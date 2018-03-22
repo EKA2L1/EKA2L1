@@ -1,9 +1,9 @@
 # EKA2L1
-- EKA2L1 is a ambigious project: a HLE Symbian 9 -> 9.4 emulator. Using Symbian 9.4 (S60V5) as a base, this HLE emulator runs a virtual ARM CPU, while also import all of modules and custom dll modules into the app.
+- EKA2L1 is a HLE Symbian OS emulator. Using Symbian 9.4 (S60V5) as a base, this emulator runs a virtual ARM CPU, and calls HLE functions where needed.
 
-- Requirement:
-    + 2GB Memory, a Intel Chip
-    + GPU card supports at least OpenGl 3.1
+- Requirements:
+    + 2GB Memory
+    + GPU card supports at least OpenGL 3.1
 
 - Dependencies planned:
     + Dynarmic
