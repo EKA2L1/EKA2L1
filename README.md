@@ -4,3 +4,7 @@
 - Requirement:
     + 2GB Memory, a Intel Chip
     + GPU card supports at least OpenGl 3.1
+
+- Dependencies planned:
+    + Dynarmic
+    + Boost
