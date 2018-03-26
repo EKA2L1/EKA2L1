@@ -1,5 +1,7 @@
 add_library(loader
     include/loader/sis.h
-	src/sis.cpp)
+    include/loader/sis_script_intepreter.h
+    src/sis_script_intepreter.cpp
+    src/sis.cpp)
 
 target_include_directories(loader PUBLIC include)

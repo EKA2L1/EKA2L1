@@ -1,9 +1,11 @@
 #include <io/vfs.h>
+#include <common/path.h>
+
+#include <iostream>
 
 #include <map>
 #include <mutex>
-
-#include <filesystem>
+#include <thread>
 
 namespace eka2l1 {
 	namespace vfs {
@@ -12,16 +14,7 @@ namespace eka2l1 {
 
 		std::map<std::string, std::string> _mount_map;
 
-		std::mutex _gl_mut;
-
-		std::string pref_path() {
-			return _pref_path;
-		}
-
-		void pref_path(const std::string &new_pref_path) {
-			std::lock_guard<std::mutex> guard(_gl_mut);
-			_pref_path = new_pref_path;
-		}
+        std::mutex _gl_mut;
 
 		std::string current_dir() {
 			return _current_dir;
@@ -35,42 +28,46 @@ namespace eka2l1 {
 		void mount(const std::string &dvc, const std::string &real_path) {
 			auto find_res = _mount_map.find(dvc);
 
-			if (find_res != _mount_map.end()) {
-
+            if (find_res == _mount_map.end()) {
+                // Warn
 			}
 
 			std::lock_guard<std::mutex> guard(_gl_mut);
-			_mount_map.insert(dvc, real_path);
-		}
+            _mount_map.insert(std::make_pair(dvc, real_path));
+
+            _current_dir = dvc;
+        }
 
 		void unmount(const std::string &dvc) {
 			std::lock_guard<std::mutex> guard(_gl_mut);
 			_mount_map.erase(dvc);
 		}
 
-		// TODO: Replace this with boost until its functional
-		// Please compile with GCC on MacOS (XCode Clang wont work)
-		namespace fs = std::experimental::filesystem;
+        std::string get(std::string vir_path) {
+            std::string abs_path = "";
 
-		std::string get(std::string &vir_path) {
-			// Firstly, absolute the path. The current dir is proven to be always absolute
-			fs::path _path = fs::absolute(vir_path, vfs::get(_current_dir)).string();
+            std::string current_dir =
+                    _current_dir;
 
-			// If path has root name like C:/ or Z:/, replace them with pref path
-			if (_path.has_root_name()) {
-				std::string root_name = _path.root_name().string();
-				std::string new_vir_path = _path.string().erase(0, root_name.size());
+            // Current directory is always an absolute path
+            std::string partition = current_dir.substr(0, 2);
 
-				new_vir_path = _pref_path + new_vir_path;
+            auto res = _mount_map.find(partition);
 
-				return new_vir_path;
-			}
+            if (res == _mount_map.end()) {
+                //log_error("Could not find partition");
+                return "";
+            }
 
-			// So finally, from a path like ../Private with the current path is C:/Sys for example,
-			// and preference path is E:/SymbianEmu, we first get: C:/Private, then with some
-			// processing, we got: E:/SymbainEmu/Private
+            current_dir = res->second + current_dir.substr(2);
 
-			return _path.string();
+            if (!is_absolute(vir_path, current_dir)) {
+                abs_path = absolute_path(vir_path, current_dir);
+            } else {
+                abs_path = add_path(res->second, vir_path.substr(1));
+            }
+
+            return abs_path;
 		}
 	}
 }

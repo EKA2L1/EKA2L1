@@ -3,10 +3,7 @@
 #include <string>
 
 namespace eka2l1 {
-	namespace vfs {
-		std::string pref_path();
-		void pref_path(const std::string &new_pref_path);
-
+    namespace vfs {
 		std::string current_dir();
 		void current_dir(const std::string &new_dir);
 
@@ -14,6 +11,6 @@ namespace eka2l1 {
 		void unmount(const std::string &dvc);
 
 		// Map a virtual path to real path
-		std::string get(std::string &vir_path);
+        std::string get(std::string vir_path);
 	}
 }
