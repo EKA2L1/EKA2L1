@@ -3,6 +3,9 @@
 #include <vector>
 #include <string>
 
+#include <memory>
+#include <sstream>
+
 #include <cstdint>
 
 namespace eka2l1 {
@@ -285,12 +288,17 @@ namespace eka2l1 {
        };
 
        class sis_parser {
-           FILE* file;
+           std::shared_ptr<std::istream> stream;
+           std::shared_ptr<std::istream> alternative_stream;
 
        private:
            void valid_offset();
 
        public:
+           // Extensively use for hooking between compressed in-context data
+           void switch_stream();
+           void set_alternative_stream(std::shared_ptr<std::istream> astream);
+
            sis_parser(const std::string name);
            sis_header parse_header();
 
