@@ -3,34 +3,10 @@
 #include <vector>
 #include <string>
 
+#include <loader/sis_fields.h>
+
 namespace eka2l1 {
     namespace loader {
-        enum class ss_op {
-            EOpInstall = 1,
-            EOpRun = 2,
-            EOpText = 4,
-            EOpNull = 8
-        };
-
-        enum class ss_io_option {
-            EInstVerifyOnRestore = 1 << 15,
-        };
-
-        enum class ss_fr_option {
-            EInstFileRunOptionInstall = 1 << 1,
-            EInstFileRunOptionUninstall = 1 << 2,
-            EInstFileRunOptionByMimeTime = 1 << 3,
-            EInstFileRunOptionWaitEnd = 1 << 4,
-            EInstFileRunOptionSendEnd = 1 << 5
-        };
-
-        enum class ss_ft_option {
-            EInstFileTextOptionContinue = 1 << 9,
-            EInstFileTextOptionSkipIfNo = 1 << 10,
-            EInstFileTextOptionAbortIfNo = 1 << 11,
-            EInstFileTextOptionExitIfNo = 1 << 12
-        };
-
         class ss_inst {
             std::vector<std::string> args;
 

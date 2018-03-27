@@ -1,9 +1,10 @@
-#include <loader/sis.h>
+#include <loader/sis_fields.h>
 
 #include <cstdio>
 #include <cassert>
 
 #include <vector>
+#include <iostream>
 
 namespace eka2l1 {
     namespace loader {
@@ -12,36 +13,12 @@ namespace eka2l1 {
         };
 
         bool install_sis(std::string path) {
-            FILE* sis_file = fopen(path.c_str(), "rb");
+            sis_parser parser(path);
 
-            sis_header header;
-            fread(&header,1 ,sizeof(sis_header), sis_file);
-
-            assert(header.uid1 == uid1_cst);
-
-            std::vector<uint16_t> langs;
-            langs.resize(header.lang_count);
-
-            if (header.lang_count > 0) {
-                fseek(sis_file, header.langs_offset, SEEK_SET);
-                fread(langs.data(), header.lang_count, 2, sis_file);
-            }
+            sis_header header = parser.parse_header();
+            sis_contents cs = parser.parse_contents();
 
             return true;
-
-            std::vector<sis_requisite_metadata> reqs_metadata;
-
-            if (header.req_count > 0) {
-                fseek(sis_file, header.reqs_offset, SEEK_SET);
-
-                for (uint32_t i = 0; i < header.req_count; i++) {
-                     fread(&reqs_metadata[i].uid, 1, 4, sis_file);
-                     fread(&reqs_metadata[i].major, 1, 2, sis_file);
-                     fread(&reqs_metadata[i].minor, 1, 2, sis_file);
-
-                     fread(&reqs_metadata[i].name_len, 1, 4, sis_file);
-                }
-            }
         }
     }
 }
