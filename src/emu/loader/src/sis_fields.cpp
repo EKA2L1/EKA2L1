@@ -24,7 +24,7 @@ namespace eka2l1 {
         }
 
         sis_parser::sis_parser(const std::string name) {
-            stream = std::make_shared<std::ifstream>(name);
+            stream = std::make_shared<std::ifstream>(name, std::ifstream::binary);
         }
 
         sis_info sis_parser::parse_info() {
@@ -163,7 +163,7 @@ namespace eka2l1 {
         }
 
         void sis_parser::jump_t(uint32_t off) {
-            stream->seekg(off);
+            stream->seekg(off, stream->cur);
         }
 
         void sis_parser::valid_offset() {
