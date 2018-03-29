@@ -1,3 +1,5 @@
+#pragma once
+
 #include "internal.h"
 
 namespace eka2l1 {
