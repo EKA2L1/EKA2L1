@@ -63,13 +63,15 @@ namespace eka2l1 {
            uint32_t len_high;
        };
 
+       using utf16_str = std::basic_string<uint16_t>;
+
        struct sis_string: public sis_field {
-           std::wstring unicode_string;
+           utf16_str unicode_string;
        };
 
        struct sis_array: public sis_field {
            sis_field_type element_type;
-           std::vector<sis_field> fields;
+           std::vector<std::shared_ptr<sis_field>> fields;
        };
 
        enum class sis_compressed_algorithm: uint32_t {
@@ -86,9 +88,9 @@ namespace eka2l1 {
        };
 
        struct sis_version: public sis_field {
-            uint32_t major;
-            uint32_t minor;
-            uint32_t build;
+            int32_t major;
+            int32_t minor;
+            int32_t build;
        };
 
        struct sis_version_range: public sis_field {
@@ -195,8 +197,12 @@ namespace eka2l1 {
            sis_array options; // sis_array
        };
 
-       struct sis_supported_option {
-           sis_array names; // sis_string
+       struct sis_supported_option: public sis_field {
+           sis_string name; // sis_string
+       };
+
+       struct sis_supported_lang: public sis_field {
+           sis_lang lang;
        };
 
        struct sis_dependency: public sis_field {
@@ -278,6 +284,7 @@ namespace eka2l1 {
            sis_supported_options options;
            sis_supported_langs langs;
            sis_prerequisites prequisites;
+           sis_properties properties;
        };
 
        struct sis_contents: public sis_field {
@@ -293,7 +300,7 @@ namespace eka2l1 {
 
        private:
            void valid_offset();
-
+           void switch_istrstream(char* buf, size_t size);
        public:
            // Extensively use for hooking between compressed in-context data
            void switch_stream();
@@ -307,15 +314,37 @@ namespace eka2l1 {
 
            sis_info parse_info();
            sis_uid  parse_uid();
+           sis_controller parse_controller();
 
-           void parse_field_child(sis_field* field);
+           sis_array parse_array();
+
+           sis_supported_options parse_supported_options();
+           sis_supported_langs parse_supported_langs();
+
+           sis_supported_option parse_supported_option(bool no_own = false);
+           sis_supported_lang parse_supported_lang(bool no_own = false);
+
+           void parse_field_child(sis_field* field, bool left_type_for_arr = false);
 
            sis_contents parse_contents();
 
            sis_controller_checksum parse_controller_checksum();
            sis_data_checksum parse_data_checksum();
 
-           sis_string parse_string();
+           sis_dependency parse_dependency(bool no_type = false);
+           sis_version_range parse_version_range();
+
+           sis_prerequisites parse_prerequisites();
+
+           sis_string parse_string(bool no_type = false);
+
+           sis_version parse_version();
+           sis_date parse_date();
+           sis_time parse_time();
+           sis_date_time parse_date_time();
+
+           sis_property parse_property(bool no_type = false);
+           sis_properties parse_properties();
 
            void jump_t(uint32_t off);
        };
