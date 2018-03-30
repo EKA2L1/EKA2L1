@@ -85,6 +85,8 @@ namespace eka2l1 {
 
             std::vector<unsigned char>        uncompressed_data;
             std::vector<unsigned char>        compressed_data;
+
+            uint64_t offset;
        };
 
        struct sis_version: public sis_field {
@@ -225,10 +227,6 @@ namespace eka2l1 {
            sis_array properties;
        };
 
-       struct sis_capabilities: public sis_field {
-            std::vector<char> caps;
-       };
-
        enum class sis_hash_algorithm {
            sha1 = 1
        };
@@ -264,19 +262,73 @@ namespace eka2l1 {
            EInstFileTextOptionExitIfNo = 1 << 12
        };
 
-       struct sis_file_description: public sis_field {
+       struct sis_capabilities: public sis_blob {};
+
+       struct sis_file_des: public sis_field {
            sis_string target;
            sis_string mime_type;
            sis_capabilities caps;
-
            sis_hash hash;
-           ss_op    op;
-           uint32_t operation_ops;
+
+           ss_op op;
+           uint32_t op_op;
 
            uint64_t len;
            uint64_t uncompressed_len;
 
-           uint32_t file_index;
+           uint32_t idx;
+       };
+
+       struct sis_logo: public sis_field {
+           sis_file_des logo;
+       };
+
+
+       struct sis_certificate_chain: public sis_field {
+           sis_blob cert_data;
+       };
+
+       struct sis_sig_cert_chain: public sis_field {
+           sis_array sigs;
+           sis_certificate_chain cert_chain;
+       };
+
+       struct sis_sig_algorithm: public sis_field {
+           sis_string algorithm;
+       };
+
+       struct sis_sig: public sis_field {
+           sis_sig_algorithm algorithm;
+           sis_blob signature_data;
+       };
+
+       enum class ss_expr_op {
+           EBinOpEqual = 1,
+           EBinOpNotEqual,
+           EBinOpGreaterThan,
+           EBinOpLessThan,
+           EBinOpGreaterThanOrEqual,
+           EBinOpLessOrEqual,
+
+           ELogOpAnd,
+           ELogOpOr,
+
+           EUnaryOpNot,
+
+           EFuncExists,
+           EFuncAppProperties,
+           EFuncDevProperties,
+
+           EPrimTypeString,
+           EPrimTypeOption,
+           EPrimTypeVariable,
+           EPrimTypeNumber
+       };
+
+       struct sis_install_block: public sis_field {
+            sis_array files;
+            sis_array controllers;
+            sis_array if_blocks;
        };
 
        struct sis_controller: public sis_field {
@@ -285,13 +337,50 @@ namespace eka2l1 {
            sis_supported_langs langs;
            sis_prerequisites prequisites;
            sis_properties properties;
+           sis_logo logo;
+           sis_install_block install_block;
+           std::vector<sis_sig_cert_chain> sigcert_chains;
+           sis_data_index idx;
+       };
+
+       struct sis_expression;
+
+       struct sis_expression: public sis_field {
+           ss_expr_op op;
+           int32_t int_val;
+           sis_string val;
+
+           std::shared_ptr<sis_expression> left_expr, right_expr;
+       };
+
+       struct sis_if: public sis_field {
+            sis_expression expr;
+            sis_install_block install_block;
+            sis_array else_if;
+       };
+
+       struct sis_else_if: public sis_field {
+            sis_expression expr;
+            sis_install_block install_block;
+       };
+
+       struct sis_data: public sis_field {
+           sis_array data_units;
+       };
+
+       struct sis_data_unit: public sis_field {
+           sis_array data_unit;
+       };
+
+       struct sis_file_data: public sis_field {
+            sis_compressed raw_data;
        };
 
        struct sis_contents: public sis_field {
            sis_controller_checksum controller_checksum;
            sis_data_checksum data_checksum;
            sis_controller    controller;
-           //sis_data          data;
+           sis_data          data;
        };
 
        class sis_parser {
@@ -310,11 +399,17 @@ namespace eka2l1 {
            sis_header parse_header();
 
            // Parse a compressed block. Inflate the block if needed
-           sis_compressed parse_compressed();
+           // Data inflating do not use parse compressed
+           sis_compressed parse_compressed(bool no_extract = false);
 
            sis_info parse_info();
            sis_uid  parse_uid();
-           sis_controller parse_controller();
+           sis_controller parse_controller(bool no_type = false);
+
+           sis_hash parse_hash();
+           sis_blob parse_blob();
+           sis_logo parse_logo();
+           sis_file_des parse_file_description(bool no_type = false);
 
            sis_array parse_array();
 
@@ -338,6 +433,8 @@ namespace eka2l1 {
 
            sis_string parse_string(bool no_type = false);
 
+           sis_capabilities parse_caps();
+
            sis_version parse_version();
            sis_date parse_date();
            sis_time parse_time();
@@ -345,6 +442,23 @@ namespace eka2l1 {
 
            sis_property parse_property(bool no_type = false);
            sis_properties parse_properties();
+
+           sis_data parse_data();
+           sis_data_unit parse_data_unit(bool no_type= false);
+           sis_file_data parse_file_data(bool no_type  = false);
+
+           sis_if parse_if(bool no_type = false);
+           sis_else_if parse_if_else(bool no_type = false);
+
+           sis_data_index parse_data_index();
+
+           sis_expression parse_expression(bool no_type = false);
+           sis_install_block parse_install_block(bool no_type = false);
+
+           sis_sig_algorithm parse_signature_algorithm(bool no_type = false);
+           sis_sig parse_signature(bool no_type = false);
+           sis_certificate_chain parse_cert_chain(bool no_type = false);
+           sis_sig_cert_chain parse_sig_cert_chain(bool no_type= false);
 
            void jump_t(uint32_t off);
        };

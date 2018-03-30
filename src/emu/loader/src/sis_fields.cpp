@@ -94,8 +94,87 @@ namespace eka2l1 {
 
                     break;
 
+               case sis_field_type::SISFileDes:
+                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                        auto str = std::make_shared<sis_file_des>(parse_file_description(true));
+                        str->type = arr.element_type;
+                        arr.fields.push_back(str);
+                        valid_offset();
+                    }
 
-                default: break;
+                    break;
+
+              case sis_field_type::SISController:
+                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                        auto str = std::make_shared<sis_controller>(parse_controller(true));
+                        str->type = arr.element_type;
+                        arr.fields.push_back(str);
+                        valid_offset();
+                    }
+
+                    break;
+
+             case sis_field_type::SISFileData:
+                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                        auto str = std::make_shared<sis_file_data>(parse_file_data(true));
+                        str->type = arr.element_type;
+                        arr.fields.push_back(str);
+                        valid_offset();
+                    }
+
+                    break;
+
+            case sis_field_type::SISdataUnit:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_data_unit>(parse_data_unit(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
+
+                break;
+
+            case sis_field_type::SISExpression:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_expression>(parse_expression(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
+
+                break;
+
+            case sis_field_type::SISIf:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_if>(parse_if(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
+
+                break;
+
+            case sis_field_type::SISElseIf:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_else_if>(parse_if_else(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
+
+                break;
+
+            case sis_field_type::SISSignature:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_sig>(parse_signature(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
+
+                break;
+
+            default: break;
             }
 
             valid_offset();
@@ -254,7 +333,7 @@ namespace eka2l1 {
             return langs;
         }
 
-        sis_compressed sis_parser::parse_compressed() {
+        sis_compressed sis_parser::parse_compressed(bool no_extract) {
             sis_compressed compressed;
 
             parse_field_child(&compressed);
@@ -262,42 +341,44 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<char*>(&compressed.algorithm), 4);
             stream->read(reinterpret_cast<char*>(&compressed.uncompressed_size), 8);
 
+            // Store the offset, make intepreter do their work
+            compressed.offset = stream->tellg();
+
             if (compressed.algorithm != sis_compressed_algorithm::deflated) {
-                compressed.uncompressed_data.resize(compressed.uncompressed_size);
-                stream->read(reinterpret_cast<char*>(compressed.uncompressed_data.data()),
-                             compressed.uncompressed_size);
+                if (!no_extract) {
+                    compressed.uncompressed_data.resize(compressed.uncompressed_size);
+                    stream->read(reinterpret_cast<char*>(compressed.uncompressed_data.data()),
+                                 compressed.uncompressed_size);
+                }
             } else {
-                uint32_t us = (compressed.len_low | (compressed.len_high << 32));
+                uint32_t us = (compressed.len_low | (compressed.len_high << 32)) - 12;
 
-                compressed.compressed_data.resize(us);
-                stream->read(reinterpret_cast<char*>(compressed.compressed_data.data()),us);
+                if (!no_extract) {
+                    compressed.compressed_data.resize(us);
+                    stream->read(reinterpret_cast<char*>(compressed.compressed_data.data()),us);
 
-                mz_stream stream;
+                    mz_stream stream;
 
-                stream.avail_in = 0;
-                stream.next_in = 0;
-                stream.zalloc = nullptr;
-                stream.zfree = nullptr;
+                    stream.avail_in = 0;
+                    stream.next_in = 0;
+                    stream.zalloc = nullptr;
+                    stream.zfree = nullptr;
 
-                inflateInit(&stream);
+                    inflateInit(&stream);
 
-                compressed.uncompressed_data.resize(compressed.uncompressed_size);
+                    compressed.uncompressed_data.resize(compressed.uncompressed_size);
 
-                stream.avail_in = us;
-                stream.next_in = compressed.compressed_data.data();
+                    stream.avail_in = us;
+                    stream.next_in = compressed.compressed_data.data();
 
-                stream.avail_out = compressed.uncompressed_size;
-                stream.next_out = compressed.uncompressed_data.data();
+                    stream.avail_out = compressed.uncompressed_size;
+                    stream.next_out = compressed.uncompressed_data.data();
 
-                inflate(&stream,Z_NO_FLUSH);
-                inflateEnd(&stream);
+                    inflate(&stream,Z_NO_FLUSH);
+                    inflateEnd(&stream);
 
-                LOG_INFO("Writing inflated controller metadata: inflatedController.mt");
-
-                FILE* ftemp = fopen("inflatedController.mt", "wb");
-                fwrite(compressed.uncompressed_data.data(), 1, compressed.uncompressed_size, ftemp);
-
-                fclose(ftemp);
+                    LOG_INFO("Inflating chunk, size: {}", us);
+                }
             }
 
             valid_offset();
@@ -335,21 +416,26 @@ namespace eka2l1 {
             }
 
             sis_compressed compress_data = parse_compressed();
-
             switch_istrstream(reinterpret_cast<char*>(compress_data.uncompressed_data.data()),
                               compress_data.uncompressed_size);
 
             contents.controller = parse_controller();
+            assert(stream->tellg() == compress_data.uncompressed_size);
 
+            switch_stream();
+
+            LOG_INFO("Pos after reading controller: {}", stream->tellg());
+
+            contents.data = parse_data();
             valid_offset();
 
             return contents;
         }
 
-        sis_controller sis_parser::parse_controller() {
+        sis_controller sis_parser::parse_controller(bool no_type) {
             sis_controller controller;
 
-            parse_field_child(&controller);
+            parse_field_child(&controller, no_type);
 
             controller.info = parse_info();
             controller.options = parse_supported_options();
@@ -357,7 +443,41 @@ namespace eka2l1 {
             controller.prequisites = parse_prerequisites();
             controller.properties = parse_properties();
 
+            int logo_avail;
+
+            peek(&logo_avail, 1, 4, stream.get());
+
+            if (logo_avail == (int)sis_field_type::SISLogo) {
+                controller.logo = parse_logo();
+            }
+
+            controller.install_block = parse_install_block();
+
+            int sigcert_avail;
+
+            peek(&sigcert_avail, 1, 4, stream.get());
+
+            while (sigcert_avail == (int)sis_field_type::SISSignatureCertChain) {
+                controller.sigcert_chains.push_back(parse_sig_cert_chain());
+                peek(&sigcert_avail, 1, 4, stream.get());
+            }
+
+            controller.idx = parse_data_index();
+
+            valid_offset();
+
             return controller;
+        }
+
+        sis_data_index sis_parser::parse_data_index() {
+            sis_data_index idx;
+
+            parse_field_child(&idx);
+            stream->read(reinterpret_cast<char*>(&idx.data_index), 4);
+
+            valid_offset();
+
+            return idx;
         }
 
         sis_string sis_parser::parse_string(bool no_arr) {
@@ -450,6 +570,235 @@ namespace eka2l1 {
             valid_offset();
 
             return uid;
+        }
+
+        sis_hash sis_parser::parse_hash() {
+            sis_hash hash;
+            parse_field_child(&hash);
+
+            stream->read(reinterpret_cast<char*>(&hash.hash_method), sizeof(sis_hash_algorithm));
+
+            hash.hash_data = parse_blob();
+            valid_offset();
+
+            return hash;
+        }
+
+        sis_blob sis_parser::parse_blob() {
+            sis_blob blob;
+            parse_field_child(&blob);
+
+            blob.raw_data.resize(blob.len_low | (blob.len_high << 32));
+
+            stream->read(blob.raw_data.data(), blob.raw_data.size());
+            valid_offset();
+            return blob;
+        }
+
+        sis_capabilities sis_parser::parse_caps() {
+            sis_capabilities blob;
+            parse_field_child(&blob);
+
+            blob.raw_data.resize(blob.len_low | (blob.len_high << 32));
+
+            stream->read(blob.raw_data.data(), blob.raw_data.size());
+            valid_offset();
+            return blob;
+        }
+
+        sis_logo sis_parser::parse_logo() {
+            sis_logo logo;
+            parse_field_child(&logo);
+
+            logo.logo = parse_file_description();
+            valid_offset();
+            return logo;
+        }
+
+        sis_file_des sis_parser::parse_file_description(bool no_type) {
+            sis_file_des des;
+            parse_field_child(&des, no_type);
+
+            des.target = parse_string();
+            des.mime_type = parse_string();
+
+            int caps_avail;
+
+            peek(&caps_avail, 1, 4, stream.get());
+
+            if (caps_avail == (int)sis_field_type::SISCapabilites) {
+                des.caps = parse_caps();
+            }
+
+            des.hash = parse_hash();
+
+            std::string filename_ascii;
+            filename_ascii.resize(des.target.unicode_string.size());
+
+            for (int i = 0; i < des.target.unicode_string.size(); i++) {
+                filename_ascii[i] = (char)(des.target.unicode_string[i]);
+            }
+
+            LOG_INFO("File detected: {}", filename_ascii);
+
+            stream->read(reinterpret_cast<char*>(&des.op), 4);
+            stream->read(reinterpret_cast<char*>(&des.op_op), 4);
+            stream->read(reinterpret_cast<char*>(&des.len), 8);
+            stream->read(reinterpret_cast<char*>(&des.uncompressed_len), 8);
+            stream->read(reinterpret_cast<char*>(&des.idx), 4);
+
+            valid_offset();
+            return des;
+        }
+
+        sis_data sis_parser::parse_data() {
+            sis_data dt;
+
+            parse_field_child(&dt);
+            dt.data_units = parse_array();
+
+            valid_offset();
+
+            return dt;
+        }
+
+        sis_data_unit sis_parser::parse_data_unit(bool no_type) {
+            sis_data_unit du;
+
+            parse_field_child(&du, no_type);
+            du.data_unit = parse_array();
+
+            valid_offset();
+
+            return du;
+        }
+
+        sis_file_data sis_parser::parse_file_data(bool no_type) {
+            sis_file_data fd;
+
+            parse_field_child(&fd, no_type);
+            fd.raw_data = parse_compressed(true);
+
+            valid_offset();
+
+            return fd;
+        }
+
+
+        sis_if sis_parser::parse_if(bool no_type) {
+             sis_if ifexpr;
+
+             parse_field_child(&ifexpr, no_type);
+             ifexpr.expr = parse_expression();
+             ifexpr.install_block = parse_install_block();
+             ifexpr.else_if = parse_array();
+
+             valid_offset();
+
+             return ifexpr;
+        }
+
+        sis_else_if sis_parser::parse_if_else(bool no_type) {
+             sis_else_if ei;
+
+             parse_field_child(&ei, no_type);
+             ei.expr = parse_expression();
+             ei.install_block = parse_install_block();
+
+             valid_offset();
+
+             return ei;
+        }
+
+        sis_expression sis_parser::parse_expression(bool no_type) {
+            sis_expression expr;
+            parse_field_child(&expr, no_type);
+
+            stream->read(reinterpret_cast<char*>(&expr.op), 4);
+
+            if (expr.op == ss_expr_op::EPrimTypeNumber || expr.op == ss_expr_op::EPrimTypeVariable
+                    || expr.op == ss_expr_op::EPrimTypeOption) {
+                 stream->read(reinterpret_cast<char*>(&expr.int_val), 4);
+            }
+
+            if (expr.op == ss_expr_op::EFuncExists || expr.op == ss_expr_op::EPrimTypeString) {
+                 expr.val = parse_string();
+            }
+
+            if (((int)expr.op >= 2 && ((int)expr.op <= 8))
+                    || (expr.op == ss_expr_op::EFuncAppProperties)
+                    || (expr.op == ss_expr_op::EFuncDevProperties))
+            {
+                expr.left_expr = std::make_shared<sis_expression>(parse_expression());
+            }
+
+            if (((int)expr.op >=4) &&
+                    (expr.op != ss_expr_op::EFuncExists)) {
+                expr.right_expr = std::make_shared<sis_expression>(parse_expression());
+            }
+
+            valid_offset();
+
+            return expr;
+        }
+
+        sis_install_block sis_parser::parse_install_block(bool no_type) {
+            sis_install_block ib;
+
+            parse_field_child(&ib, no_type);
+            ib.files = parse_array();
+            ib.controllers = parse_array();
+            ib.if_blocks = parse_array();
+
+            valid_offset();
+
+            return ib;
+        }
+
+        sis_sig_algorithm sis_parser::parse_signature_algorithm(bool no_type){
+            sis_sig_algorithm algo;
+
+            parse_field_child(&algo, no_type);
+            algo.algorithm = parse_string();
+
+            valid_offset();
+
+            return algo;
+        }
+
+        sis_sig sis_parser::parse_signature(bool no_type) {
+            sis_sig sig;
+
+            parse_field_child(&sig, no_type);
+            sig.algorithm = parse_signature_algorithm();
+            sig.signature_data = parse_blob();
+
+            valid_offset();
+
+            return sig;
+        }
+
+        sis_certificate_chain sis_parser::parse_cert_chain(bool no_type){
+            sis_certificate_chain cert_chain;
+
+            parse_field_child(&cert_chain, no_type);
+            cert_chain.cert_data = parse_blob();
+
+            valid_offset();
+
+            return cert_chain;
+        }
+
+        sis_sig_cert_chain sis_parser::parse_sig_cert_chain(bool no_type) {
+            sis_sig_cert_chain sc;
+
+            parse_field_child(&sc, no_type);
+            sc.sigs = parse_array();
+            sc.cert_chain = parse_cert_chain();
+
+            valid_offset();
+
+            return sc;
         }
 
         void sis_parser::jump_t(uint32_t off) {

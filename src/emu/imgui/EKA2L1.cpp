@@ -32,6 +32,8 @@ namespace eka2l1 {
 
             debug_logger = std::make_shared<eka2l1::imgui::logger>();
             eka2l1::log::setup_log(debug_logger);
+
+            LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
         }
 
         eka2l1_inst::~eka2l1_inst() {
