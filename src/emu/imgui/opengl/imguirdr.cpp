@@ -1,4 +1,5 @@
 #include "../imguirdr.h"
+#include <common/log.h>
 
 #include <iostream>
 
@@ -15,6 +16,10 @@ namespace eka2l1 {
 
         GLuint vbo_handle;
         GLuint elements_handle;
+
+        void free_gl() {
+            glDeleteProgram(basic_shader_program);
+        }
 
         void create_font_tx() {
             ImGuiIO& io = ImGui::GetIO();
@@ -90,7 +95,7 @@ namespace eka2l1 {
             if(!success)
             {
                 glGetShaderInfoLog(vertex_handle, 512, NULL, infoLog);
-                std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+                LOG_ERROR("Vertex shader error: {}", infoLog);
             };
 
             glCompileShader(frag_handle);
@@ -99,7 +104,7 @@ namespace eka2l1 {
             if(!success)
             {
                 glGetShaderInfoLog(frag_handle, 512, NULL, infoLog);
-                std::cout << "ERROR::SHADER::FRAG::COMPILATION_FAILED\n" << infoLog << std::endl;
+                LOG_ERROR("Fragment shader error: {}", infoLog);
             };
 
             glAttachShader(basic_shader_program, vertex_handle);
@@ -110,7 +115,7 @@ namespace eka2l1 {
             if(!success)
             {
                 glGetProgramInfoLog(basic_shader_program, 512, NULL, infoLog);
-                std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+                LOG_ERROR("Shader program link: {}", infoLog);
             }
 
             attrib_loc_tex = glGetUniformLocation(basic_shader_program, "Texture");
@@ -265,6 +270,11 @@ namespace eka2l1 {
             io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
 
             ImGui::NewFrame();
+        }
+
+        void clear_gl(ImVec4 clcl) {
+            glClearColor(clcl.x, clcl.y, clcl.z, clcl.w);
+            glClear(GL_COLOR_BUFFER_BIT);
         }
     }
 }

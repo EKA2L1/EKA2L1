@@ -1,9 +1,15 @@
 add_subdirectory(opengl)
 add_subdirectory(io)
+add_subdirectory(logger)
 
 add_executable(eka2l1_imgui EKA2L1.cpp
+    EKA2L1.h
     internal.h internal.cpp
     window.h window.cpp
-    imguirdr.h)
+    imguirdr.h
+    menu.h
+    menu.cpp
+    main.cpp)
 
-target_link_libraries(eka2l1_imgui imguirdr-gl imguiio imgui glfw GL X11 glad)
+target_link_libraries(eka2l1_imgui imguirdr-gl imguiio
+    imgui common imgui-logger loader)

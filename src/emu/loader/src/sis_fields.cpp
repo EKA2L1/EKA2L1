@@ -1,6 +1,8 @@
 #include <loader/sis_fields.h>
 #include <miniz.h>
 
+#include <common/log.h>
+
 #include <iostream>
 #include <fstream>
 
@@ -169,6 +171,12 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<char*>(&info.install_type), 1);
             stream->read(reinterpret_cast<char*>(&info.install_flags), 1);
 
+            LOG_INFO("UID: 0x{:x}", info.uid.uid);
+            LOG_INFO("Creation date: {}/{}/{}", info.creation_date.date.year, info.creation_date.date.month,
+                     info.creation_date.date.day);
+            LOG_INFO("Creation time: {}:{}:{}", info.creation_date.time.hours, info.creation_date.time.minutes,
+                     info.creation_date.time.secs);
+
             valid_offset();
 
             return info;
@@ -284,7 +292,9 @@ namespace eka2l1 {
                 inflate(&stream,Z_NO_FLUSH);
                 inflateEnd(&stream);
 
-                FILE* ftemp = fopen("/home/dtt2502/Miscs/inflatedController.metadata", "wb");
+                LOG_INFO("Writing inflated controller metadata: inflatedController.mt");
+
+                FILE* ftemp = fopen("inflatedController.mt", "wb");
                 fwrite(compressed.uncompressed_data.data(), 1, compressed.uncompressed_size, ftemp);
 
                 fclose(ftemp);

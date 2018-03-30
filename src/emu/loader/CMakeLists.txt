@@ -7,4 +7,4 @@ add_library(loader
     src/sis.cpp)
 
 target_include_directories(loader PUBLIC include)
-target_link_libraries(loader miniz)
+target_link_libraries(loader miniz common)
