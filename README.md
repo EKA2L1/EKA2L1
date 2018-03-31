@@ -1,18 +1,22 @@
 # EKA2L1
-- EKA2L1 is a HLE Symbian OS emulator. Using Symbian 9.4 (S60V5) as a base, this emulator runs a virtual ARM CPU, and calls HLE functions where needed.
+- EKA2L1 is a HLE Symbian OS emulator. Using Symbian 9.4 (S60V5) as a base. The current thing it can do now is load rom and interpreting some instructions. Screenshot provides below.
+
+![Screenshot](https://raw.githubusercontent.com/bentokun/EKA2L1/master/screenshots/prototype.png)
 
 - Requirements:
     + 2GB Memory
     + GPU card supports at least OpenGL 3.1
 
-- Dependencies planned:
-    + Dynarmic
-    + Boost
+- Dependencies:
+    + Dynarmic (Future)
+    + ImGui
+    + GLFW
+    + Miniz
+    + Glad
 
 - Help me
     * Symbian Systemcall Signatures (SSS)
-	    * If you have SSS for s60v5 or upper, please send them to me through: fewdspuckrito@gmail.com as json file if i havent imported them yet.
-	    * Currently, SSS are extracted from .lib file in Symbian SDK. It's the method that most re use. Library are converted to IDT using IDS tool.
+	    * Currently, SSS are extracted from library file in Symbian SDK. It's the method that most re use. Library are converted to IDT using IDS tool.
             * After being converted to IDT, there will be a parser that parse the IDT file, to generate correspond HLE header and source for that library.
 
 - Intepreter
