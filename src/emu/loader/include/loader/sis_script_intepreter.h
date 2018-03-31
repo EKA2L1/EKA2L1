@@ -2,56 +2,36 @@
 
 #include <vector>
 #include <string>
+#include <functional>
 
 #include <loader/sis_fields.h>
 
+#define CHUNK_SIZE 10000
+#define CHUNK_MAX_INFLATED_SIZE 30000
+
 namespace eka2l1 {
     namespace loader {
-        class ss_inst {
-            std::vector<std::string> args;
+        // An interpreter that runs SIS install script
+        class ss_interpreter {
+             sis_install_block install_block;
+             sis_data install_data;
+             sis_drive install_drive;
 
-            ss_op raw_op;
-            uint32_t option;
-
-        public:
-            ss_inst(ss_op op, uint32_t option);
-            void add_arg(std::string str);
-
-            ss_op get_raw_op() {
-                return raw_op;
-            }
-
-            size_t get_arg_count() {
-                return args.size();
-            }
-
-            std::string* get_args() {
-                return args.data();
-            }
-        };
-
-        ss_inst build_inst(ss_op op, uint32_t option, std::string arg1);
-        ss_inst build_inst(ss_op op, uint32_t option, std::string arg1, std::string arg2);
-        ss_inst build_inst(ss_op op, uint32_t option, std::string arg1, std::string arg2);
-
-        class ss_script {
-            std::vector<ss_inst> insts;
+             std::shared_ptr<std::istream> data_stream;
+             std::function<bool(std::vector<uint8_t>)> show_text_func;
 
         public:
-             ss_script() {}
+             std::vector<uint8_t> get_small_file_buf(uint32_t data_idx);
+             void extract_file(const std::string& path, const uint32_t idx);
 
-             void add_inst(ss_inst script_inst);
-             ss_inst get_inst(const uint32_t idx);
-        };
+             explicit ss_interpreter();
+             ss_interpreter(std::shared_ptr<std::istream> stream,
+                           sis_install_block inst_blck,
+                           sis_data inst_data,
+                           sis_drive install_drv);
 
-        class ss_intepreter {
-            friend class ss_script;
-            ss_script script;
-
-        public:
-            ss_intepreter(ss_script& script);
-
-            bool intepret();
+             bool interpret(sis_install_block install_block);
+             bool interpret() { return interpret(install_block); }
         };
     }
 }

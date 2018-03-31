@@ -730,6 +730,7 @@ namespace eka2l1 {
                     || (expr.op == ss_expr_op::EFuncDevProperties))
             {
                 expr.left_expr = std::make_shared<sis_expression>(parse_expression());
+
             }
 
             if (((int)expr.op >=4) &&

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/types.h>
+
 #include <vector>
 #include <string>
 
@@ -62,8 +64,6 @@ namespace eka2l1 {
            uint32_t len_low;
            uint32_t len_high;
        };
-
-       using utf16_str = std::basic_string<uint16_t>;
 
        struct sis_string: public sis_field {
            utf16_str unicode_string;

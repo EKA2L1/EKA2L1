@@ -43,7 +43,7 @@ namespace eka2l1 {
         }
 
         void eka2l1_inst::run() {
-            bool install_finished = loader::install_sis("/home/dtt2502/Miscs/super_miners.sis");
+            bool install_finished = loader::install_sis("/home/dtt2502/Miscs/super_miners.sis", loader::sis_drive::drive_c);
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();

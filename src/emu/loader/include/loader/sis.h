@@ -1,5 +1,7 @@
 #pragma once 
 
+#include <loader/sis_fields.h>
+
 #include <string>
 #include <vector>
 
@@ -7,6 +9,6 @@
 
 namespace eka2l1 {
 	namespace loader {
-        bool install_sis(std::string path);
+        bool install_sis(std::string path, sis_drive drv);
 	}
 }
