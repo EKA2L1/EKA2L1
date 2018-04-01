@@ -5,4 +5,4 @@ add_library(manager
     src/manager.cpp)
 
 target_include_directories(manager PUBLIC include)
-target_link_libraries(manager PRIVATE common)
+target_link_libraries(manager PRIVATE common loader)

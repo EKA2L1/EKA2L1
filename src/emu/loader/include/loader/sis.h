@@ -9,6 +9,6 @@
 
 namespace eka2l1 {
 	namespace loader {
-        bool install_sis(std::string path, sis_drive drv);
+        sis_contents install_sis(std::string path, sis_drive drv);
 	}
 }

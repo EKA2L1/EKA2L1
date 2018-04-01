@@ -15,7 +15,7 @@ namespace eka2l1 {
             uid1_cst = 0x10201A7a
         };
 
-        bool install_sis(std::string path, sis_drive drv) {
+        sis_contents install_sis(std::string path, sis_drive drv) {
             sis_parser parser(path);
 
             sis_header header = parser.parse_header();
@@ -26,7 +26,7 @@ namespace eka2l1 {
 
             // not install yet
 
-            return true;
+            return cs;
         }
     }
 }
