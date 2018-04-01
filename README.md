@@ -30,4 +30,5 @@
     * Symbian 9.1
     
 - GUI
-    * Currently a gui is supported. By compile and run the executable in src/emu/imgui, and change the SIS package path to your path, you can get the metadata and other logging information. A ARM debugger is planned, other nothing much
+    * Currently a gui is supported. By compile and run the executable in src/emu/imgui, and change the SIS package path to your path, you can get the metadata and other logging information. An ARM debugger is planned.
+    * No user supports provided yet (not until I finished the package manager)
