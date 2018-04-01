@@ -1,5 +1,5 @@
 # EKA2L1
-- EKA2L1 is a HLE Symbian OS emulator. Using Symbian 9.4 (S60V5) as a base. The current thing it can do now is load rom. Progress are slowly being made. Screenshot provides below.
+- EKA2L1 is a Symbian OS HLE. The current thing it can do now is load rom. Progress are slowly being made. Screenshot provides below.
 
 ![Screenshot](https://raw.githubusercontent.com/bentokun/EKA2L1/master/screenshots/prototype.png)
 
@@ -26,9 +26,6 @@
     * Need help implement them?
     * The emulator will catch the leave and stop the process and report them to the user. When the leave is trapped, if enabled, emulator will log the leave to the Logger, and continue
 
-- Milestone intended
-    * Symbian 9.1
-    
 - GUI
     * Currently a gui is supported. By compile and run the executable in src/emu/imgui, and change the SIS package path to your path, you can get the metadata and other logging information. An ARM debugger is planned.
     * No user supports provided yet (not until I finished the package manager)
