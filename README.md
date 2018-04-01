@@ -20,7 +20,7 @@
             * After being converted to IDT, there will be a parser that parse the IDT file, to generate correspond HLE header and source for that library.
 
 - Intepreter
-    * Need help to write a ARMv6 Intepreter. I intend to use Dynarmic, but some instructions are not done yet, so if one is unavail, the intepreter will take the JIT job from there
+    * Need help to write a ARMv6 Intepreter. I intend to use Dynarmic along.
 
 - Leave and trap
     * Need help implement them?
