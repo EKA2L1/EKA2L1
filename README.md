@@ -1,5 +1,5 @@
 # EKA2L1
-- EKA2L1 is a HLE Symbian OS emulator. Using Symbian 9.4 (S60V5) as a base. The current thing it can do now is load rom and interpreting some instructions. Screenshot provides below.
+- EKA2L1 is a HLE Symbian OS emulator. Using Symbian 9.4 (S60V5) as a base. The current thing it can do now is load rom. Progress are slowly being made. Screenshot provides below.
 
 ![Screenshot](https://raw.githubusercontent.com/bentokun/EKA2L1/master/screenshots/prototype.png)
 
