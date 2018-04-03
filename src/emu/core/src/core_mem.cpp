@@ -103,7 +103,13 @@ namespace eka2l1 {
         }
 
         void free(address addr) {
+           const size_t page = addr / page_size;
+           const gen generation = allocated_pages[page];
 
+           const auto different_gen = std::bind(std::not_equal_to<gen>(), generation, std::placeholders::_1);
+           const auto& first_page = allocated_pages.begin() + page;
+           const auto& last_page = std::find_if(first_page, allocated_pages.end(), different_gen);
+           std::fill(first_page, last_page, 0);
         }
     }
 }

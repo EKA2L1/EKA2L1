@@ -1,6 +1,5 @@
 add_library(common
     include/common/path.h
-    include/common/ptr.h
     include/common/cvt.h
     include/common/log.h
     include/common/types.h
