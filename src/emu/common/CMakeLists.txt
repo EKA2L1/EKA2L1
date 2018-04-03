@@ -4,6 +4,7 @@ add_library(common
     include/common/cvt.h
     include/common/log.h
     include/common/types.h
+    include/common/algorithm.h
     src/path.cpp
     src/log.cpp
     src/cvt.cpp)

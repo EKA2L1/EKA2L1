@@ -15,16 +15,11 @@ namespace eka2l1 {
             uid1_cst = 0x10201A7a
         };
 
-        sis_contents install_sis(std::string path, sis_drive drv) {
+        sis_contents parse_sis(std::string path) {
             sis_parser parser(path);
 
             sis_header header = parser.parse_header();
             sis_contents cs = parser.parse_contents();
-
-            ss_interpreter it(std::make_shared<std::ifstream>(path),
-                              cs.controller.install_block, cs.data, drv);
-
-            // not install yet
 
             return cs;
         }

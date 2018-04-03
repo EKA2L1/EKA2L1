@@ -1,6 +1,7 @@
 #include "EKA2L1.h"
 
 #include "loader/sis.h"
+#include "loader/eka2img.h"
 
 #include "logger/logger.h"
 #include "internal.h"
@@ -43,7 +44,8 @@ namespace eka2l1 {
         }
 
         void eka2l1_inst::run() {
-            auto install_finished = loader::install_sis("/home/dtt2502/Miscs/super_miners.sis", loader::sis_drive::drive_c);
+            auto install_finished = loader::parse_sis("/home/dtt2502/Miscs/super_miners.sis");
+            loader::try_load_header("/home/dtt2502/Miscs/SuperMiners.exe");
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();

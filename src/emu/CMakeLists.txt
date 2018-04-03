@@ -5,6 +5,7 @@ add_subdirectory(loader)
 add_subdirectory(common)
 add_subdirectory(imgui)
 add_subdirectory(manager)
+add_subdirectory(core)
 
 add_executable(EKA2L1 EKA2L1.cpp)
 
