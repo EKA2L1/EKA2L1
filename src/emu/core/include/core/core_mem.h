@@ -10,6 +10,7 @@ namespace eka2l1 {
         extern mem memory;
 
         void init();
+        void shutdown();
 
         address alloc(size_t size);
         void free(address addr);

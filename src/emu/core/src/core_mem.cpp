@@ -35,6 +35,10 @@ namespace eka2l1 {
 #endif
         }
 
+        void shutdown() {
+            memory.reset();
+        }
+
         void init() {
 #ifdef WIN32
             SYSTEM_INFO system_info = {};

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <common/types.h>
+
 #include <cstring>
+#include <cstdint>
 
 namespace eka2l1 {
 	namespace common {
@@ -25,6 +28,5 @@ namespace eka2l1 {
         constexpr size_t GB(size_t gb) {
             return gb * MB(1024);
         }
-
 	}
 }

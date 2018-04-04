@@ -7,6 +7,7 @@ namespace eka2l1 {
     namespace arm {
         // Allow multiple backends to be added
         class jit_interface {
+        public:
             // yuzu
             struct thread_context {
                 std::array<uint64_t, 31> cpu_registers;

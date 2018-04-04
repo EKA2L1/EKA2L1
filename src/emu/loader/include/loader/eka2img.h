@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
+#include <string>
 
 namespace eka2l1 {
     namespace loader {
@@ -32,12 +34,15 @@ namespace eka2l1 {
             //eka2_cpu cpu;
 
             uint32_t header_crc;
-            uint32_t module_ver;
-            uint32_t compress_type;
 
-            uint8_t major;
-            uint8_t minor;
-            uint16_t build;
+            uint16_t major;
+            uint16_t minor;
+
+            uint32_t compression_type;
+
+            uint8_t petran_major;
+            uint8_t petran_minor;
+            uint16_t petran_build;
 
             uint32_t msb;
             uint32_t lsb;
@@ -72,6 +77,12 @@ namespace eka2l1 {
             eka2_cpu cpu;
         };
 
-        void try_load_header(const char* file);
+        struct eka2img {
+            eka2img_header header;
+            std::vector<char> data;
+            uint32_t uncompressed_size;
+        };
+
+        eka2img load_eka2img(const std::string& path);
     }
 }

@@ -13,6 +13,7 @@ namespace eka2l1 {
         void init(core_arm_type arm_type);
         void run();
         void stop();
+        void shutdown();
 
         void step();
 
