@@ -119,41 +119,40 @@ namespace eka2l1 {
                 break;
             }
 
-            LOG_TRACE("Code size: 0x{:x}, Text size: 0x{:x}.", img.header.code_size, img.header.text_size);
+            //LOG_TRACE("Code size: 0x{:x}, Text size: 0x{:x}.", img.header.code_size, img.header.text_size);
 
             uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
             LOG_TRACE("Import + export size: 0x{:x}", import_export_table_size);
+
+            fseek(f, img.header.import_offset, SEEK_SET);
+            fread(&img.import_section.size, 1, 4, f);
+            img.import_section.imports.resize(img.header.dll_ref_table_count);
+
+            for (auto& import: img.import_section.imports) {
+                fread(&import.dll_name_offset, 1, 4, f);
+                fread(&import.number_of_imports, 1, 4, f);
+
+                auto crr_size = ftell(f);
+                fseek(f, img.header.import_offset + import.dll_name_offset, SEEK_SET);
+
+                char temp = 1;
+                while (temp != 0) {
+                    fread(&temp, 1, 1, f);
+                    import.dll_name += temp;
+                }
+
+                LOG_INFO("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
+
+                fseek(f, crr_size, SEEK_SET);
+
+                import.ordinals.resize(import.number_of_imports);
+
+                for (auto& oridinal: import.ordinals) {
+                    fread(&oridinal, 1, 4, f);
+                }
+            }
+
             fclose(f);
-
-            uint32_t relocation_size, relocation_count;
-            memcpy(&relocation_size, &img.data[img.header.code_reloc_offset], 4);
-            memcpy(&relocation_count, &img.data[img.header.code_reloc_offset + 4], 4);
-
-            uint8_t try1, try2, try3, try4, try5;
-            memcpy(&try1, &img.data[img.header.code_reloc_offset + 5], 1);
-            memcpy(&try2, &img.data[img.header.code_reloc_offset + 6], 1);
-            memcpy(&try3, &img.data[img.header.code_reloc_offset + 7], 1);
-            memcpy(&try4, &img.data[img.header.code_reloc_offset + 8], 1);
-            memcpy(&try5, &img.data[img.header.code_reloc_offset + 9], 1);
-
-            memcpy(&try1, &img.data[img.header.code_reloc_offset + 10], 1);
-            memcpy(&try2, &img.data[img.header.code_reloc_offset + 11], 1);
-            memcpy(&try3, &img.data[img.header.code_reloc_offset + 12], 1);
-            memcpy(&try4, &img.data[img.header.code_reloc_offset + 13], 1);
-            memcpy(&try5, &img.data[img.header.code_reloc_offset + 14], 1);
-
-            memcpy(&try1, &img.data[img.header.code_reloc_offset + 15], 1);
-            memcpy(&try2, &img.data[img.header.code_reloc_offset + 16], 1);
-            memcpy(&try3, &img.data[img.header.code_reloc_offset + 17], 1);
-            memcpy(&try4, &img.data[img.header.code_reloc_offset + 18], 1);
-            memcpy(&try5, &img.data[img.header.code_reloc_offset + 19], 1);
-
-
-            memcpy(&try1, &img.data[img.header.code_reloc_offset + 20], 1);
-            memcpy(&try2, &img.data[img.header.code_reloc_offset + 21], 1);
-            memcpy(&try3, &img.data[img.header.code_reloc_offset + 22], 1);
-            memcpy(&try4, &img.data[img.header.code_reloc_offset + 23], 1);
-            memcpy(&try5, &img.data[img.header.code_reloc_offset + 24], 1);
 
             return img;
         }

@@ -24,6 +24,22 @@ namespace eka2l1 {
             dll = 0x10000079
         };
 
+        // Copy from E32Explorer
+        struct eka2img_import_block
+        {
+            //This is only for EKA1 targeted import block from PE
+            uint32_t dll_name_offset; //relative to the import section
+            int32_t number_of_imports; // number of imports from this dll
+            std::vector<uint32_t> ordinals;	// TUint32 iImport[iNumberOfImports];
+            std::string dll_name;
+        };
+
+        struct eka2_import_section
+        {
+            int32_t size; // size of this section
+            std::vector<eka2img_import_block> imports; // E32ImportBlock[iDllRefTableCount];
+        };
+
         struct eka2img_header {
             eka2_img_type uid1;
             uint32_t uid2;
@@ -81,6 +97,7 @@ namespace eka2l1 {
             eka2img_header header;
             std::vector<char> data;
             uint32_t uncompressed_size;
+            eka2_import_section import_section;
         };
 
         eka2img load_eka2img(const std::string& path);
