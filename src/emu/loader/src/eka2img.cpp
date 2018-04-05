@@ -3,6 +3,7 @@
 #include <miniz.h>
 
 #include <cstdio>
+#include <sstream>
 
 namespace eka2l1 {
     namespace loader {
@@ -21,6 +22,9 @@ namespace eka2l1 {
             abs8 = 0x08
         };
 
+        // This is copying from Vita3K
+        // It generates instruction binary.
+
         void write_mov_abs(void* data, uint16_t sym) {
             struct inst {
                 uint32_t imm12: 12;
@@ -35,6 +39,13 @@ namespace eka2l1 {
             instruction->imm4 = sym >> 12;
         }
 
+        void write(void* data, uint16_t sym) {
+            memcpy(data, &sym, 2);
+        }
+
+        // Given a relocation code with the pointer to the target, s, p, a param
+        // Relocate the code/data to the position its supposed to be
+        // Todo: write some relocation here
         bool relocate(void* data, relocation_code code, uint32_t s, uint32_t p, uint32_t a) {
             switch (code) {
             case abs32:
@@ -47,8 +58,29 @@ namespace eka2l1 {
             return true;
         }
 
-        bool relocate(void* entries, size_t size) {
+        // Given relocation entries, relocate the code and data
+        bool relocate(std::vector<eka2_reloc_entry> entries, uint32_t base_all_off, size_t size) {
             return true;
+        }
+
+        // TODO: Write a system interruption and write a mov pc instruction with the symbol
+        // the interrupt hook will read the symbol and call it.
+        // Eg.
+        // svc #0 (Empty)
+        // mov pc, lr
+        // [your symbol here]
+        // When there is an interuppt, it calls the interuppt hook. Here we can read the
+        // symbol and call the right function.
+        // This still needs more reversing
+        bool import_libs() {
+            return true;
+        }
+
+        void peek_t(void* buf, size_t element_count, size_t element_size, std::istream* file) {
+             size_t crr = file->tellg();
+
+             file->read(static_cast<char*>(buf), element_count * element_size);
+             file->seekg(crr);
         }
 
         eka2img load_eka2img(const std::string& path) {
@@ -124,32 +156,66 @@ namespace eka2l1 {
             uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
             LOG_TRACE("Import + export size: 0x{:x}", import_export_table_size);
 
-            fseek(f, img.header.import_offset, SEEK_SET);
-            fread(&img.import_section.size, 1, 4, f);
+            // Read the import section
+
+            std::istringstream strstream;
+            strstream.rdbuf()->pubsetbuf(img.data.data(), img.data.size());
+
+            strstream.seekg(img.header.import_offset, std::ios_base::beg);
+            strstream.read(reinterpret_cast<char*>(&img.import_section.size), 4);
+
             img.import_section.imports.resize(img.header.dll_ref_table_count);
 
             for (auto& import: img.import_section.imports) {
-                fread(&import.dll_name_offset, 1, 4, f);
-                fread(&import.number_of_imports, 1, 4, f);
+                strstream.read(reinterpret_cast<char*>(&import.dll_name_offset), 4);
+                strstream.read(reinterpret_cast<char*>(&import.number_of_imports), 4);
 
-                auto crr_size = ftell(f);
-                fseek(f, img.header.import_offset + import.dll_name_offset, SEEK_SET);
+                auto crr_size = strstream.tellg();
+                strstream.seekg(img.header.import_offset + import.dll_name_offset, std::ios_base::beg);
 
                 char temp = 1;
                 while (temp != 0) {
-                    fread(&temp, 1, 1, f);
+                    strstream.read(&temp, 1);
                     import.dll_name += temp;
                 }
 
-                LOG_INFO("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
+                LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
 
-                fseek(f, crr_size, SEEK_SET);
+                strstream.seekg(crr_size, std::ios_base::beg);
 
                 import.ordinals.resize(import.number_of_imports);
 
                 for (auto& oridinal: import.ordinals) {
-                    fread(&oridinal, 1, 4, f);
+                    strstream.read(reinterpret_cast<char*>(&oridinal), 4);
                 }
+            }
+
+            strstream.seekg(img.header.code_reloc_offset, std::ios::beg);
+
+            LOG_TRACE("Code reloc offset: 0x{:x}, Data reloc offset: 0x{:x}", img.header.code_reloc_offset,
+                      img.header.data_offset);
+
+            strstream.read(reinterpret_cast<char*>(&img.code_reloc_section.size), 4);
+            strstream.read(reinterpret_cast<char*>(&img.code_reloc_section.num_relocs), 4);
+
+            LOG_TRACE("Code relocation size: {}, code total relocations: {}", img.code_reloc_section.size,
+                      img.code_reloc_section.num_relocs);
+
+            // There is no document on this anywhere. The code you see online is not right.
+            // Here is the part i tell you the truth: The size is including both the base and itself
+            // An entry contains the target offset and relocate size. After that, there is list of relocation
+            // code (uint16_t).
+            // Since I saw repeated pattern and also saw some code from elf2e32 reloaded, i just subtract the
+            // seek with 8, and actually works. Now i feel like i has wasted 4 hours of my life figuring out this :P
+            while ((uint32_t)strstream.tellg() - img.header.code_reloc_offset < img.code_reloc_section.size) {
+                eka2_reloc_entry reloc_entry;
+
+                strstream.read(reinterpret_cast<char*>(&reloc_entry.base), 4);
+                strstream.read(reinterpret_cast<char*>(&reloc_entry.size), 4);
+
+                img.code_reloc_section.entries.push_back(reloc_entry);
+
+                strstream.seekg(reloc_entry.size - 8, std::ios::cur);
             }
 
             fclose(f);

@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+// A lightweight loader based on elfe32
+
 namespace eka2l1 {
     namespace loader {
         enum class eka2_cpu: uint16_t {
@@ -38,6 +40,22 @@ namespace eka2l1 {
         {
             int32_t size; // size of this section
             std::vector<eka2img_import_block> imports; // E32ImportBlock[iDllRefTableCount];
+        };
+
+        struct eka2_reloc_entry {
+            uint32_t base;
+            uint32_t size;
+        };
+
+        #define ELF32_R_SYM(i) ((i)>>8)
+        #define ELF32_R_TYPE(i) ((unsigned char)(i))
+        #define ELF32_R_INFO(s,t) (((s)<<8)+(unsigned char)(t))
+
+        struct eka2_reloc_section {
+            uint32_t size;
+            uint32_t num_relocs;
+
+            std::vector<eka2_reloc_entry> entries;
         };
 
         struct eka2img_header {
@@ -98,6 +116,7 @@ namespace eka2l1 {
             std::vector<char> data;
             uint32_t uncompressed_size;
             eka2_import_section import_section;
+            eka2_reloc_section code_reloc_section;
         };
 
         eka2img load_eka2img(const std::string& path);
