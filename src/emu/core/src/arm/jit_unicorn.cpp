@@ -1,4 +1,4 @@
-#include <core/arm/jit_unicorn.h>
+#include <arm/jit_unicorn.h>
 #include <cassert>
 
 namespace eka2l1 {

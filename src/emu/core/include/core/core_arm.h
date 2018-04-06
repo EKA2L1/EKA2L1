@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/arm/jit_interface.h>
+#include <arm/jit_interface.h>
 #include <memory>
 
 namespace eka2l1 {

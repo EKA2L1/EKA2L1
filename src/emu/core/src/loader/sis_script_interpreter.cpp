@@ -1,9 +1,9 @@
-#include <loader/sis_script_intepreter.h>
+#include <loader/sis_script_interpreter.h>
 #include <common/cvt.h>
 #include <common/types.h>
 #include <common/log.h>
 
-#include <io/vfs.h>
+#include <vfs.h>
 
 #include <miniz.h>
 

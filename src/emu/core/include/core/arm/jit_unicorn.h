@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unicorn/unicorn.h>
-#include <core/arm/jit_interface.h>
+#include <arm/jit_interface.h>
 
 namespace eka2l1 {
     namespace arm {

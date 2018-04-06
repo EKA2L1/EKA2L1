@@ -11,5 +11,5 @@ add_executable(eka2l1_imgui EKA2L1.cpp
     menu.cpp
     main.cpp)
 
-target_link_libraries(eka2l1_imgui imguirdr-gl imguiio
-    imgui common imgui-logger loader)
+target_link_libraries(eka2l1_imgui PRIVATE imguirdr-gl imguiio
+    imgui common imgui-logger coreloader core)

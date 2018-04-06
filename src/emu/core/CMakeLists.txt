@@ -1,17 +1,31 @@
-add_library(core 
-	include/core/core_timing.h
-	include/core/core_mem.h
-        include/core/ptr.h
-	include/core/arm/jit_interface.h
-        include/core/arm/jit_unicorn.h
-        include/core/arm/jit_dynarmic.h
-        include/core/core_arm.h
-        src/core_timing.cpp
-        src/core_mem.cpp
-        src/core_arm.cpp
-        src/arm/jit_unicorn.cpp)
+set (CORE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core)
 
+add_library(coremem
+        include/core/core_mem.h
+        include/core/ptr.h
+        src/core_mem.cpp)
+
+add_library(coretiming
+        include/core/core_timing.h
+        src/core_timing.cpp)
+
+add_library(coreio
+        include/core/vfs.h
+        src/vfs.cpp)
+
+add_subdirectory(src/arm)
+add_subdirectory(src/loader)
+add_subdirectory(src/manager)
+
+target_include_directories(coremem PUBLIC include)
+target_include_directories(coretiming PUBLIC include)
+target_include_directories(coreio PUBLIC include)
+
+target_link_libraries(coremem PUBLIC common)
+target_link_libraries(coretiming PUBLIC common)
+target_link_libraries(coreio PUBLIC common)
+
+add_library(core include/core/ptr.h)
+
+target_link_libraries(core PRIVATE coremem coretiming coreio corearm coreloader coremanager)
 target_include_directories(core PUBLIC include)
-target_link_libraries(core PUBLIC common)
-target_link_libraries(core PRIVATE unicorn)
-	

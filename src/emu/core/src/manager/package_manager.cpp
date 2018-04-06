@@ -1,6 +1,6 @@
 #include <manager/package_manager.h>
 #include <loader/sis.h>
-#include <loader/sis_script_intepreter.h>
+#include <loader/sis_script_interpreter.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <dirent.h>

@@ -1,7 +1,7 @@
 #include <loader/eka2img.h>
+#include <ptr.h>
 #include <common/log.h>
 #include <miniz.h>
-
 #include <cstdio>
 #include <sstream>
 
@@ -12,46 +12,32 @@ namespace eka2l1 {
             uint32_t num_reloc;
         };
 
-        enum relocation_code {
-            abs32 = 0x02,
-            rel32 = 0x03,
-            ldr_pc_g0 = 0x04,
-            abs16 = 0x05,
-            abs12 = 0x06,
-            thm_abs5 = 0x07,
-            abs8 = 0x08
+        enum class relocation_type: uint16_t {
+            reserved = 0x0000,
+            text = 0x1000,
+            data = 0x2000,
+            inffered = 0x3000
         };
 
-        // This is copying from Vita3K
-        // It generates instruction binary.
+        enum compress_type {
+            byte_pair_c = 0x101F7AFC,
+            deflate_c = 0x102822AA
+        };
 
-        void write_mov_abs(void* data, uint16_t sym) {
-            struct inst {
-                uint32_t imm12: 12;
-                uint32_t ignored1: 4;
-                uint32_t imm4: 4;
-                uint32_t ignored2: 12;
-            };
+        bool relocate(uint32_t* data_ptr, relocation_type type, uint32_t delta) {
+            if (type == relocation_type::reserved) {
+                LOG_ERROR("Invalid relocation type: 0");
 
-            inst* instruction = reinterpret_cast<inst*>(data);
+                return false;
+            }
 
-            instruction->imm12 = sym;
-            instruction->imm4 = sym >> 12;
-        }
-
-        void write(void* data, uint16_t sym) {
-            memcpy(data, &sym, 2);
-        }
-
-        // Given a relocation code with the pointer to the target, s, p, a param
-        // Relocate the code/data to the position its supposed to be
-        // Todo: write some relocation here
-        bool relocate(void* data, relocation_code code, uint32_t s, uint32_t p, uint32_t a) {
-            switch (code) {
-            case abs32:
+            switch (type) {
+            case relocation_type::data:
+                break;
+            case relocation_type::text:
                 break;
             default:
-                LOG_INFO("Unimplemented relocation code: {}", (int)code);
+                LOG_WARN("Unhandled relocation type: {}", (int)type);
                 break;
             }
 
@@ -59,19 +45,55 @@ namespace eka2l1 {
         }
 
         // Given relocation entries, relocate the code and data
-        bool relocate(std::vector<eka2_reloc_entry> entries, uint32_t base_all_off, size_t size) {
+        bool relocate(std::vector<eka2_reloc_entry> entries,
+                      uint32_t* dest_addr,
+                      uint32_t delta) {
+            for (uint32_t i = 0; i < entries.size(); i++) {
+                auto entry = entries[i];
+
+                for (auto& rel_info: entry.rels_info) {
+                    // Get the lower 12 bit for virtual_address
+                    uint32_t virtual_addr = i + (rel_info & 0x0FFF);
+                    uint32_t* data_ptr = virtual_addr + dest_addr;
+
+                    relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
+
+                    if (!relocate(data_ptr, rel_type, delta)) {
+                        LOG_TRACE("Relocate fail at page: {}", i);
+                        return false;
+                    }
+                }
+            }
+
             return true;
         }
 
-        // TODO: Write a system interruption and write a mov pc instruction with the symbol
+        bool import_func(ptr<uint32_t> stub_ptr, uint32_t sym) {
+            uint32_t* stub = stub_ptr.get();
+
+            if (stub == nullptr) {
+                return false;
+            }
+
+            stub[0] = 0xef000000; // swi #0
+            stub[1] = 0xe1a0f00e; // mov pc, lr
+            stub[2] = sym;
+            
+            return true;
+        }
+
+        // TODO1: Move this along with io and manager to core
+        // TODO2: Write a system interruption and write a mov pc instruction with the symbol
         // the interrupt hook will read the symbol and call it.
         // Eg.
-        // svc #0 (Empty)
+        // swi #0 (Empty)
         // mov pc, lr
         // [your symbol here]
         // When there is an interuppt, it calls the interuppt hook. Here we can read the
         // symbol and call the right function.
-        // This still needs more reversing
+        // First, add the stub at the end of text section
+        // Next, in import address table, specified the address of each stub
+        // In each stub, write an intteruption and a mov instruction
         bool import_libs() {
             return true;
         }
@@ -213,10 +235,27 @@ namespace eka2l1 {
                 strstream.read(reinterpret_cast<char*>(&reloc_entry.base), 4);
                 strstream.read(reinterpret_cast<char*>(&reloc_entry.size), 4);
 
-                img.code_reloc_section.entries.push_back(reloc_entry);
+                assert((reloc_entry.size - 8) % 2 == 0);
 
-                strstream.seekg(reloc_entry.size - 8, std::ios::cur);
+                reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2)-1);
+
+                for (auto& rel_info: reloc_entry.rels_info) {
+                    strstream.read(reinterpret_cast<char*>(&rel_info), 2);
+                }
+
+                uint16_t temp_padding = 0;
+                strstream.read(reinterpret_cast<char*>(&temp_padding), 2);
+
+                // If it's zero, maybe it's padding
+                if (temp_padding != 0) {
+                    reloc_entry.rels_info.push_back(temp_padding);
+                }
+
+                img.code_reloc_section.entries.push_back(reloc_entry);
             }
+
+            relocate(img.code_reloc_section.entries, reinterpret_cast<uint32_t*>
+                     (img.data.data() + img.header.code_offset), img.header.code_base);
 
             fclose(f);
 

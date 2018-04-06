@@ -1,5 +1,5 @@
 #include <loader/sis_fields.h>
-#include <loader/sis_script_intepreter.h>
+#include <loader/sis_script_interpreter.h>
 
 #include <cstdio>
 #include <cassert>

@@ -45,6 +45,8 @@ namespace eka2l1 {
         struct eka2_reloc_entry {
             uint32_t base;
             uint32_t size;
+
+            std::vector<uint16_t> rels_info;
         };
 
         #define ELF32_R_SYM(i) ((i)>>8)

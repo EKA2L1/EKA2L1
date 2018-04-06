@@ -1,4 +1,4 @@
-#include <io/vfs.h>
+#include <core/vfs.h>
 #include <common/path.h>
 
 #include <iostream>
