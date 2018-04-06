@@ -36,6 +36,22 @@ namespace eka2l1 {
             std::string dll_name;
         };
 
+        struct eka2img_vsec_info {
+            uint32_t secure_id;
+            uint32_t vendor_id;
+            uint32_t cap1;
+            uint32_t cap2;
+        };
+
+        struct eka2img_header_extended {
+            eka2img_vsec_info info;
+            uint32_t exception_des;
+            uint32_t spare2;
+            uint16_t export_desc_size;	// size of bitmap section
+            uint8_t	 export_desc_type;	// type of description of holes in export table
+            uint8_t	 export_desc;
+        };
+
         struct eka2_import_section
         {
             int32_t size; // size of this section
@@ -115,10 +131,13 @@ namespace eka2l1 {
 
         struct eka2img {
             eka2img_header header;
+            eka2img_header_extended header_extended;
             std::vector<char> data;
             uint32_t uncompressed_size;
             eka2_import_section import_section;
             eka2_reloc_section code_reloc_section;
+
+            bool has_extended_header = false;
         };
 
         eka2img load_eka2img(const std::string& path);

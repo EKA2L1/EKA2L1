@@ -1,6 +1,7 @@
 #include <loader/eka2img.h>
 #include <ptr.h>
 #include <common/log.h>
+#include <common/bytepair.h>
 #include <miniz.h>
 #include <cstdio>
 #include <sstream>
@@ -105,6 +106,32 @@ namespace eka2l1 {
              file->seekg(crr);
         }
 
+        void dump_flag_info(int flag) {
+            int fixed = (uint8_t)((flag >> 0x2) & 1);
+            int abi = (uint16_t)((flag >> 0x3) & 3);
+            int ept = (uint16_t)((flag >> 0x5) & 7);
+
+            LOG_INFO("Image dump info");
+
+            if (abi == 1) {
+                LOG_INFO("ABI: EABI");
+            } else {
+                LOG_INFO("ABI: GCC98r2");
+            }
+
+            if (fixed) {
+                LOG_INFO("Address type: Fixed");
+            } else {
+                LOG_INFO("Address type: None");
+            }
+
+            if (ept == 0) {
+                LOG_INFO("Entry point type: EKA1");
+            } else {
+                LOG_INFO("Entry point type: EKA2");
+            }
+        }
+
         eka2img load_eka2img(const std::string& path) {
             eka2img img;
 
@@ -118,39 +145,61 @@ namespace eka2l1 {
 
             assert(img.header.sig == 0x434F5045);
 
-            if (img.header.compression_type != 0) {
+            compress_type ctype = (compress_type)(img.header.compression_type);
+            dump_flag_info((int)img.header.flags);
+
+            if (img.header.compression_type > 0) {
+
+                int header_format = ((int)img.header.flags >> 24) & 0xF;
+
                 fread(&img.uncompressed_size, 1, 4, f);
+
+                if (header_format == 2) {
+                    img.has_extended_header = true;
+                    LOG_INFO("V-Format used, load more (too tired) \\_(-.-)_/");
+
+                    fread(&img.header_extended.info, 1, sizeof(eka2img_vsec_info), f);
+                    fread(&img.header_extended.exception_des, 1, 4, f);
+                    fread(&img.header_extended.spare2, 1, 4, f);
+                    fread(&img.header_extended.export_desc_size, 1, 2, f);
+                    fread(&img.header_extended.export_desc_type, 1, 1, f);
+                    fread(&img.header_extended.export_desc, 1, 1, f);
+                }
+
                 std::vector<char> temp_buf(file_size - sizeof(eka2img_header) - 4);
-
                 img.data.resize(img.uncompressed_size);
-
-                memcpy(img.data.data(), &img.header, sizeof(eka2img_header));
-                memcpy(img.data.data() + sizeof(eka2img_header), &img.uncompressed_size, 4);
 
                 fread(temp_buf.data(), 1, temp_buf.size(), f);
 
-                // INFLATE IT!
-                mz_stream stream;
-                stream.avail_in = 0;
-                stream.next_in = 0;
-                stream.zalloc = nullptr;
-                stream.zfree = nullptr;
+                if (ctype == compress_type::deflate_c) {
+                    // INFLATE IT!
+                    mz_stream stream;
+                    stream.avail_in = 0;
+                    stream.next_in = 0;
+                    stream.zalloc = nullptr;
+                    stream.zfree = nullptr;
 
-                if (inflateInit(&stream) != MZ_OK) {
-                    LOG_ERROR("Can not intialize inflate stream");
+                    if (inflateInit(&stream) != MZ_OK) {
+                        LOG_ERROR("Can not intialize inflate stream");
+                    }
+
+                    stream.avail_in = temp_buf.size();
+                    stream.next_in = reinterpret_cast<const unsigned char*>(temp_buf.data());
+                    stream.next_out = reinterpret_cast<unsigned char*>(&img.data[sizeof(eka2img_header) + 4]);
+
+                    auto res = inflate(&stream,Z_NO_FLUSH);
+
+                    if (res != MZ_OK) {
+                        LOG_ERROR("Inflate chunk failed!");
+                    };
+
+                    inflateEnd(&stream);
+                } else {
+                    common::nokia_bytepair_decompress(img.data.data(), img.data.size(),
+                                                      temp_buf.data(), temp_buf.size());
+
+                    return eka2img{};
                 }
-
-                stream.avail_in = temp_buf.size();
-                stream.next_in = reinterpret_cast<const unsigned char*>(temp_buf.data());
-                stream.next_out = reinterpret_cast<unsigned char*>(&img.data[sizeof(eka2img_header) + 4]);
-
-                auto res = inflate(&stream,Z_NO_FLUSH);
-
-                if (res != MZ_OK) {
-                    LOG_ERROR("Inflate chunk failed!");
-                };
-
-                inflateEnd(&stream);
 
             } else {
                 img.data.resize(file_size);

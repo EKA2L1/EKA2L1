@@ -15,7 +15,6 @@ namespace eka2l1 {
         ptr()
             : mem_address(0) {}
 
-        template <typename T>
         ptr(const T* ptr) {
             mem_address = static_cast<address>(ptr);
         }
@@ -25,7 +24,7 @@ namespace eka2l1 {
         }
 
         T* get() const {
-            return core_mem::get(mem_address);
+            return core_mem::get<T>(mem_address);
         }
 
         void reset() {

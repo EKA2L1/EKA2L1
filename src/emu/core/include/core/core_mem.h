@@ -1,6 +1,8 @@
 #pragma one
 
 #include <common/types.h>
+#include <memory>
+#include <functional>
 
 namespace eka2l1 {
     // The core memory
