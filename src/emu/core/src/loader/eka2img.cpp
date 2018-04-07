@@ -197,8 +197,6 @@ namespace eka2l1 {
                 } else {
                     common::nokia_bytepair_decompress(img.data.data(), img.data.size(),
                                                       temp_buf.data(), temp_buf.size());
-
-                    return eka2img{};
                 }
 
             } else {
