@@ -112,8 +112,9 @@ namespace eka2l1 {
                         process_replace();
                     }
 
-                    b = sec_stack.pop();
-                    *dst++ = p1;
+                    b = sec_stack.top();
+                    sec_stack.pop();
+                    *dest++ = p1;
                     p1 = lookup_table_first[b];
 
                     recurse();

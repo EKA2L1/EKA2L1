@@ -9,6 +9,8 @@
 #include "io/imguiio.h"
 #include "window.h"
 
+#include <common/data_displayer.h>
+
 static void glfw_err_callback(int err, const char* des){
     std::cout << err << ": " << des << std::endl;
 }
@@ -31,6 +33,9 @@ namespace eka2l1 {
 
             ImGui::StyleColorsDark();
 
+            mem_dumper = std::make_shared<imgui_mem_dumper>();
+            eka2l1::data_dump_setup(mem_dumper);
+
             debug_logger = std::make_shared<eka2l1::imgui::logger>();
             eka2l1::log::setup_log(debug_logger);
 
@@ -45,7 +50,7 @@ namespace eka2l1 {
 
         void eka2l1_inst::run() {
             auto install_finished = loader::parse_sis("/home/dtt2502/Miscs/super_miners.sis");
-            auto img = loader::load_eka2img("/home/dtt2502/Miscs/SuperMiners.exe");
+            auto img = loader::load_eka2img("/home/dtt2502/Miscs/colorbox.exe");
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
@@ -55,6 +60,7 @@ namespace eka2l1 {
 
                 emu_menu.draw();
 
+                mem_dumper->draw();
                 debug_logger->draw("EKA2L1 Logger");
                 eka2l1::imgui::clear_gl(clear_color);
 

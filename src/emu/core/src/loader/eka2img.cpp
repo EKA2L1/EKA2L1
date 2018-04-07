@@ -2,6 +2,7 @@
 #include <ptr.h>
 #include <common/log.h>
 #include <common/bytepair.h>
+#include <common/data_displayer.h>
 #include <miniz.h>
 #include <cstdio>
 #include <sstream>
@@ -58,6 +59,8 @@ namespace eka2l1 {
                     uint32_t* data_ptr = virtual_addr + dest_addr;
 
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
+
+                    LOG_TRACE("virtual address: 0x{:x}", virtual_addr);
 
                     if (!relocate(data_ptr, rel_type, delta)) {
                         LOG_TRACE("Relocate fail at page: {}", i);
@@ -149,6 +152,8 @@ namespace eka2l1 {
             dump_flag_info((int)img.header.flags);
 
             if (img.header.compression_type > 0) {
+                LOG_WARN("Image that compressed is not properly supported rn. Try"
+                         "other image until you find one that does not emit this warning");
 
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
 
@@ -205,6 +210,8 @@ namespace eka2l1 {
                 fread(img.data.data(), 1, img.data.size(), f);
             }
 
+            eka2l1::dump_data("Image data", std::vector<uint8_t>(img.data.begin(), img.data.end()));
+
             switch (img.header.cpu) {
             case eka2_cpu::armv5:
                 LOG_INFO("Detected: ARMv5");
@@ -219,6 +226,7 @@ namespace eka2l1 {
                 LOG_INFO("Invalid cpu specified in EKA2 Image Header. Maybe x86 or undetected");
                 break;
             }
+
 
             //LOG_TRACE("Code size: 0x{:x}, Text size: 0x{:x}.", img.header.code_size, img.header.text_size);
 
