@@ -144,7 +144,7 @@ namespace eka2l1 {
         bool import_exe_image(eka2img* img) {
             // Map the memory to store the text, data and import section
             ptr<void> asmdata =
-                    core_mem::map(runtime_code_addr, img->uncompressed_size, core_mem::prot::read_write_exec);
+                    core_mem::map(RAM_CODE_ADDR, img->uncompressed_size, core_mem::prot::read_write_exec);
 
             uint32_t rtcode_addr = RAM_CODE_ADDR;
             uint32_t rtdata_addr = 0;
@@ -152,10 +152,20 @@ namespace eka2l1 {
             rtdata_addr = import_libs(img, RAM_CODE_ADDR);
             rtdata_addr += rtcode_addr + img->header.code_size;
 
-            memcpy(asmdata.get() + rtcode_addr, img->data.data() + img->header.code_offset, img->header.code_base);
-            memcpy(asmdata.get() + rtdata_addr, img->data.data() + img->header.data_offset, img->header.data_size);
+            // Ram code address is the run time address of the code
+            uint32_t code_delta = rtcode_addr - img->header.code_base;
+            uint32_t data_delta = rtdata_addr - img->header.data_base;
 
-            core_mem::change_prot(runtime_code_addr, img->uncompressed_size, core_mem::prot::none);
+            relocate(img->code_reloc_section.entries, reinterpret_cast<uint32_t*>
+                     (img->data.data() + img->header.code_offset), code_delta, data_delta);
+
+            relocate(img->data_reloc_section.entries, reinterpret_cast<uint32_t*>
+                     (img->data.data() + img->header.data_offset), code_delta, data_delta);
+
+            memcpy((uint8_t*)asmdata.get() + rtcode_addr, img->data.data() + img->header.code_offset, img->header.code_base);
+            memcpy((uint8_t*)asmdata.get() + rtdata_addr, img->data.data() + img->header.data_offset, img->header.data_size);
+
+            core_mem::change_prot(RAM_CODE_ADDR, img->uncompressed_size, core_mem::prot::none);
 
             return true;
         }
@@ -371,21 +381,8 @@ namespace eka2l1 {
 
             read_relocations(&strstream,
                              img.data_reloc_section, img.header.data_reloc_offset);
-            // Ram code address is the run time address of the code
 
-            uint32_t runtime_code_addr = RAM_CODE_ADDR;
-            uint32_t runtime_data_addr = runtime_code_addr + img.header.code_size;
-
-            uint32_t code_delta = runtime_code_addr - img.header.code_base;
-            uint32_t data_delta = runtime_data_addr - img.header.data_base;
-
-            relocate(img.code_reloc_section.entries, reinterpret_cast<uint32_t*>
-                     (img.data.data() + img.header.code_offset), code_delta, data_delta);
-
-            relocate(img.data_reloc_section.entries, reinterpret_cast<uint32_t*>
-                     (img.data.data() + img.header.data_offset), code_delta, data_delta);
-
-            import_exe_image(&img, runtime_code_addr, runtime_data_addr);
+            import_exe_image(&img);
 
             fclose(f);
 
