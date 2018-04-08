@@ -19,12 +19,15 @@ namespace eka2l1 {
             mem_address = static_cast<address>(ptr);
         }
 
+        ptr(const uint32_t addr)
+            : mem_address(addr) {}
+
         address ptr_address() {
             return mem_address;
         }
 
         T* get() const {
-            return core_mem::get<T>(mem_address);
+            return core_mem::get_addr<T>(mem_address);
         }
 
         void reset() {

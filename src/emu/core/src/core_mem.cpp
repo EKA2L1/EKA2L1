@@ -1,7 +1,6 @@
 #include <common/algorithm.h>
 #include <common/log.h>
-
-#include <core/core_mem.h>
+#include <core/ptr.h>
 
 #include <cstdint>
 
@@ -115,5 +114,64 @@ namespace eka2l1 {
            const auto& last_page = std::find_if(first_page, allocated_pages.end(), different_gen);
            std::fill(first_page, last_page, 0);
         }
+
+        int translate_protection(prot cprot) {
+            int tprot = 0;
+
+            if (cprot == prot::read) {
+#ifndef WIN32
+                tprot = PROT_READ;
+#else
+                tprot = PAGE_READONLY;
+#endif
+            } else if (cprot == prot::exec) {
+#ifndef WIN32
+                tprot = PROT_EXEC;
+#else
+                tprot = PAGE_EXECUTE;
+#endif
+            } else if (cprot == prot::read_write) {
+#ifndef WIN32
+                tprot = PROT_READ | PROT_WRITE;
+#else
+                tprot = PAGE_READWRITE;
+#endif
+            } else if (cprot == prot::read_exec) {
+#ifndef WIN32
+                tprot = PROT_READ | PROT_EXEC;
+#else
+                tprot = PAGE_EXECUTE_READ;
+#endif
+            } else if (cprot == prot::read_write_exec) {
+#ifndef WIN32
+                tprot = PROT_READ | PROT_WRITE | PROT_EXEC;
+#else
+                tprot = PAGE_EXECUTE_READWRITE;
+#endif
+            } else {
+                tprot = -1;
+            }
+
+            return tprot;
+        }
+
+        // Map dynamicly still fine. As soon as user call IME_RANGE,
+        // that will call the UC and execute it
+        ptr<void> map(address addr, size_t size, prot cprot) {
+            auto tprot = translate_protection(cprot);
+
+#ifdef WIN32
+            VirtualAlloc(&memory[addr], size, MEM_COMMIT, tprot);
+#else
+            mprotect(&memory[addr], size, tprot);
+#endif
+
+            return ptr<void>(addr);
+        }
+
+        int  unmap(ptr<void> addr, size_t length) {
+            return munmap(addr.get(), length);
+        }
     }
+
 }

@@ -26,20 +26,32 @@ namespace eka2l1 {
             deflate_c = 0x102822AA
         };
 
-        bool relocate(uint32_t* data_ptr, relocation_type type, uint32_t delta) {
+        // Write simple relocation
+        // Symbian only used this, as found on IDA
+        bool write(uint32_t* data, uint32_t sym) {
+            *data = sym;
+            return true;
+        }
+
+        bool relocate(uint32_t* dest_ptr, relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == relocation_type::reserved) {
                 LOG_ERROR("Invalid relocation type: 0");
 
                 return false;
             }
 
+            // What is in it ?? :))
+            uint32_t reloc_offset = *dest_ptr;
+
             switch (type) {
-            case relocation_type::data:
-                break;
             case relocation_type::text:
+                write(dest_ptr, reloc_offset + code_delta);
                 break;
-            default:
-                LOG_WARN("Unhandled relocation type: {}", (int)type);
+            case relocation_type::data:
+                write(dest_ptr, reloc_offset + data_delta);
+                break;
+            case relocation_type::inffered: default:
+                LOG_WARN("Relocation not properly handle: {}", (int)type);
                 break;
             }
 
@@ -49,20 +61,19 @@ namespace eka2l1 {
         // Given relocation entries, relocate the code and data
         bool relocate(std::vector<eka2_reloc_entry> entries,
                       uint32_t* dest_addr,
-                      uint32_t delta) {
+                      uint32_t code_delta,
+                      uint32_t data_delta) {
             for (uint32_t i = 0; i < entries.size(); i++) {
                 auto entry = entries[i];
 
                 for (auto& rel_info: entry.rels_info) {
                     // Get the lower 12 bit for virtual_address
-                    uint32_t virtual_addr = i + (rel_info & 0x0FFF);
-                    uint32_t* data_ptr = virtual_addr + dest_addr;
+                    uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
+                    uint32_t* dest_ptr = virtual_addr + dest_addr;
 
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
-                    LOG_TRACE("virtual address: 0x{:x}", virtual_addr);
-
-                    if (!relocate(data_ptr, rel_type, delta)) {
+                    if (!relocate(dest_ptr, rel_type, code_delta, data_delta)) {
                         LOG_TRACE("Relocate fail at page: {}", i);
                         return false;
                     }
@@ -309,8 +320,20 @@ namespace eka2l1 {
                 img.code_reloc_section.entries.push_back(reloc_entry);
             }
 
+            // Ram code address is the run time address of the code
+
+            uint32_t runtime_code_addr = RAM_CODE_ADDR;
+            uint32_t runtime_data_addr = runtime_code_addr + img.header.code_size;
+
+            uint32_t code_delta = runtime_code_addr - img.header.code_base;
+            uint32_t data_delta = runtime_data_addr - img.header.data_base;
+
             relocate(img.code_reloc_section.entries, reinterpret_cast<uint32_t*>
-                     (img.data.data() + img.header.code_offset), img.header.code_base);
+                     (img.data.data() + img.header.code_offset), code_delta, data_delta);
+
+            // Map the memory to store the text, data and import section
+            //ptr<void> asmdata =
+            //        core_mem::map(runtime_code_addr, img.uncompressed_size, core_mem::prot::read_write_exec);
 
             fclose(f);
 
