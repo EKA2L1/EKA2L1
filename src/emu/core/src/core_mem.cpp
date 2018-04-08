@@ -65,11 +65,10 @@ namespace eka2l1 {
             }
 
             allocated_pages.resize(len / page_size);
-            alloc(page_size);
 
 #ifdef WIN32
             DWORD old_protect = 0;
-            const BOOL res = VirtualProtect(memory.get(), page_size, PAGE_NOACCESS, &old_protect);
+            const BOOL res = VirtualProtect(memory.get(), LOCAL_DATA - NULL_TRAP, PAGE_NOACCESS, &old_protect);
 #else
             mprotect(memory.get(), page_size, PROT_NONE);
 #endif
@@ -118,7 +117,13 @@ namespace eka2l1 {
         int translate_protection(prot cprot) {
             int tprot = 0;
 
-            if (cprot == prot::read) {
+            if (cprot == prot::none) {
+#ifndef WIN32
+                tprot = PROT_NONE;
+#else
+                tprot = PAGE_NOACCESS;
+#endif
+            } else if (cprot == prot::read) {
 #ifndef WIN32
                 tprot = PROT_READ;
 #else
@@ -160,6 +165,9 @@ namespace eka2l1 {
         ptr<void> map(address addr, size_t size, prot cprot) {
             auto tprot = translate_protection(cprot);
 
+            //const size_t page_count = (size + (page_size - 1)) / page_size;
+            //const size_t aligned_page_size = page_count * page_size;
+
 #ifdef WIN32
             VirtualAlloc(&memory[addr], size, MEM_COMMIT, tprot);
 #else
@@ -167,6 +175,17 @@ namespace eka2l1 {
 #endif
 
             return ptr<void>(addr);
+        }
+
+        void      change_prot(address addr, size_t size, prot nprot) {
+            auto tprot = translate_protection(nprot);
+
+#ifdef WIN32
+            DWORD old_prot = 0;
+            VirtualProtect(&memory[addr], size, tprot, &old_prot);
+#else
+            mprotect(&memory[addr], size, tprot);
+#endif
         }
 
         int  unmap(ptr<void> addr, size_t length) {

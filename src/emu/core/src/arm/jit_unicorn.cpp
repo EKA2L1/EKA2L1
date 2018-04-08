@@ -1,8 +1,14 @@
 #include <arm/jit_unicorn.h>
+#include <core_mem.h>
 #include <cassert>
 
 namespace eka2l1 {
     namespace arm {
+        // Read the symbol and redirect to HLE function
+        void intr_hook() {
+
+        }
+
         jit_unicorn::jit_unicorn() {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);

@@ -109,7 +109,54 @@ namespace eka2l1 {
         // First, add the stub at the end of text section
         // Next, in import address table, specified the address of each stub
         // In each stub, write an intteruption and a mov instruction
-        bool import_libs() {
+        // We hijack the table by throwing stub disguises as legit code
+        // at the end of the text section
+        // The import address table will contains the address of all these
+        // stubs
+        // I don't know if it will work, but probally
+        bool import_libs(eka2img* img, uint32_t rtcode_addr) {
+            // Fill text segment with stub
+            uint32_t stub_ptr = rtcode_addr + img->header.code_size;
+            uint32_t stub_size = 0;
+            std::vector<uint32_t> iat_addresses;
+
+            for (auto& import_entry: img->import_section.imports) {
+                for (auto& oridinal: import_entry.ordinals) {
+                    import_func(ptr<uint32_t>(stub_ptr), oridinal);
+                    iat_addresses.push_back(stub_ptr);
+                    stub_ptr += 3;
+                    stub_size += 3;
+                }
+            }
+
+            uint32_t iat_ptr = stub_ptr;
+
+            for (auto& iat_address: iat_addresses) {
+                uint32_t* iat_im_ptr = core_mem::get_addr<uint32_t>(iat_ptr);
+                *iat_im_ptr = iat_address;
+                iat_ptr += 4;
+                stub_size += 4;
+            }
+
+            return stub_size;
+        }
+
+        bool import_exe_image(eka2img* img) {
+            // Map the memory to store the text, data and import section
+            ptr<void> asmdata =
+                    core_mem::map(runtime_code_addr, img->uncompressed_size, core_mem::prot::read_write_exec);
+
+            uint32_t rtcode_addr = RAM_CODE_ADDR;
+            uint32_t rtdata_addr = 0;
+
+            rtdata_addr = import_libs(img, RAM_CODE_ADDR);
+            rtdata_addr += rtcode_addr + img->header.code_size;
+
+            memcpy(asmdata.get() + rtcode_addr, img->data.data() + img->header.code_offset, img->header.code_base);
+            memcpy(asmdata.get() + rtdata_addr, img->data.data() + img->header.data_offset, img->header.data_size);
+
+            core_mem::change_prot(runtime_code_addr, img->uncompressed_size, core_mem::prot::none);
+
             return true;
         }
 
@@ -335,9 +382,10 @@ namespace eka2l1 {
             relocate(img.code_reloc_section.entries, reinterpret_cast<uint32_t*>
                      (img.data.data() + img.header.code_offset), code_delta, data_delta);
 
-            // Map the memory to store the text, data and import section
-            // ptr<void> asmdata =
-            //        core_mem::map(runtime_code_addr, img.uncompressed_size, core_mem::prot::read_write_exec);
+            relocate(img.data_reloc_section.entries, reinterpret_cast<uint32_t*>
+                     (img.data.data() + img.header.data_offset), code_delta, data_delta);
+
+            import_exe_image(&img, runtime_code_addr, runtime_data_addr);
 
             fclose(f);
 

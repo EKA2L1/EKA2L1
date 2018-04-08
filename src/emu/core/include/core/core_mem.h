@@ -5,8 +5,24 @@
 #include <functional>
 
 namespace eka2l1 {
+    namespace loader {
+        class eka2img;
+    }
+
     enum {
-        RAM_CODE_ADDR = 0x70000000
+        NULL_TRAP     = 0x00000000,
+        LOCAL_DATA    = 0x00400000,
+        DLL_STATIC_DATA = 0x38000000,
+        SHARED_DATA = 0x40000000,
+        RAM_CODE_ADDR = 0x70000000,
+        ROM           = 0x80000000,
+        GLOBAL_DATA   = 0x90000000,
+        RAM_DRIVE     = 0xA0000000,
+        MMU           = 0xC0000000,
+        IOMAPPING     = 0xC3000000,
+        PAGETABS      = 0xC4000000,
+        UMEM          = 0xC8000000,
+        KERNELMAPPING = 0xC9200000
     };
 
     template <class T>
@@ -34,9 +50,10 @@ namespace eka2l1 {
         }
 
         enum class prot {
-            read = 0,
-            write = 1,
-            exec = 2,
+            none = 0,
+            read = 1,
+            write = 2,
+            exec = 3,
             read_write = read | write,
             read_exec = read | exec,
             read_write_exec = read_write | exec
@@ -44,6 +61,7 @@ namespace eka2l1 {
 
         // Map an Symbian-address
         ptr<void> map(address addr, size_t size, prot cprot);
+        void      change_prot(address addr, size_t size, prot nprot);
         int  unmap(ptr<uint8_t> addr, size_t length);
     }
 }

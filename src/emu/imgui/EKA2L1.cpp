@@ -10,6 +10,9 @@
 #include "window.h"
 
 #include <common/data_displayer.h>
+#include <core/core_timing.h>
+#include <core/core_arm.h>
+#include <core/core_mem.h>
 
 static void glfw_err_callback(int err, const char* des){
     std::cout << err << ": " << des << std::endl;
@@ -39,12 +42,23 @@ namespace eka2l1 {
             debug_logger = std::make_shared<eka2l1::imgui::logger>();
             eka2l1::log::setup_log(debug_logger);
 
+            // Intialize core
+
+            eka2l1::core_mem::init();
+            eka2l1::core_timing::init();
+
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
         }
 
         eka2l1_inst::~eka2l1_inst() {
             eka2l1::imgui::destroy_window(emu_win);
             eka2l1::imgui::free_gl();
+
+            // FBI SHUT IT DOWN
+
+            eka2l1::core_mem::shutdown();
+            eka2l1::core_timing::shutdown();
+
             glfwTerminate();
         }
 

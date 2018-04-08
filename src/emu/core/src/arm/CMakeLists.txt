@@ -8,4 +8,4 @@ add_library(corearm
 target_include_directories(corearm PUBLIC ${CORE_INCLUDE_DIR})
 
 target_link_libraries(corearm PUBLIC common)
-target_link_libraries(corearm PRIVATE unicorn)
+target_link_libraries(corearm PRIVATE unicorn coremem)
