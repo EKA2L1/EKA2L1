@@ -146,6 +146,47 @@ namespace eka2l1 {
             }
         }
 
+        void read_relocations(std::istringstream* stream,
+                              eka2_reloc_section& section,
+                              uint32_t offset) {
+
+            stream->seekg(offset, std::ios::beg);
+
+            stream->read(reinterpret_cast<char*>(&section.size), 4);
+            stream->read(reinterpret_cast<char*>(&section.num_relocs), 4);
+
+            // There is no document on this anywhere. The code you see online is not right.
+            // Here is the part i tell you the truth: The size is including both the base and itself
+            // An entry contains the target offset and relocate size. After that, there is list of relocation
+            // code (uint16_t).
+            // Since I saw repeated pattern and also saw some code from elf2e32 reloaded, i just subtract the
+            // seek with 8, and actually works. Now i feel like i has wasted 4 hours of my life figuring out this :P
+            while ((uint32_t)stream->tellg() - offset < section.size) {
+                eka2_reloc_entry reloc_entry;
+
+                stream->read(reinterpret_cast<char*>(&reloc_entry.base), 4);
+                stream->read(reinterpret_cast<char*>(&reloc_entry.size), 4);
+
+                assert((reloc_entry.size - 8) % 2 == 0);
+
+                reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2)-1);
+
+                for (auto& rel_info: reloc_entry.rels_info) {
+                    stream->read(reinterpret_cast<char*>(&rel_info), 2);
+                }
+
+                uint16_t temp_padding = 0;
+                stream->read(reinterpret_cast<char*>(&temp_padding), 2);
+
+                // If it's zero, maybe it's padding
+                if (temp_padding != 0) {
+                    reloc_entry.rels_info.push_back(temp_padding);
+                }
+
+                section.entries.push_back(reloc_entry);
+            }
+        }
+
         eka2img load_eka2img(const std::string& path) {
             eka2img img;
 
@@ -278,48 +319,11 @@ namespace eka2l1 {
                 }
             }
 
-            strstream.seekg(img.header.code_reloc_offset, std::ios::beg);
+            read_relocations(&strstream,
+                             img.code_reloc_section, img.header.code_reloc_offset);
 
-            LOG_TRACE("Code reloc offset: 0x{:x}, Data reloc offset: 0x{:x}", img.header.code_reloc_offset,
-                      img.header.data_offset);
-
-            strstream.read(reinterpret_cast<char*>(&img.code_reloc_section.size), 4);
-            strstream.read(reinterpret_cast<char*>(&img.code_reloc_section.num_relocs), 4);
-
-            LOG_TRACE("Code relocation size: {}, code total relocations: {}", img.code_reloc_section.size,
-                      img.code_reloc_section.num_relocs);
-
-            // There is no document on this anywhere. The code you see online is not right.
-            // Here is the part i tell you the truth: The size is including both the base and itself
-            // An entry contains the target offset and relocate size. After that, there is list of relocation
-            // code (uint16_t).
-            // Since I saw repeated pattern and also saw some code from elf2e32 reloaded, i just subtract the
-            // seek with 8, and actually works. Now i feel like i has wasted 4 hours of my life figuring out this :P
-            while ((uint32_t)strstream.tellg() - img.header.code_reloc_offset < img.code_reloc_section.size) {
-                eka2_reloc_entry reloc_entry;
-
-                strstream.read(reinterpret_cast<char*>(&reloc_entry.base), 4);
-                strstream.read(reinterpret_cast<char*>(&reloc_entry.size), 4);
-
-                assert((reloc_entry.size - 8) % 2 == 0);
-
-                reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2)-1);
-
-                for (auto& rel_info: reloc_entry.rels_info) {
-                    strstream.read(reinterpret_cast<char*>(&rel_info), 2);
-                }
-
-                uint16_t temp_padding = 0;
-                strstream.read(reinterpret_cast<char*>(&temp_padding), 2);
-
-                // If it's zero, maybe it's padding
-                if (temp_padding != 0) {
-                    reloc_entry.rels_info.push_back(temp_padding);
-                }
-
-                img.code_reloc_section.entries.push_back(reloc_entry);
-            }
-
+            read_relocations(&strstream,
+                             img.data_reloc_section, img.header.data_reloc_offset);
             // Ram code address is the run time address of the code
 
             uint32_t runtime_code_addr = RAM_CODE_ADDR;
@@ -332,7 +336,7 @@ namespace eka2l1 {
                      (img.data.data() + img.header.code_offset), code_delta, data_delta);
 
             // Map the memory to store the text, data and import section
-            //ptr<void> asmdata =
+            // ptr<void> asmdata =
             //        core_mem::map(runtime_code_addr, img.uncompressed_size, core_mem::prot::read_write_exec);
 
             fclose(f);

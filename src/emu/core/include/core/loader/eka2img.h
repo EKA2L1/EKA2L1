@@ -135,7 +135,9 @@ namespace eka2l1 {
             std::vector<char> data;
             uint32_t uncompressed_size;
             eka2_import_section import_section;
+
             eka2_reloc_section code_reloc_section;
+            eka2_reloc_section data_reloc_section;
 
             bool has_extended_header = false;
         };
