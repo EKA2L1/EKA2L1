@@ -62,6 +62,6 @@ namespace eka2l1 {
         // Map an Symbian-address
         ptr<void> map(address addr, size_t size, prot cprot);
         void      change_prot(address addr, size_t size, prot nprot);
-        int  unmap(ptr<uint8_t> addr, size_t length);
+        int  unmap(ptr<void> addr, size_t length);
     }
 }

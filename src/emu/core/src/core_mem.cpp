@@ -15,11 +15,19 @@
 #include <unistd.h>
 #endif
 
+// Why I make this advanced is because many emulators in Symbian
+// and game use hack to run dynamic code (relocate code at runtime)
+// The focus here is that mapping memory and allocate things is fine
+
 namespace eka2l1 {
     namespace core_mem {
         using gen = size_t;
         using mem = std::unique_ptr<uint8_t[], std::function<void(uint8_t*)>>;
         using allocated = std::vector<gen>;
+
+        enum {
+            MAP_GEN_BASE = 0xF000
+        };
 
         uint64_t  page_size;
         gen       generations;
@@ -78,7 +86,8 @@ namespace eka2l1 {
             uint8_t* addr_mem = &memory[addr];
             auto aligned_size = pg_count * page_size;
 
-            std::fill_n(blck, pg_count, generations);
+            const gen generation = ++generations;
+            std::fill_n(blck, pg_count, generation);
 
 #ifdef WIN32
             VirtualAlloc(addr_mem, aligned_size, MEM_COMMIT, PAGE_READWRITE);
@@ -88,9 +97,17 @@ namespace eka2l1 {
             std::memset(addr_mem, 0, aligned_size);
         }
 
+        // Allocate the memory in heap memory
         address alloc(size_t size) {
             const size_t page_count = (size + (page_size - 1)) / page_size;
-            const auto& free_block = std::search_n(allocated_pages.begin(), allocated_pages.end(), page_count, 0);
+
+            const size_t page_heap_start = (LOCAL_DATA / page_size)+ 1;
+            const size_t page_heap_end = (DLL_STATIC_DATA / page_size) - 1;
+
+            const auto start_heap_page = allocated_pages.begin() + page_heap_start;
+            const auto end_heap_page = allocated_pages.begin() + page_heap_end;
+
+            const auto& free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
 
             if (free_block != allocated_pages.end()) {
                 const size_t block_page_index = free_block -allocated_pages.begin();
@@ -108,9 +125,12 @@ namespace eka2l1 {
            const size_t page = addr / page_size;
            const gen generation = allocated_pages[page];
 
+           const size_t page_heap_end = (DLL_STATIC_DATA / page_size) - 1;
+           const auto end_heap_page = allocated_pages.begin() + page_heap_end;
+
            const auto different_gen = std::bind(std::not_equal_to<gen>(), generation, std::placeholders::_1);
            const auto& first_page = allocated_pages.begin() + page;
-           const auto& last_page = std::find_if(first_page, allocated_pages.end(), different_gen);
+           const auto& last_page = std::find_if(first_page, end_heap_page, different_gen);
            std::fill(first_page, last_page, 0);
         }
 
@@ -163,10 +183,12 @@ namespace eka2l1 {
         // Map dynamicly still fine. As soon as user call IME_RANGE,
         // that will call the UC and execute it
         ptr<void> map(address addr, size_t size, prot cprot) {
-            auto tprot = translate_protection(cprot);
+            if (addr <= NULL_TRAP && addr != 0) {
+                LOG_INFO("Unmapable region 0x{:x}", addr);
+                return nullptr;
+            }
 
-            //const size_t page_count = (size + (page_size - 1)) / page_size;
-            //const size_t aligned_page_size = page_count * page_size;
+            auto tprot = translate_protection(cprot);
 
 #ifdef WIN32
             VirtualAlloc(&memory[addr], size, MEM_COMMIT, tprot);
@@ -188,8 +210,8 @@ namespace eka2l1 {
 #endif
         }
 
-        int  unmap(ptr<void> addr, size_t length) {
-            return munmap(addr.get(), length);
+        int  unmap(ptr<void> addr, size_t size) {
+            return munmap(addr.get(), size);
         }
     }
 
