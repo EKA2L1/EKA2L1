@@ -1,0 +1,22 @@
+/*
+============================================================================
+ Name		: EKA2L1HW.mmp
+ Author	  : 
+ Copyright   : Copyright 2018 Do Trong Thu
+ Description : This is the project specification file for EKA2L1HW.
+============================================================================
+*/
+
+TARGET		  EKA2L1HW.exe
+TARGETTYPE	  exe
+UID			 0 0xecf52f7f
+
+USERINCLUDE	 ..\inc
+SYSTEMINCLUDE   \epoc32\include
+
+SOURCEPATH	  ..\src
+SOURCE		  EKA2L1HW.cpp EKA2L1Mem.cpp
+
+LIBRARY		 euser.lib
+
+DEBUGGABLE_UDEBONLY

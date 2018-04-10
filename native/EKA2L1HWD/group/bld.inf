@@ -1,0 +1,15 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : 
+ Copyright   : Copyright 2018 Do Trong Thu
+ Description : This file provides the information required for building the
+				whole of a EKA2L1HW.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_MMPFILES
+EKA2L1HW.mmp
