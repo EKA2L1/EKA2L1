@@ -15,6 +15,8 @@
 #include <unistd.h>
 #endif
 
+#include <errno.h>
+
 // Why I make this advanced is because many emulators in Symbian
 // and game use hack to run dynamic code (relocate code at runtime)
 // The focus here is that mapping memory and allocate things is fine
@@ -56,7 +58,7 @@ namespace eka2l1 {
             page_size = sysconf(_SC_PAGESIZE);
 #endif
 
-            uint32_t len = common::GB(1);
+            size_t len = common::GB(4);
 
 #ifndef WIN32
             memory = mem(static_cast<uint8_t*>
@@ -67,6 +69,8 @@ namespace eka2l1 {
                             (VirtualAlloc(nullptr, len, MEM_REVERSE, PAGE_NOACCESS), _free_mem);
 #endif
 
+            LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
+
             if (!memory) {
                 LOG_CRITICAL("Allocating virtual memory for emulating failed!");
                 return;
@@ -76,7 +80,7 @@ namespace eka2l1 {
 
 #ifdef WIN32
             DWORD old_protect = 0;
-            const BOOL res = VirtualProtect(memory.get(), LOCAL_DATA - NULL_TRAP, PAGE_NOACCESS, &old_protect);
+            const BOOL res = VirtualProtect(memory.get(), page_size, PAGE_NOACCESS, &old_protect);
 #else
             mprotect(memory.get(), page_size, PROT_NONE);
 #endif
@@ -182,36 +186,52 @@ namespace eka2l1 {
 
         // Map dynamicly still fine. As soon as user call IME_RANGE,
         // that will call the UC and execute it
+        // Returns a pointer that is aligned and mapped
         ptr<void> map(address addr, size_t size, prot cprot) {
             if (addr <= NULL_TRAP && addr != 0) {
                 LOG_INFO("Unmapable region 0x{:x}", addr);
-                return nullptr;
+                return ptr<void>();
             }
 
+            address page_addr = (addr / page_size);
+            page_addr = page_addr * page_size;
+
+            void* real_address = &memory[page_addr];
             auto tprot = translate_protection(cprot);
 
+            int res = 0;
+
 #ifdef WIN32
-            VirtualAlloc(&memory[addr], size, MEM_COMMIT, tprot);
+            res = VirtualAlloc(real_address, size, MEM_COMMIT, tprot);
 #else
-            mprotect(&memory[addr], size, tprot);
+            res = mprotect(real_address, size, tprot);
 #endif
 
-            return ptr<void>(addr);
+            if (res == -1) {
+                LOG_ERROR("Can not map: 0x{:x}, size = {}", addr, size);
+            }
+
+            return ptr<void>(page_addr);
         }
 
-        void      change_prot(address addr, size_t size, prot nprot) {
+        int      change_prot(address addr, size_t size, prot nprot) {
             auto tprot = translate_protection(nprot);
+            void* real_addr = get_addr<void>(addr);
 
 #ifdef WIN32
             DWORD old_prot = 0;
-            VirtualProtect(&memory[addr], size, tprot, &old_prot);
+            return VirtualProtect(real_addr, size, tprot, &old_prot);
 #else
-            mprotect(&memory[addr], size, tprot);
+            return mprotect(real_addr, size, tprot);
 #endif
         }
 
         int  unmap(ptr<void> addr, size_t size) {
+#ifndef WIN32
             return munmap(addr.get(), size);
+#else
+            return VirtualFree(addr.get(), size, MEM_DECOMMIT);
+#endif
         }
     }
 

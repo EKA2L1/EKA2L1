@@ -33,6 +33,7 @@ namespace eka2l1 {
         using mem = std::unique_ptr<uint8_t[], std::function<void(uint8_t*)>>;
 
         extern mem memory;
+        extern uint64_t page_size;
 
         void init();
         void shutdown();
@@ -54,14 +55,14 @@ namespace eka2l1 {
             read = 1,
             write = 2,
             exec = 3,
-            read_write = read | write,
-            read_exec = read | exec,
-            read_write_exec = read_write | exec
+            read_write = 4,
+            read_exec = 5,
+            read_write_exec = 6
         };
 
         // Map an Symbian-address
         ptr<void> map(address addr, size_t size, prot cprot);
-        void      change_prot(address addr, size_t size, prot nprot);
+        int      change_prot(address addr, size_t size, prot nprot);
         int  unmap(ptr<void> addr, size_t length);
     }
 }

@@ -16,7 +16,7 @@ namespace eka2l1 {
             : mem_address(0) {}
 
         ptr(const T* ptr) {
-            mem_address = static_cast<address>(ptr);
+            mem_address = (address)ptr;
         }
 
         ptr(const uint32_t addr)

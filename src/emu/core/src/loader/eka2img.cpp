@@ -60,20 +60,20 @@ namespace eka2l1 {
 
         // Given relocation entries, relocate the code and data
         bool relocate(std::vector<eka2_reloc_entry> entries,
-                      uint32_t* dest_addr,
+                      uint8_t* dest_addr,
                       uint32_t code_delta,
                       uint32_t data_delta) {
             for (uint32_t i = 0; i < entries.size(); i++) {
                 auto entry = entries[i];
 
                 for (auto& rel_info: entry.rels_info) {
-                    // Get the lower 12 bit for virtual_address
+                    // Get the lower 12 bit for virtual_address 
                     uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
-                    uint32_t* dest_ptr = virtual_addr + dest_addr;
+                    uint8_t* dest_ptr = virtual_addr + dest_addr;
 
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
-                    if (!relocate(dest_ptr, rel_type, code_delta, data_delta)) {
+                    if (!relocate(reinterpret_cast<uint32_t*>(dest_ptr), rel_type, code_delta, data_delta)) {
                         LOG_TRACE("Relocate fail at page: {}", i);
                         return false;
                     }
@@ -144,28 +144,32 @@ namespace eka2l1 {
         bool import_exe_image(eka2img* img) {
             // Map the memory to store the text, data and import section
             ptr<void> asmdata =
-                    core_mem::map(RAM_CODE_ADDR, img->uncompressed_size, core_mem::prot::read_write_exec);
+                    core_mem::map(RAM_CODE_ADDR, img->uncompressed_size,
+                    core_mem::prot::read_write_exec);
 
-            uint32_t rtcode_addr = RAM_CODE_ADDR;
+            LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
+            LOG_INFO("Code size: 0x{:x}", img->header.code_size);
+
+            uint32_t rtcode_addr = asmdata.ptr_address();
             uint32_t rtdata_addr = 0;
 
-            rtdata_addr = import_libs(img, RAM_CODE_ADDR);
+            rtdata_addr = import_libs(img, rtcode_addr);
             rtdata_addr += rtcode_addr + img->header.code_size;
 
             // Ram code address is the run time address of the code
             uint32_t code_delta = rtcode_addr - img->header.code_base;
             uint32_t data_delta = rtdata_addr - img->header.data_base;
 
-            relocate(img->code_reloc_section.entries, reinterpret_cast<uint32_t*>
+            relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t*>
                      (img->data.data() + img->header.code_offset), code_delta, data_delta);
 
-            relocate(img->data_reloc_section.entries, reinterpret_cast<uint32_t*>
+            relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t*>
                      (img->data.data() + img->header.data_offset), code_delta, data_delta);
 
-            memcpy((uint8_t*)asmdata.get() + rtcode_addr, img->data.data() + img->header.code_offset, img->header.code_base);
-            memcpy((uint8_t*)asmdata.get() + rtdata_addr, img->data.data() + img->header.data_offset, img->header.data_size);
+            memcpy(ptr<uint32_t>(rtcode_addr).get(), img->data.data() + img->header.code_offset, img->header.code_size);
+            memcpy(ptr<uint32_t>(rtdata_addr).get(), img->data.data() + img->header.data_offset, img->header.data_size);
 
-            core_mem::change_prot(RAM_CODE_ADDR, img->uncompressed_size, core_mem::prot::none);
+            LOG_INFO("Load executable success");
 
             return true;
         }
@@ -314,6 +318,8 @@ namespace eka2l1 {
                 }
 
             } else {
+                img.uncompressed_size = file_size;
+
                 img.data.resize(file_size);
                 fseek(f, SEEK_SET, 0);
                 fread(img.data.data(), 1, img.data.size(), f);
