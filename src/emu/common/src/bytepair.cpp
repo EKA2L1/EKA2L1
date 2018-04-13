@@ -1,11 +1,14 @@
 #include <common/bytepair.h>
+#include <common/algorithm.h>
 
 #include <cstdint>
 #include <functional>
 #include <stack>
 
+
 namespace eka2l1 {
     namespace common {
+
         // Given a chunk of data compress by byte-pair compression as specified by Nokia,
         // decompress the chunk.
         // The game which I'm testing that use this type of compression (and even its pak file),
@@ -28,10 +31,9 @@ namespace eka2l1 {
 
             uint8_t* dest = reinterpret_cast<uint8_t*>(destination);
 
-            for (uint32_t* lut = (uint32_t*)(lookup_table); b > step; lut++)
+            for (uint32_t* lut = (uint32_t*)(lookup_table); b > step; lut++, b += step)
             {
                 *lut = b;
-                b += step;
             }
 
             uint8_t total_pair = *data8++;
@@ -146,6 +148,39 @@ namespace eka2l1 {
             }
 
             return 1;
+        }
+
+        ibytepair_stream::ibytepair_stream(std::shared_ptr<std::istream> stream)
+            : compress_stream(std::move(stream)) {
+            read_table();
+        }
+
+        ibytepair_stream::index_table ibytepair_stream::table() const {
+            return idx_tab;
+        }
+
+        void ibytepair_stream::seek_fwd(size_t size) {
+            compress_stream->seekg(size, std::ios::cur);
+        }
+
+        // Read the table entry
+        void ibytepair_stream::read_table() {
+            compress_stream->read(reinterpret_cast<char*>(&idx_tab.header), 10);
+            idx_tab.page_size.resize(idx_tab.header.number_of_pages);
+
+            compress_stream->read(reinterpret_cast<char*>(idx_tab.page_size.data()),
+                                  idx_tab.page_size.size() * sizeof(uint16_t));
+        }
+
+        uint32_t ibytepair_stream::read_page(char* dest, uint32_t page, size_t size) {
+            uint32_t len = common::min<uint32_t>(size, idx_tab.page_size[page]);
+            auto crr_pos = compress_stream->tellg();
+            std::vector<char> buf(len);
+            compress_stream->read(buf.data(), len);
+            auto omitted = nokia_bytepair_decompress(dest, len, buf.data(), len);
+            compress_stream->seekg(crr_pos, std::ios::beg);
+
+            return omitted;
         }
     }
 }

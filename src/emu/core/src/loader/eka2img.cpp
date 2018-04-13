@@ -22,8 +22,8 @@ namespace eka2l1 {
         };
 
         enum compress_type {
-            byte_pair_c = 0x101F7AFC,
-            deflate_c = 0x102822AA
+            byte_pair_c = 0x102822AA,
+            deflate_c = 0x101F7AFC
         };
 
         // Write simple relocation
@@ -258,7 +258,6 @@ namespace eka2l1 {
             fseek(f, 0, SEEK_SET);
 
             fread(&img.header, 1, sizeof(eka2img_header), f);
-
             assert(img.header.sig == 0x434F5045);
 
             compress_type ctype = (compress_type)(img.header.compression_type);
@@ -272,6 +271,9 @@ namespace eka2l1 {
 
                 fread(&img.uncompressed_size, 1, 4, f);
 
+                std::vector<char> temp_buf(file_size - img.header.code_offset);
+                img.data.resize(img.uncompressed_size);
+
                 if (header_format == 2) {
                     img.has_extended_header = true;
                     LOG_INFO("V-Format used, load more (too tired) \\_(-.-)_/");
@@ -284,37 +286,48 @@ namespace eka2l1 {
                     fread(&img.header_extended.export_desc, 1, 1, f);
                 }
 
-                std::vector<char> temp_buf(file_size - sizeof(eka2img_header) - 4);
-                img.data.resize(img.uncompressed_size);
+                fseek(f, 0, SEEK_SET);
+                fread(img.data.data(), 1, sizeof(eka2img_header) + 4
+                      + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
 
+                fseek(f, img.header.code_offset, SEEK_SET);
                 fread(temp_buf.data(), 1, temp_buf.size(), f);
 
                 if (ctype == compress_type::deflate_c) {
                     // INFLATE IT!
                     mz_stream stream;
-                    stream.avail_in = 0;
-                    stream.next_in = 0;
+
+                    stream.avail_in = temp_buf.size();
+                    stream.next_in = reinterpret_cast<const unsigned char*>(temp_buf.data());
+
+                    stream.next_out = reinterpret_cast<unsigned char*>(&img.data[img.header.code_offset]);
+                    stream.avail_out = img.header.code_size;
                     stream.zalloc = nullptr;
                     stream.zfree = nullptr;
 
-                    if (inflateInit(&stream) != MZ_OK) {
+                    if (inflateInit2(&stream, -15) != MZ_OK) {
                         LOG_ERROR("Can not intialize inflate stream");
                     }
 
                     stream.avail_in = temp_buf.size();
                     stream.next_in = reinterpret_cast<const unsigned char*>(temp_buf.data());
-                    stream.next_out = reinterpret_cast<unsigned char*>(&img.data[sizeof(eka2img_header) + 4]);
 
-                    auto res = inflate(&stream,Z_NO_FLUSH);
+                    stream.next_out = reinterpret_cast<unsigned char*>(&img.data[img.header.code_offset]);
+                    stream.avail_out = img.header.code_size;
+
+                    auto res = inflate(&stream, Z_NO_FLUSH);
 
                     if (res != MZ_OK) {
-                        LOG_ERROR("Inflate chunk failed!");
+                        LOG_ERROR("Inflate chunk failed! Code: {}", res);
                     };
 
                     inflateEnd(&stream);
                 } else {
-                    common::nokia_bytepair_decompress(img.data.data(), img.data.size(),
-                                                      temp_buf.data(), temp_buf.size());
+                    auto temp_stream = std::make_shared<std::istringstream>();
+                    temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
+                    common::ibytepair_stream bpstream(temp_stream);
+
+                    auto tb = bpstream.table();
                 }
 
             } else {
