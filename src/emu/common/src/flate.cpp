@@ -211,10 +211,6 @@ namespace eka2l1 {
                 }
             }
 
-            void decoding(const int* huffman, uint32_t num_codes, uint32_t* decode_tree,int sym_base) {
-
-            }
-
             void externalize(bit_output& output,const uint32_t* huff_man, uint32_t num_codes) {
                 std::array<uint8_t, HUFFMAN_METACODE> list;
                 int i = 0;
@@ -260,13 +256,130 @@ namespace eka2l1 {
             const int huff_term=0x0001;
             const uint32_t branch1 = sizeof(uint32_t) << 16;
 
-            /*
+            // Do a binary search and insert subtree
             uint32_t* huffman_subtree(uint32_t* ptr, const uint32_t* val, uint32_t** lvl) {
+                uint32_t* left = *lvl++;
+                if (left > val) {
+                    uint32_t* sub0 = huffman_subtree(ptr, val, lvl);  // 0-tree first
+                    ptr = huffman_subtree(sub0, val - (ptr - sub0) - 1, lvl);  // 1-tree
+                    int branch0 = (uint8_t*)sub0 - (uint8_t*)(ptr - 1);
+                    *--ptr = branch1 | branch0;
+                } else if (left == val) {
+                    uint32_t term0 = *val--;    // 0-term
+                    ptr = huffman_subtree(ptr, val, lvl);			// 1-tree
+                    *--ptr = branch1 | (term0>>16);
+                } else	{       // l<iNext
+                    uint32_t term0 = *val--;						// 0-term
+                    uint32_t term1 = *val--;
+                    *--ptr = (term1 >> 16 <<16) |(term0 >> 16);
+                }
+                return ptr;
+            }
 
-            }*/
+            void decoding(const int* huffman, uint32_t num_codes, uint32_t* decode_tree,int sym_base) {
+                if (!valid(huffman, num_codes)) {
+                    LOG_ERROR("Decoding failed: Huffman codes invalid!");
+                    return;
+                }
 
-            void externalize(bit_input& aInput, uint32_t* huffman,int num_codes) {
+                std::array<uint32_t, HUFFMAN_MAX_CODELENGTH> counts;
+                uint32_t codes = 0;
 
+                int i = 0;
+
+                for (i = 0; i < num_codes; ++i) {
+                     int32_t len = huffman[i];
+                     decode_tree[i] = len;
+
+                     if (--len >= 0) {
+                        ++counts[len];
+                        ++codes;
+                     }
+                }
+
+                std::array<uint32_t*, HUFFMAN_MAX_CODELENGTH> lvl;
+                uint32_t* lit = decode_tree + codes;
+
+                for (i = 0; i < HUFFMAN_MAX_CODELENGTH; ++i) {
+                    lvl[i] = lit;
+                    lit -= counts[i];
+                }
+
+                sym_base = (sym_base << 17) + (huff_term << 16);
+
+                for (i = 0; i < HUFFMAN_MAX_CODELENGTH; ++i) {
+                    uint32_t len= (uint8_t)decode_tree[i];
+
+                    if (len)
+                        *--lvl[len-1] |= (i << 17) + sym_base;
+                }
+
+                if (codes == 1) {
+                    uint8_t term = decode_tree[0] >> 16;
+                    decode_tree[0] = term |(term<<16);
+                }
+                else if (codes>1) {
+                    huffman_subtree(decode_tree + codes - 1, decode_tree + codes - 1,&lvl[0]);
+                }
+            }
+
+            void externalize(bit_input& input, uint32_t* huffman,int num_codes) {
+                std::array<uint8_t, HUFFMAN_METACODE> list;
+
+                for (uint8_t i = 0; i < list.size(); ++i)
+                    list[i]= uint8_t(i);
+
+                char last=0;
+                uint32_t* p = huffman;
+
+                const uint32_t* end = huffman + num_codes;
+
+                char rl = 0;
+
+                while (p + rl < end) {
+                    uint32_t c = input.huffman(huffman_enc);
+
+                    if (c < 2) {
+                        // Update run length
+                        rl += rl + c + 1;
+                    }
+                    else {
+                        while (rl > 0) {
+                            if (p > end) {
+                                LOG_ERROR("Externalize error: Invalid inflate data!");
+                                return;
+                            }
+
+                            *p++ = last;
+                            --rl;
+                        }
+
+                        --c;
+                        list[0] = uint8_t(last);
+                        last = list[c];
+
+                        for (uint8_t i = c-1; i >= 0; i--)
+                            list[i+1] = list[i];
+
+                        if (p > end) {
+                            LOG_ERROR("Externalize error: Invalid inflate data!");
+                            return;
+                        }
+                        *p++ = last;
+                    }
+                }
+
+                // Run length still left
+                while (rl > 0)
+                    {
+                    if (p > end) {
+                        LOG_ERROR("Externalize error: Invalid inflate data!");
+                        return;
+                    }
+
+                    *p++ = last;
+                    --rl;
+                }
             }
         }
 
