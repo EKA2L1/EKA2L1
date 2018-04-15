@@ -5,6 +5,33 @@
 
 namespace eka2l1 {
     namespace flate {
+
+        // Made specificlly for Image Compressing
+        enum {
+            DEFLATE_LENGTH_MAG = 8,
+            DEFLATE_DIST_MAG = 12,
+            DEFLATE_MIN_LENGTH = 3,
+            DEFLATE_MAX_LENGTH = DEFLATE_MIN_LENGTH - 1 + (1 << DEFLATE_LENGTH_MAG),
+            DEFLATE_MAX_DIST = 1 << DEFLATE_DIST_MAG,
+            DEFLATE_DIST_CODE_BASE = 0x200,
+            DEFLATE_HASH_MUL = 0xACC4B9B19u,
+            DEFLATE_HASH_SHIFT = 24,
+            ENCODING_LITERALS = 256,
+            ENCODING_LENGTHS = (DEFLATE_LENGTH_MAG - 1) * 4,
+            ENCODING_SPECIALS = 1,
+            ENCODING_DISTS = (DEFLATE_DIST_MAG - 1) * 4,
+            ENCODING_LITERAL_LEN = ENCODING_LITERALS + ENCODING_LENGTHS + ENCODING_SPECIALS,
+            ENCODING_EOS = ENCODING_LITERALS + ENCODING_LITERAL_LEN,
+            DEFLATE_CODES = ENCODING_LITERAL_LEN + ENCODING_DISTS
+
+        };
+
+        // Represent an encoding
+        struct encoding {
+            int lit_len[ENCODING_LITERALS];
+            int dist[ENCODING_DISTS];
+        };
+
         class bit_output {
             uint32_t code;
             uint32_t bits;
@@ -29,10 +56,10 @@ namespace eka2l1 {
         };
 
         class bit_input {
-            size_t   count;
+            int   count;
             uint32_t bits;
-            size_t   remain;
-            const uint32_t buf_ptr;
+            int   remain;
+            const uint32_t* buf_ptr;
         public:
             bit_input();
             bit_input(const uint8_t* ptr, int len, int off = 0);
@@ -59,5 +86,32 @@ namespace eka2l1 {
             void externalize(bit_output& aOutput,const uint32_t* huff_man, uint32_t num_codes);
             void externalize(bit_input& aInput, uint32_t* huffman,int num_codes);
         }
+
+        enum {
+            INFLATER_BUF_SIZE = 0x800,
+            INFLATER_SAFE_ZONE = 8
+        };
+
+        // Given a bit input, inflate and return the decoded data
+        class inflater {
+            bit_input* bits;
+            const uint8_t* rptr;
+            int len;
+            const uint8_t* avail;
+            const uint8_t* limit;
+            encoding encode;
+            uint8_t out[DEFLATE_MAX_DIST];	// circular buffer for distance matches
+            uint8_t huff[INFLATER_BUF_SIZE + INFLATER_SAFE_ZONE];  // huffman data
+
+            int inflate();
+            void init();
+
+        public:
+            inflater(bit_input& input);
+            ~inflater() {}
+
+            int read(uint8_t* buf, size_t rlen);
+            int skip(int len);
+        };
     }
 }

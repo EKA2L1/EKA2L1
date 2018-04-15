@@ -1,5 +1,6 @@
 #include <common/flate.h>
 #include <common/log.h>
+#include <common/algorithm.h>
 
 namespace eka2l1 {
     namespace flate {
@@ -381,6 +382,8 @@ namespace eka2l1 {
                     --rl;
                 }
             }
+            
+            
         }
 
         void bit_output::do_write(int bits, uint32_t size) {
@@ -450,6 +453,231 @@ namespace eka2l1 {
         void bit_output::pad(uint32_t pad_size) {
             if (bits > -8)
                 do_write(pad_size ? 0xffffffffu : 0, -bits);
+        }
+
+        uint32_t swap_bo(uint32_t val) {
+            uint32_t tval = (val << 16) | (val >> 16);
+            tval ^= val;
+            tval &= 0xff00ffff;
+            val = (val >> 8) | (val << 24);
+            return val ^ (tval >> 8);
+        }
+
+        bit_input::bit_input() {}
+
+        bit_input::bit_input(const uint8_t* ptr, int len, int off) {
+            set(ptr, len, off);
+        }
+
+        void bit_input::set(const uint8_t* ptr, int len, int off) {
+            uintptr_t p = (uintptr_t)ptr;
+
+            p += off >> 3;			// nearest byte to the specified bit offset
+            off &= 7;				// bit offset within the byte
+            uint32_t* nptr = (uint32_t*)(p & ~3);	// word containing this byte
+            off += (p & 3) << 3;		// bit offset within the word
+
+            if (len==0)
+                count=0;
+            else {
+                // read the first few bits of the stream
+                bits = swap_bo(*nptr++) << off;
+                off = 32 - off;
+                len -= off;
+
+                if (len < 0)
+                    off += len;
+
+                count = off;
+            }
+
+            remain = len;
+            buf_ptr = nptr;
+        }
+
+        uint32_t bit_input::read() {
+            int tcount = count;
+            uint32_t tbits = bits;
+
+            if (--tcount < 0)
+                return read(1);
+
+            count=tcount;
+            bits=tbits<<1;
+
+            return bits>>31;
+        }
+
+        uint32_t bit_input::read(size_t size) {
+            // Nothing to read
+            if (!size)
+               return 0;
+
+            uint32_t val=0;
+            uint32_t tbits = bits;
+
+            count -= size;
+
+            while (count < 0) {
+               // Disable warning
+               if (count + size !=0)
+                  val |= tbits >> (32 - (count + size)) << (-count);
+            }
+
+            size = -count;	// bits still required
+
+            // Things are still remain shit
+            if (remain > 0) {
+                bits = swap_bo(*buf_ptr++);
+                count += 32;
+                remain -= 32;
+
+                if (remain < 0)
+                    count += remain;
+
+            } else {
+                LOG_ERROR("Bit input read underflow!");
+                tbits = bits;
+                count -= size;
+
+                return 0;
+            }
+
+            bits = (size==32) ? 0 : bits << size;
+
+            return val | (tbits >> (32 - size));
+        }
+
+        uint32_t bit_input::huffman(const uint32_t* tree) {
+            uint32_t huff = 0;
+
+            do {
+                tree += huff >> 16;
+                huff = *tree;
+
+                if (read()==0)
+                    huff <<= 16;
+
+            } while ((huff & 0x10000u) == 0);
+
+            return huff>>17;
+        }
+
+        inflater::inflater(bit_input& input)
+            : bits(&input) { init(); }
+
+        int inflater::inflate() {
+            uint8_t* tout= out;
+            uint8_t* end = out + DEFLATE_MAX_DIST;
+            int* tree = encode.lit_len;
+
+            if (len < 0)	// Nothing more for you
+                return 0;
+            if (len > 0)
+                goto useHistory;    // TODO: Lambda.
+
+            while (tout < end) {
+                {
+                    int val = bits->huffman(reinterpret_cast<uint32_t*>(tree)) - ENCODING_LITERALS;
+
+                    if (val < 0) {
+                        *tout++= (uint8_t)val;
+                        continue;			// Combo literal, please continue getting them
+                    }
+
+                    if (val ==ENCODING_EOS - ENCODING_LITERALS) {
+                        len -= 1;
+                        break;
+                    }
+
+                    // Get the extra bits for the code
+                    int code = val & 0xff;
+
+                    if (code >= 8) {
+                        int xtra = (code >> 2) - 1;
+                        code -= xtra << 2;
+                        code <<= xtra;
+                        code |= bits->read(xtra);
+                    }
+
+                    if (val < DEFLATE_DIST_CODE_BASE - ENCODING_LITERALS) {
+                        // Length code
+                        len = code + DEFLATE_MIN_LENGTH;
+                        tree = encode.dist;
+                        continue;			// read the huffman code
+                    }
+
+                    // distance code
+                    rptr = tout - (code + 1);
+
+                    if (rptr + DEFLATE_MAX_DIST < end) {
+                        rptr += DEFLATE_MAX_DIST;
+                    }
+                }
+        // Digging things up from the cache: rptr
+        useHistory:
+                int tfr = common::min((intptr_t)(end - out), (intptr_t)len);
+                len -= tfr;
+
+                const uint8_t* from = rptr;
+                do {
+                    *tout++ = *from++;
+
+                    if (from == end)
+                        from -= DEFLATE_MAX_DIST;
+
+                } while (--tfr!=0);
+
+                rptr = from;
+                tree = encode.lit_len;
+            };
+
+            return tout- out;
+        }
+
+        void inflater::init() {
+            huffman::externalize(*bits, reinterpret_cast<uint32_t*>(encode.lit_len), DEFLATE_CODES);
+            if (!huffman::valid(encode.lit_len, ENCODING_LITERAL_LEN) ||
+                !huffman::valid(encode.dist, ENCODING_DISTS)) {
+                LOG_ERROR("Inflate stream invalid!");
+                return;
+            }
+
+            huffman::decoding(encode.lit_len, ENCODING_LITERAL_LEN, reinterpret_cast<uint32_t*>(encode.lit_len));
+            huffman::decoding(encode.dist, ENCODING_DISTS, reinterpret_cast<uint32_t*>(encode.dist), DEFLATE_DIST_CODE_BASE);
+        }
+
+        int inflater::read(uint8_t* buf, size_t rlen) {
+            int tfr = 0;
+
+            // Read chunk by chunk
+            for (;;) {
+               int hlen = common::min((intptr_t)rlen, (intptr_t)(limit - avail));
+
+               if (hlen && buf)  {
+                    memcpy(buf, avail, hlen);
+                    buf += hlen;
+               }
+
+               len -= hlen;
+               avail += hlen;
+               tfr += hlen;
+
+               if (len == 0)
+                   return tfr;
+
+               len = inflate();
+
+               if (len == 0)
+                   return tfr;
+
+               avail = out;
+               limit = avail + hlen;
+            }
+        }
+
+        int inflater::skip(int len) {
+            return read(nullptr, len);
         }
     }
 }
