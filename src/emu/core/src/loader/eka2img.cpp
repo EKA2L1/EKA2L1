@@ -1,8 +1,12 @@
 #include <loader/eka2img.h>
+
 #include <ptr.h>
+
 #include <common/log.h>
 #include <common/bytepair.h>
+#include <common/flate.h>
 #include <common/data_displayer.h>
+
 #include <miniz.h>
 #include <cstdio>
 #include <sstream>
@@ -22,8 +26,8 @@ namespace eka2l1 {
         };
 
         enum compress_type {
-            byte_pair_c = 0x101F7AFC,
-            deflate_c = 0x102822AA
+            byte_pair_c = 0x102822AA,
+            deflate_c = 0x101F7AFC
         };
 
         // Write simple relocation
@@ -210,6 +214,10 @@ namespace eka2l1 {
         void read_relocations(std::istringstream* stream,
                               eka2_reloc_section& section,
                               uint32_t offset) {
+            // No relocations
+            if (offset == 0) {
+                return;
+            }
 
             stream->seekg(offset, std::ios::beg);
 
@@ -248,6 +256,24 @@ namespace eka2l1 {
             }
         }
 
+        bool dump_compress_data(std::vector<char> vec) {
+            FILE* file = fopen("compresscode.dat", "wb");
+
+            if (!file) {
+                return false;
+            }
+
+            auto write_bytes = fwrite(vec.data(), 1, vec.size(), file);
+
+            if (write_bytes != vec.size()) {
+                fclose(file);
+                return false;
+            }
+
+            fclose(file);
+            return true;
+        }
+
         eka2img load_eka2img(const std::string& path) {
             eka2img img;
 
@@ -258,7 +284,6 @@ namespace eka2l1 {
             fseek(f, 0, SEEK_SET);
 
             fread(&img.header, 1, sizeof(eka2img_header), f);
-
             assert(img.header.sig == 0x434F5045);
 
             compress_type ctype = (compress_type)(img.header.compression_type);
@@ -268,9 +293,14 @@ namespace eka2l1 {
                 LOG_WARN("Image that compressed is not properly supported rn. Try"
                          "other image until you find one that does not emit this warning");
 
+
+
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
 
                 fread(&img.uncompressed_size, 1, 4, f);
+
+                std::vector<char> temp_buf(file_size);
+                img.data.resize(img.uncompressed_size + img.header.code_offset);
 
                 if (header_format == 2) {
                     img.has_extended_header = true;
@@ -284,37 +314,36 @@ namespace eka2l1 {
                     fread(&img.header_extended.export_desc, 1, 1, f);
                 }
 
-                std::vector<char> temp_buf(file_size - sizeof(eka2img_header) - 4);
-                img.data.resize(img.uncompressed_size);
+                fseek(f, 0, SEEK_SET);
+                fread(img.data.data(), 1, sizeof(eka2img_header) + 4
+                      + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
 
-                fread(temp_buf.data(), 1, temp_buf.size(), f);
+                fseek(f, img.header.code_offset, SEEK_SET);
+                fread(temp_buf.data(), 1, 0x10000, f);
+
+                if (dump_compress_data(temp_buf)) {
+                    LOG_INFO("Dumped compress data: compresscode.dat");
+                }
 
                 if (ctype == compress_type::deflate_c) {
                     // INFLATE IT!
-                    mz_stream stream;
-                    stream.avail_in = 0;
-                    stream.next_in = 0;
-                    stream.zalloc = nullptr;
-                    stream.zfree = nullptr;
+                    // Weird behavior, this is my way
+                    img.data[img.header.code_offset] = 12;
 
-                    if (inflateInit(&stream) != MZ_OK) {
-                        LOG_ERROR("Can not intialize inflate stream");
-                    }
+                    flate::bit_input input(reinterpret_cast<uint8_t*>(temp_buf.data()), temp_buf.size() * 8);
+                    flate::inflater inflate_machine(input);
 
-                    stream.avail_in = temp_buf.size();
-                    stream.next_in = reinterpret_cast<const unsigned char*>(temp_buf.data());
-                    stream.next_out = reinterpret_cast<unsigned char*>(&img.data[sizeof(eka2img_header) + 4]);
+                    inflate_machine.init();
+                    auto readed = inflate_machine.read(reinterpret_cast<uint8_t*>(&img.data[img.header.code_offset]),
+                                         img.uncompressed_size);
 
-                    auto res = inflate(&stream,Z_NO_FLUSH);
-
-                    if (res != MZ_OK) {
-                        LOG_ERROR("Inflate chunk failed!");
-                    };
-
-                    inflateEnd(&stream);
+                    LOG_INFO("Readed compress, size: {}", readed);
                 } else {
-                    common::nokia_bytepair_decompress(img.data.data(), img.data.size(),
-                                                      temp_buf.data(), temp_buf.size());
+                    auto temp_stream = std::make_shared<std::istringstream>();
+                    temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
+                    common::ibytepair_stream bpstream(temp_stream);
+
+                    auto tb = bpstream.table();
                 }
 
             } else {
@@ -324,8 +353,6 @@ namespace eka2l1 {
                 fseek(f, SEEK_SET, 0);
                 fread(img.data.data(), 1, img.data.size(), f);
             }
-
-            eka2l1::dump_data("Image data", std::vector<uint8_t>(img.data.begin(), img.data.end()));
 
             switch (img.header.cpu) {
             case eka2_cpu::armv5:
@@ -342,6 +369,7 @@ namespace eka2l1 {
                 break;
             }
 
+            eka2l1::dump_data("Image data", std::vector<uint8_t>(img.data.begin(), img.data.end()));
 
             //LOG_TRACE("Code size: 0x{:x}, Text size: 0x{:x}.", img.header.code_size, img.header.text_size);
 

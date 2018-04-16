@@ -64,7 +64,7 @@ namespace eka2l1 {
 
         void eka2l1_inst::run() {
             auto install_finished = loader::parse_sis("/home/dtt2502/Miscs/super_miners.sis");
-            auto img = loader::load_eka2img("/home/dtt2502/Miscs/creebies.exe");
+            auto img = loader::load_eka2img("/home/dtt2502/Miscs/EKA2L1HW.exe");
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
