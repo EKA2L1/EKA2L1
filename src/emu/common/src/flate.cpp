@@ -727,7 +727,7 @@ namespace eka2l1 {
                     buf += hlen;
                }
 
-               len -= hlen;
+               rlen -= hlen;
                avail += hlen;
                tfr += hlen;
 

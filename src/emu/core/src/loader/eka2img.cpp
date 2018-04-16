@@ -214,6 +214,10 @@ namespace eka2l1 {
         void read_relocations(std::istringstream* stream,
                               eka2_reloc_section& section,
                               uint32_t offset) {
+            // No relocations
+            if (offset == 0) {
+                return;
+            }
 
             stream->seekg(offset, std::ios::beg);
 
@@ -295,8 +299,8 @@ namespace eka2l1 {
 
                 fread(&img.uncompressed_size, 1, 4, f);
 
-                std::vector<char> temp_buf(file_size - img.header.code_offset);
-                img.data.resize(img.uncompressed_size);
+                std::vector<char> temp_buf(file_size);
+                img.data.resize(img.uncompressed_size + img.header.code_offset);
 
                 if (header_format == 2) {
                     img.has_extended_header = true;
@@ -315,7 +319,7 @@ namespace eka2l1 {
                       + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
 
                 fseek(f, img.header.code_offset, SEEK_SET);
-                fread(temp_buf.data(), 1, temp_buf.size(), f);
+                fread(temp_buf.data(), 1, 0x10000, f);
 
                 if (dump_compress_data(temp_buf)) {
                     LOG_INFO("Dumped compress data: compresscode.dat");
@@ -330,8 +334,10 @@ namespace eka2l1 {
                     flate::inflater inflate_machine(input);
 
                     inflate_machine.init();
-                    inflate_machine.read(reinterpret_cast<uint8_t*>(&img.data[img.header.code_offset]),
-                                         0x100000);
+                    auto readed = inflate_machine.read(reinterpret_cast<uint8_t*>(&img.data[img.header.code_offset]),
+                                         img.uncompressed_size);
+
+                    LOG_INFO("Readed compress, size: {}", readed);
                 } else {
                     auto temp_stream = std::make_shared<std::istringstream>();
                     temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
