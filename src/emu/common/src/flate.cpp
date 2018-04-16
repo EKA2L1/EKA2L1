@@ -2,6 +2,9 @@
 #include <common/log.h>
 #include <common/algorithm.h>
 
+
+#include <iostream>
+
 namespace eka2l1 {
     namespace flate {
 
@@ -49,6 +52,38 @@ namespace eka2l1 {
                 0x87fff000,
                 0x87fff800
              };
+
+            const  uint32_t huffman_dec[]=
+                {
+                0x0004006c,
+                0x00040064,
+                0x0004005c,
+                0x00040050,
+                0x00040044,
+                0x0004003c,
+                0x00040034,
+                0x00040021,
+                0x00040023,
+                0x00040025,
+                0x00040027,
+                0x00040029,
+                0x00040014,
+                0x0004000c,
+                0x00040035,
+                0x00390037,
+                0x00330031,
+                0x0004002b,
+                0x002f002d,
+                0x001f001d,
+                0x001b0019,
+                0x00040013,
+                0x00170015,
+                0x0004000d,
+                0x0011000f,
+                0x000b0009,
+                0x00070003,
+                0x00050001
+                };
 
             // Give a tree and a root index, emit the length of from that node to the current node
             // to the length array
@@ -136,7 +171,7 @@ namespace eka2l1 {
                     huffman_len(reinterpret_cast<uint32_t*>(huffman),nodes.data(),1,0);
                  }
 
-                if(!valid(huffman, num_codes)) {
+                if(!valid(reinterpret_cast<uint32_t*>(huffman), num_codes)) {
                     LOG_ERROR("Huffman invalid code!");
                     return false;
                 };
@@ -144,12 +179,12 @@ namespace eka2l1 {
                 return true;
             }
 
-            bool valid(const int* huffman,int num_codes) {
-                uint32_t remain = 1 << HUFFMAN_MAX_CODELENGTH;
+            bool valid(const uint32_t* huffman,int num_codes) {
+                int remain = 1 << HUFFMAN_MAX_CODELENGTH;
                 int total_len = 0;
 
                 // Downing
-                for (const int* p = huffman + num_codes; p > huffman;) {
+                for (const uint32_t* p = huffman + num_codes; p > huffman;) {
                     int len = *--p;
 
                     if (len>0) {
@@ -158,7 +193,7 @@ namespace eka2l1 {
                         if (len > HUFFMAN_MAX_CODELENGTH)
                             return false;
 
-                        uint32_t c = 1 << (HUFFMAN_MAX_CODELENGTH-len);
+                        uint32_t c = 1 << (HUFFMAN_MAX_CODELENGTH - len);
 
                         if (c > remain)
                             return false;
@@ -212,7 +247,7 @@ namespace eka2l1 {
                 }
             }
 
-            void externalize(bit_output& output,const uint32_t* huff_man, uint32_t num_codes) {
+            void externalize(bit_output& output,const int* huff_man, uint32_t num_codes) {
                 std::array<uint8_t, HUFFMAN_METACODE> list;
                 int i = 0;
 
@@ -221,8 +256,8 @@ namespace eka2l1 {
                 int last = 0;
 
                 int rl = 0;
-                const uint32_t* p32 = huff_man;
-                const uint32_t* e32 = p32 + num_codes;
+                const int* p32 = huff_man;
+                const int* e32 = p32 + num_codes;
 
                 while (p32 < e32) {
                     int c = *p32++;
@@ -274,16 +309,20 @@ namespace eka2l1 {
                     uint32_t term1 = *val--;
                     *--ptr = (term1 >> 16 <<16) |(term0 >> 16);
                 }
+
                 return ptr;
             }
 
             void decoding(const int* huffman, uint32_t num_codes, uint32_t* decode_tree,int sym_base) {
-                if (!valid(huffman, num_codes)) {
+                if (!valid(reinterpret_cast<const uint32_t*>(huffman), num_codes)) {
                     LOG_ERROR("Decoding failed: Huffman codes invalid!");
                     return;
                 }
 
                 std::array<uint32_t, HUFFMAN_MAX_CODELENGTH> counts;
+
+                // Gotta dump everyday bro
+                std::fill(counts.begin(), counts.end(), 0);
                 uint32_t codes = 0;
 
                 int i = 0;
@@ -295,6 +334,7 @@ namespace eka2l1 {
                      if (--len >= 0) {
                         ++counts[len];
                         ++codes;
+
                      }
                 }
 
@@ -308,12 +348,18 @@ namespace eka2l1 {
 
                 sym_base = (sym_base << 17) + (huff_term << 16);
 
-                for (i = 0; i < HUFFMAN_MAX_CODELENGTH; ++i) {
+                std::cout << "DUMPING LEN: " << std::endl;
+
+                for (i = 0; i < num_codes; ++i) {
                     uint32_t len= (uint8_t)decode_tree[i];
+
+                    std::cout << len << " ";
 
                     if (len)
                         *--lvl[len-1] |= (i << 17) + sym_base;
                 }
+
+                std::cout << std::endl;
 
                 if (codes == 1) {
                     uint8_t term = decode_tree[0] >> 16;
@@ -324,21 +370,21 @@ namespace eka2l1 {
                 }
             }
 
-            void externalize(bit_input& input, uint32_t* huffman,int num_codes) {
+            void internalize(bit_input& input, uint32_t* huffman,int num_codes) {
                 std::array<uint8_t, HUFFMAN_METACODE> list;
 
                 for (uint8_t i = 0; i < list.size(); ++i)
                     list[i]= uint8_t(i);
 
-                char last=0;
+                int last=0;
+
                 uint32_t* p = huffman;
+                uint32_t* end = p + num_codes;
 
-                const uint32_t* end = huffman + num_codes;
-
-                char rl = 0;
+                int rl = 0;
 
                 while (p + rl < end) {
-                    uint32_t c = input.huffman(huffman_enc);
+                    int c = input.huffman(huffman_dec);
 
                     if (c < 2) {
                         // Update run length
@@ -359,20 +405,19 @@ namespace eka2l1 {
                         list[0] = uint8_t(last);
                         last = list[c];
 
-                        for (uint8_t i = c-1; i >= 0; i--)
-                            list[i+1] = list[i];
+                        memmove((void* const)&list[1], (const void * const)&list[0], (size_t)c);
 
                         if (p > end) {
                             LOG_ERROR("Externalize error: Invalid inflate data!");
                             return;
                         }
+
                         *p++ = last;
                     }
                 }
 
                 // Run length still left
-                while (rl > 0)
-                    {
+                while (rl > 0) {
                     if (p > end) {
                         LOG_ERROR("Externalize error: Invalid inflate data!");
                         return;
@@ -382,8 +427,7 @@ namespace eka2l1 {
                     --rl;
                 }
             }
-            
-            
+
         }
 
         void bit_output::do_write(int bits, uint32_t size) {
@@ -496,16 +540,16 @@ namespace eka2l1 {
         }
 
         uint32_t bit_input::read() {
-            int tcount = count;
             uint32_t tbits = bits;
+            int tcount = count;
 
             if (--tcount < 0)
                 return read(1);
 
-            count=tcount;
-            bits=tbits<<1;
+            count = tcount;
+            bits = tbits << 1;
 
-            return bits>>31;
+            return tbits >> 31;
         }
 
         uint32_t bit_input::read(size_t size) {
@@ -522,28 +566,28 @@ namespace eka2l1 {
                // Disable warning
                if (count + size !=0)
                   val |= tbits >> (32 - (count + size)) << (-count);
+
+                size = -count;	// bits still required
+
+                // Things are still remain shit
+                if (remain > 0) {
+                    tbits = swap_bo(*buf_ptr++);
+                    count += 32;
+                    remain -= 32;
+
+                    if (remain < 0)
+                        count += remain;
+
+                } else {
+                    LOG_ERROR("Bit input read underflow!");
+                    tbits = bits;
+                    count -= size;
+
+                    return 0;
+                }
             }
 
-            size = -count;	// bits still required
-
-            // Things are still remain shit
-            if (remain > 0) {
-                bits = swap_bo(*buf_ptr++);
-                count += 32;
-                remain -= 32;
-
-                if (remain < 0)
-                    count += remain;
-
-            } else {
-                LOG_ERROR("Bit input read underflow!");
-                tbits = bits;
-                count -= size;
-
-                return 0;
-            }
-
-            bits = (size==32) ? 0 : bits << size;
+            bits = (size==32) ? 0 : tbits << size;
 
             return val | (tbits >> (32 - size));
         }
@@ -552,24 +596,31 @@ namespace eka2l1 {
             uint32_t huff = 0;
 
             do {
-                tree += huff >> 16;
+                tree = (uint32_t*)((uint8_t*)(tree) + (huff >> 16));
                 huff = *tree;
 
-                if (read()==0)
-                    huff <<= 16;
+                auto rval = read();
 
+                if (rval == 0)
+                    huff <<= 16;
             } while ((huff & 0x10000u) == 0);
 
             return huff>>17;
         }
 
         inflater::inflater(bit_input& input)
-            : bits(&input) { init(); }
+            : bits(&input) {
+            out[0] = 5;
+
+            len = 0;
+            avail = out;
+            limit = out;
+        }
 
         int inflater::inflate() {
             uint8_t* tout= out;
             uint8_t* end = out + DEFLATE_MAX_DIST;
-            int* tree = encode.lit_len;
+            uint32_t* tree = encode.lit_len;
 
             if (len < 0)	// Nothing more for you
                 return 0;
@@ -616,7 +667,7 @@ namespace eka2l1 {
                 }
         // Digging things up from the cache: rptr
         useHistory:
-                int tfr = common::min((intptr_t)(end - out), (intptr_t)len);
+                int tfr = common::min((intptr_t)(end - tout), (intptr_t)len);
                 len -= tfr;
 
                 const uint8_t* from = rptr;
@@ -636,15 +687,32 @@ namespace eka2l1 {
         }
 
         void inflater::init() {
-            huffman::externalize(*bits, reinterpret_cast<uint32_t*>(encode.lit_len), DEFLATE_CODES);
-            if (!huffman::valid(encode.lit_len, ENCODING_LITERAL_LEN) ||
-                !huffman::valid(encode.dist, ENCODING_DISTS)) {
+            huffman::internalize(*bits, encode.lit_len, DEFLATE_CODES);
+
+            if (huffman::valid(encode.lit_len, ENCODING_LITERAL_LEN)) {
+                if (!huffman::valid(encode.dist, ENCODING_DISTS)) {
+                    LOG_ERROR("Inflate stream invalid!");
+                }
+            } else {
                 LOG_ERROR("Inflate stream invalid!");
                 return;
             }
 
-            huffman::decoding(encode.lit_len, ENCODING_LITERAL_LEN, reinterpret_cast<uint32_t*>(encode.lit_len));
-            huffman::decoding(encode.dist, ENCODING_DISTS, reinterpret_cast<uint32_t*>(encode.dist), DEFLATE_DIST_CODE_BASE);
+            huffman::decoding(reinterpret_cast<int*>(encode.lit_len), ENCODING_LITERAL_LEN, reinterpret_cast<uint32_t*>(encode.lit_len));
+            huffman::decoding(reinterpret_cast<int*>(encode.dist), ENCODING_DISTS, reinterpret_cast<uint32_t*>(encode.dist), DEFLATE_DIST_CODE_BASE);
+
+            for (uint32_t i = 0; i < ENCODING_DISTS; i++) {
+                std::cout << encode.dist[i] << " ";
+            }
+
+            std::cout << std::endl;
+
+            for (uint32_t i = 0; i < ENCODING_LITERAL_LEN; i++) {
+                std::cout << encode.lit_len[i] << " ";
+            }
+
+            std::cout << std::endl;
+
         }
 
         int inflater::read(uint8_t* buf, size_t rlen) {
@@ -663,12 +731,12 @@ namespace eka2l1 {
                avail += hlen;
                tfr += hlen;
 
-               if (len == 0)
+               if (rlen == 0)
                    return tfr;
 
-               len = inflate();
+               hlen = inflate();
 
-               if (len == 0)
+               if (hlen == 0)
                    return tfr;
 
                avail = out;

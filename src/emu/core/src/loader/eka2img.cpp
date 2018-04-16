@@ -1,8 +1,12 @@
 #include <loader/eka2img.h>
+
 #include <ptr.h>
+
 #include <common/log.h>
 #include <common/bytepair.h>
+#include <common/flate.h>
 #include <common/data_displayer.h>
+
 #include <miniz.h>
 #include <cstdio>
 #include <sstream>
@@ -248,6 +252,24 @@ namespace eka2l1 {
             }
         }
 
+        bool dump_compress_data(std::vector<char> vec) {
+            FILE* file = fopen("compresscode.dat", "wb");
+
+            if (!file) {
+                return false;
+            }
+
+            auto write_bytes = fwrite(vec.data(), 1, vec.size(), file);
+
+            if (write_bytes != vec.size()) {
+                fclose(file);
+                return false;
+            }
+
+            fclose(file);
+            return true;
+        }
+
         eka2img load_eka2img(const std::string& path) {
             eka2img img;
 
@@ -266,6 +288,8 @@ namespace eka2l1 {
             if (img.header.compression_type > 0) {
                 LOG_WARN("Image that compressed is not properly supported rn. Try"
                          "other image until you find one that does not emit this warning");
+
+
 
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
 
@@ -293,35 +317,21 @@ namespace eka2l1 {
                 fseek(f, img.header.code_offset, SEEK_SET);
                 fread(temp_buf.data(), 1, temp_buf.size(), f);
 
+                if (dump_compress_data(temp_buf)) {
+                    LOG_INFO("Dumped compress data: compresscode.dat");
+                }
+
                 if (ctype == compress_type::deflate_c) {
                     // INFLATE IT!
-                    mz_stream stream;
+                    // Weird behavior, this is my way
+                    img.data[img.header.code_offset] = 12;
 
-                    stream.avail_in = temp_buf.size();
-                    stream.next_in = reinterpret_cast<const unsigned char*>(temp_buf.data());
+                    flate::bit_input input(reinterpret_cast<uint8_t*>(temp_buf.data()), temp_buf.size() * 8);
+                    flate::inflater inflate_machine(input);
 
-                    stream.next_out = reinterpret_cast<unsigned char*>(&img.data[img.header.code_offset]);
-                    stream.avail_out = img.header.code_size;
-                    stream.zalloc = nullptr;
-                    stream.zfree = nullptr;
-
-                    if (inflateInit2(&stream, -15) != MZ_OK) {
-                        LOG_ERROR("Can not intialize inflate stream");
-                    }
-
-                    stream.avail_in = temp_buf.size();
-                    stream.next_in = reinterpret_cast<const unsigned char*>(temp_buf.data());
-
-                    stream.next_out = reinterpret_cast<unsigned char*>(&img.data[img.header.code_offset]);
-                    stream.avail_out = img.header.code_size;
-
-                    auto res = inflate(&stream, Z_NO_FLUSH);
-
-                    if (res != MZ_OK) {
-                        LOG_ERROR("Inflate chunk failed! Code: {}", res);
-                    };
-
-                    inflateEnd(&stream);
+                    inflate_machine.init();
+                    inflate_machine.read(reinterpret_cast<uint8_t*>(&img.data[img.header.code_offset]),
+                                         0x100000);
                 } else {
                     auto temp_stream = std::make_shared<std::istringstream>();
                     temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
@@ -338,8 +348,6 @@ namespace eka2l1 {
                 fread(img.data.data(), 1, img.data.size(), f);
             }
 
-            eka2l1::dump_data("Image data", std::vector<uint8_t>(img.data.begin(), img.data.end()));
-
             switch (img.header.cpu) {
             case eka2_cpu::armv5:
                 LOG_INFO("Detected: ARMv5");
@@ -355,6 +363,7 @@ namespace eka2l1 {
                 break;
             }
 
+            eka2l1::dump_data("Image data", std::vector<uint8_t>(img.data.begin(), img.data.end()));
 
             //LOG_TRACE("Code size: 0x{:x}, Text size: 0x{:x}.", img.header.code_size, img.header.text_size);
 

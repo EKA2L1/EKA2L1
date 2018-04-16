@@ -28,8 +28,8 @@ namespace eka2l1 {
 
         // Represent an encoding
         struct encoding {
-            int lit_len[ENCODING_LITERALS];
-            int dist[ENCODING_DISTS];
+            uint32_t lit_len[ENCODING_LITERAL_LEN];
+            uint32_t dist[ENCODING_DISTS];
         };
 
         class bit_output {
@@ -81,10 +81,10 @@ namespace eka2l1 {
             bool huffman(const int* freq, uint32_t num_codes, int* huffman);
             void encoding(const int* huffman, uint32_t num_codes, int* encode_tab);
             void decoding(const int* huffman, uint32_t num_codes, uint32_t* decode_tree,int sym_base = 0);
-            bool valid(const int* huffman,int num_codes);
+            bool valid(const uint32_t* huffman,int num_codes);
 
-            void externalize(bit_output& aOutput,const uint32_t* huff_man, uint32_t num_codes);
-            void externalize(bit_input& aInput, uint32_t* huffman,int num_codes);
+            void externalize(bit_output& output,const int* huff_man, uint32_t num_codes);
+            void internalize(bit_input& input, uint32_t* huffman,int num_codes);
         }
 
         enum {
@@ -104,11 +104,12 @@ namespace eka2l1 {
             uint8_t huff[INFLATER_BUF_SIZE + INFLATER_SAFE_ZONE];  // huffman data
 
             int inflate();
-            void init();
 
         public:
             inflater(bit_input& input);
             ~inflater() {}
+
+            void init();
 
             int read(uint8_t* buf, size_t rlen);
             int skip(int len);
