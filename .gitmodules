@@ -7,3 +7,6 @@
 [submodule "src/external/glfw"]
 	path = src/external/glfw
 	url = https://github.com/glfw/glfw
+[submodule "src/external/capstone"]
+	path = src/external/capstone
+	url = https://github.com/aquynh/capstone

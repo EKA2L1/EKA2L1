@@ -118,18 +118,20 @@ namespace eka2l1 {
         // The import address table will contains the address of all these
         // stubs
         // I don't know if it will work, but probally
-        bool import_libs(eka2img* img, uint32_t rtcode_addr) {
+        uint32_t import_libs(eka2img* img, uint32_t rtcode_addr) {
             // Fill text segment with stub
             uint32_t stub_ptr = rtcode_addr + img->header.code_size;
             uint32_t stub_size = 0;
             std::vector<uint32_t> iat_addresses;
 
+            LOG_ERROR("Start writing stubs at: 0x{:x}", stub_ptr);
+
             for (auto& import_entry: img->import_section.imports) {
                 for (auto& oridinal: import_entry.ordinals) {
                     import_func(ptr<uint32_t>(stub_ptr), oridinal);
                     iat_addresses.push_back(stub_ptr);
-                    stub_ptr += 3;
-                    stub_size += 3;
+                    stub_ptr += 12;
+                    stub_size += 12;
                 }
             }
 
@@ -145,11 +147,11 @@ namespace eka2l1 {
             return stub_size;
         }
 
-        bool import_exe_image(eka2img* img) {
+        bool import_exe_image(eka2img* img) {            
             // Map the memory to store the text, data and import section
             ptr<void> asmdata =
                     core_mem::map(RAM_CODE_ADDR, img->uncompressed_size,
-                    core_mem::prot::read_write_exec);
+                    prot::read_write_exec);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
@@ -159,6 +161,8 @@ namespace eka2l1 {
 
             rtdata_addr = import_libs(img, rtcode_addr);
             rtdata_addr += rtcode_addr + img->header.code_size;
+
+            LOG_INFO("Writing data at offset: 0x{:x}", rtdata_addr);
 
             // Ram code address is the run time address of the code
             uint32_t code_delta = rtcode_addr - img->header.code_base;
@@ -368,8 +372,6 @@ namespace eka2l1 {
                 LOG_INFO("Invalid cpu specified in EKA2 Image Header. Maybe x86 or undetected");
                 break;
             }
-
-            eka2l1::dump_data("Image data", std::vector<uint8_t>(img.data.begin(), img.data.end()));
 
             //LOG_TRACE("Code size: 0x{:x}, Text size: 0x{:x}.", img.header.code_size, img.header.text_size);
 

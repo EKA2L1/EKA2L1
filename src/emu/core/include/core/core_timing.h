@@ -73,6 +73,7 @@ namespace eka2l1 {
 
         void set_clock_frequency_mhz(int cpu_mhz);
         uint32_t get_clock_frequency_mhz();
+        int get_downcount();
 
         extern int slice_len;
     }

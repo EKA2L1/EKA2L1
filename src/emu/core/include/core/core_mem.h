@@ -50,16 +50,6 @@ namespace eka2l1 {
             return reinterpret_cast<T*>(&memory[addr]);
         }
 
-        enum class prot {
-            none = 0,
-            read = 1,
-            write = 2,
-            exec = 3,
-            read_write = 4,
-            read_exec = 5,
-            read_write_exec = 6
-        };
-
         // Map an Symbian-address
         ptr<void> map(address addr, size_t size, prot cprot);
         int      change_prot(address addr, size_t size, prot nprot);

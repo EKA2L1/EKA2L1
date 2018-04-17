@@ -62,11 +62,11 @@ namespace eka2l1 {
 
 #ifndef WIN32
             memory = mem(static_cast<uint8_t*>
-                            (mmap(nullptr, len, PROT_NONE,
+                            (mmap(nullptr, len, PROT_READ,
                                   MAP_ANONYMOUS | MAP_PRIVATE,0, 0)), _free_mem);
 #else
             memory = mem(static_cast<uint8_t*>
-                            (VirtualAlloc(nullptr, len, MEM_REVERSE, PAGE_NOACCESS), _free_mem);
+                            (VirtualAlloc(nullptr, len, MEM_REVERSE, PAGE_READONLY), _free_mem);
 #endif
 
             LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
@@ -80,9 +80,9 @@ namespace eka2l1 {
 
 #ifdef WIN32
             DWORD old_protect = 0;
-            const BOOL res = VirtualProtect(memory.get(), page_size, PAGE_NOACCESS, &old_protect);
+            const BOOL res = VirtualProtect(memory.get(), page_size, PAGE_READONLY, &old_protect);
 #else
-            mprotect(memory.get(), page_size, PROT_NONE);
+            mprotect(memory.get(), page_size, PROT_READ);
 #endif
         }
 
@@ -136,52 +136,6 @@ namespace eka2l1 {
            const auto& first_page = allocated_pages.begin() + page;
            const auto& last_page = std::find_if(first_page, end_heap_page, different_gen);
            std::fill(first_page, last_page, 0);
-        }
-
-        int translate_protection(prot cprot) {
-            int tprot = 0;
-
-            if (cprot == prot::none) {
-#ifndef WIN32
-                tprot = PROT_NONE;
-#else
-                tprot = PAGE_NOACCESS;
-#endif
-            } else if (cprot == prot::read) {
-#ifndef WIN32
-                tprot = PROT_READ;
-#else
-                tprot = PAGE_READONLY;
-#endif
-            } else if (cprot == prot::exec) {
-#ifndef WIN32
-                tprot = PROT_EXEC;
-#else
-                tprot = PAGE_EXECUTE;
-#endif
-            } else if (cprot == prot::read_write) {
-#ifndef WIN32
-                tprot = PROT_READ | PROT_WRITE;
-#else
-                tprot = PAGE_READWRITE;
-#endif
-            } else if (cprot == prot::read_exec) {
-#ifndef WIN32
-                tprot = PROT_READ | PROT_EXEC;
-#else
-                tprot = PAGE_EXECUTE_READ;
-#endif
-            } else if (cprot == prot::read_write_exec) {
-#ifndef WIN32
-                tprot = PROT_READ | PROT_WRITE | PROT_EXEC;
-#else
-                tprot = PAGE_EXECUTE_READWRITE;
-#endif
-            } else {
-                tprot = -1;
-            }
-
-            return tprot;
         }
 
         // Map dynamicly still fine. As soon as user call IME_RANGE,

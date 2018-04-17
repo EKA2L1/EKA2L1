@@ -85,6 +85,10 @@ namespace eka2l1 {
             return event_types.size() - 1;
         }
 
+        int get_downcount() {
+            return downcount;
+        }
+
         void init() {
             downcount = MAX_SLICE_LENGTH;
             slice_len = MAX_SLICE_LENGTH;

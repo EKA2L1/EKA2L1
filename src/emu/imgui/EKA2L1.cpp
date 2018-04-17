@@ -14,6 +14,8 @@
 #include <core/core_arm.h>
 #include <core/core_mem.h>
 
+#include <disasm/disasm.h>
+
 static void glfw_err_callback(int err, const char* des){
     std::cout << err << ": " << des << std::endl;
 }
@@ -46,6 +48,8 @@ namespace eka2l1 {
 
             eka2l1::core_mem::init();
             eka2l1::core_timing::init();
+            eka2l1::core_arm::init(core_arm::unicorn);
+            eka2l1::disasm::init();
 
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
         }
@@ -58,6 +62,8 @@ namespace eka2l1 {
 
             eka2l1::core_mem::shutdown();
             eka2l1::core_timing::shutdown();
+            eka2l1::core_arm::shutdown();
+            eka2l1::disasm::shutdown();
 
             glfwTerminate();
         }
@@ -65,6 +71,10 @@ namespace eka2l1 {
         void eka2l1_inst::run() {
             auto install_finished = loader::parse_sis("/home/dtt2502/Miscs/super_miners.sis");
             auto img = loader::load_eka2img("/home/dtt2502/Miscs/EKA2L1HW.exe");
+
+            LOG_INFO("Dumping RAM code memory");
+
+            eka2l1::dump_data_map("Memory", &core_mem::memory[0x70000000], 0xFFFFFFF, 0x70000000);
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();

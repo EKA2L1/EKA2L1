@@ -17,15 +17,15 @@ namespace eka2l1 {
 
         void step();
 
-        uint64_t get_reg(size_t idx);
+        uint32_t get_reg(size_t idx);
         uint64_t get_sp();
         uint64_t get_pc();
-        uint128_t get_vfp(size_t idx);
+        uint64_t get_vfp(size_t idx);
 
-        void set_reg(size_t idx, uint64_t val);
+        void set_reg(size_t idx, uint32_t val);
         void set_pc(uint64_t val);
         void set_lr(uint64_t val);
-        void set_vfp(size_t idx, uint128_t val);
+        void set_vfp(size_t idx, uint64_t val);
 
         uint32_t get_cpsr();
 

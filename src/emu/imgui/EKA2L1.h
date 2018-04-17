@@ -17,18 +17,30 @@ namespace eka2l1 {
 
             MemoryEditor editor;
             std::string name;
-            std::vector<uint8_t> data;
+            uint8_t* ptr;
+            size_t size;
+            size_t start_off = 0;
 
             void set_name(const std::string& new_name) override {
                 name = new_name;
             }
 
             void set_data(std::vector<uint8_t>& new_data) override {
-                data = new_data;
+                ptr = new_data.data();
+                size = new_data.size();
+            }
+
+            void set_data_map(uint8_t* dptr, size_t psize) override {
+                ptr = dptr;
+                size = psize;
+            }
+
+            void set_start_off(size_t stoff) override {
+                start_off = stoff;
             }
 
             void draw() override {
-                editor.DrawWindow(name.c_str(), data.data(), data.size());
+                editor.DrawWindow(name.c_str(), ptr, size, start_off);
             }
         };
 
