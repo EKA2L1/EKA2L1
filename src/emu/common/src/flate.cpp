@@ -691,22 +691,6 @@ namespace eka2l1 {
 
             huffman::decoding(reinterpret_cast<int*>(encode.lit_len), ENCODING_LITERAL_LEN, reinterpret_cast<uint32_t*>(encode.lit_len));
             huffman::decoding(reinterpret_cast<int*>(encode.dist), ENCODING_DISTS, reinterpret_cast<uint32_t*>(encode.dist), DEFLATE_DIST_CODE_BASE);
-<<<<<<< HEAD
-
-            for (uint32_t i = 0; i < ENCODING_DISTS; i++) {
-                std::cout << encode.dist[i] << " ";
-            }
-
-            std::cout << std::endl;
-
-            for (uint32_t i = 0; i < ENCODING_LITERAL_LEN; i++) {
-                std::cout << encode.lit_len[i] << " ";
-            }
-
-            std::cout << std::endl;
-
-=======
->>>>>>> origin/master
         }
 
         int inflater::read(uint8_t* buf, size_t rlen) {
