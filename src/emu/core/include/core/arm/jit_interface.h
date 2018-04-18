@@ -32,7 +32,8 @@ namespace eka2l1 {
             virtual void set_pc(uint64_t val) = 0;
             virtual void set_lr(uint64_t val);
             virtual void set_vfp(size_t idx, uint64_t val) = 0;
-
+            virtual void set_entry_point(address ep) = 0;
+            virtual address get_entry_point() = 0;
             virtual uint32_t get_cpsr() = 0;
 
             virtual void save_context(thread_context& ctx) = 0;

@@ -7,6 +7,11 @@ namespace eka2l1 {
     namespace arm {
         class jit_unicorn: public jit_interface {
             uc_engine* engine;
+            address epa;
+
+        private:
+            bool execute_instructions(int num_instructions);
+
         public:
             jit_unicorn();
             ~jit_unicorn();
@@ -30,6 +35,9 @@ namespace eka2l1 {
 
             void save_context(thread_context& ctx) override;
             void load_context(const thread_context& ctx) override;
+
+            void set_entry_point(address ep) override;
+            address get_entry_point() override;
         };
     }
 }

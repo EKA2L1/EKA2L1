@@ -63,12 +63,42 @@ namespace eka2l1 {
             uc_close(engine);
         }
 
-        void execute_instructions(uc_engine* engine, uint64_t pc, int num_instructions) {
-            uc_emu_start(engine, pc, 1ULL << 63, 0, num_instructions);
+        bool jit_unicorn::execute_instructions(int num_instructions) {
+            uint32_t pc = get_pc();
+            bool tm = thumb_mode(engine);
+            if (tm) {
+                pc |= 1;
+            }
+
+            uc_reg_write(engine, UC_ARM_REG_LR, &epa);
+
+            int err = uc_emu_start(engine, pc, 0, 0, 1);
+            pc = get_pc();
+
+            tm = thumb_mode(engine);
+
+            if (tm) {
+                pc |= 1;
+            }
+
+            err = uc_emu_start(engine, pc, epa & 0xfffffffe, 0, num_instructions);
+
+            assert(err == UC_ERR_OK);
+
+            pc = get_pc();
+
+            tm = thumb_mode(engine);
+
+            if (tm) {
+                pc |= 1;
+            }
+
+            return pc == epa;
         }
 
         void jit_unicorn::run() {
-            execute_instructions(engine, get_pc(), std::max(core_timing::get_downcount(), 0));
+            set_pc(epa);
+            execute_instructions(std::max(core_timing::get_downcount(), 0));
         }
 
         void jit_unicorn::stop() {
@@ -76,7 +106,7 @@ namespace eka2l1 {
         }
 
         void jit_unicorn::step() {
-            execute_instructions(engine, get_pc(), 1);
+            execute_instructions(1);
         }
 
         uint32_t jit_unicorn::get_reg(size_t idx) {
@@ -135,8 +165,20 @@ namespace eka2l1 {
             }
         }
 
-        void jit_unicorn::set_lr(uint64_t val) {
+        void jit_unicorn::set_entry_point(address ep) {
+            epa = ep;
+        }
 
+        address jit_unicorn::get_entry_point() {
+            return epa;
+        }
+
+        void jit_unicorn::set_lr(uint64_t val) {
+            auto err = uc_reg_write(engine, UC_ARM_REG_LR, &val);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("ARM PC failed to be set!");
+            }
         }
 
         void jit_unicorn::set_vfp(size_t idx, uint64_t val) {
