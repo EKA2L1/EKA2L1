@@ -7,6 +7,7 @@ add_library(common
     include/common/bytepair.h
     include/common/data_displayer.h
     include/common/flate.h
+    include/common/resource.h
     src/path.cpp
     src/log.cpp
     src/cvt.cpp

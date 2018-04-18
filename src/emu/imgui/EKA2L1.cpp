@@ -48,7 +48,6 @@ namespace eka2l1 {
 
             eka2l1::core_mem::init();
             eka2l1::core_timing::init();
-            eka2l1::core_arm::init(core_arm::unicorn);
             eka2l1::disasm::init();
 
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
@@ -62,7 +61,6 @@ namespace eka2l1 {
 
             eka2l1::core_mem::shutdown();
             eka2l1::core_timing::shutdown();
-            eka2l1::core_arm::shutdown();
             eka2l1::disasm::shutdown();
 
             glfwTerminate();
