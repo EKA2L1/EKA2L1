@@ -172,6 +172,8 @@ namespace eka2l1 {
              if (lhs.op == ss_expr_op::EPrimTypeString) {
                  return lhs.val.unicode_string == rhs.val.unicode_string;
              }
+
+             return false;
         }
 
         bool operator > (const sis_expression& lhs, const sis_expression& rhs) {
@@ -188,6 +190,8 @@ namespace eka2l1 {
              if (lhs.op == ss_expr_op::EPrimTypeString) {
                  return lhs.val.unicode_string > rhs.val.unicode_string;
              }
+
+             return false;
         }
 
         bool operator < (const sis_expression& lhs, const sis_expression& rhs) {
@@ -204,6 +208,8 @@ namespace eka2l1 {
              if (lhs.op == ss_expr_op::EPrimTypeString) {
                  return lhs.val.unicode_string < rhs.val.unicode_string;
              }
+
+             return false;
         }
 
         // Take two expression, return if logical and is bigger than 0 or not

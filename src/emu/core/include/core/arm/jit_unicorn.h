@@ -38,6 +38,9 @@ namespace eka2l1 {
 
             void set_entry_point(address ep) override;
             address get_entry_point() override;
+
+            void set_stack_top(address addr) override;
+            address get_stack_top() override;
         };
     }
 }

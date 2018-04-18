@@ -181,6 +181,25 @@ namespace eka2l1 {
             }
         }
 
+        void jit_unicorn::set_stack_top(address addr) {
+            auto err = uc_reg_write(engine, UC_ARM_REG_SP, &addr);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("ARM PC failed to be set!");
+            }
+        }
+
+        address jit_unicorn::get_stack_top() {
+            address addr = 0;
+            auto err = uc_reg_read(engine, UC_ARM_REG_SP, &addr);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("Failed to get ARM CPU stack top!");
+            }
+
+            return addr;
+        }
+
         void jit_unicorn::set_vfp(size_t idx, uint64_t val) {
 
         }

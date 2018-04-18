@@ -6,13 +6,9 @@
 
 #include <kernel/kernel_obj.h>
 #include <common/resource.h>
+#include <arm/jit_factory.h>
 
 namespace eka2l1 {
-    namespace arm {
-        class jit_interface;
-        using jitter = std::unique_ptr<jit_interface>;
-    }
-
     namespace kernel {
         using address = uint32_t;
         using thread_stack = common::resource<address>;
@@ -44,14 +40,18 @@ namespace eka2l1 {
             thread_state              state;
             arm::jitter               cpu;
             std::mutex                mut;
-            std::conditional_variable todo;
+            std::condition_variable todo;
 
             // Threads are stored in a priority queue. Thread with
             // higher priority will be taken first and run.
             thread_priority priority;
             thread_stack_ptr stack;
+
+            size_t stack_size;
         public:
-            thread(const address epa);
+            thread() = delete;
+            thread(const std::string& name, const address epa, const size_t stack_size,
+                   arm::jitter_arm_type jit_type = arm::unicorn);
 
             // Physically we can't compare thread.
             bool operator > (const thread& rhs);
@@ -60,5 +60,7 @@ namespace eka2l1 {
             bool operator >= (const thread& rhs);
             bool operator <= (const thread& rhs);
         };
+
+        using thread_ptr = std::shared_ptr<kernel::thread>;
     }
 }

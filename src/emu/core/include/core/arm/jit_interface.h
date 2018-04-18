@@ -38,6 +38,9 @@ namespace eka2l1 {
 
             virtual void save_context(thread_context& ctx) = 0;
             virtual void load_context(const thread_context& ctx) = 0;
+
+            virtual void set_stack_top(address addr) = 0;
+            virtual address get_stack_top() = 0;
         };
     }
 }

@@ -1,10 +1,13 @@
-#pragma one
+#pragma once
 
 #include <common/types.h>
 #include <memory>
 #include <functional>
 
 namespace eka2l1 {
+    template <class T>
+    class ptr;
+
     namespace loader {
         class eka2img;
     }
@@ -24,9 +27,6 @@ namespace eka2l1 {
         UMEM          = 0xC8000000,
         KERNELMAPPING = 0xC9200000
     };
-
-    template <class T>
-    class ptr;
 
     // The core memory
     namespace core_mem {

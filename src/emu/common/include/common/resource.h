@@ -6,7 +6,7 @@ namespace eka2l1 {
     namespace common {
 
         // Custom runtime RAII
-    \   template <typename T>
+        template <typename T>
         struct resource {
             using deleter = std::function<void(T)>;
 
