@@ -2,9 +2,6 @@
 #include <common/log.h>
 #include <common/algorithm.h>
 
-
-#include <iostream>
-
 namespace eka2l1 {
     namespace flate {
 
@@ -348,19 +345,13 @@ namespace eka2l1 {
 
                 sym_base = (sym_base << 17) + (huff_term << 16);
 
-                std::cout << "DUMPING LEN: " << std::endl;
-
                 for (i = 0; i < num_codes; ++i) {
                     uint32_t len= (uint8_t)decode_tree[i];
-
-                    std::cout << len << " ";
-
+                    
                     if (len)
                         *--lvl[len-1] |= (i << 17) + sym_base;
                 }
-
-                std::cout << std::endl;
-
+                
                 if (codes == 1) {
                     uint8_t term = decode_tree[0] >> 16;
                     decode_tree[0] = term |(term<<16);
@@ -700,6 +691,7 @@ namespace eka2l1 {
 
             huffman::decoding(reinterpret_cast<int*>(encode.lit_len), ENCODING_LITERAL_LEN, reinterpret_cast<uint32_t*>(encode.lit_len));
             huffman::decoding(reinterpret_cast<int*>(encode.dist), ENCODING_DISTS, reinterpret_cast<uint32_t*>(encode.dist), DEFLATE_DIST_CODE_BASE);
+<<<<<<< HEAD
 
             for (uint32_t i = 0; i < ENCODING_DISTS; i++) {
                 std::cout << encode.dist[i] << " ";
@@ -713,6 +705,8 @@ namespace eka2l1 {
 
             std::cout << std::endl;
 
+=======
+>>>>>>> origin/master
         }
 
         int inflater::read(uint8_t* buf, size_t rlen) {
