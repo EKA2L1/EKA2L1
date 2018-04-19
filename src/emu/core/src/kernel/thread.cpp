@@ -5,11 +5,32 @@
 
 namespace eka2l1 {
     namespace kernel {
+        int caculate_thread_priority(thread_priority pri) {
+            const uint8_t pris[] = {
+                1, 1,  2,  3,  4,  5,  22,  0,
+                3, 5,  6,  7,  8,  9,  22,  0,
+                3, 10, 11, 12, 13, 14, 22,  0,
+                3, 17, 18, 19, 20, 22, 23,  0,
+                9, 15, 16, 21, 24, 25, 28,  0,
+                9, 15, 16, 21, 24, 25, 28,  0,
+                9, 15, 16, 21, 24, 25, 28,  0,
+                18, 26, 27, 28, 29, 30, 31, 0
+            };
+
+            // The owning process, in this case is always have the priority
+            // of 3 (foreground)
+
+            int idx = 3 << 3 + (int)pri;
+            return pris[idx];
+        }
+
         thread::thread(const std::string& name, const address epa,  const size_t stack_size,
-                       arm::jitter_arm_type jit_type)
+                       thread_priority pri ,arm::jitter_arm_type jit_type)
             : kernel_obj(name), stack_size(stack_size) {
             cpu = arm::create_jitter(jit_type);
             cpu->set_entry_point(epa);
+
+            priority = caculate_thread_priority(pri);
 
             const thread_stack::deleter stack_deleter = [](address stack) {
                    core_mem::free(stack);

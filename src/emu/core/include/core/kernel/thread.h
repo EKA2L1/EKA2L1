@@ -7,6 +7,7 @@
 #include <kernel/kernel_obj.h>
 #include <common/resource.h>
 #include <arm/jit_factory.h>
+#include <ptr.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -17,6 +18,7 @@ namespace eka2l1 {
         enum class thread_state {
             run,
             wait,
+            ready,
             stop
         };
 
@@ -42,16 +44,26 @@ namespace eka2l1 {
             std::mutex                mut;
             std::condition_variable todo;
 
-            // Threads are stored in a priority queue. Thread with
-            // higher priority will be taken first and run.
-            thread_priority priority;
+            int priority;
             thread_stack_ptr stack;
 
             size_t stack_size;
         public:
             thread() = delete;
             thread(const std::string& name, const address epa, const size_t stack_size,
+                   thread_priority pri = priority_normal,
                    arm::jitter_arm_type jit_type = arm::unicorn);
+
+            thread_state current_state() const {
+                return state;
+            }
+
+            thread_priority current_priority() const {
+                return priority;
+            }
+
+            // Run without notice the order
+            void run_ignore(size_t arg_len, ptr<void> args);
 
             // Physically we can't compare thread.
             bool operator > (const thread& rhs);
