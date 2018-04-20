@@ -10,9 +10,7 @@
 #include "window.h"
 
 #include <common/data_displayer.h>
-#include <core/core_timing.h>
-#include <core/core_arm.h>
-#include <core/core_mem.h>
+#include <core/core.h>
 
 #include <disasm/disasm.h>
 
@@ -46,10 +44,7 @@ namespace eka2l1 {
 
             // Intialize core
 
-            eka2l1::core_mem::init();
-            eka2l1::core_timing::init();
-            eka2l1::disasm::init();
-
+            eka2l1::core::init();
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
         }
 
@@ -58,24 +53,20 @@ namespace eka2l1 {
             eka2l1::imgui::free_gl();
 
             // FBI SHUT IT DOWN
-
-            eka2l1::core_mem::shutdown();
-            eka2l1::core_timing::shutdown();
-            eka2l1::disasm::shutdown();
+            eka2l1::core::shutdown();
 
             glfwTerminate();
         }
 
         void eka2l1_inst::run() {
-            auto install_finished = loader::parse_sis("/home/dtt2502/Miscs/super_miners.sis");
-            auto img = loader::load_eka2img("/home/dtt2502/Miscs/EKA2L1HW.exe");
-
+            eka2l1::core::load("EKA2L1HW", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
             LOG_INFO("Dumping RAM code memory");
-
             eka2l1::dump_data_map("Memory", &core_mem::memory[0x70000000], 0xFFFFFFF, 0x70000000);
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
+
+                eka2l1::core::loop();
 
                 eka2l1::imgui::update_io(emu_win);
                 eka2l1::imgui::newframe_gl(emu_win);

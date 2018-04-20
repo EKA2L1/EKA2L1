@@ -326,7 +326,7 @@ namespace eka2l1 {
                       + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
 
                 fseek(f, img.header.code_offset, SEEK_SET);
-                fread(temp_buf.data(), 1, 0x10000, f);
+                fread(temp_buf.data(), 1, temp_buf.size(), f);
 
                 if (dump_compress_data(temp_buf)) {
                     LOG_INFO("Dumped compress data: compresscode.dat");

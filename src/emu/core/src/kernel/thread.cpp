@@ -21,7 +21,7 @@ namespace eka2l1 {
             // The owning process, in this case is always have the priority
             // of 3 (foreground)
 
-            int idx = 3 << 3 + (int)pri;
+            int idx = (3 << 3) + (int)pri;
             return pris[idx];
         }
 

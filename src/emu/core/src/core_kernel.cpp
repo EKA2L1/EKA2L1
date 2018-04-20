@@ -22,6 +22,11 @@ namespace eka2l1 {
             thr_sch = std::make_shared<kernel::thread_scheduler>(100);
         }
 
+        void shutdown() {
+            thr_sch.reset();
+            crr_uid.store(0);
+        }
+
         kernel::uid next_uid() {
             crr_uid++;
             return crr_uid.load();

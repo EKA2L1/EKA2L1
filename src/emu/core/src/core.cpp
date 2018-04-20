@@ -5,8 +5,7 @@
 
 namespace eka2l1 {
     namespace core {
-        gui_rendering_func grfunc;
-        process crr_process;
+        std::shared_ptr<process> crr_process;
 
         void init() {
             core_timing::init();
@@ -17,13 +16,9 @@ namespace eka2l1 {
         void load(const std::string& name, uint64_t id, const std::string& path) {
             loader::eka2img img = loader::load_eka2img(path);
 
-            //crr_process = process(id,name, img.rt_code_addr + img.header.entry_point,
-            //                      img.header.heap_size_min, img.header.heap_size_max,
-            //                      img.header.stack_size);
-        }
-
-        void register_gui_rendering(gui_rendering_func func) {
-            grfunc = func;
+            crr_process = std::make_shared<process>(id,name, img.rt_code_addr + img.header.entry_point,
+                                  img.header.heap_size_min, img.header.heap_size_max,
+                                  img.header.stack_size);
         }
 
         int loop() {
@@ -31,12 +26,17 @@ namespace eka2l1 {
                 core_timing::idle();
                 core_timing::advance();
             } else {
+                core_timing::idle();
                 core_timing::advance();
             }
+
+            return 1;
         }
 
         void shutdown() {
-
+            core_timing::shutdown();
+            core_kernel::shutdown();
+            core_mem::shutdown();
         }
     }
 }

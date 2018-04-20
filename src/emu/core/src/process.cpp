@@ -9,7 +9,6 @@ namespace eka2l1 {
         : uid(uid), process_name(process_name),
           prthr(process_name, epa, stack_size, min_heap_size, max_heap_size,
                 nullptr, kernel::priority_normal, arm_type) {
-        core_kernel::add_thread(&prthr);
     }
 
     // Create a new thread and run
