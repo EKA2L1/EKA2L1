@@ -162,6 +162,9 @@ namespace eka2l1 {
             rtdata_addr = import_libs(img, rtcode_addr);
             rtdata_addr += rtcode_addr + img->header.code_size;
 
+            img->rt_code_addr = rtcode_addr;
+            img->rt_data_addr = rtdata_addr;
+
             LOG_INFO("Writing data at offset: 0x{:x}", rtdata_addr);
 
             // Ram code address is the run time address of the code

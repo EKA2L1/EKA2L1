@@ -30,6 +30,7 @@ namespace eka2l1 {
             ready_threads.pop();
             take_thread->current_state(thread_state::run);
             running_threads.emplace(take_thread->unique_id(), take_thread);
+            crr_running_thread = take_thread;
             take_thread->run_ignore();
         }
 
@@ -45,6 +46,7 @@ namespace eka2l1 {
             thread* thr_real = thr->second;
 
             thr_real->state = thread_state::run;
+            crr_running_thread = thr_real;
             thr_real->run_ignore();
         }
 

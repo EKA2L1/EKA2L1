@@ -46,6 +46,9 @@ namespace eka2l1 {
             std::mutex                mut;
             std::condition_variable todo;
 
+            // Thread context to save when suspend the execution
+            arm::jit_interface::thread_context ctx;
+
             int priority;
             thread_stack_ptr stack;
 
@@ -55,8 +58,13 @@ namespace eka2l1 {
             size_t heap_addr;
             void* usrdata;
 
+        protected:
+            // Run without notice the order
+            void run_ignore();
+            void stop_ignore();
+
         public:
-            thread() = delete;
+            thread();
             thread(const std::string& name, const address epa, const size_t stack_size,
                    const size_t min_heap_size, const size_t max_heap_size,
                    void* usrdata = nullptr,
@@ -75,10 +83,8 @@ namespace eka2l1 {
                 state = st;
             }
 
-            // Run without notice the order
-            void run_ignore();
-
-            void stop_ignore();
+            bool run();
+            bool suspend();
 
             // Physically we can't compare thread.
             bool operator > (const thread& rhs);

@@ -30,9 +30,6 @@ namespace eka2l1 {
             void yeild_thread();
             void wake_thread(uint64_t id);
 
-            kernel::thread* current_running_threads() const {
-                return crr_running_thread;
-            }
 
         public:
             // The thread scheduler register and schedule an event to the timing,
@@ -43,6 +40,10 @@ namespace eka2l1 {
 
             bool schedule(kernel::thread* thread);
             bool sleep(kernel::thread* thread, uint32_t sl_time);
+
+            kernel::thread* current_running_thread() const {
+                return crr_running_thread;
+            }
         };
     }
 }

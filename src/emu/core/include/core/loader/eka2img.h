@@ -139,6 +139,9 @@ namespace eka2l1 {
             eka2_reloc_section code_reloc_section;
             eka2_reloc_section data_reloc_section;
 
+            uint32_t rt_code_addr;
+            uint32_t rt_data_addr;
+
             bool has_extended_header = false;
         };
 

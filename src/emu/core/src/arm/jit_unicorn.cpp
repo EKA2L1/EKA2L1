@@ -42,6 +42,33 @@ void intr_hook(uc_engine* uc, uint32_t in_no, void* user_data) {
 
 namespace eka2l1 {
     namespace arm {
+        void enable_vfp_fp(uc_engine* en) {
+            uint64_t c1c0  = 0;
+            uc_err err = uc_reg_read(en, UC_ARM_REG_C1_C0_2, &c1c0);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("Can't get c1c0, set vfp failed!");
+                return;
+            }
+
+            c1c0 |= 0xF << 20;
+            err = uc_reg_write(en, UC_ARM_REG_C1_C0_2, &c1c0);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("Can't set c1c0, set vfp failed!");
+                return;
+            }
+            // Enable fpu
+            const uint64_t fpexc = 0xF0000000;
+
+            err = uc_reg_write(en, UC_ARM_REG_FPEXC, &fpexc);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("Can't set fpexc, set floating point precison failed!");
+                return;
+            }
+        }
+
         jit_unicorn::jit_unicorn() {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);
@@ -57,6 +84,8 @@ namespace eka2l1 {
             // Haha
             err = uc_mem_map_ptr(engine, 0, common::GB(4), UC_PROT_ALL, core_mem::memory.get());
                 assert(err == UC_ERR_OK);
+
+            enable_vfp_fp(engine);
         }
 
         jit_unicorn::~jit_unicorn() {
@@ -145,6 +174,7 @@ namespace eka2l1 {
 
         uint64_t jit_unicorn::get_vfp(size_t idx) {
             uint64_t temp;
+
             return temp;
         }
 
@@ -209,11 +239,21 @@ namespace eka2l1 {
         }
 
         void jit_unicorn::save_context(thread_context& ctx) {
+            for (auto i = 0; i < ctx.cpu_registers.size(); i++) {
+                ctx.cpu_registers[i] = get_reg(i);
+            }
 
+            ctx.pc = get_pc();
+            ctx.sp = get_sp();
         }
 
         void jit_unicorn::load_context(const thread_context& ctx) {
+            set_pc(ctx.pc);
+            //set_sp(ctx.sp);
 
+            for (auto i = 0; i <ctx.cpu_registers.size(); i++) {
+                set_reg(i, ctx.cpu_registers[i]);
+            }
         }
     }
 }
