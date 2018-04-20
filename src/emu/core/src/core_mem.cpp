@@ -36,6 +36,9 @@ namespace eka2l1 {
         mem       memory;
         allocated allocated_pages;
 
+        address   crr_heap;
+        size_t    crr_heap_size;
+
         void _free_mem(uint8_t* dt) {
 #ifndef WIN32
             munmap(dt, common::GB(1));
@@ -186,6 +189,37 @@ namespace eka2l1 {
 #else
             return VirtualFree(addr.get(), size, MEM_DECOMMIT);
 #endif
+        }
+
+        // Alloc from thread heap
+        address heap_alloc(size_t size) {
+            const size_t page_count = (size + (page_size - 1)) / page_size;
+
+            const size_t page_heap_start = (crr_heap / page_size)+ 1;
+            const size_t page_heap_end = (crr_heap + crr_heap_size / page_size) - 1;
+
+            const auto start_heap_page = allocated_pages.begin() + page_heap_start;
+            const auto end_heap_page = allocated_pages.begin() + page_heap_end;
+
+            const auto& free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
+
+            if (free_block != allocated_pages.end()) {
+                const size_t block_page_index = free_block -allocated_pages.begin();
+                const address addr = static_cast<address>(block_page_index * page_size);
+
+                alloc_inner(addr, page_count, free_block);
+
+                return addr;
+            }
+
+            return 0;
+        }
+
+        // Set the current thread heap region, specif where heap
+        // alloc must do allocation
+        void set_crr_thread_heap_region(const address where, size_t size) {
+            crr_heap = where;
+            crr_heap_size = std::min((size_t)DLL_STATIC_DATA - where, size);
         }
     }
 

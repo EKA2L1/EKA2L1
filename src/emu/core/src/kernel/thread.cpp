@@ -1,4 +1,5 @@
 #include <kernel/thread.h>
+#include <common/log.h>
 #include <core_mem.h>
 #include <core_kernel.h>
 #include <ptr.h>
@@ -25,8 +26,11 @@ namespace eka2l1 {
         }
 
         thread::thread(const std::string& name, const address epa,  const size_t stack_size,
+                       const size_t min_heap_size, const size_t max_heap_size,
+                       void* usrdata,
                        thread_priority pri ,arm::jitter_arm_type jit_type)
-            : kernel_obj(name), stack_size(stack_size) {
+            : kernel_obj(name), stack_size(stack_size), min_heap_size(min_heap_size),
+              max_heap_size(max_heap_size), usrdata(usrdata) {
             cpu = arm::create_jitter(jit_type);
             cpu->set_entry_point(epa);
 
@@ -49,8 +53,25 @@ namespace eka2l1 {
 
             cpu->set_stack_top(stack_top);
 
+            heap_addr = core_mem::alloc(1);
+
+            if (!heap_addr) {
+                LOG_ERROR("No more heap for thread!");
+            }
+
+            // Set the thread region: where to alloc memory
+            core_mem::set_crr_thread_heap_region(heap_addr, max_heap_size);
+
             // Add the thread to the kernel management unit
             core_kernel::add_thread(this);
+        }
+
+        void thread::run_ignore() {
+            cpu->run();
+        }
+
+        void thread::stop_ignore() {
+            cpu->stop();
         }
     }
 }

@@ -39,6 +39,8 @@ namespace eka2l1 {
         };
 
         class thread: public kernel_obj {
+            friend class thread_scheduler;
+
             thread_state              state;
             arm::jitter               cpu;
             std::mutex                mut;
@@ -48,9 +50,16 @@ namespace eka2l1 {
             thread_stack_ptr stack;
 
             size_t stack_size;
+            size_t min_heap_size, max_heap_size;
+
+            size_t heap_addr;
+            void* usrdata;
+
         public:
             thread() = delete;
             thread(const std::string& name, const address epa, const size_t stack_size,
+                   const size_t min_heap_size, const size_t max_heap_size,
+                   void* usrdata = nullptr,
                    thread_priority pri = priority_normal,
                    arm::jitter_arm_type jit_type = arm::unicorn);
 
@@ -58,12 +67,18 @@ namespace eka2l1 {
                 return state;
             }
 
-            thread_priority current_priority() const {
+            int current_priority() const {
                 return priority;
             }
 
+            void current_state(thread_state st) {
+                state = st;
+            }
+
             // Run without notice the order
-            void run_ignore(size_t arg_len, ptr<void> args);
+            void run_ignore();
+
+            void stop_ignore();
 
             // Physically we can't compare thread.
             bool operator > (const thread& rhs);

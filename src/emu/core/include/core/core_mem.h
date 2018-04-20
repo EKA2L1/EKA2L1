@@ -38,8 +38,16 @@ namespace eka2l1 {
         void init();
         void shutdown();
 
+        // Used for User to alloc freely in local data
         address alloc(size_t size);
         void free(address addr);
+
+        // Alloc from thread heap
+        address heap_alloc(size_t size);
+
+        // Set the current thread heap region, specify where heap
+        // alloc must do allocation
+        void set_crr_thread_heap_region(const address where, size_t size);
 
         template <typename T>
         T* get_addr(address addr) {

@@ -14,6 +14,7 @@ namespace eka2l1 {
                 const std::string& process_name);
 
         // Create a new thread and run
+        // No arguments provided
         bool run();
 
         // Step through instructions
