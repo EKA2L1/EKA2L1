@@ -63,6 +63,8 @@ namespace eka2l1 {
         void advance();
         void move_events();
 
+        void add_ticks(uint32_t ticks);
+
         void force_check();
 
         void idle(int max_idle = 0);

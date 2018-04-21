@@ -26,7 +26,6 @@ namespace eka2l1 {
                 core_timing::idle();
                 core_timing::advance();
             } else {
-                core_timing::idle();
                 core_timing::advance();
             }
 

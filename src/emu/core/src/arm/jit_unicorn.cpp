@@ -110,7 +110,7 @@ namespace eka2l1 {
                 pc |= 1;
             }
 
-            err = uc_emu_start(engine, pc, epa & 0xfffffffe, 0, num_instructions);
+            err = uc_emu_start(engine, pc, epa & 0xfffffffe, 0, num_instructions - 1);
 
             assert(err == UC_ERR_OK);
 
@@ -122,11 +122,12 @@ namespace eka2l1 {
                 pc |= 1;
             }
 
+            core_timing::add_ticks(num_instructions);
+
             return pc == epa;
         }
 
         void jit_unicorn::run() {
-            set_pc(epa);
             execute_instructions(std::max(core_timing::get_downcount(), 0));
         }
 

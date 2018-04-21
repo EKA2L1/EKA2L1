@@ -1,0 +1,5 @@
+include_directories(${GTEST_INCLUDE_DIR})
+set (CMAKE_CXX_STANDARD 14)
+#add_subdirectory(core)
+add_executable(ekatests tests.cpp core/core_timing.cpp)
+target_link_libraries(ekatests PRIVATE coretiming gmock)

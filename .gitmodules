@@ -10,3 +10,6 @@
 [submodule "src/external/capstone"]
 	path = src/external/capstone
 	url = https://github.com/aquynh/capstone
+[submodule "src/external/googletest"]
+	path = src/external/googletest
+	url = https://github.com/google/googletest

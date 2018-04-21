@@ -113,6 +113,10 @@ namespace eka2l1 {
             event_types.clear();
         }
 
+        void add_ticks(uint32_t ticks) {
+            downcount -= ticks;
+        }
+
         void schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata) {
             std::lock_guard<std::mutex> guard(mut);
             event evt;
