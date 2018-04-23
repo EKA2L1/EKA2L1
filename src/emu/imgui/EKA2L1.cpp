@@ -43,7 +43,6 @@ namespace eka2l1 {
             eka2l1::log::setup_log(debug_logger);
 
             // Intialize core
-
             eka2l1::core::init();
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
         }
@@ -59,9 +58,9 @@ namespace eka2l1 {
         }
 
         void eka2l1_inst::run() {
-            eka2l1::core::load("EKA2L1HW", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
-            LOG_INFO("Dumping RAM code memory");
-            eka2l1::dump_data_map("Memory", &core_mem::memory[0x70000000], 0xFFFFFFF, 0x70000000);
+            //eka2l1::core::load("EKA2L1HW", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
+            //LOG_INFO("Dumping RAM code memory");
+            //eka2l1::dump_data_map("Memory", &core_mem::memory[0x70000000], 0xFFFFFFF, 0x70000000);
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();

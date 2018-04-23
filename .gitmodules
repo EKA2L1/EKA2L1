@@ -13,3 +13,6 @@
 [submodule "src/external/googletest"]
 	path = src/external/googletest
 	url = https://github.com/google/googletest
+[submodule "src/external/Imgui-IGS-Snippets"]
+	path = src/external/Imgui-IGS-Snippets
+	url = https://github.com/gileoo/Imgui-IGS-Snippets

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <core/core_mem.h>
 #include <cstdint>
+#include "core_mem.h"
 
 namespace eka2l1 {
     // Symbian is 32 bit

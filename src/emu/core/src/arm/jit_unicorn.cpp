@@ -1,4 +1,5 @@
 #include <arm/jit_unicorn.h>
+#include <unicorn/unicorn.h>
 #include <common/types.h>
 #include <common/log.h>
 #include <common/algorithm.h>
@@ -6,8 +7,6 @@
 #include <core_timing.h>
 #include <ptr.h>
 #include <cassert>
-
-#include <unicorn/unicorn.h>
 
 bool thumb_mode(uc_engine *uc) {
     size_t mode = 0;
@@ -101,7 +100,7 @@ namespace eka2l1 {
 
             uc_reg_write(engine, UC_ARM_REG_LR, &epa);
 
-            int err = uc_emu_start(engine, pc, 0, 0, 1);
+            uc_err err = uc_emu_start(engine, pc, 0, 0, 1);
             pc = get_pc();
 
             tm = thumb_mode(engine);

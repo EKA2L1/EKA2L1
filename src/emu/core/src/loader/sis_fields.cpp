@@ -420,7 +420,7 @@ namespace eka2l1 {
                               compress_data.uncompressed_size);
 
             contents.controller = parse_controller();
-            assert(stream->tellg() == compress_data.uncompressed_size);
+            assert((uint64_t)stream->tellg() == compress_data.uncompressed_size);
 
             switch_stream();
 

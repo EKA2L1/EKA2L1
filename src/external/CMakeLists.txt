@@ -21,6 +21,14 @@ add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
 add_library(unicorn INTERFACE)
 
+add_library(imgui_igs
+	Imgui-IGS-Snippets/ImguiWindowsFileIO.hpp
+	Imgui-IGS-Snippets/ImguiWindowsFileIO.cpp)
+
+target_link_libraries(imgui_igs PRIVATE imgui)
+
+target_include_directories(imgui_igs PUBLIC Imgui-IGS-Snippets)
+
 if(APPLE)
 	target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/include")
 	target_link_libraries(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/lib/libunicorn.a")

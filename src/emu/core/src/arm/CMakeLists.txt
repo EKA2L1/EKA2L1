@@ -8,4 +8,9 @@ add_library(arm
 target_include_directories(arm PUBLIC ${CORE_INCLUDE_DIR})
 
 target_link_libraries(arm PUBLIC common)
-target_link_libraries(arm PRIVATE unicorn disasm coremem coretiming)
+target_link_libraries(arm 
+	PRIVATE 
+	disasm 
+	coremem 
+	coretiming
+	unicorn)
