@@ -1,2 +1,2 @@
-add_library(imguiio imguiio.cpp)
-target_link_libraries(imguiio PUBLIC glfw imgui common GL X11 glad)
+add_library(imgui_io imguiio.h imguiio.cpp)
+target_link_libraries(imgui_io PUBLIC glfw imgui common glad)

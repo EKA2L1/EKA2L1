@@ -3,7 +3,6 @@
 #include <loader/sis_script_interpreter.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <dirent.h>
 
 #include <fstream>
 

@@ -68,8 +68,8 @@ namespace eka2l1 {
                             (mmap(nullptr, len, PROT_READ,
                                   MAP_ANONYMOUS | MAP_PRIVATE,0, 0)), _free_mem);
 #else
-            memory = mem(static_cast<uint8_t*>
-                            (VirtualAlloc(nullptr, len, MEM_REVERSE, PAGE_READONLY), _free_mem);
+            memory = mem(reinterpret_cast<uint8_t*>
+                            (VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_READONLY), _free_mem));
 #endif
 
             LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
@@ -159,14 +159,14 @@ namespace eka2l1 {
             int res = 0;
 
 #ifdef WIN32
-            res = VirtualAlloc(real_address, size, MEM_COMMIT, tprot);
+            VirtualAlloc(real_address, size, MEM_COMMIT, tprot);
 #else
             res = mprotect(real_address, size, tprot);
-#endif
 
-            if (res == -1) {
-                LOG_ERROR("Can not map: 0x{:x}, size = {}", addr, size);
-            }
+			if (res == -1) {
+				LOG_ERROR("Can not map: 0x{:x}, size = {}", addr, size);
+			}
+#endif
 
             return ptr<void>(page_addr);
         }

@@ -12,5 +12,5 @@ add_executable(eka2l1_imgui EKA2L1.cpp
     main.cpp
     memory_editor.h)
 
-target_link_libraries(eka2l1_imgui PRIVATE imguirdr-gl imguiio
+target_link_libraries(eka2l1_imgui PRIVATE imguirdr-gl imgui_io
     imgui common imgui-logger coreloader core)

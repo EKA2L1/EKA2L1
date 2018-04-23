@@ -1,7 +1,13 @@
-#include "imguiio.h"
-
 #include <GLFW/glfw3.h>
+
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32 1
+#endif
+
+#include <GLFW/glfw3native.h>
+
 #include <imgui.h>
+#include "imguiio.h"
 
 namespace eka2l1 {
     namespace imgui {

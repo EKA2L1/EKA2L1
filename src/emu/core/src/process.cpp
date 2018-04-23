@@ -14,6 +14,6 @@ namespace eka2l1 {
     // Create a new thread and run
     // No arguments provided
     bool process::run() {
-        core_kernel::run_thread(prthr.unique_id());
+        return core_kernel::run_thread(prthr.unique_id());
     }
 }
