@@ -1,6 +1,7 @@
 add_subdirectory(opengl)
 add_subdirectory(io)
 add_subdirectory(logger)
+add_subdirectory(installer)
 
 add_executable(eka2l1_imgui EKA2L1.cpp
     EKA2L1.h
