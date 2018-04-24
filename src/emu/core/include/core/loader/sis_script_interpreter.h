@@ -21,8 +21,8 @@ namespace eka2l1 {
              std::function<bool(std::vector<uint8_t>)> show_text_func;
 
         public:
-             std::vector<uint8_t> get_small_file_buf(uint32_t data_idx);
-             void extract_file(const std::string& path, const uint32_t idx);
+             std::vector<uint8_t> get_small_file_buf(uint32_t data_idx,uint16_t crr_blck_idx);
+             void extract_file(const std::string& path, const uint32_t idx, uint16_t crr_blck_idx);
 
              explicit ss_interpreter();
              ss_interpreter(std::shared_ptr<std::istream> stream,
@@ -30,7 +30,7 @@ namespace eka2l1 {
                            sis_data inst_data,
                            sis_drive install_drv);
 
-             bool interpret(sis_install_block install_block);
+             bool interpret(sis_install_block install_block, uint16_t crr_blck_idx = 0);
              bool interpret() { return interpret(install_block); }
         };
     }

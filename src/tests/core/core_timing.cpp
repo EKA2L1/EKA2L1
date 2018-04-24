@@ -40,14 +40,12 @@ TEST(coreTimingTest, basicScheduling) {
     auto ioevt = core_timing::register_event("testIOEvent", std::bind(timed_io_callback, std::placeholders::_1));
     auto nopevt = core_timing::register_event("testNonEvent", std::bind(timed_nop_callback, std::placeholders::_1));
 
-    core_timing::advance();
-
     // Schedule: make sure those are executed correctly
     // No order, because the core timing of EKA2L1 doesn't use
     // a priority queue
-    core_timing::schedule_event(400, ioevt);
+    core_timing::schedule_event(25000, ioevt);
     core_timing::schedule_event(300, nopevt);
 
-    advance_and_check(400);
-    advance_and_check(300);
+    advance_and_check(5000);
+    advance_and_check(20000);
 }

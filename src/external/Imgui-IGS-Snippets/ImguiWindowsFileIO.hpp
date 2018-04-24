@@ -1,22 +1,23 @@
-
 #pragma once
 
 #include <string>
 #include <list>
 #include <vector>
 
-#include <imgui.h>
 //#include "../ImGuiGf/IconsFontAwesome.h" // <- note required. just comment if not available
 
 /** Show a file-io dialoge window, e.g. usable as file save and file close dialoge.
 */
+
+struct ImVec2;
+
 bool fileIOWindow(
     std::string& file_path,
     std::vector<std::string>& recently_used_files,
     const std::string& button_text,
-    std::vector<std::string> file_filter = {"*.*"}, 
-    bool ensure_file_exists = false,
-    ImVec2 size = ImVec2(420,240) );
+    std::vector<std::string> file_filter,
+    bool ensure_file_exists,
+    ImVec2& size);
 
 
 
@@ -25,8 +26,8 @@ bool fileIOWindow(
 class MiniPath
 {
 private:
-    std::string path {""};
-    std::string name {""};
+    std::string path;
+    std::string name;
 
 public:
     MiniPath( const std::string& some_path );

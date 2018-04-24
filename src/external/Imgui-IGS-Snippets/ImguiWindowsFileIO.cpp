@@ -24,6 +24,8 @@
 #define CARET_DOWN "v"
 #endif
 
+#include <imgui.h>
+
 using namespace std;
 using namespace ImGui;
 
@@ -156,7 +158,7 @@ string MiniPath::extension() const
 
 string MiniPath::getCurrentDir()
 {
-    char cCurrentPath[FILENAME_MAX];
+    char cCurrentPath[1024];
     if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath)))
         return 0;
     cCurrentPath[sizeof(cCurrentPath) - 1] = '\0';
@@ -191,13 +193,13 @@ vector<string> MiniPath::getPathTokens() const
 void MiniPath::setName( const string& name )
 {
     string tmp;
-    unsigned last_delim_pos = name.find_last_of ('/');
+    size_t last_delim_pos = name.find_last_of ('/');
     if( last_delim_pos != string::npos )
         tmp = name.substr (last_delim_pos+1);
     else
         tmp = name;
 
-    unsigned last_delim_pos2 = tmp.find_last_of ('\\');
+    size_t last_delim_pos2 = tmp.find_last_of ('\\');
     if( last_delim_pos2 != string::npos )
         tmp = tmp.substr (last_delim_pos2+1);
 
@@ -393,7 +395,7 @@ bool fileIOWindow(
         const string& button_text,
         std::vector<std::string> file_filter,
         bool ensure_file_exists,
-        ImVec2 size )
+        ImVec2& size )
 {
     bool close_it = false;
 
@@ -589,16 +591,24 @@ bool fileIOWindow(
 
         if( ensure_file_exists )
         {
-            if( MiniPath::pathExists( file_path ) )
+            if( MiniPath::pathExists( file_path ) ) {
+                CloseCurrentPopup();
                 close_it = true;
+            } else {
+                file_path = "invalid";
+            }
         }
-        else
+        else {
+            CloseCurrentPopup();
             close_it = true;
+        }
     }
 
     SameLine();
-    if( Button( "Cancel" ) )
+    if(Button( "Cancel" )) {
+        CloseCurrentPopup();
         close_it = true;
+    }
     End();
 
     return close_it;

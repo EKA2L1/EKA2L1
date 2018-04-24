@@ -13,6 +13,7 @@
 #include <core/core.h>
 
 #include <disasm/disasm.h>
+#include "installer/installer.h"
 
 static void glfw_err_callback(int err, const char* des){
     std::cout << err << ": " << des << std::endl;
@@ -58,9 +59,10 @@ namespace eka2l1 {
         }
 
         void eka2l1_inst::run() {
-            //eka2l1::core::load("EKA2L1HW", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
-            //LOG_INFO("Dumping RAM code memory");
-            //eka2l1::dump_data_map("Memory", &core_mem::memory[0x70000000], 0xFFFFFFF, 0x70000000);
+            bool stop_file_dialogue = false;
+            bool draw_warning_box = false;
+
+            std::optional<std::string> res;
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
@@ -71,9 +73,9 @@ namespace eka2l1 {
                 eka2l1::imgui::newframe_gl(emu_win);
 
                 emu_menu.draw();
-
                 mem_dumper->draw();
                 debug_logger->draw("EKA2L1 Logger");
+
                 eka2l1::imgui::clear_gl(clear_color);
 
                 ImGui::Render();

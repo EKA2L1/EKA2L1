@@ -198,7 +198,7 @@ namespace eka2l1 {
             }
 
             if (!events.empty()) {
-                slice_len = std::max((int)(global_timer - events.front().event_time), (int)MAX_SLICE_LENGTH);
+                slice_len = std::min((int)(events.front().event_time- global_timer), (int)MAX_SLICE_LENGTH);
             }
 
             downcount = slice_len;

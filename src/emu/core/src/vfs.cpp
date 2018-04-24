@@ -51,7 +51,6 @@ namespace eka2l1 {
 
             // Current directory is always an absolute path
             std::string partition = current_dir.substr(0, 2);
-
             auto res = _mount_map.find(partition);
 
             if (res == _mount_map.end()) {
