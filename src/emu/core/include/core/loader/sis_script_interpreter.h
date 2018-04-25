@@ -6,7 +6,7 @@
 
 #include <loader/sis_fields.h>
 
-#define CHUNK_SIZE 10000
+#define CHUNK_SIZE 0x2000
 #define CHUNK_MAX_INFLATED_SIZE 30000
 
 namespace eka2l1 {

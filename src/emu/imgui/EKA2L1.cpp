@@ -11,6 +11,7 @@
 
 #include <common/data_displayer.h>
 #include <core/core.h>
+#include <core/vfs.h>
 
 #include <disasm/disasm.h>
 #include "installer/installer.h"
@@ -43,6 +44,8 @@ namespace eka2l1 {
             debug_logger = std::make_shared<eka2l1::imgui::logger>();
             eka2l1::log::setup_log(debug_logger);
 
+            vfs::init();
+
             // Intialize core
             eka2l1::core::init();
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
@@ -54,7 +57,7 @@ namespace eka2l1 {
 
             // FBI SHUT IT DOWN
             eka2l1::core::shutdown();
-
+            vfs::shutdown();
             glfwTerminate();
         }
 

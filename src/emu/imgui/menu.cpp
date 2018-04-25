@@ -10,7 +10,7 @@ namespace eka2l1 {
         void menu::draw() {
              if (ImGui::BeginMainMenuBar()) {
                  if (ImGui::BeginMenu("File")) {
-                      if (ImGui::MenuItem("Install SIS"))  {
+                      if (ImGui::MenuItem("Install SIS", "Ctrl + Shift + I"))  {
                           show_sis_dialog = true;
                       }
 

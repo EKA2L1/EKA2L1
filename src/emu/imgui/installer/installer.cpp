@@ -10,6 +10,7 @@ namespace eka2l1 {
 	namespace imgui {
         bool stop_file_dialogue = false;
         bool draw_warning_box = false;
+        bool draw_success_box = false;
 
         bool pop_up_warning(const std::string msg) {
             ImGui::OpenPopup("Warning!");
@@ -56,8 +57,15 @@ namespace eka2l1 {
                 res =  imgui::choose_sis_dialog();
 
                 if (draw_warning_box) {
-                    if (imgui::pop_up_warning("Invalid file!")) {
+                    if (pop_up_warning("Invalid file!")) {
                         draw_warning_box = false;
+                    }
+                }
+
+                if (draw_success_box) {
+                    if (pop_up_warning("Sucessfuly installed app!")) {
+                        draw_success_box = false;
+                        stop_file_dialogue = true;
                     }
                 }
 
@@ -70,12 +78,16 @@ namespace eka2l1 {
             }
 
             if (stop_file_dialogue == true && draw_warning_box == false) {
-                auto path = res.value();
-                manager::get_package_manager()->install_package(
-                            std::u16string(path.begin(), path.end()), 0);
-
                 stop_file_dialogue = false;
-                return true;
+
+                if (!res.has_value()) {
+                    return true;
+                }
+
+                auto path = res.value();
+
+                draw_success_box = manager::get_package_manager()->install_package(
+                            std::u16string(path.begin(), path.end()), 0);
             }
 
             return false;

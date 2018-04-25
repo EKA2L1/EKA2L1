@@ -381,6 +381,13 @@ namespace eka2l1 {
                 }
             }
 
+            auto lenseg = (compressed.len_low) | (compressed.len_high << 31);
+
+            if (no_extract) {
+                // Must emit the data
+                stream->seekg(lenseg - 12, std::ios_base::cur);
+            }
+
             valid_offset();
 
             return compressed;

@@ -2,6 +2,7 @@
 #include <common/cvt.h>
 #include <common/types.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include <vfs.h>
 
@@ -63,32 +64,26 @@ namespace eka2l1 {
             : data_stream(stream), install_block(inst_blck), install_data(inst_data),
               install_drive(inst_drv) {}
 
-        bool inflate_data(void* in, void* out, uint32_t in_size, uint32_t* out_size = nullptr) {
-            mz_stream stream;
+        bool inflate_data(mz_stream* stream, void* in, void* out, uint32_t in_size, uint32_t* out_size = nullptr) {
+            stream->avail_in = in_size;
+            stream->next_in = static_cast<const unsigned char*>(in);
+            stream->next_out = static_cast<unsigned char*>(out);
+            stream->avail_out = CHUNK_MAX_INFLATED_SIZE;
 
-            stream.avail_in = 0;
-            stream.next_in = 0;
-            stream.zalloc = nullptr;
-            stream.zfree = nullptr;
+            auto res = inflate(stream,Z_NO_FLUSH);
 
-            if (inflateInit(&stream) != MZ_OK) {
-                LOG_ERROR("Can not intialize inflate stream");
-                return false;
-            }
+            if (res != MZ_OK) {
+                if (res == MZ_STREAM_END) {
+                    if (out_size)
+                        *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
 
-            stream.avail_in = in_size;
-            stream.next_in = static_cast<const unsigned char*>(in);
-            stream.next_out = static_cast<unsigned char*>(out);
-            stream.avail_out = in_size;
+                    return true;
+                }
 
-            if (inflate(&stream,Z_NO_FLUSH) != MZ_OK) {
-                LOG_ERROR("Inflate chunk failed!");
                 return false;
             };
 
-            *out_size = in_size - stream.avail_out;
-            inflateEnd(&stream);
-
+            *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
             return true;
         }
 
@@ -97,7 +92,7 @@ namespace eka2l1 {
                         reinterpret_cast<sis_data_unit*>(install_data.data_units.fields[crr_blck_idx].get())->data_unit.fields[data_idx].get());
             sis_compressed compressed = data->raw_data;
 
-            uint32_t us = (compressed.len_low) | (compressed.len_high << 32);
+            uint32_t us = ((compressed.len_low) | (compressed.len_high << 32)) - 4;
 
             compressed.compressed_data.resize(us);
 
@@ -109,7 +104,17 @@ namespace eka2l1 {
             }
 
             compressed.uncompressed_data.resize(compressed.uncompressed_size);
-            inflate_data(compressed.compressed_data.data(), compressed.uncompressed_data.data(), us);
+            mz_stream stream;
+
+            stream.zalloc = nullptr;
+            stream.zfree = nullptr;
+
+            if (inflateInit(&stream) != MZ_OK) {
+                LOG_ERROR("Can not intialize inflate stream");
+            }
+
+            inflate_data(&stream, compressed.compressed_data.data(), compressed.uncompressed_data.data(), us);
+            inflateEnd(&stream);
 
             return compressed.uncompressed_data;
         }
@@ -117,6 +122,11 @@ namespace eka2l1 {
         // Assuming this file is small since it's stored in std::vector
         // Directly write this
         void extract_file_with_buf(const std::string& path, std::vector<uint8_t>& data) {
+            std::string rp = eka2l1::file_directory(path);
+            eka2l1::create_directories(rp);
+
+            LOG_INFO("Write to: {}", path);
+
             FILE* temp = fopen(path.c_str(), "wb");
             fwrite(data.data(), 1, data.size(), temp);
 
@@ -124,18 +134,20 @@ namespace eka2l1 {
         }
 
         void ss_interpreter::extract_file(const std::string& path, const uint32_t idx, uint16_t crr_blck_idx) {
+            std::string rp = eka2l1::file_directory(path);
+            eka2l1::create_directories(rp);
+
             FILE* file = fopen(path.c_str(), "wb");
 
-            LOG_INFO("Extracting: {}", path.size());
-
-            sis_file_data* data = reinterpret_cast<sis_file_data*>(
-                        reinterpret_cast<sis_data_unit*>(install_data.data_units.fields[crr_blck_idx].get())->data_unit.fields[idx].get());
+            sis_data_unit* data_unit =
+                        reinterpret_cast<sis_data_unit*>(install_data.data_units.fields[crr_blck_idx].get());
+            sis_file_data* data = reinterpret_cast<sis_file_data*>(data_unit->data_unit.fields[idx].get());
 
             sis_compressed compressed = data->raw_data;
 
-            uint32_t us = (compressed.len_low) | (compressed.len_high << 32);
-
+            uint32_t us = ((compressed.len_low) | (compressed.len_high << 31)) - 4;
             compressed.compressed_data.resize(us);
+
             data_stream->seekg(compressed.offset);
 
             std::vector<unsigned char> temp_chunk;
@@ -145,6 +157,16 @@ namespace eka2l1 {
             temp_inflated_chunk.resize(CHUNK_MAX_INFLATED_SIZE);
 
             uint32_t left = us;
+            mz_stream stream;
+
+            stream.zalloc = nullptr;
+            stream.zfree = nullptr;
+
+            if (compressed.algorithm == sis_compressed_algorithm::deflated) {
+                if (inflateInit(&stream) != MZ_OK) {
+                    LOG_ERROR("Can not intialize inflate stream");
+                }
+            }
 
             while (left > 0) {
                 std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
@@ -154,7 +176,12 @@ namespace eka2l1 {
 
                 if (compressed.algorithm == sis_compressed_algorithm::deflated) {
                     uint32_t inflated_size = 0;
-                    inflate_data(temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
+
+                    auto res = inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
+
+                    if (!res) {
+                        LOG_ERROR("Uncompress failed!");
+                    }
 
                     fwrite(temp_inflated_chunk.data(), 1, inflated_size, file);
                 } else {
@@ -162,6 +189,10 @@ namespace eka2l1 {
                 }
 
                 left -= grab;
+            }
+
+            if (compressed.algorithm == sis_compressed_algorithm::deflated) {
+                inflateEnd(&stream);
             }
 
             fclose(file);
@@ -272,10 +303,10 @@ namespace eka2l1 {
 
                      if (file->op == ss_op::EOpText) {
                           auto buf = get_small_file_buf(file->idx, crr_blck_idx);
-                          extract_file_with_buf(raw_path, buf);
-                          show_text_func(buf);
+                          //extract_file_with_buf(raw_path, buf);
+                          //show_text_func(buf);
 
-                          LOG_INFO("EOpText {}", raw_path);
+                          LOG_INFO("EOpText");
                      } else if (file->op == ss_op::EOpRun) {
                           // Doesn't do anything yet.
                           LOG_INFO("EOpRun {}", raw_path);

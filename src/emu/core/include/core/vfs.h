@@ -4,6 +4,9 @@
 
 namespace eka2l1 {
     namespace vfs {
+        void init();
+        void shutdown();
+
 		std::string current_dir();
 		void current_dir(const std::string &new_dir);
 

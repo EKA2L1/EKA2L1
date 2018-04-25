@@ -20,4 +20,48 @@ namespace eka2l1 {
 
      bool has_root_path(std::string path, bool symbian_use= false);
      std::string root_path(std::string path, bool symbian_use= false);
+
+     bool has_filename(std::string path, bool symbian_use = false);
+     std::string filename(std::string path, bool symbian_use = false);
+
+     std::string file_directory(std::string path, bool symbian_use = false);
+
+     // Since I'm too desperate
+     struct path_iterator {
+        std::string path;
+        std::string comp;
+        uint32_t crr_pos;
+
+     public:
+        path_iterator()
+            : crr_pos(0) {}
+
+        path_iterator(std::string p)
+            : path(p), crr_pos(0) {}
+
+        void operator++() {
+            comp = "";
+
+            while ((path[crr_pos] != '/') && (path[crr_pos] != '\\')) {
+                comp += path[crr_pos];
+                crr_pos += 1;
+            }
+
+            while ((path[crr_pos] == '/') || (path[crr_pos] == '\\'))
+                crr_pos += 1;
+        }
+
+        std::string operator*() const {
+            return comp;
+        }
+
+        operator bool() const {
+            return path.length() > crr_pos;
+        }
+     };
+
+     void create_directory(std::string path);
+     bool exists(std::string path);
+     bool is_dir(std::string path);
+     void create_directories(std::string path);
 }
