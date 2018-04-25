@@ -20,6 +20,7 @@ namespace eka2l1 {
 
         void init() {
             _current_dir = "C:";
+
             mount("C:", "/home/dtt2502/EKA2L1/partitions/C");
             mount("E:", "/home/dtt2502/EKA2L1/partitions/E");
         }

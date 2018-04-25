@@ -86,6 +86,10 @@ namespace eka2l1 {
 
                 auto path = res.value();
 
+                if (path == "") {
+                    return true;
+                }
+
                 draw_success_box = manager::get_package_manager()->install_package(
                             std::u16string(path.begin(), path.end()), 0);
             }

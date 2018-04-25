@@ -52,21 +52,16 @@ namespace eka2l1 {
         }
 
         eka2l1_inst::~eka2l1_inst() {
-            eka2l1::imgui::destroy_window(emu_win);
-            eka2l1::imgui::free_gl();
+            imgui::destroy_window(emu_win);
+            imgui::free_gl();
 
-            // FBI SHUT IT DOWN
-            eka2l1::core::shutdown();
+            core::shutdown();
             vfs::shutdown();
+
             glfwTerminate();
         }
 
         void eka2l1_inst::run() {
-            bool stop_file_dialogue = false;
-            bool draw_warning_box = false;
-
-            std::optional<std::string> res;
-
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
 

@@ -33,5 +33,5 @@ add_library(core include/core/ptr.h
                  src/process.cpp
                  src/core.cpp)
 
-target_link_libraries(core PRIVATE coremem corekernel coretiming coreio arm coreloader coremanager)
+target_link_libraries(core PRIVATE simini coremem corekernel coretiming coreio arm coreloader coremanager)
 target_include_directories(core PUBLIC include)

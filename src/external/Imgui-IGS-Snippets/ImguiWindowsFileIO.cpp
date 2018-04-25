@@ -435,7 +435,7 @@ bool fileIOWindow(
         size.y += std::min( size_t( 8 ), std::max( dir_list.size(), file_list.size() ) ) *  GetFontSize();
 
     SetNextWindowSize( size );
-    Begin( "FileIO" );
+    Begin( "Open" );
 
     Text("Directory: "); SameLine();
     PushItemWidth( GetWindowWidth() - 145 );
@@ -590,6 +590,173 @@ bool fileIOWindow(
             file_path = current_mini_path.filePath();
 
         if( ensure_file_exists )
+        {
+            if( MiniPath::pathExists( file_path ) ) {
+                CloseCurrentPopup();
+                close_it = true;
+            } else {
+                file_path = "invalid";
+            }
+        }
+        else {
+            CloseCurrentPopup();
+            close_it = true;
+        }
+    }
+
+    SameLine();
+    if(Button( "Cancel" )) {
+        CloseCurrentPopup();
+        close_it = true;
+    }
+    End();
+
+    return close_it;
+}
+
+
+bool dirIOWindow(
+        std::string& file_path,
+        const std::string& button_text,
+        bool ensure_dir_exists,
+        ImVec2& size) {
+    bool close_it = false;
+
+    static string current_folder = "x";
+    static char c_current_folder[ 2048 ];
+
+    if( current_folder == "x" )
+        current_folder = MiniPath::getCurrentDir();
+
+    static int  file_type_selected = 0;
+    static int  file_selected = 0;
+    static int  directory_selected = 0;
+    static int  drive_selected = 0;
+    static bool directory_browsing = false;
+    static int  recent_selected = 0;
+
+    string sys_delim = MiniPath::getSystemDelim();
+
+    string tmp = current_folder + sys_delim;
+    MiniPath current_mini_path( tmp );
+
+    list<string> directories = MiniPath::listDirectories( current_mini_path.getPath() );
+    std::vector<const char*> dir_list;
+    for( const string& s : directories )
+    {
+        if( s == "." ) continue;
+        dir_list.push_back( s.c_str() );
+    }
+
+    /*
+    list<string> local_files = MiniPath::listFiles( current_mini_path.getPath(), string("") );
+    vector<const char*> file_list = toCStringVec( local_files );
+*/
+    if ( directory_browsing )
+        size.y += std::min( size_t( 8 ), dir_list.size() ) *  GetFontSize();
+
+    SetNextWindowSize( size );
+    Begin( "Open" );
+
+    Text("Directory: "); SameLine();
+    PushItemWidth( GetWindowWidth() - 145 );
+
+    strcpy( c_current_folder, current_folder.c_str() );
+    if( InputText( " ", c_current_folder, IM_ARRAYSIZE( c_current_folder ) ) )
+    {
+        string tmp = c_current_folder;
+        if( MiniPath::pathExists( tmp ) )
+            current_folder = c_current_folder;
+    }
+
+    Text("           "); SameLine();
+    vector<string> split_directories = current_mini_path.getPathTokens();
+    for( int i = 0; i < split_directories.size(); ++i )
+    {
+        if( Button( split_directories[i].c_str() ) )
+        {
+#if defined(WIN32)
+            string chosen_dir;
+#else
+            string chosen_dir = "/";
+#endif
+
+            for( int j = 0; j <= i; ++j)
+            {
+                chosen_dir += split_directories[j];
+                if( j != i )
+                    chosen_dir += sys_delim;
+            }
+            current_folder = chosen_dir;
+        }
+        if( i != split_directories.size()-1 )
+            SameLine();
+    }
+
+    if( CollapsingHeader("Browse Directories") )
+    {
+        directory_browsing = true;
+
+#if defined(WIN32)
+        vector<const char*> drive_list = toCStringVec( getWindowsDrives() );
+
+        // select list item dependent on folder path
+        if( drive_list[drive_selected][0] != c_current_folder[0]  )
+            for( int i = 0; i < drive_list.size(); ++i )
+                if( c_current_folder[0] == drive_list[i][0] )
+                    drive_selected = i;
+
+        Text( "  " ); SameLine();
+        PushItemWidth( 40 );
+        if( ListBox( "  ", &drive_selected, drive_list.data(), drive_list.size() ) )
+        {
+            string new_path = drive_list[drive_selected];
+            current_folder = new_path;
+        }
+#else
+        Text( "           " );
+#endif
+        SameLine();
+
+        if( ListBox( " ", &directory_selected, dir_list.data(), dir_list.size() ) )
+        {
+            string new_path;
+
+            if( string(dir_list[directory_selected]).find( ".." ) != std::string::npos )
+            {
+                vector<string> split_directories = current_mini_path.getPathTokens();
+                current_folder.clear();
+#ifndef WIN32
+                current_folder += "/";
+#endif
+                for( int i = 0; i < split_directories.size() - 1; ++i )
+                {
+                    current_folder += split_directories[i];
+                    if( i < split_directories.size() - 2 )
+                        current_folder += sys_delim;
+                }
+            }
+            else
+                current_folder = current_folder + sys_delim + dir_list[directory_selected];
+        }
+    }
+    else
+        directory_browsing = false;
+
+    Text(" ");
+
+    ImVec2 pos = GetCursorPos();
+
+    pos.x += GetWindowWidth() - 75 - button_text.size() * ( GetFontSize() * 0.7 );
+    pos.y  = GetWindowHeight() - 30;
+
+    SetCursorPos( pos );
+
+    if( Button( button_text.c_str() ) )
+    {
+       file_path = current_mini_path.filePath();
+
+        if( ensure_dir_exists )
         {
             if( MiniPath::pathExists( file_path ) ) {
                 CloseCurrentPopup();

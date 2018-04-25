@@ -6,18 +6,18 @@
 
 namespace eka2l1 {
     namespace kernel {
-        thread_scheduler::thread_scheduler(uint32_t ticks_yeild)
-            : ticks_yeild(ticks_yeild) {
+        thread_scheduler::thread_scheduler(uint32_t ticks_yield)
+            : ticks_yield(ticks_yield) {
             // Register event for core_timing
-            yeild_evt = core_timing::register_event("SchedulerYeildNextThread",
-                                                    std::bind(&thread_scheduler::yeild_thread, this));
+            yield_evt = core_timing::register_event("ScheduleryieldNextThread",
+                                                    std::bind(&thread_scheduler::yield_thread, this));
             wakeup_evt = core_timing::register_event("SchedulerWakeUpThread",
                                                      std::bind(&thread_scheduler::wake_thread, this, std::placeholders::_1));
 
-            core_timing::schedule_event(ticks_yeild, yeild_evt);
+            core_timing::schedule_event(ticks_yield, yield_evt);
         }
 
-        void thread_scheduler::yeild_thread() {
+        void thread_scheduler::yield_thread() {
             // Don't do anything, or else you might break things
             if (ready_threads.empty()) {
                 return;
@@ -32,6 +32,8 @@ namespace eka2l1 {
             running_threads.emplace(take_thread->unique_id(), take_thread);
             crr_running_thread = take_thread;
             take_thread->run_ignore();
+
+            core_timing::schedule_event(ticks_yield, yield_evt);
         }
 
         void thread_scheduler::wake_thread(uint64_t id) {

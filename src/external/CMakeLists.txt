@@ -26,8 +26,10 @@ add_library(imgui_igs
 	Imgui-IGS-Snippets/ImguiWindowsFileIO.cpp)
 
 target_link_libraries(imgui_igs PRIVATE imgui)
-
 target_include_directories(imgui_igs PUBLIC Imgui-IGS-Snippets)
+
+add_library(simini INTERFACE)
+target_include_directories(simini INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/simpleini")
 
 if(APPLE)
 	target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/include")

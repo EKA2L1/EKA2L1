@@ -19,7 +19,11 @@ bool fileIOWindow(
     bool ensure_file_exists,
     ImVec2& size);
 
-
+bool dirIOWindow(
+        std::string& file_path,
+        const std::string& button_text,
+        bool ensure_dir_exists,
+        ImVec2& size);
 
 /** Helper class to deal with file paths.
 */
