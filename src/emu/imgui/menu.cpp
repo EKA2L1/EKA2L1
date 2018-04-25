@@ -15,6 +15,10 @@ namespace eka2l1 {
         std::vector<char> path_c(400);
         std::vector<char> path_e(400);
 
+        void save_vfs_path() {
+
+        }
+
         void menu::draw() {
              if (ImGui::BeginMainMenuBar()) {
                  if (ImGui::BeginMenu("File")) {
@@ -50,27 +54,42 @@ namespace eka2l1 {
                  ImVec2 new_win_size(300, 150);
                  ImGui::SetNextWindowSize(new_win_size);
 
-                 if (ImGui::Begin("VFS Rebase", nullptr, ImGuiWindowFlags_ResizeFromAnySide)) {
-                     ImGui::InputText("C:", &path_c[0], 256); ImGui::SameLine(0, 25);
+                 ImGui::Begin("VFS Rebase", nullptr, ImGuiWindowFlags_ResizeFromAnySide);
 
-                     if (ImGui::Button("...##1")) {
-                         request_dir_1 = true;
-                     }
+                 ImGui::Text("C:  "); ImGui::SameLine();
+                 ImGui::InputText(" ", &path_c[0], 256); ImGui::SameLine(0, 15);
 
-                     ImGui::InputText("E:", &path_e[0], 256); ImGui::SameLine(0, 25);
-
-                     if (ImGui::Button("...##2")) {
-                         if (!request_dir_1) {
-                             request_dir_2 = true;
-                         }
-                     }
-
-                     ImGui::Button("OK");
-                     ImGui::SameLine();
-                     ImGui::Button("Cancel");
-
-                     ImGui::End();
+                 if (ImGui::Button("...##1")) {
+                     request_dir_1 = true;
                  }
+
+                 ImGui::Text("E:  "); ImGui::SameLine();
+                 ImGui::InputText(" ", &path_e[0], 256); ImGui::SameLine(0, 15);
+
+                 if (ImGui::Button("...##2")) {
+                     if (!request_dir_1) {
+                         request_dir_2 = true;
+                     }
+                 }
+
+                 ImGui::NewLine();
+                 ImGui::NewLine();
+
+                 ImGui::Indent(new_win_size.x / 2 - 40);
+
+                 if (ImGui::Button("OK")) {
+                    save_vfs_path();
+                    show_vfs_rebase = false;
+                 }
+
+                 ImGui::SameLine();
+
+                 if (ImGui::Button("Cancel")) {
+                     show_vfs_rebase = false;
+                 }
+
+                 ImGui::End();
+
              }
 
              if (request_dir_1 || request_dir_2) {

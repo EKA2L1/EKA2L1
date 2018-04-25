@@ -80,6 +80,9 @@ namespace eka2l1 {
                     return true;
                 }
 
+                LOG_ERROR("Inflate failed description: {}", mz_error(res));
+                *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
+
                 return false;
             };
 
@@ -156,7 +159,7 @@ namespace eka2l1 {
             std::vector<unsigned char> temp_inflated_chunk;
             temp_inflated_chunk.resize(CHUNK_MAX_INFLATED_SIZE);
 
-            uint32_t left = us;
+            long long left = us;
             mz_stream stream;
 
             stream.zalloc = nullptr;
@@ -172,6 +175,7 @@ namespace eka2l1 {
                 std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
 
                 int grab = left < CHUNK_SIZE ? left : CHUNK_SIZE;
+
                 data_stream->read(reinterpret_cast<char*>(temp_chunk.data()), grab);
 
                 if (compressed.algorithm == sis_compressed_algorithm::deflated) {
