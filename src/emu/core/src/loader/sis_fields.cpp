@@ -265,6 +265,8 @@ namespace eka2l1 {
             sis_header header;
             stream->read(reinterpret_cast<char*>(&header), sizeof(sis_header));
 
+            LOG_INFO("Header UID: 0x{:x}", header.uid3);
+
             return header;
         }
 
@@ -423,10 +425,17 @@ namespace eka2l1 {
             }
 
             sis_compressed compress_data = parse_compressed();
+
+            FILE* ftemp = fopen("inflatedController.mt", "wb");
+            fwrite(compress_data.uncompressed_data.data(), 1, compress_data.uncompressed_size, ftemp);
+            fclose(ftemp);
+
             switch_istrstream(reinterpret_cast<char*>(compress_data.uncompressed_data.data()),
                               compress_data.uncompressed_size);
 
             contents.controller = parse_controller();
+
+            //LOG_INFO("Current stream position: {}, compressed data size: {}", stream->tellg(), compress_data.uncompressed_size);
             assert((uint64_t)stream->tellg() == compress_data.uncompressed_size);
 
             switch_stream();
@@ -447,6 +456,7 @@ namespace eka2l1 {
             controller.info = parse_info();
             controller.options = parse_supported_options();
             controller.langs = parse_supported_langs();
+            LOG_INFO("Prequisites read position: {}", stream->tellg());
             controller.prequisites = parse_prerequisites();
             controller.properties = parse_properties();
 
@@ -507,11 +517,10 @@ namespace eka2l1 {
             parse_field_child(&range);
             range.from_ver = parse_version();
 
-            // If the app is installed only one and not a patch update,
-            // the from version will be zero. So ignore the to
-            if (!(range.from_ver.major == 0 &&
-                    range.from_ver.minor == 0
-                    && range.from_ver.build == 0)) {
+            int nkiadik = 0;
+            loader::peek(&nkiadik, 1, 4, stream.get());
+
+            if (nkiadik == (int)sis_field_type::SISVersion) {
                 range.to_ver = parse_version();
             }
 
@@ -525,7 +534,11 @@ namespace eka2l1 {
 
             parse_field_child(&pre);
             pre.target_devices = parse_array();
+
+            LOG_INFO("Position after reading targets pres: {}", stream->tellg());
             pre.dependencies = parse_array();
+
+            LOG_INFO("Position after reading all pres: {}", stream->tellg());
 
             valid_offset();
 
@@ -561,6 +574,7 @@ namespace eka2l1 {
         sis_properties sis_parser::parse_properties() {
             sis_properties properties;
 
+            LOG_INFO("Properties read position: {}", stream->tellg());
             parse_field_child(&properties);
             properties.properties = parse_array();
 
@@ -754,6 +768,7 @@ namespace eka2l1 {
             sis_install_block ib;
 
             parse_field_child(&ib, no_type);
+
             ib.files = parse_array();
             ib.controllers = parse_array();
             ib.if_blocks = parse_array();

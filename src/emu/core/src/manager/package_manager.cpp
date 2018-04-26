@@ -255,6 +255,10 @@ namespace eka2l1 {
             info.drive = drv;
             info.executable_name = u"";
 
+            uid ruid = ctrl->info.uid.uid;
+
+            LOG_INFO("Package UID: 0x{:x}", ruid);
+
             for (auto& wrap_file_des: ctrl->install_block.files.fields) {
                 loader::sis_file_des* file_des = (loader::sis_file_des*)(wrap_file_des.get());
                 bool is_exe = false;
@@ -278,9 +282,9 @@ namespace eka2l1 {
             }
 
             if (drv == 0) {
-                c_apps.insert(std::make_pair(ctrl->info.uid.uid, info));
+                c_apps.insert(std::make_pair(ruid, info));
             } else {
-                e_apps.insert(std::make_pair(ctrl->info.uid.uid, info));
+                e_apps.insert(std::make_pair(ruid, info));
             }
 
             for (auto& wrap_mini_ctrl: ctrl->install_block.controllers.fields) {
