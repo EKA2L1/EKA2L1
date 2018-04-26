@@ -33,6 +33,7 @@ namespace eka2l1 {
         // Write simple relocation
         // Symbian only used this, as found on IDA
         bool write(uint32_t* data, uint32_t sym) {
+            LOG_TRACE("Relocation original data: 0x{:x}, new data: 0x{:x}", *data, sym);
             *data = sym;
             return true;
         }
@@ -75,6 +76,8 @@ namespace eka2l1 {
                     uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
                     uint8_t* dest_ptr = virtual_addr + dest_addr;
 
+                    LOG_INFO("Relocation virtual address: 0x{:x}", 0x70000000 + virtual_addr);
+
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
                     if (!relocate(reinterpret_cast<uint32_t*>(dest_ptr), rel_type, code_delta, data_delta)) {
@@ -93,6 +96,8 @@ namespace eka2l1 {
             if (stub == nullptr) {
                 return false;
             }
+
+            LOG_TRACE("Stubbing import: 0x{:x}", sym);
 
             stub[0] = 0xef000000; // swi #0
             stub[1] = 0xe1a0f00e; // mov pc, lr
@@ -150,7 +155,7 @@ namespace eka2l1 {
         bool import_exe_image(eka2img* img) {            
             // Map the memory to store the text, data and import section
             ptr<void> asmdata =
-                    core_mem::map(RAM_CODE_ADDR, img->uncompressed_size,
+                    core_mem::map(RAM_CODE_ADDR, 0x30000,
                     prot::read_write_exec);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));

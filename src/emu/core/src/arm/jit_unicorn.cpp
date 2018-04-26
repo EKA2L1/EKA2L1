@@ -22,7 +22,7 @@ bool thumb_mode(uc_engine *uc) {
 
 void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
     memcpy(&value, eka2l1::ptr<const void>(address).get(), size);
-    LOG_TRACE("Read at address = {}, size = 0x{:x}, val = 0x{:x}"
+    LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}"
               , address, size, value);
 }
 
@@ -36,7 +36,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
 // Read the symbol and redirect to HLE function
 void intr_hook(uc_engine* uc, uint32_t in_no, void* user_data) {
-
+    LOG_TRACE("Trying to hook but fuck off");
 }
 
 namespace eka2l1 {
@@ -76,7 +76,7 @@ namespace eka2l1 {
 
             uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), nullptr, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void*>(code_hook), nullptr, 1, 0);
-
+            uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void*>(intr_hook), nullptr, 1, 0);
             // Map for unicorn to run around and play
             // Sure it won't die
             // Haha
@@ -93,6 +93,7 @@ namespace eka2l1 {
 
         bool jit_unicorn::execute_instructions(int num_instructions) {
             uint32_t pc = get_pc();
+
             bool tm = thumb_mode(engine);
             if (tm) {
                 pc |= 1;
@@ -110,6 +111,15 @@ namespace eka2l1 {
             }
 
             err = uc_emu_start(engine, pc, epa & 0xfffffffe, 0, num_instructions - 1);
+
+            if (err != UC_ERR_OK) {
+                uint32_t error_pc = get_pc();
+                uint32_t lr = 0;
+                uc_reg_read(engine,  UC_ARM_REG_LR, &lr);
+
+                LOG_CRITICAL("Unicorn error {:#02x} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}", err, pc, error_pc, lr);
+                return false;
+            }
 
             assert(err == UC_ERR_OK);
 
@@ -196,7 +206,9 @@ namespace eka2l1 {
         }
 
         void jit_unicorn::set_entry_point(address ep) {
+            LOG_TRACE("Entry point set: 0x{:x}", ep);
             epa = ep;
+            set_pc(epa);
         }
 
         address jit_unicorn::get_entry_point() {

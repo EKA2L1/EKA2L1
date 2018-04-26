@@ -46,7 +46,7 @@ namespace eka2l1 {
             cs_err err = cs_option(cp_handle, CS_OPT_MODE, thumb ? CS_MODE_THUMB : CS_MODE_ARM);
 
             if (err != CS_ERR_OK) {
-                LOG_ERROR("Unable to set disassemble option!");
+                LOG_ERROR("Unable to set disassemble option! Error: {}", err);
                 return "";
             }
 

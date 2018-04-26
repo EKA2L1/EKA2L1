@@ -7,7 +7,7 @@
 namespace eka2l1 {
     namespace kernel {
         thread_scheduler::thread_scheduler(uint32_t ticks_yield)
-            : ticks_yield(ticks_yield) {
+            : ticks_yield(ticks_yield), crr_running_thread(nullptr) {
             // Register event for core_timing
             yield_evt = core_timing::register_event("ScheduleryieldNextThread",
                                                     std::bind(&thread_scheduler::yield_thread, this));
@@ -20,10 +20,11 @@ namespace eka2l1 {
         void thread_scheduler::yield_thread() {
             // Don't do anything, or else you might break things
             if (ready_threads.empty()) {
+                core_timing::schedule_event(ticks_yield, yield_evt);
                 return;
             }
 
-            auto take_thread = ready_threads.top();
+            auto take_thread = std::move(ready_threads.top());
 
             const std::unique_lock<std::mutex> ul(mut);
 

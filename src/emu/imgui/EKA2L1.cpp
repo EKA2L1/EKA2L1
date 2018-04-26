@@ -13,7 +13,6 @@
 #include <core/core.h>
 #include <core/vfs.h>
 
-#include <disasm/disasm.h>
 #include "installer/installer.h"
 
 static void glfw_err_callback(int err, const char* des){
@@ -62,6 +61,8 @@ namespace eka2l1 {
         }
 
         void eka2l1_inst::run() {
+            core::load("color", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
+
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
 
@@ -74,6 +75,7 @@ namespace eka2l1 {
                 mem_dumper->draw();
                 debug_logger->draw("EKA2L1 Logger");
 
+                eka2l1::dump_data_map("Memory", eka2l1::core_mem::get_addr<uint8_t>(0x70000000), 0x50000, 0x70000000);
                 eka2l1::imgui::clear_gl(clear_color);
 
                 ImGui::Render();
