@@ -1,5 +1,7 @@
 # Imgui-IGS-Snippets
-Imgui code exchanges for convenience at IGS 
+  * Imgui code exchanges for convenience at IGS 
+  * This fork adds more function for EKA2L1, such as an directory open dialog, and customize the original code
+to fit EKA2L1
 
 ## Tested on
  * windows, mingw gcc 5.1.0 - cmake/ninja, imgui 1.49
