@@ -193,11 +193,11 @@ namespace eka2l1 {
         }
 
         // Alloc from thread heap
-        address heap_alloc(size_t size) {
+        address alloc_range(address beg, address end, size_t size) {
             const size_t page_count = (size + (page_size - 1)) / page_size;
 
-            const size_t page_heap_start = (crr_heap / page_size)+ 1;
-            const size_t page_heap_end = (crr_heap + crr_heap_size / page_size) - 1;
+            const size_t page_heap_start = (beg / page_size)+ 1;
+            const size_t page_heap_end = (end / page_size) - 1;
 
             const auto start_heap_page = allocated_pages.begin() + page_heap_start;
             const auto end_heap_page = allocated_pages.begin() + page_heap_end;
@@ -214,6 +214,17 @@ namespace eka2l1 {
             }
 
             return 0;
+        }
+
+        address alloc_heap(size_t size) {
+            return alloc_range(crr_heap, crr_heap + crr_heap_size, size);
+        }
+
+        address alloc_ime(size_t size) {
+            address addr = alloc_range(RAM_CODE_ADDR, ROM, size);
+            change_prot(addr, size, prot::read_write_exec)
+;
+            return addr;
         }
 
         // Set the current thread heap region, specif where heap

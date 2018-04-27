@@ -19,3 +19,6 @@
 [submodule "src/external/simpleini"]
 	path = src/external/simpleini
 	url = https://github.com/brofield/simpleini
+[submodule "src/external/yaml-cpp"]
+	path = src/external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp

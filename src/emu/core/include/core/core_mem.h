@@ -42,8 +42,14 @@ namespace eka2l1 {
         address alloc(size_t size);
         void free(address addr);
 
+        // Alloc in a specific range
+        address alloc_range(address beg, address end, size_t size) ;
+
         // Alloc from thread heap
         address heap_alloc(size_t size);
+
+        // Alloc for dynamic code execution
+        address alloc_ime(size_t size);
 
         // Set the current thread heap region, specify where heap
         // alloc must do allocation

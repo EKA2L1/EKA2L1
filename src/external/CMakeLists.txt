@@ -4,6 +4,7 @@ target_include_directories(miniz PUBLIC miniz)
 add_subdirectory(spdlog)
 add_subdirectory(googletest)
 add_subdirectory(glfw)
+add_subdirectory(yaml-cpp)
 
 add_library(imgui imgui/imgui.h imgui/imgui.cpp
     imgui/imgui_demo.cpp

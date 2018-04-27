@@ -155,8 +155,7 @@ namespace eka2l1 {
         bool import_exe_image(eka2img* img) {            
             // Map the memory to store the text, data and import section
             ptr<void> asmdata =
-                    core_mem::map(RAM_CODE_ADDR, 0x30000,
-                    prot::read_write_exec);
+                    core_mem::alloc_ime(img->header.code_size + 0x1000);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
@@ -286,7 +285,27 @@ namespace eka2l1 {
             return true;
         }
 
-        eka2img load_eka2img(const std::string& path) {
+        void parse_export_dir(eka2img& img) {
+            if (img.header.export_dir_offset == 0) {
+                return;
+            }
+
+            uint32_t* exp = reinterpret_cast<uint32_t*>(img.data.data() + img.header.export_dir_offset);
+
+            for (auto i = 0; i < img.header.export_dir_count; i++) {
+                img.ed.syms.push_back(*exp++);
+            }
+        }
+
+        void parse_iat(eka2img& img) {
+            uint32_t* imp_addr = reinterpret_cast<uint32_t*>(img.data.data() + img.header.code_offset + img.header.text_size);
+
+            while (*imp_addr != 0) {
+                img.iat.its.push_back(*imp_addr++);
+            }
+        }
+
+        eka2img parse_eka2img(const std::string& path) {
             eka2img img;
 
             FILE* f = fopen(path.c_str(), "rb");
@@ -384,8 +403,10 @@ namespace eka2l1 {
             uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
             LOG_TRACE("Import + export size: 0x{:x}", import_export_table_size);
 
-            // Read the import section
+            parse_export_dir(img);
+            parse_iat(img);
 
+            // Read the import section
             std::istringstream strstream;
             strstream.rdbuf()->pubsetbuf(img.data.data(), img.data.size());
 
@@ -424,11 +445,13 @@ namespace eka2l1 {
             read_relocations(&strstream,
                              img.data_reloc_section, img.header.data_reloc_offset);
 
-            import_exe_image(&img);
-
             fclose(f);
 
             return img;
+        }
+
+        bool load_eka2img(eka2img &img) {
+            return import_exe_image(&img);
         }
     }
 }

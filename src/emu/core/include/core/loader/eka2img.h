@@ -52,10 +52,18 @@ namespace eka2l1 {
             uint8_t	 export_desc;
         };
 
-        struct eka2_import_section
-        {
+        struct eka2_import_section {
             int32_t size; // size of this section
             std::vector<eka2img_import_block> imports; // E32ImportBlock[iDllRefTableCount];
+        };
+
+        // For my precious baby to yml
+        struct eka2img_export_directory {
+            std::vector<uint32_t> syms;
+        };
+
+        struct eka2img_iat {
+            std::vector<uint32_t> its;
         };
 
         struct eka2_reloc_entry {
@@ -132,6 +140,9 @@ namespace eka2l1 {
         struct eka2img {
             eka2img_header header;
             eka2img_header_extended header_extended;
+            eka2img_iat iat;
+            eka2img_export_directory ed;
+
             std::vector<char> data;
             uint32_t uncompressed_size;
             eka2_import_section import_section;
@@ -145,6 +156,7 @@ namespace eka2l1 {
             bool has_extended_header = false;
         };
 
-        eka2img load_eka2img(const std::string& path);
+        eka2img parse_eka2img(const std::string& path);
+        bool    load_eka2img(eka2img& img);
     }
 }
