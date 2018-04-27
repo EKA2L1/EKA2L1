@@ -16,6 +16,10 @@ add_library(imgui imgui/imgui.h imgui/imgui.cpp
     imgui/stb_truetype.h
 )
 
+if (MSVC)
+    add_subdirectory(libcxxabi)
+endif()
+
 target_include_directories(imgui PUBLIC imgui)
 
 add_library(glad glad/include/glad/glad.h glad/src/glad.c)

@@ -22,3 +22,6 @@
 [submodule "src/external/yaml-cpp"]
 	path = src/external/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
+[submodule "src/external/libcxxabi"]
+	path = src/external/libcxxabi
+	url = https://github.com/llvm-mirror/libcxxabi
