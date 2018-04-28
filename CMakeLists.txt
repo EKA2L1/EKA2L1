@@ -4,7 +4,7 @@ set (GTEST_INCLUDE_DIR
 	src/external/googletest/googletest/include)
 
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/external/yaml-cpp/include")
-
+set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/external/libcxxabi/include")
 set (CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(src/external)
