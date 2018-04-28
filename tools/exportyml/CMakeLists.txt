@@ -9,3 +9,13 @@ target_link_libraries(exportyml
 target_include_directories(exportyml
     PUBLIC
     ${YAML_INCLUDE_DIR})
+
+if (MSVC)
+    target_link_libraries(exportyml
+        PRIVATE
+        cxxabi-static)
+    target_include_directories(exportyml
+    PUBLIC
+    ${LIBCXXABI_INCLUDE_DIR})
+endif()
+

@@ -50,6 +50,9 @@ namespace eka2l1 {
             // Read the table entry
             void read_table();
             uint32_t read_page(char* dest, uint32_t page, size_t size);
+            uint32_t read_pages(char* dest, size_t size);
+
+            std::vector<uint32_t> page_offsets(uint32_t initial_off);
         };
     }
 }

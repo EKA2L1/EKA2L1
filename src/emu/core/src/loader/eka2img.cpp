@@ -306,6 +306,8 @@ namespace eka2l1 {
         }
 
         eka2img parse_eka2img(const std::string& path) {
+            LOG_TRACE("Loading image: {}", path);
+
             eka2img img;
 
             FILE* f = fopen(path.c_str(), "rb");
@@ -314,18 +316,63 @@ namespace eka2l1 {
             auto file_size = ftell(f);
             fseek(f, 0, SEEK_SET);
 
-            fread(&img.header, 1, sizeof(eka2img_header), f);
-            assert(img.header.sig == 0x434F5045);
+            fread(&img.header.uid1, 1, 4, f);
+            fread(&img.header.uid2, 1, 4, f);
+            fread(&img.header.uid3, 1, 4, f);
+            fread(&img.header.check, 1, 4, f);
+            fread(&img.header.sig, 1, 4, f);
+
+            if (img.header.sig != 0x434F5045) {
+                LOG_ERROR("Undefined EKA Image type");
+                fclose(f);
+                return eka2img{};
+            }
+
+            uint32_t temp = 0;
+            fread(&temp, 1, 4, f);
+
+            if ((temp == 0x2000) || (temp == 0x1000)) {
+                // Quick hack to determinate if this is an EKA1
+                img.header.cpu = static_cast<loader::eka2_cpu>(temp);
+
+                fread(&temp, 1, 4, f);
+                fread(&temp, 1, 4, f);
+                fread(&img.header.petran_major, 1, 1, f);
+                fread(&img.header.petran_minor, 1, 1, f);
+                fread(&img.header.petran_build, 1, 2, f);
+                fread(&img.header.flags, 1, 4, f);
+                fread(&img.header.code_size, 1, 4, f);
+                fread(&img.header.data_size, 1, 4, f);
+                fread(&img.header.heap_size_min, 1, 4, f);
+                fread(&img.header.heap_size_max, 1, 4, f);
+                fread(&img.header.stack_size, 1, 4, f);
+                fread(&img.header.bss_size, 1, 4, f);
+                fread(&img.header.entry_point, 1, 4, f);
+                fread(&img.header.code_base, 1, 4, f);
+                fread(&img.header.data_base, 1, 4, f);
+                fread(&img.header.dll_ref_table_count, 1, 4, f);
+                fread(&img.header.export_dir_offset, 1, 4, f);
+                fread(&img.header.export_dir_count, 1, 4, f);
+                fread(&img.header.text_size, 1, 4, f);
+                fread(&img.header.code_offset, 1, 4, f);
+                fread(&img.header.data_offset, 1, 4, f);
+                fread(&img.header.import_offset, 1, 4, f);
+                fread(&img.header.code_reloc_offset, 1, 4, f);
+                fread(&img.header.data_reloc_offset, 1, 4, f);
+                fread(&img.header.priority, 1, 2, f);
+
+                img.header.compression_type = 1;
+            } else {
+                fseek(f, 0, SEEK_SET);
+                fread(&img.header, 1, sizeof(eka2img_header), f);
+
+                int a = 5;
+            }
 
             compress_type ctype = (compress_type)(img.header.compression_type);
             dump_flag_info((int)img.header.flags);
 
             if (img.header.compression_type > 0) {
-                LOG_WARN("Image that compressed is not properly supported rn. Try"
-                         "other image until you find one that does not emit this warning");
-
-
-
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
 
                 fread(&img.uncompressed_size, 1, 4, f);
@@ -369,12 +416,12 @@ namespace eka2l1 {
                                          img.uncompressed_size);
 
                     LOG_INFO("Readed compress, size: {}", readed);
-                } else {
+                } else if (ctype == compress_type::byte_pair_c) {
                     auto temp_stream = std::make_shared<std::istringstream>();
                     temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
                     common::ibytepair_stream bpstream(temp_stream);
 
-                    auto tb = bpstream.table();
+                    bpstream.read_pages(&img.data[img.header.code_offset], img.uncompressed_size);
                 }
 
             } else {
