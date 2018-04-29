@@ -1,11 +1,16 @@
-add_library(corearm
+add_library(arm
 	${CORE_INCLUDE_DIR}/arm/jit_interface.h
-	${CORE_INCLUDE_DIR}/arm/jit_unicorn.h
-        ${CORE_INCLUDE_DIR}/core_arm.h
+        ${CORE_INCLUDE_DIR}/arm/jit_unicorn.h
+        ${CORE_INCLUDE_DIR}/arm/jit_factory.h
         jit_unicorn.cpp
-        ../core_arm.cpp)
+        jit_factory.cpp)
 
-target_include_directories(corearm PUBLIC ${CORE_INCLUDE_DIR})
+target_include_directories(arm PUBLIC ${CORE_INCLUDE_DIR})
 
-target_link_libraries(corearm PUBLIC common)
-target_link_libraries(corearm PRIVATE unicorn coremem)
+target_link_libraries(arm PUBLIC common)
+target_link_libraries(arm 
+	PRIVATE 
+	disasm 
+	coremem 
+	coretiming
+	unicorn)

@@ -3,7 +3,6 @@
 #include <loader/sis_script_interpreter.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <dirent.h>
 
 #include <fstream>
 
@@ -29,27 +28,27 @@ namespace eka2l1 {
 
             int total_app = c_apps.size() + e_apps.size();
 
-            uint64_t uid_offset = 40;
-            uint64_t name_offset = 40 + total_app * 4;
+            uint64_t uid_offset = 48;
+            uint64_t name_offset = uid_offset + total_app * 4;
             uint64_t drive_offset = name_offset + total_app * 4;
 
             for (auto& c_app: c_apps) {
-                drive_offset += c_app.second.name.size() * 2;
+                drive_offset += c_app.second.name.length() * 2;
             }
 
             for (auto& e_app: e_apps) {
-                drive_offset += e_app.second.name.size() * 2;
+                drive_offset += e_app.second.name.length() * 2;
             }
 
             uint64_t vendor_offset = drive_offset + total_app;
             uint64_t ename_offset = vendor_offset + total_app * 4;
 
             for (auto& c_app: c_apps) {
-                ename_offset += c_app.second.executable_name.size() * 2;
+                ename_offset += c_app.second.vendor_name.size() * 2;
             }
 
             for (auto& e_app: e_apps) {
-                ename_offset += e_app.second.executable_name.size() * 2;
+                ename_offset += e_app.second.vendor_name.size() * 2;
             }
 
             fwrite("sdbf", 1, 4, file);
@@ -58,6 +57,7 @@ namespace eka2l1 {
             fwrite(&name_offset, 1, 8, file);
             fwrite(&drive_offset, 1, 8, file);
             fwrite(&vendor_offset, 1, 8, file);
+            fwrite(&ename_offset, 1, 8, file);
 
             for (auto& c_app: c_apps) {
                 fwrite(&c_app.first, 1, 4, file);
@@ -143,6 +143,8 @@ namespace eka2l1 {
             fread(&header.app_count, 1, 4, file);
             fread(&header.uid_offset, 1, 8, file);
             fread(&header.name_offset, 1, 8, file);
+            fread(&header.drive_offset, 1, 8, file);
+            fread(&header.vendor_offset, 1, 8, file);
             fread(&header.ename_offset, 1, 8, file);
 
             std::vector<uid> uids(header.app_count);
@@ -174,6 +176,7 @@ namespace eka2l1 {
                 fread(&drives[i], 1, 1, file);
             }
 
+            fseek(file, header.vendor_offset, SEEK_SET);
 
             std::vector<std::u16string> vendor_names(header.app_count);
 
@@ -185,6 +188,8 @@ namespace eka2l1 {
 
                 fread(&(vendor_names[i])[0], 2, name_len, file);
             }
+
+            fseek(file, header.ename_offset, SEEK_SET);
 
             std::vector<std::u16string> exe_names(header.app_count);
 
@@ -248,25 +253,38 @@ namespace eka2l1 {
             info.vendor_name = ctrl->info.vendor_name.unicode_string;
             info.name = ((loader::sis_string*)(ctrl->info.names.fields[0].get()))->unicode_string;
             info.drive = drv;
+            info.executable_name = u"";
+
+            uid ruid = ctrl->info.uid.uid;
+
+            LOG_INFO("Package UID: 0x{:x}", ruid);
 
             for (auto& wrap_file_des: ctrl->install_block.files.fields) {
                 loader::sis_file_des* file_des = (loader::sis_file_des*)(wrap_file_des.get());
-                if (file_des->caps.raw_data.size() != 0) {
+                bool is_exe = false;
+
+                if (file_des->target.unicode_string.length() > 4) {
+                    is_exe = file_des->target.unicode_string.substr(file_des->target.unicode_string.length() - 4) == u".exe";
+                }
+
+                if ((file_des->caps.raw_data.size() != 0) || is_exe) {
                     info.executable_name = file_des->target.unicode_string;
+                    LOG_INFO("Executable_name: {}", std::string(info.executable_name.begin(), info.executable_name.end()));
                     // Get file name
                     size_t slash_pos = info.executable_name.find_last_of(u"\\");
 
                     if (slash_pos != std::u16string::npos) {
-                        info.executable_name = info.executable_name.substr(0, slash_pos);
+                        info.executable_name = info.executable_name.substr(slash_pos + 1);
+
                         break;
                     }
                 }
             }
 
             if (drv == 0) {
-                c_apps.insert(std::make_pair(ctrl->info.uid.uid, info));
+                c_apps.insert(std::make_pair(ruid, info));
             } else {
-                e_apps.insert(std::make_pair(ctrl->info.uid.uid, info));
+                e_apps.insert(std::make_pair(ruid, info));
             }
 
             for (auto& wrap_mini_ctrl: ctrl->install_block.controllers.fields) {

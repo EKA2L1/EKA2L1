@@ -85,6 +85,10 @@ namespace eka2l1 {
             return event_types.size() - 1;
         }
 
+        int get_downcount() {
+            return downcount;
+        }
+
         void init() {
             downcount = MAX_SLICE_LENGTH;
             slice_len = MAX_SLICE_LENGTH;
@@ -107,6 +111,10 @@ namespace eka2l1 {
 
         void unregister_all_events() {
             event_types.clear();
+        }
+
+        void add_ticks(uint32_t ticks) {
+            downcount -= ticks;
         }
 
         void schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata) {
@@ -190,7 +198,7 @@ namespace eka2l1 {
             }
 
             if (!events.empty()) {
-                slice_len = std::max((int)(global_timer - events.front().event_time), (int)MAX_SLICE_LENGTH);
+                slice_len = std::min((int)(events.front().event_time- global_timer), (int)MAX_SLICE_LENGTH);
             }
 
             downcount = slice_len;

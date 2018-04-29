@@ -7,3 +7,21 @@
 [submodule "src/external/glfw"]
 	path = src/external/glfw
 	url = https://github.com/glfw/glfw
+[submodule "src/external/capstone"]
+	path = src/external/capstone
+	url = https://github.com/aquynh/capstone
+[submodule "src/external/googletest"]
+	path = src/external/googletest
+	url = https://github.com/google/googletest
+[submodule "src/external/Imgui-IGS-Snippets"]
+	path = src/external/Imgui-IGS-Snippets
+	url = https://github.com/gileoo/Imgui-IGS-Snippets
+[submodule "src/external/simpleini"]
+	path = src/external/simpleini
+	url = https://github.com/brofield/simpleini
+[submodule "src/external/yaml-cpp"]
+	path = src/external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
+[submodule "src/external/libcxxabi"]
+	path = src/external/libcxxabi
+	url = https://github.com/llvm-mirror/libcxxabi

@@ -1,10 +1,13 @@
-#pragma one
+#pragma once
 
 #include <common/types.h>
 #include <memory>
 #include <functional>
 
 namespace eka2l1 {
+    template <class T>
+    class ptr;
+
     namespace loader {
         class eka2img;
     }
@@ -25,9 +28,6 @@ namespace eka2l1 {
         KERNELMAPPING = 0xC9200000
     };
 
-    template <class T>
-    class ptr;
-
     // The core memory
     namespace core_mem {
         using mem = std::unique_ptr<uint8_t[], std::function<void(uint8_t*)>>;
@@ -38,8 +38,22 @@ namespace eka2l1 {
         void init();
         void shutdown();
 
+        // Used for User to alloc freely in local data
         address alloc(size_t size);
         void free(address addr);
+
+        // Alloc in a specific range
+        address alloc_range(address beg, address end, size_t size) ;
+
+        // Alloc from thread heap
+        address heap_alloc(size_t size);
+
+        // Alloc for dynamic code execution
+        address alloc_ime(size_t size);
+
+        // Set the current thread heap region, specify where heap
+        // alloc must do allocation
+        void set_crr_thread_heap_region(const address where, size_t size);
 
         template <typename T>
         T* get_addr(address addr) {
@@ -49,16 +63,6 @@ namespace eka2l1 {
 
             return reinterpret_cast<T*>(&memory[addr]);
         }
-
-        enum class prot {
-            none = 0,
-            read = 1,
-            write = 2,
-            exec = 3,
-            read_write = 4,
-            read_exec = 5,
-            read_write_exec = 6
-        };
 
         // Map an Symbian-address
         ptr<void> map(address addr, size_t size, prot cprot);

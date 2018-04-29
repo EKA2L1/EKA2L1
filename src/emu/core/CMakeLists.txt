@@ -16,6 +16,8 @@ add_library(coreio
 add_subdirectory(src/arm)
 add_subdirectory(src/loader)
 add_subdirectory(src/manager)
+add_subdirectory(src/disasm)
+add_subdirectory(src/kernel)
 
 target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)
@@ -25,7 +27,11 @@ target_link_libraries(coremem PUBLIC common)
 target_link_libraries(coretiming PUBLIC common)
 target_link_libraries(coreio PUBLIC common)
 
-add_library(core include/core/ptr.h)
+add_library(core include/core/ptr.h
+                 include/core/process.h
+                 include/core/core.h
+                 src/process.cpp
+                 src/core.cpp)
 
-target_link_libraries(core PRIVATE coremem coretiming coreio corearm coreloader coremanager)
+target_link_libraries(core PRIVATE simini coremem corekernel coretiming coreio arm coreloader coremanager)
 target_include_directories(core PUBLIC include)

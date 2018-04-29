@@ -6,6 +6,7 @@
 #include <common/bytepair.h>
 #include <common/flate.h>
 #include <common/data_displayer.h>
+#include <common/buffer.h>
 
 #include <miniz.h>
 #include <cstdio>
@@ -33,6 +34,7 @@ namespace eka2l1 {
         // Write simple relocation
         // Symbian only used this, as found on IDA
         bool write(uint32_t* data, uint32_t sym) {
+            LOG_TRACE("Relocation original data: 0x{:x}, new data: 0x{:x}", *data, sym);
             *data = sym;
             return true;
         }
@@ -75,6 +77,8 @@ namespace eka2l1 {
                     uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
                     uint8_t* dest_ptr = virtual_addr + dest_addr;
 
+                    LOG_INFO("Relocation virtual address: 0x{:x}", 0x70000000 + virtual_addr);
+
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
                     if (!relocate(reinterpret_cast<uint32_t*>(dest_ptr), rel_type, code_delta, data_delta)) {
@@ -93,6 +97,8 @@ namespace eka2l1 {
             if (stub == nullptr) {
                 return false;
             }
+
+            LOG_TRACE("Stubbing import: 0x{:x}", sym);
 
             stub[0] = 0xef000000; // swi #0
             stub[1] = 0xe1a0f00e; // mov pc, lr
@@ -118,18 +124,20 @@ namespace eka2l1 {
         // The import address table will contains the address of all these
         // stubs
         // I don't know if it will work, but probally
-        bool import_libs(eka2img* img, uint32_t rtcode_addr) {
+        uint32_t import_libs(eka2img* img, uint32_t rtcode_addr) {
             // Fill text segment with stub
             uint32_t stub_ptr = rtcode_addr + img->header.code_size;
             uint32_t stub_size = 0;
             std::vector<uint32_t> iat_addresses;
 
+            LOG_ERROR("Start writing stubs at: 0x{:x}", stub_ptr);
+
             for (auto& import_entry: img->import_section.imports) {
                 for (auto& oridinal: import_entry.ordinals) {
                     import_func(ptr<uint32_t>(stub_ptr), oridinal);
                     iat_addresses.push_back(stub_ptr);
-                    stub_ptr += 3;
-                    stub_size += 3;
+                    stub_ptr += 12;
+                    stub_size += 12;
                 }
             }
 
@@ -145,11 +153,10 @@ namespace eka2l1 {
             return stub_size;
         }
 
-        bool import_exe_image(eka2img* img) {
+        bool import_exe_image(eka2img* img) {            
             // Map the memory to store the text, data and import section
             ptr<void> asmdata =
-                    core_mem::map(RAM_CODE_ADDR, img->uncompressed_size,
-                    core_mem::prot::read_write_exec);
+                    core_mem::alloc_ime(img->header.code_size + 0x1000);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
@@ -159,6 +166,11 @@ namespace eka2l1 {
 
             rtdata_addr = import_libs(img, rtcode_addr);
             rtdata_addr += rtcode_addr + img->header.code_size;
+
+            img->rt_code_addr = rtcode_addr;
+            img->rt_data_addr = rtdata_addr;
+
+            LOG_INFO("Writing data at offset: 0x{:x}", rtdata_addr);
 
             // Ram code address is the run time address of the code
             uint32_t code_delta = rtcode_addr - img->header.code_base;
@@ -211,7 +223,7 @@ namespace eka2l1 {
             }
         }
 
-        void read_relocations(std::istringstream* stream,
+        void read_relocations(common::ro_buf_stream* stream,
                               eka2_reloc_section& section,
                               uint32_t offset) {
             // No relocations
@@ -219,10 +231,10 @@ namespace eka2l1 {
                 return;
             }
 
-            stream->seekg(offset, std::ios::beg);
+            stream->seek(offset, common::beg);
 
-            stream->read(reinterpret_cast<char*>(&section.size), 4);
-            stream->read(reinterpret_cast<char*>(&section.num_relocs), 4);
+            stream->read(reinterpret_cast<void*>(&section.size), 4);
+            stream->read(reinterpret_cast<void*>(&section.num_relocs), 4);
 
             // There is no document on this anywhere. The code you see online is not right.
             // Here is the part i tell you the truth: The size is including both the base and itself
@@ -230,34 +242,26 @@ namespace eka2l1 {
             // code (uint16_t).
             // Since I saw repeated pattern and also saw some code from elf2e32 reloaded, i just subtract the
             // seek with 8, and actually works. Now i feel like i has wasted 4 hours of my life figuring out this :P
-            while ((uint32_t)stream->tellg() - offset < section.size) {
+            for (int i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
-                stream->read(reinterpret_cast<char*>(&reloc_entry.base), 4);
-                stream->read(reinterpret_cast<char*>(&reloc_entry.size), 4);
+                stream->read(reinterpret_cast<void*>(&reloc_entry.base), 4);
+                stream->read(reinterpret_cast<void*>(&reloc_entry.size), 4);
 
                 assert((reloc_entry.size - 8) % 2 == 0);
 
-                reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2)-1);
+                reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2));
 
                 for (auto& rel_info: reloc_entry.rels_info) {
-                    stream->read(reinterpret_cast<char*>(&rel_info), 2);
-                }
-
-                uint16_t temp_padding = 0;
-                stream->read(reinterpret_cast<char*>(&temp_padding), 2);
-
-                // If it's zero, maybe it's padding
-                if (temp_padding != 0) {
-                    reloc_entry.rels_info.push_back(temp_padding);
+                    stream->read(reinterpret_cast<void*>(&rel_info), 2);
                 }
 
                 section.entries.push_back(reloc_entry);
             }
         }
 
-        bool dump_compress_data(std::vector<char> vec) {
-            FILE* file = fopen("compresscode.dat", "wb");
+        bool dump_buf_data(std::string path, std::vector<char> vec) {
+            FILE* file = fopen(path.c_str(), "wb");
 
             if (!file) {
                 return false;
@@ -274,7 +278,29 @@ namespace eka2l1 {
             return true;
         }
 
-        eka2img load_eka2img(const std::string& path) {
+        void parse_export_dir(eka2img& img) {
+            if (img.header.export_dir_offset == 0) {
+                return;
+            }
+
+            uint32_t* exp = reinterpret_cast<uint32_t*>(img.data.data() + img.header.export_dir_offset);
+
+            for (auto i = 0; i < img.header.export_dir_count; i++) {
+                img.ed.syms.push_back(*exp++);
+            }
+        }
+
+        void parse_iat(eka2img& img) {
+            uint32_t* imp_addr = reinterpret_cast<uint32_t*>(img.data.data() + img.header.code_offset + img.header.text_size);
+
+            while (*imp_addr != 0) {
+                img.iat.its.push_back(*imp_addr++);
+            }
+        }
+
+        std::optional<eka2img> parse_eka2img(const std::string& path, bool read_reloc) {
+            LOG_TRACE("Loading image: {}", path);
+
             eka2img img;
 
             FILE* f = fopen(path.c_str(), "rb");
@@ -283,18 +309,61 @@ namespace eka2l1 {
             auto file_size = ftell(f);
             fseek(f, 0, SEEK_SET);
 
-            fread(&img.header, 1, sizeof(eka2img_header), f);
-            assert(img.header.sig == 0x434F5045);
+            fread(&img.header.uid1, 1, 4, f);
+            fread(&img.header.uid2, 1, 4, f);
+            fread(&img.header.uid3, 1, 4, f);
+            fread(&img.header.check, 1, 4, f);
+            fread(&img.header.sig, 1, 4, f);
+
+            if (img.header.sig != 0x434F5045) {
+                LOG_ERROR("Undefined EKA Image type");
+                fclose(f);
+                return std::optional<eka2img>{};
+            }
+
+            uint32_t temp = 0;
+            fread(&temp, 1, 4, f); 
+
+            if ((temp == 0x2000) || (temp == 0x1000)) {
+                // Quick hack to determinate if this is an EKA1
+                img.header.cpu = static_cast<loader::eka2_cpu>(temp);
+
+                fread(&temp, 1, 4, f);
+                fread(&temp, 1, 4, f);
+                fread(&img.header.petran_major, 1, 1, f);
+                fread(&img.header.petran_minor, 1, 1, f);
+                fread(&img.header.petran_build, 1, 2, f);
+                fread(&img.header.flags, 1, 4, f);
+                fread(&img.header.code_size, 1, 4, f);
+                fread(&img.header.data_size, 1, 4, f);
+                fread(&img.header.heap_size_min, 1, 4, f);
+                fread(&img.header.heap_size_max, 1, 4, f);
+                fread(&img.header.stack_size, 1, 4, f);
+                fread(&img.header.bss_size, 1, 4, f);
+                fread(&img.header.entry_point, 1, 4, f);
+                fread(&img.header.code_base, 1, 4, f);
+                fread(&img.header.data_base, 1, 4, f);
+                fread(&img.header.dll_ref_table_count, 1, 4, f);
+                fread(&img.header.export_dir_offset, 1, 4, f);
+                fread(&img.header.export_dir_count, 1, 4, f);
+                fread(&img.header.text_size, 1, 4, f);
+                fread(&img.header.code_offset, 1, 4, f);
+                fread(&img.header.data_offset, 1, 4, f);
+                fread(&img.header.import_offset, 1, 4, f);
+                fread(&img.header.code_reloc_offset, 1, 4, f);
+                fread(&img.header.data_reloc_offset, 1, 4, f);
+                fread(&img.header.priority, 1, 2, f);
+
+                img.header.compression_type = 1;
+            } else {
+                fseek(f, 0, SEEK_SET);
+                fread(&img.header, 1, sizeof(eka2img_header), f);
+            }
 
             compress_type ctype = (compress_type)(img.header.compression_type);
             dump_flag_info((int)img.header.flags);
 
             if (img.header.compression_type > 0) {
-                LOG_WARN("Image that compressed is not properly supported rn. Try"
-                         "other image until you find one that does not emit this warning");
-
-
-
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
 
                 fread(&img.uncompressed_size, 1, 4, f);
@@ -319,11 +388,7 @@ namespace eka2l1 {
                       + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
 
                 fseek(f, img.header.code_offset, SEEK_SET);
-                fread(temp_buf.data(), 1, 0x10000, f);
-
-                if (dump_compress_data(temp_buf)) {
-                    LOG_INFO("Dumped compress data: compresscode.dat");
-                }
+                fread(temp_buf.data(), 1, temp_buf.size(), f);
 
                 if (ctype == compress_type::deflate_c) {
                     // INFLATE IT!
@@ -338,12 +403,14 @@ namespace eka2l1 {
                                          img.uncompressed_size);
 
                     LOG_INFO("Readed compress, size: {}", readed);
-                } else {
-                    auto temp_stream = std::make_shared<std::istringstream>();
-                    temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
-                    common::ibytepair_stream bpstream(temp_stream);
+                } else if (ctype == compress_type::byte_pair_c) {
+                    auto temp_stream = std::make_shared<std::ifstream>(path);
+					temp_stream->seekg(img.header.code_offset, std::ios::beg);
 
-                    auto tb = bpstream.table();
+                    common::ibytepair_stream bpstream(path, img.header.code_offset);
+
+                    auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
+                    auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
                 }
 
             } else {
@@ -353,6 +420,8 @@ namespace eka2l1 {
                 fseek(f, SEEK_SET, 0);
                 fread(img.data.data(), 1, img.data.size(), f);
             }
+
+            dump_buf_data(path.substr(0, path.find_last_of(".")) + ".dedat", img.data);
 
             switch (img.header.cpu) {
             case eka2_cpu::armv5:
@@ -369,58 +438,68 @@ namespace eka2l1 {
                 break;
             }
 
-            eka2l1::dump_data("Image data", std::vector<uint8_t>(img.data.begin(), img.data.end()));
-
-            //LOG_TRACE("Code size: 0x{:x}, Text size: 0x{:x}.", img.header.code_size, img.header.text_size);
-
             uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
             LOG_TRACE("Import + export size: 0x{:x}", import_export_table_size);
 
+            parse_export_dir(img);
+            parse_iat(img);
+
             // Read the import section
+			common::ro_buf_stream stream(reinterpret_cast<uint8_t*>(img.data.data()), img.data.size());
 
-            std::istringstream strstream;
-            strstream.rdbuf()->pubsetbuf(img.data.data(), img.data.size());
-
-            strstream.seekg(img.header.import_offset, std::ios_base::beg);
-            strstream.read(reinterpret_cast<char*>(&img.import_section.size), 4);
+            stream.seek(img.header.import_offset, common::beg);
+            stream.read(reinterpret_cast<void*>(&img.import_section.size), 4);
 
             img.import_section.imports.resize(img.header.dll_ref_table_count);
 
-            for (auto& import: img.import_section.imports) {
-                strstream.read(reinterpret_cast<char*>(&import.dll_name_offset), 4);
-                strstream.read(reinterpret_cast<char*>(&import.number_of_imports), 4);
+            LOG_INFO("Total dll count: {}", img.header.dll_ref_table_count);
+            LOG_INFO("Import offsets: {}", img.header.import_offset);
 
-                auto crr_size = strstream.tellg();
-                strstream.seekg(img.header.import_offset + import.dll_name_offset, std::ios_base::beg);
+            for (auto& import: img.import_section.imports) {
+                stream.read(reinterpret_cast<void*>(&import.dll_name_offset), 4);
+                stream.read(reinterpret_cast<void*>(&import.number_of_imports), 4);
+
+				if (import.number_of_imports == 0) {
+					continue;
+				}
+
+                auto crr_size = stream.tell();
+                stream.seek(img.header.import_offset + import.dll_name_offset, common::beg);
 
                 char temp = 1;
+
                 while (temp != 0) {
-                    strstream.read(&temp, 1);
+                    stream.read(&temp, 1);
                     import.dll_name += temp;
                 }
 
                 LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
 
-                strstream.seekg(crr_size, std::ios_base::beg);
+                stream.seek(crr_size, common::beg);
 
                 import.ordinals.resize(import.number_of_imports);
 
                 for (auto& oridinal: import.ordinals) {
-                    strstream.read(reinterpret_cast<char*>(&oridinal), 4);
+                    stream.read(reinterpret_cast<void*>(&oridinal), 4);
                 }
             }
 
-            read_relocations(&strstream,
-                             img.code_reloc_section, img.header.code_reloc_offset);
+            if (read_reloc) {
+                read_relocations(&stream,
+                                 img.code_reloc_section, img.header.code_reloc_offset);
 
-            read_relocations(&strstream,
-                             img.data_reloc_section, img.header.data_reloc_offset);
+                read_relocations(&stream,
+                                 img.data_reloc_section, img.header.data_reloc_offset);
 
-            import_exe_image(&img);
+            }
 
             fclose(f);
 
             return img;
+        }
+
+        bool load_eka2img(eka2img &img) {
+            return import_exe_image(&img);
         }
     }
 }

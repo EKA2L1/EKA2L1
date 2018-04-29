@@ -3,10 +3,12 @@ add_library(coreloader
 	${CORE_INCLUDE_DIR}/loader/sis.h
 	${CORE_INCLUDE_DIR}/loader/sis_script_interpreter.h
 	${CORE_INCLUDE_DIR}/loader/eka2img.h
+        ${CORE_INCLUDE_DIR}/loader/romimage.h
 	eka2img.cpp
 	sis.cpp
 	sis_fields.cpp
-	sis_script_interpreter.cpp)
+        sis_script_interpreter.cpp
+        romimage.cpp)
 
 target_link_libraries(coreloader PUBLIC common)
 target_link_libraries(coreloader PRIVATE coremem miniz core)

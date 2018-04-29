@@ -46,7 +46,9 @@ namespace eka2l1 {
 
             std::vector<spdlog::sink_ptr> sinks;
 
-            sinks.push_back(std::make_shared<imgui_logger_sink>(gui_logger));
+            if (gui_logger) {
+                sinks.push_back(std::make_shared<imgui_logger_sink>(gui_logger));
+            }
 
 #ifdef WIN32
             sinks.push_back(std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>());

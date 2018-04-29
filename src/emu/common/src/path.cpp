@@ -2,6 +2,15 @@
 #include <cstring>
 #include <iostream>
 
+#include <common/log.h>
+
+#ifndef WIN32
+#include <sys/stat.h>
+#include <unistd.h>
+#else
+#include <Windows.h>
+#endif
+
 namespace eka2l1 {
     bool is_separator(const char sep) {
        if (sep == '/' || sep == '\\') {
@@ -77,8 +86,6 @@ namespace eka2l1 {
     std::string absolute_path(std::string str, std::string current_dir,bool symbian_use) {
          bool root_dirb = has_root_dir(str, symbian_use);
          bool root_drive = has_root_name(str, symbian_use);
-
-         std::cout << "ROOT DIR: " << root_dirb << " " << root_drive << std::endl;
 
          // Absoluted
          if (root_dirb) {
@@ -173,7 +180,6 @@ namespace eka2l1 {
             return path.substr(res, 1);
         } else {
             if (path.size() > 1 && is_separator(path[0])) {
-                std::cout << "PATH: " << path.c_str() << std::endl;
                 return path.substr(0, 1);
             }
         }
@@ -212,5 +218,98 @@ namespace eka2l1 {
         }
 
         return "";
+    }
+
+    bool has_filename(std::string path, bool symbian_use) {
+        return filename(path, symbian_use) != "";
+    }
+
+    std::string filename(std::string path, bool symbian_use) {
+        std::string fn = "";
+
+        if (is_separator(path[path.length() - 1])) {
+            // It's directory
+            return fn;
+        }
+
+        for (uint32_t i = path.length()-1; i >= 0; i--) {
+            if (is_separator(path[i])) {
+                break;
+            }
+
+            fn = path[i] + fn;
+        }
+
+        return fn;
+    }
+
+    std::string file_directory(std::string path, bool symbian_use) {
+        auto fn = filename(path, symbian_use);
+
+        if (fn == "") {
+            return "";
+        }
+
+        return path.substr(0, path.length() - fn.length());
+    }
+
+    void create_directory(std::string path) {
+#ifndef WIN32
+       mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#else
+       CreateDirectoryA(path.c_str(), NULL);
+#endif
+    }
+
+    bool exists(std::string path) {
+#ifndef WIN32
+       struct stat st;
+       auto res = stat(path.c_str(), &st);
+
+       return res != -1;
+#else
+       DWORD dw_attrib = GetFileAttributesA(path.c_str());
+
+       return (dw_attrib != INVALID_FILE_ATTRIBUTES &&
+               (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
+#endif
+    }
+
+    bool is_dir(std::string path) {
+#ifndef WIN32
+        struct stat st;
+        auto res = stat(path.c_str(), &st);
+
+        if (res == -1) {
+            return false;
+        }
+
+        return S_ISDIR(st.st_mode);
+#else
+        DWORD dw_attrib = GetFileAttributesA(path.c_str());
+
+		return (dw_attrib != INVALID_FILE_ATTRIBUTES &&
+			(dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
+#endif
+    }
+
+    void create_directories(std::string path) {
+        std::string crr_path = "";
+
+        path_iterator ite;
+
+        for (ite = path_iterator(path);
+            ite; ++ite) {
+           crr_path += *ite + "/";
+
+           if (!is_dir(crr_path)) {
+               create_directory(crr_path);
+           }
+       }
+
+        crr_path += *ite + "/";
+        if (!is_dir(crr_path)) {
+            create_directory(crr_path);
+        }
     }
 }

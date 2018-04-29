@@ -344,7 +344,7 @@ namespace eka2l1 {
                 }
 
                 sym_base = (sym_base << 17) + (huff_term << 16);
-                
+
                 for (i = 0; i < num_codes; ++i) {
                     uint32_t len= (uint8_t)decode_tree[i];
                     

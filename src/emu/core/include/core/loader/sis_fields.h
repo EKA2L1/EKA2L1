@@ -117,7 +117,7 @@ namespace eka2l1 {
        };
 
        struct sis_uid: public sis_field {
-           int32_t uid;
+           uint32_t uid;
        };
 
        enum class sis_lang: uint16_t {

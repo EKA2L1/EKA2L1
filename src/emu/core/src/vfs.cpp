@@ -1,5 +1,6 @@
 #include <core/vfs.h>
 #include <common/path.h>
+#include <common/log.h>
 
 #include <iostream>
 
@@ -8,13 +9,26 @@
 #include <thread>
 
 namespace eka2l1 {
-	namespace vfs {
+    namespace vfs {
+
 		std::string _pref_path;
 		std::string _current_dir;
 
 		std::map<std::string, std::string> _mount_map;
 
         std::mutex _gl_mut;
+
+        void init() {
+            _current_dir = "C:";
+
+            mount("C:", "/home/dtt2502/EKA2L1/partitions/C");
+            mount("E:", "/home/dtt2502/EKA2L1/partitions/E");
+        }
+
+        void shutdown() {
+            unmount("C:");
+            unmount("E:");
+        }
 
 		std::string current_dir() {
 			return _current_dir;
@@ -50,7 +64,15 @@ namespace eka2l1 {
                     _current_dir;
 
             // Current directory is always an absolute path
-            std::string partition = current_dir.substr(0, 2);
+            std::string partition;
+
+            if (vir_path.find_first_of(':') == 1) {
+                partition = vir_path.substr(0, 2);
+            } else {
+                partition = current_dir.substr(0, 2);
+            }
+
+            partition[0] = std::toupper(partition[0]);
 
             auto res = _mount_map.find(partition);
 
@@ -59,12 +81,17 @@ namespace eka2l1 {
                 return "";
             }
 
-            current_dir = res->second + current_dir.substr(2);
+            current_dir = res->second + _current_dir.substr(2);
+
+            // Make it case-insensitive
+            for (auto& c: vir_path) {
+                c = std::tolower(c);
+            }
 
             if (!is_absolute(vir_path, current_dir)) {
                 abs_path = absolute_path(vir_path, current_dir);
             } else {
-                abs_path = add_path(res->second, vir_path.substr(1));
+                abs_path = add_path(res->second, vir_path.substr(2));
             }
 
             return abs_path;
