@@ -288,8 +288,8 @@ namespace eka2l1 {
 #else
         DWORD dw_attrib = GetFileAttributesA(path.c_str());
 
-        return (dw_attrib != INVALID_FILE_ATTRIBUTES &&
-                (dw_attrib & FILE_ATTRIBUTE_DIRECTORY))
+		return (dw_attrib != INVALID_FILE_ATTRIBUTES &&
+			(dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
 #endif
     }
 

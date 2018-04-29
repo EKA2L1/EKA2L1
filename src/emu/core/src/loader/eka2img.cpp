@@ -6,6 +6,7 @@
 #include <common/bytepair.h>
 #include <common/flate.h>
 #include <common/data_displayer.h>
+#include <common/buffer.h>
 
 #include <miniz.h>
 #include <cstdio>
@@ -222,7 +223,7 @@ namespace eka2l1 {
             }
         }
 
-        void read_relocations(std::istringstream* stream,
+        void read_relocations(common::ro_buf_stream* stream,
                               eka2_reloc_section& section,
                               uint32_t offset) {
             // No relocations
@@ -230,10 +231,10 @@ namespace eka2l1 {
                 return;
             }
 
-            stream->seekg(offset, std::ios::beg);
+            stream->seek(offset, common::beg);
 
-            stream->read(reinterpret_cast<char*>(&section.size), 4);
-            stream->read(reinterpret_cast<char*>(&section.num_relocs), 4);
+            stream->read(reinterpret_cast<void*>(&section.size), 4);
+            stream->read(reinterpret_cast<void*>(&section.num_relocs), 4);
 
             // There is no document on this anywhere. The code you see online is not right.
             // Here is the part i tell you the truth: The size is including both the base and itself
@@ -244,15 +245,15 @@ namespace eka2l1 {
             for (int i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
-                stream->read(reinterpret_cast<char*>(&reloc_entry.base), 4);
-                stream->read(reinterpret_cast<char*>(&reloc_entry.size), 4);
+                stream->read(reinterpret_cast<void*>(&reloc_entry.base), 4);
+                stream->read(reinterpret_cast<void*>(&reloc_entry.size), 4);
 
                 assert((reloc_entry.size - 8) % 2 == 0);
 
                 reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2));
 
                 for (auto& rel_info: reloc_entry.rels_info) {
-                    stream->read(reinterpret_cast<char*>(&rel_info), 2);
+                    stream->read(reinterpret_cast<void*>(&rel_info), 2);
                 }
 
                 section.entries.push_back(reloc_entry);
@@ -314,14 +315,16 @@ namespace eka2l1 {
             fread(&img.header.check, 1, 4, f);
             fread(&img.header.sig, 1, 4, f);
 
+#if 1
             if (img.header.sig != 0x434F5045) {
                 LOG_ERROR("Undefined EKA Image type");
                 fclose(f);
                 return eka2img{};
             }
+#endif
 
             uint32_t temp = 0;
-            fread(&temp, 1, 4, f);
+            fread(&temp, 1, 4, f); 
 
             if ((temp == 0x2000) || (temp == 0x1000)) {
                 // Quick hack to determinate if this is an EKA1
@@ -403,9 +406,10 @@ namespace eka2l1 {
 
                     LOG_INFO("Readed compress, size: {}", readed);
                 } else if (ctype == compress_type::byte_pair_c) {
-                    auto temp_stream = std::make_shared<std::istringstream>();
-                    temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
-                    common::ibytepair_stream bpstream(temp_stream);
+                    auto temp_stream = std::make_shared<std::ifstream>(path);
+					temp_stream->seekg(img.header.code_offset, std::ios::beg);
+
+                    common::ibytepair_stream bpstream(path, img.header.code_offset);
 
                     auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
                     auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
@@ -444,11 +448,10 @@ namespace eka2l1 {
             parse_iat(img);
 
             // Read the import section
-            std::istringstream strstream;
-            strstream.rdbuf()->pubsetbuf(img.data.data(), img.data.size());
+			common::ro_buf_stream stream(reinterpret_cast<uint8_t*>(img.data.data()), img.data.size());
 
-            strstream.seekg(img.header.import_offset, std::ios_base::beg);
-            strstream.read(reinterpret_cast<char*>(&img.import_section.size), 4);
+            stream.seek(img.header.import_offset, common::beg);
+            stream.read(reinterpret_cast<void*>(&img.import_section.size), 4);
 
             img.import_section.imports.resize(img.header.dll_ref_table_count);
 
@@ -456,35 +459,39 @@ namespace eka2l1 {
             LOG_INFO("Import offsets: {}", img.header.import_offset);
 
             for (auto& import: img.import_section.imports) {
-                strstream.read(reinterpret_cast<char*>(&import.dll_name_offset), 4);
-                strstream.read(reinterpret_cast<char*>(&import.number_of_imports), 4);
+                stream.read(reinterpret_cast<void*>(&import.dll_name_offset), 4);
+                stream.read(reinterpret_cast<void*>(&import.number_of_imports), 4);
 
-                auto crr_size = strstream.tellg();
-                strstream.seekg(img.header.import_offset + import.dll_name_offset, std::ios_base::beg);
+				if (import.number_of_imports == 0) {
+					continue;
+				}
+
+                auto crr_size = stream.tell();
+                stream.seek(img.header.import_offset + import.dll_name_offset, common::beg);
 
                 char temp = 1;
 
                 while (temp != 0) {
-                    strstream.read(&temp, 1);
+                    stream.read(&temp, 1);
                     import.dll_name += temp;
                 }
 
                 LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
 
-                strstream.seekg(crr_size, std::ios_base::beg);
+                stream.seek(crr_size, common::beg);
 
                 import.ordinals.resize(import.number_of_imports);
 
                 for (auto& oridinal: import.ordinals) {
-                    strstream.read(reinterpret_cast<char*>(&oridinal), 4);
+                    stream.read(reinterpret_cast<void*>(&oridinal), 4);
                 }
             }
 
             if (read_reloc) {
-                read_relocations(&strstream,
+                read_relocations(&stream,
                                  img.code_reloc_section, img.header.code_reloc_offset);
 
-                read_relocations(&strstream,
+                read_relocations(&stream,
                                  img.data_reloc_section, img.header.data_reloc_offset);
 
             }

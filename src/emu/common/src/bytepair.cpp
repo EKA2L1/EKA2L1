@@ -15,7 +15,7 @@ namespace eka2l1 {
         // is Super Miners by ID
         int nokia_bytepair_decompress(void* destination, unsigned int dest_size, void* buffer, unsigned int buf_size) {
             uint8_t* data8 = reinterpret_cast<uint8_t*>(buffer);
-            uint32_t lookup_table[0x100];
+            uint32_t lookup_table[0x200];
 
             uint8_t* lookup_table_first = reinterpret_cast<uint8_t*>(lookup_table);
             uint8_t* lookup_table_second = lookup_table_first + 0x100;
@@ -97,12 +97,13 @@ namespace eka2l1 {
                     goto done_data8;
                 }
 
-                if (dest >= dest_end) {
-                    goto done_dest;
-                }
 
                 b = *data8++;
                 *dest++ = p1;
+
+				if (dest >= dest_end) {
+					goto done_dest;
+				}
 
                 p1 = lookup_table_first[b];
 
@@ -143,18 +144,23 @@ namespace eka2l1 {
                goto process_replace;
 
             done_data8:
-               *dest = p1;
+               *dest++ = p1;
                return dest - static_cast<uint8_t*>(destination);
 
             done_dest:
                return dest - static_cast<uint8_t*>(destination);
 
             return 1;
+        } 
+
+        ibytepair_stream::ibytepair_stream(std::shared_ptr<std::istream> stream) {
+			compress_stream = stream;
         }
 
-        ibytepair_stream::ibytepair_stream(std::shared_ptr<std::istream> stream)
-            : compress_stream(std::move(stream)) {
-        }
+		ibytepair_stream::ibytepair_stream(std::string path, uint32_t start) {
+			compress_stream = std::make_shared<std::ifstream>(path, std::ios::binary);
+			compress_stream->seekg(start);
+		}
 
         ibytepair_stream::index_table ibytepair_stream::table() const {
             return idx_tab;
@@ -166,7 +172,7 @@ namespace eka2l1 {
 
         // Read the table entry
         void ibytepair_stream::read_table() {
-            compress_stream->read(reinterpret_cast<char*>(&idx_tab.header), 10);
+			compress_stream->read(reinterpret_cast<char*>(&idx_tab.header), 10);
             idx_tab.page_size.resize(idx_tab.header.number_of_pages);
 
             compress_stream->read(reinterpret_cast<char*>(idx_tab.page_size.data()),
@@ -176,7 +182,10 @@ namespace eka2l1 {
         uint32_t ibytepair_stream::read_page(char* dest, uint32_t page, size_t size) {
             uint32_t len = common::min<uint32_t>(size, 4096);
             auto crr_pos = compress_stream->tellg();
-            std::vector<char> buf(idx_tab.page_size[page]);
+            std::vector<char> buf;
+
+			buf.resize(idx_tab.page_size[page]);
+
             compress_stream->read(buf.data(), buf.size());
             auto omitted = nokia_bytepair_decompress(dest, len, buf.data(), idx_tab.page_size[page]);
 

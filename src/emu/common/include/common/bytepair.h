@@ -7,6 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace eka2l1 {
     namespace common {
@@ -43,6 +44,8 @@ namespace eka2l1 {
 
         public:
             ibytepair_stream(std::shared_ptr<std::istream> stream);
+			ibytepair_stream(std::string path, uint32_t start);
+
             index_table table() const;
 
             void seek_fwd(size_t size);

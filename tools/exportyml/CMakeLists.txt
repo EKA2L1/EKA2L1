@@ -3,8 +3,7 @@ add_executable(exportyml src/main.cpp)
 target_link_libraries(exportyml
     PRIVATE
     common
-    yaml-cpp
-    stdc++fs)
+    yaml-cpp)
 
 target_include_directories(exportyml
     PUBLIC
@@ -17,5 +16,7 @@ if (MSVC)
     target_include_directories(exportyml
     PUBLIC
     ${LIBCXXABI_INCLUDE_DIR})
+else()
+    target_link_libraries(exportlister PRIVATE stdc++fs)
 endif()
 

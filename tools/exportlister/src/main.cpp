@@ -13,7 +13,7 @@ using namespace eka2l1::loader;
 std::vector<fs::path> libs;
 
 void dump_to_syms(const std::string& org_path, eka2img& img) {
-    std::string lib = fs::path(org_path).filename().replace_extension(fs::path(""));
+    std::string lib = fs::path(org_path).filename().replace_extension(fs::path("")).string();
     std::ofstream of(lib + ".nsd");
 
     of << "library: " << lib << std::endl;
@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
     }
 
     for (auto& path: libs) {
-        eka2img img = parse_eka2img(path, false);
-        dump_to_syms(path, img);
+        eka2img img = parse_eka2img(path.string(), false);
+        dump_to_syms(path.string(), img);
     }
 
     return 0;
