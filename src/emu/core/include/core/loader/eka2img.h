@@ -156,7 +156,7 @@ namespace eka2l1 {
             bool has_extended_header = false;
         };
 
-        eka2img parse_eka2img(const std::string& path);
+        eka2img parse_eka2img(const std::string& path, bool read_reloc = true);
         bool    load_eka2img(eka2img& img);
     }
 }

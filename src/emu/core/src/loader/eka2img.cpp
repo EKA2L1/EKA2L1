@@ -241,7 +241,7 @@ namespace eka2l1 {
             // code (uint16_t).
             // Since I saw repeated pattern and also saw some code from elf2e32 reloaded, i just subtract the
             // seek with 8, and actually works. Now i feel like i has wasted 4 hours of my life figuring out this :P
-            while ((uint32_t)stream->tellg() - offset < section.size) {
+            for (int i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
                 stream->read(reinterpret_cast<char*>(&reloc_entry.base), 4);
@@ -249,26 +249,18 @@ namespace eka2l1 {
 
                 assert((reloc_entry.size - 8) % 2 == 0);
 
-                reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2)-1);
+                reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2));
 
                 for (auto& rel_info: reloc_entry.rels_info) {
                     stream->read(reinterpret_cast<char*>(&rel_info), 2);
-                }
-
-                uint16_t temp_padding = 0;
-                stream->read(reinterpret_cast<char*>(&temp_padding), 2);
-
-                // If it's zero, maybe it's padding
-                if (temp_padding != 0) {
-                    reloc_entry.rels_info.push_back(temp_padding);
                 }
 
                 section.entries.push_back(reloc_entry);
             }
         }
 
-        bool dump_compress_data(std::vector<char> vec) {
-            FILE* file = fopen("compresscode.dat", "wb");
+        bool dump_buf_data(std::string path, std::vector<char> vec) {
+            FILE* file = fopen(path.c_str(), "wb");
 
             if (!file) {
                 return false;
@@ -305,7 +297,7 @@ namespace eka2l1 {
             }
         }
 
-        eka2img parse_eka2img(const std::string& path) {
+        eka2img parse_eka2img(const std::string& path, bool read_reloc) {
             LOG_TRACE("Loading image: {}", path);
 
             eka2img img;
@@ -365,8 +357,6 @@ namespace eka2l1 {
             } else {
                 fseek(f, 0, SEEK_SET);
                 fread(&img.header, 1, sizeof(eka2img_header), f);
-
-                int a = 5;
             }
 
             compress_type ctype = (compress_type)(img.header.compression_type);
@@ -399,10 +389,6 @@ namespace eka2l1 {
                 fseek(f, img.header.code_offset, SEEK_SET);
                 fread(temp_buf.data(), 1, temp_buf.size(), f);
 
-                if (dump_compress_data(temp_buf)) {
-                    LOG_INFO("Dumped compress data: compresscode.dat");
-                }
-
                 if (ctype == compress_type::deflate_c) {
                     // INFLATE IT!
                     // Weird behavior, this is my way
@@ -421,7 +407,8 @@ namespace eka2l1 {
                     temp_stream->rdbuf()->pubsetbuf(temp_buf.data(), temp_buf.size());
                     common::ibytepair_stream bpstream(temp_stream);
 
-                    bpstream.read_pages(&img.data[img.header.code_offset], img.uncompressed_size);
+                    auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
+                    auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
                 }
 
             } else {
@@ -431,6 +418,9 @@ namespace eka2l1 {
                 fseek(f, SEEK_SET, 0);
                 fread(img.data.data(), 1, img.data.size(), f);
             }
+
+
+            dump_buf_data(path.substr(0, path.find_last_of(".")) + ".dedat", img.data);
 
             switch (img.header.cpu) {
             case eka2_cpu::armv5:
@@ -462,6 +452,9 @@ namespace eka2l1 {
 
             img.import_section.imports.resize(img.header.dll_ref_table_count);
 
+            LOG_INFO("Total dll count: {}", img.header.dll_ref_table_count);
+            LOG_INFO("Import offsets: {}", img.header.import_offset);
+
             for (auto& import: img.import_section.imports) {
                 strstream.read(reinterpret_cast<char*>(&import.dll_name_offset), 4);
                 strstream.read(reinterpret_cast<char*>(&import.number_of_imports), 4);
@@ -470,6 +463,7 @@ namespace eka2l1 {
                 strstream.seekg(img.header.import_offset + import.dll_name_offset, std::ios_base::beg);
 
                 char temp = 1;
+
                 while (temp != 0) {
                     strstream.read(&temp, 1);
                     import.dll_name += temp;
@@ -486,11 +480,14 @@ namespace eka2l1 {
                 }
             }
 
-            read_relocations(&strstream,
-                             img.code_reloc_section, img.header.code_reloc_offset);
+            if (read_reloc) {
+                read_relocations(&strstream,
+                                 img.code_reloc_section, img.header.code_reloc_offset);
 
-            read_relocations(&strstream,
-                             img.data_reloc_section, img.header.data_reloc_offset);
+                read_relocations(&strstream,
+                                 img.data_reloc_section, img.header.data_reloc_offset);
+
+            }
 
             fclose(f);
 

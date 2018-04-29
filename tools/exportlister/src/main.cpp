@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     }
 
     for (auto& path: libs) {
-        eka2img img = parse_eka2img(path);
+        eka2img img = parse_eka2img(path, false);
         dump_to_syms(path, img);
     }
 
