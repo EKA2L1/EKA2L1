@@ -298,7 +298,7 @@ namespace eka2l1 {
             }
         }
 
-        eka2img parse_eka2img(const std::string& path, bool read_reloc) {
+        std::optional<eka2img> parse_eka2img(const std::string& path, bool read_reloc) {
             LOG_TRACE("Loading image: {}", path);
 
             eka2img img;
@@ -315,13 +315,11 @@ namespace eka2l1 {
             fread(&img.header.check, 1, 4, f);
             fread(&img.header.sig, 1, 4, f);
 
-#if 1
             if (img.header.sig != 0x434F5045) {
                 LOG_ERROR("Undefined EKA Image type");
                 fclose(f);
-                return eka2img{};
+                return std::optional<eka2img>{};
             }
-#endif
 
             uint32_t temp = 0;
             fread(&temp, 1, 4, f); 
@@ -422,7 +420,6 @@ namespace eka2l1 {
                 fseek(f, SEEK_SET, 0);
                 fread(img.data.data(), 1, img.data.size(), f);
             }
-
 
             dump_buf_data(path.substr(0, path.find_last_of(".")) + ".dedat", img.data);
 

@@ -187,6 +187,12 @@ namespace eka2l1 {
 			buf.resize(idx_tab.page_size[page]);
 
             compress_stream->read(buf.data(), buf.size());
+
+            if (buf.data() == nullptr) {
+                LOG_ERROR("Buffer is null! Size: {}", idx_tab.page_size[page]);
+                return 0;
+            }
+
             auto omitted = nokia_bytepair_decompress(dest, len, buf.data(), idx_tab.page_size[page]);
 
             return omitted;

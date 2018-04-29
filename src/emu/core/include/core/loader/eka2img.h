@@ -3,8 +3,9 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <optional>
 
-// A lightweight loader based on elfe32
+// A lightweight loader based on elf2e32
 
 namespace eka2l1 {
     namespace loader {
@@ -156,7 +157,7 @@ namespace eka2l1 {
             bool has_extended_header = false;
         };
 
-        eka2img parse_eka2img(const std::string& path, bool read_reloc = true);
+        std::optional<eka2img> parse_eka2img(const std::string& path, bool read_reloc = true);
         bool    load_eka2img(eka2img& img);
     }
 }

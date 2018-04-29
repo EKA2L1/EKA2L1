@@ -18,16 +18,24 @@ namespace eka2l1 {
         }
 
         void load(const std::string& name, uint64_t id, const std::string& path) {
-            loader::eka2img img = loader::parse_eka2img(path);
-            bool succ = loader::load_eka2img(img);
+            auto img = loader::parse_eka2img(path);
+
+            if (!img) {
+                LOG_CRITICAL("This is not what i expected! Fake E32Image!");
+                return;
+            }
+
+            loader::eka2img& real_img = img.value();
+            bool succ = loader::load_eka2img(real_img);
 
             if (!succ) {
                 LOG_CRITICAL("Unable to load EKA2Img!");
+                return;
             }
 
-            crr_process = std::make_shared<process>(id,name, img.rt_code_addr + img.header.entry_point,
-                                  img.header.heap_size_min, img.header.heap_size_max,
-                                  img.header.stack_size);
+            crr_process = std::make_shared<process>(id,name, real_img.rt_code_addr + real_img.header.entry_point,
+                                  real_img.header.heap_size_min, real_img.header.heap_size_max,
+                                  real_img.header.stack_size);
 
             crr_process->run();
         }

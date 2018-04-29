@@ -8,7 +8,8 @@ add_library(common
     include/common/data_displayer.h
     include/common/flate.h
     include/common/resource.h
-	include/common/buffer.h
+    include/common/buffer.h
+    include/common/hash.h
     src/path.cpp
     src/log.cpp
     src/cvt.cpp
