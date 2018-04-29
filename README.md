@@ -1,33 +1,7 @@
 # EKA2L1
-- EKA2L1 is a Symbian OS HLE. The current thing it can do now is load rom. Progress are slowly being made. Screenshot provides below.
+- Best Symbian OS emulator to install and run malware
 
-![Screenshot](https://raw.githubusercontent.com/bentokun/EKA2L1/master/screenshots/prototype.png)
-
-- Requirements:
-    + 2GB Memory
-    + GPU card supports at least OpenGL 3.1
-
-- Dependencies:
-    + Dynarmic (Future)
-    + ImGui
-    + GLFW
-    + Miniz
-    + Glad
-
-- Help me
-	    * Currently, symbols are extracted from library file in Symbian SDK. It's the method that most re use. Library are converted to IDT using IDS tool.
-            * After being converted to IDT, there will be a parser that parse the IDT file, to generate correspond HLE header and source for that library.
-
-- Intepreter
-    * Need help to write a ARMv6 Intepreter. I intend to use Dynarmic along.
-
-- Leave and trap
-    * Need help implement them?
-    * The emulator will catch the leave and stop the process and report them to the user. When the leave is trapped, if enabled, emulator will log the leave to the Logger, and continue
-
-- GUI
-    * Currently a gui is supported. By compile and run the executable in src/emu/imgui, and change the SIS package path to your path, you can get the metadata and other logging information. An ARM debugger is planned.
-    * No user supports provided yet (not until I finished the package manager)
+![Screenshot](https://media.discordapp.net/attachments/431430141319708692/439051654537674754/unknown.png?width=860&height=484)
 
 - Information and contact
     * You can contact me through Discord channel [here](https://discord.gg/5Bm5SJ9)
