@@ -1,4 +1,5 @@
 #include <loader/eka2img.h>
+#include <loader/romimage.h>
 #include <common/log.h>
 
 #include <iostream>
@@ -20,6 +21,17 @@ void dump_to_syms(const std::string& org_path, eka2img& img) {
 
     for (uint32_t i = 0; i < img.ed.syms.size(); i++) {
         of << "\t" << i << ": " << img.ed.syms[i] << std::endl;
+    }
+}
+
+void dump_to_syms2(const std::string& org_path, romimg& img) {
+    std::string lib = fs::path(org_path).filename().replace_extension(fs::path("")).string();
+    std::ofstream of(lib + ".nsd");
+
+    of << "library: " << lib << std::endl;
+
+    for (uint32_t i = 0; i < img.exports.size(); i++) {
+        of << "\t" << i << ": " << img.exports[i] << std::endl;
     }
 }
 
@@ -45,8 +57,19 @@ int main(int argc, char** argv) {
     }
 
     for (auto& path: libs) {
-        eka2img img = parse_eka2img(path.string(), false);
-        dump_to_syms(path.string(), img);
+        auto img = parse_eka2img(path.string(), false);
+
+        if (img) {
+            dump_to_syms(path.string(), img.value());
+        } else {
+            auto rom = parse_romimg(path.string());
+
+            if (rom) {
+                dump_to_syms2(path.string(), rom.value());
+            } else {
+                LOG_ERROR("Can't dump: not romimg or e32img!");
+            }
+        }
     }
 
     return 0;

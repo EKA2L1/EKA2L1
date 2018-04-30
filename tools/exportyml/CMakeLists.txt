@@ -17,6 +17,6 @@ if (MSVC)
     PUBLIC
     ${LIBCXXABI_INCLUDE_DIR})
 else()
-    target_link_libraries(exportlister PRIVATE stdc++fs)
+    target_link_libraries(exportyml PRIVATE stdc++fs)
 endif()
 

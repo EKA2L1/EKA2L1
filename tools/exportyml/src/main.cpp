@@ -1,14 +1,21 @@
+// Unfinished
+
 #include <common/log.h>
+#include <common/hash.h>
+#include <common/cvt.h>
+
 #include <yaml-cpp/yaml.h>
 
 #include <experimental/filesystem>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 // You could tell that I'm depressed
 #include <cxxabi.h>
 
 using namespace eka2l1::log;
+using namespace eka2l1;
 namespace fs = std::experimental::filesystem;
 
 std::vector<fs::path> libs;
@@ -17,6 +24,8 @@ YAML::Emitter emitter;
 std::string current_lib;
 
 using function_name = std::string;
+using vtable_name = std::string;
+using typeinfo_name = std::string;
 using function_raw_args = std::string;
 using function_args = std::string;
 
@@ -32,29 +41,6 @@ void list_all_libs() {
             libs.push_back(fs::path(f));
         }
     }
-}
-
-std::vector<uint32_t> read_nsd(const fs::path& path) {
-    YAML::Node node = YAML::LoadFile(path.string());
-    std::vector<uint32_t> exp_nodes;
-
-    current_lib = node["library"].as<std::string>();
-
-    uint64_t i = 0;
-
-    while (true) {
-        auto nn = node[std::to_string(i)];
-
-        if (!nn) {
-            break;
-        }
-
-        exp_nodes.push_back(nn.as<uint32_t>());
-
-        ++i;
-    }
-
-    return exp_nodes;
 }
 
 std::vector<function_name> read_idt(const fs::path& path) {
@@ -78,16 +64,26 @@ std::vector<function_name> read_idt(const fs::path& path) {
         }
 
         function_name raw_sauce = line.substr(where + 5);
-        function_name cooked_sauce;
 
-        cooked_sauce.resize(256);
+        auto pos = raw_sauce.find("Pascal");
+
+        if (pos != std::string::npos) {
+            continue;
+        }
+
+        char* cooked_sauce = reinterpret_cast<char*>(malloc(512));
         int result = 0;
 
         size_t len = raw_sauce.length();
+        char* cooked_output = abi::__cxa_demangle(raw_sauce.c_str(), cooked_sauce, &len, &result);
 
-        abi::__cxa_demangle(raw_sauce.c_str(), cooked_sauce.data(), &len, &result);
-
-        fts.push_back(cooked_sauce);
+        if (!result) {
+            fts.push_back(std::string(cooked_output));
+            LOG_INFO("{}", cooked_output);
+        } else {
+            fts.push_back(raw_sauce);
+            free(cooked_sauce);
+        }
 
         ++lc;
     }
@@ -96,11 +92,22 @@ std::vector<function_name> read_idt(const fs::path& path) {
 }
 
 void yml_link(const fs::path& path) {
-    fs::path dll_path = path.filename().replace_extension(".nsd");
-
-    auto exports = read_nsd(dll_path);
     auto func_names = read_idt(path);
+    auto lib = path.filename().replace_extension("").string();
 
+    emitter << YAML::BeginMap;
+    emitter << YAML::Key << "library" << YAML::Value << lib;
+    emitter << YAML::Key << "sid" << YAML::Value << "0x" + common::to_string(common::hash(lib), std::hex);
+    emitter << YAML::Key << "functions" ;
+    emitter << YAML::Value << YAML::BeginMap;
+
+    for (auto& func_name: func_names) {
+        emitter << YAML::Key << func_name;
+        emitter << YAML::Value << "0x" + common::to_string(common::hash(func_name), std::hex);
+    }
+
+    emitter << YAML::EndMap;
+    emitter << YAML::EndMap;
 }
 
 int main(int argc, char** argv) {
@@ -114,9 +121,18 @@ int main(int argc, char** argv) {
         }
     }
 
+    emitter << YAML::BeginMap;
+    emitter << YAML::Key << "modules";
+    emitter << YAML::Value;
+
     for (auto lib: libs) {
         yml_link(lib);
     }
+
+    emitter << YAML::EndMap;
+
+    std::ofstream out("db.yml");
+    out << emitter.c_str();
 
     return 0;
 }
