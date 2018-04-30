@@ -12,12 +12,6 @@ namespace eka2l1 {
             fread(&img.header, 1, sizeof(rom_header), dear_imrom);
             fseek(dear_imrom, img.header.export_dir_address - img.header.code_address + sizeof(rom_header), SEEK_SET);
 
-            img.exports.resize(img.header.export_dir_count);
-
-            for (auto& exp: img.exports) {
-                fread(&exp, 1, 4, dear_imrom);
-            }
-
             fclose(dear_imrom);
 
             return img;

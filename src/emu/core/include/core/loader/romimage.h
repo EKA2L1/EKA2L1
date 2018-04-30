@@ -35,7 +35,7 @@ namespace eka2l1 {
             uint32_t export_dir_address;
             uint32_t code_checksum;
             uint32_t data_checksum;
-            //rom_vsec_info sec_info;
+            rom_vsec_info sec_info;
             uint8_t major;
             uint8_t minor;
             uint16_t build;
@@ -44,9 +44,9 @@ namespace eka2l1 {
             uint32_t data_bss_linear_base_address;
             uint32_t next_extension_linear_address;
             uint32_t harware_variant; //I have no idea what this is exactly
-            //uint32_t total_size;
-            //uint32_t module;
-            //uint32_t exception_des;
+            uint32_t total_size;
+            uint32_t module;
+            uint32_t exception_des;
         };
 
         struct romimg {
