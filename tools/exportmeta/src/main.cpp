@@ -66,6 +66,8 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
             new_entry.id = common::hash(
                         std::string(reinterpret_cast<const char*>(clang_Cursor_getMangling(cursor).data)));
 
+            new_entry.attribute = "none";
+
             if (clang_CXXMethod_isPureVirtual(cursor)) {
                 new_entry.attribute = "pure_virtual";
                 info->sinful = true;
@@ -83,8 +85,6 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
                 new_entry.attribute = "override";
                 info->sinful = true;
                 clang_disposeOverriddenCursors(overriden_cursor);
-            } else {
-                new_entry.attribute = "none";
             }
 
             LOG_TRACE("Find method: {}, Attribute: {}", new_entry.name, new_entry.attribute);
