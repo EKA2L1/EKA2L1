@@ -1,3 +1,11 @@
 add_executable(exportmeta src/main.cpp)
 target_link_libraries(exportmeta PRIVATE
-     common libclang)
+     common libclang yaml-cpp)
+
+target_include_directories(exportmeta
+    PUBLIC
+    ${YAML_INCLUDE_DIR})
+
+if (NOT MSVC)
+ target_link_libraries(exportmeta PRIVATE stdc++fs)
+endif()

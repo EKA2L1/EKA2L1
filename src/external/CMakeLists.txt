@@ -52,7 +52,7 @@ if (BUILD_TOOLS)
 
     if (LIBCLANG_FOUND)
         add_library(libclang INTERFACE)
-        target_include_directories(libclang INTERFACE ${libclang_lib})
+        target_link_libraries(libclang INTERFACE ${libclang_lib})
         target_include_directories(libclang INTERFACE ${libclang_include_dir})
     endif()
 endif()
