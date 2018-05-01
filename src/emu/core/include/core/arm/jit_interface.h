@@ -1,7 +1,7 @@
 #pragma once
 
-#include <common/types.h>
 #include <array>
+#include <common/types.h>
 
 namespace eka2l1 {
     namespace arm {
@@ -36,8 +36,8 @@ namespace eka2l1 {
             virtual address get_entry_point() = 0;
             virtual uint32_t get_cpsr() = 0;
 
-            virtual void save_context(thread_context& ctx) = 0;
-            virtual void load_context(const thread_context& ctx) = 0;
+            virtual void save_context(thread_context &ctx) = 0;
+            virtual void load_context(const thread_context &ctx) = 0;
 
             virtual void set_stack_top(address addr) = 0;
             virtual address get_stack_top() = 0;

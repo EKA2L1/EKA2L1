@@ -1,39 +1,38 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
-#include <string>
 #include <optional>
+#include <string>
+#include <vector>
 
 // A lightweight loader based on elf2e32
 
 namespace eka2l1 {
     namespace loader {
-        enum class eka2_cpu: uint16_t {
+        enum class eka2_cpu : uint16_t {
             x86 = 0x1000,
             armv4 = 0x2000,
-            armv5=0x2001,
-            armv6=0x2002,
+            armv5 = 0x2001,
+            armv6 = 0x2002,
             mstar_core = 0x4000
         };
 
-        enum class eka2_flags: uint32_t {
+        enum class eka2_flags : uint32_t {
             exe = 0,
             dll = 1
         };
 
-        enum class eka2_img_type: uint32_t {
+        enum class eka2_img_type : uint32_t {
             exe = 0x1000007a,
             dll = 0x10000079
         };
 
         // Copy from E32Explorer
-        struct eka2img_import_block
-        {
+        struct eka2img_import_block {
             //This is only for EKA1 targeted import block from PE
             uint32_t dll_name_offset; //relative to the import section
             int32_t number_of_imports; // number of imports from this dll
-            std::vector<uint32_t> ordinals;	// TUint32 iImport[iNumberOfImports];
+            std::vector<uint32_t> ordinals; // TUint32 iImport[iNumberOfImports];
             std::string dll_name;
         };
 
@@ -48,9 +47,9 @@ namespace eka2l1 {
             eka2img_vsec_info info;
             uint32_t exception_des;
             uint32_t spare2;
-            uint16_t export_desc_size;	// size of bitmap section
-            uint8_t	 export_desc_type;	// type of description of holes in export table
-            uint8_t	 export_desc;
+            uint16_t export_desc_size; // size of bitmap section
+            uint8_t export_desc_type; // type of description of holes in export table
+            uint8_t export_desc;
         };
 
         struct eka2_import_section {
@@ -74,9 +73,9 @@ namespace eka2l1 {
             std::vector<uint16_t> rels_info;
         };
 
-        #define ELF32_R_SYM(i) ((i)>>8)
-        #define ELF32_R_TYPE(i) ((unsigned char)(i))
-        #define ELF32_R_INFO(s,t) (((s)<<8)+(unsigned char)(t))
+#define ELF32_R_SYM(i) ((i) >> 8)
+#define ELF32_R_TYPE(i) ((unsigned char)(i))
+#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
 
         struct eka2_reloc_section {
             uint32_t size;
@@ -157,7 +156,7 @@ namespace eka2l1 {
             bool has_extended_header = false;
         };
 
-        std::optional<eka2img> parse_eka2img(const std::string& path, bool read_reloc = true);
-        bool    load_eka2img(eka2img& img);
+        std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
+        bool load_eka2img(eka2img &img);
     }
 }

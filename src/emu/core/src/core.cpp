@@ -1,9 +1,9 @@
 #include <core.h>
 #include <process.h>
 
-#include <loader/eka2img.h>
-#include <disasm/disasm.h>
 #include <common/log.h>
+#include <disasm/disasm.h>
+#include <loader/eka2img.h>
 
 namespace eka2l1 {
     namespace core {
@@ -17,7 +17,7 @@ namespace eka2l1 {
             disasm::init();
         }
 
-        void load(const std::string& name, uint64_t id, const std::string& path) {
+        void load(const std::string &name, uint64_t id, const std::string &path) {
             auto img = loader::parse_eka2img(path);
 
             if (!img) {
@@ -25,7 +25,7 @@ namespace eka2l1 {
                 return;
             }
 
-            loader::eka2img& real_img = img.value();
+            loader::eka2img &real_img = img.value();
             bool succ = loader::load_eka2img(real_img);
 
             if (!succ) {
@@ -33,9 +33,9 @@ namespace eka2l1 {
                 return;
             }
 
-            crr_process = std::make_shared<process>(id,name, real_img.rt_code_addr + real_img.header.entry_point,
-                                  real_img.header.heap_size_min, real_img.header.heap_size_max,
-                                  real_img.header.stack_size);
+            crr_process = std::make_shared<process>(id, name, real_img.rt_code_addr + real_img.header.entry_point,
+                real_img.header.heap_size_min, real_img.header.heap_size_max,
+                real_img.header.stack_size);
 
             crr_process->run();
         }

@@ -1,11 +1,11 @@
-#include <atomic>
 #include <algorithm>
-#include <thread>
+#include <atomic>
 #include <queue>
+#include <thread>
 
 #include <core_kernel.h>
-#include <kernel/thread.h>
 #include <kernel/scheduler.h>
+#include <kernel/thread.h>
 #include <ptr.h>
 
 namespace eka2l1 {
@@ -32,7 +32,7 @@ namespace eka2l1 {
             return crr_uid.load();
         }
 
-        void add_thread(kernel::thread* thr) {
+        void add_thread(kernel::thread *thr) {
             const std::lock_guard<std::mutex> guard(mut);
             threads.emplace(thr->unique_id(), thr);
         }
@@ -49,7 +49,7 @@ namespace eka2l1 {
             return true;
         }
 
-        kernel::thread* crr_running_thread() {
+        kernel::thread *crr_running_thread() {
             return thr_sch->current_running_thread();
         }
     }

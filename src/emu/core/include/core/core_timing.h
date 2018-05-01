@@ -1,7 +1,7 @@
 #pragma once
 
-#include <functional>
 #include <cstdint>
+#include <functional>
 
 namespace eka2l1 {
     // Based on Dolphin
@@ -50,13 +50,13 @@ namespace eka2l1 {
         uint64_t get_idle_ticks();
         uint64_t get_global_time_us();
 
-        int register_event(const std::string& name, timed_callback callback);
-        void restore_register_event(int event_type, const std::string& name, timed_callback callback);
+        int register_event(const std::string &name, timed_callback callback);
+        void restore_register_event(int event_type, const std::string &name, timed_callback callback);
         void unregister_all_events();
 
         void schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata = 0);
         void schedule_event_imm(int event_type, uint64_t userdata = 0);
-        void unschedule_event(int event_type ,uint64_t userdata);
+        void unschedule_event(int event_type, uint64_t userdata);
 
         void remove_event(int event_type);
         void remove_all_events(int event_type);

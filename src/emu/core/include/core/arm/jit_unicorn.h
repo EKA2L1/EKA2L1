@@ -1,12 +1,12 @@
 #pragma once
 
-#include <unicorn/unicorn.h>
 #include <arm/jit_interface.h>
+#include <unicorn/unicorn.h>
 
 namespace eka2l1 {
     namespace arm {
-        class jit_unicorn: public jit_interface {
-            uc_engine* engine;
+        class jit_unicorn : public jit_interface {
+            uc_engine *engine;
             address epa;
 
         private:
@@ -33,8 +33,8 @@ namespace eka2l1 {
 
             uint32_t get_cpsr() override;
 
-            void save_context(thread_context& ctx) override;
-            void load_context(const thread_context& ctx) override;
+            void save_context(thread_context &ctx) override;
+            void load_context(const thread_context &ctx) override;
 
             void set_entry_point(address ep) override;
             address get_entry_point() override;

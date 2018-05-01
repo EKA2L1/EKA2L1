@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include "core_mem.h"
+#include <cstdint>
 
 namespace eka2l1 {
     // Symbian is 32 bit
@@ -15,7 +15,7 @@ namespace eka2l1 {
         ptr()
             : mem_address(0) {}
 
-        ptr(const T* ptr) {
+        ptr(const T *ptr) {
             mem_address = (address)ptr;
         }
 
@@ -26,7 +26,7 @@ namespace eka2l1 {
             return mem_address;
         }
 
-        T* get() const {
+        T *get() const {
             return core_mem::get_addr<T>(mem_address);
         }
 

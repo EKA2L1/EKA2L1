@@ -1,15 +1,15 @@
 // Unfinished
 
-#include <common/log.h>
-#include <common/hash.h>
 #include <common/cvt.h>
+#include <common/hash.h>
+#include <common/log.h>
 
 #include <yaml-cpp/yaml.h>
 
 #include <experimental/filesystem>
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 // You could tell that I'm depressed
 #include <cxxabi.h>
@@ -34,7 +34,7 @@ void init_log() {
 }
 
 void list_all_libs() {
-    for (auto& f: fs::directory_iterator(".")) {
+    for (auto &f : fs::directory_iterator(".")) {
         fs::path fdir = fs::path(f);
 
         if (fs::is_regular_file(fdir) && fdir.extension().string() == ".idt") {
@@ -43,7 +43,7 @@ void list_all_libs() {
     }
 }
 
-std::vector<function_name> read_idt(const fs::path& path) {
+std::vector<function_name> read_idt(const fs::path &path) {
     std::ifstream idt(path.string());
     std::vector<function_name> fts;
 
@@ -71,11 +71,11 @@ std::vector<function_name> read_idt(const fs::path& path) {
             continue;
         }
 
-        char* cooked_sauce = reinterpret_cast<char*>(malloc(512));
+        char *cooked_sauce = reinterpret_cast<char *>(malloc(512));
         int result = 0;
 
         size_t len = raw_sauce.length();
-        char* cooked_output = abi::__cxa_demangle(raw_sauce.c_str(), cooked_sauce, &len, &result);
+        char *cooked_output = abi::__cxa_demangle(raw_sauce.c_str(), cooked_sauce, &len, &result);
 
         if (!result) {
             fts.push_back(std::string(cooked_output));
@@ -91,17 +91,17 @@ std::vector<function_name> read_idt(const fs::path& path) {
     return fts;
 }
 
-void yml_link(const fs::path& path) {
+void yml_link(const fs::path &path) {
     auto func_names = read_idt(path);
     auto lib = path.filename().replace_extension("").string();
 
     emitter << YAML::BeginMap;
     emitter << YAML::Key << "library" << YAML::Value << lib;
     emitter << YAML::Key << "sid" << YAML::Value << "0x" + common::to_string(common::hash(lib), std::hex);
-    emitter << YAML::Key << "functions" ;
+    emitter << YAML::Key << "functions";
     emitter << YAML::Value << YAML::BeginMap;
 
-    for (auto& func_name: func_names) {
+    for (auto &func_name : func_names) {
         emitter << YAML::Key << func_name;
         emitter << YAML::Value << "0x" + common::to_string(common::hash(func_name), std::hex);
     }
@@ -110,7 +110,7 @@ void yml_link(const fs::path& path) {
     emitter << YAML::EndMap;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     init_log();
 
     if (argc == 1) {
@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
     emitter << YAML::Key << "modules";
     emitter << YAML::Value;
 
-    for (auto lib: libs) {
+    for (auto lib : libs) {
         yml_link(lib);
     }
 

@@ -1,7 +1,7 @@
 #include <common/cvt.h>
 
-#include <locale>
 #include <codecvt>
+#include <locale>
 
 namespace eka2l1 {
     namespace common {

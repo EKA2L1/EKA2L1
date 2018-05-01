@@ -1,11 +1,11 @@
 #include <loader/sis_fields.h>
 #include <loader/sis_script_interpreter.h>
 
-#include <cstdio>
 #include <cassert>
+#include <cstdio>
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include <fstream>
 

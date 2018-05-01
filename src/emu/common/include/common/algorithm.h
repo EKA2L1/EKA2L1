@@ -2,11 +2,11 @@
 
 #include <common/types.h>
 
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 
 namespace eka2l1 {
-	namespace common {
+    namespace common {
         template <typename T>
         constexpr T max(T a, T b) {
             return a > b ? a : b;
@@ -28,5 +28,5 @@ namespace eka2l1 {
         constexpr size_t GB(size_t gb) {
             return gb * MB(1024);
         }
-	}
+    }
 }

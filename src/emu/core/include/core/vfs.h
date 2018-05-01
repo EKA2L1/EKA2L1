@@ -7,13 +7,13 @@ namespace eka2l1 {
         void init();
         void shutdown();
 
-		std::string current_dir();
-		void current_dir(const std::string &new_dir);
+        std::string current_dir();
+        void current_dir(const std::string &new_dir);
 
-		void mount(const std::string &dvc, const std::string &real_path);
-		void unmount(const std::string &dvc);
+        void mount(const std::string &dvc, const std::string &real_path);
+        void unmount(const std::string &dvc);
 
-		// Map a virtual path to real path
+        // Map a virtual path to real path
         std::string get(std::string vir_path);
-	}
+    }
 }
