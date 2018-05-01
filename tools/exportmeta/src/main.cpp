@@ -7,6 +7,7 @@
 #include <experimental/filesystem>
 #include <vector>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <optional>
 
@@ -30,11 +31,12 @@ using typeinfos = std::vector<typeinfo>;
 
 struct class_info {
     sid id;
+    std::string name;
 
     typeinfo info;
     entries func_entries;
 
-    std::vector<sid> parents;
+    std::vector<sid> base;
 
     bool sinful = false;
 };
@@ -43,6 +45,9 @@ using class_infos = std::vector<class_info>;
 
 using namespace eka2l1;
 namespace fs = std::experimental::filesystem;
+
+std::string global_include_path;
+std::vector<fs::path> headers;
 
 CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     class_info* info = reinterpret_cast<class_info*>(client_data);
@@ -82,26 +87,30 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
                 new_entry.attribute = "none";
             }
 
+            LOG_TRACE("Find method: {}, Attribute: {}", new_entry.name, new_entry.attribute);
+
             info->func_entries.push_back(new_entry);
 
             break;
+        }
+
+        case CXCursor_ClassDecl: case CXCursor_StructDecl: {
+            return CXChildVisit_Continue;
         }
 
         case CXCursor_CXXBaseSpecifier:
         {
             std::string name = reinterpret_cast<const char*>(clang_getCursorSpelling(cursor).data);
             size_t class_reside = name.find("class ");
-            size_t struct_reside = name.find("struct ");
-
             std::string parent1;
 
             if (class_reside != std::string::npos) {
-                parent1 = name.substr(class_reside);
+                parent1 = name.substr(7);
             } else {
-                parent1 = name.substr(struct_reside);
+                parent1 = name.substr(8);
             }
 
-            info->parents.push_back(common::hash(name));
+            info->base.push_back(common::hash(name));
 
             break;
         }
@@ -110,7 +119,7 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
             break;
     }
 
-    return CXChildVisit_Continue;
+    return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visit_big_guy(CXCursor cursor, CXCursor parent, CXClientData client_data) {
@@ -122,19 +131,27 @@ CXChildVisitResult visit_big_guy(CXCursor cursor, CXCursor parent, CXClientData 
         return CXChildVisit_Break;
     }
 
+    if (!clang_Location_isFromMainFile(clang_getCursorLocation (cursor))) {
+        return CXChildVisit_Continue;
+    }
+
     if (clang_getCursorKind(cursor) == CXCursor_ClassDecl
             || clang_getCursorKind(cursor) == CXCursor_StructDecl) {
         list->emplace_back(cursor);
     }
 
-    return CXChildVisit_Continue;
+    return CXChildVisit_Recurse;
 }
 
 std::optional<class_infos> gather_classinfos(const std::string& path) {
+    LOG_INFO("Gather info of: {}", path);
+
+    const char* const args[] = { "-x", "c++", "--include-directory", global_include_path.c_str() };
+
     CXIndex idx = clang_createIndex(0, 0);
     CXTranslationUnit unit = clang_parseTranslationUnit(
         idx,
-        path.c_str(), nullptr, 0,
+        path.c_str(), args, 2,
         nullptr, 0,
         CXTranslationUnit_None);
 
@@ -157,10 +174,13 @@ std::optional<class_infos> gather_classinfos(const std::string& path) {
 
         std::string name = reinterpret_cast<const char*>(clang_getCursorSpelling(all_classes[i]).data);
 
+        LOG_INFO("Found class/struct: {}", name);
+
         info->id = common::hash(name);
+        info->name = name;
         info->info.name = reinterpret_cast<const char*>(clang_Cursor_getMangling(all_classes[i]).data);
 
-        clang_visitChildren(cursor, visit_class, info);
+        clang_visitChildren(all_classes[i], visit_class, info);
     }
 
     clang_disposeTranslationUnit(unit);
@@ -188,8 +208,54 @@ std::vector<fs::path> query_headers(const std::string& where) {
 }
 
 void yaml_meta_emit(const std::string& path) {
+    auto inf = gather_classinfos(path);
+
+    if (!inf) {
+        return;
+    }
+
+    auto real_info = inf.value();
+}
+
+void launch_gen_metadata(int start_off, int end_off) {
+    for (uint32_t i = start_off; i < end_off; i++) {
+        yaml_meta_emit(headers[i].string());
+    }
 }
 
 int main(int argc, char** argv) {
+    if (argc == 1) {
+        global_include_path = ".";
+    } else {
+        global_include_path = argv[argc-1];
+    }
 
+    log::setup_log(nullptr);
+    headers = query_headers(global_include_path);
+
+    uint32_t total_thread = 4;
+    uint32_t header_for_work, start_off = 0;
+    uint32_t end_off = 0;
+
+    for (uint32_t i = 0; i < total_thread - 1; i++) {
+        header_for_work = headers.size() / total_thread;
+        end_off += header_for_work;
+
+        std::thread t1(launch_gen_metadata, start_off, end_off);
+        t1.join();
+
+        start_off += header_for_work;
+    }
+
+    header_for_work = headers.size() / total_thread + headers.size() % total_thread;
+    end_off += header_for_work;
+
+    std::thread t2(launch_gen_metadata, start_off, end_off);
+    t2.join();
+
+    for (auto& header: headers) {
+        yaml_meta_emit(header.string());
+    }
+
+    return 0;
 }

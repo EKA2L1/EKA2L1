@@ -9,3 +9,7 @@ target_include_directories(exportmeta
 if (NOT MSVC)
  target_link_libraries(exportmeta PRIVATE stdc++fs)
 endif()
+
+if (NOT WIN32)
+ target_link_libraries(exportmeta PRIVATE pthread)
+endif()
