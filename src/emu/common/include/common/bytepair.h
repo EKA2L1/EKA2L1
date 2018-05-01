@@ -2,18 +2,18 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <iostream>
 #include <fstream>
-#include <sstream>
-#include <vector>
+#include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <vector>
 
 namespace eka2l1 {
     namespace common {
         // Given a chunk of data compress by byte-pair compression as specified by Nokia,
         // decompress the chunk.
-        int nokia_bytepair_decompress(void* dest, unsigned int dest_size, void* buffer, unsigned int buf_size);
+        int nokia_bytepair_decompress(void *dest, unsigned int dest_size, void *buffer, unsigned int buf_size);
 
         enum {
             BYTEPAIR_PAGE_SIZE = 4096
@@ -26,11 +26,10 @@ namespace eka2l1 {
             std::shared_ptr<std::istream> compress_stream;
 
         public:
-
             struct index_table_header {
-                int	size_of_data;   // Includes the index and compressed pages
-                int	decompressed_size;
-                uint16_t	number_of_pages;
+                int size_of_data; // Includes the index and compressed pages
+                int decompressed_size;
+                uint16_t number_of_pages;
             };
 
             struct index_table {
@@ -39,12 +38,11 @@ namespace eka2l1 {
             };
 
         private:
-
             index_table idx_tab;
 
         public:
             ibytepair_stream(std::shared_ptr<std::istream> stream);
-			ibytepair_stream(std::string path, uint32_t start);
+            ibytepair_stream(std::string path, uint32_t start);
 
             index_table table() const;
 
@@ -52,8 +50,8 @@ namespace eka2l1 {
 
             // Read the table entry
             void read_table();
-            uint32_t read_page(char* dest, uint32_t page, size_t size);
-            uint32_t read_pages(char* dest, size_t size);
+            uint32_t read_page(char *dest, uint32_t page, size_t size);
+            uint32_t read_pages(char *dest, size_t size);
 
             std::vector<uint32_t> page_offsets(uint32_t initial_off);
         };

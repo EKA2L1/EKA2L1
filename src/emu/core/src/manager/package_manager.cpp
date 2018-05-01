@@ -1,8 +1,8 @@
-#include <manager/package_manager.h>
-#include <loader/sis.h>
-#include <loader/sis_script_interpreter.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <loader/sis.h>
+#include <loader/sis_script_interpreter.h>
+#include <manager/package_manager.h>
 
 #include <fstream>
 
@@ -19,8 +19,8 @@ namespace eka2l1 {
             uint64_t ename_offset;
         };
 
-        bool package_manager::write_sdb(const std::string& path) {
-            FILE* file = fopen(path.c_str(), "wb");
+        bool package_manager::write_sdb(const std::string &path) {
+            FILE *file = fopen(path.c_str(), "wb");
 
             if (!file) {
                 return false;
@@ -32,22 +32,22 @@ namespace eka2l1 {
             uint64_t name_offset = uid_offset + total_app * 4;
             uint64_t drive_offset = name_offset + total_app * 4;
 
-            for (auto& c_app: c_apps) {
+            for (auto &c_app : c_apps) {
                 drive_offset += c_app.second.name.length() * 2;
             }
 
-            for (auto& e_app: e_apps) {
+            for (auto &e_app : e_apps) {
                 drive_offset += e_app.second.name.length() * 2;
             }
 
             uint64_t vendor_offset = drive_offset + total_app;
             uint64_t ename_offset = vendor_offset + total_app * 4;
 
-            for (auto& c_app: c_apps) {
+            for (auto &c_app : c_apps) {
                 ename_offset += c_app.second.vendor_name.size() * 2;
             }
 
-            for (auto& e_app: e_apps) {
+            for (auto &e_app : e_apps) {
                 ename_offset += e_app.second.vendor_name.size() * 2;
             }
 
@@ -59,58 +59,58 @@ namespace eka2l1 {
             fwrite(&vendor_offset, 1, 8, file);
             fwrite(&ename_offset, 1, 8, file);
 
-            for (auto& c_app: c_apps) {
+            for (auto &c_app : c_apps) {
                 fwrite(&c_app.first, 1, 4, file);
             }
 
-            for (auto& e_app: e_apps) {
+            for (auto &e_app : e_apps) {
                 fwrite(&e_app.first, 1, 4, file);
             }
 
-            for (auto& c_app: c_apps) {
+            for (auto &c_app : c_apps) {
                 int size = c_app.second.name.size();
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&c_app.second.name[0], 2, c_app.second.name.size(), file);
             }
 
-            for (auto& e_app: e_apps) {
+            for (auto &e_app : e_apps) {
                 int size = e_app.second.name.size();
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&e_app.second.name[0], 2, e_app.second.name.size(), file);
             }
 
-            for (auto& c_app: c_apps) {
+            for (auto &c_app : c_apps) {
                 fwrite(&c_app.second.drive, 1, 1, file);
             }
 
-            for (auto& e_app: e_apps) {
+            for (auto &e_app : e_apps) {
                 fwrite(&e_app.second.drive, 1, 4, file);
             }
 
-            for (auto& c_app: c_apps) {
+            for (auto &c_app : c_apps) {
                 int size = c_app.second.name.size();
 
                 fwrite(&size, 1, 4, file);
                 fwrite(c_app.second.vendor_name.data(), 2, c_app.second.vendor_name.size(), file);
             }
 
-            for (auto& e_app: e_apps) {
+            for (auto &e_app : e_apps) {
                 int size = e_app.second.name.size();
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&e_app.second.vendor_name[0], 2, e_app.second.vendor_name.size(), file);
             }
 
-            for (auto& c_app: c_apps) {
+            for (auto &c_app : c_apps) {
                 int size = c_app.second.name.size();
 
                 fwrite(&size, 1, 4, file);
                 fwrite(c_app.second.executable_name.data(), 2, c_app.second.executable_name.size(), file);
             }
 
-            for (auto& e_app: e_apps) {
+            for (auto &e_app : e_apps) {
                 int size = e_app.second.name.size();
 
                 fwrite(&size, 1, 4, file);
@@ -125,8 +125,8 @@ namespace eka2l1 {
         // Load registry contains all installed apps
         // This is a quick format I designed when I was on my way
         // going home :P
-        bool package_manager::load_sdb(const std::string& path) {
-            FILE* file = fopen(path.c_str(), "rb");
+        bool package_manager::load_sdb(const std::string &path) {
+            FILE *file = fopen(path.c_str(), "rb");
 
             if (!file) {
                 return false;
@@ -204,7 +204,7 @@ namespace eka2l1 {
 
             // Load those into the manager
             for (uint32_t i = 0; i < header.app_count; i++) {
-                app_info info {};
+                app_info info{};
 
                 info.drive = drives[i];
                 info.name = names[i];
@@ -225,10 +225,10 @@ namespace eka2l1 {
         }
 
         bool package_manager::installed(uid app_uid) {
-             auto res1 = c_apps.find(app_uid);
-             auto res2 = e_apps.find(app_uid);
+            auto res1 = c_apps.find(app_uid);
+            auto res2 = e_apps.find(app_uid);
 
-             return (res1 != c_apps.end()) || (res2 != e_apps.end());
+            return (res1 != c_apps.end()) || (res2 != e_apps.end());
         }
 
         std::u16string package_manager::app_name(uid app_uid) {
@@ -247,11 +247,11 @@ namespace eka2l1 {
             return res2->second.name;
         }
 
-        bool package_manager::install_controller(loader::sis_controller* ctrl, uint8_t drv) {
+        bool package_manager::install_controller(loader::sis_controller *ctrl, uint8_t drv) {
             app_info info{};
 
             info.vendor_name = ctrl->info.vendor_name.unicode_string;
-            info.name = ((loader::sis_string*)(ctrl->info.names.fields[0].get()))->unicode_string;
+            info.name = ((loader::sis_string *)(ctrl->info.names.fields[0].get()))->unicode_string;
             info.drive = drv;
             info.executable_name = u"";
 
@@ -259,8 +259,8 @@ namespace eka2l1 {
 
             LOG_INFO("Package UID: 0x{:x}", ruid);
 
-            for (auto& wrap_file_des: ctrl->install_block.files.fields) {
-                loader::sis_file_des* file_des = (loader::sis_file_des*)(wrap_file_des.get());
+            for (auto &wrap_file_des : ctrl->install_block.files.fields) {
+                loader::sis_file_des *file_des = (loader::sis_file_des *)(wrap_file_des.get());
                 bool is_exe = false;
 
                 if (file_des->target.unicode_string.length() > 4) {
@@ -287,8 +287,8 @@ namespace eka2l1 {
                 e_apps.insert(std::make_pair(ruid, info));
             }
 
-            for (auto& wrap_mini_ctrl: ctrl->install_block.controllers.fields) {
-                loader::sis_controller* mini_ctrl = (loader::sis_controller*)(wrap_mini_ctrl.get());
+            for (auto &wrap_mini_ctrl : ctrl->install_block.controllers.fields) {
+                loader::sis_controller *mini_ctrl = (loader::sis_controller *)(wrap_mini_ctrl.get());
                 // Recursively install controller
                 install_controller(mini_ctrl, drv);
             }
@@ -296,17 +296,16 @@ namespace eka2l1 {
             return true;
         }
 
-        bool package_manager::install_package(const std::u16string& path, uint8_t drive) {
-            loader::sis_contents res =
-                    loader::parse_sis(common::ucs2_to_utf8(path));
+        bool package_manager::install_package(const std::u16string &path, uint8_t drive) {
+            loader::sis_contents res = loader::parse_sis(common::ucs2_to_utf8(path));
 
             install_controller(&res.controller, drive);
 
             // Interpret the file
             loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ifstream::binary),
-                                               res.controller.install_block,
-                                               res.data,
-                                               loader::sis_drive(drive));
+                res.controller.install_block,
+                res.data,
+                loader::sis_drive(drive));
 
             interpreter.interpret();
 

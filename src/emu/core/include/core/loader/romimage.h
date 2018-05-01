@@ -54,6 +54,6 @@ namespace eka2l1 {
             std::vector<uint32_t> exports;
         };
 
-        std::optional<romimg> parse_romimg(const std::string& path);
+        std::optional<romimg> parse_romimg(const std::string &path);
     }
 }

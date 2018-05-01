@@ -1,10 +1,10 @@
 #pragma once
 
-#include <imgui.h>
 #include <ImguiWindowsFileIO.hpp>
+#include <imgui.h>
 
-#include <future>
 #include <functional>
+#include <future>
 #include <map>
 #include <vector>
 
@@ -27,7 +27,7 @@ namespace eka2l1 {
         std::string open_dialogue(const std::vector<std::string> filters) {
             fileIOWindow()
 
-            std::string res_path;
+                std::string res_path;
         }
     };
 }

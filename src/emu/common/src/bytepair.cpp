@@ -1,11 +1,10 @@
-#include <common/bytepair.h>
 #include <common/algorithm.h>
+#include <common/bytepair.h>
 #include <common/log.h>
 
 #include <cstdint>
 #include <functional>
 #include <stack>
-
 
 namespace eka2l1 {
     namespace common {
@@ -13,12 +12,12 @@ namespace eka2l1 {
         // decompress the chunk.
         // The game which I'm testing that use this type of compression (and even its pak file),
         // is Super Miners by ID
-        int nokia_bytepair_decompress(void* destination, unsigned int dest_size, void* buffer, unsigned int buf_size) {
-            uint8_t* data8 = reinterpret_cast<uint8_t*>(buffer);
+        int nokia_bytepair_decompress(void *destination, unsigned int dest_size, void *buffer, unsigned int buf_size) {
+            uint8_t *data8 = reinterpret_cast<uint8_t *>(buffer);
             uint32_t lookup_table[0x200];
 
-            uint8_t* lookup_table_first = reinterpret_cast<uint8_t*>(lookup_table);
-            uint8_t* lookup_table_second = lookup_table_first + 0x100;
+            uint8_t *lookup_table_first = reinterpret_cast<uint8_t *>(lookup_table);
+            uint8_t *lookup_table_second = lookup_table_first + 0x100;
 
             uint32_t marker = ~0u;
             uint8_t p1, p2;
@@ -29,17 +28,16 @@ namespace eka2l1 {
 
             std::stack<uint8_t> sec_stack;
 
-            uint8_t* buf_end = reinterpret_cast<uint8_t*>(buffer) + buf_size;
-            uint8_t* dest_end = reinterpret_cast<uint8_t*>(destination) +dest_size;
+            uint8_t *buf_end = reinterpret_cast<uint8_t *>(buffer) + buf_size;
+            uint8_t *dest_end = reinterpret_cast<uint8_t *>(destination) + dest_size;
 
-            uint8_t* dest = reinterpret_cast<uint8_t*>(destination);
+            uint8_t *dest = reinterpret_cast<uint8_t *>(destination);
 
-            uint32_t* lut = (uint32_t*)(lookup_table);
+            uint32_t *lut = (uint32_t *)(lookup_table);
 
-            do
-            {
+            do {
                 *lut++ = b;
-                b+= step;
+                b += step;
             } while (b > step);
 
             uint8_t total_pair = *data8++;
@@ -49,7 +47,7 @@ namespace eka2l1 {
                 lookup_table_first[marker] = (uint8_t)(~marker);
 
                 if (total_pair < 32) {
-                    uint8_t* pair_end = data8 + 3 * total_pair;
+                    uint8_t *pair_end = data8 + 3 * total_pair;
 
                     do {
                         b = *data8++;
@@ -61,13 +59,13 @@ namespace eka2l1 {
                     } while (data8 < pair_end);
 
                 } else {
-                    uint8_t* mask_st = data8;
+                    uint8_t *mask_st = data8;
                     data8 += 32;
 
                     for (b = 0; b < 0x100; b++) {
                         uint8_t mask = mask_st[b >> 3];
 
-                        if (mask & (1<< (b & 7))) {
+                        if (mask & (1 << (b & 7))) {
                             // Read the pair
                             p1 = *data8++;
                             p2 = *data8++;
@@ -92,75 +90,73 @@ namespace eka2l1 {
             if (p1 != b)
                 goto not_single;
 
-            process_replace:
-                if (data8 >= buf_end) {
-                    goto done_data8;
-                }
+        process_replace:
+            if (data8 >= buf_end) {
+                goto done_data8;
+            }
 
+            b = *data8++;
+            *dest++ = p1;
 
-                b = *data8++;
-                *dest++ = p1;
+            if (dest >= dest_end) {
+                goto done_dest;
+            }
 
-				if (dest >= dest_end) {
-					goto done_dest;
-				}
+            p1 = lookup_table_first[b];
 
-                p1 = lookup_table_first[b];
+            if (p1 == b)
+                goto process_replace;
 
-                if (p1 == b)
-                    goto process_replace;
+        not_single:
+            if (b == marker) {
+                goto do_marker;
+            }
 
-            not_single:
-                if (b == marker) {
-                    goto do_marker;
-                }
+        do_pair:
+            p2 = lookup_table_second[b];
+            b = p1;
+            p1 = lookup_table_first[b];
+            sec_stack.push(p2);
 
-            do_pair:
-                p2 = lookup_table_second[b];
-                b = p1;
-                p1 = lookup_table_first[b];
-                sec_stack.push(p2);
+        recurse:
+            if (b != p1) {
+                goto do_pair;
+            }
 
-            recurse:
-                if (b != p1) {
-                    goto do_pair;
-                }
+            if (sec_stack.empty()) {
+                goto process_replace;
+            }
 
-                if (sec_stack.empty()) {
-                    goto process_replace;
-                }
+            b = sec_stack.top();
+            sec_stack.pop();
 
-                b = sec_stack.top();
-                sec_stack.pop();
+            *dest++ = p1;
+            p1 = lookup_table_first[b];
 
-                *dest++ = p1;
-                p1 = lookup_table_first[b];
+            goto recurse;
 
-                goto recurse;
+        do_marker:
+            p1 = *data8++;
+            goto process_replace;
 
+        done_data8:
+            *dest++ = p1;
+            return dest - static_cast<uint8_t *>(destination);
 
-            do_marker:
-               p1 = *data8++;
-               goto process_replace;
-
-            done_data8:
-               *dest++ = p1;
-               return dest - static_cast<uint8_t*>(destination);
-
-            done_dest:
-               return dest - static_cast<uint8_t*>(destination);
+        done_dest:
+            return dest - static_cast<uint8_t *>(destination);
 
             return 1;
-        } 
-
-        ibytepair_stream::ibytepair_stream(std::shared_ptr<std::istream> stream) {
-			compress_stream = stream;
         }
 
-		ibytepair_stream::ibytepair_stream(std::string path, uint32_t start) {
-			compress_stream = std::make_shared<std::ifstream>(path, std::ios::binary);
-			compress_stream->seekg(start);
-		}
+        ibytepair_stream::ibytepair_stream(std::shared_ptr<std::istream> stream) {
+            compress_stream = stream;
+        }
+
+        ibytepair_stream::ibytepair_stream(std::string path, uint32_t start) {
+            compress_stream = std::make_shared<std::ifstream>(path, std::ios::binary);
+            compress_stream->seekg(start);
+        }
 
         ibytepair_stream::index_table ibytepair_stream::table() const {
             return idx_tab;
@@ -172,19 +168,19 @@ namespace eka2l1 {
 
         // Read the table entry
         void ibytepair_stream::read_table() {
-			compress_stream->read(reinterpret_cast<char*>(&idx_tab.header), 10);
+            compress_stream->read(reinterpret_cast<char *>(&idx_tab.header), 10);
             idx_tab.page_size.resize(idx_tab.header.number_of_pages);
 
-            compress_stream->read(reinterpret_cast<char*>(idx_tab.page_size.data()),
-                                  idx_tab.page_size.size() * sizeof(uint16_t));
+            compress_stream->read(reinterpret_cast<char *>(idx_tab.page_size.data()),
+                idx_tab.page_size.size() * sizeof(uint16_t));
         }
 
-        uint32_t ibytepair_stream::read_page(char* dest, uint32_t page, size_t size) {
+        uint32_t ibytepair_stream::read_page(char *dest, uint32_t page, size_t size) {
             uint32_t len = common::min<uint32_t>(size, 4096);
             auto crr_pos = compress_stream->tellg();
             std::vector<char> buf;
 
-			buf.resize(idx_tab.page_size[page]);
+            buf.resize(idx_tab.page_size[page]);
 
             compress_stream->read(buf.data(), buf.size());
 
@@ -198,7 +194,7 @@ namespace eka2l1 {
             return omitted;
         }
 
-        uint32_t ibytepair_stream::read_pages(char* dest, size_t size) {
+        uint32_t ibytepair_stream::read_pages(char *dest, size_t size) {
             uint32_t decompressed_size = 0;
             read_table();
 

@@ -1,13 +1,13 @@
-#include <manager/manager.h>
 #include <ImguiWindowsFileIO.hpp>
-#include <imgui.h>
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
+#include <imgui.h>
+#include <manager/manager.h>
 
 #include "installer.h"
 
 namespace eka2l1 {
-	namespace imgui {
+    namespace imgui {
         bool stop_file_dialogue = false;
         bool draw_warning_box = false;
         bool draw_success_box = false;
@@ -49,13 +49,13 @@ namespace eka2l1 {
             }
 
             return std::optional<std::string>{};
-		}
+        }
 
         bool install_sis_dialog_op() {
             std::optional<std::string> res;
 
             if (!stop_file_dialogue) {
-                res =  imgui::choose_sis_dialog();
+                res = imgui::choose_sis_dialog();
 
                 if (draw_warning_box) {
                     if (pop_up_warning("Invalid file!")) {
@@ -92,11 +92,10 @@ namespace eka2l1 {
                 }
 
                 draw_success_box = manager::get_package_manager()->install_package(
-                            std::u16string(path.begin(), path.end()), 0);
+                    std::u16string(path.begin(), path.end()), 0);
             }
 
             return false;
         }
-	}
-
+    }
 }

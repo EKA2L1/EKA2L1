@@ -15,9 +15,9 @@ namespace eka2l1 {
 
         kernel::uid next_uid();
 
-        void add_thread(kernel::thread* thr);
+        void add_thread(kernel::thread *thr);
         bool run_thread(kernel::uid thr);
 
-        kernel::thread* crr_running_thread();
+        kernel::thread *crr_running_thread();
     }
 }

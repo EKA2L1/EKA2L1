@@ -24,22 +24,22 @@
 namespace eka2l1 {
     namespace core_mem {
         using gen = size_t;
-        using mem = std::unique_ptr<uint8_t[], std::function<void(uint8_t*)>>;
+        using mem = std::unique_ptr<uint8_t[], std::function<void(uint8_t *)>>;
         using allocated = std::vector<gen>;
 
         enum {
             MAP_GEN_BASE = 0xF000
         };
 
-        uint64_t  page_size;
-        gen       generations;
-        mem       memory;
+        uint64_t page_size;
+        gen generations;
+        mem memory;
         allocated allocated_pages;
 
-        address   crr_heap;
-        size_t    crr_heap_size;
+        address crr_heap;
+        size_t crr_heap_size;
 
-        void _free_mem(uint8_t* dt) {
+        void _free_mem(uint8_t *dt) {
 #ifndef WIN32
             munmap(dt, common::GB(1));
 #else
@@ -64,21 +64,19 @@ namespace eka2l1 {
             size_t len = common::GB(4);
 
 #ifndef WIN32
-            memory = mem(static_cast<uint8_t*>
-                            (mmap(nullptr, len, PROT_READ,
-                                  MAP_ANONYMOUS | MAP_PRIVATE,0, 0)), _free_mem);
+            memory = mem(static_cast<uint8_t *>(mmap(nullptr, len, PROT_READ,
+                             MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
+                _free_mem);
 #else
-            memory = mem(reinterpret_cast<uint8_t*>
-                            (VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_NOACCESS)), _free_mem);
+            memory = mem(reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_NOACCESS)), _free_mem);
 #endif
 
             if (!memory) {
                 LOG_CRITICAL("Allocating virtual memory for emulating failed!");
                 return;
-			}
-			else {
-				LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
-			}
+            } else {
+                LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
+            }
 
             allocated_pages.resize(len / page_size);
 
@@ -91,7 +89,7 @@ namespace eka2l1 {
         }
 
         void alloc_inner(address addr, size_t pg_count, allocated::iterator blck) {
-            uint8_t* addr_mem = &memory[addr];
+            uint8_t *addr_mem = &memory[addr];
             auto aligned_size = pg_count * page_size;
 
             const gen generation = ++generations;
@@ -109,16 +107,16 @@ namespace eka2l1 {
         address alloc(size_t size) {
             const size_t page_count = (size + (page_size - 1)) / page_size;
 
-            const size_t page_heap_start = (LOCAL_DATA / page_size)+ 1;
+            const size_t page_heap_start = (LOCAL_DATA / page_size) + 1;
             const size_t page_heap_end = (DLL_STATIC_DATA / page_size) - 1;
 
             const auto start_heap_page = allocated_pages.begin() + page_heap_start;
             const auto end_heap_page = allocated_pages.begin() + page_heap_end;
 
-            const auto& free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
+            const auto &free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
 
             if (free_block != allocated_pages.end()) {
-                const size_t block_page_index = free_block -allocated_pages.begin();
+                const size_t block_page_index = free_block - allocated_pages.begin();
                 const address addr = static_cast<address>(block_page_index * page_size);
 
                 alloc_inner(addr, page_count, free_block);
@@ -130,16 +128,16 @@ namespace eka2l1 {
         }
 
         void free(address addr) {
-           const size_t page = addr / page_size;
-           const gen generation = allocated_pages[page];
+            const size_t page = addr / page_size;
+            const gen generation = allocated_pages[page];
 
-           const size_t page_heap_end = (DLL_STATIC_DATA / page_size) - 1;
-           const auto end_heap_page = allocated_pages.begin() + page_heap_end;
+            const size_t page_heap_end = (DLL_STATIC_DATA / page_size) - 1;
+            const auto end_heap_page = allocated_pages.begin() + page_heap_end;
 
-           const auto different_gen = std::bind(std::not_equal_to<gen>(), generation, std::placeholders::_1);
-           const auto& first_page = allocated_pages.begin() + page;
-           const auto& last_page = std::find_if(first_page, end_heap_page, different_gen);
-           std::fill(first_page, last_page, 0);
+            const auto different_gen = std::bind(std::not_equal_to<gen>(), generation, std::placeholders::_1);
+            const auto &first_page = allocated_pages.begin() + page;
+            const auto &last_page = std::find_if(first_page, end_heap_page, different_gen);
+            std::fill(first_page, last_page, 0);
         }
 
         // Map dynamicly still fine. As soon as user call IME_RANGE,
@@ -154,7 +152,7 @@ namespace eka2l1 {
             address page_addr = (addr / page_size);
             page_addr = page_addr * page_size;
 
-            void* real_address = &memory[page_addr];
+            void *real_address = &memory[page_addr];
             auto tprot = translate_protection(cprot);
 
             int res = 0;
@@ -164,17 +162,17 @@ namespace eka2l1 {
 #else
             res = mprotect(real_address, size, tprot);
 
-			if (res == -1) {
-				LOG_ERROR("Can not map: 0x{:x}, size = {}", addr, size);
-			}
+            if (res == -1) {
+                LOG_ERROR("Can not map: 0x{:x}, size = {}", addr, size);
+            }
 #endif
 
             return ptr<void>(page_addr);
         }
 
-        int      change_prot(address addr, size_t size, prot nprot) {
+        int change_prot(address addr, size_t size, prot nprot) {
             auto tprot = translate_protection(nprot);
-            void* real_addr = get_addr<void>(addr);
+            void *real_addr = get_addr<void>(addr);
 
 #ifdef WIN32
             DWORD old_prot = 0;
@@ -184,7 +182,7 @@ namespace eka2l1 {
 #endif
         }
 
-        int  unmap(ptr<void> addr, size_t size) {
+        int unmap(ptr<void> addr, size_t size) {
 #ifndef WIN32
             return munmap(addr.get(), size);
 #else
@@ -196,16 +194,16 @@ namespace eka2l1 {
         address alloc_range(address beg, address end, size_t size) {
             const size_t page_count = (size + (page_size - 1)) / page_size;
 
-            const size_t page_heap_start = (beg / page_size)+ 1;
+            const size_t page_heap_start = (beg / page_size) + 1;
             const size_t page_heap_end = (end / page_size) - 1;
 
             const auto start_heap_page = allocated_pages.begin() + page_heap_start;
             const auto end_heap_page = allocated_pages.begin() + page_heap_end;
 
-            const auto& free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
+            const auto &free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
 
             if (free_block != allocated_pages.end()) {
-                const size_t block_page_index = free_block -allocated_pages.begin();
+                const size_t block_page_index = free_block - allocated_pages.begin();
                 const address addr = static_cast<address>(block_page_index * page_size);
 
                 alloc_inner(addr, page_count, free_block);
@@ -222,8 +220,7 @@ namespace eka2l1 {
 
         address alloc_ime(size_t size) {
             address addr = alloc_range(RAM_CODE_ADDR, ROM, size);
-            change_prot(addr, size, prot::read_write_exec)
-;
+            change_prot(addr, size, prot::read_write_exec);
             return addr;
         }
 
@@ -234,5 +231,4 @@ namespace eka2l1 {
             crr_heap_size = std::min((size_t)DLL_STATIC_DATA - where, size);
         }
     }
-
 }

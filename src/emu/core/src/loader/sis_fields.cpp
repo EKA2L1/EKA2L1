@@ -3,26 +3,26 @@
 
 #include <common/log.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 namespace eka2l1 {
     namespace loader {
-        void peek(void* buf, size_t element_count, size_t element_size, std::istream* file) {
-             size_t crr = file->tellg();
+        void peek(void *buf, size_t element_count, size_t element_size, std::istream *file) {
+            size_t crr = file->tellg();
 
-             file->read(static_cast<char*>(buf), element_count * element_size);
-             file->seekg(crr);
+            file->read(static_cast<char *>(buf), element_count * element_size);
+            file->seekg(crr);
         }
 
-        void sis_parser::parse_field_child(sis_field* field, bool left_type_for_arr) {
+        void sis_parser::parse_field_child(sis_field *field, bool left_type_for_arr) {
             if (!left_type_for_arr)
-                stream->read(reinterpret_cast<char*>(&field->type), 4);
+                stream->read(reinterpret_cast<char *>(&field->type), 4);
 
-            stream->read(reinterpret_cast<char*>(&field->len_low), 4);
+            stream->read(reinterpret_cast<char *>(&field->len_low), 4);
 
             if ((field->len_low & 0xFFFFFFFF) >> 31 == 1) {
-                stream->read(reinterpret_cast<char*>(&field->len_high), 4);
+                stream->read(reinterpret_cast<char *>(&field->len_high), 4);
             } else {
                 field->len_high = 0;
             }
@@ -37,92 +37,90 @@ namespace eka2l1 {
 
             parse_field_child(&arr);
 
-            stream->read(reinterpret_cast<char*>(&arr.element_type), 4);
+            stream->read(reinterpret_cast<char *>(&arr.element_type), 4);
 
             uint32_t crr_pos = stream->tellg();
 
             switch (arr.element_type) {
-                case sis_field_type::SISString:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_string>(parse_string(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
+            case sis_field_type::SISString:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_string>(parse_string(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
-                    break;
+                break;
 
+            case sis_field_type::SISSupportedOption:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_supported_option>(parse_supported_option(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
-                case sis_field_type::SISSupportedOption:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_supported_option>(parse_supported_option(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
+                break;
 
-                    break;
+            case sis_field_type::SISLanguage:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_supported_lang>(parse_supported_lang(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
+                break;
 
-                case sis_field_type::SISLanguage:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_supported_lang>(parse_supported_lang(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
+            case sis_field_type::SISDependency:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_dependency>(parse_dependency(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
-                    break;
+                break;
 
-                case sis_field_type::SISDependency:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_dependency>(parse_dependency(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
+            case sis_field_type::SISProperty:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_property>(parse_property(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
-                    break;
+                break;
 
-                case sis_field_type::SISProperty:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_property>(parse_property(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
+            case sis_field_type::SISFileDes:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_file_des>(parse_file_description(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
-                    break;
+                break;
 
-               case sis_field_type::SISFileDes:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_file_des>(parse_file_description(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
+            case sis_field_type::SISController:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_controller>(parse_controller(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
-                    break;
+                break;
 
-              case sis_field_type::SISController:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_controller>(parse_controller(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
+            case sis_field_type::SISFileData:
+                while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
+                    auto str = std::make_shared<sis_file_data>(parse_file_data(true));
+                    str->type = arr.element_type;
+                    arr.fields.push_back(str);
+                    valid_offset();
+                }
 
-                    break;
-
-             case sis_field_type::SISFileData:
-                    while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
-                        auto str = std::make_shared<sis_file_data>(parse_file_data(true));
-                        str->type = arr.element_type;
-                        arr.fields.push_back(str);
-                        valid_offset();
-                    }
-
-                    break;
+                break;
 
             case sis_field_type::SISdataUnit:
                 while ((uint32_t)stream->tellg() - crr_pos < (arr.len_low | (arr.len_high << 32)) - 4) {
@@ -174,7 +172,8 @@ namespace eka2l1 {
 
                 break;
 
-            default: break;
+            default:
+                break;
             }
 
             valid_offset();
@@ -187,9 +186,9 @@ namespace eka2l1 {
 
             parse_field_child(&ver);
 
-            stream->read(reinterpret_cast<char*>(&ver.major), 4);
-            stream->read(reinterpret_cast<char*>(&ver.minor), 4);
-            stream->read(reinterpret_cast<char*>(&ver.build), 4);
+            stream->read(reinterpret_cast<char *>(&ver.major), 4);
+            stream->read(reinterpret_cast<char *>(&ver.minor), 4);
+            stream->read(reinterpret_cast<char *>(&ver.build), 4);
 
             valid_offset();
 
@@ -201,9 +200,9 @@ namespace eka2l1 {
 
             parse_field_child(&date);
 
-            stream->read(reinterpret_cast<char*>(&date.year), 2);
-            stream->read(reinterpret_cast<char*>(&date.month), 1);
-            stream->read(reinterpret_cast<char*>(&date.day), 1);
+            stream->read(reinterpret_cast<char *>(&date.year), 2);
+            stream->read(reinterpret_cast<char *>(&date.month), 1);
+            stream->read(reinterpret_cast<char *>(&date.day), 1);
 
             valid_offset();
 
@@ -215,9 +214,9 @@ namespace eka2l1 {
 
             parse_field_child(&time);
 
-            stream->read(reinterpret_cast<char*>(&time.hours), 1);
-            stream->read(reinterpret_cast<char*>(&time.minutes), 1);
-            stream->read(reinterpret_cast<char*>(&time.secs), 1);
+            stream->read(reinterpret_cast<char *>(&time.hours), 1);
+            stream->read(reinterpret_cast<char *>(&time.minutes), 1);
+            stream->read(reinterpret_cast<char *>(&time.secs), 1);
 
             valid_offset();
 
@@ -229,7 +228,7 @@ namespace eka2l1 {
 
             parse_field_child(&dt);
 
-            dt.date= parse_date();
+            dt.date = parse_date();
             dt.time = parse_time();
 
             return dt;
@@ -247,14 +246,14 @@ namespace eka2l1 {
             info.version = parse_version();
             info.creation_date = parse_date_time();
 
-            stream->read(reinterpret_cast<char*>(&info.install_type), 1);
-            stream->read(reinterpret_cast<char*>(&info.install_flags), 1);
+            stream->read(reinterpret_cast<char *>(&info.install_type), 1);
+            stream->read(reinterpret_cast<char *>(&info.install_flags), 1);
 
             LOG_INFO("UID: 0x{:x}", info.uid.uid);
             LOG_INFO("Creation date: {}/{}/{}", info.creation_date.date.year, info.creation_date.date.month,
-                     info.creation_date.date.day);
+                info.creation_date.date.day);
             LOG_INFO("Creation time: {}:{}:{}", info.creation_date.time.hours, info.creation_date.time.minutes,
-                     info.creation_date.time.secs);
+                info.creation_date.time.secs);
 
             valid_offset();
 
@@ -263,7 +262,7 @@ namespace eka2l1 {
 
         sis_header sis_parser::parse_header() {
             sis_header header;
-            stream->read(reinterpret_cast<char*>(&header), sizeof(sis_header));
+            stream->read(reinterpret_cast<char *>(&header), sizeof(sis_header));
 
             LOG_INFO("Header UID: 0x{:x}", header.uid3);
 
@@ -275,7 +274,7 @@ namespace eka2l1 {
 
             parse_field_child(&sum);
 
-            stream->read(reinterpret_cast<char*>(&sum.sum), 2);
+            stream->read(reinterpret_cast<char *>(&sum.sum), 2);
             valid_offset();
             return sum;
         }
@@ -285,7 +284,7 @@ namespace eka2l1 {
 
             parse_field_child(&sum);
 
-            stream->read(reinterpret_cast<char*>(&sum.sum), 2);
+            stream->read(reinterpret_cast<char *>(&sum.sum), 2);
             valid_offset();
             return sum;
         }
@@ -305,7 +304,7 @@ namespace eka2l1 {
             sis_supported_lang lang;
 
             parse_field_child(&lang, no_own);
-            stream->read(reinterpret_cast<char*>(&lang.lang), 2);
+            stream->read(reinterpret_cast<char *>(&lang.lang), 2);
 
             valid_offset();
 
@@ -313,15 +312,15 @@ namespace eka2l1 {
         }
 
         sis_supported_options sis_parser::parse_supported_options() {
-             sis_supported_options ops;
+            sis_supported_options ops;
 
-             parse_field_child(&ops);
+            parse_field_child(&ops);
 
-             ops.options = parse_array();
+            ops.options = parse_array();
 
-             valid_offset();
+            valid_offset();
 
-             return ops;
+            return ops;
         }
 
         sis_supported_langs sis_parser::parse_supported_langs() {
@@ -340,8 +339,8 @@ namespace eka2l1 {
 
             parse_field_child(&compressed);
 
-            stream->read(reinterpret_cast<char*>(&compressed.algorithm), 4);
-            stream->read(reinterpret_cast<char*>(&compressed.uncompressed_size), 8);
+            stream->read(reinterpret_cast<char *>(&compressed.algorithm), 4);
+            stream->read(reinterpret_cast<char *>(&compressed.uncompressed_size), 8);
 
             // Store the offset, make intepreter do their work
             compressed.offset = stream->tellg();
@@ -349,15 +348,15 @@ namespace eka2l1 {
             if (compressed.algorithm != sis_compressed_algorithm::deflated) {
                 if (!no_extract) {
                     compressed.uncompressed_data.resize(compressed.uncompressed_size);
-                    stream->read(reinterpret_cast<char*>(compressed.uncompressed_data.data()),
-                                 compressed.uncompressed_size);
+                    stream->read(reinterpret_cast<char *>(compressed.uncompressed_data.data()),
+                        compressed.uncompressed_size);
                 }
             } else {
                 uint32_t us = (compressed.len_low | (compressed.len_high << 32)) - 12;
 
                 if (!no_extract) {
                     compressed.compressed_data.resize(us);
-                    stream->read(reinterpret_cast<char*>(compressed.compressed_data.data()),us);
+                    stream->read(reinterpret_cast<char *>(compressed.compressed_data.data()), us);
 
                     mz_stream stream;
 
@@ -376,7 +375,7 @@ namespace eka2l1 {
                     stream.avail_out = compressed.uncompressed_size;
                     stream.next_out = compressed.uncompressed_data.data();
 
-                    inflate(&stream,Z_NO_FLUSH);
+                    inflate(&stream, Z_NO_FLUSH);
                     inflateEnd(&stream);
 
                     LOG_INFO("Inflating chunk, size: {}", us);
@@ -395,11 +394,10 @@ namespace eka2l1 {
             return compressed;
         }
 
-        void sis_parser::switch_istrstream(char* buf, size_t size) {
+        void sis_parser::switch_istrstream(char *buf, size_t size) {
             set_alternative_stream(std::make_shared<std::istringstream>(std::ios::binary));
 
-            reinterpret_cast<std::istringstream*>(alternative_stream.get())->rdbuf()->pubsetbuf(
-                     buf, size);
+            reinterpret_cast<std::istringstream *>(alternative_stream.get())->rdbuf()->pubsetbuf(buf, size);
 
             switch_stream();
         }
@@ -426,12 +424,12 @@ namespace eka2l1 {
 
             sis_compressed compress_data = parse_compressed();
 
-            FILE* ftemp = fopen("inflatedController.mt", "wb");
+            FILE *ftemp = fopen("inflatedController.mt", "wb");
             fwrite(compress_data.uncompressed_data.data(), 1, compress_data.uncompressed_size, ftemp);
             fclose(ftemp);
 
-            switch_istrstream(reinterpret_cast<char*>(compress_data.uncompressed_data.data()),
-                              compress_data.uncompressed_size);
+            switch_istrstream(reinterpret_cast<char *>(compress_data.uncompressed_data.data()),
+                compress_data.uncompressed_size);
 
             contents.controller = parse_controller();
 
@@ -490,7 +488,7 @@ namespace eka2l1 {
             sis_data_index idx;
 
             parse_field_child(&idx);
-            stream->read(reinterpret_cast<char*>(&idx.data_index), 4);
+            stream->read(reinterpret_cast<char *>(&idx.data_index), 4);
 
             valid_offset();
 
@@ -501,9 +499,9 @@ namespace eka2l1 {
             sis_string str;
             parse_field_child(&str, no_arr);
 
-            str.unicode_string.resize(((str.len_low) | (str.len_high << 32))/2);
+            str.unicode_string.resize(((str.len_low) | (str.len_high << 32)) / 2);
 
-            stream->read(reinterpret_cast<char*>(&str.unicode_string[0]),
+            stream->read(reinterpret_cast<char *>(&str.unicode_string[0]),
                 str.unicode_string.size() * 2);
 
             valid_offset();
@@ -550,8 +548,8 @@ namespace eka2l1 {
 
             parse_field_child(&pr, no_type);
 
-            stream->read(reinterpret_cast<char*>(&pr.key), 4);
-            stream->read(reinterpret_cast<char*>(&pr.val), 4);
+            stream->read(reinterpret_cast<char *>(&pr.key), 4);
+            stream->read(reinterpret_cast<char *>(&pr.val), 4);
 
             valid_offset();
 
@@ -586,7 +584,7 @@ namespace eka2l1 {
         sis_uid sis_parser::parse_uid() {
             sis_uid uid;
             parse_field_child(&uid);
-            stream->read(reinterpret_cast<char*>(&uid.uid), 4);
+            stream->read(reinterpret_cast<char *>(&uid.uid), 4);
 
             valid_offset();
 
@@ -597,7 +595,7 @@ namespace eka2l1 {
             sis_hash hash;
             parse_field_child(&hash);
 
-            stream->read(reinterpret_cast<char*>(&hash.hash_method), sizeof(sis_hash_algorithm));
+            stream->read(reinterpret_cast<char *>(&hash.hash_method), sizeof(sis_hash_algorithm));
 
             hash.hash_data = parse_blob();
             valid_offset();
@@ -662,11 +660,11 @@ namespace eka2l1 {
 
             LOG_INFO("File detected: {}", filename_ascii);
 
-            stream->read(reinterpret_cast<char*>(&des.op), 4);
-            stream->read(reinterpret_cast<char*>(&des.op_op), 4);
-            stream->read(reinterpret_cast<char*>(&des.len), 8);
-            stream->read(reinterpret_cast<char*>(&des.uncompressed_len), 8);
-            stream->read(reinterpret_cast<char*>(&des.idx), 4);
+            stream->read(reinterpret_cast<char *>(&des.op), 4);
+            stream->read(reinterpret_cast<char *>(&des.op_op), 4);
+            stream->read(reinterpret_cast<char *>(&des.len), 8);
+            stream->read(reinterpret_cast<char *>(&des.uncompressed_len), 8);
+            stream->read(reinterpret_cast<char *>(&des.idx), 4);
 
             valid_offset();
             return des;
@@ -705,57 +703,53 @@ namespace eka2l1 {
             return fd;
         }
 
-
         sis_if sis_parser::parse_if(bool no_type) {
-             sis_if ifexpr;
+            sis_if ifexpr;
 
-             parse_field_child(&ifexpr, no_type);
-             ifexpr.expr = parse_expression();
-             ifexpr.install_block = parse_install_block();
-             ifexpr.else_if = parse_array();
+            parse_field_child(&ifexpr, no_type);
+            ifexpr.expr = parse_expression();
+            ifexpr.install_block = parse_install_block();
+            ifexpr.else_if = parse_array();
 
-             valid_offset();
+            valid_offset();
 
-             return ifexpr;
+            return ifexpr;
         }
 
         sis_else_if sis_parser::parse_if_else(bool no_type) {
-             sis_else_if ei;
+            sis_else_if ei;
 
-             parse_field_child(&ei, no_type);
-             ei.expr = parse_expression();
-             ei.install_block = parse_install_block();
+            parse_field_child(&ei, no_type);
+            ei.expr = parse_expression();
+            ei.install_block = parse_install_block();
 
-             valid_offset();
+            valid_offset();
 
-             return ei;
+            return ei;
         }
 
         sis_expression sis_parser::parse_expression(bool no_type) {
             sis_expression expr;
             parse_field_child(&expr, no_type);
 
-            stream->read(reinterpret_cast<char*>(&expr.op), 4);
+            stream->read(reinterpret_cast<char *>(&expr.op), 4);
 
             if (expr.op == ss_expr_op::EPrimTypeNumber || expr.op == ss_expr_op::EPrimTypeVariable
-                    || expr.op == ss_expr_op::EPrimTypeOption) {
-                 stream->read(reinterpret_cast<char*>(&expr.int_val), 4);
+                || expr.op == ss_expr_op::EPrimTypeOption) {
+                stream->read(reinterpret_cast<char *>(&expr.int_val), 4);
             }
 
             if (expr.op == ss_expr_op::EFuncExists || expr.op == ss_expr_op::EPrimTypeString) {
-                 expr.val = parse_string();
+                expr.val = parse_string();
             }
 
             if (((int)expr.op >= 2 && ((int)expr.op <= 8))
-                    || (expr.op == ss_expr_op::EFuncAppProperties)
-                    || (expr.op == ss_expr_op::EFuncDevProperties))
-            {
+                || (expr.op == ss_expr_op::EFuncAppProperties)
+                || (expr.op == ss_expr_op::EFuncDevProperties)) {
                 expr.left_expr = std::make_shared<sis_expression>(parse_expression());
-
             }
 
-            if (((int)expr.op >=4) &&
-                    (expr.op != ss_expr_op::EFuncExists)) {
+            if (((int)expr.op >= 4) && (expr.op != ss_expr_op::EFuncExists)) {
                 expr.right_expr = std::make_shared<sis_expression>(parse_expression());
             }
 
@@ -778,7 +772,7 @@ namespace eka2l1 {
             return ib;
         }
 
-        sis_sig_algorithm sis_parser::parse_signature_algorithm(bool no_type){
+        sis_sig_algorithm sis_parser::parse_signature_algorithm(bool no_type) {
             sis_sig_algorithm algo;
 
             parse_field_child(&algo, no_type);
@@ -801,7 +795,7 @@ namespace eka2l1 {
             return sig;
         }
 
-        sis_certificate_chain sis_parser::parse_cert_chain(bool no_type){
+        sis_certificate_chain sis_parser::parse_cert_chain(bool no_type) {
             sis_certificate_chain cert_chain;
 
             parse_field_child(&cert_chain, no_type);
@@ -832,7 +826,7 @@ namespace eka2l1 {
             size_t crr_pos = stream->tellg();
 
             if (crr_pos % 4 != 0) {
-                jump_t(4- crr_pos % 4);
+                jump_t(4 - crr_pos % 4);
             }
         }
 
@@ -847,6 +841,5 @@ namespace eka2l1 {
 
             alternative_stream = astream;
         }
-
     }
 }

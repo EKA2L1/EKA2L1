@@ -6,8 +6,8 @@
 using namespace eka2l1;
 
 void timed_io_callback(uint64_t time_delay) {
-    FILE* f = fopen("test_register.txt", "w");
-    const char* fo = "ur mom nice";
+    FILE *f = fopen("test_register.txt", "w");
+    const char *fo = "ur mom nice";
 
     fwrite(fo, 1, 12, f);
     fclose(f);

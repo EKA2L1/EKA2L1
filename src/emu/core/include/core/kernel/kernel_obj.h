@@ -13,9 +13,10 @@ namespace eka2l1 {
             std::string obj_name;
             uid obj_id;
 
-            kernel_obj(const std::string& obj_name);
-            kernel_obj(const uid obj_id, const std::string& obj_name)
-                : obj_id(obj_id), obj_name(obj_name) {}
+            kernel_obj(const std::string &obj_name);
+            kernel_obj(const uid obj_id, const std::string &obj_name)
+                : obj_id(obj_id)
+                , obj_name(obj_name) {}
 
         public:
             std::string name() const {

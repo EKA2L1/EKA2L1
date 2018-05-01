@@ -2,14 +2,14 @@
 
 #include <ptr.h>
 
-#include <common/log.h>
-#include <common/bytepair.h>
-#include <common/flate.h>
-#include <common/data_displayer.h>
 #include <common/buffer.h>
+#include <common/bytepair.h>
+#include <common/data_displayer.h>
+#include <common/flate.h>
+#include <common/log.h>
 
-#include <miniz.h>
 #include <cstdio>
+#include <miniz.h>
 #include <sstream>
 
 namespace eka2l1 {
@@ -19,7 +19,7 @@ namespace eka2l1 {
             uint32_t num_reloc;
         };
 
-        enum class relocation_type: uint16_t {
+        enum class relocation_type : uint16_t {
             reserved = 0x0000,
             text = 0x1000,
             data = 0x2000,
@@ -33,13 +33,13 @@ namespace eka2l1 {
 
         // Write simple relocation
         // Symbian only used this, as found on IDA
-        bool write(uint32_t* data, uint32_t sym) {
+        bool write(uint32_t *data, uint32_t sym) {
             LOG_TRACE("Relocation original data: 0x{:x}, new data: 0x{:x}", *data, sym);
             *data = sym;
             return true;
         }
 
-        bool relocate(uint32_t* dest_ptr, relocation_type type, uint32_t code_delta, uint32_t data_delta) {
+        bool relocate(uint32_t *dest_ptr, relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == relocation_type::reserved) {
                 LOG_ERROR("Invalid relocation type: 0");
 
@@ -56,7 +56,8 @@ namespace eka2l1 {
             case relocation_type::data:
                 write(dest_ptr, reloc_offset + data_delta);
                 break;
-            case relocation_type::inffered: default:
+            case relocation_type::inffered:
+            default:
                 LOG_WARN("Relocation not properly handle: {}", (int)type);
                 break;
             }
@@ -66,22 +67,22 @@ namespace eka2l1 {
 
         // Given relocation entries, relocate the code and data
         bool relocate(std::vector<eka2_reloc_entry> entries,
-                      uint8_t* dest_addr,
-                      uint32_t code_delta,
-                      uint32_t data_delta) {
+            uint8_t *dest_addr,
+            uint32_t code_delta,
+            uint32_t data_delta) {
             for (uint32_t i = 0; i < entries.size(); i++) {
                 auto entry = entries[i];
 
-                for (auto& rel_info: entry.rels_info) {
-                    // Get the lower 12 bit for virtual_address 
+                for (auto &rel_info : entry.rels_info) {
+                    // Get the lower 12 bit for virtual_address
                     uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
-                    uint8_t* dest_ptr = virtual_addr + dest_addr;
+                    uint8_t *dest_ptr = virtual_addr + dest_addr;
 
                     LOG_INFO("Relocation virtual address: 0x{:x}", 0x70000000 + virtual_addr);
 
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
-                    if (!relocate(reinterpret_cast<uint32_t*>(dest_ptr), rel_type, code_delta, data_delta)) {
+                    if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
                         LOG_TRACE("Relocate fail at page: {}", i);
                         return false;
                     }
@@ -92,7 +93,7 @@ namespace eka2l1 {
         }
 
         bool import_func(ptr<uint32_t> stub_ptr, uint32_t sym) {
-            uint32_t* stub = stub_ptr.get();
+            uint32_t *stub = stub_ptr.get();
 
             if (stub == nullptr) {
                 return false;
@@ -103,7 +104,7 @@ namespace eka2l1 {
             stub[0] = 0xef000000; // swi #0
             stub[1] = 0xe1a0f00e; // mov pc, lr
             stub[2] = sym;
-            
+
             return true;
         }
 
@@ -124,7 +125,7 @@ namespace eka2l1 {
         // The import address table will contains the address of all these
         // stubs
         // I don't know if it will work, but probally
-        uint32_t import_libs(eka2img* img, uint32_t rtcode_addr) {
+        uint32_t import_libs(eka2img *img, uint32_t rtcode_addr) {
             // Fill text segment with stub
             uint32_t stub_ptr = rtcode_addr + img->header.code_size;
             uint32_t stub_size = 0;
@@ -132,8 +133,8 @@ namespace eka2l1 {
 
             LOG_ERROR("Start writing stubs at: 0x{:x}", stub_ptr);
 
-            for (auto& import_entry: img->import_section.imports) {
-                for (auto& oridinal: import_entry.ordinals) {
+            for (auto &import_entry : img->import_section.imports) {
+                for (auto &oridinal : import_entry.ordinals) {
                     import_func(ptr<uint32_t>(stub_ptr), oridinal);
                     iat_addresses.push_back(stub_ptr);
                     stub_ptr += 12;
@@ -143,8 +144,8 @@ namespace eka2l1 {
 
             uint32_t iat_ptr = stub_ptr;
 
-            for (auto& iat_address: iat_addresses) {
-                uint32_t* iat_im_ptr = core_mem::get_addr<uint32_t>(iat_ptr);
+            for (auto &iat_address : iat_addresses) {
+                uint32_t *iat_im_ptr = core_mem::get_addr<uint32_t>(iat_ptr);
                 *iat_im_ptr = iat_address;
                 iat_ptr += 4;
                 stub_size += 4;
@@ -153,10 +154,9 @@ namespace eka2l1 {
             return stub_size;
         }
 
-        bool import_exe_image(eka2img* img) {            
+        bool import_exe_image(eka2img *img) {
             // Map the memory to store the text, data and import section
-            ptr<void> asmdata =
-                    core_mem::alloc_ime(img->header.code_size + 0x1000);
+            ptr<void> asmdata = core_mem::alloc_ime(img->header.code_size + 0x1000);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
@@ -176,11 +176,9 @@ namespace eka2l1 {
             uint32_t code_delta = rtcode_addr - img->header.code_base;
             uint32_t data_delta = rtdata_addr - img->header.data_base;
 
-            relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t*>
-                     (img->data.data() + img->header.code_offset), code_delta, data_delta);
+            relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.code_offset), code_delta, data_delta);
 
-            relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t*>
-                     (img->data.data() + img->header.data_offset), code_delta, data_delta);
+            relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
 
             memcpy(ptr<uint32_t>(rtcode_addr).get(), img->data.data() + img->header.code_offset, img->header.code_size);
             memcpy(ptr<uint32_t>(rtdata_addr).get(), img->data.data() + img->header.data_offset, img->header.data_size);
@@ -190,11 +188,11 @@ namespace eka2l1 {
             return true;
         }
 
-        void peek_t(void* buf, size_t element_count, size_t element_size, std::istream* file) {
-             size_t crr = file->tellg();
+        void peek_t(void *buf, size_t element_count, size_t element_size, std::istream *file) {
+            size_t crr = file->tellg();
 
-             file->read(static_cast<char*>(buf), element_count * element_size);
-             file->seekg(crr);
+            file->read(static_cast<char *>(buf), element_count * element_size);
+            file->seekg(crr);
         }
 
         void dump_flag_info(int flag) {
@@ -223,9 +221,9 @@ namespace eka2l1 {
             }
         }
 
-        void read_relocations(common::ro_buf_stream* stream,
-                              eka2_reloc_section& section,
-                              uint32_t offset) {
+        void read_relocations(common::ro_buf_stream *stream,
+            eka2_reloc_section &section,
+            uint32_t offset) {
             // No relocations
             if (offset == 0) {
                 return;
@@ -233,8 +231,8 @@ namespace eka2l1 {
 
             stream->seek(offset, common::beg);
 
-            stream->read(reinterpret_cast<void*>(&section.size), 4);
-            stream->read(reinterpret_cast<void*>(&section.num_relocs), 4);
+            stream->read(reinterpret_cast<void *>(&section.size), 4);
+            stream->read(reinterpret_cast<void *>(&section.num_relocs), 4);
 
             // There is no document on this anywhere. The code you see online is not right.
             // Here is the part i tell you the truth: The size is including both the base and itself
@@ -245,15 +243,15 @@ namespace eka2l1 {
             for (int i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
-                stream->read(reinterpret_cast<void*>(&reloc_entry.base), 4);
-                stream->read(reinterpret_cast<void*>(&reloc_entry.size), 4);
+                stream->read(reinterpret_cast<void *>(&reloc_entry.base), 4);
+                stream->read(reinterpret_cast<void *>(&reloc_entry.size), 4);
 
                 assert((reloc_entry.size - 8) % 2 == 0);
 
                 reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2));
 
-                for (auto& rel_info: reloc_entry.rels_info) {
-                    stream->read(reinterpret_cast<void*>(&rel_info), 2);
+                for (auto &rel_info : reloc_entry.rels_info) {
+                    stream->read(reinterpret_cast<void *>(&rel_info), 2);
                 }
 
                 section.entries.push_back(reloc_entry);
@@ -261,7 +259,7 @@ namespace eka2l1 {
         }
 
         bool dump_buf_data(std::string path, std::vector<char> vec) {
-            FILE* file = fopen(path.c_str(), "wb");
+            FILE *file = fopen(path.c_str(), "wb");
 
             if (!file) {
                 return false;
@@ -278,32 +276,32 @@ namespace eka2l1 {
             return true;
         }
 
-        void parse_export_dir(eka2img& img) {
+        void parse_export_dir(eka2img &img) {
             if (img.header.export_dir_offset == 0) {
                 return;
             }
 
-            uint32_t* exp = reinterpret_cast<uint32_t*>(img.data.data() + img.header.export_dir_offset);
+            uint32_t *exp = reinterpret_cast<uint32_t *>(img.data.data() + img.header.export_dir_offset);
 
             for (auto i = 0; i < img.header.export_dir_count; i++) {
                 img.ed.syms.push_back(*exp++);
             }
         }
 
-        void parse_iat(eka2img& img) {
-            uint32_t* imp_addr = reinterpret_cast<uint32_t*>(img.data.data() + img.header.code_offset + img.header.text_size);
+        void parse_iat(eka2img &img) {
+            uint32_t *imp_addr = reinterpret_cast<uint32_t *>(img.data.data() + img.header.code_offset + img.header.text_size);
 
             while (*imp_addr != 0) {
                 img.iat.its.push_back(*imp_addr++);
             }
         }
 
-        std::optional<eka2img> parse_eka2img(const std::string& path, bool read_reloc) {
+        std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc) {
             LOG_TRACE("Loading image: {}", path);
 
             eka2img img;
 
-            FILE* f = fopen(path.c_str(), "rb");
+            FILE *f = fopen(path.c_str(), "rb");
 
             fseek(f, 0, SEEK_END);
             auto file_size = ftell(f);
@@ -322,7 +320,7 @@ namespace eka2l1 {
             }
 
             uint32_t temp = 0;
-            fread(&temp, 1, 4, f); 
+            fread(&temp, 1, 4, f);
 
             if ((temp == 0x2000) || (temp == 0x1000)) {
                 // Quick hack to determinate if this is an EKA1
@@ -384,8 +382,7 @@ namespace eka2l1 {
                 }
 
                 fseek(f, 0, SEEK_SET);
-                fread(img.data.data(), 1, sizeof(eka2img_header) + 4
-                      + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
+                fread(img.data.data(), 1, sizeof(eka2img_header) + 4 + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
 
                 fseek(f, img.header.code_offset, SEEK_SET);
                 fread(temp_buf.data(), 1, temp_buf.size(), f);
@@ -395,17 +392,17 @@ namespace eka2l1 {
                     // Weird behavior, this is my way
                     img.data[img.header.code_offset] = 12;
 
-                    flate::bit_input input(reinterpret_cast<uint8_t*>(temp_buf.data()), temp_buf.size() * 8);
+                    flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), temp_buf.size() * 8);
                     flate::inflater inflate_machine(input);
 
                     inflate_machine.init();
-                    auto readed = inflate_machine.read(reinterpret_cast<uint8_t*>(&img.data[img.header.code_offset]),
-                                         img.uncompressed_size);
+                    auto readed = inflate_machine.read(reinterpret_cast<uint8_t *>(&img.data[img.header.code_offset]),
+                        img.uncompressed_size);
 
                     LOG_INFO("Readed compress, size: {}", readed);
                 } else if (ctype == compress_type::byte_pair_c) {
                     auto temp_stream = std::make_shared<std::ifstream>(path);
-					temp_stream->seekg(img.header.code_offset, std::ios::beg);
+                    temp_stream->seekg(img.header.code_offset, std::ios::beg);
 
                     common::ibytepair_stream bpstream(path, img.header.code_offset);
 
@@ -445,23 +442,23 @@ namespace eka2l1 {
             parse_iat(img);
 
             // Read the import section
-			common::ro_buf_stream stream(reinterpret_cast<uint8_t*>(img.data.data()), img.data.size());
+            common::ro_buf_stream stream(reinterpret_cast<uint8_t *>(img.data.data()), img.data.size());
 
             stream.seek(img.header.import_offset, common::beg);
-            stream.read(reinterpret_cast<void*>(&img.import_section.size), 4);
+            stream.read(reinterpret_cast<void *>(&img.import_section.size), 4);
 
             img.import_section.imports.resize(img.header.dll_ref_table_count);
 
             LOG_INFO("Total dll count: {}", img.header.dll_ref_table_count);
             LOG_INFO("Import offsets: {}", img.header.import_offset);
 
-            for (auto& import: img.import_section.imports) {
-                stream.read(reinterpret_cast<void*>(&import.dll_name_offset), 4);
-                stream.read(reinterpret_cast<void*>(&import.number_of_imports), 4);
+            for (auto &import : img.import_section.imports) {
+                stream.read(reinterpret_cast<void *>(&import.dll_name_offset), 4);
+                stream.read(reinterpret_cast<void *>(&import.number_of_imports), 4);
 
-				if (import.number_of_imports == 0) {
-					continue;
-				}
+                if (import.number_of_imports == 0) {
+                    continue;
+                }
 
                 auto crr_size = stream.tell();
                 stream.seek(img.header.import_offset + import.dll_name_offset, common::beg);
@@ -479,18 +476,17 @@ namespace eka2l1 {
 
                 import.ordinals.resize(import.number_of_imports);
 
-                for (auto& oridinal: import.ordinals) {
-                    stream.read(reinterpret_cast<void*>(&oridinal), 4);
+                for (auto &oridinal : import.ordinals) {
+                    stream.read(reinterpret_cast<void *>(&oridinal), 4);
                 }
             }
 
             if (read_reloc) {
                 read_relocations(&stream,
-                                 img.code_reloc_section, img.header.code_reloc_offset);
+                    img.code_reloc_section, img.header.code_reloc_offset);
 
                 read_relocations(&stream,
-                                 img.data_reloc_section, img.header.data_reloc_offset);
-
+                    img.data_reloc_section, img.header.data_reloc_offset);
             }
 
             fclose(f);

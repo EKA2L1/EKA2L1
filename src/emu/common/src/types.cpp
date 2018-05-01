@@ -1,8 +1,8 @@
 #include <common/types.h>
 
 #ifndef WIN32
-#include <unistd.h>
 #include <sys/mman.h>
+#include <unistd.h>
 #else
 #include <Windows.h>
 #endif
@@ -52,4 +52,3 @@ int translate_protection(prot cprot) {
 
     return tprot;
 }
-
