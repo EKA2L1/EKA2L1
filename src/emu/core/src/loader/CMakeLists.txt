@@ -15,6 +15,10 @@ add_library(coreloader
         stub.cpp)
 
 target_link_libraries(coreloader PUBLIC common)
-target_link_libraries(coreloader PRIVATE coremem miniz core)
+target_link_libraries(coreloader PRIVATE coremem miniz core yaml-cpp)
 
 target_include_directories(coreloader PUBLIC ${CORE_INCLUDE_DIR})
+
+target_include_directories(coreloader
+    PUBLIC
+    ${YAML_INCLUDE_DIR})

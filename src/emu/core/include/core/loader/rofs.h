@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 // Extracting the one and annoying only Read Only File System!!
 
@@ -47,6 +48,12 @@ namespace eka2l1 {
             uint32_t file_block_addr; // address of associated file block
             uint32_t file_block_size; // size of associated file block
             rofs_entry sub_dir;
+        };
+
+        struct rofs_file {
+            rofs_header header;
+            std::vector<rofs_entry> entries;
+            std::vector<rofs_dir> dirs;
         };
     }
 }

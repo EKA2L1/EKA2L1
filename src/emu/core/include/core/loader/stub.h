@@ -4,10 +4,9 @@
 #include <string>
 #include <vector>
 
-namespace eka2l1 {
-    template <typename T>
-    class ptr;
+#include <ptr.h>
 
+namespace eka2l1 {
     namespace loader {
         using sid = uint32_t;
 

@@ -47,6 +47,16 @@ elseif(UNIX)
         target_link_libraries(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/unix/lib/libunicorn.a")
 endif()
 
+if (BUILD_TOOLS)
+    find_package(LibClang)
+
+    if (LIBCLANG_FOUND)
+        add_library(libclang INTERFACE)
+        target_include_directories(libclang INTERFACE ${libclang_lib})
+        target_include_directories(libclang INTERFACE ${libclang_include_dir})
+    endif()
+endif()
+
 option(CAPSTONE_BUILD_SHARED "Build shared library" OFF)
 option(CAPSTONE_BUILD_TESTS "Build tests" OFF)
 option(CAPSTONE_ARM_SUPPORT "ARM support" ON)
