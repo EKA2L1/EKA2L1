@@ -237,21 +237,24 @@ int main(int argc, char** argv) {
     uint32_t header_for_work, start_off = 0;
     uint32_t end_off = 0;
 
+    std::vector<std::thread> threads;
+    threads.resize(total_thread);
+
     for (uint32_t i = 0; i < total_thread - 1; i++) {
         header_for_work = headers.size() / total_thread;
         end_off += header_for_work;
 
-        std::thread t1(launch_gen_metadata, start_off, end_off);
-        t1.join();
-
+        threads[i] = std::thread(launch_gen_metadata, start_off, end_off);
         start_off += header_for_work;
     }
 
     header_for_work = headers.size() / total_thread + headers.size() % total_thread;
     end_off += header_for_work;
+    threads[total_thread-1] = std::thread(launch_gen_metadata, start_off, end_off);
 
-    std::thread t2(launch_gen_metadata, start_off, end_off);
-    t2.join();
+    for (auto& thr: threads) {
+        thr.join();
+    }
 
     for (auto& header: headers) {
         yaml_meta_emit(header.string());
