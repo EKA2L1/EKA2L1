@@ -1,18 +1,19 @@
-#include <kernel/scheduler.h>
 #include <algorithm>
-#include <functional>
-#include <kernel/thread.h>
 #include <core_timing.h>
+#include <functional>
+#include <kernel/scheduler.h>
+#include <kernel/thread.h>
 
 namespace eka2l1 {
     namespace kernel {
         thread_scheduler::thread_scheduler(uint32_t ticks_yield)
-            : ticks_yield(ticks_yield), crr_running_thread(nullptr) {
+            : ticks_yield(ticks_yield)
+            , crr_running_thread(nullptr) {
             // Register event for core_timing
             yield_evt = core_timing::register_event("ScheduleryieldNextThread",
-                                                    std::bind(&thread_scheduler::yield_thread, this));
+                std::bind(&thread_scheduler::yield_thread, this));
             wakeup_evt = core_timing::register_event("SchedulerWakeUpThread",
-                                                     std::bind(&thread_scheduler::wake_thread, this, std::placeholders::_1));
+                std::bind(&thread_scheduler::wake_thread, this, std::placeholders::_1));
 
             core_timing::schedule_event(ticks_yield, yield_evt);
         }
@@ -46,7 +47,7 @@ namespace eka2l1 {
             }
 
             waiting_threads.erase(id);
-            thread* thr_real = thr->second;
+            thread *thr_real = thr->second;
 
             thr_real->state = thread_state::run;
             crr_running_thread = thr_real;
@@ -54,7 +55,7 @@ namespace eka2l1 {
         }
 
         // Put the thread into the ready queue to run in the next core timing yeid
-        bool thread_scheduler::schedule(kernel::thread* thr) {
+        bool thread_scheduler::schedule(kernel::thread *thr) {
             if (thr->state == thread_state::run || thr->state == thread_state::ready) {
                 return false;
             }
@@ -65,7 +66,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool thread_scheduler::sleep(kernel::thread* thread, uint32_t sl_time) {
+        bool thread_scheduler::sleep(kernel::thread *thread, uint32_t sl_time) {
             // It's already waiting
             if (thread->state == thread_state::wait || thread->state == thread_state::ready) {
                 return false;

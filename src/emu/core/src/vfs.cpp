@@ -1,6 +1,6 @@
-#include <core/vfs.h>
-#include <common/path.h>
 #include <common/log.h>
+#include <common/path.h>
+#include <core/vfs.h>
 
 #include <iostream>
 
@@ -11,10 +11,10 @@
 namespace eka2l1 {
     namespace vfs {
 
-		std::string _pref_path;
-		std::string _current_dir;
+        std::string _pref_path;
+        std::string _current_dir;
 
-		std::map<std::string, std::string> _mount_map;
+        std::map<std::string, std::string> _mount_map;
 
         std::mutex _gl_mut;
 
@@ -30,38 +30,37 @@ namespace eka2l1 {
             unmount("E:");
         }
 
-		std::string current_dir() {
-			return _current_dir;
-		}
+        std::string current_dir() {
+            return _current_dir;
+        }
 
-		void current_dir(const std::string &new_dir) {
-			std::lock_guard<std::mutex> guard(_gl_mut);
-			_current_dir = new_dir;
-		}
+        void current_dir(const std::string &new_dir) {
+            std::lock_guard<std::mutex> guard(_gl_mut);
+            _current_dir = new_dir;
+        }
 
-		void mount(const std::string &dvc, const std::string &real_path) {
-			auto find_res = _mount_map.find(dvc);
+        void mount(const std::string &dvc, const std::string &real_path) {
+            auto find_res = _mount_map.find(dvc);
 
             if (find_res == _mount_map.end()) {
                 // Warn
-			}
+            }
 
-			std::lock_guard<std::mutex> guard(_gl_mut);
+            std::lock_guard<std::mutex> guard(_gl_mut);
             _mount_map.insert(std::make_pair(dvc, real_path));
 
             _current_dir = dvc;
         }
 
-		void unmount(const std::string &dvc) {
-			std::lock_guard<std::mutex> guard(_gl_mut);
-			_mount_map.erase(dvc);
-		}
+        void unmount(const std::string &dvc) {
+            std::lock_guard<std::mutex> guard(_gl_mut);
+            _mount_map.erase(dvc);
+        }
 
         std::string get(std::string vir_path) {
             std::string abs_path = "";
 
-            std::string current_dir =
-                    _current_dir;
+            std::string current_dir = _current_dir;
 
             // Current directory is always an absolute path
             std::string partition;
@@ -84,7 +83,7 @@ namespace eka2l1 {
             current_dir = res->second + _current_dir.substr(2);
 
             // Make it case-insensitive
-            for (auto& c: vir_path) {
+            for (auto &c : vir_path) {
                 c = std::tolower(c);
             }
 
@@ -95,6 +94,6 @@ namespace eka2l1 {
             }
 
             return abs_path;
-		}
-	}
+        }
+    }
 }

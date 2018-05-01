@@ -1,12 +1,12 @@
 #include "EKA2L1.h"
 
-#include "loader/sis.h"
 #include "loader/eka2img.h"
+#include "loader/sis.h"
 
-#include "logger/logger.h"
-#include "internal.h"
 #include "imguirdr.h"
+#include "internal.h"
 #include "io/imguiio.h"
+#include "logger/logger.h"
 #include "window.h"
 
 #include <common/data_displayer.h>
@@ -15,7 +15,7 @@
 
 #include "installer/installer.h"
 
-static void glfw_err_callback(int err, const char* des){
+static void glfw_err_callback(int err, const char *des) {
     std::cout << err << ": " << des << std::endl;
 }
 

@@ -1,10 +1,10 @@
+#include <common/log.h>
 #include <loader/eka2img.h>
 #include <loader/romimage.h>
-#include <common/log.h>
 
+#include <fstream>
 #include <iostream>
 #include <string>
-#include <fstream>
 
 #include <experimental/filesystem>
 
@@ -13,7 +13,7 @@ using namespace eka2l1::loader;
 
 std::vector<fs::path> libs;
 
-void dump_to_syms(const std::string& org_path, eka2img& img) {
+void dump_to_syms(const std::string &org_path, eka2img &img) {
     std::string lib = fs::path(org_path).filename().replace_extension(fs::path("")).string();
     std::ofstream of(lib + ".nsd");
 
@@ -24,7 +24,7 @@ void dump_to_syms(const std::string& org_path, eka2img& img) {
     }
 }
 
-void dump_to_syms2(const std::string& org_path, romimg& img) {
+void dump_to_syms2(const std::string &org_path, romimg &img) {
     std::string lib = fs::path(org_path).filename().replace_extension(fs::path("")).string();
     std::ofstream of(lib + ".nsd");
 
@@ -36,7 +36,7 @@ void dump_to_syms2(const std::string& org_path, romimg& img) {
 }
 
 void list_all_libs() {
-    for (auto& f: fs::directory_iterator(".")) {
+    for (auto &f : fs::directory_iterator(".")) {
         fs::path fdir = fs::path(f);
 
         if (fs::is_regular_file(fdir) && fdir.extension().string() == ".dll") {
@@ -45,7 +45,7 @@ void list_all_libs() {
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     eka2l1::log::setup_log(nullptr);
 
     if (argc == 1) {
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    for (auto& path: libs) {
+    for (auto &path : libs) {
         auto img = parse_eka2img(path.string(), false);
 
         if (img) {

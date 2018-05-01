@@ -1,10 +1,10 @@
-#include <core/core_timing.h>
 #include <common/log.h>
+#include <core/core_timing.h>
 
 #include <algorithm>
-#include <vector>
-#include <thread>
 #include <mutex>
+#include <thread>
+#include <vector>
 
 namespace eka2l1 {
     namespace core_timing {
@@ -41,7 +41,7 @@ namespace eka2l1 {
         std::vector<event> events, ts_events;
 
         void fire_mhz_changes() {
-            for (auto& mhz_change: internal_mhzcs) {
+            for (auto &mhz_change : internal_mhzcs) {
                 mhz_change();
             }
         }
@@ -74,7 +74,7 @@ namespace eka2l1 {
             return last_global_time_us + passed / frequency;
         }
 
-        int register_event(const std::string& name, timed_callback callback) {
+        int register_event(const std::string &name, timed_callback callback) {
             event_type evtype;
 
             evtype.name = name;
@@ -100,7 +100,7 @@ namespace eka2l1 {
             idle_ticks = 0;
         }
 
-        void restore_register_event(int evt_type, const std::string& name, timed_callback callback) {
+        void restore_register_event(int evt_type, const std::string &name, timed_callback callback) {
             event_type evtype;
 
             evtype.callback = callback;
@@ -132,11 +132,11 @@ namespace eka2l1 {
             schedule_event(0, event_type, userdata);
         }
 
-        void unschedule_event(int event_type ,uint64_t usrdata) {
+        void unschedule_event(int event_type, uint64_t usrdata) {
             std::lock_guard<std::mutex> guard(mut);
 
             auto res = std::find_if(events.begin(), events.end(),
-               [&](auto evt) { return (evt.event_type == event_type) && (evt.event_user_data == usrdata); });
+                [&](auto evt) { return (evt.event_type == event_type) && (evt.event_user_data == usrdata); });
 
             if (res != events.end()) {
                 events.erase(res);
@@ -147,7 +147,7 @@ namespace eka2l1 {
             std::lock_guard<std::mutex> guard(mut);
 
             auto res = std::find_if(events.begin(), events.end(),
-               [&](auto evt) { return (evt.event_type == event_type); });
+                [&](auto evt) { return (evt.event_type == event_type); });
 
             if (res != events.end()) {
                 events.erase(res);
@@ -158,7 +158,7 @@ namespace eka2l1 {
             auto dc = downcount;
 
             if (max_idle != 0 && dc > max_idle) {
-                dc= max_idle;
+                dc = max_idle;
             }
 
             if (events.size() > 0 && dc > 0) {
@@ -198,7 +198,7 @@ namespace eka2l1 {
             }
 
             if (!events.empty()) {
-                slice_len = std::min((int)(events.front().event_time- global_timer), (int)MAX_SLICE_LENGTH);
+                slice_len = std::min((int)(events.front().event_time - global_timer), (int)MAX_SLICE_LENGTH);
             }
 
             downcount = slice_len;
@@ -224,9 +224,9 @@ namespace eka2l1 {
         }
 
         void log_pending_events() {
-            for (auto evt: events) {
+            for (auto evt : events) {
                 LOG_INFO("Pending event: Time: {}, Event type pos: {}, Event userdata: {}",
-                         evt.event_time, evt.event_type, evt.event_user_data);
+                    evt.event_time, evt.event_type, evt.event_user_data);
             }
         }
 

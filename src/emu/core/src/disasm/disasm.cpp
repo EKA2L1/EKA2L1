@@ -1,20 +1,20 @@
-#include <disasm/disasm.h>
-#include <common/log.h>
 #include <capstone.h>
+#include <common/log.h>
+#include <disasm/disasm.h>
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <sstream>
 
 namespace eka2l1 {
     namespace disasm {
         using insn_ptr = std::unique_ptr<cs_insn, std::function<void(cs_insn *)>>;
-        using csh_ptr = std::unique_ptr<csh, std::function<void(csh*)>>;
+        using csh_ptr = std::unique_ptr<csh, std::function<void(csh *)>>;
 
         csh cp_handle;
         insn_ptr cp_insn;
 
-        void shutdown_insn(cs_insn* insn) {
+        void shutdown_insn(cs_insn *insn) {
             if (cp_insn) {
                 cs_free(insn, 1);
             }

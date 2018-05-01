@@ -4,9 +4,9 @@
 #include <memory>
 #include <string>
 
-#include <kernel/kernel_obj.h>
-#include <common/resource.h>
 #include <arm/jit_factory.h>
+#include <common/resource.h>
+#include <kernel/kernel_obj.h>
 #include <ptr.h>
 
 namespace eka2l1 {
@@ -22,8 +22,7 @@ namespace eka2l1 {
             stop
         };
 
-        enum thread_priority
-        {
+        enum thread_priority {
             priority_null = -30,
             priority_much_less = -20,
             priority_less = -10,
@@ -38,12 +37,12 @@ namespace eka2l1 {
             priority_absolute_high = 500
         };
 
-        class thread: public kernel_obj {
+        class thread : public kernel_obj {
             friend class thread_scheduler;
 
-            thread_state              state;
-            arm::jitter               cpu;
-            std::mutex                mut;
+            thread_state state;
+            arm::jitter cpu;
+            std::mutex mut;
             std::condition_variable todo;
 
             // Thread context to save when suspend the execution
@@ -56,7 +55,7 @@ namespace eka2l1 {
             size_t min_heap_size, max_heap_size;
 
             size_t heap_addr;
-            void* usrdata;
+            void *usrdata;
 
         protected:
             // Run without notice the order
@@ -65,11 +64,11 @@ namespace eka2l1 {
 
         public:
             thread();
-            thread(const std::string& name, const address epa, const size_t stack_size,
-                   const size_t min_heap_size, const size_t max_heap_size,
-                   void* usrdata = nullptr,
-                   thread_priority pri = priority_normal,
-                   arm::jitter_arm_type jit_type = arm::unicorn);
+            thread(const std::string &name, const address epa, const size_t stack_size,
+                const size_t min_heap_size, const size_t max_heap_size,
+                void *usrdata = nullptr,
+                thread_priority pri = priority_normal,
+                arm::jitter_arm_type jit_type = arm::unicorn);
 
             thread_state current_state() const {
                 return state;
@@ -87,11 +86,11 @@ namespace eka2l1 {
             bool suspend();
 
             // Physically we can't compare thread.
-            bool operator > (const thread& rhs);
-            bool operator < (const thread& rhs);
-            bool operator == (const thread& rhs);
-            bool operator >= (const thread& rhs);
-            bool operator <= (const thread& rhs);
+            bool operator>(const thread &rhs);
+            bool operator<(const thread &rhs);
+            bool operator==(const thread &rhs);
+            bool operator>=(const thread &rhs);
+            bool operator<=(const thread &rhs);
         };
 
         using thread_ptr = std::shared_ptr<kernel::thread>;

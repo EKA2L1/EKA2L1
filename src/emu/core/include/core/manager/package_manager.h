@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace eka2l1 {
     namespace loader {
@@ -25,10 +25,10 @@ namespace eka2l1 {
             std::map<uid, app_info> c_apps;
             std::map<uid, app_info> e_apps;
 
-            bool load_sdb(const std::string& path);
-            bool write_sdb(const std::string& path);
+            bool load_sdb(const std::string &path);
+            bool write_sdb(const std::string &path);
 
-            bool install_controller(loader::sis_controller* ctrl, uint8_t drv);
+            bool install_controller(loader::sis_controller *ctrl, uint8_t drv);
 
         public:
             package_manager() { load_sdb("apps_registry.sdb"); }
@@ -38,7 +38,7 @@ namespace eka2l1 {
             std::u16string app_name(uid app_uid);
             app_info info(uid app_uid);
 
-            bool install_package(const std::u16string& path, uint8_t drive);
+            bool install_package(const std::u16string &path, uint8_t drive);
             bool uninstall_package(uid app_uid);
         };
     }

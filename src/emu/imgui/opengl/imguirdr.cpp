@@ -22,9 +22,9 @@ namespace eka2l1 {
         }
 
         void create_font_tx() {
-            ImGuiIO& io = ImGui::GetIO();
+            ImGuiIO &io = ImGui::GetIO();
 
-            unsigned char* pixels;
+            unsigned char *pixels;
             int width,
                 height;
 
@@ -39,45 +39,42 @@ namespace eka2l1 {
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-            io.Fonts->TexID = (void*)(intptr_t)(font_tex);
+            io.Fonts->TexID = (void *)(intptr_t)(font_tex);
 
             // Restore state
             glBindTexture(GL_TEXTURE_2D, last_texture);
         }
 
-        bool create_dvc_objs()
-        {
+        bool create_dvc_objs() {
             // Backup GL state
             GLint last_texture, last_array_buffer, last_vertex_array;
             glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
             glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
             glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
 
-            const GLchar* vertex_shader =
-                "#version 150\n"
-                "uniform mat4 ProjMtx;\n"
-                "in vec2 Position;\n"
-                "in vec2 UV;\n"
-                "in vec4 Color;\n"
-                "out vec2 Frag_UV;\n"
-                "out vec4 Frag_Color;\n"
-                "void main()\n"
-                "{\n"
-                "	Frag_UV = UV;\n"
-                "	Frag_Color = Color;\n"
-                "	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
-                "}\n";
+            const GLchar *vertex_shader = "#version 150\n"
+                                          "uniform mat4 ProjMtx;\n"
+                                          "in vec2 Position;\n"
+                                          "in vec2 UV;\n"
+                                          "in vec4 Color;\n"
+                                          "out vec2 Frag_UV;\n"
+                                          "out vec4 Frag_Color;\n"
+                                          "void main()\n"
+                                          "{\n"
+                                          "	Frag_UV = UV;\n"
+                                          "	Frag_Color = Color;\n"
+                                          "	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
+                                          "}\n";
 
-            const GLchar* fragment_shader =
-                "#version 150\n"
-                "uniform sampler2D Texture;\n"
-                "in vec2 Frag_UV;\n"
-                "in vec4 Frag_Color;\n"
-                "out vec4 Out_Color;\n"
-                "void main()\n"
-                "{\n"
-                "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
-                "}\n";
+            const GLchar *fragment_shader = "#version 150\n"
+                                            "uniform sampler2D Texture;\n"
+                                            "in vec2 Frag_UV;\n"
+                                            "in vec4 Frag_Color;\n"
+                                            "out vec4 Out_Color;\n"
+                                            "void main()\n"
+                                            "{\n"
+                                            "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
+                                            "}\n";
 
             basic_shader_program = glCreateProgram();
             auto vertex_handle = glCreateShader(GL_VERTEX_SHADER);
@@ -92,8 +89,7 @@ namespace eka2l1 {
             char infoLog[512];
 
             glGetShaderiv(vertex_handle, GL_COMPILE_STATUS, &success);
-            if(!success)
-            {
+            if (!success) {
                 glGetShaderInfoLog(vertex_handle, 512, NULL, infoLog);
                 LOG_ERROR("Vertex shader error: {}", infoLog);
             };
@@ -101,8 +97,7 @@ namespace eka2l1 {
             glCompileShader(frag_handle);
 
             glGetShaderiv(frag_handle, GL_COMPILE_STATUS, &success);
-            if(!success)
-            {
+            if (!success) {
                 glGetShaderInfoLog(frag_handle, 512, NULL, infoLog);
                 LOG_ERROR("Fragment shader error: {}", infoLog);
             };
@@ -112,8 +107,7 @@ namespace eka2l1 {
             glLinkProgram(basic_shader_program);
 
             glGetProgramiv(basic_shader_program, GL_LINK_STATUS, &success);
-            if(!success)
-            {
+            if (!success) {
                 glGetProgramInfoLog(basic_shader_program, 512, NULL, infoLog);
                 LOG_ERROR("Shader program link: {}", infoLog);
             }
@@ -137,9 +131,9 @@ namespace eka2l1 {
             return true;
         }
 
-        void draw_gl(ImDrawData* draw_data) {
+        void draw_gl(ImDrawData *draw_data) {
             // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
-            ImGuiIO& io = ImGui::GetIO();
+            ImGuiIO &io = ImGui::GetIO();
             int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
             int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
             if (fb_width == 0 || fb_height == 0)
@@ -147,23 +141,39 @@ namespace eka2l1 {
             draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
             // Backup GL state
-            GLenum last_active_texture; glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint*)&last_active_texture);
+            GLenum last_active_texture;
+            glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&last_active_texture);
             glActiveTexture(GL_TEXTURE0);
-            GLint last_program; glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
-            GLint last_texture; glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-            GLint last_sampler; glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
-            GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
-            GLint last_element_array_buffer; glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
-            GLint last_vertex_array; glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
-            GLint last_polygon_mode[2]; glGetIntegerv(GL_POLYGON_MODE, last_polygon_mode);
-            GLint last_viewport[4]; glGetIntegerv(GL_VIEWPORT, last_viewport);
-            GLint last_scissor_box[4]; glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
-            GLenum last_blend_src_rgb; glGetIntegerv(GL_BLEND_SRC_RGB, (GLint*)&last_blend_src_rgb);
-            GLenum last_blend_dst_rgb; glGetIntegerv(GL_BLEND_DST_RGB, (GLint*)&last_blend_dst_rgb);
-            GLenum last_blend_src_alpha; glGetIntegerv(GL_BLEND_SRC_ALPHA, (GLint*)&last_blend_src_alpha);
-            GLenum last_blend_dst_alpha; glGetIntegerv(GL_BLEND_DST_ALPHA, (GLint*)&last_blend_dst_alpha);
-            GLenum last_blend_equation_rgb; glGetIntegerv(GL_BLEND_EQUATION_RGB, (GLint*)&last_blend_equation_rgb);
-            GLenum last_blend_equation_alpha; glGetIntegerv(GL_BLEND_EQUATION_ALPHA, (GLint*)&last_blend_equation_alpha);
+            GLint last_program;
+            glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
+            GLint last_texture;
+            glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+            GLint last_sampler;
+            glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
+            GLint last_array_buffer;
+            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
+            GLint last_element_array_buffer;
+            glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
+            GLint last_vertex_array;
+            glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+            GLint last_polygon_mode[2];
+            glGetIntegerv(GL_POLYGON_MODE, last_polygon_mode);
+            GLint last_viewport[4];
+            glGetIntegerv(GL_VIEWPORT, last_viewport);
+            GLint last_scissor_box[4];
+            glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
+            GLenum last_blend_src_rgb;
+            glGetIntegerv(GL_BLEND_SRC_RGB, (GLint *)&last_blend_src_rgb);
+            GLenum last_blend_dst_rgb;
+            glGetIntegerv(GL_BLEND_DST_RGB, (GLint *)&last_blend_dst_rgb);
+            GLenum last_blend_src_alpha;
+            glGetIntegerv(GL_BLEND_SRC_ALPHA, (GLint *)&last_blend_src_alpha);
+            GLenum last_blend_dst_alpha;
+            glGetIntegerv(GL_BLEND_DST_ALPHA, (GLint *)&last_blend_dst_alpha);
+            GLenum last_blend_equation_rgb;
+            glGetIntegerv(GL_BLEND_EQUATION_RGB, (GLint *)&last_blend_equation_rgb);
+            GLenum last_blend_equation_alpha;
+            glGetIntegerv(GL_BLEND_EQUATION_ALPHA, (GLint *)&last_blend_equation_alpha);
             GLboolean last_enable_blend = glIsEnabled(GL_BLEND);
             GLboolean last_enable_cull_face = glIsEnabled(GL_CULL_FACE);
             GLboolean last_enable_depth_test = glIsEnabled(GL_DEPTH_TEST);
@@ -180,12 +190,11 @@ namespace eka2l1 {
 
             // Setup viewport, orthographic projection matrix
             glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
-            const float ortho_projection[4][4] =
-            {
-                { 2.0f/io.DisplaySize.x, 0.0f,                   0.0f, 0.0f },
-                { 0.0f,                  2.0f/-io.DisplaySize.y, 0.0f, 0.0f },
-                { 0.0f,                  0.0f,                  -1.0f, 0.0f },
-                {-1.0f,                  1.0f,                   0.0f, 1.0f },
+            const float ortho_projection[4][4] = {
+                { 2.0f / io.DisplaySize.x, 0.0f, 0.0f, 0.0f },
+                { 0.0f, 2.0f / -io.DisplaySize.y, 0.0f, 0.0f },
+                { 0.0f, 0.0f, -1.0f, 0.0f },
+                { -1.0f, 1.0f, 0.0f, 1.0f },
             };
             glUseProgram(basic_shader_program);
             glUniform1i(attrib_loc_tex, 0);
@@ -201,31 +210,26 @@ namespace eka2l1 {
             glEnableVertexAttribArray(attrib_loc_pos);
             glEnableVertexAttribArray(attrib_loc_uv);
             glEnableVertexAttribArray(attrib_loc_color);
-            glVertexAttribPointer(attrib_loc_pos, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, pos));
-            glVertexAttribPointer(attrib_loc_uv, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, uv));
-            glVertexAttribPointer(attrib_loc_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, col));
+            glVertexAttribPointer(attrib_loc_pos, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid *)IM_OFFSETOF(ImDrawVert, pos));
+            glVertexAttribPointer(attrib_loc_uv, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid *)IM_OFFSETOF(ImDrawVert, uv));
+            glVertexAttribPointer(attrib_loc_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid *)IM_OFFSETOF(ImDrawVert, col));
 
             // Draw
-            for (int n = 0; n < draw_data->CmdListsCount; n++)
-            {
-                const ImDrawList* cmd_list = draw_data->CmdLists[n];
-                const ImDrawIdx* idx_buffer_offset = 0;
+            for (int n = 0; n < draw_data->CmdListsCount; n++) {
+                const ImDrawList *cmd_list = draw_data->CmdLists[n];
+                const ImDrawIdx *idx_buffer_offset = 0;
 
                 glBindBuffer(GL_ARRAY_BUFFER, vbo_handle);
-                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), (const GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), (const GLvoid *)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
 
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elements_handle);
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), (const GLvoid *)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
 
-                for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
-                {
-                    const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-                    if (pcmd->UserCallback)
-                    {
+                for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
+                    const ImDrawCmd *pcmd = &cmd_list->CmdBuffer[cmd_i];
+                    if (pcmd->UserCallback) {
                         pcmd->UserCallback(cmd_list, pcmd);
-                    }
-                    else
-                    {
+                    } else {
                         glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
                         glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
                         glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
@@ -246,20 +250,32 @@ namespace eka2l1 {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, last_element_array_buffer);
             glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
             glBlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
-            if (last_enable_blend) glEnable(GL_BLEND); else glDisable(GL_BLEND);
-            if (last_enable_cull_face) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE);
-            if (last_enable_depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
-            if (last_enable_scissor_test) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
+            if (last_enable_blend)
+                glEnable(GL_BLEND);
+            else
+                glDisable(GL_BLEND);
+            if (last_enable_cull_face)
+                glEnable(GL_CULL_FACE);
+            else
+                glDisable(GL_CULL_FACE);
+            if (last_enable_depth_test)
+                glEnable(GL_DEPTH_TEST);
+            else
+                glDisable(GL_DEPTH_TEST);
+            if (last_enable_scissor_test)
+                glEnable(GL_SCISSOR_TEST);
+            else
+                glDisable(GL_SCISSOR_TEST);
             glPolygonMode(GL_FRONT_AND_BACK, (GLenum)last_polygon_mode[0]);
             glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
             glScissor(last_scissor_box[0], last_scissor_box[1], (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
         }
 
-        void newframe_gl(GLFWwindow* win) {
+        void newframe_gl(GLFWwindow *win) {
             if (!font_tex)
                 create_dvc_objs();
 
-            ImGuiIO& io = ImGui::GetIO();
+            ImGuiIO &io = ImGui::GetIO();
 
             // Setup display size (every frame to accommodate for window resizing)
             int w, h;

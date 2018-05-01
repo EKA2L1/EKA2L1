@@ -18,5 +18,4 @@
 
 GLDEF_C TInt E32Main();
 
-#endif  // __EKA2L1HW_H__
-
+#endif // __EKA2L1HW_H__

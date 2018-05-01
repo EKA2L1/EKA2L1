@@ -29,8 +29,8 @@ namespace eka2l1 {
 
         uint32_t get_cpsr();
 
-        void save_context(arm::jit_interface::thread_context& ctx);
-        void load_context(const arm::jit_interface::thread_context& ctx);
+        void save_context(arm::jit_interface::thread_context &ctx);
+        void load_context(const arm::jit_interface::thread_context &ctx);
 
         std::shared_ptr<arm::jit_interface> get_instance();
     }

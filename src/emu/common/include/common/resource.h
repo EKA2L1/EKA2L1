@@ -15,7 +15,8 @@ namespace eka2l1 {
 
         public:
             resource(T res, deleter del)
-                : res(res), del(del) {}
+                : res(res)
+                , del(del) {}
 
             ~resource() {
                 if (del) {

@@ -5,7 +5,7 @@ namespace eka2l1 {
     namespace manager {
         package_manager mngr;
 
-        package_manager* get_package_manager() {
+        package_manager *get_package_manager() {
             return &mngr;
         }
     }
