@@ -91,22 +91,69 @@ std::vector<function_name> read_idt(const fs::path &path) {
     return fts;
 }
 
+std::string normalize_for_hash(std::string org) {
+    if (org.find("vtable for") != std::string::npos) {
+        return org;
+    }
+
+    if (org.find("typeinfo for") != std::string::npos) {
+        return org;
+    }
+
+    auto remove = [](std::string& inp, std::string to_remove) {
+        size_t pos = 0;
+
+        do {
+            pos = inp.find(to_remove, pos);
+
+            if (pos == std::string::npos) {
+                break;
+            } else {
+                inp.erase(pos, to_remove.length());
+            }
+        } while (true);
+    };
+
+    for (auto& c: org) {
+        c = std::tolower(c);
+    }
+
+    remove(org, " ");
+    // Remove class in arg
+
+    std::size_t beg = org.find("(");
+    std::size_t end = org.find(")");
+
+    if (beg == std::string::npos ||
+            end == std::string::npos) {
+        return org;
+    }
+
+    std::string sub = org.substr(beg, end);
+
+    remove(sub, "class");
+    remove(sub, "const");
+    remove(sub, "struct");
+
+    auto res =  org.substr(0, beg) + sub + org.substr(end+1);
+
+    return res;
+}
+
 void yml_link(const fs::path &path) {
     auto func_names = read_idt(path);
     auto lib = path.filename().replace_extension("").string();
 
-    emitter << YAML::BeginMap;
-    emitter << YAML::Key << "library" << YAML::Value << lib;
-    emitter << YAML::Key << "sid" << YAML::Value << "0x" + common::to_string(common::hash(lib), std::hex);
-    emitter << YAML::Key << "functions";
-    emitter << YAML::Value << YAML::BeginMap;
+    emitter << YAML::Key << lib << YAML::Value << YAML::BeginMap;
+        emitter << YAML::Key << "sid" << YAML::Value << "0x" + common::to_string(common::hash(lib), std::hex);
+        emitter << YAML::Key << "exports";
+        emitter << YAML::Value << YAML::BeginMap;
 
-    for (auto &func_name : func_names) {
-        emitter << YAML::Key << func_name;
-        emitter << YAML::Value << "0x" + common::to_string(common::hash(func_name), std::hex);
-    }
+            for (auto &func_name : func_names) {
+                emitter << YAML::Key << func_name << YAML::Value << "0x" + common::to_string(common::hash(normalize_for_hash(func_name)), std::hex);
+            }
 
-    emitter << YAML::EndMap;
+        emitter << YAML::EndMap;
     emitter << YAML::EndMap;
 }
 
@@ -123,12 +170,13 @@ int main(int argc, char **argv) {
 
     emitter << YAML::BeginMap;
     emitter << YAML::Key << "modules";
-    emitter << YAML::Value;
+    emitter << YAML::Value << YAML::BeginMap;
 
     for (auto lib : libs) {
         yml_link(lib);
     }
 
+    emitter << YAML::EndMap;
     emitter << YAML::EndMap;
 
     std::ofstream out("db.yml");
