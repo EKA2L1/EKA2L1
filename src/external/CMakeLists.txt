@@ -2,9 +2,12 @@ add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
 add_subdirectory(spdlog)
-add_subdirectory(googletest)
 add_subdirectory(glfw)
+
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
 add_subdirectory(yaml-cpp)
+
+add_subdirectory(googletest)
 
 add_library(imgui imgui/imgui.h imgui/imgui.cpp
     imgui/imgui_demo.cpp
@@ -69,4 +72,8 @@ option(CAPSTONE_XCORE_SUPPORT "XCore support" OFF)
 option(CAPSTONE_X86_SUPPORT "x86 support" OFF)
 
 add_subdirectory(capstone EXCLUDE_FROM_ALL)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
+set (GTEST_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/googletest/include" PARENT_SCOPE)
+set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
+set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)

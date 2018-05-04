@@ -3,13 +3,16 @@ if (UNIX)
         /usr/lib/llvm-3.8/include/
         /usr/lib/llvm-4.0/include/
         /usr/lib/llvm-5.0/include/
+        /usr/lib/llvm-6.0/include/
         /usr/local/llvm/include/
         /usr/lib/llvm-3.8/lib/
         /usr/lib/llvm-4.0/lib/
         /usr/lib/llvm-5.0/lib/
+        /usr/lib/llvm-6.0/lib/
         /usr/local/llvm/lib/
         /opt/llvm/include/
         /opt/llvm/lib/)
+        
 elseif (WIN32)
     set (libclang_search
         $ENV{PATH}

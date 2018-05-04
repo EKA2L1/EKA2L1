@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.8)
 
-set (GTEST_INCLUDE_DIR
-	src/external/googletest/googletest/include)
-
-set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/external/yaml-cpp/include")
-set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/external/libcxxabi/include")
 set (CMAKE_CXX_STANDARD 17)
+
+option(BUILD_TOOLS "Build EKA2L1's tools" ON)
+
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_subdirectory(src/external)
 add_subdirectory(src/tests)
 add_subdirectory(src/emu)
 
-add_subdirectory(tools)
+if (BUILD_TOOLS)
+	add_subdirectory(tools)
+endif()
