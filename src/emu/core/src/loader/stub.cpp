@@ -1,5 +1,7 @@
 #include <loader/stub.h>
 #include <yaml-cpp/yaml.h>
+#include <common/algorithm.h>
+#include <common/hash.h>
 
 #include <mutex>
 
@@ -10,11 +12,11 @@
 #include <cxxabi.h>
 
 namespace eka2l1 {
-    namespace loader {
-        YAML::Node db_node;
-        YAML::Node meta_node;
+	namespace loader {
+		YAML::Node db_node;
+		YAML::Node meta_node;
 
-        std::mutex mut;
+		std::mutex mut;
 
 		std::map<std::string, vtable_stub> vtable_cache;
 		std::map<std::string, typeinfo_stub> typeinfo_cache;
@@ -33,7 +35,7 @@ namespace eka2l1 {
 
 			wh[0] = helper.ptr_address();
 			wh8 += 4;
-			
+
 			// I will provide a fake abi class, and there is nothing to hide, so ...
 			memcpy(wh8, info_des.data(), info_des.length());
 
@@ -50,10 +52,92 @@ namespace eka2l1 {
 		}
 
 		void vtable_stub::write_stub() {
-			uint32_t* wh = reinterpret_cast<uint32_t*>(pos.get());
-			auto bases = parent->bases;
+			for (auto& st : mini_stubs) {
+				st->write_stub();
+			}
+		}
 
-			// UNFINISHED
+		bool check_class_exists(module_stub& mstub, const std::string& cname) {
+			auto res = std::find_if(mstub.class_stubs.begin(), mstub.class_stubs.end(),
+				[cname](auto ms) {
+					return cname == ms.des;
+				});
+
+			if (res == mstub.class_stubs.end()) {
+				return false;
+			}
+
+			return true;
+		}
+
+		void init_new_class_stub(module_stub& mstub, const std::string& thatclass) {
+			class_stub* cstub = mstub.new_class_stub();
+			cstub->des = thatclass;
+			cstub->is_template = thatclass.find("<") != std::string::npos;
+			cstub->id = common::hash(
+				common::normalize_for_hash(cstub->des));
+		}
+
+		// Given a description, find all referenced class to get in meta.yml
+		void find_reference_classes(std::string des, module_stub& mstub) {
+			size_t pos1 = des.find("typeinfo for");
+			size_t pos2 = des.find("vtable for");
+
+			if (pos1 != std::string::npos) {
+				std::string thatclass = des.substr(pos1 + 1);
+
+				if (check_class_exists(mstub, thatclass)) {
+					return;
+				}
+
+				init_new_class_stub(mstub, thatclass);
+
+				return;
+			}
+
+			if (pos2 != std::string::npos) {
+				std::string thatclass = des.substr(pos2 + 1);
+
+				if (check_class_exists(mstub, thatclass)) {
+					return;
+				}
+
+				init_new_class_stub(mstub, thatclass);
+
+				return;
+			}
+
+			size_t first_in = des.find_first_of("::");
+
+			if (first_in != std::string::npos) {
+				std::string cname = des.substr(0, first_in);
+
+				if (!check_class_exists(mstub, cname)) {
+					init_new_class_stub(mstub, cname);
+				}
+			}
+
+			common::remove(des, "const");
+			common::remove(des, "&");
+			common::remove(des, "*");
+
+			size_t start_tokenizing = des.find_first_of("(");
+
+			if (start_tokenizing != std::string::npos) {
+				std::string temp = "";
+				
+				for (uint32_t i = start_tokenizing; i < des.length(); i++) {
+					if (des[i] != ',' && des[i] != ')') {
+						temp += des[i];
+					} else {
+						if (!check_class_exists(mstub, temp)) {
+							init_new_class_stub(mstub, temp);
+						}
+
+						temp = "";
+					}
+				}
+			}
 		}
 
         // Extract the library function from the database, then write the stub into memory
@@ -61,9 +145,29 @@ namespace eka2l1 {
             db_node = YAML::LoadFile(db_path + "/db.yml");
             meta_node = YAML::LoadFile(db_path + "/meta.yml");
 
-            auto all_stubs = db_node[name.c_str()];
+			auto all_stubs = db_node[name.c_str()];
+			module_stub mstub;
 
-			return module_stub{};
+			if (all_stubs.IsMap()) {
+				auto all_exports = all_stubs["exports"];
+
+				if (all_exports.IsMap()) {
+					for (auto exp : all_exports) {
+						std::string des = exp.first.as<std::string>();
+
+						find_reference_classes(des, mstub);
+
+						mstub.pub_func_stubs.push_back(eka2l1::loader::function_stub{});
+						
+						function_stub* last_stub = &mstub.pub_func_stubs.back();
+						last_stub->pos = core_mem::alloc_ime(24);
+						last_stub->id = exp.second.as<uint32_t>();
+						last_stub->des = des;
+					}
+				}
+			}
+
+			return mstub;
         }
     }
 }

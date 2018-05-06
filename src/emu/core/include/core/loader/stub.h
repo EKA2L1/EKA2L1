@@ -46,12 +46,20 @@ namespace eka2l1 {
             void write_stub() override;
         };
 
+		struct ordinial_stub : public stub {
+			uint32_t ord;
+			
+			void write_stub() override;
+		};
+
+		struct ptr_stub : public ordinial_stub {};
+
 		struct class_stub;
 		
         // Vtable (8 bytes), contains pointer to functions for Inheritance
         // and Polymorphysm.
         struct vtable_stub : public stub {
-            stub *mini_stubs;
+            std::vector<stub*> mini_stubs;
 			class_stub* parent;
 
             void add_stub(stub &st);
@@ -65,8 +73,9 @@ namespace eka2l1 {
             std::vector<function_stub> fn_stubs;
             typeinfo_stub typeinf_stub;
             vtable_stub vtab_stub;
-
             uint32_t crr_stub;
+
+			bool is_template;
 
 			struct class_base {
 				bool virt_base;
