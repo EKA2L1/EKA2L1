@@ -126,44 +126,6 @@ std::string resolve_name(std::string dec1, CXCursor cursor) {
     return "";
 }
 
-std::string normalize_for_hash(std::string org) {
-    auto remove = [](std::string& inp, std::string to_remove) {
-        size_t pos = 0;
-
-        do {
-            pos = inp.find(to_remove, pos);
-
-            if (pos == std::string::npos) {
-                break;
-            } else {
-                inp.erase(pos, to_remove.length());
-            }
-        } while (true);
-    };
-
-    for (auto& c: org) {
-        c = std::tolower(c);
-    }
-
-    remove(org, " ");
-    // Remove class in arg
-
-    std::size_t beg = org.find("(");
-    std::size_t end = org.find(")");
-
-    std::string sub = org.substr(beg, end);
-
-    remove(sub, "class");
-    remove(sub, "const");
-    remove(sub, "struct");
-
-    auto res =  org.substr(0, beg) + sub + org.substr(end + 1);
-
-    LOG_INFO("Help: {}", res);
-
-    return res;
-}
-
 CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     class_info* info = reinterpret_cast<class_info*>(client_data);
 
@@ -201,7 +163,7 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
             }
 
             new_entry.id = common::hash(
-                       normalize_for_hash(new_entry.name));
+                       common::normalize_for_hash(new_entry.name));
 
             new_entry.attribute = "none";
             new_entry.type = clang_getCString(clang_getTypeSpelling(clang_getResultType(clang_getCursorType(cursor))));
@@ -358,13 +320,13 @@ void yaml_meta_emit(const std::string& path) {
         emitter << YAML::Key << info.info.name << YAML::Value << YAML::BeginMap;
             emitter << YAML::Key << "id" << YAML::Value << std::string("0x") + common::to_string(info.id, std::hex);
 
-                emitter << YAML::Key << "base" << YAML::Value << YAML::BeginSeq;
+                emitter << YAML::Key << "base" << YAML::Value << YAML::BeginMap;
 
                     for (auto& minbase: info.base) {
                         emitter << YAML::Key << minbase.first << YAML::Value << minbase.second;
                     }
 
-                emitter << YAML::EndSeq;
+                emitter << YAML::EndMap;
 
                 emitter << YAML::Key << "entries" << YAML::Value << YAML::BeginMap;
 

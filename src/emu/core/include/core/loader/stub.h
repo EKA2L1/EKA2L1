@@ -27,12 +27,18 @@ namespace eka2l1 {
             ptr<void> pos;
             ptr<void> parent;
 
-            virtual void write_stub();
+			virtual void write_stub() = 0;
         };
 
-        // An export stub. Basiclly same as normal stub
+		enum class func_attrib {
+			virt,
+			pure_virt,
+			ovride
+		};
+
+        // A function stub. Basiclly same as normal stub
         struct function_stub : public stub {
-            func_type ftype;
+			func_attrib attrib;
 
             void write_stub() override;
         };
@@ -41,18 +47,28 @@ namespace eka2l1 {
         // of the class.
         struct typeinfo_stub : public stub {
             std::string info_des;
-            ptr<uint32_t> helper;
+			ptr<void> helper;
+			ptr<void> parent_info;
 
             void write_stub() override;
         };
 
+		struct ordinial_stub : public stub {
+			uint32_t ord;
+			
+			void write_stub() override;
+		};
+
+		struct ptr_stub : public ordinial_stub {};
+
+		struct class_stub;
+        struct module_stub;
+		
         // Vtable (8 bytes), contains pointer to functions for Inheritance
         // and Polymorphysm.
         struct vtable_stub : public stub {
             std::vector<stub*> mini_stubs;
-            std::vector<vtable_stub*> basers;
-
-            std::string owner;
+			class_stub* parent;
 
             void add_stub(stub &st);
             void remove_last_stub();
@@ -68,8 +84,18 @@ namespace eka2l1 {
             std::vector<function_stub> fn_stubs;
             typeinfo_stub typeinf_stub;
             vtable_stub vtab_stub;
-
             uint32_t crr_stub;
+
+            module_stub* module;
+
+			bool is_template;
+
+			struct class_base {
+				bool virt_base;
+				class_stub* stub;
+			};
+
+			std::vector<class_base> bases;
 
             function_stub *new_function_stub() {
                 fn_stubs.push_back(function_stub{});

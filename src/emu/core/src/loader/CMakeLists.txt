@@ -16,6 +16,11 @@ add_library(coreloader
 
 target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp)
 
+if(WIN32)
+	target_include_directories(coreloader PRIVATE ${LIBCXXABI_INCLUDE_DIR})
+	target_link_libraries(coreloader PRIVATE libcxxabi)
+endif()
+
 target_include_directories(coreloader PUBLIC ${CORE_INCLUDE_DIR})
 target_include_directories(coreloader
     PUBLIC
