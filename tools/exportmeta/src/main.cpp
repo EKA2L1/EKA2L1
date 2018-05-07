@@ -42,7 +42,7 @@ struct class_info {
     typeinfo info;
     entries func_entries;
 
-    std::vector<sid> base;
+    std::vector<std::pair<std::string, std::string>> base;
 
     bool sinful = false;
 };
@@ -244,7 +244,7 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
         {
             auto resolved = resolve_name(info->info.name, cursor);
             LOG_INFO("{}", resolved);
-            info->base.push_back(common::hash(resolved));
+            info->base.push_back(std::make_pair(resolved, std::string()));
 
             break;
         }
@@ -311,8 +311,8 @@ std::optional<class_infos> gather_classinfos(const std::string& path) {
 
         info->name = reinterpret_cast<const char*>(clang_getCursorSpelling(all_classes[i]).data);
 
-        info->id = common::hash(info->name);
         info->info.name = fully_qualified(all_classes[i]);
+        info->id = common::hash(info->info.name);
 
         LOG_INFO("Found class/struct: {}, mangled: {}", info->name, info->info.name);
 
@@ -361,7 +361,7 @@ void yaml_meta_emit(const std::string& path) {
                 emitter << YAML::Key << "base" << YAML::Value << YAML::BeginSeq;
 
                     for (auto& minbase: info.base) {
-                        emitter << std::string("0x") + common::to_string(minbase, std::hex);
+                        emitter << YAML::Key << minbase.first << YAML::Value << minbase.second;
                     }
 
                 emitter << YAML::EndSeq;

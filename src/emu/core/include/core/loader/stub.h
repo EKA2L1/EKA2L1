@@ -13,18 +13,27 @@ namespace eka2l1 {
         class eka2img;
         class romimg;
 
+        enum class func_type {
+            virt,
+            ride,
+            pure_virt
+        };
+
         // A stub contains a Symbol ID and a description and
         // where the stub reside in memory
         struct stub {
             sid id;
             std::string des;
             ptr<void> pos;
+            ptr<void> parent;
 
             virtual void write_stub();
         };
 
-        // A function stub. Basiclly same as normal stub
+        // An export stub. Basiclly same as normal stub
         struct function_stub : public stub {
+            func_type ftype;
+
             void write_stub() override;
         };
 
@@ -32,6 +41,7 @@ namespace eka2l1 {
         // of the class.
         struct typeinfo_stub : public stub {
             std::string info_des;
+            ptr<uint32_t> helper;
 
             void write_stub() override;
         };
@@ -39,10 +49,16 @@ namespace eka2l1 {
         // Vtable (8 bytes), contains pointer to functions for Inheritance
         // and Polymorphysm.
         struct vtable_stub : public stub {
-            stub *mini_stubs;
+            std::vector<stub*> mini_stubs;
+            std::vector<vtable_stub*> basers;
+
+            std::string owner;
 
             void add_stub(stub &st);
-            void remove_stub();
+            void remove_last_stub();
+
+            void add_parent_vtable(vtable_stub& vstub);
+            void remove_last_parent_vtable();
 
             void write_stub() override;
         };

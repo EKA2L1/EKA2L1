@@ -78,8 +78,6 @@ namespace eka2l1 {
                     uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
                     uint8_t *dest_ptr = virtual_addr + dest_addr;
 
-                    LOG_INFO("Relocation virtual address: 0x{:x}", 0x70000000 + virtual_addr);
-
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
                     if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
