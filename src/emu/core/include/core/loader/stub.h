@@ -31,6 +31,7 @@ namespace eka2l1 {
         };
 
 		enum class func_attrib {
+            none,
 			virt,
 			pure_virt,
 			ovride

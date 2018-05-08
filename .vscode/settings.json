@@ -1,0 +1,4 @@
+{
+    "cmake.useCMakeServer": true,
+    "C_Cpp.intelliSenseEngineFallback": "Enabled"
+}

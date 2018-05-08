@@ -184,12 +184,18 @@ namespace eka2l1 {
 			return &(*res);
 		}
 
-		// Given a SID, find the function stub. 
-		function_stub* find_function_stub(module_stub& mstub, uint32_t id) {
-			auto res = std::find_if(mstub.pub_func_stubs.begin(), mstub.pub_func_stubs.end(), 
+		auto find_function_stub(std::vector<function_stub>& fstubs, uint32_t id) {
+			auto res = std::find_if(fstubs.begin(), fstubs.end(), 
 				[id](auto fstub) {
 					return fstub.id == id;
 				});
+
+			return res;
+		}
+
+		// Given a SID, find the function stub. 
+		function_stub* find_function_stub(module_stub& mstub, uint32_t id) {
+			auto res = find_function_stub(mstub.pub_func_stubs, id);
 
 			if (res == mstub.pub_func_stubs.end()) {
 				return nullptr;
@@ -210,6 +216,69 @@ namespace eka2l1 {
 			}
 
 			return &res->second;
+		}
+
+		// Implying that the function name follows: a::b::c(a,a,a)
+		std::string get_class_function_name(const std::string des) {
+			size_t last_access = des.find_last_of("::");
+			size_t first_bracket = des.find_first_of("(");
+
+			return des.substr(last_access + 2, first_bracket - last_access - 2);
+		}
+
+		function_stub* find_same_name(function_stub* src, class_stub::class_base& base) {
+			if (src == nullptr) {
+				return nullptr;
+			}
+
+			for (auto fn: base.stub->fn_stubs) {
+				const std::string fn_name = get_class_function_name(fn.des);
+				const std::string src_fn_name = get_class_function_name(src->des);
+				
+				if (fn_name == src_fn_name) {
+					return &fn;
+				}
+			}
+
+			return nullptr;
+		}
+
+		// Easy situation: only one class is based on another
+		void resolve_base_only_one(class_stub& stub) {
+			class_stub::class_base& base = stub.bases[0];
+
+			ordinial_stub* zero_top_offset = get_ordinial_stub(0);
+			stub.vtab_stub.mini_stubs.push_back(zero_top_offset);
+
+			auto fn_stubs_base_copy = base.stub->fn_stubs;
+
+			for (uint32_t i = 0; i < stub.fn_stubs.size(); i++) {
+				if (stub.fn_stubs[i].attrib == func_attrib::none) {
+					continue;
+				}
+
+				function_stub* base_stub = find_same_name(&stub.fn_stubs[i], base);
+
+				if (base_stub == nullptr) {
+					stub.vtab_stub.mini_stubs.push_back(&stub.fn_stubs[i]);
+				} else {
+					fn_stubs_base_copy.erase(find_function_stub(stub.fn_stubs, base_stub->id));
+
+					// If two functions have the same attribute, choose the lastest
+					if (base_stub->attrib == stub.fn_stubs[i].attrib) {
+						stub.vtab_stub.mini_stubs.push_back(&stub.fn_stubs[i]);
+					} else {
+						if (stub.fn_stubs[i].attrib == func_attrib::ovride) {
+							stub.vtab_stub.mini_stubs.push_back(&stub.fn_stubs[i]);
+						} 
+					}
+				}
+			}
+
+			// Fill the rest of the vtable
+			for (auto base_left: fn_stubs_base_copy) {
+				stub.vtab_stub.mini_stubs.push_back(&base_left);
+			}
 		}
 
 		// Fill a vtable
@@ -262,10 +331,23 @@ namespace eka2l1 {
 				vtab->add_stub(*zero_top_offset);
 
 				for (auto ent: all_entries) {
-					function_stub* fstub = find_function_stub(*stub.module, ent.second.as<uint32_t>());
-
+					function_stub* fstub = find_function_stub(*stub.module, ent.second["sid"].as<uint32_t>());
+					
 					if (fstub == nullptr) {
 						// Log critical here too
+					}
+
+					const std::string attrib_raw = ent.second["attrib"].as<std::string>();
+					
+					if (attrib_raw == "none") {
+						fstub->attrib = func_attrib::none;
+						continue;
+					} else if (attrib_raw == "override") {
+						fstub->attrib = func_attrib::ovride;
+					} else if (attrib_raw == "pure_virtual") {
+						fstub->attrib = func_attrib::pure_virt;
+					} else {
+						fstub->attrib = func_attrib::virt;
 					}
 
 					vtab->add_stub(*fstub);
@@ -274,8 +356,10 @@ namespace eka2l1 {
 				return;
 			}
 
-			for (auto class_base: stub.bases) {
-				
+			if (stub.bases.size() == 1) {
+				// If the class is only based on one class, 
+				// do things as normal. In this case, we can
+				// ignore the virtual base
 			}
 		}
 
