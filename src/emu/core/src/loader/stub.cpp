@@ -250,34 +250,36 @@ namespace eka2l1 {
 			ordinial_stub* zero_top_offset = get_ordinial_stub(0);
 			stub.vtab_stub.mini_stubs.push_back(zero_top_offset);
 
-			auto fn_stubs_base_copy = base.stub->fn_stubs;
+			// TODO: Push typeinfos
 
-			for (uint32_t i = 0; i < stub.fn_stubs.size(); i++) {
-				if (stub.fn_stubs[i].attrib == func_attrib::none) {
+			auto fn_stubs_target_copy = stub.fn_stubs;
+
+			for (uint32_t i = 0; i < base.stub->fn_stubs.size(); i++) {
+				if (base.stub->fn_stubs[i].attrib == func_attrib::none) {
 					continue;
 				}
 
-				function_stub* base_stub = find_same_name(&stub.fn_stubs[i], base);
+				function_stub* target_stub_replaceable =
+					 find_same_name(&base.stub->fn_stubs[i], base);
 
-				if (base_stub == nullptr) {
-					stub.vtab_stub.mini_stubs.push_back(&stub.fn_stubs[i]);
+				// Nothing can replace this
+				if (target_stub_replaceable == nullptr) {
+					stub.vtab_stub.mini_stubs.push_back(&base.stub->fn_stubs[i]);
 				} else {
-					fn_stubs_base_copy.erase(find_function_stub(stub.fn_stubs, base_stub->id));
-
-					// If two functions have the same attribute, choose the lastest
-					if (base_stub->attrib == stub.fn_stubs[i].attrib) {
-						stub.vtab_stub.mini_stubs.push_back(&stub.fn_stubs[i]);
+					if (target_stub_replaceable->attrib >= base.stub->fn_stubs[i].attrib) {					
+						fn_stubs_target_copy.erase(find_function_stub(stub.fn_stubs, target_stub_replaceable->id));
+						stub.vtab_stub.mini_stubs.push_back(target_stub_replaceable);
 					} else {
-						if (stub.fn_stubs[i].attrib == func_attrib::ovride) {
-							stub.vtab_stub.mini_stubs.push_back(&stub.fn_stubs[i]);
-						} 
+						// This should be undefined behavior, as it won't happens in single 
+						// base
+						stub.vtab_stub.mini_stubs.push_back(&base.stub->fn_stubs[i]);
 					}
 				}
 			}
 
 			// Fill the rest of the vtable
-			for (auto base_left: fn_stubs_base_copy) {
-				stub.vtab_stub.mini_stubs.push_back(&base_left);
+			for (auto target_left: fn_stubs_target_copy) {
+				stub.vtab_stub.mini_stubs.push_back(&target_left);
 			}
 		}
 
@@ -360,6 +362,7 @@ namespace eka2l1 {
 				// If the class is only based on one class, 
 				// do things as normal. In this case, we can
 				// ignore the virtual base
+				resolve_base_only_one(stub);
 			}
 		}
 
