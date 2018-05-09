@@ -1,7 +1,6 @@
-set(CMAKE_CXX_STANDARD 14)
+add_subdirectory(loader)
 
-add_library(coretest
-	core_timing.cpp)
-
-target_link_libraries(coretest
-        PRIVATE googletest coretiming)
+set (CORE_TESTS_FILE 
+        ${CORE_LOADER_TESTS_FILE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/core_mem.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/core_timing.cpp)
