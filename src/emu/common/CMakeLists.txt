@@ -10,6 +10,7 @@ add_library(common
     include/common/resource.h
     include/common/buffer.h
     include/common/hash.h
+    include/common/advstream.h
     src/path.cpp
     src/log.cpp
     src/cvt.cpp

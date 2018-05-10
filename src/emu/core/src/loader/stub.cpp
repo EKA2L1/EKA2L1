@@ -43,7 +43,7 @@ namespace eka2l1 {
 			// I will provide a fake abi class, and there is nothing to hide, so ...
 			memcpy(wh8, info_des.data(), info_des.length());
 
-			++wh8 = '\0';
+			*(++wh8) = '\0';
 			wh = reinterpret_cast<uint32_t*>(wh8);
 
 			wh[0] = parent_info.ptr_address();
