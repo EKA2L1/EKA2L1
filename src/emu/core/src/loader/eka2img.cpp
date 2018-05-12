@@ -106,23 +106,6 @@ namespace eka2l1 {
             return true;
         }
 
-        // TODO1: Move this along with io and manager to core
-        // TODO2: Write a system interruption and write a mov pc instruction with the symbol
-        // the interrupt hook will read the symbol and call it.
-        // Eg.
-        // swi #0 (Empty)
-        // mov pc, lr
-        // [your symbol here]
-        // When there is an interuppt, it calls the interuppt hook. Here we can read the
-        // symbol and call the right function.
-        // First, add the stub at the end of text section
-        // Next, in import address table, specified the address of each stub
-        // In each stub, write an intteruption and a mov instruction
-        // We hijack the table by throwing stub disguises as legit code
-        // at the end of the text section
-        // The import address table will contains the address of all these
-        // stubs
-        // I don't know if it will work, but probally
         uint32_t import_libs(eka2img *img, uint32_t rtcode_addr) {
             // Fill text segment with stub
             uint32_t stub_ptr = rtcode_addr + img->header.code_size;

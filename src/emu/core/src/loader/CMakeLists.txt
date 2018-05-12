@@ -4,15 +4,13 @@ add_library(coreloader
 	${CORE_INCLUDE_DIR}/loader/sis_script_interpreter.h
 	${CORE_INCLUDE_DIR}/loader/eka2img.h
         ${CORE_INCLUDE_DIR}/loader/romimage.h
-        ${CORE_INCLUDE_DIR}/loader/stub.h
         ${CORE_INCLUDE_DIR}/loader/rofs.h
         ${CORE_INCLUDE_DIR}/loader/rom.h
 	eka2img.cpp
 	sis.cpp
 	sis_fields.cpp
         sis_script_interpreter.cpp
-        romimage.cpp
-        stub.cpp)
+        romimage.cpp)
 
 target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp)
 
