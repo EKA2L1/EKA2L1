@@ -106,36 +106,36 @@ namespace eka2l1 {
             return true;
         }
 
-        uint32_t import_libs(eka2img *img, uint32_t rtcode_addr) {
+        uint32_t import_libs(eka2img *img, uint32_t rtcode_addr, hle::lib_manager& mngr) {
             // Fill text segment with stub
             uint32_t stub_ptr = rtcode_addr + img->header.code_size;
             uint32_t stub_size = 0;
-            std::vector<uint32_t> iat_addresses;
 
             LOG_ERROR("Start writing stubs at: 0x{:x}", stub_ptr);
 
             for (auto &import_entry : img->import_section.imports) {
-                for (auto &oridinal : import_entry.ordinals) {
-                    import_func(ptr<uint32_t>(stub_ptr), oridinal);
-                    iat_addresses.push_back(stub_ptr);
+				auto ids = mngr.get_sids(import_entry.dll_name);
+
+				if (!ids) {
+					LOG_CRITICAL("No SIDS provided for: {}", import_entry.dll_name);
+					continue;
+				}
+
+				std::vector<uint32_t> stub_resides;
+
+				for (uint32_t i = 0; i < import_entry.number_of_imports; i++) {
+                    import_func(ptr<uint32_t>(stub_ptr), ids.value()[i]);
+					*ptr<uint32_t>(import_entry.ordinals[i]).get() = stub_ptr;
+
                     stub_ptr += 12;
                     stub_size += 12;
                 }
             }
 
-            uint32_t iat_ptr = stub_ptr;
-
-            for (auto &iat_address : iat_addresses) {
-                uint32_t *iat_im_ptr = core_mem::get_addr<uint32_t>(iat_ptr);
-                *iat_im_ptr = iat_address;
-                iat_ptr += 4;
-                stub_size += 4;
-            }
-
             return stub_size;
         }
 
-        bool import_exe_image(eka2img *img) {
+        bool import_exe_image(eka2img *img, hle::lib_manager& mngr) {
             // Map the memory to store the text, data and import section
             ptr<void> asmdata = core_mem::alloc_ime(img->header.code_size + 0x1000);
 
@@ -145,7 +145,7 @@ namespace eka2l1 {
             uint32_t rtcode_addr = asmdata.ptr_address();
             uint32_t rtdata_addr = 0;
 
-            rtdata_addr = import_libs(img, rtcode_addr);
+            rtdata_addr = import_libs(img, rtcode_addr, mngr);
             rtdata_addr += rtcode_addr + img->header.code_size;
 
             img->rt_code_addr = rtcode_addr;
@@ -475,8 +475,8 @@ namespace eka2l1 {
             return img;
         }
 
-        bool load_eka2img(eka2img &img) {
-            return import_exe_image(&img);
+        bool load_eka2img(eka2img &img, hle::lib_manager& mngr) {
+            return import_exe_image(&img, mngr);
         }
     }
 }

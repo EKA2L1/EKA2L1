@@ -12,7 +12,7 @@ add_library(coreloader
         sis_script_interpreter.cpp
         romimage.cpp)
 
-target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp)
+target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp hle) 
 
 if(WIN32)
 	target_include_directories(coreloader PRIVATE ${LIBCXXABI_INCLUDE_DIR})
