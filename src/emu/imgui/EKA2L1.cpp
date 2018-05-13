@@ -61,7 +61,7 @@ namespace eka2l1 {
         }
 
         void eka2l1_inst::run() {
-            core::load("color", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
+            //core::load("color", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
