@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <hle/libmanager.h>
+
 // A lightweight loader based on elf2e32
 
 namespace eka2l1 {
@@ -73,9 +75,9 @@ namespace eka2l1 {
             std::vector<uint16_t> rels_info;
         };
 
-#define ELF32_R_SYM(i) ((i) >> 8)
-#define ELF32_R_TYPE(i) ((unsigned char)(i))
-#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
+		#define ELF32_R_SYM(i) ((i) >> 8)
+		#define ELF32_R_TYPE(i) ((unsigned char)(i))
+		#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
 
         struct eka2_reloc_section {
             uint32_t size;
@@ -157,6 +159,6 @@ namespace eka2l1 {
         };
 
         std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
-        bool load_eka2img(eka2img &img);
+        bool load_eka2img(eka2img &img, hle::lib_manager& mngr);
     }
 }

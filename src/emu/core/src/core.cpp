@@ -8,6 +8,9 @@
 namespace eka2l1 {
     namespace core {
         std::shared_ptr<process> crr_process;
+		std::mutex mut;
+
+		std::unique_ptr<hle::lib_manager> mngr;
 
         void init() {
             core_timing::init();
@@ -26,7 +29,9 @@ namespace eka2l1 {
             }
 
             loader::eka2img &real_img = img.value();
-            bool succ = loader::load_eka2img(real_img);
+			mngr = std::make_unique<hle::lib_manager>("db.yml");
+
+            bool succ = loader::load_eka2img(real_img, *mngr);
 
             if (!succ) {
                 LOG_CRITICAL("Unable to load EKA2Img!");

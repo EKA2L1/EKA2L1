@@ -75,7 +75,7 @@ namespace eka2l1 {
                 mem_dumper->draw();
                 debug_logger->draw("EKA2L1 Logger");
 
-                eka2l1::dump_data_map("Memory", eka2l1::core_mem::get_addr<uint8_t>(0x70000000), 0x50000, 0x70000000);
+                //eka2l1::dump_data_map("Memory", eka2l1::core_mem::get_addr<uint8_t>(0x70000000), 0x50000, 0x70000000);
                 eka2l1::imgui::clear_gl(clear_color);
 
                 ImGui::Render();
