@@ -3,6 +3,8 @@
 #include "installer/installer.h"
 #include <GLFW/glfw3.h>
 #include <ImguiWindowsFileIO.hpp>
+#include <SimpleIni.h>
+#include <core/vfs.h>
 
 namespace eka2l1 {
     namespace imgui {
@@ -15,7 +17,37 @@ namespace eka2l1 {
         std::vector<char> path_c(400);
         std::vector<char> path_e(400);
 
+        CSimpleIniA ini;
+
+        void remount() {
+            vfs::mount("C:", path_c.data());
+            vfs::mount("E:", path_e.data());
+        }
+
         void save_vfs_path() {
+            int rc = ini.SetValue("vfs", nullptr, nullptr);
+            rc = ini.SetValue("vfs", "c", path_c.data());
+            rc = ini.SetValue("vfs", "e", path_e.data());
+
+            ini.SaveFile("config.ini");
+
+            remount();
+        }
+
+        void menu::init() {
+            ini.SetUnicode();
+            ini.LoadFile("config.ini");
+
+            auto path_c_temp = ini.GetValue("vfs", "c", "./drives/c/");
+            auto path_e_temp = ini.GetValue("vfs", "e", "./drives/e/");
+
+            path_c.resize(strlen(path_c_temp));
+            path_e.resize(strlen(path_e_temp));
+
+            memcpy(path_c.data(), path_c_temp, strlen(path_c_temp));
+            memcpy(path_e.data(), path_e_temp, strlen(path_e_temp));            
+        
+            remount();
         }
 
         void menu::draw() {
@@ -53,7 +85,7 @@ namespace eka2l1 {
                 ImVec2 new_win_size(300, 150);
                 ImGui::SetNextWindowSize(new_win_size);
 
-                ImGui::Begin("VFS Rebase", nullptr, ImGuiWindowFlags_ResizeFromAnySide);
+                ImGui::Begin("VFS Rebase", nullptr, 0);
 
                 ImGui::Text("C:  ");
                 ImGui::SameLine();
@@ -102,9 +134,11 @@ namespace eka2l1 {
 
                 if (res) {
                     if (request_dir_1) {
+                        path_c.resize(temp_path.length());
                         memcpy(path_c.data(), temp_path.data(), temp_path.length());
                         request_dir_1 = false;
                     } else {
+                        path_e.resize(temp_path.length());
                         memcpy(path_e.data(), temp_path.data(), temp_path.length());
                         request_dir_2 = false;
                     }

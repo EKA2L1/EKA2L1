@@ -11,12 +11,13 @@ namespace eka2l1 {
     namespace imgui {
         class menu {
             GLFWwindow *window;
+            void init();
 
         public:
             menu()
-                : window(nullptr) {}
+                : window(nullptr) { init(); }
             menu(GLFWwindow *win)
-                : window(win) {}
+                : window(win) { init(); }
 
             void draw();
         };

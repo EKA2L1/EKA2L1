@@ -6,13 +6,7 @@
 #include <loader/eka2img.h>
 
 namespace eka2l1 {
-    namespace core {
-        std::shared_ptr<process> crr_process;
-		std::mutex mut;
-
-		std::unique_ptr<hle::lib_manager> mngr;
-
-        void init() {
+        void app::init() {
             core_timing::init();
             core_kernel::init();
             core_mem::init();

@@ -2,11 +2,50 @@
 
 #include <cstdint>
 #include <functional>
+#include <vector>
+#include <mutex>
 
 namespace eka2l1 {
     // Based on Dolphin
-    namespace core_timing {
-        extern int64_t CPU_HZ;
+    using mhz_change_callback = std::function<void()>;
+    using timed_callback = std::function<void(uint64_t, int)>;
+
+    enum {
+        MAX_SLICE_LENGTH = 20000
+    };
+
+    struct event_type {
+        timed_callback callback;
+        std::string name;
+    };
+
+    struct event {
+        int event_type;
+        uint64_t event_time;
+        uint64_t event_user_data;
+    };
+
+    class timing_system {
+        int slice_len;
+        int downcount;
+
+        int64_t CPU_HZ;
+    
+        uint64_t global_timer;
+        uint64_t idle_ticks;
+        uint64_t last_global_time_ticks;
+        uint64_t last_global_time_us;
+
+        std::mutex mut;
+
+        std::vector<mhz_change_callback> internal_mhzcs;
+
+        std::vector<event_type> event_types;
+        std::vector<event> events, ts_events;
+
+        void fire_mhz_changes();
+
+    protected:
 
         inline int64_t ms_to_cycles(int ms) {
             return CPU_HZ / 1000 * ms;
@@ -40,8 +79,7 @@ namespace eka2l1 {
             return cycles / (CPU_HZ / 1000000);
         }
 
-        using mhz_change_callback = std::function<void()>;
-        using timed_callback = std::function<void(uint64_t, int)>;
+    public:
 
         void init();
         void shutdown();
@@ -57,6 +95,8 @@ namespace eka2l1 {
         void schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata = 0);
         void schedule_event_imm(int event_type, uint64_t userdata = 0);
         void unschedule_event(int event_type, uint64_t userdata);
+
+        void log_pending_events();
 
         void remove_event(int event_type);
         void remove_all_events(int event_type);
@@ -76,7 +116,5 @@ namespace eka2l1 {
         void set_clock_frequency_mhz(int cpu_mhz);
         uint32_t get_clock_frequency_mhz();
         int get_downcount();
-
-        extern int slice_len;
     }
 }
