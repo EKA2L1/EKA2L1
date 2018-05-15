@@ -6,6 +6,8 @@
 #include <vector>
 
 namespace eka2l1 {
+    class timing_system;
+
     namespace kernel {
         class thread;
         enum class thread_state;
@@ -25,6 +27,7 @@ namespace eka2l1 {
             int yield_evt;
 
             std::mutex mut;
+            timing_system* system;
 
         protected:
             void yield_thread();
@@ -35,7 +38,7 @@ namespace eka2l1 {
             // that each ticks_yield, call the next thread that follow the priority
             // rules
             // The constructor also register all the needed event
-            thread_scheduler(uint32_t ticks_yield);
+            thread_scheduler(timing_system* sys, uint32_t ticks_yield);
 
             bool schedule(kernel::thread *thread);
             bool sleep(kernel::thread *thread, uint32_t sl_time);

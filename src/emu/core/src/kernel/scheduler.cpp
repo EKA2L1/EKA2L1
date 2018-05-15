@@ -3,25 +3,27 @@
 #include <functional>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
+#include <core_timing.h>
+
 
 namespace eka2l1 {
     namespace kernel {
-        thread_scheduler::thread_scheduler(uint32_t ticks_yield)
-            : ticks_yield(ticks_yield)
+        thread_scheduler::thread_scheduler(timing_system* system, uint32_t ticks_yield)
+            : ticks_yield(ticks_yield), system(system)
             , crr_running_thread(nullptr) {
             // Register event for core_timing
-            yield_evt = core_timing::register_event("ScheduleryieldNextThread",
+            yield_evt = system->register_event("ScheduleryieldNextThread",
                 std::bind(&thread_scheduler::yield_thread, this));
-            wakeup_evt = core_timing::register_event("SchedulerWakeUpThread",
+            wakeup_evt = system->register_event("SchedulerWakeUpThread",
                 std::bind(&thread_scheduler::wake_thread, this, std::placeholders::_1));
 
-            core_timing::schedule_event(ticks_yield, yield_evt);
+            system->schedule_event(ticks_yield, yield_evt);
         }
 
         void thread_scheduler::yield_thread() {
             // Don't do anything, or else you might break things
             if (ready_threads.empty()) {
-                core_timing::schedule_event(ticks_yield, yield_evt);
+                system->schedule_event(ticks_yield, yield_evt);
                 return;
             }
 
@@ -35,7 +37,7 @@ namespace eka2l1 {
             crr_running_thread = take_thread;
             take_thread->run_ignore();
 
-            core_timing::schedule_event(ticks_yield, yield_evt);
+            system->schedule_event(ticks_yield, yield_evt);
         }
 
         void thread_scheduler::wake_thread(uint64_t id) {
@@ -80,7 +82,7 @@ namespace eka2l1 {
             waiting_threads.emplace(thread->unique_id(), thread);
 
             // Schedule the thread to be waken up
-            core_timing::schedule_event(sl_time, wakeup_evt, thread->unique_id());
+            system->schedule_event(sl_time, wakeup_evt, thread->unique_id());
 
             return true;
         }

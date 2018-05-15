@@ -10,6 +10,9 @@
 #include <ptr.h>
 
 namespace eka2l1 {
+    class kernel_system;
+    class memory;
+
     namespace kernel {
         using address = uint32_t;
         using thread_stack = common::resource<address>;
@@ -57,6 +60,9 @@ namespace eka2l1 {
             size_t heap_addr;
             void *usrdata;
 
+            kernel_system* kern;
+            memory* mem;
+
         protected:
             // Run without notice the order
             void run_ignore();
@@ -64,7 +70,7 @@ namespace eka2l1 {
 
         public:
             thread();
-            thread(const std::string &name, const address epa, const size_t stack_size,
+            thread(kernel_system* kern, memory* mem, const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 void *usrdata = nullptr,
                 thread_priority pri = priority_normal,

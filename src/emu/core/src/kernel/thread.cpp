@@ -25,7 +25,7 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-        thread::thread(const std::string &name, const address epa, const size_t stack_size,
+        thread::thread(kernel_system* kern, memory* mem, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             void *usrdata,
             thread_priority pri, arm::jitter_arm_type jit_type)
@@ -33,18 +33,20 @@ namespace eka2l1 {
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
-            , usrdata(usrdata) {
+            , usrdata(usrdata)
+            , kern(kern)
+            , mem(mem) {
             cpu = arm::create_jitter(jit_type);
             cpu->set_entry_point(epa);
 
             priority = caculate_thread_priority(pri);
 
-            const thread_stack::deleter stack_deleter = [](address stack) {
-                core_mem::free(stack);
+            const thread_stack::deleter stack_deleter = [&](address stack) {
+                mem->free(stack);
             };
 
             stack = std::make_unique<thread_stack>(
-                core_mem::alloc(stack_size), stack_deleter);
+                mem->alloc(stack_size), stack_deleter);
 
             const address stack_top = stack->get() + stack_size;
 
@@ -56,17 +58,14 @@ namespace eka2l1 {
 
             cpu->set_stack_top(stack_top);
 
-            heap_addr = core_mem::alloc(1);
+            heap_addr = mem->alloc(1);
 
             if (!heap_addr) {
                 LOG_ERROR("No more heap for thread!");
             }
 
-            // Set the thread region: where to alloc memory
-            core_mem::set_crr_thread_heap_region(heap_addr, max_heap_size);
-
             // Add the thread to the kernel management unit
-            core_kernel::add_thread(this);
+            kern->add_thread(this);
         }
 
         void thread::run_ignore() {
