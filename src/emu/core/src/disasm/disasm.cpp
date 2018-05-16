@@ -1,4 +1,3 @@
-#include <capstone.h>
 #include <common/log.h>
 #include <disasm/disasm.h>
 
@@ -7,60 +6,52 @@
 #include <sstream>
 
 namespace eka2l1 {
-    namespace disasm {
-        using insn_ptr = std::unique_ptr<cs_insn, std::function<void(cs_insn *)>>;
-        using csh_ptr = std::unique_ptr<csh, std::function<void(csh *)>>;
+    void disasm::shutdown_insn(cs_insn *insn) {
+        if (cp_insn) {
+            cs_free(insn, 1);
+        }
+    }
 
-        csh cp_handle;
-        insn_ptr cp_insn;
+    void disasm::init() {
+        cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle);
 
-        void shutdown_insn(cs_insn *insn) {
-            if (cp_insn) {
-                cs_free(insn, 1);
-            }
+        if (err != CS_ERR_OK) {
+            LOG_ERROR("Capstone open errored! Error code: {}", err);
+            return;
         }
 
-        void init() {
-            cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle);
+        cp_insn = insn_ptr(cs_malloc(cp_handle), shutdown_insn);
+        cs_option(cp_handle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
-            if (err != CS_ERR_OK) {
-                LOG_ERROR("Capstone open errored! Error code: {}", err);
-                return;
-            }
+        if (!cp_insn) {
+            LOG_ERROR("Capstone INSN allocation failed!");
+            return;
+        }
+    }
 
-            cp_insn = insn_ptr(cs_malloc(cp_handle), shutdown_insn);
-            cs_option(cp_handle, CS_OPT_SKIPDATA, CS_OPT_ON);
+    void disasm::shutdown() {
+        cp_insn.reset();
+        cs_close(&cp_handle);
+    }
 
-            if (!cp_insn) {
-                LOG_ERROR("Capstone INSN allocation failed!");
-                return;
-            }
+    std::string disasm::disassemble(const uint8_t *code, size_t size, uint64_t address, bool thumb) {
+        cs_err err = cs_option(cp_handle, CS_OPT_MODE, thumb ? CS_MODE_THUMB : CS_MODE_ARM);
+
+        if (err != CS_ERR_OK) {
+            LOG_ERROR("Unable to set disassemble option! Error: {}", err);
+            return "";
         }
 
-        void shutdown() {
-            cp_insn.reset();
-            cs_close(&cp_handle);
+        bool success = cs_disasm_iter(cp_handle, &code, &size, &address, cp_insn.get());
+
+        std::ostringstream out;
+        out << cp_insn->mnemonic << " " << cp_insn->op_str;
+
+        if (!success) {
+            cs_err err = cs_errno(cp_handle);
+            out << " (" << cs_strerror(err) << ")";
         }
 
-        std::string disassemble(const uint8_t *code, size_t size, uint64_t address, bool thumb) {
-            cs_err err = cs_option(cp_handle, CS_OPT_MODE, thumb ? CS_MODE_THUMB : CS_MODE_ARM);
-
-            if (err != CS_ERR_OK) {
-                LOG_ERROR("Unable to set disassemble option! Error: {}", err);
-                return "";
-            }
-
-            bool success = cs_disasm_iter(cp_handle, &code, &size, &address, cp_insn.get());
-
-            std::ostringstream out;
-            out << cp_insn->mnemonic << " " << cp_insn->op_str;
-
-            if (!success) {
-                cs_err err = cs_errno(cp_handle);
-                out << " (" << cs_strerror(err) << ")";
-            }
-
-            return out.str();
-        }
+        return out.str();
     }
 }

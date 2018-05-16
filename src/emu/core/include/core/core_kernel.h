@@ -22,9 +22,15 @@ namespace eka2l1 {
         std::mutex mut;
         std::shared_ptr<kernel::thread_scheduler> thr_sch;
 
+		timing_system* timing;
+
     public:
-        void init();
+        void init(timing_system* sys, arm::jit_interface* cpu);
         void shutdown();
+
+		void reschedule() {
+			thr_sch->reschedule();
+		}
 
         kernel::uid next_uid();
 

@@ -248,6 +248,10 @@ namespace eka2l1 {
             return 0;
         }
 
+		void jit_unicorn::set_sp(uint32_t val) {
+			set_stack_top(val);
+		}
+
         void jit_unicorn::save_context(thread_context &ctx) {
             for (auto i = 0; i < ctx.cpu_registers.size(); i++) {
                 ctx.cpu_registers[i] = get_reg(i);
@@ -259,11 +263,19 @@ namespace eka2l1 {
 
         void jit_unicorn::load_context(const thread_context &ctx) {
             set_pc(ctx.pc);
-            //set_sp(ctx.sp);
+            set_sp(ctx.sp);
 
             for (auto i = 0; i < ctx.cpu_registers.size(); i++) {
                 set_reg(i, ctx.cpu_registers[i]);
             }
         }
+
+		void jit_unicorn::prepare_rescheduling() {
+			uc_err err = uc_emu_stop(engine);
+
+			if (err != UC_ERR_OK) {
+				LOG_ERROR("Prepare rescheduling failed!");
+			}
+		}
     }
 }

@@ -44,9 +44,8 @@ namespace eka2l1 {
             eka2l1::log::setup_log(debug_logger);
 
             vfs::init();
+			sys.init();
 
-            // Intialize core
-            eka2l1::core::init();
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
         }
 
@@ -54,7 +53,7 @@ namespace eka2l1 {
             imgui::destroy_window(emu_win);
             imgui::free_gl();
 
-            core::shutdown();
+			sys.shutdown();
             vfs::shutdown();
 
             glfwTerminate();
@@ -66,7 +65,7 @@ namespace eka2l1 {
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
 
-                eka2l1::core::loop();
+				sys.loop();
 
                 eka2l1::imgui::update_io(emu_win);
                 eka2l1::imgui::newframe_gl(emu_win);

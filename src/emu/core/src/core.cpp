@@ -6,15 +6,17 @@
 #include <loader/eka2img.h>
 
 namespace eka2l1 {
-        void app::init() {
-            core_timing::init();
-            core_kernel::init();
-            core_mem::init();
+        void system::init() {
+			cpu = std::make_unique<arm::jit_interface>(arm::jitter_arm_type::unicorn);
 
-            disasm::init();
+            timing.init();
+            mem.init();
+            asm.init();
+
+			kern.init(&timing, cpu.get());
         }
 
-        void load(const std::string &name, uint64_t id, const std::string &path) {
+        void system::load(const std::string &name, uint64_t id, const std::string &path) {
             auto img = loader::parse_eka2img(path);
 
             if (!img) {
@@ -39,22 +41,32 @@ namespace eka2l1 {
             crr_process->run();
         }
 
-        int loop() {
-            if (core_kernel::crr_running_thread() == nullptr) {
-                core_timing::idle();
-                core_timing::advance();
+        int system::loop() {
+			auto prepare_reschedule = [&]() {
+				cpu->prepare_rescheduling();
+				reschedule_pending = true;
+			}
+
+            if (kern.crr_running_thread() == nullptr) {
+                timing.idle();
+                timing.advance();
+				prepare_reschedule();
             } else {
-                core_timing::advance();
+                timing.advance();
+				cpu->run();
             }
+
+			kern.reschedule();
+			reschedule_pending = false;
 
             return 1;
         }
 
-        void shutdown() {
-            core_timing::shutdown();
-            core_kernel::shutdown();
-            core_mem::shutdown();
-            disasm::shutdown();
+        void system::shutdown() {
+            timing.shutdown();
+            kern.shutdown();
+            mem.shutdown();
+            asm.shutdown();
         }
     }
 }

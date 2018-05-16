@@ -62,7 +62,10 @@ namespace eka2l1 {
             kernel_system* kern;
             memory* mem;
 
+			uint32_t lrt;
+
         public:
+
             thread();
             thread(kernel_system* kern, memory* mem, const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,

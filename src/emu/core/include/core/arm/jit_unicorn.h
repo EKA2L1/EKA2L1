@@ -28,6 +28,7 @@ namespace eka2l1 {
 
             void set_reg(size_t idx, uint32_t val) override;
             void set_pc(uint64_t val) override;
+			void set_sp(uint32_t val) override;
             void set_lr(uint64_t val) override;
             void set_vfp(size_t idx, uint64_t val) override;
 
@@ -41,6 +42,8 @@ namespace eka2l1 {
 
             void set_stack_top(address addr) override;
             address get_stack_top() override;
+
+			void prepare_rescheduling();
         };
     }
 }

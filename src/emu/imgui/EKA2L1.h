@@ -7,6 +7,7 @@
 #include "menu.h"
 
 #include <common/data_displayer.h>
+#include <core.h>
 
 #include <iostream>
 
@@ -20,6 +21,8 @@ namespace eka2l1 {
             uint8_t *ptr;
             size_t size;
             size_t start_off = 0;
+
+			eka2l1::system sys;
 
             void set_name(const std::string &new_name) override {
                 name = new_name;
