@@ -28,7 +28,7 @@ namespace eka2l1 {
         thread::thread(kernel_system* kern, memory* mem, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             void *usrdata,
-            thread_priority pri, arm::jitter_arm_type jit_type)
+            thread_priority pri)
             : kernel_obj(name)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
@@ -36,9 +36,6 @@ namespace eka2l1 {
             , usrdata(usrdata)
             , kern(kern)
             , mem(mem) {
-            cpu = arm::create_jitter(jit_type);
-            cpu->set_entry_point(epa);
-
             priority = caculate_thread_priority(pri);
 
             const thread_stack::deleter stack_deleter = [&](address stack) {
@@ -54,9 +51,7 @@ namespace eka2l1 {
             ptr<uint8_t> stack_phys_end(stack->get() + stack_size);
 
             // Fill the stack with garbage
-            std::fill(stack_phys_beg.get(), stack_phys_end.get(), 0xcc);
-
-            cpu->set_stack_top(stack_top);
+            std::fill(stack_phys_beg.get(mem), stack_phys_end.get(mem), 0xcc);
 
             heap_addr = mem->alloc(1);
 
@@ -64,16 +59,10 @@ namespace eka2l1 {
                 LOG_ERROR("No more heap for thread!");
             }
 
+            // Create thread context
+
             // Add the thread to the kernel management unit
             kern->add_thread(this);
-        }
-
-        void thread::run_ignore() {
-            cpu->run();
-        }
-
-        void thread::stop_ignore() {
-            cpu->stop();
         }
     }
 }

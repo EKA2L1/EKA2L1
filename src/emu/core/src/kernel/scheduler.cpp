@@ -8,36 +8,12 @@
 
 namespace eka2l1 {
     namespace kernel {
-        thread_scheduler::thread_scheduler(timing_system* system, uint32_t ticks_yield)
-            : ticks_yield(ticks_yield), system(system)
+        thread_scheduler::thread_scheduler(timing_system* system, arm::jit_interface& jit)
+            : system(system)
+            , jitter(&jit)
             , crr_running_thread(nullptr) {
-            // Register event for core_timing
-            yield_evt = system->register_event("ScheduleryieldNextThread",
-                std::bind(&thread_scheduler::yield_thread, this));
             wakeup_evt = system->register_event("SchedulerWakeUpThread",
                 std::bind(&thread_scheduler::wake_thread, this, std::placeholders::_1));
-
-            system->schedule_event(ticks_yield, yield_evt);
-        }
-
-        void thread_scheduler::yield_thread() {
-            // Don't do anything, or else you might break things
-            if (ready_threads.empty()) {
-                system->schedule_event(ticks_yield, yield_evt);
-                return;
-            }
-
-            auto take_thread = std::move(ready_threads.top());
-
-            const std::unique_lock<std::mutex> ul(mut);
-
-            ready_threads.pop();
-            take_thread->current_state(thread_state::run);
-            running_threads.emplace(take_thread->unique_id(), take_thread);
-            crr_running_thread = take_thread;
-            take_thread->run_ignore();
-
-            system->schedule_event(ticks_yield, yield_evt);
         }
 
         void thread_scheduler::wake_thread(uint64_t id) {
@@ -53,7 +29,6 @@ namespace eka2l1 {
 
             thr_real->state = thread_state::run;
             crr_running_thread = thr_real;
-            thr_real->run_ignore();
         }
 
         // Put the thread into the ready queue to run in the next core timing yeid
@@ -75,9 +50,7 @@ namespace eka2l1 {
             }
 
             running_threads.erase(thread->unique_id());
-
             thread->state = thread_state::wait;
-            thread->stop_ignore();
 
             waiting_threads.emplace(thread->unique_id(), thread);
 

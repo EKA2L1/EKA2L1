@@ -23,6 +23,8 @@ namespace eka2l1 {
             kernel::thread *crr_running_thread;
             uint32_t ticks_yield;
 
+            arm::jit_interface* jitter;
+
             int wakeup_evt;
             int yield_evt;
 
@@ -33,12 +35,12 @@ namespace eka2l1 {
             void yield_thread();
             void wake_thread(uint64_t id);
 
+            void switch_context();
         public:
-            // The thread scheduler register and schedule an event to the timing,
-            // that each ticks_yield, call the next thread that follow the priority
-            // rules
             // The constructor also register all the needed event
-            thread_scheduler(timing_system* sys, uint32_t ticks_yield);
+            thread_scheduler(timing_system* sys, arm::jit_interface& jitter);
+
+            void reschedule();
 
             bool schedule(kernel::thread *thread);
             bool sleep(kernel::thread *thread, uint32_t sl_time);
