@@ -2,7 +2,7 @@
 
 #include <string>
 
-typedef std::basic_string<uint16_t> utf16_str;
+typedef std::u16string utf16_str;
 typedef uint32_t address;
 
 struct uint128_t {

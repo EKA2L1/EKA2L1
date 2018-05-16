@@ -22,8 +22,6 @@ namespace eka2l1 {
             size_t size;
             size_t start_off = 0;
 
-			eka2l1::system sys;
-
             void set_name(const std::string &new_name) override {
                 name = new_name;
             }
@@ -52,6 +50,8 @@ namespace eka2l1 {
             std::shared_ptr<imgui_mem_dumper> mem_dumper;
             GLFWwindow *emu_win;
             menu emu_menu;
+
+			eka2l1::system symsys;
 
             ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 

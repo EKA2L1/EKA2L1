@@ -96,8 +96,6 @@ namespace eka2l1 {
         void schedule_event_imm(int event_type, uint64_t userdata = 0);
         void unschedule_event(int event_type, uint64_t userdata);
 
-        void log_pending_events();
-
         void remove_event(int event_type);
         void remove_all_events(int event_type);
         void advance();
@@ -116,5 +114,5 @@ namespace eka2l1 {
         void set_clock_frequency_mhz(int cpu_mhz);
         uint32_t get_clock_frequency_mhz();
         int get_downcount();
-    }
+    };
 }

@@ -59,7 +59,6 @@ namespace eka2l1 {
             size_t heap_addr;
             void *usrdata;
 
-            kernel_system* kern;
             memory* mem;
 
 			uint32_t lrt;

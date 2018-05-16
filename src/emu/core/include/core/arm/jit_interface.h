@@ -43,7 +43,7 @@ namespace eka2l1 {
             virtual void set_stack_top(address addr) = 0;
             virtual address get_stack_top() = 0;
 
-			void prepare_rescheduling();
+			virtual void prepare_rescheduling() = 0;
         };
     }
 }

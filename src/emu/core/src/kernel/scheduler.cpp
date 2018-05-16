@@ -11,7 +11,7 @@ namespace eka2l1 {
         thread_scheduler::thread_scheduler(timing_system* system, arm::jit_interface& jit)
             : system(system)
             , jitter(&jit)
-            , crr_running_thread(nullptr) {
+            , crr_thread(nullptr) {
             wakeup_evt = system->register_event("SchedulerWakeUpThread",
                 std::bind(&thread_scheduler::wake_thread, this, std::placeholders::_1));
         }
@@ -62,7 +62,7 @@ namespace eka2l1 {
 		kernel::thread* thread_scheduler::next_ready_thread() {
 			kernel::thread* crr = current_thread();
 
-			if (crr && crr->current_state == thread_state::run) {
+			if (crr && crr->current_state() == thread_state::run) {
 				if (ready_threads.top()->current_priority() < crr->current_priority()) {
 					return crr;
 				}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <arm/jit_factory.h>
+
 #include <map>
 #include <mutex>
 #include <queue>

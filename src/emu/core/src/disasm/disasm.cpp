@@ -1,4 +1,5 @@
 #include <common/log.h>
+#include <capstone.h>
 #include <disasm/disasm.h>
 
 #include <functional>
@@ -6,8 +7,8 @@
 #include <sstream>
 
 namespace eka2l1 {
-    void disasm::shutdown_insn(cs_insn *insn) {
-        if (cp_insn) {
+    void shutdown_insn(cs_insn *insn) {
+        if (insn) {
             cs_free(insn, 1);
         }
     }

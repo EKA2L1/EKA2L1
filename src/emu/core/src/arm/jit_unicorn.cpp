@@ -19,17 +19,31 @@ bool thumb_mode(uc_engine *uc) {
 
     return mode & UC_MODE_THUMB;
 }
-
+    
 void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
-    memcpy(&value, eka2l1::ptr<const void>(address).get(), size);
+    eka2l1::arm::jit_unicorn* jit = reinterpret_cast<decltype(jit)>(user_data);
+
+    if (jit == nullptr) {
+        LOG_ERROR("Read hook failed: User Data was null");
+        return;
+    }
+    
+    memcpy(&value, eka2l1::ptr<const void>(address).get(jit->get_memory_sys()), size);
     LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
-    const uint8_t *const code = eka2l1::ptr<const uint8_t>(address).get();
+    eka2l1::arm::jit_unicorn* jit = reinterpret_cast<decltype(jit)>(user_data);
+
+    if (jit == nullptr) {
+        LOG_ERROR("Code hook failed: User Data was null");
+        return;
+    }
+
+    const uint8_t *const code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
     const size_t buffer_size = eka2l1::common::GB(4) - address;
     const bool thumb = thumb_mode(uc);
-    const std::string disassembly = eka2l1::disasm::disassemble(code, buffer_size, address, thumb);
+    const std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
     LOG_TRACE("{:#08x} {}", address, disassembly);
 }
 
@@ -67,20 +81,23 @@ namespace eka2l1 {
             }
         }
 
-        jit_unicorn::jit_unicorn() {
+        jit_unicorn::jit_unicorn(timing_system* sys, memory* mem, disasm* asmdis)
+            : timing(sys),
+              mem(mem),
+              asmdis(asmdis) {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);
 
             uc_hook hook{};
 
-            uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), nullptr, 1, 0);
-            uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), nullptr, 1, 0);
-            uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), nullptr, 1, 0);
+            uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
+            uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), this, 1, 0);
+            uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), this, 1, 0);
             // Map for unicorn to run around and play
             // Sure it won't die
             // Haha
             // Haha
-            err = uc_mem_map_ptr(engine, 0, common::GB(4), UC_PROT_ALL, core_mem::memory.get());
+            err = uc_mem_map_ptr(engine, 0, common::GB(4), UC_PROT_ALL, mem->get_mem_start());
             assert(err == UC_ERR_OK);
 
             enable_vfp_fp(engine);
@@ -130,13 +147,13 @@ namespace eka2l1 {
                 pc |= 1;
             }
 
-            core_timing::add_ticks(num_instructions);
+            timing->add_ticks(num_instructions);
 
-            return pc == epa;
+            return true;
         }
 
         void jit_unicorn::run() {
-            execute_instructions(std::max(core_timing::get_downcount(), 0));
+            execute_instructions(std::max(timing->get_downcount(), 0));
         }
 
         void jit_unicorn::stop() {

@@ -22,7 +22,7 @@
 // The focus here is that mapping memory and allocate things is fine
 
 namespace eka2l1 {
-    void memory::_free_mem(uint8_t *dt) {
+    void _free_mem(uint8_t *dt) {
 #ifndef WIN32
         munmap(dt, common::GB(1));
 #else
@@ -167,7 +167,7 @@ namespace eka2l1 {
 
     int memory::unmap(ptr<void> addr, size_t size) {
 #ifndef WIN32
-        return munmap(addr.get(), size);
+        return munmap(addr.get(this), size);
 #else
         return VirtualFree(addr.get(), size, MEM_DECOMMIT);
 #endif

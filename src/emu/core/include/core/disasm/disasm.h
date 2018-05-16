@@ -11,12 +11,11 @@ namespace eka2l1 {
 		csh cp_handle;
 		insn_ptr cp_insn;
 
-		void shutdown_insn(cs_insn *insn);
 	public:
 
         void init();
         void shutdown();
 
         std::string disassemble(const uint8_t *code, size_t size, uint64_t address, bool thumb);
-    }
+    };
 }

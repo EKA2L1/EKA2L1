@@ -6,67 +6,68 @@
 #include <loader/eka2img.h>
 
 namespace eka2l1 {
-        void system::init() {
-			cpu = std::make_unique<arm::jit_interface>(arm::jitter_arm_type::unicorn);
+    void system::init() {
+        // Initialize all the system that doesn't depend on others first
+        timing.init();
+        mem.init();
+        asmdis.init();
 
-            timing.init();
-            mem.init();
-            asm.init();
+        cpu = arm::create_jitter(&timing, &mem, &asmdis, arm::jitter_arm_type::unicorn);
 
-			kern.init(&timing, cpu.get());
+        kern.init(&timing, cpu.get());
+    }
+
+    void system::load(const std::string &name, uint64_t id, const std::string &path) {
+        auto img = loader::parse_eka2img(path);
+
+        if (!img) {
+            LOG_CRITICAL("This is not what i expected! Fake E32Image!");
+            return;
         }
 
-        void system::load(const std::string &name, uint64_t id, const std::string &path) {
-            auto img = loader::parse_eka2img(path);
+        loader::eka2img &real_img = img.value();
+        mngr = std::make_unique<hle::lib_manager>("db.yml");
 
-            if (!img) {
-                LOG_CRITICAL("This is not what i expected! Fake E32Image!");
-                return;
-            }
+        bool succ = loader::load_eka2img(real_img, &mem, *mngr);
 
-            loader::eka2img &real_img = img.value();
-			mngr = std::make_unique<hle::lib_manager>("db.yml");
-
-            bool succ = loader::load_eka2img(real_img, *mngr);
-
-            if (!succ) {
-                LOG_CRITICAL("Unable to load EKA2Img!");
-                return;
-            }
-
-            crr_process = std::make_shared<process>(id, name, real_img.rt_code_addr + real_img.header.entry_point,
-                real_img.header.heap_size_min, real_img.header.heap_size_max,
-                real_img.header.stack_size);
-
-            crr_process->run();
+        if (!succ) {
+            LOG_CRITICAL("Unable to load EKA2Img!");
+            return;
         }
 
-        int system::loop() {
-			auto prepare_reschedule = [&]() {
-				cpu->prepare_rescheduling();
-				reschedule_pending = true;
-			}
+        crr_process = std::make_shared<process>(&kern, &mem, id, name, 
+            real_img.rt_code_addr + real_img.header.entry_point,
+            real_img.header.heap_size_min, real_img.header.heap_size_max,
+            real_img.header.stack_size);
 
-            if (kern.crr_running_thread() == nullptr) {
-                timing.idle();
-                timing.advance();
-				prepare_reschedule();
-            } else {
-                timing.advance();
-				cpu->run();
-            }
+        crr_process->run();
+    }
 
-			kern.reschedule();
-			reschedule_pending = false;
+    int system::loop() {
+        auto prepare_reschedule = [&]() {
+            cpu->prepare_rescheduling();
+            reschedule_pending = true;
+        };
 
-            return 1;
+        if (kern.crr_thread() == nullptr) {
+            timing.idle();
+            timing.advance();
+            prepare_reschedule();
+        } else {
+            timing.advance();
+            cpu->run();
         }
 
-        void system::shutdown() {
-            timing.shutdown();
-            kern.shutdown();
-            mem.shutdown();
-            asm.shutdown();
-        }
+        kern.reschedule();
+        reschedule_pending = false;
+
+        return 1;
+    }
+
+    void system::shutdown() {
+        timing.shutdown();
+        kern.shutdown();
+        mem.shutdown();
+        asmdis.shutdown();
     }
 }

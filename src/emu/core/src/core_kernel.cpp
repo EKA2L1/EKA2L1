@@ -9,11 +9,11 @@
 #include <ptr.h>
 
 namespace eka2l1 {
-    void kernel_system::init(timing_system* sys, arm::jit_interface* cpu)
-		: timing(sys) {
+    void kernel_system::init(timing_system* sys, arm::jit_interface* cpu) {
         // Intialize the uid with zero
         crr_uid.store(0);
-        thr_sch = std::make_shared<kernel::thread_scheduler>(sys, cpu);
+        timing = sys;
+        thr_sch = std::make_shared<kernel::thread_scheduler>(sys, *cpu);
     }
 
     void kernel_system::shutdown() {
@@ -38,12 +38,12 @@ namespace eka2l1 {
             return false;
         }
 
-        thr_sch->schedule(res->second.get());
+        thr_sch->schedule(res->second);
 
         return true;
     }
 
-    kernel::thread *kernel_system::crr_running_thread() {
-        return thr_sch->current_running_thread();
+    kernel::thread *kernel_system::crr_thread() {
+        return thr_sch->current_thread();
     }
 }

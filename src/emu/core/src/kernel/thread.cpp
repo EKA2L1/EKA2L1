@@ -29,12 +29,11 @@ namespace eka2l1 {
             const size_t min_heap_size, const size_t max_heap_size,
             void *usrdata,
             thread_priority pri)
-            : kernel_obj(name)
+            : kernel_obj(kern, name)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
-            , kern(kern)
             , mem(mem) {
             priority = caculate_thread_priority(pri);
 

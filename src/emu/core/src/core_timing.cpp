@@ -41,7 +41,7 @@ namespace eka2l1 {
         return last_global_time_us + passed / frequency;
     }
 
-    int register_event(const std::string &name, timed_callback callback) {
+    int timing_system::register_event(const std::string &name, timed_callback callback) {
         event_type evtype;
 
         evtype.name = name;

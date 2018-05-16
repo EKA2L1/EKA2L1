@@ -5,6 +5,7 @@
 #include <core_timing.h>
 #include <hle/libmanager.h>
 #include <arm/jit_factory.h>
+#include <disasm/disasm.h>
 
 #include <functional>
 #include <memory>
@@ -23,7 +24,7 @@ namespace eka2l1 {
 		kernel_system kern;
 		timing_system timing;
 
-		disasm asm;
+		disasm asmdis;
 
 		bool reschedule_pending;
 
@@ -37,5 +38,5 @@ namespace eka2l1 {
         void load(const std::string &name, uint64_t id, const std::string &path);
         int loop();
         void shutdown();
-    }
+    };
 }

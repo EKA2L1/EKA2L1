@@ -45,5 +45,9 @@ target_link_libraries(core PRIVATE
         abi
         coreloader
         coremanager)
+
+# Disasm on the go in the future
+target_link_libraries(core PUBLIC
+        disasm)       
         
 target_include_directories(core PUBLIC include)

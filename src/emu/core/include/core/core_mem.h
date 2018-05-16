@@ -38,11 +38,11 @@ namespace eka2l1 {
 
         gen generations;
         allocated allocated_pages;
-
-        void _free_mem(uint8_t *dt);
+        
     protected:
         // Alloc in a specific range
         address alloc_range(address beg, address end, size_t size);
+        void alloc_inner(address addr, size_t pg_count, allocated::iterator blck);
 
     public:
         void init();
@@ -64,9 +64,13 @@ namespace eka2l1 {
             return reinterpret_cast<T *>(&memory[addr]);
         }
 
+        void* get_mem_start() {
+            return memory.get();
+        }
+
         // Map an Symbian-address
         ptr<void> map(address addr, size_t size, prot cprot);
         int change_prot(address addr, size_t size, prot nprot);
         int unmap(ptr<void> addr, size_t length);
-    }
+    };
 }

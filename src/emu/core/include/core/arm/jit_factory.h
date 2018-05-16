@@ -4,6 +4,10 @@
 #include <memory>
 
 namespace eka2l1 {
+    class timing_system;
+    class memory;
+    class disasm;
+
     namespace arm {
         enum jitter_arm_type {
             unicorn = 0
@@ -13,6 +17,7 @@ namespace eka2l1 {
         using jitter = std::unique_ptr<jit_interface>;
 
         // Create a jitter. A JITter is unique by itself.
-        jitter create_jitter(jitter_arm_type arm_type);
+        jitter create_jitter(timing_system* timing, memory* mem, 
+                             disasm* asmdis, jitter_arm_type arm_type);
     }
 }
