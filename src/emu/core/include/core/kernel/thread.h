@@ -10,6 +10,9 @@
 #include <ptr.h>
 
 namespace eka2l1 {
+    class kernel_system;
+    class memory;
+
     namespace kernel {
         using address = uint32_t;
         using thread_stack = common::resource<address>;
@@ -41,7 +44,6 @@ namespace eka2l1 {
             friend class thread_scheduler;
 
             thread_state state;
-            arm::jitter cpu;
             std::mutex mut;
             std::condition_variable todo;
 
@@ -57,18 +59,17 @@ namespace eka2l1 {
             size_t heap_addr;
             void *usrdata;
 
-        protected:
-            // Run without notice the order
-            void run_ignore();
-            void stop_ignore();
+            memory* mem;
+
+			uint32_t lrt;
 
         public:
+
             thread();
-            thread(const std::string &name, const address epa, const size_t stack_size,
+            thread(kernel_system* kern, memory* mem, const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 void *usrdata = nullptr,
-                thread_priority pri = priority_normal,
-                arm::jitter_arm_type jit_type = arm::unicorn);
+                thread_priority pri = priority_normal);
 
             thread_state current_state() const {
                 return state;

@@ -9,8 +9,8 @@ namespace eka2l1 {
             FILE *dear_imrom = fopen(path.c_str(), "rb");
             romimg img;
 
-            fread(&img.header, 1, sizeof(rom_header), dear_imrom);
-            fseek(dear_imrom, img.header.export_dir_address - img.header.code_address + sizeof(rom_header), SEEK_SET);
+            fread(&img.header, 1, sizeof(rom_image_header), dear_imrom);
+            fseek(dear_imrom, img.header.export_dir_address - img.header.code_address + sizeof(rom_image_header), SEEK_SET);
 
             fclose(dear_imrom);
 

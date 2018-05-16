@@ -6,61 +6,68 @@
 #include <loader/eka2img.h>
 
 namespace eka2l1 {
-    namespace core {
-        std::shared_ptr<process> crr_process;
-		std::mutex mut;
+    void system::init() {
+        // Initialize all the system that doesn't depend on others first
+        timing.init();
+        mem.init();
+        asmdis.init();
 
-		std::unique_ptr<hle::lib_manager> mngr;
+        cpu = arm::create_jitter(&timing, &mem, &asmdis, arm::jitter_arm_type::unicorn);
 
-        void init() {
-            core_timing::init();
-            core_kernel::init();
-            core_mem::init();
+        kern.init(&timing, cpu.get());
+    }
 
-            disasm::init();
+    void system::load(const std::string &name, uint64_t id, const std::string &path) {
+        auto img = loader::parse_eka2img(path);
+
+        if (!img) {
+            LOG_CRITICAL("This is not what i expected! Fake E32Image!");
+            return;
         }
 
-        void load(const std::string &name, uint64_t id, const std::string &path) {
-            auto img = loader::parse_eka2img(path);
+        loader::eka2img &real_img = img.value();
+        mngr = std::make_unique<hle::lib_manager>("db.yml");
 
-            if (!img) {
-                LOG_CRITICAL("This is not what i expected! Fake E32Image!");
-                return;
-            }
+        bool succ = loader::load_eka2img(real_img, &mem, *mngr);
 
-            loader::eka2img &real_img = img.value();
-			mngr = std::make_unique<hle::lib_manager>("db.yml");
-
-            bool succ = loader::load_eka2img(real_img, *mngr);
-
-            if (!succ) {
-                LOG_CRITICAL("Unable to load EKA2Img!");
-                return;
-            }
-
-            crr_process = std::make_shared<process>(id, name, real_img.rt_code_addr + real_img.header.entry_point,
-                real_img.header.heap_size_min, real_img.header.heap_size_max,
-                real_img.header.stack_size);
-
-            crr_process->run();
+        if (!succ) {
+            LOG_CRITICAL("Unable to load EKA2Img!");
+            return;
         }
 
-        int loop() {
-            if (core_kernel::crr_running_thread() == nullptr) {
-                core_timing::idle();
-                core_timing::advance();
-            } else {
-                core_timing::advance();
-            }
+        crr_process = std::make_shared<process>(&kern, &mem, id, name, 
+            real_img.rt_code_addr + real_img.header.entry_point,
+            real_img.header.heap_size_min, real_img.header.heap_size_max,
+            real_img.header.stack_size);
 
-            return 1;
+        crr_process->run();
+    }
+
+    int system::loop() {
+        auto prepare_reschedule = [&]() {
+            cpu->prepare_rescheduling();
+            reschedule_pending = true;
+        };
+
+        if (kern.crr_thread() == nullptr) {
+            timing.idle();
+            timing.advance();
+            prepare_reschedule();
+        } else {
+            timing.advance();
+            cpu->run();
         }
 
-        void shutdown() {
-            core_timing::shutdown();
-            core_kernel::shutdown();
-            core_mem::shutdown();
-            disasm::shutdown();
-        }
+        kern.reschedule();
+        reschedule_pending = false;
+
+        return 1;
+    }
+
+    void system::shutdown() {
+        timing.shutdown();
+        kern.shutdown();
+        mem.shutdown();
+        asmdis.shutdown();
     }
 }

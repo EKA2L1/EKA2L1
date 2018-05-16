@@ -17,7 +17,7 @@ namespace eka2l1 {
 
             {
                 if (ImGui::BeginPopup("Warning!")) {
-                    ImGui::Text(msg.data());
+                    ImGui::Text("%s", msg.data());
                     ImGui::Indent(76);
                     if (ImGui::Button("OK")) {
                         ImGui::CloseCurrentPopup();

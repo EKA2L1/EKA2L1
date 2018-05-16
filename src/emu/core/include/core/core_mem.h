@@ -28,13 +28,23 @@ namespace eka2l1 {
         KERNELMAPPING = 0xC9200000
     };
 
-    // The core memory
-    namespace core_mem {
+    class memory {
+        using gen = size_t;
         using mem = std::unique_ptr<uint8_t[], std::function<void(uint8_t *)>>;
+        using allocated = std::vector<gen>;
 
-        extern mem memory;
-        extern uint64_t page_size;
+        mem memory;
+        uint64_t page_size;
 
+        gen generations;
+        allocated allocated_pages;
+        
+    protected:
+        // Alloc in a specific range
+        address alloc_range(address beg, address end, size_t size);
+        void alloc_inner(address addr, size_t pg_count, allocated::iterator blck);
+
+    public:
         void init();
         void shutdown();
 
@@ -42,18 +52,8 @@ namespace eka2l1 {
         address alloc(size_t size);
         void free(address addr);
 
-        // Alloc in a specific range
-        address alloc_range(address beg, address end, size_t size);
-
-        // Alloc from thread heap
-        address heap_alloc(size_t size);
-
         // Alloc for dynamic code execution
         address alloc_ime(size_t size);
-
-        // Set the current thread heap region, specify where heap
-        // alloc must do allocation
-        void set_crr_thread_heap_region(const address where, size_t size);
 
         template <typename T>
         T *get_addr(address addr) {
@@ -64,9 +64,13 @@ namespace eka2l1 {
             return reinterpret_cast<T *>(&memory[addr]);
         }
 
+        void* get_mem_start() {
+            return memory.get();
+        }
+
         // Map an Symbian-address
         ptr<void> map(address addr, size_t size, prot cprot);
         int change_prot(address addr, size_t size, prot nprot);
         int unmap(ptr<void> addr, size_t length);
-    }
+    };
 }

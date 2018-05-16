@@ -15,7 +15,7 @@ namespace eka2l1 {
             uint32_t cap2;
         };
 
-        struct rom_header {
+        struct rom_image_header {
             uint32_t uid1;
             uint32_t uid2;
             uint32_t uid3;
@@ -50,7 +50,7 @@ namespace eka2l1 {
         };
 
         struct romimg {
-            rom_header header;
+            rom_image_header header;
             std::vector<uint32_t> exports;
         };
 

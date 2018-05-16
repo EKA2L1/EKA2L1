@@ -26,8 +26,8 @@ namespace eka2l1 {
             return mem_address;
         }
 
-        T *get() const {
-            return core_mem::get_addr<T>(mem_address);
+        T *get(memory* mem) const {
+            return mem->get_addr<T>(mem_address);
         }
 
         void reset() {
