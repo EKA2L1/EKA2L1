@@ -9,91 +9,130 @@
 #include <thread>
 
 namespace eka2l1 {
-    namespace vfs {
+    struct rom_file: public file {
+        loader::rom_entry file;
+        loader::rom* parent;
 
-        std::string _pref_path;
-        std::string _current_dir;
+        uint64_t crr_pos;
 
-        std::map<std::string, std::string> _mount_map;
-
-        std::mutex _gl_mut;
+        std::mutex mut;
 
         void init() {
-            _current_dir = "C:";
 
-            mount("C:", "/home/dtt2502/EKA2L1/partitions/C");
-            mount("E:", "/home/dtt2502/EKA2L1/partitions/E");
         }
 
-        void shutdown() {
-            unmount("C:");
-            unmount("E:");
+        uint64_t file_size() const override {
+            return file.size;
         }
 
-        std::string current_dir() {
-            return _current_dir;
+        int read_file(void* data, uint32_t size, uint32_t count) override {
+            return 0;
         }
 
-        void current_dir(const std::string &new_dir) {
-            std::lock_guard<std::mutex> guard(_gl_mut);
-            _current_dir = new_dir;
+        int write_file(void* data, uint32_t size, uint32_t count) override {
+            LOG_ERROR("Can't write into ROM!");
+            return -1;
+        }
+    }
+
+    struct physical_file: public file {
+        FILE* file;
+
+        uint64_t file_size() const override {
+            auto crr_pos = ftell(file);
+            fseek(file, 0, SEEK_END);
+
+            auto res = ftell(file);
+            fseek(file, crr_pos, SEEK_SET);
+
+            return res;
         }
 
-        void mount(const std::string &dvc, const std::string &real_path) {
-            auto find_res = _mount_map.find(dvc);
+        bool close() override {
+            fclose(file);
+        }
+    }
 
-            if (find_res == _mount_map.end()) {
-                // Warn
-            }
+    void io_system::init() {
+        _current_dir = "C:";
+    }
 
-            std::lock_guard<std::mutex> guard(_gl_mut);
-            _mount_map.insert(std::make_pair(dvc, real_path));
+    void io_system::shutdown() {
+        drives.clear();
+    }
 
-            _current_dir = dvc;
+    std::string io_system::current_dir() {
+        return crr_dir;
+    }
+
+    void io_system::current_dir(const std::string &new_dir) {
+        std::lock_guard<std::mutex> guard(mut);
+        crr_dir = new_dir;
+    }
+
+    void io_system::mount(const std::string &dvc, const std::string &real_path) {
+        auto find_res = drives.find(dvc);
+
+        if (find_res == drives.end()) {
+            // Warn
         }
 
-        void unmount(const std::string &dvc) {
-            std::lock_guard<std::mutex> guard(_gl_mut);
-            _mount_map.erase(dvc);
+        drive drv;
+        drv.is_in_mem = false;
+        drv.drive_name = dvc;
+        drv.real_path = real_path;
+
+        std::lock_guard<std::mutex> guard(mut);
+        drives.insert(std::make_pair(dvc, drv));
+
+        crr_dir = dvc;
+    }
+
+    void io_system::unmount(const std::string &dvc) {
+        std::lock_guard<std::mutex> guard(mut);
+        drives.erase(dvc);
+    }
+
+    std::string io_system::get(std::string vir_path) {
+        std::string abs_path = "";
+
+        std::string current_dir = crr_dir;
+
+        // Current directory is always an absolute path
+        std::string partition;
+
+        if (vir_path.find_first_of(':') == 1) {
+            partition = vir_path.substr(0, 2);
+        } else {
+            partition = current_dir.substr(0, 2);
         }
 
-        std::string get(std::string vir_path) {
-            std::string abs_path = "";
+        partition[0] = std::toupper(partition[0]);
 
-            std::string current_dir = _current_dir;
+        auto res = drives.find(partition);
 
-            // Current directory is always an absolute path
-            std::string partition;
-
-            if (vir_path.find_first_of(':') == 1) {
-                partition = vir_path.substr(0, 2);
-            } else {
-                partition = current_dir.substr(0, 2);
-            }
-
-            partition[0] = std::toupper(partition[0]);
-
-            auto res = _mount_map.find(partition);
-
-            if (res == _mount_map.end()) {
-                //log_error("Could not find partition");
-                return "";
-            }
-
-            current_dir = res->second + _current_dir.substr(2);
-
-            // Make it case-insensitive
-            for (auto &c : vir_path) {
-                c = std::tolower(c);
-            }
-
-            if (!is_absolute(vir_path, current_dir)) {
-                abs_path = absolute_path(vir_path, current_dir);
-            } else {
-                abs_path = add_path(res->second, vir_path.substr(2));
-            }
-
-            return abs_path;
+        if (res == _mount_map.end() || res.second.is_in_mem) {
+            //log_error("Could not find partition");
+            return "";
         }
+
+        current_dir = res->second + crr_dir.substr(2);
+
+        // Make it case-insensitive
+        for (auto &c : vir_path) {
+            c = std::tolower(c);
+        }
+
+        if (!is_absolute(vir_path, current_dir)) {
+            abs_path = absolute_path(vir_path, current_dir);
+        } else {
+            abs_path = add_path(res->second, vir_path.substr(2));
+        }
+
+        return abs_path;
+    }
+
+    std::shared_ptr<file> io_system::open_file(std::string vir_path, int mode) {
+
     }
 }

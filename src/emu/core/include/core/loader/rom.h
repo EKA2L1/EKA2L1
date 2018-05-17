@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <common/types.h>
 #include <vector>
+#include <optional>
 
 namespace eka2l1 {
     namespace loader {
@@ -12,40 +13,42 @@ namespace eka2l1 {
             uint16_t max_pages;
             uint16_t young_old_ratio;
             uint16_t spare[3];
-        }
+        };
 
         struct security_info {
             uint32_t secure_id;
             uint32_t vendor_id;
             uint32_t caps[2];
-        }
+        };
 
         struct rom_page_info {
             enum attrib: uint8_t {
                 pageable = 1 << 0
-            }
+            };
 
             enum compression: uint8_t {
                 none,
                 bytepair
-            }
+            };
 
             uint32_t data_start;
             uint16_t data_size;
             compression compression_type;
             attrib paging_attrib;
-        }
+        };
 
         struct rom_header {
             uint8_t jump[124];
             address restart_vector;
             int64_t time;
             uint32_t time_high;
+            // 8c = 16 * 8 + 12 = 128 + 12 = 140
             address rom_base;
             uint32_t rom_size;
             address rom_root_dir_list;
             address kern_data_address;
             address kern_limit;
+            // Offset to the first file
             address primary_file;
             address secondary_file;
             uint32_t checksum;
@@ -58,7 +61,7 @@ namespace eka2l1 {
             address rom_section_header;
             int32_t total_sv_data_size;
 
-            address variant_file;
+            address variant_file; // Offset to file describes variant
             address extension_file;
             address reloc_info;
             uint32_t old_trace_mask;
@@ -93,26 +96,26 @@ namespace eka2l1 {
 
             uint32_t hcr_file_addr;
             uint32_t spare[36];
-        }
+        };
 
         struct root_dir_info {
             uint32_t hardware_variant;
             address addr_lin;
-        }
+        };
 
         struct root_dir_list {
             int num_root_dirs;
             root_dir_info root_dir;
-        }
+        };
 
         struct rom_section_header {
             uint8_t major;
-            uint8_t minor
+            uint8_t minor;
             uint16_t build;
 
             uint32_t checksum;
             uint64_t lang;
-        }
+        };
 
         struct rom_entry {
             uint32_t size;
@@ -120,18 +123,30 @@ namespace eka2l1 {
             uint8_t attrib;
             uint8_t name_len;
             utf16_str name;
-        }
+        };
 
         struct rom_dir {
             int size;
-            rom_entry entry;
-        } 
+            std::vector<rom_entry> entries;
+        };
 
         struct rom_dir_sort_info {
             uint16_t subdir_count;
             uint16_t file_count;
 
             uint16_t* entry_offset;
-        }
+        };
+
+        struct rom {
+            rom_header header;
+            rom_section_header section_header;
+
+            FILE* handler;
+
+            std::vector<rom_dir> dirs;
+            std::vector<rom_entry> entries;
+        };
+
+        std::optional<rom> load_rom(const std::string& path);
     }
 }

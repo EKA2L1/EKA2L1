@@ -9,7 +9,8 @@ add_library(coreloader
 	sis.cpp
 	sis_fields.cpp
     sis_script_interpreter.cpp
-    romimage.cpp)
+    romimage.cpp
+	rom.cpp)
 
 target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp hle) 
 
