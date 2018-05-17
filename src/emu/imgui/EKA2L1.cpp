@@ -12,6 +12,7 @@
 #include <common/data_displayer.h>
 #include <core/core.h>
 #include <core/vfs.h>
+#include <loader/rom.h>
 
 #include "installer/installer.h"
 
@@ -31,7 +32,7 @@ namespace eka2l1 {
             }
 
             emu_win = eka2l1::imgui::open_window("EKA2L1", width, height);
-            emu_menu = eka2l1::imgui::menu(emu_win);
+            emu_menu = eka2l1::imgui::menu(emu_win, symsys);
 
             eka2l1::imgui::setup_io(emu_win);
 
@@ -43,7 +44,6 @@ namespace eka2l1 {
             debug_logger = std::make_shared<eka2l1::imgui::logger>();
             eka2l1::log::setup_log(debug_logger);
 
-            vfs::init();
 			symsys.init();
 
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
@@ -54,18 +54,18 @@ namespace eka2l1 {
             imgui::free_gl();
 
 			symsys.shutdown();
-            vfs::shutdown();
 
             glfwTerminate();
         }
 
         void eka2l1_inst::run() {
             //core::load("color", 0xDDDDDDDD, "/home/dtt2502/Miscs/EKA2L1HW.exe");
+            auto lol = loader::load_rom("/home/dtt2502/5800romdump.dmp");
 
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
 
-				symsys.loop();
+				//symsys.loop();
 
                 eka2l1::imgui::update_io(emu_win);
                 eka2l1::imgui::newframe_gl(emu_win);

@@ -27,7 +27,7 @@ target_include_directories(coreio PUBLIC include)
 
 target_link_libraries(coremem PUBLIC common)
 target_link_libraries(coretiming PUBLIC common)
-target_link_libraries(coreio PUBLIC common)
+target_link_libraries(coreio PUBLIC common coreloader)
 
 add_library(core include/core/ptr.h
                  include/core/process.h
@@ -48,6 +48,7 @@ target_link_libraries(core PRIVATE
 
 # Disasm on the go in the future
 target_link_libraries(core PUBLIC
-        disasm)       
+        disasm
+        hle)       
         
 target_include_directories(core PUBLIC include)

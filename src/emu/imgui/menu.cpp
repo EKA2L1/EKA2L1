@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <ImguiWindowsFileIO.hpp>
 #include <SimpleIni.h>
-#include <core/vfs.h>
+#include <core.h>
 
 namespace eka2l1 {
     namespace imgui {
@@ -76,7 +76,7 @@ namespace eka2l1 {
             }
 
             if (show_sis_dialog) {
-                if (imgui::install_sis_dialog_op()) {
+                if (imgui::install_sis_dialog_op(sys)) {
                     show_sis_dialog = false;
                 }
             }

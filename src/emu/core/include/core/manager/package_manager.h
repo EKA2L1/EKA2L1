@@ -5,6 +5,8 @@
 #include <vector>
 
 namespace eka2l1 {
+    class io_system;
+
     namespace loader {
         class sis_controller;
     }
@@ -28,10 +30,12 @@ namespace eka2l1 {
             bool load_sdb(const std::string &path);
             bool write_sdb(const std::string &path);
 
+            io_system* io;
+
             bool install_controller(loader::sis_controller *ctrl, uint8_t drv);
 
         public:
-            package_manager() { load_sdb("apps_registry.sdb"); }
+            package_manager(io_system* io): io(io) { load_sdb("apps_registry.sdb"); }
 
             bool installed(uid app_uid);
 

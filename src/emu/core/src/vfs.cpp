@@ -1,6 +1,9 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <core/vfs.h>
+#include <core/core_mem.h>
+#include <core/loader/rom.h>
+#include <core/ptr.h>
 
 #include <iostream>
 
@@ -9,36 +12,76 @@
 #include <thread>
 
 namespace eka2l1 {
+    // Class for some one want to access rom
     struct rom_file: public file {
         loader::rom_entry file;
         loader::rom* parent;
 
         uint64_t crr_pos;
-
         std::mutex mut;
 
-        void init() {
+        memory* mem;
 
+        ptr<char> file_ptr;
+
+        void init() {
+            file_ptr = ptr<char>(file.address_lin);
         }
 
-        uint64_t file_size() const override {
+        uint64_t size() const override {
             return file.size;
         }
 
         int read_file(void* data, uint32_t size, uint32_t count) override {
-            return 0;
+            auto will_read = std::min((uint64_t)count, file.size - crr_pos);
+            memcpy(data, &file_ptr.get(mem)[crr_pos], will_read);
+
+            crr_pos += will_read;
+
+            return will_read;
         }
 
         int write_file(void* data, uint32_t size, uint32_t count) override {
             LOG_ERROR("Can't write into ROM!");
             return -1;
         }
-    }
+
+        void seek(uint32_t seek_off, file_seek_mode where) override {
+            if (where == file_seek_mode::beg) {
+                crr_pos = seek_off;
+            } else if (where == file_seek_mode::crr) {
+                crr_pos += seek_off;
+            } else {
+                crr_pos += size() + seek_off;
+            }
+        }
+
+        std::u16string file_name() const override {
+            return file.name;
+        }
+
+        bool close() override {
+            return true;
+        }
+    };
 
     struct physical_file: public file {
         FILE* file;
+        std::u16string input_name;
 
-        uint64_t file_size() const override {
+        void init(std::string inp_name) {
+            input_name = std::u16string(inp_name.begin(), inp_name.end());
+        }
+        
+        int write_file(void* data, uint32_t size, uint32_t count) override {
+            return fwrite(data, size, count, file);
+        }
+        
+        int read_file(void* data, uint32_t size, uint32_t count) override {
+            return fread(data, size, count, file);
+        }
+
+        uint64_t size() const override {
             auto crr_pos = ftell(file);
             fseek(file, 0, SEEK_END);
 
@@ -50,11 +93,27 @@ namespace eka2l1 {
 
         bool close() override {
             fclose(file);
+            return true;
         }
-    }
 
-    void io_system::init() {
-        _current_dir = "C:";
+        void seek(uint32_t seek_off, file_seek_mode where) override {
+            if (where == file_seek_mode::beg) {
+                fseek(file, seek_off, SEEK_SET);
+            } else if (where == file_seek_mode::crr) {
+                fseek(file, seek_off, SEEK_CUR);
+            } else {
+                fseek(file, seek_off, SEEK_END);
+            }
+        }
+
+        std::u16string file_name() const override {
+            return input_name;
+        }
+    };
+
+    void io_system::init(memory* smem) {
+        mem = smem;
+        crr_dir = "C:";
     }
 
     void io_system::shutdown() {
@@ -111,12 +170,12 @@ namespace eka2l1 {
 
         auto res = drives.find(partition);
 
-        if (res == _mount_map.end() || res.second.is_in_mem) {
+        if (res == drives.end() || res->second.is_in_mem) {
             //log_error("Could not find partition");
             return "";
         }
 
-        current_dir = res->second + crr_dir.substr(2);
+        current_dir = res->second.real_path + crr_dir.substr(2);
 
         // Make it case-insensitive
         for (auto &c : vir_path) {
@@ -126,13 +185,13 @@ namespace eka2l1 {
         if (!is_absolute(vir_path, current_dir)) {
             abs_path = absolute_path(vir_path, current_dir);
         } else {
-            abs_path = add_path(res->second, vir_path.substr(2));
+            abs_path = add_path(res->second.real_path, vir_path.substr(2));
         }
 
         return abs_path;
     }
 
     std::shared_ptr<file> io_system::open_file(std::string vir_path, int mode) {
-
+        return std::shared_ptr<file>(nullptr);
     }
 }

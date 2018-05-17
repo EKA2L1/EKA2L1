@@ -58,10 +58,12 @@ namespace eka2l1 {
         }
 
         ss_interpreter::ss_interpreter(std::shared_ptr<std::istream> stream,
+            io_system* io,
             sis_install_block inst_blck,
             sis_data inst_data,
             sis_drive inst_drv)
             : data_stream(stream)
+            , io(io)
             , install_block(inst_blck)
             , install_data(inst_data)
             , install_drive(inst_drv) {}
@@ -304,7 +306,7 @@ namespace eka2l1 {
             auto install_file = [&](sis_install_block inst_blck, uint16_t crr_blck_idx) {
                 for (auto &wrap_file : inst_blck.files.fields) {
                     sis_file_des *file = (sis_file_des *)(wrap_file.get());
-                    std::string raw_path = vfs::get(get_install_path(file->target.unicode_string, install_drive));
+                    std::string raw_path = io->get(get_install_path(file->target.unicode_string, install_drive));
 
                     if (file->op == ss_op::EOpText) {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);

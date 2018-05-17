@@ -2,11 +2,12 @@
 #include <manager/package_manager.h>
 
 namespace eka2l1 {
-    namespace manager {
-        package_manager mngr;
+    manager::package_manager *manager_system::get_package_manager() {
+        return &pkgmngr;
+    }
 
-        package_manager *get_package_manager() {
-            return &mngr;
-        }
+    void manager_system::init(io_system* ios) {
+        io = ios;
+        pkgmngr = manager::package_manager(ios);
     }
 }

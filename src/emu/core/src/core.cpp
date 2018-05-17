@@ -14,6 +14,8 @@ namespace eka2l1 {
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, arm::jitter_arm_type::unicorn);
 
+        io.init(&mem);
+        mngr.init(&io);
         kern.init(&timing, cpu.get());
     }
 
@@ -26,9 +28,9 @@ namespace eka2l1 {
         }
 
         loader::eka2img &real_img = img.value();
-        mngr = std::make_unique<hle::lib_manager>("db.yml");
+        hlelibmngr = std::make_unique<hle::lib_manager>("db.yml");
 
-        bool succ = loader::load_eka2img(real_img, &mem, *mngr);
+        bool succ = loader::load_eka2img(real_img, &mem, *hlelibmngr);
 
         if (!succ) {
             LOG_CRITICAL("Unable to load EKA2Img!");
@@ -62,6 +64,10 @@ namespace eka2l1 {
         reschedule_pending = false;
 
         return 1;
+    }
+
+    bool system::install_package(std::u16string path, uint8_t drv) {
+        return mngr.get_package_manager()->install_package(path, drv);
     }
 
     void system::shutdown() {

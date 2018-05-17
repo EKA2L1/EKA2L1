@@ -2,7 +2,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <imgui.h>
-#include <manager/manager.h>
+#include <core.h>
 
 #include "installer.h"
 
@@ -51,7 +51,7 @@ namespace eka2l1 {
             return std::optional<std::string>{};
         }
 
-        bool install_sis_dialog_op() {
+        bool install_sis_dialog_op(system* sys) {
             std::optional<std::string> res;
 
             if (!stop_file_dialogue) {
@@ -91,7 +91,7 @@ namespace eka2l1 {
                     return true;
                 }
 
-                draw_success_box = manager::get_package_manager()->install_package(
+                draw_success_box = sys->install_package(
                     std::u16string(path.begin(), path.end()), 0);
             }
 

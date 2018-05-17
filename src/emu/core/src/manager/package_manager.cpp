@@ -3,6 +3,7 @@
 #include <loader/sis.h>
 #include <loader/sis_script_interpreter.h>
 #include <manager/package_manager.h>
+#include <vfs.h>
 
 #include <fstream>
 
@@ -303,6 +304,7 @@ namespace eka2l1 {
 
             // Interpret the file
             loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ifstream::binary),
+                io,
                 res.controller.install_block,
                 res.data,
                 loader::sis_drive(drive));

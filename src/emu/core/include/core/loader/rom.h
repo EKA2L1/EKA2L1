@@ -1,6 +1,5 @@
 #pragma once
 
-#include <loader/romimage.h>
 #include <cstdint>
 #include <common/types.h>
 #include <vector>

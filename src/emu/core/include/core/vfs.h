@@ -1,9 +1,22 @@
 #pragma once
 
 #include <string>
+#include <map>
 
 // VFS
 namespace eka2l1 {
+    class memory;
+
+    namespace loader {
+        class rom;
+    }
+
+    enum class file_seek_mode {
+        beg,
+        crr,
+        end
+    };
+
     // A file abstraction
     struct file {
         virtual int write_file(void* data, uint32_t size, uint32_t count) = 0;
@@ -14,37 +27,39 @@ namespace eka2l1 {
         virtual std::u16string file_name() const = 0;
 
         virtual uint64_t size() const = 0;
-        virtual void seek(uint32_t seek_off, uint32_t where) = 0;
+        virtual void seek(uint32_t seek_off, file_seek_mode where) = 0;
 
         virtual bool close() = 0;
-    }
+    };
 
     struct directory {
         virtual int file_count() const = 0;
         virtual std::u16string directory_name() const = 0;
-    }
+    };
 
     struct drive {
         bool is_in_mem;
 
         std::string drive_name;
         std::string real_path; // This exists if the drive is physically available
-    }
+    };
 
     class io_system {
         std::map<std::string, file> file_caches;
         std::map<std::string, drive> drives;
 
-        loader::rom rom_cache;
+        loader::rom* rom_cache;
 
         std::string pref_path;
         std::string crr_dir;
 
         std::mutex mut;
 
+        memory* mem;
+
     public:
         // Initialize the IO system
-        void init();
+        void init(memory* smem);
 
         // Shutdown the IO system
         void shutdown();
@@ -69,5 +84,5 @@ namespace eka2l1 {
 
         // Open a file. Return is a shared pointer of the file interface.
         std::shared_ptr<file> open_file(std::string vir_path, int mode);
-    }
+    };
 }

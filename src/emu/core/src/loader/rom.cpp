@@ -86,7 +86,7 @@ namespace eka2l1 {
             fread(&dir.size, 1, 4, file);
         
             while (ftell(file) - old_off < dir.size) {
-                dir.entires.push_back(read_rom_entry(file));
+                dir.entries.push_back(read_rom_entry(file));
                 fseek(file, dir.entries.back().size, SEEK_CUR);
             }
 
