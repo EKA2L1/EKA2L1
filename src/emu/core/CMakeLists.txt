@@ -46,6 +46,10 @@ target_link_libraries(core PRIVATE
         coreloader
         coremanager)
 
+if (UNIX OR APPLE)
+        target_link_libraries(core PRIVATE pthread)
+endif()
+
 # Disasm on the go in the future
 target_link_libraries(core PUBLIC
         disasm

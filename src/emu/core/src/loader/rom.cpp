@@ -1,7 +1,12 @@
 #include <loader/rom.h>
+#include <common/log.h>
 
 namespace eka2l1 {
     namespace loader {
+        enum class file_attrib {
+            dir = 0x0010
+        };
+
         uint32_t rom_to_offset(address romstart, address off) {
             return off - romstart;
         }
@@ -21,8 +26,13 @@ namespace eka2l1 {
             fread(&header.primary_file, 1, 4, file);
             fread(&header.secondary_file, 1, 4, file);
             fread(&header.checksum, 1, 4, file);
+            
+            // From this section, all read are invalid
+
+            // Symbian says those are for testing though
             fread(&header.hardware, 1, 4, file);
             fread(&header.lang, 1, 8, file);
+            
             fread(&header.kern_config_flags, 1, 4, file);
             fread(&header.rom_exception_search_tab, 1, 4, file);
             fread(&header.rom_header_size, 1, 4, file);
@@ -60,47 +70,94 @@ namespace eka2l1 {
 
             fread(&header.unpaged_compressed_size, 1, 4, file);
             fread(&header.hcr_file_addr, 1, 4, file);
-            fread(&header.spare, 1, 36, file);
+            fread(header.spare, 4, 36, file);
+
+            return header;
         }
 
-        rom_entry read_rom_entry(FILE* file) {
+        rom_dir read_rom_dir(rom& romf);
+
+        rom_entry read_rom_entry(rom& romf, rom_dir* mother) {
             rom_entry entry;
+            FILE* file = romf.handler;
 
             fread(&entry.size, 1, 4, file);
             fread(&entry.address_lin, 1, 4, file);
             fread(&entry.attrib, 1, 1, file);
-            fread(&entry.name_len, 1, 4, file);
+            fread(&entry.name_len, 1, 1, file);
 
             entry.name.resize(entry.name_len);
 
             fread(entry.name.data(), 2, entry.name_len, file);
 
+            if (entry.attrib & (int)file_attrib::dir) {
+                auto crr_pos = ftell(file);
+                fseek(file, rom_to_offset(romf.header.rom_base, entry.address_lin), SEEK_SET);
+                entry.dir = std::make_optional<rom_dir>(read_rom_dir(romf));
+                mother->subdirs.push_back(&entry.dir.value());
+                fseek(file, crr_pos, SEEK_SET);
+            }
+
             return entry;
         }
 
-        rom_dir read_rom_dir(FILE* file) {
+        rom_dir read_rom_dir(rom& romf) {
             rom_dir dir;
 
-            auto old_off = ftell(file);
+            auto old_off = ftell(romf.handler);
 
-            fread(&dir.size, 1, 4, file);
+            fread(&dir.size, 1, 4, romf.handler);
         
-            while (ftell(file) - old_off < dir.size) {
-                dir.entries.push_back(read_rom_entry(file));
-                fseek(file, dir.entries.back().size, SEEK_CUR);
+            while (ftell(romf.handler) - old_off < dir.size) {
+                dir.entries.push_back(read_rom_entry(romf, &dir));
+
+                if (ftell(romf.handler) % 4 != 0) {
+                    fseek(romf.handler, 2, SEEK_CUR);
+                }
             }
 
             return dir;
         }
 
+        root_dir read_root_dir(rom& romf) {
+            root_dir rdir;
+            FILE* file = romf.handler;
+
+            fread(&rdir.hardware_variant, 1, 4, file);
+            fread(&rdir.addr_lin, 1,4, file);
+
+            fseek(file, rom_to_offset(romf.header.rom_base ,rdir.addr_lin), SEEK_SET);
+
+            rdir.dir = read_rom_dir(romf);
+
+            return rdir;
+        }
+
+        root_dir_list read_root_dir_list(rom& romf) {
+            root_dir_list list;
+            FILE* file = romf.handler;
+            
+            fread(&list.num_root_dirs, 1, 4, file);
+
+            for (int i = 0; i < list.num_root_dirs; i++) {
+                auto last_pos = ftell(file);
+                list.root_dirs.push_back(read_root_dir(romf));
+                fseek(file, last_pos, SEEK_SET);
+            }
+
+            return list;
+        }
+
         // Loading rom supports only uncompressed rn
         std::optional<rom> load_rom(const std::string& path) {
             rom romf;
-            romf.handler = fopen(path.c_str(), "wb");
+            romf.handler = fopen(path.c_str(), "rb");
             romf.header = read_rom_header(romf.handler);
 
             // Seek to the first entry
-            fseek(romf.handler, romf.header.primary_file, SEEK_SET);
+            fseek(romf.handler, rom_to_offset(romf.header.rom_base, romf.header.rom_root_dir_list), SEEK_SET);
+
+            romf.root = read_root_dir_list(romf);
 
             return romf;
         }   

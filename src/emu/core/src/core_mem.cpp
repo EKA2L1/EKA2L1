@@ -197,6 +197,43 @@ namespace eka2l1 {
         return 0;
     }
 
+    // Load the ROM into virtual memory, using ma
+    bool memory::load_rom(const std::string& rom_path) {
+#ifndef WIN32
+        struct stat tus;
+        auto res = stat(rom_path.c_str(), &tus);
+
+        if (res == -1) {
+            LOG_ERROR("ROM path is invalid!");
+            return false;
+        }
+
+        int des = open(rom_path.c_str(), O_RDONLY);
+
+        //munmap(get_addr<void>(0x80000000), tus.st_size * 2);
+        auto res2 = mmap(get_addr<void>(0x80000000), tus.st_size* 2, PROT_READ | PROT_EXEC, 
+                MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, des, 0);
+        
+        if (res2 == MAP_FAILED) {
+            return false;
+        }
+
+        return true;
+#else
+        FILE* f = fopen(rom_path.c_str(), "rb");
+        fseek(f, 0, SEEK_END);
+
+        auto size = ftell(f);
+
+        fclose(f);
+
+        VirtualFree(get_addr<void>(0x80000000), size * 2, MEM_DECOMMIT);
+        HFILE handle = OpenFile();
+
+        MapViewOfFileEx(handle, FILE_MAP_READ, 0, 0, size, get_addr<void>(0x80000000));
+#endif
+    }
+
     address memory::alloc_ime(size_t size) {
         address addr = alloc_range(RAM_CODE_ADDR, ROM, size);
         change_prot(addr, size, prot::read_write_exec);

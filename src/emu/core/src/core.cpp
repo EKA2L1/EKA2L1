@@ -7,6 +7,8 @@
 
 namespace eka2l1 {
     void system::init() {
+        log::setup_log(nullptr);
+
         // Initialize all the system that doesn't depend on others first
         timing.init();
         mem.init();
@@ -68,6 +70,25 @@ namespace eka2l1 {
 
     bool system::install_package(std::u16string path, uint8_t drv) {
         return mngr.get_package_manager()->install_package(path, drv);
+    }
+
+    bool system::load_rom(const std::string& path) {
+        auto romf_res = loader::load_rom(path);
+
+        if (!romf_res) {
+            return false;
+        }
+
+        romf = romf_res.value();
+        io.set_rom_cache(&romf);
+
+        bool res1 = mem.load_rom(path);
+
+        if (!res1) {
+            return false;
+        }
+
+        return true;
     }
 
     void system::shutdown() {

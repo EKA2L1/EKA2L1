@@ -97,16 +97,6 @@ namespace eka2l1 {
             uint32_t spare[36];
         };
 
-        struct root_dir_info {
-            uint32_t hardware_variant;
-            address addr_lin;
-        };
-
-        struct root_dir_list {
-            int num_root_dirs;
-            root_dir_info root_dir;
-        };
-
         struct rom_section_header {
             uint8_t major;
             uint8_t minor;
@@ -116,17 +106,28 @@ namespace eka2l1 {
             uint64_t lang;
         };
 
+        struct rom_entry;
+
+        struct rom_dir {
+            int size;
+            utf16_str name;
+
+            std::vector<rom_entry> entries;
+
+            // Subdirs filtering
+            std::vector<rom_dir*> subdirs;
+        };
+
         struct rom_entry {
             uint32_t size;
             uint32_t address_lin;
             uint8_t attrib;
             uint8_t name_len;
             utf16_str name;
-        };
 
-        struct rom_dir {
-            int size;
-            std::vector<rom_entry> entries;
+            // If the entry is really pointed to a directory entry
+            // this will provide it
+            std::optional<rom_dir> dir;
         };
 
         struct rom_dir_sort_info {
@@ -136,14 +137,29 @@ namespace eka2l1 {
             uint16_t* entry_offset;
         };
 
+        struct root_dir {
+            uint32_t hardware_variant;
+            address addr_lin;
+
+            rom_dir dir;
+        };
+
+        struct root_dir_list {
+            int num_root_dirs;
+            std::vector<root_dir> root_dirs;
+
+            root_dir& operator[](uint32_t idx) {
+                return root_dirs[idx];
+            }
+        };
+
         struct rom {
             rom_header header;
             rom_section_header section_header;
 
             FILE* handler;
 
-            std::vector<rom_dir> dirs;
-            std::vector<rom_entry> entries;
+            root_dir_list root;
         };
 
         std::optional<rom> load_rom(const std::string& path);

@@ -64,6 +64,9 @@ namespace eka2l1 {
             return reinterpret_cast<T *>(&memory[addr]);
         }
 
+        // Load the ROM into virtual memory, using map
+        bool load_rom(const std::string& rom_path);
+
         void* get_mem_start() {
             return memory.get();
         }

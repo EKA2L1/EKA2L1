@@ -8,6 +8,8 @@
 using namespace eka2l1;
 
 std::string rom_path = "SYM.ROM";
+eka2l1::system symsys;
+
 bool help_printed = false;
 
 void print_help() {
@@ -29,11 +31,20 @@ void parse_args(int argc, char** argv) {
     }
 }
 
+void init() {
+    symsys.init();
+    bool res = symsys.load_rom(rom_path);
+}
+
+void shutdown() {
+    symsys.shutdown();
+}
+
 int main(int argc, char** argv) {
     std::cout << "EKA2L1: Experimental Symbian Emulator" << std::endl;
     parse_args(argc, argv);
 
-    auto rom_load = loader::load_rom(rom_path);
+    init();
 
     return 0;
 }

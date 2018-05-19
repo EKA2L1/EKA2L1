@@ -35,6 +35,7 @@ namespace eka2l1 {
             bool install_controller(loader::sis_controller *ctrl, uint8_t drv);
 
         public:
+            package_manager() = default;
             package_manager(io_system* io): io(io) { load_sdb("apps_registry.sdb"); }
 
             bool installed(uid app_uid);

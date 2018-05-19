@@ -2,6 +2,8 @@
 
 #include <string>
 #include <map>
+#include <mutex>
+#include <optional>
 
 // VFS
 namespace eka2l1 {
@@ -9,6 +11,7 @@ namespace eka2l1 {
 
     namespace loader {
         class rom;
+        class rom_entry;
     }
 
     enum class file_seek_mode {
@@ -16,6 +19,11 @@ namespace eka2l1 {
         crr,
         end
     };
+
+    #define READ_MODE 0x100
+    #define WRITE_MODE 0x200
+    #define APPEND_MODE 0x300
+    #define BIN_MODE 0x400
 
     // A file abstraction
     struct file {
@@ -32,10 +40,7 @@ namespace eka2l1 {
         virtual bool close() = 0;
     };
 
-    struct directory {
-        virtual int file_count() const = 0;
-        virtual std::u16string directory_name() const = 0;
-    };
+    using symfile = std::shared_ptr<file>;
 
     struct drive {
         bool is_in_mem;
@@ -45,7 +50,7 @@ namespace eka2l1 {
     };
 
     class io_system {
-        std::map<std::string, file> file_caches;
+        std::map<std::string, symfile> file_caches;
         std::map<std::string, drive> drives;
 
         loader::rom* rom_cache;
@@ -57,9 +62,17 @@ namespace eka2l1 {
 
         memory* mem;
 
+        std::optional<drive> find_dvc(std::string vir_path);
+
+        // Burn the tree down and look for entry in the dust
+        std::optional<loader::rom_entry> burn_tree_find_entry(const std::string& vir_path);
+
     public:
         // Initialize the IO system
         void init(memory* smem);
+        void set_rom_cache(loader::rom* rom) {
+            rom_cache = rom;
+        }
 
         // Shutdown the IO system
         void shutdown();
@@ -83,6 +96,6 @@ namespace eka2l1 {
         std::string get(std::string vir_path);
 
         // Open a file. Return is a shared pointer of the file interface.
-        std::shared_ptr<file> open_file(std::string vir_path, int mode);
+        std::shared_ptr<file> open_file(utf16_str vir_path, int mode);
     };
 }
