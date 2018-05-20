@@ -1,0 +1,41 @@
+object MainForm: TMainForm
+  Left = 315
+  Height = 360
+  Top = 210
+  Width = 409
+  Caption = 'EKA2L1'
+  Menu = MainMenu
+  OnCreate = FormCreate
+  LCLVersion = '1.8.2.0'
+  object MainMenu: TMainMenu
+    left = 16
+    top = 8
+    object FileMenu: TMenuItem
+      Caption = '&File'
+      OnClick = FileMenuClick
+      object InstallSISOption: TMenuItem
+        Caption = '&Install SIS'
+      end
+      object InstallROMOption: TMenuItem
+        Caption = '&Install ROM'
+      end
+      object FileMenuSep1: TMenuItem
+        Caption = '-'
+      end
+      object QuitOption: TMenuItem
+        Caption = '&Quit'
+        ShortCut = 16465
+        OnClick = QuitOptionClick
+      end
+    end
+    object EditMenu: TMenuItem
+      Caption = '&Edit'
+      object DeviceMappingOption: TMenuItem
+        Caption = '&Device Mapping'
+      end
+      object MenuItem1: TMenuItem
+        Caption = '&Function Database'
+      end
+    end
+  end
+end
