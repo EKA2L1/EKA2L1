@@ -3,8 +3,19 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
+#include <memory>
 
 namespace eka2l1 {
+    struct file;
+    class memory;
+    class disasm;
+    
+    using symfile = std::shared_ptr<file>; 
+
+    namespace hle {
+        class lib_manager;
+    }
+
     namespace loader {
         // Unstable
 
@@ -54,6 +65,7 @@ namespace eka2l1 {
             std::vector<uint32_t> exports;
         };
 
-        std::optional<romimg> parse_romimg(const std::string &path);
+        std::optional<romimg> parse_romimg(symfile& file);
+        bool stub_romimg(romimg& img, memory* mem, disasm* asmdis);
     }
 }

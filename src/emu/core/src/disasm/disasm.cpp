@@ -1,6 +1,10 @@
 #include <common/log.h>
+#include <common/types.h>
+#include <arm/jit_factory.h>
+#include <core_mem.h>
 #include <capstone.h>
 #include <disasm/disasm.h>
+#include <ptr.h>
 
 #include <functional>
 #include <memory>
@@ -13,7 +17,7 @@ namespace eka2l1 {
         }
     }
 
-    void disasm::init() {
+    void disasm::init(memory* smem) {
         cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle);
 
         if (err != CS_ERR_OK) {
@@ -28,6 +32,11 @@ namespace eka2l1 {
             LOG_ERROR("Capstone INSN allocation failed!");
             return;
         }
+
+        mem = smem;
+
+        // Create jitter to detect thumb
+        jitter = arm::create_jitter(nullptr, mem, this, arm::jitter_arm_type::unicorn);
     }
 
     void disasm::shutdown() {
@@ -54,5 +63,45 @@ namespace eka2l1 {
         }
 
         return out.str();
+    }
+
+    subroutine disasm::get_subroutine(ptr<uint8_t> beg) {
+        address beg_addr = beg.ptr_address();
+        address progressed = 0;
+
+        subroutine sub;
+
+        jitter->set_pc(beg_addr);
+
+        bool found = false;
+
+        while (!found) {
+            bool thumb = jitter->is_thumb_mode();
+            size_t inst_size = thumb ? 2 : 4;
+
+            std::string inst = disassemble(mem->get_addr<uint8_t>(beg_addr + progressed), inst_size,
+                0, thumb);
+
+            if (FOUND_STR(inst.find("("))) {
+                for (uint8_t i = 0; i < inst_size; i++) {
+                    sub.insts.push_back(arm_inst_type::data);
+                }
+            } else {
+                sub.insts.push_back(thumb ? arm_inst_type::thumb : arm_inst_type::arm);
+            
+                // Quick hack: if the pc is modified (means pc go first, have space),
+                // or if inst is branch or jump, then subroutine is here
+                if (inst[0] == 'b' || inst[0] == 'j' || FOUND_STR(inst.find(" pc"))) {
+                    sub.end = ptr<uint8_t>(beg_addr + progressed);
+                    found = true;
+                }
+            }
+
+            progressed += inst_size;
+            // Step the jit
+            jitter->step();
+        }
+
+        return sub;
     }
 }

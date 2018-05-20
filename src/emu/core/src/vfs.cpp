@@ -38,7 +38,7 @@ namespace eka2l1 {
         }
 
         int read_file(void* data, uint32_t size, uint32_t count) override {
-            auto will_read = std::min((uint64_t)count, file.size - crr_pos);
+            auto will_read = std::min((uint64_t)count * size, file.size - crr_pos);
             memcpy(data, &file_ptr.get(mem)[crr_pos], will_read);
 
             crr_pos += will_read;

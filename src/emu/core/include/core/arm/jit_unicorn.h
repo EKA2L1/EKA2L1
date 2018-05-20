@@ -64,6 +64,8 @@ namespace eka2l1 {
             address get_stack_top() override;
 
 			void prepare_rescheduling() override;
+
+            bool is_thumb_mode() override;
         };
     }
 }

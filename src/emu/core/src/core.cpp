@@ -12,12 +12,12 @@ namespace eka2l1 {
         // Initialize all the system that doesn't depend on others first
         timing.init();
         mem.init();
-        asmdis.init();
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, arm::jitter_arm_type::unicorn);
 
         io.init(&mem);
         mngr.init(&io);
+        asmdis.init(&mem);
         kern.init(&timing, cpu.get());
     }
 

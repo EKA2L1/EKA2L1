@@ -81,6 +81,10 @@ namespace eka2l1 {
             }
         }
 
+        bool jit_unicorn::is_thumb_mode() {
+            return thumb_mode(engine);
+        }
+
         jit_unicorn::jit_unicorn(timing_system* sys, memory* mem, disasm* asmdis)
             : timing(sys),
               mem(mem),
@@ -126,33 +130,41 @@ namespace eka2l1 {
                 pc |= 1;
             }
 
-            err = uc_emu_start(engine, pc, epa & 0xfffffffe, 0, num_instructions - 1);
+            if (num_instructions >= 1) {
+                err = uc_emu_start(engine, pc, epa & 0xfffffffe, 0, num_instructions - 1);
 
-            if (err != UC_ERR_OK) {
-                uint32_t error_pc = get_pc();
-                uint32_t lr = 0;
-                uc_reg_read(engine, UC_ARM_REG_LR, &lr);
+                if (err != UC_ERR_OK) {
+                    uint32_t error_pc = get_pc();
+                    uint32_t lr = 0;
+                    uc_reg_read(engine, UC_ARM_REG_LR, &lr);
 
-                LOG_CRITICAL("Unicorn error {:#02x} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}", err, pc, error_pc, lr);
-                return false;
+                    LOG_CRITICAL("Unicorn error {:#02x} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}", err, pc, error_pc, lr);
+                    return false;
+                }
+
+                assert(err == UC_ERR_OK);
+
+                pc = get_pc();
+
+                tm = thumb_mode(engine);
+
+                if (tm) {
+                    pc |= 1;
+                }
             }
 
-            assert(err == UC_ERR_OK);
-
-            pc = get_pc();
-
-            tm = thumb_mode(engine);
-
-            if (tm) {
-                pc |= 1;
-            }
-
-            timing->add_ticks(num_instructions);
+            if (timing)
+                timing->add_ticks(num_instructions);
 
             return true;
         }
 
         void jit_unicorn::run() {
+            if (!timing) {
+                LOG_ERROR("Can run the CPU, timing system not available.");
+                return; 
+            }
+
             execute_instructions(std::max(timing->get_downcount(), 0));
         }
 

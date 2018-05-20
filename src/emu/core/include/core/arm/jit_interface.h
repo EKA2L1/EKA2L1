@@ -44,6 +44,8 @@ namespace eka2l1 {
             virtual address get_stack_top() = 0;
 
 			virtual void prepare_rescheduling() = 0;
+
+            virtual bool is_thumb_mode() = 0;
         };
     }
 }
