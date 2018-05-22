@@ -25,7 +25,7 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-        thread::thread(kernel_system* kern, memory* mem, const std::string &name, const address epa, const size_t stack_size,
+        thread::thread(kernel_system* kern, memory_system* mem, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             void *usrdata,
             thread_priority pri)

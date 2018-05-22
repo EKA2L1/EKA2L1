@@ -30,11 +30,11 @@ namespace eka2l1 {
 #endif
     }
 
-    void memory::shutdown() {
+    void memory_system::shutdown() {
         memory.reset();
     }
 
-    void memory::init() {
+    void memory_system::init() {
 #ifdef WIN32
         SYSTEM_INFO system_info = {};
         GetSystemInfo(&system_info);
@@ -65,13 +65,13 @@ namespace eka2l1 {
 
 #ifdef WIN32
         DWORD old_protect = 0;
-        const BOOL res = VirtualProtect(memory.get(), page_size, PAGE_NOACCESS, &old_protect);
+        BOOL res = VirtualProtect(memory.get(), page_size, PAGE_NOACCESS, &old_protect);
 #else
         mprotect(memory.get(), page_size, PROT_READ);
 #endif
     }
 
-    void memory::alloc_inner(address addr, size_t pg_count, allocated::iterator blck) {
+    void memory_system::alloc_inner(address addr, size_t pg_count, allocated::iterator blck) {
         uint8_t *addr_mem = &memory[addr];
         auto aligned_size = pg_count * page_size;
 
@@ -87,7 +87,7 @@ namespace eka2l1 {
     }
 
     // Allocate the memory in heap memory
-    address memory::alloc(size_t size) {
+    address memory_system::alloc(size_t size) {
         const size_t page_count = (size + (page_size - 1)) / page_size;
 
         const size_t page_heap_start = (LOCAL_DATA / page_size) + 1;
@@ -110,7 +110,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    void memory::free(address addr) {
+    void memory_system::free(address addr) {
         const size_t page = addr / page_size;
         const gen generation = allocated_pages[page];
 
@@ -126,7 +126,7 @@ namespace eka2l1 {
     // Map dynamicly still fine. As soon as user call IME_RANGE,
     // that will call the UC and execute it
     // Returns a pointer that is aligned and mapped
-    ptr<void> memory::map(address addr, size_t size, prot cprot) {
+    ptr<void> memory_system::map(address addr, size_t size, prot cprot) {
         if (addr <= NULL_TRAP && addr != 0) {
             LOG_INFO("Unmapable region 0x{:x}", addr);
             return ptr<void>();
@@ -153,7 +153,7 @@ namespace eka2l1 {
         return ptr<void>(page_addr);
     }
 
-    int memory::change_prot(address addr, size_t size, prot nprot) {
+    int memory_system::change_prot(address addr, size_t size, prot nprot) {
         auto tprot = translate_protection(nprot);
         void *real_addr = get_addr<void>(addr);
 
@@ -165,16 +165,16 @@ namespace eka2l1 {
 #endif
     }
 
-    int memory::unmap(ptr<void> addr, size_t size) {
+    int memory_system::unmap(ptr<void> addr, size_t size) {
 #ifndef WIN32
         return munmap(addr.get(this), size);
 #else
-        return VirtualFree(addr.get(), size, MEM_DECOMMIT);
+        return VirtualFree(addr.get(this), size, MEM_DECOMMIT);
 #endif
     }
 
     // Alloc from thread heap
-    address memory::alloc_range(address beg, address end, size_t size) {
+    address memory_system::alloc_range(address beg, address end, size_t size) {
         const size_t page_count = (size + (page_size - 1)) / page_size;
 
         const size_t page_heap_start = (beg / page_size) + 1;
@@ -198,7 +198,7 @@ namespace eka2l1 {
     }
 
     // Load the ROM into virtual memory, using ma
-    bool memory::load_rom(const std::string& rom_path) {
+    bool memory_system::load_rom(const std::string& rom_path) {
 #ifndef WIN32
         struct stat tus;
         auto res = stat(rom_path.c_str(), &tus);
@@ -221,6 +221,11 @@ namespace eka2l1 {
         return true;
 #else
         FILE* f = fopen(rom_path.c_str(), "rb");
+
+		if (f == nullptr) {
+			return false;
+		}
+
         fseek(f, 0, SEEK_END);
 
         auto size = ftell(f);
@@ -228,13 +233,17 @@ namespace eka2l1 {
         fclose(f);
 
         VirtualFree(get_addr<void>(0x80000000), size * 2, MEM_DECOMMIT);
-        HFILE handle = OpenFile();
+        HANDLE handle = OpenFileMapping(PAGE_READWRITE, false, rom_path.c_str());
 
-        MapViewOfFileEx(handle, FILE_MAP_READ, 0, 0, size, get_addr<void>(0x80000000));
+		if (MapViewOfFileEx(handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, size, get_addr<void>(0x80000000)) == nullptr) {
+			return false;
+		}
+
+		return true;
 #endif
     }
 
-    address memory::alloc_ime(size_t size) {
+    address memory_system::alloc_ime(size_t size) {
         address addr = alloc_range(RAM_CODE_ADDR, ROM, size);
         change_prot(addr, size, prot::read_write_exec);
         return addr;

@@ -4,16 +4,20 @@
 #include <vector>
 #include <map>
 #include <optional>
+#include <memory>
 
-#include <yaml-cpp/yaml.h>
+namespace YAML {
+	class Node;
+}
 
 namespace eka2l1 {
     using sid = uint32_t;
     using sids = std::vector<uint32_t>;
     using exportaddr = uint32_t;
     using exportaddrs = sids;
-    
+
     typedef uint32_t address;
+
 
     namespace hle {
         // This class is launched at configuration time, so
@@ -24,7 +28,7 @@ namespace eka2l1 {
 
             std::map<address, sid> addr_map;
 
-            YAML::Node root;
+            std::shared_ptr<YAML::Node> root;
 
             void load_all_sids();
 

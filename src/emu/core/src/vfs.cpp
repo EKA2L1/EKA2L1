@@ -22,11 +22,11 @@ namespace eka2l1 {
         uint64_t crr_pos;
         std::mutex mut;
 
-        memory* mem;
+        memory_system* mem;
 
         ptr<char> file_ptr;
 
-        rom_file(memory* mem, loader::rom* supereme_mother, loader::rom_entry entry)
+        rom_file(memory_system* mem, loader::rom* supereme_mother, loader::rom_entry entry)
             : parent(supereme_mother), file(entry), mem(mem) { init(); }
 
         void init() {
@@ -166,7 +166,7 @@ namespace eka2l1 {
         }
     };
 
-    void io_system::init(memory* smem) {
+    void io_system::init(memory_system* smem) {
         mem = smem;
         crr_dir = "C:";
     }

@@ -4,6 +4,7 @@
 #include <common/log.h>
 #include <common/types.h>
 #include <core_timing.h>
+#include <hle/libmanager.h>
 #include <disasm/disasm.h>
 #include <ptr.h>
 #include <unicorn/unicorn.h>
@@ -39,6 +40,18 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         LOG_ERROR("Code hook failed: User Data was null");
         return;
     }
+
+	eka2l1::hle::lib_manager* mngr = jit->get_lib_manager();
+
+	// Use this manager to get the address
+	auto sid_correspond = mngr->get_sid(address);
+
+	if (sid_correspond) {
+		// Explain(bentokun)
+		// Call responding function. Don't have to worry about other instructions
+		// Both thumb and arm instructions in the subroutine are replaced with NOP
+		// Others data is still being keeped.
+	}
 
     const uint8_t *const code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
     const size_t buffer_size = eka2l1::common::GB(4) - address;
@@ -85,7 +98,7 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        jit_unicorn::jit_unicorn(timing_system* sys, memory* mem, disasm* asmdis)
+        jit_unicorn::jit_unicorn(timing_system* sys, memory_system* mem, disasm* asmdis)
             : timing(sys),
               mem(mem),
               asmdis(asmdis) {

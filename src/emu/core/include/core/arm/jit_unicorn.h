@@ -6,7 +6,11 @@
 namespace eka2l1 {
     class timing_system;
     class disasm;
-    class memory;
+    class memory_system;
+
+	namespace hle {
+		class lib_manager;
+	}
 
     namespace arm {
         class jit_unicorn : public jit_interface {
@@ -15,7 +19,9 @@ namespace eka2l1 {
 
             timing_system* timing;
             disasm* asmdis;
-            memory* mem;
+            memory_system* mem;
+			
+			hle::lib_manager* lib_mngr;
 
         private:
             bool execute_instructions(int num_instructions);
@@ -29,11 +35,15 @@ namespace eka2l1 {
                 return asmdis;
             }
 
-            memory* get_memory_sys() {
+            memory_system* get_memory_sys() {
                 return mem;
             }
 
-            jit_unicorn(timing_system* sys, memory* mem, disasm* asmdis);
+			hle::lib_manager* get_lib_manager() {
+				return lib_mngr;
+			}
+
+            jit_unicorn(timing_system* sys, memory_system* mem, disasm* asmdis);
             ~jit_unicorn();
 
             void run() override;

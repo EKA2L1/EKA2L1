@@ -34,13 +34,13 @@ namespace eka2l1 {
 
 		csh cp_handle;
 		insn_ptr cp_insn;
-        memory* mem;
+        memory_system* mem;
 
         // This jitter is use for detect subroutine.
         arm::jitter jitter;
 
 	public:
-        void init(memory* smem);
+        void init(memory_system* smem);
         void shutdown();
 
         subroutine get_subroutine(ptr<uint8_t> beg);

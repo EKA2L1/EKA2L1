@@ -7,7 +7,7 @@
 
 namespace eka2l1 {
     struct file;
-    class memory;
+    class memory_system;
     class disasm;
     
     using symfile = std::shared_ptr<file>; 
@@ -66,6 +66,6 @@ namespace eka2l1 {
         };
 
         std::optional<romimg> parse_romimg(symfile& file);
-        bool stub_romimg(romimg& img, memory* mem, disasm* asmdis);
+        bool stub_romimg(romimg& img, memory_system* mem, disasm* asmdis);
     }
 }

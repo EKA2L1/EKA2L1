@@ -26,7 +26,7 @@ namespace eka2l1 {
             return mem_address;
         }
 
-        T *get(memory* mem) const {
+        T *get(memory_system* mem) const {
             return mem->get_addr<T>(mem_address);
         }
 

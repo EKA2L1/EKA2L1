@@ -59,14 +59,14 @@ namespace eka2l1 {
             size_t heap_addr;
             void *usrdata;
 
-            memory* mem;
+            memory_system* mem;
 
 			uint32_t lrt;
 
         public:
 
             thread();
-            thread(kernel_system* kern, memory* mem, const std::string &name, const address epa, const size_t stack_size,
+            thread(kernel_system* kern, memory_system* mem, const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 void *usrdata = nullptr,
                 thread_priority pri = priority_normal);

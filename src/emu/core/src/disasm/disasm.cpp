@@ -17,7 +17,7 @@ namespace eka2l1 {
         }
     }
 
-    void disasm::init(memory* smem) {
+    void disasm::init(memory_system* smem) {
         cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle);
 
         if (err != CS_ERR_OK) {

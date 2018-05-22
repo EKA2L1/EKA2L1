@@ -60,7 +60,7 @@ namespace eka2l1 {
 
         std::mutex mut;
 
-        memory* mem;
+        memory_system* mem;
 
         std::optional<drive> find_dvc(std::string vir_path);
 
@@ -69,7 +69,7 @@ namespace eka2l1 {
 
     public:
         // Initialize the IO system
-        void init(memory* smem);
+        void init(memory_system* smem);
         void set_rom_cache(loader::rom* rom) {
             rom_cache = rom;
         }

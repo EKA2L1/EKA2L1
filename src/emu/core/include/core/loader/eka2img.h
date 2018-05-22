@@ -10,7 +10,7 @@
 // A lightweight loader based on elf2e32
 
 namespace eka2l1 {
-    class memory;
+    class memory_system;
 
     namespace loader {
         enum class eka2_cpu : uint16_t {
@@ -161,6 +161,6 @@ namespace eka2l1 {
         };
 
         std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
-        bool load_eka2img(eka2img &img, memory* mem, hle::lib_manager& mngr);
+        bool load_eka2img(eka2img &img, memory_system* mem, hle::lib_manager& mngr);
     }
 }

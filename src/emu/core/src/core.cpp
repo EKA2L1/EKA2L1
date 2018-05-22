@@ -6,12 +6,37 @@
 #include <loader/eka2img.h>
 
 namespace eka2l1 {
+	void system::add_sid(uint8_t major, uint8_t minor, const std::string& path) {
+		sids_path.insert(std::make_pair(
+			std::make_pair(major, minor),
+			path)
+		);
+	}
+
+	void system::set_symbian_version_use(uint8_t major, uint8_t minor) {
+		current_version.emplace(std::make_pair(major, minor));
+	}
+
+	std::optional<symversion> system::get_symbian_version_use() const {
+		return current_version.value();
+	}
+
     void system::init() {
+		symversion ver;
+		ver.first = 9;
+		ver.second = 4;
+
         log::setup_log(nullptr);
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
         mem.init();
+
+		if (current_version) {
+			ver = current_version.value();
+		}
+
+		hlelibmngr = std::make_unique<hle::lib_manager>(sids_path[ver]);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, arm::jitter_arm_type::unicorn);
 

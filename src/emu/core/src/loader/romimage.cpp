@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdio>
 #include <common/log.h>
 #include <core_mem.h>
@@ -24,7 +25,7 @@ namespace eka2l1 {
         }
 
         // This results the file also being modified
-        bool stub_export(memory* mem, disasm* asmdis, address exp) {
+        bool stub_export(memory_system* mem, disasm* asmdis, address exp) {
             subroutine sub = asmdis->get_subroutine(ptr<uint8_t>(exp));
 
             // Fill them with nop
@@ -47,9 +48,9 @@ namespace eka2l1 {
         }
 
         // Stub the export with NOP
-        bool stub_romimg(romimg& img, std::string name, memory* mem, disasm* asmdis) {
-            for (uint32_t i = 0; i < std::min(img.exports.size(), lib_sids.size()); i++) {
-                stub_export(mem, asmdis, img.exports[i]);
+        bool stub_romimg(romimg& img, std::string name, memory_system* mem, disasm* asmdis) {
+            for (uint32_t i = 0; i < img.exports.size(); i++) {
+				stub_export(mem, asmdis, img.exports[i]);
             }
             
             return true;

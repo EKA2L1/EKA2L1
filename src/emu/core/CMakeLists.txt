@@ -18,7 +18,7 @@ add_subdirectory(src/loader)
 add_subdirectory(src/manager)
 add_subdirectory(src/disasm)
 add_subdirectory(src/kernel)
-add_subdirectory(src/abi)
+#add_subdirectory(src/abi)
 add_subdirectory(src/hle)
 
 target_include_directories(coremem PUBLIC include)
@@ -42,9 +42,10 @@ target_link_libraries(core PRIVATE
         coretiming 
         coreio
         arm
-        abi
+        #abi
         coreloader
-        coremanager)
+        coremanager
+		common)
 
 if (UNIX OR APPLE)
         target_link_libraries(core PRIVATE pthread)

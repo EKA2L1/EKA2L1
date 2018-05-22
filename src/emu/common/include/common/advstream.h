@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -88,7 +89,7 @@ namespace eka2l1 {
             friend advstringstream& operator >>(advstringstream& stream, uint32_t& res) {
                 std::string num;
 
-                while (std::isdigit(stream.peek())) {
+                while (isdigit(stream.peek())) {
                     num += stream.get();
                 }
 

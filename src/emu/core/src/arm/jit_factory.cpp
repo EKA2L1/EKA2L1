@@ -4,7 +4,7 @@
 
 namespace eka2l1 {
     namespace arm {
-        jitter create_jitter(timing_system* timing, memory* mem, 
+        jitter create_jitter(timing_system* timing, memory_system* mem, 
                              disasm* asmdis, jitter_arm_type arm_type) {
             switch (arm_type) {
             case unicorn:

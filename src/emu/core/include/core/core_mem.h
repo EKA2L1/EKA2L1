@@ -28,7 +28,7 @@ namespace eka2l1 {
         KERNELMAPPING = 0xC9200000
     };
 
-    class memory {
+    class memory_system {
         using gen = size_t;
         using mem = std::unique_ptr<uint8_t[], std::function<void(uint8_t *)>>;
         using allocated = std::vector<gen>;
@@ -67,7 +67,7 @@ namespace eka2l1 {
         // Load the ROM into virtual memory, using map
         bool load_rom(const std::string& rom_path);
 
-        void* get_mem_start() {
+        void* get_mem_start() const {
             return memory.get();
         }
 

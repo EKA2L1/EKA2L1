@@ -1,9 +1,10 @@
 #include <hle/libmanager.h>
+#include <yaml-cpp/yaml.h>
 
 namespace eka2l1 {
     namespace hle {
         void lib_manager::load_all_sids() {
-            for (auto lib: root) {
+            for (auto lib: *root) {
                 std::string lib_name = lib.first.as<std::string>();
                 std::vector<sid> tids;
 
@@ -36,7 +37,7 @@ namespace eka2l1 {
         }
 
         lib_manager::lib_manager(const std::string db_path) {
-            root = YAML::LoadFile(db_path)["libraries"];
+            root = std::make_shared<YAML::Node>(YAML::LoadFile(db_path)["libraries"]);
             load_all_sids();
         }
 
@@ -58,7 +59,7 @@ namespace eka2l1 {
             return true;
         }
 
-        std::optional<sid> lib_manager::get_sid(exportaddress addr) {
+        std::optional<sid> lib_manager::get_sid(exportaddr addr) {
             auto res = addr_map.find(addr);
 
             if (res == addr_map.end()) {

@@ -14,8 +14,12 @@
 #include <memory>
 #include <mutex>
 #include <process.h>
+#include <optional>
+#include <tuple>
 
 namespace eka2l1 {
+	using symversion = std::pair<uint8_t, uint8_t>;
+
     class system {
         std::shared_ptr<process> crr_process;
 		std::mutex mut;
@@ -23,7 +27,7 @@ namespace eka2l1 {
 		std::unique_ptr<hle::lib_manager> hlelibmngr;
 		arm::jitter cpu;
 		
-		memory mem;
+		memory_system mem;
 		kernel_system kern;
 		timing_system timing;
 
@@ -36,14 +40,18 @@ namespace eka2l1 {
 
 		bool reschedule_pending;
 
-	protected:
+		std::map<symversion, std::string> sids_path;
+		std::optional<symversion> current_version;
 
-		void prepare_reschedule();
-		void reschedule();
 
     public:
 		system()
 			: hlelibmngr(nullptr) {}
+
+		void add_sid(uint8_t major, uint8_t minor, const std::string& path);
+
+		void set_symbian_version_use(uint8_t major, uint8_t minor);
+		std::optional<symversion> get_symbian_version_use() const;
 
         void init();
         void load(const std::string &name, uint64_t id, const std::string &path);
