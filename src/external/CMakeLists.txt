@@ -19,9 +19,13 @@ add_library(imgui imgui/imgui.h imgui/imgui.cpp
     imgui/stb_truetype.h
 )
 
-#if (MSVC)
-#    add_subdirectory(libcxxabi)
-#endif()
+if (MSVC)
+    add_library(libdemangle
+		libdemangle/include/cxxabi.h
+		libcxxabi/src/cxa_demangle.cpp)
+
+	target_include_directories(libdemangle PUBLIC libdemangle/include)
+endif()
 
 target_include_directories(imgui PUBLIC imgui)
 

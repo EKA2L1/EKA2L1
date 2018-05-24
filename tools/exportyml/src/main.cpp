@@ -29,6 +29,14 @@ using typeinfo_name = std::string;
 using function_raw_args = std::string;
 using function_args = std::string;
 
+struct function {
+	function_name dename;
+	uint32_t id;
+
+	function(function_name name, uint32_t sid)
+		: dename(name), id(sid) {}
+};
+
 void init_log() {
     setup_log(nullptr);
 }
@@ -43,9 +51,9 @@ void list_all_libs() {
     }
 }
 
-std::vector<function_name> read_idt(const fs::path &path) {
+std::vector<function> read_idt(const fs::path &path) {
     std::ifstream idt(path.string());
-    std::vector<function_name> fts;
+    std::vector<function> fts;
 
     uint32_t lc = 1;
 
@@ -77,11 +85,34 @@ std::vector<function_name> read_idt(const fs::path &path) {
         size_t len = raw_sauce.length();
         char *cooked_output = abi::__cxa_demangle(raw_sauce.c_str(), cooked_sauce, &len, &result);
 
+		std::string cooked;
+
+		if (cooked_output) {
+			cooked = cooked_output;
+			std::string temp(raw_sauce);
+
+			if (temp.find("C1") != std::string::npos) {
+				cooked += " (complete object constructor)";
+			}
+			else if (temp.find("C2") != std::string::npos) {
+				cooked += " (base object constructor)";
+			}
+			else if (temp.find("C3") != std::string::npos) {
+				cooked += " (complete object allocating constructor)";
+			}
+			else if (temp.find("D1") != std::string::npos) {
+				cooked += " (complete object destructor)";
+			}
+			else if (temp.find("D2") != std::string::npos) {
+				cooked += " (base object destructor)";
+			}
+		}
+
         if (!result) {
-            fts.push_back(std::string(cooked_output));
-            LOG_INFO("{}", cooked_output);
+            fts.push_back(function(cooked, common::hash(raw_sauce)));
+            LOG_INFO("{}", cooked);
         } else {
-            fts.push_back(raw_sauce);
+            fts.push_back(function(raw_sauce, common::hash(raw_sauce)));
             free(cooked_sauce);
         }
 
@@ -141,7 +172,7 @@ std::string normalize_for_hash(std::string org) {
 }
 
 void yml_link(const fs::path &path) {
-    auto func_names = read_idt(path);
+    auto funcs = read_idt(path);
     auto lib = path.filename().replace_extension("").string();
 
     emitter << YAML::Key << lib << YAML::Value << YAML::BeginMap;
@@ -149,8 +180,8 @@ void yml_link(const fs::path &path) {
         emitter << YAML::Key << "exports";
         emitter << YAML::Value << YAML::BeginMap;
 
-            for (auto &func_name : func_names) {
-                emitter << YAML::Key << func_name << YAML::Value << "0x" + common::to_string(common::hash(normalize_for_hash(func_name)), std::hex);
+            for (auto &func : funcs) {
+                emitter << YAML::Key << func.dename<< YAML::Value << "0x" + common::to_string(func.id, std::hex);
             }
 
         emitter << YAML::EndMap;

@@ -32,7 +32,7 @@ namespace eka2l1 {
 			};
 
 			for (auto& c : org) {
-				c = std::tolower(c);
+				c = tolower(c);
 			}
 
 			remove(org, " ");

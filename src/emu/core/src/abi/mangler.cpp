@@ -1,9 +1,4 @@
 #include <abi/eabi.h>
-
-#ifdef __MSC_VER
-    #define __attribute__()
-#endif
-
 #include <cxxabi.h>
 #include <memory>
 
