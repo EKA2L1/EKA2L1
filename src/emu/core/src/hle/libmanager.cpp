@@ -1,19 +1,26 @@
 #include <hle/libmanager.h>
+#include <common/log.h>
 #include <yaml-cpp/yaml.h>
 
 namespace eka2l1 {
     namespace hle {
-        void lib_manager::load_all_sids() {
-            for (auto lib: *root) {
-                std::string lib_name = lib.first.as<std::string>();
-                std::vector<sid> tids;
+        void lib_manager::load_all_sids(const epocver ver) {
+			std::vector<sid> tids;
+			std::string lib_name;
 
-                for (auto lib_entry: lib.second) {
-                    tids.push_back(lib_entry.second.as<uint32_t>());
-                }
+			#define LIB(x) lib_name = #x;
+			#define EXPORT(x, y) tids.push_back(y); func_names.insert(std::make_pair(y, x)); 
+			#define ENDLIB() ids.insert(std::make_pair(lib_name, tids)); tids.clear(); 
 
-                ids.insert(std::make_pair(lib_name, tids));
-            }
+			if (ver == epocver::epoc6) {
+				#include <hle/epoc6.h>
+			} else {
+				#include <hle/epoc9.h>
+			}
+
+			#undef LIB
+			#undef EXPORT
+			#undef ENLIB
         }
 
         std::optional<sids> lib_manager::get_sids(const std::string& lib_name) {
@@ -36,9 +43,8 @@ namespace eka2l1 {
             return res->second;
         }
 
-        lib_manager::lib_manager(const std::string db_path) {
-            root = std::make_shared<YAML::Node>(YAML::LoadFile(db_path)["libraries"]);
-            load_all_sids();
+        lib_manager::lib_manager(const epocver ver) {
+            load_all_sids(ver);
         }
 
         bool lib_manager::register_exports(const std::string& lib_name, exportaddrs& addrs) {           

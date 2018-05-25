@@ -4,15 +4,21 @@
 #include <thread>
 
 #include <core_kernel.h>
+#include <core_mem.h>
+#include <manager/manager.h>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
 #include <ptr.h>
 
 namespace eka2l1 {
-    void kernel_system::init(timing_system* sys, arm::jit_interface* cpu) {
+    void kernel_system::init(timing_system* sys, manager_system* mngrsys,
+		memory_system* mem_sys, hle::lib_manager* lib_sys, arm::jit_interface* cpu) {
         // Intialize the uid with zero
         crr_uid.store(0);
         timing = sys;
+		mngr = mngrsys;
+		mem = mem_sys;
+		libmngr = lib_sys;
         thr_sch = std::make_shared<kernel::thread_scheduler>(sys, *cpu);
     }
 
@@ -46,4 +52,26 @@ namespace eka2l1 {
     kernel::thread *kernel_system::crr_thread() {
         return thr_sch->current_thread();
     }
+
+	process* kernel_system::spawn_new_process(std::string& path, std::string name, uint32_t uid) {
+		auto res = loader::parse_eka2img(path);
+
+		if (!res) {
+			return nullptr;
+		}
+
+		bool res2 = loader::load_eka2img(res.value(), mem, *libmngr);
+
+		if (!res2) {
+			return nullptr;
+		}
+
+		processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, res.value())));
+		return &(*processes[uid]);
+	}
+
+	process* kernel_system::spawn_new_process(uint32_t uid) {
+		return spawn_new_process(mngr->get_package_manager()->get_app_executable_path(uid),
+			mngr->get_package_manager()->get_app_name(uid), uid);
+	}
 }

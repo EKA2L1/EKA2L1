@@ -8,7 +8,6 @@
 using namespace eka2l1;
 
 std::string rom_path = "SYM.ROM";
-std::string default_sym_9_4_path = "sym94/db.yml";
 
 eka2l1::system symsys;
 
@@ -21,6 +20,7 @@ void print_help() {
 	std::cout << "-sid: Specified the SID path" << std::endl;
 	std::cout << "\t Follow the SID option is the major version, minor version and path" << std::endl;
 	std::cout << "-h/-help: Print help" << std::endl;
+	//std::cout << "-"
 }
 
 void parse_args(int argc, char** argv) {
@@ -32,20 +32,19 @@ void parse_args(int argc, char** argv) {
             print_help();
             help_printed = true;
 		}
-		else if (strncmp(argv[i], "-sid", 4) == 0) {
-			int major = std::atoi(argv[++i]);
-			int minor = std::atoi(argv[++i]);
+		else if ((strncmp(argv[i], "-ver", 4) == 0 || (strncmp(argv[i], "-v", 2) == 0))) {
+			int ver = std::atoi(argv[++i]);
 
-			const char* path = argv[++i];
-			symsys.add_sid(major, minor, path);
+			if (ver == 6) {
+				symsys.set_symbian_version_use(epocver::epoc6);
+			} else {
+				symsys.set_symbian_version_use(epocver::epoc9);
+			}
 		}
     }
 }
 
 void init() {
-	symsys.set_symbian_version_use(9, 4);
-	symsys.add_sid(9, 4, default_sym_9_4_path);
-
     symsys.init();
     bool res = symsys.load_rom(rom_path);
 }

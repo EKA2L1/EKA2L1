@@ -111,5 +111,13 @@ namespace eka2l1 {
 
             return true;
         }
+
+		void thread_scheduler::unschedule_wakeup() {
+			system->unschedule_event(wakeup_evt, 0);
+		}
+
+		void thread_scheduler::unschedule(kernel::uid id) {
+			// ?
+		}
     }
 }

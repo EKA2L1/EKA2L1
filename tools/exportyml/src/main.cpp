@@ -19,6 +19,7 @@ using namespace eka2l1;
 namespace fs = std::experimental::filesystem;
 
 std::vector<fs::path> libs;
+std::ofstream ostr("modules.h");
 YAML::Emitter emitter;
 
 std::string current_lib;
@@ -113,6 +114,7 @@ std::vector<function> read_idt(const fs::path &path) {
             LOG_INFO("{}", cooked);
         } else {
             fts.push_back(function(raw_sauce, common::hash(raw_sauce)));
+			LOG_INFO("{}", raw_sauce);
             free(cooked_sauce);
         }
 
@@ -171,8 +173,7 @@ std::string normalize_for_hash(std::string org) {
     return res;
 }
 
-void yml_link(const fs::path &path) {
-    auto funcs = read_idt(path);
+void yml_link(std::vector<function>& funcs, const fs::path &path) {
     auto lib = path.filename().replace_extension("").string();
 
     emitter << YAML::Key << lib << YAML::Value << YAML::BeginMap;
@@ -186,6 +187,18 @@ void yml_link(const fs::path &path) {
 
         emitter << YAML::EndMap;
     emitter << YAML::EndMap;
+}
+
+void header_link(std::vector<function>& funcs, const fs::path& path) {
+	auto lib = path.filename().replace_extension("").string();
+
+	ostr << "LIB(" << lib << ")" << std::endl;
+
+	for (auto &func : funcs) {
+		ostr << "EXPORT(" << '"' << func.dename << '"' << ", " << func.id << ")" << std::endl;
+	}
+
+	ostr << "ENDLIB()" << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -204,7 +217,12 @@ int main(int argc, char **argv) {
     emitter << YAML::Value << YAML::BeginMap;
 
     for (auto lib : libs) {
-        yml_link(lib);
+		LOG_INFO("Lib: {}", lib.string());
+
+		auto funcs = read_idt(lib);
+
+        yml_link(funcs, lib);
+		header_link(funcs, lib);
     }
 
     emitter << YAML::EndMap;

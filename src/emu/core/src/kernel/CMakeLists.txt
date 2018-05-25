@@ -4,10 +4,12 @@ add_library(corekernel
         ${CORE_INCLUDE_DIR}/kernel/kernel_obj.h
         ${CORE_INCLUDE_DIR}/core_kernel.h
         ${CORE_INCLUDE_DIR}/kernel/scheduler.h
+        ${CORE_INCLUDE_DIR}/kernel/wait_obj.h
         scheduler.cpp
         thread.cpp
         mutex.cpp
         kernel_obj.cpp
+		wait_obj.cpp
         ../core_kernel.cpp)
 
 target_include_directories(corekernel PUBLIC ${CORE_INCLUDE_DIR})

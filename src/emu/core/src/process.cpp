@@ -3,15 +3,23 @@
 
 namespace eka2l1 {
     process::process(kernel_system* kern, memory_system* mem, uint32_t uid,
-        const std::string &process_name, uint32_t epa, size_t min_heap_size,
-        size_t max_heap_size, size_t stack_size)
+        const std::string &process_name, loader::eka2img& img)
         : uid(uid)
         , process_name(process_name)
-        , prthr(kern, mem, process_name, epa, stack_size, min_heap_size, max_heap_size,
-              nullptr, kernel::priority_normal)
+        , prthr(kern, mem, process_name, img.rt_code_addr + img.header.entry_point, 
+			img.header.stack_size, img.header.heap_size_min, img.header.heap_size_max,
+            nullptr, kernel::priority_normal)
         , kern(kern)
-        , mem(mem) {
+        , mem(mem)
+		, img(img) {
     }
+
+	bool process::stop() {
+		prthr.stop();
+		mem->free(img.header.code_offset);
+
+		return true;
+	}
 
     // Create a new thread and run
     // No arguments provided

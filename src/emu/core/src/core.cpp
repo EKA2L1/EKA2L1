@@ -6,69 +6,25 @@
 #include <loader/eka2img.h>
 
 namespace eka2l1 {
-	void system::add_sid(uint8_t major, uint8_t minor, const std::string& path) {
-		sids_path.insert(std::make_pair(
-			std::make_pair(major, minor),
-			path)
-		);
-	}
-
-	void system::set_symbian_version_use(uint8_t major, uint8_t minor) {
-		current_version.emplace(std::make_pair(major, minor));
-	}
-
-	std::optional<symversion> system::get_symbian_version_use() const {
-		return current_version.value();
-	}
-
     void system::init() {
-		symversion ver;
-		ver.first = 9;
-		ver.second = 4;
-
         log::setup_log(nullptr);
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
         mem.init();
 
-		if (current_version) {
-			ver = current_version.value();
-		}
+		hlelibmngr = std::make_unique<hle::lib_manager>(ver);
 
-		hlelibmngr = std::make_unique<hle::lib_manager>(sids_path[ver]);
-
-        cpu = arm::create_jitter(&timing, &mem, &asmdis, arm::jitter_arm_type::unicorn);
+        cpu = arm::create_jitter(&timing, &mem, &asmdis, jit_type);
 
         io.init(&mem);
         mngr.init(&io);
         asmdis.init(&mem);
-        kern.init(&timing, cpu.get());
+        kern.init(&timing, &mngr, &mem, hlelibmngr.get(), cpu.get());
     }
 
-    void system::load(const std::string &name, uint64_t id, const std::string &path) {
-        auto img = loader::parse_eka2img(path);
-
-        if (!img) {
-            LOG_CRITICAL("This is not what i expected! Fake E32Image!");
-            return;
-        }
-
-        loader::eka2img &real_img = img.value();
-        hlelibmngr = std::make_unique<hle::lib_manager>("db.yml");
-
-        bool succ = loader::load_eka2img(real_img, &mem, *hlelibmngr);
-
-        if (!succ) {
-            LOG_CRITICAL("Unable to load EKA2Img!");
-            return;
-        }
-
-        crr_process = std::make_shared<process>(&kern, &mem, id, name, 
-            real_img.rt_code_addr + real_img.header.entry_point,
-            real_img.header.heap_size_min, real_img.header.heap_size_max,
-            real_img.header.stack_size);
-
+    void system::load(uint64_t id) {
+		crr_process = kern.spawn_new_process(id);
         crr_process->run();
     }
 
@@ -122,4 +78,8 @@ namespace eka2l1 {
         mem.shutdown();
         asmdis.shutdown();
     }
+
+	void system::mount(availdrive drv, std::string path) {
+		io.mount(((drv == availdrive::c) ? "C:\\" : "E:\\"), path);
+	}
 }

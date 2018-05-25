@@ -8,6 +8,7 @@
 #include <arm/jit_factory.h>
 #include <disasm/disasm.h>
 #include <manager/manager.h>
+#include <manager/package_manager.h>
 #include <loader/rom.h>
 
 #include <functional>
@@ -18,14 +19,18 @@
 #include <tuple>
 
 namespace eka2l1 {
-	using symversion = std::pair<uint8_t, uint8_t>;
+	enum class availdrive {
+		c,
+		e
+	};
 
     class system {
-        std::shared_ptr<process> crr_process;
+        process* crr_process;
 		std::mutex mut;
 
 		std::unique_ptr<hle::lib_manager> hlelibmngr;
 		arm::jitter cpu;
+		arm::jitter_arm_type jit_type;
 		
 		memory_system mem;
 		kernel_system kern;
@@ -40,25 +45,36 @@ namespace eka2l1 {
 
 		bool reschedule_pending;
 
-		std::map<symversion, std::string> sids_path;
-		std::optional<symversion> current_version;
-
+		epocver ver = epocver::epoc9;
 
     public:
-		system()
-			: hlelibmngr(nullptr) {}
+		system(arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
+			: hlelibmngr(nullptr), jit_type(jit_type) {}
 
-		void add_sid(uint8_t major, uint8_t minor, const std::string& path);
+		void set_symbian_version_use(const epocver ever) {
+			ver = ever;
+		}
 
-		void set_symbian_version_use(uint8_t major, uint8_t minor);
-		std::optional<symversion> get_symbian_version_use() const;
+		epocver get_symbian_version_use() const {
+			return ver;
+		}
 
         void init();
-        void load(const std::string &name, uint64_t id, const std::string &path);
+        void load(uint64_t id);
         int loop();
         void shutdown();
 
+		void mount(availdrive drv, std::string path);
+
 		bool install_package(std::u16string path, uint8_t drv);
 		bool load_rom(const std::string& path);
+
+		uint32_t total_app() {
+			return mngr.get_package_manager()->app_count();
+		}
+
+		std::vector<manager::app_info> app_infos() {
+			return mngr.get_package_manager()->get_apps_info();
+		}
     };
 }

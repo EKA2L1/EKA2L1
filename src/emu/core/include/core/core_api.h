@@ -3,6 +3,9 @@
 #define CPU_UNICORN 0
 #define CPU_DYNARMIC 1
 
+#define EPOC6 0x65243205
+#define EPOC9 0x65243209
+
 // Support Lazarus Pascal GUI and other wants to use EKA2L1 as API
 extern "C" {
     int create_symbian_system(int cpu_type);
@@ -25,11 +28,8 @@ extern "C" {
     int load_rom(int sys, const char* path);
 
 	// Which Symbian version is gonna be used. Get it.
-	int get_current_symbian_use(int sys, unsigned char* major, unsigned char* minor);
+	int get_current_symbian_use(int sys, unsigned int* ver);
 
 	// Which Symbian version is gonna be used. Set it.
-	int set_current_symbian_use(int sys, unsigned char major, unsigned char minor);
-
-	// Add the path to one of the SID database
-	int symbian_system_add_sid(int sys, unsigned char major, unsigned char minor, const char* path);
+	int set_current_symbian_use(int sys, unsigned int ver);
 }

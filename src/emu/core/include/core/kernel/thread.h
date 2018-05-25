@@ -22,7 +22,10 @@ namespace eka2l1 {
             run,
             wait,
             ready,
-            stop
+            stop,
+			suspended,
+			wait_fast_sema,
+			wait_dfc
         };
 
         enum thread_priority {
@@ -84,7 +87,7 @@ namespace eka2l1 {
             }
 
             bool run();
-            bool suspend();
+			bool stop();
 
             // Physically we can't compare thread.
             bool operator>(const thread &rhs);

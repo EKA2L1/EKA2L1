@@ -18,22 +18,26 @@ namespace eka2l1 {
 
     typedef uint32_t address;
 
+	enum class epocver {
+		epoc6,
+		epoc9
+	};
 
     namespace hle {
         // This class is launched at configuration time, so
         // no race condition.
         class lib_manager {
             std::map<std::string, sids> ids;
+			std::map<sid, std::string> func_names;
+
             std::map<std::string, exportaddrs> exports;
 
             std::map<address, sid> addr_map;
 
-            std::shared_ptr<YAML::Node> root;
-
-            void load_all_sids();
+            void load_all_sids(const epocver ver);
 
         public:
-            lib_manager(const std::string db_path);
+            lib_manager(const epocver ver);
             std::optional<sids> get_sids(const std::string& lib_name);
             std::optional<exportaddrs> get_export_addrs(const std::string& lib_name);
 

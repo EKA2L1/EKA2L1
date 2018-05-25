@@ -63,5 +63,24 @@ namespace eka2l1 {
             // Add the thread to the kernel management unit
             kern->add_thread(this);
         }
+
+		bool thread::run() {
+			state = thread_state::run;
+			kern->run_thread(obj_id);
+
+			return true;
+		}
+
+		bool thread::stop() {
+			kern->unschedule_wakeup();
+
+			if (state == thread_state::ready) {
+				kern->unschedule(obj_id);
+			}
+
+			state = thread_state::stop;
+
+			return true;
+		}
     }
 }

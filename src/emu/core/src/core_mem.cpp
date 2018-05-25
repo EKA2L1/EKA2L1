@@ -199,48 +199,30 @@ namespace eka2l1 {
 
     // Load the ROM into virtual memory, using ma
     bool memory_system::load_rom(const std::string& rom_path) {
-#ifndef WIN32
-        struct stat tus;
-        auto res = stat(rom_path.c_str(), &tus);
-
-        if (res == -1) {
-            LOG_ERROR("ROM path is invalid!");
-            return false;
-        }
-
-        int des = open(rom_path.c_str(), O_RDONLY);
-
-        //munmap(get_addr<void>(0x80000000), tus.st_size * 2);
-        auto res2 = mmap(get_addr<void>(0x80000000), tus.st_size* 2, PROT_READ | PROT_EXEC, 
-                MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, des, 0);
-        
-        if (res2 == MAP_FAILED) {
-            return false;
-        }
-
-        return true;
-#else
-        FILE* f = fopen(rom_path.c_str(), "rb");
+		FILE* f = fopen(rom_path.c_str(), "rb");
 
 		if (f == nullptr) {
 			return false;
 		}
 
-        fseek(f, 0, SEEK_END);
+		fseek(f, 0, SEEK_END);
 
-        auto size = ftell(f);
+		auto left = ftell(f);
+		long buf_once = 0;
 
-        fclose(f);
+		ptr<void> start(0x80000000);
 
-        VirtualFree(get_addr<void>(0x80000000), size * 2, MEM_DECOMMIT);
-        HANDLE handle = OpenFileMapping(PAGE_READWRITE, false, rom_path.c_str());
+		while (left) {
+			buf_once = common::min(left, (long)100000);
+			fread(start.get(this), 1, buf_once, f);
+			start += (address)buf_once;
 
-		if (MapViewOfFileEx(handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, size, get_addr<void>(0x80000000)) == nullptr) {
-			return false;
+			left -= buf_once;
 		}
 
+		fclose(f);
+
 		return true;
-#endif
     }
 
     address memory_system::alloc_ime(size_t size) {

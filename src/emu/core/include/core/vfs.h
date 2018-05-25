@@ -10,8 +10,8 @@ namespace eka2l1 {
     class memory;
 
     namespace loader {
-        class rom;
-        class rom_entry;
+        struct rom;
+        struct rom_entry;
     }
 
     enum class file_seek_mode {
