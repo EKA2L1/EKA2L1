@@ -6,7 +6,7 @@ namespace eka2l1 {
         const std::string &process_name, loader::eka2img& img)
         : uid(uid)
         , process_name(process_name)
-        , prthr(kern, mem, process_name, img.rt_code_addr + img.header.entry_point, 
+        , prthr(kern, mem, uid, process_name, img.rt_code_addr + img.header.entry_point,
 			img.header.stack_size, img.header.heap_size_min, img.header.heap_size_max,
             nullptr, kernel::priority_normal)
         , kern(kern)

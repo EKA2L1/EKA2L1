@@ -25,17 +25,18 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-        thread::thread(kernel_system* kern, memory_system* mem, const std::string &name, const address epa, const size_t stack_size,
+        thread::thread(kernel_system* kern, memory_system* mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             void *usrdata,
             thread_priority pri)
-            : kernel_obj(kern, name)
+            : wait_obj(kern, name)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
-            , mem(mem) {
-            priority = caculate_thread_priority(pri);
+            , mem(mem)
+			, owner(owner) {
+		     priority = caculate_thread_priority(pri);
 
             const thread_stack::deleter stack_deleter = [&](address stack) {
                 mem->free(stack);
@@ -58,11 +59,16 @@ namespace eka2l1 {
                 LOG_ERROR("No more heap for thread!");
             }
 
-            // Create thread context
+			scheduler = kern->get_thread_scheduler();
 
             // Add the thread to the kernel management unit
             kern->add_thread(this);
         }
+
+		bool thread::sleep(int64_t ns) {
+			state = thread_state::wait;
+			return scheduler->sleep(this, ns);
+		}
 
 		bool thread::run() {
 			state = thread_state::run;
@@ -72,15 +78,37 @@ namespace eka2l1 {
 		}
 
 		bool thread::stop() {
-			kern->unschedule_wakeup();
+			scheduler->unschedule_wakeup();
 
 			if (state == thread_state::ready) {
-				kern->unschedule(obj_id);
+				scheduler->unschedule(obj_id);
 			}
 
 			state = thread_state::stop;
 
+			wake_up_waiting_threads();
+
+			for (auto& thr : waits) {
+				thr->erase_waiting_thread(thr->unique_id());
+			}
+
+			waits.clear();
+
+			// release mutex
+
 			return true;
+		}
+
+		bool thread::resume() {
+			return scheduler->resume(obj_id);
+		}
+
+		bool thread::should_wait(const kernel::uid id) {
+			return state != thread_state::stop;
+		}
+
+		void thread::acquire(const kernel::uid id) {
+			// :)
 		}
     }
 }

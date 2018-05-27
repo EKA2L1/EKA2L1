@@ -44,6 +44,10 @@ namespace eka2l1 {
 			memory_system* mem_sys, hle::lib_manager* lib_sys, arm::jit_interface* cpu);
         void shutdown();
 
+		std::shared_ptr<kernel::thread_scheduler> get_thread_scheduler() {
+			return thr_sch;
+		}
+
 		void reschedule() {
 			thr_sch->reschedule();
 		}

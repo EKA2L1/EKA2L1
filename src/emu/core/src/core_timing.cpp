@@ -52,6 +52,16 @@ namespace eka2l1 {
         return event_types.size() - 1;
     }
 
+	int timing_system::get_register_event(const std::string& name) {
+		for (uint32_t i = 0; i < event_types.size(); i++) {
+			if (event_types[i].name == name) {
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
     int timing_system::get_downcount() {
         return downcount;
     }

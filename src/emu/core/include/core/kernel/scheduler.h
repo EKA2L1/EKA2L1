@@ -36,7 +36,6 @@ namespace eka2l1 {
         protected:
 			kernel::thread* next_ready_thread();
 
-            void wake_thread(uint64_t id);
             void switch_context(kernel::thread* oldt, kernel::thread* newt);
 
         public:
@@ -49,6 +48,7 @@ namespace eka2l1 {
             bool schedule(kernel::thread *thread);
             bool sleep(kernel::thread *thread, uint32_t sl_time);
 
+			bool resume(kernel::uid id);
 			void unschedule(kernel::uid id);
 
             kernel::thread *current_thread() const {

@@ -13,9 +13,9 @@ namespace eka2l1 {
 			#define ENDLIB() ids.insert(std::make_pair(lib_name, tids)); tids.clear(); 
 
 			if (ver == epocver::epoc6) {
-				#include <hle/epoc6.h>
+				#include <hle/epoc6_n.h>
 			} else {
-				#include <hle/epoc9.h>
+				#include <hle/epoc9_n.h>
 			}
 
 			#undef LIB
