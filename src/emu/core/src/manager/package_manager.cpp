@@ -137,7 +137,7 @@ namespace eka2l1 {
 
             fread(header.magic, 1, 4, file);
 
-            if (strcmp(header.magic, "sdbf") != 0) {
+            if (strncmp(header.magic, "sdbf", 4) != 0) {
                 return false;
             }
 
@@ -306,6 +306,7 @@ namespace eka2l1 {
             // Interpret the file
             loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ifstream::binary),
                 io,
+				this,
                 res.controller.install_block,
                 res.data,
                 loader::sis_drive(drive));

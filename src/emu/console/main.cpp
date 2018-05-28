@@ -11,6 +11,8 @@
 using namespace eka2l1;
 
 std::string rom_path = "SYM.ROM";
+std::string mount_c = "drives/c/";
+std::string mount_e = "drives/e/";
 std::string sis_install_path = "-1";
 
 uint8_t adrive;
@@ -45,7 +47,7 @@ void parse_args(int argc, char** argv) {
 		return;
 	}
 
-    for (int i = 1; i < argc - 1; i++) {
+    for (int i = 1; i <= argc - 1; i++) {
         if (strncmp(argv[i], "-rom", 4) == 0) {
             rom_path = argv[++i];
 			config["rom_path"] = rom_path;
@@ -95,8 +97,8 @@ void do_args() {
 
 	if (list_app) {
 		for (auto& info : infos) {
-			std::cout << info.id << common::ucs2_to_utf8(info.name) << " [drive: " << ((info.drive == 0) ? 'C' : 'E')
-				<< " , executable name: " << common::ucs2_to_utf8(info.executable_name) << "]";
+			std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: " << common::ucs2_to_utf8(info.name) << " (drive: " << ((info.drive == 0) ? 'C' : 'E')
+				<< " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")";
 		}
 
 		quit = true;
@@ -115,7 +117,13 @@ void do_args() {
 	}
 
 	if (sis_install_path != "-1") {
-		symsys.install_package(std::u16string(sis_install_path.begin(), sis_install_path.end()), adrive);
+		auto res = symsys.install_package(std::u16string(sis_install_path.begin(), sis_install_path.end()), adrive);
+
+		if (res) {
+			std::cout << "Install successfully!" << std::endl;
+		} else {
+			std::cout << "Install failed" << std::endl;
+		}
 	}
 }
 
@@ -123,6 +131,9 @@ void init() {
 	symsys.set_symbian_version_use(ever);
 
     symsys.init();
+	symsys.mount(availdrive::c, mount_c);
+	symsys.mount(availdrive::e, mount_e);
+
     bool res = symsys.load_rom(rom_path);
 }
 
@@ -132,8 +143,6 @@ void shutdown() {
 
 int main(int argc, char** argv) {
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
-
-	log::setup_log(nullptr);
 
 	read_config();
     parse_args(argc, argv);

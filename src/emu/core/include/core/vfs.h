@@ -35,7 +35,9 @@ namespace eka2l1 {
         virtual std::u16string file_name() const = 0;
 
         virtual uint64_t size() const = 0;
+
         virtual void seek(uint32_t seek_off, file_seek_mode where) = 0;
+		virtual uint64_t tell() = 0;
 
         virtual bool close() = 0;
     };

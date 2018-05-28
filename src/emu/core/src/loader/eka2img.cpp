@@ -1,4 +1,5 @@
 #include <loader/eka2img.h>
+#include <vfs.h>
 
 #include <ptr.h>
 
@@ -245,66 +246,63 @@ namespace eka2l1 {
             }
         }
 
-        std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc) {
-            LOG_TRACE("Loading image: {}", path);
+		std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true) {
+			if (!ef) {
+				return std::optional<eka2img>{};
+			}
 
             eka2img img;
 
-            FILE *f = fopen(path.c_str(), "rb");
-
-            fseek(f, 0, SEEK_END);
-            auto file_size = ftell(f);
-            fseek(f, 0, SEEK_SET);
-
-            fread(&img.header.uid1, 1, 4, f);
-            fread(&img.header.uid2, 1, 4, f);
-            fread(&img.header.uid3, 1, 4, f);
-            fread(&img.header.check, 1, 4, f);
-            fread(&img.header.sig, 1, 4, f);
+			auto file_size = ef->size();
+			
+            ef->read_file(&img.header.uid1, 1, 4);
+            ef->read_file(&img.header.uid2, 1, 4);
+            ef->read_file(&img.header.uid3, 1, 4);
+            ef->read_file(&img.header.check, 1, 4);
+            ef->read_file(&img.header.sig, 1, 4);
 
             if (img.header.sig != 0x434F5045) {
                 LOG_ERROR("Undefined EKA Image type");
-                fclose(f);
                 return std::optional<eka2img>{};
             }
 
             uint32_t temp = 0;
-            fread(&temp, 1, 4, f);
+            ef->read_file(&temp, 1, 4);
 
             if ((temp == 0x2000) || (temp == 0x1000)) {
                 // Quick hack to determinate if this is an EKA1
                 img.header.cpu = static_cast<loader::eka2_cpu>(temp);
 
-                fread(&temp, 1, 4, f);
-                fread(&temp, 1, 4, f);
-                fread(&img.header.petran_major, 1, 1, f);
-                fread(&img.header.petran_minor, 1, 1, f);
-                fread(&img.header.petran_build, 1, 2, f);
-                fread(&img.header.flags, 1, 4, f);
-                fread(&img.header.code_size, 1, 4, f);
-                fread(&img.header.data_size, 1, 4, f);
-                fread(&img.header.heap_size_min, 1, 4, f);
-                fread(&img.header.heap_size_max, 1, 4, f);
-                fread(&img.header.stack_size, 1, 4, f);
-                fread(&img.header.bss_size, 1, 4, f);
-                fread(&img.header.entry_point, 1, 4, f);
-                fread(&img.header.code_base, 1, 4, f);
-                fread(&img.header.data_base, 1, 4, f);
-                fread(&img.header.dll_ref_table_count, 1, 4, f);
-                fread(&img.header.export_dir_offset, 1, 4, f);
-                fread(&img.header.export_dir_count, 1, 4, f);
-                fread(&img.header.text_size, 1, 4, f);
-                fread(&img.header.code_offset, 1, 4, f);
-                fread(&img.header.data_offset, 1, 4, f);
-                fread(&img.header.import_offset, 1, 4, f);
-                fread(&img.header.code_reloc_offset, 1, 4, f);
-                fread(&img.header.data_reloc_offset, 1, 4, f);
-                fread(&img.header.priority, 1, 2, f);
+                ef->read_file(&temp, 1, 4);
+                ef->read_file(&temp, 1, 4);
+                ef->read_file(&img.header.petran_major, 1, 1);
+                ef->read_file(&img.header.petran_minor, 1, 1);
+                ef->read_file(&img.header.petran_build, 1, 2);
+                ef->read_file(&img.header.flags, 1, 4);
+                ef->read_file(&img.header.code_size, 1, 4);
+                ef->read_file(&img.header.data_size, 1, 4);
+                ef->read_file(&img.header.heap_size_min, 1, 4);
+                ef->read_file(&img.header.heap_size_max, 1, 4);
+                ef->read_file(&img.header.stack_size, 1, 4);
+                ef->read_file(&img.header.bss_size, 1, 4);
+                ef->read_file(&img.header.entry_point, 1, 4);
+                ef->read_file(&img.header.code_base, 1, 4);
+                ef->read_file(&img.header.data_base, 1, 4);
+                ef->read_file(&img.header.dll_ref_table_count, 1, 4);
+                ef->read_file(&img.header.export_dir_offset, 1, 4);
+                ef->read_file(&img.header.export_dir_count, 1, 4);
+                ef->read_file(&img.header.text_size, 1, 4);
+                ef->read_file(&img.header.code_offset, 1, 4);
+                ef->read_file(&img.header.data_offset, 1, 4);
+                ef->read_file(&img.header.import_offset, 1, 4);
+                ef->read_file(&img.header.code_reloc_offset, 1, 4);
+                ef->read_file(&img.header.data_reloc_offset, 1, 4);
+                ef->read_file(&img.header.priority, 1, 2);
 
                 img.header.compression_type = 1;
             } else {
-                fseek(f, 0, SEEK_SET);
-                fread(&img.header, 1, sizeof(eka2img_header), f);
+				ef->seek(0, file_seek_mode::beg);
+                ef->read_file(&img.header, 1, sizeof(eka2img_header));
             }
 
             compress_type ctype = (compress_type)(img.header.compression_type);
@@ -313,7 +311,7 @@ namespace eka2l1 {
             if (img.header.compression_type > 0) {
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
 
-                fread(&img.uncompressed_size, 1, 4, f);
+                ef->read_file(&img.uncompressed_size, 1, 4);
 
                 std::vector<char> temp_buf(file_size);
                 img.data.resize(img.uncompressed_size + img.header.code_offset);
@@ -322,19 +320,19 @@ namespace eka2l1 {
                     img.has_extended_header = true;
                     LOG_INFO("V-Format used, load more (too tired) \\_(-.-)_/");
 
-                    fread(&img.header_extended.info, 1, sizeof(eka2img_vsec_info), f);
-                    fread(&img.header_extended.exception_des, 1, 4, f);
-                    fread(&img.header_extended.spare2, 1, 4, f);
-                    fread(&img.header_extended.export_desc_size, 1, 2, f);
-                    fread(&img.header_extended.export_desc_type, 1, 1, f);
-                    fread(&img.header_extended.export_desc, 1, 1, f);
+                    ef->read_file(&img.header_extended.info, 1, sizeof(eka2img_vsec_info));
+                    ef->read_file(&img.header_extended.exception_des, 1, 4);
+                    ef->read_file(&img.header_extended.spare2, 1, 4);
+                    ef->read_file(&img.header_extended.export_desc_size, 1, 2);
+                    ef->read_file(&img.header_extended.export_desc_type, 1, 1);
+                    ef->read_file(&img.header_extended.export_desc, 1, 1);
                 }
 
                 fseek(f, 0, SEEK_SET);
-                fread(img.data.data(), 1, sizeof(eka2img_header) + 4 + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
+                ef->read_file(img.data.data(), 1, sizeof(eka2img_header) + 4 + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
 
                 fseek(f, img.header.code_offset, SEEK_SET);
-                fread(temp_buf.data(), 1, temp_buf.size(), f);
+                ef->read_file(temp_buf.data(), 1, temp_buf.size());
 
                 if (ctype == compress_type::deflate_c) {
                     // INFLATE IT!
@@ -350,10 +348,16 @@ namespace eka2l1 {
 
                     LOG_INFO("Readed compress, size: {}", readed);
                 } else if (ctype == compress_type::byte_pair_c) {
-                    auto temp_stream = std::make_shared<std::ifstream>(path);
-                    temp_stream->seekg(img.header.code_offset, std::ios::beg);
+					auto crr_pos = ef->tell();
 
-                    common::ibytepair_stream bpstream(path, img.header.code_offset);
+					std::vector<char> temp(ef->size() - crr_pos);
+					ef->read_file(temp.data(), 1, temp.size());
+
+					FILE* tempfile = fopen("bytepairTemp.seg", "wb");
+					fwrite(temp.data(), 1, temp.size(), tempfile);
+					fclose(tempfile);
+
+                    common::ibytepair_stream bpstream("bytepairTemp.seg", img.header.code_offset);
 
                     auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
                     auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
@@ -363,11 +367,9 @@ namespace eka2l1 {
                 img.uncompressed_size = file_size;
 
                 img.data.resize(file_size);
-                fseek(f, SEEK_SET, 0);
-                fread(img.data.data(), 1, img.data.size(), f);
+                ef->seek(0, file_seek_mode::beg);
+                ef->read_file(img.data.data(), 1, img.data.size());
             }
-
-            dump_buf_data(path.substr(0, path.find_last_of(".")) + ".dedat", img.data);
 
             switch (img.header.cpu) {
             case eka2_cpu::armv5:
@@ -437,8 +439,6 @@ namespace eka2l1 {
                 read_relocations(&stream,
                     img.data_reloc_section, img.header.data_reloc_offset);
             }
-
-            fclose(f);
 
             return img;
         }

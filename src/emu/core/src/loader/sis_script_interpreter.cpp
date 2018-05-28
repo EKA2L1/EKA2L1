@@ -3,6 +3,7 @@
 #include <common/path.h>
 #include <common/types.h>
 #include <loader/sis_script_interpreter.h>
+#include <manager/package_manager.h>
 
 #include <vfs.h>
 
@@ -26,7 +27,13 @@ namespace eka2l1 {
 
         bool exists(const utf16_str &str) {
             FILE *temp = fopen(common::ucs2_to_utf8(str).c_str(), "rb");
-            return temp;
+
+			if (temp) {
+				fclose(temp);
+				return true;
+			}
+
+            return false;
         }
 
         std::string get_install_path(const std::u16string &pseudo_path, sis_drive drv) {
@@ -39,17 +46,15 @@ namespace eka2l1 {
             return common::ucs2_to_utf8(raw_path);
         }
 
-        bool appprop(sis_uid uid, sis_property prop) {
+        bool ss_interpreter::appprop(sis_uid uid, sis_property prop) {
             return false;
         }
 
-        bool package(sis_uid uid) {
-            // package_manager& manager = get_package_manager();
-            // if (manager.installed(uid.uid)) {
-            //    return true;
-            // }
-            //
-            // return false;
+        bool ss_interpreter::package(sis_uid uid) {
+            if (mngr->installed(uid.uid)) {
+                return true;
+            }
+            
             return false;
         }
 
@@ -57,12 +62,14 @@ namespace eka2l1 {
             data_stream.reset();
         }
 
-        ss_interpreter::ss_interpreter(std::shared_ptr<std::istream> stream,
+		ss_interpreter::ss_interpreter(std::shared_ptr<std::istream> stream,
             io_system* io,
+			manager::package_manager* pkgmngr,
             sis_install_block inst_blck,
             sis_data inst_data,
             sis_drive inst_drv)
             : data_stream(stream)
+			, mngr(pkgmngr)
             , io(io)
             , install_block(inst_blck)
             , install_data(inst_data)

@@ -65,6 +65,10 @@ namespace eka2l1 {
             }
         }
 
+		uint64_t tell() override {
+			return crr_pos;
+		}
+
         std::u16string file_name() const override {
             return file.name;
         }
@@ -151,6 +155,10 @@ namespace eka2l1 {
             return true;
         }
 
+		uint64_t tell() override {
+			return ftell(file);
+		}
+
         void seek(uint32_t seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg) {
                 fseek(file, seek_off, SEEK_SET);
@@ -221,13 +229,15 @@ namespace eka2l1 {
             partition = current_dir.substr(0, 2);
         }
 
-        partition[0] = std::toupper(partition[0]);
-
         auto res = drives.find(partition);
 
         if (res == drives.end() || res->second.is_in_mem) {
-            //log_error("Could not find partition");
-            return "";
+			partition[0] = std::toupper(partition[0]);
+			res = drives.find(partition);
+
+			if (res == drives.end() || res->second.is_in_mem) {
+				return "";
+			}
         }
 
         current_dir = res->second.real_path + crr_dir.substr(2);

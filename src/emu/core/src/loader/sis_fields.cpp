@@ -2,6 +2,7 @@
 #include <miniz.h>
 
 #include <common/log.h>
+#include <common/advstream.h>
 
 #include <fstream>
 #include <iostream>
@@ -395,10 +396,7 @@ namespace eka2l1 {
         }
 
         void sis_parser::switch_istrstream(char *buf, size_t size) {
-            set_alternative_stream(std::make_shared<std::istringstream>(std::ios::binary));
-
-            reinterpret_cast<std::istringstream *>(alternative_stream.get())->rdbuf()->pubsetbuf(buf, size);
-
+            set_alternative_stream(std::make_shared<std::ifstream>("inflatedController.mt", std::ios::binary));
             switch_stream();
         }
 

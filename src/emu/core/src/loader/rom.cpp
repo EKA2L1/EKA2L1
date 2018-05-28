@@ -152,6 +152,11 @@ namespace eka2l1 {
         std::optional<rom> load_rom(const std::string& path) {
             rom romf;
             romf.handler = fopen(path.c_str(), "rb");
+
+			if (!romf.handler) {
+				return std::optional<rom>{};
+			}
+
             romf.header = read_rom_header(romf.handler);
 
             // Seek to the first entry

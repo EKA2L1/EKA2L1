@@ -12,6 +12,9 @@
 namespace eka2l1 {
     class memory_system;
 
+	struct file;
+	using symfile = std::shared_ptr<file>;
+
     namespace loader {
         enum class eka2_cpu : uint16_t {
             x86 = 0x1000,
@@ -161,6 +164,8 @@ namespace eka2l1 {
         };
 
         std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
+		std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true);
+
         bool load_eka2img(eka2img &img, memory_system* mem, hle::lib_manager& mngr);
     }
 }

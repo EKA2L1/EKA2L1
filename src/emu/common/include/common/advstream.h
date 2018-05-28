@@ -5,6 +5,8 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <fstream>
+#include <streambuf>
 
 namespace eka2l1 {
     namespace common {
@@ -98,5 +100,25 @@ namespace eka2l1 {
                 return stream;
             }
         };
+
+		struct istreambuf : public std::streambuf {
+		private:
+			std::vector<char> buffer;
+
+		public:
+			istreambuf(char* buf, std::streamsize buf_len) {
+				buffer.resize(buf_len);
+				memcpy(buffer.data(), buf, buf_len);
+				this->setg(buffer.data(), buffer.data(), buffer.data() + buffer.size());
+			}
+		};
+
+		struct icbuf : virtual istreambuf, std::istream {
+		public:
+			explicit icbuf(char* buf, std::streamsize buf_len)
+				: istreambuf(buf, buf_len),
+				  std::istream(this)	{
+			}
+		};
     }
 }

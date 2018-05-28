@@ -80,6 +80,6 @@ namespace eka2l1 {
     }
 
 	void system::mount(availdrive drv, std::string path) {
-		io.mount(((drv == availdrive::c) ? "C:\\" : "E:\\"), path);
+		io.mount(((drv == availdrive::c) ? "C:" : "E:"), path);
 	}
 }
