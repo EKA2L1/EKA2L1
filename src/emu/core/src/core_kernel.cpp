@@ -6,6 +6,7 @@
 #include <core_kernel.h>
 #include <core_mem.h>
 #include <manager/manager.h>
+#include <hle/libmanager.h>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
 #include <ptr.h>
@@ -54,19 +55,15 @@ namespace eka2l1 {
     }
 
 	process* kernel_system::spawn_new_process(std::string& path, std::string name, uint32_t uid) {
-		auto res = loader::parse_eka2img(path);
-
-		if (!res) {
-			return nullptr;
-		}
-
-		bool res2 = loader::load_eka2img(res.value(), mem, *libmngr);
+		auto res2 = libmngr->load_e32img(std::u16string(name.begin(), name.end()));
 
 		if (!res2) {
 			return nullptr;
 		}
 
-		processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, res.value())));
+		libmngr->open_e32img(res2);
+
+		processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, *res2)));
 		return &(*processes[uid]);
 	}
 

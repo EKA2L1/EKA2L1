@@ -13,14 +13,13 @@ namespace eka2l1 {
         timing.init();
         mem.init();
 
-		hlelibmngr = std::make_unique<hle::lib_manager>(ver);
-
         cpu = arm::create_jitter(&timing, &mem, &asmdis, jit_type);
 
         io.init(&mem);
         mngr.init(&io);
         asmdis.init(&mem);
-        kern.init(&timing, &mngr, &mem, hlelibmngr.get(), cpu.get());
+		hlelibmngr.init(&io, &mem, ver);
+        kern.init(&timing, &mngr, &mem, &hlelibmngr, cpu.get());
     }
 
     void system::load(uint64_t id) {

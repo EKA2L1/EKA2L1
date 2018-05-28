@@ -13,6 +13,7 @@ namespace YAML {
 
 namespace eka2l1 {
 	class io_system;
+	class memory_system;
 
     using sid = uint32_t;
     using sids = std::vector<uint32_t>;
@@ -38,7 +39,7 @@ namespace eka2l1 {
         // This class is launched at configuration time, so
         // no race condition.
         class lib_manager {
-            std::map<std::string, sids> ids;
+            std::map<std::u16string, sids> ids;
 			std::map<sid, std::string> func_names;
 
             std::map<std::u16string, exportaddrs> exports;
@@ -56,11 +57,13 @@ namespace eka2l1 {
 			void load_all_sids(const epocver ver);
 
 			io_system* io;
+			memory_system* mem;
 
         public:
-            lib_manager(const epocver ver);
+			lib_manager() {};
+			void init(io_system* ios, memory_system* mems, epocver ver);
 
-            std::optional<sids> get_sids(const std::string& lib_name);
+            std::optional<sids> get_sids(const std::u16string& lib_name);
             std::optional<exportaddrs> get_export_addrs(const std::u16string& lib_name);
 
 			// Image name
@@ -69,6 +72,9 @@ namespace eka2l1 {
 
 			// Open the image code segment
 			void open_e32img(loader::e32img_ptr& img);
+			
+			// Close the image code segment. Means that the image will be unloaded, XIP turns to false
+			void close_e32img(loader::e32img_ptr& img);
 
             // Register export addresses for desired HLE library
             // This will also map the export address with the correspond SID

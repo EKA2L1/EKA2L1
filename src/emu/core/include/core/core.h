@@ -9,6 +9,7 @@
 #include <disasm/disasm.h>
 #include <manager/manager.h>
 #include <manager/package_manager.h>
+#include <hle/libmanager.h>
 #include <loader/rom.h>
 
 #include <functional>
@@ -28,7 +29,7 @@ namespace eka2l1 {
         process* crr_process;
 		std::mutex mut;
 
-		std::unique_ptr<hle::lib_manager> hlelibmngr;
+		hle::lib_manager hlelibmngr;
 		arm::jitter cpu;
 		arm::jitter_arm_type jit_type;
 		
@@ -49,7 +50,7 @@ namespace eka2l1 {
 
     public:
 		system(arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
-			: hlelibmngr(nullptr), jit_type(jit_type) {}
+			: jit_type(jit_type) {}
 
 		void set_symbian_version_use(const epocver ever) {
 			ver = ever;

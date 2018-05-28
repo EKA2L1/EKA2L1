@@ -1,16 +1,25 @@
 #include <hle/libmanager.h>
 #include <common/log.h>
+#include <loader/eka2img.h>
+#include <loader/romimage.h>
 #include <vfs.h>
 
 namespace eka2l1 {
     namespace hle {
+		void lib_manager::init(io_system* ios, memory_system* mems, epocver ver) {
+			io = ios;
+			mem = mems;
+
+			load_all_sids(ver);
+		}
+
         void lib_manager::load_all_sids(const epocver ver) {
 			std::vector<sid> tids;
 			std::string lib_name;
 
 			#define LIB(x) lib_name = #x;
 			#define EXPORT(x, y) tids.push_back(y); func_names.insert(std::make_pair(y, x)); 
-			#define ENDLIB() ids.insert(std::make_pair(lib_name, tids)); tids.clear(); 
+			#define ENDLIB() ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); tids.clear(); 
 
 			if (ver == epocver::epoc6) {
 				#include <hle/epoc6_n.h>
@@ -23,7 +32,7 @@ namespace eka2l1 {
 			#undef ENLIB
         }
 
-        std::optional<sids> lib_manager::get_sids(const std::string& lib_name) {
+        std::optional<sids> lib_manager::get_sids(const std::u16string& lib_name) {
             auto res = ids.find(lib_name);
 
             if (res == ids.end()) {
@@ -41,10 +50,6 @@ namespace eka2l1 {
             }
 
             return res->second;
-        }
-
-        lib_manager::lib_manager(const epocver ver) {
-            load_all_sids(ver);
         }
 
         bool lib_manager::register_exports(const std::u16string& lib_name, exportaddrs& addrs) {           
@@ -101,7 +106,13 @@ namespace eka2l1 {
 				}
 			}
 
-			loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(loader::parse_eka2img(img));
+			auto res = loader::parse_eka2img(img);
+
+			if (!res) {
+				return loader::e32img_ptr(nullptr);
+			}
+
+			loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());
 			
 			if (e32imgs_cache.find(pimg->header.check) != e32imgs_cache.end()) {
 				img->close();
@@ -131,6 +142,49 @@ namespace eka2l1 {
 					return loader::romimg_ptr(nullptr);
 				}
 			}
+
+			auto res = loader::parse_romimg(romimgf);
+
+			if (!res) {
+				return loader::romimg_ptr(nullptr);
+			}
+
+			if (romimgs_cache.find(res->header.code_checksum) != romimgs_cache.end()) {
+				romimgf->close();
+				return romimgs_cache[res->header.code_checksum];
+			}
+
+			romimgs_cache.emplace(res->header.code_checksum, std::make_shared<loader::romimg>(res.value()));
+			return romimgs_cache[res->header.code_checksum];
+		}
+
+		// Open the image code segment
+		void lib_manager::open_e32img(loader::e32img_ptr& img) {
+			auto res = e32imgs_cache.find(img->header.check);
+
+			if (res == e32imgs_cache.end()) {
+				LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
+				return;
+			}
+
+			// If the image is not XIP, means that it's unloaded or not loaded
+			if (!res->second.is_xip) {
+				loader::load_eka2img(*img, mem, *this);
+				res->second.is_xip = true;
+			}
+		}
+
+		// Close the image code segment. Means that the image will be unloaded, XIP turns to false
+		void lib_manager::close_e32img(loader::e32img_ptr& img) {
+			auto res = e32imgs_cache.find(img->header.check);
+
+			if (res == e32imgs_cache.end()) {
+				LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
+				return;
+			}
+
+			mem->free(img->rt_code_addr);
+			res->second.is_xip = false;
 		}
     }
 }

@@ -98,6 +98,6 @@ namespace eka2l1 {
         std::string get(std::string vir_path);
 
         // Open a file. Return is a shared pointer of the file interface.
-        std::shared_ptr<file> open_file(utf16_str vir_path, int mode);
+        std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
     };
 }

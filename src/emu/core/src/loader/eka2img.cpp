@@ -93,14 +93,13 @@ namespace eka2l1 {
 
         void import_libs(eka2img *img, memory_system* mem, uint32_t rtcode_addr, hle::lib_manager& mngr) {
             for (auto &import_entry : img->import_section.imports) {
-				auto exports = mngr.get_export_addrs(import_entry.dll_name);
+				auto exports = mngr.get_export_addrs(std::u16string(import_entry.dll_name.begin(), import_entry.dll_name.end()));
 
 				if (!exports) {
 					LOG_CRITICAL("No export addresses provided for: {}", import_entry.dll_name);
 					continue;
 				}
 
-			
 				for (uint32_t i = 0; i < import_entry.number_of_imports; i++) {
 					write(ptr<uint32_t>(import_entry.ordinals[i]).get(mem), exports.value()[i]);
                 }
@@ -246,7 +245,7 @@ namespace eka2l1 {
             }
         }
 
-		std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true) {
+		std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc) {
 			if (!ef) {
 				return std::optional<eka2img>{};
 			}
@@ -328,10 +327,10 @@ namespace eka2l1 {
                     ef->read_file(&img.header_extended.export_desc, 1, 1);
                 }
 
-                fseek(f, 0, SEEK_SET);
-                ef->read_file(img.data.data(), 1, sizeof(eka2img_header) + 4 + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
+				ef->seek(0, file_seek_mode::beg);
+                ef->read_file(img.data.data(), 1, sizeof(eka2img_header) + 4 + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0));
 
-                fseek(f, img.header.code_offset, SEEK_SET);
+				ef->seek(img.header.code_offset, file_seek_mode::beg);
                 ef->read_file(temp_buf.data(), 1, temp_buf.size());
 
                 if (ctype == compress_type::deflate_c) {

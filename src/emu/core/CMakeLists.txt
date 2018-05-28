@@ -42,7 +42,6 @@ target_link_libraries(core PRIVATE
         coretiming 
         coreio
         arm
-        #abi
         coreloader
         coremanager
 		common)
