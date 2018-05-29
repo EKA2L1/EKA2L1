@@ -9,7 +9,7 @@ namespace eka2l1 {
     class ptr;
 
     namespace loader {
-        class eka2img;
+        struct eka2img;
     }
 
     enum {

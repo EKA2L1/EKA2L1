@@ -65,6 +65,10 @@ namespace eka2l1 {
             }
         }
 
+		std::string get_error_descriptor() override {
+			return "no";
+		}
+
 		uint64_t tell() override {
 			return crr_pos;
 		}
@@ -172,6 +176,10 @@ namespace eka2l1 {
         std::u16string file_name() const override {
             return input_name;
         }
+
+		std::string get_error_descriptor() override {
+			return "no";
+		}
     };
 
     void io_system::init(memory_system* smem) {
@@ -263,7 +271,7 @@ namespace eka2l1 {
             return std::optional<drive>{};
         }
 
-        std::string path_dvc = vir_path.substr(0, 3);
+        std::string path_dvc = vir_path.substr(0, 2);
 
         auto findres = drives.find(path_dvc);
 
@@ -318,7 +326,7 @@ namespace eka2l1 {
 
         drive drv = res.value();
 
-        if (drv.is_in_mem && mode == WRITE_MODE) {
+        if (drv.is_in_mem && (mode & WRITE_MODE)) {
             auto rom_entry = burn_tree_find_entry(std::string(vir_path.begin(), vir_path.end()));
             
             if (!rom_entry) {

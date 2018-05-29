@@ -40,6 +40,8 @@ namespace eka2l1 {
 		virtual uint64_t tell() = 0;
 
         virtual bool close() = 0;
+
+		virtual std::string get_error_descriptor() = 0;
     };
 
     using symfile = std::shared_ptr<file>;

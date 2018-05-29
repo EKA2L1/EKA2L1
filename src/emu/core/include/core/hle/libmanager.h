@@ -48,6 +48,7 @@ namespace eka2l1 {
 			struct e32img_inf {
 				loader::e32img_ptr img;
 				bool is_xip;
+				bool is_rom;
 			};
 			
 			// Caches the image
