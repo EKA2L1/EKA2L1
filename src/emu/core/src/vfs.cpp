@@ -31,6 +31,7 @@ namespace eka2l1 {
 
         void init() {
             file_ptr = ptr<char>(file.address_lin);
+			crr_pos = 0;
         }
 
         uint64_t size() const override {
@@ -39,7 +40,7 @@ namespace eka2l1 {
 
         int read_file(void* data, uint32_t size, uint32_t count) override {
             auto will_read = std::min((uint64_t)count * size, file.size - crr_pos);
-            memcpy(data, &file_ptr.get(mem)[crr_pos], will_read);
+            memcpy(data, &(file_ptr.get(mem)[crr_pos]), will_read);
 
             crr_pos += will_read;
 
@@ -200,6 +201,16 @@ namespace eka2l1 {
         crr_dir = new_dir;
     }
 
+	void io_system::mount_rom(const std::string& dvc, loader::rom* rom) {
+		rom_cache = rom;
+
+		drive drv;
+		drv.is_in_mem = true;
+		drv.drive_name = dvc;
+
+		drives.insert(std::make_pair(dvc, drv));
+	}
+
     void io_system::mount(const std::string &dvc, const std::string &real_path) {
         auto find_res = drives.find(dvc);
 
@@ -284,30 +295,32 @@ namespace eka2l1 {
 
     // Gurantees that these path are ASCII (ROM you says ;) )
     std::optional<loader::rom_entry> io_system::burn_tree_find_entry(const std::string& vir_path) {
-        auto dirs = rom_cache->root[0].dir.subdirs;
+		std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
         auto ite = path_iterator(vir_path);
 
-        loader::rom_dir* last_dir_found; 
+        loader::rom_dir last_dir_found; 
 
-        ++ite;
-
+		++ite;
+		
         for (; ite; ++ite) {
             auto res1 = std::find_if(dirs.begin(), dirs.end(),
-                [ite](auto p1) { return p1->name == utf16_str((*ite).begin(), (*ite).end()); });
+                [ite](auto p1) { return _strcmpi((common::ucs2_to_utf8(p1.name)).data(), (*ite).data()) == 0; });
 
             if (res1 != dirs.end()) {
-                dirs = (*res1)->subdirs;
-                last_dir_found = *res1;
-            }
-
-            return std::optional<loader::rom_entry>{};
+				last_dir_found = *res1;
+                dirs = res1->subdirs;
+			}
          }
 
+		if (ite) {
+			return std::optional<loader::rom_entry>{};
+		}
+
         // Save the last
-        auto entries = last_dir_found->entries;
+        auto entries = last_dir_found.entries;
 
         auto res2 = std::find_if(entries.begin(), entries.end(),
-            [ite](auto p2) { return p2.name == utf16_str((*ite).begin(), (*ite).end()); });
+            [ite](auto p2) { return _strcmpi((common::ucs2_to_utf8(p2.name)).data(), (*ite).data()) == 0; });
 
         if (res2 != entries.end() && !res2->dir) {
             return *res2;
@@ -326,7 +339,7 @@ namespace eka2l1 {
 
         drive drv = res.value();
 
-        if (drv.is_in_mem && (mode & WRITE_MODE)) {
+        if (drv.is_in_mem && !(mode & WRITE_MODE)) {
             auto rom_entry = burn_tree_find_entry(std::string(vir_path.begin(), vir_path.end()));
             
             if (!rom_entry) {

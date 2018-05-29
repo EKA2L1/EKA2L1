@@ -61,7 +61,7 @@ namespace eka2l1 {
         }
 
         romf = romf_res.value();
-        io.set_rom_cache(&romf);
+		io.mount_rom("Z:", &romf);
 
         bool res1 = mem.load_rom(path);
 

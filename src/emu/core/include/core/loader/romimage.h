@@ -65,7 +65,7 @@ namespace eka2l1 {
             std::vector<uint32_t> exports;
         };
 
-        std::optional<romimg> parse_romimg(symfile& file);
-        bool stub_romimg(romimg& img, memory_system* mem, disasm* asmdis);
+        std::optional<romimg> parse_romimg(symfile& file, memory_system* mem);
+        bool stub_romimg(romimg& img, memory_system* mem, disasm* asmdis, hle::lib_manager);
     }
 }

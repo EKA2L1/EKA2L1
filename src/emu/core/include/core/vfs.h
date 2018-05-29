@@ -74,9 +74,6 @@ namespace eka2l1 {
     public:
         // Initialize the IO system
         void init(memory_system* smem);
-        void set_rom_cache(loader::rom* rom) {
-            rom_cache = rom;
-        }
 
         // Shutdown the IO system
         void shutdown();
@@ -91,7 +88,7 @@ namespace eka2l1 {
         void mount(const std::string &dvc, const std::string &real_path);
 
         // Mount a ROM to a device. This is usually Z:
-        void mount_rom(const std::string& dvc, const std::string& rom_path);
+        void mount_rom(const std::string& dvc, loader::rom* rom);
 
         // Unmount a device
         void unmount(const std::string &dvc);

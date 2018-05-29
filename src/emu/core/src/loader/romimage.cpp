@@ -9,16 +9,22 @@
 
 namespace eka2l1 {
     namespace loader {
+		uint32_t rom_to_offset_n(address romstart, address off) {
+			return off - romstart;
+		}
+
         // Unstable
-        std::optional<romimg> parse_romimg(symfile& file) {
+        std::optional<romimg> parse_romimg(symfile& file, memory_system* mem) {
             romimg img;
             file->read_file(&img, 1, sizeof(rom_image_header));
-            file->seek(img.header.export_dir_address, file_seek_mode::beg);
+
+			ptr<uint32_t> export_off(img.header.export_dir_address);
 
             img.exports.resize(img.header.export_dir_count);
 
             for (auto& exp: img.exports) {
-                file->read_file(&exp, 1, 4);
+				exp = *export_off.get(mem);
+				export_off += 4;
             }
 
             return img;
@@ -48,7 +54,7 @@ namespace eka2l1 {
         }
 
         // Stub the export with NOP
-        bool stub_romimg(romimg& img, std::string name, memory_system* mem, disasm* asmdis) {
+        bool stub_romimg(romimg& img, memory_system* mem, disasm* asmdis) {
             for (uint32_t i = 0; i < img.exports.size(); i++) {
 				stub_export(mem, asmdis, img.exports[i]);
             }
