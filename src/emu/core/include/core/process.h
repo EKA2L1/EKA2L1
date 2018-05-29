@@ -20,11 +20,12 @@ namespace eka2l1 {
     class process {
         uint32_t uid;
         std::string process_name;
-        kernel::thread prthr;
-        kernel_system* kern;
-        memory_system* mem;
+		kernel::thread prthr;
 
 		loader::e32img_ptr img;
+
+		kernel_system* kern;
+		memory_system* mem;
 
 		std::vector<kernel::thread*> own_threads;
 

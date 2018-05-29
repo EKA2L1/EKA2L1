@@ -161,6 +161,11 @@ void save_config() {
 	config_file << config;
 }
 
+void do_quit() {
+	save_config();
+	symsys.shutdown();
+}
+
 int main(int argc, char** argv) {
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
 
@@ -168,7 +173,7 @@ int main(int argc, char** argv) {
     parse_args(argc, argv);
 
 	if (quit) {
-		save_config();
+		do_quit();
 		return 0;
 	}
 
@@ -176,9 +181,11 @@ int main(int argc, char** argv) {
 	do_args();
 
 	if (quit) {
-		save_config();
+		do_quit();
 		return 0;
 	}
+
+	do_quit();
 
     return 0;
 }

@@ -114,8 +114,7 @@ namespace eka2l1 {
         const size_t page = addr / page_size;
         const gen generation = allocated_pages[page];
 
-        const size_t page_heap_end = (DLL_STATIC_DATA / page_size) - 1;
-        const auto end_heap_page = allocated_pages.begin() + page_heap_end;
+        const auto end_heap_page = allocated_pages.end();
 
         const auto different_gen = std::bind(std::not_equal_to<gen>(), generation, std::placeholders::_1);
         const auto &first_page = allocated_pages.begin() + page;

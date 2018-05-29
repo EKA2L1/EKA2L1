@@ -24,6 +24,7 @@ namespace eka2l1 {
 
     process* system::load(uint64_t id) {
 		crr_process = kern.spawn_new_process(id);
+		crr_process->run();
 		return crr_process;
     }
 

@@ -87,15 +87,20 @@ namespace eka2l1 {
 			return false;
 		}
 
+		LOG_TRACE("Shutdown process with UID: 0x{:x}", pr->get_uid());
+
+		pr->stop();
+
 		libmngr->close_e32img(pr->get_e32img());
 		processes.erase(pr->get_uid());
 
 		return true;
 	}
 
+	// TODO: Fix this poorly written code
 	bool kernel_system::close_all_processes() {
-		for (const auto&[id, pr] : processes) {
-			if (!close_process(&(*pr))) {
+		while (processes.size() > 0) {
+			if (!close_process(&(*processes.begin()->second))) {
 				return false;
 			}
 		}

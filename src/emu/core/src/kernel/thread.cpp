@@ -38,7 +38,7 @@ namespace eka2l1 {
 			, owner(owner) {
 		     priority = caculate_thread_priority(pri);
 
-            const thread_stack::deleter stack_deleter = [&](address stack) {
+            const thread_stack::deleter stack_deleter = [mem](address stack) {
                 mem->free(stack);
             };
 

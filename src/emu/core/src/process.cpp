@@ -16,8 +16,6 @@ namespace eka2l1 {
 
 	bool process::stop() {
 		prthr.stop();
-		mem->free(img->header.code_offset);
-
 		return true;
 	}
 

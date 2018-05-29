@@ -56,7 +56,6 @@ namespace eka2l1 {
             arm::jit_interface::thread_context ctx;
 
             int priority;
-            thread_stack_ptr stack;
 
             size_t stack_size;
             size_t min_heap_size, max_heap_size;
@@ -66,6 +65,8 @@ namespace eka2l1 {
 
             memory_system* mem;
 			uint32_t lrt;
+
+			thread_stack_ptr stack;
 
 			// Owner of the thread
 			uint32_t owner;
