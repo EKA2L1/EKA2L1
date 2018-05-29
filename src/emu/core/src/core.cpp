@@ -19,12 +19,12 @@ namespace eka2l1 {
         mngr.init(&io);
         asmdis.init(&mem);
 		hlelibmngr.init(&io, &mem, ver);
-        kern.init(&timing, &mngr, &mem, &hlelibmngr, cpu.get());
+        kern.init(&timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
     }
 
-    void system::load(uint64_t id) {
+    process* system::load(uint64_t id) {
 		crr_process = kern.spawn_new_process(id);
-        crr_process->run();
+		return crr_process;
     }
 
     int system::loop() {

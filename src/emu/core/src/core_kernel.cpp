@@ -5,6 +5,8 @@
 
 #include <core_kernel.h>
 #include <core_mem.h>
+#include <vfs.h>
+#include <common/log.h>
 #include <manager/manager.h>
 #include <hle/libmanager.h>
 #include <kernel/scheduler.h>
@@ -13,19 +15,22 @@
 
 namespace eka2l1 {
     void kernel_system::init(timing_system* sys, manager_system* mngrsys,
-		memory_system* mem_sys, hle::lib_manager* lib_sys, arm::jit_interface* cpu) {
+		memory_system* mem_sys, io_system* io_sys, hle::lib_manager* lib_sys, arm::jit_interface* cpu) {
         // Intialize the uid with zero
         crr_uid.store(0);
         timing = sys;
 		mngr = mngrsys;
 		mem = mem_sys;
 		libmngr = lib_sys;
+		io = io_sys;
         thr_sch = std::make_shared<kernel::thread_scheduler>(sys, *cpu);
     }
 
     void kernel_system::shutdown() {
         thr_sch.reset();
         crr_uid.store(0);
+
+		close_all_processes();
     }
 
     kernel::uid kernel_system::next_uid() {
@@ -55,7 +60,7 @@ namespace eka2l1 {
     }
 
 	process* kernel_system::spawn_new_process(std::string& path, std::string name, uint32_t uid) {
-		auto res2 = libmngr->load_e32img(std::u16string(name.begin(), name.end()));
+		auto res2 = libmngr->load_e32img(std::u16string(path.begin(), path.end()));
 
 		if (!res2) {
 			return nullptr;
@@ -63,12 +68,38 @@ namespace eka2l1 {
 
 		libmngr->open_e32img(res2);
 
-		processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, *res2)));
+		processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, res2)));
+
+		LOG_INFO("Process name: {}, uid: 0x{:x} loaded, ready for command to run.", name, uid);
+
 		return &(*processes[uid]);
 	}
 
 	process* kernel_system::spawn_new_process(uint32_t uid) {
 		return spawn_new_process(mngr->get_package_manager()->get_app_executable_path(uid),
 			mngr->get_package_manager()->get_app_name(uid), uid);
+	}
+
+	bool kernel_system::close_process(process* pr) {
+		auto res = processes.find(pr->get_uid());
+
+		if (res == processes.end()) {
+			return false;
+		}
+
+		libmngr->close_e32img(pr->get_e32img());
+		processes.erase(pr->get_uid());
+
+		return true;
+	}
+
+	bool kernel_system::close_all_processes() {
+		for (const auto&[id, pr] : processes) {
+			if (!close_process(&(*pr))) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

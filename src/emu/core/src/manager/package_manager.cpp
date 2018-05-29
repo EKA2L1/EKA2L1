@@ -105,14 +105,14 @@ namespace eka2l1 {
             }
 
             for (auto &c_app : c_apps) {
-                int size = c_app.second.name.size();
+                int size = c_app.second.executable_name.size();
 
                 fwrite(&size, 1, 4, file);
-                fwrite(c_app.second.executable_name.data(), 2, c_app.second.executable_name.size(), file);
+                fwrite(&c_app.second.executable_name[0], 2, c_app.second.executable_name.size(), file);
             }
 
             for (auto &e_app : e_apps) {
-                int size = e_app.second.name.size();
+                int size = e_app.second.executable_name.size();
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&e_app.second.executable_name[0], 2, e_app.second.executable_name.size(), file);
@@ -210,7 +210,7 @@ namespace eka2l1 {
                 info.drive = drives[i];
                 info.name = names[i];
                 info.vendor_name = vendor_names[i];
-                info.executable_name = exe_names[i];
+                info.executable_name = exe_names[i].data();
 				info.id = uids[i];
 
                 // Drive C
@@ -346,7 +346,7 @@ namespace eka2l1 {
 
 		std::string package_manager::get_app_executable_path(uint32_t uid) {
 			app_info inf = info(uid);
-			std::string res = (inf.drive == 0) ? "C" : "E";
+			std::string res = (inf.drive == 0) ? "C:" : "E:";
 			res += "/sys/bin/";
 			res += common::ucs2_to_utf8(inf.executable_name);
 

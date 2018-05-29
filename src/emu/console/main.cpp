@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <fstream>
 
 #include <yaml-cpp/yaml.h>
 #include <loader/rom.h>
@@ -21,6 +22,8 @@ eka2l1::system symsys;
 eka2l1::epocver ever = epocver::epoc9;
 
 YAML::Node config;
+
+int drive_mount;
 
 int app_idx = -1;
 
@@ -74,6 +77,14 @@ void parse_args(int argc, char** argv) {
 		else if (strncmp(argv[i], "-install", 8) == 0) {
 			adrive = std::atoi(argv[++i]);
 			sis_install_path = argv[++i];
+		} else if (strncmp(argv[i], "-mount", 6) == 0) {
+			drive_mount = std::atoi(argv[++i]);
+
+			if (drive_mount == 0) {
+				mount_c = argv[++i];
+			} else {
+				mount_e = argv[++i];
+			}
 		}
     }
 }
@@ -81,15 +92,14 @@ void parse_args(int argc, char** argv) {
 void read_config() {
 	try {
 		config = YAML::LoadFile("config.yml");
+
+		rom_path = config["rom_path"].as<std::string>();
+		ever = (eka2l1::epocver)(config["epoc_ver"].as<int>());
 	}
-	catch (YAML::BadFile* badboy) {
-		LOG_ERROR("YAML-cpp error: {}", badboy->msg);
-		LOG_INFO("Can not load config, use default configuration");
+	catch (...) {
+		//LOG_INFO("Can not load config, use default configuration");
 		return;
 	}
-
-	rom_path = config["rom_path"].as<std::string>();
-	ever = (eka2l1::epocver)(config["epoc_ver"].as<int>());
 }
 
 void do_args() {
@@ -98,7 +108,7 @@ void do_args() {
 	if (list_app) {
 		for (auto& info : infos) {
 			std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: " << common::ucs2_to_utf8(info.name) << " (drive: " << ((info.drive == 0) ? 'C' : 'E')
-				<< " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")";
+				<< " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
 		}
 
 		quit = true;
@@ -141,6 +151,16 @@ void shutdown() {
     symsys.shutdown();
 }
 
+void save_config() {
+	config["rom_path"] = rom_path;
+	config["epoc_ver"] = (int)ever;
+	config["c_mount"] = mount_c;
+	config["e_mount"] = mount_e;
+
+	std::ofstream config_file("config.yml");
+	config_file << config;
+}
+
 int main(int argc, char** argv) {
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
 
@@ -148,6 +168,7 @@ int main(int argc, char** argv) {
     parse_args(argc, argv);
 
 	if (quit) {
+		save_config();
 		return 0;
 	}
 
@@ -155,6 +176,7 @@ int main(int argc, char** argv) {
 	do_args();
 
 	if (quit) {
+		save_config();
 		return 0;
 	}
 

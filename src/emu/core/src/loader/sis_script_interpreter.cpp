@@ -313,14 +313,17 @@ namespace eka2l1 {
             auto install_file = [&](sis_install_block inst_blck, uint16_t crr_blck_idx) {
                 for (auto &wrap_file : inst_blck.files.fields) {
                     sis_file_des *file = (sis_file_des *)(wrap_file.get());
-                    std::string raw_path = io->get(get_install_path(file->target.unicode_string, install_drive));
+					std::string raw_path = "";
+
+					if (file->target.unicode_string.length() > 0) 
+						raw_path = io->get(get_install_path(file->target.unicode_string, install_drive));
 
                     if (file->op == ss_op::EOpText) {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);
                         //extract_file_with_buf(raw_path, buf);
                         //show_text_func(buf);
 
-                        LOG_INFO("EOpText");
+                        LOG_INFO("EOpText: {}", buf.data());
                     } else if (file->op == ss_op::EOpRun) {
                         // Doesn't do anything yet.
                         LOG_INFO("EOpRun {}", raw_path);

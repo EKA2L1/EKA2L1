@@ -207,7 +207,15 @@ namespace eka2l1 {
 
 		fseek(f, 0, SEEK_END);
 
-		auto left = ftell(f);
+		auto size = ftell(f);
+		auto left = size;
+
+#ifdef WIN32
+		VirtualProtect(ptr<void>(0x80000000).get(this), left, PAGE_READWRITE, nullptr);
+#else
+		mprotect(ptr<void>(0x80000000).get(this), left, PROT_READ | PROT_WRITE);
+#endif
+
 		long buf_once = 0;
 
 		ptr<void> start(0x80000000);
@@ -222,6 +230,11 @@ namespace eka2l1 {
 
 		fclose(f);
 
+#ifdef WIN32
+		VirtualProtect(ptr<void>(0x80000000).get(this), size, PAGE_READONLY, nullptr);
+#else
+		mprotect(ptr<void>(0x80000000).get(this), size, PROT_READ);
+#endif
 		return true;
     }
 

@@ -70,6 +70,7 @@ namespace eka2l1 {
         };
 
         struct eka2img_iat {
+			uint32_t number_imports;
             std::vector<uint32_t> its;
         };
 

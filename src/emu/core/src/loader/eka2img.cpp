@@ -82,8 +82,7 @@ namespace eka2l1 {
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
                     if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
-                        LOG_TRACE("Relocate fail at page: {}", i);
-                        return false;
+                        LOG_WARN("Relocate fail at page: {}", i);
                     }
                 }
             }
@@ -203,6 +202,8 @@ namespace eka2l1 {
                     stream->read(reinterpret_cast<void *>(&rel_info), 2);
                 }
 
+				i += reloc_entry.rels_info.size();
+
                 section.entries.push_back(reloc_entry);
             }
         }
@@ -239,6 +240,10 @@ namespace eka2l1 {
 
         void parse_iat(eka2img &img) {
             uint32_t *imp_addr = reinterpret_cast<uint32_t *>(img.data.data() + img.header.code_offset + img.header.text_size);
+
+			if (*imp_addr != 0) {
+
+			}
 
             while (*imp_addr != 0) {
                 img.iat.its.push_back(*imp_addr++);
@@ -309,29 +314,33 @@ namespace eka2l1 {
 
             if (img.header.compression_type > 0) {
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
-
                 ef->read_file(&img.uncompressed_size, 1, 4);
 
-                std::vector<char> temp_buf(file_size);
+				if (header_format == 2) {
+					img.has_extended_header = true;
+					LOG_INFO("V-Format used, load more (too tired) \\_(-.-)_/");
+
+					ef->read_file(&img.header_extended.info, 1, sizeof(eka2img_vsec_info));
+					ef->read_file(&img.header_extended.exception_des, 1, 4);
+					ef->read_file(&img.header_extended.spare2, 1, 4);
+					ef->read_file(&img.header_extended.export_desc_size, 1, 2);
+					ef->read_file(&img.header_extended.export_desc_type, 1, 1);
+					ef->read_file(&img.header_extended.export_desc, 1, 1);
+				} 
+
                 img.data.resize(img.uncompressed_size + img.header.code_offset);
 
-                if (header_format == 2) {
-                    img.has_extended_header = true;
-                    LOG_INFO("V-Format used, load more (too tired) \\_(-.-)_/");
-
-                    ef->read_file(&img.header_extended.info, 1, sizeof(eka2img_vsec_info));
-                    ef->read_file(&img.header_extended.exception_des, 1, 4);
-                    ef->read_file(&img.header_extended.spare2, 1, 4);
-                    ef->read_file(&img.header_extended.export_desc_size, 1, 2);
-                    ef->read_file(&img.header_extended.export_desc_type, 1, 1);
-                    ef->read_file(&img.header_extended.export_desc, 1, 1);
-                }
-
 				ef->seek(0, file_seek_mode::beg);
-                ef->read_file(img.data.data(), 1, sizeof(eka2img_header) + 4 + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0));
+                ef->read_file(img.data.data(), 1, img.header.code_offset);
+
+				std::vector<char> temp_buf(file_size - img.header.code_offset);
 
 				ef->seek(img.header.code_offset, file_seek_mode::beg);
-                ef->read_file(temp_buf.data(), 1, temp_buf.size());
+                auto bytes_read = ef->read_file(temp_buf.data(), 1, temp_buf.size());
+
+				if (bytes_read != temp_buf.size()) {
+					LOG_ERROR("File reading unproperly");
+				}
 
                 if (ctype == compress_type::deflate_c) {
                     // INFLATE IT!
@@ -346,6 +355,11 @@ namespace eka2l1 {
                         img.uncompressed_size);
 
                     LOG_INFO("Readed compress, size: {}", readed);
+
+					FILE* tempfile = fopen("nokiaDefaltedTemp.seg", "wb");
+					fwrite(img.data.data(), 1, img.data.size(), tempfile);
+					fclose(tempfile);
+
                 } else if (ctype == compress_type::byte_pair_c) {
 					auto crr_pos = ef->tell();
 
@@ -384,6 +398,7 @@ namespace eka2l1 {
                 LOG_INFO("Invalid cpu specified in EKA2 Image Header. Maybe x86 or undetected");
                 break;
             }
+
 
             uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
             LOG_TRACE("Import + export size: 0x{:x}", import_export_table_size);

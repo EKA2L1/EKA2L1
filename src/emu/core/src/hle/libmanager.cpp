@@ -83,24 +83,26 @@ namespace eka2l1 {
 		// Images are searched in
 		// C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
 		loader::e32img_ptr lib_manager::load_e32img(const std::u16string& img_name) {
-			symfile img = io->open_file(img_name, READ_MODE);
+			symfile img = io->open_file(img_name, READ_MODE | BIN_MODE);
 			bool xip = false;
+			bool is_rom = false;
 			std::u16string path;
 
 			// I'm so sorry
 			if (!img) {
-				img = io->open_file( u"C:\\sys\\bin\\" + img_name, READ_MODE);
+				img = io->open_file( u"C:\\sys\\bin\\" + img_name, READ_MODE | BIN_MODE);
 				
 				if (!img) {
-					img = io->open_file(u"E:\\sys\\bin\\" + img_name, READ_MODE);
+					img = io->open_file(u"E:\\sys\\bin\\" + img_name, READ_MODE | BIN_MODE);
 
 					if (!img) {
-						img = io->open_file(u"Z:\\sys\\bin\\" + img_name, READ_MODE);
+						img = io->open_file(u"Z:\\sys\\bin\\" + img_name, READ_MODE | BIN_MODE);
 
 						if (!img) {
 							return loader::e32img_ptr(nullptr);
 						} else {
 							xip = true;
+							is_rom = true;
 						}
 					}
 				}
@@ -123,6 +125,7 @@ namespace eka2l1 {
 
 			info.img = pimg;
 			info.is_xip = xip;
+			info.is_rom = is_rom;
 
 			uint32_t check = info.img->header.check;
 
@@ -133,10 +136,10 @@ namespace eka2l1 {
 		}
 
 		loader::romimg_ptr lib_manager::load_romimg(const std::u16string& rom_name) {
-			symfile romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name, READ_MODE);
+			symfile romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name, READ_MODE | BIN_MODE);
 
 			if (!romimgf) {
-				romimgf = io->open_file(rom_name, READ_MODE);
+				romimgf = io->open_file(rom_name, READ_MODE | BIN_MODE);
 
 				if (!romimgf) {
 					return loader::romimg_ptr(nullptr);
@@ -183,8 +186,10 @@ namespace eka2l1 {
 				return;
 			}
 
-			mem->free(img->rt_code_addr);
-			res->second.is_xip = false;
+			if (!res->second.is_rom) {
+				mem->free(img->rt_code_addr);
+				res->second.is_xip = false;
+			}
 		}
     }
 }

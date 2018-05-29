@@ -15,6 +15,7 @@ namespace eka2l1 {
     class timing_system;
 	class memory_system;
 	class manager_system;
+	class io_system;
 
     namespace kernel {
         class thread;
@@ -26,6 +27,8 @@ namespace eka2l1 {
 	using process_ptr = std::shared_ptr<process>;
 
     class kernel_system {
+		friend class process;
+
         std::atomic<kernel::uid> crr_uid;
         std::map<kernel::uid, thread_ptr> threads;
 
@@ -38,10 +41,11 @@ namespace eka2l1 {
 		manager_system* mngr;
 		memory_system* mem;
 		hle::lib_manager* libmngr;
+		io_system* io;
 
     public:
         void init(timing_system* sys, manager_system* mngrsys,
-			memory_system* mem_sys, hle::lib_manager* lib_sys, arm::jit_interface* cpu);
+			memory_system* mem_sys, io_system* io_sys, hle::lib_manager* lib_sys, arm::jit_interface* cpu);
         void shutdown();
 
 		std::shared_ptr<kernel::thread_scheduler> get_thread_scheduler() {
@@ -67,6 +71,9 @@ namespace eka2l1 {
 
 		process* spawn_new_process(std::string& path, std::string name, uint32_t uid);
 		process* spawn_new_process(uint32_t uid);
+
+		bool close_process(process* pr);
+		bool close_all_processes();
 
         kernel::thread *crr_thread();
     };

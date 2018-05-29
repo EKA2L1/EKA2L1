@@ -14,12 +14,12 @@ add_library(coreio
         src/vfs.cpp)
 
 add_subdirectory(src/arm)
+add_subdirectory(src/hle)
 add_subdirectory(src/loader)
 add_subdirectory(src/manager)
 add_subdirectory(src/disasm)
 add_subdirectory(src/kernel)
 #add_subdirectory(src/abi)
-add_subdirectory(src/hle)
 
 target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)
