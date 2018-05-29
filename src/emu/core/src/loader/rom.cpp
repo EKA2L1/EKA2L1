@@ -94,7 +94,8 @@ namespace eka2l1 {
                 auto crr_pos = ftell(file);
                 fseek(file, rom_to_offset(romf.header.rom_base, entry.address_lin), SEEK_SET);
                 entry.dir = std::make_optional<rom_dir>(read_rom_dir(romf));
-                mother->subdirs.push_back(&entry.dir.value());
+				entry.dir->name = entry.name;
+                mother->subdirs.push_back(entry.dir.value());
                 fseek(file, crr_pos, SEEK_SET);
             }
 

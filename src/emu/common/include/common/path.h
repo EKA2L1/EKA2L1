@@ -34,22 +34,25 @@ namespace eka2l1 {
 
     public:
         path_iterator()
-            : crr_pos(0) {}
+			: crr_pos(0) {
+			++(*this);
+		}
 
         path_iterator(std::string p)
             : path(p)
-            , crr_pos(0) {}
+            , crr_pos(0) {
+			++(*this);
+		}
 
         void operator++() {
-            comp = "";
+			if (crr_pos < path.length()) comp = "";
 
-            while ((path[crr_pos] != '/') && (path[crr_pos] != '\\')) {
+            while ((crr_pos < path.length()) && (path[crr_pos] != '/') && (path[crr_pos] != '\\')) {
                 comp += path[crr_pos];
                 crr_pos += 1;
             }
 
-            while ((path[crr_pos] == '/') || (path[crr_pos] == '\\'))
-                crr_pos += 1;
+            crr_pos += 1;
         }
 
         std::string operator*() const {
@@ -57,7 +60,7 @@ namespace eka2l1 {
         }
 
         operator bool() const {
-            return path.length() > crr_pos;
+            return path.length() >= crr_pos - 1;
         }
     };
 

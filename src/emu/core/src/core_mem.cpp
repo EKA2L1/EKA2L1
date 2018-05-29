@@ -34,41 +34,35 @@ namespace eka2l1 {
         memory.reset();
     }
 
-    void memory_system::init() {
+	void memory_system::init() {
 #ifdef WIN32
-        SYSTEM_INFO system_info = {};
-        GetSystemInfo(&system_info);
+		SYSTEM_INFO system_info = {};
+		GetSystemInfo(&system_info);
 
-        page_size = system_info.dwPageSize;
+		page_size = system_info.dwPageSize;
 #else
-        page_size = sysconf(_SC_PAGESIZE);
+		page_size = sysconf(_SC_PAGESIZE);
 #endif
 
-        size_t len = common::GB(4);
+		size_t len = common::GB(4);
 
 #ifndef WIN32
-        memory = mem(static_cast<uint8_t *>(mmap(nullptr, len, PROT_READ,
-                            MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
-            _free_mem);
+		memory = mem(static_cast<uint8_t *>(mmap(nullptr, len, PROT_READ,
+			MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
+			_free_mem);
 #else
-        memory = mem(reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_NOACCESS)), _free_mem);
+		memory = mem(reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_NOACCESS)), _free_mem);
 #endif
 
-        if (!memory) {
-            LOG_CRITICAL("Allocating virtual memory for emulating failed!");
-            return;
-        } else {
-            LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
-        }
+		if (!memory) {
+			LOG_CRITICAL("Allocating virtual memory for emulating failed!");
+			return;
+		}
+		else {
+			LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
+		}
 
-        allocated_pages.resize(len / page_size);
-
-#ifdef WIN32
-        DWORD old_protect = 0;
-        BOOL res = VirtualProtect(memory.get(), page_size, PAGE_NOACCESS, &old_protect);
-#else
-        mprotect(memory.get(), page_size, PROT_READ);
-#endif
+		allocated_pages.resize(len / page_size);
     }
 
     void memory_system::alloc_inner(address addr, size_t pg_count, allocated::iterator blck) {
@@ -207,10 +201,18 @@ namespace eka2l1 {
 		fseek(f, 0, SEEK_END);
 
 		auto size = ftell(f);
+		auto aligned_size = ((size / page_size) + 1) * (page_size);
 		auto left = size;
 
+		fseek(f, 0, SEEK_SET);
+
 #ifdef WIN32
-		VirtualProtect(ptr<void>(0x80000000).get(this), left, PAGE_READWRITE, nullptr);
+		DWORD old_prot;
+		auto newptr = VirtualAlloc(ptr<void>(0x80000000).get(this), aligned_size, MEM_COMMIT, PAGE_READWRITE);
+
+		if (!newptr) {
+			return false;
+		}
 #else
 		mprotect(ptr<void>(0x80000000).get(this), left, PROT_READ | PROT_WRITE);
 #endif
@@ -230,7 +232,11 @@ namespace eka2l1 {
 		fclose(f);
 
 #ifdef WIN32
-		VirtualProtect(ptr<void>(0x80000000).get(this), size, PAGE_READONLY, nullptr);
+		bool res = VirtualProtect(ptr<void>(0x80000000).get(this),aligned_size, PAGE_READONLY, &old_prot);
+
+		if (!res) {
+			LOG_WARN("Can't change protection of ROM memory back to read-only.");
+		}
 #else
 		mprotect(ptr<void>(0x80000000).get(this), size, PROT_READ);
 #endif

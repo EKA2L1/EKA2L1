@@ -1,4 +1,5 @@
 #include <loader/eka2img.h>
+#include <loader/romimage.h>
 #include <vfs.h>
 
 #include <ptr.h>
@@ -92,15 +93,27 @@ namespace eka2l1 {
 
         void import_libs(eka2img *img, memory_system* mem, uint32_t rtcode_addr, hle::lib_manager& mngr) {
             for (auto &import_entry : img->import_section.imports) {
-				auto exports = mngr.get_export_addrs(std::u16string(import_entry.dll_name.begin(), import_entry.dll_name.end()));
+				std::string dll_name = import_entry.dll_name;
 
-				if (!exports) {
-					LOG_CRITICAL("No export addresses provided for: {}", import_entry.dll_name);
-					continue;
+				size_t dll_name_end_pos = dll_name.find_first_of("{");
+
+				if (FOUND_STR(dll_name_end_pos)) {
+					dll_name = dll_name.substr(0, dll_name_end_pos);
+				} else {
+					dll_name_end_pos = dll_name.find_last_of(".");
+
+					if (FOUND_STR(dll_name_end_pos)) { 
+						dll_name = dll_name.substr(0, dll_name_end_pos);
+					} 
 				}
 
+				auto dll_u16 = std::u16string(dll_name.begin(), dll_name.end());
+				loader::romimg_ptr rimg = mngr.load_romimg(dll_u16, true);
+
+				auto exports = rimg->exports;
+
 				for (uint32_t i = 0; i < import_entry.number_of_imports; i++) {
-					write(ptr<uint32_t>(import_entry.ordinals[i]).get(mem), exports.value()[i]);
+					write(ptr<uint32_t>(rtcode_addr + import_entry.ordinals[i]).get(mem), exports[i]);
                 }
             }
         }
@@ -125,11 +138,12 @@ namespace eka2l1 {
             uint32_t data_delta = rtdata_addr - img->header.data_base;
 
             relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.code_offset), code_delta, data_delta);
-
             relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
 
             memcpy(ptr<uint32_t>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
             memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
+
+			import_libs(img, mem, rtcode_addr, mngr);
 
             LOG_INFO("Load executable success");
 

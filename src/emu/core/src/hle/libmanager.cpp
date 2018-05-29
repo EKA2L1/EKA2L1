@@ -1,5 +1,7 @@
 #include <hle/libmanager.h>
 #include <common/log.h>
+#include <common/algorithm.h>
+#include <common/cvt.h>
 #include <loader/eka2img.h>
 #include <loader/romimage.h>
 #include <vfs.h>
@@ -52,20 +54,32 @@ namespace eka2l1 {
             return res->second;
         }
 
-        bool lib_manager::register_exports(const std::u16string& lib_name, exportaddrs& addrs) {           
-            auto libidsop = get_sids(lib_name);
+        bool lib_manager::register_exports(const std::u16string& lib_name, exportaddrs& addrs, bool log_exports) {           
+			if (exports.find(lib_name) != exports.end()) {
+				LOG_WARN("Exports already register, not really dangerous");
+				return true;
+			}
 
-            if (!libidsop) {
-                return false;
-            }
+			exports.insert(std::make_pair(lib_name, addrs));
 
-            exports.insert(std::make_pair(lib_name, addrs));
+			auto libidsop = get_sids(lib_name);
 
-            sids libids = libidsop.value();
+			if (libidsop) {
+				sids libids = libidsop.value();
 
-            for (uint32_t i = 0; i < addrs.size(); i++) {
-                addr_map.insert(std::make_pair(addrs[i], libids[i]));
-            }
+				if (addrs.size() > libids.size()) {
+					LOG_WARN("Export size is bigger than total symbol size provided, please update the symbol database for: {}",
+						common::ucs2_to_utf8(lib_name));
+				}
+
+				for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
+					addr_map.insert(std::make_pair(addrs[i], libids[i]));
+
+					if (log_exports) {
+						LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}]", func_names[libids[i]], addrs[i], libids[i]);
+					}
+				}
+			}
 
             return true;
         }
@@ -90,13 +104,13 @@ namespace eka2l1 {
 
 			// I'm so sorry
 			if (!img) {
-				img = io->open_file( u"C:\\sys\\bin\\" + img_name, READ_MODE | BIN_MODE);
+				img = io->open_file( u"C:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 				
 				if (!img) {
-					img = io->open_file(u"E:\\sys\\bin\\" + img_name, READ_MODE | BIN_MODE);
+					img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
 					if (!img) {
-						img = io->open_file(u"Z:\\sys\\bin\\" + img_name, READ_MODE | BIN_MODE);
+						img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
 						if (!img) {
 							return loader::e32img_ptr(nullptr);
@@ -112,6 +126,10 @@ namespace eka2l1 {
 
 			if (!res) {
 				return loader::e32img_ptr(nullptr);
+			}
+
+			if (res->ed.syms.size() > 0) {
+				register_exports(img_name, res->ed.syms);
 			}
 
 			loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());
@@ -135,8 +153,8 @@ namespace eka2l1 {
 			return e32imgs_cache[check].img;
 		}
 
-		loader::romimg_ptr lib_manager::load_romimg(const std::u16string& rom_name) {
-			symfile romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name, READ_MODE | BIN_MODE);
+		loader::romimg_ptr lib_manager::load_romimg(const std::u16string& rom_name, bool log_exports) {
+			symfile romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll" , READ_MODE | BIN_MODE);
 
 			if (!romimgf) {
 				romimgf = io->open_file(rom_name, READ_MODE | BIN_MODE);
@@ -146,16 +164,20 @@ namespace eka2l1 {
 				}
 			}
 
-			auto res = loader::parse_romimg(romimgf);
+			auto res = loader::parse_romimg(romimgf, mem);
 
 			if (!res) {
 				return loader::romimg_ptr(nullptr);
 			}
 
+			register_exports(rom_name, res->exports, log_exports);
+
 			if (romimgs_cache.find(res->header.code_checksum) != romimgs_cache.end()) {
 				romimgf->close();
 				return romimgs_cache[res->header.code_checksum];
 			}
+
+			//loader::stub_romimg()
 
 			romimgs_cache.emplace(res->header.code_checksum, std::make_shared<loader::romimg>(res.value()));
 			return romimgs_cache[res->header.code_checksum];

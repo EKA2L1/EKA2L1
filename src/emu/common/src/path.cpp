@@ -316,10 +316,5 @@ namespace eka2l1 {
 				}
 			}
         }
-
-        crr_path += add_path(*ite, "/");
-        if (!is_dir(crr_path)) {
-            create_directory(crr_path);
-        }
     }
 }

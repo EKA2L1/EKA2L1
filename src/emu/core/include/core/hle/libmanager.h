@@ -69,7 +69,7 @@ namespace eka2l1 {
 
 			// Image name
 			loader::e32img_ptr load_e32img(const std::u16string& img_name);
-			loader::romimg_ptr load_romimg(const std::u16string& rom_name);
+			loader::romimg_ptr load_romimg(const std::u16string& rom_name, bool log_export = false);
 
 			// Open the image code segment
 			void open_e32img(loader::e32img_ptr& img);
@@ -81,7 +81,7 @@ namespace eka2l1 {
             // This will also map the export address with the correspond SID
             // Note that these export addresses are unique, since they are the address in
             // the memory.
-            bool register_exports(const std::u16string& lib_name, exportaddrs& addrs);
+            bool register_exports(const std::u16string& lib_name, exportaddrs& addrs, bool log_export = false);
             std::optional<sid> get_sid(exportaddr addr);
         };
     }
