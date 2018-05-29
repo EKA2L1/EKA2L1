@@ -115,7 +115,7 @@ namespace eka2l1 {
             std::vector<rom_entry> entries;
 
             // Subdirs filtering
-            std::vector<rom_dir*> subdirs;
+            std::vector<rom_dir> subdirs;
         };
 
         struct rom_entry {
