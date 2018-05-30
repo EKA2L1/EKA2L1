@@ -213,5 +213,15 @@ namespace eka2l1 {
 				res->second.is_xip = false;
 			}
 		}
+
+		std::optional<std::string> lib_manager::get_func_name(const sid id) {
+			auto res = func_names.find(id);
+
+			if (res == func_names.end()) {
+				return std::optional<std::string>{};
+			}
+
+			return res->second;
+		}
     }
 }

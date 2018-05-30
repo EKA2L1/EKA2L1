@@ -13,12 +13,13 @@ namespace eka2l1 {
         timing.init();
         mem.init();
 
-        cpu = arm::create_jitter(&timing, &mem, &asmdis, jit_type);
-
         io.init(&mem);
         mngr.init(&io);
         asmdis.init(&mem);
 		hlelibmngr.init(&io, &mem, ver);
+
+		cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
+
         kern.init(&timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
     }
 

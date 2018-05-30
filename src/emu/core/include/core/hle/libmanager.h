@@ -83,6 +83,8 @@ namespace eka2l1 {
             // the memory.
             bool register_exports(const std::u16string& lib_name, exportaddrs& addrs, bool log_export = false);
             std::optional<sid> get_sid(exportaddr addr);
+
+			std::optional<std::string> get_func_name(const sid id);
         };
     }
 }

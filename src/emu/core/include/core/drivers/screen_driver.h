@@ -21,22 +21,32 @@ namespace eka2l1 {
 		class screen_driver {
 			emu_window_ptr win;
 		public:
-			void init(emu_window_ptr emu);
+			void init(emu_window_ptr emu) = 0;
 
-			void init(object_size& screen_size, object_size& font_size);
-			void blit(const std::string& text, int len, const point& where);
-			bool scroll_up(rect& trect);
+			void init(object_size& screen_size, object_size& font_size) = 0;
+			void blit(const std::string& text, int len, const point& where) = 0;
+			bool scroll_up(rect& trect) = 0;
 
-			void clear(rect& trect);
+			void clear(rect& trect) = 0;
 
-			void set_pixel(const point& pos, uint8_t color);
-			int get_pixel(const point& pos);
+			void set_pixel(const point& pos, uint8_t color) = 0;
+			int get_pixel(const point& pos) = 0;
 
-			void set_word(const point& pos, int word);
-			int get_word(const point& pos);
+			void set_word(const point& pos, int word) = 0;
+			int get_word(const point& pos) = 0;
 
-			void set_line(const point& pos, const pixel_line& pl);
-			void get_line(const point& pos, pixel_line& pl);
+			void set_line(const point& pos, const pixel_line& pl) = 0;
+			void get_line(const point& pos, pixel_line& pl) = 0;
 		};
+
+		enum class driver_type {
+			opengl,
+			vulkan,
+			directx
+		};
+
+		using screen_driver_ptr = std::unique_ptr<screen_driver>;
+
+		screen_driver_ptr new_screen_driver(driver_type dr_type);
 	}
 }

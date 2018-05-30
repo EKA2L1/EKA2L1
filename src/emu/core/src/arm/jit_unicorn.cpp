@@ -43,14 +43,19 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
 	eka2l1::hle::lib_manager* mngr = jit->get_lib_manager();
 
-	// Use this manager to get the address
-	auto sid_correspond = mngr->get_sid(address);
+	if (mngr) {
+		// Use this manager to get the address
+		auto sid_correspond = mngr->get_sid(address);
 
-	if (sid_correspond) {
-		// Explain(bentokun)
-		// Call responding function. Don't have to worry about other instructions
-		// Both thumb and arm instructions in the subroutine are replaced with NOP
-		// Others data is still being keeped.
+		if (!sid_correspond && thumb_mode(uc)) {
+			sid_correspond = mngr->get_sid(address + 1);
+		}
+
+		if (sid_correspond) {
+			// DO nothing now
+			auto func_name = mngr->get_func_name(sid_correspond.value());
+			LOG_INFO("HLE function called: {}", func_name.value());
+		}
 	}
 
     const uint8_t *const code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
@@ -98,13 +103,14 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        jit_unicorn::jit_unicorn(timing_system* sys, memory_system* mem, disasm* asmdis)
+        jit_unicorn::jit_unicorn(timing_system* sys, memory_system* mem, disasm* asmdis, hle::lib_manager* mngr)
             : timing(sys),
               mem(mem),
-              asmdis(asmdis) {
+              asmdis(asmdis),
+			  lib_mngr(mngr) {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);
-
+		
             uc_hook hook{};
 
             uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
@@ -132,7 +138,11 @@ namespace eka2l1 {
                 pc |= 1;
             }
 
-            uc_reg_write(engine, UC_ARM_REG_LR, &epa);
+			uc_err erra = uc_reg_write(engine, UC_ARM_REG_LR, &pc);
+
+			if (erra != UC_ERR_OK) {
+				LOG_WARN("Can't set LR to PC");
+			}
 
             uc_err err = uc_emu_start(engine, pc, 0, 0, 1);
             pc = get_pc();
@@ -144,7 +154,7 @@ namespace eka2l1 {
             }
 
             if (num_instructions >= 1) {
-                err = uc_emu_start(engine, pc, epa & 0xfffffffe, 0, num_instructions - 1);
+                err = uc_emu_start(engine, pc, 0, 0, num_instructions - 1);
 
                 if (err != UC_ERR_OK) {
                     uint32_t error_pc = get_pc();

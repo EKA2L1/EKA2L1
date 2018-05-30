@@ -245,7 +245,7 @@ namespace eka2l1 {
 
     address memory_system::alloc_ime(size_t size) {
         address addr = alloc_range(RAM_CODE_ADDR, ROM, size);
-        change_prot(addr, size, prot::read_write_exec);
+        int res = change_prot(addr, size, prot::read_write_exec);
         return addr;
     }
 }

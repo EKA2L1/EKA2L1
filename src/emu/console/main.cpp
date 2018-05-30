@@ -166,6 +166,8 @@ void do_quit() {
 	symsys.shutdown();
 }
 
+#define FOREVER for (; ;)
+
 int main(int argc, char** argv) {
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
 
@@ -183,6 +185,10 @@ int main(int argc, char** argv) {
 	if (quit) {
 		do_quit();
 		return 0;
+	}
+
+	FOREVER {
+		symsys.loop();
 	}
 
 	do_quit();

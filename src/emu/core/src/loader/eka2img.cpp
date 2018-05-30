@@ -36,7 +36,7 @@ namespace eka2l1 {
         // Write simple relocation
         // Symbian only used this, as found on IDA
         bool write(uint32_t *data, uint32_t sym) {
-            LOG_TRACE("Relocation original data: 0x{:x}, new data: 0x{:x}", *data, sym);
+            LOG_TRACE("Original data: 0x{:x}, new data: 0x{:x}", *data, sym);
             *data = sym;
             return true;
         }
@@ -91,8 +91,113 @@ namespace eka2l1 {
             return true;
         }
 
+		std::string get_real_dll_name(std::string dll_name) {
+			size_t dll_name_end_pos = dll_name.find_first_of("{");
+
+			if (FOUND_STR(dll_name_end_pos)) {
+				dll_name = dll_name.substr(0, dll_name_end_pos);
+			}
+			else {
+				dll_name_end_pos = dll_name.find_last_of(".");
+
+				if (FOUND_STR(dll_name_end_pos)) {
+					dll_name = dll_name.substr(0, dll_name_end_pos);
+				}
+			}
+
+			return dll_name;
+		}
+
+		bool pe_fix_up_iat(memory* mem, hle::lib_manager& mngr, eka2img_iat& iat) {
+			return false;
+		}
+
+		bool elf_fix_up_import_dir(memory_system* mem, hle::lib_manager& mngr, loader::eka2img& me, eka2img_import_block& import_block) {
+			const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
+			const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
+			
+			loader::e32img_ptr img = mngr.load_e32img(dll_name);
+			loader::romimg_ptr rimg = mngr.load_romimg(dll_name);
+
+			uint32_t* imdir = &(import_block.ordinals[0]);
+			uint32_t* expdir;
+
+			uint32_t code_start;
+			uint32_t code_end;
+			uint32_t data_start;
+			uint32_t data_end;
+
+			uint32_t code_delta;
+			uint32_t data_delta;
+
+			if (!img && !rimg) {
+				return false;
+			}
+			else {
+				if (img) {
+					mngr.open_e32img(img);
+
+					code_start = img->rt_code_addr;
+					data_start = img->rt_data_addr;
+					code_end = code_start + img->header.code_size;
+					data_end = data_start + img->header.data_size;
+				
+					code_delta = img->rt_code_addr - img->header.code_base;
+					data_delta = img->rt_data_addr - img->header.data_base;
+
+					expdir = img->ed.syms.data();
+				}
+				else {
+					code_start = rimg->header.code_address;
+					code_end = code_start + rimg->header.code_size;
+					data_start = rimg->header.data_address;
+					data_end = data_start + rimg->header.data_size + rimg->header.bss_size;
+
+					code_delta = 0;
+					data_delta = 0;
+
+					expdir = rimg->exports.data();
+				}
+			}
+
+			for (uint32_t i = 0; i < import_block.ordinals.size() - 1; i++) {
+				uint32_t off = imdir[i];
+				uint32_t* code_ptr = ptr<uint32_t>(me.rt_code_addr + off).get(mem);
+
+				uint32_t import_inf = *code_ptr;
+				uint32_t ord = import_inf & 0xffff;
+				uint32_t adj = import_inf >> 16;
+
+				uint32_t export_addr;
+				uint32_t section_delta;
+				uint32_t val = 0;
+
+				if (ord > 0) {
+					export_addr = expdir[ord - 1];
+
+					auto sid = mngr.get_sid(export_addr);
+
+					LOG_INFO("Importing meow export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}",
+						export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off);
+
+					if (export_addr >= code_start && export_addr <= code_end) {
+						section_delta = code_delta;
+					} else {
+						section_delta = data_delta;
+					}
+
+					val = export_addr + section_delta + adj;
+				}
+
+				write(code_ptr, val);
+			}
+
+			return true;
+		}
+		
         void import_libs(eka2img *img, memory_system* mem, uint32_t rtcode_addr, hle::lib_manager& mngr) {
-            for (auto &import_entry : img->import_section.imports) {
+			/*
+			for (auto &import_entry : img->import_section.imports) {
 				std::string dll_name = import_entry.dll_name;
 
 				size_t dll_name_end_pos = dll_name.find_first_of("{");
@@ -108,14 +213,16 @@ namespace eka2l1 {
 				}
 
 				auto dll_u16 = std::u16string(dll_name.begin(), dll_name.end());
-				loader::romimg_ptr rimg = mngr.load_romimg(dll_u16, true);
+				loader::romimg_ptr rimg = mngr.load_romimg(dll_u16);
 
 				auto exports = rimg->exports;
 
 				for (uint32_t i = 0; i < import_entry.number_of_imports; i++) {
-					write(ptr<uint32_t>(rtcode_addr + import_entry.ordinals[i]).get(mem), exports[i]);
+					auto or = rtcode_addr + import_entry.ordinals[i];
+					LOG_INFO("Import export 0x{:x}, sid: 0x{:x} ({}) at 0x{:x}", exports[i], (mngr.get_sid(exports[i])).value(), (mngr.get_func_name(mngr.get_sid(exports[i]).value()).value()), rtcode_addr + import_entry.ordinals[i]);
+					write(ptr<uint32_t>(or).get(mem), exports[i]);
                 }
-            }
+            } */
         }
 
         bool import_exe_image(eka2img *img, memory_system* mem, hle::lib_manager& mngr) {
@@ -143,7 +250,11 @@ namespace eka2l1 {
             memcpy(ptr<uint32_t>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
             memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
 
-			import_libs(img, mem, rtcode_addr, mngr);
+			//import_libs(img, mem, rtcode_addr, mngr);
+
+			for (auto& ib : img->import_section.imports) {
+				elf_fix_up_import_dir(mem, mngr, *img, ib);
+			}
 
             LOG_INFO("Load executable success");
 
@@ -196,12 +307,6 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<void *>(&section.size), 4);
             stream->read(reinterpret_cast<void *>(&section.num_relocs), 4);
 
-            // There is no document on this anywhere. The code you see online is not right.
-            // Here is the part i tell you the truth: The size is including both the base and itself
-            // An entry contains the target offset and relocate size. After that, there is list of relocation
-            // code (uint16_t).
-            // Since I saw repeated pattern and also saw some code from elf2e32 reloaded, i just subtract the
-            // seek with 8, and actually works. Now i feel like i has wasted 4 hours of my life figuring out this :P
             for (int i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
@@ -254,10 +359,6 @@ namespace eka2l1 {
 
         void parse_iat(eka2img &img) {
             uint32_t *imp_addr = reinterpret_cast<uint32_t *>(img.data.data() + img.header.code_offset + img.header.text_size);
-
-			if (*imp_addr != 0) {
-
-			}
 
             while (*imp_addr != 0) {
                 img.iat.its.push_back(*imp_addr++);

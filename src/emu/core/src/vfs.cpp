@@ -134,7 +134,8 @@ namespace eka2l1 {
         }
 
         void shutdown() {
-            fclose(file);
+            if (file)
+				fclose(file);
         }
         
         int write_file(void* data, uint32_t size, uint32_t count) override {
@@ -349,7 +350,14 @@ namespace eka2l1 {
             return std::make_shared<rom_file>(mem, rom_cache, rom_entry.value());
         } else {
             auto new_path = get(common::ucs2_to_utf8(vir_path));
-            return std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
+            auto res = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
+
+			if (!res->file) {
+				return std::shared_ptr<file>(nullptr);
+			}
+			else {
+				return res;
+			}
         }
 
         return std::shared_ptr<file>(nullptr);

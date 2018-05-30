@@ -25,6 +25,15 @@ namespace eka2l1 {
             return pris[idx];
         }
 
+		void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
+			ctx.pc = entry_point;
+			ctx.sp = stack_top;
+			ctx.cpsr = 16 | ((entry_point & 1) << 5);
+
+			std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
+			std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
+		}
+
         thread::thread(kernel_system* kern, memory_system* mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             void *usrdata,
@@ -58,6 +67,8 @@ namespace eka2l1 {
             if (!heap_addr) {
                 LOG_ERROR("No more heap for thread!");
             }
+
+			reset_thread_ctx(epa, stack_top);
 
 			scheduler = kern->get_thread_scheduler();
 

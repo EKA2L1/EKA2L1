@@ -5,7 +5,10 @@
 #include <loader/romimage.h>
 #include <hle/libmanager.h>
 #include <disasm/disasm.h>
+#include <common/algorithm.h>
 #include <vfs.h>
+
+#include <set>
 
 namespace eka2l1 {
     namespace loader {
@@ -20,13 +23,13 @@ namespace eka2l1 {
 
 			ptr<uint32_t> export_off(img.header.export_dir_address);
 
-            img.exports.resize(img.header.export_dir_count);
+			for (uint32_t i = 0; i < img.header.export_dir_count; i++) {
+				auto export_addr = *export_off.get(mem);
+				img.exports.push_back(export_addr);
 
-            for (auto& exp: img.exports) {
-				exp = *export_off.get(mem);
 				export_off += 4;
             }
-
+			
             return img;
         }
 

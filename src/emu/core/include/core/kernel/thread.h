@@ -72,6 +72,8 @@ namespace eka2l1 {
 			uint32_t owner;
 			std::shared_ptr<thread_scheduler> scheduler;  // The scheduler that schedules this thread
 
+			void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
+
         public:
 
             thread();

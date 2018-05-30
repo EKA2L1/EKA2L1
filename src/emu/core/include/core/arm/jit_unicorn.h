@@ -43,7 +43,7 @@ namespace eka2l1 {
 				return lib_mngr;
 			}
 
-            jit_unicorn(timing_system* sys, memory_system* mem, disasm* asmdis);
+            jit_unicorn(timing_system* sys, memory_system* mem, disasm* asmdis, hle::lib_manager* mngr);
             ~jit_unicorn();
 
             void run() override;
