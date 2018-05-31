@@ -8,39 +8,39 @@ namespace eka2l1 {
     class kernel_system;
     class memory;
 
-	struct process_info {
-		ptr<void> code_where;
-		uint64_t size;
-	};
+    struct process_info {
+        ptr<void> code_where;
+        uint64_t size;
+    };
 
-	namespace loader {
-		using e32img_ptr = std::shared_ptr<eka2img>;
-	}
-    
+    namespace loader {
+        using e32img_ptr = std::shared_ptr<eka2img>;
+    }
+
     class process {
         uint32_t uid;
         std::string process_name;
-		kernel::thread prthr;
+        kernel::thread prthr;
 
-		loader::e32img_ptr img;
+        loader::e32img_ptr img;
 
-		kernel_system* kern;
-		memory_system* mem;
+        kernel_system *kern;
+        memory_system *mem;
 
-		std::vector<kernel::thread*> own_threads;
+        std::vector<kernel::thread *> own_threads;
 
     public:
         process() = default;
-        process(kernel_system* kern, memory_system* mem, uint32_t uid,
-            const std::string &process_name, loader::e32img_ptr& img);
+        process(kernel_system *kern, memory_system *mem, uint32_t uid,
+            const std::string &process_name, loader::e32img_ptr &img);
 
-		uint32_t get_uid() {
-			return uid;
-		}
+        uint32_t get_uid() {
+            return uid;
+        }
 
-		loader::e32img_ptr get_e32img() {
-			return img;
-		}
+        loader::e32img_ptr get_e32img() {
+            return img;
+        }
 
         // Create a new thread and run
         // No arguments provided
@@ -49,8 +49,8 @@ namespace eka2l1 {
         // Step through instructions
         bool step();
 
-		// LOL
-		bool suspend() { return true; }
+        // LOL
+        bool suspend() { return true; }
 
         // Stop the main process thread
         bool stop();

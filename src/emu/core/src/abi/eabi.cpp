@@ -2,12 +2,12 @@
 #include <common/advstream.h>
 #include <common/log.h>
 
-#include <vector>
 #include <mutex>
 #include <sstream>
+#include <vector>
 
 namespace eka2l1 {
-    // This is not exactly an ABI, but a ABI-like 
+    // This is not exactly an ABI, but a ABI-like
     // implementation of some Symbian specific stuffs
     namespace eabi {
         // Some functions leave.
@@ -19,8 +19,7 @@ namespace eka2l1 {
         std::vector<leave_handler> leaves;
         std::mutex mut;
 
-        void leave(uint32_t id, const std::string& msg)
-        {
+        void leave(uint32_t id, const std::string &msg) {
             std::lock_guard<std::mutex> guard(mut);
             leave_handler handler;
 

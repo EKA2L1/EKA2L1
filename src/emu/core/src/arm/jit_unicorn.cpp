@@ -4,8 +4,8 @@
 #include <common/log.h>
 #include <common/types.h>
 #include <core_timing.h>
-#include <hle/libmanager.h>
 #include <disasm/disasm.h>
+#include <hle/libmanager.h>
 #include <ptr.h>
 #include <unicorn/unicorn.h>
 
@@ -20,43 +20,43 @@ bool thumb_mode(uc_engine *uc) {
 
     return mode & UC_MODE_THUMB;
 }
-    
+
 void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
-    eka2l1::arm::jit_unicorn* jit = reinterpret_cast<decltype(jit)>(user_data);
+    eka2l1::arm::jit_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
     if (jit == nullptr) {
         LOG_ERROR("Read hook failed: User Data was null");
         return;
     }
-    
+
     memcpy(&value, eka2l1::ptr<const void>(address).get(jit->get_memory_sys()), size);
     LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
-    eka2l1::arm::jit_unicorn* jit = reinterpret_cast<decltype(jit)>(user_data);
+    eka2l1::arm::jit_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
     if (jit == nullptr) {
         LOG_ERROR("Code hook failed: User Data was null");
         return;
     }
 
-	eka2l1::hle::lib_manager* mngr = jit->get_lib_manager();
+    eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
-	if (mngr) {
-		// Use this manager to get the address
-		auto sid_correspond = mngr->get_sid(address);
+    if (mngr) {
+        // Use this manager to get the address
+        auto sid_correspond = mngr->get_sid(address);
 
-		if (!sid_correspond && thumb_mode(uc)) {
-			sid_correspond = mngr->get_sid(address + 1);
-		}
+        if (!sid_correspond && thumb_mode(uc)) {
+            sid_correspond = mngr->get_sid(address + 1);
+        }
 
-		if (sid_correspond) {
-			// DO nothing now
-			auto func_name = mngr->get_func_name(sid_correspond.value());
-			LOG_INFO("HLE function called: {}", func_name.value());
-		}
-	}
+        if (sid_correspond) {
+            // DO nothing now
+            auto func_name = mngr->get_func_name(sid_correspond.value());
+            LOG_INFO("HLE function called: {}", func_name.value());
+        }
+    }
 
     const uint8_t *const code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
     const size_t buffer_size = eka2l1::common::GB(4) - address;
@@ -103,14 +103,14 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        jit_unicorn::jit_unicorn(timing_system* sys, memory_system* mem, disasm* asmdis, hle::lib_manager* mngr)
-            : timing(sys),
-              mem(mem),
-              asmdis(asmdis),
-			  lib_mngr(mngr) {
+        jit_unicorn::jit_unicorn(timing_system *sys, memory_system *mem, disasm *asmdis, hle::lib_manager *mngr)
+            : timing(sys)
+            , mem(mem)
+            , asmdis(asmdis)
+            , lib_mngr(mngr) {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);
-		
+
             uc_hook hook{};
 
             uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
@@ -138,11 +138,11 @@ namespace eka2l1 {
                 pc |= 1;
             }
 
-			uc_err erra = uc_reg_write(engine, UC_ARM_REG_LR, &pc);
+            uc_err erra = uc_reg_write(engine, UC_ARM_REG_LR, &pc);
 
-			if (erra != UC_ERR_OK) {
-				LOG_WARN("Can't set LR to PC");
-			}
+            if (erra != UC_ERR_OK) {
+                LOG_WARN("Can't set LR to PC");
+            }
 
             uc_err err = uc_emu_start(engine, pc, 0, 0, 1);
             pc = get_pc();
@@ -154,7 +154,7 @@ namespace eka2l1 {
             }
 
             if (num_instructions >= 1) {
-                err = uc_emu_start(engine, pc, 0, 0, num_instructions - 1);
+                err = uc_emu_start(engine, pc, 1ULL << 63, 0, num_instructions - 1);
 
                 if (err != UC_ERR_OK) {
                     uint32_t error_pc = get_pc();
@@ -185,7 +185,7 @@ namespace eka2l1 {
         void jit_unicorn::run() {
             if (!timing) {
                 LOG_ERROR("Can run the CPU, timing system not available.");
-                return; 
+                return;
             }
 
             execute_instructions(std::max(timing->get_downcount(), 0));
@@ -300,9 +300,9 @@ namespace eka2l1 {
             return 0;
         }
 
-		void jit_unicorn::set_sp(uint32_t val) {
-			set_stack_top(val);
-		}
+        void jit_unicorn::set_sp(uint32_t val) {
+            set_stack_top(val);
+        }
 
         void jit_unicorn::save_context(thread_context &ctx) {
             for (auto i = 0; i < ctx.cpu_registers.size(); i++) {
@@ -322,12 +322,12 @@ namespace eka2l1 {
             }
         }
 
-		void jit_unicorn::prepare_rescheduling() {
-			uc_err err = uc_emu_stop(engine);
+        void jit_unicorn::prepare_rescheduling() {
+            uc_err err = uc_emu_stop(engine);
 
-			if (err != UC_ERR_OK) {
-				LOG_ERROR("Prepare rescheduling failed!");
-			}
-		}
+            if (err != UC_ERR_OK) {
+                LOG_ERROR("Prepare rescheduling failed!");
+            }
+        }
     }
 }

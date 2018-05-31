@@ -1,21 +1,21 @@
 #pragma once
 
+#include <arm/jit_interface.h>
 #include <kernel/kernel_obj.h>
 #include <kernel/scheduler.h>
-#include <arm/jit_interface.h>
 #include <process.h>
 #include <ptr.h>
 
 #include <atomic>
-#include <memory>
 #include <map>
+#include <memory>
 #include <mutex>
 
 namespace eka2l1 {
     class timing_system;
-	class memory_system;
-	class manager_system;
-	class io_system;
+    class memory_system;
+    class manager_system;
+    class io_system;
 
     namespace kernel {
         class thread;
@@ -23,57 +23,57 @@ namespace eka2l1 {
         using uid = uint64_t;
     }
 
-    using thread_ptr = kernel::thread*;
-	using process_ptr = std::shared_ptr<process>;
+    using thread_ptr = kernel::thread *;
+    using process_ptr = std::shared_ptr<process>;
 
     class kernel_system {
-		friend class process;
+        friend class process;
 
         std::atomic<kernel::uid> crr_uid;
         std::map<kernel::uid, thread_ptr> threads;
 
         std::mutex mut;
         std::shared_ptr<kernel::thread_scheduler> thr_sch;
-		
-		std::map<uint32_t, process_ptr> processes;
 
-		timing_system* timing;
-		manager_system* mngr;
-		memory_system* mem;
-		hle::lib_manager* libmngr;
-		io_system* io;
+        std::map<uint32_t, process_ptr> processes;
+
+        timing_system *timing;
+        manager_system *mngr;
+        memory_system *mem;
+        hle::lib_manager *libmngr;
+        io_system *io;
 
     public:
-        void init(timing_system* sys, manager_system* mngrsys,
-			memory_system* mem_sys, io_system* io_sys, hle::lib_manager* lib_sys, arm::jit_interface* cpu);
+        void init(timing_system *sys, manager_system *mngrsys,
+            memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu);
         void shutdown();
 
-		std::shared_ptr<kernel::thread_scheduler> get_thread_scheduler() {
-			return thr_sch;
-		}
+        std::shared_ptr<kernel::thread_scheduler> get_thread_scheduler() {
+            return thr_sch;
+        }
 
-		void reschedule() {
-			thr_sch->reschedule();
-		}
+        void reschedule() {
+            thr_sch->reschedule();
+        }
 
-		void unschedule_wakeup() {
-			thr_sch->unschedule_wakeup();
-		}
+        void unschedule_wakeup() {
+            thr_sch->unschedule_wakeup();
+        }
 
-		void unschedule(kernel::uid thread_id) {
-			thr_sch->unschedule(thread_id);
-		}
+        void unschedule(kernel::uid thread_id) {
+            thr_sch->unschedule(thread_id);
+        }
 
         kernel::uid next_uid();
 
         void add_thread(kernel::thread *thr);
         bool run_thread(kernel::uid thr);
 
-		process* spawn_new_process(std::string& path, std::string name, uint32_t uid);
-		process* spawn_new_process(uint32_t uid);
+        process *spawn_new_process(std::string &path, std::string name, uint32_t uid);
+        process *spawn_new_process(uint32_t uid);
 
-		bool close_process(process* pr);
-		bool close_all_processes();
+        bool close_process(process *pr);
+        bool close_all_processes();
 
         kernel::thread *crr_thread();
     };

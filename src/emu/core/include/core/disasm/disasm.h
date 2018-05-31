@@ -1,10 +1,10 @@
 #pragma once
 
 #include <capstone.h>
-#include <string>
 #include <memory>
-#include <vector>
 #include <ptr.h>
+#include <string>
+#include <vector>
 
 namespace eka2l1 {
     namespace arm {
@@ -29,18 +29,18 @@ namespace eka2l1 {
     };
 
     class disasm {
-		using insn_ptr = std::unique_ptr<cs_insn, std::function<void(cs_insn *)>>;
-		using csh_ptr = std::unique_ptr<csh, std::function<void(csh *)>>;
+        using insn_ptr = std::unique_ptr<cs_insn, std::function<void(cs_insn *)>>;
+        using csh_ptr = std::unique_ptr<csh, std::function<void(csh *)>>;
 
-		csh cp_handle;
-		insn_ptr cp_insn;
-        memory_system* mem;
+        csh cp_handle;
+        insn_ptr cp_insn;
+        memory_system *mem;
 
         // This jitter is use for detect subroutine.
         arm::jitter jitter;
 
-	public:
-        void init(memory_system* smem);
+    public:
+        void init(memory_system *smem);
         void shutdown();
 
         subroutine get_subroutine(ptr<uint8_t> beg);

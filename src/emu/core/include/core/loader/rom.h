@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
 #include <common/types.h>
-#include <vector>
+#include <cstdint>
 #include <optional>
+#include <vector>
 
 namespace eka2l1 {
     namespace loader {
@@ -21,11 +21,11 @@ namespace eka2l1 {
         };
 
         struct rom_page_info {
-            enum attrib: uint8_t {
+            enum attrib : uint8_t {
                 pageable = 1 << 0
             };
 
-            enum compression: uint8_t {
+            enum compression : uint8_t {
                 none,
                 bytepair
             };
@@ -134,7 +134,7 @@ namespace eka2l1 {
             uint16_t subdir_count;
             uint16_t file_count;
 
-            uint16_t* entry_offset;
+            uint16_t *entry_offset;
         };
 
         struct root_dir {
@@ -148,7 +148,7 @@ namespace eka2l1 {
             int num_root_dirs;
             std::vector<root_dir> root_dirs;
 
-            root_dir& operator[](uint32_t idx) {
+            root_dir &operator[](uint32_t idx) {
                 return root_dirs[idx];
             }
         };
@@ -157,11 +157,11 @@ namespace eka2l1 {
             rom_header header;
             rom_section_header section_header;
 
-            FILE* handler;
+            FILE *handler;
 
             root_dir_list root;
         };
 
-        std::optional<rom> load_rom(const std::string& path);
+        std::optional<rom> load_rom(const std::string &path);
     }
 }

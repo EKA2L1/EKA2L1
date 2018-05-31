@@ -1,8 +1,8 @@
+#include <arm/jit_factory.h>
+#include <capstone.h>
 #include <common/log.h>
 #include <common/types.h>
-#include <arm/jit_factory.h>
 #include <core_mem.h>
-#include <capstone.h>
 #include <disasm/disasm.h>
 #include <ptr.h>
 
@@ -17,7 +17,7 @@ namespace eka2l1 {
         }
     }
 
-    void disasm::init(memory_system* smem) {
+    void disasm::init(memory_system *smem) {
         cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle);
 
         if (err != CS_ERR_OK) {
@@ -88,7 +88,7 @@ namespace eka2l1 {
                 }
             } else {
                 sub.insts.push_back(thumb ? arm_inst_type::thumb : arm_inst_type::arm);
-            
+
                 // Quick hack: if the pc is modified (means pc go first, have space),
                 // or if inst is branch or jump, then subroutine is here
                 if (inst[0] == 'b' || inst[0] == 'j' || FOUND_STR(inst.find(" pc"))) {

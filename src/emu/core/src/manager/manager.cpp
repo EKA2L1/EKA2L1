@@ -6,7 +6,7 @@ namespace eka2l1 {
         return &pkgmngr;
     }
 
-    void manager_system::init(io_system* ios) {
+    void manager_system::init(io_system *ios) {
         io = ios;
         pkgmngr = manager::package_manager(ios);
     }

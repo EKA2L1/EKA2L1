@@ -1,8 +1,8 @@
 #include <loader/sis_fields.h>
 #include <miniz.h>
 
-#include <common/log.h>
 #include <common/advstream.h>
+#include <common/log.h>
 
 #include <fstream>
 #include <iostream>

@@ -25,16 +25,16 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-		void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
-			ctx.pc = entry_point;
-			ctx.sp = stack_top;
-			ctx.cpsr = 16 | ((entry_point & 1) << 5);
+        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
+            ctx.pc = entry_point;
+            ctx.sp = stack_top;
+            ctx.cpsr = 16 | ((entry_point & 1) << 5);
 
-			std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
-			std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
-		}
+            std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
+            std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
+        }
 
-        thread::thread(kernel_system* kern, memory_system* mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
+        thread::thread(kernel_system *kern, memory_system *mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             void *usrdata,
             thread_priority pri)
@@ -44,8 +44,8 @@ namespace eka2l1 {
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
             , mem(mem)
-			, owner(owner) {
-		     priority = caculate_thread_priority(pri);
+            , owner(owner) {
+            priority = caculate_thread_priority(pri);
 
             const thread_stack::deleter stack_deleter = [mem](address stack) {
                 mem->free(stack);
@@ -62,64 +62,64 @@ namespace eka2l1 {
             // Fill the stack with garbage
             std::fill(stack_phys_beg.get(mem), stack_phys_end.get(mem), 0xcc);
 
-            heap_addr = mem->alloc(1);
+            heap_addr = mem->alloc(max_heap_size);
 
             if (!heap_addr) {
                 LOG_ERROR("No more heap for thread!");
             }
 
-			reset_thread_ctx(epa, stack_top);
+            reset_thread_ctx(epa, stack_top);
 
-			scheduler = kern->get_thread_scheduler();
+            scheduler = kern->get_thread_scheduler();
 
             // Add the thread to the kernel management unit
             kern->add_thread(this);
         }
 
-		bool thread::sleep(int64_t ns) {
-			state = thread_state::wait;
-			return scheduler->sleep(this, ns);
-		}
+        bool thread::sleep(int64_t ns) {
+            state = thread_state::wait;
+            return scheduler->sleep(this, ns);
+        }
 
-		bool thread::run() {
-			state = thread_state::run;
-			kern->run_thread(obj_id);
+        bool thread::run() {
+            state = thread_state::run;
+            kern->run_thread(obj_id);
 
-			return true;
-		}
+            return true;
+        }
 
-		bool thread::stop() {
-			scheduler->unschedule_wakeup();
+        bool thread::stop() {
+            scheduler->unschedule_wakeup();
 
-			if (state == thread_state::ready) {
-				scheduler->unschedule(obj_id);
-			}
+            if (state == thread_state::ready) {
+                scheduler->unschedule(obj_id);
+            }
 
-			state = thread_state::stop;
+            state = thread_state::stop;
 
-			wake_up_waiting_threads();
+            wake_up_waiting_threads();
 
-			for (auto& thr : waits) {
-				thr->erase_waiting_thread(thr->unique_id());
-			}
+            for (auto &thr : waits) {
+                thr->erase_waiting_thread(thr->unique_id());
+            }
 
-			waits.clear();
+            waits.clear();
 
-			// release mutex
+            // release mutex
 
-			return true;
-		}
+            return true;
+        }
 
-		bool thread::resume() {
-			return scheduler->resume(obj_id);
-		}
+        bool thread::resume() {
+            return scheduler->resume(obj_id);
+        }
 
-		bool thread::should_wait(const kernel::uid id) {
-			return state != thread_state::stop;
-		}
+        bool thread::should_wait(const kernel::uid id) {
+            return state != thread_state::stop;
+        }
 
-		void thread::acquire(const kernel::uid id) {
-			// :)
-		}
+        void thread::acquire(const kernel::uid id) {
+            // :)
+        }
     }
 }

@@ -18,16 +18,16 @@ namespace eka2l1 {
         using thread_stack = common::resource<address>;
         using thread_stack_ptr = std::unique_ptr<thread_stack>;
 
-		class thread_scheduler;
+        class thread_scheduler;
 
         enum class thread_state {
             run,
             wait,
             ready,
             stop,
-			wait_fast_sema,  // Wait for semaphore
-			wait_dfc,   // Unused
-			wait_hle    // Wait in case an HLE event is taken place - e.g GUI
+            wait_fast_sema, // Wait for semaphore
+            wait_dfc, // Unused
+            wait_hle // Wait in case an HLE event is taken place - e.g GUI
         };
 
         enum thread_priority {
@@ -63,21 +63,20 @@ namespace eka2l1 {
             size_t heap_addr;
             void *usrdata;
 
-            memory_system* mem;
-			uint32_t lrt;
+            memory_system *mem;
+            uint32_t lrt;
 
-			thread_stack_ptr stack;
+            thread_stack_ptr stack;
 
-			// Owner of the thread
-			uint32_t owner;
-			std::shared_ptr<thread_scheduler> scheduler;  // The scheduler that schedules this thread
+            // Owner of the thread
+            uint32_t owner;
+            std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
 
-			void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
+            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
 
         public:
-
             thread();
-            thread(kernel_system* kern, memory_system* mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
+            thread(kernel_system *kern, memory_system *mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 void *usrdata = nullptr,
                 thread_priority pri = priority_normal);
@@ -95,13 +94,13 @@ namespace eka2l1 {
             }
 
             bool run();
-			bool stop();
+            bool stop();
 
-			bool sleep(int64_t ns);
-			bool resume();
+            bool sleep(int64_t ns);
+            bool resume();
 
-			bool should_wait(const kernel::uid id) override;
-			void acquire(const kernel::uid id) override;
+            bool should_wait(const kernel::uid id) override;
+            void acquire(const kernel::uid id) override;
 
             // Physically we can't compare thread.
             bool operator>(const thread &rhs);

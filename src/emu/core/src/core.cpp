@@ -16,17 +16,17 @@ namespace eka2l1 {
         io.init(&mem);
         mngr.init(&io);
         asmdis.init(&mem);
-		hlelibmngr.init(&io, &mem, ver);
+        hlelibmngr.init(&io, &mem, ver);
 
-		cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
+        cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
 
         kern.init(&timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
     }
 
-    process* system::load(uint64_t id) {
-		crr_process = kern.spawn_new_process(id);
-		crr_process->run();
-		return crr_process;
+    process *system::load(uint64_t id) {
+        crr_process = kern.spawn_new_process(id);
+        crr_process->run();
+        return crr_process;
     }
 
     int system::loop() {
@@ -54,7 +54,7 @@ namespace eka2l1 {
         return mngr.get_package_manager()->install_package(path, drv);
     }
 
-    bool system::load_rom(const std::string& path) {
+    bool system::load_rom(const std::string &path) {
         auto romf_res = loader::load_rom(path);
 
         if (!romf_res) {
@@ -62,7 +62,7 @@ namespace eka2l1 {
         }
 
         romf = romf_res.value();
-		io.mount_rom("Z:", &romf);
+        io.mount_rom("Z:", &romf);
 
         bool res1 = mem.load_rom(path);
 
@@ -80,7 +80,7 @@ namespace eka2l1 {
         asmdis.shutdown();
     }
 
-	void system::mount(availdrive drv, std::string path) {
-		io.mount(((drv == availdrive::c) ? "C:" : "E:"), path);
-	}
+    void system::mount(availdrive drv, std::string path) {
+        io.mount(((drv == availdrive::c) ? "C:" : "E:"), path);
+    }
 }

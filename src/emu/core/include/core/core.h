@@ -1,81 +1,88 @@
 #pragma once
 
+#include <arm/jit_factory.h>
 #include <core_kernel.h>
 #include <core_mem.h>
 #include <core_timing.h>
-#include <vfs.h>
-#include <hle/libmanager.h>
-#include <arm/jit_factory.h>
 #include <disasm/disasm.h>
-#include <manager/manager.h>
-#include <manager/package_manager.h>
 #include <hle/libmanager.h>
 #include <loader/rom.h>
+#include <manager/manager.h>
+#include <manager/package_manager.h>
+#include <vfs.h>
 
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <process.h>
 #include <optional>
+#include <process.h>
 #include <tuple>
 
 namespace eka2l1 {
-	enum class availdrive {
-		c,
-		e
-	};
+    enum class availdrive {
+        c,
+        e
+    };
 
     class system {
-        process* crr_process;
-		std::mutex mut;
+        process *crr_process;
+        std::mutex mut;
 
-		hle::lib_manager hlelibmngr;
-		arm::jitter cpu;
-		arm::jitter_arm_type jit_type;
-		
-		memory_system mem;
-		kernel_system kern;
-		timing_system timing;
+        hle::lib_manager hlelibmngr;
+        arm::jitter cpu;
+        arm::jitter_arm_type jit_type;
 
-		manager_system mngr;
-		io_system io;
+        memory_system mem;
+        kernel_system kern;
+        timing_system timing;
 
-		disasm asmdis;
+        manager_system mngr;
+        io_system io;
 
-		loader::rom romf;
+        disasm asmdis;
 
-		bool reschedule_pending;
+        loader::rom romf;
 
-		epocver ver = epocver::epoc9;
+        bool reschedule_pending;
+
+        epocver ver = epocver::epoc9;
 
     public:
-		system(arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
-			: jit_type(jit_type) {}
+        system(arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
+            : jit_type(jit_type) {}
 
-		void set_symbian_version_use(const epocver ever) {
-			ver = ever;
-		}
+        void set_symbian_version_use(const epocver ever) {
+            ver = ever;
+        }
 
-		epocver get_symbian_version_use() const {
-			return ver;
-		}
+        epocver get_symbian_version_use() const {
+            return ver;
+        }
 
         void init();
-        process* load(uint64_t id);
+        process *load(uint64_t id);
         int loop();
         void shutdown();
 
-		void mount(availdrive drv, std::string path);
+        memory_system *get_memory_system() {
+            return &mem;
+        }
 
-		bool install_package(std::u16string path, uint8_t drv);
-		bool load_rom(const std::string& path);
+        arm::jitter &get_cpu() {
+            return cpu;
+        }
 
-		uint32_t total_app() {
-			return mngr.get_package_manager()->app_count();
-		}
+        void mount(availdrive drv, std::string path);
 
-		std::vector<manager::app_info> app_infos() {
-			return mngr.get_package_manager()->get_apps_info();
-		}
+        bool install_package(std::u16string path, uint8_t drv);
+        bool load_rom(const std::string &path);
+
+        uint32_t total_app() {
+            return mngr.get_package_manager()->app_count();
+        }
+
+        std::vector<manager::app_info> app_infos() {
+            return mngr.get_package_manager()->get_apps_info();
+        }
     };
 }

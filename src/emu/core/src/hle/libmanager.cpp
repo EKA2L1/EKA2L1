@@ -1,40 +1,44 @@
-#include <hle/libmanager.h>
-#include <common/log.h>
 #include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/log.h>
+#include <hle/libmanager.h>
 #include <loader/eka2img.h>
 #include <loader/romimage.h>
 #include <vfs.h>
 
 namespace eka2l1 {
     namespace hle {
-		void lib_manager::init(io_system* ios, memory_system* mems, epocver ver) {
-			io = ios;
-			mem = mems;
+        void lib_manager::init(io_system *ios, memory_system *mems, epocver ver) {
+            io = ios;
+            mem = mems;
 
-			load_all_sids(ver);
-		}
-
-        void lib_manager::load_all_sids(const epocver ver) {
-			std::vector<sid> tids;
-			std::string lib_name;
-
-			#define LIB(x) lib_name = #x;
-			#define EXPORT(x, y) tids.push_back(y); func_names.insert(std::make_pair(y, x)); 
-			#define ENDLIB() ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); tids.clear(); 
-
-			if (ver == epocver::epoc6) {
-				#include <hle/epoc6_n.h>
-			} else {
-				#include <hle/epoc9_n.h>
-			}
-
-			#undef LIB
-			#undef EXPORT
-			#undef ENLIB
+            load_all_sids(ver);
         }
 
-        std::optional<sids> lib_manager::get_sids(const std::u16string& lib_name) {
+        void lib_manager::load_all_sids(const epocver ver) {
+            std::vector<sid> tids;
+            std::string lib_name;
+
+#define LIB(x) lib_name = #x;
+#define EXPORT(x, y)   \
+    tids.push_back(y); \
+    func_names.insert(std::make_pair(y, x));
+#define ENDLIB()                                                                        \
+    ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); \
+    tids.clear();
+
+            if (ver == epocver::epoc6) {
+#include <hle/epoc6_n.h>
+            } else {
+#include <hle/epoc9_n.h>
+            }
+
+#undef LIB
+#undef EXPORT
+#undef ENLIB
+        }
+
+        std::optional<sids> lib_manager::get_sids(const std::u16string &lib_name) {
             auto res = ids.find(lib_name);
 
             if (res == ids.end()) {
@@ -44,7 +48,7 @@ namespace eka2l1 {
             return res->second;
         }
 
-        std::optional<exportaddrs> lib_manager::get_export_addrs(const std::u16string& lib_name) {
+        std::optional<exportaddrs> lib_manager::get_export_addrs(const std::u16string &lib_name) {
             auto res = exports.find(lib_name);
 
             if (res == exports.end()) {
@@ -54,32 +58,32 @@ namespace eka2l1 {
             return res->second;
         }
 
-        bool lib_manager::register_exports(const std::u16string& lib_name, exportaddrs& addrs, bool log_exports) {           
-			if (exports.find(lib_name) != exports.end()) {
-				LOG_WARN("Exports already register, not really dangerous");
-				return true;
-			}
+        bool lib_manager::register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_exports) {
+            if (exports.find(lib_name) != exports.end()) {
+                LOG_WARN("Exports already register, not really dangerous");
+                return true;
+            }
 
-			exports.insert(std::make_pair(lib_name, addrs));
+            exports.insert(std::make_pair(lib_name, addrs));
 
-			auto libidsop = get_sids(lib_name);
+            auto libidsop = get_sids(lib_name);
 
-			if (libidsop) {
-				sids libids = libidsop.value();
+            if (libidsop) {
+                sids libids = libidsop.value();
 
-				if (addrs.size() > libids.size()) {
-					LOG_WARN("Export size is bigger than total symbol size provided, please update the symbol database for: {}",
-						common::ucs2_to_utf8(lib_name));
-				}
+                if (addrs.size() > libids.size()) {
+                    LOG_WARN("Export size is bigger than total symbol size provided, please update the symbol database for: {}",
+                        common::ucs2_to_utf8(lib_name));
+                }
 
-				for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
-					addr_map.insert(std::make_pair(addrs[i], libids[i]));
+                for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
+                    addr_map.insert(std::make_pair(addrs[i], libids[i]));
 
-					if (log_exports) {
-						LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}]", func_names[libids[i]], addrs[i], libids[i]);
-					}
-				}
-			}
+                    if (log_exports) {
+                        LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}]", func_names[libids[i]], addrs[i], libids[i]);
+                    }
+                }
+            }
 
             return true;
         }
@@ -94,134 +98,134 @@ namespace eka2l1 {
             return res->second;
         }
 
-		// Images are searched in
-		// C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
-		loader::e32img_ptr lib_manager::load_e32img(const std::u16string& img_name) {
-			symfile img = io->open_file(img_name, READ_MODE | BIN_MODE);
-			bool xip = false;
-			bool is_rom = false;
-			std::u16string path;
+        // Images are searched in
+        // C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
+        loader::e32img_ptr lib_manager::load_e32img(const std::u16string &img_name) {
+            symfile img = io->open_file(img_name, READ_MODE | BIN_MODE);
+            bool xip = false;
+            bool is_rom = false;
+            std::u16string path;
 
-			// I'm so sorry
-			if (!img) {
-				img = io->open_file( u"C:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
-				
-				if (!img) {
-					img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
+            // I'm so sorry
+            if (!img) {
+                img = io->open_file(u"C:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
-					if (!img) {
-						img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
+                if (!img) {
+                    img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
-						if (!img) {
-							return loader::e32img_ptr(nullptr);
-						} else {
-							xip = true;
-							is_rom = true;
-						}
-					}
-				}
-			}
+                    if (!img) {
+                        img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
-			auto res = loader::parse_eka2img(img);
+                        if (!img) {
+                            return loader::e32img_ptr(nullptr);
+                        } else {
+                            xip = true;
+                            is_rom = true;
+                        }
+                    }
+                }
+            }
 
-			if (!res) {
-				return loader::e32img_ptr(nullptr);
-			}
+            auto res = loader::parse_eka2img(img);
 
-			if (res->ed.syms.size() > 0) {
-				register_exports(img_name, res->ed.syms);
-			}
+            if (!res) {
+                return loader::e32img_ptr(nullptr);
+            }
 
-			loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());
-			
-			if (e32imgs_cache.find(pimg->header.check) != e32imgs_cache.end()) {
-				img->close();
-				return e32imgs_cache[pimg->header.check].img;
-			}
+            if (res->ed.syms.size() > 0) {
+                register_exports(img_name, res->ed.syms);
+            }
 
-			e32img_inf info;
+            loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());
 
-			info.img = pimg;
-			info.is_xip = xip;
-			info.is_rom = is_rom;
+            if (e32imgs_cache.find(pimg->header.check) != e32imgs_cache.end()) {
+                img->close();
+                return e32imgs_cache[pimg->header.check].img;
+            }
 
-			uint32_t check = info.img->header.check;
+            e32img_inf info;
 
-			e32imgs_cache.insert(std::make_pair(info.img->header.check, std::move(info)));
-			img->close();
+            info.img = pimg;
+            info.is_xip = xip;
+            info.is_rom = is_rom;
 
-			return e32imgs_cache[check].img;
-		}
+            uint32_t check = info.img->header.check;
 
-		loader::romimg_ptr lib_manager::load_romimg(const std::u16string& rom_name, bool log_exports) {
-			symfile romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll" , READ_MODE | BIN_MODE);
+            e32imgs_cache.insert(std::make_pair(info.img->header.check, std::move(info)));
+            img->close();
 
-			if (!romimgf) {
-				romimgf = io->open_file(rom_name, READ_MODE | BIN_MODE);
+            return e32imgs_cache[check].img;
+        }
 
-				if (!romimgf) {
-					return loader::romimg_ptr(nullptr);
-				}
-			}
+        loader::romimg_ptr lib_manager::load_romimg(const std::u16string &rom_name, bool log_exports) {
+            symfile romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll", READ_MODE | BIN_MODE);
 
-			auto res = loader::parse_romimg(romimgf, mem);
+            if (!romimgf) {
+                romimgf = io->open_file(rom_name, READ_MODE | BIN_MODE);
 
-			if (!res) {
-				return loader::romimg_ptr(nullptr);
-			}
+                if (!romimgf) {
+                    return loader::romimg_ptr(nullptr);
+                }
+            }
 
-			register_exports(rom_name, res->exports, log_exports);
+            auto res = loader::parse_romimg(romimgf, mem);
 
-			if (romimgs_cache.find(res->header.code_checksum) != romimgs_cache.end()) {
-				romimgf->close();
-				return romimgs_cache[res->header.code_checksum];
-			}
+            if (!res) {
+                return loader::romimg_ptr(nullptr);
+            }
 
-			//loader::stub_romimg()
+            register_exports(rom_name, res->exports, log_exports);
 
-			romimgs_cache.emplace(res->header.code_checksum, std::make_shared<loader::romimg>(res.value()));
-			return romimgs_cache[res->header.code_checksum];
-		}
+            if (romimgs_cache.find(res->header.code_checksum) != romimgs_cache.end()) {
+                romimgf->close();
+                return romimgs_cache[res->header.code_checksum];
+            }
 
-		// Open the image code segment
-		void lib_manager::open_e32img(loader::e32img_ptr& img) {
-			auto res = e32imgs_cache.find(img->header.check);
+            //loader::stub_romimg()
 
-			if (res == e32imgs_cache.end()) {
-				LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
-				return;
-			}
+            romimgs_cache.emplace(res->header.code_checksum, std::make_shared<loader::romimg>(res.value()));
+            return romimgs_cache[res->header.code_checksum];
+        }
 
-			// If the image is not XIP, means that it's unloaded or not loaded
-			if (!res->second.is_xip) {
-				loader::load_eka2img(*img, mem, *this);
-				res->second.is_xip = true;
-			}
-		}
+        // Open the image code segment
+        void lib_manager::open_e32img(loader::e32img_ptr &img) {
+            auto res = e32imgs_cache.find(img->header.check);
 
-		// Close the image code segment. Means that the image will be unloaded, XIP turns to false
-		void lib_manager::close_e32img(loader::e32img_ptr& img) {
-			auto res = e32imgs_cache.find(img->header.check);
+            if (res == e32imgs_cache.end()) {
+                LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
+                return;
+            }
 
-			if (res == e32imgs_cache.end()) {
-				LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
-				return;
-			}
+            // If the image is not XIP, means that it's unloaded or not loaded
+            if (!res->second.is_xip) {
+                loader::load_eka2img(*img, mem, *this);
+                res->second.is_xip = true;
+            }
+        }
 
-			if (!res->second.is_rom) {
-				mem->free(img->rt_code_addr);
-				res->second.is_xip = false;
-			}
-		}
+        // Close the image code segment. Means that the image will be unloaded, XIP turns to false
+        void lib_manager::close_e32img(loader::e32img_ptr &img) {
+            auto res = e32imgs_cache.find(img->header.check);
 
-		std::optional<std::string> lib_manager::get_func_name(const sid id) {
-			auto res = func_names.find(id);
+            if (res == e32imgs_cache.end()) {
+                LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
+                return;
+            }
 
-			if (res == func_names.end()) {
-				return std::optional<std::string>{};
-			}
+            if (!res->second.is_rom) {
+                mem->free(img->rt_code_addr);
+                res->second.is_xip = false;
+            }
+        }
 
-			return res->second;
-		}
+        std::optional<std::string> lib_manager::get_func_name(const sid id) {
+            auto res = func_names.find(id);
+
+            if (res == func_names.end()) {
+                return std::optional<std::string>{};
+            }
+
+            return res->second;
+        }
     }
 }

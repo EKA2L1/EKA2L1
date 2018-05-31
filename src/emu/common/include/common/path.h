@@ -34,18 +34,19 @@ namespace eka2l1 {
 
     public:
         path_iterator()
-			: crr_pos(0) {
-			++(*this);
-		}
+            : crr_pos(0) {
+            ++(*this);
+        }
 
         path_iterator(std::string p)
             : path(p)
             , crr_pos(0) {
-			++(*this);
-		}
+            ++(*this);
+        }
 
         void operator++() {
-			if (crr_pos < path.length()) comp = "";
+            if (crr_pos < path.length())
+                comp = "";
 
             while ((crr_pos < path.length()) && (path[crr_pos] != '/') && (path[crr_pos] != '\\')) {
                 comp += path[crr_pos];

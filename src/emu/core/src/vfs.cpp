@@ -1,11 +1,11 @@
+#include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <common/cvt.h>
 
-#include <core/vfs.h>
 #include <core/core_mem.h>
 #include <core/loader/rom.h>
 #include <core/ptr.h>
+#include <core/vfs.h>
 
 #include <iostream>
 
@@ -15,30 +15,32 @@
 
 namespace eka2l1 {
     // Class for some one want to access rom
-    struct rom_file: public file {
+    struct rom_file : public file {
         loader::rom_entry file;
-        loader::rom* parent;
+        loader::rom *parent;
 
         uint64_t crr_pos;
         std::mutex mut;
 
-        memory_system* mem;
+        memory_system *mem;
 
         ptr<char> file_ptr;
 
-        rom_file(memory_system* mem, loader::rom* supereme_mother, loader::rom_entry entry)
-            : parent(supereme_mother), file(entry), mem(mem) { init(); }
+        rom_file(memory_system *mem, loader::rom *supereme_mother, loader::rom_entry entry)
+            : parent(supereme_mother)
+            , file(entry)
+            , mem(mem) { init(); }
 
         void init() {
             file_ptr = ptr<char>(file.address_lin);
-			crr_pos = 0;
+            crr_pos = 0;
         }
 
         uint64_t size() const override {
             return file.size;
         }
 
-        int read_file(void* data, uint32_t size, uint32_t count) override {
+        int read_file(void *data, uint32_t size, uint32_t count) override {
             auto will_read = std::min((uint64_t)count * size, file.size - crr_pos);
             memcpy(data, &(file_ptr.get(mem)[crr_pos]), will_read);
 
@@ -51,7 +53,7 @@ namespace eka2l1 {
             return READ_MODE;
         }
 
-        int write_file(void* data, uint32_t size, uint32_t count) override {
+        int write_file(void *data, uint32_t size, uint32_t count) override {
             LOG_ERROR("Can't write into ROM!");
             return -1;
         }
@@ -66,13 +68,13 @@ namespace eka2l1 {
             }
         }
 
-		std::string get_error_descriptor() override {
-			return "no";
-		}
+        std::string get_error_descriptor() override {
+            return "no";
+        }
 
-		uint64_t tell() override {
-			return crr_pos;
-		}
+        uint64_t tell() override {
+            return crr_pos;
+        }
 
         std::u16string file_name() const override {
             return file.name;
@@ -83,17 +85,17 @@ namespace eka2l1 {
         }
     };
 
-    struct physical_file: public file {
-        FILE* file;
+    struct physical_file : public file {
+        FILE *file;
         std::u16string input_name;
         int fmode;
 
-        const char* translate_mode(int mode) {
+        const char *translate_mode(int mode) {
             if (mode & READ_MODE) {
                 if (mode & BIN_MODE) {
                     if (mode & WRITE_MODE) {
                         return "rwb";
-                    } 
+                    }
 
                     return "rb";
                 } else if (mode & WRITE_MODE) {
@@ -118,8 +120,7 @@ namespace eka2l1 {
             return "";
         }
 
-        physical_file(utf16_str path, int mode)
-            { init(path, mode); }
+        physical_file(utf16_str path, int mode) { init(path, mode); }
 
         ~physical_file() { shutdown(); }
 
@@ -135,14 +136,14 @@ namespace eka2l1 {
 
         void shutdown() {
             if (file)
-				fclose(file);
+                fclose(file);
         }
-        
-        int write_file(void* data, uint32_t size, uint32_t count) override {
+
+        int write_file(void *data, uint32_t size, uint32_t count) override {
             return fwrite(data, size, count, file);
         }
-        
-        int read_file(void* data, uint32_t size, uint32_t count) override {
+
+        int read_file(void *data, uint32_t size, uint32_t count) override {
             return fread(data, size, count, file);
         }
 
@@ -161,9 +162,9 @@ namespace eka2l1 {
             return true;
         }
 
-		uint64_t tell() override {
-			return ftell(file);
-		}
+        uint64_t tell() override {
+            return ftell(file);
+        }
 
         void seek(uint32_t seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg) {
@@ -179,12 +180,12 @@ namespace eka2l1 {
             return input_name;
         }
 
-		std::string get_error_descriptor() override {
-			return "no";
-		}
+        std::string get_error_descriptor() override {
+            return "no";
+        }
     };
 
-    void io_system::init(memory_system* smem) {
+    void io_system::init(memory_system *smem) {
         mem = smem;
         crr_dir = "C:";
     }
@@ -202,15 +203,15 @@ namespace eka2l1 {
         crr_dir = new_dir;
     }
 
-	void io_system::mount_rom(const std::string& dvc, loader::rom* rom) {
-		rom_cache = rom;
+    void io_system::mount_rom(const std::string &dvc, loader::rom *rom) {
+        rom_cache = rom;
 
-		drive drv;
-		drv.is_in_mem = true;
-		drv.drive_name = dvc;
+        drive drv;
+        drv.is_in_mem = true;
+        drv.drive_name = dvc;
 
-		drives.insert(std::make_pair(dvc, drv));
-	}
+        drives.insert(std::make_pair(dvc, drv));
+    }
 
     void io_system::mount(const std::string &dvc, const std::string &real_path) {
         auto find_res = drives.find(dvc);
@@ -252,12 +253,12 @@ namespace eka2l1 {
         auto res = drives.find(partition);
 
         if (res == drives.end() || res->second.is_in_mem) {
-			partition[0] = std::toupper(partition[0]);
-			res = drives.find(partition);
+            partition[0] = std::toupper(partition[0]);
+            res = drives.find(partition);
 
-			if (res == drives.end() || res->second.is_in_mem) {
-				return "";
-			}
+            if (res == drives.end() || res->second.is_in_mem) {
+                return "";
+            }
         }
 
         current_dir = res->second.real_path + crr_dir.substr(2);
@@ -287,7 +288,7 @@ namespace eka2l1 {
 
         auto findres = drives.find(path_dvc);
 
-        if (findres != drives.end())  {
+        if (findres != drives.end()) {
             return findres->second;
         }
 
@@ -295,27 +296,27 @@ namespace eka2l1 {
     }
 
     // Gurantees that these path are ASCII (ROM you says ;) )
-    std::optional<loader::rom_entry> io_system::burn_tree_find_entry(const std::string& vir_path) {
-		std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
+    std::optional<loader::rom_entry> io_system::burn_tree_find_entry(const std::string &vir_path) {
+        std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
         auto ite = path_iterator(vir_path);
 
-        loader::rom_dir last_dir_found; 
+        loader::rom_dir last_dir_found;
 
-		++ite;
-		
+        ++ite;
+
         for (; ite; ++ite) {
             auto res1 = std::find_if(dirs.begin(), dirs.end(),
                 [ite](auto p1) { return _strcmpi((common::ucs2_to_utf8(p1.name)).data(), (*ite).data()) == 0; });
 
             if (res1 != dirs.end()) {
-				last_dir_found = *res1;
+                last_dir_found = *res1;
                 dirs = res1->subdirs;
-			}
-         }
+            }
+        }
 
-		if (ite) {
-			return std::optional<loader::rom_entry>{};
-		}
+        if (ite) {
+            return std::optional<loader::rom_entry>{};
+        }
 
         // Save the last
         auto entries = last_dir_found.entries;
@@ -342,7 +343,7 @@ namespace eka2l1 {
 
         if (drv.is_in_mem && !(mode & WRITE_MODE)) {
             auto rom_entry = burn_tree_find_entry(std::string(vir_path.begin(), vir_path.end()));
-            
+
             if (!rom_entry) {
                 return std::shared_ptr<file>(nullptr);
             }
@@ -352,12 +353,11 @@ namespace eka2l1 {
             auto new_path = get(common::ucs2_to_utf8(vir_path));
             auto res = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
 
-			if (!res->file) {
-				return std::shared_ptr<file>(nullptr);
-			}
-			else {
-				return res;
-			}
+            if (!res->file) {
+                return std::shared_ptr<file>(nullptr);
+            } else {
+                return res;
+            }
         }
 
         return std::shared_ptr<file>(nullptr);

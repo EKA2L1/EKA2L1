@@ -12,8 +12,8 @@
 namespace eka2l1 {
     class memory_system;
 
-	struct file;
-	using symfile = std::shared_ptr<file>;
+    struct file;
+    using symfile = std::shared_ptr<file>;
 
     namespace loader {
         enum class eka2_cpu : uint16_t {
@@ -70,7 +70,7 @@ namespace eka2l1 {
         };
 
         struct eka2img_iat {
-			uint32_t number_imports;
+            uint32_t number_imports;
             std::vector<uint32_t> its;
         };
 
@@ -81,9 +81,9 @@ namespace eka2l1 {
             std::vector<uint16_t> rels_info;
         };
 
-		#define ELF32_R_SYM(i) ((i) >> 8)
-		#define ELF32_R_TYPE(i) ((unsigned char)(i))
-		#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
+#define ELF32_R_SYM(i) ((i) >> 8)
+#define ELF32_R_TYPE(i) ((unsigned char)(i))
+#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
 
         struct eka2_reloc_section {
             uint32_t size;
@@ -165,8 +165,8 @@ namespace eka2l1 {
         };
 
         std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
-		std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true);
+        std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true);
 
-        bool load_eka2img(eka2img &img, memory_system* mem, hle::lib_manager& mngr);
+        bool load_eka2img(eka2img &img, memory_system *mem, hle::lib_manager &mngr);
     }
 }

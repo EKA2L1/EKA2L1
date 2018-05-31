@@ -3,48 +3,51 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <memory>
-#include <string>
 #include <fstream>
+#include <memory>
 #include <streambuf>
+#include <string>
 
 namespace eka2l1 {
     namespace common {
         // A advance morden stream
         template <typename T>
         class advstream {
-            T* data;
+            T *data;
             uint64_t count;
             uint64_t size;
 
         protected:
-            T* _get(uint64_t hm) {
+            T *_get(uint64_t hm) {
                 if (eof()) {
                     return nullptr;
                 }
 
                 uint64_t get_count = std::min(hm, length());
-                T& res = data[get_count];
+                T &res = data[get_count];
 
                 count += get_count;
 
                 return &res;
             }
 
-            T* _peek(uint64_t hm) const {
+            T *_peek(uint64_t hm) const {
                 if (eof()) {
                     return nullptr;
                 }
 
-                return &data[count];   
+                return &data[count];
             }
 
         public:
             advstream()
-                : count(0), data(nullptr) {}
+                : count(0)
+                , data(nullptr) {}
 
-            advstream(T* dat, const uint64_t ssize)
-                : data(dat), size(ssize), count(0) {}
+            advstream(T *dat, const uint64_t ssize)
+                : data(dat)
+                , size(ssize)
+                , count(0) {}
 
             bool eof() const {
                 return count >= size;
@@ -55,12 +58,12 @@ namespace eka2l1 {
             }
         };
 
-        class advstringstream: public advstream<char> {
+        class advstringstream : public advstream<char> {
         public:
-            advstringstream(std::string& str)
+            advstringstream(std::string &str)
                 : advstream<char>(str.data(), str.size()) {}
 
-            char& get() {
+            char &get() {
                 return *_get(1);
             }
 
@@ -88,7 +91,7 @@ namespace eka2l1 {
                 return res;
             }
 
-            friend advstringstream& operator >>(advstringstream& stream, uint32_t& res) {
+            friend advstringstream &operator>>(advstringstream &stream, uint32_t &res) {
                 std::string num;
 
                 while (isdigit(stream.peek())) {
@@ -101,24 +104,24 @@ namespace eka2l1 {
             }
         };
 
-		struct istreambuf : public std::streambuf {
-		private:
-			std::vector<char> buffer;
+        struct istreambuf : public std::streambuf {
+        private:
+            std::vector<char> buffer;
 
-		public:
-			istreambuf(char* buf, std::streamsize buf_len) {
-				buffer.resize(buf_len);
-				memcpy(buffer.data(), buf, buf_len);
-				this->setg(buffer.data(), buffer.data(), buffer.data() + buffer.size());
-			}
-		};
+        public:
+            istreambuf(char *buf, std::streamsize buf_len) {
+                buffer.resize(buf_len);
+                memcpy(buffer.data(), buf, buf_len);
+                this->setg(buffer.data(), buffer.data(), buffer.data() + buffer.size());
+            }
+        };
 
-		struct icbuf : virtual istreambuf, std::istream {
-		public:
-			explicit icbuf(char* buf, std::streamsize buf_len)
-				: istreambuf(buf, buf_len),
-				  std::istream(this)	{
-			}
-		};
+        struct icbuf : virtual istreambuf, std::istream {
+        public:
+            explicit icbuf(char *buf, std::streamsize buf_len)
+                : istreambuf(buf, buf_len)
+                , std::istream(this) {
+            }
+        };
     }
 }

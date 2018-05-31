@@ -34,35 +34,34 @@ namespace eka2l1 {
         memory.reset();
     }
 
-	void memory_system::init() {
+    void memory_system::init() {
 #ifdef WIN32
-		SYSTEM_INFO system_info = {};
-		GetSystemInfo(&system_info);
+        SYSTEM_INFO system_info = {};
+        GetSystemInfo(&system_info);
 
-		page_size = system_info.dwPageSize;
+        page_size = system_info.dwPageSize;
 #else
-		page_size = sysconf(_SC_PAGESIZE);
+        page_size = sysconf(_SC_PAGESIZE);
 #endif
 
-		size_t len = common::GB(4);
+        size_t len = common::GB(4);
 
 #ifndef WIN32
-		memory = mem(static_cast<uint8_t *>(mmap(nullptr, len, PROT_READ,
-			MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
-			_free_mem);
+        memory = mem(static_cast<uint8_t *>(mmap(nullptr, len, PROT_READ,
+                         MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
+            _free_mem);
 #else
-		memory = mem(reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_NOACCESS)), _free_mem);
+        memory = mem(reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_NOACCESS)), _free_mem);
 #endif
 
-		if (!memory) {
-			LOG_CRITICAL("Allocating virtual memory for emulating failed!");
-			return;
-		}
-		else {
-			LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
-		}
+        if (!memory) {
+            LOG_CRITICAL("Allocating virtual memory for emulating failed!");
+            return;
+        } else {
+            LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
+        }
 
-		allocated_pages.resize(len / page_size);
+        allocated_pages.resize(len / page_size);
     }
 
     void memory_system::alloc_inner(address addr, size_t pg_count, allocated::iterator blck) {
@@ -191,56 +190,56 @@ namespace eka2l1 {
     }
 
     // Load the ROM into virtual memory, using ma
-    bool memory_system::load_rom(const std::string& rom_path) {
-		FILE* f = fopen(rom_path.c_str(), "rb");
+    bool memory_system::load_rom(const std::string &rom_path) {
+        FILE *f = fopen(rom_path.c_str(), "rb");
 
-		if (f == nullptr) {
-			return false;
-		}
+        if (f == nullptr) {
+            return false;
+        }
 
-		fseek(f, 0, SEEK_END);
+        fseek(f, 0, SEEK_END);
 
-		auto size = ftell(f);
-		auto aligned_size = ((size / page_size) + 1) * (page_size);
-		auto left = size;
+        auto size = ftell(f);
+        auto aligned_size = ((size / page_size) + 1) * (page_size);
+        auto left = size;
 
-		fseek(f, 0, SEEK_SET);
-
-#ifdef WIN32
-		DWORD old_prot;
-		auto newptr = VirtualAlloc(ptr<void>(0x80000000).get(this), aligned_size, MEM_COMMIT, PAGE_READWRITE);
-
-		if (!newptr) {
-			return false;
-		}
-#else
-		mprotect(ptr<void>(0x80000000).get(this), left, PROT_READ | PROT_WRITE);
-#endif
-
-		long buf_once = 0;
-
-		ptr<void> start(0x80000000);
-
-		while (left) {
-			buf_once = common::min(left, (long)100000);
-			fread(start.get(this), 1, buf_once, f);
-			start += (address)buf_once;
-
-			left -= buf_once;
-		}
-
-		fclose(f);
+        fseek(f, 0, SEEK_SET);
 
 #ifdef WIN32
-		bool res = VirtualProtect(ptr<void>(0x80000000).get(this),aligned_size, PAGE_READONLY, &old_prot);
+        DWORD old_prot;
+        auto newptr = VirtualAlloc(ptr<void>(0x80000000).get(this), aligned_size, MEM_COMMIT, PAGE_READWRITE);
 
-		if (!res) {
-			LOG_WARN("Can't change protection of ROM memory back to read-only.");
-		}
+        if (!newptr) {
+            return false;
+        }
 #else
-		mprotect(ptr<void>(0x80000000).get(this), size, PROT_READ);
+        mprotect(ptr<void>(0x80000000).get(this), left, PROT_READ | PROT_WRITE);
 #endif
-		return true;
+
+        long buf_once = 0;
+
+        ptr<void> start(0x80000000);
+
+        while (left) {
+            buf_once = common::min(left, (long)100000);
+            fread(start.get(this), 1, buf_once, f);
+            start += (address)buf_once;
+
+            left -= buf_once;
+        }
+
+        fclose(f);
+
+#ifdef WIN32
+        bool res = VirtualProtect(ptr<void>(0x80000000).get(this), aligned_size, PAGE_READONLY, &old_prot);
+
+        if (!res) {
+            LOG_WARN("Can't change protection of ROM memory back to read-only.");
+        }
+#else
+        mprotect(ptr<void>(0x80000000).get(this), size, PROT_READ);
+#endif
+        return true;
     }
 
     address memory_system::alloc_ime(size_t size) {

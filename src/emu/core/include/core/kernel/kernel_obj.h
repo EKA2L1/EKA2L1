@@ -15,10 +15,10 @@ namespace eka2l1 {
             std::string obj_name;
             uid obj_id;
 
-            kernel_system* kern;
+            kernel_system *kern;
 
-            kernel_obj(kernel_system* kern, const std::string &obj_name);
-            kernel_obj(kernel_system* kern, const uid obj_id, const std::string &obj_name)
+            kernel_obj(kernel_system *kern, const std::string &obj_name);
+            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name)
                 : obj_id(obj_id)
                 , obj_name(obj_name)
                 , kern(kern) {}

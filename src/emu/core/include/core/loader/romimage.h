@@ -1,16 +1,16 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <vector>
-#include <memory>
 
 namespace eka2l1 {
     struct file;
     class memory_system;
     class disasm;
-    
-    using symfile = std::shared_ptr<file>; 
+
+    using symfile = std::shared_ptr<file>;
 
     namespace hle {
         class lib_manager;
@@ -65,7 +65,7 @@ namespace eka2l1 {
             std::vector<uint32_t> exports;
         };
 
-        std::optional<romimg> parse_romimg(symfile& file, memory_system* mem);
-        bool stub_romimg(romimg& img, memory_system* mem, disasm* asmdis, hle::lib_manager);
+        std::optional<romimg> parse_romimg(symfile &file, memory_system *mem);
+        bool stub_romimg(romimg &img, memory_system *mem, disasm *asmdis, hle::lib_manager);
     }
 }

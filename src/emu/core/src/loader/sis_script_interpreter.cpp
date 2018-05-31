@@ -28,10 +28,10 @@ namespace eka2l1 {
         bool exists(const utf16_str &str) {
             FILE *temp = fopen(common::ucs2_to_utf8(str).c_str(), "rb");
 
-			if (temp) {
-				fclose(temp);
-				return true;
-			}
+            if (temp) {
+                fclose(temp);
+                return true;
+            }
 
             return false;
         }
@@ -54,7 +54,7 @@ namespace eka2l1 {
             if (mngr->installed(uid.uid)) {
                 return true;
             }
-            
+
             return false;
         }
 
@@ -62,14 +62,14 @@ namespace eka2l1 {
             data_stream.reset();
         }
 
-		ss_interpreter::ss_interpreter(std::shared_ptr<std::istream> stream,
-            io_system* io,
-			manager::package_manager* pkgmngr,
+        ss_interpreter::ss_interpreter(std::shared_ptr<std::istream> stream,
+            io_system *io,
+            manager::package_manager *pkgmngr,
             sis_install_block inst_blck,
             sis_data inst_data,
             sis_drive inst_drv)
             : data_stream(stream)
-			, mngr(pkgmngr)
+            , mngr(pkgmngr)
             , io(io)
             , install_block(inst_blck)
             , install_data(inst_data)
@@ -313,10 +313,10 @@ namespace eka2l1 {
             auto install_file = [&](sis_install_block inst_blck, uint16_t crr_blck_idx) {
                 for (auto &wrap_file : inst_blck.files.fields) {
                     sis_file_des *file = (sis_file_des *)(wrap_file.get());
-					std::string raw_path = "";
+                    std::string raw_path = "";
 
-					if (file->target.unicode_string.length() > 0) 
-						raw_path = io->get(get_install_path(file->target.unicode_string, install_drive));
+                    if (file->target.unicode_string.length() > 0)
+                        raw_path = io->get(get_install_path(file->target.unicode_string, install_drive));
 
                     if (file->op == ss_op::EOpText) {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);

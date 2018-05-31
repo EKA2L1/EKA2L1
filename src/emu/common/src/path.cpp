@@ -38,38 +38,34 @@ namespace eka2l1 {
 
     std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use) {
         std::string nstring = "";
-		std::string merge = "";
+        std::string merge = "";
 
-		if (path1.length() == 0 && path2.length() == 0) {
-			return "";
-		}
-		else if (path1.length() == 0) {
-			merge = path2;
-		}
-		else if (path2.length() == 0) {
-			merge = path1;
-		}  else {
-			bool end_sep = is_separator(path1[path1.size() - 1]);
-			bool beg_sep = is_separator(path2[0]);
+        if (path1.length() == 0 && path2.length() == 0) {
+            return "";
+        } else if (path1.length() == 0) {
+            merge = path2;
+        } else if (path2.length() == 0) {
+            merge = path1;
+        } else {
+            bool end_sep = is_separator(path1[path1.size() - 1]);
+            bool beg_sep = is_separator(path2[0]);
 
-			if (end_sep && beg_sep) {
-				auto pos_sub = path2.find_first_not_of(path2[0]);
+            if (end_sep && beg_sep) {
+                auto pos_sub = path2.find_first_not_of(path2[0]);
 
-				if (pos_sub == std::string::npos) {
-					return path1;
-				}
+                if (pos_sub == std::string::npos) {
+                    return path1;
+                }
 
-				nstring = path2.substr(pos_sub);
-			}
-			else if (!end_sep && !beg_sep) {
-				nstring = std::string("/") + path2;
-			}
-			else {
-				nstring = path2;
-			}
+                nstring = path2.substr(pos_sub);
+            } else if (!end_sep && !beg_sep) {
+                nstring = std::string("/") + path2;
+            } else {
+                nstring = path2;
+            }
 
-			merge = path1 + nstring;
-		}
+            merge = path1 + nstring;
+        }
 
         // Turn all slash into / (quick hack)
 
@@ -308,13 +304,13 @@ namespace eka2l1 {
 
         for (ite = path_iterator(path);
              ite; ++ite) {
-			if ((*ite).length() != 0) {
-				crr_path = add_path(crr_path, add_path(*ite, "/"));
+            if ((*ite).length() != 0) {
+                crr_path = add_path(crr_path, add_path(*ite, "/"));
 
-				if (!is_dir(crr_path)) {
-					create_directory(crr_path);
-				}
-			}
+                if (!is_dir(crr_path)) {
+                    create_directory(crr_path);
+                }
+            }
         }
     }
 }

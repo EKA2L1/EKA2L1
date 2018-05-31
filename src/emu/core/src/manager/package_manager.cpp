@@ -211,7 +211,7 @@ namespace eka2l1 {
                 info.name = names[i];
                 info.vendor_name = vendor_names[i];
                 info.executable_name = exe_names[i].data();
-				info.id = uids[i];
+                info.id = uids[i];
 
                 // Drive C
                 if (drives[i] == 0) {
@@ -306,7 +306,7 @@ namespace eka2l1 {
             // Interpret the file
             loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ifstream::binary),
                 io,
-				this,
+                this,
                 res.controller.install_block,
                 res.data,
                 loader::sis_drive(drive));
@@ -344,18 +344,18 @@ namespace eka2l1 {
             return res2->second;
         }
 
-		std::string package_manager::get_app_executable_path(uint32_t uid) {
-			app_info inf = info(uid);
-			std::string res = (inf.drive == 0) ? "C:" : "E:";
-			res += "/sys/bin/";
-			res += common::ucs2_to_utf8(inf.executable_name);
+        std::string package_manager::get_app_executable_path(uint32_t uid) {
+            app_info inf = info(uid);
+            std::string res = (inf.drive == 0) ? "C:" : "E:";
+            res += "/sys/bin/";
+            res += common::ucs2_to_utf8(inf.executable_name);
 
-			return res;
-		}
+            return res;
+        }
 
-		std::string package_manager::get_app_name(uint32_t uid) {
-			app_info inf = info(uid);
-			return common::ucs2_to_utf8(inf.name);
-		}
+        std::string package_manager::get_app_name(uint32_t uid) {
+            app_info inf = info(uid);
+            return common::ucs2_to_utf8(inf.name);
+        }
     }
 }

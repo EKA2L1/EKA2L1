@@ -2,22 +2,22 @@
 #include <process.h>
 
 namespace eka2l1 {
-    process::process(kernel_system* kern, memory_system* mem, uint32_t uid,
-        const std::string &process_name, loader::e32img_ptr& img)
+    process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
+        const std::string &process_name, loader::e32img_ptr &img)
         : uid(uid)
         , process_name(process_name)
         , prthr(kern, mem, uid, process_name, img->rt_code_addr + img->header.entry_point,
-			img->header.stack_size, img->header.heap_size_min, img->header.heap_size_max,
-            nullptr, kernel::priority_normal)
+              img->header.stack_size, img->header.heap_size_min, img->header.heap_size_max,
+              nullptr, kernel::priority_normal)
         , kern(kern)
         , mem(mem)
-		, img(img) {
+        , img(img) {
     }
 
-	bool process::stop() {
-		prthr.stop();
-		return true;
-	}
+    bool process::stop() {
+        prthr.stop();
+        return true;
+    }
 
     // Create a new thread and run
     // No arguments provided

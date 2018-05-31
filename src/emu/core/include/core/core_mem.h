@@ -38,7 +38,7 @@ namespace eka2l1 {
 
         gen generations;
         allocated allocated_pages;
-        
+
     protected:
         // Alloc in a specific range
         address alloc_range(address beg, address end, size_t size);
@@ -65,9 +65,9 @@ namespace eka2l1 {
         }
 
         // Load the ROM into virtual memory, using map
-        bool load_rom(const std::string& rom_path);
+        bool load_rom(const std::string &rom_path);
 
-        void* get_mem_start() const {
+        void *get_mem_start() const {
             return memory.get();
         }
 
