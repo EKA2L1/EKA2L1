@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <common/log.h>
 #include <core_kernel.h>
 #include <core_mem.h>
@@ -47,38 +66,24 @@ namespace eka2l1 {
             , owner(owner) {
             priority = caculate_thread_priority(pri);
 
-            const thread_stack::deleter stack_deleter = [mem](address stack) {
-                mem->free(stack);
-            };
+            stack_chunk = kern->create_chunk("", 0, stack_size, stack_size, prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none);
 
-            stack = std::make_unique<thread_stack>(
-                mem->alloc(stack_size), stack_deleter);
+            const address stack_top = stack_chunk->base().ptr_address() + stack_size;
 
-            const address stack_top = stack->get() + stack_size;
-
-            ptr<uint8_t> stack_phys_beg(stack->get());
-            ptr<uint8_t> stack_phys_end(stack->get() + stack_size);
+            ptr<uint8_t> stack_phys_beg(stack_chunk->base().ptr_address());
+            ptr<uint8_t> stack_phys_end(stack_chunk->base().ptr_address() + stack_size);
 
             // Fill the stack with garbage
             std::fill(stack_phys_beg.get(mem), stack_phys_end.get(mem), 0xcc);
 
-            heap_addr = mem->alloc(max_heap_size);
-
-            if (!heap_addr) {
-                LOG_ERROR("No more heap for thread!");
-            }
-
             reset_thread_ctx(epa, stack_top);
-
             scheduler = kern->get_thread_scheduler();
-
-            // Add the thread to the kernel management unit
-            kern->add_thread(this);
         }
 
         bool thread::sleep(int64_t ns) {
             state = thread_state::wait;
-            return scheduler->sleep(this, ns);
+            return scheduler->sleep(obj_id, ns);
         }
 
         bool thread::run() {
@@ -123,3 +128,4 @@ namespace eka2l1 {
         }
     }
 }
+

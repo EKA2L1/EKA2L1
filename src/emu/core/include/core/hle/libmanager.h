@@ -1,19 +1,22 @@
-// EKA2l1 project
-// Copyright (C) 2018 EKA2l1 team
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, write to the Free Software Foundation, Inc.,
-// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #pragma once
 
@@ -30,6 +33,7 @@ namespace YAML {
 namespace eka2l1 {
     class io_system;
     class memory_system;
+    class kernel_system;
 
     using sid = uint32_t;
     using sids = std::vector<uint32_t>;
@@ -75,10 +79,11 @@ namespace eka2l1 {
 
             io_system *io;
             memory_system *mem;
+            kernel_system *kern;
 
         public:
             lib_manager(){};
-            void init(io_system *ios, memory_system *mems, epocver ver);
+            void init(kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
 
             std::optional<sids> get_sids(const std::u16string &lib_name);
             std::optional<exportaddrs> get_export_addrs(const std::u16string &lib_name);

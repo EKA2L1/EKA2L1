@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <condition_variable>
@@ -7,11 +27,14 @@
 #include <arm/jit_factory.h>
 #include <common/resource.h>
 #include <kernel/wait_obj.h>
+#include <kernel/chunk.h>
 #include <ptr.h>
 
 namespace eka2l1 {
     class kernel_system;
     class memory;
+
+    using chunk_ptr = std::shared_ptr<kernel::chunk>;
 
     namespace kernel {
         using address = uint32_t;
@@ -66,7 +89,7 @@ namespace eka2l1 {
             memory_system *mem;
             uint32_t lrt;
 
-            thread_stack_ptr stack;
+            chunk_ptr stack_chunk;
 
             // Owner of the thread
             uint32_t owner;
@@ -113,3 +136,4 @@ namespace eka2l1 {
         using thread_ptr = std::shared_ptr<kernel::thread>;
     }
 }
+

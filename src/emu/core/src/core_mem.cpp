@@ -1,7 +1,27 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <common/algorithm.h>
 #include <common/log.h>
 #include <core/ptr.h>
 
+#include <algorithm>
 #include <cstdint>
 
 #include <functional>
@@ -61,129 +81,187 @@ namespace eka2l1 {
             LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
         }
 
-        allocated_pages.resize(len / page_size);
+        mem_pages.resize(len / page_size);
     }
 
-    void memory_system::alloc_inner(address addr, size_t pg_count, allocated::iterator blck) {
-        uint8_t *addr_mem = &memory[addr];
-        auto aligned_size = pg_count * page_size;
+    ptr<void> memory_system::chunk_range(size_t beg_addr, size_t end_addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
+        max_grow -= max_grow % page_size;
+
+        // Find the reversed memory with this max grow
+        size_t page_count = (max_grow + page_size - 1) / page_size;
+
+        size_t page_begin_off = (beg_addr + page_size - 1) / page_size;
+        size_t page_end_off = (end_addr - page_size + 1) / page_size;
+
+        const auto& page_begin = mem_pages.rend() + page_begin_off;
+        const auto& page_end = page_begin + page_end_off;
+
+        page holder;
+
+        auto& suitable_pages = std::search_n(page_begin, page_end, page_count, holder, 
+            [](const auto& lhs, const auto& rhs) {
+            return (rhs.sts == page_status::free) && (rhs.generation == 0);
+        });
+
+        if (suitable_pages != mem_pages.rbegin()) {
+            return chunk((suitable_pages - mem_pages.rend()) * page_size, bottom, top, max_grow, cprot);
+        }
+
+        return ptr<void>(nullptr);
+    }
+
+    // Create a new chunk with specified address. Return base of chunk
+    ptr<void> memory_system::chunk(address addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
+        max_grow -= max_grow % page_size;
+
+        // Find the reversed memory with this max grow
+        size_t page_count = (max_grow + page_size - 1) / page_size;
+
+        if (bottom % page_size != 0) {
+            bottom += page_size - bottom % page_size;
+        }
+
+        if (top % page_size != 0) {
+            top += page_size - bottom % page_size;
+        }
+
+        size_t page_begin_off = (addr + page_size - 1) / page_size;
+        
+        const auto& page_begin = mem_pages.begin() + page_begin_off;
+        const auto& page_end = page_begin + page_count;
+
+        for (auto ite = page_begin; ite != page_end; ite++) {
+            // If the page is not free, than either it's reserved or commited
+            // We can not make a new chunk on those pages
+            if (ite->sts != page_status::free) {
+                return ptr<void>(nullptr);
+            }
+        }
 
         const gen generation = ++generations;
-        std::fill_n(blck, pg_count, generation);
+
+        // We commit them later, so as well as assigned there protect first
+        page new_page = { generation, page_status::reserved, cprot };
+
+        std::fill(page_begin, page_end, new_page);
 
 #ifdef WIN32
-        VirtualAlloc(addr_mem, aligned_size, MEM_COMMIT, PAGE_READWRITE);
+        DWORD oldprot = 0;
+        BOOL res = VirtualProtect(ptr<void>(page_begin_off * page_size).get(this), page_count * page_size, translate_protection(cprot), &oldprot);
+
+        if (!res) {
+            return -1;
+        }
 #else
-        mprotect(addr_mem, aligned_size, PROT_READ | PROT_WRITE);
+        mprotect(ptr<void>(page_begin_off * page_size).get(this), page_count * page_size, translate_protection(cprot));
 #endif
-        std::memset(addr_mem, 0, aligned_size);
+
+        commit(addr + top, bottom - top);
+
+        return ptr<void>(addr);
     }
 
-    // Allocate the memory in heap memory
-    address memory_system::alloc(size_t size) {
-        const size_t page_count = (size + (page_size - 1)) / page_size;
+    // Commit to page
+    int memory_system::commit(ptr<void> addr, size_t size) {
+        address beg = (addr.ptr_address() / page_size) * page_size;
+        size_t  count = ((size + page_size - 1) / page_size);
 
-        const size_t page_heap_start = (LOCAL_DATA / page_size) + 1;
-        const size_t page_heap_end = (DLL_STATIC_DATA / page_size) - 1;
+        auto& page_begin = mem_pages.begin() + beg;
+        auto& page_end = page_begin + count;
 
-        const auto start_heap_page = allocated_pages.begin() + page_heap_start;
-        const auto end_heap_page = allocated_pages.begin() + page_heap_end;
+        prot nprot = page_begin->protection;
 
-        const auto &free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
+        for (page_begin; page_begin != page_end; page_begin++) {
+            // Can commit on commited region or reserved region
+            if (page_begin->sts == page_status::free) {
+                return -1;
+            }
 
-        if (free_block != allocated_pages.end()) {
-            const size_t block_page_index = free_block - allocated_pages.begin();
-            const address addr = static_cast<address>(block_page_index * page_size);
-
-            alloc_inner(addr, page_count, free_block);
-
-            return addr;
+            page_begin->sts = page_status::committed;
         }
+
+#ifdef WIN32
+        DWORD oldprot = 0;
+        auto res = VirtualAlloc(ptr<void>(beg).get(this), count * page_size, MEM_COMMIT, translate_protection(nprot));
+
+        if (!res) {
+            return -1;
+    }
+#else
+        mprotect(ptr<void>(beg).get(this), count * page_size, translate_protection(nprot));
+#endif
 
         return 0;
     }
 
-    void memory_system::free(address addr) {
-        const size_t page = addr / page_size;
-        const gen generation = allocated_pages[page];
+    int memory_system::decommit(ptr<void> addr, size_t size) {
+        address beg = (addr.ptr_address() / page_size) * page_size;
+        size_t  count = ((size + page_size - 1) / page_size);
 
-        const auto end_heap_page = allocated_pages.end();
+        auto& page_begin = mem_pages.begin() + beg;
+        auto& page_end = page_begin + count;
 
-        const auto different_gen = std::bind(std::not_equal_to<gen>(), generation, std::placeholders::_1);
-        const auto &first_page = allocated_pages.begin() + page;
-        const auto &last_page = std::find_if(first_page, end_heap_page, different_gen);
-        std::fill(first_page, last_page, 0);
-    }
-
-    // Map dynamicly still fine. As soon as user call IME_RANGE,
-    // that will call the UC and execute it
-    // Returns a pointer that is aligned and mapped
-    ptr<void> memory_system::map(address addr, size_t size, prot cprot) {
-        if (addr <= NULL_TRAP && addr != 0) {
-            LOG_INFO("Unmapable region 0x{:x}", addr);
-            return ptr<void>();
+        for (page_begin; page_begin != page_end; page_begin++) {
+            if (page_begin->sts == page_status::committed) {
+                page_begin->sts = page_status::reserved;
+            }
         }
 
-        address page_addr = (addr / page_size);
-        page_addr = page_addr * page_size;
-
-        void *real_address = &memory[page_addr];
-        auto tprot = translate_protection(cprot);
-
-        int res = 0;
-
 #ifdef WIN32
-        VirtualAlloc(real_address, size, MEM_COMMIT, tprot);
-#else
-        res = mprotect(real_address, size, tprot);
+        DWORD oldprot = 0;
+        auto res = VirtualFree(ptr<void>(beg).get(this), count * page_size, MEM_DECOMMIT);
 
-        if (res == -1) {
-            LOG_ERROR("Can not map: 0x{:x}, size = {}", addr, size);
+        if (!res) {
+            return -1;
         }
+#else
+        mprotect(ptr<void>(beg).get(this), count * page_size, PROT_NONE);
 #endif
-
-        return ptr<void>(page_addr);
+        return 0;
     }
 
-    int memory_system::change_prot(address addr, size_t size, prot nprot) {
-        auto tprot = translate_protection(nprot);
-        void *real_addr = get_addr<void>(addr);
+    // Change the prot of pages
+    int memory_system::change_prot(ptr<void> addr, size_t size, prot nprot) {
+        address beg = (addr.ptr_address() / page_size) * page_size;
+        size_t  count = ((size + page_size - 1) / page_size);
+
+        auto& page_begin = mem_pages.begin() + beg;
+        auto& page_end = page_begin + count;
+
+        for (page_begin; page_begin != page_end; page_begin++) {
+            // Only a commited region can have a protection
+            if (page_begin->sts != page_status::committed) {
+                return -1;
+            }
+
+            page_begin->protection = nprot;
+        }
 
 #ifdef WIN32
-        DWORD old_prot = 0;
-        return VirtualProtect(real_addr, size, tprot, &old_prot);
+        DWORD oldprot = 0;
+        BOOL res = VirtualProtect(ptr<void>(beg).get(this), count * page_size, translate_protection(nprot), &oldprot);
+
+        if (!res) {
+            return -1;
+        }
 #else
-        return mprotect(real_addr, size, tprot);
+        mprotect(ptr<void>(beg).get(this), count * page_size, translate_protection(nprot));
 #endif
+
+        return 0;
     }
 
-    int memory_system::unmap(ptr<void> addr, size_t size) {
-#ifndef WIN32
-        return munmap(addr.get(this), size);
-#else
-        return VirtualFree(addr.get(this), size, MEM_DECOMMIT);
-#endif
-    }
+    // Mark a chunk at addr as unusable
+    int memory_system::unchunk(ptr<void> addr, size_t length) {
+        address beg = (addr.ptr_address() / page_size) * page_size;
+        size_t  count = ((length + page_size - 1) / page_size);
 
-    // Alloc from thread heap
-    address memory_system::alloc_range(address beg, address end, size_t size) {
-        const size_t page_count = (size + (page_size - 1)) / page_size;
+        auto& page_begin = mem_pages.begin() + beg;
+        auto& page_end = page_begin + count;
 
-        const size_t page_heap_start = (beg / page_size) + 1;
-        const size_t page_heap_end = (end / page_size) - 1;
-
-        const auto start_heap_page = allocated_pages.begin() + page_heap_start;
-        const auto end_heap_page = allocated_pages.begin() + page_heap_end;
-
-        const auto &free_block = std::search_n(start_heap_page, end_heap_page, page_count, 0);
-
-        if (free_block != allocated_pages.end()) {
-            const size_t block_page_index = free_block - allocated_pages.begin();
-            const address addr = static_cast<address>(block_page_index * page_size);
-
-            alloc_inner(addr, page_count, free_block);
-
-            return addr;
+        for (page_begin; page_begin != page_end; page_begin++) {
+            page_begin->sts = page_status::free;
+            page_begin->protection = prot::none;
         }
 
         return 0;
@@ -203,18 +281,9 @@ namespace eka2l1 {
         auto aligned_size = ((size / page_size) + 1) * (page_size);
         auto left = size;
 
+        chunk_range(ROM, GLOBAL_DATA, 0, size, size, prot::read_write);
+
         fseek(f, 0, SEEK_SET);
-
-#ifdef WIN32
-        DWORD old_prot;
-        auto newptr = VirtualAlloc(ptr<void>(0x80000000).get(this), aligned_size, MEM_COMMIT, PAGE_READWRITE);
-
-        if (!newptr) {
-            return false;
-        }
-#else
-        mprotect(ptr<void>(0x80000000).get(this), left, PROT_READ | PROT_WRITE);
-#endif
 
         long buf_once = 0;
 
@@ -230,21 +299,9 @@ namespace eka2l1 {
 
         fclose(f);
 
-#ifdef WIN32
-        bool res = VirtualProtect(ptr<void>(0x80000000).get(this), aligned_size, PAGE_READONLY, &old_prot);
+        change_prot(ptr<void>(ROM), size, prot::read);
 
-        if (!res) {
-            LOG_WARN("Can't change protection of ROM memory back to read-only.");
-        }
-#else
-        mprotect(ptr<void>(0x80000000).get(this), size, PROT_READ);
-#endif
         return true;
     }
-
-    address memory_system::alloc_ime(size_t size) {
-        address addr = alloc_range(RAM_CODE_ADDR, ROM, size);
-        int res = change_prot(addr, size, prot::read_write_exec);
-        return addr;
-    }
 }
+

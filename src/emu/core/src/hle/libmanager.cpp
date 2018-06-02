@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -6,11 +25,14 @@
 #include <loader/romimage.h>
 #include <vfs.h>
 
+#include <core_kernel.h>
+
 namespace eka2l1 {
     namespace hle {
-        void lib_manager::init(io_system *ios, memory_system *mems, epocver ver) {
+        void lib_manager::init(kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
             io = ios;
             mem = mems;
+            kern = kerns;
 
             load_all_sids(ver);
         }
@@ -198,7 +220,7 @@ namespace eka2l1 {
 
             // If the image is not XIP, means that it's unloaded or not loaded
             if (!res->second.is_xip) {
-                loader::load_eka2img(*img, mem, *this);
+                loader::load_eka2img(*img, mem, kern, *this);
                 res->second.is_xip = true;
             }
         }
@@ -213,7 +235,7 @@ namespace eka2l1 {
             }
 
             if (!res->second.is_rom) {
-                mem->free(img->rt_code_addr);
+                kern->close_chunk(img->code_chunk->unique_id());
                 res->second.is_xip = false;
             }
         }

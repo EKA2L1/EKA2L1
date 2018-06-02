@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <algorithm>
 #include <atomic>
 #include <queue>
@@ -38,11 +57,6 @@ namespace eka2l1 {
         return crr_uid.load();
     }
 
-    void kernel_system::add_thread(kernel::thread *thr) {
-        const std::lock_guard<std::mutex> guard(mut);
-        threads.emplace(thr->unique_id(), thr);
-    }
-
     bool kernel_system::run_thread(kernel::uid thr_id) {
         auto res = threads.find(thr_id);
 
@@ -55,7 +69,7 @@ namespace eka2l1 {
         return true;
     }
 
-    kernel::thread *kernel_system::crr_thread() {
+    thread_ptr kernel_system::crr_thread() {
         return thr_sch->current_thread();
     }
 
@@ -107,4 +121,44 @@ namespace eka2l1 {
 
         return true;
     }
+
+    chunk_ptr kernel_system::create_chunk(std::string name, address top, const address bottom, const size_t size, prot protection,
+        kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib) {
+        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, top, bottom, size, protection, type, access, attrib);
+        uint32_t id = new_chunk->unique_id();
+
+        chunks.emplace(new_chunk->unique_id(), std::move(new_chunk));
+
+        return chunks[id];
+    }
+
+    void kernel_system::close_chunk(kernel::uid id) {
+        auto res = chunks.find(id);
+
+        if (res != chunks.end()) {
+            chunks.erase(id);
+        }
+    }
+
+    void kernel_system::close_thread(kernel::uid id) {
+        auto res = threads.find(id);
+
+        if (res != threads.end()) {
+            threads.erase(id);
+        }
+    }
+
+    thread_ptr kernel_system::add_thread(uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
+        const size_t min_heap_size, const size_t max_heap_size,
+        void *usrdata,
+        kernel::thread_priority pri) {
+        thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, owner, name, epa, stack_size, min_heap_size, max_heap_size);
+        uint32_t id = new_thread->unique_id();
+
+        thr_sch->schedule(new_thread);
+        threads.emplace(new_thread->unique_id(), std::move(new_thread));
+        
+        return threads[id];
+    }
 }
+

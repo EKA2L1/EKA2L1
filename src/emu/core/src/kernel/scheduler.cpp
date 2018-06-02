@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <algorithm>
 #include <common/log.h>
 #include <core_timing.h>
@@ -8,7 +27,7 @@
 void wake_thread(uint64_t ud, int cycles_late);
 
 void wake_thread(uint64_t ud, int cycles_late) {
-    eka2l1::kernel::thread *thr = reinterpret_cast<decltype(thr)>(ud);
+    eka2l1::kernel::thread* thr = reinterpret_cast<decltype(thr)>(ud);
 
     if (thr == nullptr) {
         return;
@@ -40,7 +59,7 @@ namespace eka2l1 {
             }
         }
 
-        void thread_scheduler::switch_context(kernel::thread *oldt, kernel::thread *newt) {
+        void thread_scheduler::switch_context(thread_ptr oldt, thread_ptr newt) {
             if (oldt) {
                 oldt->lrt = system->get_ticks();
                 jitter->save_context(oldt->ctx);
@@ -69,8 +88,8 @@ namespace eka2l1 {
             }
         }
 
-        kernel::thread *thread_scheduler::next_ready_thread() {
-            kernel::thread *crr = current_thread();
+        thread_ptr thread_scheduler::next_ready_thread() {
+            thread_ptr crr = current_thread();
 
             if (crr && crr->current_state() == thread_state::run) {
                 if (ready_threads.top()->current_priority() < crr->current_priority()) {
@@ -87,14 +106,14 @@ namespace eka2l1 {
         }
 
         void thread_scheduler::reschedule() {
-            kernel::thread *crr_thread = current_thread();
-            kernel::thread *next_thread = next_ready_thread();
+            thread_ptr crr_thread = current_thread();
+            thread_ptr next_thread = next_ready_thread();
 
             switch_context(crr_thread, next_thread);
         }
 
         // Put the thread into the ready queue to run in the next core timing yeid
-        bool thread_scheduler::schedule(kernel::thread *thr) {
+        bool thread_scheduler::schedule(thread_ptr thr) {
             if (thr->state == thread_state::run || thr->state == thread_state::ready) {
                 return false;
             }
@@ -105,19 +124,27 @@ namespace eka2l1 {
             return true;
         }
 
-        bool thread_scheduler::sleep(kernel::thread *thread, uint32_t sl_time) {
+        bool thread_scheduler::sleep(kernel::uid thr_id, uint32_t sl_time) {
+            auto res = running_threads.find(thr_id);
+
+            if (res == running_threads.end()) {
+                return false;
+            }
+
+            thread_ptr thread = res->second;
+
             // It's already waiting
             if (thread->state == thread_state::wait || thread->state == thread_state::ready) {
                 return false;
             }
 
-            running_threads.erase(thread->unique_id());
+            running_threads.erase(thr_id);
             thread->state = thread_state::wait;
 
             waiting_threads.emplace(thread->unique_id(), thread);
 
             // Schedule the thread to be waken up
-            system->schedule_event(sl_time, wakeup_evt, (uint64_t)this);
+            system->schedule_event(sl_time, wakeup_evt, (uint64_t)&(*thread));
 
             return true;
         }
@@ -134,7 +161,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            thread *thr = res->second;
+            thread_ptr thr = res->second;
 
             switch (thr->state) {
             case thread_state::wait:
@@ -161,3 +188,4 @@ namespace eka2l1 {
         }
     }
 }
+

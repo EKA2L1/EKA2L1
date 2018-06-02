@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "EKA2L1.h"
 
 #include "loader/eka2img.h"
@@ -44,7 +63,7 @@ namespace eka2l1 {
             debug_logger = std::make_shared<eka2l1::imgui::logger>();
             eka2l1::log::setup_log(debug_logger);
 
-			symsys.init();
+            symsys.init();
 
             LOG_INFO("EKA2L1: Experimental Symbian SIS Emulator");
         }
@@ -53,7 +72,7 @@ namespace eka2l1 {
             imgui::destroy_window(emu_win);
             imgui::free_gl();
 
-			symsys.shutdown();
+            symsys.shutdown();
 
             glfwTerminate();
         }
@@ -65,7 +84,7 @@ namespace eka2l1 {
             while (!glfwWindowShouldClose(emu_win)) {
                 glfwPollEvents();
 
-				//symsys.loop();
+                //symsys.loop();
 
                 eka2l1::imgui::update_io(emu_win);
                 eka2l1::imgui::newframe_gl(emu_win);
@@ -84,3 +103,4 @@ namespace eka2l1 {
         }
     }
 }
+

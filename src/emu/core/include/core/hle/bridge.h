@@ -1,19 +1,22 @@
-// EKA2l1 project
-// Copyright (C) 2018 EKA2l1 team
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, write to the Free Software Foundation, Inc.,
-// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+/*
+* Copyright (c) 2018 Vita3K Team / EKA2L1 Team.
+*
+* This file is part of Vita3K emulator project / EKA2L1 project
+* (see bentokun.github.com/EKA2L1).
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #pragma once
 
@@ -39,20 +42,20 @@ namespace eka2l1 {
         using import_func = std::function<system*>;
 
         template <typename ret, typename... args, size_t... indices>
-        void call(ret(*export_fn)(system*, args...), const args_layout &layout, std::index_sequence<args...>, arm::jitter& cpu, system* symsys) {
+        void call(ret(*export_fn)(system*, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter& cpu, system* symsys) {
             const ret result = (*export_fn)(symsys, read<arg, indices, args...>(cpu, layout, symsys->get_memory_system())...);
 
             write_return_value(cpu, result);
         }
 
         template <typename... args, size_t... indices>
-        void call(ret(*export_fn)(system*, args...), const args_layout &layout, std::index_sequence<args...>, arm::jitter& cpu, system* symsys) {
+        void call(void(*export_fn)(system*, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter& cpu, system* symsys) {
             (*export_fn)(symsys, read<arg, indices, args...>(cpu, layout, symsys->get_memory_system())...);
         }
 
         template <typename ret, typename... args>
         import_func bridge(ret(*export_fn)(system*, args...)) {
-            constexpr args_layout<args...> layouts = lay_out<args...>();
+            constexpr args_layout<args...> layouts = lay_out<typename bridge_types<args>::arm_type...>();
 
             return [export_fn, layout](system* symsys) {
                 using indices = std::index_sequence_for<args...>;
@@ -62,5 +65,7 @@ namespace eka2l1 {
 
         #define BRIDGE_REGISTER(func_sid, func) { func_sid, eka2l1::hle::bridge(&func) }
         #define BRIDGE_FUNC(ret, name, ...) ret name(eka2l1::system *sys, ##__VA_ARGS__)
+
+        using func_map = std::unordered_map<uint32_t, import_func>;
     }
 }

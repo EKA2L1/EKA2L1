@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <loader/eka2img.h>
 #include <loader/romimage.h>
 #include <vfs.h>
@@ -9,6 +29,8 @@
 #include <common/data_displayer.h>
 #include <common/flate.h>
 #include <common/log.h>
+
+#include <core_kernel.h>
 
 #include <cstdio>
 #include <miniz.h>
@@ -192,44 +214,15 @@ namespace eka2l1 {
             return true;
         }
 
-        void import_libs(eka2img *img, memory_system *mem, uint32_t rtcode_addr, hle::lib_manager &mngr) {
-            /*
-			for (auto &import_entry : img->import_section.imports) {
-				std::string dll_name = import_entry.dll_name;
-
-				size_t dll_name_end_pos = dll_name.find_first_of("{");
-
-				if (FOUND_STR(dll_name_end_pos)) {
-					dll_name = dll_name.substr(0, dll_name_end_pos);
-				} else {
-					dll_name_end_pos = dll_name.find_last_of(".");
-
-					if (FOUND_STR(dll_name_end_pos)) { 
-						dll_name = dll_name.substr(0, dll_name_end_pos);
-					} 
-				}
-
-				auto dll_u16 = std::u16string(dll_name.begin(), dll_name.end());
-				loader::romimg_ptr rimg = mngr.load_romimg(dll_u16);
-
-				auto exports = rimg->exports;
-
-				for (uint32_t i = 0; i < import_entry.number_of_imports; i++) {
-					auto or = rtcode_addr + import_entry.ordinals[i];
-					LOG_INFO("Import export 0x{:x}, sid: 0x{:x} ({}) at 0x{:x}", exports[i], (mngr.get_sid(exports[i])).value(), (mngr.get_func_name(mngr.get_sid(exports[i]).value()).value()), rtcode_addr + import_entry.ordinals[i]);
-					write(ptr<uint32_t>(or).get(mem), exports[i]);
-                }
-            } */
-        }
-
-        bool import_exe_image(eka2img *img, memory_system *mem, hle::lib_manager &mngr) {
-            // Map the memory_system to store the text, data and import section
-            ptr<void> asmdata = mem->alloc_ime(img->header.code_size + 0x1000);
+        bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            // Create the code + static data chunk
+            img->code_chunk = kern->create_chunk("", 0, img->header.code_size + 0x1000, img->header.code_size + 0x1000, prot::read_write_exec,
+                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
 
-            uint32_t rtcode_addr = asmdata.ptr_address();
+            uint32_t rtcode_addr = img->code_chunk->base().ptr_address();
             uint32_t rtdata_addr = rtcode_addr + img->header.code_size;
 
             img->rt_code_addr = rtcode_addr;
@@ -246,8 +239,6 @@ namespace eka2l1 {
 
             memcpy(ptr<uint32_t>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
             memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
-
-            //import_libs(img, mem, rtcode_addr, mngr);
 
             for (auto &ib : img->import_section.imports) {
                 elf_fix_up_import_dir(mem, mngr, *img, ib);
@@ -455,10 +446,6 @@ namespace eka2l1 {
                 }
 
                 if (ctype == compress_type::deflate_c) {
-                    // INFLATE IT!
-                    // Weird behavior, this is my way
-                    img.data[img.header.code_offset] = 12;
-
                     flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), temp_buf.size() * 8);
                     flate::inflater inflate_machine(input);
 
@@ -568,8 +555,9 @@ namespace eka2l1 {
             return img;
         }
 
-        bool load_eka2img(eka2img &img, memory_system *mem, hle::lib_manager &mngr) {
-            return import_exe_image(&img, mem, mngr);
+        bool load_eka2img(eka2img &img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            return import_exe_image(&img, mem, kern, mngr);
         }
     }
 }
+
