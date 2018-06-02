@@ -35,7 +35,9 @@ namespace eka2l1 {
         io.init(&mem);
         mngr.init(&io);
         asmdis.init(&mem);
-        hlelibmngr.init(&kern, &io, &mem, ver);
+
+        // Lib manager needs the system to call HLE function
+        hlelibmngr.init(this, &kern, &io, &mem, ver);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
 

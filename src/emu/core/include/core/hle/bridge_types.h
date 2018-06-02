@@ -30,7 +30,7 @@ namespace eka2l1 {
         struct bridge_type {
             using arm_type = host_type;
 
-            host_type arm_to_host(const arm_type &t, const memory_system *mem) {
+            static host_type arm_to_host(const arm_type &t, const memory_system *mem) {
                 return t;
             }
         };
@@ -39,7 +39,7 @@ namespace eka2l1 {
         struct bridge_type<pointee*> {
             using arm_type = ptr<pointee>;
 
-            pointee* arm_to_host(const arm_type &t, const memory_system *mem) {
+            static pointee* arm_to_host(const arm_type &t, const memory_system *mem) {
                 return t.get(mem);
             }
         };

@@ -72,10 +72,10 @@ namespace eka2l1 {
         }
 
         template <typename arg, size_t idx, typename... args>
-        arg read(arm::jitter &cpu, const args_layout<args...> &margs, const memory_system* mem) {
-            using arm_type = bridge_type<arg>::arm_type;
+        arg read(arm::jitter &cpu, const args_layout<args...> &margs, memory_system* mem) {
+            using arm_type = typename bridge_type<arg>::arm_type;
             
-            const arg bridged = read<arm_type>(cpu, margs[idx], mem);
+            const arm_type bridged = read<arm_type>(cpu, margs[idx], mem);
             return bridge_type<arg>::arm_to_host(bridged, mem);
         }
     }

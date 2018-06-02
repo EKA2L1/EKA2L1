@@ -106,6 +106,10 @@ namespace eka2l1 {
 
         // Decommit
         int decommit(ptr<void> addr, size_t size);
+
+        uint64_t get_page_size() const {
+            return page_size;
+        }
     };
 }
 

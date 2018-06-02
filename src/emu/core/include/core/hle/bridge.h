@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <hle/bridge_types.h>
 #include <hle/layout_args.h>
 #include <hle/read_arg.h>
 #include <hle/write_arg.h>
@@ -39,11 +40,11 @@ namespace eka2l1 {
     }
 
     namespace hle {
-        using import_func = std::function<system*>;
+        using import_func = std::function<void(system*)>;
 
         template <typename ret, typename... args, size_t... indices>
         void call(ret(*export_fn)(system*, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter& cpu, system* symsys) {
-            const ret result = (*export_fn)(symsys, read<arg, indices, args...>(cpu, layout, symsys->get_memory_system())...);
+            const ret result = (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, symsys->get_memory_system())...);
 
             write_return_value(cpu, result);
         }
@@ -55,12 +56,12 @@ namespace eka2l1 {
 
         template <typename ret, typename... args>
         import_func bridge(ret(*export_fn)(system*, args...)) {
-            constexpr args_layout<args...> layouts = lay_out<typename bridge_types<args>::arm_type...>();
+            constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
 
-            return [export_fn, layout](system* symsys) {
+            return [export_fn, layouts](system* symsys) {
                 using indices = std::index_sequence_for<args...>;
-                call(export_fn, export_name, args_layout, indices(), symsys->get_cpu(), symsys);
-            }
+                call(export_fn, layouts, indices(), symsys->get_cpu(), symsys);
+            };
         }
 
         #define BRIDGE_REGISTER(func_sid, func) { func_sid, eka2l1::hle::bridge(&func) }

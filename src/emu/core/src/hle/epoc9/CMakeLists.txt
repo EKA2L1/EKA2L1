@@ -7,9 +7,11 @@ add_library(epoc9
     ${CORE_INCLUDE_DIR}/hle/epoc9/sts.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/thread.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/types.h
-    thread.cpp)
+    ${CORE_INCLUDE_DIR}/hle/epoc9/register.h
+    thread.cpp
+    register.cpp)
 
 target_include_directories(epoc9 PUBLIC ${CORE_INCLUDE_DIR}/hle)
 target_link_libraries(epoc9 PUBLIC common)
-target_link_libraries(epoc9 PRIVATE corekernel hle disasm)
+target_link_libraries(epoc9 PRIVATE corekernel hle)
 

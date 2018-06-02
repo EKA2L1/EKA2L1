@@ -91,7 +91,7 @@ namespace eka2l1 {
         kernel::uid next_uid();
 
         // Create a chunk with these condition
-        chunk_ptr create_chunk(std::string name, address top, const address bottom, const size_t size, prot protection,
+        chunk_ptr create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
             kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib);
 
         void close_chunk(kernel::uid id);

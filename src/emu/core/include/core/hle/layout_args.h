@@ -59,7 +59,7 @@ namespace eka2l1 {
             const size_t next_gpr_used = gpr_idx + gpr_required;
 
             if (next_gpr_used > 4) {
-                return add_to_stack<arg>(state)l
+                return add_to_stack<arg>(state);
             }
 
             const arg_layout layout = { arg_where::gpr, gpr_idx };
@@ -75,7 +75,7 @@ namespace eka2l1 {
 
             const arg_layout layout = { arg_where::fpr, float_idx };
             const layout_args_state next_state = { state.gpr_used, state.stack_used, next_float_used };
-            
+
             return { layout, next_state };
         }
 
@@ -91,24 +91,26 @@ namespace eka2l1 {
 
         template <typename... args>
         constexpr std::enable_if_t<sizeof...(args) == 0> add_args_to_layout(arg_layout &head, layout_args_state &state) {
-            LOG_WARN("Adding arguments to layout without any arguments");
+            //LOG_WARN("Adding arguments to layout without any arguments");
         }
 
         template <typename head, typename... tail>
-        constexpr void add_args_to_layout(arg_layout &head, layout_args_state &state) {
-            const auto res = add_arg_to_layout<head>(state);
+        constexpr void add_args_to_layout(arg_layout &mhead, layout_args_state &state) {
+            const std::tuple<arg_layout, layout_args_state> res = add_arg_to_layout<head>(state);
             
-            head = std::get<0>(res);
+            mhead = std::get<0>(res);
             state = std::get<1>(res);
 
-            add_args_to_layout<tail...>(*(&head + 1), state);
+            add_args_to_layout<tail...>(*(&mhead + 1), state);
         }
 
         template <typename... args>
         constexpr args_layout<args...> lay_out() {
             args_layout<args...> layout = {};
             layout_args_state state = {};
-            add_args_to_layout(*layout.data(), state);
+            add_args_to_layout<args...>(*layout.data(), state);
+
+            return layout;
         }
     }
 }

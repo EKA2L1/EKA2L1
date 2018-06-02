@@ -28,6 +28,8 @@
 #include <ptr.h>
 #include <unicorn/unicorn.h>
 
+bool noppify_func = false;
+
 bool thumb_mode(uc_engine *uc) {
     size_t mode = 0;
     auto err = uc_query(uc, UC_QUERY_MODE, &mode);
@@ -52,6 +54,17 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
     LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
+void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
+    eka2l1::arm::jit_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
+
+    if (jit == nullptr) {
+        LOG_ERROR("Read hook failed: User Data was null");
+        return;
+    }
+
+    LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
+}
+
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
     eka2l1::arm::jit_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
@@ -73,14 +86,24 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         if (sid_correspond) {
             // DO nothing now
             auto func_name = mngr->get_func_name(sid_correspond.value());
-            LOG_INFO("HLE function called: {}", func_name.value());
+            mngr->call_hle(sid_correspond.value());
+
+            LOG_INFO("HLE function called: {}, jumping back to LR", func_name.value());
+
+            uint32_t lr = 0;
+
+            uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+            uc_reg_write(uc, UC_ARM_REG_PC, &lr);
+
+            return;
         }
     }
 
-    const uint8_t *const code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
-    const size_t buffer_size = eka2l1::common::GB(4) - address;
-    const bool thumb = thumb_mode(uc);
-    const std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
+    const uint8_t * code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
+    size_t buffer_size = eka2l1::common::GB(4) - address;
+    bool thumb = thumb_mode(uc);
+    std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
+
     LOG_TRACE("{:#08x} {}", address, disassembly);
 }
 
@@ -133,6 +156,7 @@ namespace eka2l1 {
             uc_hook hook{};
 
             uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
+            uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), this, 1, 0);
             // Map for unicorn to run around and play
@@ -220,7 +244,7 @@ namespace eka2l1 {
 
         uint32_t jit_unicorn::get_reg(size_t idx) {
             uint32_t val = 0;
-            auto treg = UC_ARM_REG_SP + UC_ARM_REG_R0 + idx;
+            auto treg = UC_ARM_REG_R0 + idx;  
             auto err = uc_reg_read(engine, treg, &val);
 
             if (err != UC_ERR_OK) {
@@ -297,7 +321,7 @@ namespace eka2l1 {
             auto err = uc_reg_write(engine, UC_ARM_REG_SP, &addr);
 
             if (err != UC_ERR_OK) {
-                LOG_WARN("ARM PC failed to be set!");
+                LOG_WARN("ARM SP failed to be set!");
             }
         }
 

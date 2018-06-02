@@ -39,4 +39,4 @@ BRIDGE_FUNC(TInt, UserHeapSetupThreadHeap, TBool aFirst, eka2l1::ptr<SStdEpocThr
 
 const eka2l1::hle::func_map thread_register_funcs = {
     BRIDGE_REGISTER(4238211793, UserHeapSetupThreadHeap)
-}
+};

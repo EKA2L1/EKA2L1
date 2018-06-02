@@ -69,7 +69,10 @@ namespace eka2l1 {
             stack_chunk = kern->create_chunk("", 0, stack_size, stack_size, prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none);
 
-            const address stack_top = stack_chunk->base().ptr_address() + stack_size;
+            const size_t metadata_size = 0x40;
+
+            // Left the space for the program to put thread create information
+            const address stack_top = stack_chunk->base().ptr_address() + stack_size - metadata_size;
 
             ptr<uint8_t> stack_phys_beg(stack_chunk->base().ptr_address());
             ptr<uint8_t> stack_phys_end(stack_chunk->base().ptr_address() + stack_size);

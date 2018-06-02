@@ -20,7 +20,10 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
+
+#include <hle/epoc9/register.h>
 #include <hle/libmanager.h>
+
 #include <loader/eka2img.h>
 #include <loader/romimage.h>
 #include <vfs.h>
@@ -29,12 +32,17 @@
 
 namespace eka2l1 {
     namespace hle {
-        void lib_manager::init(kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
+        void lib_manager::init(system* syss, kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
+            sys = syss;
             io = ios;
             mem = mems;
             kern = kerns;
 
             load_all_sids(ver);
+            
+            if (ver == epocver::epoc9) {
+                register_epoc9(*this);
+            }
         }
 
         void lib_manager::load_all_sids(const epocver ver) {
@@ -51,7 +59,8 @@ namespace eka2l1 {
 
             if (ver == epocver::epoc6) {
 #include <hle/epoc6_n.h>
-            } else {
+            }
+            else {
 #include <hle/epoc9_n.h>
             }
 
@@ -140,7 +149,8 @@ namespace eka2l1 {
 
                         if (!img) {
                             return loader::e32img_ptr(nullptr);
-                        } else {
+                        }
+                        else {
                             xip = true;
                             is_rom = true;
                         }
@@ -248,6 +258,32 @@ namespace eka2l1 {
             }
 
             return res->second;
+        }
+
+        void lib_manager::register_hle(sid id, epoc_import_func func) {
+            import_funcs.emplace(id, func);
+        }
+
+        std::optional<epoc_import_func> lib_manager::get_hle(sid id) {
+            auto res = import_funcs.find(id);
+
+            if (res != import_funcs.end()) {
+                return res->second;
+            }
+
+            return std::optional<epoc_import_func>{};
+        }
+
+        void lib_manager::call_hle(sid id) {
+            auto eimp = get_hle(id);
+
+            if (!eimp) {
+                LOG_WARN("Function unimplemented!");
+                return;
+            }
+
+            auto imp = eimp.value();
+            imp(sys);
         }
     }
 }

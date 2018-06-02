@@ -24,6 +24,7 @@
 
 #include <ptr.h>
 
+#include <common/algorithm.h>
 #include <common/buffer.h>
 #include <common/bytepair.h>
 #include <common/data_displayer.h>
@@ -196,8 +197,10 @@ namespace eka2l1 {
 
                     auto sid = mngr.get_sid(export_addr);
 
-                    LOG_INFO("Importing meow export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}",
-                        export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off);
+                    if (sid) {
+                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}",
+                            export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off);
+                    }
 
                     if (export_addr >= code_start && export_addr <= code_end) {
                         section_delta = code_delta;
@@ -216,29 +219,35 @@ namespace eka2l1 {
 
         bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             // Create the code + static data chunk
-            img->code_chunk = kern->create_chunk("", 0, img->header.code_size + 0x1000, img->header.code_size + 0x1000, prot::read_write_exec,
+            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()) , common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
                 kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none);
+
+            if (img->header.data_size)
+                img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
+                   kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
 
             uint32_t rtcode_addr = img->code_chunk->base().ptr_address();
-            uint32_t rtdata_addr = rtcode_addr + img->header.code_size;
+            uint32_t rtdata_addr = img->data_chunk ? img->data_chunk->base().ptr_address() : 0;
 
             img->rt_code_addr = rtcode_addr;
             img->rt_data_addr = rtdata_addr;
-
-            LOG_INFO("Writing data at offset: 0x{:x}", rtdata_addr);
 
             // Ram code address is the run time address of the code
             uint32_t code_delta = rtcode_addr - img->header.code_base;
             uint32_t data_delta = rtdata_addr - img->header.data_base;
 
             relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.code_offset), code_delta, data_delta);
-            relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
+      
+            if (img->header.data_size)
+                relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
 
-            memcpy(ptr<uint32_t>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
-            memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
+            memcpy(ptr<void>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
+
+            if (img->header.data_size)
+                memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
 
             for (auto &ib : img->import_section.imports) {
                 elf_fix_up_import_dir(mem, mngr, *img, ib);

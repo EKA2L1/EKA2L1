@@ -72,7 +72,7 @@ namespace eka2l1 {
 
         public:
             // The top and bottom address will be rounded up to align the page size
-            chunk(kernel_system* kern, memory_system* mem, std::string name, address top, const address bottom, const size_t max_grow_size, prot protection,
+            chunk(kernel_system* kern, memory_system* mem, std::string name, address bottom, const address top, const size_t max_grow_size, prot protection,
                 chunk_type type, chunk_access access, chunk_attrib attrib);
 
             ~chunk();

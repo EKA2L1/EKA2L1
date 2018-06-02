@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -34,6 +35,7 @@ namespace eka2l1 {
     class io_system;
     class memory_system;
     class kernel_system;
+    class system;
 
     using sid = uint32_t;
     using sids = std::vector<uint32_t>;
@@ -56,8 +58,8 @@ namespace eka2l1 {
     }
 
     namespace hle {
-        // This class is launched at configuration time, so
-        // no race condition.
+        using epoc_import_func = std::function<void(system*)>;
+
         class lib_manager {
             std::map<std::u16string, sids> ids;
             std::map<sid, std::string> func_names;
@@ -80,13 +82,21 @@ namespace eka2l1 {
             io_system *io;
             memory_system *mem;
             kernel_system *kern;
+            system *sys;
 
         public:
+            std::map<sid, epoc_import_func> import_funcs;
+
             lib_manager(){};
-            void init(kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
+            void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
 
             std::optional<sids> get_sids(const std::u16string &lib_name);
             std::optional<exportaddrs> get_export_addrs(const std::u16string &lib_name);
+
+            void register_hle(sid id, epoc_import_func func);
+            std::optional<epoc_import_func> get_hle(sid id);
+
+            void call_hle(sid id);
 
             // Image name
             loader::e32img_ptr load_e32img(const std::u16string &img_name);

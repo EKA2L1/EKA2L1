@@ -189,6 +189,7 @@ namespace eka2l1 {
             uint32_t rt_data_addr;
 
             chunk_ptr code_chunk;
+            chunk_ptr data_chunk;
 
             bool has_extended_header = false;
         };
