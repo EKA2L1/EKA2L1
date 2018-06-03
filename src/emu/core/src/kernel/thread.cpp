@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2018 EKA2L1 Team / Citra Team
  * 
- * This file is part of EKA2L1 project 
+ * This file is part of EKA2L1 project / Citra Emulator Project
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include <common/algorithm.h>
 #include <common/log.h>
 #include <core_kernel.h>
 #include <core_mem.h>
@@ -25,6 +26,27 @@
 
 namespace eka2l1 {
     namespace kernel {
+        struct epoc9_thread_create_info {
+            int           handle;
+            int           type;
+            address       func_ptr;
+            address       ptr;
+            address       supervisor_stack;
+            int           supervisor_stack_size;
+            address       user_stack;
+            int           user_stack_size;
+            int           init_thread_priority;
+            address        name;
+            int           total_size;
+        };
+
+        struct epoc9_std_epoc_thread_create_info : public epoc9_thread_create_info {
+            address allocator;
+            int     heap_min;
+            int     heap_max;
+            int     padding;
+        };
+
         int caculate_thread_priority(thread_priority pri) {
             const uint8_t pris[] = {
                 1, 1, 2, 3, 4, 5, 22, 0,
@@ -53,21 +75,53 @@ namespace eka2l1 {
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
         }
 
+        void thread::create_stack_metadata(ptr<void> stack_ptr, const address epa) {
+            epoc9_std_epoc_thread_create_info info;
+
+            // This is intended to make EPOC HLE side create RHeap
+            info.allocator = 0;
+            info.func_ptr = epa;
+            info.ptr = usrdata.ptr_address();
+
+            // The handle to RThread. HLE function ignore this, however when a RThread HLE call is executed, this
+            // will point to that RThread Handle
+            info.handle = 0;
+            info.heap_min = min_heap_size;
+            info.heap_max = max_heap_size;
+            info.init_thread_priority = priority;
+
+            info.name = name_chunk->base().ptr_address();
+            info.supervisor_stack = 0;
+            info.supervisor_stack_size = 0;
+
+            info.user_stack = stack_ptr.ptr_address();
+            info.user_stack_size = stack_size;
+            info.padding = 0;
+
+            info.total_size = 0x40;
+
+            memcpy(stack_ptr.get(mem), &info, 0x40);
+        }
+
         thread::thread(kernel_system *kern, memory_system *mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
-            void *usrdata,
+            ptr<void> usrdata,
             thread_priority pri)
-            : wait_obj(kern, name)
+            : wait_obj(kern, name, owner_type::process, owner)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
-            , mem(mem)
-            , owner(owner) {
+            , mem(mem){
             priority = caculate_thread_priority(pri);
 
             stack_chunk = kern->create_chunk("", 0, stack_size, stack_size, prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none);
+
+            name_chunk = kern->create_chunk("", 0, common::align(name.length(), mem->get_page_size()), common::align(name.length(), mem->get_page_size()), prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none);
+
+            memcpy(name_chunk->base().get(mem), name.data(), name.length());
 
             const size_t metadata_size = 0x40;
 
@@ -79,6 +133,7 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(stack_phys_beg.get(mem), stack_phys_end.get(mem), 0xcc);
+            create_stack_metadata(ptr<void>(stack_top), epa);
 
             reset_thread_ctx(epa, stack_top);
             scheduler = kern->get_thread_scheduler();

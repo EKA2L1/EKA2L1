@@ -28,7 +28,7 @@
 using namespace eka2l1::hle;
 
 struct RAllocator {
-    void*   iVtable; 
+    ptr<void>   iVtable; 
     TInt	iAccessCount;
     TInt	iCellCount;
     TUint32	iFlags;
@@ -45,7 +45,7 @@ struct SCell {
 struct RHeap : public RAllocator {
     TInt	 iAlign;
     TInt     iAllocCount;
-    TUint8 * iBase;
+    eka2l1::ptr<uint8_t> iBase;
     TInt	iChunkHandle;
     TInt	iFailAllocCount;
     TInt	iFailRate;
@@ -61,8 +61,8 @@ struct RHeap : public RAllocator {
     TInt	iOffset;
     TInt	iPageSize;
     TInt	iRand;
-    TAny *	iTestData;
-    TUint8 *iTop;
+    eka2l1::ptr<uint8_t>	iTestData;
+    eka2l1::ptr<uint8_t>    iTop;
 };
 
 BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator);

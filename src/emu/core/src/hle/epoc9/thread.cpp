@@ -19,7 +19,7 @@
  */
 #include <epoc9/thread.h>
 
-BRIDGE_FUNC(TInt, UserHeapSetupThreadHeap, TBool aFirst, eka2l1::ptr<SStdEpocThreadCreateInfo> aInfo) {
+BRIDGE_FUNC(TInt, UserHeapSetupThreadHeap, TBool aNotFirst, eka2l1::ptr<SStdEpocThreadCreateInfo> aInfo) {
     SStdEpocThreadCreateInfo *info = aInfo.get(sys->get_memory_system());
 
     if (!info) {

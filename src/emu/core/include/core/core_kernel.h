@@ -46,11 +46,13 @@ namespace eka2l1 {
     using thread_ptr = std::shared_ptr<kernel::thread>;
     using process_ptr = std::shared_ptr<process>;
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
+    using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
 
     class kernel_system {
         friend class process;
 
         std::atomic<kernel::uid> crr_uid;
+        kernel::uid crr_process_id;
 
         std::map<kernel::uid, thread_ptr> threads;
         std::map<kernel::uid, chunk_ptr> chunks;
@@ -89,13 +91,22 @@ namespace eka2l1 {
         }
 
         kernel::uid next_uid();
+        kernel::uid get_id_base_owner(kernel::owner_type owner) const;
 
         // Create a chunk with these condition
         chunk_ptr create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
-            kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib);
+            kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib,
+            kernel::owner_type owner);
 
-        void close_chunk(kernel::uid id);
-        void close_thread(kernel::uid id);
+        bool close_chunk(kernel::uid id);
+        bool close_thread(kernel::uid id);
+
+        bool close(kernel::uid id);
+
+        void set_closeable(kernel::uid id, bool opt);
+        bool get_closeable(kernel::uid id);
+
+        kernel_obj_ptr get_kernel_obj(kernel::uid id);
 
         thread_ptr add_thread(uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,

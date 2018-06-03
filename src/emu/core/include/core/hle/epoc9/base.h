@@ -21,6 +21,9 @@
 #pragma once
 
 #include <epoc9/types.h>
+#include <hle/bridge.h>
+
+#include <ptr.h>
 
 struct CBase {
     void *vtable;
@@ -29,3 +32,11 @@ struct CBase {
 struct RHandleBase {
     TInt iHandle;
 };
+
+BRIDGE_FUNC(TUint, RHandleBaseAttributes, eka2l1::ptr<RHandleBase> aThis);
+BRIDGE_FUNC(TInt, RHandleBaseBTraceId, eka2l1::ptr<RHandleBase> aThis);
+BRIDGE_FUNC(void, RHandleBaseClose, eka2l1::ptr<RHandleBase> aThis);
+BRIDGE_FUNC(void, RHandleBaseSetHandle, eka2l1::ptr<RHandleBase> aThis, TInt aNewHandle);
+BRIDGE_FUNC(void, RHandleBaseSetHandleNC, eka2l1::ptr<RHandleBase> aThis, TInt aNewHandle);
+
+extern const eka2l1::hle::func_map base_register_funcs;

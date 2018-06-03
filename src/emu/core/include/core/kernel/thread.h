@@ -83,25 +83,24 @@ namespace eka2l1 {
             size_t stack_size;
             size_t min_heap_size, max_heap_size;
 
-            size_t heap_addr;
-            void *usrdata;
+            ptr<void> usrdata;
 
             memory_system *mem;
             uint32_t lrt;
 
             chunk_ptr stack_chunk;
+            chunk_ptr name_chunk;
 
-            // Owner of the thread
-            uint32_t owner;
             std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
 
             void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
+            void create_stack_metadata(ptr<void> stack_ptr, const address epa);
 
         public:
             thread();
             thread(kernel_system *kern, memory_system *mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
-                void *usrdata = nullptr,
+                ptr<void> usrdata = nullptr,
                 thread_priority pri = priority_normal);
 
             thread_state current_state() const {

@@ -20,9 +20,64 @@
 
 #pragma once
 
-namespace eka2l1 {
-    namespace hle {
-        namespace epoc9 {
-        }
-    }
-}
+#include <epoc9/base.h>
+#include <epoc9/types.h>
+
+#include <hle/bridge.h>
+
+#include <ptr.h>
+
+struct RChunk : public RHandleBase {
+    enum TRestrictions {
+        EPreventAdjust
+    };
+};
+
+struct TChunkCreateInfo {
+    TUint iAttributes;
+    TUint8 iClearByte;
+    TBool iGlobal;
+    TInt iInitialBottom;
+    TInt iInitialTop;
+    TInt iMaxSize;
+    eka2l1::ptr<void> iName;   // TODO: Replace with TDesC
+    TOwnerType iOwnerType;
+    TUint8 iSpare1;
+    TUint8 iSpare2;
+    TUint  iType;
+    TUint  iVersion;
+};
+
+enum TChunkCreateAtt {
+    ENormal = 0x0,
+    EDoubleEnded = 0x1,
+    EDisconnected = 0x2,
+    ECache = 0x3,
+    EMappingMask = 0xf,
+    ELocal = 0x0,
+    EGlobal = 0x10,
+    EData = 0x0,
+    ECode = 0x20,
+    EMemNotOwned = 0x40,
+    ELocalNamed = 0x80,
+    EReadOnly = 0x100,
+    EPagingUnspec = 0x0,
+    EUnpaged = 0x40000000,
+    EPaged = 0x80000000,
+    EPagingMask = EPaged | EUnpaged,
+    EChunkCreateAttMask = EMappingMask | EGlobal | ECode | ELocalNamed
+};
+
+BRIDGE_FUNC(TInt, RChunkAdjust, eka2l1::ptr<RChunk> aThis, TInt aNewSize);
+BRIDGE_FUNC(TInt, RChunkAdjustDoubleEnded, eka2l1::ptr<RChunk> aThis, TInt aNewBottom, TInt aNewTop);
+BRIDGE_FUNC(TInt, RChunkAllocate, eka2l1::ptr<RChunk> aThis, TInt aSize);
+BRIDGE_FUNC(TInt, RChunkCommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt aSize);
+BRIDGE_FUNC(TInt, RChunkDecommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt aSize);
+BRIDGE_FUNC(eka2l1::ptr<TUint8>, RChunkBase, eka2l1::ptr<RChunk> aThis);
+BRIDGE_FUNC(TInt, RChunkBottom, eka2l1::ptr<RChunk> aThis);
+BRIDGE_FUNC(TInt, RChunkTop, eka2l1::ptr<RChunk> aThis);
+BRIDGE_FUNC(TInt, RChunkMaxSize, eka2l1::ptr<RChunk> aThis);
+BRIDGE_FUNC(TInt, RChunkCreate, eka2l1::ptr<RChunk> aThis, eka2l1::ptr<TChunkCreateInfo> aInfo);
+BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt aInitBottom, TInt aInitTop, TInt aMaxSize, TOwnerType aType = EOwnerProcess);
+
+extern const eka2l1::hle::func_map mem_register_funcs;

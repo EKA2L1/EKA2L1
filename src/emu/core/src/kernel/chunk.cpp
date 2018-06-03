@@ -29,8 +29,8 @@
 namespace eka2l1 {
     namespace kernel {
         chunk::chunk(kernel_system* kern, memory_system* mem, std::string name, address bottom, const address top, const size_t max_size, prot protection,
-            chunk_type type, chunk_access access, chunk_attrib attrib)
-            : kernel_obj(kern, name)
+            chunk_type type, chunk_access access, chunk_attrib attrib, kernel::owner_type owner_type, kernel::uid owner)
+            : kernel_obj(kern, name, owner_type, owner)
             , type(type)
             , access(access)
             , attrib(attrib)
@@ -43,7 +43,7 @@ namespace eka2l1 {
                 obj_name = "anonymous" + common::to_string(eka2l1::random());
             } 
 
-            if (access == chunk_access::local) {
+            if (access == chunk_access::local && name == "") {
                 obj_name = "local" + common::to_string(eka2l1::random());
             }
 

@@ -86,6 +86,8 @@ namespace eka2l1 {
 
         LOG_INFO("Process name: {}, uid: 0x{:x} loaded, ready for command to run.", name, uid);
 
+        crr_process_id = uid;
+
         return &(*processes[uid]);
     }
 
@@ -108,6 +110,8 @@ namespace eka2l1 {
         libmngr->close_e32img(pr->get_e32img());
         processes.erase(pr->get_uid());
 
+        crr_process_id = processes.begin()->first;
+
         return true;
     }
 
@@ -122,9 +126,14 @@ namespace eka2l1 {
         return true;
     }
 
+    kernel::uid kernel_system::get_id_base_owner(kernel::owner_type owner) const {
+        return owner == kernel::owner_type::process ? crr_process_id : thr_sch->current_thread()->unique_id();
+    }
+
     chunk_ptr kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
-        kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib) {
-        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib);
+        kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner) {
+        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib, 
+            owner, get_id_base_owner(owner));
         uint32_t id = new_chunk->unique_id();
 
         chunks.emplace(new_chunk->unique_id(), std::move(new_chunk));
@@ -132,20 +141,44 @@ namespace eka2l1 {
         return chunks[id];
     }
 
-    void kernel_system::close_chunk(kernel::uid id) {
+    bool kernel_system::close_chunk(kernel::uid id) {
         auto res = chunks.find(id);
 
         if (res != chunks.end()) {
             chunks.erase(id);
+            return true;
         }
+
+        return false;
     }
 
-    void kernel_system::close_thread(kernel::uid id) {
+    bool kernel_system::close_thread(kernel::uid id) {
         auto res = threads.find(id);
 
         if (res != threads.end()) {
             threads.erase(id);
+
+            for (auto& chnk : chunks) {
+                // Erase all chunks that have relation to the thread
+                if (chnk.second && chnk.second->obj_owner() == id) {
+                    chunks.erase(chnk.first);
+                }
+            }
+
+            return true;
         }
+
+        return false;
+    }
+
+    bool kernel_system::close(kernel::uid id) {
+        if (!close_chunk(id)) {
+            if (!close_thread(id)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     thread_ptr kernel_system::add_thread(uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
@@ -159,6 +192,44 @@ namespace eka2l1 {
         threads.emplace(new_thread->unique_id(), std::move(new_thread));
         
         return threads[id];
+    }
+
+    void kernel_system::set_closeable(kernel::uid id, bool opt) {
+        kernel_obj_ptr obj = get_kernel_obj(id);
+
+        if (obj == nullptr) {
+            LOG_WARN("Get closeable attribute of unexist kernel object");
+            return;
+        }
+
+        obj->user_closeable(opt);
+    }
+
+    bool kernel_system::get_closeable(kernel::uid id) {
+        kernel_obj_ptr obj = get_kernel_obj(id);
+
+        if (!obj) {
+            return false;
+        }
+
+        return obj->user_closeable();
+    }
+
+    kernel_obj_ptr kernel_system::get_kernel_obj(kernel::uid id) {
+        auto chunk_ite = chunks.find(id);
+
+        if (chunk_ite == chunks.end()) {
+            auto thread_ite = threads.find(id);
+
+            if (thread_ite != threads.end()) {
+                return thread_ite->second;
+            }
+            else {
+                return nullptr;
+            }
+        } 
+
+        return chunk_ite->second;
     }
 }
 

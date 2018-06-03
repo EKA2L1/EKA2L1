@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ptr.h>
 
 typedef char TInt8;
 typedef short TInt16;
@@ -28,6 +29,7 @@ typedef int32_t TInt32;
 typedef int64_t TInt64;
 
 typedef int TInt;
+typedef unsigned int TUint;
 typedef bool TBool;
 
 typedef unsigned char TUint8;
@@ -36,4 +38,9 @@ typedef uint32_t TUint32;
 typedef uint64_t TUint64;
 
 using TAny = void;
-using TPtrC = char*;
+using TPtrC = eka2l1::ptr<char>;
+
+enum TOwnerType {
+    EOwnerProcess,
+    EOwnerThread
+};

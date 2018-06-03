@@ -22,9 +22,11 @@
 
 namespace eka2l1 {
     namespace kernel {
-        kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name)
+        kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner)
             : obj_name(obj_name)
-            , kern(kern) {
+            , kern(kern)
+            , owner_type(owner_type)
+            , owner(owner) {
             obj_id = kern->next_uid();
         }
     }

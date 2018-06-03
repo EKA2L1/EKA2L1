@@ -87,6 +87,10 @@ namespace eka2l1 {
             return &mem;
         }
 
+        kernel_system *get_kernel_system() {
+            return &kern;
+        }
+
         arm::jitter &get_cpu() {
             return cpu;
         }

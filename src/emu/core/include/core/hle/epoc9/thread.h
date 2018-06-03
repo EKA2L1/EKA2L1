@@ -28,26 +28,26 @@
 typedef void(*TThreadFunction)(int);
 
 struct SThreadCreateInfo {
-    TAny*           iHandle;
-    TInt            iType;
-    TThreadFunction iFunction;
-    TAny*           iPtr;
-    TAny*           iSupervisorStack;
-    TInt            iSupervisorStackSize;
-    TAny*           iUserStack;
-    TInt            iUserStackSize;
-    TInt            iInitThreadPriority;
-    TPtrC           iName;
-    TInt            iTotalSize;
+    eka2l1::ptr<TAny>          iHandle;
+    TInt                       iType;
+    eka2l1::ptr<TAny>          iFunction;
+    eka2l1::ptr<TAny>          iPtr;
+    eka2l1::ptr<TAny>          iSupervisorStack;
+    TInt                       iSupervisorStackSize;
+    eka2l1::ptr<TAny>          iUserStack;
+    TInt                       iUserStackSize;
+    TInt                       iInitThreadPriority;
+    TPtrC                      iName;
+    TInt                       iTotalSize;
 };
 
 struct SStdEpocThreadCreateInfo : public SThreadCreateInfo {
-    TAny* iAllocator;
-    TInt  iHeapInitialSize;
-    TInt  iHeapMaxSize;
-    TInt  iPadding;
+    eka2l1::ptr<TAny>  iAllocator;
+    TInt               iHeapInitialSize;
+    TInt               iHeapMaxSize;
+    TInt               iPadding;
 };
 
-BRIDGE_FUNC(TInt, UserHeapSetupThreadHeap, TBool first, eka2l1::ptr<SStdEpocThreadCreateInfo> info);
+BRIDGE_FUNC(TInt, UserHeapSetupThreadHeap, TBool aNotfirst, eka2l1::ptr<SStdEpocThreadCreateInfo> aInfo);
 
 extern const eka2l1::hle::func_map thread_register_funcs;

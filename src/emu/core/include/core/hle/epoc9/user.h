@@ -18,10 +18,16 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <epoc9/register.h>
+#pragma once
 
-void register_epoc9(eka2l1::hle::lib_manager& mngr) {
-    ADD_REGISTERS(mngr, thread_register_funcs);
-    ADD_REGISTERS(mngr, base_register_funcs);
-    ADD_REGISTERS(mngr, mem_register_funcs);
-}
+// Implementing all USER calls
+
+#include <epoc9/types.h>
+#include <epoc9/err.h>
+
+#include <hle/bridge.h>
+#include <ptr.h>
+
+BRIDGE_FUNC(TInt, UserIsRomAddress, eka2l1::ptr<TBool> aBool, eka2l1::ptr<TAny> aAddr);
+
+extern const eka2l1::hle::func_map user_register_funcs;

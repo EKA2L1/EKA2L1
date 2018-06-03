@@ -29,19 +29,33 @@ namespace eka2l1 {
     namespace kernel {
         using uid = uint64_t;
 
+        enum class owner_type {
+            process,
+            thread
+        };
+
         // Base class for all kernel object
         class kernel_obj {
         protected:
             std::string obj_name;
             uid obj_id;
 
-            kernel_system *kern;
+            bool obj_user_closeable = true;
 
-            kernel_obj(kernel_system *kern, const std::string &obj_name);
-            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name)
+            kernel_system *kern;
+            
+            // If the owner_type is process, this will contains the process index in the kernel
+            // Else, it will contains the thread's id
+            kernel::uid owner;
+            kernel::owner_type owner_type;
+
+            kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner);
+            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner)
                 : obj_id(obj_id)
                 , obj_name(obj_name)
-                , kern(kern) {}
+                , kern(kern)
+                , owner(owner)
+                , owner_type(owner_type) {}
 
         public:
             std::string name() const {
@@ -54,6 +68,18 @@ namespace eka2l1 {
 
             kernel_system *get_kernel_object_owner() const {
                 return kern;
+            }
+
+            bool user_closeable() const {
+                return obj_user_closeable;
+            }
+
+            void user_closeable(bool opt) {
+                obj_user_closeable = opt;
+            }
+
+            kernel::uid obj_owner() const {
+                return owner;
             }
         };
     }

@@ -84,6 +84,35 @@ namespace eka2l1 {
             }
             return begin;
         }
+
+        template <typename T>
+        T next_power_of_two(const T target) {
+            T power = static_cast<T>(std::log2l(static_cast<long double>(target)));
+            return static_cast<T>(1 << power);
+        }
+
+        template <typename T>
+        bool is_power_of_two(const T target) {
+            T mask = 0;
+            T power = static_cast<T>(std::log2l(static_cast<long double>(target)));
+
+            for (T i = 0; i < power; ++i) {
+                mask += static_cast<T>(1 << i);
+            }
+
+            return !(target & mask);
+        }
+
+        template <typename T>
+        T align(T target, uint32_t alignment, int mode = 1) {
+            uint32_t new_alignment = is_power_of_two(alignment) ? alignment : next_power_of_two(alignment);
+
+            if (mode == 0) {
+                return target - target % new_alignment;
+            }
+
+            return target + new_alignment - target % new_alignment;
+        }
     }
 }
 

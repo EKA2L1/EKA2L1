@@ -31,8 +31,8 @@ namespace eka2l1 {
 
         class wait_obj : public kernel_obj {
         public:
-            wait_obj(kernel_system *sys, std::string name)
-                : kernel_obj(sys, name) {
+            wait_obj(kernel_system *sys, std::string name, kernel::owner_type owner_type, kernel::uid owner_id)
+                : kernel_obj(sys, name, owner_type, owner_id) {
                 waits.clear();
             }
 
