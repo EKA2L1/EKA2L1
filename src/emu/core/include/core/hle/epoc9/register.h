@@ -2,6 +2,7 @@
 
 #include <epoc9/allocator.h>
 #include <epoc9/base.h>
+#include <epoc9/char.h>
 #include <epoc9/cons.h>
 #include <epoc9/lock.h>
 #include <epoc9/mem.h>

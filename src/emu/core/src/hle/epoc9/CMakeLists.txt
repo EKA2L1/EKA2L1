@@ -12,6 +12,7 @@ add_library(epoc9
     ${CORE_INCLUDE_DIR}/hle/epoc9/register.h
     allocator.cpp
     base.cpp
+    char.cpp
     mem.cpp
     thread.cpp
     user.cpp

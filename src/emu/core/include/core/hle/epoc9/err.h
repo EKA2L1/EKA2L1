@@ -35,7 +35,6 @@ const TInt KErrUnderflow = (-10);
 const TInt KErrAlreadyExists = (-11);
 const TInt KErrPathNotFound = (-12);
 const TInt KErrDied = (-13);
-const TInt KErrDied=(-13);
 const TInt KErrInUse = (-14);
 const TInt KErrServerTerminated = (-15);
 const TInt KErrServerBusy = (-16);

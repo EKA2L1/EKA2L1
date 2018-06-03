@@ -43,6 +43,8 @@ namespace eka2l1 {
             if (ver == epocver::epoc9) {
                 register_epoc9(*this);
             }
+
+            LOG_INFO("Lib manager initialized, total implemented HLE functions: {}", import_funcs.size());
         }
 
         void lib_manager::load_all_sids(const epocver ver) {

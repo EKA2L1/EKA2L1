@@ -22,6 +22,7 @@
 
 #include <epoc9/base.h>
 #include <epoc9/types.h>
+#include <epoc9/char.h>
 
 #include <hle/bridge.h>
 
@@ -79,5 +80,7 @@ BRIDGE_FUNC(TInt, RChunkTop, eka2l1::ptr<RChunk> aThis);
 BRIDGE_FUNC(TInt, RChunkMaxSize, eka2l1::ptr<RChunk> aThis);
 BRIDGE_FUNC(TInt, RChunkCreate, eka2l1::ptr<RChunk> aThis, eka2l1::ptr<TChunkCreateInfo> aInfo);
 BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt aInitBottom, TInt aInitTop, TInt aMaxSize, TOwnerType aType = EOwnerProcess);
+
+BRIDGE_FUNC(void, MemFill, eka2l1::ptr<TAny> aTrg, TInt aLen, TChar aChar);
 
 extern const eka2l1::hle::func_map mem_register_funcs;

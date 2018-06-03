@@ -29,9 +29,8 @@ BRIDGE_FUNC(TInt, RHandleBaseBTraceId, eka2l1::ptr<RHandleBase> aThis) {
     return 0;
 }
 
-BRIDGE_FUNC(void, RHandleBaseClose, eka2l1::ptr<RHandleBase> aThis) {
+void RHandleBaseCloseNoHLEPointer(eka2l1::system *sys, RHandleBase *handle_base) {
     eka2l1::kernel_system *kern = sys->get_kernel_system();
-    RHandleBase *handle_base = aThis.get(sys->get_memory_system());
 
     if (!handle_base) {
         return;
@@ -42,20 +41,31 @@ BRIDGE_FUNC(void, RHandleBaseClose, eka2l1::ptr<RHandleBase> aThis) {
         kern->close(handle_base->iHandle);
 }
 
-BRIDGE_FUNC(void, RHandleBaseSetHandle, eka2l1::ptr<RHandleBase> aThis, TInt aNewHandle) {
+BRIDGE_FUNC(void, RHandleBaseClose, eka2l1::ptr<RHandleBase> aThis) {
+    eka2l1::kernel_system *kern = sys->get_kernel_system();
     RHandleBase *handle_base = aThis.get(sys->get_memory_system());
 
+    RHandleBaseCloseNoHLEPointer(sys, handle_base);
+}
+
+void RHandleBaseSetHandleNoHLEPointer(eka2l1::system *sys, RHandleBase *handle_base, TInt aNewHandle) {
     if (!handle_base) {
         return;
     }
 
     // Close this kernel handle before lending it a new one
     if (sys->get_kernel_system()->get_closeable(handle_base->iHandle)) {
-        RHandleBaseClose(sys, aThis);
+        RHandleBaseCloseNoHLEPointer(sys, handle_base);
         handle_base->iHandle = aNewHandle;
-    } else {
+    }
+    else {
         return;
     }
+}
+
+BRIDGE_FUNC(void, RHandleBaseSetHandle, eka2l1::ptr<RHandleBase> aThis, TInt aNewHandle) {
+    RHandleBase *handle_base = aThis.get(sys->get_memory_system());
+    RHandleBaseSetHandleNoHLEPointer(sys, handle_base, aNewHandle);
 }
 
 BRIDGE_FUNC(void, RHandleBaseSetHandleNC, eka2l1::ptr<RHandleBase> aThis, TInt aNewHandle) {

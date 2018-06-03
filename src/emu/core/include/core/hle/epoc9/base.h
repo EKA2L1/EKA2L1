@@ -33,6 +33,9 @@ struct RHandleBase {
     TInt iHandle;
 };
 
+void RHandleBaseSetHandleNoHLEPointer(eka2l1::system *sys, RHandleBase *handle_base, TInt aNewHandle);
+void RHandleBaseCloseNoHLEPointer(eka2l1::system *sys, RHandleBase *handle_base);
+
 BRIDGE_FUNC(TUint, RHandleBaseAttributes, eka2l1::ptr<RHandleBase> aThis);
 BRIDGE_FUNC(TInt, RHandleBaseBTraceId, eka2l1::ptr<RHandleBase> aThis);
 BRIDGE_FUNC(void, RHandleBaseClose, eka2l1::ptr<RHandleBase> aThis);

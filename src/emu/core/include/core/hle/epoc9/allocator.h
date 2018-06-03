@@ -27,13 +27,16 @@
 
 using namespace eka2l1::hle;
 
-struct RAllocator {
-    ptr<void>   iVtable; 
+struct MAllocator {
+    eka2l1::ptr<void> iVtable;
+};
+
+struct RAllocator: public MAllocator {
     TInt	iAccessCount;
     TInt	iCellCount;
     TUint32	iFlags;
     TInt	iHandleCount;
-    TInt*	iHandles;
+    eka2l1::ptr<TInt>	iHandles;
     TInt	iTotalAllocSize;
 };
 
@@ -65,4 +68,8 @@ struct RHeap : public RAllocator {
     eka2l1::ptr<uint8_t>    iTop;
 };
 
+BRIDGE_FUNC(void, RAllocatorDoClose, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator);
+BRIDGE_FUNC(void, RAllocatorClose, eka2l1::ptr<RAllocator> aAllocator);
+
+extern const eka2l1::hle::func_map allocator_register_funcs;
