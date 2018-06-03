@@ -220,11 +220,11 @@ namespace eka2l1 {
         bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             // Create the code + static data chunk
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()) , common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
-                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none);
+                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
             if (img->header.data_size)
                 img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
-                   kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none);
+                   kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);

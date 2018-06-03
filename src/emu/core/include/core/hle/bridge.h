@@ -51,7 +51,7 @@ namespace eka2l1 {
 
         template <typename... args, size_t... indices>
         void call(void(*export_fn)(system*, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter& cpu, system* symsys) {
-            (*export_fn)(symsys, read<arg, indices, args...>(cpu, layout, symsys->get_memory_system())...);
+            (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, symsys->get_memory_system())...);
         }
 
         template <typename ret, typename... args>

@@ -189,7 +189,7 @@ BRIDGE_FUNC(TInt, RChunkCreate, eka2l1::ptr<RChunk> aThis, eka2l1::ptr<TChunkCre
     return RChunkCreateHLEPointerEliminate(sys, chunk, create_info);
 }
 
-BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt aInitBottom, TInt aInitTop, TInt aMaxSize, TOwnerType aType = EOwnerProcess) {
+BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt aInitBottom, TInt aInitTop, TInt aMaxSize, TOwnerType aType) {
     RChunk *chunk = aThis.get(sys->get_memory_system());
 
     if (!chunk) {
@@ -214,4 +214,4 @@ const eka2l1::hle::func_map mem_register_funcs = {
     BRIDGE_REGISTER(762561902, RChunkCommit),
     BRIDGE_REGISTER(2317460249, RChunkDecommit),
     BRIDGE_REGISTER(3839845899, RChunkMaxSize)
-}
+};
