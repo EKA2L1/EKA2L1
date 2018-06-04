@@ -4,3 +4,6 @@ build/*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+src/emu/core/include/core/core_io.h
+src/emu/core/src/core_io.cpp
+.vs
