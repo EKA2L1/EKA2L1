@@ -67,6 +67,8 @@ namespace eka2l1 {
             std::map<std::u16string, exportaddrs> exports;
             std::map<address, sid> addr_map;
 
+            std::map<std::string, address> vtable_addrs;
+
             struct e32img_inf {
                 loader::e32img_ptr img;
                 bool is_xip;
@@ -116,6 +118,9 @@ namespace eka2l1 {
             std::optional<sid> get_sid(exportaddr addr);
 
             std::optional<std::string> get_func_name(const sid id);
+
+            address get_vtable_address(const std::string class_name);
+            address get_export_addr(sid id);
         };
     }
 }

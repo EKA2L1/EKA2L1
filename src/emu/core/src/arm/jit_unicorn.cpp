@@ -86,16 +86,13 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         if (sid_correspond) {
             // DO nothing now
             auto func_name = mngr->get_func_name(sid_correspond.value());
-
+            LOG_INFO("Calling HLE function: {}", func_name.value());
             if (mngr->call_hle(sid_correspond.value())) {
-                LOG_INFO("HLE function called: {}, jumping back to LR", func_name.value());
-
                 uint32_t lr = 0;
 
                 uc_reg_read(uc, UC_ARM_REG_LR, &lr);
                 uc_reg_write(uc, UC_ARM_REG_PC, &lr);
             }
-
 
             return;
         }
@@ -237,7 +234,11 @@ namespace eka2l1 {
         }
 
         void jit_unicorn::stop() {
-            uc_emu_stop(engine);
+            uc_err force_stop = uc_emu_stop(engine);
+
+            if (force_stop != UC_ERR_OK) {
+                LOG_ERROR("Can't stop CPU, reason: {}", force_stop);
+            }
         }
 
         void jit_unicorn::step() {

@@ -65,6 +65,7 @@ namespace eka2l1 {
         bool reschedule_pending;
 
         epocver ver = epocver::epoc9;
+        bool exit = false;
 
     public:
         system(arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
@@ -91,6 +92,14 @@ namespace eka2l1 {
             return &kern;
         }
 
+        hle::lib_manager *get_lib_manager() {
+            return &hlelibmngr;
+        }
+
+        disasm *get_disasm() {
+            return &asmdis;
+        }
+
         arm::jitter &get_cpu() {
             return cpu;
         }
@@ -99,6 +108,11 @@ namespace eka2l1 {
 
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);
+
+        void request_exit();
+        bool should_exit() const {
+            return exit;
+        }
 
         uint32_t total_app() {
             return mngr.get_package_manager()->app_count();

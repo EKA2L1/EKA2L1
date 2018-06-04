@@ -105,6 +105,10 @@ namespace eka2l1 {
 
         template <typename T>
         T align(T target, uint32_t alignment, int mode = 1) {
+            if (alignment == 0) {
+                return target;
+            }
+
             uint32_t new_alignment = is_power_of_two(alignment) ? alignment : next_power_of_two(alignment);
 
             if (mode == 0) {

@@ -22,10 +22,13 @@
 
 #include <hle/bridge.h>
 #include <epoc9/types.h>
+#include <epoc9/mem.h>
 #include <epoc9/allocator.h>
 #include <epoc9/des.h>
 
 #include <ptr.h>
+
+using namespace eka2l1;
 
 typedef void(*TThreadFunction)(int);
 
@@ -50,6 +53,7 @@ struct SStdEpocThreadCreateInfo : public SThreadCreateInfo {
     TInt                     iPadding;
 };
 
-BRIDGE_FUNC(TInt, UserHeapSetupThreadHeap, TBool aNotfirst, eka2l1::ptr<SStdEpocThreadCreateInfo> aInfo);
+BRIDGE_FUNC(TInt, UserHeapCreateThreadHeap, ptr<SStdEpocThreadCreateInfo> aInfo, ptr<address> iHeapPtr, TInt aAlign, TBool aSingleThread);
+BRIDGE_FUNC(ptr<RHeap>, UserHeapChunkHeap, RChunk aChunk, TInt aMinLength, TInt aOffset, TInt aGrowBy, TInt aMaxLength, TInt aAlign, TBool aSingleThread, TUint32 aMode);
 
 extern const eka2l1::hle::func_map thread_register_funcs;

@@ -65,8 +65,10 @@ namespace eka2l1 {
             cpu->run();
         }
 
-        kern.reschedule();
-        reschedule_pending = false;
+        if (!exit) {
+            kern.reschedule();
+            reschedule_pending = false;
+        }
 
         return 1;
     }
@@ -103,6 +105,11 @@ namespace eka2l1 {
 
     void system::mount(availdrive drv, std::string path) {
         io.mount(((drv == availdrive::c) ? "C:" : "E:"), path);
+    }
+
+    void system::request_exit() {
+        cpu->stop();
+        exit = true;
     }
 }
 

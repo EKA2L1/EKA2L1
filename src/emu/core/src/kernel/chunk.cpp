@@ -100,7 +100,11 @@ namespace eka2l1 {
             mem->unchunk(ptr<void>(chunk_base.ptr_address()), max_size);
         }
 
-        void chunk::commit(uint32_t offset, size_t size) {
+        bool chunk::commit(uint32_t offset, size_t size) {
+            if (type != kernel::chunk_type::disconnected) {
+                return false;
+            }
+
             mem->commit(ptr<void>(chunk_base.ptr_address() + offset), size);
 
             if (offset + size > top) {
@@ -110,13 +114,36 @@ namespace eka2l1 {
             if (offset < bottom) {
                 bottom = offset;
             }    
+
+            commited_size += size;
+
+            return true;
         }
 
-        void chunk::decommit(uint32_t offset, size_t size) {
+        bool chunk::decommit(uint32_t offset, size_t size) {
+            if (type != kernel::chunk_type::disconnected) {
+                return false;
+            }
+
             mem->decommit(ptr<void>(chunk_base.ptr_address() + offset), size);
 
             top = common::max(top, (uint32_t)(offset + size));
             bottom = common::min(bottom, offset);
+
+            commited_size -= size;
+
+            return true;
+        }
+
+        bool chunk::adjust(size_t adj_size) {
+            if (type == kernel::chunk_type::disconnected) {
+                return false;
+            }
+
+            mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), adj_size);
+            top = bottom + adj_size;
+
+            return true;
         }
     }
 }

@@ -64,6 +64,30 @@ namespace eka2l1 {
             };
         }
 
+        template <typename... args, size_t... indices>
+        void write_args(arm::jitter &cpu, const std::array<arg_layout, sizeof...(indices)>& layouts, std::index_sequence<indices...>, memory_system *mem, args... lle_args) {
+            ((void)write<args, indices, args...>(cpu, layouts, mem, std::forward<args>(lle_args)), ...);
+        }
+
+        template <typename ret, typename... args>
+        ret call_lle(hle::lib_manager *mngr, arm::jitter &mcpu, disasm *asmdis, memory_system *mem, const address addr, args... lle_args) {
+            constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
+
+            // CPU for running this LLE function
+            arm::jitter own_cpu = arm::create_jitter(nullptr, mem, asmdis, mngr, arm::jitter_arm_type::unicorn);
+            own_cpu->load_context()
+            using indices =  std::index_sequence_for<args...>;
+
+            write_args<args...>(own_cpu, layouts, indices(), mem, lle_args...);
+
+            own_cpu->set_lr(1ULL << 63);
+            own_cpu->set_pc(addr);
+
+            own_cpu->run();
+
+            return read_return_value<ret>(own_cpu);
+        }
+
         #define BRIDGE_REGISTER(func_sid, func) { func_sid, eka2l1::hle::bridge(&func) }
         #define BRIDGE_FUNC(ret, name, ...) ret name(eka2l1::system *sys, ##__VA_ARGS__)
 

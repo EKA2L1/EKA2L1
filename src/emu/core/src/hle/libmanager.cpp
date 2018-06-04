@@ -91,6 +91,16 @@ namespace eka2l1 {
             return res->second;
         }
 
+        address lib_manager::get_vtable_address(const std::string class_name) {
+            auto res = vtable_addrs.find(class_name);
+
+            if (res == vtable_addrs.end()) {
+                return 0;
+            }
+
+            return res->second;
+        }
+
         bool lib_manager::register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_exports) {
             if (exports.find(lib_name) != exports.end()) {
                 LOG_WARN("Exports already register, not really dangerous");
@@ -111,6 +121,12 @@ namespace eka2l1 {
 
                 for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
                     addr_map.insert(std::make_pair(addrs[i], libids[i]));
+                    std::string name_imp = get_func_name(libids[i]).value();
+                    size_t vtab_start = name_imp.find("vtable for ");
+
+                    if (FOUND_STR(vtab_start)) {
+                        vtable_addrs.emplace(name_imp.substr(11), addrs[i]);
+                    }
 
                     if (log_exports) {
                         LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}]", func_names[libids[i]], addrs[i], libids[i]);
@@ -288,6 +304,16 @@ namespace eka2l1 {
             imp(sys);
 
             return true;
+        }
+
+        address lib_manager::get_export_addr(sid id) {
+            for (const auto &[addr, sidk] : addr_map) {
+                if (sidk == id) {
+                    return addr;
+                }
+            }
+
+            return 0;
         }
     }
 }

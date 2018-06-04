@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    FOREVER {
+    while (!symsys.should_exit()) {
         symsys.loop();
     }
 

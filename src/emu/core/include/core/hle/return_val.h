@@ -32,5 +32,8 @@ namespace eka2l1 {
         void write_return_value(arm::jitter &cpu, ptr<pointee> ret) {
             write_return_value(cpu, ret.ptr_address());
         }
+
+        template <typename ret>
+        ret read_return_value(arm::jitter &cpu);
     }
 }

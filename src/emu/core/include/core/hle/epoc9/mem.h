@@ -83,5 +83,8 @@ BRIDGE_FUNC(TInt, RChunkCreate, eka2l1::ptr<RChunk> aThis, eka2l1::ptr<TChunkCre
 BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt aInitBottom, TInt aInitTop, TInt aMaxSize, TOwnerType aType = EOwnerProcess);
 
 BRIDGE_FUNC(void, MemFill, eka2l1::ptr<TAny> aTrg, TInt aLen, TChar aChar);
+BRIDGE_FUNC(void, MemFillZ, eka2l1::ptr<TAny> aTrg, TInt aLen);
+
+BRIDGE_FUNC(void, MemSwap, ptr<void> aLhs, ptr<void> aRhs, TInt aLen);
 
 extern const eka2l1::hle::func_map mem_register_funcs;

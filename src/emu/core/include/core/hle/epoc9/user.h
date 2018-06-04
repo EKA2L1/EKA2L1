@@ -29,5 +29,6 @@
 #include <ptr.h>
 
 BRIDGE_FUNC(TInt, UserIsRomAddress, eka2l1::ptr<TBool> aBool, eka2l1::ptr<TAny> aAddr);
+BRIDGE_FUNC(void, UserExit, TInt aReason);
 
 extern const eka2l1::hle::func_map user_register_funcs;

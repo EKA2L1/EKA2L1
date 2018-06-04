@@ -33,6 +33,10 @@ namespace eka2l1 {
             static host_type arm_to_host(const arm_type &t, const memory_system *mem) {
                 return t;
             }
+
+            static arm_type host_to_arm(const host_type &t, const memory_system *mem) {
+                return t;
+            }
         };
 
         template <typename pointee>

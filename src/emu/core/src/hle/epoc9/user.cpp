@@ -18,6 +18,15 @@ BRIDGE_FUNC(TInt, UserIsRomAddress, eka2l1::ptr<TBool> aBool, eka2l1::ptr<TAny> 
     return KErrNone;
 }
 
+BRIDGE_FUNC(void, UserExit, TInt aReason) {
+    LOG_WARN("Exit requested from HLE side, reason: {}", aReason);
+
+    // Kill the thread!!!!!
+    eka2l1::thread_ptr crr_thread = sys->get_kernel_system()->crr_thread();
+    sys->get_kernel_system()->close_thread(crr_thread->unique_id());
+}
+
 const eka2l1::hle::func_map user_register_funcs = {
-    BRIDGE_REGISTER(3511550552, UserIsRomAddress)
+    BRIDGE_REGISTER(3511550552, UserIsRomAddress),
+    BRIDGE_REGISTER(3037667387, UserExit)
 };

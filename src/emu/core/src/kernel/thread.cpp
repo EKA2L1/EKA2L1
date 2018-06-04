@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <common/algorithm.h>
+#include <common/cvt.h>
 #include <common/log.h>
 #include <core_kernel.h>
 #include <core_mem.h>
@@ -117,7 +118,7 @@ namespace eka2l1 {
             , mem(mem){
             priority = caculate_thread_priority(pri);
 
-            stack_chunk = kern->create_chunk("", 0, stack_size, stack_size, prot::read_write,
+            stack_chunk = kern->create_chunk("stackThreadID" + common::to_string(obj_id), 0, stack_size, stack_size, prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
             name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,

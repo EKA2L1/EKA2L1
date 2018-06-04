@@ -107,6 +107,11 @@ BRIDGE_FUNC(TInt, RChunkCommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt aS
     }
 
     eka2l1::chunk_ptr chunk_ptr = std::reinterpret_pointer_cast<eka2l1::kernel::chunk>(obj_ptr);
+    
+    if (chunk_ptr->get_chunk_type() != kernel::chunk_type::disconnected) {
+        return KErrGeneral;
+    }
+
     chunk_ptr->commit(aOffset, aSize);
 
     return KErrNone;
@@ -124,6 +129,11 @@ BRIDGE_FUNC(TInt, RChunkDecommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt 
     }
 
     eka2l1::chunk_ptr chunk_ptr = std::reinterpret_pointer_cast<eka2l1::kernel::chunk>(obj_ptr);
+    
+    if (chunk_ptr->get_chunk_type() != kernel::chunk_type::disconnected) {
+        return KErrGeneral;
+    }
+    
     chunk_ptr->decommit(aOffset, aSize);
 
     return KErrNone;
@@ -134,14 +144,14 @@ using namespace eka2l1::kernel;
 
 chunk_type FetchChunkType(TInt iType) {
     if (iType & TChunkCreateAtt::ENormal) {
-        return chunk_type::normal;
+        return kernel::chunk_type::normal;
     } else {
         if (iType & TChunkCreateAtt::EDoubleEnded) {
-            return chunk_type::double_ended;
+            return kernel::chunk_type::double_ended;
         }
     }
 
-    return chunk_type::disconnected;
+    return kernel::chunk_type::disconnected;
 }
 
 prot FetchProt(TInt iType) {
@@ -210,6 +220,39 @@ BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt a
     return RChunkCreateHLEPointerEliminate(sys, chunk, &info);
 }
 
+BRIDGE_FUNC(void, MemFill, eka2l1::ptr<TAny> aTrg, TInt aLen, TChar aChar) {
+    TUint8 *ptr = reinterpret_cast<TUint8*>(aTrg.get(sys->get_memory_system()));
+
+    if (!ptr) {
+        LOG_CRITICAL("Mem Filling encounters nullptr, no Panic raised.");
+        return;
+    }
+
+    // From both Symbian 6.1 and 9.4 devlib: The function assumes that the fill character 
+    // is a non-Unicode character.
+    std::fill(ptr, ptr + aLen, static_cast<TUint8>(aChar.iChar));
+}
+
+BRIDGE_FUNC(void, MemFillZ, eka2l1::ptr<TAny> aTrg, TInt aLen) {
+    MemFill(sys, aTrg, aLen, TChar{ 0 });
+}
+
+BRIDGE_FUNC(void, MemSwap, ptr<void> aLhs, ptr<void> aRhs, TInt aLen) {
+    memory_system *mem = sys->get_memory_system();
+
+    if (!aLhs || !aRhs) {
+        LOG_WARN("Swapping nullptr");
+        return;
+    }
+
+    uint8_t* holder = reinterpret_cast<uint8_t*>(malloc(aLen));
+    memcpy(holder, aLhs.get(mem), aLen);
+    memmove(aLhs.get(mem), aRhs.get(mem), aLen);
+    memmove(aRhs.get(mem), holder, aLen);
+
+    free(holder);
+}
+
 const eka2l1::hle::func_map mem_register_funcs = {
     BRIDGE_REGISTER(2758081926, RChunkCreateDisconnectLocal),
     BRIDGE_REGISTER(3201211097, RChunkTop),
@@ -217,5 +260,6 @@ const eka2l1::hle::func_map mem_register_funcs = {
     BRIDGE_REGISTER(376494078, RChunkBottom),
     BRIDGE_REGISTER(762561902, RChunkCommit),
     BRIDGE_REGISTER(2317460249, RChunkDecommit),
-    BRIDGE_REGISTER(3839845899, RChunkMaxSize)
+    BRIDGE_REGISTER(3839845899, RChunkMaxSize),
+    BRIDGE_REGISTER(261677635, MemSwap)
 };

@@ -9,6 +9,7 @@
 #include <epoc9/sts.h>
 #include <epoc9/thread.h>
 #include <epoc9/user.h>
+#include <epoc9/hal.h>
 
 #include <hle/libmanager.h>
 

@@ -59,6 +59,8 @@ namespace eka2l1 {
             prot   protection;
             size_t max_size;
 
+            size_t commited_size;
+
             chunk_type type;
             chunk_access access;
             chunk_attrib attrib;
@@ -81,11 +83,11 @@ namespace eka2l1 {
             // Else this will results unwanted behavior. E.g commit(page_size - 1, 2), should commit both
             // the first and second page, since the offset is at the first page, and the commit contains
             // both last and first byte of two page. This will results two WHOLE pages being allocated. 
-            void commit(uint32_t offset, size_t size);
+            bool commit(uint32_t offset, size_t size);
 
             // Decommit to a disconnected chunk. Offset and size SHOULD be aligned with the page size
             // The reason is same as for commit
-            void decommit(uint32_t offset, size_t size);
+            bool decommit(uint32_t offset, size_t size);
 
             chunk_type get_chunk_type() const {
                 return type;
@@ -106,6 +108,8 @@ namespace eka2l1 {
             size_t get_max_size() const {
                 return max_size;
             }
+
+            bool adjust(size_t adj_size);
         };
     }
 }
