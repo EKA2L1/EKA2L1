@@ -186,17 +186,21 @@ namespace eka2l1 {
                 LOG_WARN("Can't set LR to PC");
             }
 
-            uc_err err = uc_emu_start(engine, pc, 0, 0, 1);
-            pc = get_pc();
+            uc_err err;
 
-            tm = thumb_mode(engine);
+            if (num_instructions > 0) {
+                err = uc_emu_start(engine, pc, 0, 0, 1);
+                pc = get_pc();
 
-            if (tm) {
-                pc |= 1;
+                tm = thumb_mode(engine);
+
+                if (tm) {
+                    pc |= 1;
+                }
             }
 
-            if (num_instructions >= 1) {
-                err = uc_emu_start(engine, pc, 1ULL << 63, 0, num_instructions - 1);
+            if (num_instructions >= 1 || num_instructions == -1) {
+                err = uc_emu_start(engine, pc, 1ULL << 63, 0, num_instructions == -1 ? 0 : num_instructions - 1);
 
                 if (err != UC_ERR_OK) {
                     uint32_t error_pc = get_pc();
@@ -226,7 +230,7 @@ namespace eka2l1 {
 
         void jit_unicorn::run() {
             if (!timing) {
-                LOG_ERROR("Can run the CPU, timing system not available.");
+                execute_instructions(-1);
                 return;
             }
 

@@ -23,10 +23,6 @@
 
 #include <common/cvt.h>
 
-BRIDGE_FUNC(TInt, RChunkAdjust, eka2l1::ptr<RChunk> aThis, TInt aNewSize) {
-    return KErrNone;
-}
-
 BRIDGE_FUNC(TInt, RChunkAdjustDoubleEnded, eka2l1::ptr<RChunk> aThis, TInt aNewBottom, TInt aNewTop) {
     return KErrNone;
 }
@@ -139,6 +135,27 @@ BRIDGE_FUNC(TInt, RChunkDecommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt 
     return KErrNone;
 }
 
+BRIDGE_FUNC(TInt, RChunkAdjust, eka2l1::ptr<RChunk> aThis, TInt aSize) {
+    RChunk *chunk = aThis.get(sys->get_memory_system());
+
+    eka2l1::kernel_system *kern = sys->get_kernel_system();
+    eka2l1::kernel_obj_ptr obj_ptr = kern->get_kernel_obj(chunk->iHandle);
+
+    if (!obj_ptr) {
+        LOG_WARN("Chunk kernel object unavailable");
+        return KErrBadHandle;
+    }
+
+    eka2l1::chunk_ptr chunk_ptr = std::reinterpret_pointer_cast<eka2l1::kernel::chunk>(obj_ptr);
+
+    bool res = chunk_ptr->adjust(aSize);
+
+    if (!res) {
+        return KErrGeneral;
+    }
+    
+    return KErrNone;
+}
 
 using namespace eka2l1::kernel;
 
@@ -261,5 +278,6 @@ const eka2l1::hle::func_map mem_register_funcs = {
     BRIDGE_REGISTER(762561902, RChunkCommit),
     BRIDGE_REGISTER(2317460249, RChunkDecommit),
     BRIDGE_REGISTER(3839845899, RChunkMaxSize),
+    BRIDGE_REGISTER(3291428935, RChunkAdjust),
     BRIDGE_REGISTER(261677635, MemSwap)
 };

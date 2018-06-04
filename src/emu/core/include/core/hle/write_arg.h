@@ -46,7 +46,7 @@ namespace eka2l1 {
         template <typename T>
         void write_to_stack(arm::jitter& cpu, const arg_layout &layout, memory_system *mem, const T& data) {
             const address sp = cpu->get_stack_top();
-            const address stack_arg_offset = sp - layout.offset;
+            const address stack_arg_offset = sp - sizeof(T);
 
             memcpy(ptr<void>(stack_arg_offset).get(mem), &data, sizeof(T));
             cpu->set_sp(stack_arg_offset);

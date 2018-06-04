@@ -75,7 +75,12 @@ namespace eka2l1 {
 
             // CPU for running this LLE function
             arm::jitter own_cpu = arm::create_jitter(nullptr, mem, asmdis, mngr, arm::jitter_arm_type::unicorn);
-            own_cpu->load_context()
+
+            arm::jit_interface::thread_context crr_caller_context;
+
+            mcpu->save_context(crr_caller_context);
+            own_cpu->load_context(crr_caller_context);
+
             using indices =  std::index_sequence_for<args...>;
 
             write_args<args...>(own_cpu, layouts, indices(), mem, lle_args...);

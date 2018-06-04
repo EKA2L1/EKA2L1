@@ -44,9 +44,12 @@ BRIDGE_FUNC(TInt, UserHeapCreateThreadHeap, ptr<SStdEpocThreadCreateInfo> aInfo,
     RChunk chunk_temp;
     chunk_temp.iHandle = heap_chunk->unique_id();
 
-    //*iHeapPtr.get(mem) = UserHeapChunkHeap(sys, chunk_temp, min_len, 0, page_size, max_len, aAlign, aSingleThread, 5 /*EChunkHeapSwitchTo | EChunkHeapDuplicate*/ ).ptr_address();
-    *iHeapPtr.get(mem) = call_lle<address>(sys->get_lib_manager(), sys->get_disasm(), mem, sys->get_lib_manager()->get_export_addr(1478769233), chunk_temp, min_len, 0, page_size, max_len, aAlign, aSingleThread, 5);
+    address lol = call_lle<address>(sys->get_lib_manager(), sys->get_cpu(), sys->get_disasm(),
+        mem, sys->get_lib_manager()->get_export_addr(1478769233), 
+        chunk_temp, min_len, 0, page_size, max_len, aAlign, aSingleThread,
+        5);
 
+    *iHeapPtr.get(mem);
     return 0;
 }
 

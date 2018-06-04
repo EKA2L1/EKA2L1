@@ -70,7 +70,6 @@ enum TChunkCreateAtt {
     EChunkCreateAttMask = EMappingMask | EGlobal | ECode | ELocalNamed
 };
 
-BRIDGE_FUNC(TInt, RChunkAdjust, eka2l1::ptr<RChunk> aThis, TInt aNewSize);
 BRIDGE_FUNC(TInt, RChunkAdjustDoubleEnded, eka2l1::ptr<RChunk> aThis, TInt aNewBottom, TInt aNewTop);
 BRIDGE_FUNC(TInt, RChunkAllocate, eka2l1::ptr<RChunk> aThis, TInt aSize);
 BRIDGE_FUNC(TInt, RChunkCommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt aSize);
@@ -80,6 +79,7 @@ BRIDGE_FUNC(TInt, RChunkBottom, eka2l1::ptr<RChunk> aThis);
 BRIDGE_FUNC(TInt, RChunkTop, eka2l1::ptr<RChunk> aThis);
 BRIDGE_FUNC(TInt, RChunkMaxSize, eka2l1::ptr<RChunk> aThis);
 BRIDGE_FUNC(TInt, RChunkCreate, eka2l1::ptr<RChunk> aThis, eka2l1::ptr<TChunkCreateInfo> aInfo);
+BRIDGE_FUNC(TInt, RChunkAdjust, eka2l1::ptr<RChunk> aThis, TInt aSize);
 BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt aInitBottom, TInt aInitTop, TInt aMaxSize, TOwnerType aType = EOwnerProcess);
 
 BRIDGE_FUNC(void, MemFill, eka2l1::ptr<TAny> aTrg, TInt aLen, TChar aChar);
