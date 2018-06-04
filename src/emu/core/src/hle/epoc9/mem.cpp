@@ -21,6 +21,8 @@
 #include <epoc9/mem.h>
 #include <epoc9/err.h>
 
+#include <common/cvt.h>
+
 BRIDGE_FUNC(TInt, RChunkAdjust, eka2l1::ptr<RChunk> aThis, TInt aNewSize) {
     return KErrNone;
 }
@@ -159,12 +161,14 @@ TInt RChunkCreateHLEPointerEliminate(eka2l1::system *sys, RChunk *chunk, TChunkC
 
     std::string name = "";
 
-    if ((create_info->iAttributes & TChunkCreateAtt::ELocalNamed) && !global) {
+    if (((create_info->iAttributes & TChunkCreateAtt::ELocalNamed) && !global) || global) {
         // TODO: Replace with real name from TDesC
-        name = "placeholder_localnamedforce";
-    }
-    else {
-        name = "placeholder_noforcename";
+        TDesC16 *des = create_info->iName.get(sys->get_memory_system());
+
+        if (des) {
+            TUint16 *raw_name = GetTDes16Ptr(sys, des);
+            name = common::ucs2_to_utf8(std::u16string(raw_name, raw_name + des->iLength));
+        }
     }
 
     owner_type owner = (create_info->iOwnerType == TOwnerType::EOwnerProcess) ? owner_type::process : owner_type::thread;

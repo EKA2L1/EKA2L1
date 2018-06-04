@@ -36,7 +36,8 @@ namespace eka2l1 {
             address       user_stack;
             int           user_stack_size;
             int           init_thread_priority;
-            address        name;
+            uint32_t      name_len;
+            address       name_ptr;
             int           total_size;
         };
 
@@ -75,7 +76,7 @@ namespace eka2l1 {
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
         }
 
-        void thread::create_stack_metadata(ptr<void> stack_ptr, const address epa) {
+        void thread::create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
 
             // This is intended to make EPOC HLE side create RHeap
@@ -90,7 +91,8 @@ namespace eka2l1 {
             info.heap_max = max_heap_size;
             info.init_thread_priority = priority;
 
-            info.name = name_chunk->base().ptr_address();
+            info.name_len = name_len;
+            info.name_ptr = name_ptr;
             info.supervisor_stack = 0;
             info.supervisor_stack_size = 0;
 
@@ -116,12 +118,16 @@ namespace eka2l1 {
             priority = caculate_thread_priority(pri);
 
             stack_chunk = kern->create_chunk("", 0, stack_size, stack_size, prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none);
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
-            name_chunk = kern->create_chunk("", 0, common::align(name.length(), mem->get_page_size()), common::align(name.length(), mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none);
+            name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
-            memcpy(name_chunk->base().get(mem), name.data(), name.length());
+            /* Create TDesC string. Combine of string length and name data (USC2) */
+
+            std::u16string name_16(name.begin(), name.end());
+
+            memcpy(name_chunk->base().get(mem), name_16.data(), name.length() * 2);
 
             const size_t metadata_size = 0x40;
 
@@ -133,7 +139,7 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(stack_phys_beg.get(mem), stack_phys_end.get(mem), 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), epa);
+            create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk->base().ptr_address(), epa);
 
             reset_thread_ctx(epa, stack_top);
             scheduler = kern->get_thread_scheduler();

@@ -276,16 +276,18 @@ namespace eka2l1 {
             return std::optional<epoc_import_func>{};
         }
 
-        void lib_manager::call_hle(sid id) {
+        bool lib_manager::call_hle(sid id) {
             auto eimp = get_hle(id);
 
             if (!eimp) {
                 LOG_WARN("Function unimplemented!");
-                return;
+                return false;
             }
 
             auto imp = eimp.value();
             imp(sys);
+
+            return true;
         }
     }
 }

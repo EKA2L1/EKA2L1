@@ -25,4 +25,6 @@ void register_epoc9(eka2l1::hle::lib_manager& mngr) {
     ADD_REGISTERS(mngr, base_register_funcs);
     ADD_REGISTERS(mngr, mem_register_funcs);
     ADD_REGISTERS(mngr, char_register_funcs);
+    ADD_REGISTERS(mngr, allocator_register_funcs);
+    ADD_REGISTERS(mngr, user_register_funcs);
 }

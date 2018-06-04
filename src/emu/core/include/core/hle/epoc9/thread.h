@@ -22,6 +22,8 @@
 
 #include <hle/bridge.h>
 #include <epoc9/types.h>
+#include <epoc9/allocator.h>
+#include <epoc9/des.h>
 
 #include <ptr.h>
 
@@ -42,10 +44,10 @@ struct SThreadCreateInfo {
 };
 
 struct SStdEpocThreadCreateInfo : public SThreadCreateInfo {
-    eka2l1::ptr<TAny>  iAllocator;
-    TInt               iHeapInitialSize;
-    TInt               iHeapMaxSize;
-    TInt               iPadding;
+    eka2l1::ptr<RAllocator>  iAllocator;
+    TInt                     iHeapInitialSize;
+    TInt                     iHeapMaxSize;
+    TInt                     iPadding;
 };
 
 BRIDGE_FUNC(TInt, UserHeapSetupThreadHeap, TBool aNotfirst, eka2l1::ptr<SStdEpocThreadCreateInfo> aInfo);

@@ -96,7 +96,7 @@ namespace eka2l1 {
             void register_hle(sid id, epoc_import_func func);
             std::optional<epoc_import_func> get_hle(sid id);
 
-            void call_hle(sid id);
+            bool call_hle(sid id);
 
             // Image name
             loader::e32img_ptr load_e32img(const std::u16string &img_name);

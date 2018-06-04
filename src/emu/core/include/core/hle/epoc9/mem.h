@@ -21,6 +21,7 @@
 #pragma once
 
 #include <epoc9/base.h>
+#include <epoc9/des.h>
 #include <epoc9/types.h>
 #include <epoc9/char.h>
 
@@ -41,7 +42,7 @@ struct TChunkCreateInfo {
     TInt iInitialBottom;
     TInt iInitialTop;
     TInt iMaxSize;
-    eka2l1::ptr<void> iName;   // TODO: Replace with TDesC
+    eka2l1::ptr<TDesC> iName;   // TODO: Replace with TDesC
     TOwnerType iOwnerType;
     TUint8 iSpare1;
     TUint8 iSpare2;

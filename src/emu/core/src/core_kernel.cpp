@@ -132,9 +132,9 @@ namespace eka2l1 {
     }
 
     chunk_ptr kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
-        kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner) {
+        kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner, int64_t owner_id) {
         chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib, 
-            owner, get_id_base_owner(owner));
+            owner, owner_id < 0 ? get_id_base_owner(owner) : static_cast<kernel::uid>(owner_id));
         uint32_t id = new_chunk->unique_id();
 
         chunks.emplace(new_chunk->unique_id(), std::move(new_chunk));

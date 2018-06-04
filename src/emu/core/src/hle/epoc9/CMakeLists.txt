@@ -2,6 +2,7 @@ add_library(epoc9
     ${CORE_INCLUDE_DIR}/hle/epoc9/allocator.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/base.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/cons.h
+    ${CORE_INCLUDE_DIR}/hle/epoc9/des.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/err.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/lock.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/mem.h
@@ -13,6 +14,7 @@ add_library(epoc9
     allocator.cpp
     base.cpp
     char.cpp
+    des.cpp
     mem.cpp
     thread.cpp
     user.cpp

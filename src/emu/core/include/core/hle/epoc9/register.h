@@ -8,6 +8,7 @@
 #include <epoc9/mem.h>
 #include <epoc9/sts.h>
 #include <epoc9/thread.h>
+#include <epoc9/user.h>
 
 #include <hle/libmanager.h>
 

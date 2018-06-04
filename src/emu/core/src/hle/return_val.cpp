@@ -16,5 +16,10 @@ namespace eka2l1 {
         void write_return_value(arm::jitter &cpu, uint32_t ret) {
             cpu->set_reg(0, ret);
         }
+
+        template <>
+        void write_return_value(arm::jitter &cpu, bool ret) {
+            cpu->set_reg(0, ret);
+        }
     }
 }

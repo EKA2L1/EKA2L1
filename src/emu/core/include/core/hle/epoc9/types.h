@@ -38,7 +38,6 @@ typedef uint32_t TUint32;
 typedef uint64_t TUint64;
 
 using TAny = void;
-using TPtrC = eka2l1::ptr<char>;
 
 enum TOwnerType {
     EOwnerProcess,

@@ -96,7 +96,8 @@ namespace eka2l1 {
         // Create a chunk with these condition
         chunk_ptr create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
             kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib,
-            kernel::owner_type owner);
+            kernel::owner_type owner,
+            int64_t owner_id = -1);
 
         bool close_chunk(kernel::uid id);
         bool close_thread(kernel::uid id);

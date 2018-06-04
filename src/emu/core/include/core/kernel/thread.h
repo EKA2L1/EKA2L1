@@ -94,7 +94,7 @@ namespace eka2l1 {
             std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
 
             void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
-            void create_stack_metadata(ptr<void> stack_ptr, const address epa);
+            void create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, address epa);
 
         public:
             thread();
