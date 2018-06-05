@@ -81,6 +81,10 @@ namespace eka2l1 {
             kernel::uid obj_owner() const {
                 return owner;
             }
+
+            owner_type get_owner_type() const {
+                return owner_type;
+            }
         };
     }
 }

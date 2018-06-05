@@ -65,8 +65,6 @@ namespace eka2l1 {
             chunk_access access;
             chunk_attrib attrib;
 
-            std::string name;
-
             eka2l1::ptr<uint8_t> chunk_base;
 
             kernel_system* kern;

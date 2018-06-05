@@ -63,6 +63,8 @@ namespace eka2l1 {
             return img;
         }
 
+        
+
         // Create a new thread and run
         // No arguments provided
         bool run();

@@ -122,6 +122,10 @@ namespace eka2l1 {
         bool close_process(process *pr);
         bool close_all_processes();
 
+        kernel::uid crr_process() const {
+            return crr_process_id;
+        }
+
         thread_ptr crr_thread();
     };
 }

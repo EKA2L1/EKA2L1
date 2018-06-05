@@ -25,8 +25,15 @@
 #include <epoc9/types.h>
 #include <epoc9/err.h>
 
+#include <core.h>
+
 #include <hle/bridge.h>
 #include <ptr.h>
+
+// Get the current thread local data
+eka2l1::kernel::thread_local_data &current_local_data(eka2l1::system *sys) {
+    return sys->get_kernel_system()->crr_thread()->get_local_data();
+}
 
 BRIDGE_FUNC(TInt, UserIsRomAddress, eka2l1::ptr<TBool> aBool, eka2l1::ptr<TAny> aAddr);
 BRIDGE_FUNC(void, UserExit, TInt aReason);

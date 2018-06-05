@@ -66,6 +66,6 @@ ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16) {
 }
 
 TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16) {
-    ptr<TUint16> des_ptr = GetTDes16Ptr(sys, aDes16);
+    ptr<TUint16> des_ptr = GetTDes16HLEPtr(sys, aDes16);
     return des_ptr.get(sys->get_memory_system());
 }

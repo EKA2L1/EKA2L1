@@ -71,5 +71,6 @@ struct RHeap : public RAllocator {
 BRIDGE_FUNC(void, RAllocatorDoClose, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(void, RAllocatorClose, eka2l1::ptr<RAllocator> aAllocator);
+BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator);
 
 extern const eka2l1::hle::func_map allocator_register_funcs;

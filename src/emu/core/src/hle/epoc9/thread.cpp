@@ -23,6 +23,13 @@
 
 #include <epoc9/thread.h>
 #include <epoc9/mem.h>
+#include <epoc9/user.h>
+
+// Replace the Heap with old one in local storage
+const TInt KHeapReplace = 1;
+
+// Not use the provided chunk for heap, but duplicate it
+const TInt KHeapChunkDuplicate = 2;
 
 BRIDGE_FUNC(TInt, UserHeapCreateThreadHeap, ptr<SStdEpocThreadCreateInfo> aInfo, ptr<address> iHeapPtr, TInt aAlign, TBool aSingleThread) {
     memory_system *mem = sys->get_memory_system();
@@ -44,12 +51,11 @@ BRIDGE_FUNC(TInt, UserHeapCreateThreadHeap, ptr<SStdEpocThreadCreateInfo> aInfo,
     RChunk chunk_temp;
     chunk_temp.iHandle = heap_chunk->unique_id();
 
-    address lol = call_lle<address>(sys->get_lib_manager(), sys->get_cpu(), sys->get_disasm(),
-        mem, sys->get_lib_manager()->get_export_addr(1478769233), 
-        chunk_temp, min_len, 0, page_size, max_len, aAlign, aSingleThread,
-        5);
+    *iHeapPtr.get(mem) = UserHeapChunkHeap(sys, chunk_temp, min_len, 0, page_size, max_len, aAlign, aSingleThread, KHeapReplace | KHeapChunkDuplicate).ptr_address();
+  
+    // Since we duplicated the heap, remove it
+    sys->get_kernel_system()->close_chunk(heap_chunk->unique_id());
 
-    *iHeapPtr.get(mem);
     return 0;
 }
 
@@ -75,6 +81,12 @@ BRIDGE_FUNC(ptr<RHeap>, UserHeapChunkHeap, RChunk aChunk, TInt aMinLength, TInt 
     }
 
     eka2l1::chunk_ptr chunk_ptr = std::reinterpret_pointer_cast<eka2l1::kernel::chunk>(obj_ptr);
+
+    if (aMode & KHeapChunkDuplicate) {
+        decltype(chunk_ptr) old_chunk_ptr = chunk_ptr;
+        chunk_ptr = kern->create_chunk(old_chunk_ptr->name() + " Duplicated", 0, 0, aMaxLength, prot::read_write,
+            old_chunk_ptr->get_chunk_type(), kernel::chunk_access::local, kernel::chunk_attrib::none, old_chunk_ptr->get_owner_type());
+    }
 
     aMinLength = common::align(aMinLength + aOffset, page_size);
     aMaxLength = common::align(aMaxLength + aOffset, page_size);
@@ -112,10 +124,16 @@ BRIDGE_FUNC(ptr<RHeap>, UserHeapChunkHeap, RChunk aChunk, TInt aMinLength, TInt 
     
     // For now, just take the default heap, idk
     memcpy(chunk_ptr->base().get(mem) + aOffset, &heap, sizeof(RHeap));
+    address ret =  chunk_ptr->base().ptr_address() + aOffset;
 
-    return chunk_ptr->base().ptr_address() + aOffset;
+    if (aMode & KHeapReplace)
+    // Set the public User:: allocator to this
+        current_local_data(sys).heap = ret;
+
+    return ret;
 }
 
 const eka2l1::hle::func_map thread_register_funcs = {
-    BRIDGE_REGISTER(479498917, UserHeapCreateThreadHeap)
+    BRIDGE_REGISTER(479498917, UserHeapCreateThreadHeap),
+    BRIDGE_REGISTER(1478769233, UserHeapChunkHeap)
 };

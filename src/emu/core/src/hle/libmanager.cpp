@@ -228,13 +228,15 @@ namespace eka2l1 {
 
             if (romimgs_cache.find(res->header.code_checksum) != romimgs_cache.end()) {
                 romimgf->close();
-                return romimgs_cache[res->header.code_checksum];
+                return romimgs_cache[res->header.code_checksum].img;
             }
 
             //loader::stub_romimg()
+            romimg_inf info;
+            info.img = std::make_shared<loader::romimg>(res.value());
 
-            romimgs_cache.emplace(res->header.code_checksum, std::make_shared<loader::romimg>(res.value()));
-            return romimgs_cache[res->header.code_checksum];
+            romimgs_cache.emplace(res->header.code_checksum, std::move(info));
+            return romimgs_cache[res->header.code_checksum].img;
         }
 
         // Open the image code segment
@@ -251,6 +253,8 @@ namespace eka2l1 {
                 loader::load_eka2img(*img, mem, kern, *this);
                 res->second.is_xip = true;
             }
+
+            res->second.loader.push_back(kern->crr_process());
         }
 
         // Close the image code segment. Means that the image will be unloaded, XIP turns to false
@@ -266,6 +270,15 @@ namespace eka2l1 {
                 kern->close_chunk(img->code_chunk->unique_id());
                 res->second.is_xip = false;
             }
+
+            auto res2 = std::find(res->second.loader.begin(), res->second.loader.end(), kern->crr_process());
+
+            if (res2 == res->second.loader.end()) {
+                LOG_ERROR("Image never opened by this process");
+                return;
+            }
+
+            res->second.loader.erase(res2);
         }
 
         std::optional<std::string> lib_manager::get_func_name(const sid id) {
@@ -314,6 +327,33 @@ namespace eka2l1 {
             }
 
             return 0;
+        }
+
+        void lib_manager::open_romimg(loader::romimg_ptr &img) {
+            auto res = romimgs_cache.find(img->header.code_checksum);
+
+            if (res == romimgs_cache.end()) {
+                return;
+            }
+
+            res->second.loader.push_back(kern->crr_process());
+        }
+
+        void lib_manager::close_romimg(loader::romimg_ptr &img) {
+            auto res = romimgs_cache.find(img->header.code_checksum);
+
+            if (res == romimgs_cache.end()) {
+                return;
+            }
+
+            auto res2 = std::find(res->second.loader.begin(), res->second.loader.end(), kern->crr_process());
+
+            if (res2 == res->second.loader.end()) {
+                LOG_ERROR("Image never opened by this process");
+                return;
+            }
+
+            res->second.loader.erase(res2);
         }
     }
 }

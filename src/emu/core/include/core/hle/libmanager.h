@@ -73,11 +73,17 @@ namespace eka2l1 {
                 loader::e32img_ptr img;
                 bool is_xip;
                 bool is_rom;
+                std::vector<uint32_t> loader;
+            };
+
+            struct romimg_inf {
+                loader::romimg_ptr img;
+                std::vector<uint32_t> loader;
             };
 
             // Caches the image
             std::map<uint32_t, e32img_inf> e32imgs_cache;
-            std::map<uint32_t, loader::romimg_ptr> romimgs_cache;
+            std::map<uint32_t, romimg_inf> romimgs_cache;
 
             void load_all_sids(const epocver ver);
 
@@ -110,6 +116,9 @@ namespace eka2l1 {
             // Close the image code segment. Means that the image will be unloaded, XIP turns to false
             void close_e32img(loader::e32img_ptr &img);
 
+            void open_romimg(loader::romimg_ptr &img);
+            void close_romimg(loader::romimg_ptr &img);
+
             // Register export addresses for desired HLE library
             // This will also map the export address with the correspond SID
             // Note that these export addresses are unique, since they are the address in
@@ -118,6 +127,14 @@ namespace eka2l1 {
             std::optional<sid> get_sid(exportaddr addr);
 
             std::optional<std::string> get_func_name(const sid id);
+
+            std::map<uint32_t, e32img_inf>& get_e32imgs_cache() {
+                return e32imgs_cache;
+            }
+
+            std::map<uint32_t, romimg_inf>& get_romimgs_cache() {
+                return romimgs_cache;
+            }
 
             address get_vtable_address(const std::string class_name);
             address get_export_addr(sid id);

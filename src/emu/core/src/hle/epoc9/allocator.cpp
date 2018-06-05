@@ -68,8 +68,13 @@ BRIDGE_FUNC(void, RAllocatorDoClose, eka2l1::ptr<RAllocator> aAllocator) {
     }
 }
 
+BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator) {
+
+}
+
 const eka2l1::hle::func_map allocator_register_funcs = {
     BRIDGE_REGISTER(3787177057, RAllocatorOpen),
     BRIDGE_REGISTER(1629345542, RAllocatorClose),
-    BRIDGE_REGISTER(381559899, RAllocatorDoClose)
+    BRIDGE_REGISTER(381559899, RAllocatorDoClose),
+    BRIDGE_REGISTER(2261851716, RAllocatorDbgMarkStart)
 };

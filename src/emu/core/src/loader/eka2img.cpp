@@ -168,6 +168,8 @@ namespace eka2l1 {
 
                     expdir = img->ed.syms.data();
                 } else {
+                    mngr.open_romimg(rimg);
+
                     code_start = rimg->header.code_address;
                     code_end = code_start + rimg->header.code_size;
                     data_start = rimg->header.data_address;
@@ -180,7 +182,7 @@ namespace eka2l1 {
                 }
             }
 
-            for (uint32_t i = 0; i < import_block.ordinals.size() - 1; i++) {
+            for (uint32_t i = 0; i < import_block.ordinals.size(); i++) {
                 uint32_t off = imdir[i];
                 uint32_t *code_ptr = ptr<uint32_t>(me.rt_code_addr + off).get(mem);
 

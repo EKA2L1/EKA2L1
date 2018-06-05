@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <array>
 #include <condition_variable>
 #include <memory>
 #include <string>
@@ -68,6 +69,23 @@ namespace eka2l1 {
             priority_absolute_high = 500
         };
 
+        struct tls_slot {
+            int handle;
+            uint32_t uid;
+            ptr<void> ptr;
+        };
+
+        struct thread_local_data {
+            ptr<void> heap;
+            ptr<void> scheduler;
+            ptr<void> trap_handler;
+            uint32_t thread_id;
+            
+            // We don't use this. We use our own heap
+            ptr<void> tls_heap;
+            std::array<tls_slot, 50> tls_slots;
+        };
+
         class thread : public wait_obj {
             friend class thread_scheduler;
 
@@ -90,6 +108,9 @@ namespace eka2l1 {
 
             chunk_ptr stack_chunk;
             chunk_ptr name_chunk;
+            chunk_ptr tls_chunk;
+
+            thread_local_data ldata;
 
             std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
 
@@ -130,6 +151,13 @@ namespace eka2l1 {
             bool operator==(const thread &rhs);
             bool operator>=(const thread &rhs);
             bool operator<=(const thread &rhs);
+
+            std::optional<tls_slot&> get_free_tls_slot(uint32_t dll_uid);
+            void close_tls_slot(tls_slot &slot);
+
+            thread_local_data &get_local_data() {
+                return ldata;
+            }
         };
 
         using thread_ptr = std::shared_ptr<kernel::thread>;

@@ -67,12 +67,14 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
 
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
     eka2l1::arm::jit_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
+    eka2l1::arm::jit_interface::thread_context context_debug;
 
     if (jit == nullptr) {
         LOG_ERROR("Code hook failed: User Data was null");
         return;
     }
 
+    jit->save_context(context_debug);
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
     if (mngr) {
@@ -87,6 +89,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
             // DO nothing now
             auto func_name = mngr->get_func_name(sid_correspond.value());
             LOG_INFO("Calling HLE function: {}", func_name.value());
+
             if (mngr->call_hle(sid_correspond.value())) {
                 uint32_t lr = 0;
 
@@ -197,6 +200,10 @@ namespace eka2l1 {
                 if (tm) {
                     pc |= 1;
                 }
+
+                if (timing) {
+                    timing->add_ticks(1);
+                }
             }
 
             if (num_instructions >= 1 || num_instructions == -1) {
@@ -220,10 +227,10 @@ namespace eka2l1 {
                 if (tm) {
                     pc |= 1;
                 }
-            }
 
-            if (timing)
-                timing->add_ticks(num_instructions);
+                if (timing)
+                    timing->add_ticks(num_instructions - 1);
+            }
 
             return true;
         }
@@ -290,8 +297,8 @@ namespace eka2l1 {
         }
 
         void jit_unicorn::set_reg(size_t idx, uint32_t val) {
-            auto treg = UC_ARM_REG_SP + UC_ARM_REG_R0 + idx;
-            auto err = uc_reg_read(engine, treg, &val);
+            auto treg = UC_ARM_REG_R0 + idx;
+            auto err = uc_reg_write(engine, treg, &val);
 
             if (err != UC_ERR_OK) {
                 LOG_ERROR("Failed to set ARM CPU registers.");

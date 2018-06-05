@@ -73,24 +73,67 @@ namespace eka2l1 {
         ret call_lle(hle::lib_manager *mngr, arm::jitter &mcpu, disasm *asmdis, memory_system *mem, const address addr, args... lle_args) {
             constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
 
-            // CPU for running this LLE function
-            arm::jitter own_cpu = arm::create_jitter(nullptr, mem, asmdis, mngr, arm::jitter_arm_type::unicorn);
-
             arm::jit_interface::thread_context crr_caller_context;
-
             mcpu->save_context(crr_caller_context);
-            own_cpu->load_context(crr_caller_context);
 
             using indices =  std::index_sequence_for<args...>;
 
-            write_args<args...>(own_cpu, layouts, indices(), mem, lle_args...);
+            write_args<args...>(mcpu, layouts, indices(), mem, lle_args...);
 
-            own_cpu->set_lr(1ULL << 63);
-            own_cpu->set_pc(addr);
+            mcpu->set_lr(1ULL << 63);
+            mcpu->set_pc(addr);
+            mcpu->set_lr(crr_caller_context.pc);
 
-            own_cpu->run();
+            //arm::jit_interface::thread_context test_caller_context;
+            //mcpu->save_context(crr_caller_context);
 
-            return read_return_value<ret>(own_cpu);
+            mcpu->run();
+            mcpu->set_pc(crr_caller_context.pc);
+
+            return read_return_value<ret>(mcpu);
+        }
+
+        template <typename... args>
+        void call_lle_void(hle::lib_manager *mngr, arm::jitter &mcpu, disasm *asmdis, memory_system *mem, const address addr, args... lle_args) {
+            constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
+
+            arm::jit_interface::thread_context crr_caller_context;
+            mcpu->save_context(crr_caller_context);
+
+            using indices = std::index_sequence_for<args...>;
+
+            write_args<args...>(mcpu, layouts, indices(), mem, lle_args...);
+
+            mcpu->set_lr(1ULL << 63);
+            mcpu->set_pc(addr);
+
+            arm::jit_interface::thread_context test_caller_context;
+            mcpu->save_context(crr_caller_context);
+
+            mcpu->run();
+            mcpu->set_pc(crr_caller_context.pc);
+        }
+
+        template <typename... args>
+        void call_lle_void(eka2l1::system *sys, const address addr, args... lle_args) {
+            hle::lib_manager *mngr = sys->get_lib_manager();
+            memory_system *mem = sys->get_memory_system();
+            disasm *asmdis = sys->get_disasm();
+
+            arm::jitter &cpu = sys->get_cpu();
+
+            call_lle_void<args...>(mngr, cpu, asmdis, mem, addr, lle_args...);
+        }
+
+        template <typename ret, typename... args>
+        ret call_lle(eka2l1::system *sys, const address addr, args... lle_args) {
+            hle::lib_manager *mngr = sys->get_lib_manager();
+            memory_system *mem = sys->get_memory_system();
+            disasm *asmdis = sys->get_disasm();
+
+            arm::jitter &cpu = sys->get_cpu();
+
+            return call_lle<ret, args...>(mngr, cpu, asmdis, mem, addr, lle_args...);
         }
 
         #define BRIDGE_REGISTER(func_sid, func) { func_sid, eka2l1::hle::bridge(&func) }

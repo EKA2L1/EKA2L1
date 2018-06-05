@@ -30,7 +30,7 @@ namespace eka2l1 {
         template <typename T>
         std::enable_if_t<sizeof(T) <= 4, T> read_from_gpr(arm::jitter &cpu, const arg_layout &arg) {
             const uint32_t reg = cpu->get_reg(arg.offset);
-            return static_cast<T>(reg);
+            return *reinterpret_cast<const T*>(&reg);
         }
 
         template <typename T>
@@ -38,7 +38,9 @@ namespace eka2l1 {
             const uint64_t low = cpu->get_reg(arg.offset);
             const uint64_t high = cpu->get_reg(arg.offset + 1);
 
-            return static_cast<T>(low | (high << 32));
+            const uint64_t all = low | (high << 32);
+
+            return *reinterpret_cast<const T*>(&all);
         }
 
         template <typename T>

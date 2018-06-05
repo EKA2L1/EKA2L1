@@ -124,6 +124,9 @@ namespace eka2l1 {
             name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
+            tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+
             /* Create TDesC string. Combine of string length and name data (USC2) */
 
             std::u16string name_16(name.begin(), name.end());
@@ -190,6 +193,32 @@ namespace eka2l1 {
 
         void thread::acquire(const kernel::uid id) {
             // :)
+        }
+
+        std::optional<tls_slot&> thread::get_free_tls_slot(uint32_t dll_uid) {
+            for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
+                if (ldata.tls_slots[i].handle = -1) {
+                    ldata.tls_slots[i].handle = i;
+                    ldata.tls_slots[i].ptr = ptr<void>(tls_chunk->base().ptr_address() + 12 * i);
+                    ldata.tls_slots[i].uid = dll_uid;
+
+                    return ldata.tls_slots[i];
+                }
+            }
+
+            return std::optional<tls_slot&>{};
+        }
+
+        void thread::close_tls_slot(tls_slot &slot) {
+            if (slot.handle >= ldata.tls_slots.size()) {
+                LOG_ERROR("Invalid TLS slot");
+                return;
+            }
+
+            auto tls_corr_spot = ldata.tls_slots[slot.handle];
+
+            // Mark as free
+            tls_corr_spot.handle = -1;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace eka2l1 {
     namespace hle {
         template <typename host_type>
         struct bridge_type {
-            using arm_type = host_type;
+            typedef host_type arm_type;
 
             static host_type arm_to_host(const arm_type &t, const memory_system *mem) {
                 return t;
@@ -41,7 +41,7 @@ namespace eka2l1 {
 
         template <typename pointee>
         struct bridge_type<pointee*> {
-            using arm_type = ptr<pointee>;
+            typedef ptr<pointee> arm_type;
 
             static pointee* arm_to_host(const arm_type &t, const memory_system *mem) {
                 return t.get(mem);
