@@ -65,10 +65,26 @@ BRIDGE_FUNC(void, UserDbgMarkStart, TInt aCode) {
     RAllocatorDbgMarkStart(sys, eka2l1::ptr<RAllocator>(local_data.heap.ptr_address()));
 }
 
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserAllocZ, TInt aSize) {
+    eka2l1::kernel::thread_local_data local_data = current_local_data(sys);
+    auto ret = RHeapAllocZ(sys, local_data.heap.cast<RHeap>(), aSize);
+
+    return ret;
+}
+
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserAlloc, TInt aSize) {
+    eka2l1::kernel::thread_local_data local_data = current_local_data(sys);
+    auto ret = RHeapAlloc(sys, local_data.heap.cast<RHeap>(), aSize);
+
+    return ret;
+}
+
 const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3511550552, UserIsRomAddress),
     BRIDGE_REGISTER(3037667387, UserExit),
     BRIDGE_REGISTER(3475190555, UserPanic),
     BRIDGE_REGISTER(3108163311, UserInitProcess),
-    BRIDGE_REGISTER(1932818422, UserDbgMarkStart)
+    BRIDGE_REGISTER(1932818422, UserDbgMarkStart),
+    BRIDGE_REGISTER(3628338344, UserAllocZ),
+    BRIDGE_REGISTER(4085393645, UserAlloc)
 };

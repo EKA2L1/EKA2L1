@@ -19,7 +19,38 @@
  */
 #include <epoc9/allocator.h>
 #include <epoc9/base.h>
+#include <epoc9/mem.h>
 #include <epoc9/err.h>
+
+RHeapAdvance NewHeap(eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, address offset, int align) {
+    RHeapAdvance heap;
+
+    heap.iVtable = ptr<void>(mngr->get_vtable_address("RHeap"));
+    heap.iBase = ptr<TUint8>(chnk->base().ptr_address() + offset + sizeof(RHeapAdvance));
+    heap.iTop = ptr<TUint8>(chnk->get_top());
+    heap.iAccessCount = 0;
+    heap.iTotalAllocSize = 0;
+    heap.iChunkHandle = chnk->unique_id();
+    heap.iAlign = align;
+    heap.iBlocks = (uint64_t)(new std::vector<SBlock>()); // I am very concerned when using this, but neh
+
+    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock>*>(heap.iBlocks);
+
+    SBlock blck;
+    blck.block_ptr = heap.iBase.ptr_address();
+    blck.free = true;
+    blck.offset = 0;
+    blck.size = chnk->get_max_size() - offset - sizeof(RHeapAdvance);
+
+    blocks.push_back(blck);
+
+    return heap;
+}
+
+void FreeHeap(RHeapAdvance heap) {
+    std::vector<SBlock> *blocks = reinterpret_cast<std::vector<SBlock>*>(heap.iBlocks);
+    delete blocks;
+}
 
 BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator) {
     RAllocator *allocator = aAllocator.get(sys->get_memory_system());
@@ -81,7 +112,7 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize)
         return ptr<TAny>(nullptr);
     }
 
-    int align = heap_adv->iAlign;
+    int align = heap_adv->iAlign == 0 ? 4 : heap_adv->iAlign;
 
     // If the committed size is not enough, expand the chunk
     if (heap_adv->iTotalAllocSize + aSize > chnk->get_size()) {
@@ -92,7 +123,7 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize)
         if (blocks[i].free) {
             uint32_t block_size = blocks[i].size;
 
-            if (blocks[i].offset % heap_adv->iAlign != 0) {
+            if (blocks[i].offset % align != 0) {
                 block_size -= align - blocks[i].offset % align;
             }
 
@@ -118,7 +149,9 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize)
                 next_block.free = true;
                 next_block.offset = blocks[i].offset + aSize;
                 next_block.size = blocks[i].size - aSize;
-                blocks.push_back(next_block);
+                next_block.block_ptr = heap_adv->iBase.ptr_address() + next_block.offset;
+
+                blocks.push_back(std::move(next_block));
 
                 blocks[i].size = aSize;
                 blocks[i].free = false;
@@ -139,17 +172,31 @@ BRIDGE_FUNC(void, RHeapFree, eka2l1::ptr<RHeap> aHeap, ptr<TAny> aPtr) {
     std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock>*>(heap_adv->iBlocks);
 
     auto& res = std::find_if(blocks.begin(), blocks.end(),
-        [aPtr](auto blck) { return blck.block_ptr == aPtr; });
+        [&](SBlock blck) { return blck.block_ptr.ptr_address() == aPtr.ptr_address(); });
 
     if (res == blocks.end()) {
         LOG_WARN("Free a undenifed cell.");
         return;
     }
 
-    res->free = true;
+    auto idx = res - blocks.begin();
+
+    blocks[idx].free = true;
     
     heap_adv->iTotalAllocSize -= res->size;
     heap_adv->iCellCount -= 1;
+}
+
+BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZ, eka2l1::ptr<RHeap> aHeap, TInt aSize) {
+    auto ptr_allocated = RHeapAlloc(sys, aHeap, aSize);
+
+    if (!ptr_allocated) {
+        return ptr_allocated;
+    }
+
+    MemFillZ(sys, ptr_allocated, aSize);
+
+    return ptr_allocated;
 }
 
 BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator) {

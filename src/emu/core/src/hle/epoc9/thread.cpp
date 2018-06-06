@@ -106,22 +106,14 @@ BRIDGE_FUNC(ptr<RHeap>, UserHeapChunkHeap, RChunk aChunk, TInt aMinLength, TInt 
 
     hle::lib_manager *mngr = sys->get_lib_manager();
 
-    RHeapAdvance heap;
+    RHeapAdvance heap = NewHeap(mngr, chunk_ptr, aOffset, aAlign);
 
-    heap.iVtable = ptr<void>(mngr->get_vtable_address("RHeap"));
-    heap.iBase = ptr<TUint8>(chunk_ptr->base().ptr_address() + aOffset + sizeof(RHeapAdvance));
-    heap.iTop = ptr<TUint8>(chunk_ptr->get_top());
-    heap.iAccessCount = 0;
-    heap.iTotalAllocSize = 0;
-    heap.iChunkHandle = chunk_ptr->unique_id();
-    heap.iBlocks = (uint64_t)(new std::vector<SBlock>()); // I am very concerned when using this, but neh
-    
     // For now, just take the default heap, idk
     memcpy(chunk_ptr->base().get(mem) + aOffset, &heap, sizeof(RHeapAdvance));
     address ret =  chunk_ptr->base().ptr_address() + aOffset;
 
-    if (aMode & KHeapReplace)
     // Set the public User:: allocator to this
+    if (aMode & KHeapReplace)
         current_local_data(sys).heap = ret;
 
     return ret;

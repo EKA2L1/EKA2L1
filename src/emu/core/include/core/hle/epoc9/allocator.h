@@ -74,11 +74,15 @@ struct RHeapAdvance : public RHeap {
     TUint64 iBlocks;
 };
 
+RHeapAdvance NewHeap(eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, address offset, int align);
+void FreeHeap(RHeapAdvance heap);
+
 BRIDGE_FUNC(void, RAllocatorDoClose, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(void, RAllocatorClose, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator);
 
 BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize);
+BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZ, eka2l1::ptr<RHeap> aHeap, TInt aSize);
 
 extern const eka2l1::hle::func_map allocator_register_funcs;

@@ -21,12 +21,14 @@
 
 namespace eka2l1 {
     namespace kernel {
+        void timer_callback(uint64_t user, int cycles_late);
+
         timer::timer(kernel_system *kern, timing_system *timing, std::string name, reset_type rt,
             kernel::owner_type owner,
             kernel::uid own_id,
-            kernel::access_type access = access_type::local_access)
+            kernel::access_type access)
             : wait_obj(kern, name, owner, own_id, access)
-            , timing(sys)
+            , timing(timing)
             , rt(rt)
             , signaled(false)
             , init_delay(0)
@@ -55,12 +57,12 @@ namespace eka2l1 {
                 timing->schedule_event(
                     timing->ns_to_cycles(init),
                     callback_type,
-                    this);
+                    (uint64_t)this);
             }
         }
 
         void timer::cancel() {
-            timing->unschedule_event(timer_callback, (uint64_t)this);
+            timing->unschedule_event(callback_type, (uint64_t)this);
         }
 
         void timer::signal(int cycles_late) {
