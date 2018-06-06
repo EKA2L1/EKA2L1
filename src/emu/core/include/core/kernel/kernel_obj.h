@@ -34,6 +34,19 @@ namespace eka2l1 {
             thread
         };
 
+        enum class access_type {
+            global_access,
+            local_access
+        };
+
+        enum class object_type {
+            thread,
+            sema,
+            mutex,
+            timer,
+            chunk
+        };
+
         // Base class for all kernel object
         class kernel_obj {
         protected:
@@ -49,13 +62,20 @@ namespace eka2l1 {
             kernel::uid owner;
             kernel::owner_type owner_type;
 
-            kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner);
-            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner)
+            access_type access;
+            object_type obj_type;
+
+            kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner, 
+                kernel::access_type access = access_type::local_access);
+
+            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner, 
+                kernel::access_type access = access_type::local_access)
                 : obj_id(obj_id)
                 , obj_name(obj_name)
                 , kern(kern)
                 , owner(owner)
-                , owner_type(owner_type) {}
+                , owner_type(owner_type) 
+                , access(access) {}
 
         public:
             std::string name() const {
@@ -82,8 +102,16 @@ namespace eka2l1 {
                 return owner;
             }
 
-            owner_type get_owner_type() const {
+            kernel::owner_type get_owner_type() const {
                 return owner_type;
+            }
+
+            kernel::access_type get_access_type() const {
+                return access;
+            }
+
+            object_type get_object_type() const {
+                return obj_type;
             }
         };
     }

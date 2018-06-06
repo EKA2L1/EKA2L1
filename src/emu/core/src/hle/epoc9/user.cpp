@@ -7,7 +7,10 @@
 
 #include <core_mem.h>
 
-RAllocator *allocator;
+// Get the current thread local data
+eka2l1::kernel::thread_local_data &current_local_data(eka2l1::system *sys) {
+    return sys->get_kernel_system()->crr_thread()->get_local_data();
+}
 
 BRIDGE_FUNC(TInt, UserIsRomAddress, eka2l1::ptr<TBool> aBool, eka2l1::ptr<TAny> aAddr) {
     TBool *check = aBool.get(sys->get_memory_system());
@@ -57,9 +60,15 @@ BRIDGE_FUNC(void, UserInitProcess) {
     }
 }
 
+BRIDGE_FUNC(void, UserDbgMarkStart, TInt aCode) {
+    eka2l1::kernel::thread_local_data local_data = current_local_data(sys);
+    RAllocatorDbgMarkStart(sys, eka2l1::ptr<RAllocator>(local_data.heap.ptr_address()));
+}
+
 const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3511550552, UserIsRomAddress),
     BRIDGE_REGISTER(3037667387, UserExit),
     BRIDGE_REGISTER(3475190555, UserPanic),
-    BRIDGE_REGISTER(3108163311, UserInitProcess)
+    BRIDGE_REGISTER(3108163311, UserInitProcess),
+    BRIDGE_REGISTER(1932818422, UserDbgMarkStart)
 };

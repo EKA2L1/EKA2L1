@@ -62,7 +62,7 @@ namespace eka2l1 {
             size_t commited_size;
 
             chunk_type type;
-            chunk_access access;
+            chunk_access caccess;
             chunk_attrib attrib;
 
             eka2l1::ptr<uint8_t> chunk_base;

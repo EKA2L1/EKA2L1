@@ -95,9 +95,9 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
                 uc_reg_read(uc, UC_ARM_REG_LR, &lr);
                 uc_reg_write(uc, UC_ARM_REG_PC, &lr);
-            }
 
-            return;
+                return;
+            }
         }
     }
 

@@ -28,7 +28,7 @@ namespace eka2l1 {
         , kern(kern)
         , mem(mem)
         , img(img) {
-        prthr = kern->add_thread(uid, process_name, img->rt_code_addr + img->header.entry_point,
+        prthr = kern->add_thread(kernel::owner_type::process, uid, kernel::access_type::local_access, process_name, img->rt_code_addr + img->header.entry_point,
             img->header.stack_size, img->header.heap_size_min, img->header.heap_size_max,
             nullptr, kernel::priority_normal);
     }

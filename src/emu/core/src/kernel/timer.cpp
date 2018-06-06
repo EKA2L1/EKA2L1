@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2018 EKA2L1 Team / Citra Team
  * 
- * This file is part of EKA2L1 project 
+ * This file is part of EKA2L1 project / Citra Emulator Project
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -21,13 +21,18 @@
 
 namespace eka2l1 {
     namespace kernel {
-        timer::timer(timing_system *sys, std::string name, reset_type rt)
-            : timing(sys)
-            , name(name)
+        timer::timer(kernel_system *kern, timing_system *timing, std::string name, reset_type rt,
+            kernel::owner_type owner,
+            kernel::uid own_id,
+            kernel::access_type access = access_type::local_access)
+            : wait_obj(kern, name, owner, own_id, access)
+            , timing(sys)
             , rt(rt)
             , signaled(false)
             , init_delay(0)
             , interval_delay(0) {
+            obj_type = object_type::timer;
+
             callback_type = timing->get_register_event("TimerCallback");
 
             if (callback_type == -1) {
@@ -85,7 +90,7 @@ namespace eka2l1 {
             return !signaled;
         }
 
-        bool timer::acquire(const kernel::uid thr_id) {
+        void timer::acquire(kernel::uid thr_id) {
             if (rt == reset_type::oneshot) {
                 signaled = false;
             }

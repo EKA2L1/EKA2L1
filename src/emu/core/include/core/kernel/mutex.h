@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2018 EKA2L1 Team / Citra Emulator Project
  * 
- * This file is part of EKA2L1 project 
+ * This file is part of EKA2L1 project / Citra Emulator Project
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -18,3 +18,37 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
+#include <kernel/wait_obj.h>
+#include <kernel/thread.h>
+
+namespace eka2l1 {
+    namespace kernel {
+        class mutex : public wait_obj {
+            int lock_count;
+            uint32_t priority;
+            thread_ptr holding;
+
+        public:
+            mutex(kernel_system *kern, std::string name, bool init_locked,
+                kernel::owner_type own,
+                kernel::uid own_id,
+                kernel::access_type access = kernel::access_type::local_access);
+
+            void update_priority();
+
+            bool should_wait(kernel::uid thr_id) override;
+            void acquire(kernel::uid thr_id) override;
+
+            bool release(thread_ptr thr);
+
+            void add_waiting_thread(thread_ptr thr) override;
+            void erase_waiting_thread(kernel::uid thr) override;
+
+            uint32_t get_priority() const {
+                return priority;
+            }
+        };
+    }
+}

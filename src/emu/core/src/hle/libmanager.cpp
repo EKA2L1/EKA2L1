@@ -121,6 +121,7 @@ namespace eka2l1 {
 
                 for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
                     addr_map.insert(std::make_pair(addrs[i], libids[i]));
+
                     std::string name_imp = get_func_name(libids[i]).value();
                     size_t vtab_start = name_imp.find("vtable for ");
 

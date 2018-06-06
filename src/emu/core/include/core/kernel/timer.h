@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2018 EKA2L1 Team / Citra Team
  * 
- * This file is part of EKA2L1 project 
+ * This file is part of EKA2L1 project / Citra Emulator Project.
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -31,14 +31,17 @@ namespace eka2l1 {
         };
 
         class timer : public wait_obj {
-            std::string tname;
             timing_system *timing;
 
             reset_type rt;
             int callback_type;
 
         public:
-            timer(timing_system *timing, std::string name, reset_type rt);
+            timer(kernel_system *kern, timing_system *timing, std::string name, reset_type rt,
+                kernel::owner_type owner,
+                kernel::uid own_id,
+                kernel::access_type access = access_type::local_access);
+
             ~timer();
 
             bool signaled;
@@ -46,8 +49,8 @@ namespace eka2l1 {
             uint64_t init_delay;
             uint64_t interval_delay;
 
-            bool should_wait(const kernel::uid thr_id) override;
-            bool acquire(const kernel::uid thr_id) override;
+            bool should_wait(kernel::uid thr_id) override;
+            void acquire(kernel::uid thr_id) override;
 
             void wake_up_waiting_threads() override;
 

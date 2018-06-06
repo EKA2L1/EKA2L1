@@ -142,6 +142,83 @@ namespace eka2l1 {
         return chunks[id];
     }
 
+    mutex_ptr kernel_system::create_mutex(std::string name, bool init_locked,
+        kernel::owner_type own,
+        kernel::uid own_id,
+        kernel::access_type access) {
+        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, own, 
+            own_id < 0 ? get_id_base_owner(own) : static_cast<kernel::uid>(own_id), access);
+
+        uint32_t id = new_mutex->unique_id();
+
+        mutexes.emplace(new_mutex->unique_id(), std::move(new_mutex));
+
+        return mutexes[id];
+    }
+
+    sema_ptr kernel_system::create_sema(std::string sema_name,
+        int32_t init_count,
+        int32_t max_count,
+        kernel::owner_type own_type,
+        kernel::uid own_id,
+        kernel::access_type access) {
+        sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, max_count, own_type,
+            own_id < 0 ? get_id_base_owner(own_type) : static_cast<kernel::uid>(own_id), access);
+
+        uint32_t id = new_sema->unique_id();
+
+        semas.emplace(new_sema->unique_id(), std::move(new_sema));
+
+        return semas[id];
+    }
+
+    timer_ptr kernel_system::create_timer(std::string name, kernel::reset_type rt,
+        kernel::owner_type owner,
+        kernel::uid own_id,
+        kernel::access_type access) {
+        timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, rt, owner,
+            own_id < 0 ? get_id_base_owner(owner) : static_cast<kernel::uid>(own_id), access);
+
+        uint32_t id = new_timer->unique_id();
+
+        timers.emplace(new_timer->unique_id(), std::move(new_timer));
+
+        return timers[id];
+    }
+
+    bool kernel_system::close_timer(kernel::uid id) {
+        auto res = timers.find(id);
+
+        if (res != timers.end()) {
+            timers.erase(id);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool kernel_system::close_sema(kernel::uid id) {
+        auto res = semas.find(id);
+
+        if (res != semas.end()) {
+            semas.erase(id);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool kernel_system::close_mutex(kernel::uid id) {
+        auto res = mutexes.find(id);
+
+        if (res != mutexes.end()) {
+            mutexes.erase(id);
+            return true;
+        }
+
+        return false;
+    }
+
     bool kernel_system::close_chunk(kernel::uid id) {
         auto res = chunks.find(id);
 
@@ -173,20 +250,28 @@ namespace eka2l1 {
     }
 
     bool kernel_system::close(kernel::uid id) {
+        // TODO: Remove this horrible if
         if (!close_chunk(id)) {
             if (!close_thread(id)) {
-                return false;
+                if (!close_mutex(id)) {
+                    if (!close_sema(id)) {
+                        if (!close_timer(id)) {
+                            return false;
+                        }
+                    }
+                }
             }
         }
 
         return true;
     }
 
-    thread_ptr kernel_system::add_thread(uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
+    thread_ptr kernel_system::add_thread(kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+        const std::string &name, const address epa, const size_t stack_size,
         const size_t min_heap_size, const size_t max_heap_size,
-        void *usrdata,
+        ptr<void> usrdata,
         kernel::thread_priority pri) {
-        thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, owner, name, epa, stack_size, min_heap_size, max_heap_size);
+        thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, owner, owner_id, access, name, epa, stack_size, min_heap_size, max_heap_size, usrdata, pri);
         uint32_t id = new_thread->unique_id();
 
         thr_sch->schedule(new_thread);
@@ -219,18 +304,35 @@ namespace eka2l1 {
     kernel_obj_ptr kernel_system::get_kernel_obj(kernel::uid id) {
         auto chunk_ite = chunks.find(id);
 
-        if (chunk_ite == chunks.end()) {
-            auto thread_ite = threads.find(id);
-
-            if (thread_ite != threads.end()) {
-                return thread_ite->second;
-            }
-            else {
-                return nullptr;
-            }
+        if (chunk_ite != chunks.end()) {
+            return chunk_ite->second;
         } 
 
-        return chunk_ite->second;
+        auto thread_ite = threads.find(id);
+
+        if (thread_ite != threads.end()) {
+            return thread_ite->second;
+        }
+
+        auto timer_ite = timers.find(id);
+
+        if (timer_ite != timers.end()) {
+            return timer_ite->second;
+        }
+
+        auto sema_ite = semas.find(id);
+
+        if (sema_ite != semas.end()) {
+            return sema_ite->second;
+        }
+
+        auto mutex_ite = mutexes.find(id);
+
+        if (mutex_ite != mutexes.end()) {
+            return mutex_ite->second;
+        }
+
+        return nullptr;
     }
 }
 

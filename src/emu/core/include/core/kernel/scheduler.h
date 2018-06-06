@@ -21,6 +21,7 @@
 #pragma once
 
 #include <arm/jit_factory.h>
+#include <common/queue.h>
 
 #include <map>
 #include <mutex>
@@ -41,10 +42,9 @@ namespace eka2l1 {
 
         using uid = uint64_t;
 
-        // Schedule nanothreads based on Core Timing
         class thread_scheduler {
             std::map<uid, thread_ptr> waiting_threads;
-            std::priority_queue<thread_ptr> ready_threads;
+            eka2l1::cp_queue<thread_ptr> ready_threads;
             std::map<uid, thread_ptr> running_threads;
 
             thread_ptr crr_thread;
@@ -75,6 +75,8 @@ namespace eka2l1 {
 
             bool resume(kernel::uid id);
             void unschedule(kernel::uid id);
+
+            void refresh();
 
             thread_ptr current_thread() const {
                 return crr_thread;

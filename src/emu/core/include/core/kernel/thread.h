@@ -23,19 +23,27 @@
 #include <array>
 #include <condition_variable>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <arm/jit_factory.h>
 #include <common/resource.h>
+
 #include <kernel/wait_obj.h>
 #include <kernel/chunk.h>
+
 #include <ptr.h>
 
 namespace eka2l1 {
     class kernel_system;
     class memory;
 
+    namespace kernel {
+        class mutex;
+    }
+
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
+    using mutex_ptr = std::shared_ptr<kernel::mutex>;
 
     namespace kernel {
         using address = uint32_t;
@@ -88,6 +96,7 @@ namespace eka2l1 {
 
         class thread : public wait_obj {
             friend class thread_scheduler;
+            friend class mutex;
 
             thread_state state;
             std::mutex mut;
@@ -113,13 +122,16 @@ namespace eka2l1 {
             thread_local_data ldata;
 
             std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
+            std::vector<mutex_ptr> held_mutexes;
+            std::vector<mutex_ptr> pending_mutexes;
 
             void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
             void create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, address epa);
 
         public:
             thread();
-            thread(kernel_system *kern, memory_system *mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
+            thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access, 
+                const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 ptr<void> usrdata = nullptr,
                 thread_priority pri = priority_normal);
@@ -152,12 +164,18 @@ namespace eka2l1 {
             bool operator>=(const thread &rhs);
             bool operator<=(const thread &rhs);
 
-            std::optional<tls_slot&> get_free_tls_slot(uint32_t dll_uid);
+            std::optional<tls_slot> get_free_tls_slot(uint32_t dll_uid);
             void close_tls_slot(tls_slot &slot);
 
             thread_local_data &get_local_data() {
                 return ldata;
             }
+
+            std::shared_ptr<thread_scheduler> get_scheduler() {
+                return scheduler;
+            }
+
+            void update_priority();
         };
 
         using thread_ptr = std::shared_ptr<kernel::thread>;

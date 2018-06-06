@@ -17,12 +17,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <core_kernel.h>
 #include <core_mem.h>
 #include <kernel/thread.h>
+#include <kernel/mutex.h>
 #include <ptr.h>
 
 namespace eka2l1 {
@@ -106,16 +108,19 @@ namespace eka2l1 {
             memcpy(stack_ptr.get(mem), &info, 0x40);
         }
 
-        thread::thread(kernel_system *kern, memory_system *mem, uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
+        thread::thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+            const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             ptr<void> usrdata,
             thread_priority pri)
-            : wait_obj(kern, name, owner_type::process, owner)
+            : wait_obj(kern, name, owner, owner_id, access)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
             , mem(mem){
+            obj_type = object_type::thread;
+
             priority = caculate_thread_priority(pri);
 
             stack_chunk = kern->create_chunk("stackThreadID" + common::to_string(obj_id), 0, stack_size, stack_size, prot::read_write,
@@ -195,7 +200,7 @@ namespace eka2l1 {
             // :)
         }
 
-        std::optional<tls_slot&> thread::get_free_tls_slot(uint32_t dll_uid) {
+        std::optional<tls_slot> thread::get_free_tls_slot(uint32_t dll_uid) {
             for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
                 if (ldata.tls_slots[i].handle = -1) {
                     ldata.tls_slots[i].handle = i;
@@ -206,7 +211,7 @@ namespace eka2l1 {
                 }
             }
 
-            return std::optional<tls_slot&>{};
+            return std::optional<tls_slot>{};
         }
 
         void thread::close_tls_slot(tls_slot &slot) {
@@ -219,6 +224,25 @@ namespace eka2l1 {
 
             // Mark as free
             tls_corr_spot.handle = -1;
+        }
+
+        void thread::update_priority() {
+            int new_priority = current_priority();
+
+            for (auto &mut : held_mutexes) {
+                if (mut->get_priority() < new_priority) {
+                    new_priority = mut->get_priority();
+                }
+            }
+
+            priority = new_priority;
+
+            if (state == kernel::thread_state::ready) {
+                scheduler->refresh();
+            }
+            else {
+                scheduler->schedule(std::reinterpret_pointer_cast<thread>(kern->get_kernel_obj(obj_id)));
+            }
         }
     }
 }

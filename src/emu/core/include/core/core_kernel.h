@@ -23,6 +23,10 @@
 #include <kernel/kernel_obj.h>
 #include <kernel/scheduler.h>
 #include <kernel/chunk.h>
+#include <kernel/mutex.h>
+#include <kernel/sema.h>
+#include <kernel/timer.h>
+
 #include <process.h>
 #include <ptr.h>
 
@@ -46,6 +50,9 @@ namespace eka2l1 {
     using thread_ptr = std::shared_ptr<kernel::thread>;
     using process_ptr = std::shared_ptr<process>;
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
+    using mutex_ptr = std::shared_ptr<kernel::mutex>;
+    using sema_ptr = std::shared_ptr<kernel::semaphore>;
+    using timer_ptr = std::shared_ptr<kernel::timer>;
     using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
 
     class kernel_system {
@@ -54,8 +61,15 @@ namespace eka2l1 {
         std::atomic<kernel::uid> crr_uid;
         kernel::uid crr_process_id;
 
+        /* Kernel objects map */
+
         std::map<kernel::uid, thread_ptr> threads;
         std::map<kernel::uid, chunk_ptr> chunks;
+        std::map<kernel::uid, mutex_ptr> mutexes;
+        std::map<kernel::uid, sema_ptr> semas;
+        std::map<kernel::uid, timer_ptr> timers;
+
+        /* End kernel objects map */
 
         std::mutex mut;
         std::shared_ptr<kernel::thread_scheduler> thr_sch;
@@ -99,8 +113,34 @@ namespace eka2l1 {
             kernel::owner_type owner,
             int64_t owner_id = -1);
 
+        thread_ptr add_thread(kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+            const std::string &name, const address epa, const size_t stack_size,
+            const size_t min_heap_size, const size_t max_heap_size,
+            ptr<void> usrdata = nullptr,
+            kernel::thread_priority pri = kernel::priority_normal);
+
+        mutex_ptr create_mutex(std::string name, bool init_locked,
+            kernel::owner_type own,
+            kernel::uid own_id = -1,
+            kernel::access_type access = kernel::access_type::local_access);
+
+        sema_ptr create_sema(std::string sema_name,
+            int32_t init_count,
+            int32_t max_count,
+            kernel::owner_type own_type,
+            kernel::uid own_id = -1,
+            kernel::access_type access = kernel::access_type::local_access);
+
+        timer_ptr create_timer(std::string name, kernel::reset_type rt,
+            kernel::owner_type owner,
+            kernel::uid own_id = -1,
+            kernel::access_type access = kernel::access_type::local_access);
+
         bool close_chunk(kernel::uid id);
         bool close_thread(kernel::uid id);
+        bool close_timer(kernel::uid id);
+        bool close_sema(kernel::uid id);
+        bool close_mutex(kernel::uid id);
 
         bool close(kernel::uid id);
 
@@ -108,11 +148,6 @@ namespace eka2l1 {
         bool get_closeable(kernel::uid id);
 
         kernel_obj_ptr get_kernel_obj(kernel::uid id);
-
-        thread_ptr add_thread(uint32_t owner, const std::string &name, const address epa, const size_t stack_size,
-            const size_t min_heap_size, const size_t max_heap_size,
-            void *usrdata = nullptr,
-            kernel::thread_priority pri = kernel::priority_normal);
 
         bool run_thread(kernel::uid thr);
 

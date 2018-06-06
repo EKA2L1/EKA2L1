@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2018 EKA2L1 Team / Vita3K Team
  * 
- * This file is part of EKA2L1 project 
+ * This file is part of EKA2L1 project / Vita3K emulator project.
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify

@@ -29,25 +29,31 @@
 namespace eka2l1 {
     namespace kernel {
         chunk::chunk(kernel_system* kern, memory_system* mem, std::string name, address bottom, const address top, const size_t max_size, prot protection,
-            chunk_type type, chunk_access access, chunk_attrib attrib, kernel::owner_type owner_type, kernel::uid owner)
-            : kernel_obj(kern, name, owner_type, owner)
+            chunk_type type, chunk_access chnk_access, chunk_attrib attrib, kernel::owner_type owner_type, kernel::uid owner)
+            : kernel_obj(kern, name, owner_type, owner, access_type::local_access)
             , type(type)
-            , access(access)
+            , caccess(chnk_access)
             , attrib(attrib)
             , max_size(max_size)
             , protection(protection)
             , kern(kern)
             , mem(mem) {
+            obj_type = object_type::chunk;
+
+            if (caccess == chunk_access::global) {
+                access = access_type::global_access;
+            }
+
             if (attrib == chunk_attrib::anonymous) {
                 // Don't use the name given by that, it's anonymous omg!!!
                 obj_name = "anonymous" + common::to_string(eka2l1::random());
             } 
 
-            if (access == chunk_access::local && name == "") {
+            if (caccess == chunk_access::local && name == "") {
                 obj_name = "local" + common::to_string(eka2l1::random());
             }
 
-            if (access == chunk_access::code) {
+            if (caccess == chunk_access::code) {
                 obj_name = "code" + common::to_string(eka2l1::random());
             }
 
@@ -65,7 +71,7 @@ namespace eka2l1 {
             address range_beg = 0;
             address range_end = 0;
 
-            switch (access) {
+            switch (caccess) {
                 case chunk_access::local: {
                     range_beg = LOCAL_DATA;
                     range_end = DLL_STATIC_DATA;
@@ -92,7 +98,7 @@ namespace eka2l1 {
 
             LOG_INFO("Chunk created: {}, id: {}, bottom: {}, top: {}, type: {}, access: {}{}", obj_name, obj_id, new_bottom, new_top,
                 (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")), 
-                (access == chunk_access::local ? "local" : (access == chunk_access::code ? "code " : "global")), 
+                (caccess == chunk_access::local ? "local" : (caccess == chunk_access::code ? "code " : "global")), 
                 (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));
         }
 

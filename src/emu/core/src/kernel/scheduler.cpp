@@ -184,7 +184,21 @@ namespace eka2l1 {
         }
 
         void thread_scheduler::unschedule(kernel::uid id) {
-            // ?
+            auto res = std::find_if(ready_threads.begin(), ready_threads.end(), 
+                [&](auto ite) { return ite->unique_id() == id; });
+
+            if (res == ready_threads.end()) {
+                // Thread is not in ready
+                return;
+            }
+
+            thread_ptr thr = *res;
+            ready_threads.remove(thr);
+        }
+
+        void thread_scheduler::refresh() {
+            ready_threads.resort();
+            reschedule();
         }
     }
 }
