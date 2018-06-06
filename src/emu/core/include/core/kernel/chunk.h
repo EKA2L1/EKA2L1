@@ -108,6 +108,10 @@ namespace eka2l1 {
             }
 
             bool adjust(size_t adj_size);
+
+            size_t get_size() {
+                return commited_size;
+            }
         };
     }
 }

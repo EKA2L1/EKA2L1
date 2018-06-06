@@ -46,31 +46,39 @@ struct SCell {
 };
 
 struct RHeap : public RAllocator {
-    TInt	 iAlign;
-    TInt     iAllocCount;
-    eka2l1::ptr<uint8_t> iBase;
+    TInt    iUnused1;
+    TInt    iMaxLength;
+    TInt    iUnused2;
+    TInt    iUnused3;
     TInt	iChunkHandle;
-    TInt	iFailAllocCount;
-    TInt	iFailRate;
-    TInt 	iFailType;
-    TBool	iFailed;
-    SCell	iFree;
-    TInt	iGrowBy;
     RFastLock	iLock;
-    TInt	iMaxLength;
-    TInt	iMinCell;
-    TInt	iMinLength;
-    TInt	iNestingLevel;
-    TInt	iOffset;
-    TInt	iPageSize;
-    TInt	iRand;
-    eka2l1::ptr<uint8_t>	iTestData;
-    eka2l1::ptr<uint8_t>    iTop;
+    eka2l1::ptr<uint8_t> iBase;
+    eka2l1::ptr<uint8_t> iTop;
+    TInt iAlign;
+    TInt iAllocFail;
+    TInt iNestingLevel;
+    TInt iNestData;
+};
+
+// Our heap customized
+
+struct SBlock {
+    TInt offset;
+    TInt size;
+    eka2l1::ptr<void> block_ptr;
+
+    bool free = true;
+};
+
+struct RHeapAdvance : public RHeap {
+    TUint64 iBlocks;
 };
 
 BRIDGE_FUNC(void, RAllocatorDoClose, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(void, RAllocatorClose, eka2l1::ptr<RAllocator> aAllocator);
 BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator);
+
+BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize);
 
 extern const eka2l1::hle::func_map allocator_register_funcs;
