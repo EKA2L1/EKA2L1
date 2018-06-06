@@ -147,6 +147,9 @@ BRIDGE_FUNC(void, RHeapFree, eka2l1::ptr<RHeap> aHeap, ptr<TAny> aPtr) {
     }
 
     res->free = true;
+    
+    heap_adv->iTotalAllocSize -= res->size;
+    heap_adv->iCellCount -= 1;
 }
 
 BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator) {
