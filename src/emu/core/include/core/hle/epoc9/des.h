@@ -102,3 +102,14 @@ TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8);
 TInt GetTDesC16Type(TDesC16 *aDes16);
 ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16);
 TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16);
+
+struct TLit8 {
+    TUint iTypeLength;
+};
+
+struct TLit16 : public TLit8 {};
+
+TUint8 *GetLit8Ptr(memory_system *mem, eka2l1::ptr<TLit8> aLit);
+TUint16 *GetLit16Ptr(memory_system *mem, eka2l1::ptr<TLit16> aLit);
+
+using TLit = TLit16;

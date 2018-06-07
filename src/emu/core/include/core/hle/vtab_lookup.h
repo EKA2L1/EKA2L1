@@ -20,3 +20,19 @@
 
 #pragma once
 
+#include <hle/bridge.h>
+
+namespace eka2l1 {
+    namespace hle {
+        template <typename... args>
+        void set_vptr_cpu(memory_system *mem, arm::jitter &jitter, uint32_t* vtab, uint32_t idx, args... func_args) {
+            uint32_t addr = vtab[idx];
+            constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
+
+            write_args<args...>(jitter, layouts, std::index_sequence_for<args...>(), mem, func_args...);
+
+            jitter->set_lr(jitter->get_pc());
+            jitter->set_pc(addr);
+        }
+    }
+}

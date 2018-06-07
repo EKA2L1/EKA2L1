@@ -36,7 +36,13 @@ eka2l1::kernel::thread_local_data &current_local_data(eka2l1::system *sys);
 BRIDGE_FUNC(TInt, UserIsRomAddress, eka2l1::ptr<TBool> aBool, eka2l1::ptr<TAny> aAddr);
 BRIDGE_FUNC(void, UserExit, TInt aReason);
 BRIDGE_FUNC(void, UserDbgMarkStart, TInt aCode);
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserAllocZL, TInt aSize);
 BRIDGE_FUNC(eka2l1::ptr<TAny>, UserAllocZ, TInt aSize);
 BRIDGE_FUNC(eka2l1::ptr<TAny>, UserAlloc, TInt aSize);
+BRIDGE_FUNC(void, UserFree, eka2l1::ptr<TAny> aPtr);
+BRIDGE_FUNC(void, UserSetTrapHandler, eka2l1::ptr<TAny> aPtr);
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserTrapHandler);
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserMarkCleanupStack);
+BRIDGE_FUNC(void, UserUnmarkCleanupStack, eka2l1::ptr<TAny>);
 
 extern const eka2l1::hle::func_map user_register_funcs;

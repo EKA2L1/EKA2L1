@@ -79,12 +79,40 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, UserAlloc, TInt aSize) {
     return ret;
 }
 
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserAllocZL, TInt aSize) {
+    eka2l1::kernel::thread_local_data local_data = current_local_data(sys);
+    auto ret = RHeapAllocZL(sys, local_data.heap.cast<RHeap>(), aSize);
+
+    return ret;
+}
+
+BRIDGE_FUNC(void, UserFree, eka2l1::ptr<TAny> aPtr) {
+    eka2l1::kernel::thread_local_data local_data = current_local_data(sys);
+    RHeapFree(sys, local_data.heap.cast<RHeap>(), aPtr);
+}
+
+BRIDGE_FUNC(void, UserSetTrapHandler, eka2l1::ptr<TAny> aPtr) {
+    eka2l1::kernel::thread_local_data &local_data = current_local_data(sys);
+    local_data.trap_handler = aPtr;
+}
+
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserTrapHandler) {
+    eka2l1::kernel::thread_local_data local_data = current_local_data(sys);
+    return local_data.trap_handler;
+}
+
+BRIDGE_FUNC(eka2l1::ptr<TAny>, UserMarkCleanupStack) {
+    return UserTrapHandler(sys);
+}
+
+BRIDGE_FUNC(void, UserUnmarkCleanupStack, eka2l1::ptr<TAny> aTrapHandler) {
+
+}
+
 const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3511550552, UserIsRomAddress),
     BRIDGE_REGISTER(3037667387, UserExit),
     BRIDGE_REGISTER(3475190555, UserPanic),
     BRIDGE_REGISTER(3108163311, UserInitProcess),
-    BRIDGE_REGISTER(1932818422, UserDbgMarkStart),
-    BRIDGE_REGISTER(3628338344, UserAllocZ),
-    BRIDGE_REGISTER(4085393645, UserAlloc)
+    BRIDGE_REGISTER(1932818422, UserDbgMarkStart)
 };

@@ -98,7 +98,7 @@ namespace eka2l1 {
                 return 0;
             }
 
-            return res->second;
+            return res->second + 8;
         }
 
         bool lib_manager::register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_exports) {
@@ -355,6 +355,32 @@ namespace eka2l1 {
             }
 
             res->second.loader.erase(res2);
+        }
+
+        bool lib_manager::call_svc(sid svcnum) {
+            auto res = svc_funcs.find(svcnum);
+
+            if (res == svc_funcs.end()) {
+                return false;
+            }
+
+            epoc_import_func func = res->second;
+            func(sys);
+
+            return true;
+        }
+
+        bool lib_manager::call_custom_hle(address addr) {
+            auto res = custom_funcs.find(addr);
+
+            if (res == custom_funcs.end()) {
+                return false;
+            }
+
+            epoc_import_func func = res->second;
+            func(sys);
+
+            return true;
         }
     }
 }

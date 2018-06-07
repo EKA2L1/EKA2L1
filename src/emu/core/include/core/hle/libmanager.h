@@ -94,6 +94,8 @@ namespace eka2l1 {
 
         public:
             std::map<sid, epoc_import_func> import_funcs;
+            std::map<sid, epoc_import_func> svc_funcs;
+            std::map<address, epoc_import_func> custom_funcs;
 
             lib_manager(){};
             void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
@@ -105,6 +107,8 @@ namespace eka2l1 {
             std::optional<epoc_import_func> get_hle(sid id);
 
             bool call_hle(sid id);
+            bool call_custom_hle(address addr);
+            bool call_svc(sid svcnum);
 
             // Image name
             loader::e32img_ptr load_e32img(const std::u16string &img_name);

@@ -26,6 +26,7 @@
 #include <memory>
 #include <streambuf>
 #include <string>
+#include <vector>
 
 namespace eka2l1 {
     namespace common {

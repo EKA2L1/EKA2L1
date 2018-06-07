@@ -295,8 +295,6 @@ namespace eka2l1 {
 
         fclose(f);
 
-        change_prot(ptr<void>(ROM), size, prot::read);
-
         return true;
     }
 }

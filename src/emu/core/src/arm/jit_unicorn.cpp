@@ -98,6 +98,15 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
                 return;
             }
+        } else {
+            if (mngr->call_custom_hle(address)) {
+                uint32_t lr = 0;
+
+                uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+                uc_reg_write(uc, UC_ARM_REG_PC, &lr);
+
+                return;
+            }
         }
     }
 
@@ -110,8 +119,32 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 }
 
 // Read the symbol and redirect to HLE function
-void intr_hook(uc_engine *uc, uint32_t in_no, void *user_data) {
-    LOG_TRACE("Trying to hook but fuck off");
+void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
+    eka2l1::arm::jit_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
+
+    if (jit == nullptr) {
+        LOG_ERROR("Code hook failed: User Data was null");
+        return;
+    }
+
+    uint32_t imm = 0;
+
+    if (thumb_mode(uc)) {
+        uint16_t svc_inst = 0;
+
+        address svca = jit->get_pc() - 2;
+        uc_mem_read(uc, svca, &svc_inst, 2);
+        imm = svc_inst & 0xff;
+    }
+    else {
+        uint32_t svc_inst = 0;
+
+        address svca = jit->get_pc() - 4;
+        uc_mem_read(uc, svca, &svc_inst, 4);
+        imm = svc_inst & 0xffffff;
+    }
+
+    jit->get_lib_manager()->call_svc(imm);
 }
 
 namespace eka2l1 {
@@ -258,7 +291,7 @@ namespace eka2l1 {
 
         uint32_t jit_unicorn::get_reg(size_t idx) {
             uint32_t val = 0;
-            auto treg = UC_ARM_REG_R0 + idx;  
+            auto treg = UC_ARM_REG_R0 + idx; 
             auto err = uc_reg_read(engine, treg, &val);
 
             if (err != UC_ERR_OK) {

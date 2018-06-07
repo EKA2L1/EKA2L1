@@ -21,9 +21,30 @@
 #pragma once
 
 #include <epoc9/base.h>
+#include <epoc9/des.h>
+
+#include <hle/bridge.h>
 
 struct CConsoleBase : public CBase {
+
 };
 
 struct CColorConsoleBase : public CConsoleBase {
 };
+
+struct TSize {
+    TInt iWidth;
+    TInt iHeight;
+};
+
+struct CConsoleBaseAdvance : public CConsoleBase {
+    TInt iNameLen;
+    eka2l1::ptr<TUint16> iName;
+    TSize iConsoleSize;
+};
+
+BRIDGE_FUNC(eka2l1::ptr<CConsoleBase>, ConsoleNewL, eka2l1::ptr<TLit> aName, TSize aSize);
+BRIDGE_FUNC(void, CConsoleBaseAdvanceWrite, eka2l1::ptr<CConsoleBase> aConsole, eka2l1::ptr<TDesC> aDes);
+
+extern const eka2l1::hle::func_map cons_register_funcs;
+extern const eka2l1::hle::func_map cons_custom_register_funcs;

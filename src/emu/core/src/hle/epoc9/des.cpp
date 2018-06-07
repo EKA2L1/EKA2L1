@@ -69,3 +69,11 @@ TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16) {
     ptr<TUint16> des_ptr = GetTDes16HLEPtr(sys, aDes16);
     return des_ptr.get(sys->get_memory_system());
 }
+
+TUint8 *GetLit8Ptr(memory_system *mem, eka2l1::ptr<TLit8> aLit) {
+    return reinterpret_cast<TUint8*>(aLit.cast<TUint8>().get(mem) + 4);
+}
+
+TUint16 *GetLit16Ptr(memory_system *mem, eka2l1::ptr<TLit16> aLit) {
+    return reinterpret_cast<TUint16*>(GetLit8Ptr(mem, aLit.cast<TLit8>()));
+}

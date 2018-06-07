@@ -26,7 +26,7 @@
 #include <ptr.h>
 
 struct CBase {
-    void *vtable;
+    eka2l1::ptr<void> iVtable;
 };
 
 struct RHandleBase {

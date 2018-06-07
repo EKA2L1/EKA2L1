@@ -224,8 +224,7 @@ namespace eka2l1 {
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()) , common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
                 kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
-            if (img->header.data_size)
-                img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
+            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
                    kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
@@ -312,7 +311,7 @@ namespace eka2l1 {
                 stream->read(reinterpret_cast<void *>(&reloc_entry.base), 4);
                 stream->read(reinterpret_cast<void *>(&reloc_entry.size), 4);
 
-                assert((reloc_entry.size - 8) % 2 == 0);
+                assert((reloc_entry.size) % 2 == 0);
 
                 reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2));
 

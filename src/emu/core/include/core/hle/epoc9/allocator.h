@@ -84,5 +84,7 @@ BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator);
 
 BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize);
 BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZ, eka2l1::ptr<RHeap> aHeap, TInt aSize);
+BRIDGE_FUNC(void, RHeapFree, eka2l1::ptr<RHeap> aHeap, eka2l1::ptr<TAny> aPtr);
+BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZL, eka2l1::ptr<RHeap> aHeap, TInt aSize);
 
 extern const eka2l1::hle::func_map allocator_register_funcs;

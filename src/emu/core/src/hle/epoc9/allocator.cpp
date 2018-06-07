@@ -21,6 +21,9 @@
 #include <epoc9/base.h>
 #include <epoc9/mem.h>
 #include <epoc9/err.h>
+#include <abi/eabi.h>
+
+#include <hle/vtab_lookup.h>
 
 RHeapAdvance NewHeap(eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, address offset, int align) {
     RHeapAdvance heap;
@@ -199,6 +202,19 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZ, eka2l1::ptr<RHeap> aHeap, TInt aSize
     return ptr_allocated;
 }
 
+BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZL, eka2l1::ptr<RHeap> aHeap, TInt aSize) {
+    auto ptr_allocated = RHeapAlloc(sys, aHeap, aSize);
+
+    if (!ptr_allocated) {
+        eka2l1::eabi::leave(1, "Allocated fail");
+        return ptr_allocated;
+    }
+
+    MemFillZ(sys, ptr_allocated, aSize);
+
+    return ptr_allocated;
+}
+
 BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator) {
 
 }
@@ -209,5 +225,5 @@ const eka2l1::hle::func_map allocator_register_funcs = {
     BRIDGE_REGISTER(381559899, RAllocatorDoClose),
     BRIDGE_REGISTER(2261851716, RAllocatorDbgMarkStart),
     BRIDGE_REGISTER(2899467538, RHeapFree),
-    BRIDGE_REGISTER(179745759, RHeapAlloc)
+    BRIDGE_REGISTER(179745759, RHeapAlloc),
 };
