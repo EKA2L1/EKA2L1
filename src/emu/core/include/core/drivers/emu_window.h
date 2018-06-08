@@ -20,21 +20,41 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <functional>
 #include <cstdint>
 
 namespace eka2l1 {
     namespace driver {
         class emu_window {
-            // EPOC9 and down
-            virtual void init() = 0;
-
-            virtual void set_framebuffer_pixel(const point &pix, uint8_t color) = 0;
-            virtual void clear(const uint8_t color) = 0;
-
-            virtual void render() = 0;
+        public:
+            virtual void init(std::string title, vec2 size) = 0;
+            virtual void make_current() = 0;
+            virtual void done_current() = 0;
             virtual void swap_buffer() = 0;
-
+            virtual void poll_events() = 0;
             virtual void shutdown() = 0;
+
+            std::function<void(vec2)> resize_hook;
+
+            /* Callback handler */
+
+            /* Call when a touch input is triggered */
+            std::function<void(point)> touch_pressed;
+
+            /* Call when a touch movement is detected */
+            std::function<void(point)> touch_move;
+
+            /* Call when touch is released */
+            std::function<void()> touch_released;
+
+            /* Call when a button is pressed. User sets their own call, shutdown and center button */
+            std::function<void(uint16_t)> button_pressed;
+
+            /* Call when a button is released */
+            std::function<void()> button_released;
+
+            /* Call when a button is held */
+            std::function<void(uint16_t)> button_hold;
         };
     }
 }

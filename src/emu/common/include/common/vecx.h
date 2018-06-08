@@ -23,6 +23,8 @@ namespace eka2l1 {
     struct vec2 {
         int x, y;
 
+        vec2() {}
+
         vec2(const int x, const int y)
             : x(x)
             , y(y) {}

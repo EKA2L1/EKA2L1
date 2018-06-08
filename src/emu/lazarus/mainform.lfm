@@ -1,12 +1,40 @@
 object MainForm: TMainForm
-  Left = 315
-  Height = 360
-  Top = 210
-  Width = 409
+  Left = 535
+  Height = 583
+  Top = 41
+  Width = 836
   Caption = 'EKA2L1'
+  ClientHeight = 558
+  ClientWidth = 836
+  DesignTimePPI = 120
   Menu = MainMenu
+  OnClose = FormClose
   OnCreate = FormCreate
   LCLVersion = '1.8.2.0'
+  object AppList: TStringGrid
+    Left = 0
+    Height = 560
+    Top = 0
+    Width = 837
+    ColCount = 2
+    Columns = <    
+      item
+        Title.Alignment = taCenter
+        Title.Caption = 'UID'
+        Width = 206
+      end    
+      item
+        Title.Caption = 'Title'
+        Width = 626
+      end>
+    FixedCols = 0
+    RowCount = 200
+    TabOrder = 0
+    ColWidths = (
+      206
+      626
+    )
+  end
   object MainMenu: TMainMenu
     left = 16
     top = 8
@@ -15,6 +43,7 @@ object MainForm: TMainForm
       OnClick = FileMenuClick
       object InstallSISOption: TMenuItem
         Caption = '&Install SIS'
+        OnClick = InstallSISOptionClick
       end
       object InstallROMOption: TMenuItem
         Caption = '&Install ROM'
@@ -37,5 +66,9 @@ object MainForm: TMainForm
         Caption = '&Function Database'
       end
     end
+  end
+  object OpenDialog: TOpenDialog
+    left = 744
+    top = 480
   end
 end

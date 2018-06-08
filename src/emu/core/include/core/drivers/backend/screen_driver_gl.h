@@ -19,8 +19,64 @@
  */
 #pragma once
 
+#include <drivers/screen_driver.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include <frsml/matrix.h>
+
+#include <map>
+
 namespace eka2l1 {
     namespace driver {
+        struct ttf_char {
+            unsigned int tex_id;
+            unsigned int advance;
+            vec2 size;
+            vec2 bearing;
+        };
 
+        class screen_driver_ogl: public screen_driver {
+            object_size ssize, fsize;
+            FT_Library ft;
+            FT_Face face;
+
+            unsigned int fbo;
+            unsigned int rbo;
+            unsigned int fbt;
+
+            unsigned int quad_vao, quad_vbo;
+            unsigned int render_program;
+            unsigned int font_program;
+
+            unsigned int dynquad_vao, dynquad_vbo;
+
+            std::map<char, ttf_char> ttf_chars;
+
+            frsml::mat4 ortho;
+
+            void init_font();
+
+        public:
+            void init(emu_window_ptr win, object_size &screen_size, object_size &font_size) override;
+            void shutdown() override;
+
+            void blit(const std::string &text, int len, const point &where) override;
+            bool scroll_up(rect &trect) override;
+
+            void clear(rect &trect) override;
+
+            void set_pixel(const point &pos, uint8_t color) override;
+            int get_pixel(const point &pos) override;
+
+            void set_word(const point &pos, int word) override;
+            int get_word(const point &pos) override;
+
+            void set_line(const point &pos, const pixel_line &pl) override;
+            void get_line(const point &pos, pixel_line &pl) override;
+
+            void begin_render() override;
+            void end_render() override;
+        };
     }
 }
