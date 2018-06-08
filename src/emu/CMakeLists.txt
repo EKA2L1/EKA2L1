@@ -18,7 +18,9 @@ add_custom_command(
 	POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory "${ROOT}/sid" "$<TARGET_FILE_DIR:EKA2L1_CONS>/sid")
 
-add_library(eka2l1_api core/include/core/core_api.h
+add_definitions(-DEKA2L1_API_EXPORT)
+
+add_library(eka2l1_api SHARED core/include/core/core_api.h
 					   core/src/core_api.cpp)
 
 target_include_directories(eka2l1_api PUBLIC core/include)

@@ -7,8 +7,22 @@ interface
 uses
   Classes, SysUtils;
 
-function SymbianSystemCreate(CpuType: Longint): Longint; cdecl; name 'symbian_system_create'; library EKA2L1API;
-function SymbianSystemShutdown(Sys: Longint): Longint; cdecl; name 'symbian_system_shutdown'; library EKA2L1API;
+const EKA2L1API = 'eka2l1_api';
+      EPOC6 = $65243205;
+      EPOC9 = $65243209;
+      UNICORN = 0;
+      DYNARMIC = 1;
+
+function SymbianSystemCreate(CpuType: Longint): Longint; cdecl; external EKA2L1API name 'create_symbian_system';
+function SymbianSystemShutdown(Sys: Longint): Longint; cdecl; external EKA2L1API name 'shutdown_symbian_system';
+function SymbianSystemInit(Sys: Longint): Longint; cdecl; external EKA2L1API name 'init_symbian_system';
+function SymbianSystemLoad(Sys: Longint; AppID: Longword): Longint; cdecl; external EKA2L1API name 'load_process';
+function SymbianSystemMount(Sys: Longint; Drive: PChar; RealPath: PChar): Longint; cdecl; external EKA2L1API name 'mount_symbian_system';
+function SymbianSystemLoadRom(Sys: Longint; Path: PChar): Longint; cdecl; external EKA2L1API name 'load_rom';
+function SymbianSystemSetCurrentSymbianUse(Sys: Longint; Ver: Longword): Longint; cdecl; external EKA2L1API name 'set_current_symbian_use';
+function SymbianSystemGetCurrentSymbianUse(Sys: Longint; Ver: PLongWord): Longint; cdecl; external EKA2L1API name 'get_current_symbian_use';
+function SymbianSystemGetTotalAppInstalled(Sys: Longint): Longint; cdecl; external EKA2L1API name 'get_total_app_installed';
+function SymbianSystemGetAppInstalled(Sys: Longint; Idx: Longint; Name: PWideChar; NameLength: PLongint; UID: PLongWord): Longint; external EKA2L1API name 'get_app_installed';
 
 implementation
 

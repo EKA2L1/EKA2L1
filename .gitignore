@@ -7,3 +7,8 @@ build/*
 src/emu/core/include/core/core_io.h
 src/emu/core/src/core_io.cpp
 .vs
+src/emu/lazarus/backup/*
+src/emu/lazarus/lib/*
+src/emu/lazarus/drives/*
+src/emu/lazarus/*.dll
+src/external

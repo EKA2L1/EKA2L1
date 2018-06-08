@@ -1,21 +1,20 @@
 program EKA2L1;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$M+}
 
 uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, main, unit1
-  { you can add units after this };
+  Forms, MainForm, APIWrapper, Symbian;
 
 {$R *.res}
 
 begin
   RequireDerivedFormResource:=True;
   Application.Initialize;
-  Application.CreateForm(TMainForm, MainForm);
+  Application.CreateForm(TMainForm, EMainForm);
   Application.Run;
 end.
 

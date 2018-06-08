@@ -102,7 +102,7 @@ int get_app_installed(int sys, int idx, char *name, int *name_len, unsigned int 
     }
 
     if (name) {
-        memcpy(name, need.name.data(), *name_len);
+        memcpy(name, need.name.data(), (*name_len) * 2);
     }
 
     if (id) {
