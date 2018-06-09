@@ -37,6 +37,9 @@
 #include <process.h>
 #include <tuple>
 
+#include <drivers/emu_window.h>
+#include <drivers/screen_driver.h>
+
 namespace eka2l1 {
     enum class availdrive {
         c,
@@ -50,6 +53,8 @@ namespace eka2l1 {
         hle::lib_manager hlelibmngr;
         arm::jitter cpu;
         arm::jitter_arm_type jit_type;
+        driver::window_type win_type;
+        driver::driver_type dr_type;
 
         memory_system mem;
         kernel_system kern;
@@ -67,9 +72,14 @@ namespace eka2l1 {
         epocver ver = epocver::epoc9;
         bool exit = false;
 
+        driver::emu_window_ptr emu_win;
+        driver::screen_driver_ptr emu_screen_driver;
+
     public:
-        system(arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
-            : jit_type(jit_type) {}
+        system(driver::window_type emu_win_type = driver::window_type::glfw, 
+            driver::driver_type emu_driver_type = driver::driver_type::opengl, 
+            arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
+            : jit_type(jit_type), win_type(emu_win_type), dr_type(emu_driver_type) {}
 
         void set_symbian_version_use(const epocver ever) {
             ver = ever;
@@ -98,6 +108,14 @@ namespace eka2l1 {
 
         disasm *get_disasm() {
             return &asmdis;
+        }
+
+        driver::emu_window_ptr get_emu_window() {
+            return emu_win;
+        }
+
+        driver::screen_driver_ptr get_screen_driver() {
+            return emu_screen_driver;
         }
 
         arm::jitter &get_cpu() {

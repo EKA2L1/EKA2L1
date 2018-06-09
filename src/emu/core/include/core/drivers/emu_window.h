@@ -22,6 +22,7 @@
 #include <common/vecx.h>
 #include <functional>
 #include <cstdint>
+#include <memory>
 
 namespace eka2l1 {
     namespace driver {
@@ -56,5 +57,11 @@ namespace eka2l1 {
             /* Call when a button is held */
             std::function<void(uint16_t)> button_hold;
         };
+
+        enum class window_type {
+            glfw
+        };
+
+        std::shared_ptr<emu_window> new_emu_window(window_type win_type);
     }
 }

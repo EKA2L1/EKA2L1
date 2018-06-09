@@ -23,7 +23,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <frsml/matrix.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <map>
 
@@ -53,15 +55,17 @@ namespace eka2l1 {
 
             std::map<char, ttf_char> ttf_chars;
 
-            frsml::mat4 ortho;
+            glm::mat4 ortho;
 
             void init_font();
 
         public:
+            screen_driver_ogl() {}
+
             void init(emu_window_ptr win, object_size &screen_size, object_size &font_size) override;
             void shutdown() override;
 
-            void blit(const std::string &text, int len, const point &where) override;
+            void blit(const std::string &text, const point &where) override;
             bool scroll_up(rect &trect) override;
 
             void clear(rect &trect) override;

@@ -83,12 +83,22 @@ namespace eka2l1 {
             ptr<void> ptr;
         };
 
+        struct SBlock {
+            int offset;
+            int size;
+            eka2l1::ptr<void> block_ptr;
+
+            bool free = true;
+        };
+
         struct thread_local_data {
             ptr<void> heap;
             ptr<void> scheduler;
             ptr<void> trap_handler;
             uint32_t thread_id;
             
+            std::vector<SBlock> blocks;
+
             // We don't use this. We use our own heap
             ptr<void> tls_heap;
             std::array<tls_slot, 50> tls_slots;

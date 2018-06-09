@@ -111,7 +111,10 @@ namespace eka2l1 {
         libmngr->close_e32img(pr->get_e32img());
         processes.erase(pr->get_uid());
 
-        crr_process_id = processes.begin()->first;
+        if (processes.size() > 0)
+            crr_process_id = processes.begin()->first;
+        else
+            crr_process_id = 0;
 
         return true;
     }
@@ -223,6 +226,7 @@ namespace eka2l1 {
         auto res = chunks.find(id);
 
         if (res != chunks.end()) {
+            chunks[id]->destroy();
             chunks.erase(id);
             return true;
         }
@@ -236,10 +240,12 @@ namespace eka2l1 {
         if (res != threads.end()) {
             threads.erase(id);
 
-            for (auto& chnk : chunks) {
+            for (auto it = chunks.begin(); it != chunks.end(); ) {
                 // Erase all chunks that have relation to the thread
-                if (chnk.second && chnk.second->obj_owner() == id) {
-                    chunks.erase(chnk.first);
+                if (it->second && it->second->obj_owner() == id) {
+                    chunks.erase(it++);
+                } else {
+                    ++it;
                 }
             }
 

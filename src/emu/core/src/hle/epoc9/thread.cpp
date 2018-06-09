@@ -106,7 +106,7 @@ BRIDGE_FUNC(ptr<RHeap>, UserHeapChunkHeap, RChunk aChunk, TInt aMinLength, TInt 
 
     hle::lib_manager *mngr = sys->get_lib_manager();
 
-    RHeapAdvance heap = NewHeap(mngr, chunk_ptr, aOffset, aAlign);
+    RHeapAdvance heap = NewHeap(sys, mngr, chunk_ptr, aOffset, aAlign);
 
     // For now, just take the default heap, idk
     memcpy(chunk_ptr->base().get(mem) + aOffset, &heap, sizeof(RHeapAdvance));

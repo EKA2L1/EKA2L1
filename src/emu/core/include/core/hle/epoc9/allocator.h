@@ -74,7 +74,7 @@ struct RHeapAdvance : public RHeap {
     TUint64 iBlocks;
 };
 
-RHeapAdvance NewHeap(eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, address offset, int align);
+RHeapAdvance NewHeap(eka2l1::system *sys, eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, address offset, int align);
 void FreeHeap(RHeapAdvance heap);
 
 BRIDGE_FUNC(void, RAllocatorDoClose, eka2l1::ptr<RAllocator> aAllocator);

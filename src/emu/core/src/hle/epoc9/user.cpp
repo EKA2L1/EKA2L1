@@ -34,6 +34,7 @@ BRIDGE_FUNC(void, UserExit, TInt aReason) {
 
     // Kill the thread!!!!!
     eka2l1::thread_ptr crr_thread = sys->get_kernel_system()->crr_thread();
+    crr_thread->stop();
     sys->get_kernel_system()->close_thread(crr_thread->unique_id());
 }
 

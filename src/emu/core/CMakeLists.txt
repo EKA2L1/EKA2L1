@@ -45,7 +45,8 @@ target_link_libraries(core PRIVATE
         arm
         coreloader
         coremanager
-		common)
+		common
+        drivers)
 
 if (UNIX OR APPLE)
         target_link_libraries(core PRIVATE pthread)

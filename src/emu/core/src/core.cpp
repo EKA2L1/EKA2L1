@@ -40,8 +40,13 @@ namespace eka2l1 {
         hlelibmngr.init(this, &kern, &io, &mem, ver);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
+        emu_win = driver::new_emu_window(win_type);
+        emu_screen_driver = driver::new_screen_driver(dr_type);
 
         kern.init(&timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
+
+        emu_win->init("EKA2L1", vec2(360, 640));
+        emu_screen_driver->init(emu_win, object_size(360, 640), object_size(6, 6));
     }
 
     process *system::load(uint64_t id) {
@@ -62,12 +67,30 @@ namespace eka2l1 {
             prepare_reschedule();
         } else {
             timing.advance();
-            cpu->run();
+
+            uint32_t ticks = 0;
+            uint32_t downcount = timing.get_downcount();
+
+            while (ticks < downcount && kern.crr_thread() != nullptr) {
+                emu_screen_driver->begin_render();
+
+                cpu->execute_instructions(32);
+                ticks += 32;
+
+                emu_screen_driver->blit("let's assume this is text", point(25, 25));
+
+                emu_screen_driver->end_render();
+            }
         }
 
         if (!exit) {
             kern.reschedule();
             reschedule_pending = false;
+        }
+
+        if (kern.crr_thread() == nullptr) {
+            exit = true;
+            return 0;
         }
 
         return 1;
@@ -101,6 +124,9 @@ namespace eka2l1 {
         kern.shutdown();
         mem.shutdown();
         asmdis.shutdown();
+
+        emu_screen_driver->shutdown();
+        emu_win->shutdown();
     }
 
     void system::mount(availdrive drv, std::string path) {

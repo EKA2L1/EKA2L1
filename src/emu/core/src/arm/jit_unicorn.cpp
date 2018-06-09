@@ -51,7 +51,11 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
     }
 
     memcpy(&value, eka2l1::ptr<const void>(address).get(jit->get_memory_sys()), size);
-    LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
+    
+    const bool read_log = false;
+
+    if (read_log)
+        LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
@@ -62,7 +66,10 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
         return;
     }
 
-    LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
+    const bool write_log = false;
+
+    if (write_log)
+        LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
@@ -88,7 +95,12 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         if (sid_correspond) {
             // DO nothing now
             auto func_name = mngr->get_func_name(sid_correspond.value());
-            LOG_INFO("Calling HLE function: {}", func_name.value());
+
+            const bool log_call = false;
+
+            if (log_call) {
+                LOG_INFO("Calling HLE function: {}", func_name.value());
+            }
 
             if (mngr->call_hle(sid_correspond.value())) {
                 uint32_t lr = 0;
@@ -110,12 +122,16 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         }
     }
 
-    const uint8_t * code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
-    size_t buffer_size = eka2l1::common::GB(4) - address;
-    bool thumb = thumb_mode(uc);
-    std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
+    const bool log_code = false;
 
-    LOG_TRACE("{:#08x} {}", address, disassembly);
+    if (log_code) {
+        const uint8_t * code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
+        size_t buffer_size = eka2l1::common::GB(4) - address;
+        bool thumb = thumb_mode(uc);
+        std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
+
+        LOG_TRACE("{:#08x} {}", address, disassembly);
+    }
 }
 
 // Read the symbol and redirect to HLE function
@@ -144,7 +160,9 @@ void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
         imm = svc_inst & 0xffffff;
     }
 
-    jit->get_lib_manager()->call_svc(imm);
+    if (!jit->get_lib_manager()->call_svc(imm)) {
+        LOG_WARN("Unimplement SVC call: 0x{:x}", imm);
+    }
 }
 
 namespace eka2l1 {
@@ -214,12 +232,6 @@ namespace eka2l1 {
             bool tm = thumb_mode(engine);
             if (tm) {
                 pc |= 1;
-            }
-
-            uc_err erra = uc_reg_write(engine, UC_ARM_REG_LR, &pc);
-
-            if (erra != UC_ERR_OK) {
-                LOG_WARN("Can't set LR to PC");
             }
 
             uc_err err;

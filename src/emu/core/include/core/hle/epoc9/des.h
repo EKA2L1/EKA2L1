@@ -53,6 +53,7 @@ struct TPtrC8 : public TDesC8 {
 };
 
 struct TPtr8 : public TDes8 {
+    TInt iMaxLength;
     ptr<TUint8> iPtr;
 };
 
@@ -77,7 +78,8 @@ struct TBufCPtr8 {
     ptr<TBufC8> iPtr;
 };
 
-struct TBufC16: public TBufCBase16 {
+struct TBufC16 {
+    TInt iLength;
     ptr<TUint16> iBuf;
 };
 
@@ -85,6 +87,18 @@ struct TBufCPtr16 {
     TInt iLength;
     TInt iMaxLength;
     ptr<TBufC16> iPtr;
+};
+
+struct TBuf16 {
+    TInt iLength;
+    TInt iMaxLength;
+    ptr<TUint16> iBuf;
+};
+
+struct TBuf8 {
+    TInt iLength;
+    TInt iMaxLength;
+    ptr<TUint8> iBuf;
 };
 
 using TDesC = TDesC16;

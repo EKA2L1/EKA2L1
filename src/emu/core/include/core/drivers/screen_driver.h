@@ -45,7 +45,7 @@ namespace eka2l1 {
             virtual void init(emu_window_ptr win, object_size &screen_size, object_size &font_size) = 0;
             virtual void shutdown() = 0;
 
-            virtual void blit(const std::string &text, int len, const point &where) = 0;
+            virtual void blit(const std::string &text, const point &where) = 0;
             virtual bool scroll_up(rect &trect) = 0;
 
             virtual void clear(rect &trect) = 0;
@@ -69,7 +69,7 @@ namespace eka2l1 {
             directx
         };
 
-        using screen_driver_ptr = std::unique_ptr<screen_driver>;
+        using screen_driver_ptr = std::shared_ptr<screen_driver>;
 
         screen_driver_ptr new_screen_driver(driver_type dr_type);
     }

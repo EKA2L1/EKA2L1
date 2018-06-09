@@ -91,6 +91,9 @@ namespace eka2l1 {
         const auto& page_begin = mem_pages.rbegin() + mem_pages.size() - page_end_off;
         const auto& page_end = mem_pages.rbegin() + mem_pages.size() - page_begin_off;
 
+        //const auto& page_begin = mem_pages.begin() +  page_begin_off;
+        //const auto& page_end = mem_pages.begin() + page_end_off;
+
         page holder;
 
         auto& suitable_pages = std::search_n(page_begin, page_end, page_count, holder, 
@@ -99,6 +102,7 @@ namespace eka2l1 {
         });
 
         uint32_t idx = mem_pages.rend() - suitable_pages - page_count;
+        //uint32_t idx = suitable_pages - mem_pages.begin();
 
         if (suitable_pages != mem_pages.rend()) {
             return chunk(idx * page_size, bottom, top, max_grow, cprot);

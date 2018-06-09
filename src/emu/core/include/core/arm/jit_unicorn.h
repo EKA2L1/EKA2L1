@@ -42,10 +42,9 @@ namespace eka2l1 {
 
             hle::lib_manager *lib_mngr;
 
-        private:
-            bool execute_instructions(int num_instructions);
-
         public:
+            bool execute_instructions(int num_instructions) override;
+
             timing_system *get_timing_sys() {
                 return timing;
             }

@@ -280,6 +280,12 @@ namespace eka2l1 {
             }
 
             res->second.loader.erase(res2);
+
+            // If no one is opening this
+            if (res->second.loader.size() == 0 && !res->second.is_rom) {
+                kern->close_chunk(res->second.img->code_chunk->unique_id());
+                kern->close_chunk(res->second.img->data_chunk->unique_id());
+            }
         }
 
         std::optional<std::string> lib_manager::get_func_name(const sid id) {
@@ -310,12 +316,15 @@ namespace eka2l1 {
             auto eimp = get_hle(id);
 
             if (!eimp) {
-                LOG_WARN("Function unimplemented!");
                 return false;
             }
 
             auto imp = eimp.value();
             imp(sys);
+
+            if (sys->get_kernel_system()->crr_thread() == nullptr) {
+                return false;
+            }
 
             return true;
         }
@@ -367,6 +376,10 @@ namespace eka2l1 {
             epoc_import_func func = res->second;
             func(sys);
 
+            if (sys->get_kernel_system()->crr_thread() == nullptr) {
+                return false;
+            }
+
             return true;
         }
 
@@ -379,6 +392,10 @@ namespace eka2l1 {
 
             epoc_import_func func = res->second;
             func(sys);
+
+            if (sys->get_kernel_system()->crr_thread() == nullptr) {
+                return false;
+            }
 
             return true;
         }

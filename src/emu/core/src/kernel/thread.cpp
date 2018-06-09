@@ -177,13 +177,14 @@ namespace eka2l1 {
 
             wake_up_waiting_threads();
 
-            for (auto &thr : waits) {
-                thr->erase_waiting_thread(thr->unique_id());
-            }
+            if (waits.size() > 0)
+                for (auto &thr : waits) {
+                    thr->erase_waiting_thread(thr->unique_id());
+                }
 
             waits.clear();
 
-            // release mutex
+            scheduler->reschedule();
 
             return true;
         }

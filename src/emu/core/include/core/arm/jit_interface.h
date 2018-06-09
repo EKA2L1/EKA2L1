@@ -39,6 +39,7 @@ namespace eka2l1 {
 
             virtual void run() = 0;
             virtual void stop() = 0;
+            virtual bool execute_instructions(int num_instructions) = 0;
 
             virtual void step() = 0;
 

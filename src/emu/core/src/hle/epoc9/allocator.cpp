@@ -21,11 +21,12 @@
 #include <epoc9/base.h>
 #include <epoc9/mem.h>
 #include <epoc9/err.h>
+#include <epoc9/user.h>
 #include <abi/eabi.h>
 
 #include <hle/vtab_lookup.h>
 
-RHeapAdvance NewHeap(eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, address offset, int align) {
+RHeapAdvance NewHeap(eka2l1::system *sys, eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, address offset, int align) {
     RHeapAdvance heap;
 
     heap.iVtable = ptr<void>(mngr->get_vtable_address("RHeap"));
@@ -35,7 +36,7 @@ RHeapAdvance NewHeap(eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, add
     heap.iTotalAllocSize = 0;
     heap.iChunkHandle = chnk->unique_id();
     heap.iAlign = align;
-    heap.iBlocks = (uint64_t)(new std::vector<SBlock>()); // I am very concerned when using this, but neh
+    heap.iBlocks = (uint64_t)(&current_local_data(sys).blocks); // I am very concerned when using this, but neh
 
     std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock>*>(heap.iBlocks);
 
@@ -51,8 +52,6 @@ RHeapAdvance NewHeap(eka2l1::hle::lib_manager *mngr, eka2l1::chunk_ptr chnk, add
 }
 
 void FreeHeap(RHeapAdvance heap) {
-    std::vector<SBlock> *blocks = reinterpret_cast<std::vector<SBlock>*>(heap.iBlocks);
-    delete blocks;
 }
 
 BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator) {
@@ -145,6 +144,8 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize)
                     heap_adv->iCellCount += 1;
                     heap_adv->iTotalAllocSize += aSize;
 
+                    LOG_INFO("Heap allocated with size = {}, addr = 0x{:x}", aSize, blocks[i].block_ptr.ptr_address());
+
                     return blocks[i].block_ptr;
                 }
 
@@ -161,6 +162,8 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize)
 
                 heap_adv->iTotalAllocSize += aSize;
                 heap_adv->iCellCount += 1;
+
+                LOG_INFO("Heap allocated with size = {}, addr = 0x{:x}", aSize, blocks[i].block_ptr.ptr_address());
 
                 return blocks[i].block_ptr;
             }

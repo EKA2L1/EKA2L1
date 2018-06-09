@@ -85,6 +85,7 @@ namespace eka2l1 {
             } else {
                 // Nope
                 crr_thread = nullptr;
+                jitter->stop();
             }
         }
 
@@ -96,6 +97,10 @@ namespace eka2l1 {
                     return crr;
                 }
 
+                return nullptr;
+            }
+
+            if (ready_threads.size() == 0) {
                 return nullptr;
             }
 

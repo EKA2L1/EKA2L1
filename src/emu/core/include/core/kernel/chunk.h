@@ -75,8 +75,6 @@ namespace eka2l1 {
             chunk(kernel_system* kern, memory_system* mem, std::string name, address bottom, const address top, const size_t max_grow_size, prot protection,
                 chunk_type type, chunk_access access, chunk_attrib attrib, kernel::owner_type owner_type, kernel::uid owner);
 
-            ~chunk();
-
             // Commit to a disconnected chunk. Offset and size SHOULD be aligned with the page size
             // Else this will results unwanted behavior. E.g commit(page_size - 1, 2), should commit both
             // the first and second page, since the offset is at the first page, and the commit contains
@@ -86,6 +84,8 @@ namespace eka2l1 {
             // Decommit to a disconnected chunk. Offset and size SHOULD be aligned with the page size
             // The reason is same as for commit
             bool decommit(uint32_t offset, size_t size);
+
+            void destroy();
 
             chunk_type get_chunk_type() const {
                 return type;

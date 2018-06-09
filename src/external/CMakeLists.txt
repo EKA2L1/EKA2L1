@@ -5,6 +5,7 @@ add_subdirectory(freetype)
 add_subdirectory(FRSML)
 add_subdirectory(spdlog)
 add_subdirectory(glfw)
+add_subdirectory(glm)
 
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
 add_subdirectory(yaml-cpp)
@@ -35,12 +36,12 @@ add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
 add_library(unicorn INTERFACE)
 
-add_library(imgui_igs
-	Imgui-IGS-Snippets/ImguiWindowsFileIO.hpp
-	Imgui-IGS-Snippets/ImguiWindowsFileIO.cpp)
+#add_library(imgui_igs
+#	Imgui-IGS-Snippets/ImguiWindowsFileIO.hpp
+#	Imgui-IGS-Snippets/ImguiWindowsFileIO.cpp)
 
-target_link_libraries(imgui_igs PRIVATE imgui)
-target_include_directories(imgui_igs PUBLIC Imgui-IGS-Snippets)
+#target_link_libraries(imgui_igs PRIVATE imgui)
+#target_include_directories(imgui_igs PUBLIC Imgui-IGS-Snippets)
 
 add_library(simini INTERFACE)
 target_include_directories(simini INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/simpleini")
@@ -85,3 +86,4 @@ set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOP
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)
 set (FREETYPE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/freetype/include" PARENT_SCOPE)
 set (FRSML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/FRSML/include" PARENT_SCOPE)
+set (GLM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/glm" PARENT_SCOPE)

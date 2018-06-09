@@ -4,6 +4,8 @@
 
 namespace eka2l1 {
     namespace driver {
+        #define CALL_IF_VALID(_a, ...) if (_a) {_a(##__VA_ARGS__);}
+
         const uint32_t default_width_potrait = 360;
         const uint32_t default_height_potrait = 640;
 
@@ -38,7 +40,7 @@ namespace eka2l1 {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             
-            emu_win = glfwCreateWindow(size.x, size.y, title.data(), glfwGetPrimaryMonitor(), nullptr);
+            emu_win = glfwCreateWindow(size.x, size.y, title.data(), nullptr, nullptr);
 
             if (!emu_win) {
                 LOG_ERROR("Can't create emulator window!");
@@ -84,11 +86,11 @@ namespace eka2l1 {
 
         void emu_window_glfw3::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
             if (action == GLFW_PRESS) {
-                button_pressed(key);
+                CALL_IF_VALID(button_pressed, key);
             } else if (action == GLFW_RELEASE) {
-                button_released();
+                CALL_IF_VALID(button_released);
             } else {
-                button_hold(key);
+                CALL_IF_VALID(button_hold, key);
             }
         }
 
@@ -101,11 +103,11 @@ namespace eka2l1 {
             glfwGetCursorPos(window, &x, &y);
 
             if (action == GLFW_PRESS) {
-                touch_pressed(point(x, y));
+                CALL_IF_VALID(touch_pressed, point(x, y));
             } else if (action == GLFW_REPEAT) {
-                touch_move(point(x, y));
+                CALL_IF_VALID(touch_move, point(x, y));
             } else {
-                touch_released();
+                CALL_IF_VALID(touch_released);
             }
         }
     }

@@ -2,44 +2,43 @@
 #include <common/log.h>
 #include <drivers/emu_window.h>
 #include <glad/glad.h>
-#include <frsml/standard.h>
 
 namespace eka2l1 {
     namespace driver {
-        const char* fb_render_vertex = "#version 330 core"
-            "layout (location = 0) in vec2 aPos;"
-            "layout (location = 1) in vec2 aTexCoords;"
-            "out vec2 oTexCoords;"
-            "void main() {"
-            "glPosition = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
-            "oTexCoords = aTexCoords;"
+        const char* fb_render_vertex = "#version 330 core\n"
+            "layout (location = 0) in vec2 aPos;\n"
+            "layout (location = 1) in vec2 aTexCoords;\n"
+            "out vec2 oTexCoords;\n"
+            "void main() {\n"
+            "gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
+            "oTexCoords = aTexCoords;\n"
             "}\0";
 
-        const char* fb_render_frag = "#version 330 core"
-            "out vec4 oFragColor;"
-            "in vec2 iTexCoords;"
-            "uniform sampler2D fb;"
-            "void main() {"
-            "oFragColor = texture(fb, iTexCoords);"
+        const char* fb_render_frag = "#version 330 core\n"
+            "out vec4 oFragColor;\n"
+            "in vec2 iTexCoords;\n"
+            "uniform sampler2D fb;\n"
+            "void main() {\n"
+            "oFragColor = texture(fb, iTexCoords);\n"
             "}\0";
 
-        const char* console_shader_vert = "#version 330 core"
-            "layout (location = 0) in vec4 vertex;"
-            "out vec2 texCoords;"
-            "uniform mat4 proj;"
-            "void main() {"
-            "gl_Position = proj * vec4(vertex.xy, 0.0, 1.0);"
-            "texCoords = vertex.zw;"
+        const char* console_shader_vert = "#version 330 core\n"
+            "layout (location = 0) in vec4 vertex;\n"
+            "out vec2 texCoords;\n"
+            "uniform mat4 proj;\n"
+            "void main() {\n"
+            "gl_Position = proj * vec4(vertex.xy, 0.0, 1.0);\n"
+            "texCoords = vertex.zw;\n"
             "}";
 
-        const char* console_shader_frag = "#version 330 core"
-            "in vec2 texCoords;"
-            "out vec4 color;"
-            "uniform sampler2D text;"
-            "uniform vec3 textColor;"
-            "void main() {"
-            "vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, texCoords).r);"
-            "color = vec4(textColor, 1.0) * sampled;"
+        const char* console_shader_frag = "#version 330 core\n"
+            "in vec2 texCoords;\n"
+            "out vec4 color;\n"
+            "uniform sampler2D text;\n"
+            "uniform vec3 textColor;\n"
+            "void main() {\n"
+            "vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, texCoords).r);\n"
+            "color = vec4(textColor, 1.0) * sampled;\n"
             "}";
 
         float quad_verts[] = { 
@@ -63,7 +62,7 @@ namespace eka2l1 {
                 return;
             }
 
-            FT_Set_Pixel_Sizes(face, fsize.width(), fsize.height());
+            FT_Set_Pixel_Sizes(face, 0, 48);
             
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -106,7 +105,9 @@ namespace eka2l1 {
 
             emu_win = win;
 
-            gladLoadGL();
+            emu_win->make_current();
+
+            int res = gladLoadGL();
 
             glViewport(0, 0, screen_size.width(), screen_size.height());
 
@@ -115,7 +116,7 @@ namespace eka2l1 {
 
             glGenTextures(1, &fbt);
             glBindTexture(GL_TEXTURE_2D, fbt);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screen_size.width(), screen_size.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_size.width(), screen_size.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbt, 0);
@@ -124,7 +125,10 @@ namespace eka2l1 {
             glBindRenderbuffer(GL_RENDERBUFFER, rbo);
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screen_size.width(), screen_size.height());
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
+           
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                LOG_INFO("Framebuffer not complete!");
+            }
             // unbind our buffer
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -132,20 +136,36 @@ namespace eka2l1 {
             glGenVertexArrays(1, &quad_vao);
             glGenBuffers(1, &quad_vbo);
             glBindVertexArray(quad_vao);
-            glBindBuffer(GL_BUFFER, quad_vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(quad_verts), &quad_verts, GL_STATIC_DRAW);
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
             glEnableVertexAttribArray(1);
             glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-       
+
             auto vert = glCreateShader(GL_VERTEX_SHADER);
             glShaderSource(vert, 1, &fb_render_vertex, nullptr);
             glCompileShader(vert);
 
+            int  success;
+            char infoLog[512];
+            glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
+
+            if (!success) {
+                glGetShaderInfoLog(vert, 512, NULL, infoLog);
+                LOG_ERROR("Shader compile error: {}", infoLog);
+            }
+
             auto frag = glCreateShader(GL_FRAGMENT_SHADER);
             glShaderSource(frag, 1, &fb_render_frag, nullptr);
             glCompileShader(frag);
+
+            glGetShaderiv(frag, GL_COMPILE_STATUS, &success);
+
+            if (!success) {
+                glGetShaderInfoLog(frag, 512, NULL, infoLog);
+                LOG_ERROR("Shader compile error: {}", infoLog);
+            }
 
             render_program = glCreateProgram();
             glAttachShader(render_program, vert);
@@ -160,9 +180,21 @@ namespace eka2l1 {
             glShaderSource(vert, 1, &console_shader_vert, nullptr);
             glCompileShader(vert);
 
+            if (!success) {
+                glGetShaderInfoLog(vert, 512, NULL, infoLog);
+                LOG_ERROR("Shader compile error: {}", infoLog);
+            }
+
             frag = glCreateShader(GL_FRAGMENT_SHADER);
             glShaderSource(frag, 1, &console_shader_frag, nullptr);
             glCompileShader(frag);
+
+            glGetShaderiv(frag, GL_COMPILE_STATUS, &success);
+
+            if (!success) {
+                glGetShaderInfoLog(frag, 512, NULL, infoLog);
+                LOG_ERROR("Shader compile error: {}", infoLog);
+            }
 
             font_program = glCreateProgram();
             glAttachShader(font_program, vert);
@@ -173,10 +205,18 @@ namespace eka2l1 {
             glDeleteShader(vert);
             glDeleteShader(frag);
 
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            ortho = glm::ortho(0.0f, static_cast<GLfloat>(ssize.width()), 0.0f, static_cast<GLfloat>(ssize.height()));
+            
+            glUseProgram(render_program);
 
-            ortho = frsml::ortho_matrix(0.0f, ssize.width(), 0.0f, ssize.height(), 0.1f, 1000.0f);
+            uint32_t loc = glGetUniformLocation(render_program, "fb");
+
+            //glUniform1i(loc, 0);
+
+            loc = glGetUniformLocation(font_program, "proj");
+
+            glUseProgram(font_program);
+            glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(ortho));
 
             glGenVertexArrays(1, &dynquad_vao);
             glGenBuffers(1, &dynquad_vbo);
@@ -187,6 +227,8 @@ namespace eka2l1 {
             glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
+
+            init_font();
         }
 
         void screen_driver_ogl::shutdown() {
@@ -205,29 +247,33 @@ namespace eka2l1 {
             for (auto& ttfc: ttf_chars) {
                 glDeleteTextures(1, &ttfc.second.tex_id);
             }
+
+            emu_win->done_current();
         }
 
-        void screen_driver_ogl::blit(const std::string &text, int len, const point &where) {
+        void screen_driver_ogl::blit(const std::string &text, const point &where) {
             glUseProgram(font_program);
-            glUniform3f(glGetUniformLocation(font_program, "textColor"), 0, 0, 0);
+            glUniform3f(glGetUniformLocation(font_program, "textColor"), 0.1f, 0.1f, 0.1f);
             glActiveTexture(GL_TEXTURE0);
             glBindVertexArray(dynquad_vao);
+
+            GLfloat xx = where.x;
 
             for (const auto& c : text) {
                 ttf_char glc = ttf_chars[c];
 
-                GLfloat x = where.x + glc.bearing.x;
+                GLfloat x = xx + glc.bearing.x;
                 GLfloat y = where.y - (glc.size.y - glc.bearing.y);
 
                 GLfloat w = glc.size.x;
                 GLfloat h = glc.size.y;
 
                 GLfloat vertices[6][4] = {
-                    { x, x + h, 0.0, 0.0 },
+                    { x, y + h, 0.0, 0.0 },
                     { x, y, 0.0, 1.0},
                     { x + w, y, 1.0, 1.0},
 
-                    { x, x + h, 0.0, 0.0 },
+                    { x, y + h, 0.0, 0.0 },
                     { x + w, y, 1.0, 1.0 },
                     { x + w, y + h, 1.0, 0.0 }
                 };
@@ -238,7 +284,7 @@ namespace eka2l1 {
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
 
-                x += (glc.advance >> 6);
+                xx += (glc.advance >> 6);
             }
 
             glBindVertexArray(0);
@@ -289,12 +335,22 @@ namespace eka2l1 {
 
         void screen_driver_ogl::begin_render() {
             glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-            glEnable(GL_DEPTH_TEST); 
+            glEnable(GL_DEPTH_TEST);
+
+            glClearColor(0.5f, 0.3f, 0.3f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glEnable(GL_CULL_FACE);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
 
         void screen_driver_ogl::end_render() {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glDisable(GL_DEPTH_TEST);
+
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(render_program);
             glBindVertexArray(quad_vao);

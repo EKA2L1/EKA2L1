@@ -102,7 +102,7 @@ namespace eka2l1 {
                 (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));
         }
 
-        chunk::~chunk() {
+        void chunk::destroy() {
             mem->unchunk(ptr<void>(chunk_base.ptr_address()), max_size);
         }
 

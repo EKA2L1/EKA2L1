@@ -28,3 +28,6 @@
 [submodule "src/external/FRSML"]
 	path = src/external/FRSML
 	url = https://github.com/bentokun/FRSML
+[submodule "src/external/glm"]
+	path = src/external/glm
+	url = https://github.com/g-truc/glm

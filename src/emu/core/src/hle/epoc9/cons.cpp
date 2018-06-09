@@ -42,8 +42,13 @@ BRIDGE_FUNC(void, CConsoleBaseAdvanceWrite, eka2l1::ptr<CConsoleBase> aConsole, 
     LOG_INFO("{}", common::ucs2_to_utf8(std::u16string(name_ptr, name_ptr + len)));
 }
 
+BRIDGE_FUNC(void, CConsoleBaseGetch) {
+    LOG_INFO("Us assumes someone press the key, no problem here.");
+}
+
 const eka2l1::hle::func_map cons_register_funcs = {
-    BRIDGE_REGISTER(4262343383, ConsoleNewL)
+    BRIDGE_REGISTER(4262343383, ConsoleNewL),
+    BRIDGE_REGISTER(4012343003, CConsoleBaseGetch)
 };
 
 const eka2l1::hle::func_map cons_custom_register_funcs = {

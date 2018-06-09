@@ -39,6 +39,8 @@ namespace eka2l1 {
     };
 
     struct object_size : public vec2 {
+        object_size() : vec2() {}
+
         object_size(const int x, const int y)
             : vec2(x, y) {}
 
