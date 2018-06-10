@@ -35,10 +35,10 @@ set_target_properties(EKA2L1_CONS_API_TEST PROPERTIES OUTPUT_NAME eka2l1_cons_te
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 	
 if (WIN32)
-add_custom_command(
-		TARGET emulator
-		POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/unicorn.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libgcc_s_seh-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libwinpthread-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
+	add_custom_command(
+			TARGET emulator
+			POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../external/unicorn/windows/unicorn.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../external/unicorn/windows/libgcc_s_seh-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../external/unicorn/windows/libwinpthread-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
 endif()
