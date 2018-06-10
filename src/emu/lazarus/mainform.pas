@@ -61,6 +61,7 @@ var
   EMapPath: ansistring;
   RomPath: ansistring;
   Doc: TXMLDocument;
+  oneRun: Boolean;
 
 function GetNode(AppendTo: TDOMNode; Name: ansistring): TDomNode;
 function GetTextNode(Name: ansistring): TDomNode;
@@ -120,13 +121,10 @@ end;
 procedure TSymThread.Execute;
 var res: Boolean;
 begin
-  if not (Res) then
-  begin
-    exit;
-  end;
-
   ESym.Load(id);
   ESym.Loop;
+
+  OneRun:=false;
 end;
 
 procedure TMainForm.InitAppList;
@@ -263,10 +261,15 @@ begin
   if (row >= 1) then
     id := Hex2Dec(ids);
 
-  thr := TSymThread.Create(true);
-  thr.id:= id;
+  if (not OneRun) then
+  begin
+    OneRun := true;
 
-  thr.Start;
+    thr := TSymThread.Create(true);
+    thr.id:= id;
+
+    thr.Start;
+  end;
 end;
 
 procedure TMainForm.AppListSelectCell(Sender: TObject; aCol, aRow: integer;
@@ -279,6 +282,8 @@ var
   DeviceMapperForm: TDeviceMapper;
   DeviceNode, CNode, TextCNode, ENode, TextENode: TDomNode;
 begin
+  DeviceMapperForm := TDeviceMapper.Create(nil);
+
   try
     DeviceMapperForm.ShowModal;
   finally
