@@ -27,6 +27,8 @@
 
 namespace eka2l1 {
     void system::init() {
+        exit = false;
+
         if (!already_setup)
             log::setup_log(nullptr);
 

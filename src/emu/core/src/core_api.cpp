@@ -198,4 +198,6 @@ int install_sis(int sys, int drive, const char* path) {
 
     sys_ptr &symsys = syses[sys - 1];
     symsys->install_package(std::u16string(path, path + strlen(path)), drive);
+
+    return 0;
 }
