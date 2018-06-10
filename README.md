@@ -1,7 +1,11 @@
 # EKA2L1
-- Best Symbian OS emulator to install and run malware
+- Best Symbian OS emulator to install and run malware. You can print things too!
 
-![Screenshot](https://media.discordapp.net/attachments/431430141319708692/439051654537674754/unknown.png?width=860&height=484)
+![Screenshot2](https://raw.githubusercontent.com/bentokun/EKA2L1/master/screenshots/result.png)
 
 - Information and contact
     * You can contact me through Discord channel [here](https://discord.gg/5Bm5SJ9)
+    
+- For contributor:
+   * You can starts by compiling the core and console and fixing warnings (or comment typos ;)) to get use to the code base.
+   * You should learn some basic Symbian C++ (Active objects, Thread, Sync things, etc..) before getting in implementing HLE functions.
