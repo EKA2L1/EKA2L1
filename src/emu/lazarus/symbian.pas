@@ -23,6 +23,7 @@ type
     function GetApp(idx: longint; id: PLongWord): UnicodeString;
 
     procedure Load(id: Longword);
+    function InstallSIS(dr: Longint; path: AnsiString): boolean;
 
     function LoadRom(path: AnsiString): boolean;
     procedure MountC(path: AnsiString);
@@ -31,10 +32,17 @@ type
     procedure Loop;
 
     procedure Shut;
+
+    property Sys: Longint read system;
   end;
 
 implementation
-     
+          
+function TSymbian.InstallSIS(dr: longint; path: AnsiString): boolean;
+begin
+  exit(SymbianSystemInstall(system, dr, PChar(path)) = 0);
+end;
+
 procedure TSymbian.Load(id: Longword);
 begin
   SymbianSystemLoad(system, id);

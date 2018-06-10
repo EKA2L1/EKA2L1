@@ -17,6 +17,7 @@ const EKA2L1API = 'eka2l1_api';
 
 function SymbianSystemCreate(WinType: Longint; RenderType: Longint; CpuType: Longint): Longint; cdecl; external EKA2L1API name 'create_symbian_system';
 function SymbianSystemShutdown(Sys: Longint): Longint; cdecl; external EKA2L1API name 'shutdown_symbian_system';
+function SymbianSystemFree(Sys: Longint): Longint; cdecl; external EKA2L1API name 'free_symbian_system';
 function SymbianSystemInit(Sys: Longint): Longint; cdecl; external EKA2L1API name 'init_symbian_system';
 function SymbianSystemLoad(Sys: Longint; AppID: Longword): Longint; cdecl; external EKA2L1API name 'load_process';
 function SymbianSystemLoop(Sys: Longint): Longint; cdecl; external EKA2L1API name 'loop_system';
@@ -26,6 +27,7 @@ function SymbianSystemSetCurrentSymbianUse(Sys: Longint; Ver: Longword): Longint
 function SymbianSystemGetCurrentSymbianUse(Sys: Longint; Ver: PLongWord): Longint; cdecl; external EKA2L1API name 'get_current_symbian_use';
 function SymbianSystemGetTotalAppInstalled(Sys: Longint): Longint; cdecl; external EKA2L1API name 'get_total_app_installed';
 function SymbianSystemGetAppInstalled(Sys: Longint; Idx: Longint; Name: PWideChar; NameLength: PLongint; UID: PLongWord): Longint; external EKA2L1API name 'get_app_installed';
+function SymbianSystemInstall(Sys: Longint; drive: Longint; path: PChar): Longint;external EKA2L1API name 'install_sis';
 
 implementation
 

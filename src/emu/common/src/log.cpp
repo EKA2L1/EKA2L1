@@ -28,6 +28,8 @@
 #endif
 
 namespace eka2l1 {
+    bool already_setup = false;
+
     namespace log {
         std::shared_ptr<spdlog::logger> spd_logger;
 
@@ -89,6 +91,8 @@ namespace eka2l1 {
             spdlog::set_level(spdlog::level::trace);
 
             spd_logger->flush_on(spdlog::level::debug);
+
+            already_setup = true;
         }
     }
 }

@@ -27,7 +27,8 @@
 
 namespace eka2l1 {
     void system::init() {
-        log::setup_log(nullptr);
+        if (!already_setup)
+            log::setup_log(nullptr);
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
@@ -95,6 +96,9 @@ namespace eka2l1 {
         }
 
         if (kern.crr_thread() == nullptr) {
+            emu_screen_driver->shutdown();
+            emu_win->shutdown();
+
             exit = true;
             return 0;
         }
@@ -131,8 +135,7 @@ namespace eka2l1 {
         mem.shutdown();
         asmdis.shutdown();
 
-        emu_screen_driver->shutdown();
-        emu_win->shutdown();
+        exit = false;
     }
 
     void system::mount(availdrive drv, std::string path) {

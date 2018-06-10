@@ -1,11 +1,11 @@
 object MainForm: TMainForm
-  Left = 56
+  Left = 916
   Height = 583
-  Top = 462
+  Top = 200
   Width = 836
   Caption = 'EKA2L1'
-  ClientHeight = 0
-  ClientWidth = 0
+  ClientHeight = 558
+  ClientWidth = 836
   DesignTimePPI = 120
   Menu = MainMenu
   OnClose = FormClose

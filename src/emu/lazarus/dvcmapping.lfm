@@ -1,7 +1,7 @@
 object DeviceMapper: TDeviceMapper
-  Left = 89
+  Left = 1228
   Height = 262
-  Top = 320
+  Top = 221
   Width = 400
   Caption = 'Device Mapping'
   ClientHeight = 262

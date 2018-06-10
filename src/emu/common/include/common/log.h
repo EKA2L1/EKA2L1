@@ -25,6 +25,8 @@
 #include <string>
 
 namespace eka2l1 {
+    extern bool already_setup;
+
     class base_logger {
     public:
         virtual void log(const char *fmt, ...) = 0;

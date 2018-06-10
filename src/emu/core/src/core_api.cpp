@@ -75,8 +75,18 @@ int shutdown_symbian_system(int sys) {
     sys_ptr &symsys = syses[sys - 1];
     symsys->shutdown();
 
+    return 0;
+}
+
+int free_symbian_system(int sys) {
+    if (sys > syses.size()) {
+        return -1;
+    }
+
+    sys_ptr &symsys = syses[sys - 1];
     symsys.reset();
-    syses.pop_back();
+
+    syses.erase(syses.begin() + sys - 1);
 
     return 0;
 }
@@ -179,4 +189,13 @@ int set_current_symbian_use(int sys, unsigned int ver) {
     symsys->set_symbian_version_use((ver == EPOC6) ? eka2l1::epocver::epoc6 : eka2l1::epocver::epoc9);
 
     return 0;
+}
+
+int install_sis(int sys, int drive, const char* path) {
+    if (sys > syses.size()) {
+        return -1;
+    }
+
+    sys_ptr &symsys = syses[sys - 1];
+    symsys->install_package(std::u16string(path, path + strlen(path)), drive);
 }

@@ -67,4 +67,8 @@ extern "C" {
     EKA2L1_API int set_current_symbian_use(int sys, unsigned int ver);
 
     EKA2L1_API int loop_system(int sys);
+
+    EKA2L1_API int free_symbian_system(int sys);
+
+    EKA2L1_API int install_sis(int sys, int drive, const char* path);
 }

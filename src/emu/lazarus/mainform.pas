@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Dialogs, Menus,
   Grids, Controls, StrUtils, symbian, DvcMapping, XMLRead,
-  XMLWrite, DOM, JsonConf;
+  XMLWrite, DOM, JsonConf, LCLType;
 
 type
 
@@ -102,6 +102,11 @@ begin
   finally
     c.Free;
   end;
+  
+  ESym.MountC(CMapPath);
+  ESym.MountE(EMapPath);
+
+  ESym.LoadRom(RomPath);
 
   SaveConfig;
 end;
@@ -115,11 +120,6 @@ end;
 procedure TSymThread.Execute;
 var res: Boolean;
 begin
-  ESym.MountC(CMapPath);
-  ESym.MountE(EMapPath);
-
-  res := ESym.LoadRom(RomPath);
-
   if not (Res) then
   begin
     exit;
@@ -127,8 +127,6 @@ begin
 
   ESym.Load(id);
   ESym.Loop;
-
-  ESym.Shut;
 end;
 
 procedure TMainForm.InitAppList;
@@ -205,6 +203,7 @@ begin
   if (OpenDialog.Execute) then
   begin
     RomPath := OpenDialog.Filename;
+    ESym.LoadRom(RomPath);
     SaveConfig;
   end;
 end;
@@ -216,6 +215,20 @@ begin
   if (OpenDialog.Execute) then
   begin
     SisFile := OpenDialog.Filename;
+    if MessageDlg('Drive', 'Yes for C:, No for E:',
+       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      if (ESym.InstallSIS(0, SisFile)) then
+      begin
+        ShowMessage('Success!');
+      end;
+    end else
+    begin
+      if (ESym.InstallSIS(1, SisFile)) then
+      begin
+        ShowMessage('Success!');
+      end;
+    end;
   end;
 end;
 
@@ -266,10 +279,6 @@ var
   DeviceMapperForm: TDeviceMapper;
   DeviceNode, CNode, TextCNode, ENode, TextENode: TDomNode;
 begin
-  DeviceMapperForm := TDeviceMapper.Create(nil);
-
-  DeviceNode := GetNode(Doc, 'drives');
-
   try
     DeviceMapperForm.ShowModal;
   finally
@@ -277,6 +286,9 @@ begin
     begin
       CMapPath := DeviceMapperForm.CPath;
       EMapPath := DeviceMapperForm.EPath;
+                  
+      ESym.MountC(CMapPath);
+      ESym.MountE(EMapPath);
 
       SaveConfig;
     end;

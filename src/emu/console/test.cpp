@@ -2,10 +2,13 @@
 
 int main() {
     int sys = create_symbian_system(GLFW, OPENGL, CPU_UNICORN);
+
     init_symbian_system(sys);
+
     mount_symbian_system(sys, "C:", "drives/c/");
     mount_symbian_system(sys, "E:", "drives/e/");
 
+    install_sis(sys, 0, "EKA2L1HW_EKA2.sisx");
     load_rom(sys, "SYM.ROM");
     load_process(sys, 0xECF52F7F);
 

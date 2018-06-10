@@ -211,6 +211,7 @@ namespace eka2l1 {
 
     void io_system::shutdown() {
         drives.clear();
+        file_caches.clear();
     }
 
     std::string io_system::current_dir() {
