@@ -14,11 +14,6 @@ set_target_properties(EKA2L1_CONS PROPERTIES OUTPUT_NAME eka2l1_cons
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 	
-add_custom_command(
-	TARGET EKA2L1_CONS
-	POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory "${ROOT}/sid" "$<TARGET_FILE_DIR:EKA2L1_CONS>/sid")
-
 add_definitions(-DEKA2L1_API_EXPORT)
 
 add_library(eka2l1_api SHARED core/include/core/core_api.h
@@ -38,3 +33,12 @@ set_target_properties(eka2l1_api PROPERTIES OUTPUT_NAME eka2l1_api
 set_target_properties(EKA2L1_CONS_API_TEST PROPERTIES OUTPUT_NAME eka2l1_cons_test
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+	
+if (WIN32)
+add_custom_command(
+		TARGET emulator
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/unicorn.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libgcc_s_seh-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libwinpthread-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
+endif()
