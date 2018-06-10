@@ -1,8 +1,29 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/types.h>
 #include <loader/sis_script_interpreter.h>
+#include <manager/package_manager.h>
 
 #include <vfs.h>
 
@@ -26,7 +47,13 @@ namespace eka2l1 {
 
         bool exists(const utf16_str &str) {
             FILE *temp = fopen(common::ucs2_to_utf8(str).c_str(), "rb");
-            return temp;
+
+            if (temp) {
+                fclose(temp);
+                return true;
+            }
+
+            return false;
         }
 
         std::string get_install_path(const std::u16string &pseudo_path, sis_drive drv) {
@@ -39,17 +66,15 @@ namespace eka2l1 {
             return common::ucs2_to_utf8(raw_path);
         }
 
-        bool appprop(sis_uid uid, sis_property prop) {
+        bool ss_interpreter::appprop(sis_uid uid, sis_property prop) {
             return false;
         }
 
-        bool package(sis_uid uid) {
-            // package_manager& manager = get_package_manager();
-            // if (manager.installed(uid.uid)) {
-            //    return true;
-            // }
-            //
-            // return false;
+        bool ss_interpreter::package(sis_uid uid) {
+            if (mngr->installed(uid.uid)) {
+                return true;
+            }
+
             return false;
         }
 
@@ -58,10 +83,14 @@ namespace eka2l1 {
         }
 
         ss_interpreter::ss_interpreter(std::shared_ptr<std::istream> stream,
+            io_system *io,
+            manager::package_manager *pkgmngr,
             sis_install_block inst_blck,
             sis_data inst_data,
             sis_drive inst_drv)
             : data_stream(stream)
+            , mngr(pkgmngr)
+            , io(io)
             , install_block(inst_blck)
             , install_data(inst_data)
             , install_drive(inst_drv) {}
@@ -304,14 +333,17 @@ namespace eka2l1 {
             auto install_file = [&](sis_install_block inst_blck, uint16_t crr_blck_idx) {
                 for (auto &wrap_file : inst_blck.files.fields) {
                     sis_file_des *file = (sis_file_des *)(wrap_file.get());
-                    std::string raw_path = vfs::get(get_install_path(file->target.unicode_string, install_drive));
+                    std::string raw_path = "";
+
+                    if (file->target.unicode_string.length() > 0)
+                        raw_path = io->get(get_install_path(file->target.unicode_string, install_drive));
 
                     if (file->op == ss_op::EOpText) {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);
                         //extract_file_with_buf(raw_path, buf);
                         //show_text_func(buf);
 
-                        LOG_INFO("EOpText");
+                        LOG_INFO("EOpText: {}", buf.data());
                     } else if (file->op == ss_op::EOpRun) {
                         // Doesn't do anything yet.
                         LOG_INFO("EOpRun {}", raw_path);
@@ -420,3 +452,4 @@ namespace eka2l1 {
         }
     }
 }
+

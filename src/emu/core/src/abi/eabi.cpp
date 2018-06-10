@@ -1,13 +1,32 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <abi/eabi.h>
 #include <common/advstream.h>
 #include <common/log.h>
 
-#include <vector>
 #include <mutex>
 #include <sstream>
+#include <vector>
 
 namespace eka2l1 {
-    // This is not exactly an ABI, but a ABI-like 
+    // This is not exactly an ABI, but a ABI-like
     // implementation of some Symbian specific stuffs
     namespace eabi {
         // Some functions leave.
@@ -19,8 +38,7 @@ namespace eka2l1 {
         std::vector<leave_handler> leaves;
         std::mutex mut;
 
-        void leave(uint32_t id, const std::string& msg)
-        {
+        void leave(uint32_t id, const std::string &msg) {
             std::lock_guard<std::mutex> guard(mut);
             leave_handler handler;
 

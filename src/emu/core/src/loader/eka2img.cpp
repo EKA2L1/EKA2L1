@@ -1,12 +1,37 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <loader/eka2img.h>
+#include <loader/romimage.h>
+#include <vfs.h>
 
 #include <ptr.h>
 
+#include <common/algorithm.h>
 #include <common/buffer.h>
 #include <common/bytepair.h>
 #include <common/data_displayer.h>
 #include <common/flate.h>
 #include <common/log.h>
+
+#include <core_kernel.h>
 
 #include <cstdio>
 #include <miniz.h>
@@ -34,7 +59,7 @@ namespace eka2l1 {
         // Write simple relocation
         // Symbian only used this, as found on IDA
         bool write(uint32_t *data, uint32_t sym) {
-            LOG_TRACE("Relocation original data: 0x{:x}, new data: 0x{:x}", *data, sym);
+            LOG_TRACE("Original data: 0x{:x}, new data: 0x{:x}", *data, sym);
             *data = sym;
             return true;
         }
@@ -81,8 +106,7 @@ namespace eka2l1 {
                     relocation_type rel_type = (relocation_type)(rel_info & 0xF000);
 
                     if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
-                        LOG_TRACE("Relocate fail at page: {}", i);
-                        return false;
+                        LOG_WARN("Relocate fail at page: {}", i);
                     }
                 }
             }
@@ -90,72 +114,145 @@ namespace eka2l1 {
             return true;
         }
 
-    /*
-        bool import_func(ptr<uint32_t> stub_ptr, uint32_t sym) {
-            uint32_t *stub = stub_ptr.get();
+        std::string get_real_dll_name(std::string dll_name) {
+            size_t dll_name_end_pos = dll_name.find_first_of("{");
 
-            if (stub == nullptr) {
-                return false;
-            }
+            if (FOUND_STR(dll_name_end_pos)) {
+                dll_name = dll_name.substr(0, dll_name_end_pos);
+            } else {
+                dll_name_end_pos = dll_name.find_last_of(".");
 
-            LOG_TRACE("Stubbing import: 0x{:x}", sym);
-
-            stub[0] = 0xef000000; // swi #0
-            stub[1] = 0xe1a0f00e; // mov pc, lr
-            stub[2] = sym;
-
-            return true;
-        }
-    */
-        uint32_t import_libs(eka2img *img, memory* mem, uint32_t rtcode_addr, hle::lib_manager& mngr) {
-            uint32_t stub_size = 0;
-
-            for (auto &import_entry : img->import_section.imports) {
-				auto ids = mngr.get_sids(import_entry.dll_name);
-
-				if (!ids) {
-					LOG_CRITICAL("No SIDS provided for: {}", import_entry.dll_name);
-					continue;
-				}
-
-				std::vector<uint32_t> stub_resides;
-
-				for (uint32_t i = 0; i < import_entry.number_of_imports; i++) {
-                    //import_func(ptr<uint32_t>(stub_ptr), ids.value()[i]);
+                if (FOUND_STR(dll_name_end_pos)) {
+                    dll_name = dll_name.substr(0, dll_name_end_pos);
                 }
             }
 
-            return stub_size;
+            return dll_name;
         }
 
-        bool import_exe_image(eka2img *img, memory* mem, hle::lib_manager& mngr) {
-            // Map the memory to store the text, data and import section
-            ptr<void> asmdata = mem->alloc_ime(img->header.code_size + 0x1000);
+        bool pe_fix_up_iat(memory *mem, hle::lib_manager &mngr, eka2img_iat &iat) {
+            return false;
+        }
+
+        bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, loader::eka2img &me, eka2img_import_block &import_block) {
+            const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
+            const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
+
+            loader::e32img_ptr img = mngr.load_e32img(dll_name);
+            loader::romimg_ptr rimg = mngr.load_romimg(dll_name);
+
+            uint32_t *imdir = &(import_block.ordinals[0]);
+            uint32_t *expdir;
+
+            uint32_t code_start;
+            uint32_t code_end;
+            uint32_t data_start;
+            uint32_t data_end;
+
+            uint32_t code_delta;
+            uint32_t data_delta;
+
+            if (!img && !rimg) {
+                return false;
+            } else {
+                if (img) {
+                    mngr.open_e32img(img);
+
+                    code_start = img->rt_code_addr;
+                    data_start = img->rt_data_addr;
+                    code_end = code_start + img->header.code_size;
+                    data_end = data_start + img->header.data_size;
+
+                    code_delta = img->rt_code_addr - img->header.code_base;
+                    data_delta = img->rt_data_addr - img->header.data_base;
+
+                    expdir = img->ed.syms.data();
+                } else {
+                    mngr.open_romimg(rimg);
+
+                    code_start = rimg->header.code_address;
+                    code_end = code_start + rimg->header.code_size;
+                    data_start = rimg->header.data_address;
+                    data_end = data_start + rimg->header.data_size + rimg->header.bss_size;
+
+                    code_delta = 0;
+                    data_delta = 0;
+
+                    expdir = rimg->exports.data();
+                }
+            }
+
+            for (uint32_t i = 0; i < import_block.ordinals.size(); i++) {
+                uint32_t off = imdir[i];
+                uint32_t *code_ptr = ptr<uint32_t>(me.rt_code_addr + off).get(mem);
+
+                uint32_t import_inf = *code_ptr;
+                uint32_t ord = import_inf & 0xffff;
+                uint32_t adj = import_inf >> 16;
+
+                uint32_t export_addr;
+                uint32_t section_delta;
+                uint32_t val = 0;
+
+                if (ord > 0) {
+                    export_addr = expdir[ord - 1];
+
+                    auto sid = mngr.get_sid(export_addr);
+
+                    if (sid) {
+                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}",
+                            export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off);
+                    }
+
+                    if (export_addr >= code_start && export_addr <= code_end) {
+                        section_delta = code_delta;
+                    } else {
+                        section_delta = data_delta;
+                    }
+
+                    val = export_addr + section_delta + adj;
+                }
+
+                write(code_ptr, val);
+            }
+
+            return true;
+        }
+
+        bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            // Create the code + static data chunk
+            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()) , common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
+                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+
+            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
+                   kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
 
-            uint32_t rtcode_addr = asmdata.ptr_address();
-            uint32_t rtdata_addr = 0;
-
-            //rtdata_addr = import_libs(img, mem, rtcode_addr, mngr);
-            rtdata_addr += rtcode_addr + img->header.code_size;
+            uint32_t rtcode_addr = img->code_chunk->base().ptr_address();
+            uint32_t rtdata_addr = img->data_chunk ? img->data_chunk->base().ptr_address() : 0;
 
             img->rt_code_addr = rtcode_addr;
             img->rt_data_addr = rtdata_addr;
-
-            LOG_INFO("Writing data at offset: 0x{:x}", rtdata_addr);
 
             // Ram code address is the run time address of the code
             uint32_t code_delta = rtcode_addr - img->header.code_base;
             uint32_t data_delta = rtdata_addr - img->header.data_base;
 
             relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.code_offset), code_delta, data_delta);
+      
+            if (img->header.data_size)
+                relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
 
-            relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
+            memcpy(ptr<void>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
 
-            memcpy(ptr<uint32_t>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
-            memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
+            if (img->header.data_size)
+                memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
+
+            for (auto &ib : img->import_section.imports) {
+                elf_fix_up_import_dir(mem, mngr, *img, ib);
+            }
 
             LOG_INFO("Load executable success");
 
@@ -208,25 +305,21 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<void *>(&section.size), 4);
             stream->read(reinterpret_cast<void *>(&section.num_relocs), 4);
 
-            // There is no document on this anywhere. The code you see online is not right.
-            // Here is the part i tell you the truth: The size is including both the base and itself
-            // An entry contains the target offset and relocate size. After that, there is list of relocation
-            // code (uint16_t).
-            // Since I saw repeated pattern and also saw some code from elf2e32 reloaded, i just subtract the
-            // seek with 8, and actually works. Now i feel like i has wasted 4 hours of my life figuring out this :P
             for (int i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
                 stream->read(reinterpret_cast<void *>(&reloc_entry.base), 4);
                 stream->read(reinterpret_cast<void *>(&reloc_entry.size), 4);
 
-                assert((reloc_entry.size - 8) % 2 == 0);
+                assert((reloc_entry.size) % 2 == 0);
 
                 reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2));
 
                 for (auto &rel_info : reloc_entry.rels_info) {
                     stream->read(reinterpret_cast<void *>(&rel_info), 2);
                 }
+
+                i += reloc_entry.rels_info.size();
 
                 section.entries.push_back(reloc_entry);
             }
@@ -270,66 +363,63 @@ namespace eka2l1 {
             }
         }
 
-        std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc) {
-            LOG_TRACE("Loading image: {}", path);
+        std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc) {
+            if (!ef) {
+                return std::optional<eka2img>{};
+            }
 
             eka2img img;
 
-            FILE *f = fopen(path.c_str(), "rb");
+            auto file_size = ef->size();
 
-            fseek(f, 0, SEEK_END);
-            auto file_size = ftell(f);
-            fseek(f, 0, SEEK_SET);
-
-            fread(&img.header.uid1, 1, 4, f);
-            fread(&img.header.uid2, 1, 4, f);
-            fread(&img.header.uid3, 1, 4, f);
-            fread(&img.header.check, 1, 4, f);
-            fread(&img.header.sig, 1, 4, f);
+            ef->read_file(&img.header.uid1, 1, 4);
+            ef->read_file(&img.header.uid2, 1, 4);
+            ef->read_file(&img.header.uid3, 1, 4);
+            ef->read_file(&img.header.check, 1, 4);
+            ef->read_file(&img.header.sig, 1, 4);
 
             if (img.header.sig != 0x434F5045) {
                 LOG_ERROR("Undefined EKA Image type");
-                fclose(f);
                 return std::optional<eka2img>{};
             }
 
             uint32_t temp = 0;
-            fread(&temp, 1, 4, f);
+            ef->read_file(&temp, 1, 4);
 
             if ((temp == 0x2000) || (temp == 0x1000)) {
                 // Quick hack to determinate if this is an EKA1
                 img.header.cpu = static_cast<loader::eka2_cpu>(temp);
 
-                fread(&temp, 1, 4, f);
-                fread(&temp, 1, 4, f);
-                fread(&img.header.petran_major, 1, 1, f);
-                fread(&img.header.petran_minor, 1, 1, f);
-                fread(&img.header.petran_build, 1, 2, f);
-                fread(&img.header.flags, 1, 4, f);
-                fread(&img.header.code_size, 1, 4, f);
-                fread(&img.header.data_size, 1, 4, f);
-                fread(&img.header.heap_size_min, 1, 4, f);
-                fread(&img.header.heap_size_max, 1, 4, f);
-                fread(&img.header.stack_size, 1, 4, f);
-                fread(&img.header.bss_size, 1, 4, f);
-                fread(&img.header.entry_point, 1, 4, f);
-                fread(&img.header.code_base, 1, 4, f);
-                fread(&img.header.data_base, 1, 4, f);
-                fread(&img.header.dll_ref_table_count, 1, 4, f);
-                fread(&img.header.export_dir_offset, 1, 4, f);
-                fread(&img.header.export_dir_count, 1, 4, f);
-                fread(&img.header.text_size, 1, 4, f);
-                fread(&img.header.code_offset, 1, 4, f);
-                fread(&img.header.data_offset, 1, 4, f);
-                fread(&img.header.import_offset, 1, 4, f);
-                fread(&img.header.code_reloc_offset, 1, 4, f);
-                fread(&img.header.data_reloc_offset, 1, 4, f);
-                fread(&img.header.priority, 1, 2, f);
+                ef->read_file(&temp, 1, 4);
+                ef->read_file(&temp, 1, 4);
+                ef->read_file(&img.header.petran_major, 1, 1);
+                ef->read_file(&img.header.petran_minor, 1, 1);
+                ef->read_file(&img.header.petran_build, 1, 2);
+                ef->read_file(&img.header.flags, 1, 4);
+                ef->read_file(&img.header.code_size, 1, 4);
+                ef->read_file(&img.header.data_size, 1, 4);
+                ef->read_file(&img.header.heap_size_min, 1, 4);
+                ef->read_file(&img.header.heap_size_max, 1, 4);
+                ef->read_file(&img.header.stack_size, 1, 4);
+                ef->read_file(&img.header.bss_size, 1, 4);
+                ef->read_file(&img.header.entry_point, 1, 4);
+                ef->read_file(&img.header.code_base, 1, 4);
+                ef->read_file(&img.header.data_base, 1, 4);
+                ef->read_file(&img.header.dll_ref_table_count, 1, 4);
+                ef->read_file(&img.header.export_dir_offset, 1, 4);
+                ef->read_file(&img.header.export_dir_count, 1, 4);
+                ef->read_file(&img.header.text_size, 1, 4);
+                ef->read_file(&img.header.code_offset, 1, 4);
+                ef->read_file(&img.header.data_offset, 1, 4);
+                ef->read_file(&img.header.import_offset, 1, 4);
+                ef->read_file(&img.header.code_reloc_offset, 1, 4);
+                ef->read_file(&img.header.data_reloc_offset, 1, 4);
+                ef->read_file(&img.header.priority, 1, 2);
 
                 img.header.compression_type = 1;
             } else {
-                fseek(f, 0, SEEK_SET);
-                fread(&img.header, 1, sizeof(eka2img_header), f);
+                ef->seek(0, file_seek_mode::beg);
+                ef->read_file(&img.header, 1, sizeof(eka2img_header));
             }
 
             compress_type ctype = (compress_type)(img.header.compression_type);
@@ -337,35 +427,35 @@ namespace eka2l1 {
 
             if (img.header.compression_type > 0) {
                 int header_format = ((int)img.header.flags >> 24) & 0xF;
-
-                fread(&img.uncompressed_size, 1, 4, f);
-
-                std::vector<char> temp_buf(file_size);
-                img.data.resize(img.uncompressed_size + img.header.code_offset);
+                ef->read_file(&img.uncompressed_size, 1, 4);
 
                 if (header_format == 2) {
                     img.has_extended_header = true;
                     LOG_INFO("V-Format used, load more (too tired) \\_(-.-)_/");
 
-                    fread(&img.header_extended.info, 1, sizeof(eka2img_vsec_info), f);
-                    fread(&img.header_extended.exception_des, 1, 4, f);
-                    fread(&img.header_extended.spare2, 1, 4, f);
-                    fread(&img.header_extended.export_desc_size, 1, 2, f);
-                    fread(&img.header_extended.export_desc_type, 1, 1, f);
-                    fread(&img.header_extended.export_desc, 1, 1, f);
+                    ef->read_file(&img.header_extended.info, 1, sizeof(eka2img_vsec_info));
+                    ef->read_file(&img.header_extended.exception_des, 1, 4);
+                    ef->read_file(&img.header_extended.spare2, 1, 4);
+                    ef->read_file(&img.header_extended.export_desc_size, 1, 2);
+                    ef->read_file(&img.header_extended.export_desc_type, 1, 1);
+                    ef->read_file(&img.header_extended.export_desc, 1, 1);
                 }
 
-                fseek(f, 0, SEEK_SET);
-                fread(img.data.data(), 1, sizeof(eka2img_header) + 4 + (img.has_extended_header ? sizeof(eka2img_header_extended) : 0), f);
+                img.data.resize(img.uncompressed_size + img.header.code_offset);
 
-                fseek(f, img.header.code_offset, SEEK_SET);
-                fread(temp_buf.data(), 1, temp_buf.size(), f);
+                ef->seek(0, file_seek_mode::beg);
+                ef->read_file(img.data.data(), 1, img.header.code_offset);
+
+                std::vector<char> temp_buf(file_size - img.header.code_offset);
+
+                ef->seek(img.header.code_offset, file_seek_mode::beg);
+                auto bytes_read = ef->read_file(temp_buf.data(), 1, temp_buf.size());
+
+                if (bytes_read != temp_buf.size()) {
+                    LOG_ERROR("File reading unproperly");
+                }
 
                 if (ctype == compress_type::deflate_c) {
-                    // INFLATE IT!
-                    // Weird behavior, this is my way
-                    img.data[img.header.code_offset] = 12;
-
                     flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), temp_buf.size() * 8);
                     flate::inflater inflate_machine(input);
 
@@ -374,11 +464,22 @@ namespace eka2l1 {
                         img.uncompressed_size);
 
                     LOG_INFO("Readed compress, size: {}", readed);
-                } else if (ctype == compress_type::byte_pair_c) {
-                    auto temp_stream = std::make_shared<std::ifstream>(path);
-                    temp_stream->seekg(img.header.code_offset, std::ios::beg);
 
-                    common::ibytepair_stream bpstream(path, img.header.code_offset);
+                    FILE *tempfile = fopen("nokiaDefaltedTemp.seg", "wb");
+                    fwrite(img.data.data(), 1, img.data.size(), tempfile);
+                    fclose(tempfile);
+
+                } else if (ctype == compress_type::byte_pair_c) {
+                    auto crr_pos = ef->tell();
+
+                    std::vector<char> temp(ef->size() - crr_pos);
+                    ef->read_file(temp.data(), 1, temp.size());
+
+                    FILE *tempfile = fopen("bytepairTemp.seg", "wb");
+                    fwrite(temp.data(), 1, temp.size(), tempfile);
+                    fclose(tempfile);
+
+                    common::ibytepair_stream bpstream("bytepairTemp.seg", img.header.code_offset);
 
                     auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
                     auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
@@ -388,11 +489,9 @@ namespace eka2l1 {
                 img.uncompressed_size = file_size;
 
                 img.data.resize(file_size);
-                fseek(f, SEEK_SET, 0);
-                fread(img.data.data(), 1, img.data.size(), f);
+                ef->seek(0, file_seek_mode::beg);
+                ef->read_file(img.data.data(), 1, img.data.size());
             }
-
-            dump_buf_data(path.substr(0, path.find_last_of(".")) + ".dedat", img.data);
 
             switch (img.header.cpu) {
             case eka2_cpu::armv5:
@@ -463,13 +562,12 @@ namespace eka2l1 {
                     img.data_reloc_section, img.header.data_reloc_offset);
             }
 
-            fclose(f);
-
             return img;
         }
 
-        bool load_eka2img(eka2img &img, memory* mem, hle::lib_manager& mngr) {
-            return import_exe_image(&img, mem, mngr);
+        bool load_eka2img(eka2img &img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            return import_exe_image(&img, mem, kern, mngr);
         }
     }
 }
+

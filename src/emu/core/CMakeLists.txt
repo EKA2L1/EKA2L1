@@ -14,12 +14,13 @@ add_library(coreio
         src/vfs.cpp)
 
 add_subdirectory(src/arm)
+add_subdirectory(src/hle)
 add_subdirectory(src/loader)
 add_subdirectory(src/manager)
 add_subdirectory(src/disasm)
+add_subdirectory(src/drivers)
 add_subdirectory(src/kernel)
 add_subdirectory(src/abi)
-add_subdirectory(src/hle)
 
 target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)
@@ -27,7 +28,7 @@ target_include_directories(coreio PUBLIC include)
 
 target_link_libraries(coremem PUBLIC common)
 target_link_libraries(coretiming PUBLIC common)
-target_link_libraries(coreio PUBLIC common)
+target_link_libraries(coreio PUBLIC common coreloader)
 
 add_library(core include/core/ptr.h
                  include/core/process.h
@@ -42,12 +43,18 @@ target_link_libraries(core PRIVATE
         coretiming 
         coreio
         arm
-        abi
         coreloader
-        coremanager)
+        coremanager
+		common
+        drivers)
+
+if (UNIX OR APPLE)
+        target_link_libraries(core PRIVATE pthread)
+endif()
 
 # Disasm on the go in the future
 target_link_libraries(core PUBLIC
-        disasm)       
+        disasm
+        hle)       
         
 target_include_directories(core PUBLIC include)

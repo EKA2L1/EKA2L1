@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <string>
 
 // Symbian separators is \\
@@ -34,22 +53,26 @@ namespace eka2l1 {
 
     public:
         path_iterator()
-            : crr_pos(0) {}
+            : crr_pos(0) {
+            ++(*this);
+        }
 
         path_iterator(std::string p)
             : path(p)
-            , crr_pos(0) {}
+            , crr_pos(0) {
+            ++(*this);
+        }
 
         void operator++() {
-            comp = "";
+            if (crr_pos < path.length())
+                comp = "";
 
-            while ((path[crr_pos] != '/') && (path[crr_pos] != '\\')) {
+            while ((crr_pos < path.length()) && (path[crr_pos] != '/') && (path[crr_pos] != '\\')) {
                 comp += path[crr_pos];
                 crr_pos += 1;
             }
 
-            while ((path[crr_pos] == '/') || (path[crr_pos] == '\\'))
-                crr_pos += 1;
+            crr_pos += 1;
         }
 
         std::string operator*() const {
@@ -57,7 +80,7 @@ namespace eka2l1 {
         }
 
         operator bool() const {
-            return path.length() > crr_pos;
+            return path.length() >= crr_pos - 1;
         }
     };
 
@@ -66,3 +89,4 @@ namespace eka2l1 {
     bool is_dir(std::string path);
     void create_directories(std::string path);
 }
+

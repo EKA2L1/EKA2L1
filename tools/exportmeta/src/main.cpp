@@ -1,7 +1,7 @@
 #include <common/algorithm.h>
-#include <common/log.h>
-#include <common/hash.h>
 #include <common/cvt.h>
+#include <common/hash.h>
+#include <common/log.h>
 #include <yaml-cpp/yaml.h>
 
 #include <clang-c/Index.h>
@@ -11,10 +11,10 @@
 #include <fstream>
 #include <mutex>
 #include <optional>
-#include <vector>
 #include <string>
 #include <thread>
 #include <tuple>
+#include <vector>
 
 YAML::Emitter emitter;
 
@@ -59,17 +59,17 @@ std::mutex mut;
 uint32_t thread_count = 1;
 
 std::string fully_qualified(CXCursor cursor) {
-   if (clang_getCursorKind(cursor) == CXCursor_TranslationUnit) {
-       return "";
-   }
+    if (clang_getCursorKind(cursor) == CXCursor_TranslationUnit) {
+        return "";
+    }
 
-   std::string res = fully_qualified(clang_getCursorSemanticParent(cursor));
+    std::string res = fully_qualified(clang_getCursorSemanticParent(cursor));
 
-   if (res != "") {
-       return res + "::" + reinterpret_cast<const char*>(clang_getCursorSpelling(cursor).data);
-   }
+    if (res != "") {
+        return res + "::" + reinterpret_cast<const char *>(clang_getCursorSpelling(cursor).data);
+    }
 
-   return reinterpret_cast<const char*>(clang_getCursorSpelling(cursor).data);
+    return reinterpret_cast<const char *>(clang_getCursorSpelling(cursor).data);
 }
 
 size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos = 0) {
@@ -83,7 +83,7 @@ size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos = 0) {
 }
 
 std::string resolve_name(std::string dec1, CXCursor cursor) {
-    std::string name = reinterpret_cast<const char*>(clang_getCursorSpelling(cursor).data);
+    std::string name = reinterpret_cast<const char *>(clang_getCursorSpelling(cursor).data);
 
     size_t weird_class = name.find("class");
     size_t weird_struct = name.find("struct");
@@ -127,7 +127,7 @@ std::string resolve_name(std::string dec1, CXCursor cursor) {
 }
 
 CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData client_data) {
-    class_info* info = reinterpret_cast<class_info*>(client_data);
+    class_info *info = reinterpret_cast<class_info *>(client_data);
 
     if (info == nullptr) {
         LOG_ERROR("Client data is invalid!");
@@ -135,84 +135,83 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
     }
 
     switch (clang_getCursorKind(cursor)) {
-        case CXCursor_CXXMethod:
-        {
-            entry new_entry;
+    case CXCursor_CXXMethod: {
+        entry new_entry;
 
-            new_entry.name = reinterpret_cast<const char*>(clang_getCursorSpelling(cursor).data);
-            new_entry.name = info->name + "::" + new_entry.name;
+        new_entry.name = reinterpret_cast<const char *>(clang_getCursorSpelling(cursor).data);
+        new_entry.name = info->name + "::" + new_entry.name;
 
-            auto arg = clang_Cursor_getNumArguments(cursor);
+        auto arg = clang_Cursor_getNumArguments(cursor);
 
-            new_entry.name += "(";
+        new_entry.name += "(";
 
-            // Forgive my laziness
-            for (decltype(arg) i = 0; i < arg; i++) {
-                CXCursor carg = clang_Cursor_getArgument(cursor, i);
-                new_entry.name += clang_getCString(clang_getTypeSpelling(clang_getCursorType(carg)));
+        // Forgive my laziness
+        for (decltype(arg) i = 0; i < arg; i++) {
+            CXCursor carg = clang_Cursor_getArgument(cursor, i);
+            new_entry.name += clang_getCString(clang_getTypeSpelling(clang_getCursorType(carg)));
 
-                if (i < (arg - 1)) {
-                    new_entry.name += ", ";
-                }
+            if (i < (arg - 1)) {
+                new_entry.name += ", ";
             }
-
-            new_entry.name += ")";
-
-            if (clang_CXXMethod_isConst(cursor)) {
-                new_entry.name += " const";
-            }
-
-            new_entry.id = common::hash(
-                       common::normalize_for_hash(new_entry.name));
-
-            new_entry.attribute = "none";
-            new_entry.type = clang_getCString(clang_getTypeSpelling(clang_getResultType(clang_getCursorType(cursor))));
-
-            if (clang_CXXMethod_isPureVirtual(cursor)) {
-                new_entry.attribute = "pure_virtual";
-                info->sinful = true;
-            } else if (clang_CXXMethod_isVirtual(cursor)) {
-                new_entry.attribute = "virtual";
-                info->sinful = true;
-            }
-
-            CXCursor* overriden_cursor;
-            unsigned int overriden_num = 0;
-
-            clang_getOverriddenCursors(cursor, &overriden_cursor, &overriden_num);
-
-            if (overriden_num > 0) {
-                new_entry.attribute = "override";
-                info->sinful = true;
-                clang_disposeOverriddenCursors(overriden_cursor);
-            }
-
-            if (clang_CXXMethod_isStatic(cursor)) {
-                new_entry.attribute = "static";
-            }
-
-            LOG_TRACE("Find method: {}, Attribute: {}", new_entry.name, new_entry.attribute);
-
-            info->func_entries.push_back(new_entry);
-
-            break;
         }
 
-        case CXCursor_ClassDecl: case CXCursor_StructDecl: {
-            return CXChildVisit_Continue;
+        new_entry.name += ")";
+
+        if (clang_CXXMethod_isConst(cursor)) {
+            new_entry.name += " const";
         }
 
-        case CXCursor_CXXBaseSpecifier:
-        {
-            auto resolved = resolve_name(info->info.name, cursor);
-            LOG_INFO("{}", resolved);
-            info->base.push_back(std::make_pair(resolved, std::string()));
+        new_entry.id = common::hash(
+            common::normalize_for_hash(new_entry.name));
 
-            break;
+        new_entry.attribute = "none";
+        new_entry.type = clang_getCString(clang_getTypeSpelling(clang_getResultType(clang_getCursorType(cursor))));
+
+        if (clang_CXXMethod_isPureVirtual(cursor)) {
+            new_entry.attribute = "pure_virtual";
+            info->sinful = true;
+        } else if (clang_CXXMethod_isVirtual(cursor)) {
+            new_entry.attribute = "virtual";
+            info->sinful = true;
         }
 
-        default:
-            break;
+        CXCursor *overriden_cursor;
+        unsigned int overriden_num = 0;
+
+        clang_getOverriddenCursors(cursor, &overriden_cursor, &overriden_num);
+
+        if (overriden_num > 0) {
+            new_entry.attribute = "override";
+            info->sinful = true;
+            clang_disposeOverriddenCursors(overriden_cursor);
+        }
+
+        if (clang_CXXMethod_isStatic(cursor)) {
+            new_entry.attribute = "static";
+        }
+
+        LOG_TRACE("Find method: {}, Attribute: {}", new_entry.name, new_entry.attribute);
+
+        info->func_entries.push_back(new_entry);
+
+        break;
+    }
+
+    case CXCursor_ClassDecl:
+    case CXCursor_StructDecl: {
+        return CXChildVisit_Continue;
+    }
+
+    case CXCursor_CXXBaseSpecifier: {
+        auto resolved = resolve_name(info->info.name, cursor);
+        LOG_INFO("{}", resolved);
+        info->base.push_back(std::make_pair(resolved, std::string()));
+
+        break;
+    }
+
+    default:
+        break;
     }
 
     return CXChildVisit_Recurse;
@@ -220,21 +219,21 @@ CXChildVisitResult visit_class(CXCursor cursor, CXCursor parent, CXClientData cl
 
 CXChildVisitResult visit_big_guy(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     using cursor_list = std::vector<CXCursor>;
-    cursor_list* list = reinterpret_cast<cursor_list*>(client_data);
+    cursor_list *list = reinterpret_cast<cursor_list *>(client_data);
 
     if (list == nullptr) {
         LOG_ERROR("Client data is invalid!");
         return CXChildVisit_Break;
     }
 
-    if (!clang_Location_isFromMainFile(clang_getCursorLocation (cursor))) {
+    if (!clang_Location_isFromMainFile(clang_getCursorLocation(cursor))) {
         return CXChildVisit_Continue;
     }
 
     if (clang_getCursorKind(cursor) == CXCursor_ClassDecl
-            || clang_getCursorKind(cursor) == CXCursor_StructDecl) {
+        || clang_getCursorKind(cursor) == CXCursor_StructDecl) {
         if (!clang_equalCursors(clang_getCursorDefinition(cursor),
-                               clang_getNullCursor())) {
+                clang_getNullCursor())) {
             list->emplace_back(cursor);
         }
     }
@@ -242,10 +241,10 @@ CXChildVisitResult visit_big_guy(CXCursor cursor, CXCursor parent, CXClientData 
     return CXChildVisit_Recurse;
 }
 
-std::optional<class_infos> gather_classinfos(const std::string& path) {
+std::optional<class_infos> gather_classinfos(const std::string &path) {
     LOG_INFO("Gather info of: {}", path);
 
-    const char* const args[] = { "-xc++", "--include-directory", global_include_path.c_str(), "-DIMPORT_C= "};
+    const char *const args[] = { "-xc++", "--include-directory", global_include_path.c_str(), "-DIMPORT_C= " };
 
     CXIndex idx = clang_createIndex(0, 0);
     CXTranslationUnit unit = clang_parseTranslationUnit(
@@ -269,9 +268,9 @@ std::optional<class_infos> gather_classinfos(const std::string& path) {
     infos.resize(all_classes.size());
 
     for (auto i = 0; i < all_classes.size(); i++) {
-        class_info* info = &infos[i];
+        class_info *info = &infos[i];
 
-        info->name = reinterpret_cast<const char*>(clang_getCursorSpelling(all_classes[i]).data);
+        info->name = reinterpret_cast<const char *>(clang_getCursorSpelling(all_classes[i]).data);
 
         info->info.name = fully_qualified(all_classes[i]);
         info->id = common::hash(info->info.name);
@@ -287,7 +286,7 @@ std::optional<class_infos> gather_classinfos(const std::string& path) {
     return infos;
 }
 
-std::vector<fs::path> query_headers(const std::string& where) {
+std::vector<fs::path> query_headers(const std::string &where) {
     std::vector<fs::path> header_paths;
 
     for (auto &f : fs::directory_iterator(where)) {
@@ -305,7 +304,7 @@ std::vector<fs::path> query_headers(const std::string& where) {
     return header_paths;
 }
 
-void yaml_meta_emit(const std::string& path) {
+void yaml_meta_emit(const std::string &path) {
     auto inf = gather_classinfos(path);
 
     if (!inf) {
@@ -316,29 +315,29 @@ void yaml_meta_emit(const std::string& path) {
 
     std::lock_guard<std::mutex> guard(mut);
 
-    for (auto& info: real_info) {
+    for (auto &info : real_info) {
         emitter << YAML::Key << info.info.name << YAML::Value << YAML::BeginMap;
-            emitter << YAML::Key << "id" << YAML::Value << std::string("0x") + common::to_string(info.id, std::hex);
+        emitter << YAML::Key << "id" << YAML::Value << std::string("0x") + common::to_string(info.id, std::hex);
 
-                emitter << YAML::Key << "base" << YAML::Value << YAML::BeginMap;
+        emitter << YAML::Key << "base" << YAML::Value << YAML::BeginMap;
 
-                    for (auto& minbase: info.base) {
-                        emitter << YAML::Key << minbase.first << YAML::Value << minbase.second;
-                    }
+        for (auto &minbase : info.base) {
+            emitter << YAML::Key << minbase.first << YAML::Value << minbase.second;
+        }
 
-                emitter << YAML::EndMap;
+        emitter << YAML::EndMap;
 
-                emitter << YAML::Key << "entries" << YAML::Value << YAML::BeginMap;
+        emitter << YAML::Key << "entries" << YAML::Value << YAML::BeginMap;
 
-                    for (auto& entry: info.func_entries) {
-                        emitter << YAML::Key << entry.name << YAML::Value << YAML::BeginMap;
-                            emitter << YAML::Key << "id" << YAML::Value << std::string("0x") + common::to_string(entry.id, std::hex);
-                            emitter << YAML::Key << "type" << YAML::Value << entry.type;
-                            emitter << YAML::Key << "attrib" << YAML::Value << entry.attribute;
-                        emitter << YAML::EndMap;
-                    }
+        for (auto &entry : info.func_entries) {
+            emitter << YAML::Key << entry.name << YAML::Value << YAML::BeginMap;
+            emitter << YAML::Key << "id" << YAML::Value << std::string("0x") + common::to_string(entry.id, std::hex);
+            emitter << YAML::Key << "type" << YAML::Value << entry.type;
+            emitter << YAML::Key << "attrib" << YAML::Value << entry.attribute;
+            emitter << YAML::EndMap;
+        }
 
-                emitter << YAML::EndMap;
+        emitter << YAML::EndMap;
 
         emitter << YAML::EndMap;
     }
@@ -372,16 +371,16 @@ std::vector<std::thread> setup_threads(int total) {
 
     header_for_work = headers.size() / total_thread + headers.size() % total_thread;
     end_off += header_for_work;
-    threads[total_thread-1] = std::thread(launch_gen_metadata, start_off, end_off);
+    threads[total_thread - 1] = std::thread(launch_gen_metadata, start_off, end_off);
 
     return threads;
 }
 
-void parse_args(int argc, char** argv) {
+void parse_args(int argc, char **argv) {
     if (argc == 1) {
         global_include_path = ".";
     } else {
-        global_include_path = argv[argc-1];
+        global_include_path = argv[argc - 1];
     }
 
     for (auto i = 1; i < argc; i++) {
@@ -398,7 +397,7 @@ void write_meta_yml() {
     meta << emitter.c_str();
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     parse_args(argc, argv);
 
     log::setup_log(nullptr);
@@ -409,7 +408,7 @@ int main(int argc, char** argv) {
 
     auto threads = setup_threads(thread_count);
 
-    for (auto& thr: threads) {
+    for (auto &thr : threads) {
         thr.join();
     }
 

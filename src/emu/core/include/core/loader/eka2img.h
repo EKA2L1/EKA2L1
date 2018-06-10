@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <cstdint>
@@ -10,7 +30,17 @@
 // A lightweight loader based on elf2e32
 
 namespace eka2l1 {
-    class memory;
+    class memory_system;
+    class kernel_system;
+
+    struct file;
+    using symfile = std::shared_ptr<file>;
+
+    namespace kernel {
+        class chunk;
+    }
+
+    using chunk_ptr = std::shared_ptr<kernel::chunk>;
 
     namespace loader {
         enum class eka2_cpu : uint16_t {
@@ -67,6 +97,7 @@ namespace eka2l1 {
         };
 
         struct eka2img_iat {
+            uint32_t number_imports;
             std::vector<uint32_t> its;
         };
 
@@ -77,9 +108,9 @@ namespace eka2l1 {
             std::vector<uint16_t> rels_info;
         };
 
-		#define ELF32_R_SYM(i) ((i) >> 8)
-		#define ELF32_R_TYPE(i) ((unsigned char)(i))
-		#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
+#define ELF32_R_SYM(i) ((i) >> 8)
+#define ELF32_R_TYPE(i) ((unsigned char)(i))
+#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
 
         struct eka2_reloc_section {
             uint32_t size;
@@ -157,10 +188,16 @@ namespace eka2l1 {
             uint32_t rt_code_addr;
             uint32_t rt_data_addr;
 
+            chunk_ptr code_chunk;
+            chunk_ptr data_chunk;
+
             bool has_extended_header = false;
         };
 
         std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
-        bool load_eka2img(eka2img &img, memory* mem, hle::lib_manager& mngr);
+        std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true);
+
+        bool load_eka2img(eka2img &img, memory_system* mem, kernel_system *kern, hle::lib_manager &mngr);
     }
 }
+

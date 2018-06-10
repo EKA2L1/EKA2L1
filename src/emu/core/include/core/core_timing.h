@@ -1,14 +1,34 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team / 2008 Dolphin Emulator Project
+ * 
+ * This file is part of EKA2L1 project / Dolphin Emulator Project
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #pragma once
 
 #include <cstdint>
 #include <functional>
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace eka2l1 {
     // Based on Dolphin
     using mhz_change_callback = std::function<void()>;
     using timed_callback = std::function<void(uint64_t, int)>;
+    using dfc = timed_callback;
 
     enum {
         MAX_SLICE_LENGTH = 20000
@@ -25,12 +45,13 @@ namespace eka2l1 {
         uint64_t event_user_data;
     };
 
+    // class NTimer
     class timing_system {
         int slice_len;
         int downcount;
 
         int64_t CPU_HZ;
-    
+
         uint64_t global_timer;
         uint64_t idle_ticks;
         uint64_t last_global_time_ticks;
@@ -45,8 +66,7 @@ namespace eka2l1 {
 
         void fire_mhz_changes();
 
-    protected:
-
+    public:
         inline int64_t ms_to_cycles(int ms) {
             return CPU_HZ / 1000 * ms;
         }
@@ -79,7 +99,9 @@ namespace eka2l1 {
             return cycles / (CPU_HZ / 1000000);
         }
 
-    public:
+        inline int64_t ns_to_cycles(uint64_t us) {
+            return (int64_t)(CPU_HZ / 1000000000 * us);
+        }
 
         void init();
         void shutdown();
@@ -89,6 +111,8 @@ namespace eka2l1 {
         uint64_t get_global_time_us();
 
         int register_event(const std::string &name, timed_callback callback);
+        int get_register_event(const std::string &name);
+
         void restore_register_event(int event_type, const std::string &name, timed_callback callback);
         void unregister_all_events();
 
@@ -116,3 +140,4 @@ namespace eka2l1 {
         int get_downcount();
     };
 }
+

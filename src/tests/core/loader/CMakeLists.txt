@@ -1,3 +1,1 @@
-add_subdirectory(abi)
-
 set (CORE_LOADER_TESTS_FILE ${CORE_LOADER_ABI_TESTS_FILE})

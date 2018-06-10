@@ -35,72 +35,72 @@
 
 #pragma once
 
-#include <chrono>
-#include <limits>
-#include <cassert>
 #include <algorithm>
-#include <string>
-#include <sstream>
-#include <iomanip>
+#include <cassert>
+#include <chrono>
 #include <imgui.h>
+#include <iomanip>
+#include <limits>
+#include <sstream>
+#include <string>
 
 class FrameClock;
 
-void frameClockWindow(const FrameClock& clock);
+void frameClockWindow(const FrameClock &clock);
 
-namespace detail
-{
+namespace detail {
 
-template<typename T> inline T limitMax()
-{
-    return (std::numeric_limits<T>::max)();
+    template <typename T>
+    inline T limitMax() {
+        return (std::numeric_limits<T>::max)();
+    }
+
+    template <typename T>
+    inline T limitMin() {
+        return (std::numeric_limits<T>::min)();
+    }
+
+    template <typename T>
+    static std::string format(std::string name, std::string resolution, T value) {
+        std::ostringstream os;
+        os.precision(4);
+        os << std::setfill(' ');
+        os << std::left << std::setw(5);
+        os << name << " : ";
+        os << std::setw(5);
+        os << value << " " << resolution;
+        return os.str();
+    }
+
+    template <typename T>
+    static std::string stringPrecision(T value, int precision = 4) {
+        std::ostringstream os;
+        os.precision(precision);
+        os << value;
+        return os.str();
+    }
+
+    struct FrameClockGuiHelper {
+        FrameClockGuiHelper()
+            : mPlotFPS(120, 0)
+            , mPlotFPSOffset(0)
+            , mFrameTime(150, 0)
+            , mFrameTimeBins(150, 0)
+            , mRefreshTime(1.0 / 60.0f)
+            , mCurrentRefreshTime(0.0f) {}
+
+        std::vector<float> mPlotFPS;
+        unsigned int mPlotFPSOffset;
+
+        std::vector<float> mFrameTime;
+        std::vector<float> mFrameTimeBins;
+
+        float mRefreshTime;
+        float mCurrentRefreshTime;
+    };
 }
 
-template<typename T> inline T limitMin()
-{
-    return (std::numeric_limits<T>::min)();
-}
-
-template<typename T>
-static std::string format(std::string name, std::string resolution, T value)
-{
-    std::ostringstream os;
-    os.precision(4);
-    os << std::setfill(' ');
-    os << std::left << std::setw(5);
-    os << name << " : ";
-    os << std::setw(5);
-    os << value << " " << resolution;
-    return os.str();
-}
-
-template<typename T>
-static std::string stringPrecision(T value, int precision = 4)
-{
-    std::ostringstream os;
-    os.precision(precision);
-    os << value;
-    return os.str();
-}
-
-struct FrameClockGuiHelper
-{
-    FrameClockGuiHelper() : mPlotFPS(120, 0), mPlotFPSOffset(0), mFrameTime(150,0), mFrameTimeBins(150,0), mRefreshTime(1.0/60.0f), mCurrentRefreshTime(0.0f) {}
-
-    std::vector<float> mPlotFPS;
-    unsigned int mPlotFPSOffset;
-
-    std::vector<float> mFrameTime;
-    std::vector<float> mFrameTimeBins;
-
-    float mRefreshTime;
-    float mCurrentRefreshTime;
-};
-
-}
-
-class FrameClock
-{
+class FrameClock {
 private:
     typedef std::chrono::high_resolution_clock HighResClock;
     typedef HighResClock::time_point TimePoint;
@@ -110,14 +110,12 @@ private:
         TimePoint timeStamp;
         Time elapsed;
 
-        Clock()
-        {
+        Clock() {
             timeStamp = HighResClock::now();
             elapsed = Time::zero();
         }
 
-        Time restart()
-        {
+        Time restart() {
             auto pt = HighResClock::now();
             elapsed = pt - timeStamp;
             timeStamp = pt;
@@ -125,12 +123,11 @@ private:
             return elapsed;
         }
 
-        static inline float asSeconds(Time time) { return  std::chrono::duration<float, std::ratio<1>>(time).count() ;}
+        static inline float asSeconds(Time time) { return std::chrono::duration<float, std::ratio<1>>(time).count(); }
     };
 
 public:
-    FrameClock(std::size_t depth = 100)
-    {
+    FrameClock(std::size_t depth = 100) {
         assert(depth >= 1);
 
         sample.data.resize(depth);
@@ -141,13 +138,11 @@ public:
         time.maximum = Time::zero();
     }
 
-    inline void beginFrame()
-    {
+    inline void beginFrame() {
         clock.restart();
     }
 
-    inline Time endFrame()
-    {
+    inline Time endFrame() {
         time.current = clock.elapsed;
 
         sample.accumulator -= sample.data[sample.index];
@@ -156,13 +151,13 @@ public:
         sample.accumulator += time.current;
         time.elapsed += time.current;
 
-        if(++sample.index >= getSampleDepth())
+        if (++sample.index >= getSampleDepth())
             sample.index = 0;
 
-        if(time.current > std::chrono::duration<float>(1.719e-04))
+        if (time.current > std::chrono::duration<float>(1.719e-04))
             freq.current = 1.0f / Clock::asSeconds(time.current);
 
-        if(sample.accumulator != Time::zero()) {
+        if (sample.accumulator != Time::zero()) {
             const float smooth = static_cast<float>(getSampleDepth());
             freq.average = smooth / Clock::asSeconds(sample.accumulator);
         }
@@ -184,74 +179,60 @@ public:
         return time.current;
     }
 
-    void clear()
-    {
+    void clear() {
         FrameClock(getSampleDepth()).swap(*this);
     }
 
-    void setSampleDepth(std::size_t depth)
-    {
+    void setSampleDepth(std::size_t depth) {
         assert(depth >= 1);
         FrameClock(depth).swap(*this);
     }
 
-    inline std::size_t getSampleDepth() const
-    {
+    inline std::size_t getSampleDepth() const {
         return sample.data.size();
     }
 
-    inline float getTotalFrameTime() const
-    {
+    inline float getTotalFrameTime() const {
         return Clock::asSeconds(time.elapsed);
     }
 
-    inline std::uint64_t getTotalFrameCount() const
-    {
+    inline std::uint64_t getTotalFrameCount() const {
         return freq.elapsed;
     }
 
-    inline float getLastFrameTime() const
-    {
+    inline float getLastFrameTime() const {
         return Clock::asSeconds(time.current);
     }
 
-    inline float getMinFrameTime() const
-    {
+    inline float getMinFrameTime() const {
         return Clock::asSeconds(time.minimum);
     }
 
-    inline float getMaxFrameTime() const
-    {
+    inline float getMaxFrameTime() const {
         return Clock::asSeconds(time.maximum);
     }
 
-    inline float getAverageFrameTime() const
-    {
+    inline float getAverageFrameTime() const {
         return Clock::asSeconds(time.average);
     }
 
-    inline float getFramesPerSecond() const
-    {
+    inline float getFramesPerSecond() const {
         return freq.current;
     }
 
-    inline float getMinFramesPerSecond() const
-    {
+    inline float getMinFramesPerSecond() const {
         return freq.minimum;
     }
 
-    inline float getMaxFramesPerSecond() const
-    {
+    inline float getMaxFramesPerSecond() const {
         return freq.maximum;
     }
 
-    inline float getAverageFramesPerSecond() const
-    {
+    inline float getAverageFramesPerSecond() const {
         return freq.average;
     }
 
-    void swap(FrameClock& other)
-    {
+    void swap(FrameClock &other) {
         time.swap(other.time);
         freq.swap(other.freq);
         sample.swap(other.sample);
@@ -259,17 +240,16 @@ public:
     }
 
 private:
-
-    template<typename T, typename U>
+    template <typename T, typename U>
     struct Range {
-        Range() :   minimum(),
-            maximum(),
-            average(),
-            current(),
-            elapsed()
-        {}
+        Range()
+            : minimum()
+            , maximum()
+            , average()
+            , current()
+            , elapsed() {}
 
-        void swap(Range& other) {
+        void swap(Range &other) {
             std::swap(minimum, other.minimum);
             std::swap(maximum, other.maximum);
             std::swap(average, other.average);
@@ -285,7 +265,6 @@ private:
     };
 
     struct SampleData {
-
         Time accumulator;
         std::vector<Time> data;
         std::vector<Time>::size_type index;
@@ -293,10 +272,9 @@ private:
         SampleData()
             : accumulator()
             , data()
-            , index()
-        {}
+            , index() {}
 
-        void swap(SampleData& other) {
+        void swap(SampleData &other) {
             std::swap(accumulator, other.accumulator);
             std::swap(data, other.data);
             std::swap(index, index);
@@ -308,7 +286,3 @@ private:
 
     Clock clock;
 };
-
-
-
-

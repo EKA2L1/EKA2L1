@@ -9,14 +9,15 @@ add_library(coreloader
 	sis.cpp
 	sis_fields.cpp
     sis_script_interpreter.cpp
-    romimage.cpp)
+    romimage.cpp
+	rom.cpp)
 
 target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp hle) 
 
-if(WIN32)
-	target_include_directories(coreloader PRIVATE ${LIBCXXABI_INCLUDE_DIR})
-	target_link_libraries(coreloader PRIVATE libcxxabi)
-endif()
+#if(WIN32)
+#	target_include_directories(coreloader PRIVATE ${LIBCXXABI_INCLUDE_DIR})
+#	target_link_libraries(coreloader PRIVATE libcxxabi)
+#endif()
 
 target_include_directories(coreloader PUBLIC ${CORE_INCLUDE_DIR})
 target_include_directories(coreloader

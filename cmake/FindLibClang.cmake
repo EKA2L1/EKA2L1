@@ -23,7 +23,7 @@ elseif (WIN32)
 endif()
 
 find_path(libclang_include_dir NAMES clang-c/Index.h PATHS ${libclang_search})
-find_library(libclang_lib NAMES clang PATHS ${libclang_search})
+find_library(libclang_lib NAMES clang libclang PATHS ${libclang_search})
 
 set(LIBCLANG_LIBRARIES ${libclang_lib})
 set(LIBCLANG_INCLUDE_DIRS ${libclang_include_dir})

@@ -1,10 +1,29 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "menu.h"
 
 #include "installer/installer.h"
 #include <GLFW/glfw3.h>
 #include <ImguiWindowsFileIO.hpp>
 #include <SimpleIni.h>
-#include <core/vfs.h>
+#include <core.h>
 
 namespace eka2l1 {
     namespace imgui {
@@ -45,8 +64,8 @@ namespace eka2l1 {
             path_e.resize(strlen(path_e_temp));
 
             memcpy(path_c.data(), path_c_temp, strlen(path_c_temp));
-            memcpy(path_e.data(), path_e_temp, strlen(path_e_temp));            
-        
+            memcpy(path_e.data(), path_e_temp, strlen(path_e_temp));
+
             remount();
         }
 
@@ -76,7 +95,7 @@ namespace eka2l1 {
             }
 
             if (show_sis_dialog) {
-                if (imgui::install_sis_dialog_op()) {
+                if (imgui::install_sis_dialog_op(sys)) {
                     show_sis_dialog = false;
                 }
             }
@@ -147,3 +166,4 @@ namespace eka2l1 {
         }
     }
 }
+

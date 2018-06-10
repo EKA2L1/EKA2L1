@@ -1,0 +1,2 @@
+set (CORE_ABI_TESTS_FILE
+    ${CMAKE_CURRENT_SOURCE_DIR}/eabi.cpp)

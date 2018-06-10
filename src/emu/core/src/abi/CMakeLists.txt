@@ -7,5 +7,5 @@ target_include_directories(abi PUBLIC ${CORE_INCLUDE_DIR})
 target_link_libraries(abi PRIVATE common)
 
 if (MSVC)
-    target_link_libraries(abi PRIVATE libcxxabi)
+   target_link_libraries(abi PRIVATE libdemangle)
 endif()

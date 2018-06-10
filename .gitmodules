@@ -25,3 +25,9 @@
 [submodule "src/external/libcxxabi"]
 	path = src/external/libcxxabi
 	url = https://github.com/llvm-mirror/libcxxabi
+[submodule "src/external/FRSML"]
+	path = src/external/FRSML
+	url = https://github.com/bentokun/FRSML
+[submodule "src/external/glm"]
+	path = src/external/glm
+	url = https://github.com/g-truc/glm

@@ -1,0 +1,90 @@
+object DeviceMapper: TDeviceMapper
+  Left = 1228
+  Height = 262
+  Top = 221
+  Width = 400
+  Caption = 'Device Mapping'
+  ClientHeight = 262
+  ClientWidth = 400
+  DesignTimePPI = 120
+  LCLVersion = '1.8.2.0'
+  object CLabel: TLabel
+    Left = 28
+    Height = 20
+    Top = 35
+    Width = 12
+    Caption = 'C:'
+    ParentColor = False
+  end
+  object CPathEdit: TEdit
+    Left = 59
+    Height = 28
+    Top = 32
+    Width = 237
+    TabOrder = 0
+  end
+  object CPathBrowse: TButton
+    Left = 312
+    Height = 31
+    Top = 29
+    Width = 70
+    Caption = '...'
+    OnClick = CPathBrowseClick
+    TabOrder = 1
+  end
+  object ELabel: TLabel
+    Left = 28
+    Height = 20
+    Top = 88
+    Width = 11
+    Caption = 'E:'
+    ParentColor = False
+  end
+  object EPathEdit: TEdit
+    Left = 59
+    Height = 28
+    Top = 88
+    Width = 237
+    TabOrder = 2
+  end
+  object EPathBrowse: TButton
+    Left = 312
+    Height = 31
+    Top = 85
+    Width = 70
+    Caption = '...'
+    OnClick = EPathBrowseClick
+    TabOrder = 3
+  end
+  object StaticText1: TStaticText
+    Left = 28
+    Height = 48
+    Top = 144
+    Width = 348
+    Alignment = taCenter
+    Caption = 'Map the virtual directory of drive C: and E: in Symbian to your physical directory.'
+    TabOrder = 4
+  end
+  object SaveButton: TButton
+    Left = 40
+    Height = 31
+    Top = 208
+    Width = 94
+    Caption = 'Save'
+    OnClick = SaveButtonClick
+    TabOrder = 5
+  end
+  object Button1: TButton
+    Left = 256
+    Height = 31
+    Top = 208
+    Width = 94
+    Caption = 'Cancel'
+    OnClick = Button1Click
+    TabOrder = 6
+  end
+  object SelectDirDialog: TSelectDirectoryDialog
+    left = 296
+    top = 152
+  end
+end

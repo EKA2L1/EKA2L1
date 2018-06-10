@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <common/path.h>
 #include <cstring>
 #include <iostream>
@@ -38,25 +57,34 @@ namespace eka2l1 {
 
     std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use) {
         std::string nstring = "";
+        std::string merge = "";
 
-        bool end_sep = is_separator(path1[path1.size() - 1]);
-        bool beg_sep = is_separator(path2[0]);
+        if (path1.length() == 0 && path2.length() == 0) {
+            return "";
+        } else if (path1.length() == 0) {
+            merge = path2;
+        } else if (path2.length() == 0) {
+            merge = path1;
+        } else {
+            bool end_sep = is_separator(path1[path1.size() - 1]);
+            bool beg_sep = is_separator(path2[0]);
 
-        if (end_sep && beg_sep) {
-            auto pos_sub = path2.find_first_not_of(path2[0]);
+            if (end_sep && beg_sep) {
+                auto pos_sub = path2.find_first_not_of(path2[0]);
 
-            if (pos_sub == std::string::npos) {
-                return path1;
+                if (pos_sub == std::string::npos) {
+                    return path1;
+                }
+
+                nstring = path2.substr(pos_sub);
+            } else if (!end_sep && !beg_sep) {
+                nstring = std::string("/") + path2;
+            } else {
+                nstring = path2;
             }
 
-            nstring = path2.substr(pos_sub);
-        } else if (!end_sep && !beg_sep) {
-            nstring = std::string("/") + path2;
-        } else {
-            nstring = path2;
+            merge = path1 + nstring;
         }
-
-        auto merge = path1 + nstring;
 
         // Turn all slash into / (quick hack)
 
@@ -295,16 +323,14 @@ namespace eka2l1 {
 
         for (ite = path_iterator(path);
              ite; ++ite) {
-            crr_path += *ite + "/";
+            if ((*ite).length() != 0) {
+                crr_path = add_path(crr_path, add_path(*ite, "/"));
 
-            if (!is_dir(crr_path)) {
-                create_directory(crr_path);
+                if (!is_dir(crr_path)) {
+                    create_directory(crr_path);
+                }
             }
-        }
-
-        crr_path += *ite + "/";
-        if (!is_dir(crr_path)) {
-            create_directory(crr_path);
         }
     }
 }
+

@@ -7,4 +7,4 @@ add_executable(ekatests
 	tests.cpp 
 	${CORE_TESTS_FILE})
 
-target_link_libraries(ekatests PRIVATE core common gmock gtest)
+target_link_libraries(ekatests PRIVATE core common coreloader gmock gtest)

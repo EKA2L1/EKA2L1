@@ -1,8 +1,28 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <common/cvt.h>
 #include <common/log.h>
 #include <loader/sis.h>
 #include <loader/sis_script_interpreter.h>
 #include <manager/package_manager.h>
+#include <vfs.h>
 
 #include <fstream>
 
@@ -104,14 +124,14 @@ namespace eka2l1 {
             }
 
             for (auto &c_app : c_apps) {
-                int size = c_app.second.name.size();
+                int size = c_app.second.executable_name.size();
 
                 fwrite(&size, 1, 4, file);
-                fwrite(c_app.second.executable_name.data(), 2, c_app.second.executable_name.size(), file);
+                fwrite(&c_app.second.executable_name[0], 2, c_app.second.executable_name.size(), file);
             }
 
             for (auto &e_app : e_apps) {
-                int size = e_app.second.name.size();
+                int size = e_app.second.executable_name.size();
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&e_app.second.executable_name[0], 2, e_app.second.executable_name.size(), file);
@@ -136,7 +156,7 @@ namespace eka2l1 {
 
             fread(header.magic, 1, 4, file);
 
-            if (strcmp(header.magic, "sdbf") != 0) {
+            if (strncmp(header.magic, "sdbf", 4) != 0) {
                 return false;
             }
 
@@ -209,7 +229,8 @@ namespace eka2l1 {
                 info.drive = drives[i];
                 info.name = names[i];
                 info.vendor_name = vendor_names[i];
-                info.executable_name = exe_names[i];
+                info.executable_name = exe_names[i].data();
+                info.id = uids[i];
 
                 // Drive C
                 if (drives[i] == 0) {
@@ -303,6 +324,8 @@ namespace eka2l1 {
 
             // Interpret the file
             loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ifstream::binary),
+                io,
+                this,
                 res.controller.install_block,
                 res.data,
                 loader::sis_drive(drive));
@@ -339,5 +362,20 @@ namespace eka2l1 {
 
             return res2->second;
         }
+
+        std::string package_manager::get_app_executable_path(uint32_t uid) {
+            app_info inf = info(uid);
+            std::string res = (inf.drive == 0) ? "C:" : "E:";
+            res += "/sys/bin/";
+            res += common::ucs2_to_utf8(inf.executable_name);
+
+            return res;
+        }
+
+        std::string package_manager::get_app_name(uint32_t uid) {
+            app_info inf = info(uid);
+            return common::ucs2_to_utf8(inf.name);
+        }
     }
 }
+

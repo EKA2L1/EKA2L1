@@ -1,46 +1,67 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <core.h>
 #include <process.h>
 
 #include <common/log.h>
+#include <common/cvt.h>
 #include <disasm/disasm.h>
 #include <loader/eka2img.h>
 
 namespace eka2l1 {
     void system::init() {
+        if (!already_setup)
+            log::setup_log(nullptr);
+
         // Initialize all the system that doesn't depend on others first
         timing.init();
         mem.init();
-        asmdis.init();
 
-        cpu = arm::create_jitter(&timing, &mem, &asmdis, arm::jitter_arm_type::unicorn);
+        io.init(&mem);
+        mngr.init(&io);
+        asmdis.init(&mem);
 
-        kern.init(&timing, cpu.get());
+        // Lib manager needs the system to call HLE function
+        hlelibmngr.init(this, &kern, &io, &mem, ver);
+
+        cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
+        emu_win = driver::new_emu_window(win_type);
+        emu_screen_driver = driver::new_screen_driver(dr_type);
+
+        kern.init(&timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
     }
 
-    void system::load(const std::string &name, uint64_t id, const std::string &path) {
-        auto img = loader::parse_eka2img(path);
+    process *system::load(uint64_t id) {
+        emu_win->init("EKA2L1", vec2(360, 640));
+        emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
 
-        if (!img) {
-            LOG_CRITICAL("This is not what i expected! Fake E32Image!");
-            return;
-        }
+        emu_win->close_hook = [&]() {
+            exit = true;
+        };
 
-        loader::eka2img &real_img = img.value();
-        mngr = std::make_unique<hle::lib_manager>("db.yml");
-
-        bool succ = loader::load_eka2img(real_img, &mem, *mngr);
-
-        if (!succ) {
-            LOG_CRITICAL("Unable to load EKA2Img!");
-            return;
-        }
-
-        crr_process = std::make_shared<process>(&kern, &mem, id, name, 
-            real_img.rt_code_addr + real_img.header.entry_point,
-            real_img.header.heap_size_min, real_img.header.heap_size_max,
-            real_img.header.stack_size);
-
+        crr_process = kern.spawn_new_process(id);
         crr_process->run();
+
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+
+        return crr_process;
     }
 
     int system::loop() {
@@ -55,13 +76,57 @@ namespace eka2l1 {
             prepare_reschedule();
         } else {
             timing.advance();
-            cpu->run();
+
+            uint32_t ticks = 0;
+            uint32_t downcount = timing.get_downcount();
+
+            while (ticks < downcount && !exit && kern.crr_thread() != nullptr) {
+                emu_screen_driver->begin_render();
+
+                cpu->execute_instructions(32);
+                ticks += 32;
+
+                emu_screen_driver->end_render();
+            }
         }
 
-        kern.reschedule();
-        reschedule_pending = false;
+        if (!exit) {
+            kern.reschedule();
+            reschedule_pending = false;
+        }
+
+        if (kern.crr_thread() == nullptr) {
+            emu_screen_driver->shutdown();
+            emu_win->shutdown();
+
+            exit = true;
+            return 0;
+        }
 
         return 1;
+    }
+
+    bool system::install_package(std::u16string path, uint8_t drv) {
+        return mngr.get_package_manager()->install_package(path, drv);
+    }
+
+    bool system::load_rom(const std::string &path) {
+        auto romf_res = loader::load_rom(path);
+
+        if (!romf_res) {
+            return false;
+        }
+
+        romf = romf_res.value();
+        io.mount_rom("Z:", &romf);
+
+        bool res1 = mem.load_rom(path);
+
+        if (!res1) {
+            return false;
+        }
+
+        return true;
     }
 
     void system::shutdown() {
@@ -69,5 +134,17 @@ namespace eka2l1 {
         kern.shutdown();
         mem.shutdown();
         asmdis.shutdown();
+
+        exit = false;
+    }
+
+    void system::mount(availdrive drv, std::string path) {
+        io.mount(((drv == availdrive::c) ? "C:" : "E:"), path);
+    }
+
+    void system::request_exit() {
+        cpu->stop();
+        exit = true;
     }
 }
+
