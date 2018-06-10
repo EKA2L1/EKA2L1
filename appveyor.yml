@@ -10,7 +10,7 @@ install:
   - appveyor AddMessage "Unpacking NewPascal..."
   - 7z x -y "newpascal.zip" -o"C:\" > nul
   - appveyor AddMessage -Category Information "Configuring NewPascal..."
-  - set PATH=c:\newpascal\lazarus\fpc\3.0.4\bin\x86_64-win64;%path%
+  - set PATH=c:\lazarus\fpc\3.0.4\bin\x86_64-win64;%path%
   - git submodule update --init --recursive
   - mkdir build
   - cd build
@@ -21,7 +21,7 @@ build_script:
   - appveyor AddMessage -Cagetory Information "Building EKA2L1 Core..."
   - msbuild build\src\emu\EKA2L1.sln /maxcpucount:3  /p:Configuration=Release /p:Platform=x64
   - appveyor AddMessage -Category Information "Building EKA2L1 GUI..."
-  - c:\newpascal\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\newpascal\lazarus
+  - c:\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\lazarus
   - copy src\emu\lazarus\EKA2L1.exe build\bin\Release\EKA2L1.exe
   - 7z a -m0=LZMA2 -mx9 EKA2L1.7z .\build\bin\Release\*
   - appveyor AddMessage -Category Information "Done." 
