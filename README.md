@@ -1,4 +1,4 @@
-# EKA2L1
+# EKA2L1 ![Status](https://ci.appveyor.com/api/projects/status/umc5b97pwpyexh6q?svg=true)
 - Best Symbian OS emulator to install and run malware. You can print things too!
 
 <p align="center">
