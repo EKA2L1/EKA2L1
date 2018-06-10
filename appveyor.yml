@@ -1,0 +1,33 @@
+environment:
+  NewPascalVersion: v1.0.50
+
+install:
+  - appveyor AddMessage -Category Information "Downloading NewPascal %NewPascalVersion%..."
+  - appveyor DownloadFile https://github.com/newpascal/newpascal/releases/download/np-%NewPascalVersion%/newpascal.zip
+  - appveyor AddMessage "Unpacking NewPascal %NewPascalVersion%..."
+  - 7z x -y "newpascal.zip" -o"C:\" > nul
+  - appveyor AddMessage -Category Information "Configuring NewPascal..."
+  - c:\newpascal\configure.bat
+  - set FPCDIR=c:\newpascal\fpcsrc
+  - set PATH=c:\newpascal\fpc\bin\i386-win32;c:\newpascal\binw32;%path%
+  - git submodule update --init --recursive
+  - mkdir build
+  - pushd build
+  - cmake -G "Visual Studio 15 2017 Win64" ..
+  - popd
+
+build_script:
+  - appveyor AddMessage -Cagetory Information "Building EKA2L1 Core..."
+  - msbuild build\EKA2L1.sln /maxcpucount:3  /p:Configuration=Release /p:Platform=x64
+  - appveyor AddMessage -Category Information "Building EKA2L1 GUI..."
+  - c:\newpascal\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\newpascal\lazarus
+  - copy src\emu\lazarus\EKA2L1.exe build\bin\Release\EKA2L1.exe
+  - appveyor AddMessage -Category Information "Done." 
+
+after_build:
+   -ps:
+      7z a -m0=LZMA2 -mx9 EKA2L1.7z .\build\bin\Release\*
+
+artifacts:
+  - path: EKA2L1.7z
+    name: EKA2L1
