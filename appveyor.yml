@@ -15,9 +15,9 @@ install:
   - set PATH=c:\newpascal\fpc\bin\i386-win32;c:\newpascal\binw32;%path%
   - git submodule update --init --recursive
   - mkdir build
-  - pushd build
+  - cd build
   - cmake -G "Visual Studio 15 2017 Win64" ..
-  - popd
+  - cd ..
 
 build_script:
   - appveyor AddMessage -Cagetory Information "Building EKA2L1 Core..."
