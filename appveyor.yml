@@ -5,14 +5,12 @@ image:
   Visual Studio 2017
 
 install:
-  - appveyor AddMessage -Category Information "Downloading NewPascal %NewPascalVersion%..."
-  - appveyor DownloadFile https://github.com/newpascal/newpascal/releases/download/np-%NewPascalVersion%/newpascal.zip
-  - appveyor AddMessage "Unpacking NewPascal %NewPascalVersion%..."
+  - appveyor AddMessage -Category Information "Downloading NewPascal (bentokun)..."
+  - appveyor DownloadFile https://github.com/bentokun/newpascal/releases/download/newpascalpack-v1.0.84d/newpascal.zip
+  - appveyor AddMessage "Unpacking NewPascal..."
   - 7z x -y "newpascal.zip" -o"C:\" > nul
   - appveyor AddMessage -Category Information "Configuring NewPascal..."
-  - c:\newpascal\configure.bat
-  - set FPCDIR=c:\newpascal\fpcsrc
-  - set PATH=c:\newpascal\fpc\bin\i386-win32;%path%
+  - set PATH=c:\newpascal\lazarus\fpc\3.0.4\bin\x86_64-win64;%path%
   - git submodule update --init --recursive
   - mkdir build
   - cd build
