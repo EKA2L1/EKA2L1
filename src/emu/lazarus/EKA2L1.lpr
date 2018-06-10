@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, MainForm, APIWrapper, Symbian;
+  Forms, MainForm, APIWrapper, Symbian, dvcmapping;
 
 {$R *.res}
 
@@ -15,6 +15,7 @@ begin
   RequireDerivedFormResource:=True;
   Application.Initialize;
   Application.CreateForm(TMainForm, EMainForm);
+  Application.CreateForm(TDeviceMapper, DeviceMapper);
   Application.Run;
 end.
 

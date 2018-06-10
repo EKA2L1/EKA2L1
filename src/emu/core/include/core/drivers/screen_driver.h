@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,15 +38,18 @@ namespace eka2l1 {
         class emu_window;
         using emu_window_ptr = std::shared_ptr<emu_window>;
 
+        using render_func = std::function<void()>;
+
         class screen_driver {
         protected:
             emu_window_ptr emu_win;
+            std::vector<render_func> funcs;
 
         public:
             virtual void init(emu_window_ptr win, object_size &screen_size, object_size &font_size) = 0;
             virtual void shutdown() = 0;
 
-            virtual void blit(const std::string &text, const point &where) = 0;
+            virtual void blit(const std::string &text, point &where) = 0;
             virtual bool scroll_up(rect &trect) = 0;
 
             virtual void clear(rect &trect) = 0;
@@ -61,6 +65,12 @@ namespace eka2l1 {
 
             virtual void begin_render() = 0;
             virtual void end_render() = 0;
+
+            virtual eka2l1::vec2 get_window_size() = 0;
+
+            virtual void register_render_func(render_func func) {
+                funcs.push_back(func);
+            }
         };
 
         enum class driver_type {

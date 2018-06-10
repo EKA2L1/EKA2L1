@@ -28,18 +28,18 @@
 #include <common/vecx.h>
 #include <glfw/glfw3.h>
 
+#include <functional>
+#include <any>
+
 namespace eka2l1 {
     namespace driver {
         class emu_window_glfw3 : public emu_window {
             GLFWwindow* emu_win;
             vec2 emu_screen_size;
 
-        private:
-            void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-            void mouse_callback(GLFWwindow* window, int button, int action, int mods);
-            void fb_resize_callback(GLFWwindow* window, int width, int height);
-
         public:
+            void change_title(std::string new_title) override;
+
             void init(std::string title, vec2 size) override;
             void make_current() override;
             void done_current() override;

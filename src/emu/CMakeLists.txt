@@ -6,6 +6,8 @@ add_subdirectory(core)
 add_executable(EKA2L1_CONS console/main.cpp)
 target_link_libraries(EKA2L1_CONS PRIVATE common core yaml-cpp)
 
+target_link_libraries(EKA2L1_CONS PRIVATE common core yaml-cpp)
+
 target_include_directories(EKA2L1_CONS PRIVATE ${YAML_CPP_INCLUDE_DIR})
 
 set_target_properties(EKA2L1_CONS PROPERTIES OUTPUT_NAME eka2l1_cons
@@ -25,6 +27,14 @@ add_library(eka2l1_api SHARED core/include/core/core_api.h
 target_include_directories(eka2l1_api PUBLIC core/include)
 target_link_libraries(eka2l1_api PUBLIC core)
 
+add_executable(EKA2L1_CONS_API_TEST console/test.cpp)
+target_include_directories(EKA2L1_CONS_API_TEST PUBLIC core/include)
+target_link_libraries(EKA2L1_CONS_API_TEST PUBLIC eka2l1_api)
+
 set_target_properties(eka2l1_api PROPERTIES OUTPUT_NAME eka2l1_api
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin") 
+
+set_target_properties(EKA2L1_CONS_API_TEST PROPERTIES OUTPUT_NAME eka2l1_cons_test
+	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

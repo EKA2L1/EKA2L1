@@ -12,11 +12,14 @@ const EKA2L1API = 'eka2l1_api';
       EPOC9 = $65243209;
       UNICORN = 0;
       DYNARMIC = 1;
+      GLFW = $50535054;
+      OPENGL = $10000000;
 
-function SymbianSystemCreate(CpuType: Longint): Longint; cdecl; external EKA2L1API name 'create_symbian_system';
+function SymbianSystemCreate(WinType: Longint; RenderType: Longint; CpuType: Longint): Longint; cdecl; external EKA2L1API name 'create_symbian_system';
 function SymbianSystemShutdown(Sys: Longint): Longint; cdecl; external EKA2L1API name 'shutdown_symbian_system';
 function SymbianSystemInit(Sys: Longint): Longint; cdecl; external EKA2L1API name 'init_symbian_system';
 function SymbianSystemLoad(Sys: Longint; AppID: Longword): Longint; cdecl; external EKA2L1API name 'load_process';
+function SymbianSystemLoop(Sys: Longint): Longint; cdecl; external EKA2L1API name 'loop_system';
 function SymbianSystemMount(Sys: Longint; Drive: PChar; RealPath: PChar): Longint; cdecl; external EKA2L1API name 'mount_symbian_system';
 function SymbianSystemLoadRom(Sys: Longint; Path: PChar): Longint; cdecl; external EKA2L1API name 'load_rom';
 function SymbianSystemSetCurrentSymbianUse(Sys: Longint; Ver: Longword): Longint; cdecl; external EKA2L1API name 'set_current_symbian_use';

@@ -50,6 +50,10 @@ namespace eka2l1 {
         crr_uid.store(0);
 
         close_all_processes();
+
+        for (auto& thr : threads) {
+            close_thread(thr.second->unique_id());
+        }
     }
 
     kernel::uid kernel_system::next_uid() {

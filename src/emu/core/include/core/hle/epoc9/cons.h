@@ -41,6 +41,10 @@ struct CConsoleBaseAdvance : public CConsoleBase {
     TInt iNameLen;
     eka2l1::ptr<TUint16> iName;
     TSize iConsoleSize;
+    std::vector<std::string> iPrintList;
+
+    TUint32 iCurrentX;
+    TUint32 iCurrentY;
 };
 
 BRIDGE_FUNC(eka2l1::ptr<CConsoleBase>, ConsoleNewL, eka2l1::ptr<TLit> aName, TSize aSize);

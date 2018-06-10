@@ -1,11 +1,11 @@
 object MainForm: TMainForm
-  Left = 535
+  Left = 56
   Height = 583
-  Top = 41
+  Top = 462
   Width = 836
   Caption = 'EKA2L1'
-  ClientHeight = 558
-  ClientWidth = 836
+  ClientHeight = 0
+  ClientWidth = 0
   DesignTimePPI = 120
   Menu = MainMenu
   OnClose = FormClose
@@ -30,6 +30,9 @@ object MainForm: TMainForm
     FixedCols = 0
     RowCount = 200
     TabOrder = 0
+    OnDblClick = AppListDblClick
+    OnButtonClick = AppListButtonClick
+    OnSelectCell = AppListSelectCell
     ColWidths = (
       206
       626
@@ -47,6 +50,7 @@ object MainForm: TMainForm
       end
       object InstallROMOption: TMenuItem
         Caption = '&Install ROM'
+        OnClick = InstallROMOptionClick
       end
       object FileMenuSep1: TMenuItem
         Caption = '-'
@@ -61,6 +65,7 @@ object MainForm: TMainForm
       Caption = '&Edit'
       object DeviceMappingOption: TMenuItem
         Caption = '&Device Mapping'
+        OnClick = DeviceMappingOptionClick
       end
       object MenuItem1: TMenuItem
         Caption = '&Function Database'

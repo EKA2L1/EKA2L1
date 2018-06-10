@@ -23,6 +23,7 @@
 #include <functional>
 #include <cstdint>
 #include <memory>
+#include <string>
 
 namespace eka2l1 {
     namespace driver {
@@ -34,6 +35,8 @@ namespace eka2l1 {
             virtual void swap_buffer() = 0;
             virtual void poll_events() = 0;
             virtual void shutdown() = 0;
+
+            virtual void change_title(std::string) = 0;
 
             std::function<void(vec2)> resize_hook;
 
@@ -56,6 +59,8 @@ namespace eka2l1 {
 
             /* Call when a button is held */
             std::function<void(uint16_t)> button_hold;
+
+            std::function<void()> close_hook;
         };
 
         enum class window_type {

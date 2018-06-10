@@ -2,36 +2,58 @@
 #include <common/log.h>
 #include <common/raw_bind.h>
 
+#define CALL_IF_VALID(_a, ...) if (_a) {_a(##__VA_ARGS__);}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+
+    if (action == GLFW_PRESS) {
+        CALL_IF_VALID(win->button_pressed, key);
+    }
+    else if (action == GLFW_RELEASE) {
+        CALL_IF_VALID(win->button_released);
+    }
+    else {
+        CALL_IF_VALID(win->button_hold, key);
+    }
+}
+
+void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
+    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+
+    if (button != GLFW_MOUSE_BUTTON_LEFT) {
+        return;
+    }
+
+    double x; double y;
+    glfwGetCursorPos(window, &x, &y);
+
+    if (action == GLFW_PRESS) {
+        CALL_IF_VALID(win->touch_pressed, eka2l1::point(x, y));
+    }
+    else if (action == GLFW_REPEAT) {
+        CALL_IF_VALID(win->touch_move, eka2l1::point(x, y));
+    }
+    else {
+        CALL_IF_VALID(win->touch_released);
+    }
+}
+
+void fb_resize_callback(GLFWwindow* window, int width, int height) {
+    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+
+    CALL_IF_VALID(win->resize_hook, eka2l1::vec2(width, height));
+}
+
+void close_callback(GLFWwindow *window) {
+    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    CALL_IF_VALID(win->close_hook);
+}
+
 namespace eka2l1 {
     namespace driver {
-        #define CALL_IF_VALID(_a, ...) if (_a) {_a(##__VA_ARGS__);}
-
         const uint32_t default_width_potrait = 360;
         const uint32_t default_height_potrait = 640;
-
-        template <typename BindFunc, int id = 0> struct fWrapper1
-        {
-            static void call(GLFWwindow* win, int a, int b, int c, int d)
-            {
-                scoped_raw_bind<BindFunc, fWrapper1<BindFunc, id>>::get_bind()(win, a, b, c, d);
-            }
-        };
-
-        template <typename BindFunc, int id = 0> struct fWrapper2
-        {
-            static void call(GLFWwindow* win, int a, int b, int c)
-            {
-                scoped_raw_bind<BindFunc, fWrapper2<BindFunc, id>>::get_bind()(win, a, b, c);
-            }
-        }; 
-        
-        template <typename BindFunc, int id = 0> struct fWrapper3
-        {
-            static void call(GLFWwindow* win, int a, int b)
-            {
-                scoped_raw_bind<BindFunc, fWrapper3<BindFunc, id>>::get_bind()(win, a, b);
-            }
-        };
 
         void emu_window_glfw3::init(std::string title, vec2 size) {
             glfwInit();
@@ -39,7 +61,7 @@ namespace eka2l1 {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-            
+
             emu_win = glfwCreateWindow(size.x, size.y, title.data(), nullptr, nullptr);
 
             if (!emu_win) {
@@ -48,19 +70,18 @@ namespace eka2l1 {
 
             using namespace std::placeholders;
 
-            auto rf1 = RAW_BIND(fWrapper1, std::bind(&emu_window_glfw3::key_callback, this, _1, _2, _3, _4, _5));
-            auto rf2 = RAW_BIND(fWrapper2, std::bind(&emu_window_glfw3::mouse_callback, this, _1, _2, _3, _4));
-            auto rf3 = RAW_BIND(fWrapper3, std::bind(&emu_window_glfw3::fb_resize_callback, this, _1, _2, _3));
+            glfwSetWindowUserPointer(emu_win, this);
 
-            glfwSetKeyCallback(emu_win, rf1.get_raw_ptr());
-            glfwSetMouseButtonCallback(emu_win, rf2.get_raw_ptr());
-            glfwSetFramebufferSizeCallback(emu_win, rf3.get_raw_ptr());
+            glfwSetKeyCallback(emu_win, &key_callback);
+            glfwSetMouseButtonCallback(emu_win, &mouse_callback);
+            glfwSetFramebufferSizeCallback(emu_win, &fb_resize_callback);
+            glfwSetWindowCloseCallback(emu_win, &close_callback);
 
             emu_screen_size = size;
         }
 
-        void emu_window_glfw3::fb_resize_callback(GLFWwindow* window, int width, int height) {
-            resize_hook(vec2(width, height));
+        void emu_window_glfw3::change_title(std::string new_title) {
+            glfwSetWindowTitle(emu_win, new_title.c_str());
         }
 
         void emu_window_glfw3::make_current() {
@@ -82,33 +103,6 @@ namespace eka2l1 {
 
         void emu_window_glfw3::poll_events() {
             glfwPollEvents();
-        }
-
-        void emu_window_glfw3::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-            if (action == GLFW_PRESS) {
-                CALL_IF_VALID(button_pressed, key);
-            } else if (action == GLFW_RELEASE) {
-                CALL_IF_VALID(button_released);
-            } else {
-                CALL_IF_VALID(button_hold, key);
-            }
-        }
-
-        void emu_window_glfw3::mouse_callback(GLFWwindow* window, int button, int action, int mods) {
-            if (button != GLFW_MOUSE_BUTTON_LEFT) {
-                return;
-            }
-
-            double x; double y;
-            glfwGetCursorPos(window, &x, &y);
-
-            if (action == GLFW_PRESS) {
-                CALL_IF_VALID(touch_pressed, point(x, y));
-            } else if (action == GLFW_REPEAT) {
-                CALL_IF_VALID(touch_move, point(x, y));
-            } else {
-                CALL_IF_VALID(touch_released);
-            }
         }
     }
 }

@@ -21,15 +21,64 @@ type
 
     function TotalApp: Longint;
     function GetApp(idx: longint; id: PLongWord): UnicodeString;
+
+    procedure Load(id: Longword);
+
+    function LoadRom(path: AnsiString): boolean;
+    procedure MountC(path: AnsiString);
+    procedure MountE(path: AnsiString);
+
+    procedure Loop;
+
+    procedure Shut;
   end;
 
 implementation
+     
+procedure TSymbian.Load(id: Longword);
+begin
+  SymbianSystemLoad(system, id);
+end;
+
+procedure TSymbian.Loop;
+begin
+  SymbianSystemLoop(system);
+end;
+
+procedure TSymbian.Shut;
+begin
+  if (system > -1) then
+  begin
+    SymbianSystemShutdown(system);
+    system := -1;
+  end;
+end;
+
+function TSymbian.LoadRom(path: AnsiString): boolean;
+var res: longint;
+begin
+  res := SymbianSystemLoadRom(system, PChar(path));
+
+  if (res = -1) then
+     exit(false);
+
+  exit(true);
+end;
+
+procedure TSymbian.MountC(path: AnsiString);
+begin
+  SymbianSystemMount(system, 'C:', PChar(path));
+end;
+
+procedure TSymbian.MountE(path: AnsiString);
+begin
+  SymbianSystemMount(system, 'E:', PChar(path));
+end;
 
 function TSymbian.GetApp(idx: longint; id: PLongWord): UnicodeString;
 var name: PWideChar;
     namelen, res, i: longint;
     ret: UnicodeString;
-    a: char;
 begin
   name := getmem(200);
   res := SymbianSystemGetAppInstalled(System, idx, name, @namelen, id);
@@ -74,7 +123,7 @@ end;
 
 constructor TSymbian.Create;
 begin
-  System := SymbianSystemCreate(UNICORN);
+  System := SymbianSystemCreate(GLFW, OPENGL, UNICORN);
 
   if (System = -1) then
   begin
@@ -87,15 +136,7 @@ destructor TSymbian.Destroy;
 var
   res: longint;
 begin
-  if (System > -1) then
-  begin
-    res := SymbianSystemShutdown(System);
-
-    if (res = -1) then
-    begin
-      ShowMessage('Fail to shutdown the System!');
-    end;
-  end;
+  Shut;
 
   inherited;
 end;

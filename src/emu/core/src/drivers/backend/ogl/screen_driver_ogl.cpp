@@ -8,18 +8,19 @@ namespace eka2l1 {
         const char* fb_render_vertex = "#version 330 core\n"
             "layout (location = 0) in vec2 aPos;\n"
             "layout (location = 1) in vec2 aTexCoords;\n"
-            "out vec2 oTexCoords;\n"
+            "out vec2 TexCoords;\n"
             "void main() {\n"
             "gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
-            "oTexCoords = aTexCoords;\n"
+            "TexCoords = aTexCoords;\n"
             "}\0";
 
         const char* fb_render_frag = "#version 330 core\n"
-            "out vec4 oFragColor;\n"
-            "in vec2 iTexCoords;\n"
+            "out vec4 FragColor;\n"
+            "in vec2 TexCoords;\n"
             "uniform sampler2D fb;\n"
             "void main() {\n"
-            "oFragColor = texture(fb, iTexCoords);\n"
+            "vec3 col = texture(fb, TexCoords).rgb;\n"
+            "FragColor = vec4(col, 1.0);"
             "}\0";
 
         const char* console_shader_vert = "#version 330 core\n"
@@ -62,7 +63,9 @@ namespace eka2l1 {
                 return;
             }
 
-            FT_Set_Pixel_Sizes(face, 0, 48);
+            LOG_INFO("Sans loaded! (No Undertale here)");
+
+            FT_Set_Pixel_Sizes(face, fsize.width(), fsize.height());
             
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -108,6 +111,13 @@ namespace eka2l1 {
             emu_win->make_current();
 
             int res = gladLoadGL();
+
+            emu_win->resize_hook = [&](vec2 new_size) {
+                glViewport(0, 0, new_size.x, new_size.y);
+
+                ssize.x = new_size.x;
+                ssize.y = new_size.y;
+            };
 
             glViewport(0, 0, screen_size.width(), screen_size.height());
 
@@ -211,7 +221,7 @@ namespace eka2l1 {
 
             uint32_t loc = glGetUniformLocation(render_program, "fb");
 
-            //glUniform1i(loc, 0);
+            glUniform1i(loc, 0);
 
             loc = glGetUniformLocation(font_program, "proj");
 
@@ -251,19 +261,40 @@ namespace eka2l1 {
             emu_win->done_current();
         }
 
-        void screen_driver_ogl::blit(const std::string &text, const point &where) {
+        void screen_driver_ogl::blit(const std::string &text, point &where) {
             glUseProgram(font_program);
             glUniform3f(glGetUniformLocation(font_program, "textColor"), 0.1f, 0.1f, 0.1f);
             glActiveTexture(GL_TEXTURE0);
             glBindVertexArray(dynquad_vao);
 
             GLfloat xx = where.x;
+            GLfloat yy = where.y;
+
+            GLfloat orix = where.x;
 
             for (const auto& c : text) {
+                if (c == '\n') {
+                    yy -= fsize.height();
+                    xx = orix;
+
+                    where.x = xx;
+                    where.y = yy;
+
+                    continue;
+                } 
+
+                if (c == '\t') {
+                    xx += fsize.width() * 4;
+
+                    where.x = xx;
+
+                    continue;
+                }
+
                 ttf_char glc = ttf_chars[c];
 
                 GLfloat x = xx + glc.bearing.x;
-                GLfloat y = where.y - (glc.size.y - glc.bearing.y);
+                GLfloat y = yy - (glc.size.y - glc.bearing.y);
 
                 GLfloat w = glc.size.x;
                 GLfloat h = glc.size.y;
@@ -285,6 +316,9 @@ namespace eka2l1 {
                 glDrawArrays(GL_TRIANGLES, 0, 6);
 
                 xx += (glc.advance >> 6);
+
+                where.x = xx;
+                where.y = yy;
             }
 
             glBindVertexArray(0);
@@ -346,8 +380,15 @@ namespace eka2l1 {
         }
 
         void screen_driver_ogl::end_render() {
+            for (uint32_t i = 0; i < funcs.size(); i++) {
+                funcs[i]();
+            }
+
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
             glDisable(GL_DEPTH_TEST);
+            glDisable(GL_CULL_FACE);
+            glDisable(GL_BLEND);
 
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

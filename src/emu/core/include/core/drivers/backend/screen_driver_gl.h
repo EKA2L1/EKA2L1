@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <common/vecx.h>
+
 #include <drivers/screen_driver.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -62,10 +64,14 @@ namespace eka2l1 {
         public:
             screen_driver_ogl() {}
 
+            eka2l1::vec2 get_window_size() override {
+                return ssize;
+            }
+
             void init(emu_window_ptr win, object_size &screen_size, object_size &font_size) override;
             void shutdown() override;
 
-            void blit(const std::string &text, const point &where) override;
+            void blit(const std::string &text, point &where) override;
             bool scroll_up(rect &trect) override;
 
             void clear(rect &trect) override;

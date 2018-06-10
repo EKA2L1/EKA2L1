@@ -21,6 +21,7 @@
 #include <process.h>
 
 #include <common/log.h>
+#include <common/cvt.h>
 #include <disasm/disasm.h>
 #include <loader/eka2img.h>
 
@@ -44,14 +45,21 @@ namespace eka2l1 {
         emu_screen_driver = driver::new_screen_driver(dr_type);
 
         kern.init(&timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
-
-        emu_win->init("EKA2L1", vec2(360, 640));
-        emu_screen_driver->init(emu_win, object_size(360, 640), object_size(6, 6));
     }
 
     process *system::load(uint64_t id) {
+        emu_win->init("EKA2L1", vec2(360, 640));
+        emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
+
+        emu_win->close_hook = [&]() {
+            exit = true;
+        };
+
         crr_process = kern.spawn_new_process(id);
         crr_process->run();
+
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+
         return crr_process;
     }
 
@@ -71,13 +79,11 @@ namespace eka2l1 {
             uint32_t ticks = 0;
             uint32_t downcount = timing.get_downcount();
 
-            while (ticks < downcount && kern.crr_thread() != nullptr) {
+            while (ticks < downcount && !exit && kern.crr_thread() != nullptr) {
                 emu_screen_driver->begin_render();
 
                 cpu->execute_instructions(32);
                 ticks += 32;
-
-                emu_screen_driver->blit("let's assume this is text", point(25, 25));
 
                 emu_screen_driver->end_render();
             }

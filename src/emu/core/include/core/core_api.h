@@ -25,6 +25,10 @@
 #define EPOC6 0x65243205
 #define EPOC9 0x65243209
 
+#define GLFW 0x50535054
+
+#define OPENGL 0x10000000
+
 #ifdef _MSC_VER
     #ifdef EKA2L1_API_EXPORT
         #define EKA2L1_API __declspec(dllexport)
@@ -37,7 +41,7 @@
 
 // Support Lazarus Pascal GUI and other wants to use EKA2L1 as API
 extern "C" {
-    EKA2L1_API int create_symbian_system(int cpu_type);
+    EKA2L1_API int create_symbian_system(int win_type, int render_type, int cpu_type);
 
     EKA2L1_API int init_symbian_system(int sys);
     EKA2L1_API int load_process(int sys, unsigned int id);
@@ -61,4 +65,6 @@ extern "C" {
 
     // Which Symbian version is gonna be used. Set it.
     EKA2L1_API int set_current_symbian_use(int sys, unsigned int ver);
+
+    EKA2L1_API int loop_system(int sys);
 }

@@ -26,7 +26,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="EKA2L1.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -48,6 +48,13 @@
         <Filename Value="symbian.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="dvcmapping.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="DeviceMapper"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

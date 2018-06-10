@@ -26,8 +26,11 @@ std::vector<sys_ptr> syses;
 
 using namespace eka2l1;
 
-int create_symbian_system(int cpu_type) {
-    syses.push_back(std::make_unique<eka2l1::system>(cpu_type == CPU_UNICORN ? arm::jitter_arm_type::unicorn : arm::jitter_arm_type::unicorn));
+int create_symbian_system(int win_type, int render_type, int cpu_type) {
+    syses.push_back(std::make_unique<eka2l1::system>(win_type == GLFW ? driver::window_type::glfw : driver::window_type::glfw,
+        render_type == OPENGL ? driver::driver_type::opengl : driver::driver_type::opengl,
+        cpu_type == CPU_UNICORN ? arm::jitter_arm_type::unicorn : arm::jitter_arm_type::unicorn));
+
     return (int)syses.size();
 }
 
@@ -119,8 +122,21 @@ int mount_symbian_system(int sys, const char *drive, const char *real_path) {
     }
 
     sys_ptr &symsys = syses[sys - 1];
-    // Mount
+
+    symsys->mount(strncmp(drive, "C:", 2) == 0 ? availdrive::c : availdrive::e, real_path);
+
     return 0;
+}
+
+int loop_system(int sys) {
+    if (sys > syses.size()) {
+        return -1;
+    }
+
+    sys_ptr &symsys = syses[sys - 1];
+
+    while (!symsys->should_exit())
+        symsys->loop();
 }
 
 // Load the ROM into symbian memory
