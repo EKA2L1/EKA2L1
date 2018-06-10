@@ -12,7 +12,7 @@ install:
   - appveyor AddMessage -Category Information "Configuring NewPascal..."
   - c:\newpascal\configure.bat
   - set FPCDIR=c:\newpascal\fpcsrc
-  - set PATH=c:\newpascal\fpc\bin\i386-win32;c:\newpascal\binw32;%path%
+  - set PATH=c:\newpascal\fpc\bin\i386-win32;%path%
   - git submodule update --init --recursive
   - mkdir build
   - cd build
