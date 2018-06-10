@@ -1,7 +1,9 @@
 # EKA2L1
 - Best Symbian OS emulator to install and run malware. You can print things too!
 
-![Screenshot2](https://raw.githubusercontent.com/bentokun/EKA2L1/master/screenshots/result.png)
+<p align="center">
+<img src="https://raw.githubusercontent.com/bentokun/EKA2L1/master/screenshots/result.png">
+</p>
 
 - Information and contact
     * You can contact me through Discord channel [here](https://discord.gg/5Bm5SJ9)
