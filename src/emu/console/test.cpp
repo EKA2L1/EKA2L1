@@ -18,6 +18,10 @@ int main() {
     load_process(sys, 0xECF52F7F);
 
     loop_system(sys);
+    reinit_system(sys);
+    load_process(sys, 0xECF52F7F);
+
+    loop_system(sys);
 
     shutdown_symbian_system(sys);
 

@@ -32,19 +32,26 @@
 
 namespace eka2l1 {
     namespace hle {
-        void lib_manager::init(system* syss, kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
+        void lib_manager::init(system *syss, kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
             sys = syss;
             io = ios;
             mem = mems;
             kern = kerns;
 
             load_all_sids(ver);
-            
+
             if (ver == epocver::epoc9) {
                 register_epoc9(*this);
             }
 
             LOG_INFO("Lib manager initialized, total implemented HLE functions: {}", import_funcs.size());
+        }
+
+        void lib_manager::shutdown() {
+            for (auto &img : e32imgs_cache) {
+                kern->close_chunk(img.second.img->code_chunk->unique_id());
+                kern->close_chunk(img.second.img->data_chunk->unique_id());
+            }
         }
 
         void lib_manager::load_all_sids(const epocver ver) {
@@ -61,8 +68,7 @@ namespace eka2l1 {
 
             if (ver == epocver::epoc6) {
 #include <hle/epoc6_n.h>
-            }
-            else {
+            } else {
 #include <hle/epoc9_n.h>
             }
 
@@ -168,8 +174,7 @@ namespace eka2l1 {
 
                         if (!img) {
                             return loader::e32img_ptr(nullptr);
-                        }
-                        else {
+                        } else {
                             xip = true;
                             is_rom = true;
                         }
@@ -267,11 +272,6 @@ namespace eka2l1 {
                 return;
             }
 
-            if (!res->second.is_rom) {
-                kern->close_chunk(img->code_chunk->unique_id());
-                res->second.is_xip = false;
-            }
-
             auto res2 = std::find(res->second.loader.begin(), res->second.loader.end(), kern->crr_process());
 
             if (res2 == res->second.loader.end()) {
@@ -280,12 +280,6 @@ namespace eka2l1 {
             }
 
             res->second.loader.erase(res2);
-
-            // If no one is opening this
-            if (res->second.loader.size() == 0 && !res->second.is_rom) {
-                kern->close_chunk(res->second.img->code_chunk->unique_id());
-                kern->close_chunk(res->second.img->data_chunk->unique_id());
-            }
         }
 
         std::optional<std::string> lib_manager::get_func_name(const sid id) {
@@ -330,7 +324,7 @@ namespace eka2l1 {
         }
 
         address lib_manager::get_export_addr(sid id) {
-            for (const auto &[addr, sidk] : addr_map) {
+            for (const auto & [ addr, sidk ] : addr_map) {
                 if (sidk == id) {
                     return addr;
                 }

@@ -35,6 +35,7 @@ namespace eka2l1 {
 
     bool process::stop() {
         prthr->stop();
+        kern->close_thread(prthr->unique_id());
         return true;
     }
 

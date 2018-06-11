@@ -155,6 +155,7 @@ namespace eka2l1 {
         process *spawn_new_process(uint32_t uid);
 
         bool close_process(process *pr);
+        bool close_process(const kernel::uid id);
         bool close_all_processes();
 
         kernel::uid crr_process() const {

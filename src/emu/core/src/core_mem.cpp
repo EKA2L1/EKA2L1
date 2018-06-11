@@ -80,6 +80,7 @@ namespace eka2l1 {
         }
 
         mem_pages.resize(len / page_size);
+        generations = 0;
     }
 
     ptr<void> memory_system::chunk_range(size_t beg_addr, size_t end_addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
@@ -259,6 +260,7 @@ namespace eka2l1 {
         for (page_begin; page_begin != page_end; page_begin++) {
             page_begin->sts = page_status::free;
             page_begin->protection = prot::none;
+            page_begin->generation = 0;
         }
 
         return 0;

@@ -99,6 +99,7 @@ namespace eka2l1 {
 
             lib_manager(){};
             void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
+            void shutdown();
 
             std::optional<sids> get_sids(const std::u16string &lib_name);
             std::optional<exportaddrs> get_export_addrs(const std::u16string &lib_name);

@@ -95,11 +95,17 @@ namespace eka2l1 {
         if (!exit) {
             kern.reschedule();
             reschedule_pending = false;
-        }
+        } else {
+            if (kern.crr_process()) {
+                kern.close_process(kern.crr_process());
+			}
+		}
 
         if (kern.crr_thread() == nullptr) {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
+
+			kern.close_process(kern.crr_process());
 
             exit = true;
             return 0;
@@ -134,6 +140,7 @@ namespace eka2l1 {
     void system::shutdown() {
         timing.shutdown();
         kern.shutdown();
+        hlelibmngr.shutdown();
         mem.shutdown();
         asmdis.shutdown();
 

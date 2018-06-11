@@ -123,6 +123,29 @@ namespace eka2l1 {
         return true;
     }
 
+	bool kernel_system::close_process(const kernel::uid id) {
+        auto res = processes.find(id);
+
+        if (res == processes.end()) {
+            return false;
+        }
+
+		process_ptr pr = res->second;
+
+        LOG_TRACE("Shutdown process with UID: 0x{:x}", id);
+
+        pr->stop();
+
+        libmngr->close_e32img(pr->get_e32img());
+        processes.erase(id);
+
+        if (processes.size() > 0)
+            crr_process_id = processes.begin()->first;
+        else
+            crr_process_id = 0;
+
+        return true;
+	}
     // TODO: Fix this poorly written code
     bool kernel_system::close_all_processes() {
         while (processes.size() > 0) {
@@ -231,7 +254,7 @@ namespace eka2l1 {
 
         if (res != chunks.end()) {
             chunks[id]->destroy();
-            chunks.erase(id);
+            chunks.erase(res);
             return true;
         }
 
@@ -247,7 +270,8 @@ namespace eka2l1 {
             for (auto it = chunks.begin(); it != chunks.end(); ) {
                 // Erase all chunks that have relation to the thread
                 if (it->second && it->second->obj_owner() == id) {
-                    chunks.erase(it++);
+                    uint32_t id = (it++)->first;
+                    close_chunk(id);
                 } else {
                     ++it;
                 }

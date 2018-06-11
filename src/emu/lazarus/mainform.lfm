@@ -1,16 +1,15 @@
 object MainForm: TMainForm
-  Left = 916
+  Left = 142
   Height = 583
-  Top = 200
+  Top = 139
   Width = 836
   Caption = 'EKA2L1'
-  ClientHeight = 558
+  ClientHeight = 563
   ClientWidth = 836
-  DesignTimePPI = 120
   Menu = MainMenu
   OnClose = FormClose
   OnCreate = FormCreate
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '1.8.4.0'
   object AppList: TStringGrid
     Left = 0
     Height = 560
