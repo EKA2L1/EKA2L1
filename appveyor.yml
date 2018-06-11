@@ -1,16 +1,18 @@
 environment:
-  NewPascalVersion: v1.0.50
+  NewPascalVersion: v1.0.84
 
 image:
   Visual Studio 2017
 
 install:
   - appveyor AddMessage -Category Information "Downloading NewPascal (bentokun)..."
-  - appveyor DownloadFile https://github.com/bentokun/newpascal/releases/download/newpascalpack-v1.0.84d/newpascal.zip
+  - appveyor DownloadFile https://github.com/bentokun/newpascal/releases/download/newpascalpack-v%NewPascalVersion%/newpascal.zip
   - appveyor AddMessage "Unpacking NewPascal..."
   - 7z x -y "newpascal.zip" -o"C:\" > nul
   - appveyor AddMessage -Category Information "Configuring NewPascal..."
-  - set PATH=c:\lazarus\fpc\3.0.4\bin\x86_64-win64;%path%
+  - c:\newpascal\configure.bat
+  - set FPCDIR=c:\newpascal\fpcsrc
+  - set PATH=c:\newpascal\fpc\bin\x86_64-win64;%path%
   - git submodule update --init --recursive
   - mkdir build
   - cd build
@@ -21,7 +23,7 @@ build_script:
   - appveyor AddMessage -Cagetory Information "Building EKA2L1 Core..."
   - msbuild build\src\emu\EKA2L1.sln /maxcpucount:3  /p:Configuration=Release /p:Platform=x64
   - appveyor AddMessage -Category Information "Building EKA2L1 GUI..."
-  - c:\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\lazarus
+  - c:\newpascal\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\newpascal\lazarus
   - copy src\emu\lazarus\EKA2L1.exe build\bin\Release\EKA2L1.exe
   - 7z a -m0=LZMA2 -mx9 EKA2L1.7z .\build\bin\Release\*
   - appveyor AddMessage -Category Information "Done." 
