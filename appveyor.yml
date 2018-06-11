@@ -6,7 +6,7 @@ image:
 
 install:
   - appveyor AddMessage -Category Information "Downloading NewPascal (bentokun)..."
-  - appveyor DownloadFile https://github.com/bentokun/newpascal/releases/download/newpascalpack-v%NewPascalVersion%/newpascal.zip
+  - appveyor DownloadFile https://github.com/bentokun/newpascal/releases/download/newpascalpack-v1.0.84/newpascal.zip
   - appveyor AddMessage "Unpacking NewPascal..."
   - 7z x -y "newpascal.zip" -o"C:\" > nul
   - appveyor AddMessage -Category Information "Configuring NewPascal..."
