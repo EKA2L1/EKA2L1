@@ -30,14 +30,20 @@ type
     procedure MountE(path: AnsiString);
 
     procedure Loop;
-
     procedure Shut;
+
+    procedure Reset;
 
     property Sys: Longint read system;
   end;
 
 implementation
-          
+
+procedure TSymbian.Reset;
+begin
+  SymbianSystemReset(system);
+end;
+
 function TSymbian.InstallSIS(dr: longint; path: AnsiString): boolean;
 begin
   exit(SymbianSystemInstall(system, dr, PChar(path)) = 0);

@@ -148,5 +148,10 @@ namespace eka2l1 {
         cpu->stop();
         exit = true;
     }
+
+	void system::reset() {
+        exit = false;
+        emu_screen_driver->reset();
+	}
 }
 

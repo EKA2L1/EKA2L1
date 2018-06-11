@@ -28,6 +28,7 @@ function SymbianSystemGetCurrentSymbianUse(Sys: Longint; Ver: PLongWord): Longin
 function SymbianSystemGetTotalAppInstalled(Sys: Longint): Longint; cdecl; external EKA2L1API name 'get_total_app_installed';
 function SymbianSystemGetAppInstalled(Sys: Longint; Idx: Longint; Name: PWideChar; NameLength: PLongint; UID: PLongWord): Longint; external EKA2L1API name 'get_app_installed';
 function SymbianSystemInstall(Sys: Longint; drive: Longint; path: PChar): Longint;external EKA2L1API name 'install_sis';
+function SymbianSystemReset(Sys: Longint): Longint; cdecl; external EKA2L1API name 'reinit_system';
 
 implementation
 

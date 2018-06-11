@@ -201,3 +201,14 @@ int install_sis(int sys, int drive, const char* path) {
 
     return 0;
 }
+
+int reinit_system(int sys) {
+    if (sys > syses.size()) {
+        return -1;
+    }
+
+    sys_ptr &symsys = syses[sys - 1];
+    symsys->reset();
+
+	return 0;
+}

@@ -121,6 +121,7 @@ end;
 procedure TSymThread.Execute;
 var res: Boolean;
 begin
+  ESym.Reset;
   ESym.Load(id);
   ESym.Loop;
 
@@ -195,8 +196,6 @@ begin
 end;
 
 procedure TMainForm.InstallROMOptionClick(Sender: TObject);
-var
-  RomNode, RomText: TDOMnode;
 begin
   if (OpenDialog.Execute) then
   begin
@@ -219,12 +218,14 @@ begin
       if (ESym.InstallSIS(0, SisFile)) then
       begin
         ShowMessage('Success!');
+        InitAppList;
       end;
     end else
     begin
       if (ESym.InstallSIS(1, SisFile)) then
       begin
         ShowMessage('Success!');
+        InitAppList;
       end;
     end;
   end;
@@ -258,7 +259,10 @@ begin
   ids := TStringGrid(Sender).Cells[0, row];
   Delete(ids, 1, 2);
 
-  if (row >= 1) then
+  if (ids = '') then
+    exit;
+
+  if (row >= 1) and (ids <> '') then
     id := Hex2Dec(ids);
 
   if (not OneRun) then

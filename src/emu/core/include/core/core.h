@@ -123,6 +123,7 @@ namespace eka2l1 {
         }
 
         void mount(availdrive drv, std::string path);
+        void reset();
 
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);

@@ -71,6 +71,10 @@ namespace eka2l1 {
             virtual void register_render_func(render_func func) {
                 funcs.push_back(func);
             }
+
+			void reset() {
+                funcs.clear();
+			}
         };
 
         enum class driver_type {

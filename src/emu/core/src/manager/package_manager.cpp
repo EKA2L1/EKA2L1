@@ -275,6 +275,7 @@ namespace eka2l1 {
             info.name = ((loader::sis_string *)(ctrl->info.names.fields[0].get()))->unicode_string;
             info.drive = drv;
             info.executable_name = u"";
+            info.id = ctrl->info.uid.uid;
 
             uid ruid = ctrl->info.uid.uid;
 
