@@ -33,16 +33,18 @@
 #include <vfs.h>
 
 namespace eka2l1 {
-    void kernel_system::init(timing_system *sys, manager_system *mngrsys,
+    void kernel_system::init(system* esys, timing_system *timing_sys, manager_system *mngrsys,
         memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu) {
         // Intialize the uid with zero
         crr_uid.store(0);
-        timing = sys;
+        timing = timing_sys;
         mngr = mngrsys;
         mem = mem_sys;
         libmngr = lib_sys;
         io = io_sys;
-        thr_sch = std::make_shared<kernel::thread_scheduler>(sys, *cpu);
+        sys = esys;
+
+        thr_sch = std::make_shared<kernel::thread_scheduler>(timing, *cpu);
     }
 
     void kernel_system::shutdown() {
@@ -78,14 +80,31 @@ namespace eka2l1 {
     }
 
     process *kernel_system::spawn_new_process(std::string &path, std::string name, uint32_t uid) {
-        auto res2 = libmngr->load_e32img(std::u16string(path.begin(), path.end()));
+        symfile f = io->open_file(std::u16string(path.begin(), path.end()), READ_MODE | BIN_MODE);
+
+		if (!f) {
+            return nullptr;
+		}
+
+        auto temp = loader::parse_eka2img(f, true);
+
+		if (!temp) {
+            return false;
+        } else {
+            set_epoc_version(temp->epoc_ver);
+
+			// Lib manager needs the system to call HLE function
+            libmngr->init(sys, this, io, mem, kern_ver);
+		}
+
+		auto res2 = libmngr->load_e32img(std::u16string(path.begin(), path.end()));
 
         if (!res2) {
             return nullptr;
         }
 
         crr_process_id = uid;
-        libmngr->open_e32img(res2);
+		libmngr->open_e32img(res2);
 
         processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, res2)));
 

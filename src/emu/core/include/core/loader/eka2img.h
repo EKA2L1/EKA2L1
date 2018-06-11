@@ -173,6 +173,8 @@ namespace eka2l1 {
         };
 
         struct eka2img {
+            epocver epoc_ver;
+
             eka2img_header header;
             eka2img_header_extended header_extended;
             eka2img_iat iat;

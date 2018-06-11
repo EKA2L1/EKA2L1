@@ -54,6 +54,14 @@ namespace eka2l1 {
             }
         }
 
+        void lib_manager::reset() {
+			func_names.clear();
+			ids.clear();
+            svc_funcs.clear();
+			custom_funcs.clear();
+			import_funcs.clear();
+        }
+
         void lib_manager::load_all_sids(const epocver ver) {
             std::vector<sid> tids;
             std::string lib_name;

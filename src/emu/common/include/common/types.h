@@ -41,5 +41,10 @@ enum class prot {
     read_write_exec = 6
 };
 
+enum class epocver {
+    epoc6,
+    epoc9
+};
+
 int translate_protection(prot cprot);
 

@@ -40,14 +40,11 @@ namespace eka2l1 {
         mngr.init(&io);
         asmdis.init(&mem);
 
-        // Lib manager needs the system to call HLE function
-        hlelibmngr.init(this, &kern, &io, &mem, ver);
-
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
         emu_win = driver::new_emu_window(win_type);
         emu_screen_driver = driver::new_screen_driver(dr_type);
 
-        kern.init(&timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
+        kern.init(this, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
     }
 
     process *system::load(uint64_t id) {
@@ -128,7 +125,7 @@ namespace eka2l1 {
         romf = romf_res.value();
         io.mount_rom("Z:", &romf);
 
-        bool res1 = mem.load_rom(path);
+        bool res1 = mem.load_rom(romf.header.rom_base, path);
 
         if (!res1) {
             return false;
@@ -159,6 +156,7 @@ namespace eka2l1 {
 	void system::reset() {
         exit = false;
         emu_screen_driver->reset();
+        hlelibmngr.reset();
 	}
 }
 

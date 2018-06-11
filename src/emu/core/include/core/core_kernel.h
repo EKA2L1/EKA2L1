@@ -20,10 +20,10 @@
 #pragma once
 
 #include <arm/jit_interface.h>
-#include <kernel/kernel_obj.h>
-#include <kernel/scheduler.h>
 #include <kernel/chunk.h>
+#include <kernel/kernel_obj.h>
 #include <kernel/mutex.h>
+#include <kernel/scheduler.h>
 #include <kernel/sema.h>
 #include <kernel/timer.h>
 
@@ -40,6 +40,7 @@ namespace eka2l1 {
     class memory_system;
     class manager_system;
     class io_system;
+    class system;
 
     namespace kernel {
         class thread;
@@ -81,9 +82,13 @@ namespace eka2l1 {
         memory_system *mem;
         hle::lib_manager *libmngr;
         io_system *io;
+        system *sys;
+
+        /* Contains the EPOC version */
+        epocver kern_ver = epocver::epoc9;
 
     public:
-        void init(timing_system *sys, manager_system *mngrsys,
+        void init(system* esys, timing_system *sys, manager_system *mngrsys,
             memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu);
 
         void shutdown();
@@ -102,6 +107,15 @@ namespace eka2l1 {
 
         void unschedule(kernel::uid thread_id) {
             thr_sch->unschedule(thread_id);
+        }
+
+        epocver get_epoc_version() const {
+            return kern_ver;
+        }
+
+        // For user-provided EPOC version
+        void set_epoc_version(const epocver ver) {
+            kern_ver = ver;
         }
 
         kernel::uid next_uid();
@@ -165,4 +179,3 @@ namespace eka2l1 {
         thread_ptr crr_thread();
     };
 }
-

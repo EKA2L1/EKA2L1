@@ -12,8 +12,11 @@ BRIDGE_FUNC(eka2l1::ptr<CConsoleBase>, ConsoleNewL, eka2l1::ptr<TLit> aName, TSi
 
     cons_ptr->iVtable = sys->get_lib_manager()->get_vtable_address("CConsoleBase");
 
+	uint32_t write_ptr6 = cons_ptr->iVtable.ptr_address() + 24;
+
     // Overwrite with our own provide
-    (cons_ptr->iVtable.cast<uint32_t>().get(mem))[6] = 0x802CDCC0;
+        (cons_ptr->iVtable.cast<uint32_t>().get(mem))[6] = write_ptr6;
+	sys->get_lib_manager()->custom_funcs.insert(BRIDGE_REGISTER(write_ptr6, CConsoleBaseAdvanceWrite));
 
     cons_ptr->iConsoleSize = aSize;
 
@@ -82,5 +85,4 @@ const eka2l1::hle::func_map cons_register_funcs = {
 };
 
 const eka2l1::hle::func_map cons_custom_register_funcs = {
-    BRIDGE_REGISTER(0x802CDCC0, CConsoleBaseAdvanceWrite)
 };

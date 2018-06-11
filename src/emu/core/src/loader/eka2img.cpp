@@ -130,8 +130,69 @@ namespace eka2l1 {
             return dll_name;
         }
 
-        bool pe_fix_up_iat(memory *mem, hle::lib_manager &mngr, eka2img_iat &iat) {
-            return false;
+        bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, loader::eka2img &me, eka2img_import_block &import_block, eka2img_iat &iat, uint32_t &crr_idx) {
+            const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
+            const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
+
+            loader::e32img_ptr img = mngr.load_e32img(dll_name);
+            loader::romimg_ptr rimg = mngr.load_romimg(dll_name);
+
+            uint32_t *imdir = &(import_block.ordinals[0]);
+            uint32_t *expdir;
+
+            uint32_t code_start;
+            uint32_t code_end;
+            uint32_t data_start;
+            uint32_t data_end;
+
+            uint32_t code_delta;
+            uint32_t data_delta;
+
+            if (!img && !rimg) {
+                return false;
+            } else {
+                if (img) {
+                    mngr.open_e32img(img);
+
+                    code_start = img->rt_code_addr;
+                    data_start = img->rt_data_addr;
+                    code_end = code_start + img->header.code_size;
+                    data_end = data_start + img->header.data_size;
+
+                    code_delta = img->rt_code_addr - img->header.code_base;
+                    data_delta = img->rt_data_addr - img->header.data_base;
+
+                    expdir = img->ed.syms.data();
+                    
+					for (auto &exp : img->ed.syms) {
+                        if (exp > img->header.data_offset && exp < img->header.data_offset + img->header.data_size)
+                            exp += data_delta;
+                        else
+                            exp += code_delta;
+                    }
+                } else {
+                    mngr.open_romimg(rimg);
+
+                    code_start = rimg->header.code_address;
+                    code_end = code_start + rimg->header.code_size;
+                    data_start = rimg->header.data_address;
+                    data_end = data_start + rimg->header.data_size + rimg->header.bss_size;
+
+                    code_delta = 0;
+                    data_delta = 0;
+
+                    expdir = rimg->exports.data();
+                }
+            }
+
+            for (uint32_t i = crr_idx, j = 0; i < crr_idx + import_block.ordinals.size(), j < import_block.ordinals.size(); i++, j++) {
+                uint32_t iat_off = img->header.code_offset + img->header.code_size;
+                img->data[iat_off + i * 4] = expdir[import_block.ordinals[j] - 1];
+            }
+
+            crr_idx += import_block.ordinals.size();
+
+            return true;
         }
 
         bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, loader::eka2img &me, eka2img_import_block &import_block) {
@@ -167,6 +228,14 @@ namespace eka2l1 {
                     data_delta = img->rt_data_addr - img->header.data_base;
 
                     expdir = img->ed.syms.data();
+
+                    for (auto &exp : img->ed.syms) {
+                        if (exp > img->header.data_offset && exp < img->header.data_offset + img->header.data_size)
+                            exp += data_delta;
+                        else
+                            exp += code_delta;
+                    }
+
                 } else {
                     mngr.open_romimg(rimg);
 
@@ -221,11 +290,11 @@ namespace eka2l1 {
 
         bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             // Create the code + static data chunk
-            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()) , common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
+            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
                 kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
             img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
-                   kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
             LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
             LOG_INFO("Code size: 0x{:x}", img->header.code_size);
@@ -241,17 +310,27 @@ namespace eka2l1 {
             uint32_t data_delta = rtdata_addr - img->header.data_base;
 
             relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.code_offset), code_delta, data_delta);
-      
+
             if (img->header.data_size)
                 relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
+
+            if (img->epoc_ver == epocver::epoc6) {
+                uint32_t track = 0;
+
+                for (auto &ib : img->import_section.imports) {
+                    pe_fix_up_iat(mem, mngr, *img, ib, img->iat, track);
+                }
+            }
 
             memcpy(ptr<void>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
 
             if (img->header.data_size)
                 memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
 
-            for (auto &ib : img->import_section.imports) {
-                elf_fix_up_import_dir(mem, mngr, *img, ib);
+            if (img->epoc_ver == epocver::epoc9) {
+                for (auto &ib : img->import_section.imports) {
+                    elf_fix_up_import_dir(mem, mngr, *img, ib);
+                }
             }
 
             LOG_INFO("Load executable success");
@@ -389,6 +468,7 @@ namespace eka2l1 {
             if ((temp == 0x2000) || (temp == 0x1000)) {
                 // Quick hack to determinate if this is an EKA1
                 img.header.cpu = static_cast<loader::eka2_cpu>(temp);
+                img.epoc_ver = epocver::epoc6;
 
                 ef->read_file(&temp, 1, 4);
                 ef->read_file(&temp, 1, 4);
@@ -418,6 +498,8 @@ namespace eka2l1 {
 
                 img.header.compression_type = 1;
             } else {
+                img.epoc_ver = epocver::epoc9;
+
                 ef->seek(0, file_seek_mode::beg);
                 ef->read_file(&img.header, 1, sizeof(eka2img_header));
             }
@@ -566,8 +648,9 @@ namespace eka2l1 {
         }
 
         bool load_eka2img(eka2img &img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            if (img.header.uid1 == loader::eka2_img_type::dll) {
+            }
             return import_exe_image(&img, mem, kern, mngr);
         }
     }
 }
-
