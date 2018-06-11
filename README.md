@@ -29,3 +29,6 @@
 - Information and contact
     * You can contact me through Discord channel [here](https://discord.gg/5Bm5SJ9)
     
+- Support
+    * You can contribute to the codebase by submitting the PR. Please visit the wiki to know about the coding convention first ;)
+    * You can also support me on [Patreon](https://www.patreon.com/fewdspuck)
