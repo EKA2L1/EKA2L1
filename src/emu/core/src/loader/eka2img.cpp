@@ -474,14 +474,16 @@ namespace eka2l1 {
                 } else if (ctype == compress_type::byte_pair_c) {
                     auto crr_pos = ef->tell();
 
-                    std::vector<char> temp(ef->size() - crr_pos);
+                    std::vector<char> temp(ef->size() - img.header.code_offset);
+                    ef->seek(img.header.code_offset, file_seek_mode::beg);
+
                     ef->read_file(temp.data(), 1, temp.size());
 
                     FILE *tempfile = fopen("bytepairTemp.seg", "wb");
                     fwrite(temp.data(), 1, temp.size(), tempfile);
                     fclose(tempfile);
 
-                    common::ibytepair_stream bpstream("bytepairTemp.seg", img.header.code_offset);
+                    common::ibytepair_stream bpstream("bytepairTemp.seg", 0);
 
                     auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
                     auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
