@@ -134,6 +134,8 @@ namespace eka2l1 {
         }
 
         bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, loader::eka2img &me, eka2img_import_block &import_block) {
+            LOG_INFO("Fixup for: {}", import_block.dll_name);
+
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
 
@@ -152,6 +154,7 @@ namespace eka2l1 {
             uint32_t data_delta;
 
             if (!img && !rimg) {
+                LOG_WARN("Can't find image or rom image for: {}", dll_name8);
                 return false;
             } else {
                 if (img) {
@@ -199,7 +202,7 @@ namespace eka2l1 {
                     auto sid = mngr.get_sid(export_addr);
 
                     if (sid) {
-                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}",
+                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}",
                             export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off);
                     }
 

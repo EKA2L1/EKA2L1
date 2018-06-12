@@ -9,7 +9,7 @@ object MainForm: TMainForm
   Menu = MainMenu
   OnClose = FormClose
   OnCreate = FormCreate
-  LCLVersion = '1.8.4.0'
+  LCLVersion = '1.8.2.0'
   object AppList: TStringGrid
     Left = 0
     Height = 560

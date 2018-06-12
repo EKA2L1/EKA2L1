@@ -122,7 +122,13 @@ procedure TSymThread.Execute;
 var res: Boolean;
 begin
   ESym.Reset;
-  ESym.Load(id);
+
+  if (ESym.Load(id) < 0) then
+  begin
+     ShowMessage('Unable to load app with id: 0x' + HexStr(QWord(id), 8) +'. App maybe corrupted or do not exist');
+     exit;
+  end;
+
   ESym.Loop;
 
   OneRun:=false;
@@ -201,6 +207,7 @@ begin
   begin
     RomPath := OpenDialog.Filename;
     ESym.LoadRom(RomPath);
+    ShowMessage('Success installing the ROM!');
     SaveConfig;
   end;
 end;
