@@ -1,6 +1,7 @@
 add_library(coreloader
 	${CORE_INCLUDE_DIR}/loader/sis_fields.h
 	${CORE_INCLUDE_DIR}/loader/sis.h
+	${CORE_INCLUDE_DIR}/loader/sis_old.h
 	${CORE_INCLUDE_DIR}/loader/sis_script_interpreter.h
 	${CORE_INCLUDE_DIR}/loader/eka2img.h
     ${CORE_INCLUDE_DIR}/loader/romimage.h
@@ -8,11 +9,12 @@ add_library(coreloader
 	eka2img.cpp
 	sis.cpp
 	sis_fields.cpp
+    sis_old.cpp
     sis_script_interpreter.cpp
     romimage.cpp
 	rom.cpp)
 
-target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp hle) 
+target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp hle coreio) 
 
 #if(WIN32)
 #	target_include_directories(coreloader PRIVATE ${LIBCXXABI_INCLUDE_DIR})

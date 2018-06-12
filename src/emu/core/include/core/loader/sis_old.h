@@ -1,10 +1,15 @@
 #pragma once
 
+#include <common/types.h>
+
 #include <cstdint>
 #include <optional>
+#include <vector>
 
 namespace eka2l1 {
     namespace loader {
+        class io_system;
+
         enum class epoc_sis_type {
             epocu6 = 0x1000006D,
             epoc6 = 0x10003A12
@@ -70,7 +75,7 @@ namespace eka2l1 {
             sended
         };
 
-        struct sis_old_file {
+        struct sis_old_file_record {
             uint32_t file_record_type;
             uint32_t file_type;
             uint32_t file_details;
@@ -84,5 +89,21 @@ namespace eka2l1 {
             uint32_t mime_type_len;
             uint32_t mine_type_ptr;
         };
+
+        struct sis_old_file {
+            sis_old_file_record record;
+            std::u16string name;
+            std::u16string dest;
+        };
+
+        struct sis_old {
+            epocver epoc_ver;
+
+            sis_old_header header;
+            std::vector<sis_old_file> files;
+        };
+
+        std::optional<sis_old> parse_sis_old(const std::string path);
+        int install_sis_old(io_system *io, sis_old& old_file, uint8_t drive);
     }
 }
