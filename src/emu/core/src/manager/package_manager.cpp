@@ -324,7 +324,7 @@ namespace eka2l1 {
             install_controller(&res.controller, drive);
 
             // Interpret the file
-            loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ifstream::binary),
+            loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ios::binary),
                 io,
                 this,
                 res.controller.install_block,

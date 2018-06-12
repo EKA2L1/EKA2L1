@@ -88,7 +88,7 @@ namespace eka2l1 {
             sis_install_block inst_blck,
             sis_data inst_data,
             sis_drive inst_drv)
-            : data_stream(stream)
+            : data_stream(std::move(stream))
             , mngr(pkgmngr)
             , io(io)
             , install_block(inst_blck)
@@ -112,12 +112,15 @@ namespace eka2l1 {
                 }
 
                 LOG_ERROR("Inflate failed description: {}", mz_error(res));
-                *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
+
+                if (out_size)
+                     *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
 
                 return false;
             };
 
-            *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
+            if (out_size)
+                *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
             return true;
         }
 
@@ -130,8 +133,12 @@ namespace eka2l1 {
 
             compressed.compressed_data.resize(us);
 
-            data_stream->seekg(compressed.offset);
+            data_stream->seekg(compressed.offset, std::ios::beg);
             data_stream->read(reinterpret_cast<char *>(compressed.compressed_data.data()), us);
+           
+            if (data_stream->eof()) {
+                data_stream->clear();
+            }
 
             if (compressed.algorithm == sis_compressed_algorithm::none) {
                 return compressed.compressed_data;
@@ -181,7 +188,9 @@ namespace eka2l1 {
             uint32_t us = ((compressed.len_low) | (compressed.len_high << 31)) - 4;
             compressed.compressed_data.resize(us);
 
-            data_stream->seekg(compressed.offset);
+            data_stream->setf(std::ios::binary);
+
+            data_stream->seekg(compressed.offset, std::ios::beg);
 
             std::vector<unsigned char> temp_chunk;
             temp_chunk.resize(CHUNK_SIZE);
@@ -208,13 +217,21 @@ namespace eka2l1 {
 
                 data_stream->read(reinterpret_cast<char *>(temp_chunk.data()), grab);
 
+                if (data_stream->eof()) {
+                    data_stream->clear();
+                } else if (data_stream->fail()) {
+                    LOG_ERROR("Stream fail, skipping this file, should report to developers.");
+                    return;
+                }
+
                 if (compressed.algorithm == sis_compressed_algorithm::deflated) {
                     uint32_t inflated_size = 0;
 
                     auto res = inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
 
                     if (!res) {
-                        LOG_ERROR("Uncompress failed!");
+                        LOG_ERROR("Uncompress failed! Report to developers");
+                        return;
                     }
 
                     fwrite(temp_inflated_chunk.data(), 1, inflated_size, file);
