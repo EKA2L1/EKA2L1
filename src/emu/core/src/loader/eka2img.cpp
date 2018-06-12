@@ -59,7 +59,6 @@ namespace eka2l1 {
         // Write simple relocation
         // Symbian only used this, as found on IDA
         bool write(uint32_t *data, uint32_t sym) {
-            LOG_TRACE("Original data: 0x{:x}, new data: 0x{:x}", *data, sym);
             *data = sym;
             return true;
         }
