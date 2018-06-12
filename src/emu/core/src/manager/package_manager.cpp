@@ -311,16 +311,16 @@ namespace eka2l1 {
 
                     if (slash_pos != std::u16string::npos) {
                         info.executable_name = info.executable_name.substr(slash_pos + 1);
-
-                        break;
                     }
                 }
             }
 
             if (info.drive == 0) {
                 c_apps.insert(std::make_pair(ruid, info));
+                c_apps[ruid] = info;
             } else {
                 e_apps.insert(std::make_pair(ruid, info));
+                e_apps[ruid] = info;
             }
 
             for (auto &wrap_mini_ctrl : ctrl->install_block.controllers.fields) {

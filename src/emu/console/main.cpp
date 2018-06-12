@@ -150,6 +150,8 @@ void do_args() {
         } else {
             std::cout << "Install failed" << std::endl;
         }
+
+        quit = true;
     }
 }
 
