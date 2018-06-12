@@ -20,16 +20,21 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <loader/sis_fields.h>
+#include <loader/sis_old.h>
 
 #include <string>
 #include <vector>
 
 #include <cstdint>
+#include <optional>
 
 namespace eka2l1 {
     namespace loader {
+        // Identify epoc version from the SIS
+        std::optional<epocver> get_epoc_ver(std::string path);
         sis_contents parse_sis(std::string path);
     }
 }
-

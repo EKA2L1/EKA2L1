@@ -42,6 +42,7 @@ enum class prot {
 };
 
 enum class epocver {
+    epocu6,
     epoc6,
     epoc9
 };
