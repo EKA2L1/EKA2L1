@@ -361,6 +361,8 @@ namespace eka2l1 {
                 loader::sis_old res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
                 std::u16string main_path = res.app_path ? *res.app_path : (res.exe_path ? *res.exe_path : u"");
 
+                std::transform(main_path.begin(), main_path.end(), main_path.begin(), std::tolower);
+
                 if (main_path != u"") {
                     app_info info;
 
@@ -399,9 +401,13 @@ namespace eka2l1 {
                             dest.replace(0, 1, (info.drive == 0) ? u"c" : u"e");
                         }
 
-                        std::string rp = eka2l1::file_directory(io->get(common::ucs2_to_utf8(dest)));
-                        eka2l1::create_directories(rp);
-
+                        if (file.record.file_type != 1 && dest != u"") {
+                            std::string rp = eka2l1::file_directory(io->get(common::ucs2_to_utf8(dest)));
+                            eka2l1::create_directories(rp);
+                        } else {
+                            continue;
+                        }
+                        
                         symfile f = io->open_file(dest, WRITE_MODE | BIN_MODE);
 
                         size_t left = file.record.len;

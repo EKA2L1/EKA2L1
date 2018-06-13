@@ -36,11 +36,11 @@ namespace eka2l1 {
 
                 fread(old_file.dest.data(), 2, old_file_record.des_name_len / 2, f);
 
-                if (old_file.dest.find(u".app") != std::u16string::npos) {
+                if (old_file.dest.find(u".app") != std::u16string::npos || old_file.dest.find(u".APP") != std::u16string::npos) {
                     sold.app_path = old_file.dest;
                 }
 
-                if (old_file.dest.find(u".exe") != std::u16string::npos) {
+                if (old_file.dest.find(u".exe") != std::u16string::npos || old_file.dest.find(u".EXE") != std::u16string::npos) {
                     sold.exe_path = old_file.dest;
                 }
 
