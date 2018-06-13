@@ -7,9 +7,9 @@
 #include <vector>
 
 namespace eka2l1 {
-    namespace loader {
-        class io_system;
+    class io_system;
 
+    namespace loader {
         enum class epoc_sis_type {
             epocu6 = 0x1000006D,
             epoc6 = 0x10003A12

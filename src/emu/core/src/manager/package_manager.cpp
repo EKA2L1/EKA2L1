@@ -380,6 +380,7 @@ namespace eka2l1 {
 
         std::string package_manager::get_app_executable_path(uint32_t uid) {
             app_info inf = info(uid);
+
             std::string res = (inf.drive == 0) ? "C:" : "E:";
             res += "/sys/bin/";
             res += common::ucs2_to_utf8(inf.executable_name);
