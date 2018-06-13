@@ -17,12 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include <abi/eabi.h>
 #include <epoc9/allocator.h>
 #include <epoc9/base.h>
-#include <epoc9/mem.h>
 #include <epoc9/err.h>
+#include <epoc9/mem.h>
 #include <epoc9/user.h>
-#include <abi/eabi.h>
 
 #include <hle/vtab_lookup.h>
 
@@ -38,7 +38,7 @@ RHeapAdvance NewHeap(eka2l1::system *sys, eka2l1::hle::lib_manager *mngr, eka2l1
     heap.iAlign = align;
     heap.iBlocks = (uint64_t)(&current_local_data(sys).blocks); // I am very concerned when using this, but neh
 
-    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock>*>(heap.iBlocks);
+    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock> *>(heap.iBlocks);
 
     SBlock blck;
     blck.block_ptr = heap.iBase.ptr_address();
@@ -66,7 +66,6 @@ BRIDGE_FUNC(TInt, RAllocatorOpen, eka2l1::ptr<RAllocator> aAllocator) {
     return KErrNone;
 }
 
-
 BRIDGE_FUNC(void, RAllocatorClose, eka2l1::ptr<RAllocator> aAllocator) {
     RAllocator *allocator = aAllocator.get(sys->get_memory_system());
 
@@ -92,7 +91,7 @@ BRIDGE_FUNC(void, RAllocatorDoClose, eka2l1::ptr<RAllocator> aAllocator) {
         return;
     }
 
-    TInt* handles = allocator->iHandles.get(sys->get_memory_system());
+    TInt *handles = allocator->iHandles.get(sys->get_memory_system());
 
     for (uint32_t i = 0; i < allocator->iHandleCount; i++) {
         RHandleBase handleBase;
@@ -106,8 +105,8 @@ using namespace eka2l1;
 BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize) {
     kernel_system *kern = sys->get_kernel_system();
 
-    RHeapAdvance *heap_adv = reinterpret_cast<RHeapAdvance*>(aHeap.get(sys->get_memory_system()));
-    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock>*>(heap_adv->iBlocks);
+    RHeapAdvance *heap_adv = reinterpret_cast<RHeapAdvance *>(aHeap.get(sys->get_memory_system()));
+    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock> *>(heap_adv->iBlocks);
     chunk_ptr chnk = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(heap_adv->iChunkHandle));
 
     if (chnk == nullptr) {
@@ -174,23 +173,44 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize)
 BRIDGE_FUNC(void, RHeapFree, eka2l1::ptr<RHeap> aHeap, ptr<TAny> aPtr) {
     kernel_system *kern = sys->get_kernel_system();
 
-    RHeapAdvance *heap_adv = reinterpret_cast<RHeapAdvance*>(aHeap.get(sys->get_memory_system()));
-    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock>*>(heap_adv->iBlocks);
+    RHeapAdvance *heap_adv = reinterpret_cast<RHeapAdvance *>(aHeap.get(sys->get_memory_system()));
+    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock> *>(heap_adv->iBlocks);
 
-    auto& res = std::find_if(blocks.begin(), blocks.end(),
+    auto &res = std::find_if(blocks.begin(), blocks.end(),
         [&](SBlock blck) { return blck.block_ptr.ptr_address() == aPtr.ptr_address(); });
 
     if (res == blocks.end()) {
-        LOG_WARN("Free a undenifed cell.");
+        LOG_WARN("Free an undenifed cell.");
         return;
     }
 
     auto idx = res - blocks.begin();
 
     blocks[idx].free = true;
-    
+
     heap_adv->iTotalAllocSize -= res->size;
     heap_adv->iCellCount -= 1;
+}
+
+BRIDGE_FUNC(TInt, RHeapAllocLen, eka2l1::ptr<RHeap> aHeap, eka2l1::ptr<TAny> aPtr) {
+    kernel_system *kern = sys->get_kernel_system();
+    RHeapAdvance *heap_adv = reinterpret_cast<RHeapAdvance *>(aHeap.get(sys->get_memory_system()));
+
+    std::vector<SBlock> &blocks = *reinterpret_cast<std::vector<SBlock> *>(heap_adv->iBlocks);
+
+    auto &res = std::find_if(blocks.begin(), blocks.end(),
+        [&](SBlock blck) { return blck.block_ptr.ptr_address() == aPtr.ptr_address(); });
+
+    if (res == blocks.end()) {
+        LOG_WARN("Get size of an undenifed cell.");
+        return -1;
+    }
+
+    auto idx = res - blocks.begin();
+
+    LOG_INFO("Block size: {}", blocks[idx].size);
+
+    return blocks[idx].size;
 }
 
 BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZ, eka2l1::ptr<RHeap> aHeap, TInt aSize) {
@@ -219,7 +239,6 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAllocZL, eka2l1::ptr<RHeap> aHeap, TInt aSiz
 }
 
 BRIDGE_FUNC(void, RAllocatorDbgMarkStart, eka2l1::ptr<RAllocator> aAllocator) {
-
 }
 
 const eka2l1::hle::func_map allocator_register_funcs = {
@@ -229,4 +248,5 @@ const eka2l1::hle::func_map allocator_register_funcs = {
     BRIDGE_REGISTER(2261851716, RAllocatorDbgMarkStart),
     BRIDGE_REGISTER(2899467538, RHeapFree),
     BRIDGE_REGISTER(179745759, RHeapAlloc),
+    BRIDGE_REGISTER(2270157428, RHeapAllocLen)
 };

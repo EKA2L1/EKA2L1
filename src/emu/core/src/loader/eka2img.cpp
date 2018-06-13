@@ -139,8 +139,13 @@ namespace eka2l1 {
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
 
-            loader::e32img_ptr img = mngr.load_e32img(dll_name);
             loader::romimg_ptr rimg = mngr.load_romimg(dll_name);
+            loader::e32img_ptr img;
+
+            if (!rimg) {
+                img = mngr.load_e32img(dll_name);
+            }
+
 
             uint32_t *imdir = &(import_block.ordinals[0]);
             uint32_t *expdir;

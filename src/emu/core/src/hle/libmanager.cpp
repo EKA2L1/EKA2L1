@@ -139,8 +139,7 @@ namespace eka2l1 {
                         LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}]", func_names[libids[i]], addrs[i], libids[i]);
                     }
                 }
-            }
-            else {
+            } else {
                 LOG_WARN("Can't find SID database for: {}", common::ucs2_to_utf8(lib_name));
             }
 
@@ -160,7 +159,17 @@ namespace eka2l1 {
         // Images are searched in
         // C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
         loader::e32img_ptr lib_manager::load_e32img(const std::u16string &img_name) {
-            symfile img = io->open_file(img_name, READ_MODE | BIN_MODE);
+            symfile img;
+
+            // It's a full path
+            if (img_name.find(u":") == 1) {
+                img = io->open_file(img_name, READ_MODE | BIN_MODE);
+
+                if (!img) {
+                    return nullptr;
+                }
+            }
+
             bool xip = false;
             bool is_rom = false;
             std::u16string path;
@@ -173,14 +182,10 @@ namespace eka2l1 {
                     img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
                     if (!img) {
-                        img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
-
-                        if (!img) {
-                            return loader::e32img_ptr(nullptr);
-                        } else {
-                            xip = true;
-                            is_rom = true;
-                        }
+                        return loader::e32img_ptr(nullptr);
+                    } else {
+                        xip = true;
+                        is_rom = true;
                     }
                 }
             }
