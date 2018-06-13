@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <common/types.h>
+
 #include <map>
 #include <string>
 #include <vector>
