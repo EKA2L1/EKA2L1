@@ -112,10 +112,70 @@ BRIDGE_FUNC(void, UserUnmarkCleanupStack, eka2l1::ptr<TAny> aTrapHandler) {
 
 }
 
+BRIDGE_FUNC(TInt, UserParameterLength, TInt aSlot) {
+    kernel_system *kern = sys->get_kernel_system();
+    process_ptr pr = kern->get_process(kern->crr_process());
+
+    if (aSlot >= 16 || aSlot < 0) {
+        LOG_ERROR("User requested parameter slot is not available (slot: {} >= 16 or < 0)", aSlot);
+        UserExit(sys, 51);
+
+        return KErrGeneral;
+    }
+
+    auto slot = *pr->get_arg_slot(aSlot);
+
+    if (slot.data_size == 0) {
+        return KErrNotFound;
+    }
+
+    return slot.data_size;
+}
+
+BRIDGE_FUNC(TInt, UserCommandLineLength) {
+    kernel_system *kern = sys->get_kernel_system();
+    process_ptr pr = kern->get_process(kern->crr_process());
+
+    size_t total = 0;
+
+    for (size_t i = 0; i < 16; i++) {
+        if (pr->get_arg_slot(i)->data_size != 0) {
+            total++;
+        }
+    }
+
+    return static_cast<TInt>(total);
+}
+
+BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val) {
+    kernel_system *kern = sys->get_kernel_system();
+    process_ptr pr = kern->get_process(kern->crr_process());
+
+    if (aSlot >= 16 || aSlot < 0) {
+        LOG_ERROR("User requested parameter slot is not available (slot: {} >= 16 or < 0)", aSlot);
+        UserExit(sys, 51);
+
+        return KErrGeneral;
+    }
+
+    auto slot = *pr->get_arg_slot(aSlot);
+
+    if (slot.data_size == 0) {
+        return KErrNotFound;
+    }
+
+    *val.get(sys->get_memory_system()) = pr->get_arg_slot(aSlot)->data;
+
+    return KErrNone;
+}
+
 const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3511550552, UserIsRomAddress),
     BRIDGE_REGISTER(3037667387, UserExit),
     BRIDGE_REGISTER(3475190555, UserPanic),
     BRIDGE_REGISTER(3108163311, UserInitProcess),
-    BRIDGE_REGISTER(1932818422, UserDbgMarkStart)
+    BRIDGE_REGISTER(1932818422, UserDbgMarkStart),
+    BRIDGE_REGISTER(3656744374, UserParameterLength),
+    BRIDGE_REGISTER(77871723, UserCommandLineLength),
+    BRIDGE_REGISTER(3535789199, UserGetTIntParameter)
 };

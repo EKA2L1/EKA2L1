@@ -33,6 +33,23 @@ namespace eka2l1 {
             nullptr, kernel::priority_normal);
     }
 
+    void process::set_arg_slot(uint8_t slot, uint32_t data, size_t data_size) {
+        if (slot >= 16) {
+            return;
+        }
+
+        args[slot].data = data;
+        args[slot].data_size = data_size;
+    }
+
+    std::optional<pass_arg> process::get_arg_slot(uint8_t slot) {
+        if (slot >= 16) {
+            return std::optional<pass_arg>{};
+        }
+
+        return args[slot];
+    }
+
     bool process::stop() {
         prthr->stop();
         kern->close_thread(prthr->unique_id());

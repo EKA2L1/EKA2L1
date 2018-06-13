@@ -92,6 +92,10 @@ namespace eka2l1 {
             return thr_sch;
         }
 
+        process_ptr get_process(uint32_t uid) {
+            return processes[uid];
+        }
+
         void reschedule() {
             thr_sch->reschedule();
         }

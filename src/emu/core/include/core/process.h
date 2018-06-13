@@ -38,6 +38,11 @@ namespace eka2l1 {
 
     using thread_ptr = std::shared_ptr<kernel::thread>;
 
+    struct pass_arg {
+        uint32_t data = 0;
+        size_t data_size = 0;
+    };
+
     class process {
         uint32_t uid;
         std::string process_name;
@@ -49,6 +54,7 @@ namespace eka2l1 {
         memory_system *mem;
 
         std::vector<thread_ptr> own_threads;
+        std::array<pass_arg, 16> args;
 
     public:
         process() = default;
@@ -63,7 +69,8 @@ namespace eka2l1 {
             return img;
         }
 
-        
+        void set_arg_slot(uint8_t slot, uint32_t data, size_t data_size);
+        std::optional<pass_arg> get_arg_slot(uint8_t slot);
 
         // Create a new thread and run
         // No arguments provided

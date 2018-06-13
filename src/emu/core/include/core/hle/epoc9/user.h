@@ -44,5 +44,6 @@ BRIDGE_FUNC(void, UserSetTrapHandler, eka2l1::ptr<TAny> aPtr);
 BRIDGE_FUNC(eka2l1::ptr<TAny>, UserTrapHandler);
 BRIDGE_FUNC(eka2l1::ptr<TAny>, UserMarkCleanupStack);
 BRIDGE_FUNC(void, UserUnmarkCleanupStack, eka2l1::ptr<TAny>);
+BRIDGE_FUNC(TInt, UserParameterLength, TInt aSlot);
 
 extern const eka2l1::hle::func_map user_register_funcs;
