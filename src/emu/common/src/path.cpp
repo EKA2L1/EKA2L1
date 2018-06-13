@@ -88,7 +88,7 @@ namespace eka2l1 {
 
         // Turn all slash into / (quick hack)
 
-        int crr_point = 0;
+        size_t crr_point = 0;
         char dsep = 0;
         char rsep = get_separator(symbian_use);
 
@@ -257,7 +257,7 @@ namespace eka2l1 {
             return fn;
         }
 
-        for (uint32_t i = path.length() - 1; i >= 0; i--) {
+        for (size_t i = path.length() - 1; i >= 0; i--) {
             if (is_separator(path[i])) {
                 break;
             }

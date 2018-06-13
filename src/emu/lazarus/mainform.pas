@@ -6,25 +6,26 @@ interface
 
 uses
   Classes, SysUtils, Forms, Dialogs, Menus,
-  Grids, Controls, StrUtils, symbian, DvcMapping, XMLRead,
-  XMLWrite, DOM, JsonConf, LCLType;
+  Grids, Controls, StrUtils, symbian, DvcMapping,
+  DOM, JsonConf, LCLType, InstallDialog, SyncObjs;
 
 type
 
   { TMainForm }
 
   TMainForm = class(TForm)
-    AppList: TStringGrid;
     MainMenu: TMainMenu;
     FileMenu: TMenuItem;
     EditMenu: TMenuItem;
     InstallSISOption: TMenuItem;
     InstallROMOption: TMenuItem;
     DeviceMappingOption: TMenuItem;
-    MenuItem1: TMenuItem;
+    RefreshOption: TMenuItem;
     OpenDialog: TOpenDialog;
     QuitOption: TMenuItem;
-    FileMenuSep1: TMenuItem;
+    FileMenuSep1: TMenuItem;       
+
+    AppList: TStringGrid;
 
     procedure AppListButtonClick(Sender: TObject; aCol, aRow: integer);
     procedure AppListDblClick(Sender: TObject);
@@ -40,6 +41,7 @@ type
     procedure InstallROMOptionClick(Sender: TObject);
     procedure InstallSISOptionClick(Sender: TObject);
     procedure QuitOptionClick(Sender: TObject);
+    procedure RefreshOptionClick(Sender: TObject);
     procedure InitAppList;
   end;
 
@@ -56,17 +58,20 @@ type
 
 var
   EMainForm: TMainForm;
-  ESym: TSymbian;
   CMapPath: ansistring;
   EMapPath: ansistring;
   RomPath: ansistring;
   Doc: TXMLDocument;
   oneRun: Boolean;
+  cs: TCriticalSection;
 
 function GetNode(AppendTo: TDOMNode; Name: ansistring): TDomNode;
 function GetTextNode(Name: ansistring): TDomNode;
 procedure SaveConfig;
 procedure LoadConfig;
+
+procedure InitGameCS;
+procedure DeinitGameCS;
 
 implementation
 
@@ -112,26 +117,48 @@ begin
   SaveConfig;
 end;
 
+procedure InitGameCS;
+begin
+  cs := TCriticalSection.Create;
+end;
+
+procedure DeinitGameCS;
+begin
+  cs.Destroy;
+end;
+
 constructor TSymThread.Create(CreateSus: boolean);
 begin
   inherited Create(CreateSus);
   FreeOnTerminate := true;
+
+  cs := TCriticalSection.Create;
 end;
 
 procedure TSymThread.Execute;
 var res: Boolean;
 begin
-  ESym.Reset;
+  cs.Acquire;
 
-  if (ESym.Load(id) < 0) then
-  begin
-     ShowMessage('Unable to load app with id: 0x' + HexStr(QWord(id), 8) +'. App maybe corrupted or do not exist');
-     exit;
+  try
+    ESym.Reset;
+
+    if (ESym.Load(id) < 0) then
+    begin
+       ShowMessage('Unable to load app with id: 0x' + HexStr(QWord(id), 8) +'. App maybe corrupted or do not exist');
+       exit;
+    end;
+
+    try
+      ESym.Loop;
+    except
+      on E: Exception do ShowMessage('An exception throwed with message: ' + E.Message + '. You can create an issue with log.');
+    end;
+
+    OneRun:=false;
+  finally
+    cs.Release;
   end;
-
-  ESym.Loop;
-
-  OneRun:=false;
 end;
 
 procedure TMainForm.InitAppList;
@@ -157,7 +184,16 @@ begin
   Self.OnConstrainedResize := @FormConstrainedResize;
 
   ESym := TSymbian.Create;
-  ESym.Init;
+
+  try
+     ESym.Init;
+  except
+     on E: Exception do
+     begin
+       ShowMessage('Emulator system initialization failed. Make sure no other apps on the log and requirements are met');
+       Close;
+     end;
+  end;
 
   LoadConfig;
   InitAppList;
@@ -214,27 +250,16 @@ end;
 
 procedure TMainForm.InstallSISOptionClick(Sender: TObject);
 var
-  SisFile: ansistring;
+  InstallDlg: TInstallForm;
 begin
   if (OpenDialog.Execute) then
   begin
-    SisFile := OpenDialog.Filename;
-    if MessageDlg('Drive', 'Yes for C:, No for E:',
-       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-      if (ESym.InstallSIS(0, SisFile)) then
-      begin
-        ShowMessage('Success!');
-        InitAppList;
-      end;
-    end else
-    begin
-      if (ESym.InstallSIS(1, SisFile)) then
-      begin
-        ShowMessage('Success!');
-        InitAppList;
-      end;
-    end;
+     try
+        InstallForm.Init(ESym, OpenDialog.Files);
+        InstallForm.Show;
+        InstallForm.Install;
+     finally
+     end;
   end;
 end;
 
@@ -291,7 +316,6 @@ end;
 procedure TMainForm.DeviceMappingOptionClick(Sender: TObject);
 var
   DeviceMapperForm: TDeviceMapper;
-  DeviceNode, CNode, TextCNode, ENode, TextENode: TDomNode;
 begin
   DeviceMapperForm := TDeviceMapper.Create(nil);
 
@@ -317,6 +341,11 @@ procedure TMainForm.QuitOptionClick(Sender: TObject);
 begin
   SaveConfig;
   Close;
+end;
+
+procedure TMainForm.RefreshOptionClick(Sender: TObject);
+begin
+  InitAppList;
 end;
 
 end.

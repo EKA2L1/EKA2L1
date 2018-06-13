@@ -1,15 +1,16 @@
 object MainForm: TMainForm
-  Left = 142
+  Left = 193
   Height = 583
-  Top = 139
-  Width = 836
+  Top = 120
+  Width = 837
+  AutoSize = True
   Caption = 'EKA2L1'
   ClientHeight = 563
-  ClientWidth = 836
+  ClientWidth = 837
   Menu = MainMenu
   OnClose = FormClose
   OnCreate = FormCreate
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '1.8.4.0'
   object AppList: TStringGrid
     Left = 0
     Height = 560
@@ -66,12 +67,16 @@ object MainForm: TMainForm
         Caption = '&Device Mapping'
         OnClick = DeviceMappingOptionClick
       end
-      object MenuItem1: TMenuItem
-        Caption = '&Function Database'
+      object RefreshOption: TMenuItem
+        Caption = '&Refresh'
+        ShortCut = 116
+        OnClick = RefreshOptionClick
       end
     end
   end
   object OpenDialog: TOpenDialog
+    Filter = 'Symbian Package|*.sis;*.sisx'
+    Options = [ofAllowMultiSelect, ofEnableSizing, ofViewDetail]
     left = 744
     top = 480
   end

@@ -1,24 +1,24 @@
 object DeviceMapper: TDeviceMapper
-  Left = 1228
+  Left = 639
   Height = 262
-  Top = 221
+  Top = 223
   Width = 400
   Caption = 'Device Mapping'
   ClientHeight = 262
   ClientWidth = 400
-  DesignTimePPI = 120
-  LCLVersion = '1.8.2.0'
+  OnCreate = FormCreate
+  LCLVersion = '1.8.4.0'
   object CLabel: TLabel
     Left = 28
-    Height = 20
+    Height = 15
     Top = 35
-    Width = 12
+    Width = 11
     Caption = 'C:'
     ParentColor = False
   end
   object CPathEdit: TEdit
     Left = 59
-    Height = 28
+    Height = 23
     Top = 32
     Width = 237
     TabOrder = 0
@@ -34,15 +34,15 @@ object DeviceMapper: TDeviceMapper
   end
   object ELabel: TLabel
     Left = 28
-    Height = 20
+    Height = 15
     Top = 88
-    Width = 11
+    Width = 9
     Caption = 'E:'
     ParentColor = False
   end
   object EPathEdit: TEdit
     Left = 59
-    Height = 28
+    Height = 23
     Top = 88
     Width = 237
     TabOrder = 2

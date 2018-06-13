@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls;
+  ExtCtrls, JsonConf;
 
 type
 
@@ -26,6 +26,7 @@ type
     procedure Button1Click(Sender: TObject);
     procedure CPathBrowseClick(Sender: TObject);
     procedure EPathBrowseClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);    
 
   private
@@ -67,6 +68,20 @@ begin
   begin
     EPath := SelectDirDialog.FileName;
     EPathEdit.Text := EPath;
+  end;
+end;
+
+procedure TDeviceMapper.FormCreate(Sender: TObject);
+var c: TJsonConfig;
+begin
+  c := TJSONConfig.Create(nil);
+  try
+     c.Filename := 'config.json';
+
+     CPathEdit.Text := ExtractFilePath(c.GetValue('cmap','drives/c/'));
+     EPathEdit.Text := ExtractFilePath(c.GetValue('emap', 'drives/e/'));
+  finally
+    c.Free;
   end;
 end;
 
