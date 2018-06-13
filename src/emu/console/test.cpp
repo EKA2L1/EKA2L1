@@ -27,8 +27,7 @@ int main() {
 
     loop_system(sys);
 
-    shutdown_symbian_system(sys);*/
->>>>>>> master
+    shutdown_symbian_system(sys);
 
     return 0;
 }
