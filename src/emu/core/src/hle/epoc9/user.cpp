@@ -44,7 +44,9 @@ BRIDGE_FUNC(void, UserPanic, ptr<TDesC16> aReasonMsg, TInt aCode) {
 
     TDesC16 *des = aReasonMsg.get(mem);
     TUint16 *reason = GetTDes16Ptr(sys, des);
-    LOG_WARN("User paniced from HLE side with message: {}, code: {}", common::ucs2_to_utf8(std::u16string(reason, reason + des->iLength)), aCode);
+    LOG_WARN("User paniced from HLE side with message: {}, code: {}", common::ucs2_to_utf8(std::u16string(reason, reason + (des->iLength & 0xfffffff))), aCode);
+
+    UserExit(sys, aCode);
 }
 
 const TInt KModuleEntryReasonProcessDetach = 3;

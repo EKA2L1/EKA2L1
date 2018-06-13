@@ -59,7 +59,6 @@ namespace eka2l1 {
         // Write simple relocation
         // Symbian only used this, as found on IDA
         bool write(uint32_t *data, uint32_t sym) {
-            LOG_TRACE("Original data: 0x{:x}, new data: 0x{:x}", *data, sym);
             *data = sym;
             return true;
         }
@@ -196,11 +195,18 @@ namespace eka2l1 {
         }
 
         bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, loader::eka2img &me, eka2img_import_block &import_block) {
+            LOG_INFO("Fixup for: {}", import_block.dll_name);
+
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
 
-            loader::e32img_ptr img = mngr.load_e32img(dll_name);
             loader::romimg_ptr rimg = mngr.load_romimg(dll_name);
+            loader::e32img_ptr img;
+
+            if (!rimg) {
+                img = mngr.load_e32img(dll_name);
+            }
+
 
             uint32_t *imdir = &(import_block.ordinals[0]);
             uint32_t *expdir;
@@ -214,6 +220,7 @@ namespace eka2l1 {
             uint32_t data_delta;
 
             if (!img && !rimg) {
+                LOG_WARN("Can't find image or rom image for: {}", dll_name8);
                 return false;
             } else {
                 if (img) {
@@ -269,7 +276,7 @@ namespace eka2l1 {
                     auto sid = mngr.get_sid(export_addr);
 
                     if (sid) {
-                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}",
+                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}",
                             export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off);
                     }
 
@@ -554,14 +561,16 @@ namespace eka2l1 {
                 } else if (ctype == compress_type::byte_pair_c) {
                     auto crr_pos = ef->tell();
 
-                    std::vector<char> temp(ef->size() - crr_pos);
+                    std::vector<char> temp(ef->size() - img.header.code_offset);
+                    ef->seek(img.header.code_offset, file_seek_mode::beg);
+
                     ef->read_file(temp.data(), 1, temp.size());
 
                     FILE *tempfile = fopen("bytepairTemp.seg", "wb");
                     fwrite(temp.data(), 1, temp.size(), tempfile);
                     fclose(tempfile);
 
-                    common::ibytepair_stream bpstream("bytepairTemp.seg", img.header.code_offset);
+                    common::ibytepair_stream bpstream("bytepairTemp.seg", 0);
 
                     auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
                     auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);

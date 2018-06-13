@@ -291,22 +291,36 @@ namespace eka2l1 {
 
                 if ((file_des->caps.raw_data.size() != 0) || is_exe) {
                     info.executable_name = file_des->target.unicode_string;
+
+                    // Fixed drive
+                    if (info.executable_name.find(u"!") == std::u16string::npos) {
+                        std::u16string fixed_drive = info.executable_name.substr(0, 2);
+
+                        if (fixed_drive == u"C:" || fixed_drive == u"c:") {
+                            LOG_INFO("Fixed drive, unexpected change to C:");
+                            info.drive = 0;
+                        } else {
+                            LOG_INFO("Fixed drive, unexpected change to E:");
+                            info.drive = 1;
+                        }
+                    }
+
                     LOG_INFO("Executable_name: {}", std::string(info.executable_name.begin(), info.executable_name.end()));
                     // Get file name
                     size_t slash_pos = info.executable_name.find_last_of(u"\\");
 
                     if (slash_pos != std::u16string::npos) {
                         info.executable_name = info.executable_name.substr(slash_pos + 1);
-
-                        break;
                     }
                 }
             }
 
-            if (drv == 0) {
+            if (info.drive == 0) {
                 c_apps.insert(std::make_pair(ruid, info));
+                c_apps[ruid] = info;
             } else {
                 e_apps.insert(std::make_pair(ruid, info));
+                e_apps[ruid] = info;
             }
 
             for (auto &wrap_mini_ctrl : ctrl->install_block.controllers.fields) {
@@ -324,7 +338,7 @@ namespace eka2l1 {
             install_controller(&res.controller, drive);
 
             // Interpret the file
-            loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ifstream::binary),
+            loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ios::binary),
                 io,
                 this,
                 res.controller.install_block,

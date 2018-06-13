@@ -56,6 +56,11 @@ namespace eka2l1 {
         };
 
         crr_process = kern.spawn_new_process(id);
+
+        if (crr_process == nullptr) {
+            return nullptr;
+        }
+
         crr_process->run();
 
         emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");

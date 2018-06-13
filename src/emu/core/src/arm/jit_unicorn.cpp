@@ -96,7 +96,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
             // DO nothing now
             auto func_name = mngr->get_func_name(sid_correspond.value());
 
-            const bool log_call = false;
+            const bool log_call = true;
 
             if (log_call) {
                 LOG_INFO("Calling HLE function: {}", func_name.value());

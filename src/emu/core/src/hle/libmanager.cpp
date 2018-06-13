@@ -147,6 +147,8 @@ namespace eka2l1 {
                         LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}]", func_names[libids[i]], addrs[i], libids[i]);
                     }
                 }
+            } else {
+                LOG_WARN("Can't find SID database for: {}", common::ucs2_to_utf8(lib_name));
             }
 
             return true;
@@ -165,7 +167,17 @@ namespace eka2l1 {
         // Images are searched in
         // C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
         loader::e32img_ptr lib_manager::load_e32img(const std::u16string &img_name) {
-            symfile img = io->open_file(img_name, READ_MODE | BIN_MODE);
+            symfile img;
+
+            // It's a full path
+            if (img_name.find(u":") == 1) {
+                img = io->open_file(img_name, READ_MODE | BIN_MODE);
+
+                if (!img) {
+                    return nullptr;
+                }
+            }
+
             bool xip = false;
             bool is_rom = false;
             std::u16string path;
@@ -178,14 +190,10 @@ namespace eka2l1 {
                     img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
                     if (!img) {
-                        img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
-
-                        if (!img) {
-                            return loader::e32img_ptr(nullptr);
-                        } else {
-                            xip = true;
-                            is_rom = true;
-                        }
+                        return loader::e32img_ptr(nullptr);
+                    } else {
+                        xip = true;
+                        is_rom = true;
                     }
                 }
             }
@@ -240,17 +248,17 @@ namespace eka2l1 {
 
             register_exports(rom_name, res->exports, log_exports);
 
-            if (romimgs_cache.find(res->header.code_checksum) != romimgs_cache.end()) {
+            if (romimgs_cache.find(res->header.entry_point) != romimgs_cache.end()) {
                 romimgf->close();
-                return romimgs_cache[res->header.code_checksum].img;
+                return romimgs_cache[res->header.entry_point].img;
             }
 
             //loader::stub_romimg()
             romimg_inf info;
             info.img = std::make_shared<loader::romimg>(res.value());
 
-            romimgs_cache.emplace(res->header.code_checksum, std::move(info));
-            return romimgs_cache[res->header.code_checksum].img;
+            romimgs_cache.emplace(res->header.entry_point, std::move(info));
+            return romimgs_cache[res->header.entry_point].img;
         }
 
         // Open the image code segment
@@ -342,7 +350,7 @@ namespace eka2l1 {
         }
 
         void lib_manager::open_romimg(loader::romimg_ptr &img) {
-            auto res = romimgs_cache.find(img->header.code_checksum);
+            auto res = romimgs_cache.find(img->header.entry_point);
 
             if (res == romimgs_cache.end()) {
                 return;
@@ -352,7 +360,7 @@ namespace eka2l1 {
         }
 
         void lib_manager::close_romimg(loader::romimg_ptr &img) {
-            auto res = romimgs_cache.find(img->header.code_checksum);
+            auto res = romimgs_cache.find(img->header.entry_point);
 
             if (res == romimgs_cache.end()) {
                 return;

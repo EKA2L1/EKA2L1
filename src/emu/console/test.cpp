@@ -9,10 +9,31 @@ int main() {
     mount_symbian_system(sys, "C:", "drives/c/");
     mount_symbian_system(sys, "E:", "drives/e/");
 
+<<<<<<< HEAD
     load_rom(sys, "SYM6.ROM");
 
     auto sis_file = eka2l1::loader::parse_sis_old("ENG2.sis");
     eka2l1::loader::sis_old of = sis_file.value();
+=======
+    install_sis(sys, 0, "nfs.sis");
+    load_rom(sys, "SYM.ROM");
+
+    /*
+    load_process(sys, 0xECF52F7F);
+
+    loop_system(sys);
+
+	reinit_system(sys);
+    load_process(sys, 0xECF52F7F);
+
+    loop_system(sys);
+    reinit_system(sys);
+    load_process(sys, 0xECF52F7F);
+
+    loop_system(sys);
+
+    shutdown_symbian_system(sys);*/
+>>>>>>> master
 
     return 0;
 }
