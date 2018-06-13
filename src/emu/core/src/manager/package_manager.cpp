@@ -19,6 +19,7 @@
  */
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
 #include <loader/sis.h>
 #include <loader/sis_script_interpreter.h>
 #include <manager/package_manager.h>
@@ -276,6 +277,7 @@ namespace eka2l1 {
             info.drive = drv;
             info.executable_name = u"";
             info.id = ctrl->info.uid.uid;
+            info.ver = epocver::epoc9;
 
             uid ruid = ctrl->info.uid.uid;
 
@@ -315,12 +317,14 @@ namespace eka2l1 {
                 }
             }
 
-            if (info.drive == 0) {
-                c_apps.insert(std::make_pair(ruid, info));
-                c_apps[ruid] = info;
-            } else {
-                e_apps.insert(std::make_pair(ruid, info));
-                e_apps[ruid] = info;
+            if (info.executable_name != u"") {
+                if (info.drive == 0) {
+                    c_apps.insert(std::make_pair(ruid, info));
+                    c_apps[ruid] = info;
+                } else {
+                    e_apps.insert(std::make_pair(ruid, info));
+                    e_apps[ruid] = info;
+                }
             }
 
             for (auto &wrap_mini_ctrl : ctrl->install_block.controllers.fields) {
@@ -333,19 +337,100 @@ namespace eka2l1 {
         }
 
         bool package_manager::install_package(const std::u16string &path, uint8_t drive) {
-            loader::sis_contents res = loader::parse_sis(common::ucs2_to_utf8(path));
+            std::optional<epocver> sis_ver = loader::get_epoc_ver(common::ucs2_to_utf8(path));
 
-            install_controller(&res.controller, drive);
+            if (!sis_ver) {
+                return false;
+            }
 
-            // Interpret the file
-            loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ios::binary),
-                io,
-                this,
-                res.controller.install_block,
-                res.data,
-                loader::sis_drive(drive));
+            if (*sis_ver == epocver::epoc9) {
+                loader::sis_contents res = loader::parse_sis(common::ucs2_to_utf8(path));
 
-            interpreter.interpret();
+                install_controller(&res.controller, drive);
+
+                // Interpret the file
+                loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ios::binary),
+                    io,
+                    this,
+                    res.controller.install_block,
+                    res.data,
+                    loader::sis_drive(drive));
+
+                interpreter.interpret();
+            } else {
+                loader::sis_old res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
+                std::u16string main_path = res.app_path ? *res.app_path : (res.exe_path ? *res.exe_path : u"");
+
+                if (main_path != u"") {
+                    app_info info;
+
+                    if (main_path.find(u"!") == std::u16string::npos) {
+                        if (main_path.find(u"C:") != std::u16string::npos || main_path.find(u"c:") != std::u16string::npos) {
+                            info.drive = 0;
+                        } else {
+                            info.drive = 1;
+                        }
+                    } else {
+                        info.drive = drive;
+                    }
+
+                    size_t last_slash_pos = main_path.find_last_of(u"\\");
+                    size_t sub_pos = res.app_path ? main_path.find(u".app") : main_path.find(u".exe");
+
+                    std::u16string name = (last_slash_pos != std::u16string::npos) ? main_path.substr(last_slash_pos + 1, sub_pos - last_slash_pos - 1) : u"Unknown";
+
+                    info.executable_name = main_path;
+                    info.id = res.header.uid1;
+                    info.vendor_name = u"Your mom";
+                    info.name = name;
+                    info.executable_name = main_path.substr(last_slash_pos + 1);
+                    info.ver = *sis_ver;
+
+                    if (info.drive == 0) {
+                        c_apps.emplace(info.id, info);
+                    } else {
+                        e_apps.emplace(info.id, info);
+                    }
+
+                    for (auto &file : res.files) {
+                        std::u16string dest = file.dest;
+
+                        if (dest.find(u"!") != std::u16string::npos) {
+                            dest.replace(0, 1, (info.drive == 0) ? u"c" : u"e");
+                        }
+
+                        std::string rp = eka2l1::file_directory(io->get(common::ucs2_to_utf8(dest)));
+                        eka2l1::create_directories(rp);
+
+                        symfile f = io->open_file(dest, WRITE_MODE | BIN_MODE);
+
+                        size_t left = file.record.len;
+                        size_t chunk = 0x2000;
+
+                        std::vector<char> temp;
+                        temp.resize(chunk);
+
+                        FILE *sis_file = fopen(common::ucs2_to_utf8(path).data(), "rb");
+                        fseek(sis_file, file.record.ptr, SEEK_SET);
+
+                        while (left > 0) {
+                            size_t took = left < chunk ? left : chunk;
+                            size_t readed = fread(temp.data(), 1, took, sis_file);
+
+                            if (readed != took) {
+                                fclose(sis_file);
+                                f->close();
+
+                                return false;
+                            }
+
+                            f->write_file(temp.data(), 1, took);
+
+                            left -= took;
+                        }
+                    }
+                }
+            }
 
             write_sdb("apps_registry.sdb");
 
@@ -394,4 +479,3 @@ namespace eka2l1 {
         }
     }
 }
-

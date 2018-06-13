@@ -101,9 +101,12 @@ namespace eka2l1 {
 
             sis_old_header header;
             std::vector<sis_old_file> files;
+
+            // The app path or exe path
+            std::optional<std::u16string> app_path;
+            std::optional<std::u16string> exe_path;
         };
 
         std::optional<sis_old> parse_sis_old(const std::string path);
-        int install_sis_old(io_system *io, sis_old& old_file, uint8_t drive);
     }
 }

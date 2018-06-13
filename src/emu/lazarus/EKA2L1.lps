@@ -20,9 +20,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainForm"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="160"/>
-        <CursorPos X="20" Y="165"/>
+        <TopLine Value="230"/>
+        <CursorPos X="27" Y="245"/>
         <UsageCount Value="43"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -66,10 +67,9 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="InstallDialog"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="66"/>
-        <CursorPos X="36" Y="71"/>
+        <TopLine Value="69"/>
+        <CursorPos X="34" Y="87"/>
         <UsageCount Value="27"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -110,7 +110,7 @@
       </Unit9>
       <Unit10>
         <Filename Value="../../../../../lazarus/lcl/include/customform.inc"/>
-        <TopLine Value="2054"/>
+        <TopLine Value="2057"/>
         <CursorPos Y="2063"/>
         <UsageCount Value="12"/>
         <Loaded Value="True"/>
@@ -119,31 +119,31 @@
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="106" TopLine="100"/>
+        <Caret Line="110" TopLine="100"/>
       </Position1>
       <Position2>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="107" TopLine="100"/>
+        <Caret Line="109" TopLine="100"/>
       </Position2>
       <Position3>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="110" TopLine="100"/>
+        <Caret Line="112" TopLine="100"/>
       </Position3>
       <Position4>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="109" TopLine="100"/>
+        <Caret Line="87" TopLine="70"/>
       </Position4>
       <Position5>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="112" TopLine="100"/>
+        <Caret Line="123" TopLine="105"/>
       </Position5>
       <Position6>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="87" TopLine="70"/>
+        <Caret Line="119" TopLine="105"/>
       </Position6>
       <Position7>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="123" TopLine="105"/>
+        <Caret Line="85" TopLine="6"/>
       </Position7>
       <Position8>
         <Filename Value="installdialog.pas"/>
@@ -151,67 +151,67 @@
       </Position8>
       <Position9>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="85" TopLine="6"/>
+        <Caret Line="118" TopLine="105"/>
       </Position9>
       <Position10>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="119" TopLine="105"/>
+        <Caret Line="84" TopLine="78"/>
       </Position10>
       <Position11>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="118" TopLine="105"/>
+        <Caret Line="72" Column="17" TopLine="64"/>
       </Position11>
       <Position12>
         <Filename Value="installdialog.pas"/>
-        <Caret Line="84" TopLine="78"/>
+        <Caret Line="66" Column="46" TopLine="58"/>
       </Position12>
       <Position13>
-        <Filename Value="installdialog.pas"/>
-        <Caret Line="72" Column="17" TopLine="64"/>
+        <Filename Value="mainform.pas"/>
+        <Caret Line="252" TopLine="235"/>
       </Position13>
       <Position14>
-        <Filename Value="installdialog.pas"/>
-        <Caret Line="66" Column="46" TopLine="58"/>
+        <Filename Value="mainform.pas"/>
+        <Caret Line="248" TopLine="235"/>
       </Position14>
       <Position15>
         <Filename Value="mainform.pas"/>
-        <Caret Line="252" TopLine="235"/>
+        <Caret Line="77" Column="23" TopLine="59"/>
       </Position15>
       <Position16>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="248" TopLine="235"/>
-      </Position16>
-      <Position17>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="77" Column="23" TopLine="59"/>
-      </Position17>
-      <Position18>
         <Filename Value="installdialog.pas"/>
         <Caret Line="109" Column="36" TopLine="99"/>
-      </Position18>
-      <Position19>
+      </Position16>
+      <Position17>
         <Filename Value="installdialog.pas"/>
         <Caret Line="91" Column="38" TopLine="82"/>
-      </Position19>
-      <Position20>
+      </Position17>
+      <Position18>
         <Filename Value="dvcmapping.pas"/>
         <Caret Line="90" Column="20" TopLine="76"/>
-      </Position20>
-      <Position21>
+      </Position18>
+      <Position19>
         <Filename Value="mainform.pas"/>
         <Caret Line="134" Column="16" TopLine="100"/>
-      </Position21>
-      <Position22>
+      </Position19>
+      <Position20>
         <Filename Value="mainform.pas"/>
         <Caret Line="162" Column="11" TopLine="143"/>
-      </Position22>
-      <Position23>
+      </Position20>
+      <Position21>
         <Filename Value="installdialog.pas"/>
         <Caret Line="97" Column="15" TopLine="72"/>
-      </Position23>
-      <Position24>
+      </Position21>
+      <Position22>
         <Filename Value="installdialog.pas"/>
         <Caret Line="9" Column="46"/>
+      </Position22>
+      <Position23>
+        <Filename Value="mainform.pas"/>
+        <Caret Line="203" Column="9" TopLine="203"/>
+      </Position23>
+      <Position24>
+        <Filename Value="mainform.pas"/>
+        <Caret Line="204" Column="9" TopLine="204"/>
       </Position24>
       <Position25>
         <Filename Value="mainform.pas"/>
@@ -223,19 +223,19 @@
       </Position26>
       <Position27>
         <Filename Value="mainform.pas"/>
-        <Caret Line="203" Column="9" TopLine="203"/>
+        <Caret Line="350" Column="15" TopLine="335"/>
       </Position27>
       <Position28>
         <Filename Value="mainform.pas"/>
-        <Caret Line="204" Column="9" TopLine="204"/>
+        <Caret Line="28" Column="35" TopLine="20"/>
       </Position28>
       <Position29>
         <Filename Value="mainform.pas"/>
-        <Caret Line="350" Column="15" TopLine="335"/>
+        <Caret Line="165" Column="20" TopLine="160"/>
       </Position29>
       <Position30>
         <Filename Value="mainform.pas"/>
-        <Caret Line="28" Column="35" TopLine="20"/>
+        <Caret Line="200" Column="25" TopLine="183"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>

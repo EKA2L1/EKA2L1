@@ -20,6 +20,7 @@ type
     InstallSISOption: TMenuItem;
     InstallROMOption: TMenuItem;
     DeviceMappingOption: TMenuItem;
+    OpenDialog1: TOpenDialog;
     RefreshOption: TMenuItem;
     OpenDialog: TOpenDialog;
     QuitOption: TMenuItem;
@@ -239,9 +240,9 @@ end;
 
 procedure TMainForm.InstallROMOptionClick(Sender: TObject);
 begin
-  if (OpenDialog.Execute) then
+  if (OpenDialog1.Execute) then
   begin
-    RomPath := OpenDialog.Filename;
+    RomPath := OpenDialog1.Filename;
     ESym.LoadRom(RomPath);
     ShowMessage('Success installing the ROM!');
     SaveConfig;

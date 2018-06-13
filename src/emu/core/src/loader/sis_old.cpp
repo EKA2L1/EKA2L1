@@ -36,29 +36,26 @@ namespace eka2l1 {
 
                 fread(old_file.dest.data(), 2, old_file_record.des_name_len / 2, f);
 
-                old_file.record = std::move(old_file_record);
+                if (old_file.dest.find(u".app") != std::u16string::npos) {
+                    sold.app_path = old_file.dest;
+                }
+
+                if (old_file.dest.find(u".exe") != std::u16string::npos) {
+                    sold.exe_path = old_file.dest;
+                }
+
+                    old_file.record = std::move(old_file_record);
 
                 sold.files.push_back(std::move(old_file));
 
                 if (sold.epoc_ver != epocver::epoc6) {
                     fseek(f, crr - 12, SEEK_SET);
-                }
-                else {
+                } else {
                     fseek(f, crr, SEEK_SET);
                 }
             }
 
             return sold;
-        }
-
-        int install_sis_old(io_system *io, sis_old &old_file, uint8_t drive) {
-            for (const auto &file: old_file.files) {
-                if (file.record.file_type == 0) {
-                    
-                }
-            }
-
-            return 1;
         }
     }
 }

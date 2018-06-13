@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 193
+  Left = 216
   Height = 583
-  Top = 120
+  Top = 78
   Width = 837
   AutoSize = True
   Caption = 'EKA2L1'
@@ -79,5 +79,9 @@ object MainForm: TMainForm
     Options = [ofAllowMultiSelect, ofEnableSizing, ofViewDetail]
     left = 744
     top = 480
+  end
+  object OpenDialog1: TOpenDialog
+    left = 665
+    top = 500
   end
 end

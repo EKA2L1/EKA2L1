@@ -40,6 +40,7 @@ namespace eka2l1 {
             uint8_t drive;
 
             uid id;
+            epocver ver;
         };
 
         // A package manager, serves for managing apps

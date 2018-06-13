@@ -148,7 +148,8 @@ namespace eka2l1 {
         }
 
         void init(utf16_str inp_name, int mode) {
-            file = fopen(common::ucs2_to_utf8(inp_name).c_str(), translate_mode(mode));
+            const char *cmode = translate_mode(mode);
+            file = fopen(common::ucs2_to_utf8(inp_name).c_str(), cmode);
             input_name = std::u16string(inp_name.begin(), inp_name.end());
             fmode = mode;
         }
@@ -310,6 +311,17 @@ namespace eka2l1 {
 
         if (findres != drives.end()) {
             return findres->second;
+        } else {
+            if (std::islower(path_dvc[0]))
+                path_dvc[0] = std::toupper(path_dvc[0]);
+            else
+                path_dvc[0] = std::tolower(path_dvc[0]);
+
+            findres = drives.find(path_dvc);
+
+            if (findres != drives.end()) {
+                return findres->second;
+            }
         }
 
         return std::optional<drive>{};
@@ -383,4 +395,3 @@ namespace eka2l1 {
         return std::shared_ptr<file>(nullptr);
     }
 }
-
