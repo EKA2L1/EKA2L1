@@ -20,6 +20,7 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/random.h>
 
 #include <hle/epoc9/register.h>
 #include <hle/libmanager.h>
@@ -144,7 +145,7 @@ namespace eka2l1 {
                     }
 
                     if (log_exports) {
-                        LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}]", func_names[libids[i]], addrs[i], libids[i]);
+                        LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}, ord = {}]", func_names[libids[i]], addrs[i], libids[i], i);
                     }
                 }
             } else {

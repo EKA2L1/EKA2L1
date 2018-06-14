@@ -243,6 +243,13 @@ BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes> aDes) {
     return KErrNone;
 }
 
+BRIDGE_FUNC(TInt, UserLeave, TInt aCode) {
+    LOG_ERROR("Debug: Leave code: {}", aCode);
+    UserExit(sys, aCode);
+
+    return 0;
+}
+
 const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3511550552, UserIsRomAddress),
     BRIDGE_REGISTER(3037667387, UserExit),
@@ -253,5 +260,6 @@ const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(77871723, UserCommandLineLength),
     BRIDGE_REGISTER(3535789199, UserGetTIntParameter),
     BRIDGE_REGISTER(411482431, UserGetDesParameter),
-    BRIDGE_REGISTER(1985486127, UserGetDesParameter16)
+    BRIDGE_REGISTER(1985486127, UserGetDesParameter16),
+    BRIDGE_REGISTER(824932975, UserLeave)
 };

@@ -58,6 +58,7 @@ std::vector<function> read_idt(const fs::path &path) {
     std::vector<function> fts;
 
     uint32_t lc = 1;
+    uint32_t last_count = 0;
 
     while (idt) {
         std::string line;
@@ -71,6 +72,25 @@ std::vector<function> read_idt(const fs::path &path) {
 
         if (where == std::string::npos) {
             LOG_ERROR("Unable to interpret IDT line: {}", lc);
+            continue;
+        }
+
+        std::string nump = "";
+
+        for (uint32_t i = 0;; i++) {
+            if (std::isdigit(line[i])) {
+                nump += line[i];
+            } else {
+                break;
+            }
+        }
+
+        auto num = std::atoi(nump.data());
+
+        if (num - last_count > 1) {
+            for (uint32_t i = 0; i < num - last_count - 1; i++) {
+                fts.push_back(function("Unknown", 0));
+            }
         }
 
         function_name raw_sauce = line.substr(where + 5);
@@ -116,6 +136,7 @@ std::vector<function> read_idt(const fs::path &path) {
         }
 
         ++lc;
+        last_count = num;
     }
 
     return fts;

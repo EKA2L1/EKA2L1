@@ -17,7 +17,8 @@ add_library(common
     src/bytepair.cpp
     src/data_displayer.cpp
     src/flate.cpp
-    src/types.cpp)
+    src/types.cpp
+    src/random.cpp)
 
 target_include_directories(common PUBLIC include)
 target_link_libraries(common PUBLIC spdlog)

@@ -207,7 +207,6 @@ namespace eka2l1 {
                 img = mngr.load_e32img(dll_name);
             }
 
-
             uint32_t *imdir = &(import_block.ordinals[0]);
             uint32_t *expdir;
 
@@ -276,8 +275,8 @@ namespace eka2l1 {
                     auto sid = mngr.get_sid(export_addr);
 
                     if (sid) {
-                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}",
-                            export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off);
+                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
+                            export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
                     }
 
                     if (export_addr >= code_start && export_addr <= code_end) {
@@ -303,11 +302,10 @@ namespace eka2l1 {
             img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
                 kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
 
-            LOG_INFO("Code dest: 0x{:x}", (long)(img->header.code_size + img->header.code_offset + img->data.data()));
-            LOG_INFO("Code size: 0x{:x}", img->header.code_size);
-
             uint32_t rtcode_addr = img->code_chunk->base().ptr_address();
             uint32_t rtdata_addr = img->data_chunk ? img->data_chunk->base().ptr_address() : 0;
+
+            LOG_INFO("Runtime code: 0x{:x}", rtcode_addr);
 
             img->rt_code_addr = rtcode_addr;
             img->rt_data_addr = rtdata_addr;
