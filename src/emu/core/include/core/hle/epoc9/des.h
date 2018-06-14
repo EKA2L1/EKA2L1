@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <epoc9/types.h>
 #include <epoc9/err.h>
+#include <epoc9/types.h>
 
 #include <hle/bridge.h>
 #include <ptr.h>
@@ -31,12 +31,12 @@ using namespace eka2l1;
 const TInt KShiftDes8Type = 28;
 const TInt KShiftDes16Type = 28;
 
-enum TDesType { 
+enum TDesType {
     EBufC,
-    EPtrC, 
+    EPtrC,
     EPtr,
-    EBuf, 
-    EBufCPtr 
+    EBuf,
+    EBufCPtr
 };
 
 struct TDesC8 {
@@ -125,5 +125,10 @@ struct TLit16 : public TLit8 {};
 
 TUint8 *GetLit8Ptr(memory_system *mem, eka2l1::ptr<TLit8> aLit);
 TUint16 *GetLit16Ptr(memory_system *mem, eka2l1::ptr<TLit16> aLit);
+
+void SetLengthDes(TDesC8 *des, uint32_t len);
+void SetLengthDes(TDesC16 *des, uint32_t len);
+
+uint32_t ExtractDesLength(uint32_t len);
 
 using TLit = TLit16;

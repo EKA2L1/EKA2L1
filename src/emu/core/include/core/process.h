@@ -55,12 +55,22 @@ namespace eka2l1 {
 
         std::vector<thread_ptr> own_threads;
         std::array<pass_arg, 16> args;
-
         
+        std::u16string exe_path;
+        std::u16string cmd_args;
+
     public:
         process() = default;
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
-            const std::string &process_name, loader::e32img_ptr &img);
+            const std::string &process_name, const std::u16string &exe_path, const std::u16string &cmd_args, loader::e32img_ptr &img);
+
+        std::u16string get_cmd_args() const {
+            return cmd_args;
+        }
+
+        std::u16string get_exe_path() const {
+            return exe_path;
+        }
 
         uint32_t get_uid() {
             return uid;
@@ -85,9 +95,6 @@ namespace eka2l1 {
 
         // Stop the main process thread
         bool stop();
-
-        std::u16string exe_path;
-        std::u16string cmd_args;
     };
 }
 

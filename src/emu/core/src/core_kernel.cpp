@@ -80,7 +80,8 @@ namespace eka2l1 {
     }
 
     process *kernel_system::spawn_new_process(std::string &path, std::string name, uint32_t uid) {
-        symfile f = io->open_file(std::u16string(path.begin(), path.end()), READ_MODE | BIN_MODE);
+        std::u16string path16 = std::u16string(path.begin(), path.end());
+        symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
 		if (!f) {
             return nullptr;
@@ -97,7 +98,7 @@ namespace eka2l1 {
             libmngr->init(sys, this, io, mem, kern_ver);
 		}
 
-		auto res2 = libmngr->load_e32img(std::u16string(path.begin(), path.end()));
+		auto res2 = libmngr->load_e32img(path16);
 
         if (!res2) {
             return nullptr;
@@ -106,7 +107,7 @@ namespace eka2l1 {
         crr_process_id = uid;
 		libmngr->open_e32img(res2);
 
-        processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, res2)));
+        processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, path16, u"", res2)));
 
         LOG_INFO("Process name: {}, uid: 0x{:x} loaded, ready for command to run.", name, uid);
 

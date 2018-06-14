@@ -21,18 +21,9 @@ ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, TDesC8 *aDes8) {
 
         case EPtr:
             return (reinterpret_cast<TPtr8*>(aDes8))->iPtr;
-
-        case EBufC:
-            return (reinterpret_cast<TBufC8*>(aDes8))->iBuf;
-
-        case EBuf:
-            return (reinterpret_cast<TBuf8*>(aDes8))->iBuf;
-
-        case EBufCPtr:
-            return (reinterpret_cast<TBufCPtr8*>(aDes8))->iPtr.get(sys->get_memory_system())->iBuf;
     }
 
-    return ptr<TUint8>(nullptr);
+    return eka2l1::ptr<TUint8>(nullptr);
 }
 
 TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8) {
@@ -40,9 +31,14 @@ TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8) {
 
     if (destype == EBuf || destype == EBufC) {
         return reinterpret_cast<TUint8*>(aDes8) + 8;
+    } else if (destype == EBufCPtr) {
+        ptr<TBufC8> buf = reinterpret_cast<TBufCPtr8 *>(aDes8)->iPtr;
+        TBufC8 *ptr = buf.get(sys->get_memory_system());
+
+        return reinterpret_cast<TUint8 *>(ptr) + 8;
     }
 
-    ptr<TUint8> des_ptr = GetTDes8Ptr(sys, aDes8);
+    ptr<TUint8> des_ptr = GetTDes8HLEPtr(sys, aDes8);
     return des_ptr.get(sys->get_memory_system());
 }
 
@@ -65,15 +61,6 @@ ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16) {
 
     case EPtr:
         return (reinterpret_cast<TPtr16*>(aDes16))->iPtr;
-
-    case EBufC: 
-        return (reinterpret_cast<TBufC16*>(aDes16))->iBuf;
-
-    case EBuf:
-        return (reinterpret_cast<TBuf16*>(aDes16))->iBuf;
-
-    case EBufCPtr:
-        return (reinterpret_cast<TBufCPtr16*>(aDes16))->iPtr.get(sys->get_memory_system())->iBuf;
     }
 
     return ptr<TUint16>(nullptr);
@@ -84,6 +71,11 @@ TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16) {
 
     if (destype == EBuf || destype == EBufC) {
         return reinterpret_cast<TUint16*>(reinterpret_cast<TUint8*>(aDes16) + 8);
+    } else if (destype == EBufCPtr) {
+        ptr<TBufC16> buf = reinterpret_cast<TBufCPtr16 *>(aDes16)->iPtr;
+        TBufC16 *ptr = buf.get(sys->get_memory_system());
+
+        return reinterpret_cast<TUint16*>(reinterpret_cast<TUint8 *>(ptr) + 8);
     }
 
     ptr<TUint16> des_ptr = GetTDes16HLEPtr(sys, aDes16);
@@ -96,4 +88,17 @@ TUint8 *GetLit8Ptr(memory_system *mem, eka2l1::ptr<TLit8> aLit) {
 
 TUint16 *GetLit16Ptr(memory_system *mem, eka2l1::ptr<TLit16> aLit) {
     return reinterpret_cast<TUint16*>(GetLit8Ptr(mem, aLit.cast<TLit8>()));
+}
+
+void SetLengthDes(TDesC8 *des, uint32_t len) {
+    auto t = des->iLength >> 28;
+    des->iLength = len | (t << 28);
+}
+
+void SetLengthDes(TDesC16 *des, uint32_t len) {
+    SetLengthDes(reinterpret_cast<TDesC8 *>(des), len);
+}
+
+uint32_t ExtractDesLength(uint32_t len) {
+    return len & 0xFFFFFF;
 }

@@ -22,15 +22,20 @@
 
 namespace eka2l1 {
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
-        const std::string &process_name, loader::e32img_ptr &img)
+        const std::string &process_name, const std::u16string &exe_path, const std::u16string &cmd_args, loader::e32img_ptr &img)
         : uid(uid)
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
-        , img(img) {
+        , img(img)
+        , exe_path(exe_path)
+        , cmd_args(cmd_args) {
         prthr = kern->add_thread(kernel::owner_type::process, uid, kernel::access_type::local_access, process_name, img->rt_code_addr + img->header.entry_point,
             img->header.stack_size, img->header.heap_size_min, img->header.heap_size_max,
             nullptr, kernel::priority_normal);
+
+        args[0].data_size = 0;
+        args[1].data_size = 4 + exe_path.size() * 2 + cmd_args.size() * 2;
     }
 
     void process::set_arg_slot(uint8_t slot, uint32_t data, size_t data_size) {

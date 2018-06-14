@@ -131,20 +131,22 @@ BRIDGE_FUNC(TInt, UserParameterLength, TInt aSlot) {
     return slot.data_size;
 }
 
-BRIDGE_FUNC(void, UserLineCommandLength, eka2l1::ptr<TDesC> aDes) {
-    TUint16 *ptr = GetTDes16Ptr(sys, aDes.get(sys->get_memory_system()));
+BRIDGE_FUNC(void, UserLineCommand, eka2l1::ptr<TDesC> aDes) {
+    TDesC *des = aDes.get(sys->get_memory_system());
+    TUint16 *ptr = GetTDes16Ptr(sys, des);
 
     kernel_system *kern = sys->get_kernel_system();
-    std::u16string cmd_args = kern->get_process(kern->crr_process())->cmd_args;
+    std::u16string cmd_args = kern->get_process(kern->crr_process())->get_cmd_args();
 
-    memcpy(ptr, cmd_args.data(), cmd_args.size() * 2);
+    memcpy(ptr, cmd_args.data(), cmd_args.length() * 2);
+    SetLengthDes(des, cmd_args.length());
 }
 
 BRIDGE_FUNC(TInt, UserCommandLineLength) {
     kernel_system *kern = sys->get_kernel_system();
-    auto cmd_args = kern->get_process(kern->crr_process())->cmd_args;
+    auto cmd_args = kern->get_process(kern->crr_process())->get_cmd_args();
 
-    return cmd_args.size();
+    return cmd_args.length();
 }
 
 BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val) {
@@ -169,6 +171,78 @@ BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val) {
     return KErrNone;
 }
 
+BRIDGE_FUNC(TInt, UserGetDesParameter16, TInt aSlot, eka2l1::ptr<TDes> aDes) {
+    kernel_system *kern = sys->get_kernel_system();
+    process_ptr pr = kern->get_process(kern->crr_process());
+
+    if (aSlot >= 16 || aSlot < 0) {
+        LOG_ERROR("User requested parameter slot is not available (slot: {} >= 16 or < 0)", aSlot);
+        UserExit(sys, 51);
+
+        return KErrGeneral;
+    }
+
+    auto slot = *pr->get_arg_slot(aSlot);
+
+    if (slot.data_size == -1) {
+        return KErrNotFound;
+    }
+
+    TDes *des = aDes.get(sys->get_memory_system());
+    TUint16 *ptr = GetTDes16Ptr(sys, des);
+
+    if (aSlot == 1) {
+        std::u16string arg = pr->get_exe_path() + u" " + pr->get_cmd_args();
+        memcpy(ptr, arg.data(), slot.data_size);
+
+        SetLengthDes(des, slot.data_size);
+        return KErrNone;
+    }
+
+    TUint16 *ptr2 = eka2l1::ptr<TUint16>(slot.data).get(sys->get_memory_system());
+    memcpy(ptr, ptr2, slot.data_size);
+
+    SetLengthDes(des, slot.data_size);
+    return KErrNone;
+}
+
+BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes> aDes) {
+    kernel_system *kern = sys->get_kernel_system();
+    process_ptr pr = kern->get_process(kern->crr_process());
+
+    if (aSlot >= 16 || aSlot < 0) {
+        LOG_ERROR("User requested parameter slot is not available (slot: {} >= 16 or < 0)", aSlot);
+        UserExit(sys, 51);
+
+        return KErrGeneral;
+    }
+
+    auto slot = *pr->get_arg_slot(aSlot);
+
+    if (slot.data_size == -1) {
+        return KErrNotFound;
+    }
+
+    TDes *des = aDes.get(sys->get_memory_system());
+    TUint8 *ptr = GetTDes8Ptr(sys, des);
+
+    if (aSlot == 1) {
+        std::u16string arg = pr->get_exe_path() + u" " + pr->get_cmd_args();
+        memcpy(ptr, common::ucs2_to_utf8(arg).data(), slot.data_size);
+
+        SetLengthDes(des, slot.data_size);
+
+        return KErrNone;
+    }
+
+    TUint8 *ptr2 = eka2l1::ptr<TUint8>(slot.data).get(sys->get_memory_system());
+    memcpy(ptr, ptr2, slot.data_size);
+
+    SetLengthDes(des, slot.data_size);
+
+    return KErrNone;
+}
+
 const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3511550552, UserIsRomAddress),
     BRIDGE_REGISTER(3037667387, UserExit),
@@ -177,5 +251,7 @@ const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(1932818422, UserDbgMarkStart),
     BRIDGE_REGISTER(3656744374, UserParameterLength),
     BRIDGE_REGISTER(77871723, UserCommandLineLength),
-    BRIDGE_REGISTER(3535789199, UserGetTIntParameter)
+    BRIDGE_REGISTER(3535789199, UserGetTIntParameter),
+    BRIDGE_REGISTER(411482431, UserGetDesParameter),
+    BRIDGE_REGISTER(1985486127, UserGetDesParameter16)
 };

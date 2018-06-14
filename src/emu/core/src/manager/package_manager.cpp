@@ -59,9 +59,9 @@ namespace eka2l1 {
                 info.vendor_name = std::u16string(vendor.begin(), vendor.end());
 
                 if (info.drive == 0) {
-                    c_apps.emplace(info.drive, info);
+                    c_apps.emplace(info.id, info);
                 } else {
-                    e_apps.emplace(info.drive, info);
+                    e_apps.emplace(info.id, info);
                 }
             }
         }
