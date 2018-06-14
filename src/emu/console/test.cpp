@@ -11,7 +11,7 @@ int main() {
 
     load_rom(sys, "SYM6.ROM");
 
-    install_sis(sys, 0, "ray.sis");
+    install_sis(sys, 0, "moto.sis");
 
     shutdown_symbian_system(sys);
     free_symbian_system(sys);

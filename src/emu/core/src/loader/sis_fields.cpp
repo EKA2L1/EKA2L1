@@ -781,9 +781,14 @@ namespace eka2l1 {
 
             parse_field_child(&ib, no_type);
 
+            size_t org_pos = stream->tellg();
+
             ib.files = parse_array();
             ib.controllers = parse_array();
-            ib.if_blocks = parse_array();
+
+            stream->seekg(org_pos);
+            stream->seekg(ib.len_low, std::ios::cur);
+            //ib.if_blocks = parse_array();
 
             valid_offset();
 

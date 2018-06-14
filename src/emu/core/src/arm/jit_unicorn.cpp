@@ -99,7 +99,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
             const bool log_call = true;
 
             if (log_call) {
-                LOG_INFO("Calling HLE function: {}", func_name.value());
+                LOG_INFO("Calling HLE function: {} [0x{:x}]", func_name.value(), address);
             }
 
             if (mngr->call_hle(sid_correspond.value())) {

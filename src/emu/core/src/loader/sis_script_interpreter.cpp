@@ -114,7 +114,7 @@ namespace eka2l1 {
                 LOG_ERROR("Inflate failed description: {}", mz_error(res));
 
                 if (out_size)
-                     *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
+                    *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
 
                 return false;
             };
@@ -135,7 +135,7 @@ namespace eka2l1 {
 
             data_stream->seekg(compressed.offset, std::ios::beg);
             data_stream->read(reinterpret_cast<char *>(compressed.compressed_data.data()), us);
-           
+
             if (data_stream->eof()) {
                 data_stream->clear();
             }
@@ -367,6 +367,13 @@ namespace eka2l1 {
                     } else if (file->op == ss_op::EOpInstall) {
                         extract_file(raw_path, file->idx, crr_blck_idx);
                         LOG_INFO("EOpInstall {}", raw_path);
+
+                        std::transform(raw_path.begin(), raw_path.end(), raw_path.begin(), std::tolower);
+
+                        if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
+                            LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
+                            mngr->install_package(std::u16string(raw_path.begin(), raw_path.end()), 0);
+                        }
                     } else {
                         LOG_INFO("EOpNull");
                     }
@@ -443,14 +450,14 @@ namespace eka2l1 {
 
             // Parse if blocks
             for (auto &wrap_if_statement : install_block.if_blocks.fields) {
-                bool pass = can_pass(wrap_if_statement.get());
+                bool pass = /* can_pass(wrap_if_statement.get()); */ true;
                 sis_if *if_stmt = (sis_if *)(wrap_if_statement.get());
 
                 if (pass) {
                     interpret(if_stmt->install_block, ++crr_blck_idx);
                 } else {
                     for (auto &wrap_else_brnch : if_stmt->else_if.fields) {
-                        pass = can_pass_else(wrap_else_brnch.get());
+                        pass = /*can_pass_else(wrap_else_brnch.get()); */ true;
                         sis_else_if *if_stmt = (sis_else_if *)(wrap_if_statement.get());
 
                         if (pass) {
@@ -469,4 +476,3 @@ namespace eka2l1 {
         }
     }
 }
-
