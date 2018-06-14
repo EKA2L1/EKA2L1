@@ -1,7 +1,7 @@
 #include <epoc9/allocator.h>
-#include <epoc9/user.h>
 #include <epoc9/des.h>
 #include <epoc9/e32loader.h>
+#include <epoc9/user.h>
 
 #include <common/cvt.h>
 
@@ -109,7 +109,6 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, UserMarkCleanupStack) {
 }
 
 BRIDGE_FUNC(void, UserUnmarkCleanupStack, eka2l1::ptr<TAny> aTrapHandler) {
-
 }
 
 BRIDGE_FUNC(TInt, UserParameterLength, TInt aSlot) {
@@ -125,26 +124,27 @@ BRIDGE_FUNC(TInt, UserParameterLength, TInt aSlot) {
 
     auto slot = *pr->get_arg_slot(aSlot);
 
-    if (slot.data_size == 0) {
+    if (slot.data_size == -1) {
         return KErrNotFound;
     }
 
     return slot.data_size;
 }
 
+BRIDGE_FUNC(void, UserLineCommandLength, eka2l1::ptr<TDesC> aDes) {
+    TUint16 *ptr = GetTDes16Ptr(sys, aDes.get(sys->get_memory_system()));
+
+    kernel_system *kern = sys->get_kernel_system();
+    std::u16string cmd_args = kern->get_process(kern->crr_process())->cmd_args;
+
+    memcpy(ptr, cmd_args.data(), cmd_args.size() * 2);
+}
+
 BRIDGE_FUNC(TInt, UserCommandLineLength) {
     kernel_system *kern = sys->get_kernel_system();
-    process_ptr pr = kern->get_process(kern->crr_process());
+    auto cmd_args = kern->get_process(kern->crr_process())->cmd_args;
 
-    size_t total = 0;
-
-    for (size_t i = 0; i < 16; i++) {
-        if (pr->get_arg_slot(i)->data_size != 0) {
-            total++;
-        }
-    }
-
-    return static_cast<TInt>(total);
+    return cmd_args.size();
 }
 
 BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val) {
@@ -160,7 +160,7 @@ BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val) {
 
     auto slot = *pr->get_arg_slot(aSlot);
 
-    if (slot.data_size == 0) {
+    if (slot.data_size == -1) {
         return KErrNotFound;
     }
 

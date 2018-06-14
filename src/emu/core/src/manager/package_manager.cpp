@@ -26,9 +26,77 @@
 #include <vfs.h>
 
 #include <fstream>
+#include <yaml-cpp/yaml.h>
 
 namespace eka2l1 {
     namespace manager {
+        bool package_manager::load_sdb_yaml(const std::string &path) {
+            FILE *f = fopen(path.c_str(), "rb");
+
+            if (!f) {
+                return false;
+            }
+
+            YAML::Node sdb_node = YAML::LoadFile(path);
+
+            for (auto &maybe_app : sdb_node) {
+                YAML::Node app = maybe_app.second;
+              
+                app_info info;
+               
+                info.drive = app["drive"].as<uint8_t>();
+                info.ver = static_cast<epocver>(app["epoc"].as<int>());
+
+                auto exec = app["exec"].as<std::string>();
+                info.executable_name = std::u16string(exec.begin(), exec.end());
+
+                info.id = app["uid"].as<uint32_t>();
+
+                auto name = app["name"].as<std::string>();
+                info.name = std::u16string(name.begin(), name.end());
+                
+                auto vendor = app["vendor"].as<std::string>();
+                info.vendor_name = std::u16string(vendor.begin(), vendor.end());
+
+                if (info.drive == 0) {
+                    c_apps.emplace(info.drive, info);
+                } else {
+                    e_apps.emplace(info.drive, info);
+                }
+            }
+        }
+
+        bool package_manager::write_sdb_yaml(const std::string &path) {
+            YAML::Emitter emitter;
+
+            std::ofstream out(path);
+
+            if (out.fail()) {
+                return false;
+            }
+
+            emitter << YAML::BeginMap;
+
+            for (const auto &c_app : c_apps) {
+                emitter << YAML::Key << common::ucs2_to_utf8(c_app.second.name);
+                emitter << YAML::Value << YAML::BeginMap;
+
+                emitter << YAML::Key << "drive" << YAML::Value << c_app.second.drive;
+                emitter << YAML::Key << "epoc" << YAML::Value << static_cast<int>(c_app.second.ver);
+                emitter << YAML::Key << "exec" << YAML::Value << common::ucs2_to_utf8(c_app.second.executable_name);
+                emitter << YAML::Key << "uid" << YAML::Value << c_app.second.id;
+                emitter << YAML::Key << "name" << YAML::Value << common::ucs2_to_utf8(c_app.second.name);
+                emitter << YAML::Key << "vendor" << YAML::Value << common::ucs2_to_utf8(c_app.second.vendor_name);
+   
+                emitter << YAML::EndMap;
+            }
+
+            emitter << YAML::EndMap;
+
+            out << emitter.c_str();
+
+            return true;
+        }
 
         struct sdb_header {
             char magic[4];
@@ -407,7 +475,7 @@ namespace eka2l1 {
                         } else {
                             continue;
                         }
-                        
+
                         symfile f = io->open_file(dest, WRITE_MODE | BIN_MODE);
 
                         size_t left = file.record.len;
@@ -438,7 +506,7 @@ namespace eka2l1 {
                 }
             }
 
-            write_sdb("apps_registry.sdb");
+            write_sdb_yaml("apps_registry.yml");
 
             return true;
         }
@@ -447,7 +515,7 @@ namespace eka2l1 {
             c_apps.erase(app_uid);
             e_apps.erase(app_uid);
 
-            write_sdb("apps_registry.sdb");
+            write_sdb_yaml("apps_registry.yml");
 
             return false;
         }

@@ -54,6 +54,9 @@ namespace eka2l1 {
             bool load_sdb(const std::string &path);
             bool write_sdb(const std::string &path);
 
+            bool load_sdb_yaml(const std::string &path);
+            bool write_sdb_yaml(const std::string &path);
+
             io_system *io;
 
             bool install_controller(loader::sis_controller *ctrl, uint8_t drv);
@@ -61,7 +64,7 @@ namespace eka2l1 {
         public:
             package_manager() = default;
             package_manager(io_system *io)
-                : io(io) { load_sdb("apps_registry.sdb"); }
+                : io(io) { load_sdb_yaml("apps_registry.yml"); }
 
             bool installed(uid app_uid);
 
@@ -72,11 +75,11 @@ namespace eka2l1 {
             std::vector<app_info> get_apps_info() {
                 std::vector<app_info> infos;
 
-                for (auto const &[c_drive, c_info] : c_apps) {
+                for (auto const & [ c_drive, c_info ] : c_apps) {
                     infos.push_back(c_info);
                 }
 
-                for (auto const &[e_drive, e_info] : e_apps) {
+                for (auto const & [ e_drive, e_info ] : e_apps) {
                     infos.push_back(e_info);
                 }
 

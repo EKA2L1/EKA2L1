@@ -40,7 +40,7 @@ namespace eka2l1 {
 
     struct pass_arg {
         uint32_t data = 0;
-        size_t data_size = 0;
+        int data_size = -1;
     };
 
     class process {
@@ -56,6 +56,7 @@ namespace eka2l1 {
         std::vector<thread_ptr> own_threads;
         std::array<pass_arg, 16> args;
 
+        
     public:
         process() = default;
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
@@ -84,6 +85,9 @@ namespace eka2l1 {
 
         // Stop the main process thread
         bool stop();
+
+        std::u16string exe_path;
+        std::u16string cmd_args;
     };
 }
 
