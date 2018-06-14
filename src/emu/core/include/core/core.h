@@ -82,11 +82,11 @@ namespace eka2l1 {
             : jit_type(jit_type), win_type(emu_win_type), dr_type(emu_driver_type) {}
 
         void set_symbian_version_use(const epocver ever) {
-            ver = ever;
+            kern.set_epoc_version(ever);
         }
 
         epocver get_symbian_version_use() const {
-            return ver;
+            return kern.get_epoc_version();
         }
 
         void init();

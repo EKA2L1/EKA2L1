@@ -44,7 +44,10 @@ namespace eka2l1 {
         IOMAPPING = 0xC3000000,
         PAGETABS = 0xC4000000,
         UMEM = 0xC8000000,
-        KERNELMAPPING = 0xC9200000
+        KERNELMAPPING = 0xC9200000,
+		ROM_EKA1 = 0x50000000,
+		RAM_CODE_ADDR_EKA1 = 0xE0000000,
+		RAM_CODE_ADDR_EKA1_END = 0xF0000000
     };
 
     using gen = size_t;
@@ -85,7 +88,7 @@ namespace eka2l1 {
         }
 
         // Load the ROM into virtual memory, using map
-        bool load_rom(const std::string &rom_path);
+        bool load_rom(address addr, const std::string &rom_path);
 
         void *get_mem_start() const {
             return memory.get();

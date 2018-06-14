@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, MainForm, APIWrapper, Symbian, dvcmapping;
+  Forms, MainForm, APIWrapper, Symbian, dvcmapping, InstallDialog;
 
 {$R *.res}
 
@@ -16,6 +16,13 @@ begin
   Application.Initialize;
   Application.CreateForm(TMainForm, EMainForm);
   Application.CreateForm(TDeviceMapper, DeviceMapper);
+  Application.CreateForm(TInstallForm, InstallForm);
+
+  InitInstallDialogCS;
+  InitGameCS;
+
   Application.Run;
+
+  DeinitGameCS;
 end.
 

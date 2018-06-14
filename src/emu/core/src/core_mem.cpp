@@ -267,7 +267,7 @@ namespace eka2l1 {
     }
 
     // Load the ROM into virtual memory, using ma
-    bool memory_system::load_rom(const std::string &rom_path) {
+    bool memory_system::load_rom(address addr, const std::string &rom_path) {
         FILE *f = fopen(rom_path.c_str(), "rb");
 
         if (f == nullptr) {
@@ -280,13 +280,13 @@ namespace eka2l1 {
         auto aligned_size = ((size / page_size) + 1) * (page_size);
         auto left = size;
 
-        chunk(ROM, 0, size, size, prot::read_write);
+        chunk(addr, 0, size, size, prot::read_write);
 
         fseek(f, 0, SEEK_SET);
 
         long buf_once = 0;
 
-        ptr<void> start(0x80000000);
+        ptr<void> start(addr);
 
         while (left) {
             buf_once = common::min(left, (long)100000);

@@ -26,7 +26,7 @@
 
 // VFS
 namespace eka2l1 {
-    class memory;
+    class memory_system;
 
     namespace loader {
         struct rom;

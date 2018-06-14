@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -44,11 +46,6 @@ namespace eka2l1 {
 
     typedef uint32_t address;
 
-    enum class epocver {
-        epoc6,
-        epoc9
-    };
-
     namespace loader {
         struct eka2img;
         struct romimg;
@@ -58,7 +55,7 @@ namespace eka2l1 {
     }
 
     namespace hle {
-        using epoc_import_func = std::function<void(system*)>;
+        using epoc_import_func = std::function<void(system *)>;
 
         class lib_manager {
             std::map<std::u16string, sids> ids;
@@ -98,8 +95,11 @@ namespace eka2l1 {
             std::map<address, epoc_import_func> custom_funcs;
 
             lib_manager(){};
+
             void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
             void shutdown();
+
+            void reset();
 
             std::optional<sids> get_sids(const std::u16string &lib_name);
             std::optional<exportaddrs> get_export_addrs(const std::u16string &lib_name);
@@ -133,15 +133,20 @@ namespace eka2l1 {
 
             std::optional<std::string> get_func_name(const sid id);
 
-            std::map<uint32_t, e32img_inf>& get_e32imgs_cache() {
+            std::map<uint32_t, e32img_inf> &get_e32imgs_cache() {
                 return e32imgs_cache;
             }
 
-            std::map<uint32_t, romimg_inf>& get_romimgs_cache() {
+            std::map<uint32_t, romimg_inf> &get_romimgs_cache() {
                 return romimgs_cache;
             }
 
             address get_vtable_address(const std::string class_name);
+
+            address get_vtable_entry_addr(const std::string class_name, uint32_t idx) {
+                return get_vtable_address(class_name) + idx * 4;
+            }
+
             address get_export_addr(sid id);
         };
     }

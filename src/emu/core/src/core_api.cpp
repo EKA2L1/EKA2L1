@@ -190,7 +190,7 @@ int set_current_symbian_use(int sys, unsigned int ver) {
     }
 
     sys_ptr &symsys = syses[sys - 1];
-    symsys->set_symbian_version_use((ver == EPOC6) ? eka2l1::epocver::epoc6 : eka2l1::epocver::epoc9);
+    symsys->set_symbian_version_use((ver == EPOC6) ? epocver::epoc6 : epocver::epoc9);
 
     return 0;
 }

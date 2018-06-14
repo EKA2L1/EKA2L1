@@ -160,8 +160,8 @@ namespace eka2l1 {
 
         done_data8:
             *dest++ = p1;
-            return dest - static_cast<uint8_t *>(destination);
-
+            return static_cast<int>(dest - static_cast<uint8_t *>(destination));
+            
         done_dest:
             return dest - static_cast<uint8_t *>(destination);
 
@@ -195,7 +195,7 @@ namespace eka2l1 {
         }
 
         uint32_t ibytepair_stream::read_page(char *dest, uint32_t page, size_t size) {
-            uint32_t len = common::min<uint32_t>(size, 4096);
+            size_t len = common::min<size_t>(size, 4096);
             auto crr_pos = compress_stream->tellg();
             std::vector<char> buf;
 
@@ -208,7 +208,7 @@ namespace eka2l1 {
                 return 0;
             }
 
-            auto omitted = nokia_bytepair_decompress(dest, len, buf.data(), idx_tab.page_size[page]);
+            auto omitted = nokia_bytepair_decompress(dest, static_cast<int>(len), buf.data(), idx_tab.page_size[page]);
 
             return omitted;
         }
@@ -242,13 +242,14 @@ namespace eka2l1 {
 
             res.resize(idx_tab.header.number_of_pages + 1);
 
-            uint32_t bytes = initial_off + 10 + res.size() * sizeof(uint16_t);
+            size_t bytes = initial_off + 10 + res.size() * sizeof(uint16_t);
+
             for (auto i = 0; i < res.size(); ++i) {
-                res[i] = bytes;
+                res[i] = static_cast<uint32_t>(bytes);
                 bytes += idx_tab.page_size[i];
             }
 
-            res[res.size()] = bytes;
+            res[res.size()] = static_cast<uint32_t>(bytes);
 
             return res;
         }

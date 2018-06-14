@@ -79,14 +79,26 @@ namespace eka2l1 {
                 }
             
                 case chunk_access::global: {
-                    range_beg = GLOBAL_DATA;
-                    range_end = RAM_DRIVE; // Drive D
+                    if (kern->get_epoc_version() == epocver::epoc6) {
+                        range_beg = LOCAL_DATA;
+                        range_end = DLL_STATIC_DATA;
+					} else {
+						range_beg = GLOBAL_DATA;
+						range_end = RAM_DRIVE; // Drive D
+					}
+
                     break;
                 }
 
                 case chunk_access::code: {
-                    range_beg = RAM_CODE_ADDR;
-                    range_end = ROM;
+					if (kern->get_epoc_version() == epocver::epoc6) {
+                        range_beg = RAM_CODE_ADDR_EKA1;
+                        range_end = RAM_CODE_ADDR_EKA1_END;
+					} else {
+						range_beg = RAM_CODE_ADDR;
+						range_end = ROM;
+					}
+
                     break;
                 }
             }

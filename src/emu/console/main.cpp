@@ -38,7 +38,7 @@ std::string sis_install_path = "-1";
 uint8_t adrive;
 
 eka2l1::system symsys;
-eka2l1::epocver ever = epocver::epoc9;
+epocver ever;
 
 YAML::Node config;
 
@@ -111,7 +111,7 @@ void read_config() {
         config = YAML::LoadFile("config.yml");
 
         rom_path = config["rom_path"].as<std::string>();
-        ever = (eka2l1::epocver)(config["epoc_ver"].as<int>());
+        ever = (epocver)(config["epoc_ver"].as<int>());
     } catch (...) {
         //LOG_INFO("Can not load config, use default configuration");
         return;

@@ -37,6 +37,9 @@ type
     property Sys: Longint read system;
   end;
 
+var
+  ESym: TSymbian;
+
 implementation
 
 procedure TSymbian.Reset;

@@ -26,7 +26,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="6">
       <Unit0>
         <Filename Value="EKA2L1.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -55,6 +55,14 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="installdialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="InstallForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="InstallDialog"/>
+      </Unit5>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

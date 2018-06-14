@@ -19,6 +19,7 @@
  */
 
 #include <loader/sis_fields.h>
+#include <loader/sis_old.h>
 #include <loader/sis_script_interpreter.h>
 
 #include <cassert>
@@ -32,8 +33,33 @@
 namespace eka2l1 {
     namespace loader {
         enum {
-            uid1_cst = 0x10201A7a
+            uid1_cst = 0x10201A7A
         };
+
+        // Given a SIS path, identify the EPOC version
+        std::optional<epocver> get_epoc_ver(std::string path) {
+            FILE *f = fopen(path.c_str(), "rb");
+
+            if (!f) {
+                return std::optional<epocver>{};
+            }
+
+            uint32_t uid1 = 0;
+            uint32_t uid2 = 0;
+
+            fread(&uid1, 1, 4, f);
+            fread(&uid2, 1, 4, f);
+
+            if (uid1 == uid1_cst) {
+                return epocver::epoc9;
+            }
+
+            if (uid2 == static_cast<uint32_t>(epoc_sis_type::epocu6)) {
+                return epocver::epocu6;
+            }
+
+            return epocver::epoc6;
+        }
 
         sis_contents parse_sis(std::string path) {
             sis_parser parser(path);
@@ -45,4 +71,3 @@ namespace eka2l1 {
         }
     }
 }
-
