@@ -388,5 +388,16 @@ namespace eka2l1 {
 
         return nullptr;
     }
+
+    thread_ptr kernel_system::get_thread_by_name(const std::string &name) {
+        auto thr_pair_find = std::find_if(threads.begin(), threads.end(),
+            [](auto &thr_pair) { return thr_pair.second.obj_name() == name; });
+
+        if (thr_pair_find == threads.end()) {
+            return nullptr;
+        }
+
+        return thr_pair_find->second;
+    }
 }
 

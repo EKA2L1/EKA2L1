@@ -113,6 +113,14 @@ namespace eka2l1 {
             object_type get_object_type() const {
                 return obj_type;
             }
+
+            void set_owner_type(kernel::owner_type new_owner) {
+                owner_type = new_owner;
+            }
+
+            void rename(const std::string &new_name) {
+                obj_name = new_name;
+            }
         };
     }
 }

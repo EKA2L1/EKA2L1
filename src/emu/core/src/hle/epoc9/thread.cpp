@@ -119,7 +119,139 @@ BRIDGE_FUNC(ptr<RHeap>, UserHeapChunkHeap, RChunk aChunk, TInt aMinLength, TInt 
     return ret;
 }
 
+BRIDGE_FUNC(TInt, RThreadCreate, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC> aName, eka2l1::ptr<TThreadFunction> aFunction,
+    TInt aStackSize, TInt aHeapMinSize, TInt aHeapMaxSize, eka2l1::ptr<TAny> aPtr, TOwnerType aType) {
+    memory_system *mem = sys->get_memory_system();
+    kernel_system *kern = sys->get_kernel_system();
+    RThread *thr_wrap = aThread.get(mem);
+
+    kernel::owner_type owner = aType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread;
+    std::string thread_name = common::ucs2_to_utf8(aName.get(mem)->StdString(sys));
+
+    thread_ptr hle_thread = kern->add_thread(owner,
+        kern->get_id_base_owner(owner), kernel::access_type::local_access,
+        thread_name, aFunction.ptr_address(), aStackSize, aHeapMinSize, aHeapMaxSize, aPtr.get(mem));
+
+    thr_wrap->iHandle = hle_thread->unique_id();
+
+    chunk_ptr thread_heap_chunk = kern->create_chunk("HeapThread" + std::to_string(thr_wrap->iHandle),
+        0, aHeapMinSize, aHeapMaxSize, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::local,
+        kernel::chunk_attrib::none, kernel::owner_type::thread);
+
+    RHeapAdvance thread_heap = NewHeap(sys, sys->get_lib_manager(), thread_heap_chunk, 0, 4);
+
+    // For now, just take the default heap, idk
+    memcpy(thread_heap_chunk->base().get(mem), &thread_heap, sizeof(RHeapAdvance));
+    address ret = thread_heap_chunk->base().ptr_address();
+
+    // Swapping the heap
+    current_local_data(sys).heap = ret;
+
+    return KErrNone;
+}
+
+BRIDGE_FUNC(TInt, RThreadCreateWithAllocator, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC> aName, eka2l1::ptr<TThreadFunction> aFunction,
+    TInt aStackSize, eka2l1::ptr<RAllocator> aAllocator, eka2l1::ptr<TAny> aPtr, TOwnerType aType) {
+    memory_system *mem = sys->get_memory_system();
+    kernel_system *kern = sys->get_kernel_system();
+    RThread *thr_wrap = aThread.get(mem);
+
+    kernel::owner_type owner = aType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread;
+    std::string thread_name = common::ucs2_to_utf8(aName.get(mem)->StdString(sys));
+
+    thread_ptr hle_thread = kern->add_thread(owner,
+        kern->get_id_base_owner(owner), kernel::access_type::local_access,
+        thread_name, aFunction.ptr_address(), aStackSize, 0, 0, aPtr.get(mem));
+
+    thr_wrap->iHandle = hle_thread->unique_id();
+
+    // Swapping the heap
+    current_local_data(sys).heap = aAllocator.ptr_address();
+
+    return KErrNone;
+}
+
+BRIDGE_FUNC(TInt, RThreadOpen, eka2l1::ptr<RThread> aThread, kernel::uid aId, TOwnerType aOwner) {
+    kernel_system *kern = sys->get_kernel_system();
+    kernel_obj_ptr hle_obj = kern->get_kernel_obj(aId); 
+
+    if (!hle_obj) {
+        return KErrNotFound;
+    }
+
+    thread_ptr maybe_thread = std::dynamic_pointer_cast<kernel::thread>(hle_obj);
+
+    if (!maybe_thread) {
+        return KErrNotFound;
+    }
+
+    hle_obj->set_owner_type(aOwner == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
+    aThread.get(sys->get_memory_system())->iHandle = aId;
+
+    return KErrNone;
+}
+
+BRIDGE_FUNC(TInt, RThreadOpenByName, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC> aName, TOwnerType aOwner) {
+    kernel_system *kern = sys->get_kernel_system();
+    TDesC *des = aName.get(sys->get_memory_system());
+    thread_ptr thr = kern->get_thread_by_name(common::ucs2_to_utf8(des->StdString(sys)));
+
+    if (!thr) {
+        return KErrNotFound;
+    }
+
+    thr->set_owner_type(aOwner == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
+    aThread.get(sys->get_memory_system())->iHandle = thr->unique_id();
+
+    return KErrNone;
+}
+
+// Funny name
+BRIDGE_FUNC(TInt, RThreadRenameMe, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDes> aNewName) {
+    kernel_system *kern = sys->get_kernel_system();
+    TDesC *des = aNewName.get(sys->get_memory_system());
+    RThread *lle_thread = aThread.get(sys->get_memory_system());
+
+    kernel_obj_ptr hle_obj = kern->get_kernel_obj(lle_thread->iHandle);
+
+    if (!hle_obj) {
+        return KErrNotFound;
+    }
+
+    hle_obj->rename(common::ucs2_to_utf8(des->StdString(sys)));
+
+    return KErrNone;
+}
+
+BRIDGE_FUNC(TInt, RThreadKill, eka2l1::ptr<RThread> aThread, TInt aReason) {
+    kernel_system *kern = sys->get_kernel_system();
+    RThread *lle_thread = aThread.get(sys->get_memory_system());
+
+    kernel_obj_ptr hle_obj = kern->get_kernel_obj(lle_thread->iHandle);
+
+    if (!hle_obj) {
+        return KErrNotFound;
+    }
+
+    thread_ptr hle_thread = std::reinterpret_pointer_cast<kernel::thread>(hle_obj);
+    hle_thread->stop();
+
+    LOG_INFO("Thread is either killed or terminated with no mercy, sadly, with code: {}", aReason);
+
+    return KErrNone;
+}
+
+BRIDGE_FUNC(TInt, RThreadTerminate, eka2l1::ptr<RThread> aThread, TInt aReason) {
+    return RThreadKill(sys, aThread, aReason);
+}
+
 const eka2l1::hle::func_map thread_register_funcs = {
     BRIDGE_REGISTER(479498917, UserHeapCreateThreadHeap),
-    BRIDGE_REGISTER(1478769233, UserHeapChunkHeap)
+    BRIDGE_REGISTER(1478769233, UserHeapChunkHeap),
+    BRIDGE_REGISTER(1342626600, RThreadCreateWithAllocator),
+    BRIDGE_REGISTER(2297872534, RThreadCreate),
+    BRIDGE_REGISTER(1042284812, RThreadOpen),
+    BRIDGE_REGISTER(3698492392, RThreadOpenByName),
+    BRIDGE_REGISTER(3496173659, RThreadKill),
+    BRIDGE_REGISTER(1807821789, RThreadTerminate)
 };

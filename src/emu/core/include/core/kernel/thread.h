@@ -123,6 +123,8 @@ namespace eka2l1 {
             ptr<void> usrdata;
 
             memory_system *mem;
+            timing_system *timing;
+
             uint32_t lrt;
 
             chunk_ptr stack_chunk;

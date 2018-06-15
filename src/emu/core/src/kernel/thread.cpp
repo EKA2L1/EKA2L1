@@ -118,7 +118,7 @@ namespace eka2l1 {
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
-            , mem(mem){
+            , mem(mem) {
             obj_type = object_type::thread;
 
             priority = caculate_thread_priority(pri);

@@ -166,6 +166,7 @@ namespace eka2l1 {
         bool get_closeable(kernel::uid id);
 
         kernel_obj_ptr get_kernel_obj(kernel::uid id);
+        thread_ptr get_thread_by_name(const std::string &name);
 
         bool run_thread(kernel::uid thr);
 

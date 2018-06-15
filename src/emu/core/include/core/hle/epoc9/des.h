@@ -26,6 +26,8 @@
 #include <hle/bridge.h>
 #include <ptr.h>
 
+#include <string>
+
 using namespace eka2l1;
 
 const TInt KShiftDes8Type = 28;
@@ -41,9 +43,31 @@ enum TDesType {
 
 struct TDesC8 {
     TUint iLength;
+
+    TUint8 *Ptr(eka2l1::system *sys);
+    TUint Length() const;
+    TDesType Type() const;
+
+    bool Compare(eka2l1::system *sys, TDesC8 &aRhs);
+    std::string StdString(eka2l1::system *sys);
+
+    void SetLength(eka2l1::system *sys, TUint32 iNewLength);
+    void Assign(eka2l1::system *sys, std::string iNewString);
 };
 
-struct TDesC16 : public TDesC8 {};
+struct TDesC16 {
+    TUint iLength;
+
+    TUint16 *Ptr(eka2l1::system *sys);
+    TUint Length() const;
+    TDesType Type() const;
+
+    bool Compare(eka2l1::system *sys, TDesC16 &aRhs);
+    std::u16string StdString(eka2l1::system *sys);
+
+    void SetLength(eka2l1::system *sys, TUint32 iNewLength);
+    void Assign(eka2l1::system *sys, std::string iNewString);
+};
 
 struct TDes8 : public TDesC8 {};
 struct TDes16 : public TDesC16 {};
@@ -109,11 +133,11 @@ using TPtr = TPtr16;
 
 // TDes Utility
 
-TInt GetTDesC8Type(TDesC8 *aDes8);
+TInt GetTDesC8Type(const TDesC8 *aDes8);
 ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, TDesC8 *aDes8);
 TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8);
 
-TInt GetTDesC16Type(TDesC16 *aDes16);
+TInt GetTDesC16Type(const TDesC16 *aDes16);
 ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16);
 TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16);
 
