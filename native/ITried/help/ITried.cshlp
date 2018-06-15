@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE cshproj SYSTEM "/epoc32/tools/cshlpcmp/dtd/cshproj.dtd">
+<?xml:stylesheet href="/epoc32/tools/cshlpcmp/xsl/CSHproj.xsl" title="CS-Help project" type="text/xsl"?>
+<cshproj>
+<helpfileUID>0xed3e09d5</helpfileUID>
+<directories>
+	<input></input>
+	<output></output>
+	<graphics></graphics>
+	<working>temp\</working>
+</directories>
+<files>
+	<source>
+	<xmlfile>ITried.xml</xmlfile>
+	</source>
+	<destination>ITried_0xed3e09d5.hlp</destination>
+	<customization>custom.xml</customization>
+	</files>
+</cshproj>

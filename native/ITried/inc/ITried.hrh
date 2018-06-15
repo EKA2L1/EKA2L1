@@ -1,0 +1,24 @@
+/*
+ ============================================================================
+ Name		: ITried.hrh
+ Author	  : Your friendly mama
+ Copyright   : I'm your mama
+ Description : This file contains declarations for constants of ITried.
+ The file can be included in C++ or resource file.
+ ============================================================================
+ */
+#ifndef __ITRIED_HRH__
+#define __ITRIED_HRH__
+
+#define _UID3 0xed3e09d5
+
+// ITried enumerate command codes
+enum TITriedIds
+	{
+	ECommand1 = 0x6001, // start value must not be 0
+	ECommand2,
+	EHelp,
+	EAbout
+	};
+
+#endif // __ITRIED_HRH__

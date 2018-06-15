@@ -1,0 +1,45 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : Your friendly mama
+ Copyright   : I'm your mama
+ Description : This file provides the information required for building the
+				whole of a ITried.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+WINSCW ARMV5 GCCE
+
+
+#ifdef SBSV2
+
+PRJ_EXTENSIONS
+	
+	START EXTENSION s60/mifconv
+	OPTION TARGETFILE itried_0xed3e09d5.mif
+	OPTION HEADERFILE itried_0xed3e09d5.mbg
+	OPTION SOURCEDIR ../gfx
+	OPTION SOURCES -c32 qgn_menu_ITried
+	END
+	
+	// help compiler is not always available; see similar comment in *.pkg file
+	START EXTENSION techview/bldhelp
+	OPTION HELPPROJECTFILE ITried.cshlp
+	OPTION HELPTOOLTARGETNAME itried_0xed3e09d5.hlp
+	END
+
+#else
+
+PRJ_MMPFILES
+
+	gnumakefile icons_scalable_dc.mk
+
+	// help compiler is not always available; see similar comment in *.pkg file
+	gnumakefile ../help/build_help.mk
+
+#endif
+
+PRJ_MMPFILES
+
+ITried.mmp

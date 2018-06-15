@@ -1,0 +1,15 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : Your friendly mama
+ Copyright   : I'm your mama
+ Description : This file provides the information required for building the
+				whole of a CmdReversing.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_MMPFILES
+CmdReversing.mmp

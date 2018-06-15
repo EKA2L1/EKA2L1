@@ -52,7 +52,7 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
 
     memcpy(&value, eka2l1::ptr<const void>(address).get(jit->get_memory_sys()), size);
     
-    const bool read_log = false;
+    const bool read_log = true;
 
     if (read_log)
         LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
@@ -66,7 +66,7 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
         return;
     }
 
-    const bool write_log = false;
+    const bool write_log = true;
 
     if (write_log)
         LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
@@ -122,7 +122,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         }
     }
 
-    const bool log_code = false;
+    const bool log_code = true;
 
     if (log_code) {
         const uint8_t * code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());

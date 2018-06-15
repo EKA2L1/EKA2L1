@@ -1,0 +1,37 @@
+; Installation file for ITried application
+;
+; This is an auto-generated PKG file by Carbide.
+; This file uses variables specific to Carbide builds that will not work
+; on command-line builds. If you want to use this generated PKG file from the
+; command-line tools you will need to modify the variables with the appropriate
+; values: $(EPOCROOT), $(PLATFORM), $(TARGET)
+;
+;Language - standard language definitions
+&EN
+
+; standard SIS file header
+#{"ITried"},(0xed3e09d5),1,0,0
+
+;Localised Vendor name
+%{"Vendor-EN"}
+
+;Unique Vendor name
+:"Vendor"
+
+;Supports Series 60 v 5.0
+[0x101F7961], 0, 0, 0, {"Series60ProductID"}
+
+;Files to install
+;You should change the source paths to match that of your environment
+;<source> <destination>
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\ITried_0xed3e09d5.exe"		-"!:\sys\bin\ITried_0xed3e09d5.exe"
+"$(EPOCROOT)epoc32\data\z\resource\apps\itried_0xed3e09d5.rsc"		-"!:\resource\apps\ITried_0xed3e09d5.rsc"
+"$(EPOCROOT)epoc32\data\z\private\10003a3f\apps\itried_0xed3e09d5_reg.rsc"	-"!:\private\10003a3f\import\apps\ITried_0xed3e09d5_reg.rsc"
+"$(EPOCROOT)epoc32\data\z\resource\apps\itried_0xed3e09d5.mif" -"!:\resource\apps\ITried_0xed3e09d5.mif"
+"..\help\itried_0xed3e09d5.hlp"							 -"!:\resource\help\ITried_0xed3e09d5.hlp"
+
+; Add any installation notes if applicable
+;"ITried.txt"		-"!:\private\ed3e09d5\ITried.txt"
+
+;required for application to be covered by backup/restore facility 
+"..\sis\backup_registration.xml"		-"!:\private\ed3e09d5\backup_registration.xml"

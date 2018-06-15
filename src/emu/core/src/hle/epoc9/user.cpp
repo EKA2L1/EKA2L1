@@ -139,7 +139,7 @@ BRIDGE_FUNC(void, UserLineCommand, eka2l1::ptr<TDesC> aDes) {
     std::u16string cmd_args = kern->get_process(kern->crr_process())->get_cmd_args();
 
     memcpy(ptr, cmd_args.data(), cmd_args.length() * 2);
-    SetLengthDes(des, cmd_args.length());
+    SetLengthDes(sys, des, cmd_args.length());
 }
 
 BRIDGE_FUNC(TInt, UserCommandLineLength) {
@@ -195,18 +195,18 @@ BRIDGE_FUNC(TInt, UserGetDesParameter16, TInt aSlot, eka2l1::ptr<TDes> aDes) {
         std::u16string arg = pr->get_exe_path() + u" " + pr->get_cmd_args();
         memcpy(ptr, arg.data(), slot.data_size);
 
-        SetLengthDes(des, slot.data_size);
+        SetLengthDes(sys, des, slot.data_size / 2);
         return KErrNone;
     }
 
     TUint16 *ptr2 = eka2l1::ptr<TUint16>(slot.data).get(sys->get_memory_system());
     memcpy(ptr, ptr2, slot.data_size);
 
-    SetLengthDes(des, slot.data_size);
+    SetLengthDes(sys, des, slot.data_size / 2);
     return KErrNone;
 }
 
-BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes> aDes) {
+BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes8> aDes) {
     kernel_system *kern = sys->get_kernel_system();
     process_ptr pr = kern->get_process(kern->crr_process());
 
@@ -223,22 +223,22 @@ BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes> aDes) {
         return KErrNotFound;
     }
 
-    TDes *des = aDes.get(sys->get_memory_system());
+    TDes8 *des = aDes.get(sys->get_memory_system());
     TUint8 *ptr = GetTDes8Ptr(sys, des);
 
     if (aSlot == 1) {
         std::u16string arg = pr->get_exe_path() + u" " + pr->get_cmd_args();
-        memcpy(ptr, common::ucs2_to_utf8(arg).data(), slot.data_size);
+        memcpy(ptr, common::ucs2_to_utf8(arg).data(), slot.data_size / 2);
 
-        SetLengthDes(des, slot.data_size);
+        SetLengthDes(sys, des, slot.data_size / 2);
 
         return KErrNone;
     }
 
     TUint8 *ptr2 = eka2l1::ptr<TUint8>(slot.data).get(sys->get_memory_system());
-    memcpy(ptr, ptr2, slot.data_size);
+    memcpy(ptr, ptr2, slot.data_size / 2);
 
-    SetLengthDes(des, slot.data_size);
+    SetLengthDes(sys, des, slot.data_size / 2);
 
     return KErrNone;
 }
@@ -248,6 +248,11 @@ BRIDGE_FUNC(TInt, UserLeave, TInt aCode) {
     UserExit(sys, aCode);
 
     return 0;
+}
+
+BRIDGE_FUNC(eka2l1::ptr<void>, memcpy, eka2l1::ptr<void> dest, eka2l1::ptr<void> src, TInt size) {
+    memcpy(dest.get(sys->get_memory_system()), src.get(sys->get_memory_system()), size);
+    return dest;
 }
 
 const eka2l1::hle::func_map user_register_funcs = {
@@ -261,5 +266,6 @@ const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3535789199, UserGetTIntParameter),
     BRIDGE_REGISTER(411482431, UserGetDesParameter),
     BRIDGE_REGISTER(1985486127, UserGetDesParameter16),
-    BRIDGE_REGISTER(824932975, UserLeave)
+    BRIDGE_REGISTER(824932975, UserLeave),
+    BRIDGE_REGISTER(226653584, memcpy)
 };

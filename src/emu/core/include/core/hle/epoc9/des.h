@@ -126,8 +126,8 @@ struct TLit16 : public TLit8 {};
 TUint8 *GetLit8Ptr(memory_system *mem, eka2l1::ptr<TLit8> aLit);
 TUint16 *GetLit16Ptr(memory_system *mem, eka2l1::ptr<TLit16> aLit);
 
-void SetLengthDes(TDesC8 *des, uint32_t len);
-void SetLengthDes(TDesC16 *des, uint32_t len);
+void SetLengthDes(eka2l1::system *sys, TDesC8 *des, uint32_t len);
+void SetLengthDes(eka2l1::system *sys, TDesC16 *des, uint32_t len);
 
 uint32_t ExtractDesLength(uint32_t len);
 

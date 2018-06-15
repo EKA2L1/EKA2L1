@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE asptml SYSTEM "/epoc32/tools/cshlpcmp/dtd/asptml.dtd">
+<?xml:stylesheet href="/epoc32/tools/cshlpcmp/xsl/asptml.xsl" title="asptml" type="text/xsl"?>
+<asptml>
+<uid value="0xed3e09d5"/>
+<topic><category>ITried</category><topictitle>General Information</topictitle>
+<synonyms>General Information</synonyms>
+<context contextUID="General_Information"/>
+<index>General Information</index>
+<p>Insert your help here.</p>
+<p></p>
+</topic>
+</asptml>

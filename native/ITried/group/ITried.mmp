@@ -1,0 +1,60 @@
+/*
+============================================================================
+ Name		: ITried.mmp
+ Author	  : Your friendly mama
+ Copyright   : I'm your mama
+ Description : This is the project specification file for ITried.
+============================================================================
+*/
+
+MACRO _HELP_AVAILABLE_
+
+TARGET			ITried_0xed3e09d5.exe
+TARGETTYPE		exe
+UID		  0x100039CE 0xed3e09d5
+
+SOURCEPATH		..\src
+SOURCE			ITried.cpp
+SOURCE			ITriedApplication.cpp
+SOURCE			ITriedAppView.cpp
+SOURCE			ITriedAppUi.cpp
+SOURCE			ITriedDocument.cpp
+
+SOURCEPATH		..\data
+
+START RESOURCE	ITried.rss
+HEADER
+TARGET ITried_0xed3e09d5
+TARGETPATH resource\apps
+END //RESOURCE
+
+START RESOURCE	ITried_reg.rss
+TARGET ITried_0xed3e09d5_reg
+TARGETPATH 	  \private\10003a3f\apps
+END //RESOURCE
+
+USERINCLUDE	   ..\inc
+USERINCLUDE    ..\help
+
+SYSTEMINCLUDE	 /epoc32/include
+
+LIBRARY		   euser.lib
+LIBRARY		   apparc.lib
+LIBRARY		   cone.lib
+LIBRARY		   eikcore.lib
+LIBRARY		   avkon.lib
+LIBRARY		   commonengine.lib
+LIBRARY		   efsrv.lib 
+LIBRARY		   estor.lib
+LIBRARY        aknnotify.lib
+LIBRARY        hlplch.lib
+ 
+
+LANG SC
+
+VENDORID	  	  0
+SECUREID		  0xed3e09d5
+CAPABILITY	  	  ReadUserData
+
+DEBUGGABLE_UDEBONLY
+// End of File

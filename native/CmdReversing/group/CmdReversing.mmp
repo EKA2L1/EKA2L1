@@ -1,0 +1,22 @@
+/*
+============================================================================
+ Name		: CmdReversing.mmp
+ Author	  : Your friendly mama
+ Copyright   : I'm your mama
+ Description : This is the project specification file for CmdReversing.
+============================================================================
+*/
+
+TARGET		  CmdReversing.exe
+TARGETTYPE	  exe
+UID			 0 0xe8abe52f
+
+USERINCLUDE	 ..\inc
+SYSTEMINCLUDE   \epoc32\include
+
+SOURCEPATH	  ..\src
+SOURCE		  CmdReversing.cpp
+
+LIBRARY		 euser.lib
+
+DEBUGGABLE_UDEBONLY

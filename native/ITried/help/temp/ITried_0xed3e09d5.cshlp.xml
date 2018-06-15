@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE cshlp SYSTEM "file:///C:/S60/devices/S60_5th_Edition_SDK_v1.0/epoc32/tools/cshlpcmp/dtd/cshlp.dtd">
+<?xml:stylesheet href="file:///C:/S60/devices/S60_5th_Edition_SDK_v1.0/epoc32/tools/cshlpcmp/xsl/cshlp.xsl" title="cshlp" type="text/xsl"?>
+<cshlp helpfileUID="3980265941">
+
+
+<topic topicID="1" categoryUID="3980265941"><category>ITried</category><topictitle>General Information</topictitle>
+<synonyms>General Information</synonyms>
+
+
+<p font="sansserif" style="normal" size="10" color="foreground" justify="left" spacing="10" before="5" after="0" left="0" right="0">Insert your help here.</p>
+<p font="sansserif" style="normal" size="10" color="foreground" justify="left" spacing="10" before="5" after="0" left="0" right="0"/>
+</topic>
+<uid value="3980265941"/>
+<context contextUID="General_Information" topicID="1"/>
+<indexlink topicID="1" indexID="0" categoryUID="3980265941">General Information</indexlink>
+<index indexID="0">General Information</index>
+
+<customization><titlestyle fontstyle="sansserif" size="10"/>
+<listbullet1style bulletchar="8226"/>
+<listbullet2style bulletchar="8226"/>
+<lists leftindent="20"/>
+<body font="sansserif" style="normal" size="10" color="foreground" justify="left" spacing="10" before="5" after="0" left="0" right="0"></body>
+</customization>
+<mbmlist/></cshlp>

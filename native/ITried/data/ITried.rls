@@ -1,0 +1,39 @@
+/*
+============================================================================
+ Name		: ITried.rls
+ Author	  : Your friendly mama
+ Copyright   : I'm your mama
+ Description : This is a localisation file for ITried
+				A .rls file is the one and only place where the logical
+				strings to be localised are defined. 
+============================================================================
+*/
+
+//  LOCALISATION STRINGS
+
+// Caption string for app.
+#define qtn_caption_string "ITried"
+
+// First item in "Options" menu pane
+#define qtn_command1 "Message"
+
+// Second item in "Options" menu pane
+#define qtn_command2 "Message from file"
+
+#define qtn_help "Help"
+
+#define qtn_about "About"
+
+// Third item in "Options" menu pane
+#define qtn_exit "Exit"
+
+// When user requests ECommand1 event, text below is shown.
+#define qtn_command1_text "Hello World!"
+
+#define qtn_loc_resource_file_1 "\\resource\\apps\\ITried_0xed3e09d5"
+
+#define qtn_about_dialog_title "About"
+
+#define qtn_about_dialog_text "ITried Version 1.0.0\n\nAuthor: Your friendly mama\n\nSupport: support@mycompany.com\n\n(c) I'm your mama"
+
+// End of File
