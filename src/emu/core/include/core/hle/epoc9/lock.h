@@ -20,6 +20,20 @@
 #pragma once
 
 #include <epoc9/base.h>
+#include <epoc9/err.h>
+#include <epoc9/types.h>
+#include <epoc9/base.h>
 
-struct RFastLock: public RHandleBase {};
+#include <hle/bridge.h>
+
+#include <ptr.h>
+
+struct RFastLock : public RHandleBase {};
 struct RSemaphore : public RHandleBase {};
+
+/* RSemaphore */
+BRIDGE_FUNC(TInt, RSemaphoreOpen, eka2l1::ptr<RSemaphore> aSema, TInt aSlot, TOwnerType aOwnerType);
+BRIDGE_FUNC(TInt, RSemaphoreCreateLocal, eka2l1::ptr<RSemaphore> aSema, TInt aInitCount, TOwnerType aOwnerType);
+BRIDGE_FUNC(TInt, RSemaphoreCreateGlobal, eka2l1::ptr<RSemaphore> aSema, eka2l1::ptr<TDesC> aName, TInt aInitCount, TOwnerType aOwnerType);
+
+extern const eka2l1::hle::func_map lock_register_funcs;

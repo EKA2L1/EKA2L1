@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <hle/bridge.h>
+
 #include <cstdint>
 #include <ptr.h>
 

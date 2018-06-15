@@ -2,6 +2,7 @@
 #include <epoc9/des.h>
 #include <epoc9/e32loader.h>
 #include <epoc9/user.h>
+#include <epoc9/thread.h>
 
 #include <common/cvt.h>
 

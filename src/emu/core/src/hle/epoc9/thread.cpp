@@ -223,26 +223,46 @@ BRIDGE_FUNC(TInt, RThreadRenameMe, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDe
     return KErrNone;
 }
 
-BRIDGE_FUNC(TInt, RThreadKill, eka2l1::ptr<RThread> aThread, TInt aReason) {
+BRIDGE_FUNC(void, RThreadKill, eka2l1::ptr<RThread> aThread, TInt aReason) {
     kernel_system *kern = sys->get_kernel_system();
     RThread *lle_thread = aThread.get(sys->get_memory_system());
 
     kernel_obj_ptr hle_obj = kern->get_kernel_obj(lle_thread->iHandle);
 
     if (!hle_obj) {
-        return KErrNotFound;
+        return;
     }
 
     thread_ptr hle_thread = std::reinterpret_pointer_cast<kernel::thread>(hle_obj);
     hle_thread->stop();
 
     LOG_INFO("Thread is either killed or terminated with no mercy, sadly, with code: {}", aReason);
-
-    return KErrNone;
 }
 
-BRIDGE_FUNC(TInt, RThreadTerminate, eka2l1::ptr<RThread> aThread, TInt aReason) {
-    return RThreadKill(sys, aThread, aReason);
+BRIDGE_FUNC(void, RThreadTerminate, eka2l1::ptr<RThread> aThread, TInt aReason) {
+    RThreadKill(sys, aThread, aReason);
+}
+
+// Terminate and panic is not the same
+// TODO: Execute clean up code
+BRIDGE_FUNC(void, RThreadPanic, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC> aReasonMsg, TInt aReasonCode) {
+    hle::lib_manager *mngr = sys->get_lib_manager();
+    memory_system *mem = sys->get_memory_system();
+    kernel_system *kern = sys->get_kernel_system();
+
+    TDesC16 *des = aReasonMsg.get(mem);
+    RThread *lle_thread = aThread.get(mem);
+
+    LOG_WARN("Thread {} paniced with msg: {}, code: {}", lle_thread->iHandle, common::ucs2_to_utf8(des->StdString(sys)), aReasonCode);
+
+    kernel_obj_ptr hle_obj = kern->get_kernel_obj(lle_thread->iHandle);
+
+    if (!hle_obj) {
+        return;
+    }
+
+    thread_ptr hle_thread = std::reinterpret_pointer_cast<kernel::thread>(hle_obj);
+    hle_thread->stop();
 }
 
 const eka2l1::hle::func_map thread_register_funcs = {
@@ -253,5 +273,6 @@ const eka2l1::hle::func_map thread_register_funcs = {
     BRIDGE_REGISTER(1042284812, RThreadOpen),
     BRIDGE_REGISTER(3698492392, RThreadOpenByName),
     BRIDGE_REGISTER(3496173659, RThreadKill),
-    BRIDGE_REGISTER(1807821789, RThreadTerminate)
+    BRIDGE_REGISTER(1807821789, RThreadTerminate),
+    BRIDGE_REGISTER(3655896873, RThreadPanic)
 };

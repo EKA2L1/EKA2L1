@@ -65,10 +65,11 @@ BRIDGE_FUNC(TInt, RThreadCreate, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC
     TInt aStackSize, TInt aHeapMinSize, TInt aHeapMaxSize, eka2l1::ptr<TAny> aPtr, TOwnerType aType);
 BRIDGE_FUNC(TInt, RThreadCreateWithAllocator, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC> aName, eka2l1::ptr<TThreadFunction> aFunction,
     TInt aStackSize, eka2l1::ptr<RAllocator> aAllocator, eka2l1::ptr<TAny> aPtr, TOwnerType aType);
-BRIDGE_FUNC(TInt, RThreadTerminate, eka2l1::ptr<RThread> aThread, TInt aReason);
-BRIDGE_FUNC(TInt, RThreadKill, eka2l1::ptr<RThread> aThread, TInt aReason);
+BRIDGE_FUNC(void, RThreadTerminate, eka2l1::ptr<RThread> aThread, TInt aReason);
+BRIDGE_FUNC(void, RThreadKill, eka2l1::ptr<RThread> aThread, TInt aReason);
 BRIDGE_FUNC(TInt, RThreadRenameMe, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDes> aNewName);
 BRIDGE_FUNC(TInt, RThreadOpenByName, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC> aName, TOwnerType aOwner);
 BRIDGE_FUNC(TInt, RThreadOpen, eka2l1::ptr<RThread> aThread, kernel::uid aId, TOwnerType aOwner);
+BRIDGE_FUNC(void, RThreadPanic, eka2l1::ptr<RThread> aThread, eka2l1::ptr<TDesC> aReasonMsg, TInt aReasonCode);
 
 extern const eka2l1::hle::func_map thread_register_funcs;

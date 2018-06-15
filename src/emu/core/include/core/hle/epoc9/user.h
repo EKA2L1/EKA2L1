@@ -22,8 +22,9 @@
 
 // Implementing all USER calls
 
-#include <epoc9/types.h>
 #include <epoc9/err.h>
+#include <epoc9/types.h>
+#include <epoc9/des.h>
 
 #include <core.h>
 
@@ -45,5 +46,13 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, UserTrapHandler);
 BRIDGE_FUNC(eka2l1::ptr<TAny>, UserMarkCleanupStack);
 BRIDGE_FUNC(void, UserUnmarkCleanupStack, eka2l1::ptr<TAny>);
 BRIDGE_FUNC(TInt, UserParameterLength, TInt aSlot);
+BRIDGE_FUNC(void, UserPanic, ptr<TDesC16> aReasonMsg, TInt aCode);
+BRIDGE_FUNC(eka2l1::ptr<void>, memcpy, eka2l1::ptr<void> dest, eka2l1::ptr<void> src, TInt size);
+BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes8> aDes);
+BRIDGE_FUNC(TInt, UserGetDesParameter16, TInt aSlot, eka2l1::ptr<TDes> aDes);
+BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val);
+BRIDGE_FUNC(TInt, UserCommandLineLength);
+
+BRIDGE_FUNC(void, UserLineCommand, eka2l1::ptr<TDesC> aDes);
 
 extern const eka2l1::hle::func_map user_register_funcs;

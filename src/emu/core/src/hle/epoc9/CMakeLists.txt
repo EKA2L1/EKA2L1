@@ -20,6 +20,7 @@ add_library(epoc9
     char.cpp
     cons.cpp
     des.cpp
+    lock.cpp
     e32loader.cpp
     hal.cpp
     mem.cpp
