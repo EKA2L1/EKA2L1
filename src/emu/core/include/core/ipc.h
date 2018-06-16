@@ -60,6 +60,12 @@ namespace eka2l1 {
         ipc_arg_type get_arg_type(int slot);
     };
 
+    /* An IPC msg (ver 2) contains the IPC context. */
+    /* Handle: Handle to the message. */
+    /* Function: The IPC function ordinal */
+    /* Arg: IPC args. Max args = 4 */
+    /* Spare1: Not used. */
+    /* Session: Pointer to the session. */
     struct ipc_msg {
         int handle;
         int function;
