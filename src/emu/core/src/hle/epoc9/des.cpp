@@ -45,7 +45,7 @@ TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8) {
 }
 
 TInt GetTDesC16Type(const TDesC16 *aDes16) {
-    return GetTDesC8Type(reinterpret_cast<TDesC8 *>(aDes16));
+    return GetTDesC8Type(reinterpret_cast<const TDesC8 *>(aDes16));
 }
 
 ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16) {

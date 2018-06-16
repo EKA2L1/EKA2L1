@@ -175,15 +175,11 @@ BRIDGE_FUNC(TInt, RThreadOpen, eka2l1::ptr<RThread> aThread, kernel::uid aId, TO
     kernel_system *kern = sys->get_kernel_system();
     kernel_obj_ptr hle_obj = kern->get_kernel_obj(aId); 
 
-    if (!hle_obj) {
+    if (!hle_obj || hle_obj->get_object_type() != kernel::object_type::thread) {
         return KErrNotFound;
     }
 
-    thread_ptr maybe_thread = std::dynamic_pointer_cast<kernel::thread>(hle_obj);
-
-    if (!maybe_thread) {
-        return KErrNotFound;
-    }
+    thread_ptr maybe_thread = std::reinterpret_pointer_cast<kernel::thread>(hle_obj);
 
     hle_obj->set_owner_type(aOwner == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
     aThread.get(sys->get_memory_system())->iHandle = aId;
