@@ -30,43 +30,59 @@
 
 namespace eka2l1 {
     namespace service {
+        struct server_msg;
+
         // Arguments: IPC message, which contains the context
-        using ipc_func_wrapper = std::function<void(ipc_msg)>;
+        using ipc_func_wrapper = std::function<void(server_msg)>;
         using session_ptr = std::shared_ptr<session>;
+        using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 
         struct ipc_func {
             ipc_func_wrapper wrapper;
             std::string name;
         };
 
-        struct server_msg {
-            // The IPC context
-            ipc_msg real_msg;
-
-            // Mark if the message is requested to be replied asynchronously.
-            bool async;
-
-            // If async = false, this will be a nullptr, else, it will points to a TRequestStatus,
-            // which basiclly is an int.
-            eka2l1::ptr<int> request_status;
+        enum class ipc_message_status {
+            delivered,
+            accepted,
+            completed
         };
 
-        class server : public kernel::kernel_obj {
-            std::queue<session> sessions;
-            std::queue<server_msg> pending_msgs;
+        struct server_msg {
+            // The IPC context
+            ipc_msg_ptr real_msg;
 
+            int *request_status;
+
+            // Status of the message, if it's accepted or delivered
+            ipc_message_status msg_status;
+        };
+
+        /* A IPC HLE server. Supervisor thread will check the server and reply pending messages. */
+        class server : public kernel::wait_obj {
+            std::queue<session> sessions;
+            std::vector<server_msg> delivered_msgs;
+
+            std::vector<server_msg> accepted_msgs;
+            std::vector<server_msg> completed_msgs;
+            
             std::unordered_map<uint32_t, ipc_func> ipc_funcs;
 
-        public:
-            /* 
-               Send and receive synchronous.
-            */
-            int send_receive(ipc_msg &msg);
+            thread_ptr owning_thread;
 
-            /* 
-               Send a message blind, Receive nothing.
-            */
-            int send(ipc_msg &msg);
+        protected:
+            bool is_msg_delivered(ipc_msg_ptr &msg);
+
+        public:
+            int receive(ipc_msg_ptr &msg, int &request_sts);
+            int accept(server_msg msg);
+            int deliver(server_msg msg);
+            int cancel();
+
+            void register_ipc_func(uint32_t ordinal, ipc_func func);
+
+            // Processed asynchronously
+            void process_accepted_msg();
         };
     }
 }

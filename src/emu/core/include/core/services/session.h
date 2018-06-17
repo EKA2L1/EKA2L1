@@ -39,15 +39,11 @@ namespace eka2l1 {
 
         using server_ptr = std::shared_ptr<sever>;
 
-        class session : public kernel::wait_obj {
-            sever_ptr own_server;
-            std::queue<ipc_msg> msgs_queue;
+        class session {
+            int send_receive(ipc_msg &msg);
+            int send_receive_sync(ipc_msg &msg, int &status);
 
-            ipc_msg *free_msg;
-        };
-
-        class subsession : public kernel::wait_obj {
-
+            int send(ipc_msg &msg);
         };
     }
 }

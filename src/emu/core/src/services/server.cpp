@@ -3,34 +3,73 @@
 
 namespace eka2l1 {
     namespace service {
-        /* 
-            Send and receive sync.
-        */
-        int server::send_receive(ipc_msg &msg) {
-            auto &res = ipc_funcs.find(msg.function);
+        bool server::is_msg_delivered(ipc_msg_ptr &msg) {
+            auto &res = std::find_if(delivered_msgs.begin(), delivered_msgs.end(),
+                [&](const auto &svr_msg) { return svr_msg.real_msg->id == msg->id; });
 
-            if (res == ipc_funcs.end()) {
-                LOG_WARN("IPC call not found: {}", msg.function);
-                return -2; // KErrNotFound
+            if (res != delivered_msgs.end()) {
+                return true;
             }
 
-            std::string &name = res->second.name;
-            ipc_func_wrapper &wrapper = res->second.wrapper;
+            auto &res2 = std::find_if(accepted_msgs.begin(), accepted_msgs.end(),
+                [&](const auto &svr_msg) { return svr_msg.real_msg->id == msg->id; });
 
-            uint32_t id = res->first;
+            if (res2 != accepted_msgs.end()) {
+                return true;
+            }
 
-            LOG_INFO("Calling IPC: {}, id: {}", name, id);
+            return false;
+        }
 
-            wrapper(msg);
+        int server::receive(ipc_msg_ptr &msg, int &request_sts) {
+            msg.status = request_sts;
+
+            /* Message received. Count as delivered*/
+            server_msg smsg;
+            smsg.request_status = &request_status;
+            smsg.msg_status = ipc_message_status::delivered;
+            smsg.real_msg = msg;
+
+            /* If there is pending message, pop the last one and accept it */
+            if (!delivered_msgs.empty()) {
+                server_msg yet_pending = std::move(delivered_msgs.front());
+                accept(yet_pending.real_msg);
+                delivered_msgs.pop_back();
+            }
+
+            /* Push the received message to the delivered messages */
+            delivered_msgs.push_back(smsg);
 
             return 0;
         }
 
-        /* 
-               Send the blind message only. It doesnt expect to receive anything
-        */
-        int server::send(ipc_msg &msg) {
-            return send_receive(msg);
+        int server::accept(server_msg msg) {
+            // Server is dead, nope, i wont accept you, never, or maybe ...
+            if (owning_thread->current_state() == kernel::thread_state::stop) {
+                return -1;
+            }
+
+            msg.msg_status = ipc_message_status::accepted;
+            accepted_msgs.push_back(std::move(msg));
+
+            return 0;
+        }
+
+        int server::deliver(server_msg msg) {
+            // Is ready
+            if (msg.status == 0) {
+                accept(msg);
+            } else {
+                delivered_msgs.push_back(std::move(msg));
+            }
+
+            return 0;
+        }
+
+        int server::cancel() {
+            delivered_msgs.pop_back();
+
+            return 0;
         }
     }
 }

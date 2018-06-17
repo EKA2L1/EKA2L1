@@ -60,17 +60,20 @@ namespace eka2l1 {
         ipc_arg_type get_arg_type(int slot);
     };
 
+    class session;
+    using session_ptr = std::shared_ptr<session>;
+
     /* An IPC msg (ver 2) contains the IPC context. */
-    /* Handle: Handle to the message. */
     /* Function: The IPC function ordinal */
     /* Arg: IPC args. Max args = 4 */
-    /* Spare1: Not used. */
     /* Session: Pointer to the session. */
     struct ipc_msg {
-        int handle;
+        thread_ptr own_thr;
         int function;
         int args[4];
-        uint32_t spare1;
-        eka2l1::ptr<void> session;
+        session_ptr msg_session;
+
+        int status;
+        uint64_t id;
     };
 }
