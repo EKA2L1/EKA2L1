@@ -40,10 +40,14 @@ namespace eka2l1 {
         using server_ptr = std::shared_ptr<sever>;
 
         class session {
-            int send_receive(ipc_msg &msg);
-            int send_receive_sync(ipc_msg &msg, int &status);
+            server_ptr svr;
 
-            int send(ipc_msg &msg);
+        public:
+            int send_receive_sync(ipc_msg_ptr &msg);
+            int send_receive(ipc_msg_ptr &msg, int &status);
+
+            // Send blind message
+            int send(ipc_msg_ptr &msg);
         };
     }
 }

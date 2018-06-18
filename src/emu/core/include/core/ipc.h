@@ -62,7 +62,7 @@ namespace eka2l1 {
 
     class session;
     using session_ptr = std::shared_ptr<session>;
-
+    
     /* An IPC msg (ver 2) contains the IPC context. */
     /* Function: The IPC function ordinal */
     /* Arg: IPC args. Max args = 4 */
@@ -70,10 +70,12 @@ namespace eka2l1 {
     struct ipc_msg {
         thread_ptr own_thr;
         int function;
-        int args[4];
+        ipc_arg args;
         session_ptr msg_session;
 
         int status;
         uint64_t id;
     };
+
+    using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 }

@@ -22,6 +22,7 @@
 
 #include <kernel/kernel_obj.h>
 #include <services/session.h>
+#include <services/context.h>
 
 #include <functional>
 #include <queue>
@@ -29,11 +30,13 @@
 #include <unordered_map>
 
 namespace eka2l1 {
+    class system;
+
     namespace service {
         struct server_msg;
 
         // Arguments: IPC message, which contains the context
-        using ipc_func_wrapper = std::function<void(server_msg)>;
+        using ipc_func_wrapper = std::function<void(ipc_context)>;
         using session_ptr = std::shared_ptr<session>;
         using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 
@@ -65,10 +68,11 @@ namespace eka2l1 {
 
             std::vector<server_msg> accepted_msgs;
             std::vector<server_msg> completed_msgs;
-            
+
             std::unordered_map<uint32_t, ipc_func> ipc_funcs;
 
             thread_ptr owning_thread;
+            system *sys;
 
         protected:
             bool is_msg_delivered(ipc_msg_ptr &msg);

@@ -71,5 +71,19 @@ namespace eka2l1 {
 
             return 0;
         }
+
+        void server::register_ipc_func(uint32_t ordinal, ipc_func func) {
+            ipc_funcs.emplace(ordinal, func);
+        }
+
+        // Processed asynchronously, use for HLE service where accepted function
+        // is fetched imm
+        void server::process_accepted_msg() {
+            if (accepted_msgs.size() == 0) {
+                return;
+            }
+
+            auto &msg = std::move(accepted_msgs.back());
+        }
     }
 }
