@@ -21,8 +21,15 @@
 #pragma once
 
 #include <ptr.h>
+#include <memory>
 
 namespace eka2l1 {
+    namespace kernel {
+        class thread;
+    }
+
+    using thread_ptr = std::shared_ptr<kernel::thread>;
+
     enum class ipc_arg_type {
         unspecified = 0,
         handle = 1,
@@ -51,6 +58,8 @@ namespace eka2l1 {
     struct ipc_arg {
         int args[4];
         int flag;
+
+        ipc_arg() {}
 
         ipc_arg(int arg0, const int flag);
         ipc_arg(int arg0, int arg1, const int flag);
@@ -89,6 +98,8 @@ namespace eka2l1 {
         uint32_t owner_id;
 
         bool free : true;
+
+        ipc_msg() {}
 
         ipc_msg(uint64_t id, uint32_t owner_id, thread_ptr thr)
             : id(id), own_thr(thr), owner_id(owner_id) {}

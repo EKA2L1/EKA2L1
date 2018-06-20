@@ -228,8 +228,14 @@ BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes8> aDes) {
     TUint8 *ptr = GetTDes8Ptr(sys, des);
 
     if (aSlot == 1) {
-        std::u16string arg = pr->get_exe_path() + u" " + pr->get_cmd_args();
-        memcpy(ptr, common::ucs2_to_utf8(arg).data(), slot.data_size / 2);
+        std::u16string arg = u"\0l" + pr->get_exe_path() + u" " + pr->get_cmd_args();
+
+        char src = 0x00;
+        char src2 = 0x6C;
+
+        memcpy(ptr + 2, common::ucs2_to_utf8(arg).data(), slot.data_size / 2);
+        memcpy(ptr, &src, 1);
+        memcpy(ptr + 1, &src2, 1);
 
         SetLengthDes(sys, des, slot.data_size / 2);
 

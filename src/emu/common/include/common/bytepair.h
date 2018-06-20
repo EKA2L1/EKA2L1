@@ -49,7 +49,7 @@ namespace eka2l1 {
 
         public:
             struct index_table_header {
-                int size_of_data;]
+                int size_of_data;
                 int decompressed_size;
                 uint16_t number_of_pages;
             };

@@ -405,7 +405,7 @@ namespace eka2l1 {
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
         auto &free_msg = std::find_if(msgs.begin(), msgs.end(),
-            [](const auto &msg) { return msg->free; });
+            [](const auto &msg) { return msg.second->free; });
 
         if (free_msg != msgs.end()) {
             free_msg->second->free = false;
@@ -418,7 +418,7 @@ namespace eka2l1 {
         msg_crr_uid++;
 
         ipc_msg_ptr msg
-            = std::make_shared<ipc_msg>(msg_crr_uid.load(), crr_thread());
+            = std::make_shared<ipc_msg>(msg_crr_uid.load(), get_id_base_owner(owner), crr_thread());
 
         kernel::uid id = msg->id;
         msg->owner_type = static_cast<int>(owner);
