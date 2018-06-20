@@ -21,6 +21,7 @@ add_subdirectory(src/disasm)
 add_subdirectory(src/drivers)
 add_subdirectory(src/kernel)
 add_subdirectory(src/abi)
+add_subdirectory(src/services)
 
 target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)

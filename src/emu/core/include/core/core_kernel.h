@@ -27,6 +27,7 @@
 #include <kernel/sema.h>
 #include <kernel/timer.h>
 
+#include <ipc.h>
 #include <process.h>
 #include <ptr.h>
 
@@ -60,6 +61,10 @@ namespace eka2l1 {
         friend class process;
 
         std::atomic<kernel::uid> crr_uid;
+
+        // Message is not based on kernel object, it should have its own id counter.
+        std::atomic<kernel::uid> msg_crr_uid;
+
         kernel::uid crr_process_id;
 
         /* Kernel objects map */
@@ -69,6 +74,8 @@ namespace eka2l1 {
         std::map<kernel::uid, mutex_ptr> mutexes;
         std::map<kernel::uid, sema_ptr> semas;
         std::map<kernel::uid, timer_ptr> timers;
+
+        std::unordered_map<kernel::uid, ipc_msg_ptr> msgs;
 
         /* End kernel objects map */
 
@@ -88,7 +95,7 @@ namespace eka2l1 {
         epocver kern_ver = epocver::epoc9;
 
     public:
-        void init(system* esys, timing_system *sys, manager_system *mngrsys,
+        void init(system *esys, timing_system *sys, manager_system *mngrsys,
             memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu);
 
         void shutdown();
@@ -153,6 +160,19 @@ namespace eka2l1 {
             kernel::owner_type owner,
             kernel::uid own_id = -1,
             kernel::access_type access = kernel::access_type::local_access);
+
+        /*! \brief Create an IPC message. 
+         *
+         * First, look up to see if there is any messsage free to use. Mark message found as not free and return it.
+         * If there isn't any free message, create a new one and store it in an unordered map.
+        */
+        ipc_msg_ptr create_msg(kernel::owner_type owner);
+
+        /*! \brief Free a message. */
+        void free_msg(ipc_msg_ptr msg);
+
+        /*! \brief Completely destroy a message. */
+        void destroy_msg(ipc_msg_ptr msg);
 
         bool close_chunk(kernel::uid id);
         bool close_thread(kernel::uid id);

@@ -23,32 +23,33 @@
 #include <common/log.h>
 #include <core_kernel.h>
 #include <core_mem.h>
-#include <kernel/thread.h>
 #include <kernel/mutex.h>
+#include <kernel/sema.h>
+#include <kernel/thread.h>
 #include <ptr.h>
 
 namespace eka2l1 {
     namespace kernel {
         struct epoc9_thread_create_info {
-            int           handle;
-            int           type;
-            address       func_ptr;
-            address       ptr;
-            address       supervisor_stack;
-            int           supervisor_stack_size;
-            address       user_stack;
-            int           user_stack_size;
-            int           init_thread_priority;
-            uint32_t      name_len;
-            address       name_ptr;
-            int           total_size;
+            int handle;
+            int type;
+            address func_ptr;
+            address ptr;
+            address supervisor_stack;
+            int supervisor_stack_size;
+            address user_stack;
+            int user_stack_size;
+            int init_thread_priority;
+            uint32_t name_len;
+            address name_ptr;
+            int total_size;
         };
 
         struct epoc9_std_epoc_thread_create_info : public epoc9_thread_create_info {
             address allocator;
-            int     heap_min;
-            int     heap_max;
-            int     padding;
+            int heap_min;
+            int heap_max;
+            int padding;
         };
 
         int caculate_thread_priority(thread_priority pri) {
@@ -131,6 +132,10 @@ namespace eka2l1 {
 
             tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+
+            request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 0, 150, owner_type::thread);
+
+            sync_msg = kern->create_msg(owner_type::process);
 
             /* Create TDesC string. Combine of string length and name data (USC2) */
 
@@ -240,11 +245,26 @@ namespace eka2l1 {
 
             if (state == kernel::thread_state::ready) {
                 scheduler->refresh();
-            }
-            else {
+            } else {
                 scheduler->schedule(std::reinterpret_pointer_cast<thread>(kern->get_kernel_obj(obj_id)));
             }
         }
+
+        void thread::wait_for_any_request() {
+            request_sema->acquire(obj_id);
+
+            if (request_sema->should_wait(obj_id)) {
+                request_sema->add_waiting_thread(std::reinterpret_pointer_cast<kernel::thread>
+                    (kern->get_kernel_obj(obj_id)));
+
+                state = thread_state::wait_fast_sema;
+               
+                scheduler->reschedule();
+            }
+        }
+
+        void thread::signal_request() {
+            request_sema->release(1);
+        }
     }
 }
-

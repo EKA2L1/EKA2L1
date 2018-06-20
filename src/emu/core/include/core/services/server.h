@@ -29,63 +29,86 @@
 #include <string>
 #include <unordered_map>
 
+#include <memory>
+
 namespace eka2l1 {
     class system;
 
+    /*! \brief IPC implementation. */
     namespace service {
         struct server_msg;
 
-        // Arguments: IPC message, which contains the context
         using ipc_func_wrapper = std::function<void(ipc_context)>;
         using session_ptr = std::shared_ptr<session>;
         using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 
+        /*! \brief A class represents an IPC function */
         struct ipc_func {
             ipc_func_wrapper wrapper;
             std::string name;
         };
 
-        enum class ipc_message_status {
-            delivered,
-            accepted,
-            completed
-        };
-
+        /*! \brief A class represents server message. 
+         *
+		 *  A server message is ready when it has the destination to send
+        */
         struct server_msg {
-            // The IPC context
             ipc_msg_ptr real_msg;
+            ipc_msg_ptr dest_msg;
 
-            int *request_status;
-
-            // Status of the message, if it's accepted or delivered
-            ipc_message_status msg_status;
+            bool is_ready() const {
+                return false;
+            }
         };
 
-        /* A IPC HLE server. Supervisor thread will check the server and reply pending messages. */
-        class server : public kernel::wait_obj {
-            std::queue<session> sessions;
+        /*! \brief An IPC HLE server.
+         * 
+         *  The server can receive an message or receive them whenever they want.
+         *  After messages were received, they will be processed by the fake HLE server and signal request semaphore of the client thread.
+        */
+        class server : public kernel::kernel_obj {
+            /** All the sessions connected to this server */
+            std::vector<session*> sessions;
+            
+            /** Messages that has been delivered but not accepted yet */
             std::vector<server_msg> delivered_msgs;
-
-            std::vector<server_msg> accepted_msgs;
-            std::vector<server_msg> completed_msgs;
-
+ 
             std::unordered_map<uint32_t, ipc_func> ipc_funcs;
 
+	        /** The thread own this server */
             thread_ptr owning_thread;
             system *sys;
+
+            /** Placeholder message uses for processing */ 
+            ipc_msg_ptr process_msg;
 
         protected:
             bool is_msg_delivered(ipc_msg_ptr &msg);
 
         public:
-            int receive(ipc_msg_ptr &msg, int &request_sts);
+            server(system *sys, const std::string name);
+
+            void attach(session *svse) {
+                sessions.push_back(svse);
+            }
+
+            void destroy();
+            
+            /*! Receive the message */
+            int receive(ipc_msg_ptr &msg);
+
+            /*! Accept a message that was waiting in the delivered queue */
             int accept(server_msg msg);
+
+            /*! Deliver the message to the server. Message will be put in queue if it's not ready. */
             int deliver(server_msg msg);
+
+            /*! Cancel a message in the delivered queue */
             int cancel();
 
             void register_ipc_func(uint32_t ordinal, ipc_func func);
 
-            // Processed asynchronously
+            /*! Process an message asynchrounously */
             void process_accepted_msg();
         };
     }

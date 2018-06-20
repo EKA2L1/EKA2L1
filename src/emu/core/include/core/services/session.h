@@ -30,23 +30,47 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 namespace eka2l1 {
     using thread_ptr = std::shared_ptr<kernel::thread>;
 
     namespace service {
-        class server; // It's a reference object anyway
+        class server;
 
-        using server_ptr = std::shared_ptr<sever>;
+        using server_ptr = std::shared_ptr<server>;
 
-        class session {
+        /*! \brief An IPC session 
+		 *
+         *  A session is a bridge between server and client.
+         *  We can send message to the server and receive result.
+         *  Server can be in different process and different thread.
+        */
+        class session : public kernel::kernel_obj {
             server_ptr svr;
 
-        public:
-            int send_receive_sync(ipc_msg_ptr &msg);
-            int send_receive(ipc_msg_ptr &msg, int &status);
+            std::vector<ipc_msg_ptr> msgs_pool;
 
-            // Send blind message
+        private:
+            ipc_msg_ptr &get_free_msg();
+
+        public:
+            session(kernel_system *kern, server_ptr svr, int async_slot_count);
+
+            int send_receive_sync(int function, ipc_arg args);
+            int send_receive_sync(int function);
+            int send_receive(int function, ipc_arg args, int *request_sts);
+            int send_receive(int function, int *request_sts);
+            int send(int function, ipc_arg args);
+            int send(int function);
+
+            /*! Send and receive an message synchronously */
+            int send_receive_sync(ipc_msg_ptr &msg);
+
+            /*! Send and receive an message asynchronously */
+            int send_receive(ipc_msg_ptr &msg);
+
+            /*! Send a message blind. Meaning that we don't care about what it returns */
             int send(ipc_msg_ptr &msg);
         };
     }

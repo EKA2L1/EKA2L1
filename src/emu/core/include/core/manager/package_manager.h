@@ -32,6 +32,7 @@ namespace eka2l1 {
         class sis_controller;
     }
 
+	/*! \brief Managing apps. */
     namespace manager {
         using uid = uint32_t;
 

@@ -24,11 +24,8 @@
 
 namespace eka2l1 {
     namespace common {
-        // Hate MSVC istringstream since 1998
-
-        // This header contains a lightweight class for streaming buffer,
-        // since std contains nothing helpful for this need
-
+		/*! \brief Another buffer stream, base on LLVM's Buffer */
+		*/
         class buffer_stream_base {
         protected:
             uint8_t *beg;
@@ -53,6 +50,7 @@ namespace eka2l1 {
             end
         };
 
+		/*! A read only buffer stream */
         class ro_buf_stream : public buffer_stream_base {
         public:
             ro_buf_stream(uint8_t *beg, uint64_t size)

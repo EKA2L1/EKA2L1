@@ -20,6 +20,7 @@
 #pragma once
 
 namespace eka2l1 {
+	/*! \brief A 2D Vector */
     struct vec2 {
         int x, y;
 

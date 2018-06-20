@@ -47,7 +47,7 @@ namespace eka2l1 {
             chunk
         };
 
-        // Base class for all kernel object
+        /*! \brief Base class for all kernel object. */
         class kernel_obj {
         protected:
             std::string obj_name;

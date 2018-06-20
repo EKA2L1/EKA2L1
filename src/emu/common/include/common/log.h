@@ -27,15 +27,23 @@
 namespace eka2l1 {
     extern bool already_setup;
 
+	/*! \brief Logger interface.
+	 * 
+	 * GUI can log by provide the emulator an interface.
+	*/
     class base_logger {
     public:
         virtual void log(const char *fmt, ...) = 0;
         virtual void clear() = 0;
     };
 
+	/*! \brief Contains function to setup logging. */
     namespace log {
         extern std::shared_ptr<spdlog::logger> spd_logger;
 
+		/*! \brief Set up the logging.
+		    \param gui_logger The extra logger you want to provide to the emulator.
+		*/
         void setup_log(std::shared_ptr<base_logger> gui_logger);
     }
 }

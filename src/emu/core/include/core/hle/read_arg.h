@@ -27,12 +27,20 @@
 
 namespace eka2l1 {
     namespace hle {
+		/*! \brief Reading an argument from the registers. 
+		 * \param cpu The CPU.
+		 * \param arg The layout of that argument.
+		*/
         template <typename T>
         std::enable_if_t<sizeof(T) <= 4, T> read_from_gpr(arm::jitter &cpu, const arg_layout &arg) {
             const uint32_t reg = cpu->get_reg(arg.offset);
             return *reinterpret_cast<const T*>(&reg);
         }
 
+		/*! \brief Reading an argument from the registers. 
+		 * \param cpu The CPU.
+		 * \param arg The layout of that argument.
+		*/
         template <typename T>
         std::enable_if_t<sizeof(T) == 8, T> read_from_gpr(arm::jitter &cpu, const arg_layout &arg) {
             const uint64_t low = cpu->get_reg(arg.offset - 1);
@@ -43,12 +51,21 @@ namespace eka2l1 {
             return *reinterpret_cast<const T*>(&all);
         }
 
+		/*! \brief Reading an argument from the float registers. 
+		 * \param cpu The CPU.
+		 * \param arg The layout of that argument.
+		*/
         template <typename T>
         T read_from_fpr(arm::jitter& cpu, const arg_layout& arg) {
             LOG_WARN("Reading from FPR unimplemented");
             return T{};
         }
 
+		/*! \brief Reading an argument from stack. 
+		 * \param cpu The CPU.
+		 * \param arg The layout of that argument.
+		 * \param mem The memory system.
+		*/
         template <typename T>
         T read_from_stack(arm::jitter& cpu, const arg_layout &layout, memory_system *mem) {
             const address sp = cpu->get_stack_top();
@@ -57,6 +74,11 @@ namespace eka2l1 {
             return *ptr<T>(stack_arg_offset).get(mem);
         }
 
+		/*! \brief Reading an argument. 
+		 * \param cpu The CPU.
+		 * \param arg The layout of that argument.
+		 * \param mem The memory system.
+		*/
         template <typename T>
         T read(arm::jitter& cpu, const arg_layout &layout, memory_system *mem) {
             switch (layout.loc) {
@@ -73,6 +95,11 @@ namespace eka2l1 {
             return T{};
         }
 
+		/*! \brief Reading an argument. 
+		 * \param cpu The CPU.
+		 * \param arg The layout of that argument.
+		 * \param mem The memory system.
+		*/
         template <typename arg, size_t idx, typename... args>
         arg read(arm::jitter &cpu, const args_layout<args...> &margs, memory_system* mem) {
             using arm_type = typename bridge_type<arg>::arm_type;

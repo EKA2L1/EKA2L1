@@ -62,7 +62,13 @@ namespace eka2l1 {
 
     class session;
     using session_ptr = std::shared_ptr<session>;
-    
+
+    enum class ipc_message_status {
+        delivered,
+        accepted,
+        completed
+    };
+
     /* An IPC msg (ver 2) contains the IPC context. */
     /* Function: The IPC function ordinal */
     /* Arg: IPC args. Max args = 4 */
@@ -73,8 +79,19 @@ namespace eka2l1 {
         ipc_arg args;
         session_ptr msg_session;
 
-        int status;
+        int *request_sts;
+
+        // Status of the message, if it's accepted or delivered
+        ipc_message_status msg_status;
         uint64_t id;
+
+        int owner_type;
+        uint32_t owner_id;
+
+        bool free : true;
+
+        ipc_msg(uint64_t id, uint32_t owner_id, thread_ptr thr)
+            : id(id), own_thr(thr), owner_id(owner_id) {}
     };
 
     using ipc_msg_ptr = std::shared_ptr<ipc_msg>;

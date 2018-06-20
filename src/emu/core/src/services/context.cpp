@@ -29,8 +29,8 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if (iatype == ipc_arg_type::des16 || iatype == ipc_arg_type::desc16) {
-                TDesC16 des = eka2l1::ptr<TDesC16>(msg->args[idx]).get(sys->get_memory_system());
-                return des.StdString(sys->get_memory_system());
+                TDesC16 *des = eka2l1::ptr<TDesC16>(msg->args[idx]).get(sys->get_memory_system());
+                return des->StdString(sys);
             }
 
             return std::optional<std::u16string>{};
@@ -45,8 +45,8 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if (iatype == ipc_arg_type::des8 || iatype == ipc_arg_type::desc8) {
-                TDesC8 des = eka2l1::ptr<TDesC8>(msg->args[idx]).get(sys->get_memory_system());
-                return des.StdString(sys->get_memory_system());
+                TDesC8 *des = eka2l1::ptr<TDesC8>(msg->args[idx]).get(sys->get_memory_system());
+                return des.StdString(sys);
             }
 
             return std::optional<std::string>{};

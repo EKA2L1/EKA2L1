@@ -1,4 +1,5 @@
 #include <common/log.h>
+#include <core.h>
 #include <services/server.h>
 
 namespace eka2l1 {
@@ -11,34 +12,27 @@ namespace eka2l1 {
                 return true;
             }
 
-            auto &res2 = std::find_if(accepted_msgs.begin(), accepted_msgs.end(),
-                [&](const auto &svr_msg) { return svr_msg.real_msg->id == msg->id; });
-
-            if (res2 != accepted_msgs.end()) {
-                return true;
-            }
-
             return false;
         }
 
-        int server::receive(ipc_msg_ptr &msg, int &request_sts) {
-            msg.status = request_sts;
+        // Create a server with name
+        server::server(system *sys, const std::string name)
+            : sys(sys)
+            , kernel_obj(sys->get_kernel_system(), name, kernel::owner_type::process, 0) {
+            kernel_system *kern = sys->get_kernel_system();
+            process_msg = kern->create_msg(kernel::owner_type::process);
+        }
 
-            /* Message received. Count as delivered*/
-            server_msg smsg;
-            smsg.request_status = &request_status;
-            smsg.msg_status = ipc_message_status::delivered;
-            smsg.real_msg = msg;
-
+        int server::receive(ipc_msg_ptr &msg) {
             /* If there is pending message, pop the last one and accept it */
             if (!delivered_msgs.empty()) {
                 server_msg yet_pending = std::move(delivered_msgs.front());
-                accept(yet_pending.real_msg);
+
+                yet_pending.dest_msg = msg;
+
+                accept(yet_pending);
                 delivered_msgs.pop_back();
             }
-
-            /* Push the received message to the delivered messages */
-            delivered_msgs.push_back(smsg);
 
             return 0;
         }
@@ -49,15 +43,22 @@ namespace eka2l1 {
                 return -1;
             }
 
-            msg.msg_status = ipc_message_status::accepted;
-            accepted_msgs.push_back(std::move(msg));
+            msg.dest_msg->msg_status = ipc_message_status::accepted;
+            msg.real_msg->msg_status = ipc_message_status::accepted;
+
+            msg.dest_msg->args = msg.real_msg->args;
+            msg.dest_msg->function = msg.real_msg->function;
+            msg.dest_msg->request_sts = msg.real_msg->request_sts;
+
+            // Mark the client sending message as free
+            kern->free_msg(msg.dest_msg);
 
             return 0;
         }
 
         int server::deliver(server_msg msg) {
             // Is ready
-            if (msg.status == 0) {
+            if (msg.is_ready()) {
                 accept(msg);
             } else {
                 delivered_msgs.push_back(std::move(msg));
@@ -79,11 +80,32 @@ namespace eka2l1 {
         // Processed asynchronously, use for HLE service where accepted function
         // is fetched imm
         void server::process_accepted_msg() {
-            if (accepted_msgs.size() == 0) {
+            receive(process_msg);
+
+            int func = process_msg->function;
+
+            auto func_ite = ipc_funcs.find(func);
+
+            if (func_ite == ipc_funcs.end()) {
                 return;
             }
 
-            auto &msg = std::move(accepted_msgs.back());
+            ipc_func ipf = func_ite->second;
+            ipc_context context{ sys, process_msg };
+
+            LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+
+            ipf.wrapper(context);
+
+            // Not sure if this is finished
+            *process_msg->request_sts = 0;
+
+            // Signal request semaphore, to tell everyone that it has finished random request
+            process_msg->own_thr->signal_request();
+        }
+
+        void server::destroy() {
+            sys->get_kernel_system()->destroy_msg(process_msg);
         }
     }
 }

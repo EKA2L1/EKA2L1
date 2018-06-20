@@ -42,6 +42,7 @@ namespace eka2l1 {
 
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
 
+	/*! \brief Contains the loader for E32Image, ROMImage, SIS. */
     namespace loader {
         enum class eka2_cpu : uint16_t {
             x86 = 0x1000,
@@ -196,9 +197,16 @@ namespace eka2l1 {
             bool has_extended_header = false;
         };
 
+		/*! \brief Parse an E32 Image. 
+		 * \param path Path to the image. */
         std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
+		
+		/*! \brief Parse an E32 Image. 
+		 * \param ef The file opened from io_system. */
         std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true);
 
+		/*! \brief Load an E32 Image. 
+		 */
         bool load_eka2img(eka2img &img, memory_system* mem, kernel_system *kern, hle::lib_manager &mngr);
     }
 }

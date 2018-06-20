@@ -40,18 +40,37 @@ namespace eka2l1 {
 
         using render_func = std::function<void()>;
 
+		/*! \brief Screen driver abstract implementation
+		 *
+		 * A screen driver is responsible for drawing, writing pixels 
+		 * to the screen. People can choose different graphics API
+		 * for screen driver.
+		*/
         class screen_driver {
         protected:
             emu_window_ptr emu_win;
             std::vector<render_func> funcs;
 
         public:
+		    /*! \brief Intialize the screen driver.
+			 * \param win The emulator window.
+			 * \param screen_size The screen size.
+			 * \param font_size The font size.
+			*/
             virtual void init(emu_window_ptr win, object_size &screen_size, object_size &font_size) = 0;
-            virtual void shutdown() = 0;
+            
+			/*! \brief Shutdown the screen driver */
+			virtual void shutdown() = 0;
 
+			/*! \brief Blit text to the screen. 
+			 * \param where Position to draw the text.
+			*/
             virtual void blit(const std::string &text, point &where) = 0;
             virtual bool scroll_up(rect &trect) = 0;
 
+			/*! \brief Clear the screen.
+			 * \param trect The area to clear.
+			*/
             virtual void clear(rect &trect) = 0;
 
             virtual void set_pixel(const point &pos, uint8_t color) = 0;
@@ -85,6 +104,7 @@ namespace eka2l1 {
 
         using screen_driver_ptr = std::shared_ptr<screen_driver>;
 
+		/*! \brief Create a new screen driver */
         screen_driver_ptr new_screen_driver(driver_type dr_type);
     }
 }

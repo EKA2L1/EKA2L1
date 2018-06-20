@@ -57,6 +57,11 @@ namespace eka2l1 {
     namespace hle {
         using epoc_import_func = std::function<void(system *)>;
 
+		/*! \brief Manage libraries and HLE functions.
+		 * 
+		 * HLE functions are stored here. Libraries and images are also cached
+		 * and load when needed.
+		*/
         class lib_manager {
             std::map<std::u16string, sids> ids;
             std::map<sid, std::string> func_names;
@@ -96,41 +101,64 @@ namespace eka2l1 {
 
             lib_manager(){};
 
+			/*! \brief Intialize the library manager. 
+			 * \param ver The EPOC version to import HLE functions.
+			*/
             void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
-            void shutdown();
+            
+			/*! \brief Shutdown the library manager. */
+			void shutdown();
 
+			/*! \brief Reset the library manager. */
             void reset();
 
+			/*! \brief Get the SIDS of a library. */
             std::optional<sids> get_sids(const std::u16string &lib_name);
+			
+			/*! \brief Get the export addresses of a library. */
             std::optional<exportaddrs> get_export_addrs(const std::u16string &lib_name);
 
             void register_hle(sid id, epoc_import_func func);
+
+            /*! \brief Get the HLE function from an SID */
             std::optional<epoc_import_func> get_hle(sid id);
 
+			/*! \brief Call HLE function with an ID */
             bool call_hle(sid id);
+			
+			/*! \brief Call a HLE function registered at a specific address */
             bool call_custom_hle(address addr);
+			
+			/*! \brief Call a HLE system call.
+			 * \param svcnum The system call ordinal.
+			*/
             bool call_svc(sid svcnum);
 
-            // Image name
+			/*! \brief Load an E32Image. */
             loader::e32img_ptr load_e32img(const std::u16string &img_name);
-            loader::romimg_ptr load_romimg(const std::u16string &rom_name, bool log_export = false);
+            
+			/*! \brief Load an ROM image. */
+			loader::romimg_ptr load_romimg(const std::u16string &rom_name, bool log_export = false);
 
-            // Open the image code segment
+            /*! \brief Open the image code segment */
             void open_e32img(loader::e32img_ptr &img);
 
-            // Close the image code segment. Means that the image will be unloaded, XIP turns to false
+            /*! \brief Close the image code segment. Means that the image will be unloaded, XIP turns to false. */
             void close_e32img(loader::e32img_ptr &img);
 
             void open_romimg(loader::romimg_ptr &img);
             void close_romimg(loader::romimg_ptr &img);
 
-            // Register export addresses for desired HLE library
-            // This will also map the export address with the correspond SID
-            // Note that these export addresses are unique, since they are the address in
-            // the memory.
+            /*! \brief Register export addresses for desired HLE library
+             *
+			 * This will also map the export address with the correspond SID.
+             * Note that these export addresses are unique, since they are the address in
+             * the memory.
+			*/
             bool register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_export = false);
             std::optional<sid> get_sid(exportaddr addr);
 
+			/*! \brief Given an SID, get the function name. */
             std::optional<std::string> get_func_name(const sid id);
 
             std::map<uint32_t, e32img_inf> &get_e32imgs_cache() {
@@ -141,6 +169,9 @@ namespace eka2l1 {
                 return romimgs_cache;
             }
 
+			/*! \brief Given a class name, return the vtable address.
+			 * \returns 0 if the class doesn't exists in the cache, else returns the vtable address of that class.
+			*/
             address get_vtable_address(const std::string class_name);
 
             address get_vtable_entry_addr(const std::string class_name, uint32_t idx) {

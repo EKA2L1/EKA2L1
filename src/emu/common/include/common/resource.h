@@ -23,8 +23,10 @@
 
 namespace eka2l1 {
     namespace common {
-
-        // Custom runtime RAII
+	    /*! \brief Represents a resource.
+		 *
+		 * A resource can have custom destructor. 
+		*/
         template <typename T>
         struct resource {
             using deleter = std::function<void(T)>;
@@ -43,6 +45,10 @@ namespace eka2l1 {
                 }
             }
 
+			/*! \brief Get the actual object.
+			 *
+			 * \returns A copy of the actual object
+			*/
             T get() const {
                 return res;
             }

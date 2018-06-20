@@ -33,7 +33,7 @@
 #include <vfs.h>
 
 namespace eka2l1 {
-    void kernel_system::init(system* esys, timing_system *timing_sys, manager_system *mngrsys,
+    void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
         memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu) {
         // Intialize the uid with zero
         crr_uid.store(0);
@@ -53,7 +53,7 @@ namespace eka2l1 {
 
         close_all_processes();
 
-        for (auto& thr : threads) {
+        for (auto &thr : threads) {
             close_thread(thr.second->unique_id());
         }
     }
@@ -83,29 +83,29 @@ namespace eka2l1 {
         std::u16string path16 = std::u16string(path.begin(), path.end());
         symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
-		if (!f) {
+        if (!f) {
             return nullptr;
-		}
+        }
 
         auto temp = loader::parse_eka2img(f, true);
 
-		if (!temp) {
+        if (!temp) {
             return false;
         } else {
             set_epoc_version(temp->epoc_ver);
 
-			// Lib manager needs the system to call HLE function
+            // Lib manager needs the system to call HLE function
             libmngr->init(sys, this, io, mem, kern_ver);
-		}
+        }
 
-		auto res2 = libmngr->load_e32img(path16);
+        auto res2 = libmngr->load_e32img(path16);
 
         if (!res2) {
             return nullptr;
         }
 
         crr_process_id = uid;
-		libmngr->open_e32img(res2);
+        libmngr->open_e32img(res2);
 
         processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, path16, u"", res2)));
 
@@ -143,14 +143,14 @@ namespace eka2l1 {
         return true;
     }
 
-	bool kernel_system::close_process(const kernel::uid id) {
+    bool kernel_system::close_process(const kernel::uid id) {
         auto res = processes.find(id);
 
         if (res == processes.end()) {
             return false;
         }
 
-		process_ptr pr = res->second;
+        process_ptr pr = res->second;
 
         LOG_TRACE("Shutdown process with UID: 0x{:x}", id);
 
@@ -165,7 +165,7 @@ namespace eka2l1 {
             crr_process_id = 0;
 
         return true;
-	}
+    }
     // TODO: Fix this poorly written code
     bool kernel_system::close_all_processes() {
         while (processes.size() > 0) {
@@ -183,7 +183,7 @@ namespace eka2l1 {
 
     chunk_ptr kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
         kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner, int64_t owner_id) {
-        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib, 
+        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib,
             owner, owner_id < 0 ? get_id_base_owner(owner) : static_cast<kernel::uid>(owner_id));
         uint32_t id = new_chunk->unique_id();
 
@@ -196,7 +196,7 @@ namespace eka2l1 {
         kernel::owner_type own,
         kernel::uid own_id,
         kernel::access_type access) {
-        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, own, 
+        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, own,
             own_id < 0 ? get_id_base_owner(own) : static_cast<kernel::uid>(own_id), access);
 
         uint32_t id = new_mutex->unique_id();
@@ -285,9 +285,12 @@ namespace eka2l1 {
         auto res = threads.find(id);
 
         if (res != threads.end()) {
+            thread_ptr thr = res->second;
+            destroy_msg(thr->get_sync_msg());
+            
             threads.erase(id);
 
-            for (auto it = chunks.begin(); it != chunks.end(); ) {
+            for (auto it = chunks.begin(); it != chunks.end();) {
                 // Erase all chunks that have relation to the thread
                 if (it->second && it->second->obj_owner() == id) {
                     uint32_t id = (it++)->first;
@@ -330,7 +333,7 @@ namespace eka2l1 {
 
         thr_sch->schedule(new_thread);
         threads.emplace(new_thread->unique_id(), std::move(new_thread));
-        
+
         return threads[id];
     }
 
@@ -360,7 +363,7 @@ namespace eka2l1 {
 
         if (chunk_ite != chunks.end()) {
             return chunk_ite->second;
-        } 
+        }
 
         auto thread_ite = threads.find(id);
 
@@ -399,5 +402,43 @@ namespace eka2l1 {
 
         return thr_pair_find->second;
     }
-}
 
+    ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
+        auto &free_msg = std::find_if(msgs.begin(), msgs.end(),
+            [](const auto &msg) { return msg->free; });
+
+        if (free_msg != msgs.end()) {
+            free_msg->second->free = false;
+            free_msg->second->owner_type = static_cast<int>(owner);
+            free_msg->second->owner_id = get_id_base_owner(owner);
+
+            return free_msg->second;
+        }
+
+        msg_crr_uid++;
+
+        ipc_msg_ptr msg
+            = std::make_shared<ipc_msg>(msg_crr_uid.load(), crr_thread());
+
+        kernel::uid id = msg->id;
+        msg->owner_type = static_cast<int>(owner);
+        msg->owner_id = get_id_base_owner(owner);
+
+        msgs.emplace(id, std::move(msg));
+
+        return msgs[id];
+    }
+
+    void kernel_system::free_msg(ipc_msg_ptr msg) {
+        msg->free = true;
+    }
+
+    /*! \brief Completely destroy a message. */
+    void kernel_system::destroy_msg(ipc_msg_ptr msg) {
+        auto &res = msgs.find(msg->id);
+
+        if (res != msgs.end()) {
+            msgs.erase(res);
+        }
+    }
+}
