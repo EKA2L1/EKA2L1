@@ -1,8 +1,8 @@
 #include <epoc9/allocator.h>
 #include <epoc9/des.h>
 #include <epoc9/e32loader.h>
-#include <epoc9/user.h>
 #include <epoc9/thread.h>
+#include <epoc9/user.h>
 
 #include <common/cvt.h>
 
@@ -172,6 +172,22 @@ BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val) {
     return KErrNone;
 }
 
+BRIDGE_FUNC(TInt, UserRenameThread, eka2l1::ptr<TDesC16> aNewName) {
+    kernel_system *kern = sys->get_kernel_system();
+    memory_system *mem = sys->get_memory_system();
+    
+    thread_ptr crr_thread = kern->crr_thread();
+
+    TDesC16 *des = aNewName.get(mem);
+    std::string new_thr_name = common::ucs2_to_utf8(des->StdString(sys));
+
+    LOG_INFO("Thread renamed to {}", new_thr_name);
+
+    crr_thread->rename(new_thr_name);
+
+    return KErrNone;
+}
+
 BRIDGE_FUNC(TInt, UserGetDesParameter16, TInt aSlot, eka2l1::ptr<TDes> aDes) {
     kernel_system *kern = sys->get_kernel_system();
     process_ptr pr = kern->get_process(kern->crr_process());
@@ -228,16 +244,20 @@ BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes8> aDes) {
     TUint8 *ptr = GetTDes8Ptr(sys, des);
 
     if (aSlot == 1) {
-        std::u16string arg = u"\0l" + pr->get_exe_path() + u" " + pr->get_cmd_args();
+        std::u16string arg = u"\0l" + pr->get_exe_path();
+
+        if (!pr->get_cmd_args().empty()) {
+            arg += u" " + pr->get_cmd_args();
+        }
 
         char src = 0x00;
         char src2 = 0x6C;
 
-        memcpy(ptr + 2, common::ucs2_to_utf8(arg).data(), slot.data_size / 2);
+        memcpy(ptr + 2, common::ucs2_to_utf8(arg).data(), arg.length());
         memcpy(ptr, &src, 1);
         memcpy(ptr + 1, &src2, 1);
 
-        SetLengthDes(sys, des, slot.data_size / 2);
+        SetLengthDes(sys, des, slot.data_size);
 
         return KErrNone;
     }
@@ -245,7 +265,7 @@ BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes8> aDes) {
     TUint8 *ptr2 = eka2l1::ptr<TUint8>(slot.data).get(sys->get_memory_system());
     memcpy(ptr, ptr2, slot.data_size / 2);
 
-    SetLengthDes(sys, des, slot.data_size / 2);
+    SetLengthDes(sys, des, slot.data_size);
 
     return KErrNone;
 }
@@ -259,6 +279,11 @@ BRIDGE_FUNC(TInt, UserLeave, TInt aCode) {
 
 BRIDGE_FUNC(eka2l1::ptr<void>, memcpy, eka2l1::ptr<void> dest, eka2l1::ptr<void> src, TInt size) {
     memcpy(dest.get(sys->get_memory_system()), src.get(sys->get_memory_system()), size);
+
+    if (size = 0x1) {
+        LOG_INFO("{}", *src.cast<uint8_t>().get(sys->get_memory_system()));
+    }
+
     return dest;
 }
 
@@ -274,5 +299,6 @@ const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(411482431, UserGetDesParameter),
     BRIDGE_REGISTER(1985486127, UserGetDesParameter16),
     BRIDGE_REGISTER(824932975, UserLeave),
-    BRIDGE_REGISTER(226653584, memcpy)
+    BRIDGE_REGISTER(226653584, memcpy),
+    BRIDGE_REGISTER(3039785093, UserRenameThread)
 };

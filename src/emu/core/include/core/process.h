@@ -83,6 +83,10 @@ namespace eka2l1 {
         void set_arg_slot(uint8_t slot, uint32_t data, size_t data_size);
         std::optional<pass_arg> get_arg_slot(uint8_t slot);
 
+        std::string name() const {
+            return process_name;
+        }
+
         // Create a new thread and run
         // No arguments provided
         bool run();

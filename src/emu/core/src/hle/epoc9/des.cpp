@@ -100,6 +100,7 @@ void SetLengthDes(eka2l1::system *sys, TDesC8 *des, uint32_t len) {
 
     if (GetTDesC8Type(des) == EBufCPtr) {
         TBufCPtr8 *buf_ptr = reinterpret_cast<TBufCPtr8 *>(des);
+
         eka2l1::ptr<TBufC8> buf_hle = buf_ptr->iPtr;
 
         TBufC8 *real_buf = buf_hle.get(sys->get_memory_system());

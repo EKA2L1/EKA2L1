@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include <epoc9/pr.h>
+#include <epoc9/des.h>
+
 #include <hle/bridge.h>
 
 BRIDGE_FUNC(eka2l1::ptr<void>, Heap);
@@ -15,5 +18,6 @@ BRIDGE_FUNC(eka2l1::ptr<void>, TrapHandler);
 BRIDGE_FUNC(eka2l1::ptr<void>, SetTrapHandler, eka2l1::ptr<void> aNewHandler);
 BRIDGE_FUNC(eka2l1::ptr<void>, ActiveScheduler);
 BRIDGE_FUNC(void, SetActiveScheduler, eka2l1::ptr<void> aNewScheduler);
+BRIDGE_FUNC(void, ProcessFilename, eka2l1::ptr<RProcess> aProcess, eka2l1::ptr<TDes8> aDes);
 
 extern const eka2l1::hle::func_map svc_register_funcs;
