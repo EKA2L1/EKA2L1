@@ -26,40 +26,53 @@
 #include <string>
 
 namespace eka2l1 {
+	/*! \brief Contains implementation for driver */
     namespace driver {
+		/*! \brief An abstract class to implement the emulator window.
+		 *
+		 * Class can override methods to implement the emulator window.
+		*/
         class emu_window {
         public:
+		    /*! \brief Intialize the emulator window.
+			 * \param title The initial window title.
+			 * \param size The initial window size.
+			*/
             virtual void init(std::string title, vec2 size) = 0;
-            virtual void make_current() = 0;
+            
+			virtual void make_current() = 0;
             virtual void done_current() = 0;
             virtual void swap_buffer() = 0;
             virtual void poll_events() = 0;
             virtual void shutdown() = 0;
 
+			/*! \brief Change the window title.
+			*/
             virtual void change_title(std::string) = 0;
 
             std::function<void(vec2)> resize_hook;
 
             /* Callback handler */
 
-            /* Call when a touch input is triggered */
+            /*! Call when a touch input is triggered */
             std::function<void(point)> touch_pressed;
 
-            /* Call when a touch movement is detected */
+            /*! Call when a touch movement is detected */
             std::function<void(point)> touch_move;
 
-            /* Call when touch is released */
+            /*! Call when touch is released */
             std::function<void()> touch_released;
 
-            /* Call when a button is pressed. User sets their own call, shutdown and center button */
+            /*! Call when a button is pressed. User sets their own call, shutdown and center button */
             std::function<void(uint16_t)> button_pressed;
 
-            /* Call when a button is released */
+            /*! Call when a button is released */
             std::function<void()> button_released;
 
-            /* Call when a button is held */
+            /*! Call when a button is held */
             std::function<void(uint16_t)> button_hold;
 
+			/*! Call when the window is closed */
             std::function<void()> close_hook;
         };
 
@@ -67,6 +80,7 @@ namespace eka2l1 {
             glfw
         };
 
+		/*! \brief Create a new window emulator. */
         std::shared_ptr<emu_window> new_emu_window(window_type win_type);
     }
 }

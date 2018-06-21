@@ -3,6 +3,7 @@ add_library(epoc9
     ${CORE_INCLUDE_DIR}/hle/epoc9/base.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/cons.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/des.h
+    ${CORE_INCLUDE_DIR}/hle/epoc9/dll.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/e32loader.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/err.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/lock.h
@@ -20,6 +21,7 @@ add_library(epoc9
     char.cpp
     cons.cpp
     des.cpp
+    dll.cpp
     lock.cpp
     e32loader.cpp
     hal.cpp

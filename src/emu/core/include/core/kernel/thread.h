@@ -29,9 +29,10 @@
 #include <arm/jit_factory.h>
 #include <common/resource.h>
 
-#include <kernel/wait_obj.h>
 #include <kernel/chunk.h>
+#include <kernel/wait_obj.h>
 
+#include <ipc.h>
 #include <ptr.h>
 
 namespace eka2l1 {
@@ -40,10 +41,12 @@ namespace eka2l1 {
 
     namespace kernel {
         class mutex;
+        class semaphore;
     }
 
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
+    using sema_ptr = std::shared_ptr<kernel::semaphore>;
 
     namespace kernel {
         using address = uint32_t;
@@ -96,7 +99,7 @@ namespace eka2l1 {
             ptr<void> scheduler;
             ptr<void> trap_handler;
             uint32_t thread_id;
-            
+
             std::vector<SBlock> blocks;
 
             // We don't use this. We use our own heap
@@ -137,12 +140,15 @@ namespace eka2l1 {
             std::vector<mutex_ptr> held_mutexes;
             std::vector<mutex_ptr> pending_mutexes;
 
+            sema_ptr request_sema;
+            ipc_msg_ptr sync_msg;
+
             void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
             void create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, address epa);
 
         public:
             thread();
-            thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access, 
+            thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 ptr<void> usrdata = nullptr,
@@ -158,6 +164,10 @@ namespace eka2l1 {
 
             void current_state(thread_state st) {
                 state = st;
+            }
+
+            ipc_msg_ptr &get_sync_msg() {
+                return sync_msg;
             }
 
             bool run();
@@ -176,7 +186,7 @@ namespace eka2l1 {
             bool operator>=(const thread &rhs);
             bool operator<=(const thread &rhs);
 
-            std::optional<tls_slot> get_free_tls_slot(uint32_t dll_uid);
+            tls_slot *get_free_tls_slot(uint32_t handle, uint32_t dll_uid);
             void close_tls_slot(tls_slot &slot);
 
             thread_local_data &get_local_data() {
@@ -188,9 +198,11 @@ namespace eka2l1 {
             }
 
             void update_priority();
+
+            void wait_for_any_request();
+            void signal_request();
         };
 
         using thread_ptr = std::shared_ptr<kernel::thread>;
     }
 }
-

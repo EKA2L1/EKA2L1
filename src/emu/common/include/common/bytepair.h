@@ -30,23 +30,26 @@
 
 namespace eka2l1 {
     namespace common {
-        // Given a chunk of data compress by byte-pair compression as specified by Nokia,
-        // decompress the chunk.
+        /*! \brief Given a chunk of data compress by byte-pair compression as specified by Nokia, decompress the chunk.
+		 *
+		 *  \param dest The destination to write decompressed data to
+         *  \param dest_size The size of the destination buffer
+         *  \param buffer The compressed data
+         *  \param buf_size The compressed data size		 
+		*/
         int nokia_bytepair_decompress(void *dest, unsigned int dest_size, void *buffer, unsigned int buf_size);
 
         enum {
             BYTEPAIR_PAGE_SIZE = 4096
         };
 
-        // Nokia used a old compression algorithm because they are eager to try it out
-        // when it was described with source code in 1994. This code is based both on
-        // that source and Nokia's Open source Symbian Kernel
+		/*! \brief A read-only bytepair stream. */
         class ibytepair_stream {
             std::shared_ptr<std::istream> compress_stream;
 
         public:
             struct index_table_header {
-                int size_of_data; // Includes the index and compressed pages
+                int size_of_data;
                 int decompressed_size;
                 uint16_t number_of_pages;
             };
@@ -63,15 +66,34 @@ namespace eka2l1 {
             ibytepair_stream(std::shared_ptr<std::istream> stream);
             ibytepair_stream(std::string path, uint32_t start);
 
+			/*! \brief Get the index table */
             index_table table() const;
 
+			/*! \brief Seek forward the stream */
             void seek_fwd(size_t size);
 
-            // Read the table entry
+			/*! \brief Read the index table
+			 *
+			 * Bytepair compressed data always has a header (index table), that tells us the uncompressed size
+			 * and each bytepair page's size.
+			*/
             void read_table();
+			
+			/*! \brief Read a page.
+			 *
+			 *  \param page The page index
+			 *  \param size The page size
+			*/
             uint32_t read_page(char *dest, uint32_t page, size_t size);
-            uint32_t read_pages(char *dest, size_t size);
+            
+			/*! \brief Read all available pages.
+			 *
+			 *  \param dest The destination to write decompressed data to 
+			 *  \param size The destination size 
+			*/
+			uint32_t read_pages(char *dest, size_t size);
 
+			/*! \brief Get all the pages's offsets */
             std::vector<uint32_t> page_offsets(uint32_t initial_off);
         };
     }

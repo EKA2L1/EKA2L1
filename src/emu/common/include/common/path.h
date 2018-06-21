@@ -19,33 +19,79 @@
  */
 #include <string>
 
-// Symbian separators is \\
-// This is mostly same as Windows
-
 namespace eka2l1 {
+    /*! \brief Check if the path is absoluted or not 
+	    \param current_dir The current directory..
+		\param str The path.
+	*/
     bool is_absolute(std::string str, std::string current_dir, bool symbian_use = false);
+	
+	/*! \brief Absolute a path.
+	    \param current_dir The current directory.
+		\param str The path
+	*/
     std::string absolute_path(std::string str, std::string current_dir, bool symbian_use = false);
 
+    /*! \brief Check if the path is relative or not
+		\param str The path.
+	*/
     bool is_relative(std::string str, bool symbian_use = false);
-    std::string relative_path(std::string str, bool symbian_use = false);
+    
+	/*! \brief Get the relative path.
+		\param str The path
+	*/
+	std::string relative_path(std::string str, bool symbian_use = false);
 
+	/*! \brief Merge two paths together.
+	 * \returns The new path.
+	*/
     std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use = false);
 
+    /*! \brief Check if the path has root name or not.
+		\param str The path.
+	*/
     bool has_root_name(std::string path, bool symbian_use = false);
-    std::string root_name(std::string path, bool symbian_use = false);
+    
+	/*! \brief Get the root name.
+		\param str The path
+	*/
+	std::string root_name(std::string path, bool symbian_use = false);
 
+    /*! \brief Check if the path has root directory or not.
+		\param str The path.
+	*/
     bool has_root_dir(std::string path, bool symbian_use = false);
+	
+	/*! \brief Get the root directory.
+		\param str The path
+	*/
     std::string root_dir(std::string path, bool symbian_use = false);
-
+	
+    /*! \brief Check if the path has root path or not.
+		\param str The path.
+	*/
     bool has_root_path(std::string path, bool symbian_use = false);
+	
+	/*! \brief Get the root path.
+		\param str The path
+	*/
     std::string root_path(std::string path, bool symbian_use = false);
 
+    /*! \brief Check if the path has file name or not.
+		\param str The path.
+	*/
     bool has_filename(std::string path, bool symbian_use = false);
+	
+	/*! \brief Get the file name.
+		\param str The path
+	*/
     std::string filename(std::string path, bool symbian_use = false);
 
+    /*! \brief Get the file directory.
+	*/
     std::string file_directory(std::string path, bool symbian_use = false);
 
-    // Since I'm too desperate
+	/*! \brief Iterate through components of a path */
     struct path_iterator {
         std::string path;
         std::string comp;
@@ -84,9 +130,16 @@ namespace eka2l1 {
         }
     };
 
+	/*! \brief Create a directory. */
     void create_directory(std::string path);
+	
+	/*! \brief Check if a file or directory exists. */
     bool exists(std::string path);
+	
+	/*! \brief Check if the path points to a directory. */
     bool is_dir(std::string path);
+	
+	/*! \brief Create directories. */
     void create_directories(std::string path);
 }
 

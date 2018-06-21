@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2018 EKA2L1 Team
  * 
- * This file is part of EKA2L1 project 
+ * This file is part of EKA2L1 project
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -17,25 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
-#include <string>
-#include <typeinfo>
+#include <services/context.h>
 
-namespace eka2l1 {
-    /*! \brief EABI emulation. 
-        General uses for mangling name and pure virtual function. */
-    namespace eabi {
-        /*! Demangle an Itanium ABI name. */
-        std::string demangle(std::string target);
-
-        /*! Mangle a function name, should not use. */
-        std::string mangle(std::string target);
-
-        void pure_virtual_call();
-        void deleted_virtual_call();
-
-        void leave(uint32_t id, const std::string &msg);
-        void trap_leave(uint32_t id);
-    }
-}
+IPC_FUNC(FileRead);
+IPC_FUNC(FileWrite);
+IPC_FUNC(FileAdopt);

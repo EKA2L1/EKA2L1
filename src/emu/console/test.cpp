@@ -11,7 +11,7 @@ int main() {
 
     load_rom(sys, "SYM6.ROM");
 
-    install_sis(sys, 0, "ITried.sisx");
+    install_sis(sys, 0, "floatingduck_gcce.sisx");
 
     shutdown_symbian_system(sys);
     free_symbian_system(sys);

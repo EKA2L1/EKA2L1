@@ -21,8 +21,15 @@
 #pragma once
 
 #include <ptr.h>
+#include <memory>
 
 namespace eka2l1 {
+    namespace kernel {
+        class thread;
+    }
+
+    using thread_ptr = std::shared_ptr<kernel::thread>;
+
     enum class ipc_arg_type {
         unspecified = 0,
         handle = 1,
@@ -52,6 +59,8 @@ namespace eka2l1 {
         int args[4];
         int flag;
 
+        ipc_arg() {}
+
         ipc_arg(int arg0, const int flag);
         ipc_arg(int arg0, int arg1, const int flag);
         ipc_arg(int arg0, int arg1, int arg2, const int flag);
@@ -60,11 +69,41 @@ namespace eka2l1 {
         ipc_arg_type get_arg_type(int slot);
     };
 
-    struct ipc_msg {
-        int handle;
-        int function;
-        int args[4];
-        uint32_t spare1;
-        eka2l1::ptr<void> session;
+    class session;
+    using session_ptr = std::shared_ptr<session>;
+
+    enum class ipc_message_status {
+        delivered,
+        accepted,
+        completed
     };
+
+    /* An IPC msg (ver 2) contains the IPC context. */
+    /* Function: The IPC function ordinal */
+    /* Arg: IPC args. Max args = 4 */
+    /* Session: Pointer to the session. */
+    struct ipc_msg {
+        thread_ptr own_thr;
+        int function;
+        ipc_arg args;
+        session_ptr msg_session;
+
+        int *request_sts;
+
+        // Status of the message, if it's accepted or delivered
+        ipc_message_status msg_status;
+        uint64_t id;
+
+        int owner_type;
+        uint32_t owner_id;
+
+        bool free : true;
+
+        ipc_msg() {}
+
+        ipc_msg(uint64_t id, uint32_t owner_id, thread_ptr thr)
+            : id(id), own_thr(thr), owner_id(owner_id) {}
+    };
+
+    using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 }

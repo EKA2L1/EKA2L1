@@ -104,6 +104,7 @@ namespace eka2l1 {
             add_args_to_layout<tail...>(*(&mhead + 1), state);
         }
 
+		/*! \brief Given arguments and its types, make layout of those arguments in EABI */
         template <typename... args>
         constexpr args_layout<args...> lay_out() {
             args_layout<args...> layout = {};

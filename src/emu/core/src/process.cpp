@@ -35,7 +35,7 @@ namespace eka2l1 {
             nullptr, kernel::priority_normal);
 
         args[0].data_size = 0;
-        args[1].data_size = 4 + exe_path.size() * 2 + cmd_args.size() * 2;
+        args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D
     }
 
     void process::set_arg_slot(uint8_t slot, uint32_t data, size_t data_size) {

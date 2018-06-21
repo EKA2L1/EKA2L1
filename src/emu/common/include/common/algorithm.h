@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
 #pragma once
 
 #include <common/types.h>
@@ -26,31 +27,49 @@
 #include <string>
 
 namespace eka2l1 {
+    /*! \brief Contains functions that use frequently in the emulator */
     namespace common {
+		/*! \brief Choose the greater variable 
+		 *
+		 * Compare two objects and choose the greater object to return.
+		*/
         template <typename T>
         constexpr T max(T a, T b) {
             return a > b ? a : b;
         }
 
+		/*! \brief Choose the less variable
+		 *
+		 * Compare two objects, choose the less object to return.
+		*/
         template <typename T>
         constexpr T min(T a, T b) {
             return a > b ? b : a;
         }
 
+		/*! Convert KB to bytes */
         constexpr size_t KB(size_t kb) {
             return kb * 1024;
         }
 
+		/*! Convert MB to bytes */
         constexpr size_t MB(size_t mb) {
             return mb * KB(1024);
         }
 
+		/* Convert GB to bytes */
         constexpr size_t GB(size_t gb) {
             return gb * MB(1024);
         }
 
+		/*! \brief Find the position of the Nth apperance of a string in another string
+         *  \param idx The Nth apperance
+		 *  \param pos The position to start looking for
+		*/
         size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos = 0);
-        void remove(std::string &inp, std::string to_remove);
+        
+		/*! Remove a string from another string if possible */
+		void remove(std::string &inp, std::string to_remove);
 
         // https://stackoverflow.com/questions/12200486/how-to-remove-duplicates-from-unsorted-stdvector-while-keeping-the-original-or
         struct target_less {
@@ -63,6 +82,7 @@ namespace eka2l1 {
             bool operator()(It const &a, It const &b) const { return *a == *b; }
         };
 
+		/*! Erase all repeated object, but kept things in order. */
         template <class It>
         It uniquify(It begin, It const end) {
             std::vector<It> v;
@@ -85,12 +105,14 @@ namespace eka2l1 {
             return begin;
         }
 
+		/*! Get the next power of two of some number. */
         template <typename T>
         T next_power_of_two(const T target) {
             T power = static_cast<T>(std::log2l(static_cast<long double>(target)));
             return static_cast<T>(1 << power);
         }
 
+		/*! Check if the number is power of two. */
         template <typename T>
         bool is_power_of_two(const T target) {
             T mask = 0;
@@ -103,6 +125,7 @@ namespace eka2l1 {
             return !(target & mask);
         }
 
+		/*! Do alignment */
         template <typename T>
         T align(T target, uint32_t alignment, int mode = 1) {
             if (alignment == 0) {

@@ -42,6 +42,7 @@ namespace eka2l1 {
     namespace hle {
         using import_func = std::function<void(system*)>;
 
+		/*! \brief Call a HLE function without return value. */
         template <typename ret, typename... args, size_t... indices>
         void call(ret(*export_fn)(system*, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter& cpu, system* symsys) {
             const ret result = (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, symsys->get_memory_system())...);
@@ -49,11 +50,13 @@ namespace eka2l1 {
             write_return_value(cpu, result);
         }
 
+		/*! \brief Call a HLE function with return value. */
         template <typename... args, size_t... indices>
         void call(void(*export_fn)(system*, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter& cpu, system* symsys) {
             (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, symsys->get_memory_system())...);
         }
 
+		/*! \brief Bridge a HLE function to guest (ARM - Symbian). */
         template <typename ret, typename... args>
         import_func bridge(ret(*export_fn)(system*, args...)) {
             constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
@@ -64,11 +67,13 @@ namespace eka2l1 {
             };
         }
 
+		/*! \brief Write function arguments to guest. */
         template <typename... args, size_t... indices>
         void write_args(arm::jitter &cpu, const std::array<arg_layout, sizeof...(indices)>& layouts, std::index_sequence<indices...>, memory_system *mem, args... lle_args) {
             ((void)write<args, indices, args...>(cpu, layouts, mem, std::forward<args>(lle_args)), ...);
         }
 
+		/*! \brief Call a LLE function with return value. */
         template <typename ret, typename... args>
         ret call_lle(hle::lib_manager *mngr, arm::jitter &mcpu, disasm *asmdis, memory_system *mem, const address addr, args... lle_args) {
             constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
@@ -93,6 +98,7 @@ namespace eka2l1 {
             return read_return_value<ret>(mcpu);
         }
 
+		/*! \brief Call LLE function without return value */
         template <typename... args>
         void call_lle_void(hle::lib_manager *mngr, arm::jitter &mcpu, disasm *asmdis, memory_system *mem, const address addr, args... lle_args) {
             constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
