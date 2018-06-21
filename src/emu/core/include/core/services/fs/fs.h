@@ -21,7 +21,3 @@
 #pragma once
 
 #include <services/context.h>
-
-IPC_FUNC(FileRead);
-IPC_FUNC(FileWrite);
-IPC_FUNC(FileAdopt);

@@ -52,6 +52,10 @@ namespace eka2l1 {
             return std::optional<std::string>{};
         }
 
+        void ipc_context::set_request_status(int res) {
+            *msg->request_sts = res;
+        }
+
         int ipc_context::flag() const {
             return msg->args.flag;
         }

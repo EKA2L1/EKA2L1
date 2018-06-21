@@ -27,6 +27,9 @@
 #include <kernel/sema.h>
 #include <kernel/timer.h>
 
+#include <services/server.h>
+#include <services/session.h>
+
 #include <ipc.h>
 #include <process.h>
 #include <ptr.h>
@@ -74,6 +77,8 @@ namespace eka2l1 {
         std::map<kernel::uid, mutex_ptr> mutexes;
         std::map<kernel::uid, sema_ptr> semas;
         std::map<kernel::uid, timer_ptr> timers;
+        std::map<kernel::uid, session_ptr> sessions;
+        std::map<kernel::uid, server_ptr> servers;
 
         std::unordered_map<kernel::uid, ipc_msg_ptr> msgs;
 
@@ -160,6 +165,13 @@ namespace eka2l1 {
             kernel::owner_type owner,
             kernel::uid own_id = -1,
             kernel::access_type access = kernel::access_type::local_access);
+
+        server_ptr create_server(std::string name);
+        session_ptr create_session(server_ptr cnn_svr, int async_slots);
+
+        void add_custom_server(server_ptr svr){
+            servers.emplace(svr->unique_id(), std::move(svr));
+        }
 
         /*! \brief Create an IPC message. 
          *

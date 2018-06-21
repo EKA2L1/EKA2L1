@@ -441,4 +441,22 @@ namespace eka2l1 {
             msgs.erase(res);
         }
     }
+
+    server_ptr kernel_system::create_server(std::string name) {
+        server_ptr new_server = std::make_shared<service::server>(sys, name);
+        kernel::uid svr_id = new_server->unique_id();
+
+        servers.emplace(svr_id, std::move(new_server));
+
+        return servers[svr_id];
+    }
+
+    session_ptr kernel_system::create_session(server_ptr cnn_svr, int async_slots) {
+        session_ptr new_session = std::make_shared<service::session>(this, cnn_svr, async_slots);
+        kernel::uid ss_id = new_session->unique_id();
+
+        sessions.emplace(ss_id, std::move(new_session));
+
+        return sessions[ss_id];
+    }
 }

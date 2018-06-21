@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <ptr.h>
 #include <memory>
+#include <ptr.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -69,8 +69,11 @@ namespace eka2l1 {
         ipc_arg_type get_arg_type(int slot);
     };
 
-    class session;
-    using session_ptr = std::shared_ptr<session>;
+    namespace service {
+        class session;
+    }
+
+    using session_ptr = std::shared_ptr<service::session>;
 
     enum class ipc_message_status {
         delivered,
@@ -102,7 +105,9 @@ namespace eka2l1 {
         ipc_msg() {}
 
         ipc_msg(uint64_t id, uint32_t owner_id, thread_ptr thr)
-            : id(id), own_thr(thr), owner_id(owner_id) {}
+            : id(id)
+            , own_thr(thr)
+            , owner_id(owner_id) {}
     };
 
     using ipc_msg_ptr = std::shared_ptr<ipc_msg>;

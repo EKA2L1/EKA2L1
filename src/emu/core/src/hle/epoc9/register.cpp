@@ -20,7 +20,7 @@
 
 #include <epoc9/register.h>
 
-void register_epoc9(eka2l1::hle::lib_manager& mngr) {
+void register_epoc9(eka2l1::hle::lib_manager &mngr) {
     ADD_REGISTERS(mngr, thread_register_funcs);
     ADD_REGISTERS(mngr, base_register_funcs);
     ADD_REGISTERS(mngr, mem_register_funcs);
@@ -30,6 +30,7 @@ void register_epoc9(eka2l1::hle::lib_manager& mngr) {
     ADD_REGISTERS(mngr, hal_register_funcs);
     ADD_REGISTERS(mngr, cons_register_funcs);
     ADD_REGISTERS(mngr, trap_register_funcs);
+    ADD_REGISTERS(mngr, svr_register_funcs);
 
     ADD_SVC_REGISTERS(mngr, svc_register_funcs);
 

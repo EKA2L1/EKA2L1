@@ -21,8 +21,8 @@
 #pragma once
 
 #include <kernel/kernel_obj.h>
-#include <services/session.h>
 #include <services/context.h>
+#include <services/session.h>
 
 #include <functional>
 #include <queue>
@@ -31,21 +31,29 @@
 
 #include <memory>
 
+#define REGISTER_IPC(server, func, op, func_name) \
+    register_ipc_func(op,                         \
+        service::ipc_func(func_name, std::bind(&##server::##func, this, std::placeholders::_1)));
+
 namespace eka2l1 {
     class system;
+
+    using session_ptr = std::shared_ptr<service::session>;
 
     /*! \brief IPC implementation. */
     namespace service {
         struct server_msg;
 
         using ipc_func_wrapper = std::function<void(ipc_context)>;
-        using session_ptr = std::shared_ptr<session>;
         using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 
         /*! \brief A class represents an IPC function */
         struct ipc_func {
             ipc_func_wrapper wrapper;
             std::string name;
+
+            ipc_func(std::string iname, ipc_func_wrapper wr)
+                : name(std::move(iname)), wrapper(wr) {}
         };
 
         /*! \brief A class represents server message. 
@@ -68,18 +76,18 @@ namespace eka2l1 {
         */
         class server : public kernel::kernel_obj {
             /** All the sessions connected to this server */
-            std::vector<session*> sessions;
-            
+            std::vector<session *> sessions;
+
             /** Messages that has been delivered but not accepted yet */
             std::vector<server_msg> delivered_msgs;
- 
+
             std::unordered_map<uint32_t, ipc_func> ipc_funcs;
 
-	        /** The thread own this server */
+            /** The thread own this server */
             thread_ptr owning_thread;
             system *sys;
 
-            /** Placeholder message uses for processing */ 
+            /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
 
         protected:
@@ -93,7 +101,7 @@ namespace eka2l1 {
             }
 
             void destroy();
-            
+
             /*! Receive the message */
             int receive(ipc_msg_ptr &msg);
 

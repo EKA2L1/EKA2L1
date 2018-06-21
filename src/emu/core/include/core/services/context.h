@@ -3,8 +3,6 @@
 #include <ipc.h>
 #include <optional>
 
-#define IPC_FUNC(name) void #name(eka2l1::system *sys, ipc_context ctx);
-
 namespace eka2l1 {
     class system;
 
@@ -17,6 +15,8 @@ namespace eka2l1 {
 
             template <typename T>
             std::optional<T> get_arg(int idx);
+
+            void set_request_status(int res);
 
             int flag() const;
         };

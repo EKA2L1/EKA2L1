@@ -12,6 +12,7 @@
 #include <epoc9/hal.h>
 #include <epoc9/trap.h>
 #include <epoc9/svc.h>
+#include <epoc9/svr.h>
 
 #include <hle/libmanager.h>
 

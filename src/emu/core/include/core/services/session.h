@@ -37,9 +37,11 @@ namespace eka2l1 {
 
     namespace service {
         class server;
+    }
 
-        using server_ptr = std::shared_ptr<server>;
+    using server_ptr = std::shared_ptr<service::server>;
 
+    namespace service {
         /*! \brief An IPC session 
 		 *
          *  A session is a bridge between server and client.

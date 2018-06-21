@@ -21,4 +21,4 @@ add_library(corekernel
 target_include_directories(corekernel PUBLIC ${CORE_INCLUDE_DIR})
 
 target_link_libraries(corekernel PUBLIC common)
-target_link_libraries(corekernel PRIVATE coremem coretiming arm hle coreloader)
+target_link_libraries(corekernel PRIVATE coremem coretiming arm hle coreloader services)
