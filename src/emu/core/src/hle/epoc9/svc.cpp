@@ -1,5 +1,6 @@
 #include <epoc9/svc.h>
 #include <epoc9/user.h>
+#include <epoc9/dll.h>
 
 #include <common/cvt.h>
 #include <common/path.h>
@@ -66,6 +67,30 @@ BRIDGE_FUNC(void, ProcessFilename, eka2l1::ptr<RProcess> aProcess, eka2l1::ptr<T
     des->Assign(sys, pr_real->name());
 }
 
+BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
+    eka2l1::kernel::thread_local_data dat = current_local_data(sys);
+
+    for (const auto &tls : dat.tls_slots) {
+        if (tls.handle == aHandle) {
+            return tls.ptr;    
+        }
+    }
+
+    return eka2l1::ptr<void>(nullptr);
+}
+
+BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr) {
+    eka2l1::kernel::tls_slot *slot = get_tls_slot(sys, aHandle);
+    
+    if (!slot) {
+        return KErrNoMemory;
+    }
+
+    slot->ptr = aPtr;
+
+    return KErrNone;
+}
+
 const eka2l1::hle::func_map svc_register_funcs = {
     /* FAST EXECUTIVE CALL */
     BRIDGE_REGISTER(0x00800001, Heap),
@@ -75,5 +100,7 @@ const eka2l1::hle::func_map svc_register_funcs = {
     BRIDGE_REGISTER(0x00800008, TrapHandler),
     BRIDGE_REGISTER(0x00800009, SetTrapHandler),
     /* SLOW EXECUTIVE CALL */
-    BRIDGE_REGISTER(0x16, ProcessFilename)
+    BRIDGE_REGISTER(0x16, ProcessFilename),
+    BRIDGE_REGISTER(0x4e, DllTls),
+    BRIDGE_REGISTER(0x76, DllSetTls)
 };

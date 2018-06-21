@@ -23,7 +23,7 @@ namespace eka2l1 {
                 return kern->create_msg(kernel::owner_type::process);
             }
 
-            auto &free_msg_in_pool = std::find(msgs_pool.begin(), msgs_pool.end(),
+            auto &free_msg_in_pool = std::find_if(msgs_pool.begin(), msgs_pool.end(),
                 [](const auto &msg) { return msg->free; });
 
             if (free_msg_in_pool != msgs_pool.end()) {

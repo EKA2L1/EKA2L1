@@ -57,6 +57,18 @@ namespace eka2l1 {
     namespace hle {
         using epoc_import_func = std::function<void(system *)>;
 
+        struct e32img_inf {
+            loader::e32img_ptr img;
+            bool is_xip;
+            bool is_rom;
+            std::vector<uint32_t> loader;
+        };
+
+        struct romimg_inf {
+            loader::romimg_ptr img;
+            std::vector<uint32_t> loader;
+        };
+
 		/*! \brief Manage libraries and HLE functions.
 		 * 
 		 * HLE functions are stored here. Libraries and images are also cached
@@ -70,18 +82,6 @@ namespace eka2l1 {
             std::map<address, sid> addr_map;
 
             std::map<std::string, address> vtable_addrs;
-
-            struct e32img_inf {
-                loader::e32img_ptr img;
-                bool is_xip;
-                bool is_rom;
-                std::vector<uint32_t> loader;
-            };
-
-            struct romimg_inf {
-                loader::romimg_ptr img;
-                std::vector<uint32_t> loader;
-            };
 
             // Caches the image
             std::map<uint32_t, e32img_inf> e32imgs_cache;

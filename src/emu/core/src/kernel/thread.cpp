@@ -130,8 +130,8 @@ namespace eka2l1 {
             name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
-            tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+            //tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+            //    chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
             request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 0, 150, owner_type::thread);
 
@@ -206,18 +206,21 @@ namespace eka2l1 {
             // :)
         }
 
-        std::optional<tls_slot> thread::get_free_tls_slot(uint32_t dll_uid) {
+        tls_slot *thread::get_free_tls_slot(uint32_t handle, uint32_t dll_uid) {
             for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
                 if (ldata.tls_slots[i].handle = -1) {
-                    ldata.tls_slots[i].handle = i;
-                    ldata.tls_slots[i].ptr = ptr<void>(tls_chunk->base().ptr_address() + 12 * i);
+                    ldata.tls_slots[i].handle = handle;
                     ldata.tls_slots[i].uid = dll_uid;
 
-                    return ldata.tls_slots[i];
+                    return &ldata.tls_slots[i];
+                }
+
+                if (ldata.tls_slots[i].handle != -1 && ldata.tls_slots[i].uid == dll_uid) {
+                    return &ldata.tls_slots[i];
                 }
             }
 
-            return std::optional<tls_slot>{};
+            return nullptr;
         }
 
         void thread::close_tls_slot(tls_slot &slot) {
@@ -254,11 +257,10 @@ namespace eka2l1 {
             request_sema->acquire(obj_id);
 
             if (request_sema->should_wait(obj_id)) {
-                request_sema->add_waiting_thread(std::reinterpret_pointer_cast<kernel::thread>
-                    (kern->get_kernel_obj(obj_id)));
+                request_sema->add_waiting_thread(std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj(obj_id)));
 
                 state = thread_state::wait_fast_sema;
-               
+
                 scheduler->reschedule();
             }
         }
