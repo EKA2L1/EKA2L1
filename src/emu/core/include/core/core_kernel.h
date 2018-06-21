@@ -169,9 +169,14 @@ namespace eka2l1 {
         server_ptr create_server(std::string name);
         session_ptr create_session(server_ptr cnn_svr, int async_slots);
 
-        void add_custom_server(server_ptr svr){
+        void add_custom_server(server_ptr svr) {
             servers.emplace(svr->unique_id(), std::move(svr));
         }
+
+        session_ptr get_session(kernel::uid id);
+
+        server_ptr get_server(kernel::uid id);
+        server_ptr get_server_by_name(const std::string name);
 
         /*! \brief Create an IPC message. 
          *

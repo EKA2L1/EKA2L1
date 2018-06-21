@@ -32,6 +32,8 @@
 #include <ptr.h>
 #include <vfs.h>
 
+#include <services/init.h>
+
 namespace eka2l1 {
     void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
         memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu) {
@@ -45,6 +47,7 @@ namespace eka2l1 {
         sys = esys;
 
         thr_sch = std::make_shared<kernel::thread_scheduler>(timing, *cpu);
+        service::init_services(sys);
     }
 
     void kernel_system::shutdown() {
@@ -287,7 +290,7 @@ namespace eka2l1 {
         if (res != threads.end()) {
             thread_ptr thr = res->second;
             destroy_msg(thr->get_sync_msg());
-            
+
             threads.erase(id);
 
             for (auto it = chunks.begin(); it != chunks.end();) {
@@ -458,5 +461,36 @@ namespace eka2l1 {
         sessions.emplace(ss_id, std::move(new_session));
 
         return sessions[ss_id];
+    }
+
+    server_ptr kernel_system::get_server_by_name(const std::string name) {
+        auto &svr = std::find_if(servers.begin(), servers.end(),
+            [&name](const auto &svp) { return svp.second->name() == name; });
+
+        if (svr == servers.end()) {
+            return server_ptr(nullptr);
+        }
+
+        return svr->second;
+    }
+
+    server_ptr kernel_system::get_server(kernel::uid id) {
+        auto &res = servers.find(id);
+ 
+        if (res != servers.end()) {
+            return res->second;
+        }
+
+        return server_ptr(nullptr);
+    }
+
+    session_ptr kernel_system::get_session(kernel::uid id) {
+        auto &res = sessions.find(id);
+
+        if (res != sessions.end()) {
+            return res->second;
+        }
+
+        return session_ptr(nullptr);
     }
 }

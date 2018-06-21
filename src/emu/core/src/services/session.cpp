@@ -6,7 +6,7 @@
 namespace eka2l1 {
     namespace service {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
-            : kernel_obj(kern, "", kernel::owner_type::process, 0) {
+            : svr(svr), kernel_obj(kern, "", kernel::owner_type::process, 0) {
             svr->attach(this);
 
             if (async_slot_count > 0) {
@@ -34,7 +34,7 @@ namespace eka2l1 {
         }
 
         int session::send_receive_sync(int function, ipc_arg args) {
-            ipc_msg_ptr &msg = get_free_msg();
+            ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
                 return -1;
@@ -42,14 +42,14 @@ namespace eka2l1 {
 
             msg->function = function;
             msg->args = args;
-
+            msg->own_thr = kern->crr_thread();
             msg->request_sts = nullptr;
 
             return send_receive_sync(msg);
         }
 
         int session::send_receive_sync(int function) {
-            ipc_msg_ptr &msg = get_free_msg();
+            ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
                 return -1;
@@ -57,7 +57,7 @@ namespace eka2l1 {
 
             msg->function = function;
             msg->args = ipc_arg(0, 0, 0, 0, 0);
-
+            msg->own_thr = kern->crr_thread();
             msg->request_sts = nullptr;
 
             return send_receive_sync(msg);

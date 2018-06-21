@@ -39,9 +39,10 @@ namespace eka2l1 {
 
         int server::accept(server_msg msg) {
             // Server is dead, nope, i wont accept you, never, or maybe ...
-            if (owning_thread->current_state() == kernel::thread_state::stop) {
+            // (bentokun) This may need in the future.
+            /* if (owning_thread->current_state() == kernel::thread_state::stop) {
                 return -1;
-            }
+            } */
 
             msg.dest_msg->msg_status = ipc_message_status::accepted;
             msg.real_msg->msg_status = ipc_message_status::accepted;
@@ -61,7 +62,7 @@ namespace eka2l1 {
             if (msg.is_ready()) {
                 accept(msg);
             } else {
-                delivered_msgs.push_back(std::move(msg));
+                delivered_msgs.push_back(msg);
             }
 
             return 0;
@@ -87,6 +88,7 @@ namespace eka2l1 {
             auto func_ite = ipc_funcs.find(func);
 
             if (func_ite == ipc_funcs.end()) {
+                LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
                 return;
             }
 
