@@ -37,6 +37,6 @@ namespace eka2l1 {
             std::vector<uint8_t> get_bin();
 
             void notify_request();
-        }
+        };
     }
 }
