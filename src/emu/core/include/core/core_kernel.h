@@ -53,7 +53,7 @@ namespace eka2l1 {
     }
 
     using thread_ptr = std::shared_ptr<kernel::thread>;
-    using process_ptr = std::shared_ptr<process>;
+    using process_ptr = std::shared_ptr<eka2l1::process>;
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
     using sema_ptr = std::shared_ptr<kernel::semaphore>;

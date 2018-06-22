@@ -39,6 +39,8 @@ namespace eka2l1 {
                 if (log_read) {
                     LOG_TRACE("[Dynarmic] Read uint16_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
+
+                return ret;
             }
 
             uint32_t MemoryRead32(Dynarmic::A32::VAddr addr) override {
@@ -46,6 +48,16 @@ namespace eka2l1 {
 
                 if (log_read) {
                     LOG_TRACE("[Dynarmic] Read uint32_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
+                }
+
+                return ret;
+            }
+
+            uint64_t MemoryRead64(Dynarmic::A32::VAddr addr) override {
+                uint64_t ret = *parent.get_memory_sys()->get_addr<uint64_t>(addr);
+
+                if (log_read) {
+                    LOG_TRACE("[Dynarmic] Read uint64_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
 
                 return ret;
@@ -72,6 +84,14 @@ namespace eka2l1 {
 
                 if (log_write) {
                     LOG_TRACE("[Dynarmic] Write uint32_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
+                }
+            }
+
+            void MemoryWrite64(Dynarmic::A32::VAddr addr, uint64_t value) override {
+                *parent.get_memory_sys()->get_addr<uint64_t>(addr) = value;
+
+                if (log_write) {
+                    LOG_TRACE("[Dynarmic] Write uint64_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
             }
 
@@ -162,6 +182,8 @@ namespace eka2l1 {
         bool jit_dynarmic::execute_instructions(int num_instructions) {
             cb->set_routine_ticks(num_instructions);
             jit->Run();
+
+            return true;
         }
 
         void jit_dynarmic::run() {
@@ -176,15 +198,15 @@ namespace eka2l1 {
         }
 
         uint32_t jit_dynarmic::get_reg(size_t idx) {
-            return jit->Regs[idx];
+            return jit->Regs()[idx];
         }
 
         uint64_t jit_dynarmic::get_sp() {
-            return jit->Regs[13];
+            return jit->Regs()[13];
         }
 
         uint64_t jit_dynarmic::get_pc() {
-            return jit->Regs[15];
+            return jit->Regs()[15];
         }
 
         uint64_t jit_dynarmic::get_vfp(size_t idx) {
@@ -192,19 +214,19 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::set_reg(size_t idx, uint32_t val) {
-            jit->Regs[idx] = val;
+            jit->Regs()[idx] = val;
         }
 
         void jit_dynarmic::set_pc(uint64_t val) {
-            jit->Regs[15] = val;
+            jit->Regs()[15] = val;
         }
 
         void jit_dynarmic::set_sp(uint32_t val) {
-            jit->Regs[13] = val;
+            jit->Regs()[13] = val;
         }
 
         void jit_dynarmic::set_lr(uint64_t val) {
-            jit->Regs[14] = val;
+            jit->Regs()[14] = val;
         }
 
         void jit_dynarmic::set_vfp(size_t idx, uint64_t val) {
@@ -216,7 +238,11 @@ namespace eka2l1 {
 
         void jit_dynarmic::save_context(thread_context &ctx) {
             ctx.cpsr = get_cpsr();
-            ctx.cpu_registers = jit->Regs;
+
+            for (uint32_t i = 0; i < 16; i++) {
+                ctx.cpu_registers[i] = get_reg(i);
+            }
+
             ctx.pc = get_pc();
             ctx.sp = get_sp();
         }
@@ -225,7 +251,7 @@ namespace eka2l1 {
             jit->SetCpsr(ctx.cpsr);
 
             for (uint8_t i = 0; i < ctx.cpu_registers.size(); i++) {
-                jit->Regs[i] = ctx.cpu_registers[i];
+                jit->Regs()[i] = ctx.cpu_registers[i];
             }
 
             set_pc(ctx.pc);
@@ -236,6 +262,7 @@ namespace eka2l1 {
         }
 
         address jit_dynarmic::get_entry_point() {
+            return 0;
         }
 
         void jit_dynarmic::set_stack_top(address addr) {

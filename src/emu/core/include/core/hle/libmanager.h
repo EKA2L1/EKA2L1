@@ -21,7 +21,6 @@
 #pragma once
 
 #include <common/types.h>
-#include <core_kernel.h>
 
 #include <functional>
 #include <map>
@@ -29,6 +28,8 @@
 #include <optional>
 #include <string>
 #include <vector>
+
+#include <ptr.h>
 
 namespace YAML {
     class Node;
@@ -47,7 +48,13 @@ namespace eka2l1 {
 
     typedef uint32_t address;
 
-    namespace loader {
+    namespace kernel {
+        class chunk;
+    }
+
+    using chunk_ptr = std::shared_ptr<kernel::chunk>;
+
+   namespace loader {
         struct eka2img;
         struct romimg;
 
