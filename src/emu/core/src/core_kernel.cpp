@@ -527,6 +527,8 @@ namespace eka2l1 {
             return false;
         }
 
+        // This still right for the requirement: Status is still accepted even if the prop is not yet
+        // definied. 
         prop_request_queue.emplace(ident, request_sts);
 
         return true;
