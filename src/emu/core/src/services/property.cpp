@@ -41,6 +41,10 @@ namespace eka2l1 {
         }
 
         int property::get_int() {
+            if (data_type != service::property_type::int_data) {
+                return -1;
+            }
+
             return data.ndata;
         }
 
@@ -52,5 +56,10 @@ namespace eka2l1 {
 
             return local;
         }
+
+        void property::notify_request() {
+            kern->notify_prop(std::make_pair(first, second));
+        }
+
     }
 }

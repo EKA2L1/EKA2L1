@@ -31,6 +31,8 @@
 #include <services/session.h>
 #include <services/property.h>
 
+#include <common/hash.h>
+
 #include <ipc.h>
 #include <process.h>
 #include <ptr.h>

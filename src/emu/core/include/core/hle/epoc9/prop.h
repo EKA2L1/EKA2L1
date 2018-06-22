@@ -31,5 +31,8 @@ struct RProperty : public RHandleBase {};
 
 BRIDGE_FUNC(TInt, RPropertyAttach, eka2l1::ptr<RProperty> aProp, TUid aCagetory, TUint aKey, TOwnerType aType = EOwnerProcess);
 BRIDGE_FUNC(TInt, RPropertyCancel, eka2l1::ptr<RProperty> aProp);
+BRIDGE_FUNC(TInt, RPropertyDefineNoSec, eka2l1::ptr<RProperty> aProp, TUid aCategory, TUint aKey, TInt aAttr, TInt aPreallocate);
+BRIDGE_FUNC(TInt, RPropertyGetGlobalInt, TUid aCagetory, TUint aKey, eka2l1::ptr<TInt> aValue);
+BRIDGE_FUNC(TInt, RPropertyGetInt, eka2l1::ptr<RProperty> aProp, eka2l1::ptr<TInt> aVal);
 
 extern const eka2l1::hle::func_map prop_register_funcs;

@@ -567,7 +567,7 @@ namespace eka2l1 {
     property_ptr kernel_system::get_prop(int cagetory, int key) {
         auto &prop_res = std::find_if(properties.begin(), properties.end(),
             [=](const auto &prop) {
-                property_ptr temp = *prop.second;
+                property_ptr temp = prop.second;
                 return temp->first == cagetory && temp->second == key; // Sorry, im too lazy to search on de internet :D
             });
 
