@@ -162,8 +162,8 @@ namespace eka2l1 {
                     data_delta = img->rt_data_addr - img->header.data_base;
 
                     expdir = img->ed.syms.data();
-                    
-					for (auto &exp : img->ed.syms) {
+
+                    for (auto &exp : img->ed.syms) {
                         if (exp > img->header.data_offset && exp < img->header.data_offset + img->header.data_size)
                             exp += data_delta;
                         else
@@ -276,7 +276,18 @@ namespace eka2l1 {
 
                     if (sid) {
                         LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
-                            export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
+                            val, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
+
+                        uint32_t *imp = img->stub_ptr.get(mem);
+
+                        imp[0] = 0xef000000; // svc #0, never used
+                        imp[1] = 0xe1a0f00e; // mov pc, lr
+                        imp[2] = *sid;
+
+                        write(code_ptr, img->stub_ptr.ptr_address());
+                        img->stub_ptr += 12;
+
+                        continue;
                     }
 
                     if (export_addr >= code_start && export_addr <= code_end) {
@@ -301,6 +312,11 @@ namespace eka2l1 {
 
             img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
                 kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+
+            img->stub_chunk = kern->create_chunk("", 0, common::align(img->iat.number_imports * 12, mem->get_page_size()), common::align(img->iat.number_imports * 12, mem->get_page_size()), prot::read_write,
+                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+
+            img->stub_ptr = img->stub_chunk->base().cast<uint32_t>();
 
             uint32_t rtcode_addr = img->code_chunk->base().ptr_address();
             uint32_t rtdata_addr = img->data_chunk ? img->data_chunk->base().ptr_address() : 0;
