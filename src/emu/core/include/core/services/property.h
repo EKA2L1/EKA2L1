@@ -13,6 +13,7 @@ namespace eka2l1 {
             bin_data
         };
 
+        /*! \brief Property is a kind of environment data. */
         class property: public kernel::kernel_obj, public std::pair<int, int> {
         protected:
             union {
@@ -30,8 +31,6 @@ namespace eka2l1 {
 
             bool set(int val);
             bool set(uint8_t *data, uint32_t arr_length);
-
-            void delete_prop();
 
             int get_int();
             std::vector<uint8_t> get_bin();

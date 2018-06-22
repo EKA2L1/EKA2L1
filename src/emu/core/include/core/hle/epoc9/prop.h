@@ -20,30 +20,16 @@
 
 #pragma once
 
-#include <hle/bridge.h>
+#include <epoc9/err.h>
+#include <epoc9/types.h>
+#include <epoc9/base.h>
 
-#include <cstdint>
+#include <hle/bridge.h>
 #include <ptr.h>
 
-typedef char TInt8;
-typedef short TInt16;
-typedef int32_t TInt32;
-typedef int64_t TInt64;
+struct RProperty : public RHandleBase {};
 
-typedef int TInt;
-typedef unsigned int TUint;
-typedef bool TBool;
+BRIDGE_FUNC(TInt, RPropertyAttach, eka2l1::ptr<RProperty> aProp, TUid aCagetory, TUint aKey, TOwnerType aType = EOwnerProcess);
+BRIDGE_FUNC(TInt, RPropertyCancel, eka2l1::ptr<RProperty> aProp);
 
-typedef unsigned char TUint8;
-typedef unsigned short TUint16;
-typedef uint32_t TUint32;
-typedef uint64_t TUint64;
-
-using TAny = void;
-
-enum TOwnerType {
-    EOwnerProcess,
-    EOwnerThread
-};
-
-using TUid = uint32_t;
+extern const eka2l1::hle::func_map prop_register_funcs;
