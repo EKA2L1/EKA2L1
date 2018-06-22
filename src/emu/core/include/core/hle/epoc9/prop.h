@@ -17,25 +17,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
-#include <cstdint>
-#include <string>
+#include <epoc9/err.h>
+#include <epoc9/types.h>
+#include <epoc9/base.h>
 
-#include <tuple>
-#include <unordered_map>
+#include <hle/bridge.h>
+#include <ptr.h>
 
-namespace eka2l1 {
-    namespace common {
-        // https://stackoverflow.com/questions/7968674/unexpected-collision-with-stdhash
-        uint32_t hash(std::string const &s);
-        std::string normalize_for_hash(std::string org);
-    }
-}
+struct RProperty : public RHandleBase {};
 
-namespace std {
-    template <>
-    struct hash<std::pair<int, int>> {
-        std::size_t operator()(const std::pair<int, int> &p) const;
-    };
-};
+BRIDGE_FUNC(TInt, RPropertyAttach, eka2l1::ptr<RProperty> aProp, TUid aCagetory, TUint aKey, TOwnerType aType = EOwnerProcess);
+BRIDGE_FUNC(TInt, RPropertyCancel, eka2l1::ptr<RProperty> aProp);
+BRIDGE_FUNC(TInt, RPropertyDefineNoSec, eka2l1::ptr<RProperty> aProp, TUid aCategory, TUint aKey, TInt aAttr, TInt aPreallocate);
+BRIDGE_FUNC(TInt, RPropertyGetGlobalInt, TUid aCagetory, TUint aKey, eka2l1::ptr<TInt> aValue);
+BRIDGE_FUNC(TInt, RPropertyGetInt, eka2l1::ptr<RProperty> aProp, eka2l1::ptr<TInt> aVal);
+
+extern const eka2l1::hle::func_map prop_register_funcs;

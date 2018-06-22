@@ -1,12 +1,20 @@
 #include <core_kernel.h>
 #include <services/property.h>
 
+#include <common/log.h>
+
 namespace eka2l1 {
     namespace service {
         property::property(kernel_system *kern, service::property_type pt, uint32_t pre_allocated)
             : kernel::kernel_obj(kern, "", kernel::owner_type::process,
                   kern->get_id_base_owner(kernel::owner_type::process))
-              , data_type(pt), data_len(pre_allocated) {}
+            , data_type(pt)
+            , data_len(pre_allocated) {
+            if (pre_allocated > 512) {
+                LOG_WARN("Property trying to alloc more then 512 bytes, limited to 512 bytes");
+                data_len = 512;
+            }
+        }
 
         bool property::set(int val) {
             if (data_type == service::property_type::int_data) {
@@ -33,6 +41,10 @@ namespace eka2l1 {
         }
 
         int property::get_int() {
+            if (data_type != service::property_type::int_data) {
+                return -1;
+            }
+
             return data.ndata;
         }
 
@@ -45,8 +57,9 @@ namespace eka2l1 {
             return local;
         }
 
-        void property::delete_prop() {
-            notify_request();
+        void property::notify_request() {
+            kern->notify_prop(std::make_pair(first, second));
         }
+
     }
 }

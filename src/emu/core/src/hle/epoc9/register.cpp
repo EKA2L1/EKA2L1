@@ -31,6 +31,7 @@ void register_epoc9(eka2l1::hle::lib_manager &mngr) {
     ADD_REGISTERS(mngr, cons_register_funcs);
     ADD_REGISTERS(mngr, trap_register_funcs);
     ADD_REGISTERS(mngr, svr_register_funcs);
+    ADD_REGISTERS(mngr, prop_register_funcs);
 
     ADD_SVC_REGISTERS(mngr, svc_register_funcs);
 

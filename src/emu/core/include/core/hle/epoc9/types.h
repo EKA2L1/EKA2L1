@@ -45,3 +45,5 @@ enum TOwnerType {
     EOwnerProcess,
     EOwnerThread
 };
+
+using TUid = uint32_t;

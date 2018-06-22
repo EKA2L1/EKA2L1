@@ -29,6 +29,9 @@
 
 #include <services/server.h>
 #include <services/session.h>
+#include <services/property.h>
+
+#include <common/hash.h>
 
 #include <ipc.h>
 #include <process.h>
@@ -60,6 +63,10 @@ namespace eka2l1 {
     using timer_ptr = std::shared_ptr<kernel::timer>;
     using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
 
+    using property_ptr = std::shared_ptr<service::property>;
+
+    using prop_ident_pair = std::pair<int, int>;
+
     class kernel_system {
         friend class process;
 
@@ -79,7 +86,9 @@ namespace eka2l1 {
         std::map<kernel::uid, timer_ptr> timers;
         std::map<kernel::uid, session_ptr> sessions;
         std::map<kernel::uid, server_ptr> servers;
+        std::map<kernel::uid, property_ptr> properties;
 
+        std::unordered_map<prop_ident_pair, int *> prop_request_queue;
         std::unordered_map<kernel::uid, ipc_msg_ptr> msgs;
 
         /* End kernel objects map */
@@ -185,6 +194,15 @@ namespace eka2l1 {
         */
         ipc_msg_ptr create_msg(kernel::owner_type owner);
 
+        /*! \brief Create a property. 
+         *
+         *  This property created will be added to a map. When a static RProperty::Get method is called,
+         * it search the cagetory and key pair tied in the map. Note that this implementation is lacking
+         * platform security intended in 9.x version of Symbian. Should be in TODO list ;) .
+        */
+        property_ptr create_prop(service::property_type pt, uint32_t pre_allocated);
+        void delete_prop(property_ptr prop);
+
         /*! \brief Free a message. */
         void free_msg(ipc_msg_ptr msg);
 
@@ -213,6 +231,13 @@ namespace eka2l1 {
         bool close_process(process *pr);
         bool close_process(const kernel::uid id);
         bool close_all_processes();
+
+        bool notify_prop(prop_ident_pair ident);
+        bool subscribe_prop(prop_ident_pair ident, int *request_sts);
+        bool unsubscribe_prop(prop_ident_pair ident);
+
+        property_ptr get_prop(int cagetory, int key); // Get property by category and key
+        property_ptr get_prop(kernel::uid id);
 
         kernel::uid crr_process() const {
             return crr_process_id;

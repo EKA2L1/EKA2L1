@@ -25,7 +25,8 @@
 const TInt KErrNone = 0;
 const TInt KErrNotFound = -1;
 const TInt KErrGeneral = -2;
-const TInt KErrNoMemory = -3;
+const TInt KErrCancel = -3;
+const TInt KErrNoMemory = -4;
 const TInt KErrNotSupported = -5;
 const TInt KErrArgument = -6;
 const TInt KErrTotalLossOfPrecision = -7;
