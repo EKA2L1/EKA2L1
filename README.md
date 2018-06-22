@@ -1,4 +1,4 @@
-# EKA2L1 [![Status](https://ci.appveyor.com/api/projects/status/umc5b97pwpyexh6q/branch/master?svg=true)](https://ci.appveyor.com/project/bentokun/eka2l1/branch/master)
+# EKA2L1 [![Status](https://ci.appveyor.com/api/projects/status/hnm73527hkrfrffm/branch/master?svg=true)](https://ci.appveyor.com/project/bentokun/eka2l1-mjiuq)
 - Best Symbian OS emulator to install and run malware. You can print things too!
 
 <p align="center">
@@ -14,6 +14,13 @@
 - Artifacts:
     * Artifacts for Windows is provided through CI. Click the status badge to get to EKA2L1's Appveyor CI
     
+- Information and contact
+    * You can contact me through Discord channel [here](https://discord.gg/5Bm5SJ9)
+    
+- Support
+    * You can contribute to the codebase by submitting the PR. Please visit the wiki to know about the coding convention first ;)
+    * You can also support me on [Patreon](https://www.patreon.com/fewdspuck)
+
 - Building:
     * Update all submodules: git submodule update --init --recursive
     * Using CMakeList in the root directory to generate solution/makefile. Make sure to turn off BUILD_TOOLS (tools are broken)
@@ -25,10 +32,3 @@
    * You should learn some basic Symbian C++ (Active objects, Thread, Sync things, etc..) before getting in implementing HLE functions.
    * If you don't want to develop the core, you can contribute to the GUI. Either Lazarus (Pascal) or Qt (C++). I prefer Lazarus, but QT
  will make things easier
-
-- Information and contact
-    * You can contact me through Discord channel [here](https://discord.gg/5Bm5SJ9)
-    
-- Support
-    * You can contribute to the codebase by submitting the PR. Please visit the wiki to know about the coding convention first ;)
-    * You can also support me on [Patreon](https://www.patreon.com/fewdspuck)
