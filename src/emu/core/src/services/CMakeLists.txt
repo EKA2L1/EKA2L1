@@ -3,11 +3,13 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/init.h
     ${CORE_INCLUDE_DIR}/services/session.h
     ${CORE_INCLUDE_DIR}/services/server.h
+    ${CORE_INCLUDE_DIR}/services/property.h
     ${CORE_INCLUDE_DIR}/services/applist/op.h
     ${CORE_INCLUDE_DIR}/services/applist/applist.h
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
+    property.cpp
     server.cpp
     session.cpp
     applist/applist.cpp
