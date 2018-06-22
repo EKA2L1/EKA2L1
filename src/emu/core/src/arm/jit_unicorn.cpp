@@ -84,6 +84,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     jit->save_context(context_debug);
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
+    /*
     if (mngr) {
         // Use this manager to get the address
         auto sid_correspond = mngr->get_sid(address);
@@ -120,7 +121,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
                 return;
             }
         }
-    }
+    }*/
 
     const bool log_code = false;
 
@@ -158,6 +159,14 @@ void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
         address svca = jit->get_pc() - 4;
         uc_mem_read(uc, svca, &svc_inst, 4);
         imm = svc_inst & 0xffffff;
+    }
+
+    if (imm == 0) {
+        jit->get_lib_manager()->call_hle(*eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys()));
+        return;
+    } else if (imm == 1) {
+        jit->get_lib_manager()->call_custom_hle(*eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys()));
+        return;
     }
 
     if (!jit->get_lib_manager()->call_svc(imm)) {

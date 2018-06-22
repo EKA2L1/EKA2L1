@@ -193,9 +193,6 @@ namespace eka2l1 {
 
             chunk_ptr code_chunk;
             chunk_ptr data_chunk;
-            chunk_ptr stub_chunk;
-
-            eka2l1::ptr<uint32_t> stub_ptr;
 
             bool has_extended_header = false;
         };

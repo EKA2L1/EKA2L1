@@ -107,6 +107,12 @@ namespace eka2l1 {
                     }
 
                     return;
+                } else if (svc == 1) {
+                    // Custom call
+                    uint32_t val = *parent.get_memory_sys()->get_addr<uint32_t>(parent.get_pc() + 4);
+                    bool res = mngr->call_custom_hle(val);
+
+                    return;
                 }
 
                 bool res = mngr->call_svc(svc);

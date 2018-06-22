@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <core_kernel.h>
 
 #include <functional>
 #include <map>
@@ -69,7 +70,7 @@ namespace eka2l1 {
             std::vector<uint32_t> loader;
         };
 
-		/*! \brief Manage libraries and HLE functions.
+        /*! \brief Manage libraries and HLE functions.
 		 * 
 		 * HLE functions are stored here. Libraries and images are also cached
 		 * and load when needed.
@@ -94,6 +95,15 @@ namespace eka2l1 {
             kernel_system *kern;
             system *sys;
 
+            chunk_ptr custom_stub;
+            chunk_ptr stub;
+
+            ptr<uint32_t> stub_ptr;
+            ptr<uint32_t> custom_stub_ptr;
+
+            std::map<uint32_t, ptr<uint32_t>> stubbed;
+            std::map<uint32_t, ptr<uint32_t>> custom_stubbed;
+
         public:
             std::map<sid, epoc_import_func> import_funcs;
             std::map<sid, epoc_import_func> svc_funcs;
@@ -101,21 +111,26 @@ namespace eka2l1 {
 
             lib_manager(){};
 
-			/*! \brief Intialize the library manager. 
+            ptr<uint32_t> get_stub(uint32_t id);
+            ptr<uint32_t> do_custom_stub(uint32_t addr);
+
+            void register_custom_func(std::pair<address, epoc_import_func> func);
+
+            /*! \brief Intialize the library manager. 
 			 * \param ver The EPOC version to import HLE functions.
 			*/
             void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
-            
-			/*! \brief Shutdown the library manager. */
-			void shutdown();
 
-			/*! \brief Reset the library manager. */
+            /*! \brief Shutdown the library manager. */
+            void shutdown();
+
+            /*! \brief Reset the library manager. */
             void reset();
 
-			/*! \brief Get the SIDS of a library. */
+            /*! \brief Get the SIDS of a library. */
             std::optional<sids> get_sids(const std::u16string &lib_name);
-			
-			/*! \brief Get the export addresses of a library. */
+
+            /*! \brief Get the export addresses of a library. */
             std::optional<exportaddrs> get_export_addrs(const std::u16string &lib_name);
 
             void register_hle(sid id, epoc_import_func func);
@@ -123,22 +138,22 @@ namespace eka2l1 {
             /*! \brief Get the HLE function from an SID */
             std::optional<epoc_import_func> get_hle(sid id);
 
-			/*! \brief Call HLE function with an ID */
+            /*! \brief Call HLE function with an ID */
             bool call_hle(sid id);
-			
-			/*! \brief Call a HLE function registered at a specific address */
+
+            /*! \brief Call a HLE function registered at a specific address */
             bool call_custom_hle(address addr);
-			
-			/*! \brief Call a HLE system call.
+
+            /*! \brief Call a HLE system call.
 			 * \param svcnum The system call ordinal.
 			*/
             bool call_svc(sid svcnum);
 
-			/*! \brief Load an E32Image. */
+            /*! \brief Load an E32Image. */
             loader::e32img_ptr load_e32img(const std::u16string &img_name);
-            
-			/*! \brief Load an ROM image. */
-			loader::romimg_ptr load_romimg(const std::u16string &rom_name, bool log_export = false);
+
+            /*! \brief Load an ROM image. */
+            loader::romimg_ptr load_romimg(const std::u16string &rom_name, bool log_export = false);
 
             /*! \brief Open the image code segment */
             void open_e32img(loader::e32img_ptr &img);
@@ -158,7 +173,7 @@ namespace eka2l1 {
             bool register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_export = false);
             std::optional<sid> get_sid(exportaddr addr);
 
-			/*! \brief Given an SID, get the function name. */
+            /*! \brief Given an SID, get the function name. */
             std::optional<std::string> get_func_name(const sid id);
 
             std::map<uint32_t, e32img_inf> &get_e32imgs_cache() {
@@ -169,7 +184,7 @@ namespace eka2l1 {
                 return romimgs_cache;
             }
 
-			/*! \brief Given a class name, return the vtable address.
+            /*! \brief Given a class name, return the vtable address.
 			 * \returns 0 if the class doesn't exists in the cache, else returns the vtable address of that class.
 			*/
             address get_vtable_address(const std::string class_name);
