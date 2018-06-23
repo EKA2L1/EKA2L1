@@ -18,7 +18,7 @@ add_library(eka2l1_api SHARED core/include/core/core_api.h
 					   core/src/core_api.cpp)
 
 target_include_directories(eka2l1_api PUBLIC core/include)
-target_link_libraries(eka2l1_api PUBLIC core)
+target_link_libraries(eka2l1_api PUBLIC core common)
 
 add_executable(EKA2L1_CONS_API_TEST console/test.cpp)
 target_include_directories(EKA2L1_CONS_API_TEST PUBLIC core/include)
