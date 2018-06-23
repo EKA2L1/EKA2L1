@@ -8,3 +8,7 @@
 #include <ptr.h>
 
 struct RProcess : public RHandleBase {};
+
+BRIDGE_FUNC(void, RProcessType, eka2l1::ptr<RProcess> aProcess);
+
+extern const eka2l1::hle::func_map pr_register_funcs;

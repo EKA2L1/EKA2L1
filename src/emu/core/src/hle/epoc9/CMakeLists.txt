@@ -17,6 +17,7 @@ add_library(epoc9
     ${CORE_INCLUDE_DIR}/hle/epoc9/register.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/svc.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/svr.h
+    ${CORE_INCLUDE_DIR}/hle/epoc9/pr.h
     ${CORE_INCLUDE_DIR}/hle/epoc9/prop.h
     allocator.cpp
     base.cpp
@@ -34,6 +35,7 @@ add_library(epoc9
     register.cpp
     svc.cpp
     svr.cpp
+    pr.cpp
     prop.cpp)
 
 target_include_directories(epoc9 PUBLIC ${CORE_INCLUDE_DIR}/hle)

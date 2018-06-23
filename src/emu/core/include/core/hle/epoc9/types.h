@@ -47,3 +47,9 @@ enum TOwnerType {
 };
 
 using TUid = uint32_t;
+
+struct TUidType {
+    TUid uid1;
+    TUid uid2;
+    TUid uid3;
+};

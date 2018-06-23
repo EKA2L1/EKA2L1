@@ -664,6 +664,7 @@ namespace eka2l1 {
         bool load_eka2img(eka2img &img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             if (img.header.uid1 == loader::eka2_img_type::dll) {
             }
+
             return import_exe_image(&img, mem, kern, mngr);
         }
     }

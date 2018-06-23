@@ -13,10 +13,6 @@ namespace eka2l1 {
                 return std::optional<int>{};
             }
 
-            if (msg->args.get_arg_type(idx) != ipc_arg_type::handle) {
-                return std::optional<int>{};
-            }
-
             return msg->args.args[idx];
         }
 
@@ -28,7 +24,7 @@ namespace eka2l1 {
 
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
-            if (iatype == ipc_arg_type::des16 || iatype == ipc_arg_type::desc16) {
+            if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
                 TDesC16 *des = eka2l1::ptr<TDesC16>(msg->args.args[idx]).get(sys->get_memory_system());
                 return des->StdString(sys);
             }
@@ -44,7 +40,7 @@ namespace eka2l1 {
 
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
-            if (iatype == ipc_arg_type::des8 || iatype == ipc_arg_type::desc8) {
+            if ((int)iatype & (int)ipc_arg_type::flag_des) {
                 TDesC8 *des = eka2l1::ptr<TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
                 return des->StdString(sys);
             }
@@ -58,6 +54,37 @@ namespace eka2l1 {
 
         int ipc_context::flag() const {
             return msg->args.flag;
+        }
+
+        bool ipc_context::write_arg(int idx, uint32_t data) {
+            if (idx < 4 && msg->args.get_arg_type(idx) == ipc_arg_type::handle) {
+                msg->args.args[idx] = data;
+                return true;
+            }
+
+            return false;
+        }
+
+        bool ipc_context::write_arg_pkg(int idx, uint8_t *data, uint32_t len) {
+            if (idx >= 4) {
+                return false;
+            }
+
+            ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+
+            if ((int)arg_type & (int)ipc_arg_type::flag_des) {
+                TDesC8 *des = eka2l1::ptr<TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
+                std::string bin;
+
+                bin.resize(len);
+                memmove(bin.data(), &data, len);
+
+                des->Assign(sys, bin);
+
+                return true;
+            } 
+
+            return false;
         }
     }
 }

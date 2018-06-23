@@ -17,8 +17,9 @@ BRIDGE_FUNC(TInt, RSessionBaseCreateSession, eka2l1::ptr<RSessionBase> aSession,
     }
 
     session_ptr nss = kern->create_session(svr, aAsyncMsgSlot);
-
     aSession.get(mem)->iHandle = nss->unique_id();
+
+    LOG_INFO("Session created, connected to {} witht total of {} async slots.", server_name, aAsyncMsgSlot);
 
     return KErrNone;
 }
