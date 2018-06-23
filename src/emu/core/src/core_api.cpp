@@ -29,7 +29,7 @@ using namespace eka2l1;
 int create_symbian_system(int win_type, int render_type, int cpu_type) {
     syses.push_back(std::make_unique<eka2l1::system>(win_type == GLFW ? driver::window_type::glfw : driver::window_type::glfw,
         render_type == OPENGL ? driver::driver_type::opengl : driver::driver_type::opengl,
-        cpu_type == CPU_UNICORN ? arm::jitter_arm_type::unicorn : arm::jitter_arm_type::unicorn));
+        cpu_type == CPU_UNICORN ? arm::jitter_arm_type::unicorn : arm::jitter_arm_type::dynarmic));
 
     return (int)syses.size();
 }

@@ -102,6 +102,8 @@ namespace eka2l1 {
             void prepare_rescheduling() override;
 
             bool is_thumb_mode() override;
+
+            void imb_range(address start, uint32_t len);
         };
     }
 }

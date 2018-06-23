@@ -7,13 +7,13 @@ namespace eka2l1 {
     namespace arm {
         class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
             jit_dynarmic &parent;
-            uint64_t interpreted;
+            uint64_t interpreted = 0;
 
-            int routine_ticks = 32;
-            int default_ticks = 32;
+            int routine_ticks = 1024;
+            int default_ticks = 1024;
 
-            bool log_read = true;
-            bool log_write = true;
+            bool log_read = false;
+            bool log_write = false;
             bool log_code = true;
 
         public:
@@ -111,9 +111,11 @@ namespace eka2l1 {
             void ExceptionRaised(uint32_t pc, Dynarmic::A32::Exception exception) override {
                 switch (exception) {
                 case Dynarmic::A32::Exception::Breakpoint:
+                case Dynarmic::A32::Exception::UndefinedInstruction:
                     return;
                 default:
                     LOG_WARN("Exception Raised at pc = 0x{:x}", pc);
+                    break;
                 }
             }
 
@@ -133,6 +135,23 @@ namespace eka2l1 {
                     // Custom call
                     uint32_t val = *parent.get_memory_sys()->get_addr<uint32_t>(parent.get_pc() + 4);
                     bool res = mngr->call_custom_hle(val);
+
+                    return;
+                } else if (svc == 2) {
+                    uint32_t call_addr = parent.get_pc();
+
+                    if (call_addr && parent.is_thumb_mode()) {
+                        call_addr -= 1;
+                    } else {
+                        call_addr -= 4;
+                    }
+
+                    bool res = parent.get_lib_manager()->call_hle(*parent.get_lib_manager()->get_sid(call_addr));
+
+                    if (res) {
+                        uint32_t lr = parent.get_reg(14);
+                        parent.set_pc(lr);
+                    }
 
                     return;
                 }
@@ -175,8 +194,8 @@ namespace eka2l1 {
             , asmdis(asmdis)
             , lib_mngr(mngr)
             , fallback_jit(sys, mem, asmdis, mngr)
-            , cb(std::make_unique<arm_dynarmic_callback>(*this))
-            , jit(make_jit(cb)) {
+            , cb(std::make_unique<arm_dynarmic_callback>(*this)) {
+            jit = std::move(make_jit(cb));
         }
 
         jit_dynarmic::~jit_dynarmic() {}
@@ -193,6 +212,7 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::stop() {
+            jit->HaltExecution();
         }
 
         void jit_dynarmic::step() {
@@ -241,7 +261,7 @@ namespace eka2l1 {
         void jit_dynarmic::save_context(thread_context &ctx) {
             ctx.cpsr = get_cpsr();
 
-            for (uint32_t i = 0; i < 16; i++) {
+            for (uint8_t i = 0; i < 16; i++) {
                 ctx.cpu_registers[i] = get_reg(i);
             }
 
@@ -252,7 +272,7 @@ namespace eka2l1 {
         void jit_dynarmic::load_context(const thread_context &ctx) {
             jit->SetCpsr(ctx.cpsr);
 
-            for (uint8_t i = 0; i < ctx.cpu_registers.size(); i++) {
+            for (uint8_t i = 0; i < 16; i++) {
                 jit->Regs()[i] = ctx.cpu_registers[i];
             }
 
@@ -276,10 +296,17 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::prepare_rescheduling() {
+            if (jit->IsExecuting()) {
+                jit->HaltExecution();
+            }
         }
 
         bool jit_dynarmic::is_thumb_mode() {
             return get_cpsr() & 0x20;
+        }
+
+        void jit_dynarmic::imb_range(address start, uint32_t len) {
+            jit->InvalidateCacheRange(start, len);
         }
     }
 }
