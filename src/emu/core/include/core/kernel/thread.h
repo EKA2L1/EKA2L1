@@ -186,7 +186,7 @@ namespace eka2l1 {
             bool operator>=(const thread &rhs);
             bool operator<=(const thread &rhs);
 
-            tls_slot *get_free_tls_slot(uint32_t handle, uint32_t dll_uid);
+            tls_slot *get_tls_slot(uint32_t handle, uint32_t dll_uid);
             void close_tls_slot(tls_slot &slot);
 
             thread_local_data &get_local_data() {

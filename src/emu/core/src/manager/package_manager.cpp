@@ -41,9 +41,9 @@ namespace eka2l1 {
 
             for (auto &maybe_app : sdb_node) {
                 YAML::Node app = maybe_app.second;
-              
+
                 app_info info;
-               
+
                 info.drive = app["drive"].as<uint8_t>();
                 info.ver = static_cast<epocver>(app["epoc"].as<int>());
 
@@ -54,7 +54,7 @@ namespace eka2l1 {
 
                 auto name = app["name"].as<std::string>();
                 info.name = std::u16string(name.begin(), name.end());
-                
+
                 auto vendor = app["vendor"].as<std::string>();
                 info.vendor_name = std::u16string(vendor.begin(), vendor.end());
 
@@ -87,7 +87,7 @@ namespace eka2l1 {
                 emitter << YAML::Key << "uid" << YAML::Value << c_app.second.id;
                 emitter << YAML::Key << "name" << YAML::Value << common::ucs2_to_utf8(c_app.second.name);
                 emitter << YAML::Key << "vendor" << YAML::Value << common::ucs2_to_utf8(c_app.second.vendor_name);
-   
+
                 emitter << YAML::EndMap;
             }
 
@@ -373,9 +373,25 @@ namespace eka2l1 {
                             LOG_INFO("Fixed drive, unexpected change to E:");
                             info.drive = 1;
                         }
+
+                        FILE *f = fopen(io->get(common::ucs2_to_utf8(file_des->target.unicode_string)).data(), "rb");
+                        fseek(f, 8, SEEK_SET);
+                        fread(&info.id, 1, 4, f);
+                        fclose(f);
                     }
 
                     LOG_INFO("Executable_name: {}", std::string(info.executable_name.begin(), info.executable_name.end()));
+
+                    if (info.drive == 0)
+                        info.executable_name[0] = u'C';
+                    else
+                        info.executable_name[0] = u'E';
+
+                    FILE *f = fopen(io->get(common::ucs2_to_utf8(info.executable_name)).data(), "rb");
+                    fseek(f, 8, SEEK_SET);
+                    fread(&info.id, 1, 4, f);
+                    fclose(f);
+
                     // Get file name
                     size_t slash_pos = info.executable_name.find_last_of(u"\\");
 
@@ -414,8 +430,6 @@ namespace eka2l1 {
             if (*sis_ver == epocver::epoc9) {
                 loader::sis_contents res = loader::parse_sis(common::ucs2_to_utf8(path));
 
-                install_controller(&res.controller, drive);
-
                 // Interpret the file
                 loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ios::binary),
                     io,
@@ -425,6 +439,8 @@ namespace eka2l1 {
                     loader::sis_drive(drive));
 
                 interpreter.interpret();
+
+                install_controller(&res.controller, drive);
             } else {
                 loader::sis_old res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
                 std::u16string main_path = res.app_path ? *res.app_path : (res.exe_path ? *res.exe_path : u"");

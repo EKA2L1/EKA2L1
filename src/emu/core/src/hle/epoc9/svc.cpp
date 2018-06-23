@@ -1,6 +1,6 @@
+#include <epoc9/dll.h>
 #include <epoc9/svc.h>
 #include <epoc9/user.h>
-#include <epoc9/dll.h>
 
 #include <common/cvt.h>
 #include <common/path.h>
@@ -49,11 +49,9 @@ BRIDGE_FUNC(void, ProcessFilename, eka2l1::ptr<RProcess> aProcess, eka2l1::ptr<T
 
     // 0xffff8000 is a kernel mapping for current process
     if (aProcess.ptr_address() != 0xffff8000) {
-        RProcess *pr = aProcess.get(mem);
-
         // Unlike Symbian, process is not a kernel object here
         // Its handle contains the process's uid
-        pr_real = kern->get_process(pr->iHandle);
+        pr_real = kern->get_process(aProcess.ptr_address());
     } else {
         pr_real = kern->get_process(kern->crr_process());
     }
@@ -67,12 +65,42 @@ BRIDGE_FUNC(void, ProcessFilename, eka2l1::ptr<RProcess> aProcess, eka2l1::ptr<T
     des->Assign(sys, pr_real->name());
 }
 
+BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
+    memory_system *mem = sys->get_memory_system();
+    kernel_system *kern = sys->get_kernel_system();
+
+    process_ptr pr_real;
+
+    // 0xffff8000 is a kernel mapping for current process
+    if (pr != 0xffff8000) {
+        // Unlike Symbian, process is not a kernel object here
+        // Its handle contains the process's uid
+        pr_real = kern->get_process(pr);
+    } else {
+        pr_real = kern->get_process(kern->crr_process());
+    }
+
+    if (!pr_real) {
+        LOG_ERROR("SvcProcessType: Invalid process");
+        return;
+    }
+
+    TUidType *type = uid_type.get(mem);
+    auto &tup = pr_real->get_uid_type();
+
+
+    // Silento
+    type->uid1 = std::get<0>(tup);
+    type->uid2 = std::get<1>(tup);
+    type->uid3 = std::get<2>(tup);
+}
+
 BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
     eka2l1::kernel::thread_local_data dat = current_local_data(sys);
 
     for (const auto &tls : dat.tls_slots) {
         if (tls.handle == aHandle) {
-            return tls.ptr;    
+            return tls.ptr;
         }
     }
 
@@ -81,7 +109,7 @@ BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
 
 BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr) {
     eka2l1::kernel::tls_slot *slot = get_tls_slot(sys, aHandle);
-    
+
     if (!slot) {
         return KErrNoMemory;
     }
@@ -102,5 +130,6 @@ const eka2l1::hle::func_map svc_register_funcs = {
     /* SLOW EXECUTIVE CALL */
     BRIDGE_REGISTER(0x16, ProcessFilename),
     BRIDGE_REGISTER(0x4e, DllTls),
+    BRIDGE_REGISTER(0x64, ProcessType),
     BRIDGE_REGISTER(0x76, DllSetTls)
 };

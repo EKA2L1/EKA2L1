@@ -206,7 +206,7 @@ namespace eka2l1 {
             // :)
         }
 
-        tls_slot *thread::get_free_tls_slot(uint32_t handle, uint32_t dll_uid) {
+        tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
             for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
                 if (ldata.tls_slots[i].handle = -1) {
                     ldata.tls_slots[i].handle = handle;

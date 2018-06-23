@@ -23,6 +23,8 @@
 #include <loader/eka2img.h>
 #include <string>
 
+#include <tuple>
+
 namespace eka2l1 {
     class kernel_system;
     class memory;
@@ -42,9 +44,12 @@ namespace eka2l1 {
         uint32_t data = 0;
         int data_size = -1;
     };
+    
+    using process_uid_type = std::tuple<uint32_t, uint32_t, uint32_t>;
 
     class process {
         uint32_t uid;
+        
         std::string process_name;
         thread_ptr prthr;
 
@@ -99,6 +104,8 @@ namespace eka2l1 {
 
         // Stop the main process thread
         bool stop();
+
+        process_uid_type get_uid_type();
     };
 }
 

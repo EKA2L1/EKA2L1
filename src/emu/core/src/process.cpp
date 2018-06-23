@@ -66,5 +66,9 @@ namespace eka2l1 {
     bool process::run() {
         return kern->run_thread(prthr->unique_id());
     }
+
+    process_uid_type process::get_uid_type() {
+        return std::tuple(0x1000007A, 0x100039CE, uid);
+    }
 }
 
