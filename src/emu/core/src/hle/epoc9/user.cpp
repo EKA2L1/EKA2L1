@@ -279,11 +279,6 @@ BRIDGE_FUNC(TInt, UserLeave, TInt aCode) {
 
 BRIDGE_FUNC(eka2l1::ptr<void>, memcpy, eka2l1::ptr<void> dest, eka2l1::ptr<void> src, TInt size) {
     memcpy(dest.get(sys->get_memory_system()), src.get(sys->get_memory_system()), size);
-
-    if (size = 0x1) {
-        LOG_INFO("{}", *src.cast<uint8_t>().get(sys->get_memory_system()));
-    }
-
     return dest;
 }
 

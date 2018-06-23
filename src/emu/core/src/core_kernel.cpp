@@ -109,6 +109,7 @@ namespace eka2l1 {
 
         crr_process_id = uid;
         libmngr->open_e32img(res2);
+        libmngr->patch_hle();
 
         processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, path16, u"", res2)));
 

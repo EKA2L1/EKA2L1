@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace eka2l1 {
-	/*! \brief Contains ARM jitter and related things. */
+    /*! \brief Contains ARM jitter and related things. */
     namespace arm {
         class jit_interface;
         using jitter = std::unique_ptr<jit_interface>;
@@ -43,13 +43,13 @@ namespace eka2l1 {
         data = 0x02
     };
 
-	/*! \brief Represents a subroutine. */
+    /*! \brief Represents a subroutine. */
     struct subroutine {
         std::vector<arm_inst_type> insts;
         ptr<uint8_t> end;
     };
 
-	/*! \brief An ARM disassembler. */
+    /*! \brief An ARM disassembler. */
     class disasm {
         using insn_ptr = std::unique_ptr<cs_insn, std::function<void(cs_insn *)>>;
         using csh_ptr = std::unique_ptr<csh, std::function<void(csh *)>>;
@@ -62,24 +62,26 @@ namespace eka2l1 {
         arm::jitter jitter;
 
     public:
-	    /*! \brief Initialize the disassembler.
+        /*! \brief Initialize the disassembler.
 		 * \param smem The memory system.
 		*/
         void init(memory_system *smem);
-        
-		/*! \brief Shutdown the disassembler. */
-		void shutdown();
 
-		/*! \brief Get a subroutine.
+        /*! \brief Shutdown the disassembler. */
+        void shutdown();
+
+        /*! \brief Get a subroutine.
 		 * \param beg HLE pointer to the start of a subroutine.
 		 * \returns The subroutine
 		*/
         subroutine get_subroutine(ptr<uint8_t> beg);
-		
-		/*! \brief Disassemble binary code.
+
+        /*! \brief Disassemble binary code.
 		 * \returns The description of the instruction.
 		*/
         std::string disassemble(const uint8_t *code, size_t size, uint64_t address, bool thumb);
+
+        /*! \brief Check if the address contains thumb inst*/
+        bool thumb(uint64_t address);
     };
 }
-

@@ -82,7 +82,7 @@ namespace eka2l1 {
                 cstub_ptr_real[0] = 0xef000001; // svc #1, never used
                 cstub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
                 cstub_ptr_real[2] = addr;
-                
+
                 *ptr<uint32_t>(addr).get(mem) = custom_stub_ptr.ptr_address();
 
                 custom_stub_ptr += 12;
@@ -383,6 +383,8 @@ namespace eka2l1 {
                 return false;
             }
 
+            LOG_INFO("Calling {}", *get_func_name(id));
+
             auto imp = eimp.value();
             imp(sys);
 
@@ -462,6 +464,22 @@ namespace eka2l1 {
             }
 
             return true;
+        }
+
+        void lib_manager::patch_hle() {
+            // This is mostly based on assumption that: even a function: thumb or ARM, should be large
+            // enough to contains an svc call (This hold true).
+            for (const auto &func : import_funcs) {
+                uint32_t addr = get_export_addr(func.first);
+
+                if (addr) {
+                    bool thumb = (addr % 2 != 0); //?
+
+                    LOG_INFO("Write interrupt of {} at: 0x{:x} {}", *get_func_name(func.first), addr - addr % 2, thumb ? "(thumb)" : "");
+
+                    *eka2l1::ptr<uint32_t>(addr - addr % 2).get(mem) = thumb ? 0xDF02 : 0xEF000002;
+                }
+            }
         }
     }
 }

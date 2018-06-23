@@ -276,12 +276,14 @@ namespace eka2l1 {
 
                     if (sid) {
                         LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
-                            val, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
+                           export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
 
-                        uint32_t addr = mngr.get_stub(*sid).ptr_address();
-                        write(code_ptr, addr);
+                        if (mngr.get_hle(*sid)) {
+                            uint32_t impaddr = mngr.get_stub(*sid).ptr_address();
+                            write(code_ptr, impaddr);
 
-                        continue;
+                            continue;
+                        }
                     }
 
                     if (export_addr >= code_start && export_addr <= code_end) {

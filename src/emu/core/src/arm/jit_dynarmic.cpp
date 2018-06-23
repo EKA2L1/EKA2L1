@@ -10,6 +10,7 @@ namespace eka2l1 {
             uint64_t interpreted;
 
             int routine_ticks = 32;
+            int default_ticks = 32;
 
             bool log_read = true;
             bool log_write = true;
@@ -21,6 +22,7 @@ namespace eka2l1 {
 
             void set_routine_ticks(int new_ticks) {
                 routine_ticks = new_ticks;
+                default_ticks = new_ticks;
             }
 
             uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {
@@ -153,7 +155,7 @@ namespace eka2l1 {
                 uint64_t res = static_cast<uint64_t>(std::max(routine_ticks, 0));
 
                 if (res <= 0) {
-                    routine_ticks = 32;
+                    routine_ticks = default_ticks;
                 }
 
                 return res;

@@ -112,7 +112,7 @@ namespace eka2l1 {
             std::map<uint32_t, ptr<uint32_t>> custom_stubbed;
 
         public:
-            std::map<sid, epoc_import_func> import_funcs;
+            std::map<address, epoc_import_func> import_funcs;
             std::map<sid, epoc_import_func> svc_funcs;
             std::map<address, epoc_import_func> custom_funcs;
 
@@ -120,6 +120,8 @@ namespace eka2l1 {
 
             ptr<uint32_t> get_stub(uint32_t id);
             ptr<uint32_t> do_custom_stub(uint32_t addr);
+
+            void patch_hle();
 
             void register_custom_func(std::pair<address, epoc_import_func> func);
 
