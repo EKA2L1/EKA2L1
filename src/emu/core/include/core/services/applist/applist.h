@@ -36,7 +36,6 @@ namespace eka2l1 {
          * request_sts: KErrNotFound if app doesn't exist
         */
         void default_screen_number(service::ipc_context ctx);
-        void app_language(service::ipc_context ctx);
 
         /*! \brief Get the application language.
          *
