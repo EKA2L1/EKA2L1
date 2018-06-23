@@ -27,9 +27,9 @@
 #include <kernel/sema.h>
 #include <kernel/timer.h>
 
+#include <services/property.h>
 #include <services/server.h>
 #include <services/session.h>
-#include <services/property.h>
 
 #include <common/hash.h>
 
@@ -214,6 +214,7 @@ namespace eka2l1 {
         bool close_timer(kernel::uid id);
         bool close_sema(kernel::uid id);
         bool close_mutex(kernel::uid id);
+        bool close_session(kernel::uid id);
 
         bool close(kernel::uid id);
 

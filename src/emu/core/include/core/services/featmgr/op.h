@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team
+ * Copyright (c) 2018 EKA2L1 Team / 2009 Nokia
  * 
- * This file is part of EKA2L1 project
+ * This file is part of EKA2L1 project / Symbian Open Source Project
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -17,19 +17,3 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
-#pragma once
-
-#include <services/context.h>
-#include <services/server.h>
-
-namespace eka2l1 {
-    class fs_server : public service::server {
-        void file_open(service::ipc_context ctx);
-        void file_create(service::ipc_context ctx);
-        void file_replace(service::ipc_context ctx);
-
-    public:
-        fs_server(system *sys);
-    };
-}

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team / 2009 Nokia
  * 
- * This file is part of EKA2L1 project
+ * This file is part of EKA2L1 project / Symbian Open Source Project
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
