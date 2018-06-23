@@ -51,7 +51,7 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
     }
 
     memcpy(&value, eka2l1::ptr<const void>(address).get(jit->get_memory_sys()), size);
-    
+
     const bool read_log = false;
 
     if (read_log)
@@ -84,48 +84,10 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     jit->save_context(context_debug);
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
-    if (mngr) {
-        // Use this manager to get the address
-        auto sid_correspond = mngr->get_sid(address);
-
-        if (!sid_correspond && thumb_mode(uc)) {
-            sid_correspond = mngr->get_sid(address + 1);
-        }
-
-        if (sid_correspond) {
-            // DO nothing now
-            auto func_name = mngr->get_func_name(sid_correspond.value());
-
-            const bool log_call = true;
-
-            if (log_call) {
-                LOG_INFO("Calling HLE function: {} [0x{:x}]", func_name.value(), address);
-            }
-
-            if (mngr->call_hle(sid_correspond.value())) {
-                uint32_t lr = 0;
-
-                uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-                uc_reg_write(uc, UC_ARM_REG_PC, &lr);
-
-                return;
-            }
-        } else {
-            if (mngr->call_custom_hle(address)) {
-                uint32_t lr = 0;
-
-                uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-                uc_reg_write(uc, UC_ARM_REG_PC, &lr);
-
-                return;
-            }
-        }
-    }
-
     const bool log_code = false;
 
     if (log_code) {
-        const uint8_t * code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
+        const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
         size_t buffer_size = eka2l1::common::GB(4) - address;
         bool thumb = thumb_mode(uc);
         std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
@@ -145,19 +107,54 @@ void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
 
     uint32_t imm = 0;
 
-    if (thumb_mode(uc)) {
+    bool thumb = thumb_mode(uc);
+
+    if (thumb) {
         uint16_t svc_inst = 0;
 
         address svca = jit->get_pc() - 2;
         uc_mem_read(uc, svca, &svc_inst, 2);
         imm = svc_inst & 0xff;
-    }
-    else {
+    } else {
         uint32_t svc_inst = 0;
 
         address svca = jit->get_pc() - 4;
         uc_mem_read(uc, svca, &svc_inst, 4);
         imm = svc_inst & 0xffffff;
+    }
+
+    if (imm == 0) {
+        uint32_t sid = *eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys());
+        auto func_name = jit->get_lib_manager()->get_func_name(sid);
+
+        if (func_name) {
+            LOG_INFO("Calling {} [0x{:x}]", *func_name, jit->get_reg(14));
+        }
+
+        jit->get_lib_manager()->call_hle(sid);
+        return;
+    } else if (imm == 1) {
+        jit->get_lib_manager()->call_custom_hle(*eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys()));
+        return;
+    } else if (imm == 2) {
+        uint32_t call_addr = jit->get_pc();
+
+        if (call_addr && thumb) {
+            call_addr -= 1;
+        } else {
+            call_addr -= 4;
+        }
+
+        bool res = jit->get_lib_manager()->call_hle(*jit->get_lib_manager()->get_sid(call_addr));
+
+        if (res) {
+            uint32_t lr = 0;
+            uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+
+            jit->set_pc(lr);
+        }
+
+        return;
     }
 
     if (!jit->get_lib_manager()->call_svc(imm)) {
@@ -303,7 +300,7 @@ namespace eka2l1 {
 
         uint32_t jit_unicorn::get_reg(size_t idx) {
             uint32_t val = 0;
-            auto treg = UC_ARM_REG_R0 + idx; 
+            auto treg = UC_ARM_REG_R0 + idx;
             auto err = uc_reg_read(engine, treg, &val);
 
             if (err != UC_ERR_OK) {
@@ -433,4 +430,3 @@ namespace eka2l1 {
         }
     }
 }
-

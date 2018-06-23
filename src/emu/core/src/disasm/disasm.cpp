@@ -123,5 +123,17 @@ namespace eka2l1 {
 
         return sub;
     }
+
+    /*! \brief Check if the address contains thumb inst*/
+    bool disasm::thumb(uint64_t address) {
+        jitter->set_pc(address);
+        jitter->step();
+
+        if (jitter->is_thumb_mode()) {
+            return true;
+        }
+
+        return false;
+    }
 }
 

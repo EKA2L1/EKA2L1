@@ -45,7 +45,60 @@ namespace eka2l1 {
                 register_epoc9(*this);
             }
 
+            stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
+                kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+
+            custom_stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
+                kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+
+            stub_ptr = stub->base().cast<uint32_t>();
+            custom_stub_ptr = custom_stub->base().cast<uint32_t>();
+
             LOG_INFO("Lib manager initialized, total implemented HLE functions: {}", import_funcs.size());
+        }
+
+        ptr<uint32_t> lib_manager::get_stub(uint32_t id) {
+            auto &res = stubbed.find(id);
+
+            if (res == stubbed.end()) {
+                uint32_t *stub_ptr_real = stub_ptr.get(mem);
+                stub_ptr_real[0] = 0xef000000; // svc #0, never used
+                stub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
+                stub_ptr_real[2] = id;
+
+                stub_ptr += 12;
+
+                return ptr<uint32_t>(stub_ptr.ptr_address() - 12);
+            }
+
+            return res->second;
+        }
+
+        ptr<uint32_t> lib_manager::do_custom_stub(uint32_t addr) {
+            auto &res = custom_stubbed.find(addr);
+
+            if (res == custom_stubbed.end()) {
+                uint32_t *cstub_ptr_real = custom_stub_ptr.get(mem);
+                cstub_ptr_real[0] = 0xef000001; // svc #1, never used
+                cstub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
+                cstub_ptr_real[2] = addr;
+
+                *ptr<uint32_t>(addr).get(mem) = custom_stub_ptr.ptr_address();
+
+                custom_stub_ptr += 12;
+
+                return ptr<uint32_t>(custom_stub_ptr.ptr_address() - 12);
+            }
+
+            ptr<uint32_t> pt = res->second;
+            *ptr<uint32_t>(addr).get(mem) = pt.ptr_address();
+
+            return pt;
+        }
+
+        void lib_manager::register_custom_func(std::pair<address, epoc_import_func> func) {
+            custom_funcs.insert(func);
+            do_custom_stub(func.first);
         }
 
         void lib_manager::shutdown() {
@@ -56,11 +109,11 @@ namespace eka2l1 {
         }
 
         void lib_manager::reset() {
-			func_names.clear();
-			ids.clear();
+            func_names.clear();
+            ids.clear();
             svc_funcs.clear();
-			custom_funcs.clear();
-			import_funcs.clear();
+            custom_funcs.clear();
+            import_funcs.clear();
         }
 
         void lib_manager::load_all_sids(const epocver ver) {
@@ -330,6 +383,8 @@ namespace eka2l1 {
                 return false;
             }
 
+            LOG_INFO("Calling {}", *get_func_name(id));
+
             auto imp = eimp.value();
             imp(sys);
 
@@ -409,6 +464,22 @@ namespace eka2l1 {
             }
 
             return true;
+        }
+
+        void lib_manager::patch_hle() {
+            // This is mostly based on assumption that: even a function: thumb or ARM, should be large
+            // enough to contains an svc call (This hold true).
+            for (const auto &func : import_funcs) {
+                uint32_t addr = get_export_addr(func.first);
+
+                if (addr) {
+                    bool thumb = (addr % 2 != 0); //?
+
+                    LOG_INFO("Write interrupt of {} at: 0x{:x} {}", *get_func_name(func.first), addr - addr % 2, thumb ? "(thumb)" : "");
+
+                    *eka2l1::ptr<uint32_t>(addr - addr % 2).get(mem) = thumb ? 0xDF02 : 0xEF000002;
+                }
+            }
         }
     }
 }

@@ -1,11 +1,14 @@
 add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
+set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
+
 add_subdirectory(freetype)
 add_subdirectory(FRSML)
 add_subdirectory(spdlog)
 add_subdirectory(glfw)
 add_subdirectory(glm)
+add_subdirectory(dynarmic)
 
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
 add_subdirectory(yaml-cpp)

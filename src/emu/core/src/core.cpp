@@ -87,8 +87,8 @@ namespace eka2l1 {
             while (ticks < downcount && !exit && kern.crr_thread() != nullptr) {
                 emu_screen_driver->begin_render();
 
-                cpu->execute_instructions(32);
-                ticks += 32;
+                cpu->execute_instructions(2048);
+                ticks += 2048;
 
                 emu_screen_driver->end_render();
             }

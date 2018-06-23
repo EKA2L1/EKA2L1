@@ -109,6 +109,7 @@ namespace eka2l1 {
 
         crr_process_id = uid;
         libmngr->open_e32img(res2);
+        libmngr->patch_hle();
 
         processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, path16, u"", res2)));
 
@@ -181,7 +182,8 @@ namespace eka2l1 {
     }
 
     kernel::uid kernel_system::get_id_base_owner(kernel::owner_type owner) const {
-        return owner == kernel::owner_type::process ? crr_process_id : thr_sch->current_thread()->unique_id();
+        return owner == kernel::owner_type::process ? crr_process_id :
+            (owner == kernel::owner_type::thread ? thr_sch->current_thread()->unique_id() : 0xDDDDDDDD);
     }
 
     chunk_ptr kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,

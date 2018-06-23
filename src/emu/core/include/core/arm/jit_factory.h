@@ -33,7 +33,8 @@ namespace eka2l1 {
 
     namespace arm {
         enum jitter_arm_type {
-            unicorn = 0
+            unicorn = 0,
+            dynarmic = 1
         };
 
         class jit_interface;

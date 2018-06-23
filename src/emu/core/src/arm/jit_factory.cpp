@@ -19,6 +19,8 @@
  */
 #include <arm/jit_factory.h>
 #include <arm/jit_unicorn.h>
+#include <arm/jit_dynarmic.h>
+
 #include <core_timing.h>
 
 namespace eka2l1 {
@@ -28,10 +30,11 @@ namespace eka2l1 {
             switch (arm_type) {
             case unicorn:
                 return std::make_unique<jit_unicorn>(timing, mem, asmdis, mngr);
+            case dynarmic:
+                return std::make_unique<jit_dynarmic>(timing, mem, asmdis, mngr);
             default:
                 return jitter(nullptr);
             }
         }
     }
 }
-

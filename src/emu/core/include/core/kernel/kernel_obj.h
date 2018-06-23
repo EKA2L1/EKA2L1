@@ -30,6 +30,7 @@ namespace eka2l1 {
         using uid = uint64_t;
 
         enum class owner_type {
+            kernel,  // Kernel has id of 0xDDDDDDDD
             process,
             thread
         };

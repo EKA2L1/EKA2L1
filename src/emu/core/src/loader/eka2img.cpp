@@ -162,8 +162,8 @@ namespace eka2l1 {
                     data_delta = img->rt_data_addr - img->header.data_base;
 
                     expdir = img->ed.syms.data();
-                    
-					for (auto &exp : img->ed.syms) {
+
+                    for (auto &exp : img->ed.syms) {
                         if (exp > img->header.data_offset && exp < img->header.data_offset + img->header.data_size)
                             exp += data_delta;
                         else
@@ -276,7 +276,14 @@ namespace eka2l1 {
 
                     if (sid) {
                         LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
-                            export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
+                           export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
+
+                        if (mngr.get_hle(*sid)) {
+                            uint32_t impaddr = mngr.get_stub(*sid).ptr_address();
+                            write(code_ptr, impaddr);
+
+                            continue;
+                        }
                     }
 
                     if (export_addr >= code_start && export_addr <= code_end) {
