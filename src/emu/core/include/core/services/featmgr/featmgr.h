@@ -18,18 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <services/context.h>
 #include <services/server.h>
 
 namespace eka2l1 {
-    class fs_server : public service::server {
-        void file_open(service::ipc_context ctx);
-        void file_create(service::ipc_context ctx);
-        void file_replace(service::ipc_context ctx);
-
+    class featmgr_server : public service::server {
     public:
-        fs_server(system *sys);
+        featmgr_server(system *sys);
     };
 }

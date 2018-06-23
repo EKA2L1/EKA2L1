@@ -6,6 +6,9 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/property.h
     ${CORE_INCLUDE_DIR}/services/applist/op.h
     ${CORE_INCLUDE_DIR}/services/applist/applist.h
+    ${CORE_INCLUDE_DIR}/services/featmgr/featmgr.h
+    ${CORE_INCLUDE_DIR}/services/fontbitmap/fontbitmap.h
+    ${CORE_INCLUDE_DIR}/services/fs/fs.h
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
@@ -13,6 +16,9 @@ add_library(services
     server.cpp
     session.cpp
     applist/applist.cpp
+    featmgr/featmgr.cpp
+    fs/fs.cpp
+    fontbitmap/fontbitmap.cpp
     ../ipc.cpp)
 
 target_include_directories(services PUBLIC ${CORE_INCLUDE_DIR})

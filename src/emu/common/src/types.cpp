@@ -29,6 +29,7 @@
 int translate_protection(prot cprot) {
     int tprot = 0;
 
+    // TODO: Remove horrible ifelse and replace with switchs :(
     if (cprot == prot::none) {
 #ifndef WIN32
         tprot = PROT_NONE;

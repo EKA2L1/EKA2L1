@@ -182,8 +182,7 @@ namespace eka2l1 {
     }
 
     kernel::uid kernel_system::get_id_base_owner(kernel::owner_type owner) const {
-        return owner == kernel::owner_type::process ? crr_process_id :
-            (owner == kernel::owner_type::thread ? thr_sch->current_thread()->unique_id() : 0xDDDDDDDD);
+        return owner == kernel::owner_type::process ? crr_process_id : (owner == kernel::owner_type::thread ? thr_sch->current_thread()->unique_id() : 0xDDDDDDDD);
     }
 
     chunk_ptr kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
@@ -318,7 +317,9 @@ namespace eka2l1 {
                 if (!close_mutex(id)) {
                     if (!close_sema(id)) {
                         if (!close_timer(id)) {
-                            return false;
+                            if (!close_session(id)) {
+                                return false;
+                            }
                         }
                     }
                 }
@@ -465,6 +466,19 @@ namespace eka2l1 {
         return sessions[ss_id];
     }
 
+    bool kernel_system::close_session(kernel::uid id) {
+        auto &res = sessions.find(id);
+
+        if (res == sessions.end()) {
+            return false;
+        }
+
+        res->second->prepare_close();
+        sessions.erase(id);
+
+        return true;
+    }
+
     server_ptr kernel_system::get_server_by_name(const std::string name) {
         auto &svr = std::find_if(servers.begin(), servers.end(),
             [&name](const auto &svp) { return svp.second->name() == name; });
@@ -530,7 +544,7 @@ namespace eka2l1 {
         }
 
         // This still right for the requirement: Status is still accepted even if the prop is not yet
-        // definied. 
+        // definied.
         prop_request_queue.emplace(ident, request_sts);
 
         return true;

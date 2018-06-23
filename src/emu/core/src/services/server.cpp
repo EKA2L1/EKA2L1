@@ -50,9 +50,12 @@ namespace eka2l1 {
             msg.dest_msg->args = msg.real_msg->args;
             msg.dest_msg->function = msg.real_msg->function;
             msg.dest_msg->request_sts = msg.real_msg->request_sts;
+            msg.dest_msg->own_thr = msg.real_msg->own_thr;
+            msg.dest_msg->owner_id = msg.real_msg->owner_id;
+            msg.dest_msg->owner_type = msg.real_msg->owner_type;
 
             // Mark the client sending message as free
-            kern->free_msg(msg.dest_msg);
+            kern->free_msg(msg.real_msg);
 
             return 0;
         }
@@ -96,11 +99,7 @@ namespace eka2l1 {
             ipc_context context{ sys, process_msg };
 
             LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
-
             ipf.wrapper(context);
-
-            // Not sure if this is finished
-            *process_msg->request_sts = 0;
 
             // Signal request semaphore, to tell everyone that it has finished random request
             process_msg->own_thr->signal_request();

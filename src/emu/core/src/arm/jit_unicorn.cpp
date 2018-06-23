@@ -85,6 +85,19 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
     const bool log_code = false;
+    const bool log_passed = false;
+
+    if (log_passed && mngr) {
+        auto res = mngr->get_sid(address);
+
+        if (!res && thumb_mode(uc)) {
+            res = mngr->get_sid(address + 1);
+        }
+
+        if (res) {
+            LOG_INFO("Passing through: {}", *mngr->get_func_name(*res));
+        }
+    }
 
     if (log_code) {
         const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
