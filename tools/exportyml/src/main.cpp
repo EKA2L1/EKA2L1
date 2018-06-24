@@ -34,6 +34,7 @@ struct function {
     function_name dename;
     uint32_t id;
 
+    function() {}
     function(function_name name, uint32_t sid)
         : dename(name)
         , id(sid) {}
@@ -58,8 +59,7 @@ std::vector<function> read_idt(const fs::path &path) {
     std::vector<function> fts;
 
     uint32_t lc = 1;
-    uint32_t last_count = 0;
-
+    
     while (idt) {
         std::string line;
         std::getline(idt, line);
@@ -87,10 +87,12 @@ std::vector<function> read_idt(const fs::path &path) {
 
         auto num = std::atoi(nump.data());
 
-        if (num - last_count > 1) {
-            for (uint32_t i = 0; i < num - last_count - 1; i++) {
-                fts.push_back(function("Unknown", 0));
-            }
+        if (num == 0) {
+            continue;
+        }
+
+        if (fts.size() < num) {
+            fts.resize(num);
         }
 
         function_name raw_sauce = line.substr(where + 5);
@@ -127,16 +129,22 @@ std::vector<function> read_idt(const fs::path &path) {
         }
 
         if (!result) {
-            fts.push_back(function(cooked, common::hash(raw_sauce)));
+            fts[num - 1] = function(cooked, common::hash(raw_sauce));
             LOG_INFO("{}", cooked);
         } else {
-            fts.push_back(function(raw_sauce, common::hash(raw_sauce)));
+            for (uint32_t i = 0; i < raw_sauce.length(); i++)
+            {
+                if (raw_sauce[i] == '"') {
+                    raw_sauce.erase(i, 1);
+                }
+            }
+
+            fts[num - 1] = function(raw_sauce, common::hash(raw_sauce));
             LOG_INFO("{}", raw_sauce);
             free(cooked_sauce);
         }
 
         ++lc;
-        last_count = num;
     }
 
     return fts;

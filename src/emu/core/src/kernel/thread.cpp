@@ -208,14 +208,16 @@ namespace eka2l1 {
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
             for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
-                if (ldata.tls_slots[i].handle = -1) {
+                if (ldata.tls_slots[i].handle != -1 && ldata.tls_slots[i].handle == handle) {
+                    return &ldata.tls_slots[i];
+                }
+            } 
+
+            for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
+                if (ldata.tls_slots[i].handle == -1) {
                     ldata.tls_slots[i].handle = handle;
                     ldata.tls_slots[i].uid = dll_uid;
 
-                    return &ldata.tls_slots[i];
-                }
-
-                if (ldata.tls_slots[i].handle != -1 && ldata.tls_slots[i].uid == dll_uid) {
                     return &ldata.tls_slots[i];
                 }
             }
@@ -224,15 +226,7 @@ namespace eka2l1 {
         }
 
         void thread::close_tls_slot(tls_slot &slot) {
-            if (slot.handle >= ldata.tls_slots.size()) {
-                LOG_ERROR("Invalid TLS slot");
-                return;
-            }
-
-            auto tls_corr_spot = ldata.tls_slots[slot.handle];
-
-            // Mark as free
-            tls_corr_spot.handle = -1;
+            slot.handle = -1;
         }
 
         void thread::update_priority() {

@@ -81,8 +81,8 @@ namespace eka2l1 {
         };
 
         struct tls_slot {
-            int handle;
-            uint32_t uid;
+            int handle = -1;
+            int uid = -1;
             ptr<void> ptr;
         };
 

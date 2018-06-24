@@ -9,6 +9,7 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/featmgr/featmgr.h
     ${CORE_INCLUDE_DIR}/services/fontbitmap/fontbitmap.h
     ${CORE_INCLUDE_DIR}/services/fs/fs.h
+    ${CORE_INCLUDE_DIR}/services/window/window.h
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
@@ -19,6 +20,7 @@ add_library(services
     featmgr/featmgr.cpp
     fs/fs.cpp
     fontbitmap/fontbitmap.cpp
+    window/window.cpp
     ../ipc.cpp)
 
 target_include_directories(services PUBLIC ${CORE_INCLUDE_DIR})

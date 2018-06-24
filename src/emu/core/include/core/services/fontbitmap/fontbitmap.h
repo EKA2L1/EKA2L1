@@ -22,6 +22,7 @@
 
 namespace eka2l1 {
     class fontbitmap_server : public service::server {
+        void init(service::ipc_context ctx);
     public:
         fontbitmap_server(system *sys);
     };

@@ -95,7 +95,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         }
 
         if (res) {
-            LOG_INFO("Passing through: {}", *mngr->get_func_name(*res));
+            LOG_INFO("Passing through: {} addr = 0x{:x}", *mngr->get_func_name(*res), address);
         }
     }
 
