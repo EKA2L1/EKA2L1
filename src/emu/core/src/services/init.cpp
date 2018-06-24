@@ -2,6 +2,7 @@
 #include <services/featmgr/featmgr.h>
 #include <services/fontbitmap/fontbitmap.h>
 #include <services/fs/fs.h>
+#include <services/window/window.h>
 
 #include <services/init.h>
 
@@ -22,6 +23,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, featmgr_server);
             CREATE_SERVER(sys, fs_server);
             CREATE_SERVER(sys, fontbitmap_server);
+            CREATE_SERVER(sys, window_server);
         }
     }
 }

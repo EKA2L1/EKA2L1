@@ -175,7 +175,7 @@ BRIDGE_FUNC(TInt, UserGetTIntParameter, TInt aSlot, ptr<TInt> val) {
 BRIDGE_FUNC(TInt, UserRenameThread, eka2l1::ptr<TDesC16> aNewName) {
     kernel_system *kern = sys->get_kernel_system();
     memory_system *mem = sys->get_memory_system();
-    
+
     thread_ptr crr_thread = kern->crr_thread();
 
     TDesC16 *des = aNewName.get(mem);
@@ -295,5 +295,6 @@ const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(1985486127, UserGetDesParameter16),
     BRIDGE_REGISTER(824932975, UserLeave),
     BRIDGE_REGISTER(226653584, memcpy),
-    BRIDGE_REGISTER(3039785093, UserRenameThread)
+    BRIDGE_REGISTER(3039785093, UserRenameThread),
+    //BRIDGE_REGISTER(1727505686, UserLeaveIfError)
 };

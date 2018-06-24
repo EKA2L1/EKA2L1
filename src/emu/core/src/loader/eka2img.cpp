@@ -275,8 +275,8 @@ namespace eka2l1 {
                     auto sid = mngr.get_sid(export_addr);
 
                     if (sid) {
-                        LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
-                           export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
+                        //LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
+                        //   export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
 
                         if (mngr.get_hle(*sid)) {
                             uint32_t impaddr = mngr.get_stub(*sid).ptr_address();

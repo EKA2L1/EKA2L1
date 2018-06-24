@@ -88,7 +88,6 @@ BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
     TUidType *type = uid_type.get(mem);
     auto &tup = pr_real->get_uid_type();
 
-
     // Silento
     type->uid1 = std::get<0>(tup);
     type->uid2 = std::get<1>(tup);
@@ -98,17 +97,23 @@ BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
 BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
     eka2l1::kernel::thread_local_data dat = current_local_data(sys);
 
+    LOG_INFO("Get 0x{:x}", (TUint)aHandle);
+
     for (const auto &tls : dat.tls_slots) {
         if (tls.handle == aHandle) {
             return tls.ptr;
         }
     }
 
+    LOG_WARN("Slot nullptr");
+
     return eka2l1::ptr<void>(nullptr);
 }
 
 BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr) {
     eka2l1::kernel::tls_slot *slot = get_tls_slot(sys, aHandle);
+
+    LOG_INFO("Set slot 0x{:x}", (TUint)aHandle);
 
     if (!slot) {
         return KErrNoMemory;
@@ -117,6 +122,17 @@ BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr)
     slot->ptr = aPtr;
 
     return KErrNone;
+}
+
+BRIDGE_FUNC(void, DllFreeTLS, TInt iHandle) {
+    thread_ptr thr = sys->get_kernel_system()->crr_thread();
+    thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
+
+    LOG_INFO("Close slot: 0x{:x}", (TUint)iHandle);
+}
+
+BRIDGE_FUNC(TInt, SvcE8Stub) {
+    return 0;
 }
 
 const eka2l1::hle::func_map svc_register_funcs = {
@@ -131,5 +147,7 @@ const eka2l1::hle::func_map svc_register_funcs = {
     BRIDGE_REGISTER(0x16, ProcessFilename),
     BRIDGE_REGISTER(0x4e, DllTls),
     BRIDGE_REGISTER(0x64, ProcessType),
-    BRIDGE_REGISTER(0x76, DllSetTls)
+    BRIDGE_REGISTER(0x76, DllSetTls),
+    BRIDGE_REGISTER(0x77, DllFreeTLS),
+    BRIDGE_REGISTER(0xE8, SvcE8Stub)
 };
