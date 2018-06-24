@@ -85,7 +85,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
     const bool log_code = false;
-    const bool log_passed = true;
+    const bool log_passed = false;
 
     if (log_passed && mngr) {
         auto res = mngr->get_sid(address);
