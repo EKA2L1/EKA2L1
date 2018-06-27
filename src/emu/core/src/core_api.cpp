@@ -137,7 +137,9 @@ int mount_symbian_system(int sys, const char *drive, const char *real_path) {
 
     sys_ptr &symsys = syses[sys - 1];
 
-    symsys->mount(strncmp(drive, "C:", 2) == 0 ? availdrive::c : availdrive::e, real_path);
+    symsys->mount(strncmp(drive, "C:", 2) == 0 ? 
+        availdrive::c : (strncmp(drive, "E:", 2) == 0 ? availdrive::e : availdrive::z), 
+        real_path);
 
     return 0;
 }
@@ -215,4 +217,15 @@ int reinit_system(int sys) {
     symsys->reset();
 
 	return 0;
+}
+
+int install_rpkg(int sys, const char *path) {
+    if (sys > syses.size()) {
+        return -1;
+    }
+
+    sys_ptr &symsys = syses[sys - 1];
+    bool res = symsys->install_rpkg(path);
+
+    return res ? 0: -2;
 }

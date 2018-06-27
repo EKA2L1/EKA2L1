@@ -64,6 +64,7 @@ namespace eka2l1 {
         }
     }
 
+    // This handle both sync and async
     void window_server::execute_command(service::ipc_context ctx, ws_cmd cmd) {
         switch (cmd.header.op) {
         case EWsClOpCreateScreenDevice:
@@ -72,6 +73,9 @@ namespace eka2l1 {
 
         case EWsClOpCreateWindowGroup:
             LOG_INFO("WsCl::CreateWindowGroup: unimplemented sub-IPC call!");
+            break;
+
+        case EWsClOpEventReady:
             break;
 
         default:

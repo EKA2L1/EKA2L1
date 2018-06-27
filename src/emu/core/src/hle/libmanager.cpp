@@ -244,10 +244,14 @@ namespace eka2l1 {
                     img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
                     if (!img) {
-                        return loader::e32img_ptr(nullptr);
-                    } else {
-                        xip = true;
-                        is_rom = true;
+                        img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
+
+                        if (!img) {
+                            return loader::e32img_ptr(nullptr);
+                        } else {
+                            xip = true;
+                            is_rom = true;
+                        }
                     }
                 }
             }

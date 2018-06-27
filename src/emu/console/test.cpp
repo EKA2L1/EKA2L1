@@ -1,4 +1,6 @@
 #include <core/core_api.h>
+
+#include <loader/rpkg.h>
 #include <loader/sis_old.h>
 
 int main() {
@@ -8,10 +10,9 @@ int main() {
 
     mount_symbian_system(sys, "C:", "drives/c/");
     mount_symbian_system(sys, "E:", "drives/e/");
+    mount_symbian_system(sys, "Z:", "drives/z/");
 
-    load_rom(sys, "SYM6.ROM");
-
-    install_sis(sys, 0, "floatingduck_gcce.sisx");
+    install_rpkg(sys, "SYM.RPKG");
 
     shutdown_symbian_system(sys);
     free_symbian_system(sys);

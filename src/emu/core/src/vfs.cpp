@@ -224,17 +224,7 @@ namespace eka2l1 {
         crr_dir = new_dir;
     }
 
-    void io_system::mount_rom(const std::string &dvc, loader::rom *rom) {
-        rom_cache = rom;
-
-        drive drv;
-        drv.is_in_mem = true;
-        drv.drive_name = dvc;
-
-        drives.insert(std::make_pair(dvc, drv));
-    }
-
-    void io_system::mount(const std::string &dvc, const std::string &real_path) {
+    void io_system::mount(const std::string &dvc, const std::string &real_path, bool in_mem) {
         auto find_res = drives.find(dvc);
 
         if (find_res == drives.end()) {
@@ -242,7 +232,7 @@ namespace eka2l1 {
         }
 
         drive drv;
-        drv.is_in_mem = false;
+        drv.is_in_mem = in_mem;
         drv.drive_name = dvc;
         drv.real_path = real_path;
 
@@ -277,7 +267,7 @@ namespace eka2l1 {
             partition[0] = std::toupper(partition[0]);
             res = drives.find(partition);
 
-            if (res == drives.end() || res->second.is_in_mem) {
+            if (res == drives.end()) {
                 return "";
             }
         }
@@ -373,14 +363,9 @@ namespace eka2l1 {
 
         drive drv = res.value();
 
-        if (drv.is_in_mem && !(mode & WRITE_MODE)) {
-            auto rom_entry = burn_tree_find_entry(std::string(vir_path.begin(), vir_path.end()));
-
-            if (!rom_entry) {
-                return std::shared_ptr<file>(nullptr);
-            }
-
-            return std::make_shared<rom_file>(mem, rom_cache, rom_entry.value());
+        if (drv.is_in_mem && (mode & WRITE_MODE)) {
+            LOG_INFO("No writing in in-memory!");
+            return std::shared_ptr<file>(nullptr);
         } else {
             auto new_path = get(common::ucs2_to_utf8(vir_path));
             auto res = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);

@@ -136,7 +136,13 @@ bool TDesC8::Compare(eka2l1::system *sys, TDesC8 &aRhs) {
 
 std::string TDesC8::StdString(eka2l1::system *sys) {
     TUint8 *cstr_ptr = Ptr(sys);
-    return std::string(cstr_ptr, cstr_ptr + Length());
+
+    std::string new_inst;
+    new_inst.resize(Length());
+
+    memcpy(new_inst.data(), cstr_ptr, new_inst.size());
+
+    return new_inst;
 }
 
 TUint16 *TDesC16::Ptr(eka2l1::system *sys) {
@@ -157,7 +163,13 @@ bool TDesC16::Compare(eka2l1::system *sys, TDesC16 &aRhs) {
 
 std::u16string TDesC16::StdString(eka2l1::system *sys) {
     TUint16 *cstr_ptr = Ptr(sys);
-    return std::u16string(cstr_ptr, cstr_ptr + Length());
+
+    std::u16string new_inst;
+    new_inst.resize(Length());
+
+    memcpy(new_inst.data(), cstr_ptr, new_inst.size() * 2);
+
+    return new_inst;
 }
 
 void TDesC8::SetLength(eka2l1::system *sys, TUint32 iNewLength) {

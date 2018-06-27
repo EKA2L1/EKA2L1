@@ -18,6 +18,21 @@ namespace eka2l1 {
             template <typename T>
             std::optional<T> get_arg(int idx);
 
+            template <typename T>
+            std::optional<T> get_arg_packed(int idx) {
+                T ret;
+                
+                std::optional<std::string> dat = get_arg<std::string>(idx);
+
+                if (!dat) {
+                    return std::optional<T>{};
+                }
+
+                memcpy(&ret, dat->data(), dat->length());
+
+                return std::make_optional<T>(std::move(ret));
+            }
+
             void set_request_status(int res);
 
             int flag() const;

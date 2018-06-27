@@ -33,6 +33,7 @@ using namespace eka2l1;
 std::string rom_path = "SYM.ROM";
 std::string mount_c = "drives/c/";
 std::string mount_e = "drives/e/";
+std::string mount_z = "drives/z/";
 std::string sis_install_path = "-1";
 
 uint8_t adrive;
@@ -161,6 +162,7 @@ void init() {
     symsys.init();
     symsys.mount(availdrive::c, mount_c);
     symsys.mount(availdrive::e, mount_e);
+    symsys.mount(availdrive::z, mount_z, true);
 
     bool res = symsys.load_rom(rom_path);
 }

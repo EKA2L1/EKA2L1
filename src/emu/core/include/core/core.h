@@ -43,7 +43,8 @@
 namespace eka2l1 {
     enum class availdrive {
         c,
-        e
+        e,
+        z
     };
 
     class system {
@@ -122,8 +123,10 @@ namespace eka2l1 {
             return cpu;
         }
 
-        void mount(availdrive drv, std::string path);
+        void mount(availdrive drv, std::string path, bool in_mem = false);
         void reset();
+
+        bool install_rpkg(const std::string &path);
 
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);

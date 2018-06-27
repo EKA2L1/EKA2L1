@@ -23,11 +23,37 @@
 #include <services/context.h>
 #include <services/server.h>
 
+namespace epoc {
+    struct TTime {
+        uint64_t aTimeEncoded;
+    };
+
+    struct TEntry {
+        uint32_t aAttrib;
+        uint32_t aSize;
+        
+        TTime aModified;
+        uint32_t uid1;
+        uint32_t uid2;
+        uint32_t uid3;
+
+        uint32_t aNameLength;
+        char aName[0x100];
+        char aNameQ[0x100];
+
+        uint32_t aSizeHigh;
+        uint32_t aReversed;
+    };
+
+}
+
 namespace eka2l1 {
     class fs_server : public service::server {
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);
         void file_replace(service::ipc_context ctx);
+
+        void entry(service::ipc_context ctx);
 
     public:
         fs_server(system *sys);

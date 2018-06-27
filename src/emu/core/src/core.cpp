@@ -23,7 +23,9 @@
 #include <common/log.h>
 #include <common/cvt.h>
 #include <disasm/disasm.h>
+
 #include <loader/eka2img.h>
+#include <loader/rpkg.h>
 
 namespace eka2l1 {
     void system::init() {
@@ -127,8 +129,7 @@ namespace eka2l1 {
             return false;
         }
 
-        romf = romf_res.value();
-        io.mount_rom("Z:", &romf);
+        romf = *romf_res;
 
         bool res1 = mem.load_rom(romf.header.rom_base, path);
 
@@ -149,8 +150,8 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system::mount(availdrive drv, std::string path) {
-        io.mount(((drv == availdrive::c) ? "C:" : "E:"), path);
+    void system::mount(availdrive drv, std::string path, bool in_mem) {
+        io.mount(((drv == availdrive::c) ? "C:" : ((drv == availdrive::z) ? "Z:": "E:")), path, in_mem);
     }
 
     void system::request_exit() {
@@ -163,5 +164,10 @@ namespace eka2l1 {
         emu_screen_driver->reset();
         hlelibmngr.reset();
 	}
+
+    bool system::install_rpkg(const std::string &path) {
+        std::atomic_int holder;
+        return loader::install_rpkg(&io, path, holder);
+    }
 }
 

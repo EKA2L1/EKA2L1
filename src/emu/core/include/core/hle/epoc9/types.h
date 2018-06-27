@@ -53,3 +53,65 @@ struct TUidType {
     TUid uid2;
     TUid uid3;
 };
+
+const TUint KLocaleLanguageKey = 0x10208903;
+const TUint KLocaleDataKey = 0x10208904;
+const TUint KLocaleDataExtraKey = 0x10208905;
+const TUint KLocaleTimeDateFormatKey = 0x10208907;
+const TUint KLocaleDefaultCharSetKey = 0x10208908;
+const TUint KLocalePreferredCharSetKey = 0x10208909;
+/**
+@publishedPartner
+@released
+File system UID value 16.
+*/
+const TInt KFileSystemUidValue16 = 0x100039df;
+
+/**
+@publishedPartner
+@released
+File system UID value 8.
+*/
+const TInt KFileSystemUidValue8 = 0x1000008f;
+
+/**
+@publishedPartner
+@released
+File server UID value 16.
+*/
+const TInt KFileServerUidValue16 = 0x100039e3;
+
+/**
+@publishedPartner
+@released
+File server UID value 8.
+*/
+const TInt KFileServerUidValue8 = 0x100000bb;
+
+/**
+@publishedPartner
+@released
+File server DLL UID value 16.
+*/
+const TInt KFileServerDllUidValue16 = 0x100039e4;
+
+/**
+@publishedPartner
+@released
+File server DLL UID value 8.
+*/
+const TInt KFileServerDllUidValue8 = 0x100000bd;
+
+/**
+@publishedPartner
+@released
+Local file system UID value.
+*/
+const TInt KLocalFileSystemUidValue = 0x100000d6;
+
+/**
+@publishedPartner
+@released
+Estart component UID value.
+*/
+const TInt KEstartUidValue = 0x10272C04;

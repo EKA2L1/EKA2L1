@@ -104,10 +104,7 @@ namespace eka2l1 {
         void current_dir(const std::string &new_dir);
 
         // Mount a physical path to a device
-        void mount(const std::string &dvc, const std::string &real_path);
-
-        // Mount a ROM to a device. This is usually Z:
-        void mount_rom(const std::string &dvc, loader::rom *rom);
+        void mount(const std::string &dvc, const std::string &real_path, bool in_mem = false);
 
         // Unmount a device
         void unmount(const std::string &dvc);

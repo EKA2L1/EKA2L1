@@ -1,4 +1,5 @@
 #include <epoc9/prop.h>
+#include <epoc9/des.h>
 
 using namespace eka2l1;
 
@@ -85,9 +86,14 @@ BRIDGE_FUNC(TInt, RPropertyGetGlobalInt, TUid aCagetory, TUint aKey, eka2l1::ptr
 
     TInt *val_pass = aValue.get(mem);
 
+    if (aCagetory == 0x101F75B6) {
+        LOG_INFO("Getting a system property.");
+    }
+
     property_ptr prop_hle = kern->get_prop(aCagetory, aKey);
 
     if (!prop_hle) {
+        LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", aCagetory, aKey);
         return KErrNotFound;
     }
 
@@ -102,10 +108,16 @@ BRIDGE_FUNC(TInt, RPropertyGetGlobalInt, TUid aCagetory, TUint aKey, eka2l1::ptr
     return KErrNone;
 }
 
+BRIDGE_FUNC(TInt, RPropertyGetDes8Global, TInt aCategory, TUint aKey, eka2l1::ptr<TDes8> aDes) {
+    LOG_INFO("Get des8 property: 0x{:x}, 0x{:x}", aCategory, aKey);
+    return KErrNone;
+}
+
 const eka2l1::hle::func_map prop_register_funcs = {
     BRIDGE_REGISTER(525391138, RPropertyAttach),
     BRIDGE_REGISTER(1292343699, RPropertyCancel),
     BRIDGE_REGISTER(2000262280, RPropertyDefineNoSec),
     BRIDGE_REGISTER(3651614895, RPropertyGetInt),
-    BRIDGE_REGISTER(1693319139, RPropertyGetGlobalInt)
+    BRIDGE_REGISTER(1693319139, RPropertyGetGlobalInt),
+    BRIDGE_REGISTER(4073928151, RPropertyGetDes8Global)
 };
