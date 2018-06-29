@@ -19,28 +19,28 @@ namespace epoc {
         TWsScreenDeviceOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
-        case EWsSdOpPixelSize: {
-            // This doesn't take any arguments
-            eka2l1::vec2 screen_size = driver->get_window_size();
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
-            ctx.set_request_status(0);
+            case EWsSdOpPixelSize: {
+                // This doesn't take any arguments
+                eka2l1::vec2 screen_size = driver->get_window_size();
+                ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
+                ctx.set_request_status(0);
 
-            break;
-        }
+                break;
+            }
 
-        case EWsSdOpTwipsSize: {
-            // This doesn't take any arguments
-            eka2l1::vec2 screen_size = driver->get_window_size();
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size * 15);
-            ctx.set_request_status(0);
+            case EWsSdOpTwipsSize: {
+                // This doesn't take any arguments
+                eka2l1::vec2 screen_size = driver->get_window_size();
+                ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size * 15);
+                ctx.set_request_status(0);
 
-            break;
-        }
+                break;
+            }
 
-        default: {
-            LOG_WARN("Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
-            break;
-        }
+            default: {
+                LOG_WARN("Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
+                break;
+            }
         }
     }
 }

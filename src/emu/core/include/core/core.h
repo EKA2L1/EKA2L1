@@ -116,6 +116,10 @@ namespace eka2l1 {
             return &hlelibmngr;
         }
 
+        io_system *get_io_system() {
+            return &io;
+        }
+
         disasm *get_disasm() {
             return &asmdis;
         }

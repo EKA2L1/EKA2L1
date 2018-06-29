@@ -38,8 +38,7 @@ namespace epoc {
         uint32_t uid3;
 
         uint32_t aNameLength;
-        char aName[0x100];
-        char aNameQ[0x100];
+        uint16_t aName[0x100];
 
         uint32_t aSizeHigh;
         uint32_t aReversed;
