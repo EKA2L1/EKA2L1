@@ -23,5 +23,5 @@ add_library(services
     window/window.cpp
     ../ipc.cpp)
 
-target_include_directories(services PUBLIC ${CORE_INCLUDE_DIR})
+target_include_directories(services PUBLIC ${CORE_INCLUDE_DIR} ${EPOC32_INCLUDE_DIR})
 target_link_libraries(services PRIVATE epoc9 common core)

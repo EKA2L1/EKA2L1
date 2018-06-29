@@ -1,5 +1,7 @@
-#include <epoc9/prop.h>
 #include <epoc9/des.h>
+#include <epoc9/prop.h>
+
+#include <vector>
 
 using namespace eka2l1;
 
@@ -80,20 +82,20 @@ BRIDGE_FUNC(TInt, RPropertyGetInt, eka2l1::ptr<RProperty> aProp, eka2l1::ptr<TIn
     return KErrNone;
 }
 
-BRIDGE_FUNC(TInt, RPropertyGetGlobalInt, TUid aCagetory, TUint aKey, eka2l1::ptr<TInt> aValue) {
+BRIDGE_FUNC(TInt, RPropertyGetGlobalInt, TUid aCategory, TUint aKey, eka2l1::ptr<TInt> aValue) {
     memory_system *mem = sys->get_memory_system();
     kernel_system *kern = sys->get_kernel_system();
 
     TInt *val_pass = aValue.get(mem);
 
-    if (aCagetory == 0x101F75B6) {
+    if (aCategory == 0x101F75B6) {
         LOG_INFO("Getting a system property.");
     }
 
-    property_ptr prop_hle = kern->get_prop(aCagetory, aKey);
+    property_ptr prop_hle = kern->get_prop(aCategory, aKey);
 
     if (!prop_hle) {
-        LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", aCagetory, aKey);
+        LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", aCategory, aKey);
         return KErrNotFound;
     }
 
@@ -109,7 +111,28 @@ BRIDGE_FUNC(TInt, RPropertyGetGlobalInt, TUid aCagetory, TUint aKey, eka2l1::ptr
 }
 
 BRIDGE_FUNC(TInt, RPropertyGetDes8Global, TInt aCategory, TUint aKey, eka2l1::ptr<TDes8> aDes) {
-    LOG_INFO("Get des8 property: 0x{:x}, 0x{:x}", aCategory, aKey);
+    memory_system *mem = sys->get_memory_system();
+    kernel_system *kern = sys->get_kernel_system();
+
+    TDes8 *val_pass = aDes.get(mem);
+
+    LOG_INFO("Get des8 property: 0x{:x}, 0x{:x}, ptr: 0x{:x}",
+        aCategory, aKey, aDes.ptr_address());
+
+    if (aCategory == 0x101F75B6) {
+        LOG_INFO("Getting a system property.");
+    }
+
+    property_ptr prop_hle = kern->get_prop(aCategory, aKey);
+
+    if (!prop_hle) {
+        LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", aCategory, aKey);
+        return KErrNotFound;
+    }
+
+    auto val = prop_hle->get_bin();
+    val_pass->Assign(sys, std::string(val.data(), val.data() + val.size()));
+
     return KErrNone;
 }
 

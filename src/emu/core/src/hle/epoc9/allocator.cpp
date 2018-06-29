@@ -131,7 +131,8 @@ BRIDGE_FUNC(eka2l1::ptr<TAny>, RHeapAlloc, eka2l1::ptr<RHeap> aHeap, TInt aSize)
             if (block_size >= aSize) {
                 blocks[i].size = block_size;
 
-                if (blocks[i].offset % align == 0) {
+                // Align up
+                if (blocks[i].offset % align != 0) {
                     blocks[i].offset += align - blocks[i].offset % align;
                 }
 

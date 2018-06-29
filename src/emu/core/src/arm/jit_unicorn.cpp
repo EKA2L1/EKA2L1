@@ -23,6 +23,7 @@
 #include <common/log.h>
 #include <common/types.h>
 #include <core_timing.h>
+#include <core.h>
 #include <disasm/disasm.h>
 #include <hle/libmanager.h>
 #include <ptr.h>
@@ -52,7 +53,8 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
 
     memcpy(&value, eka2l1::ptr<const void>(address).get(jit->get_memory_sys()), size);
 
-    const bool read_log = false;
+    // It's hacky, and im not ok with this
+    bool read_log = jit->get_lib_manager()->get_sys()->get_bool_config("log_read");
 
     if (read_log)
         LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
@@ -66,7 +68,7 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
         return;
     }
 
-    const bool write_log = false;
+    bool write_log = jit->get_lib_manager()->get_sys()->get_bool_config("log_write");
 
     if (write_log)
         LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
@@ -84,8 +86,8 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     jit->save_context(context_debug);
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
-    const bool log_code = false;
-    const bool log_passed = false;
+    bool log_code = jit->get_lib_manager()->get_sys()->get_bool_config("log_code");
+    bool log_passed = jit->get_lib_manager()->get_sys()->get_bool_config("log_passed");
 
     if (log_passed && mngr) {
         auto res = mngr->get_sid(address);

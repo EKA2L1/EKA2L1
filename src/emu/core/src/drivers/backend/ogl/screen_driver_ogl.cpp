@@ -107,7 +107,6 @@ namespace eka2l1 {
             fsize = font_size;
 
             emu_win = win;
-
             emu_win->make_current();
 
             int res = gladLoadGL();

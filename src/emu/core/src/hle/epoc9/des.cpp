@@ -68,6 +68,70 @@ ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16) {
     return ptr<TUint16>(nullptr);
 }
 
+ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, ptr<TDesC16> aDes16) {
+    if (!aDes16) {
+        return ptr<TUint16>(nullptr);
+    }
+
+    TDesC16 *des = aDes16.get(sys->get_memory_system());
+
+    TDesType destype = static_cast<TDesType>(GetTDesC16Type(des));
+
+    // Symbian wants to keep it as safe as possible, so they turn them
+    // into this mess
+    switch (destype) {
+    case EPtrC:
+        return (reinterpret_cast<TPtrC16 *>(des))->iPtr;
+
+    case EPtr:
+        return (reinterpret_cast<TPtr16 *>(des))->iPtr;
+
+    case EBufC:
+        return aDes16.cast<TUint16>() + 4;
+
+    case EBuf:
+        return aDes16.cast<TUint16>() + 8;
+
+    case EBufCPtr:
+        ptr<TBufC16> buf = reinterpret_cast<TBufCPtr16 *>(des)->iPtr;
+        return buf.cast<TUint16>() + 4;
+    }
+
+    return ptr<TUint16>(nullptr);
+}
+
+ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, ptr<TDesC8> aDes8) {
+    if (!aDes8) {
+        return ptr<TUint8>(nullptr);
+    }
+
+    TDesC8 *des = aDes8.get(sys->get_memory_system());
+
+    TDesType destype = static_cast<TDesType>(GetTDesC8Type(des));
+
+    // Symbian wants to keep it as safe as possible, so they turn them
+    // into this mess
+    switch (destype) {
+    case EPtrC:
+        return (reinterpret_cast<TPtrC8 *>(des))->iPtr;
+
+    case EPtr:
+        return (reinterpret_cast<TPtr8 *>(des))->iPtr;
+
+    case EBufC:
+        return aDes8.cast<TUint8>() + 4;
+
+    case EBuf:
+        return aDes8.cast<TUint8>() + 8;
+
+    case EBufCPtr:
+        ptr<TBufC8> buf = reinterpret_cast<TBufCPtr8 *>(des)->iPtr;
+        return buf.cast<TUint8>() + 4;
+    }
+
+    return ptr<TUint8>(nullptr);
+}
+
 TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16) {
     TDesType destype = static_cast<TDesType>(GetTDesC16Type(aDes16));
 

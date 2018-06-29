@@ -37,3 +37,9 @@
 [submodule "ext-boost"]
 	path = src/external/ext-boost
 	url = https://github.com/MerryMage/ext-boost
+[submodule "src/external/date"]
+	path = src/external/date
+	url = https://github.com/HowardHinnant/date
+[submodule "src/external/oss.API_REF.Public_API"]
+	path = src/external/oss.API_REF.Public_API
+	url = https://github.com/SymbianSource/oss.API_REF.Public_API

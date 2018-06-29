@@ -237,6 +237,12 @@ BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt a
     return RChunkCreateHLEPointerEliminate(sys, chunk, &info);
 }
 
+BRIDGE_FUNC(TInt, RChunkOpenGlobal, eka2l1::ptr<RChunk> aChunk, eka2l1::ptr<TDesC> aChunkName, TInt aReadOnly, TOwnerType aType) {
+    auto name = aChunkName.get(sys->get_memory_system())->StdString(sys);
+    
+    return KErrNone;
+}
+
 BRIDGE_FUNC(void, MemFill, eka2l1::ptr<TAny> aTrg, TInt aLen, TChar aChar) {
     TUint8 *ptr = reinterpret_cast<TUint8*>(aTrg.get(sys->get_memory_system()));
 
@@ -279,5 +285,6 @@ const eka2l1::hle::func_map mem_register_funcs = {
     BRIDGE_REGISTER(2317460249, RChunkDecommit),
     BRIDGE_REGISTER(3839845899, RChunkMaxSize),
     BRIDGE_REGISTER(3291428935, RChunkAdjust),
-    BRIDGE_REGISTER(261677635, MemSwap)
+    BRIDGE_REGISTER(261677635, MemSwap),
+    BRIDGE_REGISTER(1704780047, RChunkOpenGlobal)
 };

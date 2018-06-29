@@ -57,8 +57,27 @@ namespace eka2l1 {
 			*/
             bool set(uint8_t *data, uint32_t arr_length);
 
+            template <typename T>
+            bool set(T data) {
+                return set(reinterpret_cast<uint8_t*>(&data), sizeof(T));
+            }
+
             int get_int();
             std::vector<uint8_t> get_bin();
+
+            template <typename T>
+            std::optional<T> get_pkg() {
+                auto bin = get_bin();
+                
+                if (bin.size() != sizeof(T)) {
+                    return std::optional<T>{};
+                }
+
+                T ret;
+                memcpy(&ret, bin.data(), bin.size());
+
+                return ret;
+            }
 
 			/*! \brief Notify the request that there is data change */
             void notify_request();

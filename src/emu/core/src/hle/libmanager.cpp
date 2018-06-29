@@ -182,11 +182,6 @@ namespace eka2l1 {
             if (libidsop) {
                 sids libids = libidsop.value();
 
-                if (addrs.size() > libids.size()) {
-                    LOG_WARN("Export size is bigger than total symbol size provided, please update the symbol database for: {}",
-                        common::ucs2_to_utf8(lib_name));
-                }
-
                 for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
                     addr_map.insert(std::make_pair(addrs[i], libids[i]));
 
@@ -202,7 +197,9 @@ namespace eka2l1 {
                     }
                 }
             } else {
-                LOG_WARN("Can't find SID database for: {}", common::ucs2_to_utf8(lib_name));
+                if (log_exports) {
+                    LOG_WARN("Can't find SID database for: {}", common::ucs2_to_utf8(lib_name));
+                }
             }
 
             return true;
@@ -387,7 +384,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            LOG_INFO("Calling {}", *get_func_name(id));
+            //LOG_INFO("Calling {}", *get_func_name(id));
 
             auto imp = eimp.value();
             imp(sys);
@@ -479,7 +476,7 @@ namespace eka2l1 {
                 if (addr) {
                     bool thumb = (addr % 2 != 0); //?
 
-                    LOG_INFO("Write interrupt of {} at: 0x{:x} {}", *get_func_name(func.first), addr - addr % 2, thumb ? "(thumb)" : "");
+                    //LOG_INFO("Write interrupt of {} at: 0x{:x} {}", *get_func_name(func.first), addr - addr % 2, thumb ? "(thumb)" : "");
 
                     *eka2l1::ptr<uint32_t>(addr - addr % 2).get(mem) = thumb ? 0xDF02 : 0xEF000002;
                 }

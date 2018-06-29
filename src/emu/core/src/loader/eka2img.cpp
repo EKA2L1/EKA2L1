@@ -65,9 +65,7 @@ namespace eka2l1 {
 
         bool relocate(uint32_t *dest_ptr, relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == relocation_type::reserved) {
-                LOG_ERROR("Invalid relocation type: 0");
-
-                return false;
+                return true;
             }
 
             // What is in it ?? :))

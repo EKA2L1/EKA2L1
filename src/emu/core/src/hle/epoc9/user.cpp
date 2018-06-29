@@ -279,6 +279,10 @@ BRIDGE_FUNC(TInt, UserLeave, TInt aCode) {
 
 BRIDGE_FUNC(eka2l1::ptr<void>, memcpy, eka2l1::ptr<void> dest, eka2l1::ptr<void> src, TInt size) {
     memcpy(dest.get(sys->get_memory_system()), src.get(sys->get_memory_system()), size);
+    LOG_TRACE("Copy 0x{:x} bytes from 0x{:x} to 0x{:x}", size, src.ptr_address(), dest.ptr_address());
+
+    auto ptr = src.get(sys->get_memory_system());
+
     return dest;
 }
 

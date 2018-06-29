@@ -27,12 +27,18 @@
 #include <loader/eka2img.h>
 #include <loader/rpkg.h>
 
+#include <yaml-cpp/yaml.h>
+
+#include <fstream>
+
 namespace eka2l1 {
     void system::init() {
         exit = false;
 
         if (!already_setup)
             log::setup_log(nullptr);
+
+        load_configs();
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
@@ -168,6 +174,41 @@ namespace eka2l1 {
     bool system::install_rpkg(const std::string &path) {
         std::atomic_int holder;
         return loader::install_rpkg(&io, path, holder);
+    }
+
+    void system::write_configs() {
+        YAML::Emitter emitter;
+        emitter << YAML::BeginMap;
+        
+        for (auto & [ name, op ] : bool_configs) {
+            emitter << YAML::Key << name << YAML::Value << op;
+        }
+
+        emitter << YAML::EndMap;
+
+        std::ofstream out("coreconfig.yml");
+        out << emitter.c_str();
+    }
+
+    void system::load_configs() {
+        try {
+            YAML::Node node = YAML::LoadFile("coreconfig.yml");
+
+            for (auto const &subnode : node) {
+                bool_configs.emplace(subnode.first.as<std::string>(), subnode.second.as<bool>());
+            }
+
+        } catch (...) {
+            LOG_WARN("Loading CORE config incompleted due to an exception. Use default");
+
+            bool_configs.emplace("log_code", false);
+            bool_configs.emplace("log_passed", false);
+            bool_configs.emplace("log_write", false);
+            bool_configs.emplace("log_read", false);
+            bool_configs.emplace("log_exports", false);
+
+            write_configs();
+        }
     }
 }
 

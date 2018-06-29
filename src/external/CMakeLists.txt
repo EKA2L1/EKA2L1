@@ -1,4 +1,4 @@
-add_library(miniz miniz/miniz.h miniz/miniz.c)
+﻿add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
@@ -90,3 +90,4 @@ set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PAREN
 set (FREETYPE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/freetype/include" PARENT_SCOPE)
 set (FRSML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/FRSML/include" PARENT_SCOPE)
 set (GLM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/glm" PARENT_SCOPE)
+set (EPOC32_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/oss.API_REF.Public_API/epoc32/include" PARENT_SCOPE)

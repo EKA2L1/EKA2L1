@@ -203,6 +203,10 @@ namespace eka2l1 {
             }
 
             address get_export_addr(sid id);
+
+            system *get_sys() {
+                return sys;
+            }
         };
     }
 }

@@ -76,7 +76,16 @@ namespace eka2l1 {
         driver::emu_window_ptr emu_win;
         driver::screen_driver_ptr emu_screen_driver;
 
+        std::unordered_map<std::string, bool> bool_configs;
+
+        void load_configs();
+        void write_configs();
+
     public:
+        bool get_bool_config(const std::string name) {
+            return bool_configs[name];
+        }
+
         system(driver::window_type emu_win_type = driver::window_type::glfw, 
             driver::driver_type emu_driver_type = driver::driver_type::opengl, 
             arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)

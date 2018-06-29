@@ -5,6 +5,13 @@
 #include <common/cvt.h>
 #include <common/path.h>
 
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
+#include <chrono>
+#include <ctime>
+
 BRIDGE_FUNC(eka2l1::ptr<void>, Heap) {
     auto local_data = current_local_data(sys);
     return local_data.heap;
@@ -135,6 +142,11 @@ BRIDGE_FUNC(TInt, SvcE8Stub) {
     return 0;
 }
 
+BRIDGE_FUNC(TInt, UTCOffset) {
+    // Stubbed
+    return -14400;
+}
+
 const eka2l1::hle::func_map svc_register_funcs = {
     /* FAST EXECUTIVE CALL */
     BRIDGE_REGISTER(0x00800001, Heap),
@@ -143,11 +155,12 @@ const eka2l1::hle::func_map svc_register_funcs = {
     BRIDGE_REGISTER(0x00800006, SetActiveScheduler),
     BRIDGE_REGISTER(0x00800008, TrapHandler),
     BRIDGE_REGISTER(0x00800009, SetTrapHandler),
+    BRIDGE_REGISTER(0x00800019, UTCOffset),
     /* SLOW EXECUTIVE CALL */
     BRIDGE_REGISTER(0x16, ProcessFilename),
     BRIDGE_REGISTER(0x4e, DllTls),
     BRIDGE_REGISTER(0x64, ProcessType),
     BRIDGE_REGISTER(0x76, DllSetTls),
     BRIDGE_REGISTER(0x77, DllFreeTLS),
-    BRIDGE_REGISTER(0xE8, SvcE8Stub)
+    BRIDGE_REGISTER(0xE8, SvcE8Stub),
 };
