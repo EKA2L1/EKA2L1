@@ -200,7 +200,7 @@ namespace eka2l1 {
 
         jit_dynarmic::~jit_dynarmic() {}
 
-        bool jit_dynarmic::execute_instructions(int num_instructions) {
+        bool jit_dynarmic::execute_instructions(size_t num_instructions) {
             cb->set_routine_ticks(num_instructions);
             jit->Run();
 
@@ -223,15 +223,15 @@ namespace eka2l1 {
             return jit->Regs()[idx];
         }
 
-        uint64_t jit_dynarmic::get_sp() {
+        uint32_t jit_dynarmic::get_sp() {
             return jit->Regs()[13];
         }
 
-        uint64_t jit_dynarmic::get_pc() {
+        uint32_t jit_dynarmic::get_pc() {
             return jit->Regs()[15];
         }
 
-        uint64_t jit_dynarmic::get_vfp(size_t idx) {
+        uint32_t jit_dynarmic::get_vfp(size_t idx) {
             return 0;
         }
 
@@ -239,7 +239,7 @@ namespace eka2l1 {
             jit->Regs()[idx] = val;
         }
 
-        void jit_dynarmic::set_pc(uint64_t val) {
+        void jit_dynarmic::set_pc(uint32_t val) {
             jit->Regs()[15] = val;
         }
 
@@ -247,11 +247,11 @@ namespace eka2l1 {
             jit->Regs()[13] = val;
         }
 
-        void jit_dynarmic::set_lr(uint64_t val) {
+        void jit_dynarmic::set_lr(uint32_t val) {
             jit->Regs()[14] = val;
         }
 
-        void jit_dynarmic::set_vfp(size_t idx, uint64_t val) {
+        void jit_dynarmic::set_vfp(size_t idx, uint32_t val) {
         }
 
         uint32_t jit_dynarmic::get_cpsr() {

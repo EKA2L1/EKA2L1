@@ -35,7 +35,7 @@ namespace eka2l1 {
         }
 
         int32_t semaphore::release(int32_t release_count) {
-            if (max_count - avail_count < release_count) {
+            if (avail_count > 0 || max_count - avail_count < release_count) {
                 return -1;
             }
 

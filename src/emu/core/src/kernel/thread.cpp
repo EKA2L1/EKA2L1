@@ -133,7 +133,7 @@ namespace eka2l1 {
             //tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
             //    chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
-            request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 0, 150, owner_type::thread);
+            request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 1, 150, owner_type::thread);
 
             sync_msg = kern->create_msg(owner_type::process);
 

@@ -61,6 +61,7 @@ namespace eka2l1 {
 
             void prepare_close();
 
+            int send_receive_sync(int function, ipc_arg args, int *request_sts);
             int send_receive_sync(int function, ipc_arg args);
             int send_receive_sync(int function);
             int send_receive(int function, ipc_arg args, int *request_sts);

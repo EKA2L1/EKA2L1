@@ -37,8 +37,6 @@
 namespace eka2l1 {
     void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
         memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu) {
-        // Intialize the uid with zero
-        crr_uid.store(0);
         timing = timing_sys;
         mngr = mngrsys;
         mem = mem_sys;
@@ -52,7 +50,6 @@ namespace eka2l1 {
 
     void kernel_system::shutdown() {
         thr_sch.reset();
-        crr_uid.store(0);
 
         close_all_processes();
 
@@ -61,9 +58,14 @@ namespace eka2l1 {
         }
     }
 
-    kernel::uid kernel_system::next_uid() {
-        crr_uid++;
-        return crr_uid.load();
+    kernel::uid kernel_system::next_uid(kernel::owner_type owner, uint64_t owner_id) {
+        int id = kern_obj_handles.new_handle(static_cast<handle_owner_type>(owner), owner_id);
+
+        if (id == -1) {
+            return 0;
+        }
+
+        return static_cast<kernel::uid>(id);
     }
 
     bool kernel_system::run_thread(kernel::uid thr_id) {
@@ -135,6 +137,8 @@ namespace eka2l1 {
         LOG_TRACE("Shutdown process with UID: 0x{:x}", pr->get_uid());
 
         pr->stop();
+
+        kern_obj_handles.free_all_handle(pr->get_uid());
 
         libmngr->close_e32img(pr->get_e32img());
         processes.erase(pr->get_uid());
@@ -245,6 +249,8 @@ namespace eka2l1 {
 
         if (res != timers.end()) {
             timers.erase(id);
+            kern_obj_handles.free_handle(id);
+
             return true;
         }
 
@@ -256,6 +262,8 @@ namespace eka2l1 {
 
         if (res != semas.end()) {
             semas.erase(id);
+            kern_obj_handles.free_handle(id);
+
             return true;
         }
 
@@ -267,6 +275,8 @@ namespace eka2l1 {
 
         if (res != mutexes.end()) {
             mutexes.erase(id);
+            kern_obj_handles.free_handle(id);
+
             return true;
         }
 
@@ -279,6 +289,8 @@ namespace eka2l1 {
         if (res != chunks.end()) {
             chunks[id]->destroy();
             chunks.erase(res);
+            kern_obj_handles.free_handle(id);
+
             return true;
         }
 
@@ -292,6 +304,7 @@ namespace eka2l1 {
             thread_ptr thr = res->second;
             destroy_msg(thr->get_sync_msg());
 
+            kern_obj_handles.free_handle(id);
             threads.erase(id);
 
             for (auto it = chunks.begin(); it != chunks.end();) {
@@ -365,6 +378,8 @@ namespace eka2l1 {
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj(kernel::uid id) {
+        id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
+
         auto chunk_ite = chunks.find(id);
 
         if (chunk_ite != chunks.end()) {
@@ -421,12 +436,12 @@ namespace eka2l1 {
             return free_msg->second;
         }
 
-        msg_crr_uid++;
+        uint64_t owner_id = get_id_base_owner(owner);
+        uint32_t id = next_uid(owner, owner_id);
 
         ipc_msg_ptr msg
-            = std::make_shared<ipc_msg>(msg_crr_uid.load(), get_id_base_owner(owner), crr_thread());
+            = std::make_shared<ipc_msg>(id, owner_id, crr_thread());
 
-        kernel::uid id = msg->id;
         msg->owner_type = static_cast<int>(owner);
         msg->owner_id = get_id_base_owner(owner);
 
@@ -445,6 +460,7 @@ namespace eka2l1 {
 
         if (res != msgs.end()) {
             msgs.erase(res);
+            kern_obj_handles.free_handle(msg->id);
         }
     }
 
@@ -475,6 +491,8 @@ namespace eka2l1 {
 
         res->second->prepare_close();
         sessions.erase(id);
+
+        kern_obj_handles.free_handle(id);
 
         return true;
     }
@@ -604,5 +622,32 @@ namespace eka2l1 {
         }
 
         return res->second;
+    }
+
+    kernel::uid kernel_system::mirror_sema(std::string sema_name,
+        kernel::owner_type owner) {
+        auto &sema = std::find_if(semas.begin(), semas.end(),
+            [&](const auto &sema_ite) { return sema_ite.second->name() == sema_name; });
+
+        if (sema == semas.end() || 
+            sema->second->get_access_type() == kernel::access_type::local_access) {
+            return 0;
+        }
+
+        return kern_obj_handles.new_handle(sema->second->unique_id(), static_cast<handle_owner_type>(owner),
+            get_id_base_owner(owner));
+    }
+
+    kernel::uid kernel_system::mirror_chunk(std::string chunk_name,
+        kernel::owner_type owner) {
+        auto &chunk = std::find_if(chunks.begin(), chunks.end(),
+            [&](const auto &chunk_ite) { return chunk_ite.second->name() == chunk_name; });
+
+        if (chunk == chunks.end() || chunk->second->get_access_type() == kernel::access_type::local_access) {
+            return 0;
+        }
+
+        return kern_obj_handles.new_handle(chunk->second->unique_id(), 
+            static_cast<handle_owner_type>(owner), get_id_base_owner(owner));
     }
 }

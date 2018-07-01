@@ -238,7 +238,7 @@ namespace eka2l1 {
             uc_close(engine);
         }
 
-        bool jit_unicorn::execute_instructions(int num_instructions) {
+        bool jit_unicorn::execute_instructions(size_t num_instructions) {
             uint32_t pc = get_pc();
 
             bool tm = thumb_mode(engine);
@@ -325,8 +325,8 @@ namespace eka2l1 {
             return val;
         }
 
-        uint64_t jit_unicorn::get_sp() {
-            uint64_t ret = 0;
+        uint32_t jit_unicorn::get_sp() {
+            uint32_t ret = 0;
             auto err = uc_reg_read(engine, UC_ARM_REG_SP, &ret);
 
             if (err != UC_ERR_OK) {
@@ -336,7 +336,7 @@ namespace eka2l1 {
             return ret;
         }
 
-        uint64_t jit_unicorn::get_pc() {
+        uint32_t jit_unicorn::get_pc() {
             uint32_t ret = 0;
             auto err = uc_reg_read(engine, UC_ARM_REG_PC, &ret);
 
@@ -347,8 +347,8 @@ namespace eka2l1 {
             return ret;
         }
 
-        uint64_t jit_unicorn::get_vfp(size_t idx) {
-            uint64_t temp;
+        uint32_t jit_unicorn::get_vfp(size_t idx) {
+            uint32_t temp;
 
             return temp;
         }
@@ -362,7 +362,7 @@ namespace eka2l1 {
             }
         }
 
-        void jit_unicorn::set_pc(uint64_t pc) {
+        void jit_unicorn::set_pc(uint32_t pc) {
             auto err = uc_reg_write(engine, UC_ARM_REG_PC, &pc);
 
             if (err != UC_ERR_OK) {
@@ -380,7 +380,7 @@ namespace eka2l1 {
             return epa;
         }
 
-        void jit_unicorn::set_lr(uint64_t val) {
+        void jit_unicorn::set_lr(uint32_t val) {
             auto err = uc_reg_write(engine, UC_ARM_REG_LR, &val);
 
             if (err != UC_ERR_OK) {
@@ -407,7 +407,7 @@ namespace eka2l1 {
             return addr;
         }
 
-        void jit_unicorn::set_vfp(size_t idx, uint64_t val) {
+        void jit_unicorn::set_vfp(size_t idx, uint32_t val) {
         }
 
         uint32_t jit_unicorn::get_cpsr() {

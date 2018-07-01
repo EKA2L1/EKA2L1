@@ -104,23 +104,17 @@ BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
 BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
     eka2l1::kernel::thread_local_data dat = current_local_data(sys);
 
-    LOG_INFO("Get 0x{:x}", (TUint)aHandle);
-
     for (const auto &tls : dat.tls_slots) {
         if (tls.handle == aHandle) {
             return tls.ptr;
         }
     }
 
-    LOG_WARN("Slot nullptr");
-
     return eka2l1::ptr<void>(nullptr);
 }
 
 BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr) {
     eka2l1::kernel::tls_slot *slot = get_tls_slot(sys, aHandle);
-
-    LOG_INFO("Set slot 0x{:x}", (TUint)aHandle);
 
     if (!slot) {
         return KErrNoMemory;
@@ -134,8 +128,6 @@ BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr)
 BRIDGE_FUNC(void, DllFreeTLS, TInt iHandle) {
     thread_ptr thr = sys->get_kernel_system()->crr_thread();
     thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
-
-    LOG_INFO("Close slot: 0x{:x}", (TUint)iHandle);
 }
 
 BRIDGE_FUNC(TInt, SvcE8Stub) {
@@ -147,8 +139,40 @@ BRIDGE_FUNC(TInt, UTCOffset) {
     return -14400;
 }
 
+/* Unfortunately I have to implement this through an SVC call, as they generate two version of the functon points 
+  to the same SVC call. Still keep the original HLE implementation
+*/
+BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
+    eka2l1::ptr<TInt> aStatus) {
+    memory_system *mem = sys->get_memory_system();
+    kernel_system *kern = sys->get_kernel_system();
+
+    // Dispatch the header
+    ipc_arg arg;
+    TInt *arg_header = aIpcArgs.cast<TInt>().get(mem);
+
+    for (uint8_t i = 0; i < 4; i++) {
+        arg.args[i] = *arg_header++;
+    }
+
+    arg.flag = *arg_header & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
+
+    session_ptr ss = kern->get_session(aHandle);
+
+    if (!ss) {
+        return KErrBadHandle;
+    }
+
+    return ss->send_receive(aOrd, arg, aStatus.get(mem));
+}
+
+BRIDGE_FUNC(void, WaitForAnyRequest) {
+    sys->get_kernel_system()->crr_thread()->wait_for_any_request();
+}
+
 const eka2l1::hle::func_map svc_register_funcs = {
     /* FAST EXECUTIVE CALL */
+    BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),
     BRIDGE_REGISTER(0x00800001, Heap),
     BRIDGE_REGISTER(0x00800002, HeapSwitch),
     BRIDGE_REGISTER(0x00800005, ActiveScheduler),
@@ -163,4 +187,5 @@ const eka2l1::hle::func_map svc_register_funcs = {
     BRIDGE_REGISTER(0x76, DllSetTls),
     BRIDGE_REGISTER(0x77, DllFreeTLS),
     BRIDGE_REGISTER(0xE8, SvcE8Stub),
+    BRIDGE_REGISTER(0x4D, SessionSendSync)
 };

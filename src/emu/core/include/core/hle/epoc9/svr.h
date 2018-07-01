@@ -10,6 +10,11 @@
 #include <ptr.h>
 
 struct RSessionBase : public RHandleBase {};
+struct RSubSessionBase {
+    RSessionBase iSession;
+    TInt iHandle;
+};
+
 struct TIpcArgs {
     TInt iArg0;
     TInt iArg1;

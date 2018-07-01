@@ -69,7 +69,7 @@ namespace eka2l1 {
 
             bool installed(uid app_uid);
 
-            uint32_t app_count() {
+            size_t app_count() {
                 return c_apps.size() + e_apps.size();
             }
 

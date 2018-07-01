@@ -33,7 +33,7 @@ namespace eka2l1 {
             return ipc_msg_ptr(nullptr);
         }
 
-        int session::send_receive_sync(int function, ipc_arg args) {
+        int session::send_receive_sync(int function, ipc_arg args, int *request_sts) {
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -43,12 +43,32 @@ namespace eka2l1 {
             msg->function = function;
             msg->args = args;
             msg->own_thr = kern->crr_thread();
-            msg->request_sts = nullptr;
+            msg->request_sts = request_sts;
+
+            send_receive_sync(msg);
+
+            return 0;
+        }
+
+        int session::send_receive_sync(int function, ipc_arg args) {
+            int local_response;
+            ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
+
+            if (!msg) {
+                return -1;
+            }
+
+            msg->function = function;
+            msg->args = args;
+            msg->own_thr = kern->crr_thread();
+            msg->request_sts = &local_response;
 
             return send_receive_sync(msg);
         }
 
         int session::send_receive_sync(int function) {
+            int local_response;
+
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -58,13 +78,13 @@ namespace eka2l1 {
             msg->function = function;
             msg->args = ipc_arg(0, 0, 0, 0, 0);
             msg->own_thr = kern->crr_thread();
-            msg->request_sts = nullptr;
+            msg->request_sts = &local_response;
 
             return send_receive_sync(msg);
         }
 
         int session::send_receive(int function, ipc_arg args, int *request_sts) {
-            ipc_msg_ptr &msg = get_free_msg();
+            ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
                 return -1;
@@ -72,10 +92,11 @@ namespace eka2l1 {
 
             msg->function = function;
             msg->args = args;
-
             msg->request_sts = request_sts;
 
-            return send_receive_sync(msg);
+            send_receive(msg);
+
+            return 0;
         }
 
         int session::send_receive(int function, int *request_sts) {
@@ -87,7 +108,6 @@ namespace eka2l1 {
 
             msg->function = function;
             msg->args = ipc_arg(0, 0, 0, 0, 0);
-
             msg->request_sts = request_sts;
 
             return send_receive(msg);
@@ -124,19 +144,16 @@ namespace eka2l1 {
         }
 
         int session::send_receive_sync(ipc_msg_ptr &msg) {
-            int local_response;
-
             server_msg smsg;
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->request_sts = &local_response;
 
             int deliver_success
                 = svr->deliver(smsg);
 
             svr->process_accepted_msg();
 
-            return local_response;
+            return *smsg.real_msg->request_sts;
         }
 
         int session::send_receive(ipc_msg_ptr &msg) {

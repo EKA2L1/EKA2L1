@@ -100,7 +100,7 @@ namespace eka2l1 {
         }
 
         void init();
-        process *load(uint64_t id);
+        process *load(uint32_t id);
         int loop();
         void shutdown();
 

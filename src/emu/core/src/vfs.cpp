@@ -65,7 +65,7 @@ namespace eka2l1 {
 
             crr_pos += will_read;
 
-            return will_read;
+            return static_cast<int>(will_read);
         }
 
         int file_mode() const override {

@@ -18,8 +18,8 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <epoc9/mem.h>
 #include <epoc9/err.h>
+#include <epoc9/mem.h>
 
 #include <common/cvt.h>
 
@@ -103,7 +103,7 @@ BRIDGE_FUNC(TInt, RChunkCommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt aS
     }
 
     eka2l1::chunk_ptr chunk_ptr = std::reinterpret_pointer_cast<eka2l1::kernel::chunk>(obj_ptr);
-    
+
     if (chunk_ptr->get_chunk_type() != kernel::chunk_type::disconnected) {
         return KErrGeneral;
     }
@@ -125,11 +125,11 @@ BRIDGE_FUNC(TInt, RChunkDecommit, eka2l1::ptr<RChunk> aThis, TInt aOffset, TInt 
     }
 
     eka2l1::chunk_ptr chunk_ptr = std::reinterpret_pointer_cast<eka2l1::kernel::chunk>(obj_ptr);
-    
+
     if (chunk_ptr->get_chunk_type() != kernel::chunk_type::disconnected) {
         return KErrGeneral;
     }
-    
+
     chunk_ptr->decommit(aOffset, aSize);
 
     return KErrNone;
@@ -153,7 +153,7 @@ BRIDGE_FUNC(TInt, RChunkAdjust, eka2l1::ptr<RChunk> aThis, TInt aSize) {
     if (!res) {
         return KErrGeneral;
     }
-    
+
     return KErrNone;
 }
 
@@ -238,20 +238,29 @@ BRIDGE_FUNC(TInt, RChunkCreateDisconnectLocal, eka2l1::ptr<RChunk> aThis, TInt a
 }
 
 BRIDGE_FUNC(TInt, RChunkOpenGlobal, eka2l1::ptr<RChunk> aChunk, eka2l1::ptr<TDesC> aChunkName, TInt aReadOnly, TOwnerType aType) {
-    auto name = aChunkName.get(sys->get_memory_system())->StdString(sys);
-    
+    auto name = common::ucs2_to_utf8(aChunkName.get(sys->get_memory_system())->StdString(sys));
+
+    int new_id = sys->get_kernel_system()->mirror_chunk(name, aType == EOwnerProcess ? eka2l1::kernel::owner_type::process : eka2l1::kernel::owner_type::thread);
+
+    if (new_id == -1) {
+        return KErrNotFound;
+    }
+
+    RChunk *chunk = aChunk.get(sys->get_memory_system());
+    chunk->iHandle = new_id;
+
     return KErrNone;
 }
 
 BRIDGE_FUNC(void, MemFill, eka2l1::ptr<TAny> aTrg, TInt aLen, TChar aChar) {
-    TUint8 *ptr = reinterpret_cast<TUint8*>(aTrg.get(sys->get_memory_system()));
+    TUint8 *ptr = reinterpret_cast<TUint8 *>(aTrg.get(sys->get_memory_system()));
 
     if (!ptr) {
         LOG_CRITICAL("Mem Filling encounters nullptr, no Panic raised.");
         return;
     }
 
-    // From both Symbian 6.1 and 9.4 devlib: The function assumes that the fill character 
+    // From both Symbian 6.1 and 9.4 devlib: The function assumes that the fill character
     // is a non-Unicode character.
     std::fill(ptr, ptr + aLen, static_cast<TUint8>(aChar.iChar));
 }
@@ -268,7 +277,7 @@ BRIDGE_FUNC(void, MemSwap, ptr<void> aLhs, ptr<void> aRhs, TInt aLen) {
         return;
     }
 
-    uint8_t* holder = reinterpret_cast<uint8_t*>(malloc(aLen));
+    uint8_t *holder = reinterpret_cast<uint8_t *>(malloc(aLen));
     memcpy(holder, aLhs.get(mem), aLen);
     memmove(aLhs.get(mem), aRhs.get(mem), aLen);
     memmove(aRhs.get(mem), holder, aLen);

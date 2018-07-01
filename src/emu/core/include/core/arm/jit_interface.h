@@ -32,11 +32,11 @@ namespace eka2l1 {
             */
             struct thread_context {
                 std::array<uint32_t, 31> cpu_registers;
-                uint64_t sp;
-                uint64_t pc;
-                uint64_t cpsr;
-                std::array<uint64_t, 32> fpu_registers;
-                uint64_t fpscr;
+                uint32_t sp;
+                uint32_t pc;
+                uint32_t cpsr;
+                std::array<uint32_t, 32> fpu_registers;
+                uint32_t fpscr;
             };
 
             /*! Run the CPU */
@@ -46,7 +46,7 @@ namespace eka2l1 {
             virtual void stop() = 0;
 
             /*! Execute some amount of instructions */
-            virtual bool execute_instructions(int num_instructions) = 0;
+            virtual bool execute_instructions(size_t num_instructions) = 0;
 
             /*! Step the CPU. Each step execute one instruction. */
             virtual void step() = 0;
@@ -55,26 +55,26 @@ namespace eka2l1 {
             virtual uint32_t get_reg(size_t idx) = 0;
 
             /*! Get the stack pointer */
-            virtual uint64_t get_sp() = 0;
+            virtual uint32_t get_sp() = 0;
           
             /*! Get the program counter */
-            virtual uint64_t get_pc() = 0;
+            virtual uint32_t get_pc() = 0;
 
             /*! Get the VFP */
-            virtual uint64_t get_vfp(size_t idx) = 0;
+            virtual uint32_t get_vfp(size_t idx) = 0;
 
             /*! Set a Rx register */
             virtual void set_reg(size_t idx, uint32_t val) = 0;
 
             /*! Set program counter */
-            virtual void set_pc(uint64_t val) = 0;
+            virtual void set_pc(uint32_t val) = 0;
 
             /*! Set LR */
-            virtual void set_lr(uint64_t val) = 0;
+            virtual void set_lr(uint32_t val) = 0;
             
             /*! Set stack pointer */
             virtual void set_sp(uint32_t val) = 0;
-            virtual void set_vfp(size_t idx, uint64_t val) = 0;
+            virtual void set_vfp(size_t idx, uint32_t val) = 0;
             virtual void set_entry_point(address ep) = 0;
             virtual address get_entry_point() = 0;
             virtual uint32_t get_cpsr() = 0;

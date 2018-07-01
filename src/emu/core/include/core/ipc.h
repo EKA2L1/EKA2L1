@@ -37,7 +37,7 @@ namespace eka2l1 {
         flag_const = 2,
         flag_16b = 1,
         des8 = flag_des,
-        des16 = flag_des | des8,
+        des16 = flag_des | flag_16b,
         desc8 = des8 | flag_const,
         desc16 = des16 | flag_const
     };

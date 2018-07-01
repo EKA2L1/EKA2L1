@@ -33,6 +33,7 @@
 
 #include <common/hash.h>
 
+#include <handle_table.h>
 #include <ipc.h>
 #include <process.h>
 #include <ptr.h>
@@ -70,10 +71,7 @@ namespace eka2l1 {
     class kernel_system {
         friend class process;
 
-        std::atomic<kernel::uid> crr_uid;
-
-        // Message is not based on kernel object, it should have its own id counter.
-        std::atomic<kernel::uid> msg_crr_uid;
+        handle_table<2048> kern_obj_handles;
 
         kernel::uid crr_process_id;
 
@@ -130,6 +128,12 @@ namespace eka2l1 {
             thr_sch->unschedule_wakeup();
         }
 
+        void processing_requests() {
+            for (auto &server : servers) {
+                server.second->process_accepted_msg();
+            }
+        }
+
         void unschedule(kernel::uid thread_id) {
             thr_sch->unschedule(thread_id);
         }
@@ -143,7 +147,7 @@ namespace eka2l1 {
             kern_ver = ver;
         }
 
-        kernel::uid next_uid();
+        kernel::uid next_uid(kernel::owner_type owner, uint64_t owner_id);
         kernel::uid get_id_base_owner(kernel::owner_type owner) const;
 
         // Create a chunk with these condition
@@ -174,6 +178,12 @@ namespace eka2l1 {
             kernel::owner_type owner,
             kernel::uid own_id = -1,
             kernel::access_type access = kernel::access_type::local_access);
+
+        kernel::uid mirror_sema(std::string sema_name,
+            kernel::owner_type owner);
+
+        kernel::uid mirror_chunk(std::string chunk_name,
+            kernel::owner_type owner);
 
         server_ptr create_server(std::string name);
         session_ptr create_session(server_ptr cnn_svr, int async_slots);

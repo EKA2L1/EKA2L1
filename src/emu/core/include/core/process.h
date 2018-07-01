@@ -42,7 +42,7 @@ namespace eka2l1 {
 
     struct pass_arg {
         uint32_t data = 0;
-        int data_size = -1;
+        size_t data_size = -1;
     };
     
     using process_uid_type = std::tuple<uint32_t, uint32_t, uint32_t>;

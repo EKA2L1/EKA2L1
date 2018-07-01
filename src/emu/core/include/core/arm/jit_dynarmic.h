@@ -51,7 +51,7 @@ namespace eka2l1 {
 
             hle::lib_manager *lib_mngr;
         public:
-            bool execute_instructions(int num_instructions) override;
+            bool execute_instructions(size_t num_instructions) override;
 
             timing_system *get_timing_sys() {
                 return timing;
@@ -78,15 +78,15 @@ namespace eka2l1 {
             void step() override;
 
             uint32_t get_reg(size_t idx) override;
-            uint64_t get_sp() override;
-            uint64_t get_pc() override;
-            uint64_t get_vfp(size_t idx) override;
+            uint32_t get_sp() override;
+            uint32_t get_pc() override;
+            uint32_t get_vfp(size_t idx) override;
 
             void set_reg(size_t idx, uint32_t val) override;
-            void set_pc(uint64_t val) override;
+            void set_pc(uint32_t val) override;
             void set_sp(uint32_t val) override;
-            void set_lr(uint64_t val) override;
-            void set_vfp(size_t idx, uint64_t val) override;
+            void set_lr(uint32_t val) override;
+            void set_vfp(size_t idx, uint32_t val) override;
 
             uint32_t get_cpsr() override;
 

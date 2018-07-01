@@ -32,9 +32,11 @@ namespace eka2l1 {
 
                 accept(yet_pending);
                 delivered_msgs.pop_back();
+
+                return 0;
             }
 
-            return 0;
+            return -1;
         }
 
         int server::accept(server_msg msg) {
@@ -84,7 +86,11 @@ namespace eka2l1 {
         // Processed asynchronously, use for HLE service where accepted function
         // is fetched imm
         void server::process_accepted_msg() {
-            receive(process_msg);
+            int res = receive(process_msg);
+
+            if (res == -1) {
+                return;
+            }
 
             int func = process_msg->function;
 

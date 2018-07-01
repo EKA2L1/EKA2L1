@@ -28,7 +28,7 @@ namespace eka2l1 {
             , owner_type(owner_type)
             , owner(owner)
             , access(access) {
-            obj_id = kern->next_uid();
+            obj_id = kern->next_uid(owner_type, owner);
         }
     }
 }

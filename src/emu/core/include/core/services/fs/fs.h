@@ -23,6 +23,11 @@
 #include <services/context.h>
 #include <services/server.h>
 
+#include <handle_table.h>
+
+#include <memory>
+#include <unordered_map>
+
 namespace epoc {
     struct TTime {
         uint64_t aTimeEncoded;
@@ -31,7 +36,7 @@ namespace epoc {
     struct TEntry {
         uint32_t aAttrib;
         uint32_t aSize;
-        
+
         TTime aModified;
         uint32_t uid1;
         uint32_t uid2;
@@ -43,10 +48,32 @@ namespace epoc {
         uint32_t aSizeHigh;
         uint32_t aReversed;
     };
-
 }
 
 namespace eka2l1 {
+    class io_system;
+
+    struct file;
+    using symfile = std::shared_ptr<file>;
+
+    enum class fs_node_share {
+        exclusive,
+        share_read,
+        share_read_write
+    };
+
+    struct fs_node {
+        symfile vfs_node;
+        uint32_t access_count;
+
+        int mix_mode;
+        int open_mode;
+
+        fs_node_share share_mode;
+
+        int id;
+    };
+
     class fs_server : public service::server {
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);
@@ -54,7 +81,12 @@ namespace eka2l1 {
 
         void entry(service::ipc_context ctx);
 
-    public:
+        handle_table<512> file_handles;
+        std::unordered_map<uint32_t, fs_node> file_nodes;
+
+        int new_node(io_system *io, std::u16string name, int org_mode);
+
+    public : 
         fs_server(system *sys);
     };
 }

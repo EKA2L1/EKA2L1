@@ -55,7 +55,7 @@ namespace eka2l1 {
         kern.init(this, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
     }
 
-    process *system::load(uint64_t id) {
+    process *system::load(uint32_t id) {
         emu_win->init("EKA2L1", vec2(360, 640));
         emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
 
@@ -71,7 +71,9 @@ namespace eka2l1 {
 
         crr_process->run();
 
-        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+        emu_win->change_title("EKA2L1 | " + 
+            common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + 
+            common::to_string(id, std::hex) + ")");
 
         return crr_process;
     }
@@ -104,6 +106,7 @@ namespace eka2l1 {
 
         if (!exit) {
             kern.reschedule();
+            kern.processing_requests();
             reschedule_pending = false;
         } else {
             if (kern.crr_process()) {
@@ -111,6 +114,7 @@ namespace eka2l1 {
 			}
 		}
 
+        /*
         if (kern.crr_thread() == nullptr) {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
@@ -119,7 +123,7 @@ namespace eka2l1 {
 
             exit = true;
             return 0;
-        }
+        }*/
 
         return 1;
     }
