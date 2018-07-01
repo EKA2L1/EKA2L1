@@ -98,6 +98,10 @@ namespace eka2l1 {
 
             if (func_ite == ipc_funcs.end()) {
                 LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
+
+                // Signal request semaphore, to tell everyone that it has finished random request
+                process_msg->own_thr->signal_request();
+
                 return;
             }
 

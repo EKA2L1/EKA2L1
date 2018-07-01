@@ -107,7 +107,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         bool thumb = thumb_mode(uc);
         std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
 
-        LOG_TRACE("{:#08x} {}", address, disassembly);
+        LOG_TRACE("{:#08x} {} 0x{:x}", address, disassembly, thumb ? *(uint16_t*)code : *(uint32_t*)code);
     }
 }
 
@@ -411,7 +411,18 @@ namespace eka2l1 {
         }
 
         uint32_t jit_unicorn::get_cpsr() {
-            return 0;
+            uint32_t cpsr = 0;
+            auto err = uc_reg_read(engine, UC_ARM_REG_CPSR, &cpsr);
+            
+            return cpsr;
+        }
+
+        void jit_unicorn::set_cpsr(uint32_t val) {
+            auto err = uc_reg_write(engine, UC_ARM_REG_CPSR, &val);
+
+            if (err != UC_ERR_OK) {
+                LOG_ERROR("Writing cpsr failed!");
+            }
         }
 
         void jit_unicorn::set_sp(uint32_t val) {
@@ -425,11 +436,13 @@ namespace eka2l1 {
 
             ctx.pc = get_pc();
             ctx.sp = get_sp();
+            ctx.cpsr = get_cpsr();
         }
 
         void jit_unicorn::load_context(const thread_context &ctx) {
             set_pc(ctx.pc);
             set_sp(ctx.sp);
+            set_cpsr(ctx.cpsr);
 
             for (auto i = 0; i < ctx.cpu_registers.size(); i++) {
                 set_reg(i, ctx.cpu_registers[i]);

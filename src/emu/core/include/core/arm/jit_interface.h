@@ -66,6 +66,8 @@ namespace eka2l1 {
             /*! Set a Rx register */
             virtual void set_reg(size_t idx, uint32_t val) = 0;
 
+            virtual void set_cpsr(uint32_t val) = 0;
+
             /*! Set program counter */
             virtual void set_pc(uint32_t val) = 0;
 

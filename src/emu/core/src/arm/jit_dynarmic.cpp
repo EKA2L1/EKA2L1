@@ -258,6 +258,10 @@ namespace eka2l1 {
             return jit->Cpsr();
         }
 
+        void jit_dynarmic::set_cpsr(uint32_t val) {
+            jit->SetCpsr(val);
+        }
+
         void jit_dynarmic::save_context(thread_context &ctx) {
             ctx.cpsr = get_cpsr();
 

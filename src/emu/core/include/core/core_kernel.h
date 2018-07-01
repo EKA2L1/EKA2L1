@@ -147,6 +147,8 @@ namespace eka2l1 {
             kern_ver = ver;
         }
 
+        void prepare_reschedule();
+
         kernel::uid next_uid(kernel::owner_type owner, uint64_t owner_id);
         kernel::uid get_id_base_owner(kernel::owner_type owner) const;
 
@@ -233,6 +235,7 @@ namespace eka2l1 {
 
         kernel_obj_ptr get_kernel_obj(kernel::uid id);
         thread_ptr get_thread_by_name(const std::string &name);
+        thread_ptr kernel_system::get_thread_by_id(kernel::uid id);
 
         bool run_thread(kernel::uid thr);
 

@@ -107,6 +107,8 @@ namespace eka2l1 {
             std::array<tls_slot, 50> tls_slots;
         };
 
+        using wait_obj_ptr = std::shared_ptr<wait_obj>;
+
         class thread : public wait_obj {
             friend class thread_scheduler;
             friend class mutex;
@@ -147,6 +149,8 @@ namespace eka2l1 {
             void create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, address epa);
 
         public:
+            std::vector<wait_obj*> waits_on;
+
             thread();
             thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,

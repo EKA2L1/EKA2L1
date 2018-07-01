@@ -48,6 +48,13 @@ BRIDGE_FUNC(void, RHandleBaseClose, eka2l1::ptr<RHandleBase> aThis) {
     RHandleBaseCloseNoHLEPointer(sys, handle_base);
 }
 
+BRIDGE_FUNC(TInt, RHandleBaseHandle, eka2l1::ptr<RHandleBase> aThis) {
+    eka2l1::kernel_system *kern = sys->get_kernel_system();
+    RHandleBase *handle_base = aThis.get(sys->get_memory_system());
+
+    return handle_base->iHandle;
+}
+
 void RHandleBaseSetHandleNoHLEPointer(eka2l1::system *sys, RHandleBase *handle_base, TInt aNewHandle) {
     if (!handle_base) {
         return;
@@ -76,15 +83,8 @@ BRIDGE_FUNC(void, RHandleBaseSetHandleNC, eka2l1::ptr<RHandleBase> aThis, TInt a
         return;
     }
 
-    // Close this kernel handle before lending it a new one
-    if (kern->get_closeable(handle_base->iHandle)) {
-        RHandleBaseClose(sys, aThis);
-        handle_base->iHandle = aNewHandle;
-        kern->set_closeable(handle_base->iHandle, false);
-    }
-    else {
-        return;
-    }
+    handle_base->iHandle = aNewHandle;
+    kern->set_closeable(handle_base->iHandle, false);
 }
 
 

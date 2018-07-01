@@ -99,6 +99,11 @@ namespace eka2l1 {
             return kern.get_epoc_version();
         }
 
+        void prepare_reschedule() {
+            cpu->prepare_rescheduling();
+            reschedule_pending = true;
+        }
+
         void init();
         process *load(uint32_t id);
         int loop();

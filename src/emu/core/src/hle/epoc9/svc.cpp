@@ -163,10 +163,11 @@ BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aI
         return KErrBadHandle;
     }
 
-    return ss->send_receive(aOrd, arg, aStatus.get(mem));
+    return ss->send_receive_sync(aOrd, arg, aStatus.get(mem));
 }
 
 BRIDGE_FUNC(void, WaitForAnyRequest) {
+    LOG_INFO("Requested to wait for request");
     sys->get_kernel_system()->crr_thread()->wait_for_any_request();
 }
 

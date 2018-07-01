@@ -443,10 +443,6 @@ namespace eka2l1 {
             epoc_import_func func = res->second;
             func(sys);
 
-            if (sys->get_kernel_system()->crr_thread() == nullptr) {
-                return false;
-            }
-
             return true;
         }
 

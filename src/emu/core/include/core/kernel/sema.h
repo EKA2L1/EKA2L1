@@ -42,8 +42,8 @@ namespace eka2l1 {
 
             bool should_wait(kernel::uid thr_id) override;
             void acquire(kernel::uid thr_id) override;
+
+            void wait();
         };
     }
 }
-
-

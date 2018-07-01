@@ -25,6 +25,7 @@
 #include <common/log.h>
 #include <core_kernel.h>
 #include <core_mem.h>
+#include <core.h>
 #include <hle/libmanager.h>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
@@ -44,7 +45,7 @@ namespace eka2l1 {
         io = io_sys;
         sys = esys;
 
-        thr_sch = std::make_shared<kernel::thread_scheduler>(timing, *cpu);
+        thr_sch = std::make_shared<kernel::thread_scheduler>(this, timing, *cpu);
         service::init_services(sys);
     }
 
@@ -183,6 +184,10 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    void kernel_system::prepare_reschedule() {
+        sys->prepare_reschedule();
     }
 
     kernel::uid kernel_system::get_id_base_owner(kernel::owner_type owner) const {
@@ -377,37 +382,47 @@ namespace eka2l1 {
         return obj->user_closeable();
     }
 
+    thread_ptr kernel_system::get_thread_by_id(kernel::uid id) {
+        id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
+        
+        auto thread_ite = threads.find(id);
+
+        if (thread_ite != threads.end()) {
+            return thread_ite->second;
+        }
+    }
+
     kernel_obj_ptr kernel_system::get_kernel_obj(kernel::uid id) {
         id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
 
         auto chunk_ite = chunks.find(id);
 
         if (chunk_ite != chunks.end()) {
-            return chunk_ite->second;
+            return std::dynamic_pointer_cast<kernel::kernel_obj>(chunk_ite->second);
         }
 
         auto thread_ite = threads.find(id);
 
         if (thread_ite != threads.end()) {
-            return thread_ite->second;
+            return std::dynamic_pointer_cast<kernel::kernel_obj> (thread_ite->second);
         }
 
         auto timer_ite = timers.find(id);
 
         if (timer_ite != timers.end()) {
-            return timer_ite->second;
+            return std::dynamic_pointer_cast<kernel::kernel_obj> (timer_ite->second);
         }
 
         auto sema_ite = semas.find(id);
 
         if (sema_ite != semas.end()) {
-            return sema_ite->second;
+            return std::dynamic_pointer_cast<kernel::kernel_obj> (sema_ite->second);
         }
 
         auto mutex_ite = mutexes.find(id);
 
         if (mutex_ite != mutexes.end()) {
-            return mutex_ite->second;
+            return std::dynamic_pointer_cast<kernel::kernel_obj> (mutex_ite->second);
         }
 
         return nullptr;
@@ -629,8 +644,7 @@ namespace eka2l1 {
         auto &sema = std::find_if(semas.begin(), semas.end(),
             [&](const auto &sema_ite) { return sema_ite.second->name() == sema_name; });
 
-        if (sema == semas.end() || 
-            sema->second->get_access_type() == kernel::access_type::local_access) {
+        if (sema == semas.end() || sema->second->get_access_type() == kernel::access_type::local_access) {
             return 0;
         }
 
@@ -647,7 +661,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        return kern_obj_handles.new_handle(chunk->second->unique_id(), 
+        return kern_obj_handles.new_handle(chunk->second->unique_id(),
             static_cast<handle_owner_type>(owner), get_id_base_owner(owner));
     }
 }

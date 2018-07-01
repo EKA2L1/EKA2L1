@@ -64,13 +64,16 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
-        uint32_t handle = new_node(ctx.sys->get_io_system(), *name_res, *open_mode_res);
+        LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
+
+        int handle = new_node(ctx.sys->get_io_system(), *name_res, *open_mode_res);
 
         if (handle <= 0) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(handle);
+            return;
         }
 
-        ctx.write_arg_pkg<uint32_t>(3, handle);
+        ctx.write_arg_pkg<int>(3, handle);
         ctx.set_request_status(KErrNone);
     }
 
@@ -82,23 +85,26 @@ namespace eka2l1 {
             share_mode = fs_node_share::exclusive;
         } else if (real_mode & epoc::EFileShareReadersOnly) {
             share_mode = fs_node_share::share_read;
-        } else if (real_mode & epoc::EFileShareReadersOrWriters || real_mode & epoc::EFileShareAny) {
+        } else if (real_mode & epoc::EFileShareReadersOrWriters) {
             share_mode = fs_node_share::share_read_write;
+        } else if (real_mode & epoc::EFileShareAny) {
+            share_mode = fs_node_share::any;
         }
 
         // Fetch open mode
         int access_mode = -1;
 
-        if (real_mode & epoc::EFileStream) {
+        if (!(real_mode & epoc::EFileStreamText)) {
             access_mode = BIN_MODE;
         } else {
             access_mode = 0;
         }
 
-        if (real_mode & epoc::EFileRead) {
-            access_mode = READ_MODE;
-        } else if (real_mode & epoc::EFileWrite) {
-            access_mode = WRITE_MODE;
+        if (real_mode & epoc::EFileWrite) {
+            access_mode |= WRITE_MODE;
+        } else {
+            // Since EFileRead = 0, they default to read mode if nothing is specified more
+            access_mode |= READ_MODE;
         }
 
         if (access_mode & WRITE_MODE && share_mode == fs_node_share::share_read) {
@@ -140,7 +146,35 @@ namespace eka2l1 {
         }
 
         if ((int)share_mode != -1 && share_mode != cache_node->second.share_mode) {
-            return KErrAccessDenied;
+            if (share_mode == fs_node_share::exclusive || cache_node->second.share_mode == fs_node_share::exclusive) {
+                return KErrAccessDenied;
+            }
+
+            // Compare mode, compatible ?
+            if ((share_mode == fs_node_share::share_read && cache_node->second.share_mode == fs_node_share::any)
+                || (share_mode == fs_node_share::share_read && cache_node->second.share_mode == fs_node_share::share_read_write && (cache_node->second.open_mode & WRITE_MODE))
+                || (share_mode == fs_node_share::share_read_write && (access_mode & WRITE_MODE) && cache_node->second.share_mode == fs_node_share::share_read)
+                || (share_mode == fs_node_share::any && cache_node->second.share_mode == fs_node_share::share_read)) {
+                return KErrAccessDenied;
+            }
+
+            // Let's promote mode
+
+            // Since we filtered incompatible mode, so if the share mode of them two is read, share mode of both of them is read
+            if (share_mode == fs_node_share::share_read || cache_node->second.share_mode == fs_node_share::share_read) {
+                share_mode = fs_node_share::share_read;
+                cache_node->second.share_mode = fs_node_share::share_read;
+            }
+
+            if (share_mode == fs_node_share::any || cache_node->second.share_mode == fs_node_share::any) {
+                share_mode = fs_node_share::any;
+                cache_node->second.share_mode = fs_node_share::any;
+            }
+
+            if (share_mode == fs_node_share::share_read_write || share_mode == fs_node_share::share_read_write) {
+                share_mode = fs_node_share::share_read_write;
+                cache_node->second.share_mode = fs_node_share::share_read_write;
+            }
         } else {
             share_mode = cache_node->second.share_mode;
         }
@@ -149,7 +183,7 @@ namespace eka2l1 {
             return KErrAccessDenied;
         }
 
-        // Check if mode is compatible        
+        // Check if mode is compatible
         if (cache_node->second.share_mode == fs_node_share::exclusive) {
             // Check if process id is the same
             uint64_t owner_id = file_handles.get_owner_id(cache_node->second.id);
@@ -166,7 +200,7 @@ namespace eka2l1 {
                 kern->get_id_base_owner(owner_type));
 
             return mirror_id;
-        } 
+        }
 
         fs_node new_node;
         new_node.vfs_node = io->open_file(name, access_mode);

@@ -19,6 +19,7 @@
  */
 #include <algorithm>
 #include <common/log.h>
+#include <core_kernel.h>
 #include <core_timing.h>
 #include <functional>
 #include <kernel/scheduler.h>
@@ -47,21 +48,22 @@ void wake_thread(uint64_t ud, int cycles_late) {
 
 namespace eka2l1 {
     namespace kernel {
-        thread_scheduler::thread_scheduler(timing_system *system, arm::jit_interface &jit)
-            : system(system)
+        thread_scheduler::thread_scheduler(kernel_system *kern, timing_system *timing, arm::jit_interface &jit)
+            : kern(kern)
+            , timing(timing)
             , jitter(&jit)
             , crr_thread(nullptr) {
-            wakeup_evt = system->get_register_event("SchedulerWakeUpThread");
+            wakeup_evt = timing->get_register_event("SchedulerWakeUpThread");
 
             if (wakeup_evt == -1) {
-                wakeup_evt = system->register_event("SchedulerWakeUpThread",
+                wakeup_evt = timing->register_event("SchedulerWakeUpThread",
                     &wake_thread);
             }
         }
 
         void thread_scheduler::switch_context(thread_ptr oldt, thread_ptr newt) {
             if (oldt) {
-                oldt->lrt = system->get_ticks();
+                oldt->lrt = timing->get_ticks();
                 jitter->save_context(oldt->ctx);
 
                 // If it's still in run
@@ -73,11 +75,13 @@ namespace eka2l1 {
 
             if (newt) {
                 // cancel wake up
-                system->unschedule_event(wakeup_evt, newt->obj_id);
+                timing->unschedule_event(wakeup_evt, newt->obj_id);
 
                 crr_thread = newt;
                 crr_thread->state = thread_state::run;
                 // TODO: remove the new thread from queue ?
+
+                running_threads.emplace(crr_thread->obj_id, crr_thread);
 
                 LOG_TRACE("Thread {} (id: 0x{:x}) switches context", crr_thread->name(), crr_thread->obj_id);
 
@@ -85,7 +89,6 @@ namespace eka2l1 {
             } else {
                 // Nope
                 crr_thread = nullptr;
-                jitter->stop();
             }
         }
 
@@ -149,13 +152,38 @@ namespace eka2l1 {
             waiting_threads.emplace(thread->unique_id(), thread);
 
             // Schedule the thread to be waken up
-            system->schedule_event(sl_time, wakeup_evt, (uint64_t)&(*thread));
+            timing->schedule_event(sl_time, wakeup_evt, (uint64_t) & (*thread));
 
             return true;
         }
 
         void thread_scheduler::unschedule_wakeup() {
-            system->unschedule_event(wakeup_evt, 0);
+            timing->unschedule_event(wakeup_evt, 0);
+        }
+
+        bool thread_scheduler::wait_sema(kernel::uid thr_id) {
+            auto res = running_threads.find(thr_id);
+
+            if (res == running_threads.end()) {
+                return false;
+            }
+
+            thread_ptr thread = res->second;
+
+            // It's already waiting
+            if (thread->state == thread_state::wait || thread->state == thread_state::ready
+                || thread->state == thread_state::wait_fast_sema) {
+                return false;
+            }
+
+            running_threads.erase(thr_id);
+            thread->state = thread_state::wait_fast_sema;
+
+            waiting_threads.emplace(thread->unique_id(), thread);
+            
+            kern->prepare_reschedule();
+
+            return true;
         }
 
         bool thread_scheduler::resume(kernel::uid id) {
@@ -185,7 +213,7 @@ namespace eka2l1 {
             waiting_threads.erase(id);
             ready_threads.push(thr);
 
-            reschedule();
+            kern->prepare_reschedule();
         }
 
         void thread_scheduler::unschedule(kernel::uid id) {

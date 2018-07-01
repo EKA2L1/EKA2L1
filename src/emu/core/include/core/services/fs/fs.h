@@ -59,7 +59,8 @@ namespace eka2l1 {
     enum class fs_node_share {
         exclusive,
         share_read,
-        share_read_write
+        share_read_write,
+        any
     };
 
     struct fs_node {

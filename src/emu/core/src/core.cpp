@@ -79,29 +79,13 @@ namespace eka2l1 {
     }
 
     int system::loop() {
-        auto prepare_reschedule = [&]() {
-            cpu->prepare_rescheduling();
-            reschedule_pending = true;
-        };
-
         if (kern.crr_thread() == nullptr) {
             timing.idle();
             timing.advance();
             prepare_reschedule();
         } else {
             timing.advance();
-
-            uint32_t ticks = 0;
-            uint32_t downcount = timing.get_downcount();
-
-            while (ticks < downcount && !exit && kern.crr_thread() != nullptr) {
-                emu_screen_driver->begin_render();
-
-                cpu->execute_instructions(2048);
-                ticks += 2048;
-
-                emu_screen_driver->end_render();
-            }
+            cpu->run();
         }
 
         if (!exit) {
@@ -114,8 +98,7 @@ namespace eka2l1 {
 			}
 		}
 
-        /*
-        if (kern.crr_thread() == nullptr) {
+        if (kern.get_thread_scheduler()->should_terminate()) {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
 
@@ -123,7 +106,7 @@ namespace eka2l1 {
 
             exit = true;
             return 0;
-        }*/
+        }
 
         return 1;
     }

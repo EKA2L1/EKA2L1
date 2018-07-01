@@ -30,6 +30,7 @@
 
 namespace eka2l1 {
     class timing_system;
+    class kernel_system;
 
     namespace kernel {
         class thread;
@@ -56,7 +57,8 @@ namespace eka2l1 {
             int yield_evt;
 
             std::mutex mut;
-            timing_system *system;
+            timing_system *timing;
+            kernel_system *kern;
 
         protected:
             thread_ptr next_ready_thread();
@@ -65,18 +67,24 @@ namespace eka2l1 {
 
         public:
             // The constructor also register all the needed event
-            thread_scheduler(timing_system *sys, arm::jit_interface &jitter);
+            thread_scheduler(kernel_system *kern, timing_system *sys, arm::jit_interface &jitter);
 
             void reschedule();
             void unschedule_wakeup();
 
             bool schedule(thread_ptr thread);
             bool sleep(kernel::uid thread, uint32_t sl_time);
+            bool wait_sema(kernel::uid thread);
 
             bool resume(kernel::uid id);
             void unschedule(kernel::uid id);
 
             void refresh();
+
+            bool should_terminate(){
+                return waiting_threads.empty() && running_threads.empty() 
+                    && ready_threads.empty(); 
+            }
 
             thread_ptr current_thread() const {
                 return crr_thread;
@@ -84,4 +92,3 @@ namespace eka2l1 {
         };
     }
 }
-

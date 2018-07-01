@@ -33,6 +33,7 @@ namespace eka2l1 {
             return ipc_msg_ptr(nullptr);
         }
 
+        // This behaves a little different then other
         int session::send_receive_sync(int function, ipc_arg args, int *request_sts) {
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
@@ -45,7 +46,7 @@ namespace eka2l1 {
             msg->own_thr = kern->crr_thread();
             msg->request_sts = request_sts;
 
-            send_receive_sync(msg);
+            send_receive(msg);
 
             return 0;
         }

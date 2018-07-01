@@ -74,7 +74,7 @@ namespace eka2l1 {
         void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
             ctx.pc = entry_point;
             ctx.sp = stack_top;
-            ctx.cpsr = 16 | ((entry_point & 1) << 5);
+            ctx.cpsr = 0;
 
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
@@ -133,7 +133,7 @@ namespace eka2l1 {
             //tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
             //    chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
 
-            request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 1, 150, owner_type::thread);
+            request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 0, 150, owner_type::thread);
 
             sync_msg = kern->create_msg(owner_type::process);
 
@@ -248,15 +248,7 @@ namespace eka2l1 {
         }
 
         void thread::wait_for_any_request() {
-            request_sema->acquire(obj_id);
-
-            if (request_sema->should_wait(obj_id)) {
-                request_sema->add_waiting_thread(std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj(obj_id)));
-
-                state = thread_state::wait_fast_sema;
-
-                scheduler->reschedule();
-            }
+            request_sema->wait();
         }
 
         void thread::signal_request() {

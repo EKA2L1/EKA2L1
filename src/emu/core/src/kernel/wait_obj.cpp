@@ -20,6 +20,9 @@
 #include <algorithm>
 #include <kernel/thread.h>
 #include <kernel/wait_obj.h>
+#include <kernel/scheduler.h>
+
+#include <core_kernel.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -29,8 +32,12 @@ namespace eka2l1 {
             auto res = std::find_if(waits.begin(), waits.end(),
                 [thr](auto &thr_ptr) { return thr_ptr->obj_id == thr->obj_id; });
 
-            if (res != waits.end()) {
+            if (res == waits.end()) {
                 waits.push_back(thr);
+
+                // Definitely this must be changed, i dont really want this
+                // TODO (bentokun): Replace this with dynamic pointer
+                thr->waits_on.push_back(this);
             }
         }
 
@@ -44,11 +51,11 @@ namespace eka2l1 {
         }
 
         thread_ptr wait_obj::next_ready_thread() {
-            thread *next = nullptr;
+            thread_ptr next = nullptr;
             uint32_t next_pri = kernel::priority_absolute_background + 1;
 
             for (const auto &wait_thread : waits) {
-                if (next->current_priority() >= next_pri) {
+                if (wait_thread->current_priority() >= next_pri) {
                     continue;
                 }
 
@@ -64,21 +71,21 @@ namespace eka2l1 {
                 }
 
                 if (ready_to_run) {
-                    next = &(*wait_thread);
+                    next = wait_thread;
                     next_pri = wait_thread->current_priority();
                 }
             }
 
-            return thread_ptr(next);
+            return next;
         }
 
         void wait_obj::wake_up_waiting_threads() {
             while (auto thr = next_ready_thread()) {
-                for (auto &obj : thr->waits) {
+                 for (auto &obj : thr->waits_on) {
                     obj->acquire(thr->obj_id);
                 }
 
-                for (auto &obj : thr->waits) {
+                for (auto &obj : thr->waits_on) {
                     obj->erase_waiting_thread(thr->obj_id);
                 }
 

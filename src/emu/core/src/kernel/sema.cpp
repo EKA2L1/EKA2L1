@@ -19,6 +19,7 @@
 */
 
 #include <kernel/sema.h>
+#include <core_kernel.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -35,7 +36,7 @@ namespace eka2l1 {
         }
 
         int32_t semaphore::release(int32_t release_count) {
-            if (avail_count > 0 || max_count - avail_count < release_count) {
+            if (avail_count >= 0 || max_count - avail_count < release_count) {
                 return -1;
             }
 
@@ -48,15 +49,25 @@ namespace eka2l1 {
         }
 
         bool semaphore::should_wait(kernel::uid thr_id) {
-            return avail_count <= 0;
+            return avail_count < 0;
         }
 
         void semaphore::acquire(kernel::uid thr_id) {
-            if (avail_count <= 0) {
+            if (avail_count < 0) {
                 return;
             }
 
             --avail_count;
+        }
+
+        void semaphore::wait() {
+            thread_ptr calling_thr = kern->crr_thread();
+            acquire(calling_thr->unique_id());
+
+            if (should_wait(calling_thr->unique_id())) {
+                add_waiting_thread(calling_thr);
+                calling_thr->get_scheduler()->wait_sema(calling_thr->unique_id());
+            }
         }
     }
 }
