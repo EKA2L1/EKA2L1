@@ -148,8 +148,22 @@ namespace eka2l1 {
             void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
             void create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, address epa);
 
+            int leave_depth = -1;
+
         public:
-            std::vector<wait_obj*> waits_on;
+            std::vector<wait_obj *> waits_on;
+
+            void increase_leave_depth() {
+                leave_depth++;
+            }
+
+            void decrease_leave_depth(){
+                leave_depth--;
+            }
+
+            bool is_invalid_leave() const {
+                return leave_depth > 0;
+            }
 
             thread();
             thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,

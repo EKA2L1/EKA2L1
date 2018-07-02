@@ -471,7 +471,6 @@ namespace eka2l1 {
             ef->read_file(&img.header.sig, 1, 4);
 
             if (img.header.sig != 0x434F5045) {
-                LOG_ERROR("Undefined EKA Image type");
                 return std::optional<eka2img>{};
             }
 

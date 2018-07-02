@@ -28,6 +28,7 @@ namespace eka2l1 {
         handle_table() {
             handle_info init_info;
             init_info.free = true;
+            init_info.org = -1; 
 
             std::fill(handles.begin(), handles.end(), init_info);
         }

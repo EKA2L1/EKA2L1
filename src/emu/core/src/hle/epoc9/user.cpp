@@ -47,7 +47,8 @@ BRIDGE_FUNC(void, UserPanic, ptr<TDesC16> aReasonMsg, TInt aCode) {
     TUint16 *reason = GetTDes16Ptr(sys, des);
     LOG_WARN("User paniced from HLE side with message: {}, code: {}", common::ucs2_to_utf8(std::u16string(reason, reason + (des->iLength & 0xfffffff))), aCode);
 
-    UserExit(sys, aCode);
+    kernel_system *kern = sys->get_kernel_system();
+    kern->close_process(kern->crr_process());
 }
 
 const TInt KModuleEntryReasonProcessDetach = 3;
@@ -270,13 +271,6 @@ BRIDGE_FUNC(TInt, UserGetDesParameter, TInt aSlot, eka2l1::ptr<TDes8> aDes) {
     return KErrNone;
 }
 
-BRIDGE_FUNC(TInt, UserLeave, TInt aCode) {
-    LOG_ERROR("Debug: Leave code: {}", aCode);
-    UserExit(sys, aCode);
-
-    return 0;
-}
-
 BRIDGE_FUNC(eka2l1::ptr<void>, memcpy, eka2l1::ptr<void> dest, eka2l1::ptr<void> src, TInt size) {
     memcpy(dest.get(sys->get_memory_system()), src.get(sys->get_memory_system()), size);
     auto ptr = src.get(sys->get_memory_system());
@@ -295,7 +289,6 @@ const eka2l1::hle::func_map user_register_funcs = {
     BRIDGE_REGISTER(3535789199, UserGetTIntParameter),
     BRIDGE_REGISTER(411482431, UserGetDesParameter),
     BRIDGE_REGISTER(1985486127, UserGetDesParameter16),
-    BRIDGE_REGISTER(824932975, UserLeave),
     BRIDGE_REGISTER(226653584, memcpy),
     BRIDGE_REGISTER(3039785093, UserRenameThread),
     //BRIDGE_REGISTER(1727505686, UserLeaveIfError)

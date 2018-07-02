@@ -82,12 +82,15 @@ namespace eka2l1 {
 
         void entry(service::ipc_context ctx);
 
+        void file_size(service::ipc_context ctx);
+
         handle_table<512> file_handles;
         std::unordered_map<uint32_t, fs_node> file_nodes;
 
         int new_node(io_system *io, std::u16string name, int org_mode);
+        fs_node *get_file_node(int handle);
 
-    public : 
+    public:
         fs_server(system *sys);
     };
 }

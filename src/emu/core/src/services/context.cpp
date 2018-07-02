@@ -77,7 +77,8 @@ namespace eka2l1 {
                 std::string bin;
 
                 bin.resize(len);
-                memmove(bin.data(), &data, len);
+
+                memcpy(bin.data(), data, len);
 
                 des->Assign(sys, bin);
 

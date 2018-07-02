@@ -171,6 +171,15 @@ BRIDGE_FUNC(void, WaitForAnyRequest) {
     sys->get_kernel_system()->crr_thread()->wait_for_any_request();
 }
 
+BRIDGE_FUNC(eka2l1::ptr<void>, LeaveStart) {
+    LOG_CRITICAL("Leave started!");
+
+    eka2l1::thread_ptr thr = sys->get_kernel_system()->crr_thread();
+    thr->increase_leave_depth();
+
+    return current_local_data(sys).trap_handler;
+}
+
 const eka2l1::hle::func_map svc_register_funcs = {
     /* FAST EXECUTIVE CALL */
     BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),
@@ -188,5 +197,6 @@ const eka2l1::hle::func_map svc_register_funcs = {
     BRIDGE_REGISTER(0x76, DllSetTls),
     BRIDGE_REGISTER(0x77, DllFreeTLS),
     BRIDGE_REGISTER(0xE8, SvcE8Stub),
-    BRIDGE_REGISTER(0x4D, SessionSendSync)
+    BRIDGE_REGISTER(0x4D, SessionSendSync),
+    BRIDGE_REGISTER(0xDF, LeaveStart)
 };

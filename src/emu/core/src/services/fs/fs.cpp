@@ -54,6 +54,34 @@ namespace eka2l1 {
         : service::server(sys, "!FileServer") {
         REGISTER_IPC(fs_server, entry, EFsEntry, "Fs::Entry");
         REGISTER_IPC(fs_server, file_open, EFsFileOpen, "Fs::FileOpen");
+        REGISTER_IPC(fs_server, file_size, EFsFileSize, "Fs::FileSize");
+    }
+
+    fs_node *fs_server::get_file_node(int handle) {
+        int real_handle = file_handles.get_real_handle_id(handle);
+
+        if (real_handle == -1) {
+            return nullptr;
+        }
+
+        return &file_nodes[real_handle];
+    }
+
+    void fs_server::file_size(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr) {
+            ctx.set_request_status(KErrBadHandle);
+        }
+
+        ctx.write_arg_pkg<uint64_t>(0, node->vfs_node->size());
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::file_open(service::ipc_context ctx) {
