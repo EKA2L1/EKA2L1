@@ -77,7 +77,7 @@ namespace eka2l1 {
             return -1;
         }
 
-        void seek(uint32_t seek_off, file_seek_mode where) override {
+        void seek(int seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg) {
                 crr_pos = seek_off;
             } else if (where == file_seek_mode::crr) {
@@ -186,7 +186,7 @@ namespace eka2l1 {
             return ftell(file);
         }
 
-        void seek(uint32_t seek_off, file_seek_mode where) override {
+        void seek(int seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg) {
                 fseek(file, seek_off, SEEK_SET);
             } else if (where == file_seek_mode::crr) {

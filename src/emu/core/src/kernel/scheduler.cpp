@@ -82,9 +82,6 @@ namespace eka2l1 {
                 // TODO: remove the new thread from queue ?
 
                 running_threads.emplace(crr_thread->obj_id, crr_thread);
-
-                LOG_TRACE("Thread {} (id: 0x{:x}) switches context", crr_thread->name(), crr_thread->obj_id);
-
                 jitter->load_context(crr_thread->ctx);
             } else {
                 // Nope
