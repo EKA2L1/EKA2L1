@@ -1,16 +1,19 @@
 #include <services/fs/fs.h>
 #include <services/fs/op.h>
 
-#include <epoc9/des.h>
+#include <epoc/des.h>
 #include <memory>
 
 #include <common/cvt.h>
 #include <common/path.h>
+#include <common/log.h>
 
 #include <common/e32inc.h>
 
 #include <filesystem>
 #include <vfs.h>
+
+#include <core.h>
 
 namespace fs = std::experimental::filesystem;
 
@@ -26,7 +29,7 @@ const TUint KEntryAttRemote = 0x0100;
 const TUint KEntryAttMaskFileSystemSpecific = 0x00FF0000;
 const TUint KEntryAttMatchMask = (KEntryAttHidden | KEntryAttSystem | KEntryAttDir);
 
-namespace epoc {
+namespace eka2l1::epoc {
     enum TFileMode {
         EFileShareExclusive,
         EFileShareReadersOnly,

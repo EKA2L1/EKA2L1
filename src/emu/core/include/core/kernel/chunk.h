@@ -133,6 +133,10 @@ namespace eka2l1 {
 			*/
             bool adjust(size_t adj_size);
 
+            /*! \brief Adjust the size by setting the top and bottom of a chunk
+            */
+            bool adjust_de(size_t top, size_t bottom);
+
             size_t get_size() {
                 return commited_size;
             }

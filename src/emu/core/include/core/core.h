@@ -41,6 +41,12 @@
 #include <drivers/screen_driver.h>
 
 namespace eka2l1 {
+    namespace epoc {
+        struct hal;
+    }
+
+    using hal_ptr = std::shared_ptr<epoc::hal>;
+
     enum class availdrive {
         c,
         e,
@@ -77,8 +83,10 @@ namespace eka2l1 {
         driver::screen_driver_ptr emu_screen_driver;
 
         std::unordered_map<std::string, bool> bool_configs;
+        std::unordered_map<uint32_t, hal_ptr> hals;
 
         void load_configs();
+
         void write_configs();
 
     public:
@@ -86,10 +94,12 @@ namespace eka2l1 {
             return bool_configs[name];
         }
 
-        system(driver::window_type emu_win_type = driver::window_type::glfw, 
-            driver::driver_type emu_driver_type = driver::driver_type::opengl, 
+        system(driver::window_type emu_win_type = driver::window_type::glfw,
+            driver::driver_type emu_driver_type = driver::driver_type::opengl,
             arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
-            : jit_type(jit_type), win_type(emu_win_type), dr_type(emu_driver_type) {}
+            : jit_type(jit_type)
+            , win_type(emu_win_type)
+            , dr_type(emu_driver_type) {}
 
         void set_symbian_version_use(const epocver ever) {
             kern.set_epoc_version(ever);
@@ -161,6 +171,8 @@ namespace eka2l1 {
         std::vector<manager::app_info> app_infos() {
             return mngr.get_package_manager()->get_apps_info();
         }
+
+        void add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com);
+        hal_ptr get_hal(uint32_t cagetory);
     };
 }
-

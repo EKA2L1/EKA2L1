@@ -111,6 +111,10 @@ namespace eka2l1 {
                 return access;
             }
 
+            void set_access_type(kernel::access_type acc) {
+                access = acc;
+            }
+
             object_type get_object_type() const {
                 return obj_type;
             }

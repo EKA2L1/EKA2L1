@@ -87,7 +87,7 @@ namespace eka2l1 {
                 std::cerr << "spdlog error: " << msg << std::endl;
             });
 
-            spdlog::set_pattern("[%H:%M:%S.%e] [%l] %v");
+            spdlog::set_pattern("%L { %v }");
             spdlog::set_level(spdlog::level::trace);
 
             spd_logger->flush_on(spdlog::level::debug);

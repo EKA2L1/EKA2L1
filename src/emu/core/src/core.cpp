@@ -20,12 +20,14 @@
 #include <core.h>
 #include <process.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 #include <disasm/disasm.h>
 
 #include <loader/eka2img.h>
 #include <loader/rpkg.h>
+
+#include <epoc/hal.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -53,6 +55,8 @@ namespace eka2l1 {
         emu_screen_driver = driver::new_screen_driver(dr_type);
 
         kern.init(this, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
+
+        epoc::init_hal(this);
     }
 
     process *system::load(uint32_t id) {
@@ -71,9 +75,7 @@ namespace eka2l1 {
 
         crr_process->run();
 
-        emu_win->change_title("EKA2L1 | " + 
-            common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + 
-            common::to_string(id, std::hex) + ")");
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
 
         return crr_process;
     }
@@ -94,15 +96,15 @@ namespace eka2l1 {
             reschedule_pending = false;
         } else {
             if (kern.crr_process()) {
-                kern.close_process(kern.crr_process());
-			}
-		}
+                kern.destroy_process(kern.crr_process());
+            }
+        }
 
         if (kern.get_thread_scheduler()->should_terminate()) {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
 
-			kern.close_process(kern.crr_process());
+            kern.destroy_process(kern.crr_process());
 
             exit = true;
             return 0;
@@ -144,7 +146,7 @@ namespace eka2l1 {
     }
 
     void system::mount(availdrive drv, std::string path, bool in_mem) {
-        io.mount(((drv == availdrive::c) ? "C:" : ((drv == availdrive::z) ? "Z:": "E:")), path, in_mem);
+        io.mount(((drv == availdrive::c) ? "C:" : ((drv == availdrive::z) ? "Z:" : "E:")), path, in_mem);
     }
 
     void system::request_exit() {
@@ -152,11 +154,11 @@ namespace eka2l1 {
         exit = true;
     }
 
-	void system::reset() {
+    void system::reset() {
         exit = false;
         emu_screen_driver->reset();
         hlelibmngr.reset();
-	}
+    }
 
     bool system::install_rpkg(const std::string &path) {
         std::atomic_int holder;
@@ -166,7 +168,7 @@ namespace eka2l1 {
     void system::write_configs() {
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
-        
+
         for (auto & [ name, op ] : bool_configs) {
             emitter << YAML::Key << name << YAML::Value << op;
         }
@@ -197,5 +199,12 @@ namespace eka2l1 {
             write_configs();
         }
     }
-}
 
+    void system::add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com) {
+        hals.emplace(hal_cagetory, std::move(hal_com));
+    }
+
+    hal_ptr system::get_hal(uint32_t cagetory) {
+        return hals[cagetory];
+    }
+}

@@ -23,9 +23,9 @@
 #include <thread>
 
 #include <common/log.h>
+#include <core.h>
 #include <core_kernel.h>
 #include <core_mem.h>
-#include <core.h>
 #include <hle/libmanager.h>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
@@ -52,10 +52,10 @@ namespace eka2l1 {
     void kernel_system::shutdown() {
         thr_sch.reset();
 
-        close_all_processes();
+        destroy_all_processes();
 
         for (auto &thr : threads) {
-            close_thread(thr.second->unique_id());
+            destroy_thread(thr.second->unique_id());
         }
     }
 
@@ -98,8 +98,6 @@ namespace eka2l1 {
         if (!temp) {
             return false;
         } else {
-            set_epoc_version(temp->epoc_ver);
-
             // Lib manager needs the system to call HLE function
             libmngr->init(sys, this, io, mem, kern_ver);
         }
@@ -128,7 +126,7 @@ namespace eka2l1 {
             mngr->get_package_manager()->get_app_name(uid), uid);
     }
 
-    bool kernel_system::close_process(process *pr) {
+    bool kernel_system::destroy_process(process *pr) {
         auto res = processes.find(pr->get_uid());
 
         if (res == processes.end()) {
@@ -152,7 +150,7 @@ namespace eka2l1 {
         return true;
     }
 
-    bool kernel_system::close_process(const kernel::uid id) {
+    bool kernel_system::destroy_process(const kernel::uid id) {
         auto res = processes.find(id);
 
         if (res == processes.end()) {
@@ -176,9 +174,9 @@ namespace eka2l1 {
         return true;
     }
     // TODO: Fix this poorly written code
-    bool kernel_system::close_all_processes() {
+    bool kernel_system::destroy_all_processes() {
         while (processes.size() > 0) {
-            if (!close_process(&(*processes.begin()->second))) {
+            if (!destroy_process(&(*processes.begin()->second))) {
                 return false;
             }
         }
@@ -249,7 +247,7 @@ namespace eka2l1 {
         return timers[id];
     }
 
-    bool kernel_system::close_timer(kernel::uid id) {
+    bool kernel_system::destroy_timer(kernel::uid id) {
         auto res = timers.find(id);
 
         if (res != timers.end()) {
@@ -262,7 +260,7 @@ namespace eka2l1 {
         return false;
     }
 
-    bool kernel_system::close_sema(kernel::uid id) {
+    bool kernel_system::destroy_sema(kernel::uid id) {
         auto res = semas.find(id);
 
         if (res != semas.end()) {
@@ -275,7 +273,7 @@ namespace eka2l1 {
         return false;
     }
 
-    bool kernel_system::close_mutex(kernel::uid id) {
+    bool kernel_system::destroy_mutex(kernel::uid id) {
         auto res = mutexes.find(id);
 
         if (res != mutexes.end()) {
@@ -288,12 +286,13 @@ namespace eka2l1 {
         return false;
     }
 
-    bool kernel_system::close_chunk(kernel::uid id) {
+    bool kernel_system::destroy_chunk(kernel::uid id) {
         auto res = chunks.find(id);
 
         if (res != chunks.end()) {
             chunks[id]->destroy();
             chunks.erase(res);
+
             kern_obj_handles.free_handle(id);
 
             return true;
@@ -302,7 +301,7 @@ namespace eka2l1 {
         return false;
     }
 
-    bool kernel_system::close_thread(kernel::uid id) {
+    bool kernel_system::destroy_thread(kernel::uid id) {
         auto res = threads.find(id);
 
         if (res != threads.end()) {
@@ -316,7 +315,7 @@ namespace eka2l1 {
                 // Erase all chunks that have relation to the thread
                 if (it->second && it->second->obj_owner() == id) {
                     uint32_t id = (it++)->first;
-                    close_chunk(id);
+                    destroy_chunk(id);
                 } else {
                     ++it;
                 }
@@ -328,14 +327,14 @@ namespace eka2l1 {
         return false;
     }
 
-    bool kernel_system::close(kernel::uid id) {
+    bool kernel_system::destroy(kernel::uid id) {
         // TODO: Remove this horrible if
-        if (!close_chunk(id)) {
-            if (!close_thread(id)) {
-                if (!close_mutex(id)) {
-                    if (!close_sema(id)) {
-                        if (!close_timer(id)) {
-                            if (!close_session(id)) {
+        if (!destroy_chunk(id)) {
+            if (!destroy_thread(id)) {
+                if (!destroy_mutex(id)) {
+                    if (!destroy_sema(id)) {
+                        if (!destroy_timer(id)) {
+                            if (!destroy_session(id)) {
                                 return false;
                             }
                         }
@@ -345,6 +344,20 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    bool kernel_system::close(kernel::uid id) {
+        int real_id = kern_obj_handles.get_real_handle_id(id);
+        bool res = kern_obj_handles.free_handle(id);
+
+        if (!res)
+            return res;
+
+        if (kern_obj_handles.open_ref_exists(real_id)) {
+            return true;
+        }
+
+        return destroy(id);
     }
 
     thread_ptr kernel_system::add_thread(kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
@@ -362,29 +375,16 @@ namespace eka2l1 {
     }
 
     void kernel_system::set_closeable(kernel::uid id, bool opt) {
-        kernel_obj_ptr obj = get_kernel_obj(id);
-
-        if (obj == nullptr) {
-            LOG_WARN("Get closeable attribute of unexist kernel object");
-            return;
-        }
-
-        obj->user_closeable(opt);
+        kern_obj_handles.handle_set_closeable(id, opt);
     }
 
     bool kernel_system::get_closeable(kernel::uid id) {
-        kernel_obj_ptr obj = get_kernel_obj(id);
-
-        if (!obj) {
-            return false;
-        }
-
-        return obj->user_closeable();
+        return kern_obj_handles.handle_closeable(id);
     }
 
     thread_ptr kernel_system::get_thread_by_id(kernel::uid id) {
         id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
-        
+
         auto thread_ite = threads.find(id);
 
         if (thread_ite != threads.end()) {
@@ -404,25 +404,25 @@ namespace eka2l1 {
         auto thread_ite = threads.find(id);
 
         if (thread_ite != threads.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj> (thread_ite->second);
+            return std::dynamic_pointer_cast<kernel::kernel_obj>(thread_ite->second);
         }
 
         auto timer_ite = timers.find(id);
 
         if (timer_ite != timers.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj> (timer_ite->second);
+            return std::dynamic_pointer_cast<kernel::kernel_obj>(timer_ite->second);
         }
 
         auto sema_ite = semas.find(id);
 
         if (sema_ite != semas.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj> (sema_ite->second);
+            return std::dynamic_pointer_cast<kernel::kernel_obj>(sema_ite->second);
         }
 
         auto mutex_ite = mutexes.find(id);
 
         if (mutex_ite != mutexes.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj> (mutex_ite->second);
+            return std::dynamic_pointer_cast<kernel::kernel_obj>(mutex_ite->second);
         }
 
         return nullptr;
@@ -497,14 +497,14 @@ namespace eka2l1 {
         return sessions[ss_id];
     }
 
-    bool kernel_system::close_session(kernel::uid id) {
+    bool kernel_system::destroy_session(kernel::uid id) {
         auto &res = sessions.find(id);
 
         if (res == sessions.end()) {
             return false;
         }
 
-        res->second->prepare_close();
+        res->second->prepare_destroy();
         sessions.erase(id);
 
         kern_obj_handles.free_handle(id);
@@ -524,6 +524,12 @@ namespace eka2l1 {
     }
 
     server_ptr kernel_system::get_server(kernel::uid id) {
+        if (id & 0x8000) {
+            id &= ~0x8000;
+        }
+        
+        id = kern_obj_handles.get_real_handle_id(id);
+
         auto &res = servers.find(id);
 
         if (res != servers.end()) {
@@ -534,6 +540,12 @@ namespace eka2l1 {
     }
 
     session_ptr kernel_system::get_session(kernel::uid id) {
+        if (id & 0x8000) {
+            id &= ~0x8000;
+        }
+
+        id = kern_obj_handles.get_real_handle_id(id);
+
         auto &res = sessions.find(id);
 
         if (res != sessions.end()) {
@@ -630,6 +642,12 @@ namespace eka2l1 {
     }
 
     property_ptr kernel_system::get_prop(kernel::uid id) {
+        if (id & 0x8000) {
+            id &= ~0x8000;
+        }
+
+        id = kern_obj_handles.get_real_handle_id(id);
+
         auto &res = properties.find(id);
 
         if (res == properties.end()) {
@@ -663,5 +681,9 @@ namespace eka2l1 {
 
         return kern_obj_handles.new_handle(chunk->second->unique_id(),
             static_cast<handle_owner_type>(owner), get_id_base_owner(owner));
+    }
+
+    kernel::uid kernel_system::mirror(kernel::uid id, kernel::owner_type owner) {
+        return kern_obj_handles.new_handle(id, static_cast<handle_owner_type>(owner), get_id_base_owner(owner));
     }
 }

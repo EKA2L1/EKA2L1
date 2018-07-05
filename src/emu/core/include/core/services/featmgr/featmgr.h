@@ -19,9 +19,35 @@
  */
 
 #include <services/server.h>
+#include <unordered_map>
 
 namespace eka2l1 {
+    class io_system;
+
+    struct featmgr_config_header {
+        char magic[4];
+        uint32_t unk1; 
+        uint32_t num_entry;
+        uint32_t num_range;
+    };
+
+    struct featmgr_config_entry {
+        uint32_t uid;
+        uint32_t info;
+    };
+
+    struct featmgr_config_range {
+        uint32_t low_uid;
+        uint32_t high_uid;
+    };
+
     class featmgr_server : public service::server {
+        std::unordered_map<uint32_t, uint32_t> features;
+        
+        // Load the feature manager config files.
+        bool load_featmgr_configs(io_system *io);
+        void feature_supported(service::ipc_context ctx);
+
     public:
         featmgr_server(system *sys);
     };

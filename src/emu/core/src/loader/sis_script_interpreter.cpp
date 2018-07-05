@@ -22,6 +22,8 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/types.h>
+#include <common/flate.h>
+
 #include <loader/sis_script_interpreter.h>
 #include <manager/package_manager.h>
 
@@ -95,35 +97,6 @@ namespace eka2l1 {
             , install_data(inst_data)
             , install_drive(inst_drv) {}
 
-        bool inflate_data(mz_stream *stream, void *in, void *out, uint32_t in_size, uint32_t *out_size = nullptr) {
-            stream->avail_in = in_size;
-            stream->next_in = static_cast<const unsigned char *>(in);
-            stream->next_out = static_cast<unsigned char *>(out);
-            stream->avail_out = CHUNK_MAX_INFLATED_SIZE;
-
-            auto res = inflate(stream, Z_NO_FLUSH);
-
-            if (res != MZ_OK) {
-                if (res == MZ_STREAM_END) {
-                    if (out_size)
-                        *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
-
-                    return true;
-                }
-
-                LOG_ERROR("Inflate failed description: {}", mz_error(res));
-
-                if (out_size)
-                    *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
-
-                return false;
-            };
-
-            if (out_size)
-                *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
-            return true;
-        }
-
         std::vector<uint8_t> ss_interpreter::get_small_file_buf(uint32_t data_idx, uint16_t crr_blck_idx) {
             sis_file_data *data = reinterpret_cast<sis_file_data *>(
                 reinterpret_cast<sis_data_unit *>(install_data.data_units.fields[crr_blck_idx].get())->data_unit.fields[data_idx].get());
@@ -154,7 +127,7 @@ namespace eka2l1 {
                 LOG_ERROR("Can not intialize inflate stream");
             }
 
-            inflate_data(&stream, compressed.compressed_data.data(), compressed.uncompressed_data.data(), us);
+            flate::inflate_data(&stream, compressed.compressed_data.data(), compressed.uncompressed_data.data(), us);
             inflateEnd(&stream);
 
             return compressed.uncompressed_data;
@@ -227,7 +200,7 @@ namespace eka2l1 {
                 if (compressed.algorithm == sis_compressed_algorithm::deflated) {
                     uint32_t inflated_size = 0;
 
-                    auto res = inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
+                    auto res = flate::inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
 
                     if (!res) {
                         LOG_ERROR("Uncompress failed! Report to developers");

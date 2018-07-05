@@ -138,20 +138,20 @@ void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
         imm = svc_inst & 0xffffff;
     }
 
-    if (imm == 0) {
+    if (imm == 0x00900000) {
         uint32_t sid = *eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys());
         auto func_name = jit->get_lib_manager()->get_func_name(sid);
 
         if (func_name) {
-            LOG_INFO("Calling {} [0x{:x}]", *func_name, jit->get_reg(14));
+            LOG_INFO("Calling {} [0x{:x}]", *func_name, jit->get_pc() + 4);
         }
 
         jit->get_lib_manager()->call_hle(sid);
         return;
-    } else if (imm == 1) {
+    } else if (imm == 0x00900001) {
         jit->get_lib_manager()->call_custom_hle(*eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys()));
         return;
-    } else if (imm == 2) {
+    } else if (imm == 0x00900002) {
         uint32_t call_addr = jit->get_pc();
 
         if (call_addr && thumb) {

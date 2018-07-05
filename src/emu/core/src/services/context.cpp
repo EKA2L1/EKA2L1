@@ -1,7 +1,7 @@
 #include <core.h>
 #include <ptr.h>
 
-#include <hle/epoc9/des.h>
+#include <epoc/des.h>
 
 #include <services/context.h>
 
@@ -25,7 +25,7 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
-                TDesC16 *des = eka2l1::ptr<TDesC16>(msg->args.args[idx]).get(sys->get_memory_system());
+                eka2l1::epoc::TDesC16 *des = eka2l1::ptr<epoc::TDesC16>(msg->args.args[idx]).get(sys->get_memory_system());
                 return des->StdString(sys);
             }
 
@@ -41,7 +41,7 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & (int)ipc_arg_type::flag_des) {
-                TDesC8 *des = eka2l1::ptr<TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
+                eka2l1::epoc::TDesC8 *des = eka2l1::ptr<epoc::TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
                 return des->StdString(sys);
             }
 
@@ -73,7 +73,7 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
-                TDesC8 *des = eka2l1::ptr<TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
+                epoc::TDesC8 *des = eka2l1::ptr<epoc::TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
                 std::string bin;
 
                 bin.resize(len);

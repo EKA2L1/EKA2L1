@@ -9,7 +9,7 @@
 
 #include <drivers/screen_driver.h>
 
-namespace epoc {
+namespace eka2l1::epoc {
     screen_device::screen_device(uint64_t id, eka2l1::driver::screen_driver_ptr driver)
         : id(id)
         , driver(driver) {

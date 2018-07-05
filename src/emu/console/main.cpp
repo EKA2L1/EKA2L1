@@ -39,7 +39,7 @@ std::string sis_install_path = "-1";
 uint8_t adrive;
 
 eka2l1::system symsys;
-epocver ever;
+epocver ever = epocver::epoc9;
 
 YAML::Node config;
 

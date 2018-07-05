@@ -54,7 +54,7 @@ const uint32_t unk_key1 = 0x1020e34e;
 const uint32_t locale_data_key = 0x10208904;
 const uint32_t locale_lang_key = 0x10208903;
 
-namespace epoc {
+namespace eka2l1::epoc {
     enum TDateFormat {
         EDateAmerican,
         EDateEuropean,

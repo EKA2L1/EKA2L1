@@ -28,7 +28,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace epoc {
+namespace eka2l1::epoc {
     struct TTime {
         uint64_t aTimeEncoded;
     };

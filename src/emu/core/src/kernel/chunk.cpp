@@ -64,8 +64,8 @@ namespace eka2l1 {
                 // Adjust the top and bottom. Later
                 size_t init_commit_size = new_top - new_bottom;
  
-                new_top = max_size;
-                new_bottom = new_top - init_commit_size;
+                new_top = init_commit_size;
+                new_bottom = 0;
             }
 
             address range_beg = 0;
@@ -160,6 +160,23 @@ namespace eka2l1 {
 
             mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), adj_size);
             top = bottom + adj_size;
+
+            return true;
+        }
+
+        bool chunk::adjust_de(size_t ntop, size_t nbottom) {
+            if (type != kernel::chunk_type::double_ended) {
+                return false;
+            }
+
+            if (ntop - nbottom > max_size) {
+                return false;
+            }
+
+            top = ntop;
+            bottom = nbottom;
+
+            mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), top - bottom);
 
             return true;
         }

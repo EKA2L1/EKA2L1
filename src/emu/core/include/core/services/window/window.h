@@ -43,10 +43,7 @@ namespace eka2l1 {
     };
 }
 
-/*! \brief Namespace for HLE EPOC implementation.
- *
- */
-namespace epoc {
+namespace eka2l1::epoc {
     struct window;
     using window_ptr = std::shared_ptr<epoc::window>;
 

@@ -4,6 +4,8 @@
 #include <array>
 #include <cstdint>
 
+#include <common/log.h>
+
 namespace eka2l1 {
     enum class handle_owner_type {
         kernel,
@@ -14,6 +16,9 @@ namespace eka2l1 {
     struct handle_info {
         bool free;
         bool is_mirror;
+
+        bool closeable;
+
         int org;
 
         handle_owner_type owner;
@@ -28,7 +33,7 @@ namespace eka2l1 {
         handle_table() {
             handle_info init_info;
             init_info.free = true;
-            init_info.org = -1; 
+            init_info.org = -1;
 
             std::fill(handles.begin(), handles.end(), init_info);
         }
@@ -72,7 +77,7 @@ namespace eka2l1 {
 
             frhandle->free = false;
             frhandle->is_mirror = true;
-            frhandle->org = mirror;
+            frhandle->org = get_real_handle_id(mirror);
             frhandle->owner = owner;
             frhandle->owner_id = owner_id;
 
@@ -88,13 +93,36 @@ namespace eka2l1 {
         }
 
         bool free_handle(int handle) {
-            if (handle > max_handles) {
+            if ((handle > max_handles) && (!handles[handle - 1].closeable)) {
                 return false;
             }
 
             handles[handle - 1].free = true;
 
+            // Wait, if this is not a mirror and there is still reference
+
+            if (open_ref_exists(handle) && handles[handle - 1].is_mirror == false) {
+                // Let this just close, to avoid any confusion in the handle system
+                handles[handle - 1].free = false;
+            }
+
             return true;
+        }
+
+        bool handle_closeable(int handle) {
+            if (handle > max_handles) {
+                return false;
+            }
+
+            return handles[handle - 1].closeable;
+        }
+
+        void handle_set_closeable(int handle, bool closeable) {
+            if (handle > max_handles) {
+                return;
+            }
+
+            handles[handle - 1].closeable = closeable;
         }
 
         void free_all_handle(int owner_id) {
@@ -103,6 +131,17 @@ namespace eka2l1 {
                     free_handle(i + 1);
                 }
             }
+        }
+
+        bool open_ref_exists(int org_handle) {
+            auto &ref = std::find_if(handles.begin(), handles.end(),
+                [org_handle](const auto &handle) { return handle.is_mirror && handle.org == org_handle; });
+
+            if (ref == handles.end()) {
+                return false;
+            }
+
+            return true;
         }
     };
 }

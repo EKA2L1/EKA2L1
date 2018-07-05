@@ -4,6 +4,14 @@
 
 namespace eka2l1 {
     namespace service {
+        void server::connect(service::ipc_context ctx) {
+            ctx.set_request_status(0);
+        }
+
+        void server::disconnect(service::ipc_context ctx) {
+            ctx.set_request_status(0);
+        }
+
         bool server::is_msg_delivered(ipc_msg_ptr &msg) {
             auto &res = std::find_if(delivered_msgs.begin(), delivered_msgs.end(),
                 [&](const auto &svr_msg) { return svr_msg.real_msg->id == msg->id; });
@@ -21,6 +29,9 @@ namespace eka2l1 {
             , kernel_obj(sys->get_kernel_system(), name, kernel::owner_type::process, 0) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
+
+            REGISTER_IPC(server, connect, -1, "Server::Connect");
+            REGISTER_IPC(server, disconnect, -2, "Server::Disconnect");
         }
 
         int server::receive(ipc_msg_ptr &msg) {

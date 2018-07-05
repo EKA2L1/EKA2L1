@@ -177,7 +177,7 @@ namespace eka2l1 {
             return svr->deliver(smsg);
         }
 
-        void session::prepare_close() {
+        void session::prepare_destroy() {
             for (const auto &msg : msgs_pool) {
                 kern->free_msg(msg);
             }

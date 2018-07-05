@@ -81,7 +81,7 @@ namespace eka2l1 {
             /** Messages that has been delivered but not accepted yet */
             std::vector<server_msg> delivered_msgs;
 
-            std::unordered_map<uint32_t, ipc_func> ipc_funcs;
+            std::unordered_map<int, ipc_func> ipc_funcs;
 
             /** The thread own this server */
             thread_ptr owning_thread;
@@ -89,6 +89,11 @@ namespace eka2l1 {
 
             /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
+
+            // These provides version in order to connect to the server
+            // Security layer is ignored rn.
+            void connect(service::ipc_context ctx);
+            void disconnect(service::ipc_context ctx);
 
         protected:
             bool is_msg_delivered(ipc_msg_ptr &msg);

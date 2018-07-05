@@ -22,7 +22,7 @@
 #include <common/log.h>
 #include <common/random.h>
 
-#include <hle/epoc9/register.h>
+#include <epoc/reg.h>
 #include <hle/libmanager.h>
 
 #include <loader/eka2img.h>
@@ -30,6 +30,7 @@
 #include <vfs.h>
 
 #include <core_kernel.h>
+#include <core.h>
 
 namespace eka2l1 {
     namespace hle {
@@ -42,7 +43,9 @@ namespace eka2l1 {
             load_all_sids(ver);
 
             if (ver == epocver::epoc9) {
-                register_epoc9(*this);
+                epoc::register_epocv94(*this);
+            } else if (ver == epocver::epoc93) {
+                epoc::register_epocv93(*this);
             }
 
             stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
@@ -62,7 +65,7 @@ namespace eka2l1 {
 
             if (res == stubbed.end()) {
                 uint32_t *stub_ptr_real = stub_ptr.get(mem);
-                stub_ptr_real[0] = 0xef000000; // svc #0, never used
+                stub_ptr_real[0] = 0xef900000; // svc #0, never used
                 stub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
                 stub_ptr_real[2] = id;
 
@@ -79,7 +82,7 @@ namespace eka2l1 {
 
             if (res == custom_stubbed.end()) {
                 uint32_t *cstub_ptr_real = custom_stub_ptr.get(mem);
-                cstub_ptr_real[0] = 0xef000001; // svc #1, never used
+                cstub_ptr_real[0] = 0xef900001; // svc #1, never used
                 cstub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
                 cstub_ptr_real[2] = addr;
 
@@ -103,8 +106,8 @@ namespace eka2l1 {
 
         void lib_manager::shutdown() {
             for (auto &img : e32imgs_cache) {
-                kern->close_chunk(img.second.img->code_chunk->unique_id());
-                kern->close_chunk(img.second.img->data_chunk->unique_id());
+                kern->destroy_chunk(img.second.img->code_chunk->unique_id());
+                kern->destroy_chunk(img.second.img->data_chunk->unique_id());
             }
         }
 

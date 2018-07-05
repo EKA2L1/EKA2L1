@@ -22,4 +22,4 @@ add_library(common
     src/hash.cpp)
 
 target_include_directories(common PUBLIC include)
-target_link_libraries(common PUBLIC spdlog)
+target_link_libraries(common PUBLIC spdlog miniz)

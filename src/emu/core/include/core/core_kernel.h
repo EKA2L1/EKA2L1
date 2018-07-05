@@ -181,11 +181,15 @@ namespace eka2l1 {
             kernel::uid own_id = -1,
             kernel::access_type access = kernel::access_type::local_access);
 
+        /* Safe duplication for public */
         kernel::uid mirror_sema(std::string sema_name,
             kernel::owner_type owner);
 
         kernel::uid mirror_chunk(std::string chunk_name,
             kernel::owner_type owner);
+
+        /* Fast duplication, unsafe */
+        kernel::uid mirror(kernel::uid id, kernel::owner_type owner);
 
         server_ptr create_server(std::string name);
         session_ptr create_session(server_ptr cnn_svr, int async_slots);
@@ -221,13 +225,16 @@ namespace eka2l1 {
         /*! \brief Completely destroy a message. */
         void destroy_msg(ipc_msg_ptr msg);
 
-        bool close_chunk(kernel::uid id);
-        bool close_thread(kernel::uid id);
-        bool close_timer(kernel::uid id);
-        bool close_sema(kernel::uid id);
-        bool close_mutex(kernel::uid id);
-        bool close_session(kernel::uid id);
+        bool destroy_chunk(kernel::uid id);
+        bool destroy_thread(kernel::uid id);
+        bool destroy_timer(kernel::uid id);
+        bool destroy_sema(kernel::uid id);
+        bool destroy_mutex(kernel::uid id);
+        bool destroy_session(kernel::uid id);
 
+        /* Destroy the kernel object. */
+
+        bool destroy(kernel::uid id);
         bool close(kernel::uid id);
 
         void set_closeable(kernel::uid id, bool opt);
@@ -242,9 +249,9 @@ namespace eka2l1 {
         process *spawn_new_process(std::string &path, std::string name, uint32_t uid);
         process *spawn_new_process(uint32_t uid);
 
-        bool close_process(process *pr);
-        bool close_process(const kernel::uid id);
-        bool close_all_processes();
+        bool destroy_process(process *pr);
+        bool destroy_process(const kernel::uid id);
+        bool destroy_all_processes();
 
         bool notify_prop(prop_ident_pair ident);
         bool subscribe_prop(prop_ident_pair ident, int *request_sts);
@@ -258,5 +265,6 @@ namespace eka2l1 {
         }
 
         thread_ptr crr_thread();
+        void set_handle_owner_type(int handle);
     };
 }

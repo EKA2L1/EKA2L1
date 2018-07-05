@@ -12,7 +12,7 @@ int main() {
     mount_symbian_system(sys, "E:", "drives/e/");
     mount_symbian_system(sys, "Z:", "drives/z/");
 
-    install_rpkg(sys, "SYM.RPKG");
+    install_sis(sys, 0, "pocket.sis");
 
     shutdown_symbian_system(sys);
     free_symbian_system(sys);
