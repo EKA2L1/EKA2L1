@@ -18,14 +18,56 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/queue.h>
 #include <services/server.h>
+#include <vfs.h>
+
+#include <atomic>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include <string>
+#include <vector>
 
 namespace eka2l1 {
+    class io_system;
+
+    struct font {
+        std::string font_name;
+        uint32_t attrib;
+        FT_Face ft_face;
+
+        std::string font_path;
+    };
+
     class fontbitmap_server : public service::server {
+        int max_font_cache = 5;
+        bool cache_loaded = false;
+
+        std::atomic<uint64_t> id_counter;
         chunk_ptr fbs_shared_chunk;
 
+        FT_Library ft_lib;
+
+        eka2l1::cn_queue<font> ft_fonts;
+
         void init(service::ipc_context ctx);
-    public:
-        fontbitmap_server(system *sys);
+        void get_nearest_font(service::ipc_context ctx);
+
+
+        void do_cache_fonts(io_system *io);
+        void add_font_to_cache(font &f);
+        font *get_cache_font(const std::string &font_path);
+        font *get_cache_font_by_family_and_style(const std::string &font_path, uint32_t style);
+
+        /*! \brief Search cache for the font. */
+        font *get_font(io_system *io, const std::string &font_name, uint32_t style);
+
+
+    public : 
+         fontbitmap_server(system *sys);
+
+         void destroy() override;
     };
 }

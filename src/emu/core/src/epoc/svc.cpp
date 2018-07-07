@@ -211,10 +211,6 @@ namespace eka2l1::epoc {
         thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
     }
 
-    BRIDGE_FUNC(TInt, SvcE8Stub) {
-        return 0;
-    }
-
     /***********************************/
     /* LOCALE */
     /**********************************/
@@ -276,11 +272,17 @@ namespace eka2l1::epoc {
         *handle = kern->mirror(*handle, kernel::owner_type::process);
         kern->close(old_handle);
 
+        LOG_TRACE("Old handle: {}, new handle: {}", (old_handle & 0x8000) ? (old_handle & ~0x8000) : (old_handle),
+            *handle);
+
         return KErrNone;
     }
 
     BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
         eka2l1::ptr<TInt> aStatus) {
+        
+        //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
+
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -299,7 +301,6 @@ namespace eka2l1::epoc {
         session_ptr ss = kern->get_session(aHandle);
 
         if (!ss) {
-            LOG_TRACE("Bad handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
             return KErrBadHandle;
         }
 
@@ -495,6 +496,10 @@ namespace eka2l1::epoc {
 
     /*! \brief Duplicate the handle. Create another reference to the real kernel object. */
     BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, TOwnerType aOwnerType, TInt aDupHandle) {
+        if (aDupHandle & 0x8000) {
+            aDupHandle &= ~0x8000;
+        }
+
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -539,6 +544,21 @@ namespace eka2l1::epoc {
         }
 
         return KErrGeneral;
+    }
+
+    BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<TDes8> aName) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel_obj_ptr obj = kern->get_kernel_obj(aHandle);
+
+        if (!obj) {
+            if (aHandle == 0xFFFF8001) {
+                obj = kern->crr_thread();
+            } else
+                return;
+        }
+
+        TDes8 *desname = aName.get(sys->get_memory_system());
+        desname->Assign(sys, obj->name());
     }
 
     /******************************/
@@ -612,6 +632,7 @@ namespace eka2l1::epoc {
         property_ptr prop = kern->get_prop(aCage, aKey);
 
         if (!prop) {
+            LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", aCage, aKey);
             return KErrNotFound;
         }
 
@@ -628,6 +649,7 @@ namespace eka2l1::epoc {
         property_ptr prop = kern->get_prop(aCage, aKey);
 
         if (!prop) {
+            LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", aCage, aKey);
             return KErrNotFound;
         }
 
@@ -660,6 +682,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x16, ProcessFilename),
         BRIDGE_REGISTER(0x27, SessionShare),
+        BRIDGE_REGISTER(0x3C, HandleName),
         BRIDGE_REGISTER(0x4D, SessionSendSync),
         BRIDGE_REGISTER(0x4E, DllTls),
         BRIDGE_REGISTER(0x4F, HalFunction),
@@ -677,7 +700,6 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xC5, PropertyFindGetInt),
         BRIDGE_REGISTER(0xC6, PropertyFindGetBin),
-        BRIDGE_REGISTER(0xE8, SvcE8Stub),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
         BRIDGE_REGISTER(0xDF, LeaveStart)

@@ -83,10 +83,11 @@ namespace eka2l1 {
 
             std::unordered_map<int, ipc_func> ipc_funcs;
 
-            /** The thread own this server */
-            thread_ptr owning_thread;
             system *sys;
 
+            /** The thread own this server */
+            thread_ptr owning_thread;
+            
             /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
 
@@ -105,7 +106,7 @@ namespace eka2l1 {
                 sessions.push_back(svse);
             }
 
-            void destroy();
+            virtual void destroy();
 
             /*! Receive the message */
             int receive(ipc_msg_ptr &msg);

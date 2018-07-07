@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <services/window/op.h>
 #include <services/window/window.h>
 
@@ -60,7 +80,7 @@ namespace eka2l1 {
     }
 
     void window_server::init(service::ipc_context ctx) {
-        root = std::make_shared<epoc::window>(0);
+        root = std::make_shared<epoc::window>(new_id());
 
         // Since request status is an int (retarded design), this would
         // expect address lower then 0x80000000. Meaning that it would resides
@@ -110,6 +130,7 @@ namespace eka2l1 {
                 epoc::window_ptr obj = find_window_obj(root, cmd.header.obj_handle);
 
                 if (obj) {
+                    int a = 5;
                 } else {
                     for (const auto &device : devices) {
                         if (device.second->id == cmd.header.obj_handle) {
@@ -137,6 +158,8 @@ namespace eka2l1 {
                 return obj;
             }
         }
+
+        return nullptr;
     }
 
     void window_server::create_screen_device(service::ipc_context ctx, ws_cmd cmd) {

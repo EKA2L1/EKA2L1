@@ -383,6 +383,10 @@ namespace eka2l1 {
     }
 
     thread_ptr kernel_system::get_thread_by_id(kernel::uid id) {
+        if (id & 0x8000) {
+            id &= ~0x8000;
+        }
+
         id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
 
         auto thread_ite = threads.find(id);
@@ -393,6 +397,10 @@ namespace eka2l1 {
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj(kernel::uid id) {
+        if (id & 0x8000) {
+            id &= ~0x8000;
+        }
+
         id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
 
         auto chunk_ite = chunks.find(id);

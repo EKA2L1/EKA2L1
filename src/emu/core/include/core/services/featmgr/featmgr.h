@@ -43,7 +43,8 @@ namespace eka2l1 {
 
     class featmgr_server : public service::server {
         std::unordered_map<uint32_t, uint32_t> features;
-        
+        bool config_loaded = false;
+
         // Load the feature manager config files.
         bool load_featmgr_configs(io_system *io);
         void feature_supported(service::ipc_context ctx);
