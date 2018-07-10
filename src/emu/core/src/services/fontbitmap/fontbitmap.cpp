@@ -49,7 +49,7 @@ namespace eka2l1 {
 
     void fontbitmap_server::init(service::ipc_context ctx) {
         fbs_shared_chunk = ctx.sys->get_kernel_system()->create_chunk(
-            "FbsSharedChunk", 0, 0x5000, 0x5000,
+            "FbsSharedChunk", 0, 0x10000, 0x10000,
             prot::read_write, kernel::chunk_type::disconnected, kernel::chunk_access::global,
             kernel::chunk_attrib::none, kernel::owner_type::process);
 
@@ -182,8 +182,16 @@ namespace eka2l1 {
         font *requested_font = get_font(ctx.sys->get_io_system(), typeface_name, 
             static_cast<uint32_t>(spec->style.flags) & 0x20000 ? spec->style.flags & ~0x20000 : spec->style.flags);
 
-        // TODO: Find out if font is loaded as bitmap to memory or not
+        bool twips = (ctx.msg->function == EFbsMessGetNearestFontToMaxHeightInTwips || ctx.msg->function == EFbsMessGetNearestFontToDesignHeightInTwips)
+            ? true
+            : false;
 
+        // TODO: Find out if font is loaded as bitmap to memory or not
+        // Pass
+        info->server_handle = unique_id();
+        info->font_offset = 0;
+
+        ctx.write_arg_pkg(1, *info);
         ctx.set_request_status(KErrNone);
     }
 

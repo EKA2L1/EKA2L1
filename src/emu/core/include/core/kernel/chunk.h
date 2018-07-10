@@ -137,6 +137,11 @@ namespace eka2l1 {
             */
             bool adjust_de(size_t top, size_t bottom);
 
+            /*! \brief The definition of this is blurry and unclearn. However, 
+             * afaik it commits to the top with size 
+             */
+            uint32_t allocate(size_t size);
+
             size_t get_size() {
                 return commited_size;
             }

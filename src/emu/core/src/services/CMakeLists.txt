@@ -1,6 +1,7 @@
 add_library(services 
     ${CORE_INCLUDE_DIR}/services/context.h
     ${CORE_INCLUDE_DIR}/services/init.h
+    ${CORE_INCLUDE_DIR}/services/fast_heap.h
     ${CORE_INCLUDE_DIR}/services/session.h
     ${CORE_INCLUDE_DIR}/services/server.h
     ${CORE_INCLUDE_DIR}/services/property.h
@@ -13,6 +14,7 @@ add_library(services
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
+    fast_heap.cpp
     property.cpp
     server.cpp
     session.cpp

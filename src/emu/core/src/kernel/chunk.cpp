@@ -180,5 +180,10 @@ namespace eka2l1 {
 
             return true;
         }
+
+        uint32_t chunk::allocate(size_t size) {
+            commit(top, size);
+            return top - size;
+        }
     }
 }

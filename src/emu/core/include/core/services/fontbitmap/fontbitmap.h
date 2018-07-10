@@ -19,7 +19,10 @@
  */
 
 #include <common/queue.h>
+
 #include <services/server.h>
+#include <services/fast_heap.h>
+
 #include <vfs.h>
 
 #include <atomic>
@@ -42,11 +45,13 @@ namespace eka2l1 {
     };
 
     class fontbitmap_server : public service::server {
-        int max_font_cache = 5;
+        int max_font_cache = 20;
         bool cache_loaded = false;
 
         std::atomic<uint64_t> id_counter;
+
         chunk_ptr fbs_shared_chunk;
+        fast_heap fbs_shared_heap;
 
         FT_Library ft_lib;
 
@@ -54,7 +59,6 @@ namespace eka2l1 {
 
         void init(service::ipc_context ctx);
         void get_nearest_font(service::ipc_context ctx);
-
 
         void do_cache_fonts(io_system *io);
         void add_font_to_cache(font &f);
@@ -64,10 +68,9 @@ namespace eka2l1 {
         /*! \brief Search cache for the font. */
         font *get_font(io_system *io, const std::string &font_name, uint32_t style);
 
+    public:
+        fontbitmap_server(system *sys);
 
-    public : 
-         fontbitmap_server(system *sys);
-
-         void destroy() override;
+        void destroy() override;
     };
 }

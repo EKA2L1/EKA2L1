@@ -85,4 +85,37 @@ namespace eka2l1::epoc::fbs {
         int font_offset;
         int server_handle;
     };
+
+    struct alg_style {
+        int baseline_off_pixels;
+        uint8_t flags;
+        uint8_t width_factor;
+        uint8_t height_factor;
+    };
+
+    struct bitmap_font {
+        font_spec spec_twips;
+        alg_style style;
+        eka2l1::ptr<void> heap;
+        int font_bitmap_off;
+        eka2l1::ptr<void> open_font;
+
+        uint32_t reserved;
+        uint32_t id;
+    };
+
+    struct open_font_metrics {
+        uint16_t design_height;
+        uint16_t ascent;
+        uint16_t descent;
+        uint16_t max_height;
+        uint16_t max_depth;
+        uint16_t max_width;
+        uint16_t baseline_correction;
+        uint16_t reserved;
+    };
+
+    struct open_font {
+        eka2l1::ptr<void> heap;
+    };
 }
