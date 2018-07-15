@@ -53,25 +53,57 @@ namespace eka2l1 {
         z
     };
 
+    /*! A system instance, where all the magic happens. 
+     *
+     * Represents the Symbian system. You can switch the system version dynamiclly.
+    */
     class system {
+        //! Pointer to the current process. Unused.
         process *crr_process;
+
+        //! Global lock mutex for system.
         std::mutex mut;
 
+        //! The library manager.
         hle::lib_manager hlelibmngr;
+
+        //! The cpu
         arm::jitter cpu;
+
+        //! Jit type.
         arm::jitter_arm_type jit_type;
+
+        //! The window type to use.
         driver::window_type win_type;
+
+        //! The driver type to use (GL, Vulkan, ...)
         driver::driver_type dr_type;
 
+        //! The memory system.
         memory_system mem;
+
+        //! The kernel system.
         kernel_system kern;
+
+        //! The timing system.
         timing_system timing;
 
+        //! Manager system.
+        /*!
+            This manages all apps and dlls.
+        */
         manager_system mngr;
+
+        //! The IO system
         io_system io;
 
+        //! Disassmebly helper.
         disasm asmdis;
 
+        //! The ROM
+        /*! This is the information parsed
+         * from the ROM, used as utility.
+        */
         loader::rom romf;
 
         bool reschedule_pending;
@@ -85,8 +117,11 @@ namespace eka2l1 {
         std::unordered_map<std::string, bool> bool_configs;
         std::unordered_map<uint32_t, hal_ptr> hals;
 
+        /*! \brief Load the core configs.
+        */
         void load_configs();
 
+        /*! \brief Save the core configs. */
         void write_configs();
 
     public:

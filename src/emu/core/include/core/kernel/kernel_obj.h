@@ -29,17 +29,25 @@ namespace eka2l1 {
     namespace kernel {
         using uid = uint64_t;
 
+        /*! \brief Ownership type for handle */
         enum class owner_type {
-            kernel,  // Kernel has id of 0xDDDDDDDD
+            kernel, // Kernel has id of 0xDDDDDDDD
             process,
             thread
         };
 
+        /*! \brief Access type for handle. */
         enum class access_type {
+            //! Global access
+            /*! Any process can share and access this handle. */
             global_access,
+
+            //! Local access
+            /*! Only the current process can access this handle. */
             local_access
         };
 
+        /*! \brief HLE object type. */
         enum class object_type {
             thread,
             sema,
@@ -51,42 +59,58 @@ namespace eka2l1 {
         /*! \brief Base class for all kernel object. */
         class kernel_obj {
         protected:
+            //! The name of the object
+            /*! Even local object will have a randomized name in here.
+            */
             std::string obj_name;
+
+            //! The object ID.
             uid obj_id;
 
             bool obj_user_closeable = true;
 
             kernel_system *kern;
-            
-            // If the owner_type is process, this will contains the process index in the kernel
-            // Else, it will contains the thread's id
+
+            //! Owner UID.
+            /*! If the owner_type is process, this will contains the process index in the kernel
+               Else, it will contains the thread's id
+            */
             kernel::uid owner;
             kernel::owner_type owner_type;
 
             access_type access;
             object_type obj_type;
 
-            kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner, 
+            kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner,
                 kernel::access_type access = access_type::local_access);
 
-            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner, 
+            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner,
                 kernel::access_type access = access_type::local_access)
                 : obj_id(obj_id)
                 , obj_name(obj_name)
                 , kern(kern)
                 , owner(owner)
-                , owner_type(owner_type) 
+                , owner_type(owner_type)
                 , access(access) {}
 
         public:
+            /*! \brief Get the name of the object.
+             * \returns Object name.
+            */
             std::string name() const {
                 return obj_name;
             }
 
+            /*! \brief Get the unique id of object. 
+                \returns The unique id.
+            */
             uid unique_id() const {
                 return obj_id;
             }
 
+            /*! \brief Get the kernel system that own this object. 
+                \returns The kernel system.
+            */
             kernel_system *get_kernel_object_owner() const {
                 return kern;
             }
@@ -99,10 +123,16 @@ namespace eka2l1 {
                 obj_user_closeable = opt;
             }
 
+            /*! \brief Get the id of the owner. 
+                \returns The owner id.
+            */
             kernel::uid obj_owner() const {
                 return owner;
             }
 
+            /*! \brief Get owner type. 
+                \returns Owner type.
+            */
             kernel::owner_type get_owner_type() const {
                 return owner_type;
             }
@@ -123,10 +153,12 @@ namespace eka2l1 {
                 owner_type = new_owner;
             }
 
+            /*! \brief Rename the kernel object. 
+             * \param new_name The new name of object.
+             */
             void rename(const std::string &new_name) {
                 obj_name = new_name;
             }
         };
     }
 }
-

@@ -24,7 +24,16 @@ namespace eka2l1::epoc {
         return func_pair->second(a1, a2);
     }
 
+    /*! \brief Kernel HAL cagetory. 
+     * Contains HAL of drivers, memory, etc...
+     */
     struct kern_hal : public eka2l1::epoc::hal {
+        /*! \brief Get the size of a page. 
+         *
+         * \param a1 The pointer to the integer destination, supposed to
+         *           contains the page size.
+         * \param a2 Unused.
+         */
         int page_size(int *a1, int *a2) {
             *a1 = static_cast<int>(sys->get_memory_system()->get_page_size());
             return KErrNone;

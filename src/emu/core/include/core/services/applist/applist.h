@@ -31,16 +31,16 @@ namespace eka2l1 {
     class applist_server : public service::server {
         /*! \brief Get the number of screen shared for an app. 
          * 
-         * arg0: pointer to the number of screen
-         * arg1: application UID
-         * request_sts: KErrNotFound if app doesn't exist
+         * \param arg0: pointer to the number of screen.
+         * \param arg1: application UID.
+         * \param request_sts: KErrNotFound if app doesn't exist.
         */
         void default_screen_number(service::ipc_context ctx);
 
         /*! \brief Get the application language.
          *
-         * arg0: App's uid3
-         * arg1: App language
+         * \param arg0: App's uid3.
+         * \param arg1: App language.
          *
          * Expected request status: KErrNone. 
         */

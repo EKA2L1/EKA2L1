@@ -33,9 +33,22 @@ namespace eka2l1 {
         struct rom_entry;
     }
 
+    /*! \brief The seek mode of the file. */
     enum class file_seek_mode {
+        //! Seeking from the beginning of the file.
+        /*! This set the seek cursor to the offset.*/
         beg,
+
+        //! Seeking from the current seek cursor
+        /*! This set the seek cursor to be the current position of 
+         * the seek cursor, plus with the offset provided.
+         */
         crr,
+
+        //! Seeking from the end of the file
+        /*! This set the seek cursor to be the end of the file, plus
+         * the provided offset.
+         */
         end
     };
 
@@ -44,32 +57,89 @@ namespace eka2l1 {
 #define APPEND_MODE 0x300
 #define BIN_MODE 0x400
 
-    // A file abstraction
+    /*! \brief The file abstraction for VFS class
+     *
+     * This class contains all virtual method for virtual file (ROM file
+     * and actual physical file).
+    */
     struct file {
+        /*! \brief Write to the file. 
+         *
+         * Write binary data to a file open with WRITE_MODE
+         * 
+         * \param data Pointer to the binary data.
+         * \param size The size of each element the binary data
+         * \param count Total element count.
+         *
+         * \returns Total bytes wrote. -1 if fail.
+         */
         virtual int write_file(void *data, uint32_t size, uint32_t count) = 0;
+
+        /*! \brief Read from the file. 
+         *
+         * Read from the file to the specified pointer
+         * 
+         * \param data Pointer to the destination.
+         * \param size The size of each element to read
+         * \param count Total element count.
+         *
+         * \returns Total bytes read. -1 if fail.
+         */
         virtual int read_file(void *data, uint32_t size, uint32_t count) = 0;
 
+        /*! \brief Get the file mode which specified with VFS system. 
+         * \returns The file mode.
+         */
         virtual int file_mode() const = 0;
 
+        /*! \brief Get the full path of the file. 
+         * \returns The full path of the file.
+         */
         virtual std::u16string file_name() const = 0;
 
+        /*! \brief Size of the file. 
+         * \returns The size of the file.
+        */
         virtual uint64_t size() const = 0;
 
+        /*! \brief Seek the file with specified mode. 
+         */
         virtual void seek(int seek_off, file_seek_mode where) = 0;
+
+        /*! \brief Get the position of the seek cursor.
+         * \returns The position of the seek cursor.
+         */
         virtual uint64_t tell() = 0;
 
+        /*! \brief Close the file. 
+         * \returns True if file is closed successfully.
+         */
         virtual bool close() = 0;
 
+        /*! \brief Please don't use this. */
         virtual std::string get_error_descriptor() = 0;
     };
 
     using symfile = std::shared_ptr<file>;
 
+    /*! \brief A VFS drive. */
     struct drive {
+        //! Attribute that true if the drive is in memory
+        /*! Some drives are in the memory. This included Z: (ROM region)
+         * and D: (small RAM region).
+        */
         bool is_in_mem;
 
+        //! The name of the drive.
+        /*! Lowercase of uppercase (c: or C:) doesn't matter. Like Windows,
+         * path in Symbian are insensitive.
+        */
         std::string drive_name;
-        std::string real_path; // This exists if the drive is physically available
+
+        //! The physical path of the drive.
+        /*! This exists if the drive is physically available
+        */
+        std::string real_path;
     };
 
     class io_system {
@@ -116,4 +186,3 @@ namespace eka2l1 {
         std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
     };
 }
-

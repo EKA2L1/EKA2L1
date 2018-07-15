@@ -131,9 +131,6 @@ namespace eka2l1::epoc {
         return static_cast<TInt>(slot->data_size);
     }
 
-    /*! \brief Get the environment data parameter. 
-     * \returns The slot data size, else error code
-     */
     BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get_process(kern->crr_process());
@@ -337,7 +334,7 @@ namespace eka2l1::epoc {
     /* CHUNK */
     /*********************************/
 
-    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<epoc::TDesC8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate) {
+    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<eka2l1::epoc::TDesC8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -427,7 +424,7 @@ namespace eka2l1::epoc {
                 return chunk->decommit(a1, a2);
 
             case 4: // Allocate. Afaik this adds more commit size
-                return chunk->adjust(a1 + chunk->get_size());
+                return chunk->allocate(a1);
 
             case 5:
             case 6:
@@ -477,9 +474,6 @@ namespace eka2l1::epoc {
     /* Thread independent */
     /**********************************************/
 
-    /*! \brief Close a handle. If there is no duplicate handle or another reference handle open, 
-     *  call Destroy to destroy the kernel object 
-     */
     BRIDGE_FUNC(TInt, HandleClose, TInt aHandle) {
         if (aHandle & 0x8000) {
             return false;
@@ -494,7 +488,6 @@ namespace eka2l1::epoc {
         return KErrBadHandle;
     }
 
-    /*! \brief Duplicate the handle. Create another reference to the real kernel object. */
     BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, TOwnerType aOwnerType, TInt aDupHandle) {
         if (aDupHandle & 0x8000) {
             aDupHandle &= ~0x8000;
@@ -507,29 +500,6 @@ namespace eka2l1::epoc {
             (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread);
     }
 
-    enum TObjectType {
-        EThread = 0,
-        EProcess,
-        EChunk,
-        ELibrary,
-        ESemaphore,
-        EMutex,
-        ETimer,
-        EServer,
-        ESession,
-        ELogicalDevice,
-        EPhysicalDevice,
-        ELogicalChannel,
-        EChangeNotifier,
-        EUndertaker,
-        EMsgQueue,
-        EPropertyRef,
-        ECondVar,
-        EShPool,
-        EShBuf,
-        ENumObjectTypes, // number of DObject-derived types
-        EObjectTypeAny = -1
-    };
 
     BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<epoc::TDesC8> aName, TInt aOwnerType) {
         kernel_system *kern = sys->get_kernel_system();
@@ -597,7 +567,7 @@ namespace eka2l1::epoc {
     /*  THREAD  */
     /************************/
 
-    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<epoc::TDesC8> aName) {
+    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<TDesC8> aName) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
