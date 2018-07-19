@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <manager/package_manager.h>
+#include <core/manager/package_manager.h>
 
 namespace eka2l1 {
     class manager_system {

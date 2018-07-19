@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <core.h>
-#include <core_api.h>
+#include <core/core.h>
+#include <core/core_api.h>
 #include <vector>
 
 using sys_ptr = std::unique_ptr<eka2l1::system>;

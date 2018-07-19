@@ -1,6 +1,6 @@
 #pragma once
 
-#include <drivers/shader.h>
+#include <core/drivers/shader.h>
 
 #include <cstdint>
 #include <string>

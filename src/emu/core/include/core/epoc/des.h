@@ -23,7 +23,7 @@
 #include <common/e32inc.h>
 
 #include <e32err.h>
-#include <ptr.h>
+#include <core/ptr.h>
 
 #include <string>
 

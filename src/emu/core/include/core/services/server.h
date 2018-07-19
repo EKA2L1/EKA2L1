@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <kernel/kernel_obj.h>
-#include <services/context.h>
-#include <services/session.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/services/context.h>
+#include <core/services/session.h>
 
 #include <functional>
 #include <queue>

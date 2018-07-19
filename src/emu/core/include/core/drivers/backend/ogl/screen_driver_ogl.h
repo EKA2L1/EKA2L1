@@ -21,7 +21,7 @@
 
 #include <common/vecx.h>
 
-#include <drivers/screen_driver.h>
+#include <core/drivers/screen_driver.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 

@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include <ptr.h>
+#include <core/ptr.h>
 
 namespace YAML {
     class Node;
@@ -50,11 +50,13 @@ namespace eka2l1 {
 
     namespace kernel {
         class chunk;
+        class process;
     }
 
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
+    using process_ptr = std::shared_ptr<kernel::process>;
 
-   namespace loader {
+    namespace loader {
         struct eka2img;
         struct romimg;
 
@@ -69,12 +71,12 @@ namespace eka2l1 {
             loader::e32img_ptr img;
             bool is_xip;
             bool is_rom;
-            std::vector<uint32_t> loader;
+            std::vector<process_ptr> loader;
         };
 
         struct romimg_inf {
             loader::romimg_ptr img;
-            std::vector<uint32_t> loader;
+            std::vector<process_ptr> loader;
         };
 
         /*! \brief Manage libraries and HLE functions.
@@ -102,8 +104,8 @@ namespace eka2l1 {
             kernel_system *kern;
             system *sys;
 
-            chunk_ptr custom_stub;
-            chunk_ptr stub;
+            uint32_t custom_stub;
+            uint32_t stub;
 
             ptr<uint32_t> stub_ptr;
             ptr<uint32_t> custom_stub_ptr;

@@ -17,25 +17,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <core_kernel.h>
-#include <process.h>
 
-namespace eka2l1 {
+#include <core/core_kernel.h>
+#include <core/core_mem.h>
+
+#include <core/kernel/process.h>
+#include <core/kernel/scheduler.h>
+
+namespace eka2l1::kernel {
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
-        const std::string &process_name, const std::u16string &exe_path, const std::u16string &cmd_args, loader::e32img_ptr &img)
-        : uid(uid)
+        const std::string &process_name, const std::u16string &exe_path, 
+        const std::u16string &cmd_args, loader::e32img_ptr &img)
+        : kernel_obj(kern, process_name, access_type::local_access) 
+        , uid(uid)
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
         , img(img)
         , exe_path(exe_path)
-        , cmd_args(cmd_args) {
-        prthr = kern->add_thread(kernel::owner_type::process, uid, kernel::access_type::local_access, process_name, img->rt_code_addr + img->header.entry_point,
+        , cmd_args(cmd_args) 
+        , page_tab(mem->get_page_size())
+        , process_handles(kern, handle_array_owner::process) {
+        obj_type = kernel::object_type::process;
+
+        // Preserve the page table
+        page_table *tab = mem->get_current_page_table();
+        mem->set_current_page_table(page_tab);
+
+        primary_thread = kern->create_thread(kernel::owner_type::kernel, nullptr, kernel::access_type::local_access,
+            process_name,
+            img->rt_code_addr + img->header.entry_point,
             img->header.stack_size, img->header.heap_size_min, img->header.heap_size_max,
             nullptr, kernel::priority_normal);
 
         args[0].data_size = 0;
         args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D
+
+        if (tab)
+            mem->set_current_page_table(*tab);
     }
 
     void process::set_arg_slot(uint8_t slot, uint32_t data, size_t data_size) {
@@ -55,20 +74,26 @@ namespace eka2l1 {
         return args[slot];
     }
 
-    bool process::stop() {
-        prthr->stop();
-        kern->destroy_thread(prthr->unique_id());
-        return true;
-    }
-
-    // Create a new thread and run
-    // No arguments provided
-    bool process::run() {
-        return kern->run_thread(prthr->unique_id());
-    }
-
     process_uid_type process::get_uid_type() {
         return std::tuple(0x1000007A, 0x100039CE, uid);
+    }
+
+    kernel_obj_ptr process::get_object(uint32_t handle) {
+        return process_handles.get_object(handle);
+    }
+
+    bool process::run() {
+        thread_ptr thr = kern->get_thread_by_handle(primary_thread);
+
+        if (!thr) {
+            return false;
+        }
+
+        thr->owning_process(kern->get_process(obj_name));
+
+        kern->run_thread(primary_thread);
+
+        return true;
     }
 }
 

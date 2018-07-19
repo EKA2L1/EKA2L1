@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include <hle/libmanager.h>
+#include <core/hle/libmanager.h>
 
 // A lightweight loader based on elf2e32
 
@@ -191,8 +191,8 @@ namespace eka2l1 {
             uint32_t rt_code_addr;
             uint32_t rt_data_addr;
 
-            chunk_ptr code_chunk;
-            chunk_ptr data_chunk;
+            uint32_t code_chunk;
+            uint32_t data_chunk;
 
             bool has_extended_header = false;
         };

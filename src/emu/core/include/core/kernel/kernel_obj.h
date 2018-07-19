@@ -53,45 +53,32 @@ namespace eka2l1 {
             sema,
             mutex,
             timer,
-            chunk
+            chunk,
+            server,
+            session,
+            prop,
+            process
         };
 
         /*! \brief Base class for all kernel object. */
         class kernel_obj {
         protected:
+            friend class kernel_system;
+
             //! The name of the object
             /*! Even local object will have a randomized name in here.
             */
             std::string obj_name;
 
-            //! The object ID.
-            uid obj_id;
-
-            bool obj_user_closeable = true;
-
             kernel_system *kern;
-
-            //! Owner UID.
-            /*! If the owner_type is process, this will contains the process index in the kernel
-               Else, it will contains the thread's id
-            */
-            kernel::uid owner;
-            kernel::owner_type owner_type;
 
             access_type access;
             object_type obj_type;
 
-            kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner,
+            kernel_obj(kernel_system *kern, const std::string &obj_name,
                 kernel::access_type access = access_type::local_access);
 
-            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner,
-                kernel::access_type access = access_type::local_access)
-                : obj_id(obj_id)
-                , obj_name(obj_name)
-                , kern(kern)
-                , owner(owner)
-                , owner_type(owner_type)
-                , access(access) {}
+            int access_count = 0;
 
         public:
             /*! \brief Get the name of the object.
@@ -101,40 +88,11 @@ namespace eka2l1 {
                 return obj_name;
             }
 
-            /*! \brief Get the unique id of object. 
-                \returns The unique id.
-            */
-            uid unique_id() const {
-                return obj_id;
-            }
-
             /*! \brief Get the kernel system that own this object. 
                 \returns The kernel system.
             */
             kernel_system *get_kernel_object_owner() const {
                 return kern;
-            }
-
-            bool user_closeable() const {
-                return obj_user_closeable;
-            }
-
-            void user_closeable(bool opt) {
-                obj_user_closeable = opt;
-            }
-
-            /*! \brief Get the id of the owner. 
-                \returns The owner id.
-            */
-            kernel::uid obj_owner() const {
-                return owner;
-            }
-
-            /*! \brief Get owner type. 
-                \returns Owner type.
-            */
-            kernel::owner_type get_owner_type() const {
-                return owner_type;
             }
 
             kernel::access_type get_access_type() const {
@@ -149,14 +107,15 @@ namespace eka2l1 {
                 return obj_type;
             }
 
-            void set_owner_type(kernel::owner_type new_owner) {
-                owner_type = new_owner;
-            }
+            void increase_access_count() { access_count++; }
+            void decrease_access_count() { access_count--;  };
+
+            int get_access_count() { return access_count; }
 
             /*! \brief Rename the kernel object. 
              * \param new_name The new name of object.
              */
-            void rename(const std::string &new_name) {
+            virtual void rename(const std::string &new_name) {
                 obj_name = new_name;
             }
         };

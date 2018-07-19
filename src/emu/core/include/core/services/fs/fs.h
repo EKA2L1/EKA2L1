@@ -20,11 +20,10 @@
 
 #pragma once
 
-#include <services/context.h>
-#include <services/server.h>
+#include <core/services/context.h>
+#include <core/services/server.h>
 
-#include <handle_table.h>
-
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 
@@ -90,13 +89,19 @@ namespace eka2l1 {
 
         void open_dir(service::ipc_context ctx);
 
-        handle_table<512> file_handles;
         std::unordered_map<uint32_t, fs_node> file_nodes;
 
         int new_node(io_system *io, std::u16string name, int org_mode, bool overwrite = false);
         fs_node *get_file_node(int handle);
 
-    public:
-        fs_server(system *sys);
+        std::atomic<uint32_t> counter;
+
+        uint32_t next_handle() {
+            ++counter;
+            return counter.load();
+        }
+
+        public : 
+            fs_server(system *sys);
     };
 }

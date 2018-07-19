@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <kernel/wait_obj.h>
+#include <core/kernel/wait_obj.h>
 
 namespace eka2l1 {
     class memory_system;
@@ -34,14 +34,12 @@ namespace eka2l1 {
             semaphore(kernel_system *sys, std::string sema_name,
                 int32_t init_count,
                 int32_t max_count,
-                kernel::owner_type own_type,
-                kernel::uid own_id,
                 kernel::access_type access = access_type::local_access);
 
             int32_t release(int32_t release_count);
 
-            bool should_wait(kernel::uid thr_id) override;
-            void acquire(kernel::uid thr_id) override;
+            bool should_wait(thread_ptr thr) override;
+            void acquire(thread_ptr thr) override;
 
             void wait();
         };

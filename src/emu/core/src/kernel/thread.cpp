@@ -20,13 +20,15 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/random.h>
 #include <common/log.h>
-#include <core_kernel.h>
-#include <core_mem.h>
-#include <kernel/mutex.h>
-#include <kernel/sema.h>
-#include <kernel/thread.h>
-#include <ptr.h>
+
+#include <core/core_kernel.h>
+#include <core/core_mem.h>
+#include <core/kernel/mutex.h>
+#include <core/kernel/sema.h>
+#include <core/kernel/thread.h>
+#include <core/ptr.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -109,100 +111,69 @@ namespace eka2l1 {
             memcpy(stack_ptr.get(mem), &info, 0x40);
         }
 
-        thread::thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+        thread::thread(kernel_system *kern, memory_system *mem, process_ptr owner,
+            kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
             ptr<void> usrdata,
             thread_priority pri)
-            : wait_obj(kern, name, owner, owner_id, access)
+            : wait_obj(kern, name, access)
+            , own_process(owner)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
-            , mem(mem) {
+            , mem(mem) 
+            , thread_handles(kern, handle_array_owner::thread) {
             obj_type = object_type::thread;
 
             priority = caculate_thread_priority(pri);
 
-            stack_chunk = kern->create_chunk("stackThreadID" + common::to_string(obj_id), 0, stack_size, stack_size, prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+            /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
+
+            stack_chunk = kern->create_chunk("", 0, common::align(stack_size, mem->get_page_size()), common::align(stack_size, mem->get_page_size()), prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
             name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
-            //tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
-            //    chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+            request_sema = kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, 150, owner_type::kernel);
 
-            request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 0, 150, owner_type::thread);
-
-            sync_msg = kern->create_msg(owner_type::process);
+            sync_msg = kern->create_msg(owner_type::kernel);
 
             /* Create TDesC string. Combine of string length and name data (USC2) */
 
             std::u16string name_16(name.begin(), name.end());
 
-            memcpy(name_chunk->base().get(mem), name_16.data(), name.length() * 2);
+            chunk_ptr name_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
+            chunk_ptr stack_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
+
+            memcpy(name_chunk_ptr->base().get(mem), name_16.data(), name.length() * 2);
 
             const size_t metadata_size = 0x40;
 
             // Left the space for the program to put thread create information
-            const address stack_top = stack_chunk->base().ptr_address() + stack_size - metadata_size;
+            const address stack_top = stack_chunk_ptr->base().ptr_address() + stack_size - metadata_size;
 
-            ptr<uint8_t> stack_phys_beg(stack_chunk->base().ptr_address());
-            ptr<uint8_t> stack_phys_end(stack_chunk->base().ptr_address() + stack_size);
+            ptr<uint8_t> stack_phys_beg(stack_chunk_ptr->base().ptr_address());
+            ptr<uint8_t> stack_phys_end(stack_top);
+
+            uint8_t *start = stack_phys_beg.get(mem);
+            uint8_t *end = stack_phys_end.get(mem);
 
             // Fill the stack with garbage
-            std::fill(stack_phys_beg.get(mem), stack_phys_end.get(mem), 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk->base().ptr_address(), epa);
+            std::fill(start, end, 0xcc);
+            create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk_ptr->base().ptr_address(), epa);
 
             reset_thread_ctx(epa, stack_top);
             scheduler = kern->get_thread_scheduler();
         }
-
-        bool thread::sleep(int64_t ns) {
-            state = thread_state::wait;
-            return scheduler->sleep(obj_id, ns);
-        }
-
-        bool thread::run() {
-            state = thread_state::run;
-            kern->run_thread(obj_id);
-
-            return true;
-        }
-
-        bool thread::stop() {
-            scheduler->unschedule_wakeup();
-
-            if (state == thread_state::ready) {
-                scheduler->unschedule(obj_id);
-            }
-
-            state = thread_state::stop;
-
-            wake_up_waiting_threads();
-
-            if (waits.size() > 0)
-                for (auto &thr : waits) {
-                    thr->erase_waiting_thread(thr->unique_id());
-                }
-
-            waits.clear();
-
-            scheduler->reschedule();
-
-            return true;
-        }
-
-        bool thread::resume() {
-            return scheduler->resume(obj_id);
-        }
-
-        bool thread::should_wait(const kernel::uid id) {
+        
+        bool thread::should_wait(thread_ptr thr) {
             return state != thread_state::stop;
         }
 
-        void thread::acquire(const kernel::uid id) {
+        void thread::acquire(thread_ptr thr) {
             // :)
         }
 
@@ -243,16 +214,25 @@ namespace eka2l1 {
             if (state == kernel::thread_state::ready) {
                 scheduler->refresh();
             } else {
-                scheduler->schedule(std::reinterpret_pointer_cast<thread>(kern->get_kernel_obj(obj_id)));
+                // scheduler->schedule(std::reinterpret_pointer_cast<thread>(kern->get_kernel_obj(obj_id)));
             }
         }
 
         void thread::wait_for_any_request() {
-            request_sema->wait();
+            sema_ptr sema = 
+                std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(request_sema));
+
+            sema->wait();
         }
 
         void thread::signal_request() {
-            request_sema->release(1);
+            sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(request_sema));
+
+            sema->release(1);
+        }
+
+        kernel_obj_ptr thread::get_object(uint32_t handle) {
+            return thread_handles.get_object(handle);
         }
     }
 }

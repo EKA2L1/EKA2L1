@@ -1,58 +1,30 @@
-/*
- * Copyright (c) 2018 EKA2L1 Team / Vita3K TEam
- * 
- * This file is part of EKA2L1 project / Vita3K emulator project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
 #include <common/algorithm.h>
 #include <common/log.h>
-#include <common/cvt.h>
-#include <core/ptr.h>
+
+#include <core/core_mem.h>
 
 #include <algorithm>
-#include <cstdint>
-
-#include <functional>
-#include <memory>
-#include <vector>
 
 #ifdef WIN32
 #include <Windows.h>
 #else
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
 #include <errno.h>
 
-namespace eka2l1 {
-    void _free_mem(uint8_t *dt) {
+static void _free_mem(uint8_t *dt) {
 #ifndef WIN32
-        munmap(dt, common::GB(1));
+    munmap(dt, common::GB(1));
 #else
-        VirtualFree(dt, 0, MEM_RELEASE);
+    VirtualFree(dt, 0, MEM_RELEASE);
 #endif
-    }
+}
 
-    void memory_system::shutdown() {
-        mem_pages.clear();
-        memory.reset();
-    }
-
-    void memory_system::init() {
+namespace eka2l1 {
+    void memory_system::init(uint32_t code_ram_addr) {
 #ifdef WIN32
         SYSTEM_INFO system_info = {};
         GetSystemInfo(&system_info);
@@ -62,243 +34,532 @@ namespace eka2l1 {
         page_size = sysconf(_SC_PAGESIZE);
 #endif
 
-        size_t len = common::GB(4);
+        codeseg_addr = code_ram_addr;
+        codeseg_pages.resize(0x10000000 / page_size);
+        codeseg_pointers.resize(0x10000000 / page_size);
 
-#ifndef WIN32
-        memory = mem(static_cast<uint8_t *>(mmap(nullptr, len, PROT_READ,
-                         MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
-            _free_mem);
-#else
-        memory = mem(reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, len, MEM_RESERVE, PAGE_NOACCESS)), _free_mem);
-#endif
-
-        if (!memory) {
-            LOG_CRITICAL("Allocating virtual memory for emulating failed!");
-            return;
-        } else {
-            LOG_INFO("Virtual memory allocated: 0x{:x}", (size_t)memory.get());
-        }
-
-        mem_pages.resize(len / page_size);
-        generations = 0;
+        global_pages.resize(codeseg_pages.size());
+        global_pointers.resize(codeseg_pointers.size());
     }
 
-    ptr<void> memory_system::chunk_range(size_t beg_addr, size_t end_addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
-        // Find the reversed memory with this max grow
-        size_t page_count = (max_grow + page_size - 1) / page_size;
-
-        size_t page_begin_off = (beg_addr + page_size - 1) / page_size;
-        size_t page_end_off = (end_addr - page_size + 1) / page_size;
-
-        const auto& page_begin = mem_pages.rbegin() + mem_pages.size() - page_end_off;
-        const auto& page_end = mem_pages.rbegin() + mem_pages.size() - page_begin_off;
-
-        page holder;
-
-        auto& suitable_pages = std::search_n(page_begin, page_end, page_count, holder, 
-            [](const auto& lhs, const auto& rhs) {
-            return (lhs.sts == page_status::free) && (lhs.generation == 0);
-        });
-
-        uint32_t idx = mem_pages.rend() - suitable_pages - page_count;
-
-        if (suitable_pages != mem_pages.rend()) {
-            return chunk(idx * page_size, bottom, top, max_grow, cprot);
-        }
-
-        return ptr<void>(nullptr);
-    }
-
-    // Create a new chunk with specified address. Return base of chunk
-    ptr<void> memory_system::chunk(address addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
-        max_grow -= max_grow % page_size;
-
-        if (bottom % page_size != 0) {
-            bottom += bottom % page_size;
-        }
-
-        if (top % page_size != 0) {
-            top += top % page_size;
-        }
-
-        top = common::min(top, max_grow);
-
-        size_t page_begin_off = (addr + page_size - 1) / page_size;
-        size_t page_end_off = (addr + max_grow - 1 + page_size) / page_size;
-        
-        const auto& page_begin = mem_pages.begin() + page_begin_off;
-        const auto& page_end = mem_pages.begin() + page_end_off;
-
-        const size_t count = page_end_off - page_begin_off;
-
-        for (auto ite = page_begin; ite != page_end; ite++) {
-            // If the page is not free, than either it's reserved or commited
-            // We can not make a new chunk on those pages
-            if (ite->sts != page_status::free) {
-                return ptr<void>(nullptr);
-            }
-        }
-
-        const gen generation = ++generations;
-
-        // We commit them later, so as well as assigned there protect first
-        page new_page = { generation, page_status::reserved, cprot };
-
-        std::fill(page_begin, page_end, new_page);
-
-        commit(addr + bottom, top - bottom);
-
-        return ptr<void>(addr);
-    }
-
-    // Commit to page
-    int memory_system::commit(ptr<void> addr, size_t size) {
-        address beg = addr.ptr_address() / page_size;
-        address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
-
-        size_t count = end - beg;
-
-        auto& page_begin = mem_pages.begin() + beg;
-        auto& page_end = mem_pages.begin() + end;
-
-        prot nprot = page_begin->protection;
-
-        for (page_begin; page_begin != page_end; page_begin++) {
-            // Can commit on commited region or reserved region
-            if (page_begin->sts == page_status::free) {
-                return -1;
-            }
-
-            page_begin->sts = page_status::committed;
-        }
+    bool memory_system::map_rom(uint32_t addr, const std::string &path) {
+        rom_addr = addr;
 
 #ifdef WIN32
-        DWORD oldprot = 0;
-        auto res = VirtualAlloc(ptr<void>(beg* page_size).get(this), count * page_size, MEM_COMMIT, translate_protection(nprot));
+        HANDLE rom_file_handle = CreateFile(path.c_str(), GENERIC_READ, FILE_SHARE_READ,
+            NULL, OPEN_ALWAYS, NULL, NULL);
 
-        if (!res) {
-            return -1;
-    }
-#else
-        mprotect(ptr<void>(beg).get(this), count * page_size, translate_protection(nprot));
-#endif
-
-        return 0;
-    }
-
-    int memory_system::decommit(ptr<void> addr, size_t size) {
-        address beg = addr.ptr_address() / page_size;
-        address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
-
-        size_t count = end - beg;
-
-        auto& page_begin = mem_pages.begin() + beg;
-        auto& page_end = mem_pages.begin() + end;
-
-        for (page_begin; page_begin != page_end; page_begin++) {
-            if (page_begin->sts == page_status::committed) {
-                page_begin->sts = page_status::reserved;
-            }
-        }
-
-#ifdef WIN32
-        DWORD oldprot = 0;
-        auto res = VirtualFree(ptr<void>(beg * page_size).get(this), count * page_size, MEM_DECOMMIT);
-
-        if (!res) {
-            return -1;
-        }
-#else
-        mprotect(ptr<void>(beg).get(this), count * page_size, PROT_NONE);
-#endif
-        return 0;
-    }
-
-    // Change the prot of pages
-    int memory_system::change_prot(ptr<void> addr, size_t size, prot nprot) {
-        address beg = addr.ptr_address() / page_size;
-        address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
-
-        size_t count = end - beg;
-
-        auto& page_begin = mem_pages.begin() + beg;
-        auto& page_end = mem_pages.begin() + end;
-
-        for (page_begin; page_begin != page_end; page_begin++) {
-            // Only a commited region can have a protection
-            if (page_begin->sts != page_status::committed) {
-                return -1;
-            }
-
-            page_begin->protection = nprot;
-        }
-
-#ifdef WIN32
-        DWORD oldprot = 0;
-        BOOL res = VirtualProtect(ptr<void>(beg * page_size).get(this), count * page_size, translate_protection(nprot), &oldprot);
-
-        if (!res) {
-            return -1;
-        }
-#else
-        mprotect(ptr<void>(beg).get(this), count * page_size, translate_protection(nprot));
-#endif
-
-        return 0;
-    }
-
-    // Mark a chunk at addr as unusable
-    int memory_system::unchunk(ptr<void> addr, size_t length) {
-        address beg = addr.ptr_address() / page_size;
-        address end = (addr.ptr_address() + length - 1 + page_size) / page_size;
-
-        size_t count = end - beg;
-
-        auto& page_begin = mem_pages.begin() + beg;
-        auto& page_end = mem_pages.begin() + end;
-
-        for (page_begin; page_begin != page_end; page_begin++) {
-            page_begin->sts = page_status::free;
-            page_begin->protection = prot::none;
-            page_begin->generation = 0;
-        }
-
-        return 0;
-    }
-
-    // Load the ROM into virtual memory, using ma
-    bool memory_system::load_rom(address addr, const std::string &rom_path) {
-        FILE *f = fopen(rom_path.c_str(), "rb");
-
-        if (f == nullptr) {
+        if (!rom_file_handle) {
             return false;
         }
 
-        fseek(f, 0, SEEK_END);
+        HANDLE rom_map_file_handle = CreateFileMappingA(rom_file_handle, NULL, PAGE_READONLY,
+            0, 0, "MappingRom");
 
-        auto size = ftell(f);
-        auto aligned_size = ((size / page_size) + 1) * (page_size);
-        auto left = size;
-
-        chunk(addr, 0, size, size, prot::read_write);
-
-        fseek(f, 0, SEEK_SET);
-
-        long buf_once = 0;
-
-        ptr<void> start(addr);
-
-        while (left) {
-            buf_once = common::min(left, (long)100000);
-            fread(start.get(this), 1, buf_once, f);
-            start += (address)buf_once;
-
-            left -= buf_once;
+        if (!rom_map_file_handle || rom_map_file_handle == INVALID_HANDLE_VALUE) {
+            return false;
         }
 
-        fclose(f);
+        rom_map = MapViewOfFile(rom_map_file_handle, FILE_MAP_READ,
+            0, 0, 0);
+#else
+        int rom_file_handle = open(path.c_str(), O_RDONLY);
 
+        if (rom_file_handle == -1) {
+            return false;
+        }
+
+        rom_map = mmap(nullptr, 0x3000000, PROT_READ, MAP_PRIVATE,
+            rom_file_handle, 0);
+
+        if (!rom_map) {
+            return false;
+        }
+#endif
+        LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<uint64_t>(rom_map));
         return true;
     }
-}
 
+    void *memory_system::get_real_pointer(address addr) {
+        if (addr >= codeseg_addr && addr < codeseg_addr + 0x10000000) {
+            if (!codeseg_pointers[(addr - codeseg_addr) / page_size].get()) {
+                return nullptr;
+            }
+
+            return static_cast<void *>(codeseg_pointers[(addr - codeseg_addr) / page_size].get() + (addr - codeseg_addr) % page_size);
+        }
+
+        if (addr >= rom_addr && addr < rom_addr + 0x10000000) {
+            return &reinterpret_cast<uint8_t *>(rom_map)[addr - rom_addr];
+        }
+
+        if (addr >= global_data && addr < ram_drive) {
+            if (!global_pointers[(addr - global_data) / page_size].get()) {
+                return nullptr;
+            }
+
+            return static_cast<void *>(global_pointers[(addr - global_data) / page_size].get() + (addr - global_data) % page_size);
+        }
+
+        if (!current_page_table->pointers[addr / page_size].get()) {
+            return nullptr;
+        }
+
+        return static_cast<void *>(current_page_table->pointers[addr / page_size].get() + addr % page_size);
+    }
+
+        // Create a new chunk with specified address. Return base of chunk
+        ptr<void> memory_system::chunk(address addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
+            max_grow -= max_grow % page_size;
+
+            if (bottom % page_size != 0) {
+                bottom += bottom % page_size;
+            }
+
+            if (top % page_size != 0) {
+                top += top % page_size;
+            }
+
+            top = common::min(top, max_grow);
+
+            size_t page_begin_off = (addr + page_size - 1) / page_size;
+            size_t page_end_off = (addr + max_grow - 1 + page_size) / page_size;
+
+            decltype(global_pages)::iterator page_begin;
+            decltype(page_begin) page_end;
+
+            size_t len = common::GB(4);
+
+            if (addr >= global_data && addr < ram_drive) {
+                page_begin = global_pages.begin() + (page_begin_off - (global_data / page_size));
+                page_end = global_pages.begin() + (page_end_off - (global_data / page_size));
+            } else if (addr >= codeseg_addr && addr < codeseg_addr + 0x10000000) {
+                page_begin = codeseg_pages.begin() + (page_begin_off - ((codeseg_addr) / page_size));
+                page_end = codeseg_pages.begin() + (page_end_off - ((codeseg_addr) / page_size));
+            } else {
+                page_begin = current_page_table->pages.begin() + page_begin_off;
+                page_end = current_page_table->pages.begin() + page_end_off;
+            }
+
+            const size_t count = page_end_off - page_begin_off;
+
+            for (auto ite = page_begin; ite != page_end; ite++) {
+                // If the page is not free, than either it's reserved or commited
+                // We can not make a new chunk on those pages
+                if (ite->sts != page_status::free) {
+                    return ptr<void>(nullptr);
+                }
+
+                ite->sts = page_status::reserved;
+            }
+
+            const gen generation = ++generations;
+
+            // We commit them later, so as well as assigned there protect first
+            page new_page = { generation, page_status::reserved, cprot };
+
+            std::fill(page_begin, page_end, new_page);
+
+            if (addr >= global_data && addr < ram_drive) {
+#ifndef WIN32
+                global_pointers[page_begin_off - (global_data / page_size)]
+                    = mem_ptr(
+                        static_cast<uint8_t *>(mmap(nullptr, count * page_size, PROT_READ,
+                            MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
+                        _free_mem);
+#else
+                global_pointers[page_begin_off - (global_data / page_size)]
+                    = mem_ptr(
+                        static_cast<uint8_t *>(VirtualAlloc(nullptr, count * page_size,
+                            MEM_RESERVE, PAGE_NOACCESS)),
+                        _free_mem);
+#endif
+                for (size_t i = page_begin_off - (global_data / page_size) + 1; i < page_end_off - (global_data / page_size); i++) {
+                    global_pointers[i] = mem_ptr(global_pointers[i - 1].get() + page_size);
+                }
+            } else if (addr >= ram_code_addr && addr < codeseg_addr + 0x10000000) {
+#ifndef WIN32
+                codeseg_pointers[page_begin_off - (ram_code_addr / page_size)]
+                    = mem_ptr(
+                        static_cast<uint8_t *>(mmap(nullptr, count * page_size, PROT_READ,
+                            MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
+                        _free_mem);
+#else
+                codeseg_pointers[page_begin_off - (ram_code_addr / page_size)]
+                    = mem_ptr(
+                        reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, count * page_size,
+                            MEM_RESERVE, PAGE_NOACCESS)),
+                        _free_mem);
+
+                //LOG_TRACE("PA: 0x{:x}", (uint64_t)codeseg_pointers[page_begin_off - (ram_code_addr / page_size)].get());
+#endif
+                for (size_t i = page_begin_off - (ram_code_addr / page_size) + 1; i < page_end_off - (ram_code_addr / page_size); i++) {
+                    codeseg_pointers[i] = mem_ptr(codeseg_pointers[i - 1].get() + page_size);
+                }
+            } else {
+#ifndef WIN32
+                current_page_table->pointers[page_begin_off]
+                    = mem_ptr(
+                        static_cast<uint8_t *>(mmap(nullptr, count * page_size, PROT_READ,
+                            MAP_ANONYMOUS | MAP_PRIVATE, 0, 0)),
+                        _free_mem);
+#else
+                current_page_table->pointers[page_begin_off]
+                    = mem_ptr(
+                        reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, count * page_size,
+                            MEM_RESERVE, PAGE_NOACCESS)),
+                        _free_mem);
+#endif
+                for (size_t i = page_begin_off + 1; i < page_end_off; i++) {
+                    current_page_table->pointers[i] = mem_ptr(current_page_table->pointers[i - 1].get() + page_size);
+                }
+            }
+
+            commit(addr + bottom, top - bottom);
+
+            return ptr<void>(addr);
+        }
+
+        ptr<void> memory_system::chunk_range(size_t beg_addr, size_t end_addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
+            // Find the reversed memory with this max grow
+            size_t page_count = (max_grow + page_size - 1) / page_size;
+
+            size_t page_begin_off = (beg_addr + page_size - 1) / page_size;
+            size_t page_end_off = (end_addr - page_size + 1) / page_size;
+
+            decltype(global_pages)::reverse_iterator page_begin;
+            decltype(page_begin) page_end;
+
+            size_t len = common::GB(4);
+
+            if (beg_addr >= global_data && beg_addr < ram_drive) {
+                page_begin = global_pages.rbegin() + ((ram_drive / page_size) - page_end_off);
+                page_end = global_pages.rbegin() + ((ram_drive / page_size) - page_begin_off);
+            } else if (beg_addr >= codeseg_addr && beg_addr < codeseg_addr + 0x10000000) {
+                page_begin = codeseg_pages.rbegin() + (((codeseg_addr + 0x10000000) / page_size) - page_end_off);
+                page_end = codeseg_pages.rbegin() + (((codeseg_addr + 0x10000000) / page_size) - page_begin_off);
+            } else {
+                page_begin = current_page_table->pages.rbegin() + ((len / page_size) - page_end_off);
+                page_end = current_page_table->pages.rbegin() + ((len / page_size) - page_begin_off);
+            }
+
+            page holder;
+
+            auto &suitable_pages = std::search_n(page_begin, page_end, page_count, holder,
+                [](const auto &lhs, const auto &rhs) {
+                    return (lhs.sts == page_status::free) && (lhs.generation == 0);
+                });
+
+            uint32_t idx;
+
+            if (beg_addr >= global_data && beg_addr < ram_drive) {
+                idx = global_pages.rend() - suitable_pages - page_count;
+
+                if (suitable_pages != global_pages.rend()) {
+                    return chunk(global_data + idx * page_size, bottom, top, max_grow, cprot);
+                }
+            } else if (beg_addr >= ram_code_addr && beg_addr < codeseg_addr + 0x10000000) {
+                idx = codeseg_pages.rend() - suitable_pages - page_count;
+
+                if (suitable_pages != codeseg_pages.rend()) {
+                    return chunk(ram_code_addr + idx * page_size, bottom, top, max_grow, cprot);
+                }
+            }
+
+            idx = current_page_table->pages.rend() - suitable_pages - page_count;
+
+            if (suitable_pages != current_page_table->pages.rend()) {
+                return chunk(idx * page_size, bottom, top, max_grow, cprot);
+            }
+
+            return ptr<void>(nullptr);
+        }
+
+        // Change the prot of pages
+        int memory_system::change_prot(ptr<void> addr, size_t size, prot nprot) {
+            address beg = addr.ptr_address() / page_size;
+            address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
+
+            size_t count = end - beg;
+
+            decltype(global_pages)::iterator page_begin;
+            decltype(page_begin) page_end;
+
+            size_t len = common::GB(4);
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+                page_begin = global_pages.begin() + (beg - (global_data / page_size));
+                page_end = global_pages.begin() + (end - (global_data / page_size));
+            } else if (addr.ptr_address() >= codeseg_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+                page_begin = codeseg_pages.begin() + (beg - ((codeseg_addr) / page_size));
+                page_end = codeseg_pages.begin() + (end - ((codeseg_addr) / page_size));
+            } else {
+                page_begin = current_page_table->pages.begin() + beg;
+                page_end = current_page_table->pages.begin() + end;
+            }
+
+            for (page_begin; page_begin != page_end; page_begin++) {
+                // Only a commited region can have a protection
+                if (page_begin->sts != page_status::committed) {
+                    return -1;
+                }
+
+                page_begin->page_protection = nprot;
+            }
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+#ifdef WIN32
+                DWORD oldprot = 0;
+                auto res = VirtualProtect(global_pointers[(beg - (global_data / page_size)) * page_size].get(),
+                    count * page_size, translate_protection(nprot), &oldprot);
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(global_pointers[(beg - (global_data / page_size)) * page_size].get(),
+                    count * page_size, translate_protection(nprot));
+#endif
+            } else if (addr.ptr_address() >= codeseg_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+#ifdef WIN32
+                DWORD oldprot = 0;
+                auto res = VirtualProtect(codeseg_pointers[(beg - (ram_code_addr / page_size)) * page_size].get(),
+                    count * page_size, translate_protection(nprot), &oldprot);
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(codeseg_pointers[(beg - (ram_code_addr / page_size)) * page_size].get(),
+                    count * page_size, translate_protection(nprot));
+#endif
+            } else {
+#ifdef WIN32
+                DWORD oldprot = 0;
+                auto res = VirtualProtect(current_page_table->pointers[beg].get(),
+                    count * page_size, translate_protection(nprot), &oldprot);
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(current_page_table->pointers[beg].get(),
+                    count * page_size, translate_protection(nprot));
+#endif
+            }
+
+            return 0;
+        }
+
+        // Mark a chunk at addr as unusable
+        int memory_system::unchunk(ptr<void> addr, size_t length) {
+            address beg = addr.ptr_address() / page_size;
+            address end = (addr.ptr_address() + length - 1 + page_size) / page_size;
+
+            size_t count = end - beg;
+
+            decltype(global_pages)::iterator page_begin;
+            decltype(page_begin) page_end;
+
+            size_t len = common::GB(4);
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+                page_begin = global_pages.begin() + (beg - (global_data / page_size));
+                page_end = global_pages.begin() + (end - (global_data / page_size));
+            } else if (addr.ptr_address() >= codeseg_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+                page_begin = codeseg_pages.begin() + (beg - ((codeseg_addr) / page_size));
+                page_end = codeseg_pages.begin() + (end - ((codeseg_addr) / page_size));
+            } else {
+                page_begin = current_page_table->pages.begin() + beg;
+                page_end = current_page_table->pages.begin() + end;
+            }
+
+            for (page_begin; page_begin != page_end; page_begin++) {
+                page_begin->sts = page_status::free;
+                page_begin->page_protection = prot::none;
+                page_begin->generation = 0;
+            }
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+                global_pointers[(beg - (global_data / page_size)) * page_size].reset();
+            } else if (addr.ptr_address() >= ram_code_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+                codeseg_pointers[(beg - (ram_code_addr / page_size)) * page_size].reset();
+            } else {
+                current_page_table->pointers[beg].reset();
+            }
+
+            return 0;
+        }
+
+        // Commit to page
+        int memory_system::commit(ptr<void> addr, size_t size) {
+            address beg = addr.ptr_address() / page_size;
+            address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
+
+            size_t count = end - beg;
+
+            decltype(global_pages)::iterator page_begin;
+            decltype(page_begin) page_end;
+
+            size_t len = common::GB(4);
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+                page_begin = global_pages.begin() + (beg - (global_data / page_size));
+                page_end = global_pages.begin() + (end - (global_data / page_size));
+            } else if (addr.ptr_address() >= codeseg_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+                page_begin = codeseg_pages.begin() + (beg - ((codeseg_addr) / page_size));
+                page_end = codeseg_pages.begin() + (end - ((codeseg_addr) / page_size));
+            } else {
+                page_begin = current_page_table->pages.begin() + beg;
+                page_end = current_page_table->pages.begin() + end;
+            }
+
+            prot nprot = page_begin->page_protection;
+
+            for (page_begin; page_begin != page_end; page_begin++) {
+                // Can commit on commited region or reserved region
+                if (page_begin->sts == page_status::free) {
+                    return -1;
+                }
+
+                page_begin->sts = page_status::committed;
+            }
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+#ifdef WIN32
+                DWORD oldprot = 0;
+                auto res = VirtualAlloc(global_pointers[beg - (global_data / page_size)].get(),
+                    count * page_size, MEM_COMMIT, translate_protection(nprot));
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(global_pointers[beg - (global_data / page_size)].get(),
+                    count * page_size, translate_protection(nprot));
+#endif
+            } else if (addr.ptr_address() >= codeseg_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+#ifdef WIN32
+                DWORD oldprot = 0;
+                auto res = VirtualAlloc(codeseg_pointers[beg - (codeseg_addr / page_size)].get(),
+                    count * page_size, MEM_COMMIT, translate_protection(nprot));
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(codeseg_pointers[beg - (ram_code_addr / page_size)].get(),
+                    count * page_size, translate_protection(nprot));
+#endif
+            } else {
+#ifdef WIN32
+                DWORD oldprot = 0;
+                auto res = VirtualAlloc(current_page_table->pointers[beg].get(),
+                    count * page_size, MEM_COMMIT, translate_protection(nprot));
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(current_page_table->pointers[beg].get(),
+                    count * page_size, translate_protection(nprot));
+#endif
+            }
+
+            return 0;
+        }
+
+        // Decommit
+        int memory_system::decommit(ptr<void> addr, size_t size) {
+            address beg = addr.ptr_address() / page_size;
+            address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
+
+            size_t count = end - beg;
+
+            decltype(global_pages)::iterator page_begin;
+            decltype(page_begin) page_end;
+
+            size_t len = common::GB(4);
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+                page_begin = global_pages.begin() + (beg - (global_data / page_size));
+                page_end = global_pages.begin() + (end - (global_data / page_size));
+            } else if (addr.ptr_address() >= codeseg_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+                page_begin = codeseg_pages.begin() + (beg - ((codeseg_addr) / page_size));
+                page_end = codeseg_pages.begin() + (end - ((codeseg_addr) / page_size));
+            } else {
+                page_begin = current_page_table->pages.begin() + beg;
+                page_end = current_page_table->pages.begin() + end;
+            }
+
+            prot nprot = page_begin->page_protection;
+
+            for (page_begin; page_begin != page_end; page_begin++) {
+                if (page_begin->sts == page_status::committed) {
+                    page_begin->sts = page_status::reserved;
+                }
+            }
+
+            if (addr.ptr_address() >= global_data && addr.ptr_address() < ram_drive) {
+#ifdef WIN32
+                auto res = VirtualFree(global_pointers[(beg - (global_data / page_size)) * page_size].get(),
+                    count * page_size, MEM_DECOMMIT);
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(global_pointers[(beg - (global_data / page_size)) * page_size].get(),
+                    count * page_size, PROT_NONE);
+#endif
+            } else if (addr.ptr_address() >= ram_code_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
+#ifdef WIN32
+                auto res = VirtualFree(codeseg_pointers[(beg - (ram_code_addr / page_size)) * page_size].get(),
+                    count * page_size, MEM_DECOMMIT);
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(codeseg_pointers[(beg - (ram_code_addr / page_size)) * page_size].get(),
+                    count * page_size, PROT_NONE);
+#endif
+            } else {
+#ifdef WIN32
+                auto res = VirtualFree(current_page_table->pointers[beg].get(),
+                    count * page_size, MEM_DECOMMIT);
+
+                if (!res) {
+                    return -1;
+                }
+#else
+                mprotect(current_page_table->pointers[beg].get(),
+                    count * page_size, PROT_NONE);
+#endif
+            }
+
+            return 0;
+        }
+
+        void memory_system::read(address addr, void *data, size_t size) {
+            void *fptr = get_real_pointer(addr);
+
+            if (fptr == nullptr) {
+                LOG_WARN("Reading invalid address: 0x{:x}", addr);
+                return;
+            }
+
+            memcpy(data, fptr, size);
+        }
+
+        void memory_system::write(address addr, void *data, size_t size) {
+            void *to = get_real_pointer(addr);
+
+            if (to == nullptr) {
+                LOG_WARN("Reading invalid address: 0x{:x}", addr);
+                return;
+            }
+
+            memcpy(to, data, size);
+        }
+    }

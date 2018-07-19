@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/thread.h>
+#include <core/kernel/thread.h>
 
 namespace eka2l1 {
     class system;

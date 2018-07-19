@@ -1,4 +1,4 @@
-#include <drivers/backend/ogl/shader_ogl.h>
+#include <core/drivers/backend/ogl/shader_ogl.h>
 #include <glad/glad.h>
 
 namespace eka2l1 {

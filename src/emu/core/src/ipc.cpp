@@ -1,4 +1,4 @@
-#include <ipc.h>
+#include <core/ipc.h>
 
 namespace eka2l1 {
     ipc_arg::ipc_arg(int arg0, const int aflag) {

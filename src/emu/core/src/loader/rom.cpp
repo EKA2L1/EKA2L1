@@ -19,7 +19,7 @@
  */
 
 #include <common/log.h>
-#include <loader/rom.h>
+#include <core/loader/rom.h>
 
 namespace eka2l1 {
     namespace loader {

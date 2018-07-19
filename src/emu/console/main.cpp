@@ -24,8 +24,8 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
-#include <core.h>
-#include <loader/rom.h>
+#include <core/core.h>
+#include <core/loader/rom.h>
 #include <yaml-cpp/yaml.h>
 
 using namespace eka2l1;

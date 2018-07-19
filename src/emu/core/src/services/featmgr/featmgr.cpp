@@ -18,12 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core.h>
-#include <services/featmgr/featmgr.h>
-#include <services/featmgr/op.h>
+#include <core/core.h>
+#include <core/services/featmgr/featmgr.h>
+#include <core/services/featmgr/op.h>
 
 #include <common/log.h>
-#include <epoc/des.h>
+#include <core/epoc/des.h>
 
 namespace eka2l1 {
     featmgr_server::featmgr_server(system *sys)

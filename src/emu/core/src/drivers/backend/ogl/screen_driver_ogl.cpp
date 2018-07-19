@@ -1,6 +1,7 @@
-#include <drivers/backend/ogl/screen_driver_ogl.h>
+#include <core/drivers/backend/ogl/screen_driver_ogl.h>
+#include <core/drivers/emu_window.h>
+
 #include <common/log.h>
-#include <drivers/emu_window.h>
 #include <glad/glad.h>
 
 namespace eka2l1 {

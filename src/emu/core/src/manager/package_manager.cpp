@@ -20,10 +20,11 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <loader/sis.h>
-#include <loader/sis_script_interpreter.h>
-#include <manager/package_manager.h>
-#include <vfs.h>
+
+#include <core/loader/sis.h>
+#include <core/loader/sis_script_interpreter.h>
+#include <core/manager/package_manager.h>
+#include <core/vfs.h>
 
 #include <fstream>
 #include <yaml-cpp/yaml.h>

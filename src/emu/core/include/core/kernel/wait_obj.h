@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <kernel/kernel_obj.h>
+#include <core/kernel/kernel_obj.h>
 #include <memory>
 #include <vector>
 
@@ -31,18 +31,18 @@ namespace eka2l1 {
 
         class wait_obj : public kernel_obj {
         public:
-            wait_obj(kernel_system *sys, std::string name, kernel::owner_type owner_type, kernel::uid owner_id, kernel::access_type access = access_type::local_access)
-                : kernel_obj(sys, name, owner_type, owner_id, access) {
+            wait_obj(kernel_system *sys, std::string name, kernel::access_type access = access_type::local_access)
+                : kernel_obj(sys, name, access) {
                 waits.clear();
             }
 
             std::vector<thread_ptr> waits;
 
-            virtual bool should_wait(const kernel::uid thr) = 0;
-            virtual void acquire(const kernel::uid thr) = 0;
+            virtual bool should_wait(thread_ptr thr) = 0;
+            virtual void acquire(thread_ptr thr) = 0;
 
             virtual void add_waiting_thread(thread_ptr thr);
-            virtual void erase_waiting_thread(kernel::uid thr);
+            virtual void erase_waiting_thread(thread_ptr thr);
 
             virtual void wake_up_waiting_threads();
             thread_ptr next_ready_thread();

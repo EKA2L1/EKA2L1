@@ -7,7 +7,7 @@ add_library(arm
     jit_factory.cpp
     jit_dynarmic.cpp)
 
-target_include_directories(arm PUBLIC ${CORE_INCLUDE_DIR})
+target_include_directories(arm PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 
 target_link_libraries(arm PUBLIC common)
 target_link_libraries(arm 

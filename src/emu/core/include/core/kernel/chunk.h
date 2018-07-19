@@ -20,9 +20,10 @@
 
 #pragma once
 
+#include <core/kernel/kernel_obj.h>
+#include <core/ptr.h>
+
 #include <common/types.h>
-#include <kernel/kernel_obj.h>
-#include <ptr.h>
 
 #include <cstdint>
 #include <string>
@@ -79,7 +80,7 @@ namespace eka2l1 {
 
         public:
             chunk(kernel_system* kern, memory_system* mem, std::string name, address bottom, const address top, const size_t max_grow_size, prot protection,
-                chunk_type type, chunk_access access, chunk_attrib attrib, kernel::owner_type owner_type, kernel::uid owner);
+                chunk_type type, chunk_access access, chunk_attrib attrib);
 
             /*! \brief Commit to a disconnected chunk. 
 			 *

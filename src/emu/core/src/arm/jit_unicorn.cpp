@@ -17,17 +17,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <arm/jit_unicorn.h>
-#include <cassert>
+
 #include <common/algorithm.h>
 #include <common/log.h>
 #include <common/types.h>
-#include <core_timing.h>
-#include <core.h>
-#include <disasm/disasm.h>
-#include <hle/libmanager.h>
-#include <ptr.h>
+
+#include <core/arm/jit_unicorn.h>
+#include <core/core_timing.h>
+#include <core/core.h>
+#include <core/disasm/disasm.h>
+#include <core/hle/libmanager.h>
+#include <core/ptr.h>
+
 #include <unicorn/unicorn.h>
+
+#include <cassert>
 
 bool noppify_func = false;
 
@@ -51,7 +55,8 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
         return;
     }
 
-    memcpy(&value, eka2l1::ptr<const void>(address).get(jit->get_memory_sys()), size);
+    eka2l1::memory_system *mem = jit->get_memory_sys();
+    mem->read(address, &value, size);
 
     // It's hacky, and im not ok with this
     bool read_log = jit->get_lib_manager()->get_sys()->get_bool_config("log_read");
@@ -70,6 +75,9 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
 
     bool write_log = jit->get_lib_manager()->get_sys()->get_bool_config("log_write");
 
+    eka2l1::memory_system *mem = jit->get_memory_sys();
+    mem->write(address, &value, size);
+
     if (write_log)
         LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
@@ -84,6 +92,22 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     }
 
     jit->save_context(context_debug);
+
+    if (address == 0x80325580) {
+        LOG_TRACE("r0: {:x}, r1: {:x}, r2: {:x}", context_debug.cpu_registers[0], context_debug.cpu_registers[1], context_debug.cpu_registers[2]);
+    
+        struct test {
+            int vtable;
+            int iFbs;
+            int iAddressPointer;
+            int iHandle;
+            int iServerHandle;
+        };
+
+        test *b = eka2l1::ptr<test>(context_debug.cpu_registers[0]).get(jit->get_memory_sys());
+        int a = 5;
+    }
+
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
     bool log_code = jit->get_lib_manager()->get_sys()->get_bool_config("log_code");
@@ -224,11 +248,6 @@ namespace eka2l1 {
             uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), this, 1, 0);
-            // Map for unicorn to run around and play
-            // Sure it won't die
-            // Haha
-            // Haha
-            err = uc_mem_map_ptr(engine, 0, common::GB(4), UC_PROT_ALL, mem->get_mem_start());
             assert(err == UC_ERR_OK);
 
             enable_vfp_fp(engine);

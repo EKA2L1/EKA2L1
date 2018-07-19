@@ -8,7 +8,7 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/applist/op.h
     ${CORE_INCLUDE_DIR}/services/applist/applist.h
     ${CORE_INCLUDE_DIR}/services/featmgr/featmgr.h
-    ${CORE_INCLUDE_DIR}/services/fontbitmap/fontbitmap.h
+    #${CORE_INCLUDE_DIR}/services/fontbitmap/fontbitmap.h
     ${CORE_INCLUDE_DIR}/services/fs/fs.h
     ${CORE_INCLUDE_DIR}/services/window/window.h
     ${CORE_INCLUDE_DIR}/ipc.h
@@ -21,9 +21,9 @@ add_library(services
     applist/applist.cpp
     featmgr/featmgr.cpp
     fs/fs.cpp
-    fontbitmap/fontbitmap.cpp
+    #fontbitmap/fontbitmap.cpp
     window/window.cpp
     ../ipc.cpp)
 
-target_include_directories(services PUBLIC ${CORE_INCLUDE_DIR} ${EPOC32_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR}) 
+target_include_directories(services PUBLIC ${CORE_OUTER_INCLUDE_DIR} ${EPOC32_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR}) 
 target_link_libraries(services PRIVATE epoc common core freetype)

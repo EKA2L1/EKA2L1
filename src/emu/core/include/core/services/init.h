@@ -22,8 +22,9 @@
 
 namespace eka2l1 {
     class system;
-    
+
     namespace service {
+        /*! \brief Initialize all services and properties. */
         void init_services(system *sys);
     }
 }

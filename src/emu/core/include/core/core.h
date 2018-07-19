@@ -19,16 +19,16 @@
  */
 #pragma once
 
-#include <arm/jit_factory.h>
-#include <core_kernel.h>
-#include <core_mem.h>
-#include <core_timing.h>
-#include <disasm/disasm.h>
-#include <hle/libmanager.h>
-#include <loader/rom.h>
-#include <manager/manager.h>
-#include <manager/package_manager.h>
-#include <vfs.h>
+#include <core/arm/jit_factory.h>
+#include <core/core_kernel.h>
+#include <core/core_mem.h>
+#include <core/core_timing.h>
+#include <core/disasm/disasm.h>
+#include <core/hle/libmanager.h>
+#include <core/loader/rom.h>
+#include <core/manager/manager.h>
+#include <core/manager/package_manager.h>
+#include <core/vfs.h>
 
 #include <functional>
 #include <memory>
@@ -37,8 +37,8 @@
 #include <process.h>
 #include <tuple>
 
-#include <drivers/emu_window.h>
-#include <drivers/screen_driver.h>
+#include <core/drivers/emu_window.h>
+#include <core/drivers/screen_driver.h>
 
 namespace eka2l1 {
     namespace epoc {
@@ -58,9 +58,6 @@ namespace eka2l1 {
      * Represents the Symbian system. You can switch the system version dynamiclly.
     */
     class system {
-        //! Pointer to the current process. Unused.
-        process *crr_process;
-
         //! Global lock mutex for system.
         std::mutex mut;
 
@@ -131,7 +128,7 @@ namespace eka2l1 {
 
         system(driver::window_type emu_win_type = driver::window_type::glfw,
             driver::driver_type emu_driver_type = driver::driver_type::opengl,
-            arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
+            arm::jitter_arm_type jit_type = arm::jitter_arm_type::dynarmic)
             : jit_type(jit_type)
             , win_type(emu_win_type)
             , dr_type(emu_driver_type) {}
@@ -150,7 +147,7 @@ namespace eka2l1 {
         }
 
         void init();
-        process *load(uint32_t id);
+        uint32_t load(uint32_t id);
         int loop();
         void shutdown();
 

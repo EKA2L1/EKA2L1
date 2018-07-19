@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <loader/sis_fields.h>
+#include <core/loader/sis_fields.h>
 #include <miniz.h>
 
 #include <common/advstream.h>

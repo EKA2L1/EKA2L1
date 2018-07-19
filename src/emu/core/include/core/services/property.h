@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <kernel/kernel_obj.h>
-#include <ptr.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/ptr.h>
 
 #include <array>
 #include <vector>

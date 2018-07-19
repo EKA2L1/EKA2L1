@@ -23,17 +23,17 @@
 #include <thread>
 
 #include <common/log.h>
-#include <core.h>
-#include <core_kernel.h>
-#include <core_mem.h>
-#include <hle/libmanager.h>
-#include <kernel/scheduler.h>
-#include <kernel/thread.h>
-#include <manager/manager.h>
-#include <ptr.h>
-#include <vfs.h>
+#include <core/core.h>
+#include <core/core_kernel.h>
+#include <core/core_mem.h>
+#include <core/hle/libmanager.h>
+#include <core/kernel/scheduler.h>
+#include <core/kernel/thread.h>
+#include <core/manager/manager.h>
+#include <core/ptr.h>
+#include <core/vfs.h>
 
-#include <services/init.h>
+#include <core/services/init.h>
 
 namespace eka2l1 {
     void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
@@ -46,51 +46,52 @@ namespace eka2l1 {
         sys = esys;
 
         thr_sch = std::make_shared<kernel::thread_scheduler>(this, timing, *cpu);
+
+        kernel_handles = kernel::object_ix(this, kernel::handle_array_owner::kernel);
         service::init_services(sys);
     }
 
     void kernel_system::shutdown() {
         thr_sch.reset();
-
         destroy_all_processes();
-
-        for (auto &thr : threads) {
-            destroy_thread(thr.second->unique_id());
-        }
     }
 
-    kernel::uid kernel_system::next_uid(kernel::owner_type owner, uint64_t owner_id) {
-        int id = kern_obj_handles.new_handle(static_cast<handle_owner_type>(owner), owner_id);
+    bool kernel_system::run_thread(uint32_t handle) {
+        auto res = get_thread_by_handle(handle);
 
-        if (id == -1) {
-            return 0;
-        }
-
-        return static_cast<kernel::uid>(id);
-    }
-
-    bool kernel_system::run_thread(kernel::uid thr_id) {
-        auto res = threads.find(thr_id);
-
-        if (res == threads.end()) {
+        if (!res) {
             return false;
         }
 
-        thr_sch->schedule(res->second);
+        thr_sch->schedule(res);
 
         return true;
+    }
+
+    bool kernel_system::run_process(uint32_t handle) {
+        auto res = get_process(handle);
+
+        if (!res) {
+            return false;
+        }
+
+        return res->run();
     }
 
     thread_ptr kernel_system::crr_thread() {
         return thr_sch->current_thread();
     }
 
-    process *kernel_system::spawn_new_process(std::string &path, std::string name, uint32_t uid) {
+    process_ptr kernel_system::crr_process() {
+        return thr_sch->current_process();
+    }
+
+    uint32_t kernel_system::spawn_new_process(std::string &path, std::string name, uint32_t uid, kernel::owner_type owner) {
         std::u16string path16 = std::u16string(path.begin(), path.end());
         symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
         if (!f) {
-            return nullptr;
+            return 0xFFFFFFFF;
         }
 
         auto temp = loader::parse_eka2img(f, true);
@@ -105,372 +106,259 @@ namespace eka2l1 {
         auto res2 = libmngr->load_e32img(path16);
 
         if (!res2) {
-            return nullptr;
+            return 0xFFFFFFFF;
         }
 
-        crr_process_id = uid;
         libmngr->open_e32img(res2);
         libmngr->patch_hle();
 
-        processes.insert(std::make_pair(uid, std::make_shared<process>(this, mem, uid, name, path16, u"", res2)));
+        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", res2);
+        objects.push_back(std::move(pr));
 
-        LOG_INFO("Process name: {}, uid: 0x{:x} loaded, ready for command to run.", name, uid);
+        uint32_t h = create_handle_lastest(owner);
+        run_process(h);
 
-        crr_process_id = uid;
-
-        return &(*processes[uid]);
+        return h;
     }
 
-    process *kernel_system::spawn_new_process(uint32_t uid) {
+    uint32_t kernel_system::spawn_new_process(uint32_t uid, kernel::owner_type owner) {
         return spawn_new_process(mngr->get_package_manager()->get_app_executable_path(uid),
-            mngr->get_package_manager()->get_app_name(uid), uid);
+            mngr->get_package_manager()->get_app_name(uid), uid, owner);
     }
 
-    bool kernel_system::destroy_process(process *pr) {
-        auto res = processes.find(pr->get_uid());
-
-        if (res == processes.end()) {
-            return false;
-        }
-
-        LOG_TRACE("Shutdown process with UID: 0x{:x}", pr->get_uid());
-
-        pr->stop();
-
-        kern_obj_handles.free_all_handle(pr->get_uid());
-
-        libmngr->close_e32img(pr->get_e32img());
-        processes.erase(pr->get_uid());
-
-        if (processes.size() > 0)
-            crr_process_id = processes.begin()->first;
-        else
-            crr_process_id = 0;
-
-        return true;
-    }
-
-    bool kernel_system::destroy_process(const kernel::uid id) {
-        auto res = processes.find(id);
-
-        if (res == processes.end()) {
-            return false;
-        }
-
-        process_ptr pr = res->second;
-
-        LOG_TRACE("Shutdown process with UID: 0x{:x}", id);
-
-        pr->stop();
-
-        libmngr->close_e32img(pr->get_e32img());
-        processes.erase(id);
-
-        if (processes.size() > 0)
-            crr_process_id = processes.begin()->first;
-        else
-            crr_process_id = 0;
-
-        return true;
-    }
-    // TODO: Fix this poorly written code
     bool kernel_system::destroy_all_processes() {
-        while (processes.size() > 0) {
-            if (!destroy_process(&(*processes.begin()->second))) {
-                return false;
+        for (auto &obj : objects) {
+            if (obj->get_object_type() == kernel::object_type::process) {
+                obj.reset();
             }
         }
 
         return true;
+    }
+
+    process_ptr kernel_system::get_process(std::string &name) {
+        auto pr_find = std::find_if(objects.begin(), objects.end(),
+            [&](auto &obj) {
+                if (obj->get_object_type() == kernel::object_type::process && obj->name() == name) {
+                    return true;
+                }
+            });
+
+        if (pr_find == objects.end()) {
+            return nullptr;
+        }
+
+        return std::dynamic_pointer_cast<kernel::process>(*pr_find);
+    }
+
+    process_ptr kernel_system::get_process(uint32_t handle) {
+        kernel_obj_ptr obj = get_kernel_obj(handle);
+
+        if (!obj || obj->get_object_type() != kernel::object_type::process) {
+            return nullptr;
+        }
+
+        return std::dynamic_pointer_cast<kernel::process>(obj);
     }
 
     void kernel_system::prepare_reschedule() {
         sys->prepare_reschedule();
     }
 
-    kernel::uid kernel_system::get_id_base_owner(kernel::owner_type owner) const {
-        return owner == kernel::owner_type::process ? crr_process_id : (owner == kernel::owner_type::thread ? thr_sch->current_thread()->unique_id() : 0xDDDDDDDD);
+    uint32_t kernel_system::create_handle_lastest(kernel::owner_type owner) {
+        switch (owner) {
+        case kernel::owner_type::kernel:
+            return kernel_handles.add_object(objects.back());
+
+        case kernel::owner_type::process:
+            return crr_process()->process_handles.add_object(objects.back());
+
+        case kernel::owner_type::thread:
+            return crr_thread()->thread_handles.add_object(objects.back());
+
+        default:
+            return -1;
+        }
     }
 
-    chunk_ptr kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
-        kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner, int64_t owner_id) {
-        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib,
-            owner, owner_id < 0 ? get_id_base_owner(owner) : static_cast<kernel::uid>(owner_id));
-        uint32_t id = new_chunk->unique_id();
+    uint32_t kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
+        kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner) {
+        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib);
+        objects.push_back(std::move(new_chunk));
 
-        chunks.emplace(new_chunk->unique_id(), std::move(new_chunk));
-
-        return chunks[id];
+        return create_handle_lastest(owner);
     }
 
-    mutex_ptr kernel_system::create_mutex(std::string name, bool init_locked,
+    uint32_t kernel_system::create_mutex(std::string name, bool init_locked,
         kernel::owner_type own,
-        kernel::uid own_id,
         kernel::access_type access) {
-        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, own,
-            own_id < 0 ? get_id_base_owner(own) : static_cast<kernel::uid>(own_id), access);
+        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, access);
+        objects.push_back(std::move(new_mutex));
 
-        uint32_t id = new_mutex->unique_id();
-
-        mutexes.emplace(new_mutex->unique_id(), std::move(new_mutex));
-
-        return mutexes[id];
+        return create_handle_lastest(own);
     }
 
-    sema_ptr kernel_system::create_sema(std::string sema_name,
+    uint32_t kernel_system::create_sema(std::string sema_name,
         int32_t init_count,
         int32_t max_count,
         kernel::owner_type own_type,
-        kernel::uid own_id,
         kernel::access_type access) {
-        sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, max_count, own_type,
-            own_id < 0 ? get_id_base_owner(own_type) : static_cast<kernel::uid>(own_id), access);
+        sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, max_count, access);
+        objects.push_back(std::move(new_sema));
 
-        uint32_t id = new_sema->unique_id();
-
-        semas.emplace(new_sema->unique_id(), std::move(new_sema));
-
-        return semas[id];
+        return create_handle_lastest(own_type);
     }
 
-    timer_ptr kernel_system::create_timer(std::string name, kernel::reset_type rt,
+    uint32_t kernel_system::create_timer(std::string name, kernel::reset_type rt,
         kernel::owner_type owner,
-        kernel::uid own_id,
         kernel::access_type access) {
-        timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, rt, owner,
-            own_id < 0 ? get_id_base_owner(owner) : static_cast<kernel::uid>(own_id), access);
+        timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, rt, access);
+        objects.push_back(std::move(new_timer));
 
-        uint32_t id = new_timer->unique_id();
-
-        timers.emplace(new_timer->unique_id(), std::move(new_timer));
-
-        return timers[id];
+        return create_handle_lastest(owner);
     }
 
-    bool kernel_system::destroy_timer(kernel::uid id) {
-        auto res = timers.find(id);
-
-        if (res != timers.end()) {
-            timers.erase(id);
-            kern_obj_handles.free_handle(id);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    bool kernel_system::destroy_sema(kernel::uid id) {
-        auto res = semas.find(id);
-
-        if (res != semas.end()) {
-            semas.erase(id);
-            kern_obj_handles.free_handle(id);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    bool kernel_system::destroy_mutex(kernel::uid id) {
-        auto res = mutexes.find(id);
-
-        if (res != mutexes.end()) {
-            mutexes.erase(id);
-            kern_obj_handles.free_handle(id);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    bool kernel_system::destroy_chunk(kernel::uid id) {
-        auto res = chunks.find(id);
-
-        if (res != chunks.end()) {
-            chunks[id]->destroy();
-            chunks.erase(res);
-
-            kern_obj_handles.free_handle(id);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    bool kernel_system::destroy_thread(kernel::uid id) {
-        auto res = threads.find(id);
-
-        if (res != threads.end()) {
-            thread_ptr thr = res->second;
-            destroy_msg(thr->get_sync_msg());
-
-            kern_obj_handles.free_handle(id);
-            threads.erase(id);
-
-            for (auto it = chunks.begin(); it != chunks.end();) {
-                // Erase all chunks that have relation to the thread
-                if (it->second && it->second->obj_owner() == id) {
-                    uint32_t id = (it++)->first;
-                    destroy_chunk(id);
-                } else {
-                    ++it;
-                }
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    bool kernel_system::destroy(kernel::uid id) {
-        // TODO: Remove this horrible if
-        if (!destroy_chunk(id)) {
-            if (!destroy_thread(id)) {
-                if (!destroy_mutex(id)) {
-                    if (!destroy_sema(id)) {
-                        if (!destroy_timer(id)) {
-                            if (!destroy_session(id)) {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    bool kernel_system::close(kernel::uid id) {
-        int real_id = kern_obj_handles.get_real_handle_id(id);
-        bool res = kern_obj_handles.free_handle(id);
-
-        if (!res)
-            return res;
-
-        if (kern_obj_handles.open_ref_exists(real_id)) {
-            return true;
-        }
-
-        return destroy(id);
-    }
-
-    thread_ptr kernel_system::add_thread(kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+    uint32_t kernel_system::create_thread(kernel::owner_type owner, process_ptr own_pr, kernel::access_type access,
         const std::string &name, const address epa, const size_t stack_size,
         const size_t min_heap_size, const size_t max_heap_size,
         ptr<void> usrdata,
         kernel::thread_priority pri) {
-        thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, owner, owner_id, access, name, epa, stack_size, min_heap_size, max_heap_size, usrdata, pri);
-        uint32_t id = new_thread->unique_id();
+        thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, own_pr, access,
+            name, epa, stack_size, min_heap_size, max_heap_size, usrdata, pri);
 
-        thr_sch->schedule(new_thread);
-        threads.emplace(new_thread->unique_id(), std::move(new_thread));
+        objects.push_back(std::move(new_thread));
 
-        return threads[id];
+        return create_handle_lastest(owner);
     }
 
-    void kernel_system::set_closeable(kernel::uid id, bool opt) {
-        kern_obj_handles.handle_set_closeable(id, opt);
+    uint32_t kernel_system::create_server(std::string name) {
+        server_ptr new_server = std::make_shared<service::server>(sys, name);
+        objects.push_back(std::move(new_server));
+
+        return create_handle_lastest(kernel::owner_type::kernel);
     }
 
-    bool kernel_system::get_closeable(kernel::uid id) {
-        return kern_obj_handles.handle_closeable(id);
+    uint32_t kernel_system::create_session(server_ptr cnn_svr, int async_slots) {
+        session_ptr new_session = std::make_shared<service::session>(this, cnn_svr, async_slots);
+        objects.push_back(std::move(new_session));
+
+        return create_handle_lastest(kernel::owner_type::thread);
     }
 
-    thread_ptr kernel_system::get_thread_by_id(kernel::uid id) {
-        if (id & 0x8000) {
-            id &= ~0x8000;
-        }
+    uint32_t kernel_system::create_prop(service::property_type pt, uint32_t pre_allocated) {
+        property_ptr new_prop = std::make_shared<service::property>(this, pt, pre_allocated);
+        objects.push_back(std::move(new_prop));
 
-        id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
-
-        auto thread_ite = threads.find(id);
-
-        if (thread_ite != threads.end()) {
-            return thread_ite->second;
-        }
+        return create_handle_lastest(kernel::owner_type::kernel);
     }
 
-    kernel_obj_ptr kernel_system::get_kernel_obj(kernel::uid id) {
-        if (id & 0x8000) {
-            id &= ~0x8000;
-        }
+    ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
+        auto &slot_free = std::find_if(msgs.begin(), msgs.end(),
+            [](auto slot) { return !slot || slot->free; });
 
-        id = kern_obj_handles.get_real_handle_id(static_cast<int>(id));
+        if (slot_free != msgs.end()) {
+            ipc_msg_ptr msg
+                = std::make_shared<ipc_msg>(crr_thread());
 
-        auto chunk_ite = chunks.find(id);
+            if (!*slot_free) {
+                *slot_free = std::move(msg);
+            }
 
-        if (chunk_ite != chunks.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj>(chunk_ite->second);
-        }
+            slot_free->get()->free = false;
 
-        auto thread_ite = threads.find(id);
-
-        if (thread_ite != threads.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj>(thread_ite->second);
-        }
-
-        auto timer_ite = timers.find(id);
-
-        if (timer_ite != timers.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj>(timer_ite->second);
-        }
-
-        auto sema_ite = semas.find(id);
-
-        if (sema_ite != semas.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj>(sema_ite->second);
-        }
-
-        auto mutex_ite = mutexes.find(id);
-
-        if (mutex_ite != mutexes.end()) {
-            return std::dynamic_pointer_cast<kernel::kernel_obj>(mutex_ite->second);
+            return *slot_free;
         }
 
         return nullptr;
     }
 
-    thread_ptr kernel_system::get_thread_by_name(const std::string &name) {
-        auto thr_pair_find = std::find_if(threads.begin(), threads.end(),
-            [&](auto &thr_pair) { return thr_pair.second->name() == name; });
+    bool kernel_system::destroy(kernel_obj_ptr obj) {
+        auto &obj_ite = std::find(objects.begin(), objects.end(), obj);
 
-        if (thr_pair_find == threads.end()) {
+        if (obj_ite != objects.end()) {
+            objects.erase(obj_ite);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool kernel_system::close(uint32_t handle) {
+        kernel::handle_inspect_info info = kernel::inspect_handle(handle);
+
+        if (info.no_close) {
+            return false;
+        }
+
+        if (info.handle_array_local) {
+            return crr_thread()->thread_handles.close(handle);
+        }
+
+        bool res = crr_process()->process_handles.close(handle);
+
+        if (!res) {
+            res = kernel_handles.close(handle);
+
+            return res;
+        }
+
+        return true;
+    }
+
+    thread_ptr kernel_system::get_thread_by_handle(uint32_t handle) {
+        kernel_obj_ptr obj = get_kernel_obj(handle);
+
+        if (!obj || obj->get_object_type() != kernel::object_type::thread) {
             return nullptr;
         }
 
-        return thr_pair_find->second;
+        return std::dynamic_pointer_cast<kernel::thread>(obj);
     }
 
-    ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
-        auto &free_msg = std::find_if(msgs.begin(), msgs.end(),
-            [](const auto &msg) { return msg.second->free; });
-
-        if (free_msg != msgs.end()) {
-            free_msg->second->free = false;
-            free_msg->second->owner_type = static_cast<int>(owner);
-            free_msg->second->owner_id = get_id_base_owner(owner);
-
-            return free_msg->second;
+    kernel_obj_ptr kernel_system::get_kernel_obj(uint32_t handle) {
+        if (handle == 0xFFFF8000) {
+            return crr_process();
+        } else if (handle == 0xFFFF8001) {
+            return crr_thread();
         }
 
-        uint64_t owner_id = get_id_base_owner(owner);
-        uint32_t id = next_uid(owner, owner_id);
+        kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
-        ipc_msg_ptr msg
-            = std::make_shared<ipc_msg>(id, owner_id, crr_thread());
+        if (info.no_close) {
+            return false;
+        }
 
-        msg->owner_type = static_cast<int>(owner);
-        msg->owner_id = get_id_base_owner(owner);
+        if (info.handle_array_local) {
+            return crr_thread()->thread_handles.get_object(handle);
+        }
 
-        msgs.emplace(id, std::move(msg));
+        kernel_obj_ptr res;
 
-        return msgs[id];
+        if (crr_process())
+            res = crr_process()->process_handles.get_object(handle);
+
+        if (!res) {
+            res = kernel_handles.get_object(handle);
+
+            return res;
+        }
+
+        return res;
+    }
+
+    thread_ptr kernel_system::get_thread_by_name(const std::string &name) {
+        auto thr_find = std::find_if(objects.begin(), objects.end(),
+            [&](auto &obj) {
+                if (obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
+                    return true;
+                }
+            });
+
+        if (thr_find == objects.end()) {
+            return nullptr;
+        }
+
+        return std::dynamic_pointer_cast<kernel::thread>(*thr_find);
     }
 
     void kernel_system::free_msg(ipc_msg_ptr msg) {
@@ -479,97 +367,42 @@ namespace eka2l1 {
 
     /*! \brief Completely destroy a message. */
     void kernel_system::destroy_msg(ipc_msg_ptr msg) {
-        auto &res = msgs.find(msg->id);
-
-        if (res != msgs.end()) {
-            msgs.erase(res);
-            kern_obj_handles.free_handle(msg->id);
-        }
-    }
-
-    server_ptr kernel_system::create_server(std::string name) {
-        server_ptr new_server = std::make_shared<service::server>(sys, name);
-        kernel::uid svr_id = new_server->unique_id();
-
-        servers.emplace(svr_id, std::move(new_server));
-
-        return servers[svr_id];
-    }
-
-    session_ptr kernel_system::create_session(server_ptr cnn_svr, int async_slots) {
-        session_ptr new_session = std::make_shared<service::session>(this, cnn_svr, async_slots);
-        kernel::uid ss_id = new_session->unique_id();
-
-        sessions.emplace(ss_id, std::move(new_session));
-
-        return sessions[ss_id];
-    }
-
-    bool kernel_system::destroy_session(kernel::uid id) {
-        auto &res = sessions.find(id);
-
-        if (res == sessions.end()) {
-            return false;
-        }
-
-        res->second->prepare_destroy();
-        sessions.erase(id);
-
-        kern_obj_handles.free_handle(id);
-
-        return true;
+        (msgs.begin() + msg->id)->reset();
     }
 
     server_ptr kernel_system::get_server_by_name(const std::string name) {
-        auto &svr = std::find_if(servers.begin(), servers.end(),
-            [&name](const auto &svp) { return svp.second->name() == name; });
+        auto svr_find = std::find_if(objects.begin(), objects.end(),
+            [&](auto &obj) {
+                if (obj->get_object_type() == kernel::object_type::server && obj->name() == name) {
+                    return true;
+                }
+            });
 
-        if (svr == servers.end()) {
-            return server_ptr(nullptr);
+        if (svr_find == objects.end()) {
+            return nullptr;
         }
 
-        return svr->second;
+        return std::dynamic_pointer_cast<service::server>(*svr_find);
     }
 
-    server_ptr kernel_system::get_server(kernel::uid id) {
-        if (id & 0x8000) {
-            id &= ~0x8000;
-        }
-        
-        id = kern_obj_handles.get_real_handle_id(id);
+    server_ptr kernel_system::get_server(uint32_t handle) {
+        kernel_obj_ptr obj = get_kernel_obj(handle);
 
-        auto &res = servers.find(id);
-
-        if (res != servers.end()) {
-            return res->second;
+        if (!obj || obj->get_object_type() != kernel::object_type::server) {
+            return nullptr;
         }
 
-        return server_ptr(nullptr);
+        return std::dynamic_pointer_cast<service::server>(obj);
     }
 
-    session_ptr kernel_system::get_session(kernel::uid id) {
-        if (id & 0x8000) {
-            id &= ~0x8000;
+    session_ptr kernel_system::get_session(uint32_t handle) {
+        kernel_obj_ptr obj = get_kernel_obj(handle);
+
+        if (!obj || obj->get_object_type() != kernel::object_type::session) {
+            return nullptr;
         }
 
-        id = kern_obj_handles.get_real_handle_id(id);
-
-        auto &res = sessions.find(id);
-
-        if (res != sessions.end()) {
-            return res->second;
-        }
-
-        return session_ptr(nullptr);
-    }
-
-    property_ptr kernel_system::create_prop(service::property_type pt, uint32_t pre_allocated) {
-        property_ptr new_prop = std::make_shared<service::property>(this, pt, pre_allocated);
-        uint32_t id = new_prop->unique_id();
-
-        properties.emplace(id, std::move(new_prop));
-
-        return properties[id];
+        return std::dynamic_pointer_cast<service::session>(obj);
     }
 
     bool kernel_system::notify_prop(prop_ident_pair ident) {
@@ -603,22 +436,6 @@ namespace eka2l1 {
         return true;
     }
 
-    void kernel_system::delete_prop(property_ptr prop) {
-        std::pair<int, int> prop_ident(prop->first, prop->second);
-        auto &request_ident = prop_request_queue.find(prop_ident);
-
-        if (request_ident == prop_request_queue.end()) {
-            // Unsub first
-            return;
-        }
-
-        *request_ident->second = -1; // KErrNotFound
-        crr_thread()->signal_request();
-
-        prop_request_queue.erase(prop_ident);
-        properties.erase(prop->unique_id());
-    }
-
     bool kernel_system::unsubscribe_prop(prop_ident_pair ident) {
         auto &request_ident = prop_request_queue.find(ident);
 
@@ -636,62 +453,92 @@ namespace eka2l1 {
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {
-        auto &prop_res = std::find_if(properties.begin(), properties.end(),
+        auto &prop_res = std::find_if(objects.begin(), objects.end(),
             [=](const auto &prop) {
-                property_ptr temp = prop.second;
-                return temp->first == cagetory && temp->second == key; // Sorry, im too lazy to search on de internet :D
+                if (prop->get_object_type() == kernel::object_type::prop) {
+                    property_ptr real_prop = std::dynamic_pointer_cast<service::property>(prop);
+
+                    if (real_prop->first == cagetory && real_prop->second == key) {
+                        return true;
+                    }
+                }
+
+                return false;
             });
 
-        if (prop_res == properties.end()) {
+        if (prop_res == objects.end()) {
             return property_ptr(nullptr);
         }
 
-        return prop_res->second;
+        return std::dynamic_pointer_cast<service::property>(*prop_res);
     }
 
-    property_ptr kernel_system::get_prop(kernel::uid id) {
-        if (id & 0x8000) {
-            id &= ~0x8000;
+    property_ptr kernel_system::get_prop(uint32_t handle) {
+        kernel_obj_ptr obj = get_kernel_obj(handle);
+
+        if (!obj || obj->get_object_type() != kernel::object_type::prop) {
+            return nullptr;
         }
 
-        id = kern_obj_handles.get_real_handle_id(id);
-
-        auto &res = properties.find(id);
-
-        if (res == properties.end()) {
-            return property_ptr(nullptr);
-        }
-
-        return res->second;
+        return std::dynamic_pointer_cast<service::property>(obj);
     }
 
-    kernel::uid kernel_system::mirror_sema(std::string sema_name,
-        kernel::owner_type owner) {
-        auto &sema = std::find_if(semas.begin(), semas.end(),
-            [&](const auto &sema_ite) { return sema_ite.second->name() == sema_name; });
+    uint32_t kernel_system::mirror(thread_ptr own_thread, uint32_t handle, kernel::owner_type owner) {
+        kernel_obj_ptr target_obj;
+        kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
-        if (sema == semas.end() || sema->second->get_access_type() == kernel::access_type::local_access) {
-            return 0;
+        if (info.handle_array_local) {
+            // Use the thread to get the kernel object
+            target_obj = own_thread->thread_handles.get_object(handle);
+        } else {
+            target_obj = get_kernel_obj(handle);
         }
 
-        return kern_obj_handles.new_handle(sema->second->unique_id(), static_cast<handle_owner_type>(owner),
-            get_id_base_owner(owner));
-    }
+        switch (owner) {
+        case kernel::owner_type::kernel:
+            return kernel_handles.add_object(target_obj);
 
-    kernel::uid kernel_system::mirror_chunk(std::string chunk_name,
-        kernel::owner_type owner) {
-        auto &chunk = std::find_if(chunks.begin(), chunks.end(),
-            [&](const auto &chunk_ite) { return chunk_ite.second->name() == chunk_name; });
+        case kernel::owner_type::thread: {
+            if (!own_thread) {
+                return 0xFFFFFFFF;
+            }
 
-        if (chunk == chunks.end() || chunk->second->get_access_type() == kernel::access_type::local_access) {
-            return 0;
+            return own_thread->thread_handles.add_object(target_obj);
         }
 
-        return kern_obj_handles.new_handle(chunk->second->unique_id(),
-            static_cast<handle_owner_type>(owner), get_id_base_owner(owner));
+        case kernel::owner_type::process: {
+            return crr_process()->process_handles.add_object(target_obj);
+        }
+
+        default:
+            return 0xFFFFFFFF;
+        }
     }
 
-    kernel::uid kernel_system::mirror(kernel::uid id, kernel::owner_type owner) {
-        return kern_obj_handles.new_handle(id, static_cast<handle_owner_type>(owner), get_id_base_owner(owner));
+    uint32_t kernel_system::open_handle(kernel_obj_ptr obj, kernel::owner_type owner) {
+        switch (owner) {
+        case kernel::owner_type::kernel:
+            return kernel_handles.add_object(obj);
+
+        case kernel::owner_type::thread: {
+            return crr_thread()->thread_handles.add_object(obj);
+        }
+
+        case kernel::owner_type::process: {
+            return crr_process()->process_handles.add_object(obj);
+        }
+
+        default:
+            return 0xFFFFFFFF;
+        }
+    }
+
+    void kernel_system::processing_requests() {
+        for (auto &obj : objects) {
+            if (obj->get_object_type() == kernel::object_type::server) {
+                server_ptr s = std::dynamic_pointer_cast<service::server>(obj);
+                s->process_accepted_msg();
+            }
+        }
     }
 }

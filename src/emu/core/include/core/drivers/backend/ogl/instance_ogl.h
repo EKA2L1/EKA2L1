@@ -1,6 +1,6 @@
 #pragma once
 
-#include <drivers/instance.h>
+#include <core/drivers/instance.h>
 
 namespace eka2l1 {
     namespace driver {

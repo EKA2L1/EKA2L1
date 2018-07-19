@@ -1,7 +1,7 @@
 #include <core/core_api.h>
 
-#include <loader/rpkg.h>
-#include <loader/sis_old.h>
+#include <core/loader/rpkg.h>
+#include <core/loader/sis_old.h>
 
 int main() {
     int sys = create_symbian_system(GLFW, OPENGL, CPU_UNICORN);

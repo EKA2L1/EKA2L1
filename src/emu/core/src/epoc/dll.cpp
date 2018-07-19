@@ -1,5 +1,5 @@
-#include <epoc/dll.h>
-#include <core.h>
+#include <core/epoc/dll.h>
+#include <core/core.h>
 
 namespace eka2l1::epoc {
     std::vector<uint32_t> query_entries(eka2l1::system *sys) {

@@ -19,55 +19,70 @@
  */
 #pragma once
 
-#include <kernel/thread.h>
-#include <loader/eka2img.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/kernel/object_ix.h>
+#include <core/kernel/thread.h>
+
+#include <core/loader/eka2img.h>
+
+#include <core/page_table.h>
+
 #include <string>
 
 #include <tuple>
 
 namespace eka2l1 {
     class kernel_system;
-    class memory;
+
+    namespace loader {
+        using e32img_ptr = std::shared_ptr<eka2l1::loader::eka2img>;
+    }
+
+    using thread_ptr = std::shared_ptr<kernel::thread>;
+}
+
+namespace eka2l1::kernel {
+    class thread_scheduler;
 
     struct process_info {
         ptr<void> code_where;
         uint64_t size;
     };
 
-    namespace loader {
-        using e32img_ptr = std::shared_ptr<eka2img>;
-    }
-
-    using thread_ptr = std::shared_ptr<kernel::thread>;
-
     struct pass_arg {
         uint32_t data = 0;
         size_t data_size = -1;
     };
-    
+
     using process_uid_type = std::tuple<uint32_t, uint32_t, uint32_t>;
 
-    class process {
-        uint32_t uid;
-        
+    class process : public kernel_obj {
+        friend class kernel_system;
+        friend class thread_scheduler;
+
+        uint32_t uid, primary_thread;
+
         std::string process_name;
-        thread_ptr prthr;
 
         loader::e32img_ptr img;
 
         kernel_system *kern;
         memory_system *mem;
 
-        std::vector<thread_ptr> own_threads;
         std::array<pass_arg, 16> args;
-        
+
         std::u16string exe_path;
         std::u16string cmd_args;
 
+        page_table page_tab;
+        object_ix process_handles;
+
     public:
         process() = default;
+
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
-            const std::string &process_name, const std::u16string &exe_path, const std::u16string &cmd_args, loader::e32img_ptr &img);
+            const std::string &process_name, const std::u16string &exe_path,
+            const std::u16string &cmd_args, loader::e32img_ptr &img);
 
         std::u16string get_cmd_args() const {
             return cmd_args;
@@ -85,27 +100,17 @@ namespace eka2l1 {
             return img;
         }
 
+        bool run();
+
         void set_arg_slot(uint8_t slot, uint32_t data, size_t data_size);
         std::optional<pass_arg> get_arg_slot(uint8_t slot);
 
-        std::string name() const {
-            return process_name;
-        }
-
-        // Create a new thread and run
-        // No arguments provided
-        bool run();
-
-        // Step through instructions
-        bool step();
-
-        // LOL
-        bool suspend() { return true; }
-
-        // Stop the main process thread
-        bool stop();
-
         process_uid_type get_uid_type();
+
+        kernel_obj_ptr get_object(uint32_t handle);
+
+        page_table &get_page_table() {
+            return page_tab;
+        }
     };
 }
-

@@ -1,5 +1,5 @@
-#include <epoc/des.h>
-#include <core.h>
+#include <core/epoc/des.h>
+#include <core/core.h>
 
 namespace eka2l1::epoc {
     TInt GetTDesC8Type(const TDesC8 *aDes8) {

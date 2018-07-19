@@ -5,13 +5,13 @@
 #include <memory>
 #include <unordered_map>
 
-#include <services/server.h>
+#include <core/services/server.h>
 #include <vector>
 
-#include <ptr.h>
+#include <core/ptr.h>
 
 #include <common/queue.h>
-#include <drivers/screen_driver.h>
+#include <core/drivers/screen_driver.h>
 
 enum {
     cmd_slot = 0,

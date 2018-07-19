@@ -1,5 +1,5 @@
-#include <loader/rpkg.h>
-#include <vfs.h>
+#include <core/loader/rpkg.h>
+#include <core/vfs.h>
 
 #include <common/cvt.h>
 #include <common/log.h>

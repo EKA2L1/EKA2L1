@@ -7,16 +7,16 @@
 
 #pragma once
 
-#include <epoc/des.h>
-#include <epoc/chunk.h>
-#include <epoc/dll.h>
-#include <epoc/hal.h>
-#include <epoc/handle.h>
-#include <epoc/svc.h>
-#include <epoc/tl.h>
-#include <epoc/uid.h>
+#include <core/epoc/des.h>
+#include <core/epoc/chunk.h>
+#include <core/epoc/dll.h>
+#include <core/epoc/hal.h>
+#include <core/epoc/handle.h>
+#include <core/epoc/svc.h>
+#include <core/epoc/tl.h>
+#include <core/epoc/uid.h>
 
-#include <hle/bridge.h>
+#include <core/hle/bridge.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>

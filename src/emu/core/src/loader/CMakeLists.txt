@@ -23,7 +23,7 @@ target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp hle 
 #	target_link_libraries(coreloader PRIVATE libcxxabi)
 #endif()
 
-target_include_directories(coreloader PUBLIC ${CORE_INCLUDE_DIR})
+target_include_directories(coreloader PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 target_include_directories(coreloader
     PUBLIC
     ${YAML_INCLUDE_DIR})

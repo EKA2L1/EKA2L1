@@ -1,6 +1,6 @@
 #pragma once
 
-#include <drivers/fb.h>
+#include <core/drivers/fb.h>
 
 namespace eka2l1::driver {
 

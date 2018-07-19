@@ -24,10 +24,10 @@
 #include <common/types.h>
 #include <common/flate.h>
 
-#include <loader/sis_script_interpreter.h>
-#include <manager/package_manager.h>
+#include <core/loader/sis_script_interpreter.h>
+#include <core/manager/package_manager.h>
 
-#include <vfs.h>
+#include <core/vfs.h>
 
 #include <miniz.h>
 

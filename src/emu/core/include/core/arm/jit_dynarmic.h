@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arm/jit_interface.h>
-#include <arm/jit_unicorn.h>
+#include <core/arm/jit_interface.h>
+#include <core/arm/jit_unicorn.h>
 
 #include <dynarmic/A32/a32.h>
 

@@ -17,11 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <arm/jit_factory.h>
-#include <arm/jit_unicorn.h>
-#include <arm/jit_dynarmic.h>
+#include <core/arm/jit_factory.h>
+#include <core/arm/jit_unicorn.h>
+#include <core/arm/jit_dynarmic.h>
 
-#include <core_timing.h>
+#include <core/core_timing.h>
 
 namespace eka2l1 {
     namespace arm {

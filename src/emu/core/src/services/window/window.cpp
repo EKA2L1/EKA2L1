@@ -18,16 +18,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/window/op.h>
-#include <services/window/window.h>
+#include <core/services/window/op.h>
+#include <core/services/window/window.h>
 
 #include <common/log.h>
 
-#include <core.h>
+#include <core/core.h>
 #include <optional>
 #include <string>
 
-#include <drivers/screen_driver.h>
+#include <core/drivers/screen_driver.h>
 
 namespace eka2l1::epoc {
     screen_device::screen_device(uint64_t id, eka2l1::driver::screen_driver_ptr driver)
@@ -82,11 +82,8 @@ namespace eka2l1 {
     void window_server::init(service::ipc_context ctx) {
         root = std::make_shared<epoc::window>(new_id());
 
-        // Since request status is an int (retarded design), this would
-        // expect address lower then 0x80000000. Meaning that it would resides
-        // in shared heap memory. These servers are virtual, so this will be a placeholder
-        // context
-        ctx.set_request_status(obj_id);
+        ctx.set_request_status(ctx.sys->get_kernel_system()->open_handle(
+            ctx.sys->get_kernel_system()->get_server_by_name("!Windowserver"), kernel::owner_type::kernel));
     }
 
     void window_server::parse_command_buffer(service::ipc_context ctx) {
@@ -124,7 +121,7 @@ namespace eka2l1 {
 
     void window_server::execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds) {
         for (const auto &cmd : cmds) {
-            if (obj_id == cmd.header.obj_handle) {
+            if (ctx.sys->get_kernel_system()->get_server(cmd.header.obj_handle).get() == this) {
                 execute_command(ctx, cmd);
             } else {
                 epoc::window_ptr obj = find_window_obj(root, cmd.header.obj_handle);

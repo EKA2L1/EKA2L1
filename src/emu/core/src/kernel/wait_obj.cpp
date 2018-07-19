@@ -18,11 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <algorithm>
-#include <kernel/thread.h>
-#include <kernel/wait_obj.h>
-#include <kernel/scheduler.h>
+#include <core/kernel/thread.h>
+#include <core/kernel/wait_obj.h>
+#include <core/kernel/scheduler.h>
 
-#include <core_kernel.h>
+#include <core/core_kernel.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -30,7 +30,7 @@ namespace eka2l1 {
 
         void wait_obj::add_waiting_thread(thread_ptr thr) {
             auto res = std::find_if(waits.begin(), waits.end(),
-                [thr](auto &thr_ptr) { return thr_ptr->obj_id == thr->obj_id; });
+                [thr](auto &thr_ptr) { return thr_ptr == thr; });
 
             if (res == waits.end()) {
                 waits.push_back(thr);
@@ -41,9 +41,9 @@ namespace eka2l1 {
             }
         }
 
-        void wait_obj::erase_waiting_thread(kernel::uid thr) {
+        void wait_obj::erase_waiting_thread(thread_ptr thr) {
             auto res = std::find_if(waits.begin(), waits.end(),
-                [thr](auto &thr_ptr) { return thr_ptr->obj_id == thr; });
+                [thr](auto &thr_ptr) { return thr == thr_ptr; });
 
             if (res != waits.end()) {
                 waits.erase(res);
@@ -59,7 +59,7 @@ namespace eka2l1 {
                     continue;
                 }
 
-                if (should_wait(wait_thread->unique_id())) {
+                if (should_wait(wait_thread)) {
                     continue;
                 }
 
@@ -67,7 +67,7 @@ namespace eka2l1 {
 
                 if (wait_thread->current_state() == thread_state::wait_fast_sema) {
                     ready_to_run = std::none_of(wait_thread->waits.begin(), wait_thread->waits.end(),
-                        [wait_thread](auto &obj) { return obj->should_wait(wait_thread->unique_id()); });
+                        [wait_thread](auto &obj) { return obj->should_wait(wait_thread); });
                 }
 
                 if (ready_to_run) {
@@ -82,15 +82,15 @@ namespace eka2l1 {
         void wait_obj::wake_up_waiting_threads() {
             while (auto thr = next_ready_thread()) {
                  for (auto &obj : thr->waits_on) {
-                    obj->acquire(thr->obj_id);
+                    obj->acquire(thr);
                 }
 
                 for (auto &obj : thr->waits_on) {
-                    obj->erase_waiting_thread(thr->obj_id);
+                    obj->erase_waiting_thread(thr);
                 }
 
                 thr->waits.clear();
-                thr->resume();
+                thr->get_scheduler()->resume(thr);
             }
         }
     }

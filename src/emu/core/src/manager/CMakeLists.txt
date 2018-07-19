@@ -4,7 +4,7 @@ add_library(coremanager
 	manager.cpp
 	package_manager.cpp)
 
-target_include_directories(coremanager PUBLIC ${CORE_INCLUDE_DIR})
+target_include_directories(coremanager PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 target_link_libraries(coremanager PUBLIC common)
 target_link_libraries(coremanager PRIVATE coreloader)
 	

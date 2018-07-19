@@ -18,10 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/applist/applist.h>
-#include <services/applist/op.h>
+#include <core/services/applist/applist.h>
+#include <core/services/applist/op.h>
 
-#include <core.h>
+#include <core/core.h>
 #include <functional>
 
 #include <e32lang.h>

@@ -14,7 +14,7 @@ add_library(epoc
     reg.cpp
     hal.cpp)
 
-target_include_directories(epoc PUBLIC ${CORE_INCLUDE_DIR})
+target_include_directories(epoc PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 
 target_link_libraries(epoc PUBLIC common)
 target_link_libraries(epoc PRIVATE corekernel services hle)

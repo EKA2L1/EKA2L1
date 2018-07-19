@@ -19,8 +19,8 @@
  */
 
 #include <common/log.h>
-#include <core.h>
-#include <services/server.h>
+#include <core/core.h>
+#include <core/services/server.h>
 
 namespace eka2l1 {
     namespace service {
@@ -46,9 +46,11 @@ namespace eka2l1 {
         // Create a server with name
         server::server(system *sys, const std::string name)
             : sys(sys)
-            , kernel_obj(sys->get_kernel_system(), name, kernel::owner_type::process, 0) {
+            , kernel_obj(sys->get_kernel_system(), name, kernel::access_type::global_access) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
+
+            obj_type = kernel::object_type::server;
 
             REGISTER_IPC(server, connect, -1, "Server::Connect");
             REGISTER_IPC(server, disconnect, -2, "Server::Disconnect");
@@ -84,8 +86,6 @@ namespace eka2l1 {
             msg.dest_msg->function = msg.real_msg->function;
             msg.dest_msg->request_sts = msg.real_msg->request_sts;
             msg.dest_msg->own_thr = msg.real_msg->own_thr;
-            msg.dest_msg->owner_id = msg.real_msg->owner_id;
-            msg.dest_msg->owner_type = msg.real_msg->owner_type;
 
             // Mark the client sending message as free
             kern->free_msg(msg.real_msg);

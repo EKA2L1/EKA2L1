@@ -1,10 +1,10 @@
-#include <epoc/chunk.h>
-#include <epoc/dll.h>
-#include <epoc/hal.h>
-#include <epoc/handle.h>
-#include <epoc/svc.h>
-#include <epoc/tl.h>
-#include <epoc/uid.h>
+#include <core/epoc/chunk.h>
+#include <core/epoc/dll.h>
+#include <core/epoc/hal.h>
+#include <core/epoc/handle.h>
+#include <core/epoc/svc.h>
+#include <core/epoc/tl.h>
+#include <core/epoc/uid.h>
 
 #include <common/cvt.h>
 #include <common/path.h>
@@ -78,7 +78,7 @@ namespace eka2l1::epoc {
             // Its handle contains the process's uid
             pr_real = kern->get_process(aProcessHandle);
         } else {
-            pr_real = kern->get_process(kern->crr_process());
+            pr_real = kern->crr_process();
         }
 
         if (!pr_real) {
@@ -102,7 +102,7 @@ namespace eka2l1::epoc {
             // Its handle contains the process's uid
             pr_real = kern->get_process(pr);
         } else {
-            pr_real = kern->get_process(kern->crr_process());
+            pr_real = kern->crr_process();
         }
 
         if (!pr_real) {
@@ -120,7 +120,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessDataParameterLength, TInt aSlot) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr crr_process = kern->get_process(kern->crr_process());
+        process_ptr crr_process = kern->crr_process();
 
         auto slot = crr_process->get_arg_slot(aSlot);
 
@@ -133,7 +133,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->get_process(kern->crr_process());
+        process_ptr pr = kern->crr_process();
 
         if (aSlot >= 16 || aSlot < 0) {
             LOG_ERROR("Invalid slot (slot: {} >= 16 or < 0)", aSlot);
@@ -232,15 +232,15 @@ namespace eka2l1::epoc {
             return KErrNotFound;
         }
 
-        session_ptr session = kern->create_session(server, aMsgSlot);
+        uint32_t handle = kern->create_session(server, aMsgSlot);
 
-        if (!session) {
+        if (handle == INVALID_HANDLE) {
             return KErrGeneral;
         }
 
-        LOG_TRACE("New session connected to {} with id {}", server_name, session->unique_id());
+        LOG_TRACE("New session connected to {} with id {}", server_name, handle);
 
-        return session->unique_id();
+        return handle;
     }
 
     BRIDGE_FUNC(TInt, SessionShare, eka2l1::ptr<TInt> aHandle, TInt aShare) {
@@ -266,18 +266,14 @@ namespace eka2l1::epoc {
 
         // Weird behavior, suddenly it wants to mirror handle then close the old one
         // Clean its identity :D
-        *handle = kern->mirror(*handle, kernel::owner_type::process);
+        *handle = kern->mirror(kern->crr_thread(), *handle, kernel::owner_type::process);
         kern->close(old_handle);
-
-        LOG_TRACE("Old handle: {}, new handle: {}", (old_handle & 0x8000) ? (old_handle & ~0x8000) : (old_handle),
-            *handle);
 
         return KErrNone;
     }
 
     BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
         eka2l1::ptr<TInt> aStatus) {
-        
         //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
         memory_system *mem = sys->get_memory_system();
@@ -367,15 +363,15 @@ namespace eka2l1::epoc {
             att = kernel::chunk_attrib::anonymous;
         }
 
-        chunk_ptr chunk = kern->create_chunk(name.StdString(sys), createInfo.iInitialBottom, createInfo.iInitialTop,
+        uint32_t handle = kern->create_chunk(name.StdString(sys), createInfo.iInitialBottom, createInfo.iInitialTop,
             createInfo.iMaxSize, prot::read_write, type, access, att,
             aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
 
-        if (!chunk) {
+        if (handle == INVALID_HANDLE) {
             return KErrNoMemory;
         }
 
-        return chunk->unique_id();
+        return handle;
     }
 
     BRIDGE_FUNC(TInt, ChunkMaxSize, TInt aChunkHandle) {
@@ -453,15 +449,14 @@ namespace eka2l1::epoc {
         TDesC8 *desname = aSemaName.get(mem);
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        sema_ptr sema = kern->create_sema(!desname ? "" : desname->StdString(sys),
-            aInitCount, 50, owner,
-            kern->get_id_base_owner(owner), !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
+        uint32_t sema = kern->create_sema(!desname ? "" : desname->StdString(sys),
+            aInitCount, 50, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
 
-        if (!sema) {
+        if (sema == INVALID_HANDLE) {
             return KErrGeneral;
         }
 
-        return sema->unique_id();
+        return sema;
     }
 
     BRIDGE_FUNC(void, WaitForAnyRequest) {
@@ -489,17 +484,14 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, TOwnerType aOwnerType, TInt aDupHandle) {
-        if (aDupHandle & 0x8000) {
-            aDupHandle &= ~0x8000;
-        }
-
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        return kern->mirror(aDupHandle,
+        uint32_t res =  kern->mirror(kern->get_thread_by_handle(aThreadHandle), aDupHandle,
             (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread);
-    }
 
+        return res;
+    }
 
     BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<epoc::TDesC8> aName, TInt aOwnerType) {
         kernel_system *kern = sys->get_kernel_system();
@@ -508,9 +500,8 @@ namespace eka2l1::epoc {
         std::string obj_name = aName.get(mem)->StdString(sys);
 
         switch (aObjectType) {
-        case EChunk:
-            return kern->mirror_chunk(obj_name,
-                (aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread));
+        default:
+            break;
         }
 
         return KErrGeneral;
@@ -578,7 +569,7 @@ namespace eka2l1::epoc {
         if (aHandle == 0xFFFF8001) {
             thr = kern->crr_thread();
         } else {
-            thr = kern->get_thread_by_id(aHandle);
+            thr = kern->get_thread_by_handle(aHandle);
         }
 
         if (!thr) {

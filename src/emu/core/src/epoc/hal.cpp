@@ -1,5 +1,5 @@
-#include <core.h>
-#include <epoc/hal.h>
+#include <core/core.h>
+#include <core/epoc/hal.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>

@@ -12,7 +12,7 @@ add_library(drivers
     emu_window.cpp
     screen_driver.cpp)
 
-target_include_directories(drivers PUBLIC ${CORE_INCLUDE_DIR} 
+target_include_directories(drivers PUBLIC ${CORE_OUTER_INCLUDE_DIR} 
     ${FREETYPE_INCLUDE_DIR}
     ${GLM_INCLUDE_DIR})
 

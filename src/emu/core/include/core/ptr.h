@@ -19,10 +19,11 @@
  */
 #pragma once
 
-#include "core_mem.h"
 #include <cstdint>
 
 namespace eka2l1 {
+    class memory_system;
+
     // Symbian is 32 bit
     using address = uint32_t;
 
@@ -46,7 +47,7 @@ namespace eka2l1 {
         }
 
         T *get(memory_system *mem) const {
-            return mem->get_addr<T>(mem_address);
+            return reinterpret_cast<T*>(mem->get_real_pointer(mem_address));
         }
 
         void reset() {

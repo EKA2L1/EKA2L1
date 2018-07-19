@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include <arm/jit_interface.h>
+#include <core/arm/jit_interface.h>
 #include <unicorn/unicorn.h>
 
 namespace eka2l1 {

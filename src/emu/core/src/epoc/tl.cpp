@@ -1,5 +1,5 @@
-#include <epoc/tl.h>
-#include <core.h>
+#include <core/epoc/tl.h>
+#include <core/core.h>
 
 namespace eka2l1::epoc {
     eka2l1::kernel::thread_local_data &current_local_data(eka2l1::system *sys) {

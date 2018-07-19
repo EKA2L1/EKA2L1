@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <loader/sis_fields.h>
-#include <loader/sis_old.h>
-#include <loader/sis_script_interpreter.h>
+#include <core/loader/sis_fields.h>
+#include <core/loader/sis_old.h>
+#include <core/loader/sis_script_interpreter.h>
 
 #include <cassert>
 #include <cstdio>

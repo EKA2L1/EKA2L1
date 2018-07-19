@@ -18,22 +18,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/fs/fs.h>
-#include <services/fs/op.h>
+#include <core/services/fs/fs.h>
+#include <core/services/fs/op.h>
 
-#include <epoc/des.h>
+#include <core/epoc/des.h>
 #include <memory>
 
 #include <common/cvt.h>
-#include <common/path.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include <common/e32inc.h>
 
+#include <core/vfs.h>
 #include <filesystem>
-#include <vfs.h>
 
-#include <core.h>
+#include <core/core.h>
 
 namespace fs = std::experimental::filesystem;
 
@@ -85,13 +85,13 @@ namespace eka2l1 {
     }
 
     fs_node *fs_server::get_file_node(int handle) {
-        int real_handle = file_handles.get_real_handle_id(handle);
+        //int real_handle = file_handles.get_real_handle_id(handle);
 
-        if (real_handle == -1) {
-            return nullptr;
-        }
+        //if (real_handle == -1) {
+        //    return nullptr;
+        //}
 
-        return &file_nodes[real_handle];
+        return &file_nodes[handle];
     }
 
     void fs_server::file_size(service::ipc_context ctx) {
@@ -286,8 +286,7 @@ namespace eka2l1 {
             new_node.mix_mode = real_mode;
             new_node.open_mode = access_mode;
             new_node.share_mode = share_mode;
-            new_node.id = file_handles.new_handle(static_cast<handle_owner_type>(owner_type),
-                kern->get_id_base_owner(owner_type));
+            new_node.id = next_handle();
 
             uint32_t id = new_node.id;
             file_nodes.emplace(id, std::move(new_node));
@@ -336,21 +335,20 @@ namespace eka2l1 {
         // Check if mode is compatible
         if (cache_node->second.share_mode == fs_node_share::exclusive) {
             // Check if process id is the same
-            uint64_t owner_id = file_handles.get_owner_id(cache_node->second.id);
+            //uint64_t owner_id = file_handles.get_owner_id(cache_node->second.id);
 
             // Deninded if mode is exclusive
-            if (owner_id != kern->get_id_base_owner(kernel::owner_type::process)) {
-                return KErrAccessDenied;
-            }
+            //if (owner_id != kern->get_id_base_owner(kernel::owner_type::process)) {
+           // return KErrAccessDenied;
         }
 
         // If we have the same open mode as the cache node, don't create new, mirror the id
-        if (cache_node->second.open_mode == real_mode) {
-            uint32_t mirror_id = file_handles.new_handle(cache_node->second.id, static_cast<handle_owner_type>(owner_type),
-                kern->get_id_base_owner(owner_type));
+        //if (cache_node->second.open_mode == real_mode) {
+        //     uint32_t mirror_id = file_handles.new_handle(cache_node->second.id, static_cast<handle_owner_type>(owner_type),
+        //        kern->get_id_base_owner(owner_type));
 
-            return mirror_id;
-        }
+        //    return mirror_id;
+        //}
 
         fs_node new_node;
         new_node.vfs_node = io->open_file(name, access_mode);
@@ -362,8 +360,7 @@ namespace eka2l1 {
         new_node.mix_mode = real_mode;
         new_node.open_mode = access_mode;
         new_node.share_mode = share_mode;
-        new_node.id = file_handles.new_handle(static_cast<handle_owner_type>(owner_type),
-            kern->get_id_base_owner(owner_type));
+        new_node.id = next_handle();
 
         uint32_t id = new_node.id;
         file_nodes.emplace(id, std::move(new_node));

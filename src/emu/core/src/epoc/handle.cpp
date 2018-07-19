@@ -1,4 +1,4 @@
-#include <epoc/handle.h>
+#include <core/epoc/handle.h>
 
 namespace eka2l1::epoc {
     eka2l1::kernel_obj_ptr RHandleBase::GetKObject(eka2l1::system *sys) {

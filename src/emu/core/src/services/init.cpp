@@ -18,15 +18,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/applist/applist.h>
-#include <services/featmgr/featmgr.h>
-#include <services/fontbitmap/fontbitmap.h>
-#include <services/fs/fs.h>
-#include <services/window/window.h>
+#include <core/services/applist/applist.h>
+#include <core/services/featmgr/featmgr.h>
+//#include <core/services/fontbitmap/fontbitmap.h>
+#include <core/services/fs/fs.h>
+#include <core/services/window/window.h>
 
-#include <services/init.h>
+#include <core/services/init.h>
 
-#include <core.h>
+#include <core/core.h>
 
 #include <e32lang.h>
 
@@ -43,25 +43,29 @@
     sys->get_kernel_system()->add_custom_server(temp)
 
 #define DEFINE_INT_PROP_D(sys, category, key, data)                                                 \
-    property_ptr prop = sys->get_kernel_system()->create_prop(service::property_type::int_data, 0); \
+    uint32_t prop_handle = sys->get_kernel_system()->create_prop(service::property_type::int_data, 0);    \
+    property_ptr prop = sys->get_kernel_system()->get_prop(prop_handle); \
     prop->first = category;                                                                         \
     prop->second = key;                                                                             \
     prop->set(data);
 
 #define DEFINE_INT_PROP(sys, category, key, data)                                      \
-    prop = sys->get_kernel_system()->create_prop(service::property_type::int_data, 0); \
+    prop_handle = sys->get_kernel_system()->create_prop(service::property_type::int_data, 0); \
+    prop = sys->get_kernel_system()->get_prop(prop_handle); \
     prop->first = category;                                                            \
     prop->second = key;                                                                \
     prop->set(data);
 
 #define DEFINE_BIN_PROP_D(sys, category, key, size, data)                                              \
-    property_ptr prop = sys->get_kernel_system()->create_prop(service::property_type::bin_data, size); \
+    uint32_t prop_handle = sys->get_kernel_system()->create_prop(service::property_type::bin_data, size); \
+    property_ptr prop = sys->get_kernel_system()->get_prop(prop_handle); \
     prop->first = category;                                                                            \
     prop->second = key;                                                                                \
     prop->set(data);
 
-#define DEFINE_BIN_PROP(sys, category, key, size, data)                                   \
-    prop = sys->get_kernel_system()->create_prop(service::property_type::bin_data, size); \
+#define DEFINE_BIN_PROP(sys, category, key, size, data)                                                 \
+    prop_handle = sys->get_kernel_system()->create_prop(service::property_type::bin_data, size); \
+    prop = sys->get_kernel_system()->get_prop(prop_handle); \
     prop->first = category;                                                               \
     prop->second = key;                                                                   \
     prop->set(data);
@@ -221,7 +225,7 @@ namespace eka2l1 {
             CREATE_SERVER_D(sys, applist_server);
             CREATE_SERVER(sys, featmgr_server);
             CREATE_SERVER(sys, fs_server);
-            CREATE_SERVER(sys, fontbitmap_server);
+            //CREATE_SERVER(sys, fontbitmap_server);
             CREATE_SERVER(sys, window_server);
 
             auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };

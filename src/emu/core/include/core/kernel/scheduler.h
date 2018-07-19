@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <arm/jit_factory.h>
 #include <common/queue.h>
+#include <core/arm/jit_factory.h>
 
 #include <map>
 #include <mutex>
@@ -34,9 +34,11 @@ namespace eka2l1 {
 
     namespace kernel {
         class thread;
+        class process;
     }
 
     using thread_ptr = std::shared_ptr<kernel::thread>;
+    using process_ptr = std::shared_ptr<kernel::process>;
 
     namespace kernel {
         enum class thread_state;
@@ -44,11 +46,13 @@ namespace eka2l1 {
         using uid = uint64_t;
 
         class thread_scheduler {
-            std::map<uid, thread_ptr> waiting_threads;
+            std::vector<thread_ptr> waiting_threads;
             eka2l1::cp_queue<thread_ptr> ready_threads;
-            std::map<uid, thread_ptr> running_threads;
+            std::vector<thread_ptr> running_threads;
 
             thread_ptr crr_thread;
+            process_ptr crr_process;
+
             uint32_t ticks_yield;
 
             arm::jit_interface *jitter;
@@ -73,21 +77,25 @@ namespace eka2l1 {
             void unschedule_wakeup();
 
             bool schedule(thread_ptr thread);
-            bool sleep(kernel::uid thread, uint32_t sl_time);
-            bool wait_sema(kernel::uid thread);
+            bool sleep(thread_ptr thr, uint32_t sl_time);
+            bool wait_sema(thread_ptr thr);
 
-            bool resume(kernel::uid id);
-            void unschedule(kernel::uid id);
+            bool resume(thread_ptr thr);
+            void unschedule(thread_ptr thr);
 
             void refresh();
 
-            bool should_terminate(){
-                return waiting_threads.empty() && running_threads.empty() 
-                    && ready_threads.empty(); 
+            bool should_terminate() {
+                return waiting_threads.empty() && running_threads.empty()
+                    && ready_threads.empty();
             }
 
             thread_ptr current_thread() const {
                 return crr_thread;
+            }
+
+            process_ptr current_process() const {
+                return crr_process;
             }
         };
     }

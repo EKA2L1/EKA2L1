@@ -1,8 +1,8 @@
-#include <epoc/reg.h>
-#include <epoc/svc.h>
+#include <core/epoc/reg.h>
+#include <core/epoc/svc.h>
 
-#include <hle/bridge.h>
-#include <hle/libmanager.h>
+#include <core/hle/bridge.h>
+#include <core/hle/libmanager.h>
 
 namespace eka2l1::epoc {
     void register_epocv93(eka2l1::hle::lib_manager &mngr) {

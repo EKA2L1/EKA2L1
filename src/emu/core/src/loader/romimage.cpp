@@ -21,12 +21,12 @@
 #include <algorithm>
 #include <common/algorithm.h>
 #include <common/log.h>
-#include <core_mem.h>
+#include <core/core_mem.h>
 #include <cstdio>
-#include <disasm/disasm.h>
-#include <hle/libmanager.h>
-#include <loader/romimage.h>
-#include <vfs.h>
+#include <core/disasm/disasm.h>
+#include <core/hle/libmanager.h>
+#include <core/loader/romimage.h>
+#include <core/vfs.h>
 
 #include <set>
 
@@ -51,38 +51,6 @@ namespace eka2l1 {
             }
 
             return img;
-        }
-
-        // This results the file also being modified
-        bool stub_export(memory_system *mem, disasm *asmdis, address exp) {
-            subroutine sub = asmdis->get_subroutine(ptr<uint8_t>(exp));
-
-            // Fill them with nop
-            int ad = 0;
-
-            // Stub them with zero
-            for (auto &inst : sub.insts) {
-                if (inst == arm_inst_type::thumb) {
-                    *(ptr<uint16_t>(exp + ad).get(mem)) = 0x46c0;
-                    ad += 2;
-                } else if (inst == arm_inst_type::arm) {
-                    *(ptr<uint32_t>(exp + ad).get(mem)) = 0x00000000;
-                    ad += 4;
-                } else {
-                    ad += 1;
-                }
-            }
-
-            return true;
-        }
-
-        // Stub the export with NOP
-        bool stub_romimg(romimg &img, memory_system *mem, disasm *asmdis) {
-            for (uint32_t i = 0; i < img.exports.size(); i++) {
-                stub_export(mem, asmdis, img.exports[i]);
-            }
-
-            return true;
         }
     }
 }

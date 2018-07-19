@@ -18,15 +18,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/session.h>
-#include <services/server.h>
+#include <core/services/session.h>
+#include <core/services/server.h>
 
-#include <core_kernel.h>
+#include <core/core_kernel.h>
 
 namespace eka2l1 {
     namespace service {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
-            : svr(svr), kernel_obj(kern, "", kernel::owner_type::process, 0) {
+            : svr(svr)
+            , kernel_obj(kern, "", kernel::access_type::global_access) {
+            obj_type = kernel::object_type::session;
+
             svr->attach(this);
 
             if (async_slot_count > 0) {

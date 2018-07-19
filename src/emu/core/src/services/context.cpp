@@ -18,12 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core.h>
-#include <ptr.h>
+#include <core/core.h>
+#include <core/ptr.h>
 
-#include <epoc/des.h>
+#include <core/epoc/des.h>
 
-#include <services/context.h>
+#include <core/services/context.h>
 
 namespace eka2l1 {
     namespace service {

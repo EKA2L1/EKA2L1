@@ -20,8 +20,8 @@
 
 #pragma once
 
+#include <core/ptr.h>
 #include <memory>
-#include <ptr.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -95,19 +95,13 @@ namespace eka2l1 {
 
         // Status of the message, if it's accepted or delivered
         ipc_message_status msg_status;
-        uint64_t id;
-
-        int owner_type;
-        uint32_t owner_id;
+        uint32_t id;
 
         bool free : true;
 
         ipc_msg() {}
-
-        ipc_msg(uint64_t id, uint32_t owner_id, thread_ptr thr)
-            : id(id)
-            , own_thr(thr)
-            , owner_id(owner_id) {}
+        ipc_msg(thread_ptr own)
+            : own_thr(own) {}
     };
 
     using ipc_msg_ptr = std::shared_ptr<ipc_msg>;

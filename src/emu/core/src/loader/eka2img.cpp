@@ -18,11 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <loader/eka2img.h>
-#include <loader/romimage.h>
-#include <vfs.h>
+#include <core/loader/eka2img.h>
+#include <core/loader/romimage.h>
+#include <core/vfs.h>
 
-#include <ptr.h>
+#include <core/ptr.h>
 
 #include <common/algorithm.h>
 #include <common/buffer.h>
@@ -31,7 +31,8 @@
 #include <common/flate.h>
 #include <common/log.h>
 
-#include <core_kernel.h>
+#include <core/core_kernel.h>
+#include <core/core_mem.h>
 
 #include <cstdio>
 #include <miniz.h>
@@ -276,9 +277,6 @@ namespace eka2l1 {
                     auto sid = mngr.get_sid(export_addr);
 
                     if (sid) {
-                        //LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
-                        //   export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
-
                         if (mngr.get_hle(*sid)) {
                             uint32_t impaddr = mngr.get_stub(*sid).ptr_address();
                             write(code_ptr, impaddr);
@@ -305,13 +303,16 @@ namespace eka2l1 {
         bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             // Create the code + static data chunk
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
-                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
             img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
-                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            uint32_t rtcode_addr = img->code_chunk->base().ptr_address();
-            uint32_t rtdata_addr = img->data_chunk ? img->data_chunk->base().ptr_address() : 0;
+            chunk_ptr code_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
+            chunk_ptr data_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
+
+            uint32_t rtcode_addr = code_chunk_ptr->base().ptr_address();
+            uint32_t rtdata_addr = data_chunk_ptr ? data_chunk_ptr->base().ptr_address() : 0;
 
             LOG_INFO("Runtime code: 0x{:x}", rtcode_addr);
 

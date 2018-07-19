@@ -22,6 +22,7 @@
 #include <string>
 
 #define FOUND_STR(x) x != std::string::npos
+#define INVALID_HANDLE 0xFFFFFFFF
 
 typedef std::u16string utf16_str;
 typedef uint32_t address;

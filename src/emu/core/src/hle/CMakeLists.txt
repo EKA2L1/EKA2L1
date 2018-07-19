@@ -15,6 +15,6 @@ target_link_libraries(hle PUBLIC yaml-cpp common disasm)
 target_link_libraries(hle PRIVATE coreloader epoc abi)
 
 target_include_directories(hle PUBLIC ${YAML_INCLUDE_DIR})
-target_include_directories(hle PUBLIC  ${CORE_INCLUDE_DIR})
+target_include_directories(hle PUBLIC  ${CORE_OUTER_INCLUDE_DIR})
 
 #add_subdirectory(epoc9)

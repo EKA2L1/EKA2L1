@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core.h>
+#include <core/core.h>
 #include <cstdint>
 
 namespace eka2l1::epoc {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/chunk.h>
+#include <core/kernel/chunk.h>
 
 #include <cstdint>
 #include <memory>
@@ -172,5 +172,9 @@ namespace eka2l1 {
          * \returns True if the cell can be found and free.
         */
         bool free(eka2l1::ptr<void> ptr);
+
+        eka2l1::ptr<epoc::heap> rheap() const {
+            return chunk->base().cast<epoc::heap>();
+        }
     };
 }

@@ -1,5 +1,5 @@
-#include <loader/sis_old.h>
-#include <vfs.h>
+#include <core/loader/sis_old.h>
+#include <core/vfs.h>
 
 #include <common/cvt.h>
 #include <common/flate.h>

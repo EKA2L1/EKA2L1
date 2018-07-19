@@ -17,17 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <kernel/timer.h>
+#include <core/kernel/timer.h>
 
 namespace eka2l1 {
     namespace kernel {
         void timer_callback(uint64_t user, int cycles_late);
 
         timer::timer(kernel_system *kern, timing_system *timing, std::string name, reset_type rt,
-            kernel::owner_type owner,
-            kernel::uid own_id,
             kernel::access_type access)
-            : wait_obj(kern, name, owner, own_id, access)
+            : wait_obj(kern, name, access)
             , timing(timing)
             , rt(rt)
             , signaled(false)
@@ -88,11 +86,11 @@ namespace eka2l1 {
             }
         }
 
-        bool timer::should_wait(kernel::uid id) {
+        bool timer::should_wait(thread_ptr thr) {
             return !signaled;
         }
 
-        void timer::acquire(kernel::uid thr_id) {
+        void timer::acquire(thread_ptr thr) {
             if (rt == reset_type::oneshot) {
                 signaled = false;
             }

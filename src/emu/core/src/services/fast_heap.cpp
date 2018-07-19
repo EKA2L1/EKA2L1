@@ -1,10 +1,12 @@
-#include <services/fast_heap.h>
-#include <core_mem.h>
+#include <core/services/fast_heap.h>
+#include <core/core_mem.h>
 
 #include <algorithm>
 
 namespace eka2l1 {
     fast_heap::fast_heap(memory_system *mem, chunk_ptr heap_chunk, int dealign) {
+        chunk = heap_chunk;
+        
         heap_chunk->adjust(0x1000);
 
         int real_align = (dealign <= -1) ? 4 : dealign;
@@ -28,7 +30,7 @@ namespace eka2l1 {
         // Setup LLE heap
         heap->access_count = 0;
         heap->align = real_align;
-        heap->handles = heap_chunk->unique_id();
+        heap->handles = nullptr;//heap_chunk;
         heap->cell_count = 0;
         heap->total_alloc_size = 0;
         heap->handle_count = 1;

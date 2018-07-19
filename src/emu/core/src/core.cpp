@@ -17,17 +17,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <core.h>
-#include <process.h>
+#include <core/core.h>
+#include <core/kernel/process.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
-#include <disasm/disasm.h>
+#include <core/disasm/disasm.h>
 
-#include <loader/eka2img.h>
-#include <loader/rpkg.h>
+#include <core/loader/eka2img.h>
+#include <core/loader/rpkg.h>
 
-#include <epoc/hal.h>
+#include <core/epoc/hal.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -44,7 +44,7 @@ namespace eka2l1 {
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
-        mem.init();
+        mem.init(get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr);
 
         io.init(&mem);
         mngr.init(&io);
@@ -59,7 +59,7 @@ namespace eka2l1 {
         epoc::init_hal(this);
     }
 
-    process *system::load(uint32_t id) {
+    uint32_t system::load(uint32_t id) {
         emu_win->init("EKA2L1", vec2(360, 640));
         emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
 
@@ -67,17 +67,19 @@ namespace eka2l1 {
             exit = true;
         };
 
-        crr_process = kern.spawn_new_process(id);
+        uint32_t process_handle = kern.spawn_new_process(id);
 
-        if (crr_process == nullptr) {
-            return nullptr;
+        if (process_handle == INVALID_HANDLE) {
+            return INVALID_HANDLE;
         }
 
-        crr_process->run();
+        kern.run_process(process_handle);
 
-        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+        // Change window title to game title
+        emu_win->change_title("EKA2L1 | " + 
+            common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
 
-        return crr_process;
+        return process_handle;
     }
 
     int system::loop() {
@@ -96,7 +98,7 @@ namespace eka2l1 {
             reschedule_pending = false;
         } else {
             if (kern.crr_process()) {
-                kern.destroy_process(kern.crr_process());
+                //kern.close(kern.crr_process());
             }
         }
 
@@ -104,7 +106,7 @@ namespace eka2l1 {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
 
-            kern.destroy_process(kern.crr_process());
+            //kern.destroy_process(kern.crr_process());
 
             exit = true;
             return 0;
@@ -126,7 +128,7 @@ namespace eka2l1 {
 
         romf = *romf_res;
 
-        bool res1 = mem.load_rom(romf.header.rom_base, path);
+        bool res1 = mem.map_rom(romf.header.rom_base, path);
 
         if (!res1) {
             return false;

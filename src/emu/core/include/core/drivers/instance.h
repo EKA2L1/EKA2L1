@@ -1,6 +1,6 @@
 #pragma once
 
-#include <drivers/emu_window.h>
+#include <core/drivers/emu_window.h>
 #include <memory>
 
 namespace eka2l1 {

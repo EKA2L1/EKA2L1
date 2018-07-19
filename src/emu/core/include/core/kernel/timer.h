@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <core_timing.h>
-#include <kernel/wait_obj.h>
+#include <core/kernel/wait_obj.h>
+#include <core/core_timing.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -38,8 +38,6 @@ namespace eka2l1 {
 
         public:
             timer(kernel_system *kern, timing_system *timing, std::string name, reset_type rt,
-                kernel::owner_type owner,
-                kernel::uid own_id,
                 kernel::access_type access = access_type::local_access);
 
             ~timer();
@@ -49,8 +47,8 @@ namespace eka2l1 {
             uint64_t init_delay;
             uint64_t interval_delay;
 
-            bool should_wait(kernel::uid thr_id) override;
-            void acquire(kernel::uid thr_id) override;
+            bool should_wait(thread_ptr thr) override;
+            void acquire(thread_ptr thr) override;
 
             void wake_up_waiting_threads() override;
 

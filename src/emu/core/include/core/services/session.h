@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include <kernel/kernel_obj.h>
-#include <kernel/thread.h>
-#include <kernel/wait_obj.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/kernel/thread.h>
+#include <core/kernel/wait_obj.h>
 
-#include <ipc.h>
+#include <core/ipc.h>
 
 #include <functional>
 #include <map>

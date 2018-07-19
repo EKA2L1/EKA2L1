@@ -18,17 +18,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/fontbitmap/font.h>
-#include <services/fontbitmap/fontbitmap.h>
-#include <services/fontbitmap/op.h>
+#include <core/services/fontbitmap/font.h>
+#include <core/services/fontbitmap/fontbitmap.h>
+#include <core/services/fontbitmap/op.h>
 
 #include <common/log.h>
-#include <core.h>
+#include <core/core.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>
 
-#include <vfs.h>
+#include <core/vfs.h>
 
 #include <filesystem>
 
@@ -53,6 +53,8 @@ namespace eka2l1 {
             prot::read_write, kernel::chunk_type::disconnected, kernel::chunk_access::global,
             kernel::chunk_attrib::none, kernel::owner_type::process);
 
+        fbs_heap = fast_heap(ctx.sys->get_memory_system(), fbs_shared_chunk, 4);
+
         if (FT_Init_FreeType(&ft_lib)) {
             LOG_ERROR("Freetype can't not be intialized in font bitmap server!");
             ctx.set_request_status(KErrGeneral);
@@ -60,7 +62,9 @@ namespace eka2l1 {
             return;
         }
 
-        ctx.set_request_status(obj_id);
+        ctx.set_request_status(ctx.sys->get_kernel_system()->open_handle(
+            ctx.sys->get_kernel_system()->get_server_by_name("!Fontbitmapserver"), kernel::owner_type::kernel));
+
         LOG_INFO("FontBitmapServer::Init stubbed (maybe)");
     }
 
@@ -77,9 +81,9 @@ namespace eka2l1 {
 
     font *fontbitmap_server::get_cache_font_by_family_and_style(const std::string &font_fam, uint32_t style) {
         auto &res = std::find_if(ft_fonts.begin(), ft_fonts.end(),
-            [&](const auto &f) { 
-            return (f.font_name == font_fam) && (f.attrib == style);
-        });
+            [&](const auto &f) {
+                return (f.font_name == font_fam) && (f.attrib == style);
+            });
 
         if (res != ft_fonts.end()) {
             return &(*res);
@@ -129,7 +133,7 @@ namespace eka2l1 {
         }
     }
 
-    font* fontbitmap_server::get_font(io_system *io, const std::string &font_name, uint32_t style) {
+    font *fontbitmap_server::get_font(io_system *io, const std::string &font_name, uint32_t style) {
         font *cache = get_cache_font_by_family_and_style(font_name, style);
 
         if (!cache) {
@@ -158,13 +162,14 @@ namespace eka2l1 {
                         return get_cache_font_by_family_and_style(font_name, style);
                     }
                 }
-            }   
+            }
         }
 
         return cache;
     }
 
     void fontbitmap_server::get_nearest_font(service::ipc_context ctx) {
+        // Load font cache if it hasn't been loaded yet.
         if (!cache_loaded) {
             do_cache_fonts(ctx.sys->get_io_system());
             cache_loaded = true;
@@ -178,18 +183,54 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
+        // Typeface name.
         std::string typeface_name(spec->tf.name, spec->tf.name + spec->tf.name_length);
-        font *requested_font = get_font(ctx.sys->get_io_system(), typeface_name, 
+
+        font *requested_font = get_font(ctx.sys->get_io_system(), typeface_name,
             static_cast<uint32_t>(spec->style.flags) & 0x20000 ? spec->style.flags & ~0x20000 : spec->style.flags);
 
         bool twips = (ctx.msg->function == EFbsMessGetNearestFontToMaxHeightInTwips || ctx.msg->function == EFbsMessGetNearestFontToDesignHeightInTwips)
             ? true
             : false;
 
-        // TODO: Find out if font is loaded as bitmap to memory or not
-        // Pass
+        // Allocate resources
+        eka2l1::ptr<epoc::fbs::bitmap_font> font_wrapper_vp = fbs_heap.allocate(sizeof(epoc::fbs::bitmap_font))
+                                                                  .cast<epoc::fbs::bitmap_font>();
+
+        eka2l1::ptr<epoc::fbs::open_font> open_font_vp = fbs_heap.allocate(sizeof(epoc::fbs::open_font))
+                                                             .cast<epoc::fbs::open_font>();
+
+        memory_system *mem = ctx.sys->get_memory_system();
+
+        epoc::fbs::bitmap_font *font_wrapper = font_wrapper_vp.get(mem);
+        epoc::fbs::open_font *open_font = open_font_vp.get(mem);
+
+        info->font_handle = 1;
         info->server_handle = unique_id();
-        info->font_offset = 0;
+        info->font_offset = font_wrapper_vp.ptr_address() - fbs_shared_chunk->base().ptr_address();
+
+        LOG_TRACE("Font address: 0x{:x}", font_wrapper_vp.ptr_address());
+
+        font_wrapper->vtable = ctx.sys->get_lib_manager()->get_vtable_address("CBitmapFont");
+        font_wrapper->font_bitmap_off = 0;
+        font_wrapper->open_font = open_font_vp.ptr_address();
+        font_wrapper->id = info->font_handle;
+        font_wrapper->heap = fbs_heap.rheap().ptr_address();
+
+        // Filling alg style
+        epoc::fbs::alg_style &style = font_wrapper->style;
+
+        // Filling metrics
+        epoc::fbs::open_font_metrics &metrics = open_font->metrics;
+        metrics.max_width = requested_font->ft_face->max_advance_width;
+        metrics.max_height = requested_font->ft_face->max_advance_height;
+        metrics.max_depth = 0;
+        metrics.ascent = requested_font->ft_face->ascender;
+        metrics.descent = requested_font->ft_face->descender;
+        metrics.design_height = spec->height;  // Temporary.
+
+        open_font->glyph_cache_offset = 0x90000000;
+        open_font->file_offset = 0;
 
         ctx.write_arg_pkg(1, *info);
         ctx.set_request_status(KErrNone);

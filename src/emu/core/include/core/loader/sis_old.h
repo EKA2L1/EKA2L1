@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/types.h>
-#include <manager/package_manager.h>
+#include <core/manager/package_manager.h>
 
 #include <cstdint>
 #include <optional>

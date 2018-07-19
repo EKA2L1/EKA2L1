@@ -20,10 +20,9 @@
 
 #include <common/queue.h>
 
-#include <services/server.h>
-#include <services/fast_heap.h>
-
-#include <vfs.h>
+#include <core/services/fast_heap.h>
+#include <core/services/server.h>
+#include <core/vfs.h>
 
 #include <atomic>
 
@@ -37,6 +36,8 @@ namespace eka2l1 {
     class io_system;
 
     struct font {
+        int handle;
+
         std::string font_name;
         uint32_t attrib;
         FT_Face ft_face;
@@ -45,13 +46,14 @@ namespace eka2l1 {
     };
 
     class fontbitmap_server : public service::server {
-        int max_font_cache = 20;
+        enum {
+            max_font_cache = 30
+        };
+
         bool cache_loaded = false;
 
-        std::atomic<uint64_t> id_counter;
-
         chunk_ptr fbs_shared_chunk;
-        fast_heap fbs_shared_heap;
+        fast_heap fbs_heap;
 
         FT_Library ft_lib;
 

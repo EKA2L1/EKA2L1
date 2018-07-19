@@ -20,14 +20,14 @@
 
 #pragma once
 
-#include <hle/bridge_types.h>
-#include <hle/layout_args.h>
-#include <hle/read_arg.h>
-#include <hle/write_arg.h>
-#include <hle/return_val.h>
-#include <hle/arg_layout.h>
+#include <core/hle/bridge_types.h>
+#include <core/hle/layout_args.h>
+#include <core/hle/read_arg.h>
+#include <core/hle/write_arg.h>
+#include <core/hle/return_val.h>
+#include <core/hle/arg_layout.h>
 
-#include <core.h>
+#include <core/core.h>
 
 #include <cstdint>
 #include <functional>

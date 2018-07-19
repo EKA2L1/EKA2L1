@@ -22,15 +22,15 @@
 #include <common/log.h>
 #include <common/random.h>
 
-#include <epoc/reg.h>
-#include <hle/libmanager.h>
+#include <core/epoc/reg.h>
+#include <core/hle/libmanager.h>
 
-#include <loader/eka2img.h>
-#include <loader/romimage.h>
-#include <vfs.h>
+#include <core/loader/eka2img.h>
+#include <core/loader/romimage.h>
+#include <core/vfs.h>
 
-#include <core_kernel.h>
-#include <core.h>
+#include <core/core.h>
+#include <core/core_kernel.h>
 
 namespace eka2l1 {
     namespace hle {
@@ -54,8 +54,11 @@ namespace eka2l1 {
             custom_stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            stub_ptr = stub->base().cast<uint32_t>();
-            custom_stub_ptr = custom_stub->base().cast<uint32_t>();
+            chunk_ptr stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stub));
+            chunk_ptr custom_stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(custom_stub));
+
+            stub_ptr = stub_chunk_obj->base().cast<uint32_t>();
+            custom_stub_ptr = custom_stub_chunk_obj->base().cast<uint32_t>();
 
             LOG_INFO("Lib manager initialized, total implemented HLE functions: {}", import_funcs.size());
         }
@@ -106,8 +109,8 @@ namespace eka2l1 {
 
         void lib_manager::shutdown() {
             for (auto &img : e32imgs_cache) {
-                kern->destroy_chunk(img.second.img->code_chunk->unique_id());
-                kern->destroy_chunk(img.second.img->data_chunk->unique_id());
+                kern->close(img.second.img->code_chunk);
+                kern->close(img.second.img->data_chunk);
             }
         }
 
@@ -132,9 +135,9 @@ namespace eka2l1 {
     tids.clear();
 
             if (ver == epocver::epoc6) {
-#include <hle/epoc6_n.def>
+#include <core/hle/epoc6_n.def>
             } else {
-#include <hle/epoc9_n.def>
+#include <core/hle/epoc9_n.def>
             }
 
 #undef LIB

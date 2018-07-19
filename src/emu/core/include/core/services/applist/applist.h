@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <services/server.h>
+#include <core/services/server.h>
 
 namespace eka2l1 {
     /*! \brief Applist services

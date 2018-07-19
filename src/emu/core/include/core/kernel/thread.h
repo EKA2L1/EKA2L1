@@ -26,14 +26,15 @@
 #include <optional>
 #include <string>
 
-#include <arm/jit_factory.h>
 #include <common/resource.h>
+#include <core/arm/jit_factory.h>
 
-#include <kernel/chunk.h>
-#include <kernel/wait_obj.h>
+#include <core/kernel/object_ix.h>
+#include <core/kernel/chunk.h>
+#include <core/kernel/wait_obj.h>
 
-#include <ipc.h>
-#include <ptr.h>
+#include <core/ipc.h>
+#include <core/ptr.h>
 
 namespace eka2l1 {
     class kernel_system;
@@ -42,11 +43,13 @@ namespace eka2l1 {
     namespace kernel {
         class mutex;
         class semaphore;
+        class process;
     }
 
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
     using sema_ptr = std::shared_ptr<kernel::semaphore>;
+    using process_ptr = std::shared_ptr<kernel::process>;
 
     namespace kernel {
         using address = uint32_t;
@@ -76,7 +79,7 @@ namespace eka2l1 {
             priority_absolute_very_low = 100,
             priority_absolute_low = 200,
             priority_absolute_background = 300,
-            priorty_absolute_forground = 400,
+            priorty_absolute_foreground = 400,
             priority_absolute_high = 500
         };
 
@@ -109,7 +112,10 @@ namespace eka2l1 {
 
         class thread : public wait_obj {
             friend class thread_scheduler;
+            friend class kernel_system;
             friend class mutex;
+
+            process_ptr own_process;
 
             thread_state state;
             std::mutex mut;
@@ -130,17 +136,17 @@ namespace eka2l1 {
 
             uint32_t lrt;
 
-            chunk_ptr stack_chunk;
-            chunk_ptr name_chunk;
-            chunk_ptr tls_chunk;
+            uint32_t stack_chunk;
+            uint32_t name_chunk;
+            uint32_t tls_chunk;
 
             thread_local_data ldata;
 
             std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
-            std::vector<mutex_ptr> held_mutexes;
-            std::vector<mutex_ptr> pending_mutexes;
+            std::vector<kernel::mutex*> held_mutexes;
+            std::vector<kernel::mutex*> pending_mutexes;
 
-            sema_ptr request_sema;
+            uint32_t request_sema;
             ipc_msg_ptr sync_msg;
 
             void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
@@ -148,14 +154,18 @@ namespace eka2l1 {
 
             int leave_depth = -1;
 
+            object_ix thread_handles;
+
         public:
+            kernel_obj_ptr get_object(uint32_t handle);
+
             std::vector<wait_obj *> waits_on;
 
             void increase_leave_depth() {
                 leave_depth++;
             }
 
-            void decrease_leave_depth(){
+            void decrease_leave_depth() {
                 leave_depth--;
             }
 
@@ -164,7 +174,7 @@ namespace eka2l1 {
             }
 
             thread();
-            thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+            thread(kernel_system *kern, memory_system *mem, process_ptr owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 ptr<void> usrdata = nullptr,
@@ -186,14 +196,8 @@ namespace eka2l1 {
                 return sync_msg;
             }
 
-            bool run();
-            bool stop();
-
-            bool sleep(int64_t ns);
-            bool resume();
-
-            bool should_wait(const kernel::uid id) override;
-            void acquire(const kernel::uid id) override;
+            bool should_wait(thread_ptr thr) override;
+            void acquire(thread_ptr thr) override;
 
             // Physically we can't compare thread.
             bool operator>(const thread &rhs);
@@ -217,6 +221,14 @@ namespace eka2l1 {
 
             void wait_for_any_request();
             void signal_request();
+
+            process_ptr owning_process() {
+                return own_process;
+            }
+
+            void owning_process(process_ptr pr) {
+                own_process = pr;
+            }
         };
 
         using thread_ptr = std::shared_ptr<kernel::thread>;

@@ -1,5 +1,5 @@
-#include <drivers/emu_window.h>
-#include <drivers/backend/emu_window_glfw.h>
+#include <core/drivers/emu_window.h>
+#include <core/drivers/backend/emu_window_glfw.h>
 
 namespace eka2l1 {
     namespace driver {

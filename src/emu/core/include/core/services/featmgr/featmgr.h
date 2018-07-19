@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/server.h>
+#include <core/services/server.h>
 #include <unordered_map>
 
 namespace eka2l1 {
