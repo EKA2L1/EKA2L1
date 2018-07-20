@@ -51,12 +51,12 @@ namespace eka2l1 {
             /*! Step the CPU. Each step execute one instruction. */
             virtual void step() = 0;
 
-            /*! Get a specific ARM Rx register. Range from r0 to r15 */  
+            /*! Get a specific ARM Rx register. Range from r0 to r15 */
             virtual uint32_t get_reg(size_t idx) = 0;
 
             /*! Get the stack pointer */
             virtual uint32_t get_sp() = 0;
-          
+
             /*! Get the program counter */
             virtual uint32_t get_pc() = 0;
 
@@ -73,7 +73,7 @@ namespace eka2l1 {
 
             /*! Set LR */
             virtual void set_lr(uint32_t val) = 0;
-            
+
             /*! Set stack pointer */
             virtual void set_sp(uint32_t val) = 0;
             virtual void set_vfp(size_t idx, uint32_t val) = 0;
@@ -83,20 +83,25 @@ namespace eka2l1 {
 
             /*! Save thread context from JIT. */
             virtual void save_context(thread_context &ctx) = 0;
-            
+
             /*! Load thread context to JIT. */
             virtual void load_context(const thread_context &ctx) = 0;
 
             /*! Same as set SP */
             virtual void set_stack_top(address addr) = 0;
-            
+
             /*! Same as get SP */
             virtual address get_stack_top() = 0;
 
             virtual void prepare_rescheduling() = 0;
 
             virtual bool is_thumb_mode() = 0;
+
+            virtual void page_table_changed() = 0;
+
+            virtual void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) = 0;
+
+            virtual void unmap_memory(address addr, size_t size) = 0;
         };
     }
 }
-

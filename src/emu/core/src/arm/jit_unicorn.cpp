@@ -23,8 +23,8 @@
 #include <common/types.h>
 
 #include <core/arm/jit_unicorn.h>
-#include <core/core_timing.h>
 #include <core/core.h>
+#include <core/core_timing.h>
 #include <core/disasm/disasm.h>
 #include <core/hle/libmanager.h>
 #include <core/ptr.h>
@@ -93,21 +93,6 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
     jit->save_context(context_debug);
 
-    if (address == 0x80325580) {
-        LOG_TRACE("r0: {:x}, r1: {:x}, r2: {:x}", context_debug.cpu_registers[0], context_debug.cpu_registers[1], context_debug.cpu_registers[2]);
-    
-        struct test {
-            int vtable;
-            int iFbs;
-            int iAddressPointer;
-            int iHandle;
-            int iServerHandle;
-        };
-
-        test *b = eka2l1::ptr<test>(context_debug.cpu_registers[0]).get(jit->get_memory_sys());
-        int a = 5;
-    }
-
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
     bool log_code = jit->get_lib_manager()->get_sys()->get_bool_config("log_code");
@@ -131,7 +116,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         bool thumb = thumb_mode(uc);
         std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
 
-        LOG_TRACE("{:#08x} {} 0x{:x}", address, disassembly, thumb ? *(uint16_t*)code : *(uint32_t*)code);
+        LOG_TRACE("{:#08x} {} 0x{:x}", address, disassembly, thumb ? *(uint16_t *)code : *(uint32_t *)code);
     }
 }
 
@@ -290,7 +275,9 @@ namespace eka2l1 {
                     uint32_t lr = 0;
                     uc_reg_read(engine, UC_ARM_REG_LR, &lr);
 
-                    LOG_CRITICAL("Unicorn error {:#02x} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}", err, pc, error_pc, lr);
+                    LOG_CRITICAL("Unicorn error {} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}", 
+                        uc_strerror(err), pc, error_pc, lr);
+
                     return false;
                 }
 
@@ -432,7 +419,7 @@ namespace eka2l1 {
         uint32_t jit_unicorn::get_cpsr() {
             uint32_t cpsr = 0;
             auto err = uc_reg_read(engine, UC_ARM_REG_CPSR, &cpsr);
-            
+
             return cpsr;
         }
 
@@ -474,6 +461,52 @@ namespace eka2l1 {
             if (err != UC_ERR_OK) {
                 LOG_ERROR("Prepare rescheduling failed!");
             }
+        }
+
+        void jit_unicorn::page_table_changed() {
+        }
+
+        void jit_unicorn::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
+            uint32_t perms = 0;
+
+            switch (protection) {
+            case prot::read:
+                perms = UC_PROT_READ;
+                break;
+
+            case prot::read_exec:
+                perms = UC_PROT_READ | UC_PROT_EXEC;
+                break;
+
+            case prot::read_write:
+                perms = UC_PROT_READ | UC_PROT_WRITE;
+                break;
+
+            case prot::write:
+                perms = UC_PROT_WRITE;
+                break;
+
+            case prot::exec:
+                perms = UC_PROT_EXEC;
+                break;
+
+            case prot::read_write_exec:
+                perms = UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC;
+                break;
+
+            default:
+                break;
+            }
+
+            uc_err err = uc_mem_map_ptr(engine, vaddr, size, perms, ptr);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("Error mapping backing memory at addr: 0x{:x}, err: {}", vaddr, uc_strerror(err));
+            }
+        }
+
+        void jit_unicorn::unmap_memory(address addr, size_t size) {
+            uc_mem_unmap(engine, addr, size);
         }
     }
 }

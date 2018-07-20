@@ -469,6 +469,22 @@ namespace eka2l1::epoc {
     /* Thread independent */
     /**********************************************/
 
+    struct TFindHandle {
+        int iHandle;
+        int iSpare1;
+        int iObjIdLow;
+        int iObjIdHigh;
+    };
+
+    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<TDes8> aName, eka2l1::ptr<TFindHandle> aHandleFind) {
+        memory_system *mem = sys->get_memory_system();
+        std::string name = aName.get(mem)->StdString(sys);
+
+        LOG_TRACE("Finding object name: {}", name);
+
+        return KErrNone;
+    }
+
     BRIDGE_FUNC(TInt, HandleClose, TInt aHandle) {
         if (aHandle & 0x8000) {
             return false;
@@ -639,6 +655,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
         BRIDGE_REGISTER(0x00800019, UTCOffset),
         /* SLOW EXECUTIVE CALL */
+        BRIDGE_REGISTER(0x00, ObjectNext),
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x16, ProcessFilename),

@@ -7,6 +7,12 @@
 #include <memory>
 
 namespace eka2l1 {
+    namespace arm {
+        class jit_interface;
+
+        using jitter = std::unique_ptr<jit_interface>;
+    }
+
     class memory_system {
         page_table *current_page_table;
 
@@ -24,19 +30,16 @@ namespace eka2l1 {
 
         void *rom_map;
 
+        arm::jit_interface *cpu;
+
     public:
-        void init(uint32_t code_ram_addr);
+        void init(arm::jitter &jit, uint32_t code_ram_addr);
         void shutdown() {}
 
         bool map_rom(uint32_t addr, const std::string &path);
 
-        page_table *get_current_page_table() const {
-            return current_page_table;
-        }
-
-        void set_current_page_table(page_table &table) {
-            current_page_table = &table;
-        }
+        page_table *get_current_page_table() const;
+        void set_current_page_table(page_table &table);
 
         void *get_real_pointer(address addr);
 

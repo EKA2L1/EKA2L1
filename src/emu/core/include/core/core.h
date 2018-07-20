@@ -128,7 +128,7 @@ namespace eka2l1 {
 
         system(driver::window_type emu_win_type = driver::window_type::glfw,
             driver::driver_type emu_driver_type = driver::driver_type::opengl,
-            arm::jitter_arm_type jit_type = arm::jitter_arm_type::dynarmic)
+            arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
             : jit_type(jit_type)
             , win_type(emu_win_type)
             , dr_type(emu_driver_type) {}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <common/resource.h>
 
 #include <cstdint>
 #include <functional>
@@ -41,7 +42,7 @@ namespace eka2l1 {
         prot page_protection;
     };
 
-    using mem_ptr = std::unique_ptr<uint8_t[], std::function<void(uint8_t *)>>;
+    using mem_ptr = std::shared_ptr<uint8_t[]>;
 
     struct page_table {
         std::vector<mem_ptr> pointers;

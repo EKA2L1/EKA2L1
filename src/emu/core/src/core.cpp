@@ -44,13 +44,14 @@ namespace eka2l1 {
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
-        mem.init(get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr);
 
         io.init(&mem);
         mngr.init(&io);
         asmdis.init(&mem);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
+        mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr);
+
         emu_win = driver::new_emu_window(win_type);
         emu_screen_driver = driver::new_screen_driver(dr_type);
 
@@ -98,7 +99,7 @@ namespace eka2l1 {
             reschedule_pending = false;
         } else {
             if (kern.crr_process()) {
-                //kern.close(kern.crr_process());
+                kern.crr_process().reset();
             }
         }
 
@@ -106,7 +107,7 @@ namespace eka2l1 {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
 
-            //kern.destroy_process(kern.crr_process());
+            kern.crr_process().reset();
 
             exit = true;
             return 0;

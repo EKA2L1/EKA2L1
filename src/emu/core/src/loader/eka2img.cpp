@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project 
@@ -301,12 +301,14 @@ namespace eka2l1 {
         }
 
         bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            // LOG_TRACE("Mở chunk cho code và data");
+            
             // Create the code + static data chunk
-            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
-                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
+                prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
-                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), 
+                prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
             chunk_ptr code_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
             chunk_ptr data_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));

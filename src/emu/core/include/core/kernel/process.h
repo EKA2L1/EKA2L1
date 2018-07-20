@@ -65,6 +65,7 @@ namespace eka2l1::kernel {
         std::string process_name;
 
         loader::e32img_ptr img;
+        loader::romimg_ptr romimg;
 
         kernel_system *kern;
         memory_system *mem;
@@ -77,12 +78,20 @@ namespace eka2l1::kernel {
         page_table page_tab;
         object_ix process_handles;
 
+    protected:
+        void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
+            uint32_t heap_max);
+
     public:
         process() = default;
 
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
             const std::u16string &cmd_args, loader::e32img_ptr &img);
+
+        process(kernel_system *kern, memory_system *mem, uint32_t uid,
+            const std::string &process_name, const std::u16string &exe_path,
+            const std::u16string &cmd_args, loader::romimg_ptr &img);
 
         std::u16string get_cmd_args() const {
             return cmd_args;

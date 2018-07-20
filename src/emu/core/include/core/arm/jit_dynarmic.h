@@ -21,6 +21,7 @@
 #include <core/arm/jit_interface.h>
 #include <core/arm/jit_unicorn.h>
 
+#include <dynarmic/A32/config.h>
 #include <dynarmic/A32/a32.h>
 
 #include <memory>
@@ -39,7 +40,7 @@ namespace eka2l1 {
 
         class jit_dynarmic : public jit_interface {
             friend class arm_dynarmic_callback;
-            
+
             jit_unicorn fallback_jit;
 
             std::unique_ptr<Dynarmic::A32::Jit> jit;
@@ -50,6 +51,10 @@ namespace eka2l1 {
             memory_system *mem;
 
             hle::lib_manager *lib_mngr;
+
+            std::array<uint8_t*, 
+                Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> page_table_dyn;
+
         public:
             bool execute_instructions(size_t num_instructions) override;
 
@@ -105,6 +110,12 @@ namespace eka2l1 {
             bool is_thumb_mode() override;
 
             void imb_range(address start, uint32_t len);
+
+            void page_table_changed() override;
+
+            void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) override;
+
+            void unmap_memory(address addr, size_t size) override;
         };
     }
 }

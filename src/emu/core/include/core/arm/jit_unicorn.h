@@ -95,6 +95,12 @@ namespace eka2l1 {
             void prepare_rescheduling() override;
 
             bool is_thumb_mode() override;
+
+            void page_table_changed() override;
+
+            void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) override;
+
+            void unmap_memory(address addr, size_t size) override;
         };
     }
 }

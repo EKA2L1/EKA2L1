@@ -29,6 +29,7 @@
 #include <core/hle/libmanager.h>
 #include <core/kernel/scheduler.h>
 #include <core/kernel/thread.h>
+#include <core/loader/romimage.h>
 #include <core/manager/manager.h>
 #include <core/ptr.h>
 #include <core/vfs.h>
@@ -97,6 +98,28 @@ namespace eka2l1 {
         auto temp = loader::parse_eka2img(f, true);
 
         if (!temp) {
+            f->seek(0, eka2l1::file_seek_mode::beg);
+            auto romimg = loader::parse_romimg(f, mem);
+
+            if (romimg) {
+                // Lib manager needs the system to call HLE function
+                libmngr->init(sys, this, io, mem, kern_ver);
+
+                loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
+                libmngr->open_romimg(img_ptr);
+
+                process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr);
+                objects.push_back(std::move(pr));
+
+                uint32_t h = create_handle_lastest(owner);
+                run_process(h);
+
+                f->close();
+
+                return h;
+            }
+
+            f->close();
             return false;
         } else {
             // Lib manager needs the system to call HLE function
@@ -117,6 +140,8 @@ namespace eka2l1 {
 
         uint32_t h = create_handle_lastest(owner);
         run_process(h);
+
+        f->close();
 
         return h;
     }
