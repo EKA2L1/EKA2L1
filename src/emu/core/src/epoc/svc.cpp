@@ -175,6 +175,18 @@ namespace eka2l1::epoc {
         return slot.data_size;
     }
 
+    BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr = kern->get_process(aHandle);
+
+        uint32_t org_flags = pr->get_flags();
+        uint32_t new_flags = ((org_flags & ~aClearMask) | aSetMask);
+        new_flags = (new_flags ^ org_flags);
+
+        pr->set_flags(org_flags ^ new_flags);
+    }
+
     /********************/
     /* TLS */
     /*******************/
@@ -188,7 +200,7 @@ namespace eka2l1::epoc {
             }
         }
 
-        return eka2l1::ptr<void>(nullptr);
+        return eka2l1::ptr<void>(0);
     }
 
     BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr) {
@@ -330,7 +342,7 @@ namespace eka2l1::epoc {
     /* CHUNK */
     /*********************************/
 
-    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<eka2l1::epoc::TDesC8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate) {
+    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<TDesC8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -389,7 +401,7 @@ namespace eka2l1::epoc {
         kernel_obj_ptr obj = RHandleBase(aChunkHandle).GetKObject(sys);
 
         if (!obj) {
-            return nullptr;
+            return 0;
         }
 
         chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
@@ -469,18 +481,24 @@ namespace eka2l1::epoc {
     /* Thread independent */
     /**********************************************/
 
-    struct TFindHandle {
-        int iHandle;
-        int iSpare1;
-        int iObjIdLow;
-        int iObjIdHigh;
-    };
-
     BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<TDes8> aName, eka2l1::ptr<TFindHandle> aHandleFind) {
         memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        TFindHandle *handle = aHandleFind.get(mem);
         std::string name = aName.get(mem)->StdString(sys);
 
         LOG_TRACE("Finding object name: {}", name);
+
+        std::optional<find_handle> info = kern->find_object(name, static_cast<kernel::object_type>(aObjectType));
+
+        if (!info) {
+            return KErrNotFound;
+        }
+
+        handle->iHandle = info->index;
+        handle->iObjIdLow = static_cast<uint32_t>(info->object_id);
+        handle->iObjIdHigh = info->object_id >> 32;
 
         return KErrNone;
     }
@@ -503,7 +521,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        uint32_t res =  kern->mirror(kern->get_thread_by_handle(aThreadHandle), aDupHandle,
+        uint32_t res = kern->mirror(kern->get_thread_by_handle(aThreadHandle), aDupHandle,
             (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread);
 
         return res;
@@ -550,7 +568,7 @@ namespace eka2l1::epoc {
 
         std::vector<uint32_t> list = epoc::query_entries(sys);
 
-        *total = list.size();
+        *total = static_cast<TInt>(list.size());
         memcpy(list_ptr, list.data(), sizeof(TUint32) * *total);
 
         return KErrNone;
@@ -596,6 +614,18 @@ namespace eka2l1::epoc {
         thr->rename(new_name);
 
         return KErrNone;
+    }
+
+    BRIDGE_FUNC(void, ThreadSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
+        kernel_system *kern = sys->get_kernel_system();
+
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+
+        uint32_t org_flags = thr->get_flags();
+        uint32_t new_flags = ((org_flags & ~aClearMask) | aSetMask);
+        new_flags = (new_flags ^ org_flags);
+
+        thr->set_flags(org_flags ^ new_flags);
     }
 
     /*****************************/
@@ -659,7 +689,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x16, ProcessFilename),
+        BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x27, SessionShare),
+        BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x3C, HandleName),
         BRIDGE_REGISTER(0x4D, SessionSendSync),
         BRIDGE_REGISTER(0x4E, DllTls),
@@ -692,6 +724,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800006, SetActiveScheduler),
         BRIDGE_REGISTER(0x00800008, TrapHandler),
         BRIDGE_REGISTER(0x00800009, SetTrapHandler),
-        BRIDGE_REGISTER(0x0080000D, DebugMask)
+        BRIDGE_REGISTER(0x0080000D, DebugMask),
+        /* SLOW EXECUTIVE CALL */
+        BRIDGE_REGISTER(0x00, ObjectNext)
     };
 }

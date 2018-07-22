@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <core/epoc/des.h>
 #include <core/epoc/chunk.h>
+#include <core/epoc/des.h>
 #include <core/epoc/dll.h>
 #include <core/epoc/hal.h>
 #include <core/epoc/handle.h>
@@ -114,6 +114,13 @@ namespace eka2l1::epoc {
      * \returns The slot data size, else error code.
      */
     BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength);
+
+    /*! \brief Set the process flags. 
+     * \param aHandle The process handle.
+     * \param aClearMask The flags to clear mask.
+     * \param aSetMask The flags to set mask.
+     */
+    BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask);
 
     /*! \brief Get the thread local storage of a DLL. 
      *
@@ -250,6 +257,16 @@ namespace eka2l1::epoc {
      * request signal that semaphore.
      */
     BRIDGE_FUNC(void, WaitForAnyRequest);
+
+    /*! \brief Find the kernel object with the specified type and name. 
+     * 
+     * \param aObjectType The kernel object type.
+     * \param aName A pointer to a 8-bit descriptor (Symbian EKA1 is 16-bit) contains the name.
+     * \param aHandleFind Pointer to the find handle struct. Operation success results in this struct filled.
+     *
+     * \returns KErrNone if success, else error code.
+     */
+    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<TDes8> aName, eka2l1::ptr<TFindHandle> aHandleFind);
 
     /*! \brief Close a handle. If there is no duplicate handle or another reference handle open, 
      *  call Destroy to destroy the kernel object 

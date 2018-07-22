@@ -566,4 +566,25 @@ namespace eka2l1 {
             }
         }
     }
+
+    uint64_t kernel_system::next_uid() const {
+        ++uid_counter;
+        return uid_counter.load();
+    }
+
+    std::optional<find_handle> kernel_system::find_object(const std::string &name, kernel::object_type type) {
+        find_handle handle_find_info;
+
+        const auto &obj = std::find_if(objects.begin(), objects.end(),
+            [&](kernel_obj_ptr obj) { return (obj->name() == name) && (obj->get_object_type() == type); });
+
+        if (obj != objects.end()) {
+            handle_find_info.index = obj - objects.begin();
+            handle_find_info.object_id = (*obj)->unique_id();
+
+            return handle_find_info;
+        }
+
+        return std::optional<find_handle>{};
+    }
 }

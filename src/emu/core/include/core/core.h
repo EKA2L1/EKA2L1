@@ -196,7 +196,7 @@ namespace eka2l1 {
             return exit;
         }
 
-        uint32_t total_app() {
+        size_t total_app() {
             return mngr.get_package_manager()->app_count();
         }
 

@@ -25,7 +25,8 @@ namespace eka2l1 {
         kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::access_type access)
             : obj_name(obj_name)
             , kern(kern)
-            , access(access) {
+            , access(access)
+            , uid(kern->next_uid()) {
         }
     }
 }

@@ -116,7 +116,7 @@ namespace eka2l1 {
     }
 
     // Create a new chunk with specified address. Return base of chunk
-    ptr<void> memory_system::chunk(address addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
+    ptr<void> memory_system::chunk(address addr, uint32_t bottom, uint32_t top, uint32_t max_grow, prot cprot) {
         max_grow -= max_grow % page_size;
 
         cpu->unmap_memory(addr, max_grow);
@@ -156,7 +156,7 @@ namespace eka2l1 {
             // If the page is not free, than either it's reserved or commited
             // We can not make a new chunk on those pages
             if (ite->sts != page_status::free) {
-                return ptr<void>(nullptr);
+                return ptr<void>(0);
             }
 
             ite->sts = page_status::reserved;
@@ -189,11 +189,11 @@ namespace eka2l1 {
             }
 
             if (current_page_table) {
-                std::copy(global_pages.begin() + page_begin_off - (global_data / page_size),
-                    global_pages.begin() + page_end_off - (global_data / page_size), current_page_table->pages.begin() + page_begin_off);
+                std::copy(global_pages.begin() + (page_begin_off - (global_data / page_size)),
+                    global_pages.begin() + (page_end_off - (global_data / page_size)), current_page_table->pages.begin() + page_begin_off);
 
-                std::copy(global_pointers.begin() + page_begin_off - (global_data / page_size),
-                    global_pointers.begin() + page_end_off - (global_data / page_size), current_page_table->pointers.begin() + page_begin_off);
+                std::copy(global_pointers.begin() + (page_begin_off - (global_data / page_size)),
+                    global_pointers.begin() + (page_end_off - (global_data / page_size)), current_page_table->pointers.begin() + page_begin_off);
             }
 
             cpu->map_backing_mem(addr, max_grow, global_pointers[page_begin_off - (global_data / page_size)].get(), cprot);
@@ -216,11 +216,11 @@ namespace eka2l1 {
             }
 
             if (current_page_table) {
-                std::copy(codeseg_pages.begin() + page_begin_off - (codeseg_addr / page_size),
-                    codeseg_pages.begin() + page_end_off - (codeseg_addr / page_size), current_page_table->pages.begin() + page_begin_off);
+                std::copy(codeseg_pages.begin() + (page_begin_off - (codeseg_addr / page_size)),
+                    codeseg_pages.begin() + (page_end_off - (codeseg_addr / page_size)), current_page_table->pages.begin() + page_begin_off);
 
-                std::copy(codeseg_pointers.begin() + page_begin_off - (codeseg_addr / page_size),
-                    codeseg_pointers.begin() + page_end_off - (codeseg_addr / page_size), current_page_table->pointers.begin() + page_begin_off);
+                std::copy(codeseg_pointers.begin() + (page_begin_off - (codeseg_addr / page_size)),
+                    codeseg_pointers.begin() + (page_end_off - (codeseg_addr / page_size)), current_page_table->pointers.begin() + page_begin_off);
             }
 
             cpu->map_backing_mem(addr, max_grow, codeseg_pointers[page_begin_off - (codeseg_addr / page_size)].get(), cprot);
@@ -245,17 +245,17 @@ namespace eka2l1 {
             cpu->map_backing_mem(addr, max_grow, current_page_table->pointers[page_begin_off].get(), cprot);
         }
 
-        commit(addr + bottom, top - bottom);
+        commit(addr + static_cast<uint32_t>(bottom), top - bottom);
 
         return ptr<void>(addr);
     }
 
-    ptr<void> memory_system::chunk_range(size_t beg_addr, size_t end_addr, size_t bottom, size_t top, size_t max_grow, prot cprot) {
+    ptr<void> memory_system::chunk_range(address beg_addr, address end_addr, uint32_t bottom, uint32_t top, uint32_t max_grow, prot cprot) {
         // Find the reversed memory with this max grow
-        size_t page_count = (max_grow + page_size - 1) / page_size;
+        uint32_t page_count = (max_grow + page_size - 1) / page_size;
 
-        size_t page_begin_off = (beg_addr + page_size - 1) / page_size;
-        size_t page_end_off = (end_addr - page_size + 1) / page_size;
+        uint32_t page_begin_off = (beg_addr + page_size - 1) / page_size;
+        uint32_t page_end_off = (end_addr - page_size + 1) / page_size;
 
         decltype(global_pages)::reverse_iterator page_begin;
         decltype(page_begin) page_end;
@@ -283,34 +283,34 @@ namespace eka2l1 {
         uint32_t idx;
 
         if (beg_addr >= global_data && beg_addr < ram_drive) {
-            idx = global_pages.rend() - suitable_pages - page_count;
+            idx = global_pages.rend() - suitable_pages -  page_count;
 
             if (suitable_pages != global_pages.rend()) {
                 return chunk(global_data + idx * page_size, bottom, top, max_grow, cprot);
             }
         } else if (beg_addr >= ram_code_addr && beg_addr < codeseg_addr + 0x10000000) {
-            idx = codeseg_pages.rend() - suitable_pages - page_count;
+            idx = codeseg_pages.rend() - suitable_pages - static_cast<uint32_t>(page_count);
 
             if (suitable_pages != codeseg_pages.rend()) {
                 return chunk(ram_code_addr + idx * page_size, bottom, top, max_grow, cprot);
             }
         }
 
-        idx = current_page_table->pages.rend() - suitable_pages - page_count;
+        idx = current_page_table->pages.rend() - suitable_pages - static_cast<uint32_t>(page_count);
 
         if (suitable_pages != current_page_table->pages.rend()) {
             return chunk(idx * page_size, bottom, top, max_grow, cprot);
         }
 
-        return ptr<void>(nullptr);
+        return ptr<void>(0);
     }
 
     // Change the prot of pages
-    int memory_system::change_prot(ptr<void> addr, size_t size, prot nprot) {
-        address beg = addr.ptr_address() / page_size;
-        address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
+    int memory_system::change_prot(ptr<void> addr, uint32_t size, prot nprot) {
+        uint32_t beg = addr.ptr_address() / page_size;
+        uint32_t end = (addr.ptr_address() + static_cast<uint32_t>(size) - 1 + page_size) / page_size;
 
-        size_t count = end - beg;
+        uint32_t count = end - beg;
 
         decltype(global_pages)::iterator page_begin;
         decltype(page_begin) page_end;
@@ -406,7 +406,7 @@ namespace eka2l1 {
     }
 
     // Mark a chunk at addr as unusable
-    int memory_system::unchunk(ptr<void> addr, size_t length) {
+    int memory_system::unchunk(ptr<void> addr, uint32_t length) {
         address beg = addr.ptr_address() / page_size;
         address end = (addr.ptr_address() + length - 1 + page_size) / page_size;
 
@@ -464,7 +464,7 @@ namespace eka2l1 {
     }
 
     // Commit to page
-    int memory_system::commit(ptr<void> addr, size_t size) {
+    int memory_system::commit(ptr<void> addr, uint32_t size) {
         address beg = addr.ptr_address() / page_size;
         address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
 
@@ -558,7 +558,7 @@ namespace eka2l1 {
     }
 
     // Decommit
-    int memory_system::decommit(ptr<void> addr, size_t size) {
+    int memory_system::decommit(ptr<void> addr, uint32_t size) {
         address beg = addr.ptr_address() / page_size;
         address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
 
@@ -645,7 +645,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    void memory_system::read(address addr, void *data, size_t size) {
+    void memory_system::read(address addr, void *data, uint32_t size) {
         void *fptr = get_real_pointer(addr);
 
         if (fptr == nullptr) {
@@ -656,7 +656,7 @@ namespace eka2l1 {
         memcpy(data, fptr, size);
     }
 
-    void memory_system::write(address addr, void *data, size_t size) {
+    void memory_system::write(address addr, void *data, uint32_t size) {
         void *to = get_real_pointer(addr);
 
         if (to == nullptr) {

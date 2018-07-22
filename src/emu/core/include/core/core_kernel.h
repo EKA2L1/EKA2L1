@@ -69,6 +69,11 @@ namespace eka2l1 {
 
     using prop_ident_pair = std::pair<int, int>;
 
+    struct find_handle {
+        int index;
+        uint64_t object_id;
+    };
+
     class kernel_system {
         friend class process;
 
@@ -97,8 +102,12 @@ namespace eka2l1 {
 
         uint32_t create_handle_lastest(kernel::owner_type owner);
 
+        mutable std::atomic<uint64_t> uid_counter;
+
     public:
-        memory_system * get_memory_system() {
+        uint64_t next_uid() const;
+
+        memory_system *get_memory_system() {
             return mem;
         }
 
@@ -143,7 +152,7 @@ namespace eka2l1 {
         uint32_t create_thread(kernel::owner_type owner, process_ptr own_pr, kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
-            ptr<void> usrdata = nullptr,
+            ptr<void> usrdata = 0,
             kernel::thread_priority pri = kernel::priority_normal);
 
         uint32_t create_mutex(std::string name, bool init_locked,
@@ -175,6 +184,8 @@ namespace eka2l1 {
         uint32_t mirror(thread_ptr own_thread, uint32_t handle, kernel::owner_type owner);
 
         uint32_t open_handle(kernel_obj_ptr obj, kernel::owner_type owner);
+
+        std::optional<find_handle> find_object(const std::string &name, kernel::object_type type);
 
         void add_custom_server(server_ptr svr) {
             objects.push_back(std::move(std::dynamic_pointer_cast<kernel::kernel_obj>(svr)));

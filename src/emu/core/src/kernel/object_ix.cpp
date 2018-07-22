@@ -107,5 +107,11 @@ namespace eka2l1 {
 
             return false;
         }
+
+        object_ix::object_ix(kernel_system *kern, handle_array_owner owner)
+            : kern(kern)
+            , owner(owner)
+            , next_instance(0)
+            , uid(kern->next_uid()) {}
     }
 }

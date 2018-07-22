@@ -101,7 +101,7 @@ namespace eka2l1 {
                 jit_interface::thread_context context;
                 parent.save_context(context);
                 parent.fallback_jit.load_context(context);
-                parent.fallback_jit.execute_instructions(num_insts);
+                parent.fallback_jit.execute_instructions(static_cast<uint32_t>(num_insts));
                 parent.fallback_jit.save_context(context);
                 parent.load_context(context);
 
@@ -205,12 +205,6 @@ namespace eka2l1 {
         }
 
         jit_dynarmic::~jit_dynarmic() {}
-
-        bool jit_dynarmic::execute_instructions(size_t num_instructions) {
-            jit->Run();
-
-            return true;
-        }
 
         void jit_dynarmic::run() {
             jit->Run();

@@ -27,8 +27,6 @@ namespace eka2l1 {
     class kernel_system;
 
     namespace kernel {
-        using uid = uint64_t;
-
         /*! \brief Ownership type for handle */
         enum class owner_type {
             kernel, // Kernel has id of 0xDDDDDDDD
@@ -50,14 +48,21 @@ namespace eka2l1 {
         /*! \brief HLE object type. */
         enum class object_type {
             thread,
+            process,
+            chunk,
+            library,
             sema,
             mutex,
             timer,
-            chunk,
             server,
             session,
-            prop,
-            process
+            logical_device,
+            physical_device,
+            logical_channel,
+            change_notifier,
+            undertaker,
+            msg_queue,
+            prop
         };
 
         /*! \brief Base class for all kernel object. */
@@ -79,6 +84,8 @@ namespace eka2l1 {
                 kernel::access_type access = access_type::local_access);
 
             int access_count = 0;
+
+            uint64_t uid;
 
         public:
             /*! \brief Get the name of the object.
@@ -111,6 +118,10 @@ namespace eka2l1 {
             void decrease_access_count() { access_count--;  };
 
             int get_access_count() { return access_count; }
+
+            uint64_t unique_id() const {
+                return uid;
+            }
 
             /*! \brief Rename the kernel object. 
              * \param new_name The new name of object.

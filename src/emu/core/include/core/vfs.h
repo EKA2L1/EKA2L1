@@ -73,7 +73,7 @@ namespace eka2l1 {
          *
          * \returns Total bytes wrote. -1 if fail.
          */
-        virtual int write_file(void *data, uint32_t size, uint32_t count) = 0;
+        virtual size_t write_file(void *data, uint32_t size, uint32_t count) = 0;
 
         /*! \brief Read from the file. 
          *
@@ -85,7 +85,7 @@ namespace eka2l1 {
          *
          * \returns Total bytes read. -1 if fail.
          */
-        virtual int read_file(void *data, uint32_t size, uint32_t count) = 0;
+        virtual size_t read_file(void *data, uint32_t size, uint32_t count) = 0;
 
         /*! \brief Get the file mode which specified with VFS system. 
          * \returns The file mode.

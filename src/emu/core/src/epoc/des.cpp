@@ -12,7 +12,7 @@ namespace eka2l1::epoc {
 
     ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, TDesC8 *aDes8) {
         if (!aDes8) {
-            return ptr<TUint8>(nullptr);
+            return ptr<TUint8>(0);
         }
 
         // Symbian wants to keep it as safe as possible, so they turn them
@@ -25,7 +25,7 @@ namespace eka2l1::epoc {
             return (reinterpret_cast<TPtr8 *>(aDes8))->iPtr;
         }
 
-        return eka2l1::ptr<TUint8>(nullptr);
+        return eka2l1::ptr<TUint8>(0);
     }
 
     TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8) {
@@ -52,7 +52,7 @@ namespace eka2l1::epoc {
 
     ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16) {
         if (!aDes16) {
-            return ptr<TUint16>(nullptr);
+            return ptr<TUint16>(0);
         }
 
         TDesType destype = static_cast<TDesType>(GetTDesC16Type(aDes16));
@@ -67,12 +67,12 @@ namespace eka2l1::epoc {
             return (reinterpret_cast<TPtr16 *>(aDes16))->iPtr;
         }
 
-        return ptr<TUint16>(nullptr);
+        return ptr<TUint16>(0);
     }
 
     ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, ptr<TDesC16> aDes16) {
         if (!aDes16) {
-            return ptr<TUint16>(nullptr);
+            return ptr<TUint16>(0);
         }
 
         TDesC16 *des = aDes16.get(sys->get_memory_system());
@@ -99,12 +99,12 @@ namespace eka2l1::epoc {
             return buf.cast<TUint16>() + 4;
         }
 
-        return ptr<TUint16>(nullptr);
+        return ptr<TUint16>(0);
     }
 
     ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, ptr<TDesC8> aDes8) {
         if (!aDes8) {
-            return ptr<TUint8>(nullptr);
+            return ptr<TUint8>(0);
         }
 
         TDesC8 *des = aDes8.get(sys->get_memory_system());
@@ -131,7 +131,7 @@ namespace eka2l1::epoc {
             return buf.cast<TUint8>() + 4;
         }
 
-        return ptr<TUint8>(nullptr);
+        return ptr<TUint8>(0);
     }
 
     TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16) {

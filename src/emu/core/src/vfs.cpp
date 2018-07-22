@@ -59,7 +59,7 @@ namespace eka2l1 {
             return file.size;
         }
 
-        int read_file(void *data, uint32_t size, uint32_t count) override {
+        size_t read_file(void *data, uint32_t size, uint32_t count) override {
             auto will_read = std::min((uint64_t)count * size, file.size - crr_pos);
             memcpy(data, &(file_ptr.get(mem)[crr_pos]), will_read);
 
@@ -72,7 +72,7 @@ namespace eka2l1 {
             return READ_MODE;
         }
 
-        int write_file(void *data, uint32_t size, uint32_t count) override {
+        size_t write_file(void *data, uint32_t size, uint32_t count) override {
             LOG_ERROR("Can't write into ROM!");
             return -1;
         }
@@ -159,11 +159,11 @@ namespace eka2l1 {
                 fclose(file);
         }
 
-        int write_file(void *data, uint32_t size, uint32_t count) override {
+        size_t write_file(void *data, uint32_t size, uint32_t count) override {
             return fwrite(data, size, count, file);
         }
 
-        int read_file(void *data, uint32_t size, uint32_t count) override {
+        size_t read_file(void *data, uint32_t size, uint32_t count) override {
             return fread(data, size, count, file);
         }
 
@@ -318,6 +318,7 @@ namespace eka2l1 {
     }
 
     // Gurantees that these path are ASCII (ROM you says ;) )
+    // This is only invoked when user check search in ROM config if can't find needed file.
     std::optional<loader::rom_entry> io_system::burn_tree_find_entry(const std::string &vir_path) {
         std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
         auto ite = path_iterator(vir_path);

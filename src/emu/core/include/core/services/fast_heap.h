@@ -120,7 +120,7 @@ namespace eka2l1 {
         /*! This size and the offset, chunk pointer can be changed
          * when doing reallocation.
         */
-        uint32_t size;
+        int size;
 
         //! Pointer to the cell in the heap chunk.
         eka2l1::ptr<void> block_ptr;
@@ -164,7 +164,7 @@ namespace eka2l1 {
           * \param size The size of the cell to allocate.
           * \returns The pointer to the cell.
         */
-        eka2l1::ptr<void> allocate(size_t size);
+        eka2l1::ptr<void> allocate(int size);
 
         /*! \brief Free the cell. 
          *

@@ -78,6 +78,8 @@ namespace eka2l1::kernel {
         page_table page_tab;
         object_ix process_handles;
 
+        uint32_t flags;
+
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max);
@@ -92,6 +94,14 @@ namespace eka2l1::kernel {
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
             const std::u16string &cmd_args, loader::romimg_ptr &img);
+        
+        bool run();
+
+        void set_arg_slot(uint8_t slot, uint32_t data, size_t data_size);
+        std::optional<pass_arg> get_arg_slot(uint8_t slot);
+
+        process_uid_type get_uid_type();
+        kernel_obj_ptr get_object(uint32_t handle);
 
         std::u16string get_cmd_args() const {
             return cmd_args;
@@ -108,18 +118,17 @@ namespace eka2l1::kernel {
         loader::e32img_ptr get_e32img() {
             return img;
         }
-
-        bool run();
-
-        void set_arg_slot(uint8_t slot, uint32_t data, size_t data_size);
-        std::optional<pass_arg> get_arg_slot(uint8_t slot);
-
-        process_uid_type get_uid_type();
-
-        kernel_obj_ptr get_object(uint32_t handle);
-
+        
         page_table &get_page_table() {
             return page_tab;
+        }
+
+        void set_flags(const uint32_t new_flags) {
+            flags = new_flags;
+        }
+
+        uint32_t get_flags() const {
+            return flags;
         }
     };
 }

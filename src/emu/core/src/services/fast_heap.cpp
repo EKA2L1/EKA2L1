@@ -30,7 +30,7 @@ namespace eka2l1 {
         // Setup LLE heap
         heap->access_count = 0;
         heap->align = real_align;
-        heap->handles = nullptr;//heap_chunk;
+        heap->handles = 0; //heap_chunk;
         heap->cell_count = 0;
         heap->total_alloc_size = 0;
         heap->handle_count = 1;
@@ -39,7 +39,7 @@ namespace eka2l1 {
         heap->vtable = 0x3D3C3E3F; /* This is assumes that the vtable is never used from HLE client. */
     }
 
-    eka2l1::ptr<void> fast_heap::allocate(size_t size) {
+    eka2l1::ptr<void> fast_heap::allocate(int size) {
         std::vector<heap_block> &blocks = heap_blocks;
 
         // If the committed size is not enough, expand the chunk

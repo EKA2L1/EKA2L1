@@ -45,9 +45,6 @@ namespace eka2l1 {
             /*! Stop the CPU */
             virtual void stop() = 0;
 
-            /*! Execute some amount of instructions */
-            virtual bool execute_instructions(size_t num_instructions) = 0;
-
             /*! Step the CPU. Each step execute one instruction. */
             virtual void step() = 0;
 

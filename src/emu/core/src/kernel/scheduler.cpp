@@ -211,6 +211,8 @@ namespace eka2l1 {
             ready_threads.push(thr);
 
             kern->prepare_reschedule();
+
+            return true;
         }
 
         void thread_scheduler::unschedule(thread_ptr thr) {

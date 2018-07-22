@@ -43,26 +43,26 @@ namespace eka2l1 {
 
         void *get_real_pointer(address addr);
 
-        void read(address addr, void *data, size_t size);
-        void write(address addr, void *data, size_t size);
+        void read(address addr, void *data, uint32_t size);
+        void write(address addr, void *data, uint32_t size);
 
         // Create a new chunk with specified address. Return base of chunk
-        ptr<void> chunk(address addr, size_t bottom, size_t top, size_t max_grow, prot cprot);
-        ptr<void> chunk_range(size_t beg_addr, size_t end_addr, size_t bottom, size_t top, size_t max_grow, prot cprot);
+        ptr<void> chunk(address addr, uint32_t bottom, uint32_t top, uint32_t max_grow, prot cprot);
+        ptr<void> chunk_range(address beg_addr, address end_addr, uint32_t bottom, uint32_t top, uint32_t max_grow, prot cprot);
 
         // Change the prot of pages
-        int change_prot(ptr<void> addr, size_t size, prot nprot);
+        int change_prot(ptr<void> addr, uint32_t size, prot nprot);
 
         // Mark a chunk at addr as unusable
-        int unchunk(ptr<void> addr, size_t length);
+        int unchunk(ptr<void> addr, uint32_t length);
 
         // Commit to page
-        int commit(ptr<void> addr, size_t size);
+        int commit(ptr<void> addr, uint32_t size);
 
         // Decommit
-        int decommit(ptr<void> addr, size_t size);
+        int decommit(ptr<void> addr, uint32_t size);
 
-        uint64_t get_page_size() const {
+        int get_page_size() const {
             return page_size;
         }
     };

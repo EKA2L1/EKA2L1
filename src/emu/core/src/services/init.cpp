@@ -228,13 +228,13 @@ namespace eka2l1 {
             //CREATE_SERVER(sys, fontbitmap_server);
             CREATE_SERVER(sys, window_server);
 
-            auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+            auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
 
             // Unknown key, testing show that this prop return 65535 most of times
             // The prop belongs to HAL server, but the key usuage is unknown. (TODO)
             DEFINE_INT_PROP_D(sys, sys_category, unk_key1, 65535);
-            //DEFINE_BIN_PROP(sys, sys_category, locale_lang_key, sizeof(epoc::SLocaleLanguage), lang);
+            DEFINE_BIN_PROP(sys, sys_category, locale_lang_key, sizeof(epoc::SLocaleLanguage), lang);
             DEFINE_BIN_PROP(sys, sys_category, locale_data_key, sizeof(epoc::TLocale), locale);
         }
     }

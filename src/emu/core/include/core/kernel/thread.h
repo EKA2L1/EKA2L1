@@ -89,14 +89,6 @@ namespace eka2l1 {
             ptr<void> ptr;
         };
 
-        struct SBlock {
-            int offset;
-            int size;
-            eka2l1::ptr<void> block_ptr;
-
-            bool free = true;
-        };
-
         struct thread_local_data {
             ptr<void> heap;
             ptr<void> scheduler;
@@ -126,15 +118,15 @@ namespace eka2l1 {
 
             int priority;
 
-            size_t stack_size;
-            size_t min_heap_size, max_heap_size;
+            int stack_size;
+            int min_heap_size, max_heap_size;
 
             ptr<void> usrdata;
 
             memory_system *mem;
             timing_system *timing;
 
-            uint32_t lrt;
+            uint64_t lrt;
 
             uint32_t stack_chunk;
             uint32_t name_chunk;
@@ -147,6 +139,7 @@ namespace eka2l1 {
             std::vector<kernel::mutex*> pending_mutexes;
 
             uint32_t request_sema;
+            uint32_t flags;
             ipc_msg_ptr sync_msg;
 
             void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
@@ -161,24 +154,54 @@ namespace eka2l1 {
 
             std::vector<wait_obj *> waits_on;
 
-            void increase_leave_depth() {
-                leave_depth++;
-            }
-
-            void decrease_leave_depth() {
-                leave_depth--;
-            }
-
-            bool is_invalid_leave() const {
-                return leave_depth > 0;
-            }
-
             thread();
             thread(kernel_system *kern, memory_system *mem, process_ptr owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
-                ptr<void> usrdata = nullptr,
+                ptr<void> usrdata = 0,
                 thread_priority pri = priority_normal);
+
+            bool should_wait(thread_ptr thr) override;
+            void acquire(thread_ptr thr) override;
+
+            // Physically we can't compare thread.
+            bool operator>(const thread &rhs);
+            bool operator<(const thread &rhs);
+            bool operator==(const thread &rhs);
+            bool operator>=(const thread &rhs);
+            bool operator<=(const thread &rhs);
+
+            tls_slot *get_tls_slot(uint32_t handle, uint32_t dll_uid);
+            void close_tls_slot(tls_slot &slot);
+
+            void update_priority();
+
+            void wait_for_any_request();
+            void signal_request();
+
+            uint32_t get_flags() const {
+                return flags;
+            }
+
+            void set_flags(const uint32_t new_flags) {
+                flags = new_flags;
+            }
+
+            thread_local_data &get_local_data() {
+                return ldata;
+            }
+
+            std::shared_ptr<thread_scheduler> get_scheduler() {
+                return scheduler;
+            }
+
+            process_ptr owning_process() {
+                return own_process;
+            }
+
+            void owning_process(process_ptr pr) {
+                own_process = pr;
+            }
 
             thread_state current_state() const {
                 return state;
@@ -196,38 +219,16 @@ namespace eka2l1 {
                 return sync_msg;
             }
 
-            bool should_wait(thread_ptr thr) override;
-            void acquire(thread_ptr thr) override;
-
-            // Physically we can't compare thread.
-            bool operator>(const thread &rhs);
-            bool operator<(const thread &rhs);
-            bool operator==(const thread &rhs);
-            bool operator>=(const thread &rhs);
-            bool operator<=(const thread &rhs);
-
-            tls_slot *get_tls_slot(uint32_t handle, uint32_t dll_uid);
-            void close_tls_slot(tls_slot &slot);
-
-            thread_local_data &get_local_data() {
-                return ldata;
+            void increase_leave_depth() {
+                leave_depth++;
             }
 
-            std::shared_ptr<thread_scheduler> get_scheduler() {
-                return scheduler;
+            void decrease_leave_depth() {
+                leave_depth--;
             }
 
-            void update_priority();
-
-            void wait_for_any_request();
-            void signal_request();
-
-            process_ptr owning_process() {
-                return own_process;
-            }
-
-            void owning_process(process_ptr pr) {
-                own_process = pr;
+            bool is_invalid_leave() const {
+                return leave_depth > 0;
             }
         };
 

@@ -35,10 +35,6 @@ namespace eka2l1 {
         ptr()
             : mem_address(0) {}
 
-        ptr(const T *ptr) {
-            mem_address = reinterpret_cast<address>(ptr);
-        }
-
         ptr(const uint32_t addr)
             : mem_address(addr) {}
 

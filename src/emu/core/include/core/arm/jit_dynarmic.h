@@ -56,8 +56,6 @@ namespace eka2l1 {
                 Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> page_table_dyn;
 
         public:
-            bool execute_instructions(size_t num_instructions) override;
-
             timing_system *get_timing_sys() {
                 return timing;
             }

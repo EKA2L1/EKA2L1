@@ -53,4 +53,17 @@ namespace eka2l1::epoc {
         */
         eka2l1::process_ptr GetProcess(eka2l1::system *sys);
     };
+
+    /*! \brief Find handle struct. 
+     *
+     * This struct is passed when a SVC call to find a kernel object is invoked.
+     * When that operation success, the struct will be filled with kernel
+     * object information.
+     */
+    struct TFindHandle {
+        int iHandle;
+        int iSpare1;
+        int iObjIdLow;
+        int iObjIdHigh;
+    };
 }

@@ -36,7 +36,7 @@ namespace eka2l1::kernel {
         primary_thread = kern->create_thread(kernel::owner_type::kernel, nullptr, kernel::access_type::local_access,
             process_name, ep_off,
             stack_size, heap_min, heap_max,
-            nullptr, kernel::priority_normal);
+            0, kernel::priority_normal);
 
         args[0].data_size = 0;
         args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D

@@ -242,7 +242,7 @@ namespace eka2l1 {
             uc_close(engine);
         }
 
-        bool jit_unicorn::execute_instructions(size_t num_instructions) {
+        bool jit_unicorn::execute_instructions(uint32_t num_instructions) {
             uint32_t pc = get_pc();
 
             bool tm = thumb_mode(engine);
@@ -321,7 +321,7 @@ namespace eka2l1 {
 
         uint32_t jit_unicorn::get_reg(size_t idx) {
             uint32_t val = 0;
-            auto treg = UC_ARM_REG_R0 + idx;
+            auto treg = UC_ARM_REG_R0 + static_cast<uint8_t>(idx);
             auto err = uc_reg_read(engine, treg, &val);
 
             if (err != UC_ERR_OK) {
@@ -354,13 +354,11 @@ namespace eka2l1 {
         }
 
         uint32_t jit_unicorn::get_vfp(size_t idx) {
-            uint32_t temp;
-
-            return temp;
+            return 0;
         }
 
         void jit_unicorn::set_reg(size_t idx, uint32_t val) {
-            auto treg = UC_ARM_REG_R0 + idx;
+            auto treg = UC_ARM_REG_R0 + static_cast<uint8_t>(idx);
             auto err = uc_reg_write(engine, treg, &val);
 
             if (err != UC_ERR_OK) {

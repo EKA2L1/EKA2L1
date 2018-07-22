@@ -43,6 +43,8 @@ namespace eka2l1 {
 
         /*! \brief The ultimate object handles holder. */
         class object_ix {
+            uint64_t uid;
+
             size_t next_instance;
             std::array<object_ix_record, 0x100> objects;
 
@@ -54,8 +56,7 @@ namespace eka2l1 {
 
         public:
             object_ix() {}
-            object_ix(kernel_system *kern, handle_array_owner owner)
-                : kern(kern), owner(owner), next_instance(0) {}
+            object_ix(kernel_system *kern, handle_array_owner owner);
 
             /*! \brief Add new object to the ix. 
              * \returns Handle to the object
@@ -66,6 +67,10 @@ namespace eka2l1 {
             kernel_obj_ptr get_object(uint32_t handle);
 
             bool close(uint32_t handle);
+
+            uint64_t unique_id() {
+                return uid;
+            }
         };
     }
 }

@@ -127,7 +127,7 @@ namespace eka2l1 {
                 epoc::window_ptr obj = find_window_obj(root, cmd.header.obj_handle);
 
                 if (obj) {
-                    int a = 5;
+                    // Nothing yet.
                 } else {
                     for (const auto &device : devices) {
                         if (device.second->id == cmd.header.obj_handle) {
