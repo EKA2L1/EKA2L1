@@ -56,6 +56,17 @@ namespace eka2l1::kernel {
 
     using process_uid_type = std::tuple<uint32_t, uint32_t, uint32_t>;
 
+    enum class process_priority {
+        low = 150,
+        background = 250,
+        foreground = 350,
+        high = 450,
+        window_svr = 650,
+        file_svr = 750,
+        real_time_svr = 850,
+        supervisor = 950
+    };
+
     class process : public kernel_obj {
         friend class kernel_system;
         friend class thread_scheduler;
@@ -80,6 +91,8 @@ namespace eka2l1::kernel {
 
         uint32_t flags;
 
+        process_priority priority;
+
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max);
@@ -89,12 +102,14 @@ namespace eka2l1::kernel {
 
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
-            const std::u16string &cmd_args, loader::e32img_ptr &img);
+            const std::u16string &cmd_args, loader::e32img_ptr &img,
+            const process_priority pri = process_priority::low);
 
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
-            const std::u16string &cmd_args, loader::romimg_ptr &img);
-        
+            const std::u16string &cmd_args, loader::romimg_ptr &img,
+            const process_priority pri = process_priority::low);
+
         bool run();
 
         void set_arg_slot(uint8_t slot, uint32_t data, size_t data_size);
@@ -118,7 +133,7 @@ namespace eka2l1::kernel {
         loader::e32img_ptr get_e32img() {
             return img;
         }
-        
+
         page_table &get_page_table() {
             return page_tab;
         }
@@ -130,5 +145,11 @@ namespace eka2l1::kernel {
         uint32_t get_flags() const {
             return flags;
         }
+
+        process_priority get_priority() const {
+            return priority;
+        }
+
+        void set_priority(const process_priority new_pri);
     };
 }

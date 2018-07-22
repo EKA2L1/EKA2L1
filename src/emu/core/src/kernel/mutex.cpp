@@ -44,8 +44,8 @@ namespace eka2l1 {
             int best_priority = 10000;
 
             for (auto& waiter : waiting_threads()) {
-                if (waiter->current_priority() < best_priority) {
-                    best_priority = waiter->current_priority();
+                if (waiter->current_real_priority() < best_priority) {
+                    best_priority = waiter->current_real_priority();
                 }
             }
 
@@ -62,7 +62,7 @@ namespace eka2l1 {
 
         void mutex::acquire(thread_ptr thr_ptr) {
             if (thr_ptr && lock_count == 0) {
-                priority = thr_ptr->current_priority();
+                priority = thr_ptr->current_real_priority();
 
                 // TODO: make this less ugly
                 thr_ptr->held_mutexes.push_back(this);

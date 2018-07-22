@@ -55,7 +55,7 @@ namespace eka2l1 {
             uint32_t next_pri = kernel::priority_absolute_background + 1;
 
             for (const auto &wait_thread : waits) {
-                if (wait_thread->current_priority() >= next_pri) {
+                if (wait_thread->current_real_priority() >= next_pri) {
                     continue;
                 }
 
@@ -72,7 +72,7 @@ namespace eka2l1 {
 
                 if (ready_to_run) {
                     next = wait_thread;
-                    next_pri = wait_thread->current_priority();
+                    next_pri = wait_thread->current_real_priority();
                 }
             }
 

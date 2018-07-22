@@ -393,7 +393,7 @@ namespace eka2l1 {
             //LOG_INFO("Calling {}", *get_func_name(id));
 
             auto imp = eimp.value();
-            imp(sys);
+            imp.func(sys);
 
             if (sys->get_kernel_system()->crr_thread() == nullptr) {
                 return false;
@@ -447,7 +447,12 @@ namespace eka2l1 {
             }
 
             epoc_import_func func = res->second;
-            func(sys);
+            
+            if (sys->get_bool_config("log_passed")) {
+                LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
+            }
+
+            func.func(sys);
 
             return true;
         }
@@ -460,7 +465,7 @@ namespace eka2l1 {
             }
 
             epoc_import_func func = res->second;
-            func(sys);
+            func.func(sys);
 
             if (sys->get_kernel_system()->crr_thread() == nullptr) {
                 return false;

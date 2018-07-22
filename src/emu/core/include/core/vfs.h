@@ -160,9 +160,15 @@ namespace eka2l1 {
         // Burn the tree down and look for entry in the dust
         std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path);
 
+        epocver ver;
+
     public:
         // Initialize the IO system
-        void init(memory_system *smem);
+        void init(memory_system *smem, epocver ever);
+
+        void set_epoc_version(epocver ever) {
+            ver = ever;
+        }
 
         // Shutdown the IO system
         void shutdown();

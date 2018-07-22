@@ -83,6 +83,8 @@ namespace eka2l1 {
             bool resume(thread_ptr thr);
             void unschedule(thread_ptr thr);
 
+            bool stop(thread_ptr thr);
+
             void refresh();
 
             bool should_terminate() {

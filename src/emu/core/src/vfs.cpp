@@ -205,8 +205,10 @@ namespace eka2l1 {
         }
     };
 
-    void io_system::init(memory_system *smem) {
+    void io_system::init(memory_system *smem, epocver ever) {
         mem = smem;
+        ver = ever;
+
         crr_dir = "C:";
     }
 
@@ -272,7 +274,36 @@ namespace eka2l1 {
             }
         }
 
-        current_dir = res->second.real_path + crr_dir.substr(2);
+        std::string rp = res->second.real_path;
+
+        if (res->second.is_in_mem) {
+            switch (ver) {
+                case epocver::epoc93: {
+                    rp = add_path(rp, "v93\\");
+                    break;
+                }
+    
+                case epocver::epoc9: {
+                    rp = add_path(rp, "v94\\");
+                    break;
+                }
+
+                case epocver::epoc10: {
+                    rp = add_path(rp, "belle\\");
+                    break;
+                }
+
+                case epocver::epoc6: {
+                    rp = add_path(rp, "v60\\");
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+
+        current_dir = rp + crr_dir.substr(2);
 
         // Make it case-insensitive
         for (auto &c : vir_path) {
@@ -282,7 +313,7 @@ namespace eka2l1 {
         if (!is_absolute(vir_path, current_dir)) {
             abs_path = absolute_path(vir_path, current_dir);
         } else {
-            abs_path = add_path(res->second.real_path, vir_path.substr(2));
+            abs_path = add_path(rp, vir_path.substr(2));
         }
 
         return abs_path;
@@ -363,21 +394,21 @@ namespace eka2l1 {
         }
 
         drive drv = res.value();
+        auto new_path = get(common::ucs2_to_utf8(vir_path));
 
-        if (drv.is_in_mem && (mode & WRITE_MODE)) {
-            LOG_INFO("No writing in in-memory!");
-            return std::shared_ptr<file>(nullptr);
-        } else {
-            auto new_path = get(common::ucs2_to_utf8(vir_path));
-            auto res = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
-
-            if (!res->file) {
+        if (drv.is_in_mem) {
+            if (mode & WRITE_MODE) {
+                LOG_INFO("No writing in in-memory!");
                 return std::shared_ptr<file>(nullptr);
-            } else {
-                return res;
             }
         }
 
-        return std::shared_ptr<file>(nullptr);
+        auto pf = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
+
+        if (!pf->file) {
+            return std::shared_ptr<file>(nullptr);
+        }
+
+        return pf;
     }
 }

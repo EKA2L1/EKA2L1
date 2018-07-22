@@ -49,6 +49,9 @@ int app_idx = -1;
 
 bool help_printed = false;
 bool list_app = false;
+bool install_rpkg = false;
+
+std::string rpkg_path;
 
 bool quit = false;
 
@@ -60,7 +63,27 @@ void print_help() {
     std::cout << "\t -app: Specified the app to run. Next to this option is the index number." << std::endl;
     std::cout << "\t -listapp: List all of the apps." << std::endl;
     std::cout << "\t -install: Install a SIS/SISX package" << std::endl;
+    std::cout << "\t -irpkg ver path: Install RPKG." << std::endl;
+    std::cout << "\t\t ver:  Epoc version. Available version are: v94, v93, belle, v60" << std::endl;
+    std::cout << "\t\t path: Path to RPKG file." << std::endl;
     std::cout << "\t -h/-help: Print help" << std::endl;
+}
+
+void fetch_rpkg(const char *ver, const char *path) {
+    install_rpkg = true;
+
+    rpkg_path = path;
+    std::string ver_str = ver;
+
+    if (ver_str == "v93") {
+        ever = epocver::epoc93;
+    } else if (ver_str == "v94") {
+        ever = epocver::epoc9;
+    } else if (ver_str == "belle") {
+        ever = epocver::epoc10;
+    } else if (ver_str == "v60") {
+        ever = epocver::epoc6;
+    }
 }
 
 void parse_args(int argc, char **argv) {
@@ -78,6 +101,7 @@ void parse_args(int argc, char **argv) {
             && (!help_printed)) {
             print_help();
             help_printed = true;
+            quit = true;
         } else if ((strncmp(argv[i], "-ver", 4) == 0 || (strncmp(argv[i], "-v", 2) == 0))) {
             int ver = std::atoi(argv[++i]);
 
@@ -103,6 +127,13 @@ void parse_args(int argc, char **argv) {
             } else {
                 mount_e = argv[++i];
             }
+        } else if (strncmp(argv[i], "-irpkg", 6) == 0) {
+            fetch_rpkg(argv[i++], argv[++i]);
+        } else {
+            std::cout << "Invalid request." << std::endl;
+
+            quit = true;
+            break;
         }
     }
 }
@@ -150,6 +181,19 @@ void do_args() {
             std::cout << "Install successfully!" << std::endl;
         } else {
             std::cout << "Install failed" << std::endl;
+        }
+
+        quit = true;
+    }
+
+    if (install_rpkg) {
+        symsys.set_symbian_version_use(ever);
+        bool res = symsys.install_rpkg(rpkg_path);
+
+        if (!res) {
+            std::cout << "RPKG install failed." << std::endl;
+        } else {
+            std::cout << "RPKG install successfully." << std::endl;
         }
 
         quit = true;

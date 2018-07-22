@@ -45,7 +45,7 @@ namespace eka2l1 {
         // Initialize all the system that doesn't depend on others first
         timing.init();
 
-        io.init(&mem);
+        io.init(&mem, get_symbian_version_use());
         mngr.init(&io);
         asmdis.init(&mem);
 
@@ -93,17 +93,11 @@ namespace eka2l1 {
             cpu->run();
         }
 
-        if (!exit) {
+        if (!kern.should_terminate()) {
             kern.reschedule();
             kern.processing_requests();
             reschedule_pending = false;
         } else {
-            if (kern.crr_process()) {
-                kern.crr_process().reset();
-            }
-        }
-
-        if (kern.get_thread_scheduler()->should_terminate()) {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
 

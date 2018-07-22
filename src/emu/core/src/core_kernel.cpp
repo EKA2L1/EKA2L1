@@ -371,6 +371,17 @@ namespace eka2l1 {
         return res;
     }
 
+    kernel_obj_ptr kernel_system::get_kernel_obj_by_id(uint64_t id) {
+        auto &res = std::find_if(objects.begin(), objects.end(),
+            [=](kernel_obj_ptr obj) { return obj->unique_id() == id; });
+
+        if (res != objects.end()) {
+            return *res;
+        }
+
+        return nullptr;
+    }
+
     thread_ptr kernel_system::get_thread_by_name(const std::string &name) {
         auto thr_find = std::find_if(objects.begin(), objects.end(),
             [&](auto &obj) {
@@ -384,6 +395,22 @@ namespace eka2l1 {
         }
 
         return std::dynamic_pointer_cast<kernel::thread>(*thr_find);
+    }
+
+    std::vector<thread_ptr> kernel_system::get_all_thread_own_process(process_ptr pr) {
+        std::vector<thread_ptr> thr_list;
+
+        for (kernel_obj_ptr &obj : objects) {
+            if (obj->get_object_type() == kernel::object_type::thread) {
+                thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
+
+                if (thr->own_process == pr) {
+                    thr_list.push_back(thr);
+                }
+            }
+        }
+
+        return thr_list;
     }
 
     void kernel_system::free_msg(ipc_msg_ptr msg) {
@@ -572,10 +599,14 @@ namespace eka2l1 {
         return uid_counter.load();
     }
 
-    std::optional<find_handle> kernel_system::find_object(const std::string &name, kernel::object_type type) {
+    std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type) {
         find_handle handle_find_info;
 
-        const auto &obj = std::find_if(objects.begin(), objects.end(),
+        if (start >= objects.size()) {
+            return std::optional<find_handle>{};
+        }
+
+        const auto &obj = std::find_if(objects.begin() + start, objects.end(),
             [&](kernel_obj_ptr obj) { return (obj->name() == name) && (obj->get_object_type() == type); });
 
         if (obj != objects.end()) {
@@ -586,5 +617,9 @@ namespace eka2l1 {
         }
 
         return std::optional<find_handle>{};
+    }
+
+    bool kernel_system::should_terminate() {
+        return thr_sch->should_terminate();
     }
 }

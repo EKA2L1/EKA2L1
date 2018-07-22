@@ -99,7 +99,7 @@ namespace eka2l1 {
             thread_ptr crr = current_thread();
 
             if (crr && crr->current_state() == thread_state::run) {
-                if (ready_threads.top()->current_priority() < crr->current_priority()) {
+                if (ready_threads.top()->current_real_priority() < crr->current_real_priority()) {
                     return crr;
                 }
 
@@ -226,9 +226,44 @@ namespace eka2l1 {
             ready_threads.remove(thr);
         }
 
+        bool thread_scheduler::stop(thread_ptr thr) {
+            timing->unschedule_event(wakeup_evt, reinterpret_cast<uint64_t>(thr.get()));
+
+            if (thr->state == thread_state::ready) {
+                unschedule(thr);
+            } else if (thr->state == thread_state::run) {
+                auto &thr_run = std::find(running_threads.begin(), running_threads.end(), thr);
+
+                if (thr_run != running_threads.end()) {
+                    running_threads.erase(thr_run);
+                } else {
+                    return false;
+                }
+            } else if (thr->state == thread_state::wait || thr->state == thread_state::wait_fast_sema) {
+                auto &thr_wait = std::find(waiting_threads.begin(), waiting_threads.end(), thr);
+
+                if (thr_wait != waiting_threads.end()) {
+                    waiting_threads.erase(thr_wait);
+                } else {
+                    return false;
+                }
+            }
+
+            thr->state = thread_state::stop;
+
+            thr->wake_up_waiting_threads();
+
+            for (auto &obj : thr->waits) {
+                obj->erase_waiting_thread(thr);
+            }
+
+            thr->waits.clear();
+
+            return true;
+        }
+
         void thread_scheduler::refresh() {
             ready_threads.resort();
-            reschedule();
         }
     }
 }

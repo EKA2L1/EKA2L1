@@ -20,8 +20,8 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
-#include <common/random.h>
 #include <common/log.h>
+#include <common/random.h>
 
 #include <core/core_kernel.h>
 #include <core/core_mem.h>
@@ -54,7 +54,7 @@ namespace eka2l1 {
             int padding;
         };
 
-        int caculate_thread_priority(thread_priority pri) {
+        int caculate_thread_priority(process_ptr pr, thread_priority pri) {
             const uint8_t pris[] = {
                 1, 1, 2, 3, 4, 5, 22, 0,
                 3, 5, 6, 7, 8, 9, 22, 0,
@@ -66,10 +66,7 @@ namespace eka2l1 {
                 18, 26, 27, 28, 29, 30, 31, 0
             };
 
-            // The owning process, in this case is always have the priority
-            // of 3 (foreground)
-
-            int idx = (3 << 3) + (int)pri;
+            int idx = (static_cast<int>(pr->get_priority()) << 3) + static_cast<int>(pri);
             return pris[idx];
         }
 
@@ -85,7 +82,6 @@ namespace eka2l1 {
         void thread::create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
 
-            // This is intended to make EPOC HLE side create RHeap
             info.allocator = 0;
             info.func_ptr = epa;
             info.ptr = usrdata.ptr_address();
@@ -123,11 +119,14 @@ namespace eka2l1 {
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
-            , mem(mem) 
+            , mem(mem)
+            , priority(pri)
             , thread_handles(kern, handle_array_owner::thread) {
             obj_type = object_type::thread;
+            state = thread_state::wait; // Suspended.
 
-            priority = caculate_thread_priority(pri);
+            if (own_process)
+                real_priority = caculate_thread_priority(own_process, pri);
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
@@ -168,7 +167,7 @@ namespace eka2l1 {
             reset_thread_ctx(epa, stack_top);
             scheduler = kern->get_thread_scheduler();
         }
-        
+
         bool thread::should_wait(thread_ptr thr) {
             return state != thread_state::stop;
         }
@@ -182,7 +181,7 @@ namespace eka2l1 {
                 if (ldata.tls_slots[i].handle != -1 && ldata.tls_slots[i].handle == handle) {
                     return &ldata.tls_slots[i];
                 }
-            } 
+            }
 
             for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
                 if (ldata.tls_slots[i].handle == -1) {
@@ -200,8 +199,18 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
+        bool thread::sleep(uint32_t secs) {
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)), secs);
+        }
+        
+        bool thread::stop() {
+            return scheduler->stop(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
+        }
+
         void thread::update_priority() {
-            int new_priority = current_priority();
+            real_priority = caculate_thread_priority(own_process, priority);
+
+            int new_priority = current_real_priority();
 
             for (auto &mut : held_mutexes) {
                 if (mut->get_priority() < new_priority) {
@@ -209,18 +218,37 @@ namespace eka2l1 {
                 }
             }
 
-            priority = new_priority;
+            real_priority = new_priority;
 
             if (state == kernel::thread_state::ready) {
                 scheduler->refresh();
             } else {
-                // scheduler->schedule(std::reinterpret_pointer_cast<thread>(kern->get_kernel_obj(obj_id)));
+                scheduler->schedule(
+                    std::dynamic_pointer_cast<thread>(kern->get_kernel_obj_by_id(uid)));
             }
         }
 
+        void thread::set_priority(const thread_priority new_pri) {
+            priority = new_pri;
+
+            if (state == kernel::thread_state::ready) {
+                scheduler->refresh();
+            } else {
+                scheduler->schedule(
+                    std::dynamic_pointer_cast<thread>(kern->get_kernel_obj_by_id(uid)));
+            }
+
+            update_priority();
+
+            for (auto &mut : pending_mutexes) {
+                mut->update_priority();
+            }
+
+            kern->prepare_reschedule();
+        }
+
         void thread::wait_for_any_request() {
-            sema_ptr sema = 
-                std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(request_sema));
+            sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(request_sema));
 
             sema->wait();
         }
@@ -231,8 +259,33 @@ namespace eka2l1 {
             sema->release(1);
         }
 
+        void thread::owning_process(process_ptr pr) {
+            own_process = pr;
+            update_priority();
+        }
+
         kernel_obj_ptr thread::get_object(uint32_t handle) {
             return thread_handles.get_object(handle);
+        }
+
+        bool thread::operator>(const thread &rhs) {
+            return real_priority > rhs.real_priority;
+        }
+
+        bool thread::operator<(const thread &rhs) {
+            return real_priority < rhs.real_priority;
+        }
+
+        bool thread::operator==(const thread &rhs) {
+            return real_priority == rhs.real_priority;
+        }
+
+        bool thread::operator>=(const thread &rhs) {
+            return real_priority >= rhs.real_priority;
+        }
+
+        bool thread::operator<=(const thread &rhs) {
+            return real_priority <= rhs.real_priority;
         }
     }
 }

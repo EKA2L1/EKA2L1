@@ -35,6 +35,15 @@ namespace eka2l1::epoc {
         EKernelHalSetNumberOfCpus,
     };
 
+    struct TMemoryInfoV1 {
+        int iTotalRamInBytes;
+        int iTotalRomInBytes;
+        int iMaxFreeRamInBytes;
+        int iFreeRamInBytes;
+        int iInternalDiskRamInBytes;
+        bool iRomIsReprogrammable;
+    };
+
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */
     using hal_func = std::function<int(int *, int *)>;
     using hal_cagetory_funcs = std::unordered_map<uint32_t, hal_func>;

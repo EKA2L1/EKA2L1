@@ -1,8 +1,13 @@
 #include <core/core.h>
 #include <core/epoc/hal.h>
 
+#include <common/algorithm.h>
+#include <common/log.h>
+
 #include <common/e32inc.h>
 #include <e32err.h>
+
+#include <core/epoc/des.h>
 
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
     funcs.emplace(op, std::bind(&##hal_name::##func, this, std::placeholders::_1, std::placeholders::_2))
@@ -18,7 +23,7 @@ namespace eka2l1::epoc {
         auto func_pair = funcs.find(func);
 
         if (func_pair == funcs.end()) {
-            return false;
+            return -1;
         }
 
         return func_pair->second(a1, a2);
@@ -39,9 +44,31 @@ namespace eka2l1::epoc {
             return KErrNone;
         }
 
+        int memory_info(int *a1, int *a2) {
+            TDes8 *buf = reinterpret_cast<TDes8 *>(a1);
+            TMemoryInfoV1 memInfo;
+
+            memInfo.iTotalRamInBytes = common::MB(512);
+            memInfo.iRomIsReprogrammable = false;
+            memInfo.iMaxFreeRamInBytes = common::MB(512);
+            memInfo.iFreeRamInBytes = common::MB(512);
+            memInfo.iTotalRomInBytes = sys->get_rom_info().header.rom_size;
+            memInfo.iInternalDiskRamInBytes = memInfo.iTotalRomInBytes; // This value is appr. the same as rom.
+
+            std::string dat;
+            dat.resize(sizeof(memInfo));
+
+            memcpy(dat.data(), &memInfo, sizeof(memInfo));
+
+            buf->Assign(sys, dat);
+
+            return KErrNone;
+        }
+
         kern_hal(eka2l1::system *sys)
             : hal(sys) {
             REGISTER_HAL_FUNC(EKernelHalPageSizeInBytes, kern_hal, page_size);
+            REGISTER_HAL_FUNC(EKernelHalMemoryInfo, kern_hal, memory_info);
         }
     };
 
@@ -56,6 +83,13 @@ namespace eka2l1::epoc {
             return KErrNotFound;
         }
 
-        return hal_com->do_hal(func, a1, a2);
+        int ret = hal_com->do_hal(func, a1, a2);
+
+        if (ret == -1) {
+            LOG_WARN("Unimplemented HAL function, cagetory: 0x{:x}, function: 0x{:x}",
+                cage, func);
+        }
+
+        return ret;
     }
 }

@@ -135,6 +135,11 @@ namespace eka2l1 {
 
         void set_symbian_version_use(const epocver ever) {
             kern.set_epoc_version(ever);
+            io.set_epoc_version(ever);
+        }
+
+        loader::rom &get_rom_info() {
+            return romf;
         }
 
         epocver get_symbian_version_use() const {

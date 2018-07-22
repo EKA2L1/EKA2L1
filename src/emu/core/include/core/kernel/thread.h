@@ -29,8 +29,8 @@
 #include <common/resource.h>
 #include <core/arm/jit_factory.h>
 
-#include <core/kernel/object_ix.h>
 #include <core/kernel/chunk.h>
+#include <core/kernel/object_ix.h>
 #include <core/kernel/wait_obj.h>
 
 #include <core/ipc.h>
@@ -116,7 +116,8 @@ namespace eka2l1 {
             // Thread context to save when suspend the execution
             arm::jit_interface::thread_context ctx;
 
-            int priority;
+            thread_priority priority;
+            int real_priority;
 
             int stack_size;
             int min_heap_size, max_heap_size;
@@ -135,8 +136,8 @@ namespace eka2l1 {
             thread_local_data ldata;
 
             std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
-            std::vector<kernel::mutex*> held_mutexes;
-            std::vector<kernel::mutex*> pending_mutexes;
+            std::vector<kernel::mutex *> held_mutexes;
+            std::vector<kernel::mutex *> pending_mutexes;
 
             uint32_t request_sema;
             uint32_t flags;
@@ -148,6 +149,8 @@ namespace eka2l1 {
             int leave_depth = -1;
 
             object_ix thread_handles;
+
+            int wakeup_handle;
 
         public:
             kernel_obj_ptr get_object(uint32_t handle);
@@ -179,6 +182,15 @@ namespace eka2l1 {
             void wait_for_any_request();
             void signal_request();
 
+            void set_priority(const thread_priority new_pri);
+
+            bool sleep(uint32_t secs);
+            bool stop();
+
+            thread_priority get_priority() const {
+                return priority;
+            }
+
             uint32_t get_flags() const {
                 return flags;
             }
@@ -199,16 +211,14 @@ namespace eka2l1 {
                 return own_process;
             }
 
-            void owning_process(process_ptr pr) {
-                own_process = pr;
-            }
+            void owning_process(process_ptr pr);
 
             thread_state current_state() const {
                 return state;
             }
 
-            int current_priority() const {
-                return priority;
+            int current_real_priority() const {
+                return real_priority;
             }
 
             void current_state(thread_state st) {

@@ -47,7 +47,8 @@ namespace eka2l1::kernel {
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
         const std::string &process_name, const std::u16string &exe_path,
-        const std::u16string &cmd_args, loader::e32img_ptr &img)
+        const std::u16string &cmd_args, loader::e32img_ptr &img,
+        const process_priority pri)
         : kernel_obj(kern, process_name, access_type::local_access)
         , uid(uid)
         , process_name(process_name)
@@ -56,6 +57,7 @@ namespace eka2l1::kernel {
         , img(img)
         , exe_path(exe_path)
         , cmd_args(cmd_args)
+        , priority(pri)
         , page_tab(mem->get_page_size())
         , process_handles(kern, handle_array_owner::process) {
         obj_type = kernel::object_type::process;
@@ -67,7 +69,8 @@ namespace eka2l1::kernel {
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
         const std::string &process_name, const std::u16string &exe_path,
-        const std::u16string &cmd_args, loader::romimg_ptr &img)
+        const std::u16string &cmd_args, loader::romimg_ptr &img,
+        const process_priority pri)
         : kernel_obj(kern, process_name, access_type::local_access)
         , uid(uid)
         , process_name(process_name)
@@ -77,6 +80,7 @@ namespace eka2l1::kernel {
         , exe_path(exe_path)
         , cmd_args(cmd_args)
         , page_tab(mem->get_page_size())
+        , priority(pri)
         , process_handles(kern, handle_array_owner::process) {
         obj_type = kernel::object_type::process;
 
@@ -122,9 +126,17 @@ namespace eka2l1::kernel {
         }
 
         thr->owning_process(kern->get_process(obj_name));
-
-        kern->run_thread(primary_thread);
+        //kern->run_thread(primary_thread);
 
         return true;
+    }
+
+    void process::set_priority(const process_priority new_pri) {
+        std::vector<thread_ptr> all_own_threads = kern->get_all_thread_own_process(kern->get_process(obj_name));
+        priority = new_pri;
+
+        for (const auto &thr : all_own_threads) {
+            thr->update_priority();
+        }
     }
 }

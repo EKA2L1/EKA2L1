@@ -275,7 +275,7 @@ namespace eka2l1 {
                     uint32_t lr = 0;
                     uc_reg_read(engine, UC_ARM_REG_LR, &lr);
 
-                    LOG_CRITICAL("Unicorn error {} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}", 
+                    LOG_CRITICAL("Unicorn error {} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}",
                         uc_strerror(err), pc, error_pc, lr);
 
                     return false;

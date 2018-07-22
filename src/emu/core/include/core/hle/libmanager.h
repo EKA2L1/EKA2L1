@@ -65,7 +65,10 @@ namespace eka2l1 {
     }
 
     namespace hle {
-        using epoc_import_func = std::function<void(system *)>;
+        struct epoc_import_func {
+            std::function<void(system *)> func;
+            std::string name;
+        };
 
         struct e32img_inf {
             loader::e32img_ptr img;

@@ -185,7 +185,7 @@ namespace eka2l1 {
 
         uint32_t open_handle(kernel_obj_ptr obj, kernel::owner_type owner);
 
-        std::optional<find_handle> find_object(const std::string &name, kernel::object_type type);
+        std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type);
 
         void add_custom_server(server_ptr svr) {
             objects.push_back(std::move(std::dynamic_pointer_cast<kernel::kernel_obj>(svr)));
@@ -195,6 +195,8 @@ namespace eka2l1 {
         bool close(uint32_t handle);
 
         kernel_obj_ptr get_kernel_obj(uint32_t handle);
+        kernel_obj_ptr get_kernel_obj_by_id(uint64_t id);
+
         thread_ptr get_thread_by_name(const std::string &name);
         thread_ptr kernel_system::get_thread_by_handle(uint32_t handle);
 
@@ -202,6 +204,8 @@ namespace eka2l1 {
 
         server_ptr get_server(uint32_t handle);
         server_ptr get_server_by_name(const std::string name);
+
+        std::vector<thread_ptr> get_all_thread_own_process(process_ptr pr);
 
         bool run_thread(uint32_t handle);
         bool run_process(uint32_t handle);
@@ -224,5 +228,7 @@ namespace eka2l1 {
         process_ptr crr_process();
 
         void set_handle_owner_type(int handle);
+
+        bool should_terminate();
     };
 }

@@ -187,6 +187,19 @@ namespace eka2l1::epoc {
         pr->set_flags(org_flags ^ new_flags);
     }
 
+    BRIDGE_FUNC(TInt, ProcessSetPriority, TInt aHandle, TInt aProcessPriority) {
+        kernel_system *kern = sys->get_kernel_system();
+        process_ptr pr = kern->get_process(aHandle);
+
+        if (!pr) {
+            return KErrBadHandle;
+        }
+
+        pr->set_priority(static_cast<eka2l1::kernel::process_priority>(aProcessPriority));
+
+        return KErrNone;
+    }
+
     /********************/
     /* TLS */
     /*******************/
@@ -393,7 +406,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
+        chunk_ptr chunk = std::dynamic_pointer_cast<kernel::chunk>(obj);
         return chunk->get_max_size();
     }
 
@@ -404,7 +417,7 @@ namespace eka2l1::epoc {
             return 0;
         }
 
-        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
+        chunk_ptr chunk = std::dynamic_pointer_cast<kernel::chunk>(obj);
         return chunk->base();
     }
 
@@ -415,7 +428,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
+        chunk_ptr chunk = std::dynamic_pointer_cast<kernel::chunk>(obj);
 
         auto fetch = [aType](chunk_ptr chunk, int a1, int a2) -> bool {
             switch (aType) {
@@ -490,7 +503,7 @@ namespace eka2l1::epoc {
 
         LOG_TRACE("Finding object name: {}", name);
 
-        std::optional<find_handle> info = kern->find_object(name, static_cast<kernel::object_type>(aObjectType));
+        std::optional<find_handle> info = kern->find_object(name, handle->iHandle, static_cast<kernel::object_type>(aObjectType));
 
         if (!info) {
             return KErrNotFound;
@@ -592,6 +605,42 @@ namespace eka2l1::epoc {
     /*  THREAD  */
     /************************/
 
+    BRIDGE_FUNC(TInt, ThreadKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aReasonDes) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return KErrBadHandle;
+        }
+
+        std::string exit_cage = aReasonDes.get(mem)->StdString(sys);
+
+        switch (aExitType) {
+        case TExitType::panic:
+            LOG_TRACE("Thread paniced with cagetory: {} and exit code: {}", exit_cage, aReason);
+            break;
+
+        case TExitType::kill:
+            LOG_TRACE("Thread forcefully killed with cagetory: {} and exit code: {}", exit_cage, aReason);
+            break;
+
+        case TExitType::terminate:
+        case TExitType::pending:
+            LOG_TRACE("Thread terminated peacefully with cagetory: {} and exit code: {}", exit_cage, aReason);
+            break;
+
+        default:
+            return KErrArgument;
+        }
+
+        kern->get_thread_scheduler()->stop(thr);
+        kern->prepare_reschedule();
+
+        return KErrNone;
+    }
+
     BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<TDesC8> aName) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
@@ -611,6 +660,9 @@ namespace eka2l1::epoc {
         }
 
         std::string new_name = name->StdString(sys);
+
+        LOG_TRACE("Thread with last name: {} renamed to {}", thr->name(), new_name);
+
         thr->rename(new_name);
 
         return KErrNone;
@@ -689,6 +741,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x16, ProcessFilename),
+        BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
@@ -703,6 +756,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6D, HandleOpenObject),
         BRIDGE_REGISTER(0x6E, HandleDuplicate),
         BRIDGE_REGISTER(0x70, SemaphoreCreate),
+        BRIDGE_REGISTER(0x73, ThreadKill),
         BRIDGE_REGISTER(0x76, DllSetTls),
         BRIDGE_REGISTER(0x77, DllFreeTLS),
         BRIDGE_REGISTER(0x78, ThreadRename),

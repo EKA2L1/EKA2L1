@@ -51,9 +51,9 @@ int load_process(int sys, unsigned int id) {
     }
 
     sys_ptr &symsys = syses[sys - 1];
-    process *p = symsys->load(id);
+    uint32_t p = symsys->load(id);
 
-    if (!p) {
+    if (p == 0xFFFFFFFF) {
         return -2;
     }
 

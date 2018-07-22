@@ -47,6 +47,13 @@ namespace eka2l1::epoc {
         EObjectTypeAny = -1
     };
 
+    enum class TExitType {
+        kill,
+        terminate,
+        panic,
+        pending
+    };
+
     /*! \brief Get the thread-local allocator. 
      * \returns The pointer to the allocator. 
      */
