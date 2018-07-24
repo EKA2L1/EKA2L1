@@ -54,6 +54,80 @@ namespace eka2l1 {
             int padding;
         };
 
+        int map_thread_priority_to_calc(thread_priority pri) {
+            switch (pri) {
+            case thread_priority::priority_much_less:
+                return -7;
+
+            case thread_priority::priority_less:
+                return -6;
+
+            case thread_priority::priority_normal:
+                return -5;
+
+            case thread_priority::priority_more:
+                return -4;
+
+            case thread_priority::priority_much_more:
+                return -3;
+
+            case thread_priority::priority_real_time:
+                return -2;
+
+            case thread_priority::priority_null:
+                return 0;
+
+            case thread_priority::priority_absolute_very_low:
+                return 1;
+
+            case thread_priority::priority_absolute_low:
+                return 5;
+
+            case thread_priority::priority_absolute_background:
+                return 10;
+
+            case thread_priority::priorty_absolute_foreground:
+                return 15;
+
+            case thread_priority::priority_absolute_high:
+                return 23;
+
+            default: {
+                LOG_WARN("Undefined priority.");
+                break;
+            }
+            }
+
+            return 1;
+        }
+
+        int map_process_pri_calc(process_priority pri) {
+            switch (pri) {
+            case process_priority::low:
+                return 0;
+            case process_priority::background:
+                return 1;
+            case process_priority::foreground:
+                return 2;
+            case process_priority::high:
+                return 3;
+            case process_priority::window_svr:
+                return 4;
+            case process_priority::file_svr:
+                return 5;
+            case process_priority::supervisor:
+                return 6;
+            case process_priority::real_time_svr:
+                return 7;
+            default: {
+                LOG_WARN("Undefined process priority");
+                break;
+            }
+            }
+
+            return 0;       
+        }
+
         int caculate_thread_priority(process_ptr pr, thread_priority pri) {
             const uint8_t pris[] = {
                 1, 1, 2, 3, 4, 5, 22, 0,
@@ -66,8 +140,19 @@ namespace eka2l1 {
                 18, 26, 27, 28, 29, 30, 31, 0
             };
 
-            int idx = (static_cast<int>(pr->get_priority()) << 3) + static_cast<int>(pri);
-            return pris[idx];
+            int tp = map_thread_priority_to_calc(pri);
+
+            if (tp >= 0) {
+                return (tp < 64) ? tp : 63;             
+            }
+
+            int prinew = tp + 8;
+
+            if (prinew < 0)
+                prinew = 0;
+
+            int idx = (map_process_pri_calc(pr->get_priority()) << 3) + static_cast<int>(prinew);
+            return pris[idx];    
         }
 
         void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
@@ -202,7 +287,7 @@ namespace eka2l1 {
         bool thread::sleep(uint32_t secs) {
             return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)), secs);
         }
-        
+
         bool thread::stop() {
             return scheduler->stop(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
         }

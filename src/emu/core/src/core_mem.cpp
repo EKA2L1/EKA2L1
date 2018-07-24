@@ -39,8 +39,8 @@ namespace eka2l1 {
         codeseg_pages.resize(0x10000000 / page_size);
         codeseg_pointers.resize(0x10000000 / page_size);
 
-        global_pages.resize(codeseg_pages.size());
-        global_pointers.resize(codeseg_pointers.size());
+        global_pages.resize((ram_drive - global_data) / page_size);
+        global_pointers.resize(global_pages.size());
 
         cpu = jit.get();
     }
@@ -512,11 +512,11 @@ namespace eka2l1 {
 #endif
 
             if (current_page_table) {
-                std::copy(global_pages.begin() + beg - (global_data / page_size),
-                    global_pages.begin() + end - (global_data / page_size), current_page_table->pages.begin() + beg);
+                std::copy(global_pages.begin() + (beg - (global_data / page_size)),
+                    global_pages.begin() + (end - (global_data / page_size)), current_page_table->pages.begin() + beg);
 
-                std::copy(global_pointers.begin() + beg - (global_data / page_size),
-                    global_pointers.begin() + end - (global_data / page_size), current_page_table->pointers.begin() + beg);
+                std::copy(global_pointers.begin() + (beg - (global_data / page_size)),
+                    global_pointers.begin() + (end - (global_data / page_size)), current_page_table->pointers.begin() + beg);
             }
         } else if (addr.ptr_address() >= codeseg_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
 #ifdef WIN32
@@ -533,11 +533,11 @@ namespace eka2l1 {
 #endif
 
             if (current_page_table) {
-                std::copy(codeseg_pages.begin() + beg - (codeseg_addr / page_size),
+                std::copy(codeseg_pages.begin() + (beg - (codeseg_addr / page_size)),
                     codeseg_pages.begin() + end - (codeseg_addr / page_size), current_page_table->pages.begin() + beg);
 
-                std::copy(codeseg_pointers.begin() + beg - (codeseg_addr / page_size),
-                    codeseg_pointers.begin() + end - (codeseg_addr / page_size), current_page_table->pointers.begin() + beg);
+                std::copy(codeseg_pointers.begin() + (beg - (codeseg_addr / page_size)),
+                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->pointers.begin() + beg);
             }
         } else {
 #ifdef WIN32
