@@ -182,6 +182,7 @@ namespace eka2l1 {
 
         /* Fast duplication, unsafe */
         uint32_t mirror(thread_ptr own_thread, uint32_t handle, kernel::owner_type owner);
+        uint32_t mirror(kernel_obj_ptr obj, kernel::owner_type owner);
 
         uint32_t open_handle(kernel_obj_ptr obj, kernel::owner_type owner);
 

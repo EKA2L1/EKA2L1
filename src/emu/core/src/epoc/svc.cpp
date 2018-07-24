@@ -551,9 +551,19 @@ namespace eka2l1::epoc {
 
         std::string obj_name = aName.get(mem)->StdString(sys);
 
-        switch (aObjectType) {
-        default:
-            break;
+        auto obj_info = kern->find_object(obj_name, 0, static_cast<eka2l1::kernel::object_type>(aObjectType));
+
+        if (!obj_info) {
+            return KErrNotFound;
+        }
+
+        uint64_t id = obj_info->object_id;
+        kernel_obj_ptr obj = kern->get_kernel_obj_by_id(id);
+
+        uint32_t ret_handle = kern->mirror(obj, static_cast<eka2l1::kernel::owner_type>(aOwnerType));
+
+        if (ret_handle != 0xFFFFFFFF) {
+            return ret_handle;
         }
 
         return KErrGeneral;

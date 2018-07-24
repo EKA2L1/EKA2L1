@@ -567,6 +567,24 @@ namespace eka2l1 {
         }
     }
 
+    uint32_t kernel_system::mirror(kernel_obj_ptr obj, kernel::owner_type owner) {
+        switch (owner) {
+        case kernel::owner_type::kernel:
+            return kernel_handles.add_object(obj);
+
+        case kernel::owner_type::thread: {
+            return crr_thread()->thread_handles.add_object(obj);
+        }
+
+        case kernel::owner_type::process: {
+            return crr_process()->process_handles.add_object(obj);
+        }
+
+        default:
+            return 0xFFFFFFFF;
+        }
+    }
+
     uint32_t kernel_system::open_handle(kernel_obj_ptr obj, kernel::owner_type owner) {
         switch (owner) {
         case kernel::owner_type::kernel:
