@@ -339,7 +339,11 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, DebugMask) {
-        return 96; // Constant debug mask
+        return 0;
+    }
+
+    BRIDGE_FUNC(TInt, DebugMaskIndex, TInt aIdx) {
+        return 0;
     }
 
     BRIDGE_FUNC(TInt, HalFunction, TInt aCagetory, TInt aFunc, eka2l1::ptr<TInt> a1, eka2l1::ptr<TInt> a2) {
@@ -360,9 +364,10 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
 
         TChunkCreate createInfo = *aChunkCreate.get(mem);
-        TDesC8 name = *aName.get(mem);
+        TDesC8 *name = aName.get(mem);
 
-        auto lol = name.StdString(sys);
+        auto lol
+            = name->StdString(sys);
 
         kernel::chunk_type type;
         kernel::chunk_access access = kernel::chunk_access::local;
@@ -384,11 +389,11 @@ namespace eka2l1::epoc {
             access = kernel::chunk_access::global;
         }
 
-        if (access == decltype(access)::global && name.Length() == 0) {
+        if (access == decltype(access)::global && name->Length() == 0) {
             att = kernel::chunk_attrib::anonymous;
         }
 
-        uint32_t handle = kern->create_chunk(name.StdString(sys), createInfo.iInitialBottom, createInfo.iInitialTop,
+        uint32_t handle = kern->create_chunk(name->StdString(sys), createInfo.iInitialBottom, createInfo.iInitialTop,
             createInfo.iMaxSize, prot::read_write, type, access, att,
             aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
 
@@ -733,7 +738,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800006, SetActiveScheduler),
         BRIDGE_REGISTER(0x00800008, TrapHandler),
         BRIDGE_REGISTER(0x00800009, SetTrapHandler),
-        BRIDGE_REGISTER(0x0080000D, DebugMask),
+        BRIDGE_REGISTER(0x0080000C, DebugMask),
+        BRIDGE_REGISTER(0x0080000D, DebugMaskIndex),
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
         BRIDGE_REGISTER(0x00800019, UTCOffset),
         /* SLOW EXECUTIVE CALL */
