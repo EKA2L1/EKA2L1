@@ -45,7 +45,9 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
-                eka2l1::epoc::TDesC16 *des = eka2l1::ptr<epoc::TDesC16>(msg->args.args[idx]).get(sys->get_memory_system());
+                eka2l1::epoc::TDesC16 *des = static_cast<eka2l1::epoc::TDesC16*>
+                    (msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+
                 return des->StdString(sys);
             }
 
@@ -61,8 +63,8 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & (int)ipc_arg_type::flag_des) {
-                eka2l1::epoc::TDesC8 *des = eka2l1::ptr<epoc::TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
-                return des->StdString(sys);
+                eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>
+                    (msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
             }
 
             return std::optional<std::string>{};
@@ -93,7 +95,8 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
-                epoc::TDesC8 *des = eka2l1::ptr<epoc::TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
+                eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
+                    msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
                 std::string bin;
 
                 bin.resize(len);

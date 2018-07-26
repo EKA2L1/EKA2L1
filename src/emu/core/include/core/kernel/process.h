@@ -118,6 +118,8 @@ namespace eka2l1::kernel {
         process_uid_type get_uid_type();
         kernel_obj_ptr get_object(uint32_t handle);
 
+        void *get_ptr_on_addr_space(address addr);
+
         std::u16string get_cmd_args() const {
             return cmd_args;
         }

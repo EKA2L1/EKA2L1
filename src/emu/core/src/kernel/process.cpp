@@ -139,4 +139,13 @@ namespace eka2l1::kernel {
             thr->update_priority();
         }
     }
+
+    void *process::get_ptr_on_addr_space(address addr) {
+        if (!page_tab.pointers[addr / page_tab.page_size].get()) {
+            return nullptr;
+        }
+
+        return static_cast<void *>(page_tab.pointers[addr / page_tab.page_size].get() 
+            + addr % page_tab.page_size);
+    }
 }

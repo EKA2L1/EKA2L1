@@ -71,10 +71,33 @@ namespace eka2l1 {
 
         fs_node_share share_mode;
 
-        int id;
+        process_ptr own_process;
+
+        bool is_active = false;
+
+        uint32_t id;
+    };
+
+    enum {
+        fs_max_handle = 0x200
+    };
+
+    class fs_file_table {
+        std::array<fs_node, fs_max_handle> nodes;
+
+    public:
+        fs_file_table();
+
+        size_t add_node(fs_node &node);
+        bool close_nodes(size_t handle);
+
+        fs_node *get_node(size_t handle);
+        fs_node *get_node(const std::u16string &path);
     };
 
     class fs_server : public service::server {
+        fs_file_table nodes_table;
+
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);
         void file_replace(service::ipc_context ctx);
@@ -91,17 +114,10 @@ namespace eka2l1 {
 
         std::unordered_map<uint32_t, fs_node> file_nodes;
 
-        int new_node(io_system *io, std::u16string name, int org_mode, bool overwrite = false);
+        int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false);
         fs_node *get_file_node(int handle);
 
-        std::atomic<uint32_t> counter;
-
-        uint32_t next_handle() {
-            ++counter;
-            return counter.load();
-        }
-
-        public : 
-            fs_server(system *sys);
+    public:
+        fs_server(system *sys);
     };
 }

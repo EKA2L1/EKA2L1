@@ -73,6 +73,53 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
+    fs_file_table::fs_file_table() {
+        for (size_t i = 0; i < nodes.size(); i++) {
+            nodes[i].id = i + 1;
+        }
+    }
+
+    size_t fs_file_table::add_node(fs_node &node) {
+        for (size_t i = 0; i < nodes.size(); i++) {
+            if (!nodes[i].is_active) {
+                nodes[i] = std::move(node);
+                nodes[i].is_active = true;
+
+                return i + 1;
+            }
+        }
+
+        return 0;
+    }
+
+    bool fs_file_table::close_nodes(size_t handle) {
+        if (handle <= nodes.size() && nodes[handle - 1].is_active) {
+            nodes[handle - 1].is_active = false;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    fs_node *fs_file_table::get_node(size_t handle) {
+        if (handle <= nodes.size() && nodes[handle - 1].is_active) {
+            return &nodes[handle - 1];
+        }
+
+        return nullptr;
+    }
+
+    fs_node *fs_file_table::get_node(const std::u16string &path) {
+        for (auto &file_node : nodes) {
+            if (file_node.is_active && file_node.vfs_node->file_name() == path) {
+                return &file_node;
+            }
+        }
+
+        return nullptr;
+    }
+
     fs_server::fs_server(system *sys)
         : service::server(sys, "!FileServer") {
         REGISTER_IPC(fs_server, entry, EFsEntry, "Fs::Entry");
@@ -85,13 +132,7 @@ namespace eka2l1 {
     }
 
     fs_node *fs_server::get_file_node(int handle) {
-        //int real_handle = file_handles.get_real_handle_id(handle);
-
-        //if (real_handle == -1) {
-        //    return nullptr;
-        //}
-
-        return &file_nodes[handle];
+        return nodes_table.get_node(handle);
     }
 
     void fs_server::file_size(service::ipc_context ctx) {
@@ -205,7 +246,7 @@ namespace eka2l1 {
 
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
 
-        int handle = new_node(ctx.sys->get_io_system(), *name_res, *open_mode_res, overwrite);
+        int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res, *open_mode_res, overwrite);
 
         if (handle <= 0) {
             ctx.set_request_status(handle);
@@ -224,7 +265,7 @@ namespace eka2l1 {
         new_file_subsession(ctx, true);
     }
 
-    int fs_server::new_node(io_system *io, std::u16string name, int org_mode, bool overwrite) {
+    int fs_server::new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite) {
         int real_mode = org_mode & ~(epoc::EFileStreamText | epoc::EFileReadAsyncAll | epoc::EFileBigFile);
         fs_node_share share_mode = (fs_node_share)-1;
 
@@ -268,10 +309,9 @@ namespace eka2l1 {
             owner_type = kernel::owner_type::process;
         }
 
-        auto &cache_node = std::find_if(file_nodes.begin(), file_nodes.end(),
-            [&](const auto &node) { return node.second.vfs_node->file_name() == name; });
+        fs_node *cache_node = nodes_table.get_node(name);
 
-        if (cache_node == file_nodes.end()) {
+        if (!cache_node) {
             fs_node new_node;
             new_node.vfs_node = io->open_file(name, access_mode);
 
@@ -286,46 +326,43 @@ namespace eka2l1 {
             new_node.mix_mode = real_mode;
             new_node.open_mode = access_mode;
             new_node.share_mode = share_mode;
-            new_node.id = next_handle();
+            new_node.own_process = sender->owning_process();
 
-            uint32_t id = new_node.id;
-            file_nodes.emplace(id, std::move(new_node));
-
-            return id;
+            return nodes_table.add_node(new_node);
         }
 
-        if ((int)share_mode != -1 && share_mode != cache_node->second.share_mode) {
-            if (share_mode == fs_node_share::exclusive || cache_node->second.share_mode == fs_node_share::exclusive) {
+        if ((int)share_mode != -1 && share_mode != cache_node->share_mode) {
+            if (share_mode == fs_node_share::exclusive || cache_node->share_mode == fs_node_share::exclusive) {
                 return KErrAccessDenied;
             }
 
             // Compare mode, compatible ?
-            if ((share_mode == fs_node_share::share_read && cache_node->second.share_mode == fs_node_share::any)
-                || (share_mode == fs_node_share::share_read && cache_node->second.share_mode == fs_node_share::share_read_write && (cache_node->second.open_mode & WRITE_MODE))
-                || (share_mode == fs_node_share::share_read_write && (access_mode & WRITE_MODE) && cache_node->second.share_mode == fs_node_share::share_read)
-                || (share_mode == fs_node_share::any && cache_node->second.share_mode == fs_node_share::share_read)) {
+            if ((share_mode == fs_node_share::share_read && cache_node->share_mode == fs_node_share::any)
+                || (share_mode == fs_node_share::share_read && cache_node->share_mode == fs_node_share::share_read_write && (cache_node->open_mode & WRITE_MODE))
+                || (share_mode == fs_node_share::share_read_write && (access_mode & WRITE_MODE) && cache_node->share_mode == fs_node_share::share_read)
+                || (share_mode == fs_node_share::any && cache_node->share_mode == fs_node_share::share_read)) {
                 return KErrAccessDenied;
             }
 
             // Let's promote mode
 
             // Since we filtered incompatible mode, so if the share mode of them two is read, share mode of both of them is read
-            if (share_mode == fs_node_share::share_read || cache_node->second.share_mode == fs_node_share::share_read) {
+            if (share_mode == fs_node_share::share_read || cache_node->share_mode == fs_node_share::share_read) {
                 share_mode = fs_node_share::share_read;
-                cache_node->second.share_mode = fs_node_share::share_read;
+                cache_node->share_mode = fs_node_share::share_read;
             }
 
-            if (share_mode == fs_node_share::any || cache_node->second.share_mode == fs_node_share::any) {
+            if (share_mode == fs_node_share::any || cache_node->share_mode == fs_node_share::any) {
                 share_mode = fs_node_share::any;
-                cache_node->second.share_mode = fs_node_share::any;
+                cache_node->share_mode = fs_node_share::any;
             }
 
             if (share_mode == fs_node_share::share_read_write || share_mode == fs_node_share::share_read_write) {
                 share_mode = fs_node_share::share_read_write;
-                cache_node->second.share_mode = fs_node_share::share_read_write;
+                cache_node->share_mode = fs_node_share::share_read_write;
             }
         } else {
-            share_mode = cache_node->second.share_mode;
+            share_mode = cache_node->share_mode;
         }
 
         if (share_mode == fs_node_share::share_read && access_mode & WRITE_MODE) {
@@ -333,40 +370,32 @@ namespace eka2l1 {
         }
 
         // Check if mode is compatible
-        if (cache_node->second.share_mode == fs_node_share::exclusive) {
-            // Check if process id is the same
-            //uint64_t owner_id = file_handles.get_owner_id(cache_node->second.id);
-
+        if (cache_node->share_mode == fs_node_share::exclusive) {
+            // Check if process is the same
             // Deninded if mode is exclusive
-            //if (owner_id != kern->get_id_base_owner(kernel::owner_type::process)) {
-           // return KErrAccessDenied;
+            if (cache_node->own_process != sender->owning_process()) {
+                return KErrAccessDenied;
+            }
+
+            // If we have the same open mode as the cache node, don't create new, returns this :D
+            if (cache_node->open_mode == real_mode) {
+                return cache_node->id;
+            }
+
+            fs_node new_node;
+            new_node.vfs_node = io->open_file(name, access_mode);
+
+            if (!new_node.vfs_node) {
+                return KErrNotFound;
+            }
+
+            new_node.mix_mode = real_mode;
+            new_node.open_mode = access_mode;
+            new_node.share_mode = share_mode;
+
+            return nodes_table.add_node(new_node);
         }
-
-        // If we have the same open mode as the cache node, don't create new, mirror the id
-        //if (cache_node->second.open_mode == real_mode) {
-        //     uint32_t mirror_id = file_handles.new_handle(cache_node->second.id, static_cast<handle_owner_type>(owner_type),
-        //        kern->get_id_base_owner(owner_type));
-
-        //    return mirror_id;
-        //}
-
-        fs_node new_node;
-        new_node.vfs_node = io->open_file(name, access_mode);
-
-        if (!new_node.vfs_node) {
-            return KErrNotFound;
-        }
-
-        new_node.mix_mode = real_mode;
-        new_node.open_mode = access_mode;
-        new_node.share_mode = share_mode;
-        new_node.id = next_handle();
-
-        uint32_t id = new_node.id;
-        file_nodes.emplace(id, std::move(new_node));
-
-        return id;
-    }
+     }
 
     bool is_e32img(symfile f) {
         int sig;

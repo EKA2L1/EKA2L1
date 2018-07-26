@@ -103,6 +103,8 @@ namespace eka2l1 {
                 }
 
                 objects[info.object_ix_index].free = true;
+
+                return true;
             }
 
             return false;

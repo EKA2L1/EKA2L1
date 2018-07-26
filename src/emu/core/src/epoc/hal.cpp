@@ -80,6 +80,9 @@ namespace eka2l1::epoc {
         hal_ptr hal_com = sys->get_hal(cage);
 
         if (!hal_com) {
+            LOG_TRACE("HAL cagetory not found or unimplemented: 0x{:x} (for function: 0x{:x})",
+                cage, func);
+
             return KErrNotFound;
         }
 
