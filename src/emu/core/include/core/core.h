@@ -172,6 +172,10 @@ namespace eka2l1 {
             return &io;
         }
 
+        timing_system *get_timing_system() {
+            return &timing;
+        }
+
         disasm *get_disasm() {
             return &asmdis;
         }

@@ -72,8 +72,31 @@ namespace eka2l1::epoc {
         }
     };
 
+    struct variant_hal: public eka2l1::epoc::hal {
+        int get_variant_info(int *a1, int *a2) {
+            epoc::TDes8 *package = reinterpret_cast<epoc::TDes8*>(a1);
+            epoc::TVariantInfoV1 *info_ptr = reinterpret_cast<epoc::TVariantInfoV1*>(package->Ptr(sys));
+
+            loader::rom &rom_info = sys->get_rom_info();
+            info_ptr->iMajor = rom_info.header.major;
+            info_ptr->iMinor = rom_info.header.minor;
+            info_ptr->iBuild = rom_info.header.build;
+
+            info_ptr->iProessorClockInMhz = sys->get_timing_system()->get_clock_frequency_mhz();
+            info_ptr->iMachineUid = 0x70000001;
+
+            return 0;
+        }
+
+        variant_hal(eka2l1::system *sys)
+            : hal(sys) {
+            REGISTER_HAL_FUNC(EVariantHalVariantInfo, variant_hal, get_variant_info);
+        }
+    };
+
     void init_hal(eka2l1::system *sys) {
         REGISTER_HAL(sys, 0, kern_hal);
+        REGISTER_HAL(sys, 1, variant_hal);
     }
 
     int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2) {

@@ -35,6 +35,27 @@ namespace eka2l1::epoc {
         EKernelHalSetNumberOfCpus,
     };
 
+    enum TVariantHalFunction
+	{
+	    EVariantHalVariantInfo,
+	    EVariantHalDebugPortSet,
+    	EVariantHalDebugPortGet,
+	    EVariantHalLedMaskSet,
+        EVariantHalLedMaskGet,
+        EVariantHalSwitches,
+        EVariantHalCustomRestart,
+        EVariantHalCustomRestartReason,
+        EVariantHalCaseState,     // Hmmmm
+        EVariantHalCurrentNumberOfScreens,
+        EVariantHalPersistStartupMode,
+        EVariantHalGetPersistedStartupMode,
+        EVariantHalGetMaximumCustomRestartReasons,
+        EVariantHalGetMaximumRestartStartupModes,
+        EVariantHalTimeoutExpansion,
+        EVariantHalSerialNumber,
+        EVariantHalProfilingDefaultInterruptBase
+	};
+
     struct TMemoryInfoV1 {
         int iTotalRamInBytes;
         int iTotalRomInBytes;
@@ -42,6 +63,17 @@ namespace eka2l1::epoc {
         int iFreeRamInBytes;
         int iInternalDiskRamInBytes;
         bool iRomIsReprogrammable;
+    };
+
+    struct TVariantInfoV1 {
+        uint8_t iMajor;
+        uint8_t iMinor;
+        uint16_t iBuild;
+
+        uint64_t iMachineUid;
+        uint32_t iLedCaps;
+        uint32_t iProessorClockInMhz;
+        uint32_t iSpeedFactor;
     };
 
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */

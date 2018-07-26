@@ -85,7 +85,7 @@ namespace eka2l1 {
         class advstringstream : public advstream<char> {
         public:
             advstringstream(std::string &str)
-                : advstream<char>(str.data(), str.size()) {}
+                : advstream<char>(&str[0], str.size()) {}
 
             char &get() {
                 return *_get(1);
@@ -101,7 +101,7 @@ namespace eka2l1 {
                 auto rescpy = _get(nm);
 
                 res.resize(nm);
-                memcpy(res.data(), rescpy, std::min(nm, length()));
+                memcpy(reinterpret_cast<void*>(&res[0]), rescpy, std::min(nm, length()));
 
                 return res;
             }
@@ -112,7 +112,7 @@ namespace eka2l1 {
                 auto rescpy = _peek(nm);
 
                 res.resize(nm);
-                memcpy(res.data(), rescpy, std::min(nm, length()));
+                memcpy(reinterpret_cast<void*>(&res[0]), rescpy, std::min(nm, length()));
 
                 return res;
             }
