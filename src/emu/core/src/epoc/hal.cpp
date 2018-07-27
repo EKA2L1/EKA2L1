@@ -48,10 +48,10 @@ namespace eka2l1::epoc {
             TDes8 *buf = reinterpret_cast<TDes8 *>(a1);
             TMemoryInfoV1 memInfo;
 
-            memInfo.iTotalRamInBytes = common::MB(512);
+            memInfo.iTotalRamInBytes = common::MB(256);
             memInfo.iRomIsReprogrammable = false;
-            memInfo.iMaxFreeRamInBytes = common::MB(512);
-            memInfo.iFreeRamInBytes = common::MB(512);
+            memInfo.iMaxFreeRamInBytes = common::MB(256);
+            memInfo.iFreeRamInBytes = common::MB(256);
             memInfo.iTotalRomInBytes = sys->get_rom_info().header.rom_size;
             memInfo.iInternalDiskRamInBytes = memInfo.iTotalRomInBytes; // This value is appr. the same as rom.
 
@@ -72,10 +72,10 @@ namespace eka2l1::epoc {
         }
     };
 
-    struct variant_hal: public eka2l1::epoc::hal {
+    struct variant_hal : public eka2l1::epoc::hal {
         int get_variant_info(int *a1, int *a2) {
-            epoc::TDes8 *package = reinterpret_cast<epoc::TDes8*>(a1);
-            epoc::TVariantInfoV1 *info_ptr = reinterpret_cast<epoc::TVariantInfoV1*>(package->Ptr(sys));
+            epoc::TDes8 *package = reinterpret_cast<epoc::TDes8 *>(a1);
+            epoc::TVariantInfoV1 *info_ptr = reinterpret_cast<epoc::TVariantInfoV1 *>(package->Ptr(sys));
 
             loader::rom &rom_info = sys->get_rom_info();
             info_ptr->iMajor = rom_info.header.major;
@@ -94,9 +94,40 @@ namespace eka2l1::epoc {
         }
     };
 
+    struct display_hal : public hal {
+        int current_mode_info(int *a1, int *a2) {
+            epoc::TDes8 *package = reinterpret_cast<epoc::TDes8 *>(a1);
+            epoc::TVideoInfoV01 *info_ptr = reinterpret_cast<epoc::TVideoInfoV01 *>(package->Ptr(sys));
+
+            info_ptr->iSizeInPixels = sys->get_screen_driver()->get_window_size();
+            info_ptr->iSizeInTwips = info_ptr->iSizeInPixels * 15;
+            info_ptr->iIsMono = false; // This can be changed
+            info_ptr->iBitsPerPixel = 3;
+            info_ptr->iIsPixelOrderRGB = true;
+            info_ptr->iIsPixelOrderLandscape = false; // This can be changed
+
+            return 0;
+        }
+
+        int color_count(int *a1, int *a2) {
+            *a1 = 1 << 24;
+
+            LOG_WARN("Color count stubbed with 1 << 24 (24 bit).");
+
+            return 0;
+        }
+
+        display_hal(system *sys)
+            : hal(sys) {
+            REGISTER_HAL_FUNC(EDisplayHalCurrentModeInfo, display_hal, current_mode_info);
+            REGISTER_HAL_FUNC(EDisplayHalColors, display_hal, color_count);
+        }
+    };
+
     void init_hal(eka2l1::system *sys) {
         REGISTER_HAL(sys, 0, kern_hal);
         REGISTER_HAL(sys, 1, variant_hal);
+        REGISTER_HAL(sys, 4, display_hal);
     }
 
     int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2) {

@@ -28,12 +28,17 @@ namespace eka2l1 {
         uint32_t rom_addr;
         uint32_t codeseg_addr;
 
+        uint32_t shared_addr;
+        uint32_t shared_size;
+
         void *rom_map;
 
         arm::jit_interface *cpu;
 
     public:
-        void init(arm::jitter &jit, uint32_t code_ram_addr);
+        void init(arm::jitter &jit, uint32_t code_ram_addr,
+            uint32_t shared_addr, uint32_t shared_size);
+
         void shutdown() {}
 
         bool map_rom(uint32_t addr, const std::string &path);

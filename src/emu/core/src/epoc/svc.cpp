@@ -254,6 +254,7 @@ namespace eka2l1::epoc {
         server_ptr server = kern->get_server_by_name(server_name);
 
         if (!server) {
+            LOG_TRACE("Session tried to connect to unexist server: {}", server_name);
             return KErrNotFound;
         }
 
@@ -336,6 +337,17 @@ namespace eka2l1::epoc {
         thr->increase_leave_depth();
 
         return current_local_data(sys).trap_handler;
+    }
+
+    BRIDGE_FUNC(void, LeaveEnd) {
+        eka2l1::thread_ptr thr = sys->get_kernel_system()->crr_thread();
+        thr->decrease_leave_depth();
+
+        if (thr->is_invalid_leave()) {
+            LOG_CRITICAL("Invalid leave, leave depth is negative!");
+        }
+
+        LOG_TRACE("Leave trapped by trap handler.");
     }
 
     BRIDGE_FUNC(TInt, DebugMask) {
@@ -782,7 +794,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC6, PropertyFindGetBin),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
-        BRIDGE_REGISTER(0xDF, LeaveStart)
+        BRIDGE_REGISTER(0xDF, LeaveStart),
+        BRIDGE_REGISTER(0xE0, LeaveEnd)
     };
 
     const eka2l1::hle::func_map svc_register_funcs_v93 = {

@@ -82,11 +82,11 @@ namespace eka2l1 {
             
                 case chunk_access::global: {
                     if (kern->get_epoc_version() == epocver::epoc6) {
-                        range_beg = local_data;
-                        range_end = dll_static_data;
+                        range_beg = shared_data_eka1;
+                        range_end = shared_data_end_eka1;
 					} else {
-						range_beg = global_data;
-						range_end = ram_drive; // Drive D
+						range_beg = shared_data;
+						range_end = ram_code_addr; // Drive D
 					}
 
                     break;
@@ -111,8 +111,8 @@ namespace eka2l1 {
             this->top = new_top;
             this->bottom = new_bottom;
 
-            LOG_INFO("Chunk created: {}, base: 0x{:x}, bottom: {}, top: {}, type: {}, access: {}{}", obj_name, chunk_base.ptr_address(),
-                new_bottom, new_top,
+            LOG_INFO("Chunk created: {}, base: 0x{:x}, max size: 0x{:x}, bottom: {}, top: {}, type: {}, access: {}{}", obj_name, chunk_base.ptr_address(),
+                max_size, new_bottom, new_top,
                 (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")), 
                 (caccess == chunk_access::local ? "local" : (caccess == chunk_access::code ? "code " : "global")), 
                 (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));

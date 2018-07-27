@@ -50,7 +50,11 @@ namespace eka2l1 {
         asmdis.init(&mem);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
-        mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr);
+
+        mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
+            get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
+            get_symbian_version_use() <= epocver::epoc6 ? shared_data_end_eka1 - shared_data_eka1 :
+                                                            ram_code_addr - shared_data);
 
         emu_win = driver::new_emu_window(win_type);
         emu_screen_driver = driver::new_screen_driver(dr_type);
