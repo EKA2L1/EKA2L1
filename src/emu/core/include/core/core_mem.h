@@ -14,7 +14,8 @@ namespace eka2l1 {
     }
 
     class memory_system {
-        page_table *current_page_table;
+        page_table *current_page_table = nullptr;
+        page_table *previous_page_table = nullptr;
 
         std::vector<page> global_pages;
         std::vector<mem_ptr> global_pointers;

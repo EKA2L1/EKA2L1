@@ -253,6 +253,10 @@ namespace eka2l1 {
         void jit_dynarmic::set_vfp(size_t idx, uint32_t val) {
         }
 
+        uint32_t jit_dynarmic::get_lr() {
+            return jit->Regs()[14];
+        }
+
         uint32_t jit_dynarmic::get_cpsr() {
             return jit->Cpsr();
         }
@@ -270,6 +274,7 @@ namespace eka2l1 {
 
             ctx.pc = get_pc();
             ctx.sp = get_sp();
+            ctx.lr = get_lr();
         }
 
         void jit_dynarmic::load_context(const thread_context &ctx) {
@@ -281,6 +286,7 @@ namespace eka2l1 {
 
             set_pc(ctx.pc);
             set_sp(ctx.sp);
+            set_lr(ctx.lr);
         }
 
         void jit_dynarmic::set_entry_point(address ep) {

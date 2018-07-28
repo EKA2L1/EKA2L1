@@ -65,6 +65,8 @@ namespace eka2l1 {
             if ((int)iatype & (int)ipc_arg_type::flag_des) {
                 eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>
                     (msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+
+                return des->StdString(sys);
             }
 
             return std::optional<std::string>{};

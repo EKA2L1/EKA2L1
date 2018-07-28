@@ -34,6 +34,7 @@ namespace eka2l1 {
                 std::array<uint32_t, 31> cpu_registers;
                 uint32_t sp;
                 uint32_t pc;
+                uint32_t lr;
                 uint32_t cpsr;
                 std::array<uint32_t, 32> fpu_registers;
                 uint32_t fpscr;
@@ -74,6 +75,7 @@ namespace eka2l1 {
             /*! Set stack pointer */
             virtual void set_sp(uint32_t val) = 0;
             virtual void set_vfp(size_t idx, uint32_t val) = 0;
+            virtual uint32_t get_lr() = 0;
             virtual void set_entry_point(address ep) = 0;
             virtual address get_entry_point() = 0;
             virtual uint32_t get_cpsr() = 0;

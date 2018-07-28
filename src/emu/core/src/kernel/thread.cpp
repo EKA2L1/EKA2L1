@@ -158,7 +158,7 @@ namespace eka2l1 {
         void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
             ctx.pc = entry_point;
             ctx.sp = stack_top;
-            ctx.cpsr = 0;
+            ctx.cpsr = ((entry_point & 1) << 5);
 
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);

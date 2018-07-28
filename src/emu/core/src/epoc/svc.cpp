@@ -254,7 +254,6 @@ namespace eka2l1::epoc {
         server_ptr server = kern->get_server_by_name(server_name);
 
         if (!server) {
-            LOG_TRACE("Session tried to connect to unexist server: {}", server_name);
             return KErrNotFound;
         }
 

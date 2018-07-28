@@ -47,6 +47,17 @@ bool thumb_mode(uc_engine *uc) {
     return mode & UC_MODE_THUMB;
 }
 
+void dump_context(eka2l1::arm::jit_interface::thread_context uni) {
+    LOG_TRACE("Dumping CPU context: ");
+    LOG_TRACE("pc: 0x{:x}", uni.pc);
+    LOG_TRACE("lr: 0x{:x}", uni.lr);
+    LOG_TRACE("sp: 0x{:x}", uni.sp);
+    LOG_TRACE("cpsr: 0x{:x}", uni.cpsr);
+
+    for (size_t i = 0; i < uni.cpu_registers.size(); i++)
+        LOG_TRACE("r{}: 0x{:x}", i, uni.cpu_registers[i]);
+}
+
 void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
     eka2l1::arm::jit_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
@@ -252,23 +263,8 @@ namespace eka2l1 {
 
             uc_err err;
 
-            if (num_instructions > 0) {
-                err = uc_emu_start(engine, pc, 0, 0, 1);
-                pc = get_pc();
-
-                tm = thumb_mode(engine);
-
-                if (tm) {
-                    pc |= 1;
-                }
-
-                if (timing) {
-                    timing->add_ticks(1);
-                }
-            }
-
             if (num_instructions >= 1 || num_instructions == -1) {
-                err = uc_emu_start(engine, pc, 1ULL << 63, 0, num_instructions == -1 ? 0 : num_instructions - 1);
+                err = uc_emu_start(engine, pc, 1ULL << 63, 0, num_instructions == -1 ? 0 : num_instructions);
 
                 if (err != UC_ERR_OK) {
                     uint32_t error_pc = get_pc();
@@ -277,6 +273,11 @@ namespace eka2l1 {
 
                     LOG_CRITICAL("Unicorn error {} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}",
                         uc_strerror(err), pc, error_pc, lr);
+
+                    thread_context context;
+
+                    save_context(context);
+                    dump_context(context);
 
                     return false;
                 }
@@ -421,6 +422,13 @@ namespace eka2l1 {
             return cpsr;
         }
 
+        uint32_t jit_unicorn::get_lr() {
+            uint32_t lr = 0;
+            auto err = uc_reg_read(engine, UC_ARM_REG_LR, &lr);
+
+            return lr;
+        }
+
         void jit_unicorn::set_cpsr(uint32_t val) {
             auto err = uc_reg_write(engine, UC_ARM_REG_CPSR, &val);
 
@@ -438,19 +446,21 @@ namespace eka2l1 {
                 ctx.cpu_registers[i] = get_reg(i);
             }
 
-            ctx.pc = get_pc();
             ctx.sp = get_sp();
+            ctx.lr = get_lr();
+            ctx.pc = get_pc();
             ctx.cpsr = get_cpsr();
         }
 
         void jit_unicorn::load_context(const thread_context &ctx) {
-            set_pc(ctx.pc);
-            set_sp(ctx.sp);
-            set_cpsr(ctx.cpsr);
-
             for (auto i = 0; i < ctx.cpu_registers.size(); i++) {
                 set_reg(i, ctx.cpu_registers[i]);
             }
+
+            set_sp(ctx.sp);
+            set_lr(ctx.lr);
+            set_pc(ctx.pc);
+            set_cpsr(ctx.cpsr);       
         }
 
         void jit_unicorn::prepare_rescheduling() {
@@ -504,7 +514,11 @@ namespace eka2l1 {
         }
 
         void jit_unicorn::unmap_memory(address addr, size_t size) {
-            uc_mem_unmap(engine, addr, size);
+            uc_err err = uc_mem_unmap(engine, addr, size);
+
+            if (err != UC_ERR_OK) {
+                LOG_WARN("Error unmapping backing memory at addr: 0x{:x}, err: {}", addr, uc_strerror(err));
+            }
         }
     }
 }

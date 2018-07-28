@@ -278,28 +278,28 @@ namespace eka2l1 {
 
         if (res->second.is_in_mem) {
             switch (ver) {
-                case epocver::epoc93: {
-                    rp = add_path(rp, "v93\\");
-                    break;
-                }
-    
-                case epocver::epoc9: {
-                    rp = add_path(rp, "v94\\");
-                    break;
-                }
+            case epocver::epoc93: {
+                rp = add_path(rp, "v93\\");
+                break;
+            }
 
-                case epocver::epoc10: {
-                    rp = add_path(rp, "belle\\");
-                    break;
-                }
+            case epocver::epoc9: {
+                rp = add_path(rp, "v94\\");
+                break;
+            }
 
-                case epocver::epoc6: {
-                    rp = add_path(rp, "v60\\");
-                    break;
-                }
+            case epocver::epoc10: {
+                rp = add_path(rp, "belle\\");
+                break;
+            }
 
-                default:
-                    break;
+            case epocver::epoc6: {
+                rp = add_path(rp, "v60\\");
+                break;
+            }
+
+            default:
+                break;
             }
         }
 
@@ -308,6 +308,13 @@ namespace eka2l1 {
         // Make it case-insensitive
         for (auto &c : vir_path) {
             c = std::tolower(c);
+        }
+
+        size_t lib_pos = vir_path.find("\\system\\lib");
+
+        // TODO (bentokun): Remove this hack with a proper symlink system.
+        if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+            vir_path.replace(lib_pos, 12, "\\sys\\bin");
         }
 
         if (!is_absolute(vir_path, current_dir)) {

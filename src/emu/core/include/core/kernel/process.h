@@ -103,12 +103,12 @@ namespace eka2l1::kernel {
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
             const std::u16string &cmd_args, loader::e32img_ptr &img,
-            const process_priority pri = process_priority::low);
+            const process_priority pri = process_priority::foreground);
 
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
             const std::u16string &cmd_args, loader::romimg_ptr &img,
-            const process_priority pri = process_priority::low);
+            const process_priority pri = process_priority::foreground);
 
         bool run();
 

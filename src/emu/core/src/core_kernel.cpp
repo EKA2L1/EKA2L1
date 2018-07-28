@@ -277,6 +277,28 @@ namespace eka2l1 {
         return create_handle_lastest(kernel::owner_type::kernel);
     }
 
+    uint32_t kernel_system::create_process(uint32_t uid,
+        const std::string &process_name, const std::u16string &exe_path,
+        const std::u16string &cmd_args, loader::e32img_ptr &img,
+        const kernel::process_priority pri, kernel::owner_type own) {
+        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
+            pri);
+        objects.push_back(std::move(pr));
+
+        return create_handle_lastest(own);
+    }
+
+    uint32_t kernel_system::create_process(uint32_t uid,
+        const std::string &process_name, const std::u16string &exe_path,
+        const std::u16string &cmd_args, loader::romimg_ptr &img,
+        const kernel::process_priority pri, kernel::owner_type own) {
+        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
+            pri);
+        objects.push_back(std::move(pr));
+
+        return create_handle_lastest(own);
+    }
+
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
         auto &slot_free = std::find_if(msgs.begin(), msgs.end(),
             [](auto slot) { return !slot || slot->free; });
@@ -301,7 +323,7 @@ namespace eka2l1 {
         auto &obj_ite = std::find(objects.begin(), objects.end(), obj);
 
         if (obj_ite != objects.end()) {
-            objects.erase(obj_ite);
+            obj_ite->reset();
             return true;
         }
 
@@ -604,11 +626,16 @@ namespace eka2l1 {
     }
 
     void kernel_system::processing_requests() {
+        std::vector<server_ptr> svrs;
+
         for (auto &obj : objects) {
             if (obj->get_object_type() == kernel::object_type::server) {
-                server_ptr s = std::dynamic_pointer_cast<service::server>(obj);
-                s->process_accepted_msg();
+                svrs.push_back(std::dynamic_pointer_cast<service::server>(obj));
             }
+        }
+
+        for (server_ptr &svr : svrs) {
+            svr->process_accepted_msg();
         }
     }
 

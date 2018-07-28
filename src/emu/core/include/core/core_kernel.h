@@ -172,6 +172,18 @@ namespace eka2l1 {
         uint32_t create_server(std::string name);
         uint32_t create_session(server_ptr cnn_svr, int async_slots);
 
+        uint32_t create_process(uint32_t uid,
+            const std::string &process_name, const std::u16string &exe_path,
+            const std::u16string &cmd_args, loader::e32img_ptr &img,
+            const kernel::process_priority pri = kernel::process_priority::foreground,
+            kernel::owner_type own = kernel::owner_type::process);
+
+        uint32_t create_process(uint32_t uid,
+            const std::string &process_name, const std::u16string &exe_path,
+            const std::u16string &cmd_args, loader::romimg_ptr &img,
+            const kernel::process_priority pri = kernel::process_priority::foreground,
+            kernel::owner_type own = kernel::owner_type::process);
+
         ipc_msg_ptr create_msg(kernel::owner_type owner);
         void free_msg(ipc_msg_ptr msg);
 

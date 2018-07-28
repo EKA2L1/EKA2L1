@@ -11,6 +11,8 @@ add_library(services
     #${CORE_INCLUDE_DIR}/services/fontbitmap/fontbitmap.h
     ${CORE_INCLUDE_DIR}/services/fs/fs.h
     ${CORE_INCLUDE_DIR}/services/window/window.h
+    ${CORE_INCLUDE_DIR}/services/loader/loader.h
+    ${CORE_INCLUDE_DIR}/services/loader/op.h
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
@@ -21,6 +23,7 @@ add_library(services
     applist/applist.cpp
     featmgr/featmgr.cpp
     fs/fs.cpp
+    loader/loader.cpp
     #fontbitmap/fontbitmap.cpp
     window/window.cpp
     ../ipc.cpp)

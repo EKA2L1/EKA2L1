@@ -81,6 +81,7 @@ namespace eka2l1 {
             void set_vfp(size_t idx, uint32_t val) override;
 
             uint32_t get_cpsr() override;
+            uint32_t get_lr() override;
             void set_cpsr(uint32_t val) override;
 
             void save_context(thread_context &ctx) override;
@@ -104,4 +105,3 @@ namespace eka2l1 {
         };
     }
 }
-

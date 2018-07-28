@@ -29,8 +29,6 @@
 namespace eka2l1::kernel {
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
         uint32_t heap_max) {
-        // Preserve the page table
-        page_table *tab = mem->get_current_page_table();
         mem->set_current_page_table(page_tab);
 
         primary_thread = kern->create_thread(kernel::owner_type::kernel, nullptr, kernel::access_type::local_access,
@@ -40,9 +38,6 @@ namespace eka2l1::kernel {
 
         args[0].data_size = 0;
         args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D
-
-        if (tab)
-            mem->set_current_page_table(*tab);
     }
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
@@ -84,10 +79,6 @@ namespace eka2l1::kernel {
         , process_handles(kern, handle_array_owner::process) {
         obj_type = kernel::object_type::process;
 
-        // Preserve the page table
-        page_table *tab = mem->get_current_page_table();
-        mem->set_current_page_table(page_tab);
-
         create_prim_thread(
             romimg->header.code_address, romimg->header.entry_point,
             romimg->header.stack_size, romimg->header.heap_minimum_size, romimg->header.heap_maximum_size);
@@ -126,7 +117,6 @@ namespace eka2l1::kernel {
         }
 
         thr->owning_process(kern->get_process(obj_name));
-        //kern->run_thread(primary_thread);
 
         return true;
     }
@@ -145,7 +135,7 @@ namespace eka2l1::kernel {
             return nullptr;
         }
 
-        return static_cast<void *>(page_tab.pointers[addr / page_tab.page_size].get() 
+        return static_cast<void *>(page_tab.pointers[addr / page_tab.page_size].get()
             + addr % page_tab.page_size);
     }
 }
