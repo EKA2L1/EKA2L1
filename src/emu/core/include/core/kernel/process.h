@@ -93,11 +93,34 @@ namespace eka2l1::kernel {
 
         process_priority priority;
 
+        int rendezvous_reason = 0;
+        int exit_reason = 0;
+
+        std::vector<int *> logon_requests;
+        std::vector<int *> rendezvous_requests;
+
+        uint32_t thread_count = 0;
+
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max);
 
     public:
+        uint32_t increase_thread_count() {
+            return ++thread_count;
+        }
+
+        uint32_t decrease_thread_count() {
+            return --thread_count;
+        }
+
+        void logon(int *logon_request, bool rendezvous);
+        bool logon_cancel(int *logon_request, bool rendezvous);
+
+        void rendezvous(int rendezvous_reason);
+
+        void finish_logons();
+
         process() = default;
 
         process(kernel_system *kern, memory_system *mem, uint32_t uid,

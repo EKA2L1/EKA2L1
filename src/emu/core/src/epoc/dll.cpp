@@ -14,17 +14,13 @@ namespace eka2l1::epoc {
 
             // If this image is owned to the current process
             if (res != cache.second.loader.end()) {
-                if (cache.second.img->header.uid1 == loader::eka2_img_type::exe) {
-                    exe_addr = cache.second.img->header.entry_point + cache.second.img->rt_code_addr;
-                } else {
+                if (cache.second.img->header.uid1 != loader::eka2_img_type::exe) {
                     entries.push_back(cache.second.img->header.entry_point + cache.second.img->rt_code_addr);
                 }
             }
         }
 
-        if (exe_addr != 0) {
-            entries.push_back(exe_addr);
-        }
+        entries.push_back(0x2);
 
         return entries;
     }

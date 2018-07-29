@@ -152,10 +152,31 @@ namespace eka2l1 {
 
             int wakeup_handle;
 
+            int rendezvous_reason = 0;
+            int exit_reason = 0;
+
+            std::vector<int *> logon_requests;
+            std::vector<int *> rendezvous_requests;
+
         public:
             kernel_obj_ptr get_object(uint32_t handle);
 
             std::vector<wait_obj *> waits_on;
+
+            void logon(int *logon_request, bool rendezvous);
+            bool logon_cancel(int *logon_request, bool rendezvous);
+
+            void rendezvous(int rendezvous_reason);
+
+            void finish_logons();
+
+            void set_exit_reason(int reason) {
+                exit_reason = reason;
+            }
+
+            int get_exit_reason() const {
+                return exit_reason;
+            }
 
             thread();
             thread(kernel_system *kern, memory_system *mem, process_ptr owner, kernel::access_type access,

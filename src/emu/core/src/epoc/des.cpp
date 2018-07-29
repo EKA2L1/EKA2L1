@@ -1,6 +1,8 @@
 #include <core/epoc/des.h>
 #include <core/core.h>
 
+#include <core/kernel/process.h>
+
 namespace eka2l1::epoc {
     TInt GetTDesC8Type(const TDesC8 *aDes8) {
         if (!aDes8) {
@@ -10,7 +12,7 @@ namespace eka2l1::epoc {
         return aDes8->iLength >> KShiftDes8Type;
     }
 
-    ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, TDesC8 *aDes8) {
+    ptr<TUint8> GetTDes8HLEPtr(eka2l1::process_ptr sys, TDesC8 *aDes8) {
         if (!aDes8) {
             return ptr<TUint8>(0);
         }
@@ -28,7 +30,7 @@ namespace eka2l1::epoc {
         return eka2l1::ptr<TUint8>(0);
     }
 
-    TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8) {
+    TUint8 *GetTDes8Ptr(eka2l1::process_ptr sys, TDesC8 *aDes8) {
         TDesType destype = static_cast<TDesType>(GetTDesC8Type(aDes8));
 
         if (destype == EBufC) {
@@ -37,20 +39,20 @@ namespace eka2l1::epoc {
             return reinterpret_cast<TUint8 *>(aDes8) + 8;
         } else if (destype == EBufCPtr) {
             ptr<TBufC8> buf = reinterpret_cast<TBufCPtr8 *>(aDes8)->iPtr;
-            TBufC8 *ptr = buf.get(sys->get_memory_system());
+            TBufC8 *ptr = static_cast<TBufC8*>(sys->get_ptr_on_addr_space(buf.ptr_address()));
 
             return reinterpret_cast<TUint8 *>(ptr) + 4;
         }
 
         ptr<TUint8> des_ptr = GetTDes8HLEPtr(sys, aDes8);
-        return des_ptr.get(sys->get_memory_system());
+        return static_cast<TUint8*>(sys->get_ptr_on_addr_space(des_ptr.ptr_address()));
     }
 
     TInt GetTDesC16Type(const TDesC16 *aDes16) {
         return GetTDesC8Type(reinterpret_cast<const TDesC8 *>(aDes16));
     }
 
-    ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16) {
+    ptr<TUint16> GetTDes16HLEPtr(eka2l1::process_ptr sys, TDesC16 *aDes16) {
         if (!aDes16) {
             return ptr<TUint16>(0);
         }
@@ -70,12 +72,12 @@ namespace eka2l1::epoc {
         return ptr<TUint16>(0);
     }
 
-    ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, ptr<TDesC16> aDes16) {
+    ptr<TUint16> GetTDes16HLEPtr(eka2l1::process_ptr sys, ptr<TDesC16> aDes16) {
         if (!aDes16) {
             return ptr<TUint16>(0);
         }
 
-        TDesC16 *des = aDes16.get(sys->get_memory_system());
+        TDesC16 *des = static_cast<TDesC16*>(sys->get_ptr_on_addr_space(aDes16.ptr_address()));
 
         TDesType destype = static_cast<TDesType>(GetTDesC16Type(des));
 
@@ -102,12 +104,12 @@ namespace eka2l1::epoc {
         return ptr<TUint16>(0);
     }
 
-    ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, ptr<TDesC8> aDes8) {
+    ptr<TUint8> GetTDes8HLEPtr(eka2l1::process_ptr sys, ptr<TDesC8> aDes8) {
         if (!aDes8) {
             return ptr<TUint8>(0);
         }
 
-        TDesC8 *des = aDes8.get(sys->get_memory_system());
+        TDesC8 *des = static_cast<TDesC8 *>(sys->get_ptr_on_addr_space(aDes8.ptr_address()));
 
         TDesType destype = static_cast<TDesType>(GetTDesC8Type(des));
 
@@ -134,7 +136,7 @@ namespace eka2l1::epoc {
         return ptr<TUint8>(0);
     }
 
-    TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16) {
+    TUint16 *GetTDes16Ptr(eka2l1::process_ptr sys, TDesC16 *aDes16) {
         TDesType destype = static_cast<TDesType>(GetTDesC16Type(aDes16));
 
         if (destype == EBufC) {
@@ -143,13 +145,13 @@ namespace eka2l1::epoc {
             return reinterpret_cast<TUint16 *>(reinterpret_cast<TUint8 *>(aDes16) + 8);
         } else if (destype == EBufCPtr) {
             ptr<TBufC16> buf = reinterpret_cast<TBufCPtr16 *>(aDes16)->iPtr;
-            TBufC16 *ptr = buf.get(sys->get_memory_system());
+            TBufC16 *ptr = static_cast<TBufC16*>(sys->get_ptr_on_addr_space(buf.ptr_address()));
 
             return reinterpret_cast<TUint16 *>(reinterpret_cast<TUint8 *>(ptr) + 4);
         }
 
         ptr<TUint16> des_ptr = GetTDes16HLEPtr(sys, aDes16);
-        return des_ptr.get(sys->get_memory_system());
+        return static_cast<TUint16*>(sys->get_ptr_on_addr_space(des_ptr.ptr_address()));
     }
 
     TUint8 *GetLit8Ptr(memory_system *mem, eka2l1::ptr<TLit8> aLit) {
@@ -160,7 +162,7 @@ namespace eka2l1::epoc {
         return reinterpret_cast<TUint16 *>(GetLit8Ptr(mem, aLit.cast<TLit8>()));
     }
 
-    void SetLengthDes(eka2l1::system *sys, TDesC8 *des, uint32_t len) {
+    void SetLengthDes(eka2l1::process_ptr sys, TDesC8 *des, uint32_t len) {
         auto t = des->iLength >> 28;
         des->iLength = len | (t << 28);
 
@@ -169,12 +171,12 @@ namespace eka2l1::epoc {
 
             eka2l1::ptr<TBufC8> buf_hle = buf_ptr->iPtr;
 
-            TBufC8 *real_buf = buf_hle.get(sys->get_memory_system());
+            TBufC8 *real_buf = static_cast<TBufC8*>(sys->get_ptr_on_addr_space(buf_hle.ptr_address()));
             real_buf->iLength = len | (EBufC << 28);
         }
     }
 
-    void SetLengthDes(eka2l1::system *sys, TDesC16 *des, uint32_t len) {
+    void SetLengthDes(eka2l1::process_ptr sys, TDesC16 *des, uint32_t len) {
         SetLengthDes(sys, reinterpret_cast<TDesC8 *>(des), len);
     }
 
@@ -183,7 +185,11 @@ namespace eka2l1::epoc {
     }
 
     TUint8 *TDesC8::Ptr(eka2l1::system *sys) {
-        return GetTDes8Ptr(sys, this);
+        return GetTDes8Ptr(sys->get_kernel_system()->crr_process(), this);
+    }
+
+    TUint8 *TDesC8::Ptr(eka2l1::process_ptr pr) {
+        return GetTDes8Ptr(pr, this);
     }
 
     TUint TDesC8::Length() const {
@@ -212,7 +218,11 @@ namespace eka2l1::epoc {
     }
 
     TUint16 *TDesC16::Ptr(eka2l1::system *sys) {
-        return GetTDes16Ptr(sys, this);
+        return GetTDes16Ptr(sys->get_kernel_system()->crr_process(), this);
+    }
+
+    TUint16 *TDesC16::Ptr(eka2l1::process_ptr pr) {
+        return GetTDes16Ptr(pr, this);
     }
 
     TUint TDesC16::Length() const {
@@ -238,8 +248,38 @@ namespace eka2l1::epoc {
         return new_inst;
     }
 
+    std::u16string TDesC16::StdString(eka2l1::process_ptr pr) {
+        TUint16 *cstr_ptr = Ptr(pr);
+
+        std::u16string new_inst;
+        new_inst.resize(Length());
+
+        memcpy(new_inst.data(), cstr_ptr, new_inst.size() * 2);
+
+        return new_inst;
+    }
+
+    std::string TDesC8::StdString(eka2l1::process_ptr pr) {
+        TUint8 *cstr_ptr = Ptr(pr);
+
+        std::string new_inst;
+        new_inst.resize(Length());
+
+        memcpy(new_inst.data(), cstr_ptr, new_inst.size());
+
+        return new_inst;
+    }
+
     void TDesC8::SetLength(eka2l1::system *sys, TUint32 iNewLength) {
-        SetLengthDes(sys, this, iNewLength);
+        SetLengthDes(sys->get_kernel_system()->crr_process(), this, iNewLength);
+    }
+
+    void TDesC8::SetLength(eka2l1::process_ptr pr, TUint32 iNewLength) {
+        SetLengthDes(pr, this, iNewLength);
+    }
+
+    void TDesC16::SetLength(eka2l1::process_ptr pr, TUint32 iNewLength) {
+        SetLengthDes(pr, this, iNewLength);
     }
 
     void TDesC8::Assign(eka2l1::system *sys, std::string iNewString) {
@@ -247,12 +287,22 @@ namespace eka2l1::epoc {
         SetLength(sys, iNewString.length());
     }
 
+    void TDesC8::Assign(eka2l1::process_ptr pr, std::string iNewString) {
+        memcpy(Ptr(pr), iNewString.data(), iNewString.length());
+        SetLength(pr, iNewString.length());
+    }
+
     void TDesC16::SetLength(eka2l1::system *sys, TUint32 iNewLength) {
-        SetLengthDes(sys, this, iNewLength);
+        SetLengthDes(sys->get_kernel_system()->crr_process(), this, iNewLength);
     }
 
     void TDesC16::Assign(eka2l1::system *sys, std::string iNewString) {
         memcpy(Ptr(sys), iNewString.data(), iNewString.length());
         SetLength(sys, iNewString.length());
+    }
+
+    void TDesC16::Assign(eka2l1::process_ptr pr, std::string iNewString) {
+        memcpy(Ptr(pr), iNewString.data(), iNewString.length());
+        SetLength(pr, iNewString.length());
     }
 }

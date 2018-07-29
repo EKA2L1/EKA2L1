@@ -29,15 +29,26 @@
 namespace eka2l1::kernel {
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
         uint32_t heap_max) {
+        page_table *last = mem->get_current_page_table();
         mem->set_current_page_table(page_tab);
 
-        primary_thread = kern->create_thread(kernel::owner_type::kernel, nullptr, kernel::access_type::local_access,
-            process_name, ep_off,
-            stack_size, heap_min, heap_max,
-            0, kernel::priority_normal);
+        // Reason (bentokun): EKA2 thread trying to access 0x400008, which is hardcoded and invalid. Until we can
+        // find out why, just leave it here
+        // TODO (bentokun): Find out why and remove this hack
+        mem->chunk(0x400000, 0, 0x1000, 0x1000, prot::read_write);
+
+        primary_thread
+            = kern->create_thread(kernel::owner_type::kernel, nullptr, kernel::access_type::local_access,
+                process_name, ep_off,
+                stack_size, heap_min, heap_max,
+                0, kernel::priority_normal);
 
         args[0].data_size = 0;
         args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D
+
+        if (last) {
+            mem->set_current_page_table(*last);
+        }
     }
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
@@ -137,5 +148,65 @@ namespace eka2l1::kernel {
 
         return static_cast<void *>(page_tab.pointers[addr / page_tab.page_size].get()
             + addr % page_tab.page_size);
+    }
+
+    // EKA2L1 doesn't use multicore yet, so rendezvous and logon
+    // are just simple.
+    void process::logon(int *logon_request, bool rendezvous) {
+        if (!thread_count) {
+            *logon_request = exit_reason;
+            return;
+        }
+
+        if (rendezvous) {
+            rendezvous_requests.push_back(logon_request);
+            return;
+        }
+
+        logon_requests.push_back(logon_request);
+    }
+
+    bool process::logon_cancel(int *logon_request, bool rendezvous) {
+        if (rendezvous) {
+            auto req_info = std::find(rendezvous_requests.begin(), rendezvous_requests.end(),
+                logon_request);
+
+            if (req_info != rendezvous_requests.end()) {
+                *logon_request = -3;
+                rendezvous_requests.erase(req_info);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        auto req_info = std::find(logon_requests.begin(), logon_requests.end(),
+            logon_request);
+
+        if (req_info != logon_requests.end()) {
+            *logon_request = -3;
+            logon_requests.erase(req_info);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void process::rendezvous(int rendezvous_reason) {
+        for (auto &ren : rendezvous_requests) {
+            *ren = rendezvous_reason;
+        }
+    }
+
+    void process::finish_logons() {
+        for (auto &req : logon_requests) {
+            *req = exit_reason;
+        }
+
+        for (auto &req : rendezvous_requests) {
+            *req = exit_reason;
+        }
     }
 }

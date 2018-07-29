@@ -200,6 +200,42 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(void, ProcessResume, TInt aHandle) {
+        process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
+
+        if (!pr) {
+            return;
+        }
+
+        pr->run();
+    }
+
+    BRIDGE_FUNC(void, ProcessLogon, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+        process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
+
+        if (!pr) {
+            return;
+        }
+
+        pr->logon(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+    }
+
+    BRIDGE_FUNC(TInt, ProcessLogonCancel, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+        process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
+
+        if (!pr) {
+            return KErrBadHandle;
+        }
+
+        bool logon_success = pr->logon_cancel(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+
+        if (logon_success) {
+            return KErrNone;
+        }
+
+        return KErrGeneral;
+    }
+
     /********************/
     /* TLS */
     /*******************/
@@ -245,6 +281,30 @@ namespace eka2l1::epoc {
     /********************************************/
     /* IPC */
     /*******************************************/
+
+    BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMode) {
+        kernel_system *kern = sys->get_kernel_system();
+        std::string server_name = aServerName.get(sys->get_memory_system())->StdString(sys);
+
+        uint32_t handle = kern->create_server(server_name);
+
+        if (handle != INVALID_HANDLE) {
+            LOG_TRACE("Server {} created", server_name);
+        }
+
+        return handle;
+    }
+
+    BRIDGE_FUNC(TInt, ServerReceive, TInt aHandle, eka2l1::ptr<int> aRequestStatus, eka2l1::ptr<TAny> aDataPtr) {
+        kernel_system *kern = sys->get_kernel_system();
+        server_ptr server = kern->get_server(aHandle);
+
+        if (!server) {
+            return KErrBadHandle;
+        }
+
+        return KErrNone;
+    }
 
     BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode) {
         memory_system *mem = sys->get_memory_system();
@@ -694,6 +754,39 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, ThreadProcess, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        return kern->mirror(thr->owning_process(), kernel::owner_type::thread);
+    }
+
+    BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+        thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return;
+        }
+
+        thr->logon(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+    }
+
+    BRIDGE_FUNC(TInt, ThreadLogonCancel, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+        thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return KErrBadHandle;
+        }
+
+        bool logon_success = thr->logon_cancel(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+
+        if (logon_success) {
+            return KErrNone;
+        }
+
+        return KErrGeneral;
+    }
+
     BRIDGE_FUNC(void, ThreadSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
         kernel_system *kern = sys->get_kernel_system();
 
@@ -770,6 +863,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x16, ProcessFilename),
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
+        BRIDGE_REGISTER(0x22, ServerReceive),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x3C, HandleName),
@@ -787,6 +881,11 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x76, DllSetTls),
         BRIDGE_REGISTER(0x77, DllFreeTLS),
         BRIDGE_REGISTER(0x78, ThreadRename),
+        BRIDGE_REGISTER(0x7A, ProcessResume),
+        BRIDGE_REGISTER(0x7B, ProcessLogon),
+        BRIDGE_REGISTER(0x7C, ProcessLogonCancel),
+        BRIDGE_REGISTER(0x7D, ThreadProcess),
+        BRIDGE_REGISTER(0x7E, ServerCreate),
         BRIDGE_REGISTER(0x7F, SessionCreate),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xC5, PropertyFindGetInt),

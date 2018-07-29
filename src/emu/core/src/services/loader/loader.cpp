@@ -1,6 +1,8 @@
 #include <core/services/loader/loader.h>
 #include <core/services/loader/op.h>
 
+#include <core/epoc/des.h>
+
 #include <core/core.h>
 #include <core/vfs.h>
 
@@ -55,11 +57,11 @@ namespace eka2l1 {
                 ctx.sys->get_lib_manager()->open_romimg(img_ptr);
 
                 int32_t stack_size_img = img_ptr->header.stack_size;
-                img_ptr->header.stack_size = std::min(img_ptr->header.stack_size, info->min_stack_size); 
+                img_ptr->header.stack_size = std::min(img_ptr->header.stack_size, info->min_stack_size);
 
                 /* Create process through kernel system. */
                 uint32_t handle = ctx.sys->get_kernel_system()->create_process(info->uid3, name_process,
-                    *process_name16, *process_args, img_ptr, kernel::process_priority::foreground, 
+                    *process_name16, *process_args, img_ptr, static_cast<kernel::process_priority>(img_ptr->header.priority),
                     static_cast<kernel::owner_type>(info->owner_type));
 
                 img_ptr->header.stack_size = stack_size_img;
@@ -69,7 +71,7 @@ namespace eka2l1 {
                 LOG_TRACE("Spawned process: {}, entry point: 0x{:x}", name_process, img_ptr->header.entry_point);
 
                 info->handle = handle;
-                ctx.write_arg_pkg(0, info);
+                ctx.write_arg_pkg(0, *info);
 
                 ctx.set_request_status(KErrNone);
                 return;
@@ -99,7 +101,7 @@ namespace eka2l1 {
 
         /* Create process through kernel system. */
         uint32_t handle = ctx.sys->get_kernel_system()->create_process(info->uid3, name_process,
-            *process_name16, *process_args, res2, kernel::process_priority::foreground,
+            *process_name16, *process_args, res2, static_cast<kernel::process_priority>(res2->header.priority),
             static_cast<kernel::owner_type>(info->owner_type));
 
         res2->header.stack_size = stack_size_img;
@@ -109,7 +111,7 @@ namespace eka2l1 {
         LOG_TRACE("Spawned process: {}", name_process);
 
         info->handle = handle;
-        ctx.write_arg_pkg(0, info);
+        ctx.write_arg_pkg(0, *info);
 
         ctx.set_request_status(KErrNone);
     }

@@ -668,7 +668,7 @@ namespace eka2l1 {
         void *to = get_real_pointer(addr);
 
         if (to == nullptr) {
-            LOG_WARN("Reading invalid address: 0x{:x}", addr);
+            LOG_WARN("Writing invalid address: 0x{:x}", addr);
             return;
         }
 

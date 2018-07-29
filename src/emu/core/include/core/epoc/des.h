@@ -26,9 +26,16 @@
 #include <core/ptr.h>
 
 #include <string>
+#include <memory>
 
 namespace eka2l1 {
     class system;
+
+    namespace kernel {
+        class process;
+    }
+
+    using process_ptr = std::shared_ptr<kernel::process>;
 }
 
 /*! \brief Epoc namespace is the namespace for all morden C++ implementation of 
@@ -89,6 +96,8 @@ namespace eka2l1::epoc {
         */
         TUint8 *Ptr(eka2l1::system *sys);
 
+        TUint8 *Ptr(eka2l1::process_ptr pr);
+
         /*! \brief Get the length of the descriptor.
          * \returns The descriptor length.
         */
@@ -110,15 +119,21 @@ namespace eka2l1::epoc {
          */
         std::string StdString(eka2l1::system *sys);
 
+        std::string StdString(eka2l1::process_ptr pr);
+
         /*! \brief Set the length of the descriptor.
          * \param iNewLength The new length to be set.
          */
         void SetLength(eka2l1::system *sys, TUint32 iNewLength);
 
+        void SetLength(eka2l1::process_ptr pr, TUint32 iNewLength);
+
         /*! \brief Assign the descriptor with the provided string. 
          * \param iNewString The string to assign.
          */
         void Assign(eka2l1::system *sys, std::string iNewString);
+
+        void Assign(eka2l1::process_ptr pr, std::string iNewString);
     };
 
     /*! \brief A constant 16-bit descriptor. 
@@ -139,6 +154,8 @@ namespace eka2l1::epoc {
          * \returns Pointer to the data descriptor.
         */
         TUint16 *Ptr(eka2l1::system *sys);
+
+        TUint16 *Ptr(eka2l1::process_ptr pr);
 
         /*! \brief Get the length of the descriptor.
          * \returns The descriptor length.
@@ -161,15 +178,21 @@ namespace eka2l1::epoc {
          */
         std::u16string StdString(eka2l1::system *sys);
 
+        std::u16string StdString(eka2l1::process_ptr pr);
+
         /*! \brief Set the length of the descriptor.
          * \param iNewLength The new length to be set.
          */
         void SetLength(eka2l1::system *sys, TUint32 iNewLength);
 
+        void SetLength(eka2l1::process_ptr pr, TUint32 iNewLength);
+
         /*! \brief Assign the descriptor with the provided string. 
          * \param iNewString The string to assign.
          */
         void Assign(eka2l1::system *sys, std::string iNewString);
+
+        void Assign(eka2l1::process_ptr pr, std::string iNewString);
     };
 
     /*! \brief Modifiable 8-bit descriptor */
@@ -248,15 +271,15 @@ namespace eka2l1::epoc {
 
     /*! \brief Get the type of a 8-bit descriptor. */
     TInt GetTDesC8Type(const TDesC8 *aDes8);
-    ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, TDesC8 *aDes8);
-    ptr<TUint8> GetTDes8HLEPtr(eka2l1::system *sys, ptr<TDesC8> aDes8);
-    TUint8 *GetTDes8Ptr(eka2l1::system *sys, TDesC8 *aDes8);
+    ptr<TUint8> GetTDes8HLEPtr(eka2l1::process_ptr sys, TDesC8 *aDes8);
+    ptr<TUint8> GetTDes8HLEPtr(eka2l1::process_ptr sys, ptr<TDesC8> aDes8);
+    TUint8 *GetTDes8Ptr(eka2l1::process_ptr sys, TDesC8 *aDes8);
 
     /*! \brief Get the type of a 16-bit descriptor. */
     TInt GetTDesC16Type(const TDesC16 *aDes16);
-    ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, TDesC16 *aDes16);
-    ptr<TUint16> GetTDes16HLEPtr(eka2l1::system *sys, ptr<TDesC16> aDes16);
-    TUint16 *GetTDes16Ptr(eka2l1::system *sys, TDesC16 *aDes16);
+    ptr<TUint16> GetTDes16HLEPtr(eka2l1::process_ptr sys, TDesC16 *aDes16);
+    ptr<TUint16> GetTDes16HLEPtr(eka2l1::process_ptr sys, ptr<TDesC16> aDes16);
+    TUint16 *GetTDes16Ptr(eka2l1::process_ptr sys, TDesC16 *aDes16);
 
     /*! \brief A 8-bit literal 
      *
@@ -282,8 +305,8 @@ namespace eka2l1::epoc {
     /*! \brief Get a pointer to the actual literal data. */
     TUint16 *GetLit16Ptr(memory_system *mem, eka2l1::ptr<TLit16> aLit);
 
-    void SetLengthDes(eka2l1::system *sys, TDesC8 *des, uint32_t len);
-    void SetLengthDes(eka2l1::system *sys, TDesC16 *des, uint32_t len);
+    void SetLengthDes(eka2l1::process_ptr sys, TDesC8 *des, uint32_t len);
+    void SetLengthDes(eka2l1::process_ptr sys, TDesC16 *des, uint32_t len);
 
     uint32_t ExtractDesLength(uint32_t len);
 

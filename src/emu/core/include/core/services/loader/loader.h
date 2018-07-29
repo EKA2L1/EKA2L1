@@ -1,5 +1,8 @@
 #pragma once
 
+#include <common/e32inc.h>
+#include <e32const.h>
+
 #include <core/services/server.h>
 
 namespace eka2l1 {
@@ -8,7 +11,7 @@ namespace eka2l1 {
             uint32_t uid1;
             uint32_t uid2;
             uint32_t uid3;
-            int owner_type;
+            TOwnerType owner_type;
             int handle;
             uint32_t secure_id;
             uint32_t requested_version;

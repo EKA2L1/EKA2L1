@@ -108,7 +108,9 @@ namespace eka2l1 {
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
 
-                process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr);
+                process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
+                    static_cast<kernel::process_priority>(img_ptr->header.priority));
+
                 objects.push_back(std::move(pr));
 
                 uint32_t h = create_handle_lastest(owner);
@@ -135,7 +137,9 @@ namespace eka2l1 {
         libmngr->open_e32img(res2);
         libmngr->patch_hle();
 
-        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", res2);
+        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", res2,
+            static_cast<kernel::process_priority>(res2->header.priority));
+
         objects.push_back(std::move(pr));
 
         uint32_t h = create_handle_lastest(owner);
@@ -164,7 +168,7 @@ namespace eka2l1 {
     process_ptr kernel_system::get_process(std::string &name) {
         auto pr_find = std::find_if(objects.begin(), objects.end(),
             [&](auto &obj) {
-                if (obj->get_object_type() == kernel::object_type::process && obj->name() == name) {
+                if (obj && obj->get_object_type() == kernel::object_type::process && obj->name() == name) {
                     return true;
                 }
             });
@@ -395,7 +399,7 @@ namespace eka2l1 {
 
     kernel_obj_ptr kernel_system::get_kernel_obj_by_id(uint64_t id) {
         auto &res = std::find_if(objects.begin(), objects.end(),
-            [=](kernel_obj_ptr obj) { return obj->unique_id() == id; });
+            [=](kernel_obj_ptr obj) { return obj && (obj->unique_id() == id); });
 
         if (res != objects.end()) {
             return *res;
@@ -629,7 +633,7 @@ namespace eka2l1 {
         std::vector<server_ptr> svrs;
 
         for (auto &obj : objects) {
-            if (obj->get_object_type() == kernel::object_type::server) {
+            if (obj && obj->get_object_type() == kernel::object_type::server) {
                 svrs.push_back(std::dynamic_pointer_cast<service::server>(obj));
             }
         }

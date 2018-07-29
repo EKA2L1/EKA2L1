@@ -30,6 +30,9 @@
 #include <core/kernel/thread.h>
 #include <core/ptr.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 namespace eka2l1 {
     namespace kernel {
         struct epoc9_thread_create_info {
@@ -125,7 +128,7 @@ namespace eka2l1 {
             }
             }
 
-            return 0;       
+            return 0;
         }
 
         int caculate_thread_priority(process_ptr pr, thread_priority pri) {
@@ -143,7 +146,7 @@ namespace eka2l1 {
             int tp = map_thread_priority_to_calc(pri);
 
             if (tp >= 0) {
-                return (tp < 64) ? tp : 63;             
+                return (tp < 64) ? tp : 63;
             }
 
             int prinew = tp + 8;
@@ -152,7 +155,7 @@ namespace eka2l1 {
                 prinew = 0;
 
             int idx = (map_process_pri_calc(pr->get_priority()) << 3) + static_cast<int>(prinew);
-            return pris[idx];    
+            return pris[idx];
         }
 
         void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
@@ -207,6 +210,10 @@ namespace eka2l1 {
             , mem(mem)
             , priority(pri)
             , thread_handles(kern, handle_array_owner::thread) {
+            if (owner) {
+                owner->increase_thread_count();
+            }
+
             obj_type = object_type::thread;
             state = thread_state::wait; // Suspended.
 
@@ -346,6 +353,8 @@ namespace eka2l1 {
 
         void thread::owning_process(process_ptr pr) {
             own_process = pr;
+            own_process->increase_thread_count();
+
             update_priority();
         }
 
@@ -371,6 +380,71 @@ namespace eka2l1 {
 
         bool thread::operator<=(const thread &rhs) {
             return real_priority <= rhs.real_priority;
+        }
+
+        // EKA2L1 doesn't use multicore yet, so rendezvous and logon
+        // are just simple.
+        void thread::logon(int *logon_request, bool rendezvous) {
+            if (state == thread_state::stop) {
+                *logon_request = exit_reason;
+                return;
+            }
+
+            if (rendezvous) {
+                rendezvous_requests.push_back(logon_request);
+                return;
+            }
+
+            logon_requests.push_back(logon_request);
+        }
+
+        bool thread::logon_cancel(int *logon_request, bool rendezvous) {
+            if (rendezvous) {
+                auto req_info = std::find(rendezvous_requests.begin(), rendezvous_requests.end(),
+                    logon_request);
+
+                if (req_info != rendezvous_requests.end()) {
+                    *logon_request = KErrCancel;
+                    rendezvous_requests.erase(req_info);
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            auto req_info = std::find(logon_requests.begin(), logon_requests.end(),
+                logon_request);
+
+            if (req_info != logon_requests.end()) {
+                *logon_request = KErrCancel;
+                logon_requests.erase(req_info);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        void thread::rendezvous(int rendezvous_reason) {
+            for (auto &ren : rendezvous_requests) {
+                *ren = rendezvous_reason;
+            }
+
+            rendezvous_requests.clear();
+        }
+
+        void thread::finish_logons() {
+            for (auto &req : logon_requests) {
+                *req = exit_reason;
+            }
+
+            for (auto &req : rendezvous_requests) {
+                *req = exit_reason;
+            }
+
+            logon_requests.clear();
+            rendezvous_requests.clear();
         }
     }
 }

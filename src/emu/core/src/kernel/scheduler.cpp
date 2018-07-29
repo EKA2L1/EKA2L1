@@ -251,6 +251,11 @@ namespace eka2l1 {
 
             thr->state = thread_state::stop;
 
+            if (!thr->owning_process()->decrease_thread_count()) {
+                thr->owning_process()->exit_reason = thr->get_exit_reason();
+                thr->owning_process()->finish_logons();
+            }
+
             thr->wake_up_waiting_threads();
 
             for (auto &obj : thr->waits) {
