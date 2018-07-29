@@ -68,8 +68,10 @@ namespace eka2l1 {
 
                 LOG_TRACE("Spawned process: {}, entry point: 0x{:x}", name_process, img_ptr->header.entry_point);
 
-                /* Set request status and returns*/
-                ctx.set_request_status(handle);
+                info->handle = handle;
+                ctx.write_arg_pkg(0, info);
+
+                ctx.set_request_status(KErrNone);
                 return;
             }
 
@@ -105,10 +107,11 @@ namespace eka2l1 {
         f->close();
 
         LOG_TRACE("Spawned process: {}", name_process);
-        ctx.set_request_status(handle);
-        
 
-        //ctx.set_request_status(24324);
+        info->handle = handle;
+        ctx.write_arg_pkg(0, info);
+
+        ctx.set_request_status(KErrNone);
     }
 
     loader_server::loader_server(system *sys)
