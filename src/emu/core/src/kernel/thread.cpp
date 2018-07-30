@@ -382,8 +382,6 @@ namespace eka2l1 {
             return real_priority <= rhs.real_priority;
         }
 
-        // EKA2L1 doesn't use multicore yet, so rendezvous and logon
-        // are just simple.
         void thread::logon(int *logon_request, bool rendezvous) {
             if (state == thread_state::stop) {
                 *logon_request = exit_reason;
@@ -391,20 +389,20 @@ namespace eka2l1 {
             }
 
             if (rendezvous) {
-                rendezvous_requests.push_back(logon_request);
+                rendezvous_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
                 return;
             }
 
-            logon_requests.push_back(logon_request);
+            logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
         }
 
         bool thread::logon_cancel(int *logon_request, bool rendezvous) {
             if (rendezvous) {
-                auto req_info = std::find(rendezvous_requests.begin(), rendezvous_requests.end(),
-                    logon_request);
+                auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
+                    [&](logon_request_form &form) { return form.request_status == logon_request; });
 
                 if (req_info != rendezvous_requests.end()) {
-                    *logon_request = KErrCancel;
+                    *logon_request = -3;
                     rendezvous_requests.erase(req_info);
 
                     return true;
@@ -413,11 +411,11 @@ namespace eka2l1 {
                 return false;
             }
 
-            auto req_info = std::find(logon_requests.begin(), logon_requests.end(),
-                logon_request);
+            auto req_info = std::find_if(logon_requests.begin(), logon_requests.end(),
+                [&](logon_request_form &form) { return form.request_status == logon_request; });
 
             if (req_info != logon_requests.end()) {
-                *logon_request = KErrCancel;
+                *logon_request = -3;
                 logon_requests.erase(req_info);
 
                 return true;
@@ -428,7 +426,8 @@ namespace eka2l1 {
 
         void thread::rendezvous(int rendezvous_reason) {
             for (auto &ren : rendezvous_requests) {
-                *ren = rendezvous_reason;
+                *(ren.request_status) = rendezvous_reason;
+                ren.requester->signal_request();
             }
 
             rendezvous_requests.clear();
@@ -436,11 +435,13 @@ namespace eka2l1 {
 
         void thread::finish_logons() {
             for (auto &req : logon_requests) {
-                *req = exit_reason;
+                *(req.request_status) = exit_reason;
+                req.requester->signal_request();
             }
 
             for (auto &req : rendezvous_requests) {
-                *req = exit_reason;
+                *(req.request_status) = exit_reason;
+                req.requester->signal_request();
             }
 
             logon_requests.clear();

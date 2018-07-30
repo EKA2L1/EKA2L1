@@ -96,8 +96,16 @@ namespace eka2l1::kernel {
         int rendezvous_reason = 0;
         int exit_reason = 0;
 
-        std::vector<int *> logon_requests;
-        std::vector<int *> rendezvous_requests;
+        struct logon_request_form {
+            thread_ptr requester;
+            int *request_status;
+
+            explicit logon_request_form(thread_ptr thr, int *rsts)
+                : requester(thr), request_status(rsts) {}
+        };
+
+        std::vector<logon_request_form> logon_requests;
+        std::vector<logon_request_form> rendezvous_requests;
 
         uint32_t thread_count = 0;
 
