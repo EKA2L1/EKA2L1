@@ -8,6 +8,7 @@ add_library(corekernel
     ${CORE_INCLUDE_DIR}/kernel/object_ix.h
     ${CORE_INCLUDE_DIR}/kernel/process.h
     ${CORE_INCLUDE_DIR}/kernel/chunk.h
+    ${CORE_INCLUDE_DIR}/kernel/change_notifier.h
     ${CORE_INCLUDE_DIR}/kernel/sema.h
     ${CORE_INCLUDE_DIR}/kernel/timer.h
     scheduler.cpp
@@ -17,6 +18,7 @@ add_library(corekernel
     object_ix.cpp
 	wait_obj.cpp
     chunk.cpp
+    change_notifier.cpp
     sema.cpp
     process.cpp
     timer.cpp

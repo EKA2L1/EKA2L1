@@ -20,6 +20,7 @@
 #pragma once
 
 #include <core/arm/jit_interface.h>
+#include <core/kernel/change_notifier.h>
 #include <core/kernel/chunk.h>
 #include <core/kernel/kernel_obj.h>
 #include <core/kernel/mutex.h>
@@ -64,7 +65,7 @@ namespace eka2l1 {
     using sema_ptr = std::shared_ptr<kernel::semaphore>;
     using timer_ptr = std::shared_ptr<kernel::timer>;
     using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
-
+    using change_notifier_ptr = std::shared_ptr<kernel::change_notifier>;
     using property_ptr = std::shared_ptr<service::property>;
 
     using prop_ident_pair = std::pair<int, int>;
@@ -168,6 +169,8 @@ namespace eka2l1 {
         uint32_t create_timer(std::string name, kernel::reset_type rt,
             kernel::owner_type owner,
             kernel::access_type access = kernel::access_type::local_access);
+
+        uint32_t create_change_notifier(kernel::owner_type owner);
 
         uint32_t create_server(std::string name);
         uint32_t create_session(server_ptr cnn_svr, int async_slots);
