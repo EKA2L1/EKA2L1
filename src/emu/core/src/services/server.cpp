@@ -93,10 +93,17 @@ namespace eka2l1 {
             return 0;
         }
 
+        bool server::ready() {
+            return request_status && request_data;
+        }
+
         int server::deliver(server_msg msg) {
             // Is ready
-            if (msg.is_ready()) {
+            if (ready()) {
+                msg.dest_msg = request_msg;
                 accept(msg);
+
+                finish_request_lle(msg.dest_msg, true);
             } else {
                 delivered_msgs.push_back(msg);
             }
@@ -148,6 +155,57 @@ namespace eka2l1 {
 
         void server::destroy() {
             sys->get_kernel_system()->free_msg(process_msg);
+        }
+
+        void server::finish_request_lle(ipc_msg_ptr &msg, bool notify_owner) {
+            request_data->ipc_msg_handle = msg->id;
+            request_data->flags = msg->args.flag;
+
+            std::copy(request_data->args, request_data->args + 4,
+                msg->args.args);
+
+            *request_status = 0;    // KErrNone
+
+            if (notify_owner) {
+                request_own_thread->signal_request();
+            }
+
+            request_data = nullptr;
+            request_own_thread = nullptr;
+            request_status = nullptr;
+        }
+
+        void server::receive_async_lle(int *msg_request_status, message2 *data) {
+            ipc_msg_ptr msg = sys->get_kernel_system()->create_msg(kernel::owner_type::process);
+
+            msg->free = false;
+
+            int res = receive(msg);
+
+            if (res == -1) {
+                request_status = msg_request_status;
+                request_own_thread = sys->get_kernel_system()->crr_thread();
+                request_data = data;
+                request_msg = msg;
+
+                return;
+            }
+
+            finish_request_lle(msg, false);
+        }
+
+        void server::cancel_async_lle() {
+            *request_status = -3; // KErrCancel
+
+            request_own_thread->signal_request();
+
+            request_data = nullptr;
+            request_own_thread = nullptr;
+            request_status = nullptr;
+
+            sys->get_kernel_system()->free_msg(request_msg);
+
+            request_msg = nullptr;
         }
     }
 }

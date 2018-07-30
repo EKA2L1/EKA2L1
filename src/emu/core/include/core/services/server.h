@@ -53,7 +53,8 @@ namespace eka2l1 {
             std::string name;
 
             ipc_func(std::string iname, ipc_func_wrapper wr)
-                : name(std::move(iname)), wrapper(wr) {}
+                : name(std::move(iname))
+                , wrapper(wr) {}
         };
 
         /*! \brief A class represents server message. 
@@ -67,6 +68,16 @@ namespace eka2l1 {
             bool is_ready() const {
                 return false;
             }
+        };
+
+        struct message2 {
+            int ipc_msg_handle;
+            int function;
+            int args[4];
+            int spare1;
+            int session_ptr;
+            int flags;
+            int spare3;
         };
 
         /*! \brief An IPC HLE server.
@@ -87,7 +98,7 @@ namespace eka2l1 {
 
             /** The thread own this server */
             thread_ptr owning_thread;
-            
+
             /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
 
@@ -96,8 +107,17 @@ namespace eka2l1 {
             void connect(service::ipc_context ctx);
             void disconnect(service::ipc_context ctx);
 
+            int *request_status = nullptr;
+            message2 *request_data = nullptr;
+
+            thread_ptr request_own_thread;
+            ipc_msg_ptr request_msg;
+
+            void finish_request_lle(ipc_msg_ptr &session_msg, bool notify_owner);
+
         protected:
             bool is_msg_delivered(ipc_msg_ptr &msg);
+            bool ready();
 
         public:
             server(system *sys, const std::string name);
@@ -119,6 +139,10 @@ namespace eka2l1 {
 
             /*! Cancel a message in the delivered queue */
             int cancel();
+
+            void receive_async_lle(int *request_status, message2 *data);
+
+            void cancel_async_lle();
 
             void register_ipc_func(uint32_t ordinal, ipc_func func);
 
