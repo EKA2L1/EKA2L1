@@ -107,6 +107,10 @@ namespace eka2l1 {
 
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
+                
+                // Use for debugging rom image
+                loader::romimg_ptr euser_force = libmngr->load_romimg(u"euser", false);
+                libmngr->open_romimg(euser_force);
 
                 process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
                     static_cast<kernel::process_priority>(img_ptr->header.priority));
@@ -243,6 +247,13 @@ namespace eka2l1 {
         kernel::access_type access) {
         timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, rt, access);
         objects.push_back(std::move(new_timer));
+
+        return create_handle_lastest(owner);
+    }
+
+    uint32_t kernel_system::create_change_notifier(kernel::owner_type owner) {
+        change_notifier_ptr new_nof = std::make_shared<kernel::change_notifier>(this);
+        objects.push_back(std::move(new_nof));
 
         return create_handle_lastest(owner);
     }

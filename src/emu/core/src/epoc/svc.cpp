@@ -8,6 +8,7 @@
 
 #include <common/cvt.h>
 #include <common/path.h>
+#include <common/random.h>
 
 #ifdef WIN32
 #include <Windows.h>
@@ -297,11 +298,16 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ServerReceive, TInt aHandle, eka2l1::ptr<int> aRequestStatus, eka2l1::ptr<TAny> aDataPtr) {
         kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
         server_ptr server = kern->get_server(aHandle);
 
         if (!server) {
             return KErrBadHandle;
         }
+
+        server->receive_async_lle(aRequestStatus.get(mem),
+            reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
 
         return KErrNone;
     }
@@ -314,6 +320,7 @@ namespace eka2l1::epoc {
         server_ptr server = kern->get_server_by_name(server_name);
 
         if (!server) {
+            LOG_TRACE("Create session to unexist server: {}", server_name);
             return KErrNotFound;
         }
 
@@ -843,6 +850,32 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, PropertyAttach, TInt aCagetory, TInt aValue, TOwnerType aOwnerType) {
+        kernel_system *kern = sys->get_kernel_system();
+        property_ptr prop = kern->get_prop(aCagetory, aValue);
+
+        if (!prop) {
+            return 0;
+        }
+
+        return kern->mirror(prop, static_cast<kernel::owner_type>(aOwnerType));
+    }
+
+    /**********************/
+    /* TIMER */
+    /*********************/
+    BRIDGE_FUNC(TInt, TimerCreate) {
+        return sys->get_kernel_system()->create_timer("timer" + common::to_string(eka2l1::random()),
+            kernel::reset_type::oneshot, kernel::owner_type::process);
+    }
+
+    /**********************/
+    /* CHANGE NOTIFIER */
+    /**********************/
+    BRIDGE_FUNC(TInt, ChangeNotifierCreate, TOwnerType aOwner) {
+        return sys->get_kernel_system()->create_change_notifier(static_cast<kernel::owner_type>(aOwner));
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),
@@ -887,7 +920,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7D, ThreadProcess),
         BRIDGE_REGISTER(0x7E, ServerCreate),
         BRIDGE_REGISTER(0x7F, SessionCreate),
+        BRIDGE_REGISTER(0x84, TimerCreate),
+        BRIDGE_REGISTER(0x87, ChangeNotifierCreate),
         BRIDGE_REGISTER(0xA0, StaticCallList),
+        BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xC5, PropertyFindGetInt),
         BRIDGE_REGISTER(0xC6, PropertyFindGetBin),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
