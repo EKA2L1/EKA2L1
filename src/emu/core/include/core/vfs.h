@@ -140,6 +140,38 @@ namespace eka2l1 {
         /*! This exists if the drive is physically available
         */
         std::string real_path;
+
+        bool hidden = false;
+    };
+
+    enum TDriveNumber
+    {
+        EDriveA,
+        EDriveB,
+        EDriveC,
+        EDriveD,
+        EDriveE,
+        EDriveF,
+        EDriveG,
+        EDriveH,
+        EDriveI,
+        EDriveJ,
+        EDriveK,
+        EDriveL,
+        EDriveM,
+        EDriveN,
+        EDriveO,
+        EDriveP,
+        EDriveQ,
+        EDriveR,
+        EDriveS,
+        EDriveT,
+        EDriveU,
+        EDriveV,
+        EDriveW,
+        EDriveX,
+        EDriveY,
+        EDriveZ
     };
 
     class io_system {
@@ -190,5 +222,8 @@ namespace eka2l1 {
 
         // Open a file. Return is a shared pointer of the file interface.
         std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
+
+        // Contains all drive
+        std::array<char, 26> drive_list(bool all_hidden);
     };
 }

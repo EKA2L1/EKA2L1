@@ -112,6 +112,9 @@ namespace eka2l1 {
 
         void open_dir(service::ipc_context ctx);
 
+        void drive_list(service::ipc_context ctx);
+        void drive(service::ipc_context ctx);
+
         std::unordered_map<uint32_t, fs_node> file_nodes;
 
         int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false);

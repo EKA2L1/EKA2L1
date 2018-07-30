@@ -418,4 +418,19 @@ namespace eka2l1 {
 
         return pf;
     }
+
+    std::array<char, 26> io_system::drive_list(bool all_hidden) {
+        std::array<char, 26> list;
+
+        std::fill(list.begin(), list.end(), 0);
+
+        for (auto &drive : drives) {
+            if (!drive.second.hidden || (drive.second.hidden && all_hidden)) {
+                char drive_index = std::tolower(drive.first[0]) - 97;
+                list[drive_index] = 1;
+            }
+        }
+
+        return list;
+    }
 }

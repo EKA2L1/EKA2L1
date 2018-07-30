@@ -49,6 +49,19 @@ const TUint KEntryAttRemote = 0x0100;
 const TUint KEntryAttMaskFileSystemSpecific = 0x00FF0000;
 const TUint KEntryAttMatchMask = (KEntryAttHidden | KEntryAttSystem | KEntryAttDir);
 
+const TUint KDriveAttTransaction = 0x80;
+const TUint KDriveAttPageable = 0x100;
+const TUint KDriveAttLogicallyRemovable = 0x200;
+const TUint KDriveAttHidden = 0x400;
+const TUint KDriveAttExternal = 0x800;
+const TUint KDriveAttAll = 0x100000;
+const TUint KDriveAttExclude = 0x40000;
+const TUint KDriveAttExclusive = 0x80000;
+
+const TUint KDriveAttLocal = 0x01;
+const TUint KDriveAttRom = 0x02;
+const TUint KDriveAttRedirected = 0x04;
+
 namespace eka2l1::epoc {
     enum TFileMode {
         EFileShareExclusive,
@@ -129,6 +142,8 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
         REGISTER_IPC(fs_server, open_dir, EFsDirOpen, "Fs::OpenDir");
+        REGISTER_IPC(fs_server, drive_list, EFsDriveList, "Fs::DriveList");
+        REGISTER_IPC(fs_server, drive, EFsDrive, "Fs::Drive");
     }
 
     fs_node *fs_server::get_file_node(int handle) {
@@ -395,7 +410,7 @@ namespace eka2l1 {
 
             return nodes_table.add_node(new_node);
         }
-     }
+    }
 
     bool is_e32img(symfile f) {
         int sig;
@@ -467,5 +482,101 @@ namespace eka2l1 {
 
     void fs_server::open_dir(service::ipc_context ctx) {
         ctx.set_request_status(KErrNotFound);
+    }
+
+    void fs_server::drive_list(service::ipc_context ctx) {
+        std::optional<int> flags = ctx.get_arg<int>(1);
+
+        if (!flags) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        bool list_hidden = true;
+
+        // Fetch flags
+        if (*flags & KDriveAttExclude) {
+            if (*flags & KDriveAttHidden) {
+                list_hidden = false;
+            }
+        }
+
+        std::array<char, 26> dlist = ctx.sys->get_io_system()->drive_list(list_hidden);
+        bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]), dlist.size());
+
+        if (!success) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    enum TMediaType {
+        EMediaNotPresent,
+        EMediaUnknown,
+        EMediaFloppy,
+        EMediaHardDisk,
+        EMediaCdRom,
+        EMediaRam,
+        EMediaFlash,
+        EMediaRom,
+        EMediaRemote,
+        EMediaNANDFlash,
+        EMediaRotatingMedia
+    };
+
+    enum TBatteryState {
+        EBatNotSupported,
+        EBatGood,
+        EBatLow
+    };
+
+    enum TConnectionBusType {
+        EConnectionBusInternal,
+        EConnectionBusUsb
+    };
+
+    struct TDriveInfo {
+        TMediaType iType;
+        TBatteryState iBattery;
+        TUint iDriveAtt;
+        TUint iMediaAtt;
+        TConnectionBusType iConnectionBusType;
+    };
+
+    /* Simple for now only, in the future this should be more advance. */
+    void fs_server::drive(service::ipc_context ctx) {
+        TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
+        std::optional<TDriveInfo> info = ctx.get_arg_packed<TDriveInfo>(0);
+
+        std::array<char, 26> dlist = ctx.sys->get_io_system()->drive_list(true);
+        
+        if (!dlist[static_cast<int>(drv)]) {
+            info->iType = EMediaUnknown;
+
+            ctx.write_arg_pkg<TDriveInfo>(0, *info);
+            ctx.set_request_status(KErrNone);
+            return;
+        }
+
+        if (!info) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        info->iType = EMediaHardDisk;
+        info->iDriveAtt = KDriveAttLocal;
+
+        if (drv == EDriveZ) {
+            info->iType = EMediaRom;
+            info->iDriveAtt = KDriveAttRom;
+        }
+
+        info->iBattery = EBatNotSupported;
+        info->iConnectionBusType = EConnectionBusInternal;
+
+        ctx.write_arg_pkg<TDriveInfo>(0, *info);
+        ctx.set_request_status(KErrNone);
     }
 }
