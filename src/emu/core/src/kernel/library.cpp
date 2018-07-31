@@ -29,18 +29,18 @@ namespace eka2l1 {
 
         std::optional<uint32_t> library::get_ordinal_address(const uint8_t idx) {
             if (lib_type == e32_img_library) {
-                if (e32_img->ed.syms.size() <= idx) {
+                if (e32_img->ed.syms.size() < idx) {
                     return std::optional<uint32_t>{};
                 }
 
-                return e32_img->rt_code_addr + e32_img->ed.syms[idx] - e32_img->header.code_base;
+                return e32_img->rt_code_addr + e32_img->ed.syms[idx - 1] - e32_img->header.code_base;
             }
 
-            if (rom_img->exports.size() <= idx) {
+            if (rom_img->exports.size() < idx) {
                 return std::optional<uint32_t>{};
             }
 
-            return rom_img->exports[idx];
+            return rom_img->exports[idx - 1];
         }
 
         std::vector<uint32_t> library::attach() {

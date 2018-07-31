@@ -713,6 +713,25 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, LibraryLookup, TInt aHandle, TInt aOrdinalIndex) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        library_ptr lib = std::dynamic_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+
+        if (!lib) {
+            return 0;
+        }
+
+        std::optional<uint32_t> func_addr = lib->get_ordinal_address(static_cast<uint8_t>(aOrdinalIndex));
+
+        if (!func_addr) {
+            return 0;
+        }
+
+        return *func_addr;
+    }
+
     BRIDGE_FUNC(TInt, LibraryAttached, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
@@ -945,6 +964,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00, ObjectNext),
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
+        BRIDGE_REGISTER(0x0E, LibraryLookup),
         BRIDGE_REGISTER(0x16, ProcessFilename),
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
