@@ -109,9 +109,9 @@ namespace eka2l1 {
             std::vector<uint16_t> rels_info;
         };
 
-#define ELF32_R_SYM(i) ((i) >> 8)
-#define ELF32_R_TYPE(i) ((unsigned char)(i))
-#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
+        #define ELF32_R_SYM(i) ((i) >> 8)
+        #define ELF32_R_TYPE(i) ((unsigned char)(i))
+        #define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
 
         struct eka2_reloc_section {
             uint32_t size;
@@ -195,6 +195,8 @@ namespace eka2l1 {
             uint32_t data_chunk;
 
             bool has_extended_header = false;
+
+            std::vector<std::string> dll_names;
         };
 
 		/*! \brief Parse an E32 Image. 

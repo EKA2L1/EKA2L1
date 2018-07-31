@@ -116,8 +116,91 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
+    void loader_server::load_library(service::ipc_context ctx) {
+        std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
+
+        if (!info) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        std::optional<std::u16string> lib_path = ctx.get_arg<std::u16string>(1);
+
+        if (!lib_path) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
+        eka2l1::symfile f = ctx.sys->get_io_system()->open_file(*lib_path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        auto temp = loader::parse_eka2img(f, true);
+
+        if (!temp) {
+            f->seek(0, eka2l1::file_seek_mode::beg);
+            auto romimg = loader::parse_romimg(f, ctx.sys->get_memory_system());
+
+            if (romimg && romimg->header.uid3 == info->uid3) {
+                loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*lib_path, false);
+                ctx.sys->get_lib_manager()->open_romimg(img_ptr);
+
+                /* Create process through kernel system. */
+                uint32_t handle = ctx.sys->get_kernel_system()->create_library(
+                    lib_name, img_ptr, static_cast<kernel::owner_type>(info->owner_type));
+
+                f->close();
+
+                LOG_TRACE("Loaded library: {}", lib_name);
+
+                info->handle = handle;
+
+                ctx.write_arg_pkg(0, *info);
+                ctx.set_request_status(KErrNone);
+
+                ctx.sys->get_kernel_system()->crr_process()->signal_dll_lock();
+
+                return;
+            }
+
+            f->close();
+
+            auto e32img = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
+
+            if (!e32img) {
+                ctx.set_request_status(KErrUnknown);
+                f->close();
+
+                return;
+            }
+
+            ctx.sys->get_lib_manager()->open_e32img(e32img);
+            ctx.sys->get_lib_manager()->patch_hle();
+
+            /* Create process through kernel system. */
+            uint32_t handle = ctx.sys->get_kernel_system()->create_library(lib_name,
+                e32img, static_cast<kernel::owner_type>(info->owner_type));
+
+            f->close();
+
+            LOG_TRACE("Loaded library: {}", lib_name);
+
+            info->handle = handle;
+
+            ctx.sys->get_kernel_system()->crr_process()->signal_dll_lock();
+
+            ctx.write_arg_pkg(0, *info);
+            ctx.set_request_status(KErrNone);
+        }
+    }
+
     loader_server::loader_server(system *sys)
         : service::server(sys, "!Loader") {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
+        REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
     }
 }

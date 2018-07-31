@@ -20,17 +20,27 @@ namespace eka2l1 {
     }
 
     class loader_server : public service::server {
-        /*! \brief Parse a E32 Image, and use informations from parsing to spawn a new process.
+        /*! \brief Parse a E32 Image/ Rom Image, and use informations from parsing to spawn a new process.
          * 
          * arg0: TLdrInfo contains spawn request
          * arg1: Contains path to the image.
          * arg2: Contains extra argument for the process.
          *
+         * request_status: Error code.
+        */
+        void load_process(service::ipc_context context);
+
+        /*! \brief Parse a E32 Image / Rom Image, and use informations from parsing to spawn a new library.
+         * 
+         * arg0: TLdrInfo contains spawn request
+         * arg1: Contains library name.
+         * arg2: Contains library path.
+         *
          * request_status: New Process handle.
         */
-        void load_process(eka2l1::service::ipc_context context);
+        void load_library(service::ipc_context context);
 
-    public:
-        loader_server(system *sys);
+    public: 
+         loader_server(system *sys);
     };
 }

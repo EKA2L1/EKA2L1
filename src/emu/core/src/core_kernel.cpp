@@ -108,10 +108,9 @@ namespace eka2l1 {
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
 
-                // Use for debugging rom image
-                loader::romimg_ptr euser_force = libmngr->load_romimg(u"euser", false);
-
                 if (sys->get_bool_config("force_load_euser")) {
+                    // Use for debugging rom image
+                    loader::romimg_ptr euser_force = libmngr->load_romimg(u"euser", false);
                     libmngr->open_romimg(euser_force);
                 }
 
@@ -313,6 +312,22 @@ namespace eka2l1 {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
         objects.push_back(std::move(pr));
+
+        return create_handle_lastest(own);
+    }
+
+    uint32_t kernel_system::create_library(const std::string &name, loader::romimg_ptr &img,
+        kernel::owner_type own) {
+        library_ptr lib = std::make_shared<kernel::library>(this, name, img);
+        objects.push_back(std::move(lib));
+
+        return create_handle_lastest(own);
+    }
+
+    uint32_t kernel_system::create_library(const std::string &name, loader::e32img_ptr &img,
+        kernel::owner_type own) {
+        library_ptr lib = std::make_shared<kernel::library>(this, name, img);
+        objects.push_back(std::move(lib));
 
         return create_handle_lastest(own);
     }

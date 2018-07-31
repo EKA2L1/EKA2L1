@@ -23,9 +23,9 @@
 #include <core/kernel/change_notifier.h>
 #include <core/kernel/chunk.h>
 #include <core/kernel/kernel_obj.h>
+#include <core/kernel/library.h>
 #include <core/kernel/mutex.h>
 #include <core/kernel/object_ix.h>
-#include <core/kernel/library.h>
 
 #include <core/kernel/process.h>
 #include <core/kernel/scheduler.h>
@@ -68,6 +68,7 @@ namespace eka2l1 {
     using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
     using change_notifier_ptr = std::shared_ptr<kernel::change_notifier>;
     using property_ptr = std::shared_ptr<service::property>;
+    using library_ptr = std::shared_ptr<kernel::library>;
 
     using prop_ident_pair = std::pair<int, int>;
 
@@ -111,6 +112,10 @@ namespace eka2l1 {
 
         memory_system *get_memory_system() {
             return mem;
+        }
+
+        hle::lib_manager *get_lib_manager() {
+            return mngr;
         }
 
         void init(system *esys, timing_system *sys, manager_system *mngrsys,
@@ -186,6 +191,12 @@ namespace eka2l1 {
             const std::string &process_name, const std::u16string &exe_path,
             const std::u16string &cmd_args, loader::romimg_ptr &img,
             const kernel::process_priority pri = kernel::process_priority::foreground,
+            kernel::owner_type own = kernel::owner_type::process);
+
+        uint32_t create_library(const std::string &name, loader::romimg_ptr &img,
+            kernel::owner_type own = kernel::owner_type::process);
+
+        uint32_t create_library(const std::string &name, loader::e32img_ptr &img,
             kernel::owner_type own = kernel::owner_type::process);
 
         ipc_msg_ptr create_msg(kernel::owner_type owner);
