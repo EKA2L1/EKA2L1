@@ -20,15 +20,15 @@
 
 #include <common/log.h>
 
-#include <core/kernel/mutex.h>
 #include <core/core_kernel.h>
+#include <core/kernel/mutex.h>
 
 namespace eka2l1 {
     namespace kernel {
         mutex::mutex(kernel_system *kern, std::string name, bool init_locked,
             kernel::access_type access)
-            : wait_obj(kern, std::move(name), access) 
-             , lock_count(0) {
+            : wait_obj(kern, std::move(name), access)
+            , lock_count(0) {
             obj_type = object_type::mutex;
 
             if (init_locked) {
@@ -43,7 +43,7 @@ namespace eka2l1 {
 
             int best_priority = 10000;
 
-            for (auto& waiter : waiting_threads()) {
+            for (auto &waiter : waiting_threads()) {
                 if (waiter->current_real_priority() < best_priority) {
                     best_priority = waiter->current_real_priority();
                 }
@@ -61,6 +61,10 @@ namespace eka2l1 {
         }
 
         void mutex::acquire(thread_ptr thr_ptr) {
+            if (holding == thr_ptr) {
+                return;
+            }
+
             if (thr_ptr && lock_count == 0) {
                 priority = thr_ptr->current_real_priority();
 
@@ -70,7 +74,13 @@ namespace eka2l1 {
 
                 // boost
                 thr_ptr->update_priority();
+            } else {
+                // If the mutex is being held by another thread, make them
+                // wait for mutex to be freed.
+                add_waiting_thread(thr_ptr);
             }
+
+            lock_count++;
         }
 
         bool mutex::release(thread_ptr thr) {
@@ -94,8 +104,11 @@ namespace eka2l1 {
                     holding->update_priority();
                     holding = nullptr;
 
+                    // Wake up all threads waiting for mutex.
+                    wake_up_waiting_threads();
+
                     return true;
-                }
+                } 
 
                 LOG_WARN("Thread doesn't held this mutex, weird");
             }
@@ -119,6 +132,14 @@ namespace eka2l1 {
                     update_priority();
                 }
             }
+        }
+
+        void mutex::wait() {
+            acquire(kern->crr_thread());
+        }
+
+        bool mutex::signal() {
+            return release(kern->crr_thread());
         }
     }
 }

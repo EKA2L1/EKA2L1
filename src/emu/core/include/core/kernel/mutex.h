@@ -55,6 +55,9 @@ namespace eka2l1 {
             uint32_t get_priority() const {
                 return priority;
             }
+
+            void wait();
+            bool signal();
         };
     }
 }

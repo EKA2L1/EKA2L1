@@ -20,6 +20,7 @@
 #pragma once
 
 #include <core/kernel/kernel_obj.h>
+#include <core/kernel/mutex.h>
 #include <core/kernel/object_ix.h>
 #include <core/kernel/thread.h>
 
@@ -39,6 +40,7 @@ namespace eka2l1 {
     }
 
     using thread_ptr = std::shared_ptr<kernel::thread>;
+    using mutex_ptr = std::shared_ptr<kernel::mutex>;
 }
 
 namespace eka2l1::kernel {
@@ -101,13 +103,16 @@ namespace eka2l1::kernel {
             int *request_status;
 
             explicit logon_request_form(thread_ptr thr, int *rsts)
-                : requester(thr), request_status(rsts) {}
+                : requester(thr)
+                , request_status(rsts) {}
         };
 
         std::vector<logon_request_form> logon_requests;
         std::vector<logon_request_form> rendezvous_requests;
 
         uint32_t thread_count = 0;
+
+        mutex_ptr dll_lock;
 
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
@@ -184,5 +189,8 @@ namespace eka2l1::kernel {
         }
 
         void set_priority(const process_priority new_pri);
+
+        void wait_dll_lock();
+        void signal_dll_lock();
     };
 }

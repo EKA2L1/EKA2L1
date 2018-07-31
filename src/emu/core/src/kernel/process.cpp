@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/cvt.h>
+
 #include <core/core_kernel.h>
 #include <core/core_mem.h>
 
@@ -49,6 +51,11 @@ namespace eka2l1::kernel {
         if (last) {
             mem->set_current_page_table(*last);
         }
+
+        uint32_t dll_lock_handle = kern->create_mutex("dllLockMutexProcess" + common::to_string(uid),
+            false, kernel::owner_type::kernel, kernel::access_type::local_access);
+
+        dll_lock = std::dynamic_pointer_cast<kernel::mutex>(kern->get_kernel_obj(dll_lock_handle));
     }
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
@@ -159,11 +166,11 @@ namespace eka2l1::kernel {
         }
 
         if (rendezvous) {
-            rendezvous_requests.push_back(logon_request_form{kern->crr_thread(), logon_request});
+            rendezvous_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
             return;
         }
 
-        logon_requests.push_back(logon_request_form{kern->crr_thread(), logon_request});
+        logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
     }
 
     bool process::logon_cancel(int *logon_request, bool rendezvous) {
@@ -216,5 +223,13 @@ namespace eka2l1::kernel {
 
         logon_requests.clear();
         rendezvous_requests.clear();
+    }
+
+    void process::wait_dll_lock() {
+        dll_lock->wait();
+    }
+
+    void process::signal_dll_lock() {
+        dll_lock->signal();
     }
 }

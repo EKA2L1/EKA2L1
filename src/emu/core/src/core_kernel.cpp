@@ -107,10 +107,13 @@ namespace eka2l1 {
 
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
-                
+
                 // Use for debugging rom image
                 loader::romimg_ptr euser_force = libmngr->load_romimg(u"euser", false);
-                libmngr->open_romimg(euser_force);
+
+                if (sys->get_bool_config("force_load_euser")) {
+                    libmngr->open_romimg(euser_force);
+                }
 
                 process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
                     static_cast<kernel::process_priority>(img_ptr->header.priority));

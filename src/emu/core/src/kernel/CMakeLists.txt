@@ -9,10 +9,12 @@ add_library(corekernel
     ${CORE_INCLUDE_DIR}/kernel/process.h
     ${CORE_INCLUDE_DIR}/kernel/chunk.h
     ${CORE_INCLUDE_DIR}/kernel/change_notifier.h
+    ${CORE_INCLUDE_DIR}/kernel/library.h
     ${CORE_INCLUDE_DIR}/kernel/sema.h
     ${CORE_INCLUDE_DIR}/kernel/timer.h
     scheduler.cpp
     thread.cpp
+    library.cpp
     mutex.cpp
     kernel_obj.cpp
     object_ix.cpp

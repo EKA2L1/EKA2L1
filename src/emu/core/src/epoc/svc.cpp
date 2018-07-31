@@ -680,6 +680,18 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, WaitDllLock) {
+        sys->get_kernel_system()->crr_process()->wait_dll_lock();
+
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(TInt, ReleaseDllLock) {
+        sys->get_kernel_system()->crr_process()->signal_dll_lock();
+
+        return KErrNone;
+    }
+
     /************************/
     /* USER SERVER */
     /***********************/
@@ -922,6 +934,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7F, SessionCreate),
         BRIDGE_REGISTER(0x84, TimerCreate),
         BRIDGE_REGISTER(0x87, ChangeNotifierCreate),
+        BRIDGE_REGISTER(0x9C, WaitDllLock),
+        BRIDGE_REGISTER(0x9D, ReleaseDllLock),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xC5, PropertyFindGetInt),
