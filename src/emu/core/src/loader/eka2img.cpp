@@ -628,6 +628,8 @@ namespace eka2l1 {
                 stream.read(reinterpret_cast<void *>(&import.dll_name_offset), 4);
                 stream.read(reinterpret_cast<void *>(&import.number_of_imports), 4);
 
+                img.dll_names.push_back(import.dll_name);
+
                 if (import.number_of_imports == 0) {
                     continue;
                 }

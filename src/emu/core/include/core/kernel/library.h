@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace eka2l1 {
     namespace loader {
@@ -16,10 +17,8 @@ namespace eka2l1 {
 
     namespace kernel {
         class library : public kernel_obj {
-            union {
-                loader::romimg_ptr rom_img;
-                loader::e32img_ptr e32_img;
-            };
+            loader::romimg_ptr rom_img;
+            loader::e32img_ptr e32_img;
 
             enum {
                 rom_img_library,
@@ -30,7 +29,10 @@ namespace eka2l1 {
             library(kernel_system *kern, const std::string &lib_name, loader::romimg_ptr img);
             library(kernel_system *kern, const std::string &lib_name, loader::e32img_ptr img);
 
+            ~library() {}
+
             std::optional<uint32_t> get_ordinal_address(const uint8_t idx);
+            std::vector<uint32_t> get_entry_points();
         };
     }
 }
