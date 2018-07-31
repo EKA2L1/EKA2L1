@@ -25,6 +25,7 @@
 #include <core/kernel/kernel_obj.h>
 #include <core/kernel/mutex.h>
 #include <core/kernel/object_ix.h>
+#include <core/kernel/library.h>
 
 #include <core/kernel/process.h>
 #include <core/kernel/scheduler.h>
