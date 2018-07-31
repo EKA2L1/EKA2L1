@@ -25,6 +25,12 @@ namespace eka2l1 {
                 e32_img_library
             } lib_type;
 
+            enum class library_state {
+                loaded,
+                attaching,
+                attached
+            } state;
+
         public:
             library(kernel_system *kern, const std::string &lib_name, loader::romimg_ptr img);
             library(kernel_system *kern, const std::string &lib_name, loader::e32img_ptr img);
@@ -32,7 +38,9 @@ namespace eka2l1 {
             ~library() {}
 
             std::optional<uint32_t> get_ordinal_address(const uint8_t idx);
-            std::vector<uint32_t> get_entry_points();
+            std::vector<uint32_t> attach();
+
+            bool attached();
         };
     }
 }

@@ -692,6 +692,46 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, LibraryAttach, TInt aHandle, eka2l1::ptr<TInt> aNumEps, eka2l1::ptr<TUint32> aEpList) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        library_ptr lib = std::dynamic_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+
+        if (!lib) {
+            return KErrBadHandle;
+        }
+
+        std::vector<uint32_t> entries = lib->attach();
+
+        *aNumEps.get(mem) = entries.size();
+
+        for (size_t i = 0; i < entries.size(); i++) {
+            aEpList.get(mem)[i] = entries[i];
+        }
+
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(TInt, LibraryAttached, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        library_ptr lib = std::dynamic_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+
+        if (!lib) {
+            return KErrBadHandle;
+        }
+
+        bool attached_result = lib->attached();
+
+        if (!attached_result) {
+            return KErrGeneral;
+        }
+
+        return KErrNone;
+    }
+
     /************************/
     /* USER SERVER */
     /***********************/
@@ -936,6 +976,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x87, ChangeNotifierCreate),
         BRIDGE_REGISTER(0x9C, WaitDllLock),
         BRIDGE_REGISTER(0x9D, ReleaseDllLock),
+        BRIDGE_REGISTER(0x9E, LibraryAttach),
+        BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xC5, PropertyFindGetInt),

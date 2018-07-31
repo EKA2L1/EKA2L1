@@ -115,7 +115,7 @@ namespace eka2l1 {
         }
 
         hle::lib_manager *get_lib_manager() {
-            return mngr;
+            return libmngr;
         }
 
         void init(system *esys, timing_system *sys, manager_system *mngrsys,
