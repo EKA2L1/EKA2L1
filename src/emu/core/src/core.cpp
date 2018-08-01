@@ -73,15 +73,6 @@ namespace eka2l1 {
             exit = true;
         };
 
-        if (!startup_inited) {
-            for (auto &startup_app : startup_apps) {
-                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), 0x123456);
-                kern.run_process(process);
-            }
-
-            startup_inited = true;
-        }
-
         uint32_t process_handle = kern.spawn_new_process(id);
 
         if (process_handle == INVALID_HANDLE) {
@@ -92,6 +83,15 @@ namespace eka2l1 {
 
         // Change window title to game title
         emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+
+        if (!startup_inited) {
+            for (auto &startup_app : startup_apps) {
+                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), 0x123456);
+                kern.run_process(process);
+            }
+
+            startup_inited = true;
+        }
 
         return process_handle;
     }
@@ -107,8 +107,9 @@ namespace eka2l1 {
         }
 
         if (!kern.should_terminate()) {
-            kern.reschedule();
             kern.processing_requests();
+            kern.reschedule();
+
             reschedule_pending = false;
         } else {
             emu_screen_driver->shutdown();
