@@ -40,7 +40,7 @@ namespace eka2l1 {
         void init(arm::jitter &jit, uint32_t code_ram_addr,
             uint32_t shared_addr, uint32_t shared_size);
 
-        void shutdown() {}
+        void shutdown();
 
         bool map_rom(uint32_t addr, const std::string &path);
 

@@ -932,6 +932,82 @@ namespace eka2l1::epoc {
         return kern->mirror(prop, static_cast<kernel::owner_type>(aOwnerType));
     }
 
+    BRIDGE_FUNC(TInt, PropertyDefine, TInt aCagetory, TInt aKey, eka2l1::ptr<TPropertyInfo> aPropertyInfo) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        TPropertyInfo *info = aPropertyInfo.get(mem);
+
+        service::property_type prop_type;
+
+        switch (info->iType) {
+        case EInt:
+            prop_type = service::property_type::int_data;
+            break;
+
+        case ELargeByteArray:
+        case EByteArray:
+            prop_type = service::property_type::bin_data;
+            break;
+
+        default: {
+            LOG_WARN("Unknown property type, exit with KErrGeneral.");
+            return KErrArgument;
+        }
+        }
+
+        uint32_t property_handle = kern->create_prop(prop_type, info->iSize);
+
+        if (property_handle == INVALID_HANDLE) {
+            return KErrGeneral;
+        }
+
+        property_ptr prop = kern->get_prop(property_handle);
+
+        prop->first = aCagetory;
+        prop->second = aKey;
+
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(TInt, PropertySetInt, TInt aHandle, TInt aValue) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        property_ptr prop = kern->get_prop(aHandle);
+
+        if (!prop) {
+            return KErrBadHandle;
+        }
+
+        bool res = prop->set(aValue);
+
+        if (!res) {
+            return KErrArgument;
+        }
+
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(TInt, PropertySetBin, TInt aHandle, TInt aSize, eka2l1::ptr<TUint8> aDataPtr) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        property_ptr prop = kern->get_prop(aHandle);
+
+        if (!prop) {
+            return KErrBadHandle;
+        }
+
+        bool res = prop->set(aDataPtr.get(mem), aSize);
+
+        if (!res) {
+            return KErrArgument;
+        }
+
+        return KErrNone;
+    }
+
     /**********************/
     /* TIMER */
     /*********************/
@@ -1000,6 +1076,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
+        BRIDGE_REGISTER(0xBC, PropertyDefine),
+        BRIDGE_REGISTER(0xC3, PropertySetInt),
+        BRIDGE_REGISTER(0xC4, PropertySetBin),
         BRIDGE_REGISTER(0xC5, PropertyFindGetInt),
         BRIDGE_REGISTER(0xC6, PropertyFindGetBin),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),

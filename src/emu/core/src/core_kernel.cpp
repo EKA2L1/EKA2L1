@@ -163,7 +163,7 @@ namespace eka2l1 {
 
     bool kernel_system::destroy_all_processes() {
         for (auto &obj : objects) {
-            if (obj->get_object_type() == kernel::object_type::process) {
+            if (obj && obj->get_object_type() == kernel::object_type::process) {
                 obj.reset();
             }
         }
@@ -356,7 +356,7 @@ namespace eka2l1 {
         auto &obj_ite = std::find(objects.begin(), objects.end(), obj);
 
         if (obj_ite != objects.end()) {
-            obj_ite->reset();
+            objects.erase(obj_ite);
             return true;
         }
 
@@ -562,7 +562,7 @@ namespace eka2l1 {
     property_ptr kernel_system::get_prop(int cagetory, int key) {
         auto &prop_res = std::find_if(objects.begin(), objects.end(),
             [=](const auto &prop) {
-                if (prop->get_object_type() == kernel::object_type::prop) {
+                if (prop && prop->get_object_type() == kernel::object_type::prop) {
                     property_ptr real_prop = std::dynamic_pointer_cast<service::property>(prop);
 
                     if (real_prop->first == cagetory && real_prop->second == key) {

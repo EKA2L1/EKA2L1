@@ -54,6 +54,35 @@ namespace eka2l1::epoc {
         pending
     };
 
+    enum TPropertyType {
+        EInt,
+        EByteArray,
+        EText = EByteArray,
+        ELargeByteArray,
+        ELargeText = ELargeByteArray,
+        ETypeLimit,
+        ETypeMask = 0xff
+    };
+
+    struct TSecurityPolicy {
+        TUint8 iType;
+        TUint8 iCaps[3];
+
+        union {
+            TUint32 iSecureId;
+            TUint32 iVendorId;
+            TUint8 iExtraCaps[4];
+        };
+    };
+
+    struct TPropertyInfo {
+        TUint iAttrib;
+        TUint16 iSize;
+        TPropertyType iType;
+        TSecurityPolicy iReadPolicy;
+        TSecurityPolicy iWritePolicy;
+    };
+
     /*! \brief Get the thread-local allocator. 
      * \returns The pointer to the allocator. 
      */

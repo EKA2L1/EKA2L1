@@ -18,7 +18,7 @@
 
 static void _free_mem(uint8_t *dt) {
 #ifndef WIN32
-    munmap(dt, common::GB(1));
+    munmap(dt, 4096);
 #else
     VirtualFree(dt, 0, MEM_RELEASE);
 #endif
@@ -47,6 +47,14 @@ namespace eka2l1 {
         global_pointers.resize(global_pages.size());
 
         cpu = jit.get();
+    }
+
+    void memory_system::shutdown() {
+        if (rom_map) {
+#ifdef WIN32
+            UnmapViewOfFile(rom_map);
+#endif
+        }
     }
 
     bool memory_system::map_rom(uint32_t addr, const std::string &path) {
@@ -187,7 +195,11 @@ namespace eka2l1 {
 #endif
 
             for (size_t i = page_begin_off - (shared_addr / page_size) + 1; i < page_end_off - (shared_addr / page_size); i++) {
-                global_pointers[i] = mem_ptr(global_pointers[i - 1].get() + page_size);
+                global_pointers[i] = mem_ptr(global_pointers[i - 1].get() + page_size
+                    #ifndef WIN32
+                    , _free_mem
+                    #endif
+                );
             }
 
             if (current_page_table) {
@@ -212,7 +224,11 @@ namespace eka2l1 {
                     _free_mem);
 #endif
             for (size_t i = page_begin_off - (ram_code_addr / page_size) + 1; i < page_end_off - (ram_code_addr / page_size); i++) {
-                codeseg_pointers[i] = mem_ptr(codeseg_pointers[i - 1].get() + page_size);
+                codeseg_pointers[i] = mem_ptr(codeseg_pointers[i - 1].get() + page_size
+                #ifndef WIN32
+                   , _free_mem
+                #endif
+                );
             }
 
             if (current_page_table) {
@@ -238,7 +254,11 @@ namespace eka2l1 {
 #endif
 
             for (size_t i = page_begin_off + 1; i < page_end_off; i++) {
-                current_page_table->pointers[i] = mem_ptr(current_page_table->pointers[i - 1].get() + page_size);
+                current_page_table->pointers[i] = mem_ptr(current_page_table->pointers[i - 1].get() + page_size
+                #ifndef WIN32
+                    , _free_mem
+                #endif
+                );
             }
         }
 
@@ -690,8 +710,7 @@ namespace eka2l1 {
         // Unmap all previous local data
         if (previous_page_table) {
             for (uint32_t i = shared_data / page_size; i > local_data / page_size; i--) {
-                if (previous_page_table->pointers[i] &&
-                    previous_page_table->pages[i].sts == page_status::committed) {
+                if (previous_page_table->pointers[i] && previous_page_table->pages[i].sts == page_status::committed) {
                     cpu->unmap_memory(i * page_size, page_size);
                 }
             }
@@ -720,7 +739,7 @@ namespace eka2l1 {
         // Map new local data
         for (uint32_t i = local_data / page_size; i < shared_data / page_size; i++) {
             if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed)
-                cpu->map_backing_mem(i * page_size, page_size, current_page_table->pointers[i].get(), 
+                cpu->map_backing_mem(i * page_size, page_size, current_page_table->pointers[i].get(),
                     current_page_table->pages[i].page_protection);
         }
 
