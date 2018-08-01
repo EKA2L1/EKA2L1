@@ -555,7 +555,7 @@ namespace eka2l1 {
 
             if (current_page_table) {
                 std::copy(codeseg_pages.begin() + (beg - (codeseg_addr / page_size)),
-                    codeseg_pages.begin() + end - (codeseg_addr / page_size), current_page_table->pages.begin() + beg);
+                    codeseg_pages.begin() + (end - (codeseg_addr / page_size)), current_page_table->pages.begin() + beg);
 
                 std::copy(codeseg_pointers.begin() + (beg - (codeseg_addr / page_size)),
                     codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->pointers.begin() + beg);
@@ -709,7 +709,7 @@ namespace eka2l1 {
 
         // Unmap all previous local data
         if (previous_page_table) {
-            for (uint32_t i = shared_data / page_size; i > local_data / page_size; i--) {
+            for (uint32_t i = shared_data / page_size; i >= local_data / page_size; i--) {
                 if (previous_page_table->pointers[i] && previous_page_table->pages[i].sts == page_status::committed) {
                     cpu->unmap_memory(i * page_size, page_size);
                 }
@@ -737,7 +737,7 @@ namespace eka2l1 {
         }
 
         // Map new local data
-        for (uint32_t i = local_data / page_size; i < shared_data / page_size; i++) {
+        for (uint32_t i = local_data / page_size; i <= shared_data / page_size; i++) {
             if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed)
                 cpu->map_backing_mem(i * page_size, page_size, current_page_table->pointers[i].get(),
                     current_page_table->pages[i].page_protection);

@@ -22,6 +22,8 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
+
 #include <core/disasm/disasm.h>
 
 #include <core/loader/eka2img.h>
@@ -53,8 +55,7 @@ namespace eka2l1 {
 
         mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
             get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
-            get_symbian_version_use() <= epocver::epoc6 ? shared_data_end_eka1 - shared_data_eka1 :
-                                                            ram_code_addr - shared_data);
+            get_symbian_version_use() <= epocver::epoc6 ? shared_data_end_eka1 - shared_data_eka1 : ram_code_addr - shared_data);
 
         emu_win = driver::new_emu_window(win_type);
         emu_screen_driver = driver::new_screen_driver(dr_type);
@@ -72,6 +73,15 @@ namespace eka2l1 {
             exit = true;
         };
 
+        if (!startup_inited) {
+            for (auto &startup_app : startup_apps) {
+                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), 0x123456);
+                kern.run_process(process);
+            }
+
+            startup_inited = true;
+        }
+
         uint32_t process_handle = kern.spawn_new_process(id);
 
         if (process_handle == INVALID_HANDLE) {
@@ -81,8 +91,7 @@ namespace eka2l1 {
         kern.run_process(process_handle);
 
         // Change window title to game title
-        emu_win->change_title("EKA2L1 | " + 
-            common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
 
         return process_handle;
     }
@@ -174,6 +183,14 @@ namespace eka2l1 {
             emitter << YAML::Key << name << YAML::Value << op;
         }
 
+        emitter << YAML::Key << "startup" << YAML::Value << YAML::BeginDoc;
+
+        for (const auto &app : startup_apps) {
+            emitter << app;
+        }
+
+        emitter << YAML::EndDoc;
+
         emitter << YAML::EndMap;
 
         std::ofstream out("coreconfig.yml");
@@ -185,6 +202,14 @@ namespace eka2l1 {
             YAML::Node node = YAML::LoadFile("coreconfig.yml");
 
             for (auto const &subnode : node) {
+                if (subnode.first.as<std::string>() == "startup") {
+                    for (const auto &startup_app : subnode.second) {
+                        startup_apps.push_back(startup_app.as<std::string>());
+                    }
+
+                    continue;
+                }
+
                 bool_configs.emplace(subnode.first.as<std::string>(), subnode.second.as<bool>());
             }
 

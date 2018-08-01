@@ -228,7 +228,8 @@ namespace eka2l1 {
             name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
-            request_sema = kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, 150, owner_type::kernel);
+            request_sema = std::dynamic_pointer_cast<kernel::semaphore>(
+                kern->get_kernel_obj(kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, 150, owner_type::kernel)));
 
             sync_msg = kern->create_msg(owner_type::kernel);
 
@@ -340,15 +341,11 @@ namespace eka2l1 {
         }
 
         void thread::wait_for_any_request() {
-            sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(request_sema));
-
-            sema->wait();
+            request_sema->wait();
         }
 
         void thread::signal_request() {
-            sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(request_sema));
-
-            sema->release(1);
+            request_sema->release(1);
         }
 
         void thread::owning_process(process_ptr pr) {

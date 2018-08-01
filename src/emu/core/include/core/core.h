@@ -114,6 +114,10 @@ namespace eka2l1 {
         std::unordered_map<std::string, bool> bool_configs;
         std::unordered_map<uint32_t, hal_ptr> hals;
 
+        std::vector<std::string> startup_apps;
+
+        bool startup_inited = false;
+
         /*! \brief Load the core configs.
         */
         void load_configs();

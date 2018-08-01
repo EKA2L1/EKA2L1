@@ -139,7 +139,7 @@ namespace eka2l1 {
             std::vector<kernel::mutex *> held_mutexes;
             std::vector<kernel::mutex *> pending_mutexes;
 
-            uint32_t request_sema;
+            sema_ptr request_sema;
             uint32_t flags;
             ipc_msg_ptr sync_msg;
 
