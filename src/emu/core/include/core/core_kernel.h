@@ -159,6 +159,7 @@ namespace eka2l1 {
         uint32_t create_thread(kernel::owner_type owner, process_ptr own_pr, kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
+            bool initial,
             ptr<void> usrdata = 0,
             kernel::thread_priority pri = kernel::priority_normal);
 
@@ -200,6 +201,8 @@ namespace eka2l1 {
             kernel::owner_type own = kernel::owner_type::process);
 
         ipc_msg_ptr create_msg(kernel::owner_type owner);
+        ipc_msg_ptr get_msg(int handle);
+
         void free_msg(ipc_msg_ptr msg);
 
         /*! \brief Completely destroy a message. */

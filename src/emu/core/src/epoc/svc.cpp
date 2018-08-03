@@ -29,6 +29,11 @@ namespace eka2l1::epoc {
     /*! \brief Get the current heap allocator */
     BRIDGE_FUNC(eka2l1::ptr<void>, Heap) {
         auto local_data = current_local_data(sys);
+
+        if (local_data.heap.ptr_address() == 0) {
+            LOG_WARN("Allocator is not available.");
+        }
+
         return local_data.heap;
     }
 
@@ -283,6 +288,42 @@ namespace eka2l1::epoc {
     /* IPC */
     /*******************************************/
 
+    BRIDGE_FUNC(TInt, MessageKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aCage) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        std::string exit_cage = aCage.get(mem)->StdString(sys);
+
+        switch (aExitType) {
+        case TExitType::panic:
+            LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {}", exit_cage, aReason);
+            break;
+
+        case TExitType::kill:
+            LOG_TRACE("Thread forcefully killed by message with cagetory: {} and exit code: {}", exit_cage, aReason);
+            break;
+
+        case TExitType::terminate:
+        case TExitType::pending:
+            LOG_TRACE("Thread terminated peacefully by message with cagetory: {} and exit code: {}", exit_cage, aReason);
+            break;
+
+        default:
+            return KErrArgument;
+        }
+
+        ipc_msg_ptr msg = kern->get_msg(aHandle);
+
+        if (!msg) {
+            return KErrBadHandle;
+        }
+
+        kern->get_thread_scheduler()->stop(msg->own_thr);
+        kern->prepare_reschedule();
+
+        return KErrNone;
+    }
+
     BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMode) {
         kernel_system *kern = sys->get_kernel_system();
         std::string server_name = aServerName.get(sys->get_memory_system())->StdString(sys);
@@ -296,20 +337,18 @@ namespace eka2l1::epoc {
         return handle;
     }
 
-    BRIDGE_FUNC(TInt, ServerReceive, TInt aHandle, eka2l1::ptr<int> aRequestStatus, eka2l1::ptr<TAny> aDataPtr) {
+    BRIDGE_FUNC(void, ServerReceive, TInt aHandle, eka2l1::ptr<int> aRequestStatus, eka2l1::ptr<TAny> aDataPtr) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
         server_ptr server = kern->get_server(aHandle);
 
         if (!server) {
-            return KErrBadHandle;
+            return;
         }
 
         server->receive_async_lle(aRequestStatus.get(mem),
             reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
-
-        return KErrNone;
     }
 
     BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode) {
@@ -769,6 +808,47 @@ namespace eka2l1::epoc {
     /*  THREAD  */
     /************************/
 
+    struct thread_create_info_expand {
+        int handle;
+        int type;
+        address func_ptr;
+        address ptr;
+        address supervisor_stack;
+        int supervisor_stack_size;
+        address user_stack;
+        int user_stack_size;
+        kernel::thread_priority init_thread_priority;
+        TPtrC8 name;
+        int total_size;
+
+        address allocator;
+        int heap_initial_size;
+        int heap_max_size;
+        int flags;
+    };
+
+    BRIDGE_FUNC(TInt, ThreadCreate, eka2l1::ptr<TDesC8> aThreadName, TOwnerType aOwnerType, eka2l1::ptr<thread_create_info_expand> aInfo) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        std::string thr_name = aThreadName.get(mem)->StdString(sys);
+        thread_create_info_expand *info = aInfo.get(mem);
+
+        uint32_t thr_handle = kern->create_thread(static_cast<kernel::owner_type>(aOwnerType), kern->crr_process(),
+            kernel::access_type::local_access, thr_name, info->func_ptr, info->user_stack_size,
+            info->heap_initial_size, info->heap_max_size, false, info->ptr, kernel::thread_priority::priority_normal);
+
+        if (thr_handle == INVALID_HANDLE) {
+            return KErrGeneral;
+        } else {
+            LOG_TRACE("Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", thr_name, 
+                info->func_ptr, info->user_stack_size);
+        }
+
+        kern->get_thread_by_handle(thr_handle)->owning_process(kern->crr_process());
+        return thr_handle;
+    }
+
     BRIDGE_FUNC(TInt, ThreadKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aReasonDes) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
@@ -837,6 +917,17 @@ namespace eka2l1::epoc {
 
         thread_ptr thr = kern->get_thread_by_handle(aHandle);
         return kern->mirror(thr->owning_process(), kernel::owner_type::thread);
+    }
+
+    BRIDGE_FUNC(void, ThreadResume, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return;
+        }
+
+        kern->get_thread_scheduler()->schedule(thr);
     }
 
     BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
@@ -1128,6 +1219,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x22, ServerReceive),
         BRIDGE_REGISTER(0x27, SessionShare),
+        BRIDGE_REGISTER(0x28, ThreadResume),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x3C, HandleName),
         BRIDGE_REGISTER(0x4D, SessionSendSync),
@@ -1135,12 +1227,15 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x4F, HalFunction),
         BRIDGE_REGISTER(0x6A, HandleClose),
         BRIDGE_REGISTER(0x64, ProcessType),
+        BRIDGE_REGISTER(0x68, ThreadCreate),
         BRIDGE_REGISTER(0x6B, ChunkCreate),
         BRIDGE_REGISTER(0x6C, ChunkAdjust),
         BRIDGE_REGISTER(0x6D, HandleOpenObject),
         BRIDGE_REGISTER(0x6E, HandleDuplicate),
         BRIDGE_REGISTER(0x70, SemaphoreCreate),
         BRIDGE_REGISTER(0x73, ThreadKill),
+        BRIDGE_REGISTER(0x74, ThreadLogon),
+        BRIDGE_REGISTER(0x75, ThreadLogonCancel),
         BRIDGE_REGISTER(0x76, DllSetTls),
         BRIDGE_REGISTER(0x77, DllFreeTLS),
         BRIDGE_REGISTER(0x78, ThreadRename),
@@ -1157,6 +1252,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9E, LibraryAttach),
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
+        BRIDGE_REGISTER(0xAC, MessageKill),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
         BRIDGE_REGISTER(0xC1, PropertyGetInt),

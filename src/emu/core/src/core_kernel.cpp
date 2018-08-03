@@ -263,10 +263,11 @@ namespace eka2l1 {
     uint32_t kernel_system::create_thread(kernel::owner_type owner, process_ptr own_pr, kernel::access_type access,
         const std::string &name, const address epa, const size_t stack_size,
         const size_t min_heap_size, const size_t max_heap_size,
+        bool initial,
         ptr<void> usrdata,
         kernel::thread_priority pri) {
         thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, own_pr, access,
-            name, epa, stack_size, min_heap_size, max_heap_size, usrdata, pri);
+            name, epa, stack_size, min_heap_size, max_heap_size, initial, usrdata, pri);
 
         objects.push_back(std::move(new_thread));
 
@@ -350,6 +351,14 @@ namespace eka2l1 {
         }
 
         return nullptr;
+    }
+
+    ipc_msg_ptr kernel_system::get_msg(int handle) {
+        if (msgs.size() <= handle) {
+            return nullptr;
+        }
+
+        return msgs[handle];
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
@@ -440,7 +449,7 @@ namespace eka2l1 {
     thread_ptr kernel_system::get_thread_by_name(const std::string &name) {
         auto thr_find = std::find_if(objects.begin(), objects.end(),
             [&](auto &obj) {
-                if (obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
+                if (obj && obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
                     return true;
                 }
             });
@@ -480,7 +489,7 @@ namespace eka2l1 {
     server_ptr kernel_system::get_server_by_name(const std::string name) {
         auto svr_find = std::find_if(objects.begin(), objects.end(),
             [&](auto &obj) {
-                if (obj->get_object_type() == kernel::object_type::server && obj->name() == name) {
+                if (obj && obj->get_object_type() == kernel::object_type::server && obj->name() == name) {
                     return true;
                 }
             });
@@ -594,7 +603,11 @@ namespace eka2l1 {
         kernel_obj_ptr target_obj;
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
-        if (info.handle_array_local) {
+        if (handle == 0xFFFF8000) {
+            target_obj = crr_process();
+        } else if (handle == 0xFFFF8001) {
+            target_obj = crr_thread();
+        } else if (info.handle_array_local) {
             // Use the thread to get the kernel object
             target_obj = own_thread->thread_handles.get_object(handle);
         } else {
@@ -685,7 +698,7 @@ namespace eka2l1 {
         }
 
         const auto &obj = std::find_if(objects.begin() + start, objects.end(),
-            [&](kernel_obj_ptr obj) { return (obj->name() == name) && (obj->get_object_type() == type); });
+            [&](kernel_obj_ptr obj) { return obj && (obj->name() == name) && (obj->get_object_type() == type); });
 
         if (obj != objects.end()) {
             handle_find_info.index = obj - objects.begin();

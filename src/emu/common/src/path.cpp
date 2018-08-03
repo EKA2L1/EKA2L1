@@ -257,7 +257,7 @@ namespace eka2l1 {
             return fn;
         }
 
-        for (size_t i = path.length() - 1; i >= 0; i--) {
+        for (int64_t i = path.length(); i >= 0; --i) {
             if (is_separator(path[i])) {
                 break;
             }

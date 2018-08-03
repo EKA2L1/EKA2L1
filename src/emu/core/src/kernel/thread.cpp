@@ -158,13 +158,22 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
-            ctx.pc = entry_point;
-            ctx.sp = stack_top;
-            ctx.cpsr = ((entry_point & 1) << 5);
-
+        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool initial) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
+
+            ctx.pc = entry_point;
+
+            if (!initial) {
+                ctx.pc = kern->get_lib_manager()->get_export_addr(4238211793); // Setup thread heap
+                ctx.lr = entry_point;
+
+                ctx.cpu_registers[1] = stack_top;
+                ctx.cpu_registers[0] = 0;
+            }
+
+            ctx.sp = stack_top;
+            ctx.cpsr = ((entry_point & 1) << 5);
         }
 
         void thread::create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, const address epa) {
@@ -199,6 +208,7 @@ namespace eka2l1 {
             kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
+            bool inital,
             ptr<void> usrdata,
             thread_priority pri)
             : wait_obj(kern, name, access)
@@ -257,7 +267,7 @@ namespace eka2l1 {
             std::fill(start, end, 0xcc);
             create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk_ptr->base().ptr_address(), epa);
 
-            reset_thread_ctx(epa, stack_top);
+            reset_thread_ctx(epa, stack_top, inital);
             scheduler = kern->get_thread_scheduler();
         }
 

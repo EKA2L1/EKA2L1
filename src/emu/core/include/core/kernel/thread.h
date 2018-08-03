@@ -143,7 +143,7 @@ namespace eka2l1 {
             uint32_t flags;
             ipc_msg_ptr sync_msg;
 
-            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top);
+            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool initial);
             void create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, address epa);
 
             int leave_depth = -1;
@@ -192,6 +192,7 @@ namespace eka2l1 {
             thread(kernel_system *kern, memory_system *mem, process_ptr owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
+                bool initial,
                 ptr<void> usrdata = 0,
                 thread_priority pri = priority_normal);
 

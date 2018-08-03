@@ -23,6 +23,8 @@
 
 #include <core/core_kernel.h>
 
+#include <common/log.h>
+
 namespace eka2l1 {
     namespace service {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
@@ -70,6 +72,8 @@ namespace eka2l1 {
             msg->request_sts = request_sts;
 
             send_receive(msg);
+
+            LOG_TRACE("Sending to {}", this->svr->name());
 
             return 0;
         }

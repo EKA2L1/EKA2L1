@@ -83,7 +83,7 @@ namespace eka2l1 {
                 struct dll_ref_table {
                     uint16_t flags;
                     uint16_t num_entries;
-                    uint32_t *rom_img_headers_ref;
+                    uint32_t rom_img_headers_ref[25];
                 };
 
                 std::function<void(loader::rom_image_header *)> fetch_romimg_entries = [&](loader::rom_image_header *header) {
