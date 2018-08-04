@@ -29,6 +29,7 @@ namespace eka2l1 {
     namespace service {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
             : svr(svr)
+            , cookie_address(0)
             , kernel_obj(kern, "", kernel::access_type::global_access) {
             obj_type = kernel::object_type::session;
 
@@ -175,6 +176,9 @@ namespace eka2l1 {
             server_msg smsg;
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
+            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>
+                (kern->get_kernel_obj_by_id(uid));
+            smsg.real_msg->session_ptr_lle = cookie_address;
 
             int deliver_success
                 = svr->deliver(smsg);
@@ -189,6 +193,9 @@ namespace eka2l1 {
 
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
+            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>
+                (kern->get_kernel_obj_by_id(uid));
+            smsg.real_msg->session_ptr_lle = cookie_address;
 
             return svr->deliver(smsg);
         }
@@ -200,6 +207,9 @@ namespace eka2l1 {
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
             smsg.real_msg->request_sts = nullptr; 
+            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>
+                (kern->get_kernel_obj_by_id(uid));
+            smsg.real_msg->session_ptr_lle = cookie_address;
 
             return svr->deliver(smsg);
         }

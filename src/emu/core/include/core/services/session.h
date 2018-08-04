@@ -53,6 +53,8 @@ namespace eka2l1 {
 
             std::vector<ipc_msg_ptr> msgs_pool;
 
+            uint32_t cookie_address;
+
         private:
             ipc_msg_ptr &get_free_msg();
 
@@ -68,6 +70,10 @@ namespace eka2l1 {
             int send_receive(int function, int *request_sts);
             int send(int function, ipc_arg args);
             int send(int function);
+
+            void set_cookie_address(const uint32_t addr) {
+                cookie_address = addr;
+            }
 
             /*! Send and receive an message synchronously */
             int send_receive_sync(ipc_msg_ptr &msg);
