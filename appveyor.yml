@@ -21,7 +21,7 @@ install:
 
 build_script:
   - appveyor AddMessage -Cagetory Information "Building EKA2L1 Core..."
-  - msbuild build\src\emu\EKA2L1.sln /maxcpucount:3  /p:Configuration=Release /p:Platform=x64
+  - msbuild build\src\EKA2L1.sln /maxcpucount:3  /p:Configuration=Release /p:Platform=x64
   - appveyor AddMessage -Category Information "Building EKA2L1 GUI..."
   - c:\newpascal\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\newpascal\lazarus
   - copy src\emu\lazarus\EKA2L1.exe build\bin\Release\EKA2L1.exe
