@@ -115,12 +115,14 @@ namespace eka2l1 {
 
             void finish_request_lle(ipc_msg_ptr &session_msg, bool notify_owner);
 
+            bool hle = false;
+
         protected:
             bool is_msg_delivered(ipc_msg_ptr &msg);
             bool ready();
 
         public:
-            server(system *sys, const std::string name);
+            server(system *sys, const std::string name, bool hle = false);
 
             void attach(session *svse) {
                 sessions.push_back(svse);
@@ -148,6 +150,10 @@ namespace eka2l1 {
 
             /*! Process an message asynchrounously */
             void process_accepted_msg();
+
+            bool is_hle() const {
+                return hle;
+            }
         };
     }
 }

@@ -44,8 +44,9 @@ namespace eka2l1 {
         }
 
         // Create a server with name
-        server::server(system *sys, const std::string name)
+        server::server(system *sys, const std::string name, bool hle)
             : sys(sys)
+            , hle(hle)
             , kernel_obj(sys->get_kernel_system(), name, kernel::access_type::global_access) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
@@ -86,6 +87,8 @@ namespace eka2l1 {
             msg.dest_msg->function = msg.real_msg->function;
             msg.dest_msg->request_sts = msg.real_msg->request_sts;
             msg.dest_msg->own_thr = msg.real_msg->own_thr;
+            msg.dest_msg->session_ptr_lle = msg.real_msg->session_ptr_lle;
+            msg.dest_msg->msg_session = msg.real_msg->msg_session;
 
             // Mark the client sending message as free
             kern->free_msg(msg.real_msg);
@@ -160,11 +163,13 @@ namespace eka2l1 {
         void server::finish_request_lle(ipc_msg_ptr &msg, bool notify_owner) {
             request_data->ipc_msg_handle = msg->id;
             request_data->flags = msg->args.flag;
+            request_data->function = msg->function;
+            request_data->session_ptr = msg->session_ptr_lle;
 
             std::copy(request_data->args, request_data->args + 4,
                 msg->args.args);
 
-            *request_status = 0;    // KErrNone
+            *request_status = 0; // KErrNone
 
             if (notify_owner) {
                 request_own_thread->signal_request();
@@ -182,10 +187,11 @@ namespace eka2l1 {
 
             int res = receive(msg);
 
+            request_status = msg_request_status;
+            request_own_thread = sys->get_kernel_system()->crr_thread();
+            request_data = data;
+
             if (res == -1) {
-                request_status = msg_request_status;
-                request_own_thread = sys->get_kernel_system()->crr_thread();
-                request_data = data;
                 request_msg = msg;
 
                 return;

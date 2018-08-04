@@ -179,7 +179,7 @@ namespace eka2l1 {
     }
 
     loader_server::loader_server(system *sys)
-        : service::server(sys, "!Loader") {
+        : service::server(sys, "!Loader", true) {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
         REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
     }

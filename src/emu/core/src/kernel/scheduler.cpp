@@ -89,6 +89,8 @@ namespace eka2l1 {
 
                 running_threads.push_back(crr_thread);
                 jitter->load_context(crr_thread->ctx);
+
+                LOG_TRACE("Thread {} run", crr_thread->name());
             } else {
                 // Nope
                 crr_thread = nullptr;
@@ -98,15 +100,15 @@ namespace eka2l1 {
         thread_ptr thread_scheduler::next_ready_thread() {
             thread_ptr crr = current_thread();
 
+            if (ready_threads.size() == 0) {
+                return nullptr;
+            }
+
             if (crr && crr->current_state() == thread_state::run) {
                 if (ready_threads.top()->current_real_priority() < crr->current_real_priority()) {
                     return crr;
                 }
 
-                return nullptr;
-            }
-
-            if (ready_threads.size() == 0) {
                 return nullptr;
             }
 

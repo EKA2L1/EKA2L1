@@ -90,6 +90,7 @@ namespace eka2l1 {
         int function;
         ipc_arg args;
         session_ptr msg_session;
+        int session_ptr_lle = 0;    // This should be null because the server check for it
 
         int *request_sts;
 

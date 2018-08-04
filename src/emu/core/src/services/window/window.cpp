@@ -69,7 +69,7 @@ namespace eka2l1 {
     const uint32_t default_sdvc_ptr = 0x4000ABDC;
 
     window_server::window_server(system *sys)
-        : service::server(sys, "!Windowserver")
+        : service::server(sys, "!Windowserver", true)
         , id_counter(0x400000) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");

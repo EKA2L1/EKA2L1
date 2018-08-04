@@ -134,7 +134,7 @@ namespace eka2l1 {
     }
 
     fs_server::fs_server(system *sys)
-        : service::server(sys, "!FileServer") {
+        : service::server(sys, "!FileServer", true) {
         REGISTER_IPC(fs_server, entry, EFsEntry, "Fs::Entry");
         REGISTER_IPC(fs_server, file_open, EFsFileOpen, "Fs::FileOpen");
         REGISTER_IPC(fs_server, file_size, EFsFileSize, "Fs::FileSize");

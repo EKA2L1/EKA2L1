@@ -346,6 +346,7 @@ namespace eka2l1 {
             }
 
             slot_free->get()->free = false;
+            slot_free->get()->id = slot_free - msgs.begin();
 
             return *slot_free;
         }
@@ -676,7 +677,11 @@ namespace eka2l1 {
 
         for (auto &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::server) {
-                svrs.push_back(std::dynamic_pointer_cast<service::server>(obj));
+                server_ptr svr = std::dynamic_pointer_cast<service::server>(obj);
+
+                if (svr->is_hle()) {
+                    svrs.push_back(svr);
+                }
             }
         }
 

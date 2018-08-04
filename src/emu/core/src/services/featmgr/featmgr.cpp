@@ -27,7 +27,7 @@
 
 namespace eka2l1 {
     featmgr_server::featmgr_server(system *sys)
-        : service::server(sys, "!FeatMgrServer") {
+        : service::server(sys, "!FeatMgrServer", true) {
         REGISTER_IPC(featmgr_server, feature_supported, EFeatMgrFeatureSupported, "FeatMgr::FeatureSupported");
     }
 
