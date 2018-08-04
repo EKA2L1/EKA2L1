@@ -288,6 +288,35 @@ namespace eka2l1::epoc {
     /* IPC */
     /*******************************************/
 
+    BRIDGE_FUNC(void, SetSessionPtr, TInt aMsgHandle, TUint aSessionAddress) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        ipc_msg_ptr msg = kern->get_msg(aMsgHandle);
+
+        if (!msg) {
+            return;
+        }
+
+        msg->msg_session->set_cookie_address(aSessionAddress);
+    }
+
+    BRIDGE_FUNC(TInt, MessageComplete, TInt aMsgHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        ipc_msg_ptr msg = kern->get_msg(aMsgHandle);
+
+        if (!msg) {
+            return KErrBadHandle;
+        }
+
+        *msg->request_sts = 0;
+        msg->own_thr->signal_request();
+
+        return KErrNone;
+    }
+
     BRIDGE_FUNC(TInt, MessageKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aCage) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
@@ -296,7 +325,8 @@ namespace eka2l1::epoc {
 
         switch (aExitType) {
         case TExitType::panic:
-            LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {}", exit_cage, aReason);
+            LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                aReason == 2 ? "(Session already connected)" : (aReason == 1) ? "(Session not connected)" : "(Bad message opcode)");
             break;
 
         case TExitType::kill:
@@ -346,6 +376,8 @@ namespace eka2l1::epoc {
         if (!server) {
             return;
         }
+
+        LOG_TRACE("Receive requested from {}", server->name());
 
         server->receive_async_lle(aRequestStatus.get(mem),
             reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
@@ -841,7 +873,7 @@ namespace eka2l1::epoc {
         if (thr_handle == INVALID_HANDLE) {
             return KErrGeneral;
         } else {
-            LOG_TRACE("Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", thr_name, 
+            LOG_TRACE("Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", thr_name,
                 info->func_ptr, info->user_stack_size);
         }
 
@@ -1218,10 +1250,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x22, ServerReceive),
+        BRIDGE_REGISTER(0x24, SetSessionPtr),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x3C, HandleName),
+        BRIDGE_REGISTER(0x42, MessageComplete),
         BRIDGE_REGISTER(0x4D, SessionSendSync),
         BRIDGE_REGISTER(0x4E, DllTls),
         BRIDGE_REGISTER(0x4F, HalFunction),
