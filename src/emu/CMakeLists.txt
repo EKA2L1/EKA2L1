@@ -34,15 +34,15 @@ if (WIN32)
 	add_custom_command(
 			TARGET EKA2L1_CONS
 			POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../external/unicorn/windows/unicorn.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../external/unicorn/windows/libgcc_s_seh-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../external/unicorn/windows/libwinpthread-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/unicorn.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libgcc_s_seh-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libwinpthread-1.dll" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
 endif()
 
 add_custom_command(
 	TARGET EKA2L1_CONS
 			POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/lazarus/comic.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/lazarus/comicbd.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/lazarus/comici.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/lazarus/comicz.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comic.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comicbd.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comici.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comicz.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
