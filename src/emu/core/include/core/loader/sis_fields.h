@@ -142,7 +142,7 @@ namespace eka2l1 {
 
         enum class sis_lang : uint16_t {
 #define LANG_DECL(x, y) x,
-#include "loader/lang.def"
+#include "core/loader/lang.def"
 #undef LANG_DECL
             total_lang
         };

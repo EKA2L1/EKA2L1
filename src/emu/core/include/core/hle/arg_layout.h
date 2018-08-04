@@ -36,7 +36,7 @@ namespace eka2l1 {
 		/*! \brief The layout of the argument in EABI */
         struct arg_layout {
             arg_where loc;
-            size_t offset;
+            uint32_t offset;
         };
 
         template <typename... args>

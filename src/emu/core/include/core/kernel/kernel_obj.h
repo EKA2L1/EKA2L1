@@ -27,102 +27,108 @@ namespace eka2l1 {
     class kernel_system;
 
     namespace kernel {
-        using uid = uint64_t;
-
+        /*! \brief Ownership type for handle */
         enum class owner_type {
-            kernel,  // Kernel has id of 0xDDDDDDDD
+            kernel, // Kernel has id of 0xDDDDDDDD
             process,
             thread
         };
 
+        /*! \brief Access type for handle. */
         enum class access_type {
+            //! Global access
+            /*! Any process can share and access this handle. */
             global_access,
+
+            //! Local access
+            /*! Only the current process can access this handle. */
             local_access
         };
 
+        /*! \brief HLE object type. */
         enum class object_type {
             thread,
+            process,
+            chunk,
+            library,
             sema,
             mutex,
             timer,
-            chunk
+            server,
+            session,
+            logical_device,
+            physical_device,
+            logical_channel,
+            change_notifier,
+            undertaker,
+            msg_queue,
+            prop
         };
 
         /*! \brief Base class for all kernel object. */
         class kernel_obj {
         protected:
-            std::string obj_name;
-            uid obj_id;
+            friend class kernel_system;
 
-            bool obj_user_closeable = true;
+            //! The name of the object
+            /*! Even local object will have a randomized name in here.
+            */
+            std::string obj_name;
 
             kernel_system *kern;
-            
-            // If the owner_type is process, this will contains the process index in the kernel
-            // Else, it will contains the thread's id
-            kernel::uid owner;
-            kernel::owner_type owner_type;
 
             access_type access;
             object_type obj_type;
 
-            kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner, 
+            kernel_obj(kernel_system *kern, const std::string &obj_name,
                 kernel::access_type access = access_type::local_access);
 
-            kernel_obj(kernel_system *kern, const uid obj_id, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner, 
-                kernel::access_type access = access_type::local_access)
-                : obj_id(obj_id)
-                , obj_name(obj_name)
-                , kern(kern)
-                , owner(owner)
-                , owner_type(owner_type) 
-                , access(access) {}
+            int access_count = 0;
+
+            uint64_t uid;
 
         public:
+            /*! \brief Get the name of the object.
+             * \returns Object name.
+            */
             std::string name() const {
                 return obj_name;
             }
 
-            uid unique_id() const {
-                return obj_id;
-            }
-
+            /*! \brief Get the kernel system that own this object. 
+                \returns The kernel system.
+            */
             kernel_system *get_kernel_object_owner() const {
                 return kern;
-            }
-
-            bool user_closeable() const {
-                return obj_user_closeable;
-            }
-
-            void user_closeable(bool opt) {
-                obj_user_closeable = opt;
-            }
-
-            kernel::uid obj_owner() const {
-                return owner;
-            }
-
-            kernel::owner_type get_owner_type() const {
-                return owner_type;
             }
 
             kernel::access_type get_access_type() const {
                 return access;
             }
 
+            void set_access_type(kernel::access_type acc) {
+                access = acc;
+            }
+
             object_type get_object_type() const {
                 return obj_type;
             }
 
-            void set_owner_type(kernel::owner_type new_owner) {
-                owner_type = new_owner;
+            void increase_access_count() { access_count++; }
+            void decrease_access_count() { access_count--;  };
+
+            int get_access_count() { return access_count; }
+
+            uint64_t unique_id() const {
+                return uid;
             }
 
-            void rename(const std::string &new_name) {
+            /*! \brief Rename the kernel object. 
+             * \param new_name The new name of object.
+             */
+            virtual void rename(const std::string &new_name) {
                 obj_name = new_name;
             }
         };
     }
 }
-

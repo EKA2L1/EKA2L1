@@ -1,16 +1,17 @@
-#include <arm/jit_dynarmic.h>
+#include <common/algorithm.h>
 #include <common/log.h>
 
-#include <core_timing.h>
+#include <core/arm/jit_dynarmic.h>
+
+#include <core/core_mem.h>
+#include <core/core_timing.h>
+#include <core/hle/libmanager.h>
 
 namespace eka2l1 {
     namespace arm {
         class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
             jit_dynarmic &parent;
             uint64_t interpreted = 0;
-
-            int routine_ticks = 1024;
-            int default_ticks = 1024;
 
             bool log_read = false;
             bool log_write = false;
@@ -20,13 +21,9 @@ namespace eka2l1 {
             explicit arm_dynarmic_callback(jit_dynarmic &parent)
                 : parent(parent) {}
 
-            void set_routine_ticks(int new_ticks) {
-                routine_ticks = new_ticks;
-                default_ticks = new_ticks;
-            }
-
             uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {
-                uint8_t ret = *parent.get_memory_sys()->get_addr<uint8_t>(addr);
+                uint8_t ret = 0;
+                parent.get_memory_sys()->read(addr, &ret, sizeof(uint8_t));
 
                 if (log_read) {
                     LOG_TRACE("[Dynarmic] Read uint8_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
@@ -36,7 +33,8 @@ namespace eka2l1 {
             }
 
             uint16_t MemoryRead16(Dynarmic::A32::VAddr addr) override {
-                uint16_t ret = *parent.get_memory_sys()->get_addr<uint16_t>(addr);
+                uint16_t ret = 0;
+                parent.get_memory_sys()->read(addr, &ret, sizeof(uint16_t));
 
                 if (log_read) {
                     LOG_TRACE("[Dynarmic] Read uint16_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
@@ -46,7 +44,8 @@ namespace eka2l1 {
             }
 
             uint32_t MemoryRead32(Dynarmic::A32::VAddr addr) override {
-                uint32_t ret = *parent.get_memory_sys()->get_addr<uint32_t>(addr);
+                uint32_t ret = 0;
+                parent.get_memory_sys()->read(addr, &ret, sizeof(uint32_t));
 
                 if (log_read) {
                     LOG_TRACE("[Dynarmic] Read uint32_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
@@ -56,7 +55,8 @@ namespace eka2l1 {
             }
 
             uint64_t MemoryRead64(Dynarmic::A32::VAddr addr) override {
-                uint64_t ret = *parent.get_memory_sys()->get_addr<uint64_t>(addr);
+                uint64_t ret = 0;
+                parent.get_memory_sys()->read(addr, &ret, sizeof(uint64_t));
 
                 if (log_read) {
                     LOG_TRACE("[Dynarmic] Read uint64_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
@@ -66,7 +66,7 @@ namespace eka2l1 {
             }
 
             void MemoryWrite8(Dynarmic::A32::VAddr addr, uint8_t value) override {
-                *parent.get_memory_sys()->get_addr<uint8_t>(addr) = value;
+                parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
                     LOG_TRACE("[Dynarmic] Write uint8_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
@@ -74,7 +74,7 @@ namespace eka2l1 {
             }
 
             void MemoryWrite16(Dynarmic::A32::VAddr addr, uint16_t value) override {
-                *parent.get_memory_sys()->get_addr<uint16_t>(addr) = value;
+                parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
                     LOG_TRACE("[Dynarmic] Write uint16_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
@@ -82,7 +82,7 @@ namespace eka2l1 {
             }
 
             void MemoryWrite32(Dynarmic::A32::VAddr addr, uint32_t value) override {
-                *parent.get_memory_sys()->get_addr<uint32_t>(addr) = value;
+                parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
                     LOG_TRACE("[Dynarmic] Write uint32_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
@@ -90,7 +90,7 @@ namespace eka2l1 {
             }
 
             void MemoryWrite64(Dynarmic::A32::VAddr addr, uint64_t value) override {
-                *parent.get_memory_sys()->get_addr<uint64_t>(addr) = value;
+                parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
                     LOG_TRACE("[Dynarmic] Write uint64_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
@@ -101,7 +101,7 @@ namespace eka2l1 {
                 jit_interface::thread_context context;
                 parent.save_context(context);
                 parent.fallback_jit.load_context(context);
-                parent.fallback_jit.execute_instructions(num_insts);
+                parent.fallback_jit.execute_instructions(static_cast<uint32_t>(num_insts));
                 parent.fallback_jit.save_context(context);
                 parent.load_context(context);
 
@@ -122,8 +122,8 @@ namespace eka2l1 {
             void CallSVC(uint32_t svc) override {
                 hle::lib_manager *mngr = parent.get_lib_manager();
 
-                if (svc == 0) {
-                    uint32_t val = *parent.get_memory_sys()->get_addr<uint32_t>(parent.get_pc() + 4);
+                if (svc == 0x900000) {
+                    uint32_t val = *reinterpret_cast<uint32_t *>(parent.get_memory_sys()->get_real_pointer(parent.get_pc() + 4));
                     bool res = mngr->call_hle(val);
 
                     if (!res) {
@@ -131,13 +131,13 @@ namespace eka2l1 {
                     }
 
                     return;
-                } else if (svc == 1) {
+                } else if (svc == 0x900001) {
                     // Custom call
-                    uint32_t val = *parent.get_memory_sys()->get_addr<uint32_t>(parent.get_pc() + 4);
+                    uint32_t val = *reinterpret_cast<uint32_t *>(parent.get_memory_sys()->get_real_pointer(parent.get_pc() + 4));
                     bool res = mngr->call_custom_hle(val);
 
                     return;
-                } else if (svc == 2) {
+                } else if (svc == 0x900002) {
                     uint32_t call_addr = parent.get_pc();
 
                     if (call_addr && parent.is_thumb_mode()) {
@@ -156,6 +156,8 @@ namespace eka2l1 {
                     return;
                 }
 
+                LOG_TRACE("Calling svc: 0x{:x}", svc);
+
                 bool res = mngr->call_svc(svc);
 
                 if (!res) {
@@ -165,25 +167,29 @@ namespace eka2l1 {
 
             void AddTicks(uint64_t ticks) override {
                 parent.get_timing_sys()->add_ticks(ticks - interpreted);
-                routine_ticks -= ticks + interpreted;
 
                 interpreted = 0;
             }
 
             uint64_t GetTicksRemaining() override {
-                uint64_t res = static_cast<uint64_t>(std::max(routine_ticks, 0));
-
-                if (res <= 0) {
-                    routine_ticks = default_ticks;
-                }
-
-                return res;
+                return eka2l1::common::max(parent.get_timing_sys()->get_downcount(), 0);
             }
         };
 
-        std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::unique_ptr<arm_dynarmic_callback> &callback) {
+        std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::array<uint8_t*, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> &pages, 
+            std::unique_ptr<arm_dynarmic_callback> &callback, page_table *table) {
             Dynarmic::A32::UserConfig config;
             config.callbacks = callback.get();
+
+            if (table) {
+                using config_table_array = decltype(*config.page_table);
+
+                for (size_t i = 0; i < table->pointers.size(); i++) {
+                    pages[i] = table->pointers[i].get();
+                }
+
+                config.page_table = &pages;
+            }
 
             return std::make_unique<Dynarmic::A32::Jit>(config);
         }
@@ -195,17 +201,10 @@ namespace eka2l1 {
             , lib_mngr(mngr)
             , fallback_jit(sys, mem, asmdis, mngr)
             , cb(std::make_unique<arm_dynarmic_callback>(*this)) {
-            jit = std::move(make_jit(cb));
+            jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
         }
 
         jit_dynarmic::~jit_dynarmic() {}
-
-        bool jit_dynarmic::execute_instructions(int num_instructions) {
-            cb->set_routine_ticks(num_instructions);
-            jit->Run();
-
-            return true;
-        }
 
         void jit_dynarmic::run() {
             jit->Run();
@@ -223,15 +222,15 @@ namespace eka2l1 {
             return jit->Regs()[idx];
         }
 
-        uint64_t jit_dynarmic::get_sp() {
+        uint32_t jit_dynarmic::get_sp() {
             return jit->Regs()[13];
         }
 
-        uint64_t jit_dynarmic::get_pc() {
+        uint32_t jit_dynarmic::get_pc() {
             return jit->Regs()[15];
         }
 
-        uint64_t jit_dynarmic::get_vfp(size_t idx) {
+        uint32_t jit_dynarmic::get_vfp(size_t idx) {
             return 0;
         }
 
@@ -239,7 +238,7 @@ namespace eka2l1 {
             jit->Regs()[idx] = val;
         }
 
-        void jit_dynarmic::set_pc(uint64_t val) {
+        void jit_dynarmic::set_pc(uint32_t val) {
             jit->Regs()[15] = val;
         }
 
@@ -247,15 +246,23 @@ namespace eka2l1 {
             jit->Regs()[13] = val;
         }
 
-        void jit_dynarmic::set_lr(uint64_t val) {
+        void jit_dynarmic::set_lr(uint32_t val) {
             jit->Regs()[14] = val;
         }
 
-        void jit_dynarmic::set_vfp(size_t idx, uint64_t val) {
+        void jit_dynarmic::set_vfp(size_t idx, uint32_t val) {
+        }
+
+        uint32_t jit_dynarmic::get_lr() {
+            return jit->Regs()[14];
         }
 
         uint32_t jit_dynarmic::get_cpsr() {
             return jit->Cpsr();
+        }
+
+        void jit_dynarmic::set_cpsr(uint32_t val) {
+            jit->SetCpsr(val);
         }
 
         void jit_dynarmic::save_context(thread_context &ctx) {
@@ -267,6 +274,7 @@ namespace eka2l1 {
 
             ctx.pc = get_pc();
             ctx.sp = get_sp();
+            ctx.lr = get_lr();
         }
 
         void jit_dynarmic::load_context(const thread_context &ctx) {
@@ -278,6 +286,7 @@ namespace eka2l1 {
 
             set_pc(ctx.pc);
             set_sp(ctx.sp);
+            set_lr(ctx.lr);
         }
 
         void jit_dynarmic::set_entry_point(address ep) {
@@ -307,6 +316,18 @@ namespace eka2l1 {
 
         void jit_dynarmic::imb_range(address start, uint32_t len) {
             jit->InvalidateCacheRange(start, len);
+        }
+
+        void jit_dynarmic::page_table_changed() {
+            jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
+        }
+
+        void jit_dynarmic::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
+            fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
+        }
+
+        void jit_dynarmic::unmap_memory(address addr, size_t size) {
+            fallback_jit.unmap_memory(addr, size);
         }
     }
 }

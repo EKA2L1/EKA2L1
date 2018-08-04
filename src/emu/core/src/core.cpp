@@ -17,13 +17,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <core.h>
-#include <process.h>
+#include <core/core.h>
+#include <core/kernel/process.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
-#include <disasm/disasm.h>
-#include <loader/eka2img.h>
+#include <common/log.h>
+#include <common/path.h>
+
+#include <core/disasm/disasm.h>
+
+#include <core/loader/eka2img.h>
+#include <core/loader/rpkg.h>
+
+#include <core/epoc/hal.h>
+
+#include <yaml-cpp/yaml.h>
+
+#include <fstream>
 
 namespace eka2l1 {
     void system::init() {
@@ -32,22 +42,30 @@ namespace eka2l1 {
         if (!already_setup)
             log::setup_log(nullptr);
 
+        load_configs();
+
         // Initialize all the system that doesn't depend on others first
         timing.init();
-        mem.init();
 
-        io.init(&mem);
+        io.init(&mem, get_symbian_version_use());
         mngr.init(&io);
         asmdis.init(&mem);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
+
+        mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
+            get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
+            get_symbian_version_use() <= epocver::epoc6 ? shared_data_end_eka1 - shared_data_eka1 : ram_code_addr - shared_data);
+
         emu_win = driver::new_emu_window(win_type);
         emu_screen_driver = driver::new_screen_driver(dr_type);
 
         kern.init(this, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
+
+        epoc::init_hal(this);
     }
 
-    process *system::load(uint64_t id) {
+    uint32_t system::load(uint32_t id) {
         emu_win->init("EKA2L1", vec2(360, 640));
         emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
 
@@ -55,59 +73,49 @@ namespace eka2l1 {
             exit = true;
         };
 
-        crr_process = kern.spawn_new_process(id);
+        uint32_t process_handle = kern.spawn_new_process(id);
 
-        if (crr_process == nullptr) {
-            return nullptr;
+        if (process_handle == INVALID_HANDLE) {
+            return INVALID_HANDLE;
         }
 
-        crr_process->run();
+        kern.run_process(process_handle);
 
+        // Change window title to game title
         emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
 
-        return crr_process;
+        if (!startup_inited) {
+            for (auto &startup_app : startup_apps) {
+                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), 0x123456);
+                kern.run_process(process);
+            }
+
+            startup_inited = true;
+        }
+
+        return process_handle;
     }
 
     int system::loop() {
-        auto prepare_reschedule = [&]() {
-            cpu->prepare_rescheduling();
-            reschedule_pending = true;
-        };
-
         if (kern.crr_thread() == nullptr) {
             timing.idle();
             timing.advance();
             prepare_reschedule();
         } else {
             timing.advance();
-
-            uint32_t ticks = 0;
-            uint32_t downcount = timing.get_downcount();
-
-            while (ticks < downcount && !exit && kern.crr_thread() != nullptr) {
-                emu_screen_driver->begin_render();
-
-                cpu->execute_instructions(2048);
-                ticks += 2048;
-
-                emu_screen_driver->end_render();
-            }
+            cpu->run();
         }
 
-        if (!exit) {
+        if (!kern.should_terminate()) {
+            kern.processing_requests();
             kern.reschedule();
+
             reschedule_pending = false;
         } else {
-            if (kern.crr_process()) {
-                kern.close_process(kern.crr_process());
-			}
-		}
-
-        if (kern.crr_thread() == nullptr) {
             emu_screen_driver->shutdown();
             emu_win->shutdown();
 
-			kern.close_process(kern.crr_process());
+            kern.crr_process().reset();
 
             exit = true;
             return 0;
@@ -127,10 +135,9 @@ namespace eka2l1 {
             return false;
         }
 
-        romf = romf_res.value();
-        io.mount_rom("Z:", &romf);
+        romf = *romf_res;
 
-        bool res1 = mem.load_rom(romf.header.rom_base, path);
+        bool res1 = mem.map_rom(romf.header.rom_base, path);
 
         if (!res1) {
             return false;
@@ -149,8 +156,8 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system::mount(availdrive drv, std::string path) {
-        io.mount(((drv == availdrive::c) ? "C:" : "E:"), path);
+    void system::mount(availdrive drv, std::string path, bool in_mem) {
+        io.mount(((drv == availdrive::c) ? "C:" : ((drv == availdrive::z) ? "Z:" : "E:")), path, in_mem);
     }
 
     void system::request_exit() {
@@ -158,10 +165,73 @@ namespace eka2l1 {
         exit = true;
     }
 
-	void system::reset() {
+    void system::reset() {
         exit = false;
         emu_screen_driver->reset();
         hlelibmngr.reset();
-	}
-}
+    }
 
+    bool system::install_rpkg(const std::string &path) {
+        std::atomic_int holder;
+        return loader::install_rpkg(&io, path, holder);
+    }
+
+    void system::write_configs() {
+        YAML::Emitter emitter;
+        emitter << YAML::BeginMap;
+
+        for (auto & [ name, op ] : bool_configs) {
+            emitter << YAML::Key << name << YAML::Value << op;
+        }
+
+        emitter << YAML::Key << "startup" << YAML::Value << YAML::BeginDoc;
+
+        for (const auto &app : startup_apps) {
+            emitter << app;
+        }
+
+        emitter << YAML::EndDoc;
+
+        emitter << YAML::EndMap;
+
+        std::ofstream out("coreconfig.yml");
+        out << emitter.c_str();
+    }
+
+    void system::load_configs() {
+        try {
+            YAML::Node node = YAML::LoadFile("coreconfig.yml");
+
+            for (auto const &subnode : node) {
+                if (subnode.first.as<std::string>() == "startup") {
+                    for (const auto &startup_app : subnode.second) {
+                        startup_apps.push_back(startup_app.as<std::string>());
+                    }
+
+                    continue;
+                }
+
+                bool_configs.emplace(subnode.first.as<std::string>(), subnode.second.as<bool>());
+            }
+
+        } catch (...) {
+            LOG_WARN("Loading CORE config incompleted due to an exception. Use default");
+
+            bool_configs.emplace("log_code", false);
+            bool_configs.emplace("log_passed", false);
+            bool_configs.emplace("log_write", false);
+            bool_configs.emplace("log_read", false);
+            bool_configs.emplace("log_exports", false);
+
+            write_configs();
+        }
+    }
+
+    void system::add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com) {
+        hals.emplace(hal_cagetory, std::move(hal_com));
+    }
+
+    hal_ptr system::get_hal(uint32_t cagetory) {
+        return hals[cagetory];
+    }
+}

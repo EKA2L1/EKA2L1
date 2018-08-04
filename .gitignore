@@ -8,3 +8,6 @@ src/emu/lazarus/backup/*
 src/emu/lazarus/lib/*
 src/emu/lazarus/drives/*
 src/emu/lazarus/*.dll
+docs
+CMakeSettings.json
+.vscode

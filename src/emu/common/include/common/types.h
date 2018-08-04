@@ -22,6 +22,7 @@
 #include <string>
 
 #define FOUND_STR(x) x != std::string::npos
+#define INVALID_HANDLE 0xFFFFFFFF
 
 typedef std::u16string utf16_str;
 typedef uint32_t address;
@@ -41,10 +42,13 @@ enum class prot {
     read_write_exec = 6
 };
 
+// This can be changed manually
 enum class epocver {
     epocu6,
-    epoc6,
-    epoc9
+    epoc6,    // Epoc 6.0
+    epoc93,   // Epoc 9.3
+    epoc9,    // Epoc 9.4
+    epoc10
 };
 
 int translate_protection(prot cprot);

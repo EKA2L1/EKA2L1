@@ -17,18 +17,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <core_kernel.h>
-#include <kernel/kernel_obj.h>
+#include <core/core_kernel.h>
+#include <core/kernel/kernel_obj.h>
 
 namespace eka2l1 {
     namespace kernel {
-        kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::owner_type owner_type, kernel::uid owner, kernel::access_type access)
+        kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::access_type access)
             : obj_name(obj_name)
             , kern(kern)
-            , owner_type(owner_type)
-            , owner(owner)
-            , access(access) {
-            obj_id = kern->next_uid();
+            , access(access)
+            , uid(kern->next_uid()) {
         }
     }
 }

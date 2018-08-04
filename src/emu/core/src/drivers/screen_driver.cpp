@@ -1,5 +1,5 @@
-#include <drivers/screen_driver.h>
-#include <drivers/backend/screen_driver_gl.h>
+#include <core/drivers/screen_driver.h>
+#include <core/drivers/backend/ogl/screen_driver_ogl.h>
 
 namespace eka2l1 {
     namespace driver {

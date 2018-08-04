@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <arm/jit_factory.h>
-#include <ptr.h>
+#include <core/arm/jit_factory.h>
+#include <core/ptr.h>
 
 namespace eka2l1 {
     namespace hle {

@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include <kernel/kernel_obj.h>
-#include <kernel/thread.h>
-#include <kernel/wait_obj.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/kernel/thread.h>
+#include <core/kernel/wait_obj.h>
 
-#include <ipc.h>
+#include <core/ipc.h>
 
 #include <functional>
 #include <map>
@@ -53,20 +53,27 @@ namespace eka2l1 {
 
             std::vector<ipc_msg_ptr> msgs_pool;
 
+            uint32_t cookie_address;
+
         private:
             ipc_msg_ptr &get_free_msg();
 
         public:
             session(kernel_system *kern, server_ptr svr, int async_slot_count);
 
-            void prepare_close();
+            void prepare_destroy();
 
+            int send_receive_sync(int function, ipc_arg args, int *request_sts);
             int send_receive_sync(int function, ipc_arg args);
             int send_receive_sync(int function);
             int send_receive(int function, ipc_arg args, int *request_sts);
             int send_receive(int function, int *request_sts);
             int send(int function, ipc_arg args);
             int send(int function);
+
+            void set_cookie_address(const uint32_t addr) {
+                cookie_address = addr;
+            }
 
             /*! Send and receive an message synchronously */
             int send_receive_sync(ipc_msg_ptr &msg);

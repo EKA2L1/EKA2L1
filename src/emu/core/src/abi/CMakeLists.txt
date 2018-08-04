@@ -3,7 +3,7 @@ add_library(abi
     eabi.cpp
     mangler.cpp)
 
-target_include_directories(abi PUBLIC ${CORE_INCLUDE_DIR})
+target_include_directories(abi PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 target_link_libraries(abi PRIVATE common)
 
 if (MSVC)

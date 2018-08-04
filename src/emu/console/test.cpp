@@ -1,5 +1,7 @@
 #include <core/core_api.h>
-#include <loader/sis_old.h>
+
+#include <core/loader/rpkg.h>
+#include <core/loader/sis_old.h>
 
 int main() {
     int sys = create_symbian_system(GLFW, OPENGL, CPU_UNICORN);
@@ -8,10 +10,9 @@ int main() {
 
     mount_symbian_system(sys, "C:", "drives/c/");
     mount_symbian_system(sys, "E:", "drives/e/");
+    mount_symbian_system(sys, "Z:", "drives/z/");
 
-    load_rom(sys, "SYM6.ROM");
-
-    install_sis(sys, 0, "floatingduck_gcce.sisx");
+    install_sis(sys, 0, "pocket.sis");
 
     shutdown_symbian_system(sys);
     free_symbian_system(sys);

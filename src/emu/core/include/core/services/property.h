@@ -1,7 +1,27 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <kernel/kernel_obj.h>
-#include <ptr.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/ptr.h>
 
 #include <array>
 #include <vector>
@@ -57,8 +77,27 @@ namespace eka2l1 {
 			*/
             bool set(uint8_t *data, uint32_t arr_length);
 
+            template <typename T>
+            bool set(T data) {
+                return set(reinterpret_cast<uint8_t*>(&data), sizeof(T));
+            }
+
             int get_int();
             std::vector<uint8_t> get_bin();
+
+            template <typename T>
+            std::optional<T> get_pkg() {
+                auto bin = get_bin();
+                
+                if (bin.size() != sizeof(T)) {
+                    return std::optional<T>{};
+                }
+
+                T ret;
+                memcpy(&ret, bin.data(), bin.size());
+
+                return ret;
+            }
 
 			/*! \brief Notify the request that there is data change */
             void notify_request();

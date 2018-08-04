@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <kernel/kernel_obj.h>
-#include <services/context.h>
-#include <services/session.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/services/context.h>
+#include <core/services/session.h>
 
 #include <functional>
 #include <queue>
@@ -53,7 +53,8 @@ namespace eka2l1 {
             std::string name;
 
             ipc_func(std::string iname, ipc_func_wrapper wr)
-                : name(std::move(iname)), wrapper(wr) {}
+                : name(std::move(iname))
+                , wrapper(wr) {}
         };
 
         /*! \brief A class represents server message. 
@@ -69,6 +70,16 @@ namespace eka2l1 {
             }
         };
 
+        struct message2 {
+            int ipc_msg_handle;
+            int function;
+            int args[4];
+            int spare1;
+            int session_ptr;
+            int flags;
+            int spare3;
+        };
+
         /*! \brief An IPC HLE server.
          * 
          *  The server can receive an message or receive them whenever they want.
@@ -81,26 +92,43 @@ namespace eka2l1 {
             /** Messages that has been delivered but not accepted yet */
             std::vector<server_msg> delivered_msgs;
 
-            std::unordered_map<uint32_t, ipc_func> ipc_funcs;
+            std::unordered_map<int, ipc_func> ipc_funcs;
+
+            system *sys;
 
             /** The thread own this server */
             thread_ptr owning_thread;
-            system *sys;
 
             /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
 
+            // These provides version in order to connect to the server
+            // Security layer is ignored rn.
+            void connect(service::ipc_context ctx);
+            void disconnect(service::ipc_context ctx);
+
+            int *request_status = nullptr;
+            message2 *request_data = nullptr;
+
+            thread_ptr request_own_thread;
+            ipc_msg_ptr request_msg;
+
+            void finish_request_lle(ipc_msg_ptr &session_msg, bool notify_owner);
+
+            bool hle = false;
+
         protected:
             bool is_msg_delivered(ipc_msg_ptr &msg);
+            bool ready();
 
         public:
-            server(system *sys, const std::string name);
+            server(system *sys, const std::string name, bool hle = false);
 
             void attach(session *svse) {
                 sessions.push_back(svse);
             }
 
-            void destroy();
+            virtual void destroy();
 
             /*! Receive the message */
             int receive(ipc_msg_ptr &msg);
@@ -114,10 +142,18 @@ namespace eka2l1 {
             /*! Cancel a message in the delivered queue */
             int cancel();
 
+            void receive_async_lle(int *request_status, message2 *data);
+
+            void cancel_async_lle();
+
             void register_ipc_func(uint32_t ordinal, ipc_func func);
 
             /*! Process an message asynchrounously */
             void process_accepted_msg();
+
+            bool is_hle() const {
+                return hle;
+            }
         };
     }
 }

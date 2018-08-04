@@ -64,8 +64,6 @@ namespace eka2l1 {
             uint32_t dll_ref_table_address;
             int32_t export_dir_count;
             uint32_t export_dir_address;
-            uint32_t code_checksum;
-            uint32_t data_checksum;
             rom_vsec_info sec_info;
             uint8_t major;
             uint8_t minor;
@@ -86,7 +84,6 @@ namespace eka2l1 {
         };
 
         std::optional<romimg> parse_romimg(symfile &file, memory_system *mem);
-        bool stub_romimg(romimg &img, memory_system *mem, disasm *asmdis, hle::lib_manager);
     }
 }
 

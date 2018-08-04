@@ -19,23 +19,27 @@
  */
 #pragma once
 
-#include <arm/jit_interface.h>
-#include <kernel/chunk.h>
-#include <kernel/kernel_obj.h>
-#include <kernel/mutex.h>
-#include <kernel/scheduler.h>
-#include <kernel/sema.h>
-#include <kernel/timer.h>
+#include <core/arm/jit_interface.h>
+#include <core/kernel/change_notifier.h>
+#include <core/kernel/chunk.h>
+#include <core/kernel/kernel_obj.h>
+#include <core/kernel/library.h>
+#include <core/kernel/mutex.h>
+#include <core/kernel/object_ix.h>
 
-#include <services/property.h>
-#include <services/server.h>
-#include <services/session.h>
+#include <core/kernel/process.h>
+#include <core/kernel/scheduler.h>
+#include <core/kernel/sema.h>
+#include <core/kernel/timer.h>
+
+#include <core/services/property.h>
+#include <core/services/server.h>
+#include <core/services/session.h>
 
 #include <common/hash.h>
 
-#include <ipc.h>
-#include <process.h>
-#include <ptr.h>
+#include <core/ipc.h>
+#include <core/ptr.h>
 
 #include <atomic>
 #include <map>
@@ -56,47 +60,35 @@ namespace eka2l1 {
     }
 
     using thread_ptr = std::shared_ptr<kernel::thread>;
-    using process_ptr = std::shared_ptr<eka2l1::process>;
+    using process_ptr = std::shared_ptr<kernel::process>;
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
     using sema_ptr = std::shared_ptr<kernel::semaphore>;
     using timer_ptr = std::shared_ptr<kernel::timer>;
     using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
-
+    using change_notifier_ptr = std::shared_ptr<kernel::change_notifier>;
     using property_ptr = std::shared_ptr<service::property>;
+    using library_ptr = std::shared_ptr<kernel::library>;
 
     using prop_ident_pair = std::pair<int, int>;
+
+    struct find_handle {
+        int index;
+        uint64_t object_id;
+    };
 
     class kernel_system {
         friend class process;
 
-        std::atomic<kernel::uid> crr_uid;
-
-        // Message is not based on kernel object, it should have its own id counter.
-        std::atomic<kernel::uid> msg_crr_uid;
-
-        kernel::uid crr_process_id;
-
         /* Kernel objects map */
-
-        std::map<kernel::uid, thread_ptr> threads;
-        std::map<kernel::uid, chunk_ptr> chunks;
-        std::map<kernel::uid, mutex_ptr> mutexes;
-        std::map<kernel::uid, sema_ptr> semas;
-        std::map<kernel::uid, timer_ptr> timers;
-        std::map<kernel::uid, session_ptr> sessions;
-        std::map<kernel::uid, server_ptr> servers;
-        std::map<kernel::uid, property_ptr> properties;
-
         std::unordered_map<prop_ident_pair, int *> prop_request_queue;
-        std::unordered_map<kernel::uid, ipc_msg_ptr> msgs;
+        std::array<ipc_msg_ptr, 0x80> msgs;
 
         /* End kernel objects map */
-
         std::mutex mut;
         std::shared_ptr<kernel::thread_scheduler> thr_sch;
 
-        std::map<uint32_t, process_ptr> processes;
+        std::vector<kernel_obj_ptr> objects;
 
         timing_system *timing;
         manager_system *mngr;
@@ -108,7 +100,24 @@ namespace eka2l1 {
         /* Contains the EPOC version */
         epocver kern_ver = epocver::epoc9;
 
+        //! Handles for some globally shared processes
+        kernel::object_ix kernel_handles;
+
+        uint32_t create_handle_lastest(kernel::owner_type owner);
+
+        mutable std::atomic<uint64_t> uid_counter;
+
     public:
+        uint64_t next_uid() const;
+
+        memory_system *get_memory_system() {
+            return mem;
+        }
+
+        hle::lib_manager *get_lib_manager() {
+            return libmngr;
+        }
+
         void init(system *esys, timing_system *sys, manager_system *mngrsys,
             memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::jit_interface *cpu);
 
@@ -118,9 +127,8 @@ namespace eka2l1 {
             return thr_sch;
         }
 
-        process_ptr get_process(uint32_t uid) {
-            return processes[uid];
-        }
+        process_ptr get_process(std::string &name);
+        process_ptr get_process(uint32_t handle);
 
         void reschedule() {
             thr_sch->reschedule();
@@ -130,9 +138,7 @@ namespace eka2l1 {
             thr_sch->unschedule_wakeup();
         }
 
-        void unschedule(kernel::uid thread_id) {
-            thr_sch->unschedule(thread_id);
-        }
+        void processing_requests();
 
         epocver get_epoc_version() const {
             return kern_ver;
@@ -143,107 +149,117 @@ namespace eka2l1 {
             kern_ver = ver;
         }
 
-        kernel::uid next_uid();
-        kernel::uid get_id_base_owner(kernel::owner_type owner) const;
+        void prepare_reschedule();
 
         // Create a chunk with these condition
-        chunk_ptr create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
+        uint32_t create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
             kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib,
-            kernel::owner_type owner,
-            int64_t owner_id = -1);
+            kernel::owner_type owner);
 
-        thread_ptr add_thread(kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+        uint32_t create_thread(kernel::owner_type owner, process_ptr own_pr, kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
-            ptr<void> usrdata = nullptr,
+            bool initial,
+            ptr<void> usrdata = 0,
             kernel::thread_priority pri = kernel::priority_normal);
 
-        mutex_ptr create_mutex(std::string name, bool init_locked,
+        uint32_t create_mutex(std::string name, bool init_locked,
             kernel::owner_type own,
-            kernel::uid own_id = -1,
             kernel::access_type access = kernel::access_type::local_access);
 
-        sema_ptr create_sema(std::string sema_name,
+        uint32_t create_sema(std::string sema_name,
             int32_t init_count,
             int32_t max_count,
             kernel::owner_type own_type,
-            kernel::uid own_id = -1,
             kernel::access_type access = kernel::access_type::local_access);
 
-        timer_ptr create_timer(std::string name, kernel::reset_type rt,
+        uint32_t create_timer(std::string name, kernel::reset_type rt,
             kernel::owner_type owner,
-            kernel::uid own_id = -1,
             kernel::access_type access = kernel::access_type::local_access);
 
-        server_ptr create_server(std::string name);
-        session_ptr create_session(server_ptr cnn_svr, int async_slots);
+        uint32_t create_change_notifier(kernel::owner_type owner);
 
-        void add_custom_server(server_ptr svr) {
-            servers.emplace(svr->unique_id(), std::move(svr));
-        }
+        uint32_t create_server(std::string name);
+        uint32_t create_session(server_ptr cnn_svr, int async_slots);
 
-        session_ptr get_session(kernel::uid id);
+        uint32_t create_process(uint32_t uid,
+            const std::string &process_name, const std::u16string &exe_path,
+            const std::u16string &cmd_args, loader::e32img_ptr &img,
+            const kernel::process_priority pri = kernel::process_priority::foreground,
+            kernel::owner_type own = kernel::owner_type::process);
 
-        server_ptr get_server(kernel::uid id);
-        server_ptr get_server_by_name(const std::string name);
+        uint32_t create_process(uint32_t uid,
+            const std::string &process_name, const std::u16string &exe_path,
+            const std::u16string &cmd_args, loader::romimg_ptr &img,
+            const kernel::process_priority pri = kernel::process_priority::foreground,
+            kernel::owner_type own = kernel::owner_type::process);
 
-        /*! \brief Create an IPC message. 
-         *
-         * First, look up to see if there is any messsage free to use. Mark message found as not free and return it.
-         * If there isn't any free message, create a new one and store it in an unordered map.
-        */
+        uint32_t create_library(const std::string &name, loader::romimg_ptr &img,
+            kernel::owner_type own = kernel::owner_type::process);
+
+        uint32_t create_library(const std::string &name, loader::e32img_ptr &img,
+            kernel::owner_type own = kernel::owner_type::process);
+
         ipc_msg_ptr create_msg(kernel::owner_type owner);
+        ipc_msg_ptr get_msg(int handle);
 
-        /*! \brief Create a property. 
-         *
-         *  This property created will be added to a map. When a static RProperty::Get method is called,
-         * it search the cagetory and key pair tied in the map. Note that this implementation is lacking
-         * platform security intended in 9.x version of Symbian. Should be in TODO list ;) .
-        */
-        property_ptr create_prop(service::property_type pt, uint32_t pre_allocated);
-        void delete_prop(property_ptr prop);
-
-        /*! \brief Free a message. */
         void free_msg(ipc_msg_ptr msg);
 
         /*! \brief Completely destroy a message. */
         void destroy_msg(ipc_msg_ptr msg);
 
-        bool close_chunk(kernel::uid id);
-        bool close_thread(kernel::uid id);
-        bool close_timer(kernel::uid id);
-        bool close_sema(kernel::uid id);
-        bool close_mutex(kernel::uid id);
-        bool close_session(kernel::uid id);
+        uint32_t create_prop(service::property_type pt, uint32_t pre_allocated);
 
-        bool close(kernel::uid id);
+        /* Fast duplication, unsafe */
+        uint32_t mirror(thread_ptr own_thread, uint32_t handle, kernel::owner_type owner);
+        uint32_t mirror(kernel_obj_ptr obj, kernel::owner_type owner);
 
-        void set_closeable(kernel::uid id, bool opt);
-        bool get_closeable(kernel::uid id);
+        uint32_t open_handle(kernel_obj_ptr obj, kernel::owner_type owner);
 
-        kernel_obj_ptr get_kernel_obj(kernel::uid id);
+        std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type);
+
+        void add_custom_server(server_ptr svr) {
+            objects.push_back(std::move(std::dynamic_pointer_cast<kernel::kernel_obj>(svr)));
+        }
+
+        bool destroy(kernel_obj_ptr obj);
+        bool close(uint32_t handle);
+
+        kernel_obj_ptr get_kernel_obj(uint32_t handle);
+        kernel_obj_ptr get_kernel_obj_by_id(uint64_t id);
+
         thread_ptr get_thread_by_name(const std::string &name);
+        thread_ptr kernel_system::get_thread_by_handle(uint32_t handle);
 
-        bool run_thread(kernel::uid thr);
+        session_ptr get_session(uint32_t handle);
 
-        process *spawn_new_process(std::string &path, std::string name, uint32_t uid);
-        process *spawn_new_process(uint32_t uid);
+        server_ptr get_server(uint32_t handle);
+        server_ptr get_server_by_name(const std::string name);
 
-        bool close_process(process *pr);
-        bool close_process(const kernel::uid id);
-        bool close_all_processes();
+        std::vector<thread_ptr> get_all_thread_own_process(process_ptr pr);
+
+        bool run_thread(uint32_t handle);
+        bool run_process(uint32_t handle);
+
+        uint32_t spawn_new_process(std::string &path, std::string name, uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
+        uint32_t spawn_new_process(uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
+
+        bool destroy_process(process_ptr pr);
+        bool destroy_process(const kernel::uid id);
+        bool destroy_all_processes();
 
         bool notify_prop(prop_ident_pair ident);
         bool subscribe_prop(prop_ident_pair ident, int *request_sts);
         bool unsubscribe_prop(prop_ident_pair ident);
 
         property_ptr get_prop(int cagetory, int key); // Get property by category and key
-        property_ptr get_prop(kernel::uid id);
-
-        kernel::uid crr_process() const {
-            return crr_process_id;
-        }
+        property_ptr get_prop(uint32_t handle);
 
         thread_ptr crr_thread();
+        process_ptr crr_process();
+
+        void set_handle_owner_type(int handle);
+
+        bool should_terminate();
     };
 }

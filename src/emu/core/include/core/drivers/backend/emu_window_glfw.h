@@ -23,9 +23,10 @@
 #include <Windows.h>
 #endif
 
-#include <glad/glad.h>
-#include <drivers/emu_window.h>
+#include <core/drivers/emu_window.h>
 #include <common/vecx.h>
+
+#include <glad/glad.h>
 #include <glfw/glfw3.h>
 
 #include <functional>

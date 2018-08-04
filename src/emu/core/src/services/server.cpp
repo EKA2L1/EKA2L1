@@ -1,9 +1,37 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <common/log.h>
-#include <core.h>
-#include <services/server.h>
+#include <core/core.h>
+#include <core/services/server.h>
 
 namespace eka2l1 {
     namespace service {
+        void server::connect(service::ipc_context ctx) {
+            ctx.set_request_status(0);
+        }
+
+        void server::disconnect(service::ipc_context ctx) {
+            ctx.set_request_status(0);
+        }
+
         bool server::is_msg_delivered(ipc_msg_ptr &msg) {
             auto &res = std::find_if(delivered_msgs.begin(), delivered_msgs.end(),
                 [&](const auto &svr_msg) { return svr_msg.real_msg->id == msg->id; });
@@ -16,11 +44,17 @@ namespace eka2l1 {
         }
 
         // Create a server with name
-        server::server(system *sys, const std::string name)
+        server::server(system *sys, const std::string name, bool hle)
             : sys(sys)
-            , kernel_obj(sys->get_kernel_system(), name, kernel::owner_type::process, 0) {
+            , hle(hle)
+            , kernel_obj(sys->get_kernel_system(), name, kernel::access_type::global_access) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
+
+            obj_type = kernel::object_type::server;
+
+            REGISTER_IPC(server, connect, -1, "Server::Connect");
+            REGISTER_IPC(server, disconnect, -2, "Server::Disconnect");
         }
 
         int server::receive(ipc_msg_ptr &msg) {
@@ -32,9 +66,11 @@ namespace eka2l1 {
 
                 accept(yet_pending);
                 delivered_msgs.pop_back();
+
+                return 0;
             }
 
-            return 0;
+            return -1;
         }
 
         int server::accept(server_msg msg) {
@@ -51,8 +87,8 @@ namespace eka2l1 {
             msg.dest_msg->function = msg.real_msg->function;
             msg.dest_msg->request_sts = msg.real_msg->request_sts;
             msg.dest_msg->own_thr = msg.real_msg->own_thr;
-            msg.dest_msg->owner_id = msg.real_msg->owner_id;
-            msg.dest_msg->owner_type = msg.real_msg->owner_type;
+            msg.dest_msg->session_ptr_lle = msg.real_msg->session_ptr_lle;
+            msg.dest_msg->msg_session = msg.real_msg->msg_session;
 
             // Mark the client sending message as free
             kern->free_msg(msg.real_msg);
@@ -60,10 +96,17 @@ namespace eka2l1 {
             return 0;
         }
 
+        bool server::ready() {
+            return request_status && request_data;
+        }
+
         int server::deliver(server_msg msg) {
             // Is ready
-            if (msg.is_ready()) {
+            if (ready()) {
+                msg.dest_msg = request_msg;
                 accept(msg);
+
+                finish_request_lle(msg.dest_msg, true);
             } else {
                 delivered_msgs.push_back(msg);
             }
@@ -84,7 +127,11 @@ namespace eka2l1 {
         // Processed asynchronously, use for HLE service where accepted function
         // is fetched imm
         void server::process_accepted_msg() {
-            receive(process_msg);
+            int res = receive(process_msg);
+
+            if (res == -1) {
+                return;
+            }
 
             int func = process_msg->function;
 
@@ -92,6 +139,10 @@ namespace eka2l1 {
 
             if (func_ite == ipc_funcs.end()) {
                 LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
+
+                // Signal request semaphore, to tell everyone that it has finished random request
+                process_msg->own_thr->signal_request();
+
                 return;
             }
 
@@ -106,7 +157,61 @@ namespace eka2l1 {
         }
 
         void server::destroy() {
-            sys->get_kernel_system()->destroy_msg(process_msg);
+            sys->get_kernel_system()->free_msg(process_msg);
+        }
+
+        void server::finish_request_lle(ipc_msg_ptr &msg, bool notify_owner) {
+            request_data->ipc_msg_handle = msg->id;
+            request_data->flags = msg->args.flag;
+            request_data->function = msg->function;
+            request_data->session_ptr = msg->session_ptr_lle;
+
+            std::copy(request_data->args, request_data->args + 4,
+                msg->args.args);
+
+            *request_status = 0; // KErrNone
+
+            if (notify_owner) {
+                request_own_thread->signal_request();
+            }
+
+            request_data = nullptr;
+            request_own_thread = nullptr;
+            request_status = nullptr;
+        }
+
+        void server::receive_async_lle(int *msg_request_status, message2 *data) {
+            ipc_msg_ptr msg = sys->get_kernel_system()->create_msg(kernel::owner_type::process);
+
+            msg->free = false;
+
+            int res = receive(msg);
+
+            request_status = msg_request_status;
+            request_own_thread = sys->get_kernel_system()->crr_thread();
+            request_data = data;
+
+            if (res == -1) {
+                request_msg = msg;
+
+                return;
+            }
+
+            finish_request_lle(msg, false);
+        }
+
+        void server::cancel_async_lle() {
+            *request_status = -3; // KErrCancel
+
+            request_own_thread->signal_request();
+
+            request_data = nullptr;
+            request_own_thread = nullptr;
+            request_status = nullptr;
+
+            sys->get_kernel_system()->free_msg(request_msg);
+
+            request_msg = nullptr;
         }
     }
 }

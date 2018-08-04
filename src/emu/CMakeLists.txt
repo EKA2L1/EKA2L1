@@ -1,5 +1,3 @@
-project (EKA2L1)
-
 add_subdirectory(common)
 add_subdirectory(core)
 
@@ -28,7 +26,7 @@ set_target_properties(eka2l1_api PROPERTIES OUTPUT_NAME eka2l1_api
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin") 
 
-set_target_properties(EKA2L1_CONS_API_TEST PROPERTIES OUTPUT_NAME eka2l1_cons_test
+set_target_properties(EKA2L1_CONS_API_TEST PROPERTIES OUTPUT_NAME eka2l1_cons_api_test
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 	

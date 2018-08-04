@@ -22,14 +22,15 @@
 #include <common/log.h>
 #include <common/random.h>
 
-#include <hle/epoc9/register.h>
-#include <hle/libmanager.h>
+#include <core/epoc/reg.h>
+#include <core/hle/libmanager.h>
 
-#include <loader/eka2img.h>
-#include <loader/romimage.h>
-#include <vfs.h>
+#include <core/loader/eka2img.h>
+#include <core/loader/romimage.h>
+#include <core/vfs.h>
 
-#include <core_kernel.h>
+#include <core/core.h>
+#include <core/core_kernel.h>
 
 namespace eka2l1 {
     namespace hle {
@@ -42,7 +43,9 @@ namespace eka2l1 {
             load_all_sids(ver);
 
             if (ver == epocver::epoc9) {
-                register_epoc9(*this);
+                epoc::register_epocv94(*this);
+            } else if (ver == epocver::epoc93) {
+                epoc::register_epocv93(*this);
             }
 
             stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
@@ -51,8 +54,11 @@ namespace eka2l1 {
             custom_stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            stub_ptr = stub->base().cast<uint32_t>();
-            custom_stub_ptr = custom_stub->base().cast<uint32_t>();
+            chunk_ptr stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stub));
+            chunk_ptr custom_stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(custom_stub));
+
+            stub_ptr = stub_chunk_obj->base().cast<uint32_t>();
+            custom_stub_ptr = custom_stub_chunk_obj->base().cast<uint32_t>();
 
             LOG_INFO("Lib manager initialized, total implemented HLE functions: {}", import_funcs.size());
         }
@@ -62,7 +68,7 @@ namespace eka2l1 {
 
             if (res == stubbed.end()) {
                 uint32_t *stub_ptr_real = stub_ptr.get(mem);
-                stub_ptr_real[0] = 0xef000000; // svc #0, never used
+                stub_ptr_real[0] = 0xef900000; // svc #0, never used
                 stub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
                 stub_ptr_real[2] = id;
 
@@ -79,7 +85,7 @@ namespace eka2l1 {
 
             if (res == custom_stubbed.end()) {
                 uint32_t *cstub_ptr_real = custom_stub_ptr.get(mem);
-                cstub_ptr_real[0] = 0xef000001; // svc #1, never used
+                cstub_ptr_real[0] = 0xef900001; // svc #1, never used
                 cstub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
                 cstub_ptr_real[2] = addr;
 
@@ -103,8 +109,8 @@ namespace eka2l1 {
 
         void lib_manager::shutdown() {
             for (auto &img : e32imgs_cache) {
-                kern->close_chunk(img.second.img->code_chunk->unique_id());
-                kern->close_chunk(img.second.img->data_chunk->unique_id());
+                kern->close(img.second.img->code_chunk);
+                kern->close(img.second.img->data_chunk);
             }
         }
 
@@ -129,9 +135,9 @@ namespace eka2l1 {
     tids.clear();
 
             if (ver == epocver::epoc6) {
-#include <hle/epoc6_n.def>
+#include <core/hle/epoc6_n.def>
             } else {
-#include <hle/epoc9_n.def>
+#include <core/hle/epoc9_n.def>
             }
 
 #undef LIB
@@ -182,11 +188,6 @@ namespace eka2l1 {
             if (libidsop) {
                 sids libids = libidsop.value();
 
-                if (addrs.size() > libids.size()) {
-                    LOG_WARN("Export size is bigger than total symbol size provided, please update the symbol database for: {}",
-                        common::ucs2_to_utf8(lib_name));
-                }
-
                 for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
                     addr_map.insert(std::make_pair(addrs[i], libids[i]));
 
@@ -202,7 +203,9 @@ namespace eka2l1 {
                     }
                 }
             } else {
-                LOG_WARN("Can't find SID database for: {}", common::ucs2_to_utf8(lib_name));
+                if (log_exports) {
+                    LOG_WARN("Can't find SID database for: {}", common::ucs2_to_utf8(lib_name));
+                }
             }
 
             return true;
@@ -244,10 +247,14 @@ namespace eka2l1 {
                     img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
 
                     if (!img) {
-                        return loader::e32img_ptr(nullptr);
-                    } else {
-                        xip = true;
-                        is_rom = true;
+                        img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
+
+                        if (!img) {
+                            return loader::e32img_ptr(nullptr);
+                        } else {
+                            xip = true;
+                            is_rom = true;
+                        }
                     }
                 }
             }
@@ -383,10 +390,10 @@ namespace eka2l1 {
                 return false;
             }
 
-            LOG_INFO("Calling {}", *get_func_name(id));
+            //LOG_INFO("Calling {}", *get_func_name(id));
 
             auto imp = eimp.value();
-            imp(sys);
+            imp.func(sys);
 
             if (sys->get_kernel_system()->crr_thread() == nullptr) {
                 return false;
@@ -440,11 +447,12 @@ namespace eka2l1 {
             }
 
             epoc_import_func func = res->second;
-            func(sys);
-
-            if (sys->get_kernel_system()->crr_thread() == nullptr) {
-                return false;
+            
+            if (sys->get_bool_config("log_svc_passed")) {
+                LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
             }
+
+            func.func(sys);
 
             return true;
         }
@@ -457,7 +465,7 @@ namespace eka2l1 {
             }
 
             epoc_import_func func = res->second;
-            func(sys);
+            func.func(sys);
 
             if (sys->get_kernel_system()->crr_thread() == nullptr) {
                 return false;
@@ -475,7 +483,7 @@ namespace eka2l1 {
                 if (addr) {
                     bool thumb = (addr % 2 != 0); //?
 
-                    LOG_INFO("Write interrupt of {} at: 0x{:x} {}", *get_func_name(func.first), addr - addr % 2, thumb ? "(thumb)" : "");
+                    //LOG_INFO("Write interrupt of {} at: 0x{:x} {}", *get_func_name(func.first), addr - addr % 2, thumb ? "(thumb)" : "");
 
                     *eka2l1::ptr<uint32_t>(addr - addr % 2).get(mem) = thumb ? 0xDF02 : 0xEF000002;
                 }

@@ -20,9 +20,10 @@
 
 #pragma once
 
+#include <core/kernel/kernel_obj.h>
+#include <core/ptr.h>
+
 #include <common/types.h>
-#include <kernel/kernel_obj.h>
-#include <ptr.h>
 
 #include <cstdint>
 #include <string>
@@ -79,7 +80,7 @@ namespace eka2l1 {
 
         public:
             chunk(kernel_system* kern, memory_system* mem, std::string name, address bottom, const address top, const size_t max_grow_size, prot protection,
-                chunk_type type, chunk_access access, chunk_attrib attrib, kernel::owner_type owner_type, kernel::uid owner);
+                chunk_type type, chunk_access access, chunk_attrib attrib);
 
             /*! \brief Commit to a disconnected chunk. 
 			 *
@@ -132,6 +133,15 @@ namespace eka2l1 {
 			 * \returns false if adjust failed.
 			*/
             bool adjust(size_t adj_size);
+
+            /*! \brief Adjust the size by setting the top and bottom of a chunk
+            */
+            bool adjust_de(size_t top, size_t bottom);
+
+            /*! \brief The definition of this is blurry and unclearn. However, 
+             * afaik it commits to the top with size 
+             */
+            uint32_t allocate(size_t size);
 
             size_t get_size() {
                 return commited_size;

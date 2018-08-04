@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <core.h>
-#include <core_api.h>
+#include <core/core.h>
+#include <core/core_api.h>
 #include <vector>
 
 using sys_ptr = std::unique_ptr<eka2l1::system>;
@@ -51,9 +51,9 @@ int load_process(int sys, unsigned int id) {
     }
 
     sys_ptr &symsys = syses[sys - 1];
-    process *p = symsys->load(id);
+    uint32_t p = symsys->load(id);
 
-    if (!p) {
+    if (p == 0xFFFFFFFF) {
         return -2;
     }
 
@@ -137,7 +137,9 @@ int mount_symbian_system(int sys, const char *drive, const char *real_path) {
 
     sys_ptr &symsys = syses[sys - 1];
 
-    symsys->mount(strncmp(drive, "C:", 2) == 0 ? availdrive::c : availdrive::e, real_path);
+    symsys->mount(strncmp(drive, "C:", 2) == 0 ? 
+        availdrive::c : (strncmp(drive, "E:", 2) == 0 ? availdrive::e : availdrive::z), 
+        real_path);
 
     return 0;
 }
@@ -215,4 +217,15 @@ int reinit_system(int sys) {
     symsys->reset();
 
 	return 0;
+}
+
+int install_rpkg(int sys, const char *path) {
+    if (sys > syses.size()) {
+        return -1;
+    }
+
+    sys_ptr &symsys = syses[sys - 1];
+    bool res = symsys->install_rpkg(path);
+
+    return res ? 0: -2;
 }

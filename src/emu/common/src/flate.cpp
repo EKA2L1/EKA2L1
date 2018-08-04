@@ -21,8 +21,38 @@
 #include <common/flate.h>
 #include <common/log.h>
 
+#include <miniz.h>
+
 namespace eka2l1 {
     namespace flate {
+        bool inflate_data(mz_stream *stream, void *in, void *out, uint32_t in_size, uint32_t *out_size) {
+                stream->avail_in = in_size;
+                stream->next_in = static_cast<const unsigned char *>(in);
+                stream->next_out = static_cast<unsigned char *>(out);
+                stream->avail_out = CHUNK_MAX_INFLATED_SIZE;
+
+                auto res = inflate(stream, Z_NO_FLUSH);
+
+                if (res != MZ_OK) {
+                    if (res == MZ_STREAM_END) {
+                        if (out_size)
+                            *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
+
+                        return true;
+                    }
+
+                    LOG_ERROR("Inflate failed description: {}", mz_error(res));
+
+                    if (out_size)
+                        *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
+
+                    return false;
+                };
+
+                if (out_size)
+                    *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
+                return true;
+            }
 
         namespace huffman {
             using huff = uint16_t;
@@ -737,4 +767,3 @@ namespace eka2l1 {
         }
     }
 }
-

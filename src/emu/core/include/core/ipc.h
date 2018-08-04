@@ -20,8 +20,8 @@
 
 #pragma once
 
+#include <core/ptr.h>
 #include <memory>
-#include <ptr.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -37,7 +37,7 @@ namespace eka2l1 {
         flag_const = 2,
         flag_16b = 1,
         des8 = flag_des,
-        des16 = flag_des | des8,
+        des16 = flag_des | flag_16b,
         desc8 = des8 | flag_const,
         desc16 = des16 | flag_const
     };
@@ -90,24 +90,19 @@ namespace eka2l1 {
         int function;
         ipc_arg args;
         session_ptr msg_session;
+        int session_ptr_lle = 0;    // This should be null because the server check for it
 
         int *request_sts;
 
         // Status of the message, if it's accepted or delivered
         ipc_message_status msg_status;
-        uint64_t id;
-
-        int owner_type;
-        uint32_t owner_id;
+        uint32_t id;
 
         bool free : true;
 
         ipc_msg() {}
-
-        ipc_msg(uint64_t id, uint32_t owner_id, thread_ptr thr)
-            : id(id)
-            , own_thr(thr)
-            , owner_id(owner_id) {}
+        ipc_msg(thread_ptr own)
+            : own_thr(own) {}
     };
 
     using ipc_msg_ptr = std::shared_ptr<ipc_msg>;

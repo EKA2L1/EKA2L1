@@ -20,11 +20,16 @@
 #pragma once
 
 #include <cstdint>
+#include <miniz.h>
 #include <vector>
 
+#define CHUNK_SIZE 0x2000
+#define CHUNK_MAX_INFLATED_SIZE 0x50000
+
 namespace eka2l1 {
-	/*! \brief Namespace contains all function related to Deflate/Inflate */
+    /*! \brief Namespace contains all function related to Deflate/Inflate */
     namespace flate {
+        bool inflate_data(mz_stream *stream, void *in, void *out, uint32_t in_size, uint32_t *out_size = nullptr);
 
         // Made specificlly for Image Compressing
         enum {
@@ -52,7 +57,7 @@ namespace eka2l1 {
             uint32_t dist[ENCODING_DISTS];
         };
 
-		/*! \brief Represents a Deflate bit output */
+        /*! \brief Represents a Deflate bit output */
         class bit_output {
             uint32_t code;
             uint32_t bits;
@@ -66,21 +71,21 @@ namespace eka2l1 {
             bit_output(uint8_t *buf, size_t size);
 
             virtual ~bit_output() {}
-			
-			/*! \brief Set the buffer to output. */
+
+            /*! \brief Set the buffer to output. */
             void set(uint8_t *buf, size_t size);
 
-			/*! \brief Get the pointer to the data. */
+            /*! \brief Get the pointer to the data. */
             uint8_t *data() const;
             uint32_t buffered_bits() const;
 
-			/*! \brief Encode a value and write it to the Deflate stream. */
+            /*! \brief Encode a value and write it to the Deflate stream. */
             void write(uint32_t val, uint32_t len);
             void huffman(uint32_t huff_code);
             void pad(uint32_t pad_size);
         };
 
-		/*! \brief Represents a deflate bit input. */
+        /*! \brief Represents a deflate bit input. */
         class bit_input {
             int count;
             uint32_t bits;
@@ -91,13 +96,13 @@ namespace eka2l1 {
             bit_input();
             bit_input(const uint8_t *ptr, int len, int off = 0);
             virtual ~bit_input() {}
-			
-			/*! \brief Set the buffer to read from. */
+
+            /*! \brief Set the buffer to read from. */
             void set(const uint8_t *ptr, int len, int off = 0);
 
-			/*! \brief Read a huffman byte. */
+            /*! \brief Read a huffman byte. */
             uint32_t read();
-			
+
             uint32_t read(size_t size);
             uint32_t huffman(const uint32_t *tree);
         };
@@ -108,7 +113,7 @@ namespace eka2l1 {
             HUFFMAN_MAX_CODES = 0x8000
         };
 
-		/*! \brief Contains Huffman decoding/encoding functions. */ 
+        /*! \brief Contains Huffman decoding/encoding functions. */
         namespace huffman {
             bool huffman(const int *freq, uint32_t num_codes, int *huffman);
             void encoding(const int *huffman, uint32_t num_codes, int *encode_tab);
@@ -124,7 +129,7 @@ namespace eka2l1 {
             INFLATER_SAFE_ZONE = 8
         };
 
-		/*! \brief Inflate a deflated stream (non-standard gzip). */
+        /*! \brief Inflate a deflated stream (non-standard gzip). */
         class inflater {
             bit_input *bits;
             const uint8_t *rptr;
@@ -132,32 +137,31 @@ namespace eka2l1 {
             const uint8_t *avail;
             const uint8_t *limit;
             encoding encode;
-            uint8_t out[DEFLATE_MAX_DIST]; 
-            uint8_t huff[INFLATER_BUF_SIZE + INFLATER_SAFE_ZONE]; 
+            uint8_t out[DEFLATE_MAX_DIST];
+            uint8_t huff[INFLATER_BUF_SIZE + INFLATER_SAFE_ZONE];
 
-			/*! \brief Do inflation */
+            /*! \brief Do inflation */
             int inflate();
 
         public:
-		    /*! \brief Construct an inflate stream from a bit input */
+            /*! \brief Construct an inflate stream from a bit input */
             inflater(bit_input &input);
             ~inflater() {}
 
             void init();
 
-			/*! \brief Inflate bytes of data. 
+            /*! \brief Inflate bytes of data. 
 			 * 
 			 * \param buf The destination to write inflated data to.
 			 * \param rlen The number of byte to inflate 
 			*/
             int read(uint8_t *buf, size_t rlen);
-            
-			/*! \brief Skip a number of bytes.
+
+            /*! \brief Skip a number of bytes.
 			 *
 			 *  \param len Number of bytes to skip.
 			*/
-			int skip(int len);
+            int skip(int len);
         };
     }
 }
-

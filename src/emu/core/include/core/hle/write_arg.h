@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "layout_args.h"
-#include "bridge_types.h"
+#include <core/hle/layout_args.h>
+#include <core/hle/bridge_types.h>
 
-#include <arm/jit_factory.h>
+#include <core/arm/jit_factory.h>
 
 namespace eka2l1 {
     namespace hle {

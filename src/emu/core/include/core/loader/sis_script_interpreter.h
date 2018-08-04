@@ -24,10 +24,7 @@
 #include <string>
 #include <vector>
 
-#include <loader/sis_fields.h>
-
-#define CHUNK_SIZE 0x2000
-#define CHUNK_MAX_INFLATED_SIZE 0x50000
+#include <core/loader/sis_fields.h>
 
 namespace eka2l1 {
     class io_system;

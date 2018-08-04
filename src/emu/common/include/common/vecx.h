@@ -37,6 +37,10 @@ namespace eka2l1 {
         vec2 operator-(const vec2 &rhs) {
             return vec2(x - rhs.x, y - rhs.y);
         }
+
+        vec2 operator*(const int rhs) {
+            return vec2(x * rhs, y * rhs);
+        }
     };
 
     struct object_size : public vec2 {

@@ -17,13 +17,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <arm/jit_factory.h>
-#include <capstone.h>
+
 #include <common/log.h>
 #include <common/types.h>
-#include <core_mem.h>
-#include <disasm/disasm.h>
-#include <ptr.h>
+
+#include <core/arm/jit_factory.h>
+
+#include <core/core_mem.h>
+#include <core/disasm/disasm.h>
+#include <core/ptr.h>
+
+#include <capstone.h>
 
 #include <functional>
 #include <memory>
@@ -82,58 +86,6 @@ namespace eka2l1 {
         }
 
         return out.str();
-    }
-
-    subroutine disasm::get_subroutine(ptr<uint8_t> beg) {
-        address beg_addr = beg.ptr_address();
-        address progressed = 0;
-
-        subroutine sub;
-
-        jitter->set_pc(beg_addr);
-
-        bool found = false;
-
-        while (!found) {
-            bool thumb = jitter->is_thumb_mode();
-            size_t inst_size = thumb ? 2 : 4;
-
-            std::string inst = disassemble(mem->get_addr<uint8_t>(beg_addr + progressed), inst_size,
-                0, thumb);
-
-            if (FOUND_STR(inst.find("("))) {
-                for (uint8_t i = 0; i < inst_size; i++) {
-                    sub.insts.push_back(arm_inst_type::data);
-                }
-            } else {
-                sub.insts.push_back(thumb ? arm_inst_type::thumb : arm_inst_type::arm);
-
-                // Quick hack: if the pc is modified (means pc go first, have space),
-                // or if inst is branch or jump, then subroutine is here
-                if (inst[0] == 'b' || inst[0] == 'j' || FOUND_STR(inst.find(" pc"))) {
-                    sub.end = ptr<uint8_t>(beg_addr + progressed);
-                    found = true;
-                }
-            }
-
-            progressed += inst_size;
-            // Step the jit
-            jitter->step();
-        }
-
-        return sub;
-    }
-
-    /*! \brief Check if the address contains thumb inst*/
-    bool disasm::thumb(uint64_t address) {
-        jitter->set_pc(address);
-        jitter->step();
-
-        if (jitter->is_thumb_mode()) {
-            return true;
-        }
-
-        return false;
     }
 }
 

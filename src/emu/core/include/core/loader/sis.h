@@ -22,8 +22,8 @@
 
 #include <common/types.h>
 
-#include <loader/sis_fields.h>
-#include <loader/sis_old.h>
+#include <core/loader/sis_fields.h>
+#include <core/loader/sis_old.h>
 
 #include <string>
 #include <vector>

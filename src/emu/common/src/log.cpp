@@ -69,6 +69,12 @@ namespace eka2l1 {
             }
 
 #ifdef WIN32
+            DeleteFileA(log_file_name);
+#else
+            remove(log_file_name);
+#endif
+
+#ifdef WIN32
             sinks.push_back(std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>());
 #else
             sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>());
@@ -87,7 +93,7 @@ namespace eka2l1 {
                 std::cerr << "spdlog error: " << msg << std::endl;
             });
 
-            spdlog::set_pattern("[%H:%M:%S.%e] [%l] %v");
+            spdlog::set_pattern("%L { %v }");
             spdlog::set_level(spdlog::level::trace);
 
             spd_logger->flush_on(spdlog::level::debug);

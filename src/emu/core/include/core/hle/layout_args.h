@@ -21,7 +21,7 @@
 #pragma once
 
 #include <common/log.h>
-#include <hle/arg_layout.h>
+#include <core/hle/arg_layout.h>
 
 #include <tuple>
 

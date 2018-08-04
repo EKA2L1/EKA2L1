@@ -59,25 +59,25 @@ namespace eka2l1 {
             return file.size;
         }
 
-        int read_file(void *data, uint32_t size, uint32_t count) override {
+        size_t read_file(void *data, uint32_t size, uint32_t count) override {
             auto will_read = std::min((uint64_t)count * size, file.size - crr_pos);
             memcpy(data, &(file_ptr.get(mem)[crr_pos]), will_read);
 
             crr_pos += will_read;
 
-            return will_read;
+            return static_cast<int>(will_read);
         }
 
         int file_mode() const override {
             return READ_MODE;
         }
 
-        int write_file(void *data, uint32_t size, uint32_t count) override {
+        size_t write_file(void *data, uint32_t size, uint32_t count) override {
             LOG_ERROR("Can't write into ROM!");
             return -1;
         }
 
-        void seek(uint32_t seek_off, file_seek_mode where) override {
+        void seek(int seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg) {
                 crr_pos = seek_off;
             } else if (where == file_seek_mode::crr) {
@@ -159,11 +159,11 @@ namespace eka2l1 {
                 fclose(file);
         }
 
-        int write_file(void *data, uint32_t size, uint32_t count) override {
+        size_t write_file(void *data, uint32_t size, uint32_t count) override {
             return fwrite(data, size, count, file);
         }
 
-        int read_file(void *data, uint32_t size, uint32_t count) override {
+        size_t read_file(void *data, uint32_t size, uint32_t count) override {
             return fread(data, size, count, file);
         }
 
@@ -186,7 +186,7 @@ namespace eka2l1 {
             return ftell(file);
         }
 
-        void seek(uint32_t seek_off, file_seek_mode where) override {
+        void seek(int seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg) {
                 fseek(file, seek_off, SEEK_SET);
             } else if (where == file_seek_mode::crr) {
@@ -205,8 +205,10 @@ namespace eka2l1 {
         }
     };
 
-    void io_system::init(memory_system *smem) {
+    void io_system::init(memory_system *smem, epocver ever) {
         mem = smem;
+        ver = ever;
+
         crr_dir = "C:";
     }
 
@@ -224,17 +226,7 @@ namespace eka2l1 {
         crr_dir = new_dir;
     }
 
-    void io_system::mount_rom(const std::string &dvc, loader::rom *rom) {
-        rom_cache = rom;
-
-        drive drv;
-        drv.is_in_mem = true;
-        drv.drive_name = dvc;
-
-        drives.insert(std::make_pair(dvc, drv));
-    }
-
-    void io_system::mount(const std::string &dvc, const std::string &real_path) {
+    void io_system::mount(const std::string &dvc, const std::string &real_path, bool in_mem) {
         auto find_res = drives.find(dvc);
 
         if (find_res == drives.end()) {
@@ -242,7 +234,7 @@ namespace eka2l1 {
         }
 
         drive drv;
-        drv.is_in_mem = false;
+        drv.is_in_mem = in_mem;
         drv.drive_name = dvc;
         drv.real_path = real_path;
 
@@ -277,22 +269,58 @@ namespace eka2l1 {
             partition[0] = std::toupper(partition[0]);
             res = drives.find(partition);
 
-            if (res == drives.end() || res->second.is_in_mem) {
+            if (res == drives.end()) {
                 return "";
             }
         }
 
-        current_dir = res->second.real_path + crr_dir.substr(2);
+        std::string rp = res->second.real_path;
+
+        if (res->second.is_in_mem) {
+            switch (ver) {
+            case epocver::epoc93: {
+                rp = add_path(rp, "v93\\");
+                break;
+            }
+
+            case epocver::epoc9: {
+                rp = add_path(rp, "v94\\");
+                break;
+            }
+
+            case epocver::epoc10: {
+                rp = add_path(rp, "belle\\");
+                break;
+            }
+
+            case epocver::epoc6: {
+                rp = add_path(rp, "v60\\");
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+
+        current_dir = rp + crr_dir.substr(2);
 
         // Make it case-insensitive
         for (auto &c : vir_path) {
             c = std::tolower(c);
         }
 
+        size_t lib_pos = vir_path.find("\\system\\lib");
+
+        // TODO (bentokun): Remove this hack with a proper symlink system.
+        if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+            vir_path.replace(lib_pos, 12, "\\sys\\bin");
+        }
+
         if (!is_absolute(vir_path, current_dir)) {
             abs_path = absolute_path(vir_path, current_dir);
         } else {
-            abs_path = add_path(res->second.real_path, vir_path.substr(2));
+            abs_path = add_path(rp, vir_path.substr(2));
         }
 
         return abs_path;
@@ -328,6 +356,7 @@ namespace eka2l1 {
     }
 
     // Gurantees that these path are ASCII (ROM you says ;) )
+    // This is only invoked when user check search in ROM config if can't find needed file.
     std::optional<loader::rom_entry> io_system::burn_tree_find_entry(const std::string &vir_path) {
         std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
         auto ite = path_iterator(vir_path);
@@ -372,26 +401,40 @@ namespace eka2l1 {
         }
 
         drive drv = res.value();
+        auto new_path = get(common::ucs2_to_utf8(vir_path));
 
-        if (drv.is_in_mem && !(mode & WRITE_MODE)) {
-            auto rom_entry = burn_tree_find_entry(std::string(vir_path.begin(), vir_path.end()));
-
-            if (!rom_entry) {
+        if (drv.is_in_mem) {
+            if (mode & WRITE_MODE) {
+                LOG_INFO("No writing in in-memory!");
                 return std::shared_ptr<file>(nullptr);
-            }
-
-            return std::make_shared<rom_file>(mem, rom_cache, rom_entry.value());
-        } else {
-            auto new_path = get(common::ucs2_to_utf8(vir_path));
-            auto res = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
-
-            if (!res->file) {
-                return std::shared_ptr<file>(nullptr);
-            } else {
-                return res;
             }
         }
 
-        return std::shared_ptr<file>(nullptr);
+        auto pf = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
+
+        if (!pf->file) {
+            return std::shared_ptr<file>(nullptr);
+        }
+
+        return pf;
+    }
+
+    std::array<char, 26> io_system::drive_list(bool all_hidden) {
+        std::array<char, 26> list;
+
+        std::fill(list.begin(), list.end(), 0);
+
+        for (auto &drive : drives) {
+            if (!drive.second.hidden || (drive.second.hidden && all_hidden)) {
+                char drive_index = std::tolower(drive.first[0]) - 97;
+                list[drive_index] = 1;
+            }
+        }
+
+        return list;
+    }
+
+    symfile physical_file_proxy(const std::string &path, int mode) {
+        return std::make_shared<physical_file>(std::u16string(path.begin(), path.end()), mode);
     }
 }

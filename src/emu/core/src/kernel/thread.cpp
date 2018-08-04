@@ -21,12 +21,17 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <core_kernel.h>
-#include <core_mem.h>
-#include <kernel/mutex.h>
-#include <kernel/sema.h>
-#include <kernel/thread.h>
-#include <ptr.h>
+#include <common/random.h>
+
+#include <core/core_kernel.h>
+#include <core/core_mem.h>
+#include <core/kernel/mutex.h>
+#include <core/kernel/sema.h>
+#include <core/kernel/thread.h>
+#include <core/ptr.h>
+
+#include <common/e32inc.h>
+#include <e32err.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -52,7 +57,81 @@ namespace eka2l1 {
             int padding;
         };
 
-        int caculate_thread_priority(thread_priority pri) {
+        int map_thread_priority_to_calc(thread_priority pri) {
+            switch (pri) {
+            case thread_priority::priority_much_less:
+                return -7;
+
+            case thread_priority::priority_less:
+                return -6;
+
+            case thread_priority::priority_normal:
+                return -5;
+
+            case thread_priority::priority_more:
+                return -4;
+
+            case thread_priority::priority_much_more:
+                return -3;
+
+            case thread_priority::priority_real_time:
+                return -2;
+
+            case thread_priority::priority_null:
+                return 0;
+
+            case thread_priority::priority_absolute_very_low:
+                return 1;
+
+            case thread_priority::priority_absolute_low:
+                return 5;
+
+            case thread_priority::priority_absolute_background:
+                return 10;
+
+            case thread_priority::priorty_absolute_foreground:
+                return 15;
+
+            case thread_priority::priority_absolute_high:
+                return 23;
+
+            default: {
+                LOG_WARN("Undefined priority.");
+                break;
+            }
+            }
+
+            return 1;
+        }
+
+        int map_process_pri_calc(process_priority pri) {
+            switch (pri) {
+            case process_priority::low:
+                return 0;
+            case process_priority::background:
+                return 1;
+            case process_priority::foreground:
+                return 2;
+            case process_priority::high:
+                return 3;
+            case process_priority::window_svr:
+                return 4;
+            case process_priority::file_svr:
+                return 5;
+            case process_priority::supervisor:
+                return 6;
+            case process_priority::real_time_svr:
+                return 7;
+            default: {
+                LOG_WARN("Undefined process priority");
+                break;
+            }
+            }
+
+            return 0;
+        }
+
+        int caculate_thread_priority(process_ptr pr, thread_priority pri) {
             const uint8_t pris[] = {
                 1, 1, 2, 3, 4, 5, 22, 0,
                 3, 5, 6, 7, 8, 9, 22, 0,
@@ -64,26 +143,42 @@ namespace eka2l1 {
                 18, 26, 27, 28, 29, 30, 31, 0
             };
 
-            // The owning process, in this case is always have the priority
-            // of 3 (foreground)
+            int tp = map_thread_priority_to_calc(pri);
 
-            int idx = (3 << 3) + (int)pri;
+            if (tp >= 0) {
+                return (tp < 64) ? tp : 63;
+            }
+
+            int prinew = tp + 8;
+
+            if (prinew < 0)
+                prinew = 0;
+
+            int idx = (map_process_pri_calc(pr->get_priority()) << 3) + static_cast<int>(prinew);
             return pris[idx];
         }
 
-        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top) {
-            ctx.pc = entry_point;
-            ctx.sp = stack_top;
-            ctx.cpsr = 16 | ((entry_point & 1) << 5);
-
+        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool initial) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
+
+            ctx.pc = entry_point;
+
+            if (!initial) {
+                ctx.pc = kern->get_lib_manager()->get_export_addr(4238211793); // Setup thread heap
+                ctx.lr = entry_point;
+
+                ctx.cpu_registers[1] = stack_top;
+                ctx.cpu_registers[0] = 0;
+            }
+
+            ctx.sp = stack_top;
+            ctx.cpsr = ((entry_point & 1) << 5);
         }
 
         void thread::create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
 
-            // This is intended to make EPOC HLE side create RHeap
             info.allocator = 0;
             info.func_ptr = epa;
             info.ptr = usrdata.ptr_address();
@@ -109,100 +204,78 @@ namespace eka2l1 {
             memcpy(stack_ptr.get(mem), &info, 0x40);
         }
 
-        thread::thread(kernel_system *kern, memory_system *mem, kernel::owner_type owner, kernel::uid owner_id, kernel::access_type access,
+        thread::thread(kernel_system *kern, memory_system *mem, process_ptr owner,
+            kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
+            bool inital,
             ptr<void> usrdata,
             thread_priority pri)
-            : wait_obj(kern, name, owner, owner_id, access)
+            : wait_obj(kern, name, access)
+            , own_process(owner)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
             , max_heap_size(max_heap_size)
             , usrdata(usrdata)
-            , mem(mem) {
+            , mem(mem)
+            , priority(pri)
+            , thread_handles(kern, handle_array_owner::thread) {
+            if (owner) {
+                owner->increase_thread_count();
+            }
+
             obj_type = object_type::thread;
+            state = thread_state::wait; // Suspended.
 
-            priority = caculate_thread_priority(pri);
+            if (own_process)
+                real_priority = caculate_thread_priority(own_process, pri);
 
-            stack_chunk = kern->create_chunk("stackThreadID" + common::to_string(obj_id), 0, stack_size, stack_size, prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+            /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
+
+            stack_chunk = kern->create_chunk("", 0, common::align(stack_size, mem->get_page_size()), common::align(stack_size, mem->get_page_size()), prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
             name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
-            //tls_chunk = kern->create_chunk("", 0, common::align(50 * 12, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
-            //    chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::thread, obj_id);
+            request_sema = std::dynamic_pointer_cast<kernel::semaphore>(
+                kern->get_kernel_obj(kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, 150, owner_type::kernel)));
 
-            request_sema = kern->create_sema("requestSemaFor" + common::to_string(obj_id), 0, 150, owner_type::thread);
-
-            sync_msg = kern->create_msg(owner_type::process);
+            sync_msg = kern->create_msg(owner_type::kernel);
 
             /* Create TDesC string. Combine of string length and name data (USC2) */
 
             std::u16string name_16(name.begin(), name.end());
 
-            memcpy(name_chunk->base().get(mem), name_16.data(), name.length() * 2);
+            chunk_ptr name_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
+            chunk_ptr stack_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
+
+            memcpy(name_chunk_ptr->base().get(mem), name_16.data(), name.length() * 2);
 
             const size_t metadata_size = 0x40;
 
             // Left the space for the program to put thread create information
-            const address stack_top = stack_chunk->base().ptr_address() + stack_size - metadata_size;
+            const address stack_top = stack_chunk_ptr->base().ptr_address() + stack_size - metadata_size;
 
-            ptr<uint8_t> stack_phys_beg(stack_chunk->base().ptr_address());
-            ptr<uint8_t> stack_phys_end(stack_chunk->base().ptr_address() + stack_size);
+            ptr<uint8_t> stack_phys_beg(stack_chunk_ptr->base().ptr_address());
+            ptr<uint8_t> stack_phys_end(stack_top);
+
+            uint8_t *start = stack_phys_beg.get(mem);
+            uint8_t *end = stack_phys_end.get(mem);
 
             // Fill the stack with garbage
-            std::fill(stack_phys_beg.get(mem), stack_phys_end.get(mem), 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk->base().ptr_address(), epa);
+            std::fill(start, end, 0xcc);
+            create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk_ptr->base().ptr_address(), epa);
 
-            reset_thread_ctx(epa, stack_top);
+            reset_thread_ctx(epa, stack_top, inital);
             scheduler = kern->get_thread_scheduler();
         }
 
-        bool thread::sleep(int64_t ns) {
-            state = thread_state::wait;
-            return scheduler->sleep(obj_id, ns);
-        }
-
-        bool thread::run() {
-            state = thread_state::run;
-            kern->run_thread(obj_id);
-
-            return true;
-        }
-
-        bool thread::stop() {
-            scheduler->unschedule_wakeup();
-
-            if (state == thread_state::ready) {
-                scheduler->unschedule(obj_id);
-            }
-
-            state = thread_state::stop;
-
-            wake_up_waiting_threads();
-
-            if (waits.size() > 0)
-                for (auto &thr : waits) {
-                    thr->erase_waiting_thread(thr->unique_id());
-                }
-
-            waits.clear();
-
-            scheduler->reschedule();
-
-            return true;
-        }
-
-        bool thread::resume() {
-            return scheduler->resume(obj_id);
-        }
-
-        bool thread::should_wait(const kernel::uid id) {
+        bool thread::should_wait(thread_ptr thr) {
             return state != thread_state::stop;
         }
 
-        void thread::acquire(const kernel::uid id) {
+        void thread::acquire(thread_ptr thr) {
             // :)
         }
 
@@ -211,7 +284,7 @@ namespace eka2l1 {
                 if (ldata.tls_slots[i].handle != -1 && ldata.tls_slots[i].handle == handle) {
                     return &ldata.tls_slots[i];
                 }
-            } 
+            }
 
             for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
                 if (ldata.tls_slots[i].handle == -1) {
@@ -229,8 +302,18 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
+        bool thread::sleep(uint32_t secs) {
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)), secs);
+        }
+
+        bool thread::stop() {
+            return scheduler->stop(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
+        }
+
         void thread::update_priority() {
-            int new_priority = current_priority();
+            real_priority = caculate_thread_priority(own_process, priority);
+
+            int new_priority = current_real_priority();
 
             for (auto &mut : held_mutexes) {
                 if (mut->get_priority() < new_priority) {
@@ -238,29 +321,138 @@ namespace eka2l1 {
                 }
             }
 
-            priority = new_priority;
+            real_priority = new_priority;
 
             if (state == kernel::thread_state::ready) {
                 scheduler->refresh();
             } else {
-                scheduler->schedule(std::reinterpret_pointer_cast<thread>(kern->get_kernel_obj(obj_id)));
+                scheduler->schedule(
+                    std::dynamic_pointer_cast<thread>(kern->get_kernel_obj_by_id(uid)));
             }
         }
 
-        void thread::wait_for_any_request() {
-            request_sema->acquire(obj_id);
+        void thread::set_priority(const thread_priority new_pri) {
+            priority = new_pri;
 
-            if (request_sema->should_wait(obj_id)) {
-                request_sema->add_waiting_thread(std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj(obj_id)));
-
-                state = thread_state::wait_fast_sema;
-
-                scheduler->reschedule();
+            if (state == kernel::thread_state::ready) {
+                scheduler->refresh();
+            } else {
+                scheduler->schedule(
+                    std::dynamic_pointer_cast<thread>(kern->get_kernel_obj_by_id(uid)));
             }
+
+            update_priority();
+
+            for (auto &mut : pending_mutexes) {
+                mut->update_priority();
+            }
+
+            kern->prepare_reschedule();
+        }
+
+        void thread::wait_for_any_request() {
+            request_sema->wait();
         }
 
         void thread::signal_request() {
             request_sema->release(1);
+        }
+
+        void thread::owning_process(process_ptr pr) {
+            own_process = pr;
+            own_process->increase_thread_count();
+
+            update_priority();
+        }
+
+        kernel_obj_ptr thread::get_object(uint32_t handle) {
+            return thread_handles.get_object(handle);
+        }
+
+        bool thread::operator>(const thread &rhs) {
+            return real_priority > rhs.real_priority;
+        }
+
+        bool thread::operator<(const thread &rhs) {
+            return real_priority < rhs.real_priority;
+        }
+
+        bool thread::operator==(const thread &rhs) {
+            return real_priority == rhs.real_priority;
+        }
+
+        bool thread::operator>=(const thread &rhs) {
+            return real_priority >= rhs.real_priority;
+        }
+
+        bool thread::operator<=(const thread &rhs) {
+            return real_priority <= rhs.real_priority;
+        }
+
+        void thread::logon(int *logon_request, bool rendezvous) {
+            if (state == thread_state::stop) {
+                *logon_request = exit_reason;
+                return;
+            }
+
+            if (rendezvous) {
+                rendezvous_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
+                return;
+            }
+
+            logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
+        }
+
+        bool thread::logon_cancel(int *logon_request, bool rendezvous) {
+            if (rendezvous) {
+                auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
+                    [&](logon_request_form &form) { return form.request_status == logon_request; });
+
+                if (req_info != rendezvous_requests.end()) {
+                    *logon_request = -3;
+                    rendezvous_requests.erase(req_info);
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            auto req_info = std::find_if(logon_requests.begin(), logon_requests.end(),
+                [&](logon_request_form &form) { return form.request_status == logon_request; });
+
+            if (req_info != logon_requests.end()) {
+                *logon_request = -3;
+                logon_requests.erase(req_info);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        void thread::rendezvous(int rendezvous_reason) {
+            for (auto &ren : rendezvous_requests) {
+                *(ren.request_status) = rendezvous_reason;
+                ren.requester->signal_request();
+            }
+
+            rendezvous_requests.clear();
+        }
+
+        void thread::finish_logons() {
+            for (auto &req : logon_requests) {
+                *(req.request_status) = exit_reason;
+                req.requester->signal_request();
+            }
+
+            for (auto &req : rendezvous_requests) {
+                *(req.request_status) = exit_reason;
+                req.requester->signal_request();
+            }
+
+            logon_requests.clear();
+            rendezvous_requests.clear();
         }
     }
 }

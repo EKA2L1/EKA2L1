@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project 
@@ -18,11 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <loader/eka2img.h>
-#include <loader/romimage.h>
-#include <vfs.h>
+#include <core/loader/eka2img.h>
+#include <core/loader/romimage.h>
+#include <core/vfs.h>
 
-#include <ptr.h>
+#include <core/ptr.h>
 
 #include <common/algorithm.h>
 #include <common/buffer.h>
@@ -31,7 +31,8 @@
 #include <common/flate.h>
 #include <common/log.h>
 
-#include <core_kernel.h>
+#include <core/core_kernel.h>
+#include <core/core_mem.h>
 
 #include <cstdio>
 #include <miniz.h>
@@ -65,9 +66,7 @@ namespace eka2l1 {
 
         bool relocate(uint32_t *dest_ptr, relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == relocation_type::reserved) {
-                LOG_ERROR("Invalid relocation type: 0");
-
-                return false;
+                return true;
             }
 
             // What is in it ?? :))
@@ -134,7 +133,10 @@ namespace eka2l1 {
             const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
 
             loader::e32img_ptr img = mngr.load_e32img(dll_name);
-            loader::romimg_ptr rimg = mngr.load_romimg(dll_name);
+            loader::romimg_ptr rimg;
+
+            if (!img)
+                rimg = mngr.load_romimg(dll_name);
 
             uint32_t *imdir = &(import_block.ordinals[0]);
             uint32_t *expdir;
@@ -200,11 +202,11 @@ namespace eka2l1 {
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
 
-            loader::romimg_ptr rimg = mngr.load_romimg(dll_name);
-            loader::e32img_ptr img;
+            loader::e32img_ptr img = mngr.load_e32img(dll_name);
+            loader::romimg_ptr rimg;
 
-            if (!rimg) {
-                img = mngr.load_e32img(dll_name);
+            if (!img) {
+                rimg = mngr.load_romimg(dll_name);
             }
 
             uint32_t *imdir = &(import_block.ordinals[0]);
@@ -275,9 +277,6 @@ namespace eka2l1 {
                     auto sid = mngr.get_sid(export_addr);
 
                     if (sid) {
-                        //LOG_INFO("Importing export addr: 0x{:x}, sid: 0x{:x}, function: {}, writing at: 0x{:x}, ord: {}",
-                        //   export_addr, sid.value(), mngr.get_func_name(sid.value()).value(), me.rt_code_addr + off, ord);
-
                         if (mngr.get_hle(*sid)) {
                             uint32_t impaddr = mngr.get_stub(*sid).ptr_address();
                             write(code_ptr, impaddr);
@@ -302,15 +301,20 @@ namespace eka2l1 {
         }
 
         bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            // LOG_TRACE("Mở chunk cho code và data");
+            
             // Create the code + static data chunk
-            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()), prot::read_write,
-                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
+                prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), prot::read_write,
-                kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::process);
+            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), 
+                prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            uint32_t rtcode_addr = img->code_chunk->base().ptr_address();
-            uint32_t rtdata_addr = img->data_chunk ? img->data_chunk->base().ptr_address() : 0;
+            chunk_ptr code_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
+            chunk_ptr data_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
+
+            uint32_t rtcode_addr = code_chunk_ptr->base().ptr_address();
+            uint32_t rtdata_addr = data_chunk_ptr ? data_chunk_ptr->base().ptr_address() : 0;
 
             LOG_INFO("Runtime code: 0x{:x}", rtcode_addr);
 
@@ -470,7 +474,6 @@ namespace eka2l1 {
             ef->read_file(&img.header.sig, 1, 4);
 
             if (img.header.sig != 0x434F5045) {
-                LOG_ERROR("Undefined EKA Image type");
                 return std::optional<eka2img>{};
             }
 
@@ -624,6 +627,8 @@ namespace eka2l1 {
             for (auto &import : img.import_section.imports) {
                 stream.read(reinterpret_cast<void *>(&import.dll_name_offset), 4);
                 stream.read(reinterpret_cast<void *>(&import.number_of_imports), 4);
+
+                img.dll_names.push_back(import.dll_name);
 
                 if (import.number_of_imports == 0) {
                     continue;

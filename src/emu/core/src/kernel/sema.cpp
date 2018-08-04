@@ -18,24 +18,23 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <kernel/sema.h>
+#include <core/kernel/sema.h>
+#include <core/core_kernel.h>
 
 namespace eka2l1 {
     namespace kernel {
         semaphore::semaphore(kernel_system *sys, std::string sema_name,
             int32_t init_count,
             int32_t max_count,
-            kernel::owner_type own_type,
-            kernel::uid own_id,
             kernel::access_type access)
-            : wait_obj(sys, std::move(sema_name), own_type, own_id, access),
+            : wait_obj(sys, std::move(sema_name), access),
               avail_count(init_count),
               max_count(max_count) {
             obj_type = object_type::sema;
         }
 
         int32_t semaphore::release(int32_t release_count) {
-            if (max_count - avail_count < release_count) {
+            if (avail_count >= 0 || max_count - avail_count < release_count) {
                 return -1;
             }
 
@@ -47,16 +46,26 @@ namespace eka2l1 {
             return prev_count;
         }
 
-        bool semaphore::should_wait(kernel::uid thr_id) {
-            return avail_count <= 0;
+        bool semaphore::should_wait(thread_ptr thr) {
+            return avail_count < 0;
         }
 
-        void semaphore::acquire(kernel::uid thr_id) {
-            if (avail_count <= 0) {
+        void semaphore::acquire(thread_ptr thr) {
+            if (avail_count < 0) {
                 return;
             }
 
             --avail_count;
+        }
+
+        void semaphore::wait() {
+            thread_ptr calling_thr = kern->crr_thread();
+            acquire(calling_thr);
+
+            if (should_wait(calling_thr)) {
+                add_waiting_thread(calling_thr);
+                calling_thr->get_scheduler()->wait_sema(calling_thr);
+            }
         }
     }
 }

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <hle/bridge.h>
+#include <core/hle/bridge.h>
 
 namespace eka2l1 {
     namespace hle {

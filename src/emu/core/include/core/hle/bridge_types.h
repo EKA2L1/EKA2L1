@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <ptr.h>
+#include <core/ptr.h>
 
 namespace eka2l1 {
     class memory_system;

@@ -20,21 +20,19 @@
 
 #include <common/log.h>
 
-#include <kernel/mutex.h>
-#include <core_kernel.h>
+#include <core/core_kernel.h>
+#include <core/kernel/mutex.h>
 
 namespace eka2l1 {
     namespace kernel {
         mutex::mutex(kernel_system *kern, std::string name, bool init_locked,
-            kernel::owner_type own,
-            kernel::uid own_id,
             kernel::access_type access)
-            : wait_obj(kern, std::move(name), own, own_id, access) 
-             , lock_count(0) {
+            : wait_obj(kern, std::move(name), access)
+            , lock_count(0) {
             obj_type = object_type::mutex;
 
             if (init_locked) {
-                acquire(kern->crr_thread()->unique_id());
+                acquire(kern->crr_thread());
             }
         }
 
@@ -45,9 +43,9 @@ namespace eka2l1 {
 
             int best_priority = 10000;
 
-            for (auto& waiter : waiting_threads()) {
-                if (waiter->current_priority() < best_priority) {
-                    best_priority = waiter->current_priority();
+            for (auto &waiter : waiting_threads()) {
+                if (waiter->current_real_priority() < best_priority) {
+                    best_priority = waiter->current_real_priority();
                 }
             }
 
@@ -57,28 +55,32 @@ namespace eka2l1 {
             }
         }
 
-        bool mutex::should_wait(kernel::uid thr_id) {
+        bool mutex::should_wait(thread_ptr thr) {
             // If the mutex is acquired and the given thread is not in hold
-            return lock_count > 0 && holding->unique_id() != thr_id;
+            return lock_count > 0 && holding != thr;
         }
 
-        void mutex::acquire(kernel::uid thr_id) {
-            kernel_obj_ptr kobj = kern->get_kernel_obj(thr_id);
-
-            if (kobj) {
-                thread_ptr thr_ptr = std::reinterpret_pointer_cast<thread>(kobj);
-
-                if (thr_ptr && lock_count == 0) {
-                    priority = thr_ptr->current_priority();
-
-                    // TODO: make this less ugly
-                    thr_ptr->held_mutexes.push_back(std::reinterpret_pointer_cast<mutex>(kern->get_kernel_obj(obj_id)));
-                    holding = thr_ptr;
-
-                    // boost
-                    thr_ptr->update_priority();
-                }
+        void mutex::acquire(thread_ptr thr_ptr) {
+            if (holding == thr_ptr) {
+                return;
             }
+
+            if (thr_ptr && lock_count == 0) {
+                priority = thr_ptr->current_real_priority();
+
+                // TODO: make this less ugly
+                thr_ptr->held_mutexes.push_back(this);
+                holding = thr_ptr;
+
+                // boost
+                thr_ptr->update_priority();
+            } else {
+                // If the mutex is being held by another thread, make them
+                // wait for mutex to be freed.
+                add_waiting_thread(thr_ptr);
+            }
+
+            lock_count++;
         }
 
         bool mutex::release(thread_ptr thr) {
@@ -95,15 +97,18 @@ namespace eka2l1 {
 
             if (lock_count == 0) {
                 auto res = std::find_if(thr->held_mutexes.begin(), thr->held_mutexes.end(),
-                    [&](auto mut) { return mut->unique_id() == obj_id; });
+                    [&](auto mut) { return mut == this; });
 
                 if (res != thr->held_mutexes.end()) {
                     holding->held_mutexes.erase(res);
                     holding->update_priority();
                     holding = nullptr;
 
+                    // Wake up all threads waiting for mutex.
+                    wake_up_waiting_threads();
+
                     return true;
-                }
+                } 
 
                 LOG_WARN("Thread doesn't held this mutex, weird");
             }
@@ -113,27 +118,28 @@ namespace eka2l1 {
 
         void mutex::add_waiting_thread(thread_ptr thr) {
             wait_obj::add_waiting_thread(thr);
-            thr->pending_mutexes.push_back(std::reinterpret_pointer_cast<mutex>(kern->get_kernel_obj(obj_id)));
+            thr->pending_mutexes.push_back(this);
             update_priority();
         }
 
-        void mutex::erase_waiting_thread(kernel::uid thr) {
-            wait_obj::erase_waiting_thread(thr);
-            kernel_obj_ptr kobj = kern->get_kernel_obj(thr);
+        void mutex::erase_waiting_thread(thread_ptr thr_ptr) {
+            if (thr_ptr) {
+                auto res = std::find_if(thr_ptr->pending_mutexes.begin(), thr_ptr->pending_mutexes.begin(),
+                    [&](auto mut) { return mut == this; });
 
-            if (kobj) {
-                thread_ptr thr_ptr = std::reinterpret_pointer_cast<thread>(kobj);
-
-                if (thr_ptr) {
-                    auto res = std::find_if(thr_ptr->pending_mutexes.begin(), thr_ptr->pending_mutexes.begin(),
-                        [&](auto mut) { return mut->unique_id() == obj_id; });
-
-                    if (res != thr_ptr->pending_mutexes.end()) {
-                        thr_ptr->pending_mutexes.erase(res);
-                        update_priority();
-                    }
+                if (res != thr_ptr->pending_mutexes.end()) {
+                    thr_ptr->pending_mutexes.erase(res);
+                    update_priority();
                 }
             }
+        }
+
+        void mutex::wait() {
+            acquire(kern->crr_thread());
+        }
+
+        bool mutex::signal() {
+            return release(kern->crr_thread());
         }
     }
 }

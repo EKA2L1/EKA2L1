@@ -19,9 +19,10 @@
  */
 #pragma once
 
+#include <core/ptr.h>
+
 #include <capstone.h>
 #include <memory>
-#include <ptr.h>
 #include <string>
 #include <vector>
 
@@ -70,18 +71,9 @@ namespace eka2l1 {
         /*! \brief Shutdown the disassembler. */
         void shutdown();
 
-        /*! \brief Get a subroutine.
-		 * \param beg HLE pointer to the start of a subroutine.
-		 * \returns The subroutine
-		*/
-        subroutine get_subroutine(ptr<uint8_t> beg);
-
         /*! \brief Disassemble binary code.
 		 * \returns The description of the instruction.
 		*/
         std::string disassemble(const uint8_t *code, size_t size, uint64_t address, bool thumb);
-
-        /*! \brief Check if the address contains thumb inst*/
-        bool thumb(uint64_t address);
     };
 }

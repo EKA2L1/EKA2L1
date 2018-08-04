@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <core/manager/package_manager.h>
 
 #include <cstdint>
 #include <optional>
@@ -108,5 +109,6 @@ namespace eka2l1 {
         };
 
         std::optional<sis_old> parse_sis_old(const std::string path);
+        bool install_sis_old(std::u16string path, io_system *io, uint8_t drive, epocver ver, manager::app_info &info);
     }
 }

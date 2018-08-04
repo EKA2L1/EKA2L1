@@ -1,9 +1,29 @@
-#include <core.h>
-#include <ptr.h>
+/*
+ * Copyright (c) 2018 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <hle/epoc9/des.h>
+#include <core/core.h>
+#include <core/ptr.h>
 
-#include <services/context.h>
+#include <core/epoc/des.h>
+
+#include <core/services/context.h>
 
 namespace eka2l1 {
     namespace service {
@@ -25,8 +45,9 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
-                TDesC16 *des = eka2l1::ptr<TDesC16>(msg->args.args[idx]).get(sys->get_memory_system());
-                return des->StdString(sys);
+                eka2l1::epoc::TDesC16 *des = static_cast<eka2l1::epoc::TDesC16 *>(msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+
+                return des->StdString(msg->own_thr->owning_process());
             }
 
             return std::optional<std::u16string>{};
@@ -41,8 +62,10 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & (int)ipc_arg_type::flag_des) {
-                TDesC8 *des = eka2l1::ptr<TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
-                return des->StdString(sys);
+                eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
+                    msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+
+                return des->StdString(msg->own_thr->owning_process());
             }
 
             return std::optional<std::string>{};
@@ -73,16 +96,18 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
-                TDesC8 *des = eka2l1::ptr<TDesC8>(msg->args.args[idx]).get(sys->get_memory_system());
+                eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
+                    msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
                 std::string bin;
 
                 bin.resize(len);
-                memmove(bin.data(), &data, len);
 
-                des->Assign(sys, bin);
+                memcpy(bin.data(), data, len);
+
+                des->Assign(msg->own_thr->owning_process(), bin);
 
                 return true;
-            } 
+            }
 
             return false;
         }

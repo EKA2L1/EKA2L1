@@ -18,9 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arm/jit_interface.h>
-#include <arm/jit_unicorn.h>
+#include <core/arm/jit_interface.h>
+#include <core/arm/jit_unicorn.h>
 
+#include <dynarmic/A32/config.h>
 #include <dynarmic/A32/a32.h>
 
 #include <memory>
@@ -39,7 +40,7 @@ namespace eka2l1 {
 
         class jit_dynarmic : public jit_interface {
             friend class arm_dynarmic_callback;
-            
+
             jit_unicorn fallback_jit;
 
             std::unique_ptr<Dynarmic::A32::Jit> jit;
@@ -50,9 +51,11 @@ namespace eka2l1 {
             memory_system *mem;
 
             hle::lib_manager *lib_mngr;
-        public:
-            bool execute_instructions(int num_instructions) override;
 
+            std::array<uint8_t*, 
+                Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> page_table_dyn;
+
+        public:
             timing_system *get_timing_sys() {
                 return timing;
             }
@@ -78,17 +81,19 @@ namespace eka2l1 {
             void step() override;
 
             uint32_t get_reg(size_t idx) override;
-            uint64_t get_sp() override;
-            uint64_t get_pc() override;
-            uint64_t get_vfp(size_t idx) override;
+            uint32_t get_sp() override;
+            uint32_t get_pc() override;
+            uint32_t get_vfp(size_t idx) override;
 
             void set_reg(size_t idx, uint32_t val) override;
-            void set_pc(uint64_t val) override;
+            void set_pc(uint32_t val) override;
             void set_sp(uint32_t val) override;
-            void set_lr(uint64_t val) override;
-            void set_vfp(size_t idx, uint64_t val) override;
+            void set_lr(uint32_t val) override;
+            void set_vfp(size_t idx, uint32_t val) override;
 
             uint32_t get_cpsr() override;
+            uint32_t get_lr() override;
+            void set_cpsr(uint32_t val) override;
 
             void save_context(thread_context &ctx) override;
             void load_context(const thread_context &ctx) override;
@@ -104,6 +109,12 @@ namespace eka2l1 {
             bool is_thumb_mode() override;
 
             void imb_range(address start, uint32_t len);
+
+            void page_table_changed() override;
+
+            void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) override;
+
+            void unmap_memory(address addr, size_t size) override;
         };
     }
 }

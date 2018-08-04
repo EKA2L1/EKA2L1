@@ -20,35 +20,44 @@
 
 #pragma once
 
-#include <kernel/wait_obj.h>
-#include <kernel/thread.h>
+#include <core/kernel/thread.h>
+#include <core/kernel/wait_obj.h>
 
 namespace eka2l1 {
     namespace kernel {
+        /*! \brief A mutex kernel object. 
+        */
         class mutex : public wait_obj {
+            //! The lock count
             int lock_count;
+
+            //! Priority of this mutex.
             uint32_t priority;
+
+            //! Thread holding
             thread_ptr holding;
 
         public:
             mutex(kernel_system *kern, std::string name, bool init_locked,
-                kernel::owner_type own,
-                kernel::uid own_id,
                 kernel::access_type access = kernel::access_type::local_access);
 
+            /*! \brief Update the priority of the mutex. */
             void update_priority();
 
-            bool should_wait(kernel::uid thr_id) override;
-            void acquire(kernel::uid thr_id) override;
+            bool should_wait(thread_ptr thr) override;
+            void acquire(thread_ptr thr) override;
 
             bool release(thread_ptr thr);
 
             void add_waiting_thread(thread_ptr thr) override;
-            void erase_waiting_thread(kernel::uid thr) override;
+            void erase_waiting_thread(thread_ptr thr) override;
 
             uint32_t get_priority() const {
                 return priority;
             }
+
+            void wait();
+            bool signal();
         };
     }
 }
