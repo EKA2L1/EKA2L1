@@ -226,4 +226,6 @@ namespace eka2l1 {
         // Contains all drive
         std::array<char, 26> drive_list(bool all_hidden);
     };
+
+    symfile physical_file_proxy(const std::string &path, int mode);
 }

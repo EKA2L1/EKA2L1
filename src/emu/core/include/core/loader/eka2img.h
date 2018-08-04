@@ -200,10 +200,6 @@ namespace eka2l1 {
         };
 
 		/*! \brief Parse an E32 Image. 
-		 * \param path Path to the image. */
-        std::optional<eka2img> parse_eka2img(const std::string &path, bool read_reloc = true);
-		
-		/*! \brief Parse an E32 Image. 
 		 * \param ef The file opened from io_system. */
         std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc = true);
 

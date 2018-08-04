@@ -1,8 +1,8 @@
 add_executable(exportlister src/main.cpp)
-target_link_libraries(exportlister PRIVATE coreloader common)
+target_link_libraries(exportlister PRIVATE coreloader coreio common)
 
 if (NOT MSVC)
- target_link_libraries(exportlister PRIVATE stdc++fs)
+    target_link_libraries(exportlister PRIVATE stdc++fs)
 endif()
 
 set_target_properties(exportlister PROPERTIES OUTPUT_NAME exportlister

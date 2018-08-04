@@ -1,6 +1,9 @@
 #include <common/log.h>
-#include <loader/eka2img.h>
-#include <loader/romimage.h>
+
+#include <core/loader/eka2img.h>
+#include <core/loader/romimage.h>
+
+#include <core/vfs.h>
 
 #include <fstream>
 #include <iostream>
@@ -57,18 +60,10 @@ int main(int argc, char **argv) {
     }
 
     for (auto &path : libs) {
-        auto img = parse_eka2img(path.string(), false);
+        auto img = parse_eka2img(eka2l1::physical_file_proxy(path.string(), READ_MODE | BIN_MODE), false);
 
         if (img) {
             dump_to_syms(path.string(), img.value());
-        } else {
-            auto rom = parse_romimg(path.string());
-
-            if (rom) {
-                dump_to_syms2(path.string(), rom.value());
-            } else {
-                LOG_ERROR("Can't dump: not romimg or e32img!");
-            }
         }
     }
 

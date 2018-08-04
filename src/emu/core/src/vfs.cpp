@@ -433,4 +433,8 @@ namespace eka2l1 {
 
         return list;
     }
+
+    symfile physical_file_proxy(const std::string &path, int mode) {
+        return std::make_shared<physical_file>(std::u16string(path.begin(), path.end()), mode);
+    }
 }
