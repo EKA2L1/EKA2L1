@@ -1048,8 +1048,21 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         property_ptr prop = kern->get_prop(aCagetory, aValue);
 
+        LOG_TRACE("Attach to property with cagetory: 0x{:x}, key: 0x{:x}", aCagetory, aValue);
+
         if (!prop) {
-            return 0;
+            uint32_t property_handle = kern->create_prop(static_cast<kernel::owner_type>(aOwnerType));
+
+            if (property_handle == INVALID_HANDLE) {
+                return KErrGeneral;
+            }
+
+            prop = kern->get_prop(property_handle);
+
+            prop->first = aCagetory;
+            prop->second = aValue;
+
+            return property_handle;
         }
 
         return kern->mirror(prop, static_cast<kernel::owner_type>(aOwnerType));
@@ -1079,18 +1092,53 @@ namespace eka2l1::epoc {
         }
         }
 
-        uint32_t property_handle = kern->create_prop(prop_type, info->iSize);
+        LOG_TRACE("Define to property with cagetory: 0x{:x}, key: 0x{:x}, type: {}", aCagetory, aKey,
+            prop_type == service::property_type::int_data ? "int" : "bin");
 
-        if (property_handle == INVALID_HANDLE) {
-            return KErrGeneral;
+        property_ptr prop = kern->get_prop(aCagetory, aKey);
+
+        if (!prop) {
+            uint32_t property_handle = kern->create_prop();
+
+            if (property_handle == INVALID_HANDLE) {
+                return KErrGeneral;
+            }
+
+            prop = kern->get_prop(property_handle);
+
+            prop->first = aCagetory;
+            prop->second = aKey;
         }
 
-        property_ptr prop = kern->get_prop(property_handle);
-
-        prop->first = aCagetory;
-        prop->second = aKey;
+        prop->define(prop_type, info->iSize);
 
         return KErrNone;
+    }
+
+    BRIDGE_FUNC(void, PropertySubscribe, TInt aPropertyHandle, eka2l1::ptr<TInt> aRequestStatus) {
+        kernel_system *kern = sys->get_kernel_system();
+        property_ptr prop = kern->get_prop(aPropertyHandle);
+
+        if (!prop) {
+            return;
+        }
+
+        prop->subscribe(aRequestStatus.get(sys->get_memory_system()));
+
+        return;
+    }
+
+    BRIDGE_FUNC(void, PropertyCancel, TInt aPropertyHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        property_ptr prop = kern->get_prop(aPropertyHandle);
+
+        if (!prop) {
+            return;
+        }
+
+        prop->cancel();
+
+        return;
     }
 
     BRIDGE_FUNC(TInt, PropertySetInt, TInt aHandle, TInt aValue) {
@@ -1287,8 +1335,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xAC, MessageKill),
-        BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
+        BRIDGE_REGISTER(0xBE, PropertyAttach),
+        BRIDGE_REGISTER(0xBF, PropertySubscribe),
+        BRIDGE_REGISTER(0xC0, PropertyCancel),
         BRIDGE_REGISTER(0xC1, PropertyGetInt),
         BRIDGE_REGISTER(0xC2, PropertyGetBin),
         BRIDGE_REGISTER(0xC3, PropertySetInt),

@@ -288,11 +288,11 @@ namespace eka2l1 {
         return create_handle_lastest(kernel::owner_type::thread);
     }
 
-    uint32_t kernel_system::create_prop(service::property_type pt, uint32_t pre_allocated) {
-        property_ptr new_prop = std::make_shared<service::property>(this, pt, pre_allocated);
+    uint32_t kernel_system::create_prop(kernel::owner_type owner) {
+        property_ptr new_prop = std::make_shared<service::property>(this);
         objects.push_back(std::move(new_prop));
 
-        return create_handle_lastest(kernel::owner_type::kernel);
+        return create_handle_lastest(owner);
     }
 
     uint32_t kernel_system::create_process(uint32_t uid,
@@ -520,53 +520,6 @@ namespace eka2l1 {
         }
 
         return std::dynamic_pointer_cast<service::session>(obj);
-    }
-
-    bool kernel_system::notify_prop(prop_ident_pair ident) {
-        auto &request_ident = prop_request_queue.find(ident);
-
-        if (request_ident == prop_request_queue.end()) {
-            return false;
-        }
-
-        int *request = request_ident->second;
-        *request = 0; // KErrNone
-
-        // Request completed
-        crr_thread()->signal_request();
-
-        return true;
-    }
-
-    bool kernel_system::subscribe_prop(prop_ident_pair ident, int *request_sts) {
-        auto &request_ident = prop_request_queue.find(ident);
-
-        if (request_ident != prop_request_queue.end()) {
-            // Unsub first
-            return false;
-        }
-
-        // This still right for the requirement: Status is still accepted even if the prop is not yet
-        // definied.
-        prop_request_queue.emplace(ident, request_sts);
-
-        return true;
-    }
-
-    bool kernel_system::unsubscribe_prop(prop_ident_pair ident) {
-        auto &request_ident = prop_request_queue.find(ident);
-
-        if (request_ident == prop_request_queue.end()) {
-            // Unsub first
-            return false;
-        }
-
-        *request_ident->second = -2; // KErrCancel
-        crr_thread()->signal_request();
-
-        prop_request_queue.erase(ident);
-
-        return true;
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {

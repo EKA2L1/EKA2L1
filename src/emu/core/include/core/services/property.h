@@ -24,9 +24,16 @@
 #include <core/ptr.h>
 
 #include <array>
+#include <memory>
 #include <vector>
 
 namespace eka2l1 {
+    namespace kernel {
+        class thread;
+    }
+
+    using thread_ptr = std::shared_ptr<kernel::thread>;
+
     namespace service {
         enum class property_type {
             int_data,
@@ -40,11 +47,11 @@ namespace eka2l1 {
 		 * and they are the way of ITC (Inter-Thread communication).
  		 *
 		*/
-        class property: public kernel::kernel_obj, public std::pair<int, int> {
+        class property : public kernel::kernel_obj, public std::pair<int, int> {
         protected:
             union {
                 int ndata;
-               std::array<uint8_t, 512> bindata;
+                std::array<uint8_t, 512> bindata;
             } data;
 
             uint32_t data_len;
@@ -52,10 +59,17 @@ namespace eka2l1 {
 
             service::property_type data_type;
 
-        public:
-            property(kernel_system *kern, service::property_type pt, uint32_t pre_allocated);
+            struct request {
+                thread_ptr request_thr;
+                int *request_status = 0;
+            } subscribe_request;
 
-			/*! \brief Set the property value (integer).
+        public:
+            property(kernel_system *kern);
+
+            void define(service::property_type pt, uint32_t pre_allocated);
+
+            /*! \brief Set the property value (integer).
              *
              * If the property type is not integer, this return false, else
              * it will set the value and notify the request.		
@@ -63,9 +77,8 @@ namespace eka2l1 {
              * \param val The value to set.		 
 			*/
             bool set(int val);
-			
-			
-			/*! \brief Set the property value (bin).
+
+            /*! \brief Set the property value (bin).
              *
              * If the property type is not binary, this return false, else
              * it will set the value and notify the request.	
@@ -79,7 +92,7 @@ namespace eka2l1 {
 
             template <typename T>
             bool set(T data) {
-                return set(reinterpret_cast<uint8_t*>(&data), sizeof(T));
+                return set(reinterpret_cast<uint8_t *>(&data), sizeof(T));
             }
 
             int get_int();
@@ -88,7 +101,7 @@ namespace eka2l1 {
             template <typename T>
             std::optional<T> get_pkg() {
                 auto bin = get_bin();
-                
+
                 if (bin.size() != sizeof(T)) {
                     return std::optional<T>{};
                 }
@@ -99,7 +112,11 @@ namespace eka2l1 {
                 return ret;
             }
 
-			/*! \brief Notify the request that there is data change */
+            void subscribe(int *sts);
+
+            void cancel();
+
+            /*! \brief Notify the request that there is data change */
             void notify_request();
         };
     }
