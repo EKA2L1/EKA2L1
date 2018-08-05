@@ -377,7 +377,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE("Receive requested from {}", server->name());
+        // LOG_TRACE("Receive requested from {}", server->name());
 
         server->receive_async_lle(aRequestStatus.get(mem),
             reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));

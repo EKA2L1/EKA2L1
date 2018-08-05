@@ -87,10 +87,8 @@ namespace eka2l1 {
                     mem->set_current_page_table(crr_process->get_page_table());
                 }
 
-                running_threads.push_back(crr_thread);
+                ready_threads.remove(newt);
                 jitter->load_context(crr_thread->ctx);
-
-                LOG_TRACE("Thread {} run", crr_thread->name());
             } else {
                 // Nope
                 crr_thread = nullptr;
@@ -105,7 +103,7 @@ namespace eka2l1 {
             }
 
             if (crr && crr->current_state() == thread_state::run) {
-                if (ready_threads.top()->current_real_priority() < crr->current_real_priority()) {
+                if (ready_threads.top()->current_real_priority() <= crr->current_real_priority()) {
                     return crr;
                 }
 
@@ -138,9 +136,7 @@ namespace eka2l1 {
         }
 
         bool thread_scheduler::sleep(thread_ptr thr, uint32_t sl_time) {
-            auto res = std::find(running_threads.begin(), running_threads.end(), thr);
-
-            if (res == running_threads.end()) {
+            if (crr_thread != thr) {
                 return false;
             }
 
@@ -149,7 +145,6 @@ namespace eka2l1 {
                 return false;
             }
 
-            running_threads.erase(res);
             thr->state = thread_state::wait;
 
             waiting_threads.push_back(thr);
@@ -165,23 +160,15 @@ namespace eka2l1 {
         }
 
         bool thread_scheduler::wait_sema(thread_ptr thr) {
-            auto res = std::find(running_threads.begin(), running_threads.end(), thr);
-
-            if (res == running_threads.end()) {
-                return false;
-            }
-
             // It's already waiting
             if (thr->state == thread_state::wait || thr->state == thread_state::ready
                 || thr->state == thread_state::wait_fast_sema) {
                 return false;
             }
 
-            running_threads.erase(res);
             thr->state = thread_state::wait_fast_sema;
 
             waiting_threads.push_back(thr);
-
             kern->prepare_reschedule();
 
             return true;
@@ -234,11 +221,7 @@ namespace eka2l1 {
             if (thr->state == thread_state::ready) {
                 unschedule(thr);
             } else if (thr->state == thread_state::run) {
-                auto &thr_run = std::find(running_threads.begin(), running_threads.end(), thr);
-
-                if (thr_run != running_threads.end()) {
-                    running_threads.erase(thr_run);
-                } else {
+                if (thr != crr_thread) {
                     return false;
                 }
             } else if (thr->state == thread_state::wait || thr->state == thread_state::wait_fast_sema) {

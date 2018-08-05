@@ -136,6 +136,7 @@ namespace eka2l1::kernel {
         }
 
         thr->owning_process(kern->get_process(obj_name));
+        kern->run_thread(primary_thread);
 
         return true;
     }
