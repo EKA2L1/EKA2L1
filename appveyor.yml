@@ -1,6 +1,12 @@
+platform:
+  - x64
+
 environment:
   NewPascalVersion: v1.0.84
-
+  matrix:
+  - PYTHON: 27
+  - PYTHON: 36
+  
 image:
   Visual Studio 2017
 
