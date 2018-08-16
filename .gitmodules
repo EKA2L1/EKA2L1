@@ -43,3 +43,6 @@
 [submodule "src/external/oss.API_REF.Public_API"]
 	path = src/external/oss.API_REF.Public_API
 	url = https://github.com/SymbianSource/oss.API_REF.Public_API
+[submodule "src/external/pybind11"]
+	path = src/external/pybind11
+	url = https://github.com/pybind/pybind11
