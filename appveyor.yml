@@ -3,14 +3,14 @@ platform:
 
 environment:
   NewPascalVersion: v1.0.84
-  matrix:
-  - PYTHON: 27
-  - PYTHON: 36
+  PYTHON: 27-x64
   
 image:
   Visual Studio 2017
 
 install:
+  - ps: |
+      $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
   - appveyor AddMessage -Category Information "Downloading NewPascal (bentokun)..."
   - appveyor DownloadFile https://github.com/bentokun/newpascal/releases/download/newpascalpack-v1.0.84/newpascal.zip
   - appveyor AddMessage "Unpacking NewPascal..."
