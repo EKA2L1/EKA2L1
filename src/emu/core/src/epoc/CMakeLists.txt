@@ -17,4 +17,4 @@ add_library(epoc
 target_include_directories(epoc PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 
 target_link_libraries(epoc PUBLIC common)
-target_link_libraries(epoc PRIVATE corekernel services hle)
+target_link_libraries(epoc PRIVATE corekernel services hle pybind11::embed)

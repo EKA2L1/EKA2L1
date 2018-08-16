@@ -342,6 +342,8 @@ namespace eka2l1::epoc {
             return KErrArgument;
         }
 
+        sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
+
         ipc_msg_ptr msg = kern->get_msg(aHandle);
 
         if (!msg) {
@@ -910,6 +912,8 @@ namespace eka2l1::epoc {
         default:
             return KErrArgument;
         }
+
+        sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
 
         kern->get_thread_scheduler()->stop(thr);
         kern->prepare_reschedule();

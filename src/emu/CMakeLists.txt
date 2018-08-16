@@ -1,5 +1,6 @@
 add_subdirectory(common)
 add_subdirectory(core)
+add_subdirectory(scripting)
 
 add_executable(EKA2L1_CONS console/main.cpp)
 target_link_libraries(EKA2L1_CONS PRIVATE common core yaml-cpp)

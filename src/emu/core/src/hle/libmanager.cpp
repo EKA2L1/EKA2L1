@@ -447,10 +447,12 @@ namespace eka2l1 {
             }
 
             epoc_import_func func = res->second;
-            
+
             if (sys->get_bool_config("log_svc_passed")) {
                 LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
             }
+
+            sys->get_manager_system()->get_script_manager()->call_svcs(svcnum);
 
             func.func(sys);
 

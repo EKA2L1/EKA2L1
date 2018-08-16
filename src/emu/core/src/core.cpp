@@ -48,7 +48,7 @@ namespace eka2l1 {
         timing.init();
 
         io.init(&mem, get_symbian_version_use());
-        mngr.init(&io);
+        mngr.init(this, &io);
         asmdis.init(&mem);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
@@ -61,8 +61,9 @@ namespace eka2l1 {
         emu_screen_driver = driver::new_screen_driver(dr_type);
 
         kern.init(this, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
-
         epoc::init_hal(this);
+
+        bool res = mngr.get_script_manager()->import_module("scripts/hello_panic");
     }
 
     uint32_t system::load(uint32_t id) {

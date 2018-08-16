@@ -1,4 +1,4 @@
-import eka2l1
+import symemu
 
 def panicHook(panicCode):
     errcode = panicCode & $FFFF
