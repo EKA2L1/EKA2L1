@@ -31,7 +31,8 @@ build_script:
   - appveyor AddMessage -Category Information "Building EKA2L1 GUI..."
   - c:\newpascal\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\newpascal\lazarus
   - copy src\emu\lazarus\EKA2L1.exe build\bin\Release\EKA2L1.exe
-  - xcopy /s "build\bin\scripts\symemu2\Release" "build\bin\Release\scripts"
+  - mkdir build\bin\Release\scripts\symemu2
+  - xcopy /s "build\bin\scripts\symemu2\Release" "build\bin\Release\scripts\symemu2"
   - xcopy /s "build\bin\scripts\Release" "build\bin\Release\scripts"
   - 7z a -m0=LZMA2 -mx9 EKA2L1.7z .\build\bin\Release\*
   - appveyor AddMessage -Category Information "Done." 
