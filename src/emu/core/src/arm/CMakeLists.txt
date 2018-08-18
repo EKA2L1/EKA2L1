@@ -16,4 +16,5 @@ target_link_libraries(arm
 	coremem 
 	coretiming
 	unicorn
-    dynarmic)
+    dynarmic
+    pybind11::embed)

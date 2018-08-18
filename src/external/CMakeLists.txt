@@ -4,11 +4,17 @@ target_include_directories(miniz PUBLIC miniz)
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 
 add_subdirectory(freetype)
+add_subdirectory(pybind11)
 add_subdirectory(FRSML)
 add_subdirectory(spdlog)
 add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(dynarmic)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DPy_DEBUG)
+    message("Add debug to prevent crash for PyBind11")
+endif()
 
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
 add_subdirectory(yaml-cpp)

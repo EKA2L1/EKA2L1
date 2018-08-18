@@ -167,7 +167,6 @@ namespace eka2l1 {
             std::vector<logon_request_form> logon_requests;
             std::vector<logon_request_form> rendezvous_requests;
 
-
         public:
             kernel_obj_ptr get_object(uint32_t handle);
 
@@ -243,6 +242,10 @@ namespace eka2l1 {
                 return own_process;
             }
 
+            arm::jit_interface::thread_context get_thread_context() {
+                return ctx;
+            }
+
             void owning_process(process_ptr pr);
 
             thread_state current_state() const {
@@ -271,6 +274,10 @@ namespace eka2l1 {
 
             bool is_invalid_leave() const {
                 return leave_depth > 0;
+            }
+
+            int get_leave_depth() const {
+                return leave_depth;
             }
         };
 

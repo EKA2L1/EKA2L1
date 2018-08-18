@@ -48,7 +48,6 @@ namespace eka2l1 {
         class thread_scheduler {
             std::vector<thread_ptr> waiting_threads;
             eka2l1::cp_queue<thread_ptr> ready_threads;
-            std::vector<thread_ptr> running_threads;
 
             thread_ptr crr_thread;
             process_ptr crr_process;
@@ -88,8 +87,8 @@ namespace eka2l1 {
             void refresh();
 
             bool should_terminate() {
-                return waiting_threads.empty() && running_threads.empty()
-                    && ready_threads.empty();
+                return waiting_threads.empty()
+                    && ready_threads.empty() && !crr_thread;
             }
 
             thread_ptr current_thread() const {

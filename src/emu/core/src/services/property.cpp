@@ -19,17 +19,21 @@
  */
 
 #include <core/core_kernel.h>
+#include <core/kernel/thread.h>
 #include <core/services/property.h>
 
 #include <common/log.h>
 
 namespace eka2l1 {
     namespace service {
-        property::property(kernel_system *kern, service::property_type pt, uint32_t pre_allocated)
-            : kernel::kernel_obj(kern, "", kernel::access_type::global_access)
-            , data_type(pt)
-            , data_len(pre_allocated) {
+        property::property(kernel_system *kern)
+            : kernel::kernel_obj(kern, "", kernel::access_type::global_access) {
             obj_type = kernel::object_type::prop;
+        }
+
+        void property::define(service::property_type pt, uint32_t pre_allocated) {
+            data_type = pt;
+            data_len = pre_allocated;
 
             if (pre_allocated > 512) {
                 LOG_WARN("Property trying to alloc more then 512 bytes, limited to 512 bytes");
@@ -78,9 +82,31 @@ namespace eka2l1 {
             return local;
         }
 
-        void property::notify_request() {
-            kern->notify_prop(std::make_pair(first, second));
+        void property::subscribe(int *sts) {
+            if (subscribe_request.request_status) {
+                return;
+            }
+
+            subscribe_request.request_thr = kern->crr_thread();
+            subscribe_request.request_status = sts;
         }
 
+        void property::cancel() {
+            if (subscribe_request.request_status) {
+                *subscribe_request.request_status = -3;
+                subscribe_request.request_thr->signal_request();
+
+                subscribe_request.request_status = nullptr;
+            }
+        }
+
+        void property::notify_request() {
+            if (subscribe_request.request_status) {
+                *subscribe_request.request_status = 0;
+                subscribe_request.request_thr->signal_request();
+
+                subscribe_request.request_status = nullptr;
+            }
+        }
     }
 }

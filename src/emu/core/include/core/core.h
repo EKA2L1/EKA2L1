@@ -27,7 +27,6 @@
 #include <core/hle/libmanager.h>
 #include <core/loader/rom.h>
 #include <core/manager/manager.h>
-#include <core/manager/package_manager.h>
 #include <core/vfs.h>
 
 #include <functional>
@@ -160,6 +159,10 @@ namespace eka2l1 {
         int loop();
         void shutdown();
 
+        manager_system *get_manager_system(){
+            return &mngr;
+        }
+
         memory_system *get_memory_system() {
             return &mem;
         }
@@ -200,6 +203,7 @@ namespace eka2l1 {
         void reset();
 
         bool install_rpkg(const std::string &path);
+        void load_scripts();
 
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);

@@ -325,9 +325,6 @@ namespace eka2l1 {
 
             if (state == kernel::thread_state::ready) {
                 scheduler->refresh();
-            } else {
-                scheduler->schedule(
-                    std::dynamic_pointer_cast<thread>(kern->get_kernel_obj_by_id(uid)));
             }
         }
 
@@ -336,9 +333,6 @@ namespace eka2l1 {
 
             if (state == kernel::thread_state::ready) {
                 scheduler->refresh();
-            } else {
-                scheduler->schedule(
-                    std::dynamic_pointer_cast<thread>(kern->get_kernel_obj_by_id(uid)));
             }
 
             update_priority();

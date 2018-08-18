@@ -30,12 +30,25 @@
 #include <core/loader/rpkg.h>
 
 #include <core/epoc/hal.h>
+#include <core/epoc/panic.h>
 
 #include <yaml-cpp/yaml.h>
 
+#include <experimental/filesystem>
 #include <fstream>
 
+namespace fs = std::experimental::filesystem;
+
 namespace eka2l1 {
+    void system::load_scripts() {
+        for (const auto &entry : fs::directory_iterator("scripts")) {
+            if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".py") {
+                auto module_name = entry.path().filename().replace_extension("").string();
+                mngr.get_script_manager()->import_module("scripts/" + module_name);
+            }
+        }
+    }
+    
     void system::init() {
         exit = false;
 
@@ -48,7 +61,7 @@ namespace eka2l1 {
         timing.init();
 
         io.init(&mem, get_symbian_version_use());
-        mngr.init(&io);
+        mngr.init(this, &io);
         asmdis.init(&mem);
 
         cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
@@ -63,6 +76,9 @@ namespace eka2l1 {
         kern.init(this, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
 
         epoc::init_hal(this);
+        epoc::init_panic_descriptions();
+
+        load_scripts();
     }
 
     uint32_t system::load(uint32_t id) {
@@ -82,7 +98,8 @@ namespace eka2l1 {
         kern.run_process(process_handle);
 
         // Change window title to game title
-        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + 
+            " (" + common::to_string(id, std::hex) + ")");
 
         if (!startup_inited) {
             for (auto &startup_app : startup_apps) {
@@ -108,6 +125,8 @@ namespace eka2l1 {
 
         if (!kern.should_terminate()) {
             kern.processing_requests();
+
+            mngr.get_script_manager()->call_reschedules();
             kern.reschedule();
 
             reschedule_pending = false;

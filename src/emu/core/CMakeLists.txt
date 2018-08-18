@@ -31,9 +31,9 @@ target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)
 target_include_directories(coreio PUBLIC include)
 
-target_link_libraries(coremem PUBLIC common)
-target_link_libraries(coretiming PUBLIC common)
-target_link_libraries(coreio PUBLIC common coreloader)
+target_link_libraries(coremem PUBLIC common pybind11::embed)
+target_link_libraries(coretiming PUBLIC common pybind11::embed)
+target_link_libraries(coreio PUBLIC common coreloader pybind11::embed)
 
 add_library(core include/core/ptr.h
                  include/core/core.h
@@ -59,6 +59,7 @@ endif()
 # Disasm on the go in the future
 target_link_libraries(core PUBLIC
         disasm
-        hle)       
+        hle
+        pybind11::embed)       
         
 target_include_directories(core PUBLIC include)

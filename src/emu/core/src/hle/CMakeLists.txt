@@ -12,7 +12,7 @@ add_library(hle
     return_val.cpp)
 
 target_link_libraries(hle PUBLIC yaml-cpp common disasm)
-target_link_libraries(hle PRIVATE coreloader epoc abi)
+target_link_libraries(hle PRIVATE coreloader epoc abi pybind11::embed)
 
 target_include_directories(hle PUBLIC ${YAML_INCLUDE_DIR})
 target_include_directories(hle PUBLIC  ${CORE_OUTER_INCLUDE_DIR})

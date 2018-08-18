@@ -81,7 +81,6 @@ namespace eka2l1 {
         friend class process;
 
         /* Kernel objects map */
-        std::unordered_map<prop_ident_pair, int *> prop_request_queue;
         std::array<ipc_msg_ptr, 0x80> msgs;
 
         /* End kernel objects map */
@@ -208,7 +207,7 @@ namespace eka2l1 {
         /*! \brief Completely destroy a message. */
         void destroy_msg(ipc_msg_ptr msg);
 
-        uint32_t create_prop(service::property_type pt, uint32_t pre_allocated);
+        uint32_t create_prop(kernel::owner_type owner = kernel::owner_type::kernel);
 
         /* Fast duplication, unsafe */
         uint32_t mirror(thread_ptr own_thread, uint32_t handle, kernel::owner_type owner);
@@ -237,6 +236,7 @@ namespace eka2l1 {
         server_ptr get_server_by_name(const std::string name);
 
         std::vector<thread_ptr> get_all_thread_own_process(process_ptr pr);
+        std::vector<process_ptr> get_all_processes();
 
         bool run_thread(uint32_t handle);
         bool run_process(uint32_t handle);

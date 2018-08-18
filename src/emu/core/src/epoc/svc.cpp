@@ -4,6 +4,7 @@
 #include <core/epoc/handle.h>
 #include <core/epoc/svc.h>
 #include <core/epoc/tl.h>
+#include <core/epoc/panic.h>
 #include <core/epoc/uid.h>
 
 #include <common/cvt.h>
@@ -322,25 +323,34 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
 
         std::string exit_cage = aCage.get(mem)->StdString(sys);
+        std::optional<std::string> exit_description;
 
-        switch (aExitType) {
-        case TExitType::panic:
-            LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {} {}", exit_cage, aReason,
-                aReason == 2 ? "(Session already connected)" : (aReason == 1) ? "(Session not connected)" : "(Bad message opcode)");
-            break;
+        if (is_panic_category_action_default(exit_cage)) {
+            exit_description = get_panic_description(exit_cage, aReason);
 
-        case TExitType::kill:
-            LOG_TRACE("Thread forcefully killed by message with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            switch (aExitType) {
+            case TExitType::panic:
+                LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        case TExitType::terminate:
-        case TExitType::pending:
-            LOG_TRACE("Thread terminated peacefully by message with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            case TExitType::kill:
+                LOG_TRACE("Thread forcefully killed by message with cagetory: {} and exit code: {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        default:
-            return KErrArgument;
+            case TExitType::terminate:
+            case TExitType::pending:
+                LOG_TRACE("Thread terminated peacefully by message with cagetory: {} and exit code: {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
+
+            default:
+                return KErrArgument;
+            }
         }
+
+        sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
 
         ipc_msg_ptr msg = kern->get_msg(aHandle);
 
@@ -377,7 +387,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE("Receive requested from {}", server->name());
+        // LOG_TRACE("Receive requested from {}", server->name());
 
         server->receive_async_lle(aRequestStatus.get(mem),
             reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
@@ -892,24 +902,34 @@ namespace eka2l1::epoc {
         }
 
         std::string exit_cage = aReasonDes.get(mem)->StdString(sys);
+        std::optional<std::string> exit_description;
 
-        switch (aExitType) {
-        case TExitType::panic:
-            LOG_TRACE("Thread paniced with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+        if (is_panic_category_action_default(exit_cage)) {
+            exit_description = get_panic_description(exit_cage, aReason);
 
-        case TExitType::kill:
-            LOG_TRACE("Thread forcefully killed with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            switch (aExitType) {
+            case TExitType::panic:
+                LOG_TRACE("Thread paniced with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        case TExitType::terminate:
-        case TExitType::pending:
-            LOG_TRACE("Thread terminated peacefully with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            case TExitType::kill:
+                LOG_TRACE("Thread forcefully killed with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        default:
-            return KErrArgument;
+            case TExitType::terminate:
+            case TExitType::pending:
+                LOG_TRACE("Thread terminated peacefully with cagetory: {} and exit code: {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
+
+            default:
+                return KErrArgument;
+            }
         }
+
+        sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
 
         kern->get_thread_scheduler()->stop(thr);
         kern->prepare_reschedule();
@@ -1048,8 +1068,21 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         property_ptr prop = kern->get_prop(aCagetory, aValue);
 
+        LOG_TRACE("Attach to property with cagetory: 0x{:x}, key: 0x{:x}", aCagetory, aValue);
+
         if (!prop) {
-            return 0;
+            uint32_t property_handle = kern->create_prop(static_cast<kernel::owner_type>(aOwnerType));
+
+            if (property_handle == INVALID_HANDLE) {
+                return KErrGeneral;
+            }
+
+            prop = kern->get_prop(property_handle);
+
+            prop->first = aCagetory;
+            prop->second = aValue;
+
+            return property_handle;
         }
 
         return kern->mirror(prop, static_cast<kernel::owner_type>(aOwnerType));
@@ -1079,18 +1112,53 @@ namespace eka2l1::epoc {
         }
         }
 
-        uint32_t property_handle = kern->create_prop(prop_type, info->iSize);
+        LOG_TRACE("Define to property with cagetory: 0x{:x}, key: 0x{:x}, type: {}", aCagetory, aKey,
+            prop_type == service::property_type::int_data ? "int" : "bin");
 
-        if (property_handle == INVALID_HANDLE) {
-            return KErrGeneral;
+        property_ptr prop = kern->get_prop(aCagetory, aKey);
+
+        if (!prop) {
+            uint32_t property_handle = kern->create_prop();
+
+            if (property_handle == INVALID_HANDLE) {
+                return KErrGeneral;
+            }
+
+            prop = kern->get_prop(property_handle);
+
+            prop->first = aCagetory;
+            prop->second = aKey;
         }
 
-        property_ptr prop = kern->get_prop(property_handle);
-
-        prop->first = aCagetory;
-        prop->second = aKey;
+        prop->define(prop_type, info->iSize);
 
         return KErrNone;
+    }
+
+    BRIDGE_FUNC(void, PropertySubscribe, TInt aPropertyHandle, eka2l1::ptr<TInt> aRequestStatus) {
+        kernel_system *kern = sys->get_kernel_system();
+        property_ptr prop = kern->get_prop(aPropertyHandle);
+
+        if (!prop) {
+            return;
+        }
+
+        prop->subscribe(aRequestStatus.get(sys->get_memory_system()));
+
+        return;
+    }
+
+    BRIDGE_FUNC(void, PropertyCancel, TInt aPropertyHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        property_ptr prop = kern->get_prop(aPropertyHandle);
+
+        if (!prop) {
+            return;
+        }
+
+        prop->cancel();
+
+        return;
     }
 
     BRIDGE_FUNC(TInt, PropertySetInt, TInt aHandle, TInt aValue) {
@@ -1287,8 +1355,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xAC, MessageKill),
-        BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
+        BRIDGE_REGISTER(0xBE, PropertyAttach),
+        BRIDGE_REGISTER(0xBF, PropertySubscribe),
+        BRIDGE_REGISTER(0xC0, PropertyCancel),
         BRIDGE_REGISTER(0xC1, PropertyGetInt),
         BRIDGE_REGISTER(0xC2, PropertyGetBin),
         BRIDGE_REGISTER(0xC3, PropertySetInt),

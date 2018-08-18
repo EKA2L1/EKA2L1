@@ -26,9 +26,15 @@ namespace eka2l1 {
         return &pkgmngr;
     }
 
-    void manager_system::init(io_system *ios) {
+    manager::script_manager *manager_system::get_script_manager() {
+        return scrmngr.get();
+    }
+
+    void manager_system::init(system *sys, io_system *ios) {
         io = ios;
+
         pkgmngr = manager::package_manager(ios);
+        scrmngr = std::make_unique<manager::script_manager>(sys);
     }
 }
 
