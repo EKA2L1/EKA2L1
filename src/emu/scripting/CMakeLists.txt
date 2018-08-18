@@ -34,7 +34,7 @@ set_target_properties(symemu_common PROPERTIES OUTPUT_NAME common
 
 add_custom_command(
 	TARGET symemu
-			POST_BUILD    
+			POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:symemu>/example"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/README.md" "$<TARGET_FILE_DIR:symemu>"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/example/hello_eka2l1.py" "$<TARGET_FILE_DIR:symemu>/example/"
