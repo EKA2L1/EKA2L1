@@ -111,4 +111,25 @@ namespace eka2l1::manager {
     void script_manager::register_svc(int svc_num, pybind11::function &func) {
         svc_functions.push_back(svc_func(svc_num, func));
     }
+    
+    void script_manager::register_reschedule(pybind11::function &func) {
+        reschedule_functions.push_back(func);
+    }
+
+    void script_manager::call_reschedules() {
+        std::lock_guard<std::mutex> guard(smutex);
+
+        eka2l1::system *crr_instance = scripting::get_current_instance();
+        eka2l1::scripting::set_current_instance(sys);
+
+        for (const auto &reschedule_func : reschedule_functions) {
+            try {
+                reschedule_func();
+            } catch (py::error_already_set &exec) {
+                LOG_WARN("Script interpreted error: {}", exec.what());
+            }
+        }
+
+        scripting::set_current_instance(crr_instance);
+    }
 }

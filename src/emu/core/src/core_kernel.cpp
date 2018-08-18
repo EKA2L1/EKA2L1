@@ -478,6 +478,19 @@ namespace eka2l1 {
         return thr_list;
     }
 
+    std::vector<process_ptr> kernel_system::get_all_processes() {
+        std::vector<process_ptr> process_list;
+
+        for (kernel_obj_ptr &obj : objects) {
+            if (obj->get_object_type() == kernel::object_type::process) {
+                process_ptr pr = std::dynamic_pointer_cast<kernel::process>(obj);
+                process_list.push_back(pr);
+            }
+        }
+
+        return process_list;
+    }
+
     void kernel_system::free_msg(ipc_msg_ptr msg) {
         msg->free = true;
     }

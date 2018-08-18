@@ -153,6 +153,8 @@ int loop_system(int sys) {
 
     while (!symsys->should_exit())
         symsys->loop();
+
+    return 0;
 }
 
 // Load the ROM into symbian memory

@@ -4,6 +4,7 @@ add_library(epoc
     ${CORE_INCLUDE_DIR}/epoc/svc.h
     ${CORE_INCLUDE_DIR}/epoc/handle.h
     ${CORE_INCLUDE_DIR}/epoc/reg.h
+    ${CORE_INCLUDE_DIR}/epoc/panic.h
     ${CORE_INCLUDE_DIR}/epoc/hal.h
     ${CORE_INCLUDE_DIR}/epoc/dll.h
     tl.cpp
@@ -11,6 +12,7 @@ add_library(epoc
     svc.cpp
     dll.cpp
     handle.cpp
+    panic.cpp
     reg.cpp
     hal.cpp)
 

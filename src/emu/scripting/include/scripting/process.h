@@ -7,6 +7,8 @@
 #include <vector>
 
 namespace eka2l1::scripting {
+    class thread;
+
     class process {
         eka2l1::process_ptr process_handle;
 
@@ -16,6 +18,11 @@ namespace eka2l1::scripting {
         bool read_process_memory(const size_t addr, std::vector<char> &buffer, const size_t size);
         bool write_process_memory(const size_t addr, std::vector<char> buffer);
 
-        //std::unique_ptr<eka2l1::page> get_page_info(size_t addr);
+        std::string get_executable_path();
+        std::string get_name();
+
+        std::vector<std::unique_ptr<eka2l1::scripting::thread>> get_thread_list();
     };
+
+    std::vector<std::unique_ptr<eka2l1::scripting::process>> get_process_list();
 }

@@ -46,4 +46,6 @@ add_custom_command(
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comic.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comicbd.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comici.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comicz.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>")
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comicz.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/panic.json" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/domaincli.py" "$<TARGET_FILE_DIR:EKA2L1_CONS>/scripts")

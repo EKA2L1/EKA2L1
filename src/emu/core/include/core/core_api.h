@@ -75,4 +75,4 @@ extern "C" {
 	EKA2L1_API int reinit_system(int sys);
 
     EKA2L1_API int install_rpkg(int sys, const char *path);
-  }
+}

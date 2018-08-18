@@ -4,6 +4,7 @@
 #include <core/epoc/handle.h>
 #include <core/epoc/svc.h>
 #include <core/epoc/tl.h>
+#include <core/epoc/panic.h>
 #include <core/epoc/uid.h>
 
 #include <common/cvt.h>
@@ -322,24 +323,31 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
 
         std::string exit_cage = aCage.get(mem)->StdString(sys);
+        std::optional<std::string> exit_description;
 
-        switch (aExitType) {
-        case TExitType::panic:
-            LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {} {}", exit_cage, aReason,
-                aReason == 2 ? "(Session already connected)" : (aReason == 1) ? "(Session not connected)" : "(Bad message opcode)");
-            break;
+        if (is_panic_category_action_default(exit_cage)) {
+            exit_description = get_panic_description(exit_cage, aReason);
 
-        case TExitType::kill:
-            LOG_TRACE("Thread forcefully killed by message with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            switch (aExitType) {
+            case TExitType::panic:
+                LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        case TExitType::terminate:
-        case TExitType::pending:
-            LOG_TRACE("Thread terminated peacefully by message with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            case TExitType::kill:
+                LOG_TRACE("Thread forcefully killed by message with cagetory: {} and exit code: {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        default:
-            return KErrArgument;
+            case TExitType::terminate:
+            case TExitType::pending:
+                LOG_TRACE("Thread terminated peacefully by message with cagetory: {} and exit code: {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
+
+            default:
+                return KErrArgument;
+            }
         }
 
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
@@ -894,23 +902,31 @@ namespace eka2l1::epoc {
         }
 
         std::string exit_cage = aReasonDes.get(mem)->StdString(sys);
+        std::optional<std::string> exit_description;
 
-        switch (aExitType) {
-        case TExitType::panic:
-            LOG_TRACE("Thread paniced with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+        if (is_panic_category_action_default(exit_cage)) {
+            exit_description = get_panic_description(exit_cage, aReason);
 
-        case TExitType::kill:
-            LOG_TRACE("Thread forcefully killed with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            switch (aExitType) {
+            case TExitType::panic:
+                LOG_TRACE("Thread paniced with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        case TExitType::terminate:
-        case TExitType::pending:
-            LOG_TRACE("Thread terminated peacefully with cagetory: {} and exit code: {}", exit_cage, aReason);
-            break;
+            case TExitType::kill:
+                LOG_TRACE("Thread forcefully killed with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
 
-        default:
-            return KErrArgument;
+            case TExitType::terminate:
+            case TExitType::pending:
+                LOG_TRACE("Thread terminated peacefully with cagetory: {} and exit code: {}", exit_cage, aReason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
+
+            default:
+                return KErrArgument;
+            }
         }
 
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);

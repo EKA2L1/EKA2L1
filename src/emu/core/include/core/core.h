@@ -203,6 +203,7 @@ namespace eka2l1 {
         void reset();
 
         bool install_rpkg(const std::string &path);
+        void load_scripts();
 
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);

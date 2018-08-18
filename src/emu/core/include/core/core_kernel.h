@@ -236,6 +236,7 @@ namespace eka2l1 {
         server_ptr get_server_by_name(const std::string name);
 
         std::vector<thread_ptr> get_all_thread_own_process(process_ptr pr);
+        std::vector<process_ptr> get_all_processes();
 
         bool run_thread(uint32_t handle);
         bool run_process(uint32_t handle);
