@@ -30,3 +30,13 @@ implementation of Symbian. You should make multiple hook for each OS version or 
    - Unlike Symemu, Symemu2 is compiled to a pyd and not related at all to Symemu. It's a standalone, and provides useful utilities
 to deal with Symbian stuff. For example, you can use to extract a Symbian game information
    - Some modules are written by hand that will help with scripting
+   
+## FAQ
+- Q: When does a script getting initialized?
+- A: After the emulator done intialization, meaning at the start of EKA2L1, *scriptEntry* will be called.
+
+- Q: Will hook script run asynchronously or synchronously?
+- A: Synchronously. The slowdown is possible if there are many scripts hooked to the same thing or if script is doing something big.
+
+- Q: Can i make script function running at other time on emulator rather than reschedule, svc, etc ?
+- A: More hook will be added in the future. Other than, no.
