@@ -481,6 +481,8 @@ namespace eka2l1 {
     }
 
     void fs_server::open_dir(service::ipc_context ctx) {
+        auto dir = ctx.get_arg<std::u16string>(0);
+
         ctx.set_request_status(KErrNotFound);
     }
 
