@@ -525,8 +525,11 @@ namespace eka2l1 {
             }
 
             if (!out) {
-                if (include_attribs.empty() && drv.media_type != drive_media::none) {
-                    dlist[i] = 1;
+                if (include_attribs.empty()) {
+                    if (drv.media_type != drive_media::none) {
+                        dlist[i] = 1;
+                    }
+
                     continue;
                 }
 
