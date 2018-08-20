@@ -134,9 +134,7 @@ namespace eka2l1 {
 
     enum class drive_attrib {
         none,
-        hidden,
-        exclude,
-        hidden_exclude
+        hidden
     };
 
     /*! \brief A VFS drive. */
@@ -201,8 +199,7 @@ namespace eka2l1 {
         // Open a file. Return is a shared pointer of the file interface.
         std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
 
-        // Contains all drive
-        std::array<char, 26> drive_list(bool all_hidden);
+        drive get_drive_entry(drive_number drv);
     };
 
     symfile physical_file_proxy(const std::string &path, int mode);

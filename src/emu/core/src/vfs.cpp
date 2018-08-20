@@ -403,16 +403,8 @@ namespace eka2l1 {
         return pf;
     }
 
-    std::array<char, 26> io_system::drive_list(bool all_hidden) {
-        std::array<char, 26> list;
-
-        std::fill(list.begin(), list.end(), 0);
-
-        for (size_t i = 0; i < drives.size(); i++) {
-            list[i] = 1;
-        }
-
-        return list;
+    drive io_system::get_drive_entry(drive_number drv){
+        return drives[drv];
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {

@@ -494,16 +494,51 @@ namespace eka2l1 {
             return;
         }
 
-        bool list_hidden = true;
+        std::vector<drive_attrib> exclude_attribs;
+        std::vector<drive_attrib> include_attribs;
 
         // Fetch flags
-        if (*flags & KDriveAttExclude) {
-            if (*flags & KDriveAttHidden) {
-                list_hidden = false;
+        if (*flags & KDriveAttHidden) {
+            if (*flags & KDriveAttExclude) {
+                exclude_attribs.push_back(drive_attrib::hidden);
+            } else {
+                include_attribs.push_back(drive_attrib::hidden);
             }
         }
 
-        std::array<char, 26> dlist = ctx.sys->get_io_system()->drive_list(list_hidden);
+        std::array<char, drive_count> dlist;
+
+        std::fill(dlist.begin(), dlist.end(), 0);
+
+        for (size_t i = drive_a; i < drive_count; i += 1) {
+            eka2l1::drive drv = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(i));
+
+            bool out = false;
+
+            for (const auto &exclude : exclude_attribs) {
+                if (static_cast<int>(exclude) & static_cast<int>(drv.attribute)) {
+                    dlist[i] = 0;
+                    out = true;
+
+                    break;
+                }
+            }
+
+            if (!out) {
+                if (include_attribs.empty() && drv.media_type != drive_media::none) {
+                    dlist[i] = 1;
+                    continue;
+                }
+
+                auto meet_one_condition = std::find_if(include_attribs.begin(), include_attribs.end(),
+                    [=](drive_attrib attrib) { return static_cast<int>(attrib) & static_cast<int>(drv.attribute); });
+
+                if (meet_one_condition != include_attribs.end()) {
+                    dlist[i] = 1;
+                }
+            }
+        }
+
         bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]), dlist.size());
 
         if (!success) {
@@ -581,9 +616,9 @@ namespace eka2l1 {
         TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
         std::optional<TDriveInfo> info = ctx.get_arg_packed<TDriveInfo>(0);
 
-        std::array<char, 26> dlist = ctx.sys->get_io_system()->drive_list(true);
-        
-        if (!dlist[static_cast<int>(drv)]) {
+        eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+
+        if (io_drive.media_type == drive_media::none) {
             info->iType = EMediaUnknown;
 
             ctx.write_arg_pkg<TDriveInfo>(0, *info);
@@ -596,12 +631,40 @@ namespace eka2l1 {
             return;
         }
 
-        info->iType = EMediaHardDisk;
-        info->iDriveAtt = KDriveAttLocal;
+        switch (io_drive.media_type) {
+        case drive_media::physical: {
+            info->iType = EMediaHardDisk;
+            info->iDriveAtt = KDriveAttLocal;
 
-        if (drv == EDriveZ) {
+            break;
+        }
+
+        case drive_media::rom: {
             info->iType = EMediaRom;
             info->iDriveAtt = KDriveAttRom;
+
+            break;
+        }
+
+        case drive_media::reflect: {
+            info->iType = EMediaRotatingMedia;
+            info->iDriveAtt = KDriveAttRedirected;
+
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        switch (io_drive.attribute) {
+        case drive_attrib::hidden: {
+            info->iDriveAtt &= KEntryAttHidden;
+            break;
+        }
+
+        default:
+            break;
         }
 
         info->iBattery = EBatNotSupported;
