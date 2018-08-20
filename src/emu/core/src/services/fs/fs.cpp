@@ -547,6 +547,35 @@ namespace eka2l1 {
         TConnectionBusType iConnectionBusType;
     };
 
+    enum TDriveNumber {
+        EDriveA,
+        EDriveB,
+        EDriveC,
+        EDriveD,
+        EDriveE,
+        EDriveF,
+        EDriveG,
+        EDriveH,
+        EDriveI,
+        EDriveJ,
+        EDriveK,
+        EDriveL,
+        EDriveM,
+        EDriveN,
+        EDriveO,
+        EDriveP,
+        EDriveQ,
+        EDriveR,
+        EDriveS,
+        EDriveT,
+        EDriveU,
+        EDriveV,
+        EDriveW,
+        EDriveX,
+        EDriveY,
+        EDriveZ
+    };
+
     /* Simple for now only, in the future this should be more advance. */
     void fs_server::drive(service::ipc_context ctx) {
         TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));

@@ -208,51 +208,36 @@ namespace eka2l1 {
     void io_system::init(memory_system *smem, epocver ever) {
         mem = smem;
         ver = ever;
-
-        crr_dir = "C:";
     }
 
     void io_system::shutdown() {
-        drives.clear();
         file_caches.clear();
     }
 
-    std::string io_system::current_dir() {
-        return crr_dir;
-    }
-
-    void io_system::current_dir(const std::string &new_dir) {
+    void io_system::mount(const drive_number drv, const drive_media media, const std::string &real_path) {
         std::lock_guard<std::mutex> guard(mut);
-        crr_dir = new_dir;
-    }
 
-    void io_system::mount(const std::string &dvc, const std::string &real_path, bool in_mem) {
-        auto find_res = drives.find(dvc);
+        drive &drvm = drives[drv];
 
-        if (find_res == drives.end()) {
-            // Warn
+        if (drvm.media_type != drive_media::none) {
+            return;
         }
 
-        drive drv;
-        drv.is_in_mem = in_mem;
-        drv.drive_name = dvc;
-        drv.real_path = real_path;
+        char drive_dos_char = char(0x43 + drv);
 
-        std::lock_guard<std::mutex> guard(mut);
-        drives.insert(std::make_pair(dvc, drv));
-
-        crr_dir = dvc;
+        drvm.media_type = media;
+        drvm.drive_name = std::string(&drive_dos_char, 1) + ":";
+        drvm.real_path = real_path;
     }
 
-    void io_system::unmount(const std::string &dvc) {
+    void io_system::unmount(const drive_number drv) {
         std::lock_guard<std::mutex> guard(mut);
-        drives.erase(dvc);
+
+        drives[drv].media_type = drive_media::none;
     }
 
     std::string io_system::get(std::string vir_path) {
         std::string abs_path = "";
-
-        std::string current_dir = crr_dir;
 
         // Current directory is always an absolute path
         std::string partition;
@@ -260,23 +245,26 @@ namespace eka2l1 {
         if (vir_path.find_first_of(':') == 1) {
             partition = vir_path.substr(0, 2);
         } else {
-            partition = current_dir.substr(0, 2);
+            return "";
         }
 
-        auto res = drives.find(partition);
+        auto res = std::find_if(drives.begin(), drives.end(),
+            [&](drive &drv) { return drv.drive_name == partition; });
 
-        if (res == drives.end() || res->second.is_in_mem) {
+        if (res == drives.end() || (res->media_type == drive_media::rom)) {
             partition[0] = std::toupper(partition[0]);
-            res = drives.find(partition);
+
+            res = std::find_if(drives.begin(), drives.end(),
+                [&](drive &drv) { return drv.drive_name == partition; });
 
             if (res == drives.end()) {
                 return "";
             }
         }
 
-        std::string rp = res->second.real_path;
+        std::string rp = res->real_path;
 
-        if (res->second.is_in_mem) {
+        if (res->media_type == drive_media::rom) {
             switch (ver) {
             case epocver::epoc93: {
                 rp = add_path(rp, "v93\\");
@@ -303,8 +291,6 @@ namespace eka2l1 {
             }
         }
 
-        current_dir = rp + crr_dir.substr(2);
-
         // Make it case-insensitive
         for (auto &c : vir_path) {
             c = std::tolower(c);
@@ -317,12 +303,8 @@ namespace eka2l1 {
             vir_path.replace(lib_pos, 12, "\\sys\\bin");
         }
 
-        if (!is_absolute(vir_path, current_dir)) {
-            abs_path = absolute_path(vir_path, current_dir);
-        } else {
-            abs_path = add_path(rp, vir_path.substr(2));
-        }
-
+        abs_path = add_path(rp, vir_path.substr(2));
+    
         return abs_path;
     }
 
@@ -335,20 +317,22 @@ namespace eka2l1 {
 
         std::string path_dvc = vir_path.substr(0, 2);
 
-        auto findres = drives.find(path_dvc);
+        auto findres = std::find_if(drives.begin(), drives.end(),
+            [&](drive &drv) { return drv.drive_name == path_dvc; });
 
         if (findres != drives.end()) {
-            return findres->second;
+            return *findres;
         } else {
             if (std::islower(path_dvc[0]))
                 path_dvc[0] = std::toupper(path_dvc[0]);
             else
                 path_dvc[0] = std::tolower(path_dvc[0]);
 
-            findres = drives.find(path_dvc);
+            findres = std::find_if(drives.begin(), drives.end(),
+                [&](drive &drv) { return drv.drive_name == path_dvc; });
 
             if (findres != drives.end()) {
-                return findres->second;
+                return *findres;
             }
         }
 
@@ -403,7 +387,7 @@ namespace eka2l1 {
         drive drv = res.value();
         auto new_path = get(common::ucs2_to_utf8(vir_path));
 
-        if (drv.is_in_mem) {
+        if (drv.media_type == drive_media::rom) {
             if (mode & WRITE_MODE) {
                 LOG_INFO("No writing in in-memory!");
                 return std::shared_ptr<file>(nullptr);
@@ -425,10 +409,8 @@ namespace eka2l1 {
         std::fill(list.begin(), list.end(), 0);
 
         for (auto &drive : drives) {
-            if (!drive.second.hidden || (drive.second.hidden && all_hidden)) {
-                char drive_index = std::tolower(drive.first[0]) - 97;
-                list[drive_index] = 1;
-            }
+            char drive_index = std::tolower(drive.drive_name[0]) - 97;
+            list[drive_index] = 1;
         }
 
         return list;

@@ -138,7 +138,8 @@ int mount_symbian_system(int sys, const char *drive, const char *real_path) {
     sys_ptr &symsys = syses[sys - 1];
 
     symsys->mount(strncmp(drive, "C:", 2) == 0 ? 
-        availdrive::c : (strncmp(drive, "E:", 2) == 0 ? availdrive::e : availdrive::z), 
+        drive_c : ((strncmp(drive, "E:", 2) == 0) ? drive_e : drive_z), 
+        drive_media::physical, 
         real_path);
 
     return 0;

@@ -51,5 +51,34 @@ enum class epocver {
     epoc10
 };
 
-int translate_protection(prot cprot);
+enum drive_number {
+    drive_a,
+    drive_b,
+    drive_c,
+    drive_d,
+    drive_e,
+    drive_f,
+    drive_g,
+    drive_h,
+    drive_i,
+    drive_j,
+    drive_k,
+    drive_l,
+    drive_m,
+    drive_n,
+    drive_o,
+    drive_p,
+    drive_q,
+    drive_r,
+    drive_s,
+    drive_t,
+    drive_u,
+    drive_v,
+    drive_w,
+    drive_x,
+    drive_y,
+    drive_z,
+    drive_count
+};
 
+int translate_protection(prot cprot);

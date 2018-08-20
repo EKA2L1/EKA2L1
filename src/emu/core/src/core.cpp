@@ -175,8 +175,8 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system::mount(availdrive drv, std::string path, bool in_mem) {
-        io.mount(((drv == availdrive::c) ? "C:" : ((drv == availdrive::z) ? "Z:" : "E:")), path, in_mem);
+    void system::mount(drive_number drv, drive_media media, std::string path) {
+        io.mount(drv, media, path);
     }
 
     void system::request_exit() {

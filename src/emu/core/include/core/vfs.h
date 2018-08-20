@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <array>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -122,14 +123,23 @@ namespace eka2l1 {
 
     using symfile = std::shared_ptr<file>;
 
+    enum class drive_media {
+        none,
+        usb,
+        physical,
+        reflect,
+        rom,
+        ram
+    };
+
+    enum class drive_attrib {
+        hidden,
+        exclude,
+        hidden_exclude
+    };
+
     /*! \brief A VFS drive. */
     struct drive {
-        //! Attribute that true if the drive is in memory
-        /*! Some drives are in the memory. This included Z: (ROM region)
-         * and D: (small RAM region).
-        */
-        bool is_in_mem;
-
         //! The name of the drive.
         /*! Lowercase of uppercase (c: or C:) doesn't matter. Like Windows,
          * path in Symbian are insensitive.
@@ -141,47 +151,20 @@ namespace eka2l1 {
         */
         std::string real_path;
 
-        bool hidden = false;
-    };
+        //! The attribute of the drive
+        drive_attrib attribute;
 
-    enum TDriveNumber
-    {
-        EDriveA,
-        EDriveB,
-        EDriveC,
-        EDriveD,
-        EDriveE,
-        EDriveF,
-        EDriveG,
-        EDriveH,
-        EDriveI,
-        EDriveJ,
-        EDriveK,
-        EDriveL,
-        EDriveM,
-        EDriveN,
-        EDriveO,
-        EDriveP,
-        EDriveQ,
-        EDriveR,
-        EDriveS,
-        EDriveT,
-        EDriveU,
-        EDriveV,
-        EDriveW,
-        EDriveX,
-        EDriveY,
-        EDriveZ
+        //! The media type of the drive
+        drive_media media_type;
     };
 
     class io_system {
         std::map<std::string, symfile> file_caches;
-        std::map<std::string, drive> drives;
+        std::array<drive, drive_count> drives;
 
         loader::rom *rom_cache;
 
         std::string pref_path;
-        std::string crr_dir;
 
         std::mutex mut;
 
@@ -205,17 +188,11 @@ namespace eka2l1 {
         // Shutdown the IO system
         void shutdown();
 
-        // Returns the current directory of the system
-        std::string current_dir();
-
-        // Set the current directory
-        void current_dir(const std::string &new_dir);
-
         // Mount a physical path to a device
-        void mount(const std::string &dvc, const std::string &real_path, bool in_mem = false);
+        void mount(const drive_number dvc, const drive_media media, const std::string &real_path);
 
         // Unmount a device
-        void unmount(const std::string &dvc);
+        void unmount(const drive_number dvc);
 
         // Map a virtual path to real path. Return "" if this can't be mapped to real
         std::string get(std::string vir_path);
