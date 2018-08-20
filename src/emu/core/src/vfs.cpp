@@ -223,7 +223,7 @@ namespace eka2l1 {
             return;
         }
 
-        char drive_dos_char = char(0x43 + drv);
+        char drive_dos_char = char(0x41 + drv);
 
         drvm.media_type = media;
         drvm.drive_name = std::string(&drive_dos_char, 1) + ":";
@@ -304,7 +304,7 @@ namespace eka2l1 {
         }
 
         abs_path = add_path(rp, vir_path.substr(2));
-    
+
         return abs_path;
     }
 
@@ -408,9 +408,8 @@ namespace eka2l1 {
 
         std::fill(list.begin(), list.end(), 0);
 
-        for (auto &drive : drives) {
-            char drive_index = std::tolower(drive.drive_name[0]) - 97;
-            list[drive_index] = 1;
+        for (size_t i = 0; i < drives.size(); i++) {
+            list[i] = 1;
         }
 
         return list;

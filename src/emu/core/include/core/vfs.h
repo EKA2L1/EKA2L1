@@ -133,6 +133,7 @@ namespace eka2l1 {
     };
 
     enum class drive_attrib {
+        none,
         hidden,
         exclude,
         hidden_exclude
