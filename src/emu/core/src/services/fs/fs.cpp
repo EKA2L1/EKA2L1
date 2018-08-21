@@ -494,15 +494,15 @@ namespace eka2l1 {
             return;
         }
 
-        std::vector<drive_attrib> exclude_attribs;
-        std::vector<drive_attrib> include_attribs;
+        std::vector<io_attrib> exclude_attribs;
+        std::vector<io_attrib> include_attribs;
 
         // Fetch flags
         if (*flags & KDriveAttHidden) {
             if (*flags & KDriveAttExclude) {
-                exclude_attribs.push_back(drive_attrib::hidden);
+                exclude_attribs.push_back(io_attrib::hidden);
             } else {
-                include_attribs.push_back(drive_attrib::hidden);
+                include_attribs.push_back(io_attrib::hidden);
             }
         }
 
@@ -534,7 +534,7 @@ namespace eka2l1 {
                 }
 
                 auto meet_one_condition = std::find_if(include_attribs.begin(), include_attribs.end(),
-                    [=](drive_attrib attrib) { return static_cast<int>(attrib) & static_cast<int>(drv.attribute); });
+                    [=](io_attrib attrib) { return static_cast<int>(attrib) & static_cast<int>(drv.attribute); });
 
                 if (meet_one_condition != include_attribs.end()) {
                     dlist[i] = 1;
@@ -661,7 +661,7 @@ namespace eka2l1 {
         }
 
         switch (io_drive.attribute) {
-        case drive_attrib::hidden: {
+        case io_attrib::hidden: {
             info->iDriveAtt &= KEntryAttHidden;
             break;
         }

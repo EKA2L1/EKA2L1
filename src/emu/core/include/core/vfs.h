@@ -58,12 +58,33 @@ namespace eka2l1 {
 #define APPEND_MODE 0x300
 #define BIN_MODE 0x400
 
+    enum class io_component_type {
+        file,
+        dir,
+        drive
+    };
+
+    enum class io_attrib {
+        none,
+        hidden
+    };
+
+    struct io_component {
+        io_attrib attribute;
+        io_component_type type;
+
+        io_component() {}
+        explicit io_component(io_component_type type, io_attrib attrib = io_attrib::none);
+    };
+
     /*! \brief The file abstraction for VFS class
      *
      * This class contains all virtual method for virtual file (ROM file
      * and actual physical file).
     */
-    struct file {
+    struct file : public io_component {
+        explicit file(io_attrib attrib = io_attrib::none);
+
         /*! \brief Write to the file. 
          *
          * Write binary data to a file open with WRITE_MODE
@@ -122,6 +143,7 @@ namespace eka2l1 {
     };
 
     using symfile = std::shared_ptr<file>;
+    using io_component_ptr = std::shared_ptr<io_component>;
 
     enum class drive_media {
         none,
@@ -132,16 +154,13 @@ namespace eka2l1 {
         ram
     };
 
-    enum class drive_attrib {
-        none,
-        hidden
-    };
-
     /*! \brief A VFS drive. */
-    struct drive {
+    struct drive : public io_component {
+        explicit drive(io_attrib attrib = io_attrib::none);
+
         //! The name of the drive.
         /*! Lowercase of uppercase (c: or C:) doesn't matter. Like Windows,
-         * path in Symbian are insensitive.
+        * path in Symbian are insensitive.
         */
         std::string drive_name;
 
@@ -150,11 +169,29 @@ namespace eka2l1 {
         */
         std::string real_path;
 
-        //! The attribute of the drive
-        drive_attrib attribute;
-
         //! The media type of the drive
         drive_media media_type;
+    };
+
+    struct entry_info {
+        io_attrib attribute;
+
+        std::string name;
+        std::string full_path;
+
+        io_component_type type;
+    };
+
+    struct directory : public io_component {
+        explicit directory(io_attrib attrib = io_attrib::none);
+
+        /*! \brief Get the next iterating entry. 
+        *
+        * All the entries are filtered through a regex expression. The directory iterator
+        * will increase itself if it's not at the end entry, and returns the entry info. Else,
+        * it will return nothing
+        */
+        virtual std::optional<entry_info> get_next_entry() = 0;
     };
 
     class io_system {
@@ -198,6 +235,7 @@ namespace eka2l1 {
 
         // Open a file. Return is a shared pointer of the file interface.
         std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
+        std::shared_ptr<directory> open_dir(std::u16string vir_path);
 
         drive get_drive_entry(drive_number drv);
     };
