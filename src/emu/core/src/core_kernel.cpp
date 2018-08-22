@@ -414,10 +414,6 @@ namespace eka2l1 {
 
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
-        if (info.no_close) {
-            return false;
-        }
-
         if (info.handle_array_local) {
             return crr_thread()->thread_handles.get_object(handle);
         }

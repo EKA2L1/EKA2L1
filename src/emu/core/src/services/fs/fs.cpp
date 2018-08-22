@@ -86,13 +86,13 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
-    fs_file_table::fs_file_table() {
+    fs_handle_table::fs_handle_table() {
         for (size_t i = 0; i < nodes.size(); i++) {
             nodes[i].id = i + 1;
         }
     }
 
-    size_t fs_file_table::add_node(fs_node &node) {
+    size_t fs_handle_table::add_node(fs_node &node) {
         for (size_t i = 0; i < nodes.size(); i++) {
             if (!nodes[i].is_active) {
                 nodes[i] = std::move(node);
@@ -105,7 +105,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    bool fs_file_table::close_nodes(size_t handle) {
+    bool fs_handle_table::close_nodes(size_t handle) {
         if (handle <= nodes.size() && nodes[handle - 1].is_active) {
             nodes[handle - 1].is_active = false;
 
@@ -115,7 +115,7 @@ namespace eka2l1 {
         return false;
     }
 
-    fs_node *fs_file_table::get_node(size_t handle) {
+    fs_node *fs_handle_table::get_node(size_t handle) {
         if (handle <= nodes.size() && nodes[handle - 1].is_active) {
             return &nodes[handle - 1];
         }
@@ -123,9 +123,10 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    fs_node *fs_file_table::get_node(const std::u16string &path) {
+    fs_node *fs_handle_table::get_node(const std::u16string &path) {
         for (auto &file_node : nodes) {
-            if (file_node.is_active && file_node.vfs_node->file_name() == path) {
+            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) &&
+                (std::reinterpret_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
                 return &file_node;
             }
         }
@@ -160,12 +161,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr) {
+        if (node == nullptr || node->vfs_node->type == io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
 
-        ctx.write_arg_pkg<uint64_t>(0, node->vfs_node->size());
+        ctx.write_arg_pkg<uint64_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
         ctx.set_request_status(KErrNone);
     }
 
@@ -179,10 +180,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr) {
+        if (node == nullptr && node->vfs_node->type == io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
+
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         std::optional<int> seek_mode = ctx.get_arg<int>(1);
         std::optional<int> seek_off = ctx.get_arg<int>(0);
@@ -204,8 +207,8 @@ namespace eka2l1 {
             break;
         }
 
-        node->vfs_node->seek(*seek_off, vfs_seek_mode);
-        ctx.write_arg_pkg(3, static_cast<int>(node->vfs_node->tell()));
+        vfs_file->seek(*seek_off, vfs_seek_mode);
+        ctx.write_arg_pkg(3, static_cast<int>(vfs_file->tell()));
 
         ctx.set_request_status(KErrNone);
     }
@@ -220,10 +223,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr) {
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
+
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         if (!(node->open_mode & READ_MODE)) {
             ctx.set_request_status(KErrAccessDenied);
@@ -233,19 +238,19 @@ namespace eka2l1 {
         int read_len = *ctx.get_arg<int>(1);
 
         int read_pos = *ctx.get_arg<int>(2);
-        uint64_t last_pos = node->vfs_node->tell();
-        uint64_t size = node->vfs_node->size();
+        uint64_t last_pos = vfs_file->tell();
+        uint64_t size = vfs_file->size();
 
         if (size - read_pos < read_len) {
             read_len = size - last_pos;
         }
 
-        node->vfs_node->seek(read_pos, file_seek_mode::beg);
+        vfs_file->seek(read_pos, file_seek_mode::beg);
 
         std::vector<char> read_data;
         read_data.resize(read_len);
 
-        node->vfs_node->read_file(read_data.data(), 1, read_len);
+        vfs_file->read_file(read_data.data(), 1, read_len);
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
         ctx.set_request_status(read_len);
@@ -483,7 +488,24 @@ namespace eka2l1 {
     void fs_server::open_dir(service::ipc_context ctx) {
         auto dir = ctx.get_arg<std::u16string>(0);
 
-        ctx.set_request_status(KErrNotFound);
+        if (!dir) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node node;
+        node.vfs_node = ctx.sys->get_io_system()->open_dir(*dir);
+
+        if (!node.vfs_node) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        node.own_process = ctx.msg->own_thr->owning_process();
+        size_t dir_handle = nodes_table.add_node(node);
+
+        ctx.write_arg_pkg<int>(3, dir_handle);
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::drive_list(service::ipc_context ctx) {

@@ -55,6 +55,9 @@ namespace eka2l1 {
     struct file;
     using symfile = std::shared_ptr<file>;
 
+    struct io_component;
+    using io_component_ptr = std::shared_ptr<io_component>;
+
     enum class fs_node_share {
         exclusive,
         share_read,
@@ -63,7 +66,7 @@ namespace eka2l1 {
     };
 
     struct fs_node {
-        symfile vfs_node;
+        io_component_ptr vfs_node;
         uint32_t access_count;
 
         int mix_mode;
@@ -82,11 +85,11 @@ namespace eka2l1 {
         fs_max_handle = 0x200
     };
 
-    class fs_file_table {
+    class fs_handle_table {
         std::array<fs_node, fs_max_handle> nodes;
 
     public:
-        fs_file_table();
+        fs_handle_table();
 
         size_t add_node(fs_node &node);
         bool close_nodes(size_t handle);
@@ -96,7 +99,7 @@ namespace eka2l1 {
     };
 
     class fs_server : public service::server {
-        fs_file_table nodes_table;
+        fs_handle_table nodes_table;
 
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);

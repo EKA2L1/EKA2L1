@@ -500,15 +500,23 @@ namespace eka2l1 {
         size_t pos_bs = vir_path.find_last_of(u"\\");
         size_t pos_fs = vir_path.find_last_of(u"//");
 
-        size_t pos_check = std::max(pos_bs, pos_fs);
+        size_t pos_check = std::string::npos;
+
+        if (pos_bs != std::string::npos && pos_fs != std::string::npos) {
+            pos_check = std::max(pos_bs, pos_fs);
+        } else if (pos_bs != std::string::npos) {
+            pos_check = pos_bs;
+        } else if (pos_fs != std::string::npos) {
+            pos_check = pos_fs;
+        }
 
         std::string filter("*");
 
         // Check if there should be a filter
         if (pos_check != std::string::npos && pos_check != vir_path.length() - 1) {
             // Substring this, get the filter
-            filter = common::ucs2_to_utf8(vir_path.substr(pos_check, vir_path.length() - pos_check - 1));
-            vir_path.erase(vir_path.begin() + pos_check, vir_path.end());
+            filter = common::ucs2_to_utf8(vir_path.substr(pos_check + 1, vir_path.length() - pos_check - 1));
+            vir_path.erase(vir_path.begin() + pos_check + 1, vir_path.end());
         }
 
         auto res = find_dvc(common::ucs2_to_utf8(vir_path));
