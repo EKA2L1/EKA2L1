@@ -114,6 +114,8 @@ namespace eka2l1 {
         void file_read(service::ipc_context ctx);
 
         void open_dir(service::ipc_context ctx);
+        void read_dir_packed(service::ipc_context ctx);
+        void read_dir(service::ipc_context ctx);
 
         void drive_list(service::ipc_context ctx);
         void drive(service::ipc_context ctx);

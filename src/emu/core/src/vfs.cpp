@@ -285,6 +285,8 @@ namespace eka2l1 {
                 info.name = name;
                 info.type = dir_iterator->status().type() == fs::file_type::regular ? io_component_type::file
                                                                                     : io_component_type::dir;
+                info.size = dir_iterator->status().type() == fs::file_type::regular ? fs::file_size(dir_iterator->path())
+                    : 0;
 
                 return info;
             }

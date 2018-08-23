@@ -125,8 +125,7 @@ namespace eka2l1 {
 
     fs_node *fs_handle_table::get_node(const std::u16string &path) {
         for (auto &file_node : nodes) {
-            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) &&
-                (std::reinterpret_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
+            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) && (std::dynamic_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
                 return &file_node;
             }
         }
@@ -143,6 +142,8 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
         REGISTER_IPC(fs_server, open_dir, EFsDirOpen, "Fs::OpenDir");
+        REGISTER_IPC(fs_server, read_dir, EFsDirReadOne, "Fs::ReadDir");
+        REGISTER_IPC(fs_server, read_dir_packed, EFsDirReadPacked, "Fs::ReadDirPacked");
         REGISTER_IPC(fs_server, drive_list, EFsDriveList, "Fs::DriveList");
         REGISTER_IPC(fs_server, drive, EFsDrive, "Fs::Drive");
     }
@@ -161,12 +162,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr || node->vfs_node->type == io_component_type::file) {
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
 
-        ctx.write_arg_pkg<uint64_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
+        ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
         ctx.set_request_status(KErrNone);
     }
 
@@ -180,12 +181,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr && node->vfs_node->type == io_component_type::file) {
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
 
         std::optional<int> seek_mode = ctx.get_arg<int>(1);
         std::optional<int> seek_off = ctx.get_arg<int>(0);
@@ -228,7 +229,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
 
         if (!(node->open_mode & READ_MODE)) {
             ctx.set_request_status(KErrAccessDenied);
@@ -505,6 +506,126 @@ namespace eka2l1 {
         size_t dir_handle = nodes_table.add_node(node);
 
         ctx.write_arg_pkg<int>(3, dir_handle);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::read_dir(service::ipc_context ctx) {
+        std::optional<int> handle = ctx.get_arg<int>(3);
+        std::optional<int> entry_arr_vir_ptr = ctx.get_arg<int>(0);
+
+        if (!handle || !entry_arr_vir_ptr) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *dir_node = nodes_table.get_node(*handle);
+
+        if (!dir_node || dir_node->vfs_node->type != io_component_type::dir) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
+        epoc::TEntry entry;
+
+        std::optional<entry_info> info = dir->get_next_entry();
+
+        if (!info) {
+            ctx.set_request_status(KErrEof);
+            return;
+        }
+
+        switch (info->attribute) {
+        case io_attrib::hidden: {
+            entry.aAttrib = KEntryAttHidden;
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        if (info->type == io_component_type::dir) {
+            entry.aAttrib &= KEntryAttDir;
+        } else {
+            entry.aAttrib &= KEntryAttNormal;
+        }
+
+        entry.aSize = info->size;
+        entry.aNameLength = info->full_path.length();
+
+        // TODO: Convert this using a proper function
+        std::u16string path_u16(info->full_path.begin(), info->full_path.end());
+        std::copy(path_u16.begin(), path_u16.end(), entry.aName);
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::read_dir_packed(service::ipc_context ctx) {
+        std::optional<int> handle = ctx.get_arg<int>(3);
+        std::optional<int> entry_arr_vir_ptr = ctx.get_arg<int>(0);
+
+        if (!handle || !entry_arr_vir_ptr) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *dir_node = nodes_table.get_node(*handle);
+
+        if (!dir_node || dir_node->vfs_node->type != io_component_type::dir) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
+
+        epoc::TDes8 *entry_arr = reinterpret_cast<epoc::TDes8 *>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(*entry_arr_vir_ptr));
+        epoc::TEntry *entry_buf = reinterpret_cast<epoc::TEntry *>(entry_arr->Ptr(ctx.msg->own_thr->owning_process()));
+
+        epoc::TBuf8 *entry_arr_buf = reinterpret_cast<epoc::TBuf8 *>(entry_arr);
+
+        size_t max_entries = entry_arr_buf->iMaxLength / sizeof(epoc::TEntry);
+        size_t queried_entries = 0;
+
+        for (; queried_entries < max_entries; queried_entries++) {
+            std::optional<entry_info> info = dir->get_next_entry();
+
+            if (!info) {
+                break;
+            }
+
+            switch (info->attribute) {
+            case io_attrib::hidden: {
+                entry_buf[queried_entries].aAttrib = KEntryAttHidden;
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            if (info->type == io_component_type::dir) {
+                entry_buf[queried_entries].aAttrib &= KEntryAttDir;
+            } else {
+                entry_buf[queried_entries].aAttrib &= KEntryAttNormal;
+            }
+
+            entry_buf[queried_entries].aSize = info->size;
+            entry_buf[queried_entries].aNameLength = info->name.length();
+
+            // TODO: Convert this using a proper function
+            std::u16string path_u16(info->name.begin(), info->name.end());
+            std::copy(path_u16.begin(), path_u16.end(), entry_buf[queried_entries].aName);
+        }
+
+        entry_arr->SetLength(ctx.msg->own_thr->owning_process(), queried_entries * sizeof(epoc::TEntry));
+
+        if (queried_entries < max_entries) {
+            // All entries have been read, and it should return EOF now
+            ctx.set_request_status(KErrEof);
+            return;
+        }
+
         ctx.set_request_status(KErrNone);
     }
 

@@ -74,6 +74,8 @@ namespace eka2l1 {
         io_component_type type;
 
         io_component() {}
+        virtual ~io_component() {}
+
         explicit io_component(io_component_type type, io_attrib attrib = io_attrib::none);
     };
 
@@ -180,6 +182,7 @@ namespace eka2l1 {
         std::string full_path;
 
         io_component_type type;
+        size_t size;
     };
 
     struct directory : public io_component {
