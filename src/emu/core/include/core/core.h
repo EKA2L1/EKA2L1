@@ -46,12 +46,6 @@ namespace eka2l1 {
 
     using hal_ptr = std::shared_ptr<epoc::hal>;
 
-    enum class availdrive {
-        c,
-        e,
-        z
-    };
-
     /*! A system instance, where all the magic happens. 
      *
      * Represents the Symbian system. You can switch the system version dynamiclly.
@@ -199,7 +193,7 @@ namespace eka2l1 {
             return cpu;
         }
 
-        void mount(availdrive drv, std::string path, bool in_mem = false);
+        void mount(drive_number drv, drive_media media, std::string path);
         void reset();
 
         bool install_rpkg(const std::string &path);

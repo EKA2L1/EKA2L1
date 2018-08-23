@@ -86,13 +86,13 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
-    fs_file_table::fs_file_table() {
+    fs_handle_table::fs_handle_table() {
         for (size_t i = 0; i < nodes.size(); i++) {
             nodes[i].id = i + 1;
         }
     }
 
-    size_t fs_file_table::add_node(fs_node &node) {
+    size_t fs_handle_table::add_node(fs_node &node) {
         for (size_t i = 0; i < nodes.size(); i++) {
             if (!nodes[i].is_active) {
                 nodes[i] = std::move(node);
@@ -105,7 +105,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    bool fs_file_table::close_nodes(size_t handle) {
+    bool fs_handle_table::close_nodes(size_t handle) {
         if (handle <= nodes.size() && nodes[handle - 1].is_active) {
             nodes[handle - 1].is_active = false;
 
@@ -115,7 +115,7 @@ namespace eka2l1 {
         return false;
     }
 
-    fs_node *fs_file_table::get_node(size_t handle) {
+    fs_node *fs_handle_table::get_node(size_t handle) {
         if (handle <= nodes.size() && nodes[handle - 1].is_active) {
             return &nodes[handle - 1];
         }
@@ -123,9 +123,9 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    fs_node *fs_file_table::get_node(const std::u16string &path) {
+    fs_node *fs_handle_table::get_node(const std::u16string &path) {
         for (auto &file_node : nodes) {
-            if (file_node.is_active && file_node.vfs_node->file_name() == path) {
+            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) && (std::dynamic_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
                 return &file_node;
             }
         }
@@ -142,6 +142,8 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
         REGISTER_IPC(fs_server, open_dir, EFsDirOpen, "Fs::OpenDir");
+        REGISTER_IPC(fs_server, read_dir, EFsDirReadOne, "Fs::ReadDir");
+        REGISTER_IPC(fs_server, read_dir_packed, EFsDirReadPacked, "Fs::ReadDirPacked");
         REGISTER_IPC(fs_server, drive_list, EFsDriveList, "Fs::DriveList");
         REGISTER_IPC(fs_server, drive, EFsDrive, "Fs::Drive");
     }
@@ -160,12 +162,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr) {
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
 
-        ctx.write_arg_pkg<uint64_t>(0, node->vfs_node->size());
+        ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
         ctx.set_request_status(KErrNone);
     }
 
@@ -179,10 +181,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr) {
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
+
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
 
         std::optional<int> seek_mode = ctx.get_arg<int>(1);
         std::optional<int> seek_off = ctx.get_arg<int>(0);
@@ -204,8 +208,8 @@ namespace eka2l1 {
             break;
         }
 
-        node->vfs_node->seek(*seek_off, vfs_seek_mode);
-        ctx.write_arg_pkg(3, static_cast<int>(node->vfs_node->tell()));
+        vfs_file->seek(*seek_off, vfs_seek_mode);
+        ctx.write_arg_pkg(3, static_cast<int>(vfs_file->tell()));
 
         ctx.set_request_status(KErrNone);
     }
@@ -220,10 +224,12 @@ namespace eka2l1 {
 
         fs_node *node = get_file_node(*handle_res);
 
-        if (node == nullptr) {
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
             ctx.set_request_status(KErrBadHandle);
             return;
         }
+
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
 
         if (!(node->open_mode & READ_MODE)) {
             ctx.set_request_status(KErrAccessDenied);
@@ -233,19 +239,19 @@ namespace eka2l1 {
         int read_len = *ctx.get_arg<int>(1);
 
         int read_pos = *ctx.get_arg<int>(2);
-        uint64_t last_pos = node->vfs_node->tell();
-        uint64_t size = node->vfs_node->size();
+        uint64_t last_pos = vfs_file->tell();
+        uint64_t size = vfs_file->size();
 
         if (size - read_pos < read_len) {
             read_len = size - last_pos;
         }
 
-        node->vfs_node->seek(read_pos, file_seek_mode::beg);
+        vfs_file->seek(read_pos, file_seek_mode::beg);
 
         std::vector<char> read_data;
         read_data.resize(read_len);
 
-        node->vfs_node->read_file(read_data.data(), 1, read_len);
+        vfs_file->read_file(read_data.data(), 1, read_len);
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
         ctx.set_request_status(read_len);
@@ -481,7 +487,146 @@ namespace eka2l1 {
     }
 
     void fs_server::open_dir(service::ipc_context ctx) {
-        ctx.set_request_status(KErrNotFound);
+        auto dir = ctx.get_arg<std::u16string>(0);
+
+        if (!dir) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node node;
+        node.vfs_node = ctx.sys->get_io_system()->open_dir(*dir);
+
+        if (!node.vfs_node) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        node.own_process = ctx.msg->own_thr->owning_process();
+        size_t dir_handle = nodes_table.add_node(node);
+
+        ctx.write_arg_pkg<int>(3, dir_handle);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::read_dir(service::ipc_context ctx) {
+        std::optional<int> handle = ctx.get_arg<int>(3);
+        std::optional<int> entry_arr_vir_ptr = ctx.get_arg<int>(0);
+
+        if (!handle || !entry_arr_vir_ptr) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *dir_node = nodes_table.get_node(*handle);
+
+        if (!dir_node || dir_node->vfs_node->type != io_component_type::dir) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
+        epoc::TEntry entry;
+
+        std::optional<entry_info> info = dir->get_next_entry();
+
+        if (!info) {
+            ctx.set_request_status(KErrEof);
+            return;
+        }
+
+        switch (info->attribute) {
+        case io_attrib::hidden: {
+            entry.aAttrib = KEntryAttHidden;
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        if (info->type == io_component_type::dir) {
+            entry.aAttrib &= KEntryAttDir;
+        } else {
+            entry.aAttrib &= KEntryAttNormal;
+        }
+
+        entry.aSize = info->size;
+        entry.aNameLength = info->full_path.length();
+
+        // TODO: Convert this using a proper function
+        std::u16string path_u16(info->full_path.begin(), info->full_path.end());
+        std::copy(path_u16.begin(), path_u16.end(), entry.aName);
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::read_dir_packed(service::ipc_context ctx) {
+        std::optional<int> handle = ctx.get_arg<int>(3);
+        std::optional<int> entry_arr_vir_ptr = ctx.get_arg<int>(0);
+
+        if (!handle || !entry_arr_vir_ptr) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *dir_node = nodes_table.get_node(*handle);
+
+        if (!dir_node || dir_node->vfs_node->type != io_component_type::dir) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
+
+        epoc::TDes8 *entry_arr = reinterpret_cast<epoc::TDes8 *>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(*entry_arr_vir_ptr));
+        epoc::TEntry *entry_buf = reinterpret_cast<epoc::TEntry *>(entry_arr->Ptr(ctx.msg->own_thr->owning_process()));
+
+        epoc::TBuf8 *entry_arr_buf = reinterpret_cast<epoc::TBuf8 *>(entry_arr);
+
+        size_t max_entries = entry_arr_buf->iMaxLength / sizeof(epoc::TEntry);
+        size_t queried_entries = 0;
+
+        for (; queried_entries < max_entries; queried_entries++) {
+            std::optional<entry_info> info = dir->get_next_entry();
+
+            if (!info) {
+                break;
+            }
+
+            switch (info->attribute) {
+            case io_attrib::hidden: {
+                entry_buf[queried_entries].aAttrib = KEntryAttHidden;
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            if (info->type == io_component_type::dir) {
+                entry_buf[queried_entries].aAttrib &= KEntryAttDir;
+            } else {
+                entry_buf[queried_entries].aAttrib &= KEntryAttNormal;
+            }
+
+            entry_buf[queried_entries].aSize = info->size;
+            entry_buf[queried_entries].aNameLength = info->name.length();
+
+            // TODO: Convert this using a proper function
+            std::u16string path_u16(info->name.begin(), info->name.end());
+            std::copy(path_u16.begin(), path_u16.end(), entry_buf[queried_entries].aName);
+        }
+
+        entry_arr->SetLength(ctx.msg->own_thr->owning_process(), queried_entries * sizeof(epoc::TEntry));
+
+        if (queried_entries < max_entries) {
+            // All entries have been read, and it should return EOF now
+            ctx.set_request_status(KErrEof);
+            return;
+        }
+
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::drive_list(service::ipc_context ctx) {
@@ -492,16 +637,54 @@ namespace eka2l1 {
             return;
         }
 
-        bool list_hidden = true;
+        std::vector<io_attrib> exclude_attribs;
+        std::vector<io_attrib> include_attribs;
 
         // Fetch flags
-        if (*flags & KDriveAttExclude) {
-            if (*flags & KDriveAttHidden) {
-                list_hidden = false;
+        if (*flags & KDriveAttHidden) {
+            if (*flags & KDriveAttExclude) {
+                exclude_attribs.push_back(io_attrib::hidden);
+            } else {
+                include_attribs.push_back(io_attrib::hidden);
             }
         }
 
-        std::array<char, 26> dlist = ctx.sys->get_io_system()->drive_list(list_hidden);
+        std::array<char, drive_count> dlist;
+
+        std::fill(dlist.begin(), dlist.end(), 0);
+
+        for (size_t i = drive_a; i < drive_count; i += 1) {
+            eka2l1::drive drv = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(i));
+
+            bool out = false;
+
+            for (const auto &exclude : exclude_attribs) {
+                if (static_cast<int>(exclude) & static_cast<int>(drv.attribute)) {
+                    dlist[i] = 0;
+                    out = true;
+
+                    break;
+                }
+            }
+
+            if (!out) {
+                if (include_attribs.empty()) {
+                    if (drv.media_type != drive_media::none) {
+                        dlist[i] = 1;
+                    }
+
+                    continue;
+                }
+
+                auto meet_one_condition = std::find_if(include_attribs.begin(), include_attribs.end(),
+                    [=](io_attrib attrib) { return static_cast<int>(attrib) & static_cast<int>(drv.attribute); });
+
+                if (meet_one_condition != include_attribs.end()) {
+                    dlist[i] = 1;
+                }
+            }
+        }
+
         bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]), dlist.size());
 
         if (!success) {
@@ -545,14 +728,43 @@ namespace eka2l1 {
         TConnectionBusType iConnectionBusType;
     };
 
+    enum TDriveNumber {
+        EDriveA,
+        EDriveB,
+        EDriveC,
+        EDriveD,
+        EDriveE,
+        EDriveF,
+        EDriveG,
+        EDriveH,
+        EDriveI,
+        EDriveJ,
+        EDriveK,
+        EDriveL,
+        EDriveM,
+        EDriveN,
+        EDriveO,
+        EDriveP,
+        EDriveQ,
+        EDriveR,
+        EDriveS,
+        EDriveT,
+        EDriveU,
+        EDriveV,
+        EDriveW,
+        EDriveX,
+        EDriveY,
+        EDriveZ
+    };
+
     /* Simple for now only, in the future this should be more advance. */
     void fs_server::drive(service::ipc_context ctx) {
         TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
         std::optional<TDriveInfo> info = ctx.get_arg_packed<TDriveInfo>(0);
 
-        std::array<char, 26> dlist = ctx.sys->get_io_system()->drive_list(true);
-        
-        if (!dlist[static_cast<int>(drv)]) {
+        eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+
+        if (io_drive.media_type == drive_media::none) {
             info->iType = EMediaUnknown;
 
             ctx.write_arg_pkg<TDriveInfo>(0, *info);
@@ -565,12 +777,40 @@ namespace eka2l1 {
             return;
         }
 
-        info->iType = EMediaHardDisk;
-        info->iDriveAtt = KDriveAttLocal;
+        switch (io_drive.media_type) {
+        case drive_media::physical: {
+            info->iType = EMediaHardDisk;
+            info->iDriveAtt = KDriveAttLocal;
 
-        if (drv == EDriveZ) {
+            break;
+        }
+
+        case drive_media::rom: {
             info->iType = EMediaRom;
             info->iDriveAtt = KDriveAttRom;
+
+            break;
+        }
+
+        case drive_media::reflect: {
+            info->iType = EMediaRotatingMedia;
+            info->iDriveAtt = KDriveAttRedirected;
+
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        switch (io_drive.attribute) {
+        case io_attrib::hidden: {
+            info->iDriveAtt &= KEntryAttHidden;
+            break;
+        }
+
+        default:
+            break;
         }
 
         info->iBattery = EBatNotSupported;

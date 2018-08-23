@@ -26,13 +26,30 @@
 #include <core/ptr.h>
 #include <core/vfs.h>
 
+#include <experimental/filesystem>
+
 #include <iostream>
 
 #include <map>
 #include <mutex>
+#include <regex>
 #include <thread>
 
+namespace fs = std::experimental::filesystem;
+
 namespace eka2l1 {
+    file::file(io_attrib attrib)
+        : io_component(io_component_type::file, attrib) {
+    }
+
+    drive::drive(io_attrib attrib)
+        : io_component(io_component_type::drive, attrib) {
+    }
+
+    directory::directory(io_attrib attrib)
+        : io_component(io_component_type::dir, attrib) {
+    }
+
     // Class for some one want to access rom
     struct rom_file : public file {
         loader::rom_entry file;
@@ -205,54 +222,117 @@ namespace eka2l1 {
         }
     };
 
+    /* DIRECTORY VFS */
+    class physical_directory : public directory {
+        std::regex filter;
+        std::string vir_path;
+
+        fs::directory_iterator dir_iterator;
+
+    protected:
+        std::string construct_regex_string(std::string regexstr) {
+            size_t pos = regexstr.find(".");
+
+            // Find ., replace with \.
+            while (pos != std::string::npos) {
+                regexstr.replace(regexstr.begin() + pos, regexstr.begin() + pos + 1, "\.");
+                pos = regexstr.find(".");
+            }
+
+            // Interesting, find ?, replace with . pos = regexstr.find(".");
+            pos = regexstr.find("?");
+
+            while (pos != std::string::npos) {
+                regexstr.replace(regexstr.begin() + pos, regexstr.begin() + pos + 1, ".");
+                pos = regexstr.find("?");
+            }
+
+            pos = regexstr.find("*");
+            while (pos != std::string::npos) {
+                regexstr.replace(regexstr.begin() + pos, regexstr.begin() + pos + 1, ".*");
+                pos = regexstr.find("?");
+            }
+
+            return regexstr;
+        }
+
+    public:
+        physical_directory(const std::string &phys_path, const std::string &vir_path, const std::string &filter)
+            : filter(construct_regex_string(filter))
+            , dir_iterator(phys_path)
+            , vir_path(vir_path) {
+        }
+
+        std::optional<entry_info> get_next_entry() override {
+            while (true) {
+                std::error_code err;
+                dir_iterator.increment(err);
+
+                if (err) {
+                    return std::optional<entry_info>{};
+                }
+
+                std::string name = dir_iterator->path().filename().string();
+
+                // If it doesn't meet the filter, continue until find one or there is no one
+                if (!std::regex_match(name, filter)) {
+                    continue;
+                }
+
+                entry_info info;
+                info.attribute = io_attrib::none;
+                info.full_path = eka2l1::add_path(vir_path, name);
+                info.name = name;
+                info.type = dir_iterator->status().type() == fs::file_type::regular ? io_component_type::file
+                                                                                    : io_component_type::dir;
+                info.size = dir_iterator->status().type() == fs::file_type::regular ? fs::file_size(dir_iterator->path())
+                    : 0;
+
+                return info;
+            }
+
+            return std::optional<entry_info>{};
+        }
+    };
+
+    io_component::io_component(io_component_type type, io_attrib attrib)
+        : type(type)
+        , attribute(attrib) {
+    }
+
     void io_system::init(memory_system *smem, epocver ever) {
         mem = smem;
         ver = ever;
-
-        crr_dir = "C:";
     }
 
     void io_system::shutdown() {
-        drives.clear();
         file_caches.clear();
     }
 
-    std::string io_system::current_dir() {
-        return crr_dir;
-    }
-
-    void io_system::current_dir(const std::string &new_dir) {
+    void io_system::mount(const drive_number drv, const drive_media media, const std::string &real_path) {
         std::lock_guard<std::mutex> guard(mut);
-        crr_dir = new_dir;
-    }
 
-    void io_system::mount(const std::string &dvc, const std::string &real_path, bool in_mem) {
-        auto find_res = drives.find(dvc);
+        drive &drvm = drives[drv];
 
-        if (find_res == drives.end()) {
-            // Warn
+        if (drvm.media_type != drive_media::none) {
+            return;
         }
 
-        drive drv;
-        drv.is_in_mem = in_mem;
-        drv.drive_name = dvc;
-        drv.real_path = real_path;
+        char drive_dos_char = char(0x41 + drv);
 
-        std::lock_guard<std::mutex> guard(mut);
-        drives.insert(std::make_pair(dvc, drv));
-
-        crr_dir = dvc;
+        drvm.media_type = media;
+        drvm.drive_name = std::string(&drive_dos_char, 1) + ":";
+        drvm.real_path = real_path;
     }
 
-    void io_system::unmount(const std::string &dvc) {
+    void io_system::unmount(const drive_number drv) {
         std::lock_guard<std::mutex> guard(mut);
-        drives.erase(dvc);
+
+        drives[drv].media_type = drive_media::none;
     }
 
     std::string io_system::get(std::string vir_path) {
         std::string abs_path = "";
-
-        std::string current_dir = crr_dir;
 
         // Current directory is always an absolute path
         std::string partition;
@@ -260,23 +340,26 @@ namespace eka2l1 {
         if (vir_path.find_first_of(':') == 1) {
             partition = vir_path.substr(0, 2);
         } else {
-            partition = current_dir.substr(0, 2);
+            return "";
         }
 
-        auto res = drives.find(partition);
+        auto res = std::find_if(drives.begin(), drives.end(),
+            [&](drive &drv) { return drv.drive_name == partition; });
 
-        if (res == drives.end() || res->second.is_in_mem) {
+        if (res == drives.end() || (res->media_type == drive_media::rom)) {
             partition[0] = std::toupper(partition[0]);
-            res = drives.find(partition);
+
+            res = std::find_if(drives.begin(), drives.end(),
+                [&](drive &drv) { return drv.drive_name == partition; });
 
             if (res == drives.end()) {
                 return "";
             }
         }
 
-        std::string rp = res->second.real_path;
+        std::string rp = res->real_path;
 
-        if (res->second.is_in_mem) {
+        if (res->media_type == drive_media::rom) {
             switch (ver) {
             case epocver::epoc93: {
                 rp = add_path(rp, "v93\\");
@@ -303,8 +386,6 @@ namespace eka2l1 {
             }
         }
 
-        current_dir = rp + crr_dir.substr(2);
-
         // Make it case-insensitive
         for (auto &c : vir_path) {
             c = std::tolower(c);
@@ -317,11 +398,7 @@ namespace eka2l1 {
             vir_path.replace(lib_pos, 12, "\\sys\\bin");
         }
 
-        if (!is_absolute(vir_path, current_dir)) {
-            abs_path = absolute_path(vir_path, current_dir);
-        } else {
-            abs_path = add_path(rp, vir_path.substr(2));
-        }
+        abs_path = add_path(rp, vir_path.substr(2));
 
         return abs_path;
     }
@@ -335,20 +412,22 @@ namespace eka2l1 {
 
         std::string path_dvc = vir_path.substr(0, 2);
 
-        auto findres = drives.find(path_dvc);
+        auto findres = std::find_if(drives.begin(), drives.end(),
+            [&](drive &drv) { return drv.drive_name == path_dvc; });
 
         if (findres != drives.end()) {
-            return findres->second;
+            return *findres;
         } else {
             if (std::islower(path_dvc[0]))
                 path_dvc[0] = std::toupper(path_dvc[0]);
             else
                 path_dvc[0] = std::tolower(path_dvc[0]);
 
-            findres = drives.find(path_dvc);
+            findres = std::find_if(drives.begin(), drives.end(),
+                [&](drive &drv) { return drv.drive_name == path_dvc; });
 
             if (findres != drives.end()) {
-                return findres->second;
+                return *findres;
             }
         }
 
@@ -403,7 +482,7 @@ namespace eka2l1 {
         drive drv = res.value();
         auto new_path = get(common::ucs2_to_utf8(vir_path));
 
-        if (drv.is_in_mem) {
+        if (drv.media_type == drive_media::rom) {
             if (mode & WRITE_MODE) {
                 LOG_INFO("No writing in in-memory!");
                 return std::shared_ptr<file>(nullptr);
@@ -419,19 +498,43 @@ namespace eka2l1 {
         return pf;
     }
 
-    std::array<char, 26> io_system::drive_list(bool all_hidden) {
-        std::array<char, 26> list;
+    std::shared_ptr<directory> io_system::open_dir(std::u16string vir_path) {
+        size_t pos_bs = vir_path.find_last_of(u"\\");
+        size_t pos_fs = vir_path.find_last_of(u"//");
 
-        std::fill(list.begin(), list.end(), 0);
+        size_t pos_check = std::string::npos;
 
-        for (auto &drive : drives) {
-            if (!drive.second.hidden || (drive.second.hidden && all_hidden)) {
-                char drive_index = std::tolower(drive.first[0]) - 97;
-                list[drive_index] = 1;
-            }
+        if (pos_bs != std::string::npos && pos_fs != std::string::npos) {
+            pos_check = std::max(pos_bs, pos_fs);
+        } else if (pos_bs != std::string::npos) {
+            pos_check = pos_bs;
+        } else if (pos_fs != std::string::npos) {
+            pos_check = pos_fs;
         }
 
-        return list;
+        std::string filter("*");
+
+        // Check if there should be a filter
+        if (pos_check != std::string::npos && pos_check != vir_path.length() - 1) {
+            // Substring this, get the filter
+            filter = common::ucs2_to_utf8(vir_path.substr(pos_check + 1, vir_path.length() - pos_check - 1));
+            vir_path.erase(vir_path.begin() + pos_check + 1, vir_path.end());
+        }
+
+        auto res = find_dvc(common::ucs2_to_utf8(vir_path));
+
+        if (!res) {
+            return std::shared_ptr<directory>(nullptr);
+        }
+
+        drive drv = res.value();
+        auto new_path = get(common::ucs2_to_utf8(vir_path));
+
+        return std::make_shared<physical_directory>(new_path, common::ucs2_to_utf8(vir_path), filter);
+    }
+
+    drive io_system::get_drive_entry(drive_number drv) {
+        return drives[drv];
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {
