@@ -18,7 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/log.h>
+
 #include <core/loader/rom.h>
 
 namespace eka2l1 {
@@ -137,6 +139,16 @@ namespace eka2l1 {
                 }
             }
 
+            // Sort this for lower_bound binary search
+            std::sort(dir.entries.begin(), dir.entries.end(), [](const rom_entry &lhs, const rom_entry &rhs) {
+                return common::compare_ignore_case(lhs.name, rhs.name) == -1;
+            });
+
+            // Sort this for lower_bound binary search
+            std::sort(dir.subdirs.begin(), dir.subdirs.end(), [](const rom_dir &lhs, const rom_dir &rhs) {
+                return common::compare_ignore_case(lhs.name, rhs.name) == -1;
+            });
+
             return dir;
         }
 
@@ -165,6 +177,11 @@ namespace eka2l1 {
                 list.root_dirs.push_back(read_root_dir(romf));
                 fseek(file, last_pos, SEEK_SET);
             }
+
+            // Sort this for lower_bound binary search
+            std::sort(list.root_dirs.begin(), list.root_dirs.end(), [](const root_dir &lhs, const root_dir &rhs) {
+                return (common::compare_ignore_case(lhs.dir.name, rhs.dir.name) == -1);
+            });
 
             return list;
         }

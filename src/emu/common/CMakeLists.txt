@@ -11,6 +11,7 @@ add_library(common
     include/common/buffer.h
     include/common/hash.h
     include/common/advstream.h
+    src/algorithm.cpp
     src/path.cpp
     src/log.cpp
     src/cvt.cpp

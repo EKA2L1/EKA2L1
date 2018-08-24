@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/cvt.h>
+
 #include <core/loader/eka2img.h>
 #include <core/loader/romimage.h>
 #include <core/vfs.h>
@@ -130,7 +132,7 @@ namespace eka2l1 {
 
         bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, loader::eka2img &me, eka2img_import_block &import_block, eka2img_iat &iat, uint32_t &crr_idx) {
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
-            const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
+            const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
             loader::e32img_ptr img = mngr.load_e32img(dll_name);
             loader::romimg_ptr rimg;
@@ -200,7 +202,7 @@ namespace eka2l1 {
             LOG_INFO("Fixup for: {}", import_block.dll_name);
 
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
-            const std::u16string dll_name = std::u16string(dll_name8.begin(), dll_name8.end());
+            const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
             loader::e32img_ptr img = mngr.load_e32img(dll_name);
             loader::romimg_ptr rimg;

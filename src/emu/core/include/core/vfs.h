@@ -50,7 +50,13 @@ namespace eka2l1 {
         /*! This set the seek cursor to be the end of the file, plus
          * the provided offset.
          */
-        end
+        end,
+
+        /**! Same as seeking from begging, but this indicates that 
+         * the return value must be a linear address. Will return 0xFFFFFFFF
+         * if the file is not ROM
+         */
+        address
     };
 
 #define READ_MODE 0x100
@@ -128,7 +134,7 @@ namespace eka2l1 {
 
         /*! \brief Seek the file with specified mode. 
          */
-        virtual void seek(int seek_off, file_seek_mode where) = 0;
+        virtual size_t seek(size_t seek_off, file_seek_mode where) = 0;
 
         /*! \brief Get the position of the seek cursor.
          * \returns The position of the seek cursor.
@@ -222,6 +228,10 @@ namespace eka2l1 {
 
         void set_epoc_version(epocver ever) {
             ver = ever;
+        }
+
+        void set_rom_cache(loader::rom *cache) {
+            rom_cache = cache;
         }
 
         // Shutdown the IO system

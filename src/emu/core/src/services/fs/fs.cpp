@@ -237,16 +237,27 @@ namespace eka2l1 {
         }
 
         int read_len = *ctx.get_arg<int>(1);
+        int read_pos_provided = *ctx.get_arg<int>(2);
 
-        int read_pos = *ctx.get_arg<int>(2);
+        int read_pos = 0;
         uint64_t last_pos = vfs_file->tell();
+        bool should_reseek = false;
+
+        // Low MaxUint64
+        if (read_pos_provided == 0xFFFFFFFF) {
+            read_pos = last_pos;
+        } else {
+            read_pos = read_pos_provided;
+
+            should_reseek = true;
+            vfs_file->seek(read_pos, file_seek_mode::beg);
+        }
+
         uint64_t size = vfs_file->size();
 
         if (size - read_pos < read_len) {
             read_len = size - last_pos;
         }
-
-        vfs_file->seek(read_pos, file_seek_mode::beg);
 
         std::vector<char> read_data;
         read_data.resize(read_len);
@@ -254,6 +265,15 @@ namespace eka2l1 {
         vfs_file->read_file(read_data.data(), 1, read_len);
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
+
+        // Write the position after this operation
+
+
+        // For file need reseek
+        if (should_reseek) {
+            vfs_file->seek(last_pos, file_seek_mode::beg);
+        }
+
         ctx.set_request_status(read_len);
     }
 

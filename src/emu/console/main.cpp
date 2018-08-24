@@ -175,7 +175,7 @@ void do_args() {
     }
 
     if (sis_install_path != "-1") {
-        auto res = symsys.install_package(std::u16string(sis_install_path.begin(), sis_install_path.end()), adrive);
+        auto res = symsys.install_package(common::utf8_to_ucs2(sis_install_path), adrive);
 
         if (res) {
             std::cout << "Install successfully!" << std::endl;

@@ -23,12 +23,16 @@
 #include <iostream>
 #include <sstream>
 
+#include <codecvt>
+#include <locale>
+
 namespace eka2l1 {
     namespace common {
-		/*! \brief Convert an UCS2 string to an UTF8 string. */
+        /*! \brief Convert an UCS2 string to an UTF8 string. */
         std::string ucs2_to_utf8(std::u16string str);
+        std::u16string utf8_to_ucs2(const std::string &str);
 
-		/*! \brief Convert something to string. */
+        /*! \brief Convert something to string. */
         template <class T>
         std::string to_string(T t, std::ios_base &(*f)(std::ios_base &)) {
             std::ostringstream oss;
@@ -36,7 +40,7 @@ namespace eka2l1 {
             return oss.str();
         }
 
-		/*! \brief Convert something to string. */
+        /*! \brief Convert something to string. */
         template <class T>
         std::string to_string(T t) {
             std::ostringstream oss;
@@ -45,4 +49,3 @@ namespace eka2l1 {
         }
     }
 }
-

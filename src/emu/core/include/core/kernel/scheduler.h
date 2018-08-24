@@ -26,6 +26,7 @@
 #include <map>
 #include <mutex>
 #include <queue>
+#include <tuple>
 #include <vector>
 
 namespace eka2l1 {

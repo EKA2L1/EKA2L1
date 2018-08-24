@@ -49,15 +49,15 @@ namespace eka2l1 {
                 info.ver = static_cast<epocver>(app["epoc"].as<int>());
 
                 auto exec = app["exec"].as<std::string>();
-                info.executable_name = std::u16string(exec.begin(), exec.end());
+                info.executable_name = common::utf8_to_ucs2(exec);
 
                 info.id = app["uid"].as<uint32_t>();
 
                 auto name = app["name"].as<std::string>();
-                info.name = std::u16string(name.begin(), name.end());
+                info.name = common::utf8_to_ucs2(name);
 
                 auto vendor = app["vendor"].as<std::string>();
-                info.vendor_name = std::u16string(vendor.begin(), vendor.end());
+                info.vendor_name = common::utf8_to_ucs2(vendor);
 
                 if (info.drive == 0) {
                     c_apps.emplace(info.id, info);

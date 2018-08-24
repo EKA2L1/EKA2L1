@@ -1,3 +1,5 @@
+#include <common/cvt.h>
+
 #include <core/kernel/library.h>
 #include <core/loader/eka2img.h>
 #include <core/loader/romimage.h>
@@ -54,11 +56,11 @@ namespace eka2l1 {
                     std::function<void(loader::e32img_ptr)> do_entries_query = [&](loader::e32img_ptr img) -> void {
                         for (const auto &name : img->dll_names) {
                             loader::e32img_ptr e32img = kern->get_lib_manager()->load_e32img(
-                                std::u16string(name.begin(), name.end()));
+                                common::utf8_to_ucs2(name));
 
                             if (!e32img) {
                                 loader::romimg_ptr romimg = kern->get_lib_manager()->load_romimg(
-                                    std::u16string(name.begin(), name.end()));
+                                    common::utf8_to_ucs2(name));
 
                                 if (romimg) {
                                     entries.push_back(romimg->header.entry_point);
@@ -104,7 +106,7 @@ namespace eka2l1 {
                 return entries;
             }
 
-            return std::vector<uint32_t> {};
+            return std::vector<uint32_t>{};
         }
 
         bool library::attached() {

@@ -22,7 +22,9 @@
 #include <queue>
 #include <thread>
 
+#include <common/cvt.h>
 #include <common/log.h>
+
 #include <core/core.h>
 #include <core/core_kernel.h>
 #include <core/core_mem.h>
@@ -88,7 +90,7 @@ namespace eka2l1 {
     }
 
     uint32_t kernel_system::spawn_new_process(std::string &path, std::string name, uint32_t uid, kernel::owner_type owner) {
-        std::u16string path16 = std::u16string(path.begin(), path.end());
+        std::u16string path16 = common::utf8_to_ucs2(path);
         symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
         if (!f) {
@@ -111,6 +113,12 @@ namespace eka2l1 {
                 if (sys->get_bool_config("force_load_euser")) {
                     // Use for debugging rom image
                     loader::romimg_ptr euser_force = libmngr->load_romimg(u"euser", false);
+                    libmngr->open_romimg(euser_force);
+                }
+
+                if (sys->get_bool_config("force_load_bafl")) {
+                    // Use for debugging rom image
+                    loader::romimg_ptr euser_force = libmngr->load_romimg(u"bafl", false);
                     libmngr->open_romimg(euser_force);
                 }
 
@@ -266,7 +274,7 @@ namespace eka2l1 {
         bool initial,
         ptr<void> usrdata,
         kernel::thread_priority pri) {
-        thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, own_pr, access,
+        thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, timing, own_pr, access,
             name, epa, stack_size, min_heap_size, max_heap_size, initial, usrdata, pri);
 
         objects.push_back(std::move(new_thread));

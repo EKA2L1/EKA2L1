@@ -140,6 +140,9 @@ namespace eka2l1 {
 
             return target + new_alignment - target % new_alignment;
         }
+
+        int compare_ignore_case(const utf16_str &s1,
+            const utf16_str &s2);
     }
 }
 

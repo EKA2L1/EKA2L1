@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <common/cvt.h>
+
 #include <core/core.h>
 #include <core/core_api.h>
 #include <vector>
@@ -137,9 +140,8 @@ int mount_symbian_system(int sys, const char *drive, const char *real_path) {
 
     sys_ptr &symsys = syses[sys - 1];
 
-    symsys->mount(strncmp(drive, "C:", 2) == 0 ? 
-        drive_c : ((strncmp(drive, "E:", 2) == 0) ? drive_e : drive_z), 
-        drive_media::physical, 
+    symsys->mount(strncmp(drive, "C:", 2) == 0 ? drive_c : ((strncmp(drive, "E:", 2) == 0) ? drive_e : drive_z),
+        drive_media::physical,
         real_path);
 
     return 0;
@@ -200,13 +202,13 @@ int set_current_symbian_use(int sys, unsigned int ver) {
     return 0;
 }
 
-int install_sis(int sys, int drive, const char* path) {
+int install_sis(int sys, int drive, const char *path) {
     if (sys > syses.size()) {
         return -1;
     }
 
     sys_ptr &symsys = syses[sys - 1];
-    symsys->install_package(std::u16string(path, path + strlen(path)), drive);
+    symsys->install_package(common::utf8_to_ucs2(path), drive);
 
     return 0;
 }
@@ -219,7 +221,7 @@ int reinit_system(int sys) {
     sys_ptr &symsys = syses[sys - 1];
     symsys->reset();
 
-	return 0;
+    return 0;
 }
 
 int install_rpkg(int sys, const char *path) {
@@ -230,5 +232,5 @@ int install_rpkg(int sys, const char *path) {
     sys_ptr &symsys = syses[sys - 1];
     bool res = symsys->install_rpkg(path);
 
-    return res ? 0: -2;
+    return res ? 0 : -2;
 }

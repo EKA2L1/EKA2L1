@@ -17,6 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -94,14 +96,20 @@ namespace eka2l1 {
             return -1;
         }
 
-        void seek(int seek_off, file_seek_mode where) override {
-            if (where == file_seek_mode::beg) {
+        size_t seek(size_t seek_off, file_seek_mode where) override {
+            if (where == file_seek_mode::beg || where == file_seek_mode::address) {
                 crr_pos = seek_off;
             } else if (where == file_seek_mode::crr) {
                 crr_pos += seek_off;
             } else {
                 crr_pos += size() + seek_off;
             }
+
+            if (where == file_seek_mode::address) {
+                return file.address_lin + crr_pos;
+            }
+
+            return crr_pos;
         }
 
         std::string get_error_descriptor() override {
@@ -167,7 +175,7 @@ namespace eka2l1 {
         void init(utf16_str inp_name, int mode) {
             const char *cmode = translate_mode(mode);
             file = fopen(common::ucs2_to_utf8(inp_name).c_str(), cmode);
-            input_name = std::u16string(inp_name.begin(), inp_name.end());
+            input_name = std::move(inp_name);
             fmode = mode;
         }
 
@@ -203,7 +211,11 @@ namespace eka2l1 {
             return ftell(file);
         }
 
-        void seek(int seek_off, file_seek_mode where) override {
+        size_t seek(size_t seek_off, file_seek_mode where) override {
+            if (where == file_seek_mode::address) {
+                return 0xFFFFFFFF;
+            }
+
             if (where == file_seek_mode::beg) {
                 fseek(file, seek_off, SEEK_SET);
             } else if (where == file_seek_mode::crr) {
@@ -211,6 +223,8 @@ namespace eka2l1 {
             } else {
                 fseek(file, seek_off, SEEK_END);
             }
+
+            return ftell(file);
         }
 
         std::u16string file_name() const override {
@@ -286,7 +300,7 @@ namespace eka2l1 {
                 info.type = dir_iterator->status().type() == fs::file_type::regular ? io_component_type::file
                                                                                     : io_component_type::dir;
                 info.size = dir_iterator->status().type() == fs::file_type::regular ? fs::file_size(dir_iterator->path())
-                    : 0;
+                                                                                    : 0;
 
                 return info;
             }
@@ -445,10 +459,13 @@ namespace eka2l1 {
         ++ite;
 
         for (; ite; ++ite) {
-            auto res1 = std::find_if(dirs.begin(), dirs.end(),
-                [ite](auto p1) { return _strcmpi((common::ucs2_to_utf8(p1.name)).data(), (*ite).data()) == 0; });
+            loader::rom_dir temp;
+            temp.name = common::utf8_to_ucs2(*ite);
 
-            if (res1 != dirs.end()) {
+            auto res1 = std::lower_bound(dirs.begin(), dirs.end(), temp,
+                [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+
+            if (res1 != dirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
                 last_dir_found = *res1;
                 dirs = res1->subdirs;
             }
@@ -461,10 +478,13 @@ namespace eka2l1 {
         // Save the last
         auto entries = last_dir_found.entries;
 
-        auto res2 = std::find_if(entries.begin(), entries.end(),
-            [ite](auto p2) { return _strcmpi((common::ucs2_to_utf8(p2.name)).data(), (*ite).data()) == 0; });
+        loader::rom_entry temp_entry;
+        temp_entry.name = common::utf8_to_ucs2(*ite);
 
-        if (res2 != entries.end() && !res2->dir) {
+        auto res2 = std::lower_bound(entries.begin(), entries.end(), temp_entry,
+            [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+
+        if (res2 != entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
             return *res2;
         }
 
@@ -473,23 +493,34 @@ namespace eka2l1 {
 
     // USC2 is not even supported yet, as this is retarded
     std::shared_ptr<file> io_system::open_file(utf16_str vir_path, int mode) {
-        auto res = find_dvc(common::ucs2_to_utf8(vir_path));
+        std::string path_u8 = common::ucs2_to_utf8(vir_path);
+        auto res = find_dvc(path_u8);
 
         if (!res) {
             return std::shared_ptr<file>(nullptr);
         }
 
         drive drv = res.value();
-        auto new_path = get(common::ucs2_to_utf8(vir_path));
 
         if (drv.media_type == drive_media::rom) {
             if (mode & WRITE_MODE) {
                 LOG_INFO("No writing in in-memory!");
                 return std::shared_ptr<file>(nullptr);
             }
+
+            std::optional<loader::rom_entry> entry = burn_tree_find_entry(path_u8);
+
+            if (entry) {
+                auto romf = std::make_shared<rom_file>(mem, rom_cache, *entry);
+
+                if (romf) {
+                    return romf;
+                }
+            }
         }
 
-        auto pf = std::make_shared<physical_file>(utf16_str(new_path.begin(), new_path.end()), mode);
+        auto new_path = get(path_u8);
+        auto pf = std::make_shared<physical_file>(common::utf8_to_ucs2(new_path), mode);
 
         if (!pf->file) {
             return std::shared_ptr<file>(nullptr);
@@ -538,6 +569,6 @@ namespace eka2l1 {
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {
-        return std::make_shared<physical_file>(std::u16string(path.begin(), path.end()), mode);
+        return std::make_shared<physical_file>(common::utf8_to_ucs2(path), mode);
     }
 }

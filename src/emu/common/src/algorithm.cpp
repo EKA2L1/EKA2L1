@@ -17,7 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <common/algorithm.h>
+#include <Windows.h>
 
 namespace eka2l1 {
     namespace common {
@@ -43,6 +45,62 @@ namespace eka2l1 {
                     inp.erase(pos, to_remove.length());
                 }
             } while (true);
+        }
+
+        int compare_ignore_case(const utf16_str &s1,
+            const utf16_str &s2) {
+#ifdef WIN32
+            // According to the MSDN documentation, the CompareStringEx function
+            // is optimized for NORM_IGNORECASE and string lengths specified as -1.
+
+            const int result = CompareStringEx(
+                LOCALE_NAME_INVARIANT,
+                NORM_IGNORECASE,
+                reinterpret_cast<const wchar_t *>(s1.c_str()),
+                -1,
+                reinterpret_cast<const wchar_t *>(s2.c_str()),
+                -1,
+                nullptr, // reserved
+                nullptr, // reserved
+                0 // reserved
+            );
+
+            switch (result) {
+            case CSTR_EQUAL:
+                return 0;
+
+            case CSTR_GREATER_THAN:
+                return 1;
+
+            case CSTR_LESS_THAN:
+                return -1;
+
+            default:
+                return -2;
+            }
+#else
+            if (s1.size() == s2.size()) {
+                for (size_t i = 0; i < s1.size(); i++) {
+                    const wchar_t t1 = towlower(s1[i]);
+                    const wchar_t t2 = towlower(s2[i])
+
+                        if (t1 > t2) {
+                        return 1;
+                    }
+                    else if (t1 < t2) {
+                        return -1;
+                    }
+                }
+
+                return 0;
+            }
+
+            if (s1.size() > s2.size()) {
+                return 1;
+            }
+
+            return -1;
+#endif
         }
     }
 }
