@@ -368,7 +368,7 @@ namespace eka2l1 {
 
         bool thread::operator>(const thread &rhs) {
             if (real_priority == rhs.real_priority) {
-                if (uid <= rhs.uid) {
+                if (uid > rhs.uid) {
                     return true;
                 }
 
@@ -380,7 +380,7 @@ namespace eka2l1 {
 
         bool thread::operator<(const thread &rhs) {
             if (real_priority == rhs.real_priority) {
-                if (uid <= rhs.uid) {
+                if (uid < rhs.uid) {
                     return true;
                 }
 
@@ -396,7 +396,7 @@ namespace eka2l1 {
 
         bool thread::operator>=(const thread &rhs) {
             if (real_priority == rhs.real_priority) {
-                if (uid <= rhs.uid) {
+                if (uid >= rhs.uid) {
                     return true;
                 }
 

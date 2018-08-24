@@ -118,8 +118,8 @@ namespace eka2l1 {
 
                 if (sys->get_bool_config("force_load_bafl")) {
                     // Use for debugging rom image
-                    loader::romimg_ptr euser_force = libmngr->load_romimg(u"bafl", false);
-                    libmngr->open_romimg(euser_force);
+                    loader::romimg_ptr bafl_force = libmngr->load_romimg(u"bafl", false);
+                    libmngr->open_romimg(bafl_force);
                 }
 
                 process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
