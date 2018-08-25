@@ -200,7 +200,7 @@ namespace eka2l1 {
 
         switch (*seek_mode) {
         case 0: // ESeekAddress. Handle this as a normal seek start
-            vfs_seek_mode = file_seek_mode::beg;
+            vfs_seek_mode = file_seek_mode::address;
             break;
 
         default:
@@ -208,8 +208,14 @@ namespace eka2l1 {
             break;
         }
 
-        vfs_file->seek(*seek_off, vfs_seek_mode);
-        ctx.write_arg_pkg(3, static_cast<int>(vfs_file->tell()));
+        size_t seek_res = vfs_file->seek(*seek_off, vfs_seek_mode);
+
+        if (seek_res == 0xFFFFFFFF) {
+            ctx.set_request_status(KErrGeneral);
+            return;
+        }
+
+        ctx.write_arg_pkg(3, seek_res);
 
         ctx.set_request_status(KErrNone);
     }
@@ -244,7 +250,7 @@ namespace eka2l1 {
         bool should_reseek = false;
 
         // Low MaxUint64
-        if (read_pos_provided == 0xFFFFFFFF) {
+        if (read_pos_provided == (int)(0xffffffffffffffff)) {
             read_pos = last_pos;
         } else {
             read_pos = read_pos_provided;
@@ -262,19 +268,16 @@ namespace eka2l1 {
         std::vector<char> read_data;
         read_data.resize(read_len);
 
-        vfs_file->read_file(read_data.data(), 1, read_len);
+        size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
-
-        // Write the position after this operation
-
 
         // For file need reseek
         if (should_reseek) {
             vfs_file->seek(last_pos, file_seek_mode::beg);
         }
 
-        ctx.set_request_status(read_len);
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::new_file_subsession(service::ipc_context ctx, bool overwrite) {

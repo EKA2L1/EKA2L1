@@ -23,6 +23,8 @@
 #include <common/queue.h>
 #include <core/arm/jit_factory.h>
 
+#include <algorithm>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <queue>
@@ -41,6 +43,10 @@ namespace eka2l1 {
     using thread_ptr = std::shared_ptr<kernel::thread>;
     using process_ptr = std::shared_ptr<kernel::process>;
 
+    struct thread_comparator {
+        bool operator()(const thread_ptr &x, const thread_ptr &y) const;
+    };
+
     namespace kernel {
         enum class thread_state;
 
@@ -48,7 +54,7 @@ namespace eka2l1 {
 
         class thread_scheduler {
             std::vector<thread_ptr> waiting_threads;
-            eka2l1::cp_queue<thread_ptr> ready_threads;
+            eka2l1::cp_queue<thread_ptr, thread_comparator> ready_threads;
 
             thread_ptr crr_thread;
             process_ptr crr_process;

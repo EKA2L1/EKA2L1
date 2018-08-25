@@ -84,12 +84,23 @@ namespace eka2l1 {
     }
 
     uint32_t system::load(uint32_t id) {
-        emu_win->init("EKA2L1", vec2(360, 640));
-        emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
+        if (!startup_inited) {
+            emu_win->init("EKA2L1", vec2(360, 640));
+            emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
 
-        emu_win->close_hook = [&]() {
-            exit = true;
-        };
+            emu_win->close_hook = [&]() {
+                exit = true;
+            };
+
+            for (auto &startup_app : startup_apps) {
+                // Some ROM apps have UID3 left blank, until we figured out how to get the UID3 uniquely, we gonna just hash
+                // the path to get the UID
+                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), common::hash(startup_app));
+                kern.run_process(process);
+            }
+
+            startup_inited = true;
+        }
 
         uint32_t process_handle = kern.spawn_new_process(id);
 
@@ -101,17 +112,6 @@ namespace eka2l1 {
 
         // Change window title to game title
         emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
-
-        if (!startup_inited) {
-            for (auto &startup_app : startup_apps) {
-                // Some ROM apps have UID3 left blank, until we figured out how to get the UID3 uniquely, we gonna just hash
-                // the path to get the UID
-                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), common::hash(startup_app));
-                kern.run_process(process);
-            }
-
-            startup_inited = true;
-        }
 
         return process_handle;
     }

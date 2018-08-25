@@ -1,0 +1,148 @@
+== EPOC9 ==
+{| class = wikitable
+!  Number    ||   [[# Name ]]
+|-
+| 0x00800000 ||   [[# WaitForAnyRequest ]]
+|-
+| 0x00800001 ||   [[# Heap ]]
+|-
+| 0x00800002    ||   [[#   HeapSwitch]]
+|-
+|   0x00800005    ||   [[#   ActiveScheduler]]
+|-
+|   0x00800006    ||   [[#   SetActiveScheduler]]
+|-
+|   0x00800008    ||   [[#   TrapHandler]]
+|-
+|   0x00800009    ||   [[#   SetTrapHandler]]
+|-
+|   0x0080000C    ||   [[#   DebugMask]]
+|-
+|   0x0080000D    ||   [[#   DebugMaskIndex]]
+|-
+|   0x00800013    ||   [[#   UserSvrRomHeaderAddress]]
+|-
+|   0x00800019    ||   [[#   UTCOffset]]
+|-
+|   0x00    ||   [[#   ObjectNext]]
+|-
+|   0x01    ||   [[#   ChunkBase]]
+|-
+|   0x03    ||   [[#   ChunkMaxSize]]
+|-
+|   0x0E    ||   [[#   LibraryLookup]]
+|-
+|   0x16    ||   [[#   ProcessFilename]]
+|-
+|   0x1C    ||   [[#   ProcessSetPriority]]
+|-
+|   0x1E    ||   [[#   ProcessSetFlags]]
+|-
+|   0x22    ||   [[#   ServerReceive]]
+|-
+|   0x24    ||   [[#   SetSessionPtr]]
+|-
+|   0x27    ||   [[#   SessionShare]]
+|-
+|   0x28    ||   [[#   ThreadResume]]
+|-
+|   0x2F    ||   [[#   ThreadSetFlags]]
+|-
+|   0x3C    ||   [[#   HandleName]]
+|-
+|   0x42    ||   [[#   MessageComplete]]
+|-
+|   0x4D    ||   [[#   SessionSendSync]]
+|-
+|   0x4E    ||   [[#   DllTls]]
+|-
+|   0x4F    ||   [[#   HalFunction]]
+|-
+|   0x6A    ||   [[#   HandleClose]]
+|-
+|   0x64    ||   [[#   ProcessType]]
+|-
+|   0x68    ||   [[#   ThreadCreate]]
+|-
+|   0x6B    ||   [[#   ChunkCreate]]
+|-
+|   0x6C    ||   [[#   ChunkAdjust]]
+|-
+|   0x6D    ||   [[#   HandleOpenObject]]
+|-
+|   0x6E    ||   [[#   HandleDuplicate]]
+|-
+|   0x70    ||   [[#   SemaphoreCreate]]
+|-
+|   0x73    ||   [[#   ThreadKill]]
+|-
+|   0x74    ||   [[#   ThreadLogon]]
+|-
+|   0x75    ||   [[#   ThreadLogonCancel]]
+|-
+|   0x76    ||   [[#   DllSetTls]]
+|-
+|   0x77    ||   [[#   DllFreeTLS]]
+|-
+|   0x78    ||   [[#   ThreadRename]]
+|-
+|   0x7A    ||   [[#   ProcessResume]]
+|-
+|   0x7B    ||   [[#   ProcessLogon]]
+|-
+|   0x7C    ||   [[#   ProcessLogonCancel]]
+|-
+|   0x7D    ||   [[#   ThreadProcess]]
+|-
+|   0x7E    ||   [[#   ServerCreate]]
+|-
+|   0x7F    ||   [[#   SessionCreate]]
+|-
+|   0x84    ||   [[#   TimerCreate]]
+|-
+|   0x87    ||   [[#   ChangeNotifierCreate]]
+|-
+|   0x9C    ||   [[#   WaitDllLock]]
+|-
+|   0x9D    ||   [[#   ReleaseDllLock]]
+|-
+|   0x9E    ||   [[#   LibraryAttach]]
+|-
+|   0x9F    ||   [[#   LibraryAttached]]
+|-
+|   0xA0    ||   [[#   StaticCallList]]
+|-
+|   0xAC    ||   [[#   MessageKill]]
+|-
+|   0xBC    ||   [[#   PropertyDefine]]
+|-
+|   0xBE    ||   [[#   PropertyAttach]]
+|-
+|   0xBF    ||   [[#   PropertySubscribe]]
+|-
+|   0xC0    ||   [[#   PropertyCancel]]
+|-
+|   0xC1    ||   [[#   PropertyGetInt]]
+|-
+|   0xC2    ||   [[#   PropertyGetBin]]
+|-
+|   0xC3    ||   [[#   PropertySetInt]]
+|-
+|   0xC4    ||   [[#   PropertySetBin]]
+|-
+|   0xC5    ||   [[#   PropertyFindGetInt]]
+|-
+|   0xC6    ||   [[#   PropertyFindGetBin]]
+|-
+|   0xC7    ||   [[#   PropertyFindSetInt]]
+|-
+|   0xC8    ||   [[#   PropertyFindSetBin]]
+|-
+|   0xD1    ||   [[#   ProcessGetDataParameter]]
+|-
+|   0xD2    ||   [[#   ProcessDataParameterLength]]
+|-
+|   0xDF    ||   [[#   LeaveStart]]
+|-
+|   0xE0    ||   [[#   LeaveEnd]]
+|}
