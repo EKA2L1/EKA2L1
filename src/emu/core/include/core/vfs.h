@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <common/types.h>
+
 #include <array>
 #include <map>
 #include <mutex>
@@ -148,6 +150,19 @@ namespace eka2l1 {
 
         /*! \brief Please don't use this. */
         virtual std::string get_error_descriptor() = 0;
+
+        /*! \brief Check if the file is in ROM or not. 
+         *
+         * Notice that files in Z: drive is not always ROM file. Z: drive is a combination 
+         * of ROFS and ROM (please see EBootMagic.txt in sys/data).
+         */
+        virtual bool is_in_rom() const = 0;
+
+        /*! \brief Get the address of the file in the ROM. 
+        *
+        * If the file is not in ROM, this return a null pointer.
+        */
+        virtual address rom_address() const = 0;
     };
 
     using symfile = std::shared_ptr<file>;

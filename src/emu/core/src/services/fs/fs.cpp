@@ -141,6 +141,8 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_seek, EFsFileSeek, "Fs::FileSeek");
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
+        REGISTER_IPC(fs_server, file_close, EFsFileSubClose, "Fs::FileSubClose");
+        REGISTER_IPC(fs_server, is_file_in_rom, EFsIsFileInRom, "Fs::IsFileInRom");
         REGISTER_IPC(fs_server, open_dir, EFsDirOpen, "Fs::OpenDir");
         REGISTER_IPC(fs_server, read_dir, EFsDirReadOne, "Fs::ReadDir");
         REGISTER_IPC(fs_server, read_dir_packed, EFsDirReadPacked, "Fs::ReadDirPacked");
@@ -150,6 +152,14 @@ namespace eka2l1 {
 
     fs_node *fs_server::get_file_node(int handle) {
         return nodes_table.get_node(handle);
+    }
+
+    void fs_server::connect(service::ipc_context ctx) {
+        session_paths[ctx.msg->msg_session->unique_id()] = 
+            common::utf8_to_ucs2
+            (eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
+
+        server::connect(ctx);
     }
 
     void fs_server::file_size(service::ipc_context ctx) {
@@ -277,6 +287,51 @@ namespace eka2l1 {
             vfs_file->seek(last_pos, file_seek_mode::beg);
         }
 
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::file_close(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+
+        vfs_file->close();
+        nodes_table.close_nodes(*handle_res);
+    }
+
+    void fs_server::is_file_in_rom(service::ipc_context ctx) {
+        utf16_str &session_path = session_paths[ctx.msg->msg_session->unique_id()];
+        std::optional<utf16_str> path = ctx.get_arg<utf16_str>(0);
+
+        if (!path) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        std::string final_path = common::ucs2_to_utf8(*path);
+
+        if (!eka2l1::is_absolute(final_path, common::ucs2_to_utf8(session_path), true)) {
+            final_path = eka2l1::absolute_path(final_path, common::ucs2_to_utf8(session_path), true);
+        }
+
+        symfile f = ctx.sys->get_io_system()->open_file(common::utf8_to_ucs2(final_path), READ_MODE);
+        address addr = f->rom_address();
+
+        f->close();
+
+        ctx.write_arg_pkg<address>(1, addr);
         ctx.set_request_status(KErrNone);
     }
 

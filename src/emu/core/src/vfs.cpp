@@ -116,6 +116,14 @@ namespace eka2l1 {
             return "no";
         }
 
+        bool is_in_rom() const override {
+            return true;
+        }
+
+        address rom_address() const override {
+            return file.address_lin;
+        }
+
         uint64_t tell() override {
             return crr_pos;
         }
@@ -234,6 +242,14 @@ namespace eka2l1 {
         std::string get_error_descriptor() override {
             return "no";
         }
+
+        bool is_in_rom() const override {
+            return false;
+        }
+
+        address rom_address() const override {
+             return 0;
+        }
     };
 
     /* DIRECTORY VFS */
@@ -317,10 +333,17 @@ namespace eka2l1 {
     void io_system::init(memory_system *smem, epocver ever) {
         mem = smem;
         ver = ever;
+
+        drive drvt;
+        drvt.media_type = drive_media::none;
+
+        std::fill(drives.begin(), drives.end(), drvt);
     }
 
     void io_system::shutdown() {
-        file_caches.clear();
+        if (mem) {
+            file_caches.clear();
+        }
     }
 
     void io_system::mount(const drive_number drv, const drive_media media, const std::string &real_path) {

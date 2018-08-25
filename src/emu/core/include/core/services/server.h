@@ -102,11 +102,6 @@ namespace eka2l1 {
             /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
 
-            // These provides version in order to connect to the server
-            // Security layer is ignored rn.
-            void connect(service::ipc_context ctx);
-            void disconnect(service::ipc_context ctx);
-
             int *request_status = nullptr;
             message2 *request_data = nullptr;
 
@@ -121,6 +116,12 @@ namespace eka2l1 {
             bool is_msg_delivered(ipc_msg_ptr &msg);
             bool ready();
 
+            // These provides version in order to connect to the server
+            // Security layer is ignored rn.
+            //
+            // Servers can override this method
+            virtual void connect(service::ipc_context ctx);
+            virtual void disconnect(service::ipc_context ctx);
         public:
             server(system *sys, const std::string name, bool hle = false);
 
