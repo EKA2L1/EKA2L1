@@ -24,6 +24,7 @@
 #include <core/ptr.h>
 
 #include <optional>
+#include <string>
 
 namespace eka2l1 {
     class system;
@@ -41,7 +42,7 @@ namespace eka2l1 {
             template <typename T>
             std::optional<T> get_arg_packed(int idx) {
                 T ret;
-                
+
                 std::optional<std::string> dat = get_arg<std::string>(idx);
 
                 if (!dat) {
@@ -58,6 +59,8 @@ namespace eka2l1 {
             int flag() const;
 
             bool write_arg(int idx, uint32_t data);
+            bool write_arg(int idx, const std::u16string &data);
+
             bool write_arg_pkg(int idx, uint8_t *data, uint32_t len);
 
             // Package an argument, write it to a destination

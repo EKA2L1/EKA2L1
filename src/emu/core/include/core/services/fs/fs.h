@@ -123,6 +123,10 @@ namespace eka2l1 {
 
         void is_file_in_rom(service::ipc_context ctx);
 
+        void session_path(service::ipc_context ctx);
+        void set_session_path(service::ipc_context ctx);
+        void set_session_to_private(service::ipc_context ctx);
+
         void connect(service::ipc_context ctx) override;
 
         std::unordered_map<uint32_t, fs_node> file_nodes;

@@ -148,6 +148,9 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, read_dir_packed, EFsDirReadPacked, "Fs::ReadDirPacked");
         REGISTER_IPC(fs_server, drive_list, EFsDriveList, "Fs::DriveList");
         REGISTER_IPC(fs_server, drive, EFsDrive, "Fs::Drive");
+        REGISTER_IPC(fs_server, session_path, EFsSessionPath, "Fs::SessionPath");
+        REGISTER_IPC(fs_server, set_session_path, EFsSetSessionPath, "Fs::SetSessionPath");
+        REGISTER_IPC(fs_server, set_session_to_private, EFsSessionToPrivate, "Fs::SetSessionToPrivate");
     }
 
     fs_node *fs_server::get_file_node(int handle) {
@@ -155,11 +158,43 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
-        session_paths[ctx.msg->msg_session->unique_id()] = 
-            common::utf8_to_ucs2
-            (eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
+        session_paths[ctx.msg->msg_session->unique_id()] = common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
 
         server::connect(ctx);
+    }
+
+    void fs_server::session_path(service::ipc_context ctx) {
+        ctx.write_arg(0, session_paths[ctx.msg->msg_session->unique_id()]);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::set_session_path(service::ipc_context ctx) {
+        auto new_path = ctx.get_arg<std::u16string>(0);
+
+        if (!new_path) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        session_paths[ctx.msg->msg_session->unique_id()] = *new_path;
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::set_session_to_private(service::ipc_context ctx) {
+        auto drive_ordinal = ctx.get_arg<int>(0);
+
+        if (!drive_ordinal) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        char16_t drive_dos_char = char16_t(0x41 + *drive_ordinal);
+        std::u16string drive_u16 = drive_dos_char + u":";
+
+        // Try to get the app uid
+        uint32_t uid = std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type());
+        std::string hex_id = common::to_string(uid, std::hex);
+
+        session_paths[ctx.msg->msg_session->unique_id()] = drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::file_size(service::ipc_context ctx) {

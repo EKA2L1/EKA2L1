@@ -88,6 +88,25 @@ namespace eka2l1 {
             return false;
         }
 
+        bool ipc_context::write_arg(int idx, const std::u16string &data) {
+            if (idx >= 4) {
+                return false;
+            }
+
+            ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+
+            if ((int)arg_type & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
+                eka2l1::epoc::TDesC16 *des = static_cast<eka2l1::epoc::TDesC16 *>(
+                    msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                
+                des->Assign(msg->own_thr->owning_process(), data);
+
+                return true;
+            }
+
+            return false;
+        }
+
         bool ipc_context::write_arg_pkg(int idx, uint8_t *data, uint32_t len) {
             if (idx >= 4) {
                 return false;

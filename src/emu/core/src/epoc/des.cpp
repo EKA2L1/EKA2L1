@@ -296,13 +296,13 @@ namespace eka2l1::epoc {
         SetLengthDes(sys->get_kernel_system()->crr_process(), this, iNewLength);
     }
 
-    void TDesC16::Assign(eka2l1::system *sys, std::string iNewString) {
-        memcpy(Ptr(sys), iNewString.data(), iNewString.length());
+    void TDesC16::Assign(eka2l1::system *sys, std::u16string iNewString) {
+        memcpy(Ptr(sys), iNewString.data(), iNewString.length() * 2);
         SetLength(sys, iNewString.length());
     }
 
-    void TDesC16::Assign(eka2l1::process_ptr pr, std::string iNewString) {
-        memcpy(Ptr(pr), iNewString.data(), iNewString.length());
+    void TDesC16::Assign(eka2l1::process_ptr pr, std::u16string iNewString) {
+        memcpy(Ptr(pr), iNewString.data(), iNewString.length() * 2);
         SetLength(pr, iNewString.length());
     }
 }

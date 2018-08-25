@@ -190,9 +190,9 @@ namespace eka2l1::epoc {
         /*! \brief Assign the descriptor with the provided string. 
          * \param iNewString The string to assign.
          */
-        void Assign(eka2l1::system *sys, std::string iNewString);
+        void Assign(eka2l1::system *sys, std::u16string iNewString);
 
-        void Assign(eka2l1::process_ptr pr, std::string iNewString);
+        void Assign(eka2l1::process_ptr pr, std::u16string iNewString);
     };
 
     /*! \brief Modifiable 8-bit descriptor */
