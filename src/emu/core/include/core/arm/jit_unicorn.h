@@ -24,6 +24,7 @@
 
 namespace eka2l1 {
     class timing_system;
+    class manager_system;
     class disasm;
     class memory_system;
 
@@ -39,6 +40,7 @@ namespace eka2l1 {
             timing_system *timing;
             disasm *asmdis;
             memory_system *mem;
+            manager_system *mngr;
 
             hle::lib_manager *lib_mngr;
 
@@ -57,11 +59,15 @@ namespace eka2l1 {
                 return mem;
             }
 
+            manager_system *get_manager_sys() {
+                return mngr;
+            }
+
             hle::lib_manager *get_lib_manager() {
                 return lib_mngr;
             }
 
-            jit_unicorn(timing_system *sys, memory_system *mem, disasm *asmdis, hle::lib_manager *mngr);
+            jit_unicorn(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr);
             ~jit_unicorn();
 
             void run() override;

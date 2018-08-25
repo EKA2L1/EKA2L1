@@ -13,7 +13,7 @@ add_subdirectory(src/external)
 add_subdirectory(src/emu)
 
 if (BUILD_TOOLS)
-	add_subdirectory(src/tools)
+    add_subdirectory(src/tools)
 endif()
 
 if (BUILD_TESTS)

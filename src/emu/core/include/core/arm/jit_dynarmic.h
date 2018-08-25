@@ -27,8 +27,9 @@
 #include <memory>
 
 namespace eka2l1 {
-    class timing_system;
     class disasm;
+    class timing_system;
+    class manager_system;
     class memory_system;
 
     namespace hle {
@@ -46,8 +47,9 @@ namespace eka2l1 {
             std::unique_ptr<Dynarmic::A32::Jit> jit;
             std::unique_ptr<arm_dynarmic_callback> cb;
 
-            timing_system *timing;
             disasm *asmdis;
+            timing_system *timing;
+            manager_system *mngr;
             memory_system *mem;
 
             hle::lib_manager *lib_mngr;
@@ -72,7 +74,7 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            jit_dynarmic(timing_system *sys, memory_system *mem, disasm *asmdis, hle::lib_manager *mngr);
+            jit_dynarmic(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr);
             ~jit_dynarmic();
 
             void run() override;

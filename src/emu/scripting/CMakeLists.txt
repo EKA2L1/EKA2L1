@@ -1,10 +1,12 @@
 add_library(symemu
+    include/scripting/cpu.h
     include/scripting/emulog.h
     include/scripting/instance.h
     include/scripting/process.h
     include/scripting/thread.h
     include/scripting/hook.h
     include/scripting/symemu.inl
+    src/cpu.cpp
     src/emulog.cpp
     src/process.cpp
     src/hook.cpp

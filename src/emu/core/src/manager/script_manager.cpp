@@ -116,6 +116,23 @@ namespace eka2l1::manager {
         reschedule_functions.push_back(func);
     }
 
+    void script_manager::register_sid(const uint32_t sid, pybind11::function &func) {
+        breakpoints_patch[sid].push_back(func);
+    }
+
+    void script_manager::register_breakpoint(const uint32_t addr, pybind11::function &func) {
+        breakpoints[addr - addr % 2].push_back(func);
+    }
+
+    void script_manager::patch_sid_breakpoints(const uint32_t sid, const uint32_t addr) {
+        if (breakpoints_patch.find(sid) == breakpoints_patch.end()) {
+            return;
+        }
+
+        breakpoints[addr - addr % 2].insert(breakpoints[addr - addr % 2].end(), breakpoints_patch[sid].begin(), breakpoints_patch[sid].end());
+        breakpoints_patch.erase(sid);
+    }
+
     void script_manager::call_reschedules() {
         std::lock_guard<std::mutex> guard(smutex);
 
@@ -131,5 +148,17 @@ namespace eka2l1::manager {
         }
 
         scripting::set_current_instance(crr_instance);
+    }
+
+    void script_manager::call_breakpoints(const uint32_t addr) {
+        func_list &list = breakpoints[addr];
+
+        for (const auto &func : list) {
+            try {
+                func();
+            } catch (py::error_already_set &exec) {
+                LOG_WARN("Script interpreted error: {}", exec.what());
+            }
+        }
     }
 }

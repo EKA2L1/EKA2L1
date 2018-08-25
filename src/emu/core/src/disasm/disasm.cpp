@@ -57,9 +57,6 @@ namespace eka2l1 {
         }
 
         mem = smem;
-
-        // Create jitter to detect thumb
-        jitter = arm::create_jitter(nullptr, mem, this, nullptr, arm::jitter_arm_type::unicorn);
     }
 
     void disasm::shutdown() {
