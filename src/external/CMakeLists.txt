@@ -19,6 +19,7 @@ endif()
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
 add_subdirectory(yaml-cpp)
 
+set (gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(googletest)
 
 add_library(imgui imgui/imgui.h imgui/imgui.cpp

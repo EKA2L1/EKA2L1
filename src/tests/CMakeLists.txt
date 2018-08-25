@@ -3,8 +3,6 @@ include_directories(${GTEST_INCLUDE_DIR})
 add_subdirectory(core)
 add_subdirectory(common)
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
 add_executable(ekatests 
 	tests.cpp
     ${COMMON_TEST_FILES}
