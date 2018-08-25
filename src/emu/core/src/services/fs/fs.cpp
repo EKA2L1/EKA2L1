@@ -344,6 +344,8 @@ namespace eka2l1 {
 
         vfs_file->close();
         nodes_table.close_nodes(*handle_res);
+
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::is_file_in_rom(service::ipc_context ctx) {
