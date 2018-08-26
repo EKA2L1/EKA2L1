@@ -194,12 +194,13 @@ namespace eka2l1 {
             return std::make_unique<Dynarmic::A32::Jit>(config);
         }
 
-        jit_dynarmic::jit_dynarmic(timing_system *sys, memory_system *mem, disasm *asmdis, hle::lib_manager *mngr)
+        jit_dynarmic::jit_dynarmic(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
-            , lib_mngr(mngr)
-            , fallback_jit(sys, mem, asmdis, mngr)
+            , lib_mngr(lmngr)
+            , mngr(mngr)
+            , fallback_jit(sys, mngr, mem, asmdis, lmngr)
             , cb(std::make_unique<arm_dynarmic_callback>(*this)) {
             jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
         }

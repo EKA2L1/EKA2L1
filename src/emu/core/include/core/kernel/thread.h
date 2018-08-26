@@ -38,6 +38,7 @@
 
 namespace eka2l1 {
     class kernel_system;
+    class timing_system;
     class memory;
 
     namespace kernel {
@@ -167,6 +168,8 @@ namespace eka2l1 {
             std::vector<logon_request_form> logon_requests;
             std::vector<logon_request_form> rendezvous_requests;
 
+            uint64_t create_time = 0;
+
         public:
             kernel_obj_ptr get_object(uint32_t handle);
 
@@ -188,7 +191,7 @@ namespace eka2l1 {
             }
 
             thread();
-            thread(kernel_system *kern, memory_system *mem, process_ptr owner, kernel::access_type access,
+            thread(kernel_system *kern, memory_system *mem, timing_system *timing, process_ptr owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 bool initial,

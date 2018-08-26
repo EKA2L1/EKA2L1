@@ -27,12 +27,6 @@
 #include <vector>
 
 namespace eka2l1 {
-    /*! \brief Contains ARM jitter and related things. */
-    namespace arm {
-        class jit_interface;
-        using jitter = std::unique_ptr<jit_interface>;
-    }
-
     template <class T>
     class ptr;
 
@@ -58,9 +52,6 @@ namespace eka2l1 {
         csh cp_handle;
         insn_ptr cp_insn;
         memory_system *mem;
-
-        // This jitter is use for detect subroutine.
-        arm::jitter jitter;
 
     public:
         /*! \brief Initialize the disassembler.

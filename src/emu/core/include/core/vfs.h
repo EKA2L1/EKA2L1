@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <common/types.h>
+
 #include <array>
 #include <map>
 #include <mutex>
@@ -50,7 +52,13 @@ namespace eka2l1 {
         /*! This set the seek cursor to be the end of the file, plus
          * the provided offset.
          */
-        end
+        end,
+
+        /**! Same as seeking from begging, but this indicates that 
+         * the return value must be a linear address. Will return 0xFFFFFFFF
+         * if the file is not ROM
+         */
+        address
     };
 
 #define READ_MODE 0x100
@@ -128,7 +136,7 @@ namespace eka2l1 {
 
         /*! \brief Seek the file with specified mode. 
          */
-        virtual void seek(int seek_off, file_seek_mode where) = 0;
+        virtual size_t seek(size_t seek_off, file_seek_mode where) = 0;
 
         /*! \brief Get the position of the seek cursor.
          * \returns The position of the seek cursor.
@@ -142,6 +150,19 @@ namespace eka2l1 {
 
         /*! \brief Please don't use this. */
         virtual std::string get_error_descriptor() = 0;
+
+        /*! \brief Check if the file is in ROM or not. 
+         *
+         * Notice that files in Z: drive is not always ROM file. Z: drive is a combination 
+         * of ROFS and ROM (please see EBootMagic.txt in sys/data).
+         */
+        virtual bool is_in_rom() const = 0;
+
+        /*! \brief Get the address of the file in the ROM. 
+        *
+        * If the file is not in ROM, this return a null pointer.
+        */
+        virtual address rom_address() const = 0;
     };
 
     using symfile = std::shared_ptr<file>;
@@ -195,6 +216,8 @@ namespace eka2l1 {
         * it will return nothing
         */
         virtual std::optional<entry_info> get_next_entry() = 0;
+
+        virtual std::optional<entry_info> peek_next_entry() = 0;
     };
 
     class io_system {
@@ -222,6 +245,10 @@ namespace eka2l1 {
 
         void set_epoc_version(epocver ever) {
             ver = ever;
+        }
+
+        void set_rom_cache(loader::rom *cache) {
+            rom_cache = cache;
         }
 
         // Shutdown the IO system

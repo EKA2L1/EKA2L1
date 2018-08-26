@@ -204,7 +204,7 @@ namespace eka2l1 {
             memcpy(stack_ptr.get(mem), &info, 0x40);
         }
 
-        thread::thread(kernel_system *kern, memory_system *mem, process_ptr owner,
+        thread::thread(kernel_system *kern, memory_system *mem, timing_system *timing, process_ptr owner,
             kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
@@ -219,10 +219,13 @@ namespace eka2l1 {
             , usrdata(usrdata)
             , mem(mem)
             , priority(pri)
+            , timing(timing)
             , thread_handles(kern, handle_array_owner::thread) {
             if (owner) {
                 owner->increase_thread_count();
             }
+
+            create_time = timing->get_ticks();
 
             obj_type = object_type::thread;
             state = thread_state::wait; // Suspended.
@@ -364,22 +367,55 @@ namespace eka2l1 {
         }
 
         bool thread::operator>(const thread &rhs) {
+            if (real_priority == rhs.real_priority) {
+                if (uid < rhs.uid) {
+                    return true;
+                }
+
+                return false;
+            }
+
             return real_priority > rhs.real_priority;
         }
 
         bool thread::operator<(const thread &rhs) {
+            if (real_priority == rhs.real_priority) {
+                // First thread comes first
+                if (uid > rhs.uid) {
+                    return true;
+                }
+
+                return false;
+            }
+
             return real_priority < rhs.real_priority;
         }
 
         bool thread::operator==(const thread &rhs) {
-            return real_priority == rhs.real_priority;
+            return (real_priority == rhs.real_priority) && (uid <= rhs.uid);
         }
 
         bool thread::operator>=(const thread &rhs) {
+            if (real_priority == rhs.real_priority) {
+                if (uid <= rhs.uid) {
+                    return true;
+                }
+
+                return false;
+            }
+
             return real_priority >= rhs.real_priority;
         }
 
         bool thread::operator<=(const thread &rhs) {
+            if (real_priority == rhs.real_priority) {
+                if (uid >= rhs.uid) {
+                    return true;
+                }
+
+                return false;
+            }
+
             return real_priority <= rhs.real_priority;
         }
 

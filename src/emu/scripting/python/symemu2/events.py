@@ -29,6 +29,28 @@ def emulatorSystemCallInvoke(svcNum):
         return funcWrapper
 
     return invokeDecorator
+    
+def emulatorEpocFunctionInvoke(sid):
+    def invokeDecorator(funcToInvoke):
+        def funcWrapper():
+            return funcToInvoke
+
+        symemu.registerSidInvokement(sid, funcToInvoke)
+
+        return funcWrapper
+
+    return invokeDecorator
+    
+def emulatorBreakpointInvoke(addr):
+    def invokeDecorator(funcToInvoke):
+        def funcWrapper():
+            return funcToInvoke
+
+        symemu.registerBreakpointInvokement(addr, funcToInvoke)
+
+        return funcWrapper
+
+    return invokeDecorator
 
 # The function registed with this decorator will be invoked when
 # a reschedule happens

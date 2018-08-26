@@ -134,12 +134,20 @@ namespace eka2l1 {
 
             uint32_t new_alignment = is_power_of_two(alignment) ? alignment : next_power_of_two(alignment);
 
+            // No more align if it's already aligned
+            if (target % new_alignment == 0) {
+                return target;
+            }
+
             if (mode == 0) {
                 return target - target % new_alignment;
             }
 
             return target + new_alignment - target % new_alignment;
         }
+
+        int compare_ignore_case(const utf16_str &s1,
+            const utf16_str &s2);
     }
 }
 

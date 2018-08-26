@@ -20,6 +20,7 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
 #include <common/random.h>
 
 #include <core/epoc/reg.h>
@@ -130,8 +131,8 @@ namespace eka2l1 {
 #define EXPORT(x, y)   \
     tids.push_back(y); \
     func_names.insert(std::make_pair(y, x));
-#define ENDLIB()                                                                        \
-    ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); \
+#define ENDLIB()                                                      \
+    ids.insert(std::make_pair(common::utf8_to_ucs2(lib_name), tids)); \
     tids.clear();
 
             if (ver == epocver::epoc6) {
@@ -190,6 +191,8 @@ namespace eka2l1 {
 
                 for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
                     addr_map.insert(std::make_pair(addrs[i], libids[i]));
+                    
+                    sys->get_manager_system()->get_script_manager()->patch_sid_breakpoints(libids[i], addrs[i]);
 
                     std::string name_imp = get_func_name(libids[i]).value();
                     size_t vtab_start = name_imp.find("vtable for ");
@@ -291,10 +294,14 @@ namespace eka2l1 {
         }
 
         loader::romimg_ptr lib_manager::load_romimg(const std::u16string &rom_name, bool log_exports) {
-            symfile romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll", READ_MODE | BIN_MODE);
+            symfile romimgf = nullptr;
 
-            if (!romimgf) {
+            if (rom_name.find(u":") == 1) {
                 romimgf = io->open_file(rom_name, READ_MODE | BIN_MODE);
+            }
+
+            if (!romimgf) {    
+                romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll", READ_MODE | BIN_MODE);
 
                 if (!romimgf) {
                     return loader::romimg_ptr(nullptr);

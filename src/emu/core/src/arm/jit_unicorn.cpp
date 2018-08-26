@@ -27,6 +27,7 @@
 #include <core/core_timing.h>
 #include <core/disasm/disasm.h>
 #include <core/hle/libmanager.h>
+#include <core/manager/manager.h>
 #include <core/ptr.h>
 
 #include <unicorn/unicorn.h>
@@ -104,16 +105,30 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
     jit->save_context(context_debug);
 
+    bool enable_breakpoint_script = jit->get_lib_manager()->get_sys()->get_bool_config("enable_breakpoint_script");
+
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
     bool log_code = jit->get_lib_manager()->get_sys()->get_bool_config("log_code");
     bool log_passed = jit->get_lib_manager()->get_sys()->get_bool_config("log_passed");
 
+    if (enable_breakpoint_script) {
+        jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
+    }
+
     if (log_passed && mngr) {
         auto res = mngr->get_sid(address);
 
+        if (enable_breakpoint_script && res) {
+            jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
+        }
+
         if (!res && thumb_mode(uc)) {
             res = mngr->get_sid(address + 1);
+
+            if (enable_breakpoint_script && res) {
+                jit->get_manager_sys()->get_script_manager()->call_breakpoints(address + 1);
+            }
         }
 
         if (res) {
@@ -230,11 +245,12 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        jit_unicorn::jit_unicorn(timing_system *sys, memory_system *mem, disasm *asmdis, hle::lib_manager *mngr)
+        jit_unicorn::jit_unicorn(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
-            , lib_mngr(mngr) {
+            , lib_mngr(lmngr)
+            , mngr(mngr) {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);
 
@@ -460,7 +476,7 @@ namespace eka2l1 {
             set_sp(ctx.sp);
             set_lr(ctx.lr);
             set_pc(ctx.pc);
-            set_cpsr(ctx.cpsr);       
+            set_cpsr(ctx.cpsr);
         }
 
         void jit_unicorn::prepare_rescheduling() {

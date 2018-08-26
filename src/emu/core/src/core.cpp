@@ -20,8 +20,10 @@
 #include <core/core.h>
 #include <core/kernel/process.h>
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/random.h>
 #include <common/path.h>
 
 #include <core/disasm/disasm.h>
@@ -48,7 +50,7 @@ namespace eka2l1 {
             }
         }
     }
-    
+
     void system::init() {
         exit = false;
 
@@ -64,7 +66,7 @@ namespace eka2l1 {
         mngr.init(this, &io);
         asmdis.init(&mem);
 
-        cpu = arm::create_jitter(&timing, &mem, &asmdis, &hlelibmngr, jit_type);
+        cpu = arm::create_jitter(&timing, &mngr, &mem, &asmdis, &hlelibmngr, jit_type);
 
         mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
             get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
@@ -82,12 +84,23 @@ namespace eka2l1 {
     }
 
     uint32_t system::load(uint32_t id) {
-        emu_win->init("EKA2L1", vec2(360, 640));
-        emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
+        if (!startup_inited) {
+            emu_win->init("EKA2L1", vec2(360, 640));
+            emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
 
-        emu_win->close_hook = [&]() {
-            exit = true;
-        };
+            emu_win->close_hook = [&]() {
+                exit = true;
+            };
+
+            for (auto &startup_app : startup_apps) {
+                // Some ROM apps have UID3 left blank, until we figured out how to get the UID3 uniquely, we gonna just hash
+                // the path to get the UID
+                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), common::hash(startup_app));
+                kern.run_process(process);
+            }
+
+            startup_inited = true;
+        }
 
         uint32_t process_handle = kern.spawn_new_process(id);
 
@@ -98,17 +111,7 @@ namespace eka2l1 {
         kern.run_process(process_handle);
 
         // Change window title to game title
-        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + 
-            " (" + common::to_string(id, std::hex) + ")");
-
-        if (!startup_inited) {
-            for (auto &startup_app : startup_apps) {
-                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), 0x123456);
-                kern.run_process(process);
-            }
-
-            startup_inited = true;
-        }
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
 
         return process_handle;
     }
@@ -155,6 +158,7 @@ namespace eka2l1 {
         }
 
         romf = *romf_res;
+        io.set_rom_cache(&romf);
 
         bool res1 = mem.map_rom(romf.header.rom_base, path);
 

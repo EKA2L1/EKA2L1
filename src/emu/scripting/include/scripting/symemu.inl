@@ -1,5 +1,7 @@
+#include <scripting/cpu.h>
 #include <scripting/emulog.h>
 #include <scripting/hook.h>
+#include <scripting/mem.h>
 #include <scripting/process.h>
 #include <scripting/thread.h>
 
@@ -52,7 +54,7 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         Get the current process name
         )pbdoc")
         .def("getThreadList", &scripting::process::get_thread_list,
-                R"pbdoc(
+            R"pbdoc(
         Get the thread list.
         )pbdoc");
 
@@ -99,6 +101,24 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get the own process of thread.
             )pbdoc");
 
+    py::class_<scripting::cpu>(m, "Cpu")
+        .def_static("getReg", &scripting::cpu::get_register,
+            R"pbdoc(
+            Get a register of the CPU.
+            )pbdoc")
+        .def_static("getCpsr", &scripting::cpu::get_pc,
+            R"pbdoc(
+            Get CPU's cpsr.
+            )pbdoc")
+        .def_static("getLr", &scripting::cpu::get_lr,
+            R"pbdoc(
+            Get CPU's lr.
+            )pbdoc")
+        .def_static("getSp", &scripting::cpu::get_sp,
+            R"pbdoc(
+            Get CPU's sp.
+            )pbdoc");
+
     m.def("emulog", &scripting::emulog, R"pbdoc(
         Log to the emulator's logging system
         )pbdoc");
@@ -113,6 +133,17 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         Register a function to be called when a specific SVC is called
         )pbdoc");
 
+    m.def("registerSidInvokement", &scripting::register_sid_invokement,
+        R"pbdoc(
+        Register a function to be called when a EPOC API is called
+        )pbdoc");
+
+    m.def("registerBreakpointInvokement", &scripting::register_breakpoint_invokement,
+        R"pbdoc(
+        Register a function to be called when a breakpoint is hit.
+        Only works on fallback (Dynarmic) and Unicorn JIT.
+        )pbdoc");
+
     m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement,
         R"pbdoc(
         Register a function to be called right before a reschedule is started
@@ -121,5 +152,25 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
     m.def("getProcessesList", &scripting::get_process_list,
         R"pbdoc(
         Get a list of processes currently running
+        )pbdoc");
+
+    m.def("readByte", &scripting::read_byte,
+        R"pbdoc(
+        Read a byte from current process address space.
+        )pbdoc");
+
+    m.def("readShort", &scripting::read_short,
+        R"pbdoc(
+        Read a short from current process address space.
+        )pbdoc");
+
+    m.def("readWord", &scripting::read_word,
+        R"pbdoc(
+        Read a word from current process address space.
+        )pbdoc");
+
+    m.def("readQword", &scripting::read_qword,
+        R"pbdoc(
+        Read a qword from current process address space.
         )pbdoc");
 }

@@ -345,7 +345,7 @@ namespace eka2l1 {
 
                         if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
                             LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
-                            mngr->install_package(std::u16string(raw_path.begin(), raw_path.end()), 0);
+                            mngr->install_package(common::utf8_to_ucs2(raw_path), 0);
                         }
                     } else {
                         LOG_INFO("EOpNull");

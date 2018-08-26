@@ -46,6 +46,10 @@ void wake_thread(uint64_t ud, int cycles_late) {
 }
 
 namespace eka2l1 {
+    bool thread_comparator::operator()(const thread_ptr &x, const thread_ptr &y) const {
+        return *x < *y;
+    }
+
     namespace kernel {
         thread_scheduler::thread_scheduler(kernel_system *kern, timing_system *timing, arm::jit_interface &jit)
             : kern(kern)

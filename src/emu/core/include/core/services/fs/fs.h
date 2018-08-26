@@ -104,6 +104,7 @@ namespace eka2l1 {
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);
         void file_replace(service::ipc_context ctx);
+        void file_close(service::ipc_context ctx);
 
         void new_file_subsession(service::ipc_context ctx, bool overwrite = false);
 
@@ -116,11 +117,21 @@ namespace eka2l1 {
         void open_dir(service::ipc_context ctx);
         void read_dir_packed(service::ipc_context ctx);
         void read_dir(service::ipc_context ctx);
+        void close_dir(service::ipc_context ctx);
 
         void drive_list(service::ipc_context ctx);
         void drive(service::ipc_context ctx);
 
+        void is_file_in_rom(service::ipc_context ctx);
+
+        void session_path(service::ipc_context ctx);
+        void set_session_path(service::ipc_context ctx);
+        void set_session_to_private(service::ipc_context ctx);
+
+        void connect(service::ipc_context ctx) override;
+
         std::unordered_map<uint32_t, fs_node> file_nodes;
+        std::unordered_map<uint32_t, utf16_str> session_paths;
 
         int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false);
         fs_node *get_file_node(int handle);

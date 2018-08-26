@@ -31,6 +31,13 @@ namespace eka2l1 {
 
             return convert.to_bytes(p, p + str.size());
         }
+
+        std::u16string utf8_to_ucs2(const std::string &str) {
+            std::wstring_convert<std::codecvt_utf8_utf16<int16_t>, int16_t> converter;
+            auto wstr = converter.from_bytes(str);
+
+            return std::u16string(wstr.begin(), wstr.end());
+        }
     }
 }
 
