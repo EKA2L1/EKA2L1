@@ -134,6 +134,11 @@ namespace eka2l1 {
 
             uint32_t new_alignment = is_power_of_two(alignment) ? alignment : next_power_of_two(alignment);
 
+            // No more align if it's already aligned
+            if (target % new_alignment == 0) {
+                return target;
+            }
+
             if (mode == 0) {
                 return target - target % new_alignment;
             }

@@ -1,6 +1,7 @@
 #include <scripting/cpu.h>
 #include <scripting/emulog.h>
 #include <scripting/hook.h>
+#include <scripting/mem.h>
 #include <scripting/process.h>
 #include <scripting/thread.h>
 
@@ -151,5 +152,25 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
     m.def("getProcessesList", &scripting::get_process_list,
         R"pbdoc(
         Get a list of processes currently running
+        )pbdoc");
+
+    m.def("readByte", &scripting::read_byte,
+        R"pbdoc(
+        Read a byte from current process address space.
+        )pbdoc");
+
+    m.def("readShort", &scripting::read_short,
+        R"pbdoc(
+        Read a short from current process address space.
+        )pbdoc");
+
+    m.def("readWord", &scripting::read_word,
+        R"pbdoc(
+        Read a word from current process address space.
+        )pbdoc");
+
+    m.def("readQword", &scripting::read_qword,
+        R"pbdoc(
+        Read a qword from current process address space.
         )pbdoc");
 }

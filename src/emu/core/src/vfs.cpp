@@ -142,6 +142,9 @@ namespace eka2l1 {
         std::u16string input_name;
         int fmode;
 
+        size_t file_size;
+        bool closed;
+
         const char *translate_mode(int mode) {
             if (mode & READ_MODE) {
                 if (mode & BIN_MODE) {
@@ -172,54 +175,78 @@ namespace eka2l1 {
             return "";
         }
 
+#define WARN_CLOSE \
+    if (closed)    \
+        LOG_WARN("File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
+
         physical_file(utf16_str path, int mode) { init(path, mode); }
 
-        ~physical_file() { shutdown(); }
+        ~physical_file() {
+            shutdown();
+        }
 
         int file_mode() const override {
             return fmode;
         }
 
         void init(utf16_str inp_name, int mode) {
+            closed = false;
+
             const char *cmode = translate_mode(mode);
             file = fopen(common::ucs2_to_utf8(inp_name).c_str(), cmode);
             input_name = std::move(inp_name);
             fmode = mode;
+
+            if (file) {
+                auto crr_pos = ftell(file);
+                fseek(file, 0, SEEK_END);
+
+                file_size = ftell(file);
+                fseek(file, crr_pos, SEEK_SET);
+            }
         }
 
         void shutdown() {
-            if (file)
+            if (file && !closed)
                 fclose(file);
         }
 
         size_t write_file(void *data, uint32_t size, uint32_t count) override {
+            WARN_CLOSE
+
             return fwrite(data, size, count, file);
         }
 
         size_t read_file(void *data, uint32_t size, uint32_t count) override {
+            WARN_CLOSE
+
             return fread(data, size, count, file);
         }
 
         uint64_t size() const override {
-            auto crr_pos = ftell(file);
-            fseek(file, 0, SEEK_END);
+            WARN_CLOSE
 
-            auto res = ftell(file);
-            fseek(file, crr_pos, SEEK_SET);
-
-            return res;
+            return file_size;
         }
 
         bool close() override {
+            WARN_CLOSE
+
             fclose(file);
+            closed = true;
+
             return true;
         }
 
         uint64_t tell() override {
+            WARN_CLOSE
+
             return ftell(file);
         }
 
         size_t seek(size_t seek_off, file_seek_mode where) override {
+            WARN_CLOSE
+
             if (where == file_seek_mode::address) {
                 return 0xFFFFFFFF;
             }
@@ -236,6 +263,8 @@ namespace eka2l1 {
         }
 
         std::u16string file_name() const override {
+            WARN_CLOSE
+
             return input_name;
         }
 
@@ -248,7 +277,7 @@ namespace eka2l1 {
         }
 
         address rom_address() const override {
-             return 0;
+            return 0;
         }
     };
 
@@ -259,29 +288,23 @@ namespace eka2l1 {
 
         fs::directory_iterator dir_iterator;
 
+        std::optional<entry_info> peek_info;
+        bool peeking;
+
     protected:
+        std::string replace_all(std::string str, const std::string &from, const std::string &to) {
+            size_t start_pos = 0;
+            while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+                str.replace(start_pos, from.length(), to);
+                start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+            }
+            return str;
+        }
+
         std::string construct_regex_string(std::string regexstr) {
-            size_t pos = regexstr.find(".");
-
-            // Find ., replace with \.
-            while (pos != std::string::npos) {
-                regexstr.replace(regexstr.begin() + pos, regexstr.begin() + pos + 1, "\.");
-                pos = regexstr.find(".");
-            }
-
-            // Interesting, find ?, replace with . pos = regexstr.find(".");
-            pos = regexstr.find("?");
-
-            while (pos != std::string::npos) {
-                regexstr.replace(regexstr.begin() + pos, regexstr.begin() + pos + 1, ".");
-                pos = regexstr.find("?");
-            }
-
-            pos = regexstr.find("*");
-            while (pos != std::string::npos) {
-                regexstr.replace(regexstr.begin() + pos, regexstr.begin() + pos + 1, ".*");
-                pos = regexstr.find("?");
-            }
+            regexstr = replace_all(regexstr, ".", std::string("\\") + ".");
+            regexstr = replace_all(regexstr, "?", ".");
+            regexstr = replace_all(regexstr, "*", ".*");
 
             return regexstr;
         }
@@ -290,19 +313,32 @@ namespace eka2l1 {
         physical_directory(const std::string &phys_path, const std::string &vir_path, const std::string &filter)
             : filter(construct_regex_string(filter))
             , dir_iterator(phys_path)
-            , vir_path(vir_path) {
+            , vir_path(vir_path)
+            , peeking(false) {
         }
 
         std::optional<entry_info> get_next_entry() override {
+            if (peeking) {
+                peeking = false;
+                return peek_info;
+            }
+
             while (true) {
                 std::error_code err;
                 dir_iterator.increment(err);
 
-                if (err) {
+                if (static_cast<bool>(err) || dir_iterator == fs::directory_iterator{}) {
                     return std::optional<entry_info>{};
                 }
 
-                std::string name = dir_iterator->path().filename().string();
+                std::string name = "";
+
+                try {
+                    name = dir_iterator->path().filename().string();
+                }
+                catch (...) {
+                    return std::optional<entry_info>{};
+                }
 
                 // If it doesn't meet the filter, continue until find one or there is no one
                 if (!std::regex_match(name, filter)) {
@@ -322,6 +358,15 @@ namespace eka2l1 {
             }
 
             return std::optional<entry_info>{};
+        }
+
+        std::optional<entry_info> peek_next_entry() override {
+            if (!peeking) {
+                peek_info = get_next_entry();
+                peeking = true;
+            }
+
+            return peek_info;
         }
     };
 
@@ -583,6 +628,10 @@ namespace eka2l1 {
 
         drive drv = res.value();
         auto new_path = get(common::ucs2_to_utf8(vir_path));
+
+        if (!fs::exists(new_path)) {
+            return std::shared_ptr<directory>(nullptr);
+        }
 
         return std::make_shared<physical_directory>(new_path, common::ucs2_to_utf8(vir_path), filter);
     }

@@ -216,6 +216,8 @@ namespace eka2l1 {
         * it will return nothing
         */
         virtual std::optional<entry_info> get_next_entry() = 0;
+
+        virtual std::optional<entry_info> peek_next_entry() = 0;
     };
 
     class io_system {

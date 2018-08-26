@@ -129,7 +129,7 @@ namespace eka2l1::manager {
             return;
         }
 
-        breakpoints[addr - addr % 2].insert(breakpoints[addr - addr % 2].end(), breakpoints_patch[sid].begin(), breakpoints_patch[sid].end());
+        breakpoints[addr].insert(breakpoints[addr].end(), breakpoints_patch[sid].begin(), breakpoints_patch[sid].end());
         breakpoints_patch.erase(sid);
     }
 

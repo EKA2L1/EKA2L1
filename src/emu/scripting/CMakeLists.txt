@@ -4,11 +4,13 @@ add_library(symemu
     include/scripting/instance.h
     include/scripting/process.h
     include/scripting/thread.h
+    include/scripting/mem.h
     include/scripting/hook.h
     include/scripting/symemu.inl
     src/cpu.cpp
     src/emulog.cpp
     src/process.cpp
+    src/mem.cpp
     src/hook.cpp
     src/thread.cpp
     src/instance.cpp)
@@ -17,7 +19,7 @@ pybind11_add_module(symemu_common
     include/scripting/common.h
     src/common.cpp)
 
-target_include_directories(symemu PUBLIC include)
+target_include_directories(symemu PUBLIC include  ${EPOC32_INCLUDE_DIR})
 target_link_libraries(symemu PRIVATE common pybind11 core corekernel)
 
 target_include_directories(symemu_common PUBLIC include)

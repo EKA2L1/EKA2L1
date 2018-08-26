@@ -24,6 +24,7 @@
 #include <core/epoc/des.h>
 #include <memory>
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -144,6 +145,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_close, EFsFileSubClose, "Fs::FileSubClose");
         REGISTER_IPC(fs_server, is_file_in_rom, EFsIsFileInRom, "Fs::IsFileInRom");
         REGISTER_IPC(fs_server, open_dir, EFsDirOpen, "Fs::OpenDir");
+        REGISTER_IPC(fs_server, close_dir, EFsDirSubClose, "Fs::CloseDir");
         REGISTER_IPC(fs_server, read_dir, EFsDirReadOne, "Fs::ReadDir");
         REGISTER_IPC(fs_server, read_dir_packed, EFsDirReadPacked, "Fs::ReadDirPacked");
         REGISTER_IPC(fs_server, drive_list, EFsDriveList, "Fs::DriveList");
@@ -598,11 +600,17 @@ namespace eka2l1 {
         entry.aModified = epoc::TTime{ static_cast<uint64_t>(last_mod.time_since_epoch().count()) };
         ctx.write_arg_pkg<epoc::TEntry>(1, entry);
 
+        if (!dir) {
+            file->close();
+        }
+
         ctx.set_request_status(KErrNone);
     }
 
     void fs_server::open_dir(service::ipc_context ctx) {
         auto dir = ctx.get_arg<std::u16string>(0);
+
+        LOG_TRACE("Opening directory: {}", common::ucs2_to_utf8(*dir));
 
         if (!dir) {
             ctx.set_request_status(KErrArgument);
@@ -621,6 +629,25 @@ namespace eka2l1 {
         size_t dir_handle = nodes_table.add_node(node);
 
         ctx.write_arg_pkg<int>(3, dir_handle);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::close_dir(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::dir) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        nodes_table.close_nodes(*handle_res);
         ctx.set_request_status(KErrNone);
     }
 
@@ -695,23 +722,33 @@ namespace eka2l1 {
         std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
 
         epoc::TDes8 *entry_arr = reinterpret_cast<epoc::TDes8 *>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(*entry_arr_vir_ptr));
-        epoc::TEntry *entry_buf = reinterpret_cast<epoc::TEntry *>(entry_arr->Ptr(ctx.msg->own_thr->owning_process()));
-
         epoc::TBuf8 *entry_arr_buf = reinterpret_cast<epoc::TBuf8 *>(entry_arr);
 
-        size_t max_entries = entry_arr_buf->iMaxLength / sizeof(epoc::TEntry);
-        size_t queried_entries = 0;
+        TUint8 *entry_buf = reinterpret_cast<TUint8 *>(entry_arr->Ptr(ctx.msg->own_thr->owning_process()));
+        TUint8 *entry_buf_end = entry_buf + entry_arr_buf->iMaxLength;
+        TUint8 *entry_buf_org = entry_buf;
 
-        for (; queried_entries < max_entries; queried_entries++) {
-            std::optional<entry_info> info = dir->get_next_entry();
+        size_t queried_entries = 0;
+        size_t entry_no_name_size = offsetof(epoc::TEntry, aName) + 8;
+
+        while (entry_buf < entry_buf_end) {
+            epoc::TEntry entry;
+            std::optional<entry_info> info = dir->peek_next_entry();
 
             if (!info) {
+                entry_arr->SetLength(ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
+                ctx.set_request_status(KErrEof);
+
+                return;
+            }
+
+            if (entry_buf + entry_no_name_size + common::align(common::utf8_to_ucs2(info->name).length() * 2, 4) + 4 > entry_buf_end) {
                 break;
             }
 
             switch (info->attribute) {
             case io_attrib::hidden: {
-                entry_buf[queried_entries].aAttrib = KEntryAttHidden;
+                entry.aAttrib = KEntryAttHidden;
                 break;
             }
 
@@ -720,26 +757,37 @@ namespace eka2l1 {
             }
 
             if (info->type == io_component_type::dir) {
-                entry_buf[queried_entries].aAttrib &= KEntryAttDir;
+                entry.aAttrib &= KEntryAttDir;
             } else {
-                entry_buf[queried_entries].aAttrib &= KEntryAttNormal;
+                entry.aAttrib &= KEntryAttNormal;
             }
 
-            entry_buf[queried_entries].aSize = info->size;
-            entry_buf[queried_entries].aNameLength = info->name.length();
+            entry.aSize = info->size;
+            entry.aNameLength = info->name.length();
 
             // TODO: Convert this using a proper function
             std::u16string path_u16(info->name.begin(), info->name.end());
-            std::copy(path_u16.begin(), path_u16.end(), entry_buf[queried_entries].aName);
+            std::copy(path_u16.begin(), path_u16.end(), entry.aName);
+
+            memcpy(entry_buf, &entry, offsetof(epoc::TEntry, aName));
+            entry_buf += offsetof(epoc::TEntry, aName);
+
+            memcpy(entry_buf, &entry.aName[0], entry.aNameLength * 2);
+            entry_buf += common::align(entry.aNameLength * 2, 4);
+
+            if (kern->get_epoc_version() == epocver::epoc10) {
+                // Epoc10 uses two reserved bytes
+                memcpy(entry_buf, &entry.aSizeHigh, 8);
+                entry_buf += 8;
+            }
+
+            queried_entries += 1;
+            dir->get_next_entry();
         }
 
-        entry_arr->SetLength(ctx.msg->own_thr->owning_process(), queried_entries * sizeof(epoc::TEntry));
+        entry_arr->SetLength(ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
 
-        if (queried_entries < max_entries) {
-            // All entries have been read, and it should return EOF now
-            ctx.set_request_status(KErrEof);
-            return;
-        }
+        LOG_TRACE("Queried entries: 0x{:x}", queried_entries);
 
         ctx.set_request_status(KErrNone);
     }
