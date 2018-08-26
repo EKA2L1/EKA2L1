@@ -175,12 +175,104 @@ namespace eka2l1 {
 
             return;
         }
-        
+    }
+
+    void loader_server::get_info(service::ipc_context ctx) {
+        std::optional<utf16_str> lib_name = ctx.get_arg<utf16_str>(1);
+        epoc::TDes8 *buffer = reinterpret_cast<decltype(buffer)>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(ctx.msg->args.args[2]));
+
+        if (!lib_name || !buffer) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        // Check the buffer size
+        if (buffer->iMaxLength < sizeof(epoc::lib_info)) {
+            ctx.set_request_status(KErrNoMemory);
+            return;
+        }
+
+        epoc::ldr_info load_info;
+        loader::e32img_ptr eimg = ctx.sys->get_lib_manager()->load_e32img(*lib_name);
+
+        if (!eimg) {
+            loader::romimg_ptr rimg = ctx.sys->get_lib_manager()->load_romimg(*lib_name);
+
+            if (!rimg) {
+                ctx.set_request_status(KErrNotFound);
+                return;
+            }
+
+            load_info.uid1 = rimg->header.uid1;
+            load_info.uid2 = rimg->header.uid2;
+            load_info.uid3 = rimg->header.uid3;
+            load_info.min_stack_size = rimg->header.heap_minimum_size;
+            load_info.secure_id = rimg->header.sec_info.secure_id;
+
+            epoc::lib_info linfo;
+            linfo.uid1 = rimg->header.uid1;
+            linfo.uid2 = rimg->header.uid2;
+            linfo.uid3 = rimg->header.uid3;
+            linfo.secure_id = rimg->header.sec_info.secure_id;
+            linfo.caps[0] = rimg->header.sec_info.cap1;
+            linfo.caps[1] = rimg->header.sec_info.cap2;
+            linfo.vendor_id = rimg->header.sec_info.vendor_id;
+            linfo.major = rimg->header.major;
+            linfo.minor = rimg->header.minor;
+
+            if (buffer->iMaxLength >= sizeof(epoc::lib_info2)) {
+                epoc::lib_info2 linfo2;
+                memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
+
+                linfo2.debug_attrib = 1;
+                linfo2.hfp = 0;
+
+                ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
+            } else {
+                ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info2));
+            }
+
+            ctx.write_arg_pkg<epoc::ldr_info>(0, load_info);
+            ctx.set_request_status(KErrNone);
+
+            return;
+        }
+
+        memcpy(&load_info.uid1, &eimg->header.uid1, 12);
+
+        load_info.min_stack_size = eimg->header.heap_size_min;
+        load_info.secure_id = eimg->header_extended.info.secure_id;
+
+        epoc::lib_info linfo;
+        memcpy(&linfo.uid1, &eimg->header.uid1, 12);
+
+        linfo.secure_id = eimg->header_extended.info.secure_id;
+        linfo.caps[0] = eimg->header_extended.info.cap1;
+        linfo.caps[1] = eimg->header_extended.info.cap2;
+        linfo.vendor_id = eimg->header_extended.info.vendor_id;
+        linfo.major = eimg->header.major;
+        linfo.minor = eimg->header.minor;
+
+        if (buffer->iMaxLength >= sizeof(epoc::lib_info2)) {
+            epoc::lib_info2 linfo2;
+            memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
+
+            linfo2.debug_attrib = 1;
+            linfo2.hfp = 0;
+
+            ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
+        } else {
+            ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info2));
+        } 
+
+        ctx.write_arg_pkg<epoc::ldr_info>(0, load_info);
+        ctx.set_request_status(KErrNone);
     }
 
     loader_server::loader_server(system *sys)
         : service::server(sys, "!Loader", true) {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
         REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
+        REGISTER_IPC(loader_server, get_info, EGetInfo, "Loader::GetInfo");
     }
 }
