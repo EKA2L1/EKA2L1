@@ -196,10 +196,14 @@ namespace eka2l1::epoc {
     };
 
     /*! \brief Modifiable 8-bit descriptor */
-    struct TDes8 : public TDesC8 {};
+    struct TDes8 : public TDesC8 {
+        TInt iMaxLength;
+    };
 
     /*! \brief Modifiable 16-bit descriptor */
-    struct TDes16 : public TDesC16 {};
+    struct TDes16 : public TDesC16 {
+        TInt iMaxLength;
+    };
 
     /*! \brief 8-bit descriptor with data pointer */
     struct TPtrC8 : public TDesC8 {
@@ -209,7 +213,6 @@ namespace eka2l1::epoc {
     /*! \brief 8-bit modifiable and expandable descriptor with
          data pointer */
     struct TPtr8 : public TDes8 {
-        TInt iMaxLength;
         ptr<TUint8> iPtr;
     };
 

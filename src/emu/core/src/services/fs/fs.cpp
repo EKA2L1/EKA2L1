@@ -160,7 +160,8 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
-        session_paths[ctx.msg->msg_session->unique_id()] = common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
+        session_paths[ctx.msg->msg_session->unique_id()] =
+            common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
 
         server::connect(ctx);
     }
