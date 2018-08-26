@@ -8,8 +8,7 @@
 - Requirements:
     * 64 bit OS, 2 GB of RAM
     * At least OpenGL 3.2 is supported
-    * A Symbian ROM. Currently, only Symbian 9.x is supported, and no drawing (AKN - Symbian GUI libraries, and GLES), is implemented yet.
- Only console app works
+    * A Symbian ROM, and a repackage of the Z drive (RPKG) on Symbian. No apps show graphics yet, critical servers are currently being worked on (EComServer and FBS).
     
 - Artifacts:
     * Artifacts for Windows is provided through CI. Click the status badge to get to EKA2L1's Appveyor CI
@@ -23,7 +22,7 @@
 
 - Building:
     * Update all submodules: git submodule update --init --recursive
-    * Using CMakeList in the root directory to generate solution/makefile. Make sure to turn off BUILD_TOOLS (tools are broken)
+    * Using CMakeList in the root directory to generate solution/makefile. *BUILD_TOOLS* and *BUILD_TESTS* are optional.
     * Building GUI using Lazarus 1.8.4. Must be FPC x86-64 and Lazarus 64 bit
     * Make sure to have the unicorn.dll related and eka2l1_api.dll in your executable / system directory if you want to run the GUI (because the GUI uses external functions from C++)
 
