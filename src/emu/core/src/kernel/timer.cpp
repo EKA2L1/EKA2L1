@@ -17,93 +17,67 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <common/cvt.h>
+
+#include <core/kernel/thread.h>
 #include <core/kernel/timer.h>
 
 namespace eka2l1 {
     namespace kernel {
         void timer_callback(uint64_t user, int cycles_late);
 
-        timer::timer(kernel_system *kern, timing_system *timing, std::string name, reset_type rt,
+        timer::timer(kernel_system *kern, timing_system *timing, std::string name,
             kernel::access_type access)
-            : wait_obj(kern, name, access)
-            , timing(timing)
-            , rt(rt)
-            , signaled(false)
-            , init_delay(0)
-            , interval_delay(0) {
+            : kernel_obj(kern, name, access)
+            , timing(timing) {
             obj_type = object_type::timer;
 
-            callback_type = timing->get_register_event("TimerCallback");
+            callback_type = timing->get_register_event("TimerCallback" + common::to_string(uid));
 
             if (callback_type == -1) {
-                callback_type = timing->register_event("TimerCallback",
+                callback_type = timing->register_event("TimerCallback" + common::to_string(uid),
                     timer_callback);
             }
         }
 
         timer::~timer() {}
 
-        void timer::set(int64_t init, int64_t interval) {
-            cancel();
+        void timer::after(thread_ptr requester, int *request_status, uint64_t ms_signal) {
+            if (ms_signal == 0) {
+                *request_status = 0;
+                requester->signal_request();
 
-            init_delay = init;
-            interval_delay = interval;
-
-            if (init_delay == 0) {
-                signal(0);
-            } else {
-                timing->schedule_event(
-                    timing->ns_to_cycles(init),
-                    callback_type,
-                    (uint64_t)this);
-            }
-        }
-
-        void timer::cancel() {
-            timing->unschedule_event(callback_type, (uint64_t)this);
-        }
-
-        void timer::signal(int cycles_late) {
-            signaled = true;
-
-            wake_up_waiting_threads();
-
-            if (interval_delay != 0) {
-                timing->schedule_event(timing->ns_to_cycles(interval_delay) - cycles_late,
-                    callback_type, (uint64_t)this);
-            }
-        }
-
-        void timer::clear() {
-            signaled = false;
-        }
-
-        void timer::wake_up_waiting_threads() {
-            wait_obj::wake_up_waiting_threads();
-
-            if (rt == reset_type::again) {
-                signaled = false;
-            }
-        }
-
-        bool timer::should_wait(thread_ptr thr) {
-            return !signaled;
-        }
-
-        void timer::acquire(thread_ptr thr) {
-            if (rt == reset_type::oneshot) {
-                signaled = false;
-            }
-        }
-
-        void timer_callback(uint64_t user, int cycles_late) {
-            timer *thandle = reinterpret_cast<timer *>(user);
-
-            if (!thandle) {
                 return;
             }
 
-            thandle->signal(cycles_late);
+            signal_info info;
+
+            info.request_status = request_status;
+            info.own_thread = requester;
+            info.own_timer = this;
+
+            infos.push_back(std::move(info));
+            infos.back().id = infos.size() - 1;
+
+            timing->schedule_event(timing->us_to_cycles(ms_signal), callback_type,
+                (uint64_t)(&infos.back()));
+        }
+
+        void timer::request_finish(uint32_t id) {
+            infos.erase(infos.begin() + id);
+        }
+
+        void timer_callback(uint64_t user, int cycles_late) {
+            signal_info *info = reinterpret_cast<signal_info *>(user);
+
+            if (!info) {
+                return;
+            }
+
+            *info->request_status = 0;
+            info->own_thread->signal_request();
+            info->own_timer->request_finish(info->id);
         }
     }
 }

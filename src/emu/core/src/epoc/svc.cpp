@@ -302,7 +302,7 @@ namespace eka2l1::epoc {
         msg->msg_session->set_cookie_address(aSessionAddress);
     }
 
-    BRIDGE_FUNC(TInt, MessageComplete, TInt aMsgHandle) {
+    BRIDGE_FUNC(TInt, MessageComplete, TInt aMsgHandle, TInt aVal) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -312,7 +312,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        *msg->request_sts = 0;
+       *msg->request_sts = aVal;
         msg->own_thr->signal_request();
 
         return KErrNone;
@@ -1333,7 +1333,18 @@ namespace eka2l1::epoc {
     /*********************/
     BRIDGE_FUNC(TInt, TimerCreate) {
         return sys->get_kernel_system()->create_timer("timer" + common::to_string(eka2l1::random()),
-            kernel::reset_type::oneshot, kernel::owner_type::process);
+            kernel::owner_type::process);
+    }
+
+    BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<int> aRequestStatus, TInt aMicroSeconds) {
+        kernel_system *kern = sys->get_kernel_system();
+        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+
+        if (!timer) {
+            return;
+        }
+
+        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSeconds);
     }
 
     /**********************/
@@ -1341,6 +1352,25 @@ namespace eka2l1::epoc {
     /**********************/
     BRIDGE_FUNC(TInt, ChangeNotifierCreate, TOwnerType aOwner) {
         return sys->get_kernel_system()->create_change_notifier(static_cast<kernel::owner_type>(aOwner));
+    }
+
+    BRIDGE_FUNC(TInt, ChangeNotifierLogon, TInt aHandle, eka2l1::ptr<int> aRequestStatus) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        change_notifier_ptr cnot = std::dynamic_pointer_cast<kernel::change_notifier>(kern->get_kernel_obj(aHandle));
+
+        if (!cnot) {
+            return KErrBadHandle;
+        }
+
+        bool res = cnot->logon(aRequestStatus.get(mem));
+
+        if (!res) {
+            return KErrGeneral;
+        }
+
+        return KErrNone;
     }
 
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
@@ -1370,6 +1400,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
+        BRIDGE_REGISTER(0x36, TimerAfter),
+        BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
         BRIDGE_REGISTER(0x3C, HandleName),
         BRIDGE_REGISTER(0x42, MessageComplete),
         BRIDGE_REGISTER(0x4D, SessionSendSync),

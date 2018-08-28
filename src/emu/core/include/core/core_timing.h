@@ -103,6 +103,10 @@ namespace eka2l1 {
             return (int64_t)(CPU_HZ / 1000000000 * us);
         }
 
+        inline int64_t ms_to_cycles(uint64_t ms) {
+            return (int64_t)(CPU_HZ / 1000000 * ms);
+        }
+
         void init();
         void shutdown();
 

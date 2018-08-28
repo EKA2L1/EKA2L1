@@ -257,10 +257,9 @@ namespace eka2l1 {
         return create_handle_lastest(own_type);
     }
 
-    uint32_t kernel_system::create_timer(std::string name, kernel::reset_type rt,
-        kernel::owner_type owner,
+    uint32_t kernel_system::create_timer(std::string name, kernel::owner_type owner,
         kernel::access_type access) {
-        timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, rt, access);
+        timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, access);
         objects.push_back(std::move(new_timer));
 
         return create_handle_lastest(owner);

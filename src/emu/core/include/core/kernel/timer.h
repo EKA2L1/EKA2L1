@@ -20,44 +20,43 @@
 
 #pragma once
 
-#include <core/kernel/wait_obj.h>
+#include <core/kernel/kernel_obj.h>
 #include <core/core_timing.h>
+
+#include <memory>
 
 namespace eka2l1 {
     namespace kernel {
-        enum class reset_type {
-            oneshot,
-            again
+        class thread;
+    }
+
+    using thread_ptr = std::shared_ptr<kernel::thread>;
+
+    namespace kernel {
+        class timer;
+
+        struct signal_info {
+            thread_ptr own_thread;
+            int *request_status;
+
+            timer *own_timer;
+
+            uint32_t id;
         };
 
-        class timer : public wait_obj {
+        class timer : public kernel_obj {
             timing_system *timing;
-
-            reset_type rt;
             int callback_type;
 
-        public:
-            timer(kernel_system *kern, timing_system *timing, std::string name, reset_type rt,
-                kernel::access_type access = access_type::local_access);
+            std::vector<signal_info> infos;
 
+        public:
+            timer(kernel_system *kern, timing_system *timing, std::string name,
+                kernel::access_type access = access_type::local_access);
             ~timer();
 
-            bool signaled;
-
-            uint64_t init_delay;
-            uint64_t interval_delay;
-
-            bool should_wait(thread_ptr thr) override;
-            void acquire(thread_ptr thr) override;
-
-            void wake_up_waiting_threads() override;
-
-            void set(int64_t init, int64_t interval);
-
-            void cancel();
-            void clear();
-
-            void signal(int cycles_late);
+            void after(thread_ptr requester, int* request_status, uint64_t ms_signal);
+            void request_finish(uint32_t id);
         };
     }
 }

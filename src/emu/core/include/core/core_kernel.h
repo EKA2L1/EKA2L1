@@ -172,8 +172,7 @@ namespace eka2l1 {
             kernel::owner_type own_type,
             kernel::access_type access = kernel::access_type::local_access);
 
-        uint32_t create_timer(std::string name, kernel::reset_type rt,
-            kernel::owner_type owner,
+        uint32_t create_timer(std::string name, kernel::owner_type owner,
             kernel::access_type access = kernel::access_type::local_access);
 
         uint32_t create_change_notifier(kernel::owner_type owner);
