@@ -171,6 +171,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, set_session_path, EFsSetSessionPath, "Fs::SetSessionPath");
         REGISTER_IPC(fs_server, set_session_to_private, EFsSessionToPrivate, "Fs::SetSessionToPrivate");
         REGISTER_IPC(fs_server, synchronize_driver, EFsSynchroniseDriveThread, "Fs::SyncDriveThread");
+        REGISTER_IPC(fs_server, notify_change_ex, EFsNotifyChangeEx, "Fs::NotifyChangeEx");
     }
 
     void fs_server::synchronize_driver(service::ipc_context ctx) {
@@ -423,6 +424,50 @@ namespace eka2l1 {
 
     void fs_server::file_replace(service::ipc_context ctx) {
         new_file_subsession(ctx, true);
+    }
+
+    std::string replace_all(std::string str, const std::string &from, const std::string &to) {
+        size_t start_pos = 0;
+        while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+            str.replace(start_pos, from.length(), to);
+            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+        }
+        return str;
+    }
+
+    std::regex construct_filter_from_wildcard(const utf16_str &filter) {
+        std::string copy = common::ucs2_to_utf8(filter);
+
+        std::locale loc("");
+
+        for (auto &c : copy) {
+            c = std::tolower(c, loc);
+        }
+
+        copy = replace_all(copy, "\\", "\\\\");
+        copy = replace_all(copy, ".", std::string("\\") + ".");
+        copy = replace_all(copy, "?", ".");
+        copy = replace_all(copy, "*", ".*");
+
+        return std::regex(copy);
+    }
+
+    void fs_server::notify_change_ex(service::ipc_context ctx) {
+        std::optional<utf16_str> wildcard_match = ctx.get_arg<utf16_str>(1);
+
+        if (!wildcard_match) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        notify_entry entry;
+        entry.match_pattern = construct_filter_from_wildcard(*wildcard_match);
+        entry.type = static_cast<notify_type>(*ctx.get_arg<int>(0));
+        entry.request_status = ctx.msg->request_sts;
+
+        notify_entries.push_back(entry);
+
+        ctx.set_request_status(KErrNone);
     }
 
     int fs_server::new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite) {

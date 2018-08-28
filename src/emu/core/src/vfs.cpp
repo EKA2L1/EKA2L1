@@ -302,6 +302,7 @@ namespace eka2l1 {
         }
 
         std::string construct_regex_string(std::string regexstr) {
+            regexstr = replace_all(regexstr, "\\", "\\\\");
             regexstr = replace_all(regexstr, ".", std::string("\\") + ".");
             regexstr = replace_all(regexstr, "?", ".");
             regexstr = replace_all(regexstr, "*", ".*");
