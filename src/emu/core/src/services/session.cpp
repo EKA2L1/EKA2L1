@@ -39,7 +39,7 @@ namespace eka2l1 {
                 msgs_pool.resize(async_slot_count);
 
                 for (auto &msg : msgs_pool) {
-                    msg = kern->create_msg(kernel::owner_type::process);
+                    msg = std::make_pair(true, kern->create_msg(kernel::owner_type::process));
                 }
             }
         }
@@ -50,13 +50,32 @@ namespace eka2l1 {
             }
 
             auto &free_msg_in_pool = std::find_if(msgs_pool.begin(), msgs_pool.end(),
-                [](const auto &msg) { return msg->free; });
+                [](const auto &msg) { return msg.first; });
 
             if (free_msg_in_pool != msgs_pool.end()) {
-                return *free_msg_in_pool;
+                free_msg_in_pool->first = false;
+                return free_msg_in_pool->second;
             }
 
             return ipc_msg_ptr(nullptr);
+        }
+
+        void session::set_slot_free(ipc_msg_ptr &msg) {
+            if (msg->own_thr->get_sync_msg() == msg) {
+                return;
+            }
+
+            if (msgs_pool.empty()) {
+                msg->free = true;
+                return;
+            }
+
+            auto &wrap_msg = std::find_if(msgs_pool.begin(), msgs_pool.end(),
+                [&](const auto &wrap_msg) { return wrap_msg.second == msg; });
+
+            if (wrap_msg != msgs_pool.end()) {
+                wrap_msg->first = true;
+            }
         }
 
         // This behaves a little different then other
@@ -122,6 +141,7 @@ namespace eka2l1 {
             msg->function = function;
             msg->args = args;
             msg->request_sts = request_sts;
+            msg->own_thr = kern->crr_thread();
 
             send_receive(msg);
 
@@ -129,7 +149,7 @@ namespace eka2l1 {
         }
 
         int session::send_receive(int function, int *request_sts) {
-            ipc_msg_ptr &msg = get_free_msg();
+            ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
                 return -1;
@@ -143,7 +163,7 @@ namespace eka2l1 {
         }
 
         int session::send(int function, ipc_arg args) {
-            ipc_msg_ptr &msg = get_free_msg();
+            ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
                 return -1;
@@ -158,7 +178,7 @@ namespace eka2l1 {
         }
 
         int session::send(int function) {
-            ipc_msg_ptr &msg = get_free_msg();
+            ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
                 return -1;
@@ -216,7 +236,7 @@ namespace eka2l1 {
 
         void session::prepare_destroy() {
             for (const auto &msg : msgs_pool) {
-                kern->free_msg(msg);
+                kern->free_msg(msg.second);
             }
         }
     }

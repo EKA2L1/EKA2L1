@@ -22,6 +22,8 @@
 #include <core/services/fs/op.h>
 
 #include <core/epoc/des.h>
+
+#include <clocale>
 #include <memory>
 
 #include <common/algorithm.h>
@@ -134,6 +136,21 @@ namespace eka2l1 {
         return nullptr;
     }
 
+    size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
+        utf16_str copy(key);
+
+        std::locale loc("");
+        for (auto &wc : copy) {
+            wc = std::tolower(wc, loc);
+        }
+
+        return std::hash<utf16_str>()(copy);
+    }
+
+    bool fs_path_case_insensitive_comparer::operator()(const utf16_str &x, const utf16_str &y) const {
+        return (common::compare_ignore_case(x, y) == -1);
+    }
+
     fs_server::fs_server(system *sys)
         : service::server(sys, "!FileServer", true) {
         REGISTER_IPC(fs_server, entry, EFsEntry, "Fs::Entry");
@@ -153,6 +170,11 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, session_path, EFsSessionPath, "Fs::SessionPath");
         REGISTER_IPC(fs_server, set_session_path, EFsSetSessionPath, "Fs::SetSessionPath");
         REGISTER_IPC(fs_server, set_session_to_private, EFsSessionToPrivate, "Fs::SetSessionToPrivate");
+        REGISTER_IPC(fs_server, synchronize_driver, EFsSynchroniseDriveThread, "Fs::SyncDriveThread");
+    }
+
+    void fs_server::synchronize_driver(service::ipc_context ctx) {
+        ctx.set_request_status(KErrNone);
     }
 
     fs_node *fs_server::get_file_node(int handle) {
@@ -160,8 +182,7 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
-        session_paths[ctx.msg->msg_session->unique_id()] =
-            common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
+        session_paths[ctx.msg->msg_session->unique_id()] = common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
 
         server::connect(ctx);
     }

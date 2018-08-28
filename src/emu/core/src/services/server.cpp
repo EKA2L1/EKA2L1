@@ -60,7 +60,7 @@ namespace eka2l1 {
         int server::receive(ipc_msg_ptr &msg) {
             /* If there is pending message, pop the last one and accept it */
             if (!delivered_msgs.empty()) {
-                server_msg yet_pending = std::move(delivered_msgs.front());
+                server_msg yet_pending = std::move(delivered_msgs.back());
 
                 yet_pending.dest_msg = msg;
 
@@ -90,8 +90,7 @@ namespace eka2l1 {
             msg.dest_msg->session_ptr_lle = msg.real_msg->session_ptr_lle;
             msg.dest_msg->msg_session = msg.real_msg->msg_session;
 
-            // Mark the client sending message as free
-            kern->free_msg(msg.real_msg);
+            msg.real_msg->msg_session->set_slot_free(msg.real_msg);
 
             return 0;
         }
@@ -127,33 +126,35 @@ namespace eka2l1 {
         // Processed asynchronously, use for HLE service where accepted function
         // is fetched imm
         void server::process_accepted_msg() {
-            int res = receive(process_msg);
+            while (true) {
+                int res = receive(process_msg);
 
-            if (res == -1) {
-                return;
-            }
+                if (res == -1) {
+                    return;
+                }
 
-            int func = process_msg->function;
+                int func = process_msg->function;
 
-            auto func_ite = ipc_funcs.find(func);
+                auto func_ite = ipc_funcs.find(func);
 
-            if (func_ite == ipc_funcs.end()) {
-                LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
+                if (func_ite == ipc_funcs.end()) {
+                    LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
+
+                    // Signal request semaphore, to tell everyone that it has finished random request
+                    process_msg->own_thr->signal_request();
+
+                    return;
+                }
+
+                ipc_func ipf = func_ite->second;
+                ipc_context context{ sys, process_msg };
+
+                LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+                ipf.wrapper(context);
 
                 // Signal request semaphore, to tell everyone that it has finished random request
                 process_msg->own_thr->signal_request();
-
-                return;
             }
-
-            ipc_func ipf = func_ite->second;
-            ipc_context context{ sys, process_msg };
-
-            LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
-            ipf.wrapper(context);
-
-            // Signal request semaphore, to tell everyone that it has finished random request
-            process_msg->own_thr->signal_request();
         }
 
         void server::destroy() {

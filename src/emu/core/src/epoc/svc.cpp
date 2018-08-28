@@ -2,9 +2,9 @@
 #include <core/epoc/dll.h>
 #include <core/epoc/hal.h>
 #include <core/epoc/handle.h>
+#include <core/epoc/panic.h>
 #include <core/epoc/svc.h>
 #include <core/epoc/tl.h>
-#include <core/epoc/panic.h>
 #include <core/epoc/uid.h>
 
 #include <common/cvt.h>
@@ -473,6 +473,33 @@ namespace eka2l1::epoc {
         return ss->send_receive_sync(aOrd, arg, aStatus.get(mem));
     }
 
+    BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
+        eka2l1::ptr<TInt> aStatus) {
+        //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
+
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        // Dispatch the header
+        ipc_arg arg;
+        TInt *arg_header = aIpcArgs.cast<TInt>().get(mem);
+
+        if (aIpcArgs) {
+            for (uint8_t i = 0; i < 4; i++) {
+                arg.args[i] = *arg_header++;
+            }
+
+            arg.flag = *arg_header & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
+        }
+
+        session_ptr ss = kern->get_session(aHandle);
+
+        if (!ss) {
+            return KErrBadHandle;
+        }
+
+        return ss->send_receive(aOrd, arg, aStatus.get(mem));
+    }
     /**********************************/
     /* TRAP/LEAVE */
     /*********************************/
@@ -937,6 +964,26 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(void, ThreadRequestSignal, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        thread_ptr thr;
+
+        // Current thread handle
+        if (aHandle == 0xFFFF8001) {
+            thr = kern->crr_thread();
+        } else {
+            thr = kern->get_thread_by_handle(aHandle);
+        }
+
+        if (!thr) {
+            return;
+        }
+
+        thr->signal_request();
+    }
+
     BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<TDesC8> aName) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
@@ -1319,6 +1366,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x22, ServerReceive),
         BRIDGE_REGISTER(0x24, SetSessionPtr),
+        BRIDGE_REGISTER(0x25, SessionSend),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
@@ -1369,6 +1417,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC8, PropertyFindSetBin),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
+        BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd)
     };

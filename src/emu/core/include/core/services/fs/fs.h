@@ -26,6 +26,7 @@
 #include <atomic>
 #include <memory>
 #include <unordered_map>
+#include <clocale>
 
 namespace eka2l1::epoc {
     struct TTime {
@@ -98,6 +99,14 @@ namespace eka2l1 {
         fs_node *get_node(const std::u16string &path);
     };
 
+    struct fs_path_case_insensitive_hasher {
+        size_t operator()(const utf16_str &key) const;
+    };
+
+    struct fs_path_case_insensitive_comparer {
+        bool operator()(const utf16_str &x, const utf16_str &y) const;
+    };
+
     class fs_server : public service::server {
         fs_handle_table nodes_table;
 
@@ -128,10 +137,28 @@ namespace eka2l1 {
         void set_session_path(service::ipc_context ctx);
         void set_session_to_private(service::ipc_context ctx);
 
+        void synchronize_driver(service::ipc_context ctx);
+
         void connect(service::ipc_context ctx) override;
 
         std::unordered_map<uint32_t, fs_node> file_nodes;
         std::unordered_map<uint32_t, utf16_str> session_paths;
+
+        enum class notify_type {
+            entry,
+            all,
+            file,
+            dir,
+            attrib,
+            write,
+            disk
+        };
+
+        using insensitive_request_entries_map = 
+            std::unordered_map<utf16_str, std::pair<notify_type, int *>, fs_path_case_insensitive_hasher, fs_path_case_insensitive_comparer>;
+
+        insensitive_request_entries_map request_status_specific_entries;
+        std::unordered_map<notify_type, int *> request_status_entries;
 
         int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false);
         fs_node *get_file_node(int handle);
