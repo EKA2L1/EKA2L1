@@ -73,6 +73,10 @@ namespace eka2l1::epoc {
     /* PROCESS */
     /***************************/
 
+    BRIDGE_FUNC(void, ProcessRendezvous, TInt aRendezvousCode) {
+        sys->get_kernel_system()->crr_process()->rendezvous(aRendezvousCode);
+    }
+
     BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<TDes8> aDes) {
         eka2l1::memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -312,7 +316,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-       *msg->request_sts = aVal;
+        *msg->request_sts = aVal;
         msg->own_thr->signal_request();
 
         return KErrNone;
@@ -1434,6 +1438,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9E, LibraryAttach),
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
+        BRIDGE_REGISTER(0xA5, ProcessRendezvous),
         BRIDGE_REGISTER(0xAC, MessageKill),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
