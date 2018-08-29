@@ -27,7 +27,7 @@
 #include <core/disasm/disasm.h>
 #include <core/ptr.h>
 
-#include <capstone.h>
+#include <capstone/capstone.h>
 
 #include <functional>
 #include <memory>

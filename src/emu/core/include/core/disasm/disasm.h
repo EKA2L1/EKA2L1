@@ -20,8 +20,8 @@
 #pragma once
 
 #include <core/ptr.h>
+#include <capstone/capstone.h>
 
-#include <capstone.h>
 #include <memory>
 #include <string>
 #include <vector>
