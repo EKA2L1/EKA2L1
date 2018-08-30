@@ -69,6 +69,13 @@ namespace eka2l1::kernel {
         supervisor = 950
     };
 
+    enum class process_exit_type {
+        kill,
+        terminate,
+        panic,
+        pending
+    };
+
     class process : public kernel_obj {
         friend class kernel_system;
         friend class thread_scheduler;
@@ -95,7 +102,6 @@ namespace eka2l1::kernel {
 
         process_priority priority;
 
-        int rendezvous_reason = 0;
         int exit_reason = 0;
 
         struct logon_request_form {
@@ -106,6 +112,8 @@ namespace eka2l1::kernel {
                 : requester(thr)
                 , request_status(rsts) {}
         };
+
+        process_exit_type exit_type;
 
         std::vector<logon_request_form> logon_requests;
         std::vector<logon_request_form> rendezvous_requests;
@@ -192,5 +200,17 @@ namespace eka2l1::kernel {
 
         void wait_dll_lock();
         void signal_dll_lock();
+
+        int get_exit_reason() const {
+            return exit_reason;
+        }
+
+        process_exit_type get_exit_type() const {
+            return exit_type;
+        }
+
+        void set_exit_type(const process_exit_type t) {
+            exit_type = t;
+        }
     };
 }

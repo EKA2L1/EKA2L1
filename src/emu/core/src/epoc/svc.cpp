@@ -73,6 +73,29 @@ namespace eka2l1::epoc {
     /* PROCESS */
     /***************************/
 
+    BRIDGE_FUNC(TInt, ProcessExitType, TInt aHandle) {
+        eka2l1::memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr_real;
+
+        // 0xffff8000 is a kernel mapping for current process
+        if (aHandle != 0xffff8000) {
+            // Unlike Symbian, process is not a kernel object here
+            // Its handle contains the process's uid
+            pr_real = kern->get_process(aHandle);
+        } else {
+            pr_real = kern->crr_process();
+        }
+
+        if (!pr_real) {
+            LOG_ERROR("ProcessExitType: Invalid process");
+            return 0;
+        }
+
+        return static_cast<TInt>(pr_real->get_exit_type());
+    }
+
     BRIDGE_FUNC(void, ProcessRendezvous, TInt aRendezvousCode) {
         sys->get_kernel_system()->crr_process()->rendezvous(aRendezvousCode);
     }
@@ -960,6 +983,10 @@ namespace eka2l1::epoc {
             }
         }
 
+        if (thr->owning_process()->decrease_thread_count() == 0) {
+            thr->owning_process()->set_exit_type(static_cast<kernel::process_exit_type>(aExitType));
+        }
+
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
 
         kern->get_thread_scheduler()->stop(thr);
@@ -1395,7 +1422,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
+        BRIDGE_REGISTER(0x15, ProcessResume),
         BRIDGE_REGISTER(0x16, ProcessFilename),
+        BRIDGE_REGISTER(0x18, ProcessExitType),
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x22, ServerReceive),
@@ -1425,7 +1454,6 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x76, DllSetTls),
         BRIDGE_REGISTER(0x77, DllFreeTLS),
         BRIDGE_REGISTER(0x78, ThreadRename),
-        BRIDGE_REGISTER(0x7A, ProcessResume),
         BRIDGE_REGISTER(0x7B, ProcessLogon),
         BRIDGE_REGISTER(0x7C, ProcessLogonCancel),
         BRIDGE_REGISTER(0x7D, ThreadProcess),

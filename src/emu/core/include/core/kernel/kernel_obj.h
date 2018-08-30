@@ -29,9 +29,9 @@ namespace eka2l1 {
     namespace kernel {
         /*! \brief Ownership type for handle */
         enum class owner_type {
-            kernel, // Kernel has id of 0xDDDDDDDD
             process,
-            thread
+            thread,
+            kernel
         };
 
         /*! \brief Access type for handle. */

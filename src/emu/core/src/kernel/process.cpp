@@ -40,11 +40,15 @@ namespace eka2l1::kernel {
         mem->chunk(0x400000, 0, 0x1000, 0x1000, prot::read_write);
 
         primary_thread
-            = kern->create_thread(kernel::owner_type::kernel, nullptr, kernel::access_type::local_access,
+            = kern->create_thread(kernel::owner_type::kernel,
+                nullptr,
+                kernel::access_type::local_access,
                 process_name, ep_off,
                 stack_size, heap_min, heap_max,
                 true,
                 0, kernel::priority_normal);
+
+        ++thread_count;
 
         args[0].data_size = 0;
         args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D
@@ -135,7 +139,6 @@ namespace eka2l1::kernel {
             return false;
         }
 
-        thr->owning_process(kern->get_process(obj_name));
         kern->run_thread(primary_thread);
 
         return true;
@@ -204,6 +207,9 @@ namespace eka2l1::kernel {
     }
 
     void process::rendezvous(int rendezvous_reason) {
+        exit_reason = rendezvous_reason;
+        exit_type = process_exit_type::pending;
+
         for (auto &ren : rendezvous_requests) {
             *(ren.request_status) = rendezvous_reason;
             ren.requester->signal_request();

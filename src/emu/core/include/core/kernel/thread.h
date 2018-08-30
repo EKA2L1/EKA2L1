@@ -198,6 +198,8 @@ namespace eka2l1 {
                 ptr<void> usrdata = 0,
                 thread_priority pri = priority_normal);
 
+            ~thread();
+
             bool should_wait(thread_ptr thr) override;
             void acquire(thread_ptr thr) override;
 

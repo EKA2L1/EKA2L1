@@ -223,15 +223,13 @@ namespace eka2l1 {
             , thread_handles(kern, handle_array_owner::thread) {
             if (owner) {
                 owner->increase_thread_count();
+                real_priority = caculate_thread_priority(own_process, pri);
             }
 
             create_time = timing->get_ticks();
 
             obj_type = object_type::thread;
             state = thread_state::wait; // Suspended.
-
-            if (own_process)
-                real_priority = caculate_thread_priority(own_process, pri);
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
@@ -272,6 +270,10 @@ namespace eka2l1 {
 
             reset_thread_ctx(epa, stack_top, inital);
             scheduler = kern->get_thread_scheduler();
+        }
+
+        thread::~thread() {
+            own_process->decrease_thread_count();
         }
 
         bool thread::should_wait(thread_ptr thr) {

@@ -127,9 +127,11 @@ namespace eka2l1 {
                     loader::romimg_ptr efsrv_force = libmngr->load_romimg(u"efsrv", false);
                     libmngr->open_romimg(efsrv_force);
                 }
+
                 process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
                     static_cast<kernel::process_priority>(img_ptr->header.priority));
 
+                get_thread_by_handle(pr->primary_thread)->owning_process(pr);
                 objects.push_back(std::move(pr));
 
                 uint32_t h = create_handle_lastest(owner);
@@ -313,6 +315,8 @@ namespace eka2l1 {
         const kernel::process_priority pri, kernel::owner_type own) {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
+
+        get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
 
         return create_handle_lastest(own);
@@ -324,6 +328,8 @@ namespace eka2l1 {
         const kernel::process_priority pri, kernel::owner_type own) {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
+
+        get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
 
         return create_handle_lastest(own);
