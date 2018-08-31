@@ -181,7 +181,7 @@ namespace eka2l1 {
             request_status = nullptr;
         }
 
-        void server::receive_async_lle(int *msg_request_status, message2 *data) {
+        void server::receive_async_lle(epoc::request_status *msg_request_status, message2 *data) {
             ipc_msg_ptr msg = sys->get_kernel_system()->create_msg(kernel::owner_type::process);
 
             msg->free = false;

@@ -23,6 +23,8 @@
 #include <core/kernel/kernel_obj.h>
 #include <core/core_timing.h>
 
+#include <core/epoc/reqsts.h>
+
 #include <memory>
 
 namespace eka2l1 {
@@ -37,7 +39,7 @@ namespace eka2l1 {
 
         struct signal_info {
             thread_ptr own_thread;
-            int *request_status;
+            epoc::request_status *request_status;
 
             timer *own_timer;
         };
@@ -54,7 +56,7 @@ namespace eka2l1 {
                 kernel::access_type access = access_type::local_access);
             ~timer();
 
-            bool after(thread_ptr requester, int* request_status, uint64_t ms_signal);
+            bool after(thread_ptr requester, epoc::request_status *request_status, uint64_t ms_signal);
             bool request_finish();
             bool cancel_request();
         };

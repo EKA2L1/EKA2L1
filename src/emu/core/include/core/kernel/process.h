@@ -25,6 +25,7 @@
 #include <core/kernel/thread.h>
 
 #include <core/loader/eka2img.h>
+#include <core/epoc/reqsts.h>
 
 #include <core/page_table.h>
 
@@ -106,9 +107,9 @@ namespace eka2l1::kernel {
 
         struct logon_request_form {
             thread_ptr requester;
-            int *request_status;
+            epoc::request_status *request_status;
 
-            explicit logon_request_form(thread_ptr thr, int *rsts)
+            explicit logon_request_form(thread_ptr thr, epoc::request_status *rsts)
                 : requester(thr)
                 , request_status(rsts) {}
         };
@@ -135,8 +136,8 @@ namespace eka2l1::kernel {
             return --thread_count;
         }
 
-        void logon(int *logon_request, bool rendezvous);
-        bool logon_cancel(int *logon_request, bool rendezvous);
+        void logon(epoc::request_status *logon_request, bool rendezvous);
+        bool logon_cancel(epoc::request_status *logon_request, bool rendezvous);
 
         void rendezvous(int rendezvous_reason);
 

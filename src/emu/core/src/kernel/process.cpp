@@ -164,7 +164,7 @@ namespace eka2l1::kernel {
 
     // EKA2L1 doesn't use multicore yet, so rendezvous and logon
     // are just simple.
-    void process::logon(int *logon_request, bool rendezvous) {
+    void process::logon(epoc::request_status *logon_request, bool rendezvous) {
         if (!thread_count) {
             *logon_request = exit_reason;
             return;
@@ -178,7 +178,7 @@ namespace eka2l1::kernel {
         logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
     }
 
-    bool process::logon_cancel(int *logon_request, bool rendezvous) {
+    bool process::logon_cancel(epoc::request_status *logon_request, bool rendezvous) {
         if (rendezvous) {
             auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
                 [&](logon_request_form &form) { return form.request_status == logon_request; });

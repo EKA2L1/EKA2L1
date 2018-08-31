@@ -21,6 +21,7 @@
 #pragma once
 
 #include <core/kernel/kernel_obj.h>
+#include <core/epoc/reqsts.h>
 #include <core/ptr.h>
 
 #include <array>
@@ -61,7 +62,7 @@ namespace eka2l1 {
 
             struct request {
                 thread_ptr request_thr;
-                int *request_status = 0;
+                epoc::request_status *request_status = 0;
             } subscribe_request;
 
         public:
@@ -112,7 +113,7 @@ namespace eka2l1 {
                 return ret;
             }
 
-            void subscribe(int *sts);
+            void subscribe(epoc::request_status *sts);
 
             void cancel();
 

@@ -44,7 +44,7 @@ namespace eka2l1 {
 
         timer::~timer() {}
 
-        bool timer::after(thread_ptr requester, int *request_status, uint64_t ms_signal) {
+        bool timer::after(thread_ptr requester, epoc::request_status *request_status, uint64_t ms_signal) {
             if (outstanding) {
                 return false;
             }

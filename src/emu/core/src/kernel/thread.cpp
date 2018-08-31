@@ -421,7 +421,7 @@ namespace eka2l1 {
             return real_priority <= rhs.real_priority;
         }
 
-        void thread::logon(int *logon_request, bool rendezvous) {
+        void thread::logon(epoc::request_status *logon_request, bool rendezvous) {
             if (state == thread_state::stop) {
                 *logon_request = exit_reason;
                 return;
@@ -435,7 +435,7 @@ namespace eka2l1 {
             logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
         }
 
-        bool thread::logon_cancel(int *logon_request, bool rendezvous) {
+        bool thread::logon_cancel(epoc::request_status *logon_request, bool rendezvous) {
             if (rendezvous) {
                 auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
                     [&](logon_request_form &form) { return form.request_status == logon_request; });

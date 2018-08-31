@@ -24,6 +24,8 @@
 #include <core/services/context.h>
 #include <core/services/session.h>
 
+#include <core/epoc/reqsts.h>
+
 #include <functional>
 #include <queue>
 #include <string>
@@ -102,7 +104,7 @@ namespace eka2l1 {
             /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
 
-            int *request_status = nullptr;
+            epoc::request_status *request_status = nullptr;
             message2 *request_data = nullptr;
 
             thread_ptr request_own_thread;
@@ -143,7 +145,7 @@ namespace eka2l1 {
             /*! Cancel a message in the delivered queue */
             int cancel();
 
-            void receive_async_lle(int *request_status, message2 *data);
+            void receive_async_lle(epoc::request_status *request_status, message2 *data);
 
             void cancel_async_lle();
 

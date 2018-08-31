@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/kernel/kernel_obj.h>
+#include <core/epoc/reqsts.h>
 
 #include <memory>
 
@@ -17,13 +18,13 @@ namespace eka2l1 {
 namespace eka2l1 {
     namespace kernel {
         class change_notifier : public eka2l1::kernel::kernel_obj {
-            int *request_status;
+            epoc::request_status *request_status;
             thread_ptr requester;
 
         public:
             change_notifier(kernel_system *kern);
 
-            bool logon(int *request_sts);
+            bool logon(epoc::request_status *request_sts);
             bool logon_cancel();
 
             void notify_change_requester();
