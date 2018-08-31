@@ -1378,6 +1378,17 @@ namespace eka2l1::epoc {
         timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSeconds);
     }
 
+    BRIDGE_FUNC(void, TimerCancel, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+
+        if (!timer) {
+            return;
+        }
+
+        timer->cancel_request();
+    }
+
     /**********************/
     /* CHANGE NOTIFIER */
     /**********************/
@@ -1433,6 +1444,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
+        BRIDGE_REGISTER(0x35, TimerCancel),
         BRIDGE_REGISTER(0x36, TimerAfter),
         BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
         BRIDGE_REGISTER(0x3C, HandleName),

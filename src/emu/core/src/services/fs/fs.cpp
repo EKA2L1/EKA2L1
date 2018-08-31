@@ -467,6 +467,8 @@ namespace eka2l1 {
 
         notify_entries.push_back(entry);
 
+        LOG_TRACE("Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
+
         ctx.set_request_status(KErrNone);
     }
 

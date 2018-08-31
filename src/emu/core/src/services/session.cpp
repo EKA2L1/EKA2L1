@@ -93,7 +93,7 @@ namespace eka2l1 {
 
             send_receive(msg);
 
-            LOG_TRACE("Sending to {}", this->svr->name());
+            LOG_TRACE("Sending to {}, function: 0x{:x}", this->svr->name(), msg->function);
 
             return 0;
         }

@@ -31,7 +31,8 @@ namespace eka2l1 {
     using dfc = timed_callback;
 
     enum {
-        MAX_SLICE_LENGTH = 20000
+        MAX_SLICE_LENGTH = 100000000,
+        INITIAL_SLICE_LENGTH = 20000
     };
 
     struct event_type {
@@ -71,6 +72,10 @@ namespace eka2l1 {
             return CPU_HZ / 1000 * ms;
         }
 
+        inline int64_t ms_to_cycles(uint64_t ms) {
+            return CPU_HZ / 1000 * ms;
+        }
+
         inline int64_t ms_to_cycles(float ms) {
             return (int64_t)(CPU_HZ * ms * (0.001f));
         }
@@ -101,10 +106,6 @@ namespace eka2l1 {
 
         inline int64_t ns_to_cycles(uint64_t us) {
             return (int64_t)(CPU_HZ / 1000000000 * us);
-        }
-
-        inline int64_t ms_to_cycles(uint64_t ms) {
-            return (int64_t)(CPU_HZ / 1000000 * ms);
         }
 
         void init();

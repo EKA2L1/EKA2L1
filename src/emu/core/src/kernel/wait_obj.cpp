@@ -81,7 +81,7 @@ namespace eka2l1 {
 
         void wait_obj::wake_up_waiting_threads() {
             while (auto thr = next_ready_thread()) {
-                 for (auto &obj : thr->waits_on) {
+                for (auto &obj : thr->waits_on) {
                     obj->acquire(thr);
                 }
 

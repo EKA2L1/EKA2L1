@@ -40,23 +40,23 @@ namespace eka2l1 {
             int *request_status;
 
             timer *own_timer;
-
-            uint32_t id;
         };
 
         class timer : public kernel_obj {
             timing_system *timing;
             int callback_type;
 
-            std::vector<signal_info> infos;
+            signal_info info;
+            bool outstanding;
 
         public:
             timer(kernel_system *kern, timing_system *timing, std::string name,
                 kernel::access_type access = access_type::local_access);
             ~timer();
 
-            void after(thread_ptr requester, int* request_status, uint64_t ms_signal);
-            void request_finish(uint32_t id);
+            bool after(thread_ptr requester, int* request_status, uint64_t ms_signal);
+            bool request_finish();
+            bool cancel_request();
         };
     }
 }

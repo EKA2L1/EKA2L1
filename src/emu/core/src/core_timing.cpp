@@ -86,14 +86,16 @@ namespace eka2l1 {
     }
 
     void timing_system::init() {
-        downcount = MAX_SLICE_LENGTH;
-        slice_len = MAX_SLICE_LENGTH;
+        downcount = INITIAL_SLICE_LENGTH;
+        slice_len = INITIAL_SLICE_LENGTH;
         internal_mhzcs.clear();
 
         global_timer = 0;
         last_global_time_ticks = 0;
         last_global_time_us = 0;
         idle_ticks = 0;
+
+        CPU_HZ = 250000000;
     }
 
     void timing_system::restore_register_event(int evt_type, const std::string &name, timed_callback callback) {
@@ -160,8 +162,8 @@ namespace eka2l1 {
         if (events.size() > 0 && dc > 0) {
             event first_event = events[0];
 
-            int cexecuted = slice_len - downcount;
-            int cnextevt = (int)(first_event.event_time - global_timer);
+            size_t cexecuted = slice_len - downcount;
+            size_t cnextevt = first_event.event_time - global_timer;
 
             if (cnextevt < cexecuted + dc) {
                 dc = cnextevt - cexecuted;
@@ -185,7 +187,7 @@ namespace eka2l1 {
 
         int cycles_executed = slice_len - downcount;
         global_timer += cycles_executed;
-        slice_len = MAX_SLICE_LENGTH;
+        slice_len = INITIAL_SLICE_LENGTH;
 
         while (!events.empty() && events.front().event_time <= global_timer) {
             event evt = std::move(events.front());
@@ -194,7 +196,7 @@ namespace eka2l1 {
         }
 
         if (!events.empty()) {
-            slice_len = std::min((int)(events.front().event_time - global_timer), (int)MAX_SLICE_LENGTH);
+            slice_len = std::min((size_t)(events.front().event_time - global_timer), (size_t)MAX_SLICE_LENGTH);
         }
 
         downcount = slice_len;
@@ -238,4 +240,3 @@ namespace eka2l1 {
         slice_len = -1;
     }
 }
-

@@ -39,9 +39,27 @@ namespace eka2l1 {
             }
 
             int32_t prev_count = avail_count;
-            avail_count += release_count;
 
-            wait_obj::wake_up_waiting_threads();
+            for (size_t i = 0; i < release_count; i++) {
+                avail_count += 1;
+
+                thread_ptr ready_thread = next_ready_thread();
+
+                if (!ready_thread) {
+                    break;
+                }
+
+                for (auto &obj : ready_thread->waits_on) {
+                    obj->acquire(ready_thread);
+                }
+
+                for (auto &obj : ready_thread->waits_on) {
+                    obj->erase_waiting_thread(ready_thread);
+                }
+
+                ready_thread->waits.clear();
+                ready_thread->get_scheduler()->resume(ready_thread);
+            }
 
             return prev_count;
         }

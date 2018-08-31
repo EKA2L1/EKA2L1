@@ -30,7 +30,8 @@ namespace eka2l1 {
         timer::timer(kernel_system *kern, timing_system *timing, std::string name,
             kernel::access_type access)
             : kernel_obj(kern, name, access)
-            , timing(timing) {
+            , timing(timing)
+            , outstanding(false) {
             obj_type = object_type::timer;
 
             callback_type = timing->get_register_event("TimerCallback" + common::to_string(uid));
@@ -43,29 +44,50 @@ namespace eka2l1 {
 
         timer::~timer() {}
 
-        void timer::after(thread_ptr requester, int *request_status, uint64_t ms_signal) {
+        bool timer::after(thread_ptr requester, int *request_status, uint64_t ms_signal) {
+            if (outstanding) {
+                return false;
+            }
+
             if (ms_signal == 0) {
                 *request_status = 0;
                 requester->signal_request();
 
-                return;
+                return true;
             }
 
-            signal_info info;
+            outstanding = true;
 
             info.request_status = request_status;
             info.own_thread = requester;
             info.own_timer = this;
 
-            infos.push_back(std::move(info));
-            infos.back().id = infos.size() - 1;
+            size_t invoke_time = timing->ms_to_cycles(ms_signal);
 
-            timing->schedule_event(timing->us_to_cycles(ms_signal), callback_type,
-                (uint64_t)(&infos.back()));
+            timing->schedule_event(invoke_time, callback_type,
+                (uint64_t)(&info));
+
+            return false;
         }
 
-        void timer::request_finish(uint32_t id) {
-            infos.erase(infos.begin() + id);
+        bool timer::request_finish() {
+            if (!outstanding) {
+                return false;
+            }
+
+            outstanding = false;
+            return true;
+        }
+
+        bool timer::cancel_request() {
+            if (!outstanding) {
+                return false;
+            }
+
+            *info.request_status = -3;
+            info.own_thread->signal_request();
+
+            return request_finish();
         }
 
         void timer_callback(uint64_t user, int cycles_late) {
@@ -77,7 +99,7 @@ namespace eka2l1 {
 
             *info->request_status = 0;
             info->own_thread->signal_request();
-            info->own_timer->request_finish(info->id);
+            info->own_timer->request_finish();
         }
     }
 }
