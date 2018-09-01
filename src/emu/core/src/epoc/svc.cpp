@@ -694,7 +694,7 @@ namespace eka2l1::epoc {
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
         uint32_t sema = kern->create_sema(!desname ? "" : desname->StdString(sys),
-            aInitCount, 50, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
+            aInitCount, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
 
         if (sema == INVALID_HANDLE) {
             return KErrGeneral;

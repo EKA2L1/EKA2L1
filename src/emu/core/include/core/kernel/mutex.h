@@ -21,43 +21,60 @@
 #pragma once
 
 #include <core/kernel/thread.h>
-#include <core/kernel/wait_obj.h>
+
+#include <common/queue.h>
 
 namespace eka2l1 {
     namespace kernel {
         /*! \brief A mutex kernel object. 
         */
-        class mutex : public wait_obj {
+        class mutex : public kernel_obj {
             //! The lock count
             int lock_count;
-
-            //! Priority of this mutex.
-            uint32_t priority;
 
             //! Thread holding
             thread_ptr holding;
 
-        public:
+            cp_queue<thread_ptr> waits;
+            cp_queue<thread_ptr> pendings;
+
+            std::vector<thread_ptr> suspended;
+
+        protected:
+            void wake_next_thread();
+
+        public :
             mutex(kernel_system *kern, std::string name, bool init_locked,
-                kernel::access_type access = kernel::access_type::local_access);
-
-            /*! \brief Update the priority of the mutex. */
-            void update_priority();
-
-            bool should_wait(thread_ptr thr) override;
-            void acquire(thread_ptr thr) override;
-
-            bool release(thread_ptr thr);
-
-            void add_waiting_thread(thread_ptr thr) override;
-            void erase_waiting_thread(thread_ptr thr) override;
-
-            uint32_t get_priority() const {
-                return priority;
-            }
+                        kernel::access_type access = kernel::access_type::local_access);
 
             void wait();
             bool signal();
+
+            /*! \brief This update the mutex accordingly to the priority.
+             *
+             * If the thread is in wait_mutex state, and its priority is increased, 
+             * it's put to the pending queue.
+             *
+             * If the thread is in the pending queue, and its priority is smaller
+             * then the highest priority thread in the wait queue, it will be put
+             * back to the wait queue.
+             */
+            void priority_change(thread *thr);
+
+            /*! \brief Call when a suspend call is invoked. 
+             *
+             * If the thread is in wait_mutex, it will be put into a suspend container.
+             *
+             * If the thread is in hold_mutex_pending, the next waiting thread will be
+             * call and put to the pending queue. 
+             *
+             * Note that pending thread that wait to claim the mutex is still eligable to run. In the state
+             * of hold_mutex_pending, the emulator PC will be saved back to the call to the SVC, so the 
+             * thread can claim the mutex manually. 
+            */
+            bool suspend_thread(thread *thr);
+
+            bool unsuspend_thread(thread *thr);
         };
     }
 }

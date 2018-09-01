@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cassert>
 #include <common/log.h>
 
 #include <core/core_kernel.h>
@@ -27,119 +28,189 @@ namespace eka2l1 {
     namespace kernel {
         mutex::mutex(kernel_system *kern, std::string name, bool init_locked,
             kernel::access_type access)
-            : wait_obj(kern, std::move(name), access)
-            , lock_count(0) {
+            : kernel_obj(kern, std::move(name), access)
+            , lock_count(0)
+            , holding(nullptr) {
             obj_type = object_type::mutex;
 
             if (init_locked) {
-                acquire(kern->crr_thread());
+                wait();
             }
         }
 
-        void mutex::update_priority() {
+        void mutex::wait() {
             if (!holding) {
-                return;
-            }
+                holding = kern->crr_thread();
 
-            int best_priority = 10000;
+                if (holding->state == thread_state::hold_mutex_pending) {
+                    holding->state = thread_state::ready;
+                    holding->wait_obj = nullptr;
 
-            for (auto &waiter : waiting_threads()) {
-                if (waiter->current_real_priority() < best_priority) {
-                    best_priority = waiter->current_real_priority();
+                    pendings.remove(holding);
                 }
             }
 
-            if (best_priority != priority) {
-                priority = best_priority;
-                holding->update_priority();
-            }
-        }
-
-        bool mutex::should_wait(thread_ptr thr) {
-            // If the mutex is acquired and the given thread is not in hold
-            return lock_count > 0 && holding != thr;
-        }
-
-        void mutex::acquire(thread_ptr thr_ptr) {
-            if (holding == thr_ptr) {
-                return;
-            }
-
-            if (thr_ptr && lock_count == 0) {
-                priority = thr_ptr->current_real_priority();
-
-                // TODO: make this less ugly
-                thr_ptr->held_mutexes.push_back(this);
-                holding = thr_ptr;
-
-                // boost
-                thr_ptr->update_priority();
+            if (holding == kern->crr_thread()) {
+                ++lock_count;
             } else {
-                // If the mutex is being held by another thread, make them
-                // wait for mutex to be freed.
-                add_waiting_thread(thr_ptr);
-            }
+                assert(!holding->wait_obj);
 
-            lock_count++;
+                waits.push(holding);
+                holding->get_scheduler()->wait(holding);
+                holding->state = thread_state::wait_mutex;
+
+                holding->wait_obj = this;
+            }
         }
 
-        bool mutex::release(thread_ptr thr) {
-            if (holding && thr != holding) {
+        bool mutex::signal() {
+            if (!holding) {
+                LOG_ERROR("Signal a mutex that's not held by any thread");
+
                 return false;
             }
 
-            if (lock_count <= 0) {
-                LOG_WARN("Release a mutex that doesn't being held by any thread");
-                return false;
-            }
+            --lock_count;
 
-            lock_count--;
-
-            if (lock_count == 0) {
-                auto res = std::find_if(thr->held_mutexes.begin(), thr->held_mutexes.end(),
-                    [&](auto mut) { return mut == this; });
-
-                if (res != thr->held_mutexes.end()) {
-                    holding->held_mutexes.erase(res);
-                    holding->update_priority();
+            if (!lock_count) {
+                if (waits.empty()) {
                     holding = nullptr;
-
-                    // Wake up all threads waiting for mutex.
-                    wake_up_waiting_threads();
-
                     return true;
-                } 
+                }
 
-                LOG_WARN("Thread doesn't held this mutex, weird");
+                thread_ptr ready_thread = std::move(waits.top());
+                assert(ready_thread->wait_obj == this);
+
+                waits.pop();
+
+                ready_thread->get_scheduler()->resume(ready_thread);
+                ready_thread->state = thread_state::hold_mutex_pending;
+
+                ready_thread->wait_obj = nullptr;
+
+                pendings.push(ready_thread);
+
+                holding = nullptr;
+            }
+
+            return true;
+        }
+
+        void mutex::wake_next_thread() {
+            thread_ptr thr = waits.top();
+            waits.pop();
+
+            pendings.push(thr);
+
+            thr->scheduler->resume(thr);
+            thr->state = thread_state::hold_mutex_pending;
+        }
+
+        void mutex::priority_change(thread *thr) {
+            switch (thr->state) {
+            case thread_state::hold_mutex_pending: {
+                pendings.resort();
+
+                const auto &pending_thr_ite = std::find_if(pendings.begin(), pendings.end(),
+                    [thr](const thread_ptr &pending_ct) { return pending_ct.get() == thr; });
+
+                if (pending_thr_ite != pendings.end() && thr->real_priority < waits.top()->real_priority) {
+                    // Remove this from pending
+                    thread_ptr pending_thr = *pending_thr_ite;
+                    pendings.remove(pending_thr);
+
+                    waits.push(pending_thr);
+                    waits.resort();
+
+                    pending_thr->get_scheduler()->wait(pending_thr);
+                    pending_thr->state = thread_state::wait_mutex;
+                }
+
+                break;
+            }
+
+            case thread_state::wait_mutex: {
+                waits.resort();
+
+                // If the priority is increased, put it in pending
+                if (thr->last_priority < thr->real_priority) {
+                    const auto &wait_thr_ite = std::find_if(waits.begin(), waits.end(),
+                        [thr](const thread_ptr &wait_ct) { return wait_ct.get() == thr; });
+
+                    if (wait_thr_ite != waits.end()) {
+                        thread_ptr wait_thr = *wait_thr_ite;
+                        waits.remove(wait_thr);
+                        pendings.push(wait_thr);
+
+                        wait_thr->get_scheduler()->resume(wait_thr);
+                        wait_thr->state = thread_state::hold_mutex_pending;
+                    }
+                }
+
+                break;
+            }
+
+            default: {
+                LOG_ERROR("Unknown thread state");
+                break;
+            }
+            }
+        }
+
+        bool mutex::suspend_thread(thread *thr) {
+            switch (thr->state) {
+            case thread_state::wait_mutex: {
+                const auto thr_ite = std::find_if(waits.begin(), waits.end(),
+                    [thr](const thread_ptr &wait_thr) { return wait_thr.get() == thr; });
+
+                if (thr_ite == waits.end()) {
+                    LOG_ERROR("Thread given is not found in waits");
+                    return false;
+                }
+
+                thread_ptr thr_sptr = *thr_ite; // Make a copy of this
+                waits.remove(thr_sptr);
+                suspended.push_back(thr_sptr);
+
+                thr_sptr->state = thread_state::wait_mutex_suspend;
+
+                return true;
+            }
+
+            case thread_state::hold_mutex_pending: {
+                wake_next_thread();
+                return false;
+            }
+
+            default: {
+                LOG_ERROR("Unknown thread state");
+                break;
+            }
             }
 
             return false;
         }
 
-        void mutex::add_waiting_thread(thread_ptr thr) {
-            wait_obj::add_waiting_thread(thr);
-            thr->pending_mutexes.push_back(this);
-            update_priority();
-        }
-
-        void mutex::erase_waiting_thread(thread_ptr thr_ptr) {
-            if (thr_ptr) {
-                auto res = std::find_if(thr_ptr->pending_mutexes.begin(), thr_ptr->pending_mutexes.begin(),
-                    [&](auto mut) { return mut == this; });
-
-                if (res != thr_ptr->pending_mutexes.end()) {
-                    thr_ptr->pending_mutexes.erase(res);
-                    update_priority();
-                }
+        bool mutex::unsuspend_thread(thread *thr) {
+            // Putting this thread into another suspend state
+            if (thr->current_state() != thread_state::wait_mutex_suspend) {
+                LOG_ERROR("Calling mutex to unsuspended a thread that's not suspended");
+                return false;
             }
-        }
 
-        void mutex::wait() {
-            acquire(kern->crr_thread());
-        }
+            const auto thr_ite = std::find_if(suspended.begin(), suspended.end(),
+                [thr](const thread_ptr &sus_thr) { return sus_thr.get() == thr; });
 
-        bool mutex::signal() {
-            return release(kern->crr_thread());
+            if (thr_ite == waits.end()) {
+                LOG_ERROR("Thread given is not found in suspended");
+                return false;
+            }
+
+            thread_ptr thr_sptr = *thr_ite; // Make a copy of this
+            suspended.erase(thr_ite);
+            waits.push(thr_sptr);
+
+            thr_sptr->state = thread_state::wait_mutex;
         }
     }
 }

@@ -22,7 +22,6 @@
 
 #include <core/kernel/kernel_obj.h>
 #include <core/kernel/thread.h>
-#include <core/kernel/wait_obj.h>
 
 #include <core/ipc.h>
 

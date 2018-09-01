@@ -81,6 +81,9 @@ namespace eka2l1 {
 
         bool timer::cancel_request() {
             if (!outstanding) {
+                // Do a signal so that the semaphore won't lock
+                // the thread up next time it waits
+                info.own_thread->signal_request();
                 return false;
             }
 

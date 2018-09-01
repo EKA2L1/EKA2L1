@@ -1,7 +1,7 @@
 /*
-* Copyright (c) 2018 EKA2L1 Team / Citra Team
+* Copyright (c) 2018 EKA2L1 Team
 *
-* This file is part of EKA2L1 project / Citra Emulator Project
+* This file is part of EKA2L1 project
 * (see bentokun.github.com/EKA2L1).
 *
 * This program is free software: you can redistribute it and/or modify
@@ -20,28 +20,36 @@
 
 #pragma once
 
-#include <core/kernel/wait_obj.h>
+#include <common/queue.h>
+#include <core/kernel/thread.h>
+
+#include <memory>
 
 namespace eka2l1 {
     class memory_system;
+    using thread_ptr = std::shared_ptr<kernel::thread>;
 
     namespace kernel {
-        class semaphore : public wait_obj {
-            int32_t max_count;
+        class semaphore : public kernel_obj {
             int32_t avail_count;
+            cp_queue<thread_ptr> waits;
+
+            std::vector<thread_ptr> suspended;
+
+            bool signaling;
 
         public:
             semaphore(kernel_system *sys, std::string sema_name,
                 int32_t init_count,
-                int32_t max_count,
                 kernel::access_type access = access_type::local_access);
 
-            int32_t release(int32_t release_count);
-
-            bool should_wait(thread_ptr thr) override;
-            void acquire(thread_ptr thr) override;
-
+            void signal(int32_t signal_count);
             void wait();
+
+            bool suspend_waiting_thread(thread *thr);
+            bool unsuspend_waiting_thread(thread *thr);
+
+            void priority_change();
         };
     }
 }

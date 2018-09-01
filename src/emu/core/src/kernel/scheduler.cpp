@@ -34,15 +34,6 @@ void wake_thread(uint64_t ud, int cycles_late) {
     if (thr == nullptr) {
         return;
     }
-
-    if (thr->current_state() == eka2l1::kernel::thread_state::wait_fast_sema
-        || thr->current_state() == eka2l1::kernel::thread_state::wait_hle) {
-        for (auto &wthr : thr->waits) {
-            wthr->erase_waiting_thread(wthr);
-        }
-
-        thr->waits.clear();
-    }
 }
 
 namespace eka2l1 {
@@ -131,7 +122,8 @@ namespace eka2l1 {
 
         // Put the thread into the ready queue to run in the next core timing yeid
         bool thread_scheduler::schedule(thread_ptr thr) {
-            if (thr->state == thread_state::run || thr->state == thread_state::ready) {
+            if (thr->state == thread_state::run || thr->state == thread_state::ready || 
+                thr->state == thread_state::hold_mutex_pending) {
                 return false;
             }
 
@@ -165,14 +157,12 @@ namespace eka2l1 {
             timing->unschedule_event(wakeup_evt, 0);
         }
 
-        bool thread_scheduler::wait_sema(thread_ptr thr) {
+        bool thread_scheduler::wait(thread_ptr thr) {
             // It's already waiting
             if (thr->state == thread_state::wait || thr->state == thread_state::ready
-                || thr->state == thread_state::wait_fast_sema) {
+                || thr->state == thread_state::wait_fast_sema || thr->state == thread_state::wait_mutex) {
                 return false;
             }
-
-            thr->state = thread_state::wait_fast_sema;
 
             waiting_threads.push_back(thr);
             kern->prepare_reschedule();
@@ -192,6 +182,7 @@ namespace eka2l1 {
             case thread_state::wait:
             case thread_state::wait_fast_sema:
             case thread_state::wait_hle:
+            case thread_state::wait_mutex:
                 break;
 
             case thread_state::ready:
@@ -246,14 +237,6 @@ namespace eka2l1 {
                 thr->owning_process()->exit_reason = thr->get_exit_reason();
                 thr->owning_process()->finish_logons();
             }
-
-            thr->wake_up_waiting_threads();
-
-            for (auto &obj : thr->waits) {
-                obj->erase_waiting_thread(thr);
-            }
-
-            thr->waits.clear();
 
             return true;
         }

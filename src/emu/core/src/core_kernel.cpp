@@ -250,10 +250,9 @@ namespace eka2l1 {
 
     uint32_t kernel_system::create_sema(std::string sema_name,
         int32_t init_count,
-        int32_t max_count,
         kernel::owner_type own_type,
         kernel::access_type access) {
-        sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, max_count, access);
+        sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, access);
         objects.push_back(std::move(new_sema));
 
         return create_handle_lastest(own_type);

@@ -168,7 +168,6 @@ namespace eka2l1 {
 
         uint32_t create_sema(std::string sema_name,
             int32_t init_count,
-            int32_t max_count,
             kernel::owner_type own_type,
             kernel::access_type access = kernel::access_type::local_access);
 

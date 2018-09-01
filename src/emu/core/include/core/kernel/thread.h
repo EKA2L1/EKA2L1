@@ -31,7 +31,6 @@
 
 #include <core/kernel/chunk.h>
 #include <core/kernel/object_ix.h>
-#include <core/kernel/wait_obj.h>
 
 #include <core/epoc/reqsts.h>
 
@@ -67,6 +66,10 @@ namespace eka2l1 {
             ready,
             stop,
             wait_fast_sema, // Wait for semaphore
+            wait_mutex,
+            wait_mutex_suspend,
+            wait_fast_sema_suspend,
+            hold_mutex_pending,
             wait_dfc, // Unused
             wait_hle // Wait in case an HLE event is taken place - e.g GUI
         };
@@ -103,12 +106,11 @@ namespace eka2l1 {
             std::array<tls_slot, 50> tls_slots;
         };
 
-        using wait_obj_ptr = std::shared_ptr<wait_obj>;
-
-        class thread : public wait_obj {
+        class thread : public kernel_obj {
             friend class thread_scheduler;
             friend class kernel_system;
             friend class mutex;
+            friend class semaphore;
 
             process_ptr own_process;
 
@@ -120,6 +122,8 @@ namespace eka2l1 {
             arm::jit_interface::thread_context ctx;
 
             thread_priority priority;
+            
+            int last_priority;
             int real_priority;
 
             int stack_size;
@@ -138,9 +142,7 @@ namespace eka2l1 {
 
             thread_local_data ldata;
 
-            std::shared_ptr<thread_scheduler> scheduler; // The scheduler that schedules this thread
-            std::vector<kernel::mutex *> held_mutexes;
-            std::vector<kernel::mutex *> pending_mutexes;
+            std::shared_ptr<thread_scheduler> scheduler;
 
             sema_ptr request_sema;
             uint32_t flags;
@@ -174,8 +176,7 @@ namespace eka2l1 {
 
         public:
             kernel_obj_ptr get_object(uint32_t handle);
-
-            std::vector<wait_obj *> waits_on;
+            kernel_obj *wait_obj;
 
             void logon(epoc::request_status *logon_request, bool rendezvous);
             bool logon_cancel(epoc::request_status *logon_request, bool rendezvous);
@@ -202,9 +203,6 @@ namespace eka2l1 {
 
             ~thread();
 
-            bool should_wait(thread_ptr thr) override;
-            void acquire(thread_ptr thr) override;
-
             // Physically we can't compare thread.
             bool operator>(const thread &rhs);
             bool operator<(const thread &rhs);
@@ -216,6 +214,9 @@ namespace eka2l1 {
             void close_tls_slot(tls_slot &slot);
 
             void update_priority();
+
+            bool suspend();
+            bool resume();
 
             void wait_for_any_request();
             void signal_request();

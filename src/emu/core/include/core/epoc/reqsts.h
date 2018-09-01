@@ -14,7 +14,7 @@ namespace eka2l1::epoc {
         request_status(const int sts) 
             : flags(0) {
             if (sts == 0x80000001) {
-                flags &= pending;
+                flags |= pending;
             } else {
                 flags &= ~pending;
             }
@@ -24,7 +24,7 @@ namespace eka2l1::epoc {
 
         void operator=(const int sts) {
             if (sts == 0x80000001) {
-                flags &= pending;
+                flags |= pending;
             } else {
                 flags &= ~pending;
             }

@@ -88,6 +88,8 @@ namespace eka2l1 {
             uint64_t uid;
 
         public:
+            virtual ~kernel_obj() {}
+
             /*! \brief Get the name of the object.
              * \returns Object name.
             */
@@ -115,7 +117,7 @@ namespace eka2l1 {
             }
 
             void increase_access_count() { access_count++; }
-            void decrease_access_count() { access_count--;  };
+            void decrease_access_count() { access_count--; };
 
             int get_access_count() { return access_count; }
 

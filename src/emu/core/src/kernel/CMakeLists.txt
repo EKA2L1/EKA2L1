@@ -4,7 +4,6 @@ add_library(corekernel
     ${CORE_INCLUDE_DIR}/kernel/kernel_obj.h
     ${CORE_INCLUDE_DIR}/core_kernel.h
     ${CORE_INCLUDE_DIR}/kernel/scheduler.h
-    ${CORE_INCLUDE_DIR}/kernel/wait_obj.h
     ${CORE_INCLUDE_DIR}/kernel/object_ix.h
     ${CORE_INCLUDE_DIR}/kernel/process.h
     ${CORE_INCLUDE_DIR}/kernel/chunk.h
@@ -18,7 +17,6 @@ add_library(corekernel
     mutex.cpp
     kernel_obj.cpp
     object_ix.cpp
-	wait_obj.cpp
     chunk.cpp
     change_notifier.cpp
     sema.cpp
