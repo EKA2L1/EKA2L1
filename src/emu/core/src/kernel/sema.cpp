@@ -41,9 +41,7 @@ namespace eka2l1 {
             signaling = true;
 
             for (size_t i = 0; i < signal_count; i++) {
-                avail_count += 1;
-
-                if (avail_count - 1 < 0) {
+                if (++avail_count <= 0) {
                     if (waits.size() != 0) {
                         thread_ptr ready_thread = std::move(waits.top());
                         assert(ready_thread->wait_obj == this);

@@ -95,6 +95,15 @@ namespace eka2l1 {
 
             LOG_TRACE("Sending to {}, function: 0x{:x}", this->svr->name(), msg->function);
 
+            struct version {
+                uint8_t major;
+                uint8_t minor;
+                uint16_t build;
+            };
+
+            version sreq_ver = *reinterpret_cast<version *>(&args.args[0]);
+            LOG_TRACE("Requested server version: {}.{}.{}", sreq_ver.major, sreq_ver.minor, sreq_ver.build);
+
             return 0;
         }
 

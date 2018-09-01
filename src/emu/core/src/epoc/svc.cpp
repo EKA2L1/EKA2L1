@@ -3,10 +3,10 @@
 #include <core/epoc/hal.h>
 #include <core/epoc/handle.h>
 #include <core/epoc/panic.h>
+#include <core/epoc/reqsts.h>
 #include <core/epoc/svc.h>
 #include <core/epoc/tl.h>
 #include <core/epoc/uid.h>
-#include <core/epoc/reqsts.h>
 
 #include <common/cvt.h>
 #include <common/path.h>
@@ -342,6 +342,8 @@ namespace eka2l1::epoc {
 
         *msg->request_sts = aVal;
         msg->own_thr->signal_request();
+
+        LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
     }
@@ -707,6 +709,10 @@ namespace eka2l1::epoc {
         sys->get_kernel_system()->crr_thread()->wait_for_any_request();
     }
 
+    BRIDGE_FUNC(void, RequestSignal, int aSignalCount) {
+        sys->get_kernel_system()->crr_thread()->signal_request(aSignalCount);
+    }
+
     /***********************************************/
     /* HANDLE FUNCTIONS   */
     /*                    */
@@ -1058,7 +1064,17 @@ namespace eka2l1::epoc {
             return;
         }
 
-        kern->get_thread_scheduler()->schedule(thr);
+        switch (thr->current_state()) {
+        case kernel::thread_state::create: {
+            kern->get_thread_scheduler()->schedule(thr);
+            break;
+        }
+
+        default: {
+            thr->resume();
+            break;
+        }
+        }
     }
 
     BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
@@ -1448,6 +1464,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x35, TimerCancel),
         BRIDGE_REGISTER(0x36, TimerAfter),
         BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
+        BRIDGE_REGISTER(0x3B, RequestSignal),
         BRIDGE_REGISTER(0x3C, HandleName),
         BRIDGE_REGISTER(0x42, MessageComplete),
         BRIDGE_REGISTER(0x4D, SessionSendSync),

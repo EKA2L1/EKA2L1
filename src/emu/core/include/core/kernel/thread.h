@@ -61,6 +61,7 @@ namespace eka2l1 {
         class thread_scheduler;
 
         enum class thread_state {
+            create,
             run,
             wait,
             ready,
@@ -219,7 +220,7 @@ namespace eka2l1 {
             bool resume();
 
             void wait_for_any_request();
-            void signal_request();
+            void signal_request(int count = 1);
 
             void set_priority(const thread_priority new_pri);
 

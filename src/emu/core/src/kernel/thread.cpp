@@ -231,7 +231,7 @@ namespace eka2l1 {
             create_time = timing->get_ticks();
 
             obj_type = object_type::thread;
-            state = thread_state::wait; // Suspended.
+            state = thread_state::create; // Suspended.
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
@@ -353,8 +353,8 @@ namespace eka2l1 {
             request_sema->wait();
         }
 
-        void thread::signal_request() {
-            request_sema->signal(1);
+        void thread::signal_request(int count) {
+            request_sema->signal(count);
         }
 
         bool thread::suspend() {

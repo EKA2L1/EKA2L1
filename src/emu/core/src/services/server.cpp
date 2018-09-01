@@ -126,35 +126,33 @@ namespace eka2l1 {
         // Processed asynchronously, use for HLE service where accepted function
         // is fetched imm
         void server::process_accepted_msg() {
-            while (true) {
-                int res = receive(process_msg);
+            int res = receive(process_msg);
 
-                if (res == -1) {
-                    return;
-                }
+            if (res == -1) {
+                return;
+            }
 
-                int func = process_msg->function;
+            int func = process_msg->function;
 
-                auto func_ite = ipc_funcs.find(func);
+            auto func_ite = ipc_funcs.find(func);
 
-                if (func_ite == ipc_funcs.end()) {
-                    LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
-
-                    // Signal request semaphore, to tell everyone that it has finished random request
-                    process_msg->own_thr->signal_request();
-
-                    return;
-                }
-
-                ipc_func ipf = func_ite->second;
-                ipc_context context{ sys, process_msg };
-
-                LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
-                ipf.wrapper(context);
+            if (func_ite == ipc_funcs.end()) {
+                LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
 
                 // Signal request semaphore, to tell everyone that it has finished random request
                 process_msg->own_thr->signal_request();
+
+                return;
             }
+
+            ipc_func ipf = func_ite->second;
+            ipc_context context{ sys, process_msg };
+
+            LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+            ipf.wrapper(context);
+
+            // Signal request semaphore, to tell everyone that it has finished random request
+            process_msg->own_thr->signal_request();
         }
 
         void server::destroy() {
