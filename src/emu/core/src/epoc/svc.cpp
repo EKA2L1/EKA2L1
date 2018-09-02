@@ -20,6 +20,10 @@
 #include <ctime>
 
 namespace eka2l1::epoc {
+    /* TODO:                                       
+     * 1. (bentokun) Implement global user data. Global user data should be allocated in global memory region.
+    */
+
     /********************************/
     /*    GET/SET EXECUTIVE CALLS   */
     /*                              */
@@ -394,6 +398,171 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, MessageGetDesLength, TInt aHandle, TInt aParam) {
+        if (aParam < 0) {
+            return KErrArgument;
+        }
+
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        ipc_msg_ptr msg = kern->get_msg(aHandle);
+
+        if (!msg) {
+            return KErrBadHandle;
+        }
+
+        service::ipc_context context;
+        context.msg = msg;
+        context.sys = sys;
+
+        const auto try_des8 = context.get_arg<std::string>(aParam);
+
+        if (!try_des8) {
+            const auto try_des16 = context.get_arg<std::u16string>(aParam);
+
+            if (!try_des16) {
+                return KErrBadDescriptor;
+            }
+
+            return try_des16->length();
+        }
+
+        return try_des8->length();
+    }
+
+    struct TIpcCopyInfo {
+        eka2l1::ptr<TUint8> iTargetPtr;
+        int iTargetLength;
+        int iFlags;
+    };
+
+    const TInt KChunkShiftBy0 = 0;
+    const TInt KChunkShiftBy1 = -2147483647;
+    const TInt KIpcDirRead = 0;
+    const TInt KIpcDirWrite = 0x10000000;
+
+    BRIDGE_FUNC(TInt, MessageIpcCopy, TInt aHandle, TInt aParam, eka2l1::ptr<TIpcCopyInfo> aInfo, TInt aStartOffset) {
+        if (!aInfo || aParam < 0) {
+            return KErrArgument;
+        }
+
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        TIpcCopyInfo *info = aInfo.get(mem);
+        ipc_msg_ptr msg = kern->get_msg(aHandle);
+
+        if (!msg) {
+            return KErrBadHandle;
+        }
+
+        bool des8 = true;
+        if (info->iFlags & KChunkShiftBy1) {
+            des8 = false;
+        }
+
+        bool read = true;
+        if (info->iFlags & KIpcDirWrite) {
+            read = false;
+        }
+
+        if (read) {
+            service::ipc_context context;
+            context.sys = sys;
+            context.msg = msg;
+
+            if (des8) {
+                const auto arg_request = context.get_arg<std::string>(aParam);
+
+                if (!arg_request) {
+                    return KErrBadDescriptor;
+                }
+
+                if (arg_request->length() - aStartOffset > info->iTargetLength) {
+                    return KErrNoMemory;
+                }
+
+                memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, arg_request->size() - aStartOffset);
+
+                return KErrNone;
+            }
+
+            const auto arg_request = context.get_arg<std::u16string>(aParam);
+
+            if (!arg_request) {
+                return KErrBadDescriptor;
+            }
+
+            if (arg_request->length() * 2 - aStartOffset > info->iTargetLength) {
+                return KErrNoMemory;
+            }
+
+            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset, arg_request->size() * 2 - aStartOffset);
+
+            return KErrNone;
+        }
+
+        service::ipc_context context;
+        context.sys = sys;
+        context.msg = msg;
+
+        std::string content;
+        content.resize(aStartOffset + des8 ? info->iTargetLength : info->iTargetLength * 2);
+
+        memcpy(&content[aStartOffset], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
+        bool result = context.write_arg_pkg(aParam, reinterpret_cast<uint8_t *>(&content[0]), content.length());
+
+        if (!result) {
+            return KErrBadDescriptor;
+        }
+
+        return KErrNone;
+    }
+
+    void query_security_info(eka2l1::process_ptr process, epoc::TSecurityInfo *info) {
+        assert(process);
+
+        kernel::security_info sec_info = process->get_sec_info();
+        memcpy(info, &sec_info, sizeof(sec_info));
+    }
+
+    BRIDGE_FUNC(void, ProcessSecurityInfo, TInt aProcessHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
+        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr = std::dynamic_pointer_cast<kernel::process>(kern->get_kernel_obj(aProcessHandle));
+        query_security_info(pr, sec_info);
+    }
+
+    BRIDGE_FUNC(void, ThreadSecurityInfo, TInt aThreadHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
+        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj(aThreadHandle));
+
+        if (!thr) {
+            LOG_ERROR("Thread handle invalid 0x{:x}", aThreadHandle);
+            return;
+        }
+
+        query_security_info(thr->owning_process(), sec_info);
+    }
+
+    BRIDGE_FUNC(void, MessageSecurityInfo, TInt aMessageHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
+        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        eka2l1::ipc_msg_ptr msg = kern->get_msg(aMessageHandle);
+
+        if (!msg) {
+            LOG_ERROR("Thread handle invalid 0x{:x}", aMessageHandle);
+            return;
+        }
+
+        query_security_info(msg->own_thr->owning_process(), sec_info);
+    }
+
     BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMode) {
         kernel_system *kern = sys->get_kernel_system();
         std::string server_name = aServerName.get(sys->get_memory_system())->StdString(sys);
@@ -703,6 +872,23 @@ namespace eka2l1::epoc {
         }
 
         return sema;
+    }
+
+    BRIDGE_FUNC(TInt, MutexCreate, eka2l1::ptr<TDesC8> aMutexName, TOwnerType aOwnerType) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        TDesC8 *desname = aMutexName.get(mem);
+        kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
+
+        uint32_t mut = kern->create_mutex(!desname ? "" : desname->StdString(sys), false,
+            owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
+
+        if (mut == INVALID_HANDLE) {
+            return KErrGeneral;
+        }
+
+        return mut;
     }
 
     BRIDGE_FUNC(void, WaitForAnyRequest) {
@@ -1054,6 +1240,17 @@ namespace eka2l1::epoc {
 
         thread_ptr thr = kern->get_thread_by_handle(aHandle);
         return kern->mirror(thr->owning_process(), kernel::owner_type::thread);
+    }
+
+    BRIDGE_FUNC(void, ThreadSetPriority, TInt aHandle, TInt aThreadPriority) {
+        kernel_system *kern = sys->get_kernel_system();
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return;
+        }
+
+        thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(aThreadPriority));
     }
 
     BRIDGE_FUNC(void, ThreadResume, TInt aHandle) {
@@ -1460,6 +1657,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x25, SessionSend),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
+        BRIDGE_REGISTER(0x2B, ThreadSetPriority),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x35, TimerCancel),
         BRIDGE_REGISTER(0x36, TimerAfter),
@@ -1477,6 +1675,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6C, ChunkAdjust),
         BRIDGE_REGISTER(0x6D, HandleOpenObject),
         BRIDGE_REGISTER(0x6E, HandleDuplicate),
+        BRIDGE_REGISTER(0x6F, MutexCreate),
         BRIDGE_REGISTER(0x70, SemaphoreCreate),
         BRIDGE_REGISTER(0x73, ThreadKill),
         BRIDGE_REGISTER(0x74, ThreadLogon),
@@ -1497,7 +1696,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xA5, ProcessRendezvous),
+        BRIDGE_REGISTER(0xA6, MessageGetDesLength),
+        BRIDGE_REGISTER(0xA8, MessageIpcCopy),
         BRIDGE_REGISTER(0xAC, MessageKill),
+        BRIDGE_REGISTER(0xAE, ProcessSecurityInfo),
+        BRIDGE_REGISTER(0xAF, ThreadSecurityInfo),
+        BRIDGE_REGISTER(0xB0, MessageSecurityInfo),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xBF, PropertySubscribe),

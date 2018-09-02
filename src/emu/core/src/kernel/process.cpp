@@ -72,6 +72,7 @@ namespace eka2l1::kernel {
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
+        , romimg(nullptr)
         , img(img)
         , exe_path(exe_path)
         , cmd_args(cmd_args)
@@ -94,6 +95,7 @@ namespace eka2l1::kernel {
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
+        , img(nullptr)
         , romimg(img)
         , exe_path(exe_path)
         , cmd_args(cmd_args)
@@ -239,5 +241,25 @@ namespace eka2l1::kernel {
 
     void process::signal_dll_lock() {
         dll_lock->signal();
+    }
+
+    security_info process::get_sec_info() {
+        security_info info;
+
+        if (img) {
+            info.secure_id = img->header_extended.info.secure_id;
+            info.vendor_id = img->header_extended.info.vendor_id;
+
+            info.caps[0] = img->header_extended.info.cap1;
+            info.caps[1] = img->header_extended.info.cap2;
+        } else {
+            info.secure_id = romimg->header.sec_info.secure_id;
+            info.vendor_id = romimg->header.sec_info.vendor_id;
+
+            info.caps[0] = romimg->header.sec_info.cap1;
+            info.caps[1] = romimg->header.sec_info.cap2;
+        }
+
+        return info;
     }
 }

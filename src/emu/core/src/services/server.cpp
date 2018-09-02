@@ -148,7 +148,10 @@ namespace eka2l1 {
             ipc_func ipf = func_ite->second;
             ipc_context context{ sys, process_msg };
 
-            LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+            if (sys->get_bool_config("log_ipc")) {
+                LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+            }
+
             ipf.wrapper(context);
 
             // Signal request semaphore, to tell everyone that it has finished random request
@@ -195,7 +198,7 @@ namespace eka2l1 {
                 return;
             }
 
-            finish_request_lle(msg, false);
+            finish_request_lle(msg, true);
         }
 
         void server::cancel_async_lle() {

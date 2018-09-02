@@ -24,8 +24,8 @@
 #include <core/kernel/object_ix.h>
 #include <core/kernel/thread.h>
 
-#include <core/loader/eka2img.h>
 #include <core/epoc/reqsts.h>
+#include <core/loader/eka2img.h>
 
 #include <core/page_table.h>
 
@@ -55,6 +55,12 @@ namespace eka2l1::kernel {
     struct pass_arg {
         uint32_t data = 0;
         size_t data_size = -1;
+    };
+
+    struct security_info {
+        uint32_t secure_id;
+        uint32_t vendor_id;
+        uint32_t caps[2];
     };
 
     using process_uid_type = std::tuple<uint32_t, uint32_t, uint32_t>;
@@ -196,6 +202,8 @@ namespace eka2l1::kernel {
         process_priority get_priority() const {
             return priority;
         }
+
+        security_info get_sec_info();
 
         void set_priority(const process_priority new_pri);
 
