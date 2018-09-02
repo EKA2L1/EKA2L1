@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/services/session.h>
 #include <core/services/server.h>
+#include <core/services/session.h>
 
 #include <core/core_kernel.h>
 
@@ -95,15 +95,17 @@ namespace eka2l1 {
 
             LOG_TRACE("Sending to {}, function: 0x{:x}", this->svr->name(), msg->function);
 
-            struct version {
-                uint8_t major;
-                uint8_t minor;
-                uint16_t build;
-            };
+            if (msg->function == -1) {
+                struct version {
+                    uint8_t major;
+                    uint8_t minor;
+                    uint16_t build;
+                };
 
-            version sreq_ver = *reinterpret_cast<version *>(&args.args[0]);
-            LOG_TRACE("Requested server version: {}.{}.{}", sreq_ver.major, sreq_ver.minor, sreq_ver.build);
-
+                version sreq_ver = *reinterpret_cast<version *>(&args.args[0]);
+                LOG_TRACE("Requested server version: {}.{}.{}", sreq_ver.major, sreq_ver.minor, sreq_ver.build);
+            }
+            
             return 0;
         }
 
@@ -205,8 +207,7 @@ namespace eka2l1 {
             server_msg smsg;
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>
-                (kern->get_kernel_obj_by_id(uid));
+            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(kern->get_kernel_obj_by_id(uid));
             smsg.real_msg->session_ptr_lle = cookie_address;
 
             int deliver_success
@@ -222,8 +223,7 @@ namespace eka2l1 {
 
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>
-                (kern->get_kernel_obj_by_id(uid));
+            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(kern->get_kernel_obj_by_id(uid));
             smsg.real_msg->session_ptr_lle = cookie_address;
 
             return svr->deliver(smsg);
@@ -235,9 +235,8 @@ namespace eka2l1 {
 
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->request_sts = nullptr; 
-            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>
-                (kern->get_kernel_obj_by_id(uid));
+            smsg.real_msg->request_sts = nullptr;
+            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(kern->get_kernel_obj_by_id(uid));
             smsg.real_msg->session_ptr_lle = cookie_address;
 
             return svr->deliver(smsg);

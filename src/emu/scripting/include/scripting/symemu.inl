@@ -159,9 +159,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         Read a byte from current process address space.
         )pbdoc");
 
-    m.def("readShort", &scripting::read_short,
+    m.def("readDword", &scripting::read_dword,
         R"pbdoc(
-        Read a short from current process address space.
+        Read a dword from current process address space.
         )pbdoc");
 
     m.def("readWord", &scripting::read_word,

@@ -3,11 +3,13 @@ import symemu
 
 from enum import Enum
 
+import struct
+
 class DescriptorType(Enum):
-    BUF_CONST = 0,
-    PTR_CONST = 1,
-    PTR =  2,
-    BUF = 3,
+    BUF_CONST = 0
+    PTR_CONST = 1
+    PTR =  2
+    BUF = 3
     BUF_CONST_PTR = 4
 
 # Provide read access to a in-memory descriptor
@@ -17,7 +19,7 @@ class DescriptorBase(object):
             return address + 4
             
         def get_ptr_ptr_const():
-            return symemu.readWord(address + 4)
+            return symemu.readDword(address + 4)
             
         def get_ptr_buf():
             return address + 8
@@ -30,17 +32,16 @@ class DescriptorBase(object):
             return real_buf_addr + 4
         
         ptr_switcher = {
-            BUF_CONST: get_ptr_buf_const,
-            PTR_CONST: get_ptr_ptr_const,
-            PTR: get_ptr_ptr,
-            BUF: get_ptr_buf,
-            BUF_CONST_PTR: get_ptr_buf_const_ptr
+            DescriptorType.BUF_CONST: get_ptr_buf_const,
+            DescriptorType.PTR_CONST: get_ptr_ptr_const,
+            DescriptorType.PTR: get_ptr_ptr,
+            DescriptorType.BUF: get_ptr_buf,
+            DescriptorType.BUF_CONST_PTR: get_ptr_buf_const_ptr
         };
         
-        lengthAndType = symemu.readWord(address)
+        lengthAndType = symemu.readDword(address)
         self.length = lengthAndType & 0xFFFFFF
         self.type = DescriptorType(lengthAndType >> 28)
-        
         self.ptr = ptr_switcher.get(self.type, lambda: 'Invalid descriptor type')()
         
     def type(self):
@@ -51,24 +52,26 @@ class DescriptorBase(object):
         
 class Descriptor8(DescriptorBase):
     def __init__(self, address):
-        DescriptorBase.init(self, address)
+        DescriptorBase.__init__(self, address)
 
     def __str__(self):
-        str = '';
+        retstr = '';
     
         for i in range(0, self.length - 1):
-            str += symemu.readByte(self.ptr + i * 1).decode('utf-8')
+            c = symemu.readByte(self.ptr + i * 1)
+            retstr += struct.pack('<C', c).decode('utf-8')
 
-        return str                    
+        return retstr                    
         
 class Descriptor16(DescriptorBase):
     def __init__(self, address):
-        DescriptorBase.init(self, address)
+        DescriptorBase.__init__(self, address)
 
     def __str__(self):
-        str = u'';
-    
+        retstr = u'';
+        
         for i in range(0, self.length - 1):
-            str += symemu.readWord(self.ptr + i * 2).decode('utf-16')
+            uc = symemu.readWord(self.ptr + i * 2)
+            retstr += struct.pack('<H', uc).decode('utf-16')
 
-        return str
+        return retstr

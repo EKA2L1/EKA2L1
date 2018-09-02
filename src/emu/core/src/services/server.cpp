@@ -165,8 +165,7 @@ namespace eka2l1 {
             request_data->function = msg->function;
             request_data->session_ptr = msg->session_ptr_lle;
 
-            std::copy(request_data->args, request_data->args + 4,
-                msg->args.args);
+            std::copy(msg->args.args, msg->args.args + 4, request_data->args);
 
             *request_status = 0; // KErrNone
 
