@@ -114,6 +114,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
     if (enable_breakpoint_script) {
         jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
+        jit->get_manager_sys()->get_script_manager()->call_breakpoints(address + 1);
     }
 
     if (log_passed && mngr) {

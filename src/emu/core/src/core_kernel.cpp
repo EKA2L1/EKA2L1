@@ -127,9 +127,11 @@ namespace eka2l1 {
                     loader::romimg_ptr efsrv_force = libmngr->load_romimg(u"efsrv", false);
                     libmngr->open_romimg(efsrv_force);
                 }
+
                 process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
                     static_cast<kernel::process_priority>(img_ptr->header.priority));
 
+                get_thread_by_handle(pr->primary_thread)->owning_process(pr);
                 objects.push_back(std::move(pr));
 
                 uint32_t h = create_handle_lastest(owner);
@@ -248,19 +250,17 @@ namespace eka2l1 {
 
     uint32_t kernel_system::create_sema(std::string sema_name,
         int32_t init_count,
-        int32_t max_count,
         kernel::owner_type own_type,
         kernel::access_type access) {
-        sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, max_count, access);
+        sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, access);
         objects.push_back(std::move(new_sema));
 
         return create_handle_lastest(own_type);
     }
 
-    uint32_t kernel_system::create_timer(std::string name, kernel::reset_type rt,
-        kernel::owner_type owner,
+    uint32_t kernel_system::create_timer(std::string name, kernel::owner_type owner,
         kernel::access_type access) {
-        timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, rt, access);
+        timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, access);
         objects.push_back(std::move(new_timer));
 
         return create_handle_lastest(owner);
@@ -314,6 +314,8 @@ namespace eka2l1 {
         const kernel::process_priority pri, kernel::owner_type own) {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
+
+        get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
 
         return create_handle_lastest(own);
@@ -325,6 +327,8 @@ namespace eka2l1 {
         const kernel::process_priority pri, kernel::owner_type own) {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
+
+        get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
 
         return create_handle_lastest(own);

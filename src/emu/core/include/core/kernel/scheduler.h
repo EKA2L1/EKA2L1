@@ -84,9 +84,10 @@ namespace eka2l1 {
 
             bool schedule(thread_ptr thread);
             bool sleep(thread_ptr thr, uint32_t sl_time);
-            bool wait_sema(thread_ptr thr);
+            bool wait(thread_ptr thr);
 
             bool resume(thread_ptr thr);
+
             void unschedule(thread_ptr thr);
 
             bool stop(thread_ptr thr);

@@ -12,7 +12,7 @@ namespace eka2l1 {
             obj_type = object_type::change_notifier;
         }
 
-        bool change_notifier::logon(int *request_sts) {
+        bool change_notifier::logon(epoc::request_status *request_sts) {
             if (request_status) {
                 return false;
             }

@@ -83,6 +83,12 @@ namespace eka2l1::epoc {
         TSecurityPolicy iWritePolicy;
     };
 
+    struct TSecurityInfo {
+        TUint iSecureId;
+        TUint iVendorId;
+        TUint iCaps[2];
+    };
+
     /*! \brief Get the thread-local allocator. 
      * \returns The pointer to the allocator. 
      */

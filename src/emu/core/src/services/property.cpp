@@ -82,7 +82,7 @@ namespace eka2l1 {
             return local;
         }
 
-        void property::subscribe(int *sts) {
+        void property::subscribe(epoc::request_status *sts) {
             if (subscribe_request.request_status) {
                 return;
             }

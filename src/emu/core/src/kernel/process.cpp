@@ -40,11 +40,15 @@ namespace eka2l1::kernel {
         mem->chunk(0x400000, 0, 0x1000, 0x1000, prot::read_write);
 
         primary_thread
-            = kern->create_thread(kernel::owner_type::kernel, nullptr, kernel::access_type::local_access,
+            = kern->create_thread(kernel::owner_type::kernel,
+                nullptr,
+                kernel::access_type::local_access,
                 process_name, ep_off,
                 stack_size, heap_min, heap_max,
                 true,
                 0, kernel::priority_normal);
+
+        ++thread_count;
 
         args[0].data_size = 0;
         args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D
@@ -68,6 +72,7 @@ namespace eka2l1::kernel {
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
+        , romimg(nullptr)
         , img(img)
         , exe_path(exe_path)
         , cmd_args(cmd_args)
@@ -90,6 +95,7 @@ namespace eka2l1::kernel {
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
+        , img(nullptr)
         , romimg(img)
         , exe_path(exe_path)
         , cmd_args(cmd_args)
@@ -135,7 +141,6 @@ namespace eka2l1::kernel {
             return false;
         }
 
-        thr->owning_process(kern->get_process(obj_name));
         kern->run_thread(primary_thread);
 
         return true;
@@ -161,7 +166,7 @@ namespace eka2l1::kernel {
 
     // EKA2L1 doesn't use multicore yet, so rendezvous and logon
     // are just simple.
-    void process::logon(int *logon_request, bool rendezvous) {
+    void process::logon(epoc::request_status *logon_request, bool rendezvous) {
         if (!thread_count) {
             *logon_request = exit_reason;
             return;
@@ -175,7 +180,7 @@ namespace eka2l1::kernel {
         logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
     }
 
-    bool process::logon_cancel(int *logon_request, bool rendezvous) {
+    bool process::logon_cancel(epoc::request_status *logon_request, bool rendezvous) {
         if (rendezvous) {
             auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
                 [&](logon_request_form &form) { return form.request_status == logon_request; });
@@ -204,6 +209,9 @@ namespace eka2l1::kernel {
     }
 
     void process::rendezvous(int rendezvous_reason) {
+        exit_reason = rendezvous_reason;
+        exit_type = process_exit_type::pending;
+
         for (auto &ren : rendezvous_requests) {
             *(ren.request_status) = rendezvous_reason;
             ren.requester->signal_request();
@@ -233,5 +241,25 @@ namespace eka2l1::kernel {
 
     void process::signal_dll_lock() {
         dll_lock->signal();
+    }
+
+    security_info process::get_sec_info() {
+        security_info info;
+
+        if (img) {
+            info.secure_id = img->header_extended.info.secure_id;
+            info.vendor_id = img->header_extended.info.vendor_id;
+
+            info.caps[0] = img->header_extended.info.cap1;
+            info.caps[1] = img->header_extended.info.cap2;
+        } else {
+            info.secure_id = romimg->header.sec_info.secure_id;
+            info.vendor_id = romimg->header.sec_info.vendor_id;
+
+            info.caps[0] = romimg->header.sec_info.cap1;
+            info.caps[1] = romimg->header.sec_info.cap2;
+        }
+
+        return info;
     }
 }

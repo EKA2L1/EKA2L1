@@ -24,8 +24,10 @@
 #include <core/services/server.h>
 
 #include <atomic>
+#include <clocale>
 #include <memory>
 #include <unordered_map>
+#include <regex>
 
 namespace eka2l1::epoc {
     struct TTime {
@@ -98,6 +100,14 @@ namespace eka2l1 {
         fs_node *get_node(const std::u16string &path);
     };
 
+    struct fs_path_case_insensitive_hasher {
+        size_t operator()(const utf16_str &key) const;
+    };
+
+    struct fs_path_case_insensitive_comparer {
+        bool operator()(const utf16_str &x, const utf16_str &y) const;
+    };
+
     class fs_server : public service::server {
         fs_handle_table nodes_table;
 
@@ -128,10 +138,33 @@ namespace eka2l1 {
         void set_session_path(service::ipc_context ctx);
         void set_session_to_private(service::ipc_context ctx);
 
+        void synchronize_driver(service::ipc_context ctx);
+        void notify_change_ex(service::ipc_context ctx);
+
         void connect(service::ipc_context ctx) override;
 
         std::unordered_map<uint32_t, fs_node> file_nodes;
         std::unordered_map<uint32_t, utf16_str> session_paths;
+
+        enum class notify_type {
+            entry = 1,
+            all = 2,
+            file = 4,
+            dir = 8,
+            attrib = 0x10,
+            write = 0x20,
+            disk = 0x40
+        };
+
+        struct notify_entry {
+            std::regex match_pattern;
+            notify_type type;
+            int *request_status;
+        };
+
+        std::vector<notify_entry> notify_entries;
+
+        void notify(const utf16_str &entry, const notify_type type);
 
         int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false);
         fs_node *get_file_node(int handle);

@@ -22,7 +22,6 @@
 
 #include <core/kernel/kernel_obj.h>
 #include <core/kernel/thread.h>
-#include <core/kernel/wait_obj.h>
 
 #include <core/ipc.h>
 
@@ -51,8 +50,7 @@ namespace eka2l1 {
         class session : public kernel::kernel_obj {
             server_ptr svr;
 
-            std::vector<ipc_msg_ptr> msgs_pool;
-
+            std::vector<std::pair<bool, ipc_msg_ptr>> msgs_pool;
             uint32_t cookie_address;
 
         private:
@@ -83,6 +81,8 @@ namespace eka2l1 {
 
             /*! Send a message blind. Meaning that we don't care about what it returns */
             int send(ipc_msg_ptr &msg);
+
+            void set_slot_free(ipc_msg_ptr &msg);
         };
     }
 }

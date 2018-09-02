@@ -22,6 +22,8 @@
 #include <core/services/fs/op.h>
 
 #include <core/epoc/des.h>
+
+#include <clocale>
 #include <memory>
 
 #include <common/algorithm.h>
@@ -134,6 +136,21 @@ namespace eka2l1 {
         return nullptr;
     }
 
+    size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
+        utf16_str copy(key);
+
+        std::locale loc("");
+        for (auto &wc : copy) {
+            wc = std::tolower(wc, loc);
+        }
+
+        return std::hash<utf16_str>()(copy);
+    }
+
+    bool fs_path_case_insensitive_comparer::operator()(const utf16_str &x, const utf16_str &y) const {
+        return (common::compare_ignore_case(x, y) == -1);
+    }
+
     fs_server::fs_server(system *sys)
         : service::server(sys, "!FileServer", true) {
         REGISTER_IPC(fs_server, entry, EFsEntry, "Fs::Entry");
@@ -153,6 +170,12 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, session_path, EFsSessionPath, "Fs::SessionPath");
         REGISTER_IPC(fs_server, set_session_path, EFsSetSessionPath, "Fs::SetSessionPath");
         REGISTER_IPC(fs_server, set_session_to_private, EFsSessionToPrivate, "Fs::SetSessionToPrivate");
+        REGISTER_IPC(fs_server, synchronize_driver, EFsSynchroniseDriveThread, "Fs::SyncDriveThread");
+        REGISTER_IPC(fs_server, notify_change_ex, EFsNotifyChangeEx, "Fs::NotifyChangeEx");
+    }
+
+    void fs_server::synchronize_driver(service::ipc_context ctx) {
+        ctx.set_request_status(KErrNone);
     }
 
     fs_node *fs_server::get_file_node(int handle) {
@@ -160,8 +183,7 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
-        session_paths[ctx.msg->msg_session->unique_id()] =
-            common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
+        session_paths[ctx.msg->msg_session->unique_id()] = common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
 
         server::connect(ctx);
     }
@@ -402,6 +424,52 @@ namespace eka2l1 {
 
     void fs_server::file_replace(service::ipc_context ctx) {
         new_file_subsession(ctx, true);
+    }
+
+    std::string replace_all(std::string str, const std::string &from, const std::string &to) {
+        size_t start_pos = 0;
+        while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+            str.replace(start_pos, from.length(), to);
+            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+        }
+        return str;
+    }
+
+    std::regex construct_filter_from_wildcard(const utf16_str &filter) {
+        std::string copy = common::ucs2_to_utf8(filter);
+
+        std::locale loc("");
+
+        for (auto &c : copy) {
+            c = std::tolower(c, loc);
+        }
+
+        copy = replace_all(copy, "\\", "\\\\");
+        copy = replace_all(copy, ".", std::string("\\") + ".");
+        copy = replace_all(copy, "?", ".");
+        copy = replace_all(copy, "*", ".*");
+
+        return std::regex(copy);
+    }
+
+    void fs_server::notify_change_ex(service::ipc_context ctx) {
+        std::optional<utf16_str> wildcard_match = ctx.get_arg<utf16_str>(1);
+
+        if (!wildcard_match) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        notify_entry entry;
+        entry.match_pattern = construct_filter_from_wildcard(*wildcard_match);
+        entry.type = static_cast<notify_type>(*ctx.get_arg<int>(0));
+        entry.request_status = ctx.msg->request_sts;
+
+        notify_entries.push_back(entry);
+
+        LOG_TRACE("Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
+
+        ctx.set_request_status(KErrNone);
     }
 
     int fs_server::new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite) {

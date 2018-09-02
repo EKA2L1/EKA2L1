@@ -245,6 +245,10 @@ namespace eka2l1 {
             bool_configs.emplace("log_write", false);
             bool_configs.emplace("log_read", false);
             bool_configs.emplace("log_exports", false);
+            bool_configs.emplace("log_svc_passed", false);
+            bool_configs.emplace("enable_breakpoint_script", false);
+            bool_configs.emplace("log_exports", false);
+            bool_configs.emplace("log_ipc", false);
 
             write_configs();
         }

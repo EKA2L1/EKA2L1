@@ -111,7 +111,7 @@ namespace eka2l1::manager {
     void script_manager::register_svc(int svc_num, pybind11::function &func) {
         svc_functions.push_back(svc_func(svc_num, func));
     }
-    
+
     void script_manager::register_reschedule(pybind11::function &func) {
         reschedule_functions.push_back(func);
     }
@@ -151,6 +151,10 @@ namespace eka2l1::manager {
     }
 
     void script_manager::call_breakpoints(const uint32_t addr) {
+        if (breakpoints.find(addr) == breakpoints.end()) {
+            return;
+        }
+
         func_list &list = breakpoints[addr];
 
         for (const auto &func : list) {

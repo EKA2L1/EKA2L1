@@ -2,9 +2,10 @@
 #include <core/epoc/dll.h>
 #include <core/epoc/hal.h>
 #include <core/epoc/handle.h>
+#include <core/epoc/panic.h>
+#include <core/epoc/reqsts.h>
 #include <core/epoc/svc.h>
 #include <core/epoc/tl.h>
-#include <core/epoc/panic.h>
 #include <core/epoc/uid.h>
 
 #include <common/cvt.h>
@@ -19,6 +20,10 @@
 #include <ctime>
 
 namespace eka2l1::epoc {
+    /* TODO:                                       
+     * 1. (bentokun) Implement global user data. Global user data should be allocated in global memory region.
+    */
+
     /********************************/
     /*    GET/SET EXECUTIVE CALLS   */
     /*                              */
@@ -72,6 +77,33 @@ namespace eka2l1::epoc {
     /****************************/
     /* PROCESS */
     /***************************/
+
+    BRIDGE_FUNC(TInt, ProcessExitType, TInt aHandle) {
+        eka2l1::memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr_real;
+
+        // 0xffff8000 is a kernel mapping for current process
+        if (aHandle != 0xffff8000) {
+            // Unlike Symbian, process is not a kernel object here
+            // Its handle contains the process's uid
+            pr_real = kern->get_process(aHandle);
+        } else {
+            pr_real = kern->crr_process();
+        }
+
+        if (!pr_real) {
+            LOG_ERROR("ProcessExitType: Invalid process");
+            return 0;
+        }
+
+        return static_cast<TInt>(pr_real->get_exit_type());
+    }
+
+    BRIDGE_FUNC(void, ProcessRendezvous, TInt aRendezvousCode) {
+        sys->get_kernel_system()->crr_process()->rendezvous(aRendezvousCode);
+    }
 
     BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<TDes8> aDes) {
         eka2l1::memory_system *mem = sys->get_memory_system();
@@ -217,7 +249,7 @@ namespace eka2l1::epoc {
         pr->run();
     }
 
-    BRIDGE_FUNC(void, ProcessLogon, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(void, ProcessLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
 
         if (!pr) {
@@ -227,7 +259,7 @@ namespace eka2l1::epoc {
         pr->logon(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
     }
 
-    BRIDGE_FUNC(TInt, ProcessLogonCancel, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(TInt, ProcessLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
 
         if (!pr) {
@@ -302,7 +334,7 @@ namespace eka2l1::epoc {
         msg->msg_session->set_cookie_address(aSessionAddress);
     }
 
-    BRIDGE_FUNC(TInt, MessageComplete, TInt aMsgHandle) {
+    BRIDGE_FUNC(TInt, MessageComplete, TInt aMsgHandle, TInt aVal) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -312,8 +344,10 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        *msg->request_sts = 0;
+        *msg->request_sts = aVal;
         msg->own_thr->signal_request();
+
+        LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
     }
@@ -364,6 +398,171 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, MessageGetDesLength, TInt aHandle, TInt aParam) {
+        if (aParam < 0) {
+            return KErrArgument;
+        }
+
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        ipc_msg_ptr msg = kern->get_msg(aHandle);
+
+        if (!msg) {
+            return KErrBadHandle;
+        }
+
+        service::ipc_context context;
+        context.msg = msg;
+        context.sys = sys;
+
+        const auto try_des8 = context.get_arg<std::string>(aParam);
+
+        if (!try_des8) {
+            const auto try_des16 = context.get_arg<std::u16string>(aParam);
+
+            if (!try_des16) {
+                return KErrBadDescriptor;
+            }
+
+            return try_des16->length();
+        }
+
+        return try_des8->length();
+    }
+
+    struct TIpcCopyInfo {
+        eka2l1::ptr<TUint8> iTargetPtr;
+        int iTargetLength;
+        int iFlags;
+    };
+
+    const TInt KChunkShiftBy0 = 0;
+    const TInt KChunkShiftBy1 = -2147483647;
+    const TInt KIpcDirRead = 0;
+    const TInt KIpcDirWrite = 0x10000000;
+
+    BRIDGE_FUNC(TInt, MessageIpcCopy, TInt aHandle, TInt aParam, eka2l1::ptr<TIpcCopyInfo> aInfo, TInt aStartOffset) {
+        if (!aInfo || aParam < 0) {
+            return KErrArgument;
+        }
+
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        TIpcCopyInfo *info = aInfo.get(mem);
+        ipc_msg_ptr msg = kern->get_msg(aHandle);
+
+        if (!msg) {
+            return KErrBadHandle;
+        }
+
+        bool des8 = true;
+        if (info->iFlags & KChunkShiftBy1) {
+            des8 = false;
+        }
+
+        bool read = true;
+        if (info->iFlags & KIpcDirWrite) {
+            read = false;
+        }
+
+        if (read) {
+            service::ipc_context context;
+            context.sys = sys;
+            context.msg = msg;
+
+            if (des8) {
+                const auto arg_request = context.get_arg<std::string>(aParam);
+
+                if (!arg_request) {
+                    return KErrBadDescriptor;
+                }
+
+                if (arg_request->length() - aStartOffset > info->iTargetLength) {
+                    return KErrNoMemory;
+                }
+
+                memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, arg_request->size() - aStartOffset);
+
+                return KErrNone;
+            }
+
+            const auto arg_request = context.get_arg<std::u16string>(aParam);
+
+            if (!arg_request) {
+                return KErrBadDescriptor;
+            }
+
+            if (arg_request->length() * 2 - aStartOffset > info->iTargetLength) {
+                return KErrNoMemory;
+            }
+
+            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset, arg_request->size() * 2 - aStartOffset);
+
+            return KErrNone;
+        }
+
+        service::ipc_context context;
+        context.sys = sys;
+        context.msg = msg;
+
+        std::string content;
+        content.resize(aStartOffset + des8 ? info->iTargetLength : info->iTargetLength * 2);
+
+        memcpy(&content[aStartOffset], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
+        bool result = context.write_arg_pkg(aParam, reinterpret_cast<uint8_t *>(&content[0]), content.length());
+
+        if (!result) {
+            return KErrBadDescriptor;
+        }
+
+        return KErrNone;
+    }
+
+    void query_security_info(eka2l1::process_ptr process, epoc::TSecurityInfo *info) {
+        assert(process);
+
+        kernel::security_info sec_info = process->get_sec_info();
+        memcpy(info, &sec_info, sizeof(sec_info));
+    }
+
+    BRIDGE_FUNC(void, ProcessSecurityInfo, TInt aProcessHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
+        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr = std::dynamic_pointer_cast<kernel::process>(kern->get_kernel_obj(aProcessHandle));
+        query_security_info(pr, sec_info);
+    }
+
+    BRIDGE_FUNC(void, ThreadSecurityInfo, TInt aThreadHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
+        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj(aThreadHandle));
+
+        if (!thr) {
+            LOG_ERROR("Thread handle invalid 0x{:x}", aThreadHandle);
+            return;
+        }
+
+        query_security_info(thr->owning_process(), sec_info);
+    }
+
+    BRIDGE_FUNC(void, MessageSecurityInfo, TInt aMessageHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
+        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        eka2l1::ipc_msg_ptr msg = kern->get_msg(aMessageHandle);
+
+        if (!msg) {
+            LOG_ERROR("Thread handle invalid 0x{:x}", aMessageHandle);
+            return;
+        }
+
+        query_security_info(msg->own_thr->owning_process(), sec_info);
+    }
+
     BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMode) {
         kernel_system *kern = sys->get_kernel_system();
         std::string server_name = aServerName.get(sys->get_memory_system())->StdString(sys);
@@ -377,7 +576,7 @@ namespace eka2l1::epoc {
         return handle;
     }
 
-    BRIDGE_FUNC(void, ServerReceive, TInt aHandle, eka2l1::ptr<int> aRequestStatus, eka2l1::ptr<TAny> aDataPtr) {
+    BRIDGE_FUNC(void, ServerReceive, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, eka2l1::ptr<TAny> aDataPtr) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -473,6 +672,33 @@ namespace eka2l1::epoc {
         return ss->send_receive_sync(aOrd, arg, aStatus.get(mem));
     }
 
+    BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
+        eka2l1::ptr<TInt> aStatus) {
+        //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
+
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        // Dispatch the header
+        ipc_arg arg;
+        TInt *arg_header = aIpcArgs.cast<TInt>().get(mem);
+
+        if (aIpcArgs) {
+            for (uint8_t i = 0; i < 4; i++) {
+                arg.args[i] = *arg_header++;
+            }
+
+            arg.flag = *arg_header & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
+        }
+
+        session_ptr ss = kern->get_session(aHandle);
+
+        if (!ss) {
+            return KErrBadHandle;
+        }
+
+        return ss->send_receive(aOrd, arg, aStatus.get(mem));
+    }
     /**********************************/
     /* TRAP/LEAVE */
     /*********************************/
@@ -639,7 +865,7 @@ namespace eka2l1::epoc {
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
         uint32_t sema = kern->create_sema(!desname ? "" : desname->StdString(sys),
-            aInitCount, 50, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
+            aInitCount, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
 
         if (sema == INVALID_HANDLE) {
             return KErrGeneral;
@@ -648,8 +874,29 @@ namespace eka2l1::epoc {
         return sema;
     }
 
+    BRIDGE_FUNC(TInt, MutexCreate, eka2l1::ptr<TDesC8> aMutexName, TOwnerType aOwnerType) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        TDesC8 *desname = aMutexName.get(mem);
+        kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
+
+        uint32_t mut = kern->create_mutex(!desname ? "" : desname->StdString(sys), false,
+            owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
+
+        if (mut == INVALID_HANDLE) {
+            return KErrGeneral;
+        }
+
+        return mut;
+    }
+
     BRIDGE_FUNC(void, WaitForAnyRequest) {
         sys->get_kernel_system()->crr_thread()->wait_for_any_request();
+    }
+
+    BRIDGE_FUNC(void, RequestSignal, int aSignalCount) {
+        sys->get_kernel_system()->crr_thread()->signal_request(aSignalCount);
     }
 
     /***********************************************/
@@ -929,12 +1176,36 @@ namespace eka2l1::epoc {
             }
         }
 
+        if (thr->owning_process()->decrease_thread_count() == 0) {
+            thr->owning_process()->set_exit_type(static_cast<kernel::process_exit_type>(aExitType));
+        }
+
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
 
         kern->get_thread_scheduler()->stop(thr);
         kern->prepare_reschedule();
 
         return KErrNone;
+    }
+
+    BRIDGE_FUNC(void, ThreadRequestSignal, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        thread_ptr thr;
+
+        // Current thread handle
+        if (aHandle == 0xFFFF8001) {
+            thr = kern->crr_thread();
+        } else {
+            thr = kern->get_thread_by_handle(aHandle);
+        }
+
+        if (!thr) {
+            return;
+        }
+
+        thr->signal_request();
     }
 
     BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<TDesC8> aName) {
@@ -971,6 +1242,17 @@ namespace eka2l1::epoc {
         return kern->mirror(thr->owning_process(), kernel::owner_type::thread);
     }
 
+    BRIDGE_FUNC(void, ThreadSetPriority, TInt aHandle, TInt aThreadPriority) {
+        kernel_system *kern = sys->get_kernel_system();
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return;
+        }
+
+        thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(aThreadPriority));
+    }
+
     BRIDGE_FUNC(void, ThreadResume, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get_thread_by_handle(aHandle);
@@ -979,10 +1261,20 @@ namespace eka2l1::epoc {
             return;
         }
 
-        kern->get_thread_scheduler()->schedule(thr);
+        switch (thr->current_state()) {
+        case kernel::thread_state::create: {
+            kern->get_thread_scheduler()->schedule(thr);
+            break;
+        }
+
+        default: {
+            thr->resume();
+            break;
+        }
+        }
     }
 
-    BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
 
         if (!thr) {
@@ -992,7 +1284,7 @@ namespace eka2l1::epoc {
         thr->logon(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
     }
 
-    BRIDGE_FUNC(TInt, ThreadLogonCancel, TInt aHandle, eka2l1::ptr<TInt> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(TInt, ThreadLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
 
         if (!thr) {
@@ -1135,7 +1427,7 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
-    BRIDGE_FUNC(void, PropertySubscribe, TInt aPropertyHandle, eka2l1::ptr<TInt> aRequestStatus) {
+    BRIDGE_FUNC(void, PropertySubscribe, TInt aPropertyHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
         kernel_system *kern = sys->get_kernel_system();
         property_ptr prop = kern->get_prop(aPropertyHandle);
 
@@ -1286,7 +1578,29 @@ namespace eka2l1::epoc {
     /*********************/
     BRIDGE_FUNC(TInt, TimerCreate) {
         return sys->get_kernel_system()->create_timer("timer" + common::to_string(eka2l1::random()),
-            kernel::reset_type::oneshot, kernel::owner_type::process);
+            kernel::owner_type::process);
+    }
+
+    BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds) {
+        kernel_system *kern = sys->get_kernel_system();
+        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+
+        if (!timer) {
+            return;
+        }
+
+        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSeconds);
+    }
+
+    BRIDGE_FUNC(void, TimerCancel, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+
+        if (!timer) {
+            return;
+        }
+
+        timer->cancel_request();
     }
 
     /**********************/
@@ -1294,6 +1608,25 @@ namespace eka2l1::epoc {
     /**********************/
     BRIDGE_FUNC(TInt, ChangeNotifierCreate, TOwnerType aOwner) {
         return sys->get_kernel_system()->create_change_notifier(static_cast<kernel::owner_type>(aOwner));
+    }
+
+    BRIDGE_FUNC(TInt, ChangeNotifierLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        change_notifier_ptr cnot = std::dynamic_pointer_cast<kernel::change_notifier>(kern->get_kernel_obj(aHandle));
+
+        if (!cnot) {
+            return KErrBadHandle;
+        }
+
+        bool res = cnot->logon(aRequestStatus.get(mem));
+
+        if (!res) {
+            return KErrGeneral;
+        }
+
+        return KErrNone;
     }
 
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
@@ -1314,14 +1647,22 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
+        BRIDGE_REGISTER(0x15, ProcessResume),
         BRIDGE_REGISTER(0x16, ProcessFilename),
+        BRIDGE_REGISTER(0x18, ProcessExitType),
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x22, ServerReceive),
         BRIDGE_REGISTER(0x24, SetSessionPtr),
+        BRIDGE_REGISTER(0x25, SessionSend),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
+        BRIDGE_REGISTER(0x2B, ThreadSetPriority),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
+        BRIDGE_REGISTER(0x35, TimerCancel),
+        BRIDGE_REGISTER(0x36, TimerAfter),
+        BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
+        BRIDGE_REGISTER(0x3B, RequestSignal),
         BRIDGE_REGISTER(0x3C, HandleName),
         BRIDGE_REGISTER(0x42, MessageComplete),
         BRIDGE_REGISTER(0x4D, SessionSendSync),
@@ -1334,6 +1675,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6C, ChunkAdjust),
         BRIDGE_REGISTER(0x6D, HandleOpenObject),
         BRIDGE_REGISTER(0x6E, HandleDuplicate),
+        BRIDGE_REGISTER(0x6F, MutexCreate),
         BRIDGE_REGISTER(0x70, SemaphoreCreate),
         BRIDGE_REGISTER(0x73, ThreadKill),
         BRIDGE_REGISTER(0x74, ThreadLogon),
@@ -1341,7 +1683,6 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x76, DllSetTls),
         BRIDGE_REGISTER(0x77, DllFreeTLS),
         BRIDGE_REGISTER(0x78, ThreadRename),
-        BRIDGE_REGISTER(0x7A, ProcessResume),
         BRIDGE_REGISTER(0x7B, ProcessLogon),
         BRIDGE_REGISTER(0x7C, ProcessLogonCancel),
         BRIDGE_REGISTER(0x7D, ThreadProcess),
@@ -1354,7 +1695,13 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9E, LibraryAttach),
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
+        BRIDGE_REGISTER(0xA5, ProcessRendezvous),
+        BRIDGE_REGISTER(0xA6, MessageGetDesLength),
+        BRIDGE_REGISTER(0xA8, MessageIpcCopy),
         BRIDGE_REGISTER(0xAC, MessageKill),
+        BRIDGE_REGISTER(0xAE, ProcessSecurityInfo),
+        BRIDGE_REGISTER(0xAF, ThreadSecurityInfo),
+        BRIDGE_REGISTER(0xB0, MessageSecurityInfo),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xBF, PropertySubscribe),
@@ -1369,6 +1716,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC8, PropertyFindSetBin),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
+        BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd)
     };

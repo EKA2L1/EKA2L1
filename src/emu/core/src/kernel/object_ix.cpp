@@ -98,7 +98,7 @@ namespace eka2l1 {
                 kernel_obj_ptr obj = objects[info.object_ix_index].object;
                 obj->decrease_access_count();
 
-                if (obj->get_access_count() <= 0) {
+                if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process) {
                     kern->destroy(obj);
                 }
 

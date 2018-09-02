@@ -60,7 +60,7 @@ namespace eka2l1 {
         int server::receive(ipc_msg_ptr &msg) {
             /* If there is pending message, pop the last one and accept it */
             if (!delivered_msgs.empty()) {
-                server_msg yet_pending = std::move(delivered_msgs.front());
+                server_msg yet_pending = std::move(delivered_msgs.back());
 
                 yet_pending.dest_msg = msg;
 
@@ -90,8 +90,7 @@ namespace eka2l1 {
             msg.dest_msg->session_ptr_lle = msg.real_msg->session_ptr_lle;
             msg.dest_msg->msg_session = msg.real_msg->msg_session;
 
-            // Mark the client sending message as free
-            kern->free_msg(msg.real_msg);
+            msg.real_msg->msg_session->set_slot_free(msg.real_msg);
 
             return 0;
         }
@@ -149,7 +148,10 @@ namespace eka2l1 {
             ipc_func ipf = func_ite->second;
             ipc_context context{ sys, process_msg };
 
-            LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+            if (sys->get_bool_config("log_ipc")) {
+                LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+            }
+
             ipf.wrapper(context);
 
             // Signal request semaphore, to tell everyone that it has finished random request
@@ -166,8 +168,7 @@ namespace eka2l1 {
             request_data->function = msg->function;
             request_data->session_ptr = msg->session_ptr_lle;
 
-            std::copy(request_data->args, request_data->args + 4,
-                msg->args.args);
+            std::copy(msg->args.args, msg->args.args + 4, request_data->args);
 
             *request_status = 0; // KErrNone
 
@@ -180,7 +181,7 @@ namespace eka2l1 {
             request_status = nullptr;
         }
 
-        void server::receive_async_lle(int *msg_request_status, message2 *data) {
+        void server::receive_async_lle(epoc::request_status *msg_request_status, message2 *data) {
             ipc_msg_ptr msg = sys->get_kernel_system()->create_msg(kernel::owner_type::process);
 
             msg->free = false;
@@ -197,7 +198,7 @@ namespace eka2l1 {
                 return;
             }
 
-            finish_request_lle(msg, false);
+            finish_request_lle(msg, true);
         }
 
         void server::cancel_async_lle() {

@@ -7,6 +7,7 @@ add_library(epoc
     ${CORE_INCLUDE_DIR}/epoc/panic.h
     ${CORE_INCLUDE_DIR}/epoc/hal.h
     ${CORE_INCLUDE_DIR}/epoc/dll.h
+    ${CORE_INCLUDE_DIR}/epoc/reqsts.h
     tl.cpp
     des.cpp
     svc.cpp

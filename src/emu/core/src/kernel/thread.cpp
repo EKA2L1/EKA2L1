@@ -211,7 +211,7 @@ namespace eka2l1 {
             bool inital,
             ptr<void> usrdata,
             thread_priority pri)
-            : wait_obj(kern, name, access)
+            : kernel_obj(kern, name, access)
             , own_process(owner)
             , stack_size(stack_size)
             , min_heap_size(min_heap_size)
@@ -220,18 +220,18 @@ namespace eka2l1 {
             , mem(mem)
             , priority(pri)
             , timing(timing)
+            , wait_obj(nullptr)
             , thread_handles(kern, handle_array_owner::thread) {
             if (owner) {
                 owner->increase_thread_count();
+                real_priority = caculate_thread_priority(own_process, pri);
+                last_priority = real_priority;
             }
 
             create_time = timing->get_ticks();
 
             obj_type = object_type::thread;
-            state = thread_state::wait; // Suspended.
-
-            if (own_process)
-                real_priority = caculate_thread_priority(own_process, pri);
+            state = thread_state::create; // Suspended.
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
@@ -242,7 +242,7 @@ namespace eka2l1 {
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
             request_sema = std::dynamic_pointer_cast<kernel::semaphore>(
-                kern->get_kernel_obj(kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, 150, owner_type::kernel)));
+                kern->get_kernel_obj(kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, owner_type::kernel)));
 
             sync_msg = kern->create_msg(owner_type::kernel);
 
@@ -274,12 +274,8 @@ namespace eka2l1 {
             scheduler = kern->get_thread_scheduler();
         }
 
-        bool thread::should_wait(thread_ptr thr) {
-            return state != thread_state::stop;
-        }
-
-        void thread::acquire(thread_ptr thr) {
-            // :)
+        thread::~thread() {
+            own_process->decrease_thread_count();
         }
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
@@ -314,19 +310,30 @@ namespace eka2l1 {
         }
 
         void thread::update_priority() {
+            last_priority = real_priority;
             real_priority = caculate_thread_priority(own_process, priority);
 
             int new_priority = current_real_priority();
+            real_priority = new_priority;
 
-            for (auto &mut : held_mutexes) {
-                if (mut->get_priority() < new_priority) {
-                    new_priority = mut->get_priority();
+            if (wait_obj) {
+                switch (wait_obj->get_object_type()) {
+                case object_type::mutex: {
+                    reinterpret_cast<mutex *>(wait_obj)->priority_change(this);
+                    break;
+                }
+
+                case object_type::sema: {
+                    reinterpret_cast<semaphore *>(wait_obj)->priority_change();
+                    break;
+                }
+
+                default:
+                    break;
                 }
             }
 
-            real_priority = new_priority;
-
-            if (state == kernel::thread_state::ready) {
+            if (state == kernel::thread_state::ready || state == kernel::thread_state::hold_mutex_pending) {
                 scheduler->refresh();
             }
         }
@@ -339,11 +346,6 @@ namespace eka2l1 {
             }
 
             update_priority();
-
-            for (auto &mut : pending_mutexes) {
-                mut->update_priority();
-            }
-
             kern->prepare_reschedule();
         }
 
@@ -351,8 +353,72 @@ namespace eka2l1 {
             request_sema->wait();
         }
 
-        void thread::signal_request() {
-            request_sema->release(1);
+        void thread::signal_request(int count) {
+            request_sema->signal(count);
+        }
+
+        bool thread::suspend() {
+            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>
+                (kern->get_kernel_obj_by_id(uid)));
+
+            if (!res) {
+                return false;
+            }
+
+            res = false;
+            state = thread_state::wait;
+
+            // Call wait object to handle suspend event
+            if (!wait_obj) {
+                switch (wait_obj->get_object_type()) {
+                case object_type::mutex: {
+                    res = reinterpret_cast<mutex *>(wait_obj)->suspend_thread(this);
+                    break;
+                }
+
+                case object_type::sema: {
+                    res = reinterpret_cast<semaphore *>(wait_obj)->suspend_waiting_thread(this);
+                    break;
+                }
+
+                default:
+                    break;
+                }
+            }
+
+            return res;
+        }
+
+        bool thread::resume() {
+            bool res = scheduler->resume(std::dynamic_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj_by_id(uid)));
+
+            if (!res) {
+                return false;
+            }
+
+            res = false;
+            state = thread_state::ready;
+
+            // Call wait object to handle suspend event
+            if (!wait_obj) {
+                switch (wait_obj->get_object_type()) {
+                case object_type::mutex: {
+                    res = reinterpret_cast<mutex *>(wait_obj)->unsuspend_thread(this);
+                    break;
+                }
+
+                case object_type::sema: {
+                    res = reinterpret_cast<semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
+                    break;
+                }
+
+                default:
+                    break;
+                }
+            }
+
+            return res;
         }
 
         void thread::owning_process(process_ptr pr) {
@@ -360,6 +426,7 @@ namespace eka2l1 {
             own_process->increase_thread_count();
 
             update_priority();
+            last_priority = real_priority;
         }
 
         kernel_obj_ptr thread::get_object(uint32_t handle) {
@@ -419,7 +486,7 @@ namespace eka2l1 {
             return real_priority <= rhs.real_priority;
         }
 
-        void thread::logon(int *logon_request, bool rendezvous) {
+        void thread::logon(epoc::request_status *logon_request, bool rendezvous) {
             if (state == thread_state::stop) {
                 *logon_request = exit_reason;
                 return;
@@ -433,7 +500,7 @@ namespace eka2l1 {
             logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
         }
 
-        bool thread::logon_cancel(int *logon_request, bool rendezvous) {
+        bool thread::logon_cancel(epoc::request_status *logon_request, bool rendezvous) {
             if (rendezvous) {
                 auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
                     [&](logon_request_form &form) { return form.request_status == logon_request; });
