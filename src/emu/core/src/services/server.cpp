@@ -153,9 +153,6 @@ namespace eka2l1 {
             }
 
             ipf.wrapper(context);
-
-            // Signal request semaphore, to tell everyone that it has finished random request
-            process_msg->own_thr->signal_request();
         }
 
         void server::destroy() {
@@ -189,6 +186,7 @@ namespace eka2l1 {
             int res = receive(msg);
 
             request_status = msg_request_status;
+
             request_own_thread = sys->get_kernel_system()->crr_thread();
             request_data = data;
 
