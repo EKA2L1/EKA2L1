@@ -108,6 +108,7 @@ namespace eka2l1 {
         std::unordered_map<uint32_t, hal_ptr> hals;
 
         std::vector<std::string> startup_apps;
+        std::vector<std::string> force_load_libs;
 
         bool startup_inited = false;
 

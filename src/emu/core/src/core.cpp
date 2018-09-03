@@ -23,8 +23,8 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <common/random.h>
 #include <common/path.h>
+#include <common/random.h>
 
 #include <core/disasm/disasm.h>
 
@@ -87,22 +87,9 @@ namespace eka2l1 {
         hlelibmngr.reset();
         hlelibmngr.init(this, &kern, &io, &mem, get_symbian_version_use());
 
-        if (get_bool_config("force_load_euser")) {
-            // Use for debugging rom image
-            loader::romimg_ptr euser_force = hlelibmngr.load_romimg(u"euser", false);
-            hlelibmngr.open_romimg(euser_force);
-        }
-
-        if (get_bool_config("force_load_bafl")) {
-            // Use for debugging rom image
-            loader::romimg_ptr bafl_force = hlelibmngr.load_romimg(u"bafl", false);
-            hlelibmngr.open_romimg(bafl_force);
-        }
-
-        if (get_bool_config("force_load_efsrv")) {
-            // Use for debugging rom image
-            loader::romimg_ptr efsrv_force = hlelibmngr.load_romimg(u"efsrv", false);
-            hlelibmngr.open_romimg(efsrv_force);
+        for (const auto &force_load_lib : force_load_libs) {
+            loader::romimg_ptr img = hlelibmngr.load_romimg(common::utf8_to_ucs2(force_load_lib), false);
+            hlelibmngr.open_romimg(img);
         }
 
         if (!startup_inited) {
@@ -250,6 +237,12 @@ namespace eka2l1 {
                 if (subnode.first.as<std::string>() == "startup") {
                     for (const auto &startup_app : subnode.second) {
                         startup_apps.push_back(startup_app.as<std::string>());
+                    }
+
+                    continue;
+                } else if (subnode.first.as<std::string>() == "force_load") {
+                    for (const auto &startup_app : subnode.second) {
+                        force_load_libs.push_back(startup_app.as<std::string>());
                     }
 
                     continue;
