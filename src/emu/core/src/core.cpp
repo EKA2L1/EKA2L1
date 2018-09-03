@@ -84,6 +84,27 @@ namespace eka2l1 {
     }
 
     uint32_t system::load(uint32_t id) {
+        hlelibmngr.reset();
+        hlelibmngr.init(this, &kern, &io, &mem, get_symbian_version_use());
+
+        if (get_bool_config("force_load_euser")) {
+            // Use for debugging rom image
+            loader::romimg_ptr euser_force = hlelibmngr.load_romimg(u"euser", false);
+            hlelibmngr.open_romimg(euser_force);
+        }
+
+        if (get_bool_config("force_load_bafl")) {
+            // Use for debugging rom image
+            loader::romimg_ptr bafl_force = hlelibmngr.load_romimg(u"bafl", false);
+            hlelibmngr.open_romimg(bafl_force);
+        }
+
+        if (get_bool_config("force_load_efsrv")) {
+            // Use for debugging rom image
+            loader::romimg_ptr efsrv_force = hlelibmngr.load_romimg(u"efsrv", false);
+            hlelibmngr.open_romimg(efsrv_force);
+        }
+
         if (!startup_inited) {
             emu_win->init("EKA2L1", vec2(360, 640));
             emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));

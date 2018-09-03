@@ -645,7 +645,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
-        eka2l1::ptr<TInt> aStatus) {
+        eka2l1::ptr<epoc::request_status> aStatus) {
         //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
         memory_system *mem = sys->get_memory_system();
@@ -673,7 +673,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
-        eka2l1::ptr<TInt> aStatus) {
+        eka2l1::ptr<epoc::request_status> aStatus) {
         //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
         memory_system *mem = sys->get_memory_system();

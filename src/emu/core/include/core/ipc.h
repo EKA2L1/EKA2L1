@@ -28,6 +28,10 @@ namespace eka2l1 {
         class thread;
     }
 
+    namespace epoc {
+        struct request_status;
+    }
+
     using thread_ptr = std::shared_ptr<kernel::thread>;
 
     enum class ipc_arg_type {
@@ -92,7 +96,7 @@ namespace eka2l1 {
         session_ptr msg_session;
         int session_ptr_lle = 0;    // This should be null because the server check for it
 
-        int *request_sts;
+        epoc::request_status *request_sts;
 
         // Status of the message, if it's accepted or delivered
         ipc_message_status msg_status;
