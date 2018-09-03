@@ -159,7 +159,7 @@ namespace eka2l1 {
         struct notify_entry {
             std::regex match_pattern;
             notify_type type;
-            int *request_status;
+            epoc::request_status *request_status;
         };
 
         std::vector<notify_entry> notify_entries;
