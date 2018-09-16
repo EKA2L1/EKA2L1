@@ -214,6 +214,56 @@ namespace eka2l1::epoc {
         return slot.data_size;
     }
 
+    BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        process_ptr pr = kern->crr_process();
+
+        auto slot = *pr->get_arg_slot(1);
+
+        if (slot.data_size == -1) {
+            return KErrNotFound;
+        }
+
+        return (slot.data_size / 2) + 1;
+    }
+
+    BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<TDes8> aData) {
+        kernel_system *kern = sys->get_kernel_system();
+        process_ptr pr = kern->crr_process();
+
+        auto slot = *pr->get_arg_slot(1);
+
+        if (slot.data_size == -1) {
+            return;
+        }
+
+        TDes8 *data = aData.get(sys->get_memory_system());
+
+        if (!data) {
+            return;
+        }
+
+        if (data->iMaxLength < slot.data_size) {
+            LOG_WARN("Not enough data to store command line, abort");
+            return;
+        }
+
+        std::u16string arg = u"\0l" + pr->get_exe_path();
+
+        if (!pr->get_cmd_args().empty()) {
+            arg += u" " + pr->get_cmd_args();
+        }
+
+        char src = 0x00;
+        char src2 = 0x6C;
+
+        TUint8 *data_ptr = data->Ptr(sys);
+
+        memcpy(data_ptr + 2, common::ucs2_to_utf8(arg).data(), arg.length());
+        memcpy(data_ptr, &src, 1);
+        memcpy(data_ptr + 1, &src2, 1);
+    }
+
     BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1629,6 +1679,10 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<TDesC8> aDes, TInt aMode) {
+        LOG_TRACE("{}", aDes.get(sys->get_memory_system())->StdString(sys));
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),
@@ -1649,6 +1703,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0E, LibraryLookup),
         BRIDGE_REGISTER(0x15, ProcessResume),
         BRIDGE_REGISTER(0x16, ProcessFilename),
+        BRIDGE_REGISTER(0x17, ProcessCommandLine),
         BRIDGE_REGISTER(0x18, ProcessExitType),
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
@@ -1668,6 +1723,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x4D, SessionSendSync),
         BRIDGE_REGISTER(0x4E, DllTls),
         BRIDGE_REGISTER(0x4F, HalFunction),
+        BRIDGE_REGISTER(0x52, ProcessCommandLineLength),
+        BRIDGE_REGISTER(0x56, DebugPrint),
         BRIDGE_REGISTER(0x6A, HandleClose),
         BRIDGE_REGISTER(0x64, ProcessType),
         BRIDGE_REGISTER(0x68, ThreadCreate),
