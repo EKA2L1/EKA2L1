@@ -2,6 +2,7 @@
 #include <core/vfs.h>
 
 #include <common/cvt.h>
+#include <common/log.h>
 #include <common/flate.h>
 #include <common/path.h>
 
@@ -110,6 +111,8 @@ namespace eka2l1::loader {
                 }
 
                 symfile f = io->open_file(dest, WRITE_MODE | BIN_MODE);
+
+                LOG_TRACE("Installing file {}", common::ucs2_to_utf8(dest));
 
                 size_t left = file.record.len;
                 size_t chunk = 0x2000;

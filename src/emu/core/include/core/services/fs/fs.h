@@ -141,6 +141,11 @@ namespace eka2l1 {
         void synchronize_driver(service::ipc_context ctx);
         void notify_change_ex(service::ipc_context ctx);
 
+        void private_path(service::ipc_context ctx);
+        void mkdir(service::ipc_context ctx);
+
+        void delete_entry(service::ipc_context ctx);
+
         void connect(service::ipc_context ctx) override;
 
         std::unordered_map<uint32_t, fs_node> file_nodes;

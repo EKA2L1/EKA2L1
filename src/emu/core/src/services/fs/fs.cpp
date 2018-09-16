@@ -64,6 +64,11 @@ const TUint KDriveAttExclusive = 0x80000;
 const TUint KDriveAttLocal = 0x01;
 const TUint KDriveAttRom = 0x02;
 const TUint KDriveAttRedirected = 0x04;
+const TUint KDriveAttSubsted=0x08;
+const TUint KDriveAttInternal=0x10;
+const TUint KDriveAttRemovable=0x20;
+
+const TUint KMediaAttWriteProtected=0x08;
 
 namespace eka2l1::epoc {
     enum TFileMode {
@@ -172,6 +177,20 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, set_session_to_private, EFsSessionToPrivate, "Fs::SetSessionToPrivate");
         REGISTER_IPC(fs_server, synchronize_driver, EFsSynchroniseDriveThread, "Fs::SyncDriveThread");
         REGISTER_IPC(fs_server, notify_change_ex, EFsNotifyChangeEx, "Fs::NotifyChangeEx");
+        REGISTER_IPC(fs_server, private_path, EFsPrivatePath, "Fs::PrivatePath");
+        REGISTER_IPC(fs_server, mkdir, EFsMkDir, "Fs::MkDir");
+        REGISTER_IPC(fs_server, delete_entry, EFsDelete, "Fs::Delete");
+    }
+
+    void fs_server::delete_entry(service::ipc_context ctx) {
+        auto path = ctx.get_arg<std::u16string>(0);
+
+        if (!path) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        LOG_WARN("Delete IPC stubbed, no actual delete for {}", common::ucs2_to_utf8(*path));
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::synchronize_driver(service::ipc_context ctx) {
@@ -319,15 +338,14 @@ namespace eka2l1 {
         uint64_t last_pos = vfs_file->tell();
         bool should_reseek = false;
 
-        // Low MaxUint64
-        if (read_pos_provided == (int)(0xffffffffffffffff)) {
-            read_pos = last_pos;
-        } else {
-            read_pos = read_pos_provided;
+        read_pos = last_pos;
 
-            should_reseek = true;
-            vfs_file->seek(read_pos, file_seek_mode::beg);
+        // Low MaxUint64
+        if (read_pos_provided != (int)(0xffffffffffffffff)) {
+            read_pos = read_pos_provided;
         }
+
+        vfs_file->seek(read_pos, file_seek_mode::beg);
 
         uint64_t size = vfs_file->size();
 
@@ -341,12 +359,6 @@ namespace eka2l1 {
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
-
-        // For file need reseek
-        if (should_reseek) {
-            vfs_file->seek(last_pos, file_seek_mode::beg);
-        }
-
         ctx.set_request_status(KErrNone);
     }
 
@@ -613,6 +625,19 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    void fs_server::mkdir(service::ipc_context ctx) {
+        std::optional<std::u16string> dir = ctx.get_arg<std::u16string>(0);
+
+        if (!dir) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        std::string path = ctx.sys->get_io_system()->get(common::ucs2_to_utf8(*dir));
+        fs::create_directories(path);
+
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::entry(service::ipc_context ctx) {
@@ -987,12 +1012,29 @@ namespace eka2l1 {
         EDriveZ
     };
 
+    void fs_server::private_path(service::ipc_context ctx) {
+        std::u16string path = u"\\private\\" 
+            + common::utf8_to_ucs2(common::to_string(std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type()), std::hex))
+            + u"\\";
+
+        ctx.write_arg(0, path);
+        ctx.set_request_status(KErrNone);
+    }
+
     /* Simple for now only, in the future this should be more advance. */
     void fs_server::drive(service::ipc_context ctx) {
         TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
         std::optional<TDriveInfo> info = ctx.get_arg_packed<TDriveInfo>(0);
 
+        if (!info) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
         eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+
+        info->iDriveAtt = 0;
+        info->iMediaAtt = 0;
 
         if (io_drive.media_type == drive_media::none) {
             info->iType = EMediaUnknown;
@@ -1033,18 +1075,24 @@ namespace eka2l1 {
             break;
         }
 
-        switch (io_drive.attribute) {
-        case io_attrib::hidden: {
-            info->iDriveAtt &= KEntryAttHidden;
-            break;
-        }
-
-        default:
-            break;
-        }
-
-        info->iBattery = EBatNotSupported;
         info->iConnectionBusType = EConnectionBusInternal;
+        info->iBattery = EBatNotSupported;
+
+        if (static_cast<int>(io_drive.attribute & io_attrib::hidden)) {
+            info->iDriveAtt |= KDriveAttHidden;
+        }
+
+        if (static_cast<int>(io_drive.attribute & io_attrib::internal)) {
+            info->iDriveAtt |= KDriveAttInternal;
+        }
+
+        if (static_cast<int>(io_drive.attribute & io_attrib::removeable)) {
+            info->iDriveAtt |= KDriveAttLogicallyRemovable;
+        }
+
+        if (static_cast<int>(io_drive.attribute & io_attrib::write_protected)) {
+            info->iMediaAtt |= KMediaAttWriteProtected;
+        }
 
         ctx.write_arg_pkg<TDriveInfo>(0, *info);
         ctx.set_request_status(KErrNone);
