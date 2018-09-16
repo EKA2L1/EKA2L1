@@ -168,11 +168,10 @@ namespace eka2l1::epoc {
 
         if (GetTDesC8Type(des) == EBufCPtr) {
             TBufCPtr8 *buf_ptr = reinterpret_cast<TBufCPtr8 *>(des);
-
             eka2l1::ptr<TBufC8> buf_hle = buf_ptr->iPtr;
 
             TBufC8 *real_buf = static_cast<TBufC8*>(sys->get_ptr_on_addr_space(buf_hle.ptr_address()));
-            real_buf->iLength = len | (EBufC << 28);
+            real_buf->iLength = len;
         }
     }
 

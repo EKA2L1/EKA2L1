@@ -33,27 +33,12 @@ namespace eka2l1 {
         }
 
         std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
+        auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
 
-        if (process_name16->find(u".exe") == std::string::npos) {
-            // Add the executable extension
-            *process_name16 += u".exe";
-        }
+        if (!eimg) {
+            loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*process_name16, false);
 
-        eka2l1::symfile f = ctx.sys->get_io_system()->open_file(*process_name16, READ_MODE | BIN_MODE);
-
-        if (!f) {
-            ctx.set_request_status(KErrNotFound);
-            return;
-        }
-
-        auto temp = loader::parse_eka2img(f, true);
-
-        if (!temp) {
-            f->seek(0, eka2l1::file_seek_mode::beg);
-            auto romimg = loader::parse_romimg(f, ctx.sys->get_memory_system());
-
-            if (romimg && romimg->header.uid3 == info->uid3) {
-                loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*process_name16, false);
+            if (img_ptr && img_ptr->header.uid3 == info->uid3) {
                 ctx.sys->get_lib_manager()->open_romimg(img_ptr);
 
                 int32_t stack_size_img = img_ptr->header.stack_size;
@@ -65,9 +50,6 @@ namespace eka2l1 {
                     static_cast<kernel::owner_type>(info->owner_type));
 
                 img_ptr->header.stack_size = stack_size_img;
-
-                f->close();
-
                 LOG_TRACE("Spawned process: {}, entry point: 0x{:x}", name_process, img_ptr->header.entry_point);
 
                 info->handle = handle;
@@ -75,38 +57,25 @@ namespace eka2l1 {
 
                 ctx.set_request_status(KErrNone);
                 return;
-            }
-
-            f->close();
+            } 
 
             ctx.set_request_status(KErrUnknown);
             return;
         }
 
-        auto res2 = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
-
-        if (!res2) {
-            ctx.set_request_status(KErrUnknown);
-            f->close();
-
-            return;
-        }
-
-        ctx.sys->get_lib_manager()->open_e32img(res2);
+        ctx.sys->get_lib_manager()->open_e32img(eimg);
         ctx.sys->get_lib_manager()->patch_hle();
 
         /* Create process through kernel system */
-        int32_t stack_size_img = res2->header.stack_size;
-        res2->header.stack_size = std::min(res2->header.stack_size, (uint32_t)info->min_stack_size);
+        int32_t stack_size_img = eimg->header.stack_size;
+        eimg->header.stack_size = std::min(eimg->header.stack_size, (uint32_t)info->min_stack_size);
 
         /* Create process through kernel system. */
         uint32_t handle = ctx.sys->get_kernel_system()->create_process(info->uid3, name_process,
-            *process_name16, *process_args, res2, static_cast<kernel::process_priority>(res2->header.priority),
+            *process_name16, *process_args, eimg, static_cast<kernel::process_priority>(eimg->header.priority),
             static_cast<kernel::owner_type>(info->owner_type));
 
-        res2->header.stack_size = stack_size_img;
-
-        f->close();
+        eimg->header.stack_size = stack_size_img;
 
         LOG_TRACE("Spawned process: {}", name_process);
 

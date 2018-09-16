@@ -6,7 +6,10 @@
 #include <common/path.h>
 
 #include <array>
+#include <experimental/filesystem>
 #include <vector>
+
+namespace fs = std::experimental::filesystem;
 
 namespace eka2l1 {
     namespace loader {
@@ -79,7 +82,7 @@ namespace eka2l1 {
 
                 if (!extract_file(io, f, entry)) {
                     fclose(f);
-                    return false;
+                    return true;
                 }
 
                 res += (int)(100 / header.count);

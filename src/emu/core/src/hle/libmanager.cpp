@@ -304,7 +304,11 @@ namespace eka2l1 {
                 romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll", READ_MODE | BIN_MODE);
 
                 if (!romimgf) {
-                    return loader::romimg_ptr(nullptr);
+                    romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".exe", READ_MODE | BIN_MODE);
+
+                    if (!romimgf) {
+                        return loader::romimg_ptr(nullptr);
+                    }
                 }
             }
 
