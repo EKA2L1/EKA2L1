@@ -193,7 +193,7 @@ namespace eka2l1 {
                 img->data[iat_off + i * 4] = expdir[import_block.ordinals[j] - 1];
             }
 
-            crr_idx += import_block.ordinals.size();
+            crr_idx += static_cast<uint32_t>(import_block.ordinals.size());
 
             return true;
         }
@@ -402,7 +402,7 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<void *>(&section.size), 4);
             stream->read(reinterpret_cast<void *>(&section.num_relocs), 4);
 
-            for (int i = 0; i < section.num_relocs; i++) {
+            for (uint32_t i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
                 stream->read(reinterpret_cast<void *>(&reloc_entry.base), 4);
@@ -416,7 +416,7 @@ namespace eka2l1 {
                     stream->read(reinterpret_cast<void *>(&rel_info), 2);
                 }
 
-                i += reloc_entry.rels_info.size();
+                i += static_cast<int>(reloc_entry.rels_info.size());
 
                 section.entries.push_back(reloc_entry);
             }
@@ -548,14 +548,16 @@ namespace eka2l1 {
                 std::vector<char> temp_buf(file_size - img.header.code_offset);
 
                 ef->seek(img.header.code_offset, file_seek_mode::beg);
-                auto bytes_read = ef->read_file(temp_buf.data(), 1, temp_buf.size());
+                size_t bytes_read = ef->read_file(temp_buf.data(), 1, static_cast<uint32_t>(temp_buf.size()));
 
                 if (bytes_read != temp_buf.size()) {
                     LOG_ERROR("File reading unproperly");
                 }
 
                 if (ctype == compress_type::deflate_c) {
-                    flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), temp_buf.size() * 8);
+                    flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), 
+                        static_cast<int>(temp_buf.size() * 8));
+
                     flate::inflater inflate_machine(input);
 
                     inflate_machine.init();
@@ -574,7 +576,7 @@ namespace eka2l1 {
                     std::vector<char> temp(ef->size() - img.header.code_offset);
                     ef->seek(img.header.code_offset, file_seek_mode::beg);
 
-                    ef->read_file(temp.data(), 1, temp.size());
+                    ef->read_file(temp.data(), 1, static_cast<uint32_t>(temp.size()));
 
                     FILE *tempfile = fopen("bytepairTemp.seg", "wb");
                     fwrite(temp.data(), 1, temp.size(), tempfile);
@@ -587,11 +589,11 @@ namespace eka2l1 {
                 }
 
             } else {
-                img.uncompressed_size = file_size;
+                img.uncompressed_size = static_cast<uint32_t>(file_size);
 
                 img.data.resize(file_size);
                 ef->seek(0, file_seek_mode::beg);
-                ef->read_file(img.data.data(), 1, img.data.size());
+                ef->read_file(img.data.data(), 1, static_cast<uint32_t>(img.data.size()));
             }
 
             switch (img.header.cpu) {
@@ -648,7 +650,7 @@ namespace eka2l1 {
 
                 LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
 
-                stream.seek(crr_size, common::beg);
+                stream.seek(static_cast<uint32_t>(crr_size), common::beg);
 
                 import.ordinals.resize(import.number_of_imports);
 

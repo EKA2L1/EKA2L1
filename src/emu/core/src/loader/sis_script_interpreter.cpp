@@ -45,6 +45,8 @@ namespace eka2l1 {
             if (drv == sis_drive::drive_z) {
                 return 'z';
             }
+
+            return 'd';
         }
 
         bool exists(const utf16_str &str) {
@@ -102,7 +104,7 @@ namespace eka2l1 {
                 reinterpret_cast<sis_data_unit *>(install_data.data_units.fields[crr_blck_idx].get())->data_unit.fields[data_idx].get());
             sis_compressed compressed = data->raw_data;
 
-            uint32_t us = ((compressed.len_low) | (compressed.len_high << 32)) - 4;
+            uint64_t us = ((compressed.len_low) | (compressed.len_high << 32)) - 4;
 
             compressed.compressed_data.resize(us);
 
@@ -186,7 +188,7 @@ namespace eka2l1 {
             while (left > 0) {
                 std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
 
-                int grab = left < CHUNK_SIZE ? left : CHUNK_SIZE;
+                int grab = static_cast<int>(left < CHUNK_SIZE ? left : CHUNK_SIZE);
 
                 data_stream->read(reinterpret_cast<char *>(temp_chunk.data()), grab);
 

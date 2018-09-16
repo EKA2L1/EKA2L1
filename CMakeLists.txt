@@ -9,6 +9,12 @@ option(BUILD_TESTS "Build EKA2L1's tests" ON)
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
+if (MSVC)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+    add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+else ()
+endif(MSVC)
+
 add_subdirectory(src/external)
 add_subdirectory(src/emu)
 

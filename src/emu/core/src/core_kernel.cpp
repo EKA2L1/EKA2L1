@@ -169,6 +169,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::process && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (pr_find == objects.end()) {
@@ -443,6 +445,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (thr_find == objects.end()) {
@@ -496,6 +500,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::server && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (svr_find == objects.end()) {

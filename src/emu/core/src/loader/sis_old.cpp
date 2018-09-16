@@ -146,10 +146,10 @@ namespace eka2l1::loader {
                     }
 
                     if (res.header.op & 0x8)
-                        f->write_file(temp.data(), 1, took);
+                        f->write_file(temp.data(), 1, static_cast<uint32_t>(took));
                     else {
                         uint32_t inf;
-                        bool res = flate::inflate_data(&stream, temp.data(), inflated.data(), took, &inf);
+                        bool res = flate::inflate_data(&stream, temp.data(), inflated.data(), static_cast<uint32_t>(took), &inf);
                         f->write_file(inflated.data(), 1, inf);
                     }
 
