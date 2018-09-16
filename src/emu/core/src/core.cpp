@@ -187,8 +187,8 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system::mount(drive_number drv, drive_media media, std::string path) {
-        io.mount(drv, media, path);
+    void system::mount(drive_number drv, const drive_media media, std::string path, const io_attrib attrib) {
+        io.mount(drv, media, path, attrib);
     }
 
     void system::request_exit() {
@@ -204,7 +204,15 @@ namespace eka2l1 {
 
     bool system::install_rpkg(const std::string &path) {
         std::atomic_int holder;
-        return loader::install_rpkg(&io, path, holder);
+        bool res =  loader::install_rpkg(&io, path, holder);
+
+        if (!res) {
+            return false;
+        }
+        
+        // Post build, install folders
+        const std::string install_folder = io.get("Z:\\system\\install\\");
+        return true;
     }
 
     void system::write_configs() {
