@@ -74,8 +74,19 @@ namespace eka2l1 {
 
     enum class io_attrib {
         none,
-        hidden
+        hidden = 0x100,
+        write_protected = 0x200,
+        internal = 0x400,
+        removeable = 0x800
     };
+
+    inline io_attrib operator|(io_attrib a, io_attrib b) {
+        return static_cast<io_attrib>(static_cast<int>(a) | static_cast<int>(b));
+    }
+
+    inline io_attrib operator&(io_attrib a, io_attrib b) {
+        return static_cast<io_attrib>(static_cast<int>(a) & static_cast<int>(b));
+    }
 
     struct io_component {
         io_attrib attribute;
@@ -255,7 +266,8 @@ namespace eka2l1 {
         void shutdown();
 
         // Mount a physical path to a device
-        void mount(const drive_number dvc, const drive_media media, const std::string &real_path);
+        void mount(const drive_number dvc, const drive_media media, const std::string &real_path,
+            const io_attrib attrib = io_attrib::none);
 
         // Unmount a device
         void unmount(const drive_number dvc);
