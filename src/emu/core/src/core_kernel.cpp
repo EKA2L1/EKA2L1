@@ -107,7 +107,7 @@ namespace eka2l1 {
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
 
-                process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
+                process_ptr pr = std::make_shared<kernel::process>(this, mem, img_ptr->header.uid3, name, path16, u"", img_ptr,
                     static_cast<kernel::process_priority>(img_ptr->header.priority));
 
                 get_thread_by_handle(pr->primary_thread)->owning_process(pr);
@@ -134,7 +134,7 @@ namespace eka2l1 {
         libmngr->open_e32img(res2);
         libmngr->patch_hle();
 
-        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", res2,
+        process_ptr pr = std::make_shared<kernel::process>(this, mem, res2->header.uid3, name, path16, u"", res2,
             static_cast<kernel::process_priority>(res2->header.priority));
 
         get_thread_by_handle(pr->primary_thread)->owning_process(pr);

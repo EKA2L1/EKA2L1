@@ -392,7 +392,7 @@ namespace eka2l1 {
         }
     }
 
-    void io_system::mount(const drive_number drv, const drive_media media, const std::string &real_path) {
+    void io_system::mount(const drive_number drv, const drive_media media, const std::string &real_path, const io_attrib attrib) {
         std::lock_guard<std::mutex> guard(mut);
 
         drive &drvm = drives[drv];
@@ -406,6 +406,7 @@ namespace eka2l1 {
         drvm.media_type = media;
         drvm.drive_name = std::string(&drive_dos_char, 1) + ":";
         drvm.real_path = real_path;
+        drvm.attribute = attrib;
     }
 
     void io_system::unmount(const drive_number drv) {
