@@ -196,9 +196,10 @@ namespace eka2l1 {
 
             for (size_t i = page_begin_off - (shared_addr / page_size) + 1; i < page_end_off - (shared_addr / page_size); i++) {
                 global_pointers[i] = mem_ptr(global_pointers[i - 1].get() + page_size
-                    #ifndef WIN32
-                    , _free_mem
-                    #endif
+#ifndef WIN32
+                    ,
+                    _free_mem
+#endif
                 );
             }
 
@@ -225,9 +226,10 @@ namespace eka2l1 {
 #endif
             for (size_t i = page_begin_off - (ram_code_addr / page_size) + 1; i < page_end_off - (ram_code_addr / page_size); i++) {
                 codeseg_pointers[i] = mem_ptr(codeseg_pointers[i - 1].get() + page_size
-                #ifndef WIN32
-                   , _free_mem
-                #endif
+#ifndef WIN32
+                    ,
+                    _free_mem
+#endif
                 );
             }
 
@@ -255,9 +257,10 @@ namespace eka2l1 {
 
             for (size_t i = page_begin_off + 1; i < page_end_off; i++) {
                 current_page_table->pointers[i] = mem_ptr(current_page_table->pointers[i - 1].get() + page_size
-                #ifndef WIN32
-                    , _free_mem
-                #endif
+#ifndef WIN32
+                    ,
+                    _free_mem
+#endif
                 );
             }
         }
@@ -349,6 +352,8 @@ namespace eka2l1 {
             page_end = current_page_table->pages.begin() + end;
         }
 
+        auto page_begin_orginal = page_begin;
+
         for (page_begin; page_begin != page_end; page_begin++) {
             // Only a commited region can have a protection
             if (page_begin->sts != page_status::committed) {
@@ -356,6 +361,7 @@ namespace eka2l1 {
             }
 
             page_begin->page_protection = nprot;
+            cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin, page_begin_orginal) * page_size, page_size);
         }
 
         if (addr.ptr_address() >= shared_addr && addr.ptr_address() < shared_addr + shared_size) {
@@ -504,12 +510,18 @@ namespace eka2l1 {
             page_end = current_page_table->pages.begin() + end;
         }
 
+        const auto page_begin_org = page_begin;
+
         prot nprot = page_begin->page_protection;
 
         for (page_begin; page_begin != page_end; page_begin++) {
             // Can commit on commited region or reserved region
             if (page_begin->sts == page_status::free) {
                 return -1;
+            }
+
+            if (page_begin->sts == page_status::committed) {
+                cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin, page_begin_org) * page_size, page_size);
             }
 
             page_begin->sts = page_status::committed;
