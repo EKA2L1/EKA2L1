@@ -642,6 +642,19 @@ namespace eka2l1::epoc {
             reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
     }
 
+    BRIDGE_FUNC(void, ServerCancel, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        server_ptr server = kern->get_server(aHandle);
+
+        if (!server) {
+            return;
+        }
+
+        server->cancel_async_lle();
+    }
+
     BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -1708,6 +1721,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
         BRIDGE_REGISTER(0x22, ServerReceive),
+        BRIDGE_REGISTER(0x23, ServerCancel),
         BRIDGE_REGISTER(0x24, SetSessionPtr),
         BRIDGE_REGISTER(0x25, SessionSend),
         BRIDGE_REGISTER(0x27, SessionShare),
