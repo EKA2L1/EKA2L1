@@ -52,6 +52,10 @@ namespace eka2l1 {
         : io_component(io_component_type::dir, attrib) {
     }
 
+    bool file::flush() {
+        return true;
+    }
+
     // Class for some one want to access rom
     struct rom_file : public file {
         loader::rom_entry file;
@@ -268,6 +272,12 @@ namespace eka2l1 {
             return input_name;
         }
 
+        bool flush() override {
+            WARN_CLOSE
+
+            return (fflush(file) == 0);
+        }
+
         std::string get_error_descriptor() override {
             return "no";
         }
@@ -291,6 +301,8 @@ namespace eka2l1 {
         std::optional<entry_info> peek_info;
         bool peeking;
 
+        io_attrib attrib;
+
     protected:
         std::string replace_all(std::string str, const std::string &from, const std::string &to) {
             size_t start_pos = 0;
@@ -311,10 +323,11 @@ namespace eka2l1 {
         }
 
     public:
-        physical_directory(const std::string &phys_path, const std::string &vir_path, const std::string &filter)
+        physical_directory(const std::string &phys_path, const std::string &vir_path, const std::string &filter, const io_attrib attrib)
             : filter(construct_regex_string(filter))
             , dir_iterator(phys_path)
             , vir_path(vir_path)
+            , attrib(attrib)
             , peeking(false) {
         }
 
@@ -339,6 +352,11 @@ namespace eka2l1 {
                 }
                 catch (...) {
                     return std::optional<entry_info>{};
+                }
+
+                if (!static_cast<int>(attrib & io_attrib::include_dir) && 
+                    dir_iterator->status().type() == fs::file_type::directory) {
+                    continue;      
                 }
 
                 // If it doesn't meet the filter, continue until find one or there is no one
@@ -599,7 +617,7 @@ namespace eka2l1 {
         return pf;
     }
 
-    std::shared_ptr<directory> io_system::open_dir(std::u16string vir_path) {
+    std::shared_ptr<directory> io_system::open_dir(std::u16string vir_path, const io_attrib attrib) {
         size_t pos_bs = vir_path.find_last_of(u"\\");
         size_t pos_fs = vir_path.find_last_of(u"//");
 
@@ -635,7 +653,7 @@ namespace eka2l1 {
             return std::shared_ptr<directory>(nullptr);
         }
 
-        return std::make_shared<physical_directory>(new_path, common::ucs2_to_utf8(vir_path), filter);
+        return std::make_shared<physical_directory>(new_path, common::ucs2_to_utf8(vir_path), filter, attrib);
     }
 
     drive io_system::get_drive_entry(drive_number drv) {

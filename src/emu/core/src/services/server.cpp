@@ -200,6 +200,11 @@ namespace eka2l1 {
         }
 
         void server::cancel_async_lle() {
+            if (!request_status) {
+                request_own_thread->signal_request();
+                return;
+            }
+
             *request_status = -3; // KErrCancel
 
             request_own_thread->signal_request();
@@ -207,8 +212,6 @@ namespace eka2l1 {
             request_data = nullptr;
             request_own_thread = nullptr;
             request_status = nullptr;
-
-            sys->get_kernel_system()->free_msg(request_msg);
 
             request_msg = nullptr;
         }

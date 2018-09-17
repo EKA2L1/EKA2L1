@@ -96,9 +96,14 @@ namespace eka2l1 {
 
             if (info.object_ix_index < objects.size() && info.object_ix_next_instance < objects.size() - 1) {
                 kernel_obj_ptr obj = objects[info.object_ix_index].object;
+                
+                if (!obj) {
+                    return false;
+                }
+
                 obj->decrease_access_count();
 
-                if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process) {
+                if (obj && obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process) {
                     kern->destroy(obj);
                 }
 

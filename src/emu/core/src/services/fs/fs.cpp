@@ -64,11 +64,11 @@ const TUint KDriveAttExclusive = 0x80000;
 const TUint KDriveAttLocal = 0x01;
 const TUint KDriveAttRom = 0x02;
 const TUint KDriveAttRedirected = 0x04;
-const TUint KDriveAttSubsted=0x08;
-const TUint KDriveAttInternal=0x10;
-const TUint KDriveAttRemovable=0x20;
+const TUint KDriveAttSubsted = 0x08;
+const TUint KDriveAttInternal = 0x10;
+const TUint KDriveAttRemovable = 0x20;
 
-const TUint KMediaAttWriteProtected=0x08;
+const TUint KMediaAttWriteProtected = 0x08;
 
 namespace eka2l1::epoc {
     enum TFileMode {
@@ -163,6 +163,9 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_size, EFsFileSize, "Fs::FileSize");
         REGISTER_IPC(fs_server, file_seek, EFsFileSeek, "Fs::FileSeek");
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
+        REGISTER_IPC(fs_server, file_write, EFsFileWrite, "Fs::FileWrite");
+        REGISTER_IPC(fs_server, file_flush, EFsFileFlush, "Fs::FileFlush");
+        REGISTER_IPC(fs_server, file_rename, EFsFileRename, "Fs::FileRename(Move)");
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
         REGISTER_IPC(fs_server, file_close, EFsFileSubClose, "Fs::FileSubClose");
         REGISTER_IPC(fs_server, is_file_in_rom, EFsIsFileInRom, "Fs::IsFileInRom");
@@ -180,16 +183,112 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, private_path, EFsPrivatePath, "Fs::PrivatePath");
         REGISTER_IPC(fs_server, mkdir, EFsMkDir, "Fs::MkDir");
         REGISTER_IPC(fs_server, delete_entry, EFsDelete, "Fs::Delete");
+        REGISTER_IPC(fs_server, rename, EFsRename, "Fs::Rename(Move)");
+        REGISTER_IPC(fs_server, replace, EFsReplace, "Fs::Replace");
     }
 
-    void fs_server::delete_entry(service::ipc_context ctx) {
-        auto path = ctx.get_arg<std::u16string>(0);
+    void fs_server::replace(service::ipc_context ctx) {
+        auto given_path_target = ctx.get_arg<std::u16string>(0);
+        auto given_path_dest = ctx.get_arg<std::u16string>(1);
 
-        if (!path) {
+        if (!given_path_target || !given_path_dest) {
             ctx.set_request_status(KErrArgument);
         }
 
-        LOG_WARN("Delete IPC stubbed, no actual delete for {}", common::ucs2_to_utf8(*path));
+        std::string target = common::ucs2_to_utf8(*given_path_target);
+        target = fs::absolute(target, session_paths[ctx.msg->msg_session->unique_id()]).string();
+
+        std::string dest = common::ucs2_to_utf8(*given_path_dest);
+        dest = fs::absolute(dest, session_paths[ctx.msg->msg_session->unique_id()]).string();
+
+        io_system *io = ctx.sys->get_io_system();
+        const std::string target_real_path = io->get(target);
+        const std::string dest_real_path = io->get(dest);
+
+        eka2l1::drive dr_tar = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(target)[0] - 'A'));
+        eka2l1::drive dr_dest = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(dest)[0] - 'A'));
+
+        if (static_cast<int>(dr_tar.attribute & io_attrib::write_protected)
+            || static_cast<int>(dr_dest.attribute & io_attrib::write_protected)
+            || fs::is_directory(target_real_path) || fs::is_directory(dest_real_path)) {
+            LOG_ERROR("Trying to replace a file in a protected drive or replace a whole directory (unsupported)");
+            ctx.set_request_status(KErrAccessDenied);
+            return;
+        }
+
+        fs::rename(target_real_path, dest_real_path);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::rename(service::ipc_context ctx) {
+        auto given_path_target = ctx.get_arg<std::u16string>(0);
+        auto given_path_dest = ctx.get_arg<std::u16string>(1);
+
+        if (!given_path_target || !given_path_dest) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        std::string target = common::ucs2_to_utf8(*given_path_target);
+        target = fs::absolute(target, session_paths[ctx.msg->msg_session->unique_id()]).string();
+
+        std::string dest = common::ucs2_to_utf8(*given_path_dest);
+        dest = fs::absolute(dest, session_paths[ctx.msg->msg_session->unique_id()]).string();
+
+        io_system *io = ctx.sys->get_io_system();
+        const std::string target_real_path = io->get(target);
+        const std::string dest_real_path = io->get(dest);
+
+        eka2l1::drive dr_tar = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(target)[0] - 'A'));
+        eka2l1::drive dr_dest = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(dest)[0] - 'A'));
+
+        if (static_cast<int>(dr_tar.attribute & io_attrib::write_protected)
+            || static_cast<int>(dr_dest.attribute & io_attrib::write_protected)) {
+            LOG_ERROR("Trying to rename a file in a protected drive");
+            ctx.set_request_status(KErrAccessDenied);
+            return;
+        }
+
+        fs::rename(target_real_path, dest_real_path);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::delete_entry(service::ipc_context ctx) {
+        auto given_path = ctx.get_arg<std::u16string>(0);
+
+        if (!given_path) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        std::string path = common::ucs2_to_utf8(*given_path);
+        path = fs::absolute(path, session_paths[ctx.msg->msg_session->unique_id()]).string();
+
+        io_system *io = ctx.sys->get_io_system();
+        const std::string real_path = io->get(path);
+
+        eka2l1::drive dr = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(path)[0] - 'A'));
+        if (static_cast<int>(dr.attribute & io_attrib::write_protected)) {
+            LOG_ERROR("Trying to delete a protected drive");
+            ctx.set_request_status(KErrAccessDenied);
+            return;
+        }
+
+        if (!fs::exists(real_path)) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        if (fs::status(real_path).type() != fs::file_type::regular) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        bool success = fs::remove(real_path);
+
+        if (!success) {
+            ctx.set_request_status(KErrGeneral);
+            return;
+        }
+
         ctx.set_request_status(KErrNone);
     }
 
@@ -309,6 +408,143 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
+    void fs_server::file_flush(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+
+        if (!vfs_file->flush()) {
+            ctx.set_request_status(KErrGeneral);
+            return;
+        }
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::file_rename(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+
+        auto new_path = ctx.get_arg<std::u16string>(0);
+
+        if (!new_path) {
+            ctx.set_request_status(KErrArgument);
+        }
+
+        std::string path = common::ucs2_to_utf8(*new_path);
+        path = fs::absolute(path, session_paths[ctx.msg->msg_session->unique_id()]).string();
+
+        io_system *io = ctx.sys->get_io_system();
+        const std::string real_path = io->get(path);
+
+        eka2l1::drive dr = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(path)[0] - 'A'));
+        if (static_cast<int>(dr.attribute & io_attrib::write_protected)) {
+            LOG_ERROR("Trying to delete a protected drive");
+            ctx.set_request_status(KErrAccessDenied);
+            return;
+        }
+
+        if (!fs::exists(real_path)) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        if (fs::status(real_path).type() != fs::file_type::regular) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs::rename(io->get(common::ucs2_to_utf8(vfs_file->file_name())), real_path);
+
+        // Save state of file and reopening it
+        size_t last_pos = vfs_file->tell();
+        int last_mode = vfs_file->file_mode();
+
+        vfs_file->close();
+        vfs_file = io->open_file(common::utf8_to_ucs2(real_path), last_mode);
+        vfs_file->seek(last_pos, file_seek_mode::beg);
+
+        node->vfs_node = std::move(vfs_file);
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::file_write(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        std::optional<std::string> write_data = ctx.get_arg<std::string>(0);
+
+        if (!write_data) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+
+        if (!(node->open_mode & WRITE_MODE)) {
+            ctx.set_request_status(KErrAccessDenied);
+            return;
+        }
+
+        int write_len = *ctx.get_arg<int>(1);
+        int write_pos_provided = *ctx.get_arg<int>(2);
+
+        int write_pos = 0;
+        uint64_t last_pos = vfs_file->tell();
+        bool should_reseek = false;
+
+        write_pos = last_pos;
+
+        // Low MaxUint64
+        if (write_pos_provided != -0x80000000) {
+            write_pos = write_pos_provided;
+        }
+
+        vfs_file->seek(write_pos, file_seek_mode::beg);
+        size_t wrote_size = vfs_file->write_file(&(*write_data)[0], 1, write_len);
+
+        LOG_TRACE("File {} wroted with size: {}", common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
+
+        ctx.set_request_status(KErrNone);
+    }
+
     void fs_server::file_read(service::ipc_context ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
@@ -341,7 +577,7 @@ namespace eka2l1 {
         read_pos = last_pos;
 
         // Low MaxUint64
-        if (read_pos_provided != (int)(0xffffffffffffffff)) {
+        if (read_pos_provided != -0x80000000) {
             read_pos = read_pos_provided;
         }
 
@@ -359,6 +595,8 @@ namespace eka2l1 {
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
+     
+        LOG_TRACE("Readed {} from {}", read_finish_len, read_pos);
         ctx.set_request_status(KErrNone);
     }
 
@@ -709,8 +947,15 @@ namespace eka2l1 {
             return;
         }
 
+        const int attrib_raw = *ctx.get_arg<int>(1);
+        io_attrib attrib = io_attrib::none;
+
+        if (attrib_raw & KEntryAttDir) {
+            attrib = attrib | io_attrib::include_dir;
+        }
+
         fs_node node;
-        node.vfs_node = ctx.sys->get_io_system()->open_dir(*dir);
+        node.vfs_node = ctx.sys->get_io_system()->open_dir(*dir, attrib);
 
         if (!node.vfs_node) {
             ctx.set_request_status(KErrNotFound);
@@ -1013,7 +1258,7 @@ namespace eka2l1 {
     };
 
     void fs_server::private_path(service::ipc_context ctx) {
-        std::u16string path = u"\\private\\" 
+        std::u16string path = u"\\private\\"
             + common::utf8_to_ucs2(common::to_string(std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type()), std::hex))
             + u"\\";
 

@@ -74,6 +74,7 @@ namespace eka2l1 {
 
     enum class io_attrib {
         none,
+        include_dir = 0x50,
         hidden = 0x100,
         write_protected = 0x200,
         internal = 0x400,
@@ -174,6 +175,8 @@ namespace eka2l1 {
         * If the file is not in ROM, this return a null pointer.
         */
         virtual address rom_address() const = 0;
+
+        virtual bool flush();
     };
 
     using symfile = std::shared_ptr<file>;
@@ -277,7 +280,7 @@ namespace eka2l1 {
 
         // Open a file. Return is a shared pointer of the file interface.
         std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
-        std::shared_ptr<directory> open_dir(std::u16string vir_path);
+        std::shared_ptr<directory> open_dir(std::u16string vir_path, const io_attrib attrib = io_attrib::none);
 
         drive get_drive_entry(drive_number drv);
     };
