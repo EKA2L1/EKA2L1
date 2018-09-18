@@ -12,6 +12,8 @@
 #include <common/path.h>
 #include <common/random.h>
 
+#include <date/tz.h>
+
 #ifdef WIN32
 #include <Windows.h>
 #endif
@@ -362,9 +364,36 @@ namespace eka2l1::epoc {
     /* LOCALE */
     /**********************************/
 
+    /*
+    * Warning: It's not possible to set the UTC time and offset in the emulator at the moment.
+    */
+
+    /*! \brief Get the UTC offset in seconds. 
+     *
+     * This was proved to be in seconds by the use of it in us_time.cpp (TTime::HomeTimeSecure), where 
+     * the offset was passed as a constructor argument to TTimeIntervalSeconds.
+     *
+     * \returns The UTC offset, in seconds.
+     */
     BRIDGE_FUNC(TInt, UTCOffset) {
-        // Stubbed
-        return -14400;
+        return date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count();
+    }
+
+    enum : uint64_t {
+        microsecs_per_sec = 1000000,
+        ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec
+    };
+
+    BRIDGE_FUNC(TInt, TimeNow, eka2l1::ptr<TUint64> aTime, eka2l1::ptr<TInt> aUTCOffset) {
+        TUint64 *time = aTime.get(sys->get_memory_system());
+        TInt *offset = aUTCOffset.get(sys->get_memory_system());
+
+        // The time is since EPOC, we need to convert it to first of AD
+        *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
+            + ad_epoc_dist_microsecs;
+        *offset = date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count();
+
+        return KErrNone;
     }
 
     /********************************************/
@@ -1734,6 +1763,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3B, RequestSignal),
         BRIDGE_REGISTER(0x3C, HandleName),
         BRIDGE_REGISTER(0x42, MessageComplete),
+        BRIDGE_REGISTER(0x44, TimeNow),
         BRIDGE_REGISTER(0x4D, SessionSendSync),
         BRIDGE_REGISTER(0x4E, DllTls),
         BRIDGE_REGISTER(0x4F, HalFunction),
