@@ -12,6 +12,15 @@
 #include <common/path.h>
 #include <common/random.h>
 
+#define CURL_STATICLIB
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "Normaliz.lib")
+#endif
+
 #include <date/tz.h>
 
 #ifdef WIN32
@@ -387,6 +396,9 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(TInt, TimeNow, eka2l1::ptr<TUint64> aTime, eka2l1::ptr<TInt> aUTCOffset) {
         TUint64 *time = aTime.get(sys->get_memory_system());
         TInt *offset = aUTCOffset.get(sys->get_memory_system());
+
+        LOG_INFO("EKA2L1 may download timezone database to your Downloads folder if the database doesn't exist");
+        LOG_INFO("Disable this info using core option: disableadd");
 
         // The time is since EPOC, we need to convert it to first of AD
         *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
@@ -1673,6 +1685,12 @@ namespace eka2l1::epoc {
             kernel::owner_type::process);
     }
 
+    /* 
+    * Note: the difference between At and After on hardware is At request still actives when the phone shutdown.
+    * At is extremely important to implement the alarm in S60 (i believe S60v4 is a part based on S60 so it maybe related).
+    * In emulator, it's the same, so i implement it as TimerAffter.
+    */
+
     BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds) {
         kernel_system *kern = sys->get_kernel_system();
         timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
@@ -1682,6 +1700,17 @@ namespace eka2l1::epoc {
         }
 
         timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSeconds);
+    }
+
+    BRIDGE_FUNC(void, TimerAtUtc, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TUint64 aMicroSecondsAt) {
+        kernel_system *kern = sys->get_kernel_system();
+        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+
+        if (!timer) {
+            return;
+        }
+
+        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSecondsAt - std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - ad_epoc_dist_microsecs);
     }
 
     BRIDGE_FUNC(void, TimerCancel, TInt aHandle) {
@@ -1721,8 +1750,15 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    /* DEBUG AND SECURITY */
+
     BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<TDesC8> aDes, TInt aMode) {
         LOG_TRACE("{}", aDes.get(sys->get_memory_system())->StdString(sys));
+    }
+
+    // Let all pass for now
+    BRIDGE_FUNC(TInt, PlatSecDiagnostic, eka2l1::ptr<TAny> aPlatSecInfo) {
+        return KErrNone;
     }
 
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
@@ -1759,6 +1795,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x35, TimerCancel),
         BRIDGE_REGISTER(0x36, TimerAfter),
+        BRIDGE_REGISTER(0x37, TimerAtUtc),
         BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
         BRIDGE_REGISTER(0x3B, RequestSignal),
         BRIDGE_REGISTER(0x3C, HandleName),
@@ -1817,6 +1854,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC8, PropertyFindSetBin),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
+        BRIDGE_REGISTER(0xDB, PlatSecDiagnostic),
         BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd)
