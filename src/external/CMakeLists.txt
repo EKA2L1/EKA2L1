@@ -11,6 +11,10 @@ add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(dynarmic)
 
+option (USE_SYSTEM_TZ_DB "Use system tzdb" ON)
+
+add_subdirectory(date)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPy_DEBUG)
     message("Add debug to prevent crash for PyBind11")
