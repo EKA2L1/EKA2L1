@@ -29,6 +29,8 @@ namespace eka2l1 {
     };
 
     class domainmngr_server: public service::server {
+        // These hierarchies already exist in EKA2L1 database and will be taken into 
+        // use when this is called
         void add_hierarchy(service::ipc_context context);
         void join_hierarchy(service::ipc_context context);
 
