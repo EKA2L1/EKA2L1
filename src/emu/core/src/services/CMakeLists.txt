@@ -6,6 +6,9 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/property.h
     ${CORE_INCLUDE_DIR}/services/applist/op.h
     ${CORE_INCLUDE_DIR}/services/applist/applist.h
+    ${CORE_INCLUDE_DIR}/services/domain/database.h
+    ${CORE_INCLUDE_DIR}/services/domain/defs.h
+    ${CORE_INCLUDE_DIR}/services/domain/domain.h
     ${CORE_INCLUDE_DIR}/services/featmgr/featmgr.h
     ${CORE_INCLUDE_DIR}/services/fs/fs.h
     ${CORE_INCLUDE_DIR}/services/window/window.h
@@ -18,6 +21,7 @@ add_library(services
     server.cpp
     session.cpp
     applist/applist.cpp
+    domain/domain.cpp
     featmgr/featmgr.cpp
     fs/fs.cpp
     loader/loader.cpp

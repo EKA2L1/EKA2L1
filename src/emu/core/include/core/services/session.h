@@ -59,6 +59,10 @@ namespace eka2l1 {
         public:
             session(kernel_system *kern, server_ptr svr, int async_slot_count);
 
+            server_ptr get_server() {
+                return svr;
+            }
+
             void prepare_destroy();
 
             int send_receive_sync(int function, ipc_arg args, epoc::request_status *request_sts);
