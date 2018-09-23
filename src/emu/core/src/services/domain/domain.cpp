@@ -80,7 +80,7 @@ namespace eka2l1 {
 
         if (child_count) {
             domain_ptr next = child;
-        
+
             while (next) {
                 next->set_observe(observe_op);
                 next = next->child;
@@ -124,10 +124,12 @@ namespace eka2l1 {
         domain_ptr dm = std::make_shared<domain>();
 
         std::copy(reinterpret_cast<const std::uint8_t *>(&domain_db), reinterpret_cast<const std::uint8_t *>(&domain_db) + sizeof(decltype(domain_db)),
-            reinterpret_cast<std::uint8_t*>(&(*dm)));
+            reinterpret_cast<std::uint8_t *>(&(*dm)));
 
         dm->child_count = 0;
-
+        dm->transition_count = 0;
+        dm->hierarchy = hier;
+        
         domain_ptr parent = hier->lookup(domain_db.own_id);
 
         if (parent) {
@@ -135,19 +137,20 @@ namespace eka2l1 {
 
             dm->parent = parent;
             dm->peer = parent->child;
-            parent->child = dm;
+            parent->child = std::move(dm);
         }
 
         int prop_handle = kern->create_prop();
         property_ptr prop = kern->get_prop(prop_handle);
 
         prop->first = dm_category;
-        prop->second = make_state_domain_key(hier->id, dm->id);
+        prop->second = make_state_domain_key(hier->id, domain_db.id);
 
-        prop->set(make_state_domain_value(0, dm->init_state));
+        prop->define(service::property_type::int_data, 0);
+        prop->set_int(make_state_domain_value(0, domain_db.init_state));
 
-        dm->trans_timeout_event = timing->register_event("TransTimeoutForDomain" + common::to_string(dm->id),
-            std::bind(&domain::transition_timeout, &(*dm), std::placeholders::_1, std::placeholders::_2));
+        parent->child->trans_timeout_event = timing->register_event("TransTimeoutForDomain" + common::to_string(parent->child->id),
+            std::bind(&domain::transition_timeout, &(*parent->child), std::placeholders::_1, std::placeholders::_2));
     }
 
     hierarchy_ptr construct_hier_from_database(timing_system *timing, kernel_system *kern, const service::database::hierarchy &hier_db) {
@@ -161,6 +164,11 @@ namespace eka2l1 {
         hier->root_domain->id = 0;
         hier->root_domain->parent = nullptr;
         hier->root_domain->peer = nullptr;
+        hier->transition_id = 0;
+        hier->observed_children = 0;
+        hier->observer_started = 0;
+        hier->trans_status = nullptr;
+        hier->observe_status = nullptr;
 
         for (const auto &domain_db : hier_db.domains) {
             construct_domain_from_database(timing, kern, hier, domain_db);
@@ -201,6 +209,10 @@ namespace eka2l1 {
     }
 
     domain_ptr hierarchy::lookup(const std::uint16_t domain_id) {
+        if (domain_id == 0) {
+            return root_domain;
+        }
+
         return root_domain ? root_domain->lookup_child(domain_id) : nullptr;
     }
 
@@ -208,6 +220,12 @@ namespace eka2l1 {
         domain_ptr next = child;
 
         while (next && next->id != domain_id) {
+            domain_ptr dm = next->lookup_child(domain_id);
+
+            if (dm) {
+                return dm;
+            }
+
             next = next->peer;
         }
 
@@ -765,7 +783,8 @@ namespace eka2l1 {
     }
 
     domain_server::domain_server(eka2l1::system *sys, std::shared_ptr<domain_manager> &mngr)
-        : server(sys, "!DmDomainServer", true), mngr(mngr) {
+        : server(sys, "!DmDomainServer", true)
+        , mngr(mngr) {
         /* REGISTER IPC */
         REGISTER_IPC(domain_server, join_domain, EDmDomainJoin, "DmDomain::JoinDomain");
         REGISTER_IPC(domain_server, request_transition_nof, EDmStateRequestTransitionNotification, "DmDomain::ReqTransNof");
@@ -777,7 +796,7 @@ namespace eka2l1 {
 
     domainmngr_server::domainmngr_server(eka2l1::system *sys)
         : server(sys, "!DmManagerServer", true) {
-        mngr = std::shared_ptr<domain_manager>();
+        mngr = std::make_shared<domain_manager>();
         mngr->timing = sys->get_timing_system();
         mngr->kern = sys->get_kernel_system();
 
@@ -787,7 +806,9 @@ namespace eka2l1 {
         init_prop->first = dm_category;
         init_prop->second = dm_init_key;
 
-        init_prop->set(1);
+        init_prop->define(service::property_type::int_data, 0);
+
+        init_prop->set_int(1);
 
         /* REGISTER IPC */
         REGISTER_IPC(domainmngr_server, add_new_hierarchy, EDmHierarchyAdd, "DmManager::AddHierarchy");

@@ -595,7 +595,7 @@ namespace eka2l1 {
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
-     
+
         LOG_TRACE("Readed {} from {}", read_finish_len, read_pos);
         ctx.set_request_status(KErrNone);
     }
@@ -964,6 +964,14 @@ namespace eka2l1 {
 
         node.own_process = ctx.msg->own_thr->owning_process();
         size_t dir_handle = nodes_table.add_node(node);
+
+        struct uid_type {
+            int uid[3];
+        };
+
+        uid_type type = *ctx.get_arg_packed<uid_type>(2);
+
+        LOG_TRACE("UID requested: 0x{}, 0x{}, 0x{}", type.uid[0], type.uid[1], type.uid[2]);
 
         ctx.write_arg_pkg<int>(3, dir_handle);
         ctx.set_request_status(KErrNone);

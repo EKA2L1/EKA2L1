@@ -58,6 +58,18 @@ namespace eka2l1 {
         ESsmStartupSubStateReserved4 = 0x40
     };
 
+    enum TStartupStateIdentifier {
+        EStartupStateUndefined = 0x00,
+        EReservedStartUpState1 = 0x08,
+        EStartupStateCriticalStatic = 0x10,
+        EReservedStartUpState2 = 0x18,
+        EStartupStateCriticalDynamic = 0x20,
+        EStartupStateNetworkingCritical = 0x28,
+        EStartupStateNonCritical = 0x30,
+        EReservedStartUpState4 = 0x38,
+        EReservedStartUpState5 = 0x40
+    };
+
     enum TMemberRequests {
         EDmDomainJoin,                                  // x
         EDmStateAcknowledge,                            // x

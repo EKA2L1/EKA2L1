@@ -60,9 +60,9 @@ namespace eka2l1 {
 
         const static hierarchy startup_hierarchy = {
             hierarchy_startup_id, "StartupHierarchy", { 
-                { kms2_hal_domain_3, 0, "Kms2HALDomain3", ESsmStartupSubStateCriticalStatic, startup_hierarchy_trans_timeout }, 
-                { kms2_kernel_domain_3, kms2_hal_domain_3, "Kms2KernelDomain3", ESsmStartupSubStateCriticalStatic, startup_hierarchy_trans_timeout }, 
-                { kms2_os_services_domain_3, kms2_kernel_domain_3, "Kms2OsServicces3", ESsmStartupSubStateCriticalStatic, startup_hierarchy_trans_timeout }, 
+                { kms2_hal_domain_3, 0, "Kms2HALDomain3", EStartupStateCriticalStatic, startup_hierarchy_trans_timeout }, 
+                { kms2_kernel_domain_3, kms2_hal_domain_3, "Kms2KernelDomain3", EStartupStateCriticalStatic, startup_hierarchy_trans_timeout }, 
+                { kms2_os_services_domain_3, kms2_kernel_domain_3, "Kms2OsServicces3", EStartupStateNonCritical, startup_hierarchy_trans_timeout }, 
                 { kms2_gen_middleware_domain_3, kms2_os_services_domain_3, "Kms2GenMiddlewareDomain3", ESsmStartupSubStateCriticalStatic, startup_hierarchy_trans_timeout },
                 { kms2_gen_middleware_domain_4, kms2_gen_middleware_domain_3, "Kms2GenMiddlewareDomain4", ESsmStartupSubStateCriticalStatic, startup_hierarchy_trans_timeout },
                 { kms2_app_services_domain_3, kms2_gen_middleware_domain_4, "Kms2AppServicesDomain3", ESsmStartupSubStateCriticalStatic, startup_hierarchy_trans_timeout }, 

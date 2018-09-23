@@ -269,7 +269,7 @@ namespace eka2l1 {
             }
 
             if (res->ed.syms.size() > 0) {
-                register_exports(img_name, res->ed.syms);
+                register_exports(img_name, res->ed.syms, sys->get_bool_config("log_exports"));
             }
 
             loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());

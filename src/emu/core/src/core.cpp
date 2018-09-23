@@ -89,7 +89,10 @@ namespace eka2l1 {
 
         for (const auto &force_load_lib : force_load_libs) {
             loader::romimg_ptr img = hlelibmngr.load_romimg(common::utf8_to_ucs2(force_load_lib), false);
-            hlelibmngr.open_romimg(img);
+
+            if (img) {
+                hlelibmngr.open_romimg(img);
+            }
         }
 
         if (!startup_inited) {
@@ -204,12 +207,12 @@ namespace eka2l1 {
 
     bool system::install_rpkg(const std::string &path) {
         std::atomic_int holder;
-        bool res =  loader::install_rpkg(&io, path, holder);
+        bool res = loader::install_rpkg(&io, path, holder);
 
         if (!res) {
             return false;
         }
-        
+
         // Post build, install folders
         const std::string install_folder = io.get("Z:\\system\\install\\");
         return true;
