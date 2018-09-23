@@ -742,7 +742,7 @@ namespace eka2l1 {
 
         current_page_table->pages[rom_addr / page_size] = rom_page;
 
-        for (size_t i = 1; i < common::align(common::MB(41), page_size) / page_size; i++) {
+        for (size_t i = 1; i < common::align(common::MB(42), page_size) / page_size; i++) {
             current_page_table->pointers[rom_addr / page_size + i] = mem_ptr(
                 current_page_table->pointers[rom_addr / page_size + i - 1].get() + page_size, [](uint8_t *) {});
             current_page_table->pages[rom_addr / page_size + i] = rom_page;

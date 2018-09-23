@@ -1567,7 +1567,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        bool res = prop->set(aValue);
+        bool res = prop->set_int(aValue);
 
         if (!res) {
             return KErrArgument;

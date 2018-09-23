@@ -533,6 +533,10 @@ namespace eka2l1 {
         void jit_unicorn::unmap_memory(address addr, size_t size) {
             uc_err err = uc_mem_unmap(engine, addr, size);
 
+            if (addr >= 0x80000000) {
+                LOG_WARN("Trying to unmap ROM");
+            }
+
             if (err != UC_ERR_OK) {
                 LOG_WARN("Error unmapping backing memory at addr: 0x{:x}, err: {}", addr, uc_strerror(err));
             }
