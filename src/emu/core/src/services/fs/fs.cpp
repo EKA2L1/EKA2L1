@@ -355,8 +355,14 @@ namespace eka2l1 {
             return;
         }
 
-        ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
-        ctx.set_request_status(KErrNone);
+        // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
+        if (ctx.sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
+            ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size()); 
+        } else {
+            ctx.write_arg_pkg<uint32_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size()); 
+        }
+
+        ctx.set_request_status(KErrNone);    
     }
 
     void fs_server::file_seek(service::ipc_context ctx) {
@@ -596,7 +602,7 @@ namespace eka2l1 {
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
 
-        LOG_TRACE("Readed {} from {}", read_finish_len, read_pos);
+        LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx.msg->args.args[0]);
         ctx.set_request_status(KErrNone);
     }
 
