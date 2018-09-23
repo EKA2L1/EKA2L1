@@ -53,7 +53,7 @@ namespace eka2l1 {
 
     public:
         void complete_acknowledge_with_err(const int err);
-        void transition_timeout(uint64_t data);
+        void transition_timeout(uint64_t data, const int cycles_late);
 
         explicit domain()
             : observed(false) {}
@@ -64,7 +64,7 @@ namespace eka2l1 {
         void attach_session(session_ptr ss);
         domain_ptr lookup_child(const std::uint16_t id);
 
-        int state() {
+        int get_previous_state() {
             return state_prop->get_int() & 0xffffff;
         }
 
@@ -102,11 +102,10 @@ namespace eka2l1 {
         /* Functions */
         domain_ptr lookup(const std::uint16_t id);
 
-        std::unordered_map<std::uint32_t, bool> acknowledge_pending;
-        std::unordered_map<std::uint32_t, epoc::request_status *> deferral_statuses;
+        std::unordered_map<std::uint64_t, bool> acknowledge_pending;
+        std::unordered_map<std::uint64_t, epoc::request_status *> deferral_statuses;
 
     private:
-        
         void set_state(const std::int32_t next_state, const TDmTraverseDirection new_traverse_dir);
         void add_transition(const std::uint16_t id, const int state, const int err);
         void add_transition_failure(const std::uint16_t id, const int err);
@@ -143,10 +142,10 @@ namespace eka2l1 {
     class domain_server : public service::server {
         friend struct domain;
 
-        std::unordered_map<std::uint32_t, bool> nof_enable;
-        std::unordered_map<std::uint32_t, domain_ptr> control_domains;
+        std::unordered_map<std::uint64_t, bool> nof_enable;
+        std::unordered_map<std::uint64_t, domain_ptr> control_domains;
 
-        domain_manager *mngr;
+        std::shared_ptr<domain_manager> mngr;
 
         void join_domain(service::ipc_context context);
         void request_transition_nof(service::ipc_context context);
@@ -156,13 +155,17 @@ namespace eka2l1 {
         void cancel_defer_acknowledge(service::ipc_context context);
 
     public:
-        explicit domain_server(eka2l1::system *sys);
+        explicit domain_server(eka2l1::system *sys, std::shared_ptr<domain_manager> &mngr);
+
+        std::shared_ptr<domain_manager> &get_domain_manager() {
+            return mngr;
+        }
     };
 
     class domainmngr_server : public service::server {
-        std::unordered_map<std::uint32_t, hierarchy_ptr> control_hierarchies;
+        std::unordered_map<std::uint64_t, hierarchy_ptr> control_hierarchies;
 
-        domain_manager *mngr;
+        std::shared_ptr<domain_manager> mngr;
 
         // These hierarchies already exist in EKA2L1 database and will be taken into
         // use when this is called
@@ -183,5 +186,9 @@ namespace eka2l1 {
 
     public:
         explicit domainmngr_server(eka2l1::system *sys);
+
+        std::shared_ptr<domain_manager> &get_domain_manager() {
+            return mngr;
+        }
     };
 }

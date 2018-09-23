@@ -1,6 +1,8 @@
 #include <core/services/domain/defs.h>
 #include <core/services/domain/domain.h>
 
+#include <core/core.h>
+
 #include <common/cvt.h>
 #include <common/e32inc.h>
 #include <common/log.h>
@@ -23,7 +25,7 @@ namespace eka2l1 {
      * NOTE: In EKA2L1, there is no budget for the deferrals. You can have as many deferrals as you want. 
      * Deferrals are not limited, unlike on Symbian hardware.
      */
-    void domain::transition_timeout(uint64_t data) {
+    void domain::transition_timeout(uint64_t data, const int cycles_late) {
         if (hierarchy->deferral_statuses.size() > 0) {
             // reschedule
             hierarchy->timing->schedule_event(trans_timeout, trans_timeout_event, data);
@@ -120,7 +122,9 @@ namespace eka2l1 {
 
     void construct_domain_from_database(timing_system *timing, kernel_system *kern, hierarchy_ptr hier, const service::database::domain &domain_db) {
         domain_ptr dm = std::make_shared<domain>();
-        std::copy(&domain_db, &domain_db + 1, &(*dm));
+
+        std::copy(reinterpret_cast<const std::uint8_t *>(&domain_db), reinterpret_cast<const std::uint8_t *>(&domain_db) + sizeof(decltype(domain_db)),
+            reinterpret_cast<std::uint8_t*>(&(*dm)));
 
         dm->child_count = 0;
 
@@ -143,12 +147,14 @@ namespace eka2l1 {
         prop->set(make_state_domain_value(0, dm->init_state));
 
         dm->trans_timeout_event = timing->register_event("TransTimeoutForDomain" + common::to_string(dm->id),
-            std::bind(&domain::transition_timeout, &(*dm), std::placeholders::_1));
+            std::bind(&domain::transition_timeout, &(*dm), std::placeholders::_1, std::placeholders::_2));
     }
 
     hierarchy_ptr construct_hier_from_database(timing_system *timing, kernel_system *kern, const service::database::hierarchy &hier_db) {
         hierarchy_ptr hier = std::make_shared<hierarchy>(timing);
-        std::copy(&hier_db, &hier_db + 1, &(*hier));
+
+        std::copy(reinterpret_cast<const std::uint8_t *>(&hier_db), reinterpret_cast<const std::uint8_t *>(&hier_db) + sizeof(decltype(hier_db)),
+            reinterpret_cast<std::uint8_t *>(&(*hier)));
 
         hier->root_domain = std::make_shared<domain>();
 
@@ -266,14 +272,14 @@ namespace eka2l1 {
     }
 
     void domain_server::request_transition_nof(service::ipc_context ctx) {
-        const std::uint32_t sid = ctx.msg->msg_session->unique_id();
+        const std::uint64_t sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = true;
         ctx.set_request_status(KErrNone);
     }
 
     void domain_server::cancel_transition_nof(service::ipc_context ctx) {
-        const std::uint32_t sid = ctx.msg->msg_session->unique_id();
+        const std::uint64_t sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = false;
         ctx.set_request_status(KErrNone);
@@ -308,7 +314,7 @@ namespace eka2l1 {
     }
 
     void domain_server::defer_acknowledge(service::ipc_context ctx) {
-        const std::int32_t ssid = ctx.msg->msg_session->unique_id();
+        const std::uint64_t ssid = ctx.msg->msg_session->unique_id();
         domain_ptr dm = control_domains[ssid];
 
         if (!dm) {
@@ -330,7 +336,7 @@ namespace eka2l1 {
     }
 
     void domain_server::cancel_defer_acknowledge(service::ipc_context ctx) {
-        const std::int32_t ssid = ctx.msg->msg_session->unique_id();
+        const std::uint64_t ssid = ctx.msg->msg_session->unique_id();
         domain_ptr dm = control_domains[ssid];
 
         if (!dm) {
@@ -436,7 +442,7 @@ namespace eka2l1 {
 
         if (observed) {
             if (hierarchy->observe_type & EDmNotifyTransRequest) {
-                hierarchy->add_transition(id, state(), KDmErrOutstanding);
+                hierarchy->add_transition(id, get_previous_state(), KDmErrOutstanding);
 
                 if (hierarchy->is_observe_nof_outstanding()) {
                     hierarchy->finish_observe_request(KErrNone);
@@ -543,7 +549,7 @@ namespace eka2l1 {
 
             if (observed) {
                 if (hierarchy->observe_type & EDmNotifyFail) {
-                    hierarchy->add_transition(id, state(), err);
+                    hierarchy->add_transition(id, get_previous_state(), err);
 
                     if (hierarchy->is_observe_nof_outstanding()) {
                         hierarchy->finish_observe_request(KErrNone);
@@ -560,7 +566,7 @@ namespace eka2l1 {
         } else {
             if (observed) {
                 if (hierarchy->observe_type & EDmNotifyPass) {
-                    hierarchy->add_transition(id, state(), err);
+                    hierarchy->add_transition(id, get_previous_state(), err);
 
                     if (hierarchy->is_observe_nof_outstanding()) {
                         hierarchy->finish_observe_request(KErrNone);
@@ -651,7 +657,7 @@ namespace eka2l1 {
             return;
         }
 
-        ctx.set_request_status(target_hier->transitions_fail.size());
+        ctx.set_request_status(static_cast<int>(target_hier->transitions_fail.size()));
     }
 
     void domainmngr_server::observer_join(service::ipc_context ctx) {
@@ -758,8 +764,8 @@ namespace eka2l1 {
         ctx.set_request_status(target_hier->observed_children);
     }
 
-    domain_server::domain_server(eka2l1::system *sys)
-        : server(sys, "!DmDomainSrv", true) {
+    domain_server::domain_server(eka2l1::system *sys, std::shared_ptr<domain_manager> &mngr)
+        : server(sys, "!DmDomainServer", true), mngr(mngr) {
         /* REGISTER IPC */
         REGISTER_IPC(domain_server, join_domain, EDmDomainJoin, "DmDomain::JoinDomain");
         REGISTER_IPC(domain_server, request_transition_nof, EDmStateRequestTransitionNotification, "DmDomain::ReqTransNof");
@@ -770,7 +776,11 @@ namespace eka2l1 {
     }
 
     domainmngr_server::domainmngr_server(eka2l1::system *sys)
-        : server(sys, "!DmMngrSrv", true) {
+        : server(sys, "!DmManagerServer", true) {
+        mngr = std::shared_ptr<domain_manager>();
+        mngr->timing = sys->get_timing_system();
+        mngr->kern = sys->get_kernel_system();
+
         uint32_t init_prop_handle = kern->create_prop();
         property_ptr init_prop = kern->get_prop(init_prop_handle);
 

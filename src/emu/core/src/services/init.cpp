@@ -19,9 +19,10 @@
  */
 
 #include <core/services/applist/applist.h>
+#include <core/services/domain/domain.h>
 #include <core/services/featmgr/featmgr.h>
-//#include <core/services/fontbitmap/fontbitmap.h>
 #include <core/services/fs/fs.h>
+
 #include <core/services/loader/loader.h>
 #include <core/services/window/window.h>
 
@@ -230,9 +231,13 @@ namespace eka2l1 {
             CREATE_SERVER_D(sys, applist_server);
             CREATE_SERVER(sys, featmgr_server);
             CREATE_SERVER(sys, fs_server);
-            //CREATE_SERVER(sys, fontbitmap_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);
+            CREATE_SERVER(sys, domainmngr_server);
+
+            // Create the domain server
+            temp = std::make_shared<domain_server>(sys, std::dynamic_pointer_cast<domainmngr_server>(temp)->get_domain_manager());
+            sys->get_kernel_system()->add_custom_server(temp);
 
             auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
