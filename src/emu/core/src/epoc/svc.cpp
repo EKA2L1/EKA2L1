@@ -140,6 +140,29 @@ namespace eka2l1::epoc {
         des->Assign(sys, pr_real->name());
     }
 
+    BRIDGE_FUNC(TInt, ProcessGetId, TInt aHandle) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr_real;
+
+        // 0xffff8000 is a kernel mapping for current process
+        if (pr != 0xffff8000) {
+            // Unlike Symbian, process is not a kernel object here
+            // Its handle contains the process's uid
+            pr_real = kern->get_process(pr);
+        } else {
+            pr_real = kern->crr_process();
+        }
+
+        if (!pr_real) {
+            LOG_ERROR("ProcessGetId: Invalid process");
+            return KErrBadHandle;
+        }
+
+        return pr_real->unique_id();
+    }
+
     BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -1785,6 +1808,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
+        BRIDGE_REGISTER(0x13, ProcessGetId),
         BRIDGE_REGISTER(0x15, ProcessResume),
         BRIDGE_REGISTER(0x16, ProcessFilename),
         BRIDGE_REGISTER(0x17, ProcessCommandLine),
