@@ -1761,6 +1761,11 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(eka2l1::ptr<void>, GetGlobalUserData) {
+        LOG_INFO("GetGlobalUserData stubbed with zero");
+        return 0;
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),
@@ -1774,6 +1779,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0080000D, DebugMaskIndex),
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
         BRIDGE_REGISTER(0x00800019, UTCOffset),
+        BRIDGE_REGISTER(0x0080001A, GetGlobalUserData),
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, ObjectNext),
         BRIDGE_REGISTER(0x01, ChunkBase),
