@@ -102,21 +102,23 @@ namespace eka2l1 {
 
         std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
 
-        loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*lib_path, false);
+        loader::e32img_ptr e32img_ptr = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
 
-        if (!img_ptr) {
-            loader::e32img_ptr e32img_ptr = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
+        if (!e32img_ptr) {
+            loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*lib_path);
 
-            if (!e32img_ptr) {
+            if (!img_ptr) {
                 LOG_TRACE("Invalid library provided {}", lib_name);
                 ctx.set_request_status(KErrArgument);
 
                 return;
             }
 
+            ctx.sys->get_lib_manager()->open_romimg(img_ptr);
+
             /* Create process through kernel system. */
             uint32_t handle = ctx.sys->get_kernel_system()->create_library(lib_name,
-                e32img_ptr, static_cast<kernel::owner_type>(info->owner_type));
+                img_ptr, static_cast<kernel::owner_type>(info->owner_type));
 
             LOG_TRACE("Loaded library: {}", lib_name);
 
@@ -127,11 +129,11 @@ namespace eka2l1 {
             ctx.write_arg_pkg(0, *info);
             ctx.set_request_status(KErrNone);
         } else {
-            ctx.sys->get_lib_manager()->open_romimg(img_ptr);
+            ctx.sys->get_lib_manager()->open_e32img(e32img_ptr);
 
             /* Create process through kernel system. */
             uint32_t handle = ctx.sys->get_kernel_system()->create_library(
-                lib_name, img_ptr, static_cast<kernel::owner_type>(info->owner_type));
+                lib_name, e32img_ptr, static_cast<kernel::owner_type>(info->owner_type));
 
             LOG_TRACE("Loaded library: {}", lib_name);
 
