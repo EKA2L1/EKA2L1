@@ -147,10 +147,10 @@ namespace eka2l1::epoc {
         process_ptr pr_real;
 
         // 0xffff8000 is a kernel mapping for current process
-        if (pr != 0xffff8000) {
+        if (aHandle != 0xffff8000) {
             // Unlike Symbian, process is not a kernel object here
             // Its handle contains the process's uid
-            pr_real = kern->get_process(pr);
+            pr_real = kern->get_process(aHandle);
         } else {
             pr_real = kern->crr_process();
         }

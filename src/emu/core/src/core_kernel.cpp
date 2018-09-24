@@ -33,6 +33,7 @@
 #include <core/kernel/thread.h>
 #include <core/loader/romimage.h>
 #include <core/manager/manager.h>
+#include <core/services/posix/posix.h>
 #include <core/ptr.h>
 #include <core/vfs.h>
 
@@ -107,13 +108,9 @@ namespace eka2l1 {
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
 
-                process_ptr pr = std::make_shared<kernel::process>(this, mem, img_ptr->header.uid3, name, path16, u"", img_ptr,
-                    static_cast<kernel::process_priority>(img_ptr->header.priority));
+                uint32_t h = create_process(img_ptr->header.uid3, name, path16, u"", img_ptr,
+                    static_cast<kernel::process_priority>(img_ptr->header.priority), owner);
 
-                get_thread_by_handle(pr->primary_thread)->owning_process(pr);
-                objects.push_back(std::move(pr));
-
-                uint32_t h = create_handle_lastest(owner);
                 run_process(h);
 
                 f->close();
@@ -134,13 +131,8 @@ namespace eka2l1 {
         libmngr->open_e32img(res2);
         libmngr->patch_hle();
 
-        process_ptr pr = std::make_shared<kernel::process>(this, mem, res2->header.uid3, name, path16, u"", res2,
-            static_cast<kernel::process_priority>(res2->header.priority));
-
-        get_thread_by_handle(pr->primary_thread)->owning_process(pr);
-        objects.push_back(std::move(pr));
-
-        uint32_t h = create_handle_lastest(owner);
+        uint32_t h = create_process(res2->header.uid3, name, path16, u"", res2,
+            static_cast<kernel::process_priority>(res2->header.priority), owner);
         run_process(h);
 
         f->close();
@@ -294,6 +286,10 @@ namespace eka2l1 {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
 
+        // Create a POSIX server for the process
+        std::shared_ptr<eka2l1::posix_server> ps_srv = std::make_shared<eka2l1::posix_server>(sys, pr);
+        add_custom_server(std::move(ps_srv));
+
         get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
 
@@ -306,6 +302,10 @@ namespace eka2l1 {
         const kernel::process_priority pri, kernel::owner_type own) {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
+
+        // Create a POSIX server for the process
+        std::shared_ptr<eka2l1::posix_server> ps_srv = std::make_shared<eka2l1::posix_server>(sys, pr);
+        add_custom_server(std::move(ps_srv));
 
         get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));

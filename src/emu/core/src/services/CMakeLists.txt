@@ -14,6 +14,8 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/window/window.h
     ${CORE_INCLUDE_DIR}/services/loader/loader.h
     ${CORE_INCLUDE_DIR}/services/loader/op.h
+    ${CORE_INCLUDE_DIR}/services/posix/posix.h
+    ${CORE_INCLUDE_DIR}/services/posix/op.h
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
@@ -26,6 +28,7 @@ add_library(services
     fs/fs.cpp
     loader/loader.cpp
     window/window.cpp
+    posix/posix.cpp
     ../ipc.cpp)
 
 target_include_directories(services PUBLIC ${CORE_OUTER_INCLUDE_DIR} ${EPOC32_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR}) 
