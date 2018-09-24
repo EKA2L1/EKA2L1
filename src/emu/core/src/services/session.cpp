@@ -79,7 +79,7 @@ namespace eka2l1 {
         }
 
         // This behaves a little different then other
-        int session::send_receive_sync(int function, ipc_arg args, int *request_sts) {
+        int session::send_receive_sync(int function, ipc_arg args, epoc::request_status *request_sts) {
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -110,7 +110,7 @@ namespace eka2l1 {
         }
 
         int session::send_receive_sync(int function, ipc_arg args) {
-            int local_response;
+            epoc::request_status local_response = 0x80000001;
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -126,7 +126,7 @@ namespace eka2l1 {
         }
 
         int session::send_receive_sync(int function) {
-            int local_response;
+            epoc::request_status local_response = 0x80000001;
 
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
@@ -142,7 +142,7 @@ namespace eka2l1 {
             return send_receive_sync(msg);
         }
 
-        int session::send_receive(int function, ipc_arg args, int *request_sts) {
+        int session::send_receive(int function, ipc_arg args, epoc::request_status *request_sts) {
             ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
@@ -159,7 +159,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        int session::send_receive(int function, int *request_sts) {
+        int session::send_receive(int function, epoc::request_status *request_sts) {
             ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
@@ -215,7 +215,7 @@ namespace eka2l1 {
 
             svr->process_accepted_msg();
 
-            return *smsg.real_msg->request_sts;
+            return smsg.real_msg->request_sts->status;
         }
 
         int session::send_receive(ipc_msg_ptr &msg) {

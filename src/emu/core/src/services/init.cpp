@@ -19,9 +19,10 @@
  */
 
 #include <core/services/applist/applist.h>
+#include <core/services/domain/domain.h>
 #include <core/services/featmgr/featmgr.h>
-//#include <core/services/fontbitmap/fontbitmap.h>
 #include <core/services/fs/fs.h>
+
 #include <core/services/loader/loader.h>
 #include <core/services/window/window.h>
 
@@ -49,7 +50,7 @@
     prop->first = category;                                                                         \
     prop->second = key;                                                                             \
     prop->define(service::property_type::int_data, 0);                                            \
-    prop->set(data);
+    prop->set_int(data);
 
 #define DEFINE_INT_PROP(sys, category, key, data)                                      \
     prop_handle = sys->get_kernel_system()->create_prop(); \
@@ -57,7 +58,7 @@
     prop->first = category;                                                            \
     prop->second = key;                                                                \
     prop->define(service::property_type::int_data, 0);           \
-    prop->set(data);
+    prop->set_int(data);
 
 #define DEFINE_BIN_PROP_D(sys, category, key, size, data)                                              \
     uint32_t prop_handle = sys->get_kernel_system()->create_prop(); \
@@ -226,13 +227,22 @@ namespace eka2l1::epoc {
 
 namespace eka2l1 {
     namespace service {
+        // Mostly replace startup process of a normal EPOC startup
         void init_services(system *sys) {
             CREATE_SERVER_D(sys, applist_server);
             CREATE_SERVER(sys, featmgr_server);
             CREATE_SERVER(sys, fs_server);
-            //CREATE_SERVER(sys, fontbitmap_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);
+            CREATE_SERVER(sys, domainmngr_server);
+
+            auto &dmmngr = std::dynamic_pointer_cast<domainmngr_server>(temp)->get_domain_manager();
+            dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
+            dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);
+
+            // Create the domain server
+            temp = std::make_shared<domain_server>(sys, dmmngr);
+            sys->get_kernel_system()->add_custom_server(temp);
 
             auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();

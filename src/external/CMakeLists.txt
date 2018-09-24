@@ -3,6 +3,8 @@ target_include_directories(miniz PUBLIC miniz)
 
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 
+add_definitions(-DCURL_STATICLIB)
+
 add_subdirectory(freetype)
 add_subdirectory(pybind11)
 add_subdirectory(FRSML)
@@ -10,6 +12,7 @@ add_subdirectory(spdlog)
 add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(dynarmic)
+add_subdirectory(date)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPy_DEBUG)

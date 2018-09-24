@@ -108,6 +108,7 @@ namespace eka2l1 {
         std::unordered_map<uint32_t, hal_ptr> hals;
 
         std::vector<std::string> startup_apps;
+        std::vector<std::string> force_load_libs;
 
         bool startup_inited = false;
 
@@ -193,7 +194,9 @@ namespace eka2l1 {
             return cpu;
         }
 
-        void mount(drive_number drv, drive_media media, std::string path);
+        void mount(drive_number drv, const drive_media media, std::string path, 
+            const io_attrib attrib = io_attrib::none);
+            
         void reset();
 
         bool install_rpkg(const std::string &path);

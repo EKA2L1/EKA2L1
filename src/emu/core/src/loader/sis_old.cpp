@@ -2,6 +2,7 @@
 #include <core/vfs.h>
 
 #include <common/cvt.h>
+#include <common/log.h>
 #include <common/flate.h>
 #include <common/path.h>
 
@@ -111,6 +112,8 @@ namespace eka2l1::loader {
 
                 symfile f = io->open_file(dest, WRITE_MODE | BIN_MODE);
 
+                LOG_TRACE("Installing file {}", common::ucs2_to_utf8(dest));
+
                 size_t left = file.record.len;
                 size_t chunk = 0x2000;
 
@@ -146,10 +149,10 @@ namespace eka2l1::loader {
                     }
 
                     if (res.header.op & 0x8)
-                        f->write_file(temp.data(), 1, took);
+                        f->write_file(temp.data(), 1, static_cast<uint32_t>(took));
                     else {
                         uint32_t inf;
-                        bool res = flate::inflate_data(&stream, temp.data(), inflated.data(), took, &inf);
+                        bool res = flate::inflate_data(&stream, temp.data(), inflated.data(), static_cast<uint32_t>(took), &inf);
                         f->write_file(inflated.data(), 1, inf);
                     }
 

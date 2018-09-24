@@ -29,7 +29,7 @@ namespace eka2l1 {
     class io_system;
 
     namespace loader {
-        class sis_controller;
+        struct sis_controller;
     }
 
 	/*! \brief Managing apps. */

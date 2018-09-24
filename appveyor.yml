@@ -17,6 +17,16 @@ install:
   - 7z x -y "newpascal.zip" -o"C:\" > nul
   - appveyor AddMessage -Category Information "Configuring NewPascal..."
   - c:\newpascal\configure.bat
+  - cd c:\tools\vcpkg
+  - vcpkg integrate install
+  - git pull
+  - vcpkg update
+  # Remove conflicting OpenSSL directories
+  - rd /s /q c:\OpenSSL-v11-Win32
+  - rd /s /q c:\OpenSSL-v11-Win64
+  # Install required libraries
+  - vcpkg install curl
+  - cd c:\projects\eka2l1
   - set FPCDIR=c:\newpascal\fpcsrc
   - set PATH=c:\newpascal\fpc\bin\x86_64-win64;%path%
   - git submodule update --init --recursive

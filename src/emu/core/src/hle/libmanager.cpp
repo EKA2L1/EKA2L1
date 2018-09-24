@@ -269,7 +269,7 @@ namespace eka2l1 {
             }
 
             if (res->ed.syms.size() > 0) {
-                register_exports(img_name, res->ed.syms);
+                register_exports(img_name, res->ed.syms, sys->get_bool_config("log_exports"));
             }
 
             loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());
@@ -304,7 +304,11 @@ namespace eka2l1 {
                 romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll", READ_MODE | BIN_MODE);
 
                 if (!romimgf) {
-                    return loader::romimg_ptr(nullptr);
+                    romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".exe", READ_MODE | BIN_MODE);
+
+                    if (!romimgf) {
+                        return loader::romimg_ptr(nullptr);
+                    }
                 }
             }
 

@@ -234,7 +234,7 @@ namespace eka2l1 {
                         if (len > HUFFMAN_MAX_CODELENGTH)
                             return false;
 
-                        uint32_t c = 1 << (HUFFMAN_MAX_CODELENGTH - len);
+                        int c = 1 << (HUFFMAN_MAX_CODELENGTH - len);
 
                         if (c > remain)
                             return false;
@@ -249,7 +249,7 @@ namespace eka2l1 {
             void encoding(const int *huffman, uint32_t num_codes, int *encode_tab) {
                 std::array<uint32_t, HUFFMAN_MAX_CODELENGTH> len_count;
 
-                int i = 0;
+                uint32_t i = 0;
 
                 for (i = 0; i < num_codes; ++i) {
                     int len = huffman[i] - 1;
@@ -337,7 +337,7 @@ namespace eka2l1 {
                 if (left > val) {
                     uint32_t *sub0 = huffman_subtree(ptr, val, lvl); // 0-tree first
                     ptr = huffman_subtree(sub0, val - (ptr - sub0) - 1, lvl); // 1-tree
-                    int branch0 = (uint8_t *)sub0 - (uint8_t *)(ptr - 1);
+                    int branch0 = static_cast<int>((uint8_t *)sub0 - (uint8_t *)(ptr - 1));
                     *--ptr = branch1 | branch0;
                 } else if (left == val) {
                     uint32_t term0 = *val--; // 0-term
@@ -364,7 +364,7 @@ namespace eka2l1 {
                 std::fill(counts.begin(), counts.end(), 0);
                 uint32_t codes = 0;
 
-                int i = 0;
+                uint32_t i = 0;
 
                 for (i = 0; i < num_codes; ++i) {
                     int32_t len = huffman[i];
@@ -583,7 +583,7 @@ namespace eka2l1 {
             return tbits >> 31;
         }
 
-        uint32_t bit_input::read(size_t size) {
+        uint32_t bit_input::read(int size) {
             // Nothing to read
             if (!size)
                 return 0;
@@ -698,7 +698,7 @@ namespace eka2l1 {
                 }
             // Digging things up from the cache: rptr
             useHistory:
-                int tfr = common::min((intptr_t)(end - tout), (intptr_t)len);
+                int tfr = common::min(static_cast<int>(end - tout), static_cast<int>(len));
                 len -= tfr;
 
                 const uint8_t *from = rptr;
@@ -714,7 +714,7 @@ namespace eka2l1 {
                 tree = encode.lit_len;
             };
 
-            return tout - out;
+            return static_cast<int>(tout - out);
         }
 
         void inflater::init() {
@@ -738,7 +738,7 @@ namespace eka2l1 {
 
             // Read chunk by chunk
             for (;;) {
-                int hlen = common::min((intptr_t)rlen, (intptr_t)(limit - avail));
+                int hlen = common::min(static_cast<int>(rlen), static_cast<int>(limit - avail));
 
                 if (hlen && buf) {
                     memcpy(buf, avail, hlen);

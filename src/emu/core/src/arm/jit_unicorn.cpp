@@ -88,7 +88,6 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
     bool write_log = jit->get_lib_manager()->get_sys()->get_bool_config("log_write");
 
     eka2l1::memory_system *mem = jit->get_memory_sys();
-    mem->write(address, &value, size);
 
     if (write_log)
         LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
@@ -532,6 +531,10 @@ namespace eka2l1 {
 
         void jit_unicorn::unmap_memory(address addr, size_t size) {
             uc_err err = uc_mem_unmap(engine, addr, size);
+
+            if (addr >= 0x80000000) {
+                LOG_WARN("Trying to unmap ROM");
+            }
 
             if (err != UC_ERR_OK) {
                 LOG_WARN("Error unmapping backing memory at addr: 0x{:x}, err: {}", addr, uc_strerror(err));

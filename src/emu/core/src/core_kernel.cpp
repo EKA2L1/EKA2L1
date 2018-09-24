@@ -104,31 +104,10 @@ namespace eka2l1 {
             auto romimg = loader::parse_romimg(f, mem);
 
             if (romimg) {
-                // Lib manager needs the system to call HLE function
-                libmngr->init(sys, this, io, mem, kern_ver);
-
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
 
-                if (sys->get_bool_config("force_load_euser")) {
-                    // Use for debugging rom image
-                    loader::romimg_ptr euser_force = libmngr->load_romimg(u"euser", false);
-                    libmngr->open_romimg(euser_force);
-                }
-
-                if (sys->get_bool_config("force_load_bafl")) {
-                    // Use for debugging rom image
-                    loader::romimg_ptr bafl_force = libmngr->load_romimg(u"bafl", false);
-                    libmngr->open_romimg(bafl_force);
-                }
-
-                if (sys->get_bool_config("force_load_efsrv")) {
-                    // Use for debugging rom image
-                    loader::romimg_ptr efsrv_force = libmngr->load_romimg(u"efsrv", false);
-                    libmngr->open_romimg(efsrv_force);
-                }
-
-                process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
+                process_ptr pr = std::make_shared<kernel::process>(this, mem, img_ptr->header.uid3, name, path16, u"", img_ptr,
                     static_cast<kernel::process_priority>(img_ptr->header.priority));
 
                 get_thread_by_handle(pr->primary_thread)->owning_process(pr);
@@ -144,9 +123,6 @@ namespace eka2l1 {
 
             f->close();
             return false;
-        } else {
-            // Lib manager needs the system to call HLE function
-            libmngr->init(sys, this, io, mem, kern_ver);
         }
 
         auto res2 = libmngr->load_e32img(path16);
@@ -158,9 +134,10 @@ namespace eka2l1 {
         libmngr->open_e32img(res2);
         libmngr->patch_hle();
 
-        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", res2,
+        process_ptr pr = std::make_shared<kernel::process>(this, mem, res2->header.uid3, name, path16, u"", res2,
             static_cast<kernel::process_priority>(res2->header.priority));
 
+        get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
 
         uint32_t h = create_handle_lastest(owner);
@@ -192,6 +169,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::process && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (pr_find == objects.end()) {
@@ -466,6 +445,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (thr_find == objects.end()) {
@@ -519,6 +500,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::server && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (svr_find == objects.end()) {

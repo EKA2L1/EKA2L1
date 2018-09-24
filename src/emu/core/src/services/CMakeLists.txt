@@ -1,14 +1,15 @@
 add_library(services 
     ${CORE_INCLUDE_DIR}/services/context.h
     ${CORE_INCLUDE_DIR}/services/init.h
-    ${CORE_INCLUDE_DIR}/services/fast_heap.h
     ${CORE_INCLUDE_DIR}/services/session.h
     ${CORE_INCLUDE_DIR}/services/server.h
     ${CORE_INCLUDE_DIR}/services/property.h
     ${CORE_INCLUDE_DIR}/services/applist/op.h
     ${CORE_INCLUDE_DIR}/services/applist/applist.h
+    ${CORE_INCLUDE_DIR}/services/domain/database.h
+    ${CORE_INCLUDE_DIR}/services/domain/defs.h
+    ${CORE_INCLUDE_DIR}/services/domain/domain.h
     ${CORE_INCLUDE_DIR}/services/featmgr/featmgr.h
-    #${CORE_INCLUDE_DIR}/services/fontbitmap/fontbitmap.h
     ${CORE_INCLUDE_DIR}/services/fs/fs.h
     ${CORE_INCLUDE_DIR}/services/window/window.h
     ${CORE_INCLUDE_DIR}/services/loader/loader.h
@@ -16,15 +17,14 @@ add_library(services
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
-    fast_heap.cpp
     property.cpp
     server.cpp
     session.cpp
     applist/applist.cpp
+    domain/domain.cpp
     featmgr/featmgr.cpp
     fs/fs.cpp
     loader/loader.cpp
-    #fontbitmap/fontbitmap.cpp
     window/window.cpp
     ../ipc.cpp)
 

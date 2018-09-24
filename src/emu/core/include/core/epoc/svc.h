@@ -15,6 +15,7 @@
 #include <core/epoc/svc.h>
 #include <core/epoc/tl.h>
 #include <core/epoc/uid.h>
+#include <core/epoc/reqsts.h>
 
 #include <core/hle/bridge.h>
 
@@ -224,7 +225,7 @@ namespace eka2l1::epoc {
      * \returns Error code. KErrNone if success.
      */
     BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
-        eka2l1::ptr<TInt> aStatus);
+        eka2l1::ptr<epoc::request_status> aStatus);
 
     /*! \brief Start the leave. 
      *

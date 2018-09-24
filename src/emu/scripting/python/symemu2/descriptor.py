@@ -44,12 +44,6 @@ class DescriptorBase(object):
         self.type = DescriptorType(lengthAndType >> 28)
         self.ptr = ptr_switcher.get(self.type, lambda: 'Invalid descriptor type')()
         
-    def type(self):
-        return self.type
-        
-    def length(self):
-        return self.length
-        
 class Descriptor8(DescriptorBase):
     def __init__(self, address):
         DescriptorBase.__init__(self, address)

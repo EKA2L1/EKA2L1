@@ -23,8 +23,8 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <common/random.h>
 #include <common/path.h>
+#include <common/random.h>
 
 #include <core/disasm/disasm.h>
 
@@ -84,6 +84,17 @@ namespace eka2l1 {
     }
 
     uint32_t system::load(uint32_t id) {
+        hlelibmngr.reset();
+        hlelibmngr.init(this, &kern, &io, &mem, get_symbian_version_use());
+
+        for (const auto &force_load_lib : force_load_libs) {
+            loader::romimg_ptr img = hlelibmngr.load_romimg(common::utf8_to_ucs2(force_load_lib), false);
+
+            if (img) {
+                hlelibmngr.open_romimg(img);
+            }
+        }
+
         if (!startup_inited) {
             emu_win->init("EKA2L1", vec2(360, 640));
             emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
@@ -179,8 +190,8 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system::mount(drive_number drv, drive_media media, std::string path) {
-        io.mount(drv, media, path);
+    void system::mount(drive_number drv, const drive_media media, std::string path, const io_attrib attrib) {
+        io.mount(drv, media, path, attrib);
     }
 
     void system::request_exit() {
@@ -196,7 +207,15 @@ namespace eka2l1 {
 
     bool system::install_rpkg(const std::string &path) {
         std::atomic_int holder;
-        return loader::install_rpkg(&io, path, holder);
+        bool res = loader::install_rpkg(&io, path, holder);
+
+        if (!res) {
+            return false;
+        }
+
+        // Post build, install folders
+        const std::string install_folder = io.get("Z:\\system\\install\\");
+        return true;
     }
 
     void system::write_configs() {
@@ -229,6 +248,12 @@ namespace eka2l1 {
                 if (subnode.first.as<std::string>() == "startup") {
                     for (const auto &startup_app : subnode.second) {
                         startup_apps.push_back(startup_app.as<std::string>());
+                    }
+
+                    continue;
+                } else if (subnode.first.as<std::string>() == "force_load") {
+                    for (const auto &startup_app : subnode.second) {
+                        force_load_libs.push_back(startup_app.as<std::string>());
                     }
 
                     continue;

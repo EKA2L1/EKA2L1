@@ -204,9 +204,10 @@ void init() {
     symsys.set_symbian_version_use(ever);
 
     symsys.init();
-    symsys.mount(drive_c, drive_media::physical, mount_c);
-    symsys.mount(drive_e, drive_media::physical,  mount_e);
-    symsys.mount(drive_z, drive_media::rom, mount_z);
+    symsys.mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
+    symsys.mount(drive_e, drive_media::physical,  mount_e, io_attrib::removeable);
+    symsys.mount(drive_z, drive_media::rom, 
+        mount_z, io_attrib::internal | io_attrib::write_protected);
 
     bool res = symsys.load_rom(rom_path);
 }
