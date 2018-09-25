@@ -183,7 +183,7 @@ namespace eka2l1 {
     if (closed)    \
         LOG_WARN("File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
 
-        physical_file(utf16_str path, int mode) { init(path, mode); }
+        physical_file(utf16_str vfs_path, utf16_str real_path, int mode) { init(vfs_path, real_path, mode); }
 
         ~physical_file() {
             shutdown();
@@ -193,12 +193,12 @@ namespace eka2l1 {
             return fmode;
         }
 
-        void init(utf16_str inp_name, int mode) {
+        void init(utf16_str vfs_path, utf16_str real_path, int mode) {
             closed = false;
 
             const char *cmode = translate_mode(mode);
-            file = fopen(common::ucs2_to_utf8(inp_name).c_str(), cmode);
-            input_name = std::move(inp_name);
+            file = fopen(common::ucs2_to_utf8(real_path).c_str(), cmode);
+            input_name = std::move(vfs_path);
             fmode = mode;
 
             if (file) {
@@ -608,7 +608,7 @@ namespace eka2l1 {
         }
 
         auto new_path = get(path_u8);
-        auto pf = std::make_shared<physical_file>(common::utf8_to_ucs2(new_path), mode);
+        auto pf = std::make_shared<physical_file>(vir_path, common::utf8_to_ucs2(new_path), mode);
 
         if (!pf->file) {
             return std::shared_ptr<file>(nullptr);
@@ -661,6 +661,6 @@ namespace eka2l1 {
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {
-        return std::make_shared<physical_file>(common::utf8_to_ucs2(path), mode);
+        return std::make_shared<physical_file>(common::utf8_to_ucs2(path), common::utf8_to_ucs2(path), mode);
     }
 }

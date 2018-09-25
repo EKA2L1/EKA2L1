@@ -24,6 +24,9 @@
 #include <core/services/server.h>
 
 #include <core/ptr.h>
+#include <core/vfs.h>
+
+#include <vector>
 
 namespace eka2l1 {
     struct posix_params {
@@ -40,12 +43,40 @@ namespace eka2l1 {
         int addr;
     };
 
+    using fid = std::size_t;
+
     class posix_file_manager {
-        
+        enum {
+            MAX_FID = 32768
+        };
+
+        std::vector<symfile> files;
+        io_system *io;
+
+    protected:
+        fid get_lowest_useable_fid();
+
+    public:
+        explicit posix_file_manager(io_system *io);
+
+        fid open(const std::string &path, const int mode, int &terrno);
+        void close(const fid id, int &terrno);
+        size_t seek(const fid id, const int off, const eka2l1::file_seek_mode whine, int &terrno);
+
+        std::optional<fid> duplicate(const fid id, int &terrno);
+        int duplicate_provide_fid(const fid newid, const fid oldid);
+
+        size_t tell(const fid id, int &terrno);
+        size_t read(const fid id, const size_t len, char *buf, int &terrno);
+        size_t write(const fid id, const size_t len, char *buf, int &terrno);
+
+        void stat(const fid id, struct stat *filestat, int &terrno);
     };
 
     class posix_server : public service::server {
         process_ptr associated_process;
+        posix_file_manager file_manager;
+
         std::u16string working_dir;
 
         void open(service::ipc_context ctx);
@@ -53,9 +84,15 @@ namespace eka2l1 {
         void lseek(service::ipc_context ctx);
         void fstat(service::ipc_context ctx);
 
+        void read(service::ipc_context ctx);
+        void write(service::ipc_context ctx);
+
         /*!\brief Change the current directory of the server. */
         void chdir(service::ipc_context ctx);
         void mkdir(service::ipc_context ctx);
+
+        void dup(service::ipc_context ctx);
+        void dup2(service::ipc_context ctx);
 
     public:
         posix_server(eka2l1::system *sys, process_ptr &associated_process);
