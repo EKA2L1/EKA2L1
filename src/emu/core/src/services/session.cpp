@@ -93,8 +93,6 @@ namespace eka2l1 {
 
             send_receive(msg);
 
-            LOG_TRACE("Sending to {}, function: 0x{:x}", this->svr->name(), msg->function);
-
             if (msg->function == -1) {
                 struct version {
                     uint8_t major;

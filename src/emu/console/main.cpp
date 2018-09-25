@@ -39,6 +39,7 @@ std::string sis_install_path = "-1";
 uint8_t adrive;
 
 eka2l1::system symsys;
+eka2l1::arm::jitter_arm_type jit_type = decltype(jit_type)::unicorn;
 epocver ever = epocver::epoc9;
 
 YAML::Node config;
@@ -144,6 +145,12 @@ void read_config() {
 
         rom_path = config["rom_path"].as<std::string>();
         ever = (epocver)(config["epoc_ver"].as<int>());
+
+        const std::string jit_type_raw = config["jitter"].as<std::string>();
+
+        if (jit_type_raw == "dynarmic") {
+            jit_type = decltype(jit_type)::dynarmic;
+        }
     } catch (...) {
         //LOG_INFO("Can not load config, use default configuration");
         return;
@@ -202,11 +209,12 @@ void do_args() {
 
 void init() {
     symsys.set_symbian_version_use(ever);
+    symsys.set_jit_type(jit_type);
 
     symsys.init();
     symsys.mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
-    symsys.mount(drive_e, drive_media::physical,  mount_e, io_attrib::removeable);
-    symsys.mount(drive_z, drive_media::rom, 
+    symsys.mount(drive_e, drive_media::physical, mount_e, io_attrib::removeable);
+    symsys.mount(drive_z, drive_media::rom,
         mount_z, io_attrib::internal | io_attrib::write_protected);
 
     bool res = symsys.load_rom(rom_path);

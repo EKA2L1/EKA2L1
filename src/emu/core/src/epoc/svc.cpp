@@ -461,7 +461,7 @@ namespace eka2l1::epoc {
         *msg->request_sts = aVal;
         msg->own_thr->signal_request();
 
-        LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
+        // LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
     }

@@ -136,6 +136,10 @@ namespace eka2l1 {
             io.set_epoc_version(ever);
         }
 
+        void set_jit_type(const arm::jitter_arm_type type) {
+            jit_type = type;
+        }
+
         loader::rom &get_rom_info() {
             return romf;
         }
