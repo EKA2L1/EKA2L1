@@ -361,7 +361,7 @@ namespace eka2l1 {
             }
 
             page_begin->page_protection = nprot;
-            cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin, page_begin_orginal) * page_size, page_size);
+            cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin_orginal, page_begin) * page_size, page_size);
         }
 
         if (addr.ptr_address() >= shared_addr && addr.ptr_address() < shared_addr + shared_size) {
@@ -521,7 +521,7 @@ namespace eka2l1 {
             }
 
             if (page_begin->sts == page_status::committed) {
-                cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin, page_begin_org) * page_size, page_size);
+                cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin_org, page_begin) * page_size, page_size);
             }
 
             page_begin->sts = page_status::committed;
