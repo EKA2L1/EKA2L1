@@ -19,18 +19,10 @@ add_library(eka2l1_api SHARED core/include/core/core_api.h
 target_include_directories(eka2l1_api PUBLIC core/include)
 target_link_libraries(eka2l1_api PUBLIC core common)
 
-add_executable(EKA2L1_CONS_API_TEST console/api_example.cpp)
-target_include_directories(EKA2L1_CONS_API_TEST PUBLIC core/include)
-target_link_libraries(EKA2L1_CONS_API_TEST PUBLIC eka2l1_api)
-
 set_target_properties(eka2l1_api PROPERTIES OUTPUT_NAME eka2l1_api
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin") 
 
-set_target_properties(EKA2L1_CONS_API_TEST PROPERTIES OUTPUT_NAME eka2l1_cons_api_test
-	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-	
 if (WIN32)
 	add_custom_command(
 			TARGET EKA2L1_CONS
