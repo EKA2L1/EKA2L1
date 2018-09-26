@@ -33,7 +33,7 @@ install:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
-  - cmake -G "Visual Studio 15 2017 Win64" ..
+  - cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake ..
   - cd ..
 
 build_script:
