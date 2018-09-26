@@ -5,6 +5,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 option(BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(BUILD_TESTS "Build EKA2L1's tests" ON)
+option(BUILD_EXAMPLES "Build EKA2L1's examples" ON)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -24,4 +25,8 @@ endif()
 
 if (BUILD_TESTS)
     add_subdirectory(src/tests)
+endif()
+
+if (BUILD_EXAMPLES)
+    add_subdirectory(src/examples)
 endif()
