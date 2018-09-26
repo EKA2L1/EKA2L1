@@ -19,7 +19,7 @@ add_library(eka2l1_api SHARED core/include/core/core_api.h
 target_include_directories(eka2l1_api PUBLIC core/include)
 target_link_libraries(eka2l1_api PUBLIC core common)
 
-add_executable(EKA2L1_CONS_API_TEST console/test.cpp)
+add_executable(EKA2L1_CONS_API_TEST console/api_example.cpp)
 target_include_directories(EKA2L1_CONS_API_TEST PUBLIC core/include)
 target_link_libraries(EKA2L1_CONS_API_TEST PUBLIC eka2l1_api)
 
@@ -44,10 +44,6 @@ add_custom_command(
 	TARGET EKA2L1_CONS
 			POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:EKA2L1_CONS>/scripts"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comic.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comicbd.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comici.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/lazarus/comicz.ttf" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/panic.json" "$<TARGET_FILE_DIR:EKA2L1_CONS>"
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/domaincli.py" "$<TARGET_FILE_DIR:EKA2L1_CONS>/scripts/"
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/utils/leavehook.py" "$<TARGET_FILE_DIR:EKA2L1_CONS>/scripts/")

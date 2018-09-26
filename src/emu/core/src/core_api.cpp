@@ -133,16 +133,18 @@ int get_app_installed(int sys, int idx, char *name, int *name_len, unsigned int 
 }
 
 // Mount the system with a real folder
-int mount_symbian_system(int sys, const char *drive, const char *real_path) {
+EKA2L1_API int mount_symbian_system(int sys, const int attrib, const int media_type, const int drive,
+    const char *real_path) {
     if (sys > syses.size()) {
         return -1;
     }
 
     sys_ptr &symsys = syses[sys - 1];
 
-    symsys->mount(strncmp(drive, "C:", 2) == 0 ? drive_c : ((strncmp(drive, "E:", 2) == 0) ? drive_e : drive_z),
-        drive_media::physical,
-        real_path);
+    symsys->mount(static_cast<drive_number>(drive),
+        static_cast<drive_media>(media_type),
+        real_path,
+        static_cast<io_attrib>(attrib));
 
     return 0;
 }

@@ -279,15 +279,14 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::load_context(const thread_context &ctx) {
-            jit->SetCpsr(ctx.cpsr);
-
             for (uint8_t i = 0; i < 16; i++) {
                 jit->Regs()[i] = ctx.cpu_registers[i];
             }
 
-            set_pc(ctx.pc);
             set_sp(ctx.sp);
+            set_pc(ctx.pc);
             set_lr(ctx.lr);
+            set_cpsr(ctx.cpsr);       
         }
 
         void jit_dynarmic::set_entry_point(address ep) {

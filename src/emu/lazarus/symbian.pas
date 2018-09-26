@@ -84,12 +84,14 @@ end;
 
 procedure TSymbian.MountC(path: AnsiString);
 begin
-  SymbianSystemMount(system, 'C:', PChar(path));
+  SymbianSystemMount(system, VFS_ATTRIB_INTERNAL, VFS_MEDIA_PHYSICAL,
+      VFS_DRIVE_C, PChar(path));
 end;
 
 procedure TSymbian.MountE(path: AnsiString);
 begin
-  SymbianSystemMount(system, 'E:', PChar(path));
+  SymbianSystemMount(system, VFS_ATTRIB_INTERNAL, VFS_MEDIA_PHYSICAL,
+      VFS_DRIVE_E, PChar(path));
 end;
 
 function TSymbian.GetApp(idx: longint; id: PLongWord): UnicodeString;

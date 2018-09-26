@@ -12,6 +12,9 @@ add_subdirectory(spdlog)
 add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(dynarmic)
+
+set (ENABLE_DATE_TESTING "Enable testing for Date" OFF)
+
 add_subdirectory(date)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -48,13 +51,6 @@ target_include_directories(imgui PUBLIC imgui)
 add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
 add_library(unicorn INTERFACE)
-
-#add_library(imgui_igs
-#	Imgui-IGS-Snippets/ImguiWindowsFileIO.hpp
-#	Imgui-IGS-Snippets/ImguiWindowsFileIO.cpp)
-
-#target_link_libraries(imgui_igs PRIVATE imgui)
-#target_include_directories(imgui_igs PUBLIC Imgui-IGS-Snippets)
 
 add_library(simini INTERFACE)
 target_include_directories(simini INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/simpleini")
