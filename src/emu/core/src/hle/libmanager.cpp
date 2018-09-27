@@ -33,6 +33,10 @@
 #include <core/core.h>
 #include <core/core_kernel.h>
 
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
+
 namespace eka2l1 {
     namespace hle {
         void lib_manager::init(system *syss, kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
@@ -191,7 +195,7 @@ namespace eka2l1 {
 
                 for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
                     addr_map.insert(std::make_pair(addrs[i], libids[i]));
-                    
+
                     sys->get_manager_system()->get_script_manager()->patch_sid_breakpoints(libids[i], addrs[i]);
 
                     std::string name_imp = get_func_name(libids[i]).value();
@@ -242,27 +246,40 @@ namespace eka2l1 {
             bool is_rom = false;
             std::u16string path;
 
-            // I'm so sorry
-            if (!img) {
-                img = io->open_file(u"C:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
+            const std::map<std::u16string, std::u16string> patterns = {
+                { u"Z:\\sys\\bin\\", u".dll" },
+                { u"Z:\\sys\\bin\\", u".exe" },
+                { u"C:\\sys\\bin\\", u".dll" },
+                { u"C:\\sys\\bin\\", u".exe" },
+                { u"E:\\sys\\bin\\", u".dll" },
+                { u"E:\\sys\\bin\\", u".exe" }
+            };
 
-                if (!img) {
-                    img = io->open_file(u"E:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
+            std::optional<loader::eka2img> res;
 
-                    if (!img) {
-                        img = io->open_file(u"Z:\\sys\\bin\\" + img_name + u".dll", READ_MODE | BIN_MODE);
+            if (img) {
+                res = loader::parse_eka2img(img);
 
-                        if (!img) {
-                            return loader::e32img_ptr(nullptr);
-                        } else {
-                            xip = true;
-                            is_rom = true;
+                if (!res) {
+                    img->close();
+                    return nullptr;
+                }
+            } else {
+                for (const auto &pattern : patterns) {
+                    std::string full = common::ucs2_to_utf8(pattern.first + img_name + pattern.second);
+
+                    if (fs::exists(io->get(full))) {
+                        img = io->open_file(common::utf8_to_ucs2(full), READ_MODE | BIN_MODE);
+                        res = loader::parse_eka2img(img);
+
+                        img->close();
+
+                        if (res) {
+                            break;
                         }
                     }
                 }
             }
-
-            auto res = loader::parse_eka2img(img);
 
             if (!res) {
                 return loader::e32img_ptr(nullptr);
@@ -275,7 +292,7 @@ namespace eka2l1 {
             loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());
 
             if (e32imgs_cache.find(pimg->header.check) != e32imgs_cache.end()) {
-                img->close();
+                int a = 5;
                 return e32imgs_cache[pimg->header.check].img;
             }
 
@@ -288,7 +305,6 @@ namespace eka2l1 {
             uint32_t check = info.img->header.check;
 
             e32imgs_cache.insert(std::make_pair(info.img->header.check, std::move(info)));
-            img->close();
 
             return e32imgs_cache[check].img;
         }
@@ -300,7 +316,7 @@ namespace eka2l1 {
                 romimgf = io->open_file(rom_name, READ_MODE | BIN_MODE);
             }
 
-            if (!romimgf) {    
+            if (!romimgf) {
                 romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll", READ_MODE | BIN_MODE);
 
                 if (!romimgf) {
@@ -335,7 +351,7 @@ namespace eka2l1 {
 
         // Open the image code segment
         void lib_manager::open_e32img(loader::e32img_ptr &img) {
-            auto res = e32imgs_cache.find(img->header.check);
+            auto &res = e32imgs_cache.find(img->header.check);
 
             if (res == e32imgs_cache.end()) {
                 LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
@@ -344,8 +360,8 @@ namespace eka2l1 {
 
             // If the image is not XIP, means that it's unloaded or not loaded
             if (!res->second.is_xip) {
-                loader::load_eka2img(*img, mem, kern, *this);
                 res->second.is_xip = true;
+                loader::load_eka2img(*img, mem, kern, *this);
             }
 
             res->second.loader.push_back(kern->crr_process());
@@ -353,7 +369,7 @@ namespace eka2l1 {
 
         // Close the image code segment. Means that the image will be unloaded, XIP turns to false
         void lib_manager::close_e32img(loader::e32img_ptr &img) {
-            auto res = e32imgs_cache.find(img->header.check);
+            auto &res = e32imgs_cache.find(img->header.check);
 
             if (res == e32imgs_cache.end()) {
                 LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
