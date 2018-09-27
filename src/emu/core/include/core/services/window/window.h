@@ -4,14 +4,14 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
-
-#include <core/services/server.h>
 #include <vector>
 
-#include <core/ptr.h>
-
 #include <common/queue.h>
+
+#include <core/ptr.h>
 #include <core/drivers/screen_driver.h>
+#include <core/services/server.h>
+
 
 enum {
     cmd_slot = 0,
@@ -56,7 +56,10 @@ namespace eka2l1::epoc {
     };
 
     class window_server_client;
-    using window_server_client_ptr = window_server_client*;
+    using window_server_client_ptr = window_server_client *;
+
+    struct screen_device;
+    using screen_device_ptr = std::shared_ptr<epoc::screen_device>;
 
     struct window_client_obj {
         uint32_t id;
@@ -74,6 +77,8 @@ namespace eka2l1::epoc {
     /*! \brief Base class for all window. */
     struct window : public window_client_obj {
         eka2l1::cp_queue<window_ptr> childs;
+        screen_device_ptr dvc;
+
         window_ptr parent;
         uint16_t priority;
         uint64_t id;
@@ -105,30 +110,32 @@ namespace eka2l1::epoc {
         }
 
         window(window_server_client_ptr client)
-            : type(window_type::normal)
-            , window_client_obj(client) {}
+            : window_client_obj(client)
+            , type(window_type::normal)
+            , dvc(nullptr) {}
 
         window(window_server_client_ptr client, window_type type)
-            : type(type)
-            , window_client_obj(client) {}
+            : window_client_obj(client)
+            , type(type)
+            , dvc(nullptr) {}
+
+        window(window_server_client_ptr client, screen_device_ptr dvc, window_type type)
+            : window_client_obj(client)
+            , type(type)
+            , dvc(dvc) {}
     };
 
-    struct screen_device: public window_client_obj {
+    struct screen_device : public window_client_obj {
         eka2l1::driver::screen_driver_ptr driver;
 
         screen_device(window_server_client_ptr client, eka2l1::driver::screen_driver_ptr driver);
-
         void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) override;
     };
 
-    using screen_device_ptr = std::shared_ptr<epoc::screen_device>;
-
     struct window_group : public epoc::window {
-        screen_device_ptr dvc;
-
-        window_group(window_server_client_ptr client, screen_device_ptr &dvc)
-            : window(client, window_type::group)
-            , dvc(dvc) {}
+        window_group(window_server_client_ptr client, screen_device_ptr dvc)
+            : window(client, dvc, window_type::group) {
+        }
 
         eka2l1::vec2 get_screen_size() const {
             return dvc->driver->get_window_size();
@@ -138,9 +145,21 @@ namespace eka2l1::epoc {
         }
     };
 
+    struct graphic_context : public window_client_obj {
+        window_ptr attached_window;
+
+        void active(service::ipc_context context, ws_cmd cmd);
+        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+
+        explicit graphic_context(window_server_client_ptr client, screen_device_ptr scr = nullptr,
+            window_ptr win = nullptr);
+    };
+
     using window_group_ptr = std::shared_ptr<epoc::window_group>;
 
     class window_server_client {
+        friend struct window_client_obj;
+
         session_ptr guest_session;
 
         std::vector<window_client_obj_ptr> objects;
@@ -150,6 +169,8 @@ namespace eka2l1::epoc {
 
         void create_screen_device(service::ipc_context ctx, ws_cmd cmd);
         void create_window_group(service::ipc_context ctx, ws_cmd cmd);
+        void create_graphic_context(service::ipc_context ctx, ws_cmd cmd);
+
         void restore_hotkey(service::ipc_context ctx, ws_cmd cmd);
 
         void init_device(epoc::window_ptr &win);
@@ -159,6 +180,9 @@ namespace eka2l1::epoc {
         void execute_command(service::ipc_context ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds);
         void parse_command_buffer(service::ipc_context ctx);
+
+        std::uint32_t add_object(window_client_obj_ptr obj);
+        window_client_obj_ptr get_object(const std::uint32_t handle);
 
         explicit window_server_client(session_ptr guest_session);
     };
@@ -171,6 +195,8 @@ namespace eka2l1 {
 
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
+
+        void on_unhandled_opcode(service::ipc_context ctx) override;
 
     public:
         window_server(system *sys);

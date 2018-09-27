@@ -22,6 +22,9 @@
 #include <core/services/window/window.h>
 
 #include <common/log.h>
+#include <common/e32inc.h>
+
+#include <e32err.h>
 
 #include <core/core.h>
 #include <optional>
@@ -30,8 +33,13 @@
 #include <core/drivers/screen_driver.h>
 
 namespace eka2l1::epoc {
+    enum {
+        base_handle = 0x40000000
+    };
+
     window_client_obj::window_client_obj(window_server_client_ptr client)
-        : client(client) {
+        : client(client)
+        , id(client->objects.size() + base_handle + 1) {
     }
 
     screen_device::screen_device(window_server_client_ptr client, eka2l1::driver::screen_driver_ptr driver)
@@ -68,6 +76,37 @@ namespace eka2l1::epoc {
         }
     }
 
+    void graphic_context::active(service::ipc_context context, ws_cmd cmd) {
+        const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+        attached_window = std::dynamic_pointer_cast<epoc::window>(client->get_object(window_to_attach_handle));
+
+        // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
+        // this.
+        context.set_request_status(attached_window->dvc->id);
+    }
+
+    void graphic_context::execute_command(service::ipc_context context, ws_cmd cmd) {
+        TWsGcOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+
+        switch (op) {
+        case EWsGcOpActivate: {
+            active(context, cmd);
+            break;
+        }
+
+        default: {
+            LOG_WARN("Unimplemented opcode for graphics context operation: 0x{:x}", cmd.header.op);
+            break;
+        }
+        }
+    }
+
+    graphic_context::graphic_context(window_server_client_ptr client, screen_device_ptr scr,
+        window_ptr win)
+        : window_client_obj(client)
+        , attached_window(win) {
+    }
+
     void window_server_client::parse_command_buffer(service::ipc_context ctx) {
         std::optional<std::string> dat = ctx.get_arg<std::string>(cmd_slot);
 
@@ -87,6 +126,8 @@ namespace eka2l1::epoc {
 
             if (cmd.header.op & 0x8000) {
                 cmd.header.op &= ~0x8000;
+                cmd.obj_handle = *reinterpret_cast<std::uint32_t *>(beg + sizeof(ws_cmd_header));
+
                 beg += sizeof(ws_cmd_header) + sizeof(cmd.obj_handle);
             } else {
                 beg += sizeof(ws_cmd_header);
@@ -103,18 +144,36 @@ namespace eka2l1::epoc {
 
     window_server_client::window_server_client(session_ptr guest_session)
         : guest_session(guest_session) {
-        root = std::make_shared<epoc::window>(this);       
+        add_object(std::make_shared<epoc::window>(this));
+        root = std::dynamic_pointer_cast<epoc::window>(objects.back());
     }
 
     void window_server_client::execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds) {
         for (const auto &cmd : cmds) {
-            if (!cmd.obj_handle || cmd.obj_handle > objects.size()) {
-                LOG_WARN("Object handle is invalid {}", cmd.obj_handle);
-                continue;
+            if (cmd.obj_handle == guest_session->unique_id()) {
+                execute_command(ctx, cmd);
+            } else {
+                if (auto obj = get_object(cmd.obj_handle)) {
+                    obj->execute_command(ctx, cmd);
+                }
             }
-
-            objects[cmd.obj_handle - 1]->execute_command(ctx, cmd);
         }
+    }
+
+    std::uint32_t window_server_client::add_object(window_client_obj_ptr obj) {
+        objects.push_back(std::move(obj));
+        objects.back()->id = base_handle + objects.size();
+
+        return objects.size() + base_handle;
+    }
+
+    window_client_obj_ptr window_server_client::get_object(const std::uint32_t handle) {
+        if (handle <= base_handle || handle - base_handle > objects.size()) {
+            LOG_WARN("Object handle is invalid {}", handle);
+            return nullptr;
+        }
+
+        return objects[handle - 1 - base_handle];
     }
 
     void window_server_client::create_screen_device(service::ipc_context ctx, ws_cmd cmd) {
@@ -130,10 +189,8 @@ namespace eka2l1::epoc {
             primary_device = device;
         }
 
-        auto id = device->id;
-
         init_device(root);
-        ctx.set_request_status(id);
+        ctx.set_request_status(add_object(device));
     }
 
     void window_server_client::init_device(epoc::window_ptr &win) {
@@ -165,7 +222,7 @@ namespace eka2l1::epoc {
         if (device_handle <= 0) {
             device_ptr = primary_device;
         } else {
-            device_ptr = std::dynamic_pointer_cast<epoc::screen_device>(objects[device_handle - 1]);
+            device_ptr = std::dynamic_pointer_cast<epoc::screen_device>(get_object(device_handle));
         }
 
         epoc::window_ptr group = std::make_shared<epoc::window_group>(this, device_ptr);
@@ -176,12 +233,15 @@ namespace eka2l1::epoc {
             parent_group = root;
         }
 
-        const uint32_t gid = group->id;
-
         group->parent = parent_group;
-        parent_group->childs.push(std::move(group));
+        parent_group->childs.push(group);
 
-        ctx.set_request_status(gid);
+        ctx.set_request_status(add_object(group));
+    }
+
+    void window_server_client::create_graphic_context(service::ipc_context ctx, ws_cmd cmd) {
+        std::shared_ptr<epoc::graphic_context> gcontext = std::make_shared<epoc::graphic_context>(this);
+        ctx.set_request_status(add_object(gcontext));
     }
 
     epoc::window_ptr window_server_client::find_window_obj(epoc::window_ptr &root, std::uint32_t id) {
@@ -219,6 +279,10 @@ namespace eka2l1::epoc {
             restore_hotkey(ctx, cmd);
             break;
 
+        case EWsClOpCreateGc:
+            create_graphic_context(ctx, cmd);
+            break;
+
         case EWsClOpEventReady:
             break;
 
@@ -230,7 +294,7 @@ namespace eka2l1::epoc {
 
 namespace eka2l1 {
     window_server::window_server(system *sys)
-        : service::server(sys, "!Windowserver", true) {
+        : service::server(sys, "!Windowserver", true, true) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
@@ -246,5 +310,22 @@ namespace eka2l1 {
 
     void window_server::send_to_command_buffer(service::ipc_context ctx) {
         clients[ctx.msg->msg_session->unique_id()]->parse_command_buffer(ctx);
+    }
+
+    void window_server::on_unhandled_opcode(service::ipc_context ctx) {
+        if (ctx.msg->function & EWservMessAsynchronousService) {
+            switch (ctx.msg->function & ~EWservMessAsynchronousService) {
+            case EWsClOpRedrawReady: {
+                LOG_TRACE("Redraw ready");
+                ctx.set_request_status(KErrNone);
+
+                break;
+            }
+
+            default: {
+                break;
+            }
+            }
+        }
     }
 }
