@@ -265,8 +265,11 @@ namespace eka2l1 {
                     return nullptr;
                 }
             } else {
+                bool should_append_ext = (fs::path(img_name).extension() == "");
+
                 for (const auto &pattern : patterns) {
-                    std::string full = common::ucs2_to_utf8(pattern.first + img_name + pattern.second);
+                    std::string full = common::ucs2_to_utf8(pattern.first + img_name + 
+                        (should_append_ext ? pattern.second : u""));
 
                     if (fs::exists(io->get(full))) {
                         img = io->open_file(common::utf8_to_ucs2(full), READ_MODE | BIN_MODE);
@@ -317,10 +320,14 @@ namespace eka2l1 {
             }
 
             if (!romimgf) {
-                romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".dll", READ_MODE | BIN_MODE);
+                bool should_append_ext = (fs::path(rom_name).extension() == "");
+
+                romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + (should_append_ext ? u".dll" : u""),
+                    READ_MODE | BIN_MODE);
 
                 if (!romimgf) {
-                    romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + u".exe", READ_MODE | BIN_MODE);
+                    romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + (should_append_ext ? u".exe" : u""),
+                        READ_MODE | BIN_MODE);
 
                     if (!romimgf) {
                         return loader::romimg_ptr(nullptr);
