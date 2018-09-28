@@ -160,6 +160,7 @@ namespace eka2l1 {
             const size_t min_heap_size, const size_t max_heap_size,
             bool initial,
             ptr<void> usrdata = 0,
+            ptr<void> allocator = 0,
             kernel::thread_priority pri = kernel::priority_normal);
 
         uint32_t create_mutex(std::string name, bool init_locked,

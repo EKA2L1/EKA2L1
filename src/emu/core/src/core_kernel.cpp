@@ -249,9 +249,10 @@ namespace eka2l1 {
         const size_t min_heap_size, const size_t max_heap_size,
         bool initial,
         ptr<void> usrdata,
+        ptr<void> allocator,
         kernel::thread_priority pri) {
         thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, timing, own_pr, access,
-            name, epa, stack_size, min_heap_size, max_heap_size, initial, usrdata, pri);
+            name, epa, stack_size, min_heap_size, max_heap_size, initial, usrdata, allocator, pri);
 
         objects.push_back(std::move(new_thread));
 
