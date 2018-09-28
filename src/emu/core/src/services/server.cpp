@@ -44,9 +44,10 @@ namespace eka2l1 {
         }
 
         // Create a server with name
-        server::server(system *sys, const std::string name, bool hle)
+        server::server(system *sys, const std::string name, bool hle, bool unhandle_callback_enable)
             : sys(sys)
             , hle(hle)
+            , unhandle_callback_enable(unhandle_callback_enable)
             , kernel_obj(sys->get_kernel_system(), name, kernel::access_type::global_access) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
@@ -137,6 +138,13 @@ namespace eka2l1 {
             auto func_ite = ipc_funcs.find(func);
 
             if (func_ite == ipc_funcs.end()) {
+                if (unhandle_callback_enable) {
+                    ipc_context context{ sys, process_msg };
+                    on_unhandled_opcode(context);
+
+                    return;
+                }
+
                 LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
 
                 // Signal request semaphore, to tell everyone that it has finished random request

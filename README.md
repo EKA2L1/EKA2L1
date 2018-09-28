@@ -5,7 +5,7 @@
     * 64 bit OS, 4 GB of RAM
     * At least OpenGL 3.2 is supported
     * A Symbian ROM. Currently, only Symbian 9.x is supported. Things are being worked on everyday to makes magic happen.
-    
+
 - Artifacts:
     * Artifacts for Windows is provided through CI. Click the status badge to get to EKA2L1's Appveyor CI
     

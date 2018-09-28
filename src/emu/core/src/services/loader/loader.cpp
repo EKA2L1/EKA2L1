@@ -35,10 +35,12 @@ namespace eka2l1 {
         std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
         auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
 
+        LOG_TRACE("Trying to summon: {}", name_process);
+
         if (!eimg) {
             loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*process_name16, false);
 
-            if (img_ptr && img_ptr->header.uid3 == info->uid3) {
+            if (img_ptr && ((info->uid3 == 0) || (info->uid3 != 0 && img_ptr->header.uid3 == info->uid3))) {
                 ctx.sys->get_lib_manager()->open_romimg(img_ptr);
 
                 int32_t stack_size_img = img_ptr->header.stack_size;

@@ -25,23 +25,24 @@ contributing and coding rules):
      ```
 
     - No:
-    ```  if (condition) return 0;
+    ```cpp 
+    if (condition) return 0;
     while (var != 0) var--;
     ```
 
 ### Naming
 - Follow the underscore notation for all variables, methods and classes, except for Symbian method and class legacy code style, if it's really neccesary. For example:
    - Yes:
-   ```
+   ```cpp
    int me_do;
    ```
    - No:
-   ```
+   ```cpp
    int meDo;
    ```
 
 - Compile time constant should be a *constexpr*. For example
-   ```
+   ```cpp
    constexpr std::int32_t domain_id = 0x10152026;
    constexpr std::array<std::int32_t, 7U> array_id = {15, 16, 17, 19, 21, 11, 15};
    ```
@@ -65,16 +66,21 @@ Do not leave else or else if conditions dangling unless the if condition lacks b
       // code line
    else
      // code line
-     ```
+   ```
 
    - No:
     ```cpp
+=======
+   ```
+
+   - No:
+   ```cpp
     if (condition) {
       // code
     }
     else
      // code line
-    ```
+   ```
 
 # Knowledges and references
 - EKA2L1 is a HLE emulator, it emulates kernel and neccessary servers and system calls, in order to get apps and games booting, not the entire OS.

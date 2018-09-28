@@ -1001,6 +1001,50 @@ namespace eka2l1::epoc {
         return sema;
     }
 
+    BRIDGE_FUNC(TInt, SemaphoreWait, TInt aSemaHandle, TInt aTimeout) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+
+        if (!sema) {
+            return KErrBadHandle;
+        }
+
+        if (aTimeout) {
+            LOG_WARN("Semaphore timeout unimplemented");
+        }
+
+        sema->wait();
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(void, SemaphoreSignal, TInt aSemaHandle) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+
+        if (!sema) {
+            return;
+        }
+
+        sema->signal(1);
+    }
+
+    BRIDGE_FUNC(void, SemaphoreSignalN, TInt aSemaHandle, TInt aSigCount) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+
+        if (!sema) {
+            return;
+        }
+
+        sema->signal(aSigCount);
+    }
+
     BRIDGE_FUNC(TInt, MutexCreate, eka2l1::ptr<TDesC8> aMutexName, TOwnerType aOwnerType) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -1815,6 +1859,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x18, ProcessExitType),
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
+        BRIDGE_REGISTER(0x1F, SemaphoreWait),
+        BRIDGE_REGISTER(0x20, SemaphoreSignal),
+        BRIDGE_REGISTER(0x21, SemaphoreSignalN),
         BRIDGE_REGISTER(0x22, ServerReceive),
         BRIDGE_REGISTER(0x23, ServerCancel),
         BRIDGE_REGISTER(0x24, SetSessionPtr),

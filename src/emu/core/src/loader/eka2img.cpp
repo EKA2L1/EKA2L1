@@ -302,10 +302,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
-            // LOG_TRACE("Mở chunk cho code và data");
-            
-            // Create the code + static data chunk
+        bool import_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
                 prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
@@ -351,7 +348,7 @@ namespace eka2l1 {
                 }
             }
 
-            LOG_INFO("Load executable success");
+            LOG_INFO("Load e32img success");
 
             return true;
         }
@@ -671,10 +668,7 @@ namespace eka2l1 {
         }
 
         bool load_eka2img(eka2img &img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
-            if (img.header.uid1 == loader::eka2_img_type::dll) {
-            }
-
-            return import_exe_image(&img, mem, kern, mngr);
+            return import_image(&img, mem, kern, mngr);
         }
     }
 }

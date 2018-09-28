@@ -6,7 +6,7 @@ To build the emulator, follow these steps:
 - Windows:
    - Bootstrap VCPKG and install missing dependencies. In case of EKA2L1, run these commands on Powershell with Adminstrator permissions
    ```
-   ./vcpkg --triplet x64-windows curl*. 
+   ./vcpkg --triplet x64-windows curl 
    ```
    - Run CMake targets your favorite generator with *-DCMAKE_TOOLCHAIN_FILE='<vcpkg_path>\scripts\buildsystems\vcpkg.cmake'* to specify the VCPKG toolchain
    include. If you don't pass the toolchain argument, than CURL will not be found, unless in some way you have installed it.
