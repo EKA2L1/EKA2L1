@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <core/core.h>
 #include <core/kernel/process.h>
 
@@ -122,7 +123,8 @@ namespace eka2l1 {
         kern.run_process(process_handle);
 
         // Change window title to game title
-        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) +
+            " (" + common::to_string(id, std::hex) + ")");
 
         return process_handle;
     }

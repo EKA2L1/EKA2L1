@@ -158,13 +158,13 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool initial) {
+        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool should_create_heap) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
 
             ctx.pc = entry_point;
 
-            if (!initial) {
+            if (should_create_heap) {
                 ctx.pc = kern->get_lib_manager()->get_export_addr(4238211793); // Setup thread heap
                 ctx.lr = entry_point;
 
@@ -176,10 +176,11 @@ namespace eka2l1 {
             ctx.cpsr = ((entry_point & 1) << 5);
         }
 
-        void thread::create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, const address epa) {
+        void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len, 
+            address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
 
-            info.allocator = 0;
+            info.allocator = allocator.ptr_address();
             info.func_ptr = epa;
             info.ptr = usrdata.ptr_address();
 
@@ -210,6 +211,7 @@ namespace eka2l1 {
             const size_t min_heap_size, const size_t max_heap_size,
             bool inital,
             ptr<void> usrdata,
+            ptr<void> allocator,
             thread_priority pri)
             : kernel_obj(kern, name, access)
             , own_process(owner)
@@ -268,10 +270,16 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(start, end, 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk_ptr->base().ptr_address(), epa);
+            create_stack_metadata(ptr<void>(stack_top), allocator, name.length(), name_chunk_ptr->base().ptr_address(), epa);
 
-            reset_thread_ctx(epa, stack_top, inital);
+            bool should_create_heap = (!allocator.ptr_address()) && (!inital);
+
+            reset_thread_ctx(epa, stack_top, should_create_heap);
             scheduler = kern->get_thread_scheduler();
+
+            if (allocator.ptr_address()) {
+                ldata.heap = allocator;
+            }
         }
 
         thread::~thread() {

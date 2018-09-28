@@ -22,8 +22,8 @@
 #include <core/services/domain/domain.h>
 #include <core/services/featmgr/featmgr.h>
 #include <core/services/fs/fs.h>
-
 #include <core/services/loader/loader.h>
+#include <core/services/ui/oom_app.h>
 #include <core/services/window/window.h>
 
 #include <core/services/init.h>
@@ -44,36 +44,36 @@
     temp = std::make_shared<##svr>(sys); \
     sys->get_kernel_system()->add_custom_server(temp)
 
-#define DEFINE_INT_PROP_D(sys, category, key, data)                                                 \
-    uint32_t prop_handle = sys->get_kernel_system()->create_prop();    \
+#define DEFINE_INT_PROP_D(sys, category, key, data)                      \
+    uint32_t prop_handle = sys->get_kernel_system()->create_prop();      \
     property_ptr prop = sys->get_kernel_system()->get_prop(prop_handle); \
-    prop->first = category;                                                                         \
-    prop->second = key;                                                                             \
-    prop->define(service::property_type::int_data, 0);                                            \
+    prop->first = category;                                              \
+    prop->second = key;                                                  \
+    prop->define(service::property_type::int_data, 0);                   \
     prop->set_int(data);
 
-#define DEFINE_INT_PROP(sys, category, key, data)                                      \
-    prop_handle = sys->get_kernel_system()->create_prop(); \
+#define DEFINE_INT_PROP(sys, category, key, data)           \
+    prop_handle = sys->get_kernel_system()->create_prop();  \
     prop = sys->get_kernel_system()->get_prop(prop_handle); \
-    prop->first = category;                                                            \
-    prop->second = key;                                                                \
-    prop->define(service::property_type::int_data, 0);           \
+    prop->first = category;                                 \
+    prop->second = key;                                     \
+    prop->define(service::property_type::int_data, 0);      \
     prop->set_int(data);
 
-#define DEFINE_BIN_PROP_D(sys, category, key, size, data)                                              \
-    uint32_t prop_handle = sys->get_kernel_system()->create_prop(); \
+#define DEFINE_BIN_PROP_D(sys, category, key, size, data)                \
+    uint32_t prop_handle = sys->get_kernel_system()->create_prop();      \
     property_ptr prop = sys->get_kernel_system()->get_prop(prop_handle); \
-    prop->first = category;                                                                            \
-    prop->second = key;                                                                                \
-    prop->define(service::property_type::bin_data, size); \
+    prop->first = category;                                              \
+    prop->second = key;                                                  \
+    prop->define(service::property_type::bin_data, size);                \
     prop->set(data);
 
-#define DEFINE_BIN_PROP(sys, category, key, size, data)                                                 \
-    prop_handle = sys->get_kernel_system()->create_prop(); \
+#define DEFINE_BIN_PROP(sys, category, key, size, data)     \
+    prop_handle = sys->get_kernel_system()->create_prop();  \
     prop = sys->get_kernel_system()->get_prop(prop_handle); \
-    prop->first = category;                                                               \
-    prop->second = key;                                                                   \
-    prop->define(service::property_type::bin_data, size); \
+    prop->first = category;                                 \
+    prop->second = key;                                     \
+    prop->define(service::property_type::bin_data, size);   \
     prop->set(data);
 
 const uint32_t sys_category = 0x101f75b6;
@@ -234,6 +234,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);
+            CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, domainmngr_server);
 
             auto &dmmngr = std::dynamic_pointer_cast<domainmngr_server>(temp)->get_domain_manager();

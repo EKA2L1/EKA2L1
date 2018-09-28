@@ -67,9 +67,11 @@ elseif(UNIX)
 endif()
 
 if (BUILD_TOOLS)
-    find_package(LibClang)
+    find_package(LibClang QUIET)
 
     if (LIBCLANG_FOUND)
+        set (LIBCLANG_AVAILABLE TRUE PARENT_SCOPE)
+
         add_library(libclang INTERFACE)
         target_link_libraries(libclang INTERFACE ${libclang_lib})
         target_include_directories(libclang INTERFACE ${libclang_include_dir})

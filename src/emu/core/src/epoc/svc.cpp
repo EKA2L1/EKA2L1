@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <core/epoc/chunk.h>
 #include <core/epoc/dll.h>
 #include <core/epoc/hal.h>
@@ -1296,7 +1316,7 @@ namespace eka2l1::epoc {
 
         uint32_t thr_handle = kern->create_thread(static_cast<kernel::owner_type>(aOwnerType), kern->crr_process(),
             kernel::access_type::local_access, thr_name, info->func_ptr, info->user_stack_size,
-            info->heap_initial_size, info->heap_max_size, false, info->ptr, kernel::thread_priority::priority_normal);
+            info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal);
 
         if (thr_handle == INVALID_HANDLE) {
             return KErrGeneral;

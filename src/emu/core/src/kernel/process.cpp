@@ -46,7 +46,7 @@ namespace eka2l1::kernel {
                 process_name, ep_off,
                 stack_size, heap_min, heap_max,
                 true,
-                0, kernel::priority_normal);
+                0, 0, kernel::priority_normal);
 
         ++thread_count;
 
