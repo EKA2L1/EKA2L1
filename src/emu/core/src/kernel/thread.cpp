@@ -173,7 +173,9 @@ namespace eka2l1 {
             }
 
             ctx.sp = stack_top;
-            ctx.cpsr = ((entry_point & 1) << 5);
+            
+            // Set USERMODE (0x10)
+            ctx.cpsr = 0x10 & ((ctx.pc & 1) << 5);
         }
 
         void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len, 
