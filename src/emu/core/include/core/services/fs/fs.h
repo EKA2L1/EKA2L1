@@ -135,6 +135,7 @@ namespace eka2l1 {
 
         void drive_list(service::ipc_context ctx);
         void drive(service::ipc_context ctx);
+        void volume(service::ipc_context ctx);
 
         void is_file_in_rom(service::ipc_context ctx);
 
@@ -144,6 +145,7 @@ namespace eka2l1 {
 
         void synchronize_driver(service::ipc_context ctx);
         void notify_change_ex(service::ipc_context ctx);
+        void notify_change(service::ipc_context ctx);
 
         void private_path(service::ipc_context ctx);
         void mkdir(service::ipc_context ctx);

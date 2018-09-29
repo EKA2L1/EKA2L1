@@ -21,8 +21,8 @@
 #include <core/services/window/op.h>
 #include <core/services/window/window.h>
 
-#include <common/log.h>
 #include <common/e32inc.h>
+#include <common/log.h>
 
 #include <e32err.h>
 
@@ -105,6 +105,16 @@ namespace eka2l1::epoc {
         window_ptr win)
         : window_client_obj(client)
         , attached_window(win) {
+    }
+
+    void sprite::execute_command(service::ipc_context context, ws_cmd cmd) {
+    }
+
+    sprite::sprite(window_server_client_ptr client, window_ptr attached_window,
+        eka2l1::vec2 pos)
+        : window_client_obj(client)
+        , position(pos)
+        , attached_window(attached_window) {
     }
 
     void window_server_client::parse_command_buffer(service::ipc_context ctx) {
@@ -244,6 +254,21 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(gcontext));
     }
 
+    void window_server_client::create_sprite(service::ipc_context ctx, ws_cmd cmd) {
+        ws_cmd_create_sprite_header *sprite_header = reinterpret_cast<decltype(sprite_header)>(cmd.data_ptr);
+        epoc::window_ptr win = nullptr;
+
+        if (sprite_header->window_handle <= 0) {
+            LOG_WARN("Window handle is invalid, use root");
+            win = root;
+        } else {
+            win = std::dynamic_pointer_cast<epoc::window>(get_object(sprite_header->window_handle));
+        }
+
+        std::shared_ptr<epoc::sprite> spr = std::make_shared<epoc::sprite>(this, std::move(win), sprite_header->base_pos);
+        ctx.set_request_status(add_object(spr));
+    }
+
     epoc::window_ptr window_server_client::find_window_obj(epoc::window_ptr &root, std::uint32_t id) {
         if (root->id == id) {
             return root;
@@ -283,7 +308,14 @@ namespace eka2l1::epoc {
             create_graphic_context(ctx, cmd);
             break;
 
+        case EWsClOpCreateSprite:
+            create_sprite(ctx, cmd);
+            break;
+
         case EWsClOpEventReady:
+            break;
+
+        case EWsClOpGetFocusWindowGroup:
             break;
 
         default:

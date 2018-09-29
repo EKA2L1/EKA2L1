@@ -180,11 +180,13 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, set_session_to_private, EFsSessionToPrivate, "Fs::SetSessionToPrivate");
         REGISTER_IPC(fs_server, synchronize_driver, EFsSynchroniseDriveThread, "Fs::SyncDriveThread");
         REGISTER_IPC(fs_server, notify_change_ex, EFsNotifyChangeEx, "Fs::NotifyChangeEx");
+        REGISTER_IPC(fs_server, notify_change, EFsNotifyChange, "Fs::NotifyChange");
         REGISTER_IPC(fs_server, private_path, EFsPrivatePath, "Fs::PrivatePath");
         REGISTER_IPC(fs_server, mkdir, EFsMkDir, "Fs::MkDir");
         REGISTER_IPC(fs_server, delete_entry, EFsDelete, "Fs::Delete");
         REGISTER_IPC(fs_server, rename, EFsRename, "Fs::Rename(Move)");
         REGISTER_IPC(fs_server, replace, EFsReplace, "Fs::Replace");
+        REGISTER_IPC(fs_server, volume, EFsVolume, "Fs::Volume");
     }
 
     void fs_server::replace(service::ipc_context ctx) {
@@ -357,12 +359,12 @@ namespace eka2l1 {
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
         if (ctx.sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
-            ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size()); 
+            ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
         } else {
-            ctx.write_arg_pkg<uint32_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size()); 
+            ctx.write_arg_pkg<uint32_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
         }
 
-        ctx.set_request_status(KErrNone);    
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::file_seek(service::ipc_context ctx) {
@@ -706,6 +708,16 @@ namespace eka2l1 {
         copy = replace_all(copy, "*", ".*");
 
         return std::regex(copy);
+    }
+
+    void fs_server::notify_change(service::ipc_context ctx) {
+        notify_entry entry;
+
+        entry.match_pattern = ".*";
+        entry.type = static_cast<notify_type>(*ctx.get_arg<int>(0));
+        entry.request_status = ctx.msg->request_sts;
+
+        notify_entries.push_back(entry);
     }
 
     void fs_server::notify_change_ex(service::ipc_context ctx) {
@@ -1280,31 +1292,12 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    /* Simple for now only, in the future this should be more advance. */
-    void fs_server::drive(service::ipc_context ctx) {
-        TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
-        std::optional<TDriveInfo> info = ctx.get_arg_packed<TDriveInfo>(0);
-
-        if (!info) {
-            ctx.set_request_status(KErrArgument);
-            return;
-        }
-
-        eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
-
+    void fill_drive_info(TDriveInfo *info, eka2l1::drive &io_drive) {
         info->iDriveAtt = 0;
         info->iMediaAtt = 0;
 
         if (io_drive.media_type == drive_media::none) {
             info->iType = EMediaUnknown;
-
-            ctx.write_arg_pkg<TDriveInfo>(0, *info);
-            ctx.set_request_status(KErrNone);
-            return;
-        }
-
-        if (!info) {
-            ctx.set_request_status(KErrArgument);
             return;
         }
 
@@ -1352,8 +1345,71 @@ namespace eka2l1 {
         if (static_cast<int>(io_drive.attribute & io_attrib::write_protected)) {
             info->iMediaAtt |= KMediaAttWriteProtected;
         }
+    }
+
+    /* Simple for now only, in the future this should be more advance. */
+    void fs_server::drive(service::ipc_context ctx) {
+        TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
+        std::optional<TDriveInfo> info = ctx.get_arg_packed<TDriveInfo>(0);
+
+        if (!info) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+        fill_drive_info(&(*info), io_drive);
 
         ctx.write_arg_pkg<TDriveInfo>(0, *info);
+        ctx.set_request_status(KErrNone);
+    }
+
+    enum TFileCacheFlags {
+        EFileCacheReadEnabled = 0x01,
+        EFileCacheReadOn = 0x02,
+        EFileCacheReadAheadEnabled = 0x04,
+        EFileCacheReadAheadOn = 0x08,
+        EFileCacheWriteEnabled = 0x10,
+        EFileCacheWriteOn = 0x20,
+    };
+
+    struct TVolumeInfo {
+        TDriveInfo iDriveInfo;
+        TUint iUniqueId;
+        TInt64 iSize;
+        TInt64 iFree;
+        int iNameDesType;
+        TUint16 iNameBuf[0x100];
+        TFileCacheFlags iCacheFlags;
+        TUint8 iVolSizeAsync;
+
+        TUint8 i8Reserved1;
+        TUint16 i16Reserved1;
+        TUint32 i32Reserved1;
+        TUint32 i32Reserved2;	
+    };
+
+    void fs_server::volume(service::ipc_context ctx) {
+        std::optional<TVolumeInfo> info = ctx.get_arg_packed<TVolumeInfo>(0);
+
+        if (!info) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
+        eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+   
+        fill_drive_info(&info->iDriveInfo, io_drive);
+        info->iUniqueId = drv;
+
+        LOG_WARN("Volume size stubbed with 1GB");
+
+        // Stub this
+        info->iSize = common::GB(1);
+        info->iFree = common::GB(1);
+
+        ctx.write_arg_pkg<TVolumeInfo>(0, *info);
         ctx.set_request_status(KErrNone);
     }
 }

@@ -8,10 +8,9 @@
 
 #include <common/queue.h>
 
-#include <core/ptr.h>
 #include <core/drivers/screen_driver.h>
+#include <core/ptr.h>
 #include <core/services/server.h>
-
 
 enum {
     cmd_slot = 0,
@@ -41,6 +40,12 @@ namespace eka2l1 {
         bool focus;
         uint32_t parent_id;
         uint32_t screen_device_handle;
+    };
+
+    struct ws_cmd_create_sprite_header {
+        int window_handle;
+        eka2l1::vec2 base_pos;
+        int flags;
     };
 }
 
@@ -81,7 +86,7 @@ namespace eka2l1::epoc {
 
         window_ptr parent;
         uint16_t priority;
-        uint64_t id;
+        uint32_t id;
 
         window_type type;
 
@@ -127,6 +132,7 @@ namespace eka2l1::epoc {
 
     struct screen_device : public window_client_obj {
         eka2l1::driver::screen_driver_ptr driver;
+        int screen;
 
         screen_device(window_server_client_ptr client, eka2l1::driver::screen_driver_ptr driver);
         void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) override;
@@ -155,6 +161,16 @@ namespace eka2l1::epoc {
             window_ptr win = nullptr);
     };
 
+    // Is this a 2D game engine ?
+    struct sprite : public window_client_obj {
+        window_ptr attached_window;
+        eka2l1::vec2 position;
+
+        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+        explicit sprite(window_server_client_ptr client, window_ptr attached_window = nullptr,
+            eka2l1::vec2 pos = eka2l1::vec2(0, 0));
+    };
+
     using window_group_ptr = std::shared_ptr<epoc::window_group>;
 
     class window_server_client {
@@ -170,6 +186,7 @@ namespace eka2l1::epoc {
         void create_screen_device(service::ipc_context ctx, ws_cmd cmd);
         void create_window_group(service::ipc_context ctx, ws_cmd cmd);
         void create_graphic_context(service::ipc_context ctx, ws_cmd cmd);
+        void create_sprite(service::ipc_context ctx, ws_cmd cmd);
 
         void restore_hotkey(service::ipc_context ctx, ws_cmd cmd);
 
