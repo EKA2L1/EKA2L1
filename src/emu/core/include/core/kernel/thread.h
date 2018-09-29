@@ -174,6 +174,7 @@ namespace eka2l1 {
             std::vector<logon_request_form> rendezvous_requests;
 
             uint64_t create_time = 0;
+            epoc::request_status *sleep_nof_sts;
 
         public:
             kernel_obj_ptr get_object(uint32_t handle);
@@ -225,7 +226,11 @@ namespace eka2l1 {
 
             void set_priority(const thread_priority new_pri);
 
-            bool sleep(uint32_t secs);
+            bool sleep(uint32_t mssecs);
+            bool sleep_nof(epoc::request_status *sts, uint32_t mssecs);
+
+            void notify_sleep(const int errcode);
+
             bool stop();
 
             thread_priority get_priority() const {

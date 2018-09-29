@@ -26,14 +26,17 @@
 #include <core/kernel/thread.h>
 #include <functional>
 
-void wake_thread(uint64_t ud, int cycles_late);
+static void wake_thread(uint64_t ud, int cycles_late);
 
-void wake_thread(uint64_t ud, int cycles_late) {
+static void wake_thread(uint64_t ud, int cycles_late) {
     eka2l1::kernel::thread *thr = reinterpret_cast<decltype(thr)>(ud);
 
     if (thr == nullptr) {
         return;
     }
+
+    thr->notify_sleep(0);
+    thr->signal_request();
 }
 
 namespace eka2l1 {
@@ -146,7 +149,8 @@ namespace eka2l1 {
             waiting_threads.push_back(thr);
 
             // Schedule the thread to be waken up
-            timing->schedule_event(sl_time, wakeup_evt, reinterpret_cast<uint64_t>(thr.get()));
+            timing->schedule_event(sl_time, wakeup_evt, 
+                timing->ms_to_cycles(reinterpret_cast<uint64_t>(thr.get())));
 
             return true;
         }

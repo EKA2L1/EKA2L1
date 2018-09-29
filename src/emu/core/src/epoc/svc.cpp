@@ -105,6 +105,11 @@ namespace eka2l1::epoc {
         local_data.scheduler = aNewScheduler;
     }
 
+    BRIDGE_FUNC(void, After, TInt aMicroSecs, eka2l1::ptr<epoc::request_status> aStatus) {
+        sys->get_kernel_system()->crr_thread()->sleep_nof(aStatus.get(sys->get_memory_system()),
+            aMicroSecs);
+    }
+
     /****************************/
     /* PROCESS */
     /***************************/
@@ -1896,6 +1901,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
         BRIDGE_REGISTER(0x3B, RequestSignal),
         BRIDGE_REGISTER(0x3C, HandleName),
+        BRIDGE_REGISTER(0x40, After),
         BRIDGE_REGISTER(0x42, MessageComplete),
         BRIDGE_REGISTER(0x44, TimeNow),
         BRIDGE_REGISTER(0x4D, SessionSendSync),

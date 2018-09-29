@@ -173,12 +173,12 @@ namespace eka2l1 {
             }
 
             ctx.sp = stack_top;
-            
+
             // Set USERMODE (0x10)
-            ctx.cpsr = 0x10 & ((ctx.pc & 1) << 5);
+            ctx.cpsr = ((ctx.pc & 1) << 5);
         }
 
-        void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len, 
+        void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len,
             address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
 
@@ -225,6 +225,7 @@ namespace eka2l1 {
             , priority(pri)
             , timing(timing)
             , wait_obj(nullptr)
+            , sleep_nof_sts(nullptr)
             , thread_handles(kern, handle_array_owner::thread) {
             if (owner) {
                 owner->increase_thread_count();
@@ -311,8 +312,25 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
-        bool thread::sleep(uint32_t secs) {
-            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)), secs);
+        bool thread::sleep(uint32_t mssecs) {
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)), mssecs);
+        }
+
+        bool thread::sleep_nof(epoc::request_status *sts, uint32_t mssecs) {
+            assert(!sleep_nof_sts, "Thread supposed to sleep already");
+            sleep_nof_sts = sts;
+
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)),
+                mssecs);
+        }
+
+        void thread::notify_sleep(const int errcode) {
+            if (sleep_nof_sts) {
+                sleep_nof_sts->status = errcode;
+                sleep_nof_sts = 0;
+            }
+
+            sleep_nof_sts = nullptr;
         }
 
         bool thread::stop() {
@@ -368,8 +386,7 @@ namespace eka2l1 {
         }
 
         bool thread::suspend() {
-            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>
-                (kern->get_kernel_obj_by_id(uid)));
+            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
 
             if (!res) {
                 return false;

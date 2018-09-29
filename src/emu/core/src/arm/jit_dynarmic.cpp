@@ -7,6 +7,8 @@
 #include <core/core_timing.h>
 #include <core/hle/libmanager.h>
 
+#include <dynarmic/A32/context.h>
+
 namespace eka2l1 {
     namespace arm {
         class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
@@ -156,8 +158,6 @@ namespace eka2l1 {
                     return;
                 }
 
-                LOG_TRACE("Calling svc: 0x{:x}", svc);
-
                 bool res = mngr->call_svc(svc);
 
                 if (!res) {
@@ -176,7 +176,7 @@ namespace eka2l1 {
             }
         };
 
-        std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::array<uint8_t*, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> &pages, 
+        std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::array<uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> &pages,
             std::unique_ptr<arm_dynarmic_callback> &callback, page_table *table) {
             Dynarmic::A32::UserConfig config;
             config.callbacks = callback.get();
@@ -276,6 +276,10 @@ namespace eka2l1 {
             ctx.pc = get_pc();
             ctx.sp = get_sp();
             ctx.lr = get_lr();
+
+            if (!ctx.pc) {
+                LOG_WARN("Dynarmic save context with PC = 0");
+            }
         }
 
         void jit_dynarmic::load_context(const thread_context &ctx) {
@@ -286,7 +290,7 @@ namespace eka2l1 {
             set_sp(ctx.sp);
             set_pc(ctx.pc);
             set_lr(ctx.lr);
-            set_cpsr(ctx.cpsr);       
+            set_cpsr(ctx.cpsr);
         }
 
         void jit_dynarmic::set_entry_point(address ep) {
@@ -319,14 +323,26 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::page_table_changed() {
+            arm::jit_interface::thread_context ctx;
+            save_context(ctx);
+
             jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
+            load_context(ctx);
         }
 
         void jit_dynarmic::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
+            for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
+                page_table_dyn[vaddr / mem->get_page_size()] = ptr + mem->get_page_size() * i;
+            }
+
             fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
         }
 
         void jit_dynarmic::unmap_memory(address addr, size_t size) {
+            for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
+                page_table_dyn[addr / mem->get_page_size()] = nullptr;
+            }
+
             fallback_jit.unmap_memory(addr, size);
         }
     }

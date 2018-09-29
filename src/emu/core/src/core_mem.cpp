@@ -120,27 +120,30 @@ namespace eka2l1 {
     }
 
     void *memory_system::get_real_pointer(address addr) {
-        if (addr >= codeseg_addr && addr < codeseg_addr + 0x10000000) {
-            if (!codeseg_pointers[(addr - codeseg_addr) / page_size].get()) {
-                return nullptr;
+        // Fallback to slow get if there is no page table
+        if (!current_page_table) {
+            if (addr >= codeseg_addr && addr < codeseg_addr + 0x10000000) {
+                if (!codeseg_pointers[(addr - codeseg_addr) / page_size].get()) {
+                    return nullptr;
+                }
+
+                return static_cast<void *>(codeseg_pointers[(addr - codeseg_addr) / page_size].get() + (addr - codeseg_addr) % page_size);
             }
 
-            return static_cast<void *>(codeseg_pointers[(addr - codeseg_addr) / page_size].get() + (addr - codeseg_addr) % page_size);
-        }
-
-        if (addr >= rom_addr && addr < rom_addr + 0x10000000) {
-            return &reinterpret_cast<uint8_t *>(rom_map)[addr - rom_addr];
-        }
-
-        if (addr >= shared_addr && addr < shared_addr + shared_size) {
-            if (!global_pointers[(addr - shared_addr) / page_size].get()) {
-                return nullptr;
+            if (addr >= rom_addr && addr < rom_addr + 0x10000000) {
+                return &reinterpret_cast<uint8_t *>(rom_map)[addr - rom_addr];
             }
 
-            return static_cast<void *>(global_pointers[(addr - shared_addr) / page_size].get() + (addr - shared_addr) % page_size);
+            if (addr >= shared_addr && addr < shared_addr + shared_size) {
+                if (!global_pointers[(addr - shared_addr) / page_size].get()) {
+                    return nullptr;
+                }
+
+                return static_cast<void *>(global_pointers[(addr - shared_addr) / page_size].get() + (addr - shared_addr) % page_size);
+            }
         }
 
-        if (!current_page_table->pointers[addr / page_size].get()) {
+        if (!current_page_table->pointers[addr / page_size]) {
             return nullptr;
         }
 
@@ -710,6 +713,11 @@ namespace eka2l1 {
 
         if (fptr == nullptr) {
             LOG_WARN("Reading invalid address: 0x{:x}", addr);
+            return;
+        }
+
+        if (size == 4) {
+            *reinterpret_cast<int *>(data) = *reinterpret_cast<int *>(fptr);
             return;
         }
 
