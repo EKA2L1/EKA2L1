@@ -150,7 +150,7 @@ namespace eka2l1 {
 
             // Schedule the thread to be waken up
             timing->schedule_event(sl_time, wakeup_evt, 
-                timing->ms_to_cycles(reinterpret_cast<uint64_t>(thr.get())));
+                timing->us_to_cycles(reinterpret_cast<uint64_t>(thr.get())));
 
             return true;
         }
