@@ -79,7 +79,13 @@ namespace eka2l1 {
                 write(dest_ptr, reloc_offset + code_delta);
                 break;
             case relocation_type::data:
-                write(dest_ptr, reloc_offset + data_delta);
+                // TODO: Remove the hack
+                if (*dest_ptr == 0x400000) {
+                    LOG_WARN("Destination relocation has value of 0x400000, ignored");
+                } else {
+                    write(dest_ptr, reloc_offset + data_delta);
+                }
+
                 break;
             case relocation_type::inffered:
             default:
