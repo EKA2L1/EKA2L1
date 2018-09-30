@@ -237,10 +237,12 @@ namespace eka2l1 {
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);
             CREATE_SERVER(sys, oom_ui_app_server);
-            CREATE_SERVER(sys, domainmngr_server);
             CREATE_SERVER(sys, install_server);
             CREATE_SERVER(sys, rights_server);
 
+            // Don't change order
+            CREATE_SERVER(sys, domainmngr_server);
+            
             auto &dmmngr = std::dynamic_pointer_cast<domainmngr_server>(temp)->get_domain_manager();
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);

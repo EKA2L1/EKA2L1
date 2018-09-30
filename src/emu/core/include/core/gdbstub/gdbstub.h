@@ -134,8 +134,7 @@ namespace eka2l1 {
 
         void remove_breakpoint(breakpoint_type type, std::uint32_t addr);
         breakpoint_address get_next_breakpoint_from_addr(std::uint32_t addr, breakpoint_type type);
-        bool check_breakpoint(std::uint32_t addr, breakpoint_type type);
-
+        
         void send_packet(const char packet);
         void send_reply(const char *reply);
         void send_signal(thread_ptr thread, std::uint32_t signal, bool full = true);

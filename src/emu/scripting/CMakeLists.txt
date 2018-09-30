@@ -50,7 +50,7 @@ add_custom_command(
 	TARGET symemu_common
 			POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:symemu>/scripts/symemu2"
-			COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_NAME:symemu_common>" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_NAME:symemu_common>" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/__init__.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/events.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/svc.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
