@@ -19,6 +19,8 @@
  */
 
 #include <core/core_kernel.h>
+#include <core/core_mem.h>
+
 #include <core/kernel/change_notifier.h>
 
 #include <common/cvt.h>
@@ -32,7 +34,7 @@ namespace eka2l1 {
             obj_type = object_type::change_notifier;
         }
 
-        bool change_notifier::logon(epoc::request_status *request_sts) {
+        bool change_notifier::logon(eka2l1::ptr<epoc::request_status> request_sts) {
             if (request_status) {
                 return false;
             }
@@ -48,21 +50,39 @@ namespace eka2l1 {
                 return false;
             }
 
-            *request_status = -3;
+            *request_status.get(kern->get_memory_system()) = -3;
             requester->signal_request();
 
             requester = nullptr;
-            request_status = nullptr;
+            request_status = 0;
 
             return true;
         }
 
         void change_notifier::notify_change_requester() {
-            *request_status = 0;
+            *request_status.get(kern->get_memory_system()) = 0;
             requester->signal_request();
 
             requester = nullptr;
-            request_status = nullptr;
+            request_status = 0;
+        }
+
+        void change_notifier::write_object_to_snapshot(common::wo_buf_stream &stream) {
+            kernel_obj::write_object_to_snapshot(stream);
+
+            const std::uint64_t requester_id = requester->unique_id();
+
+            stream.write(&requester_id, sizeof(requester_id));
+            stream.write(&request_status, sizeof(request_status));
+        }
+
+        void change_notifier::do_state(common::ro_buf_stream &stream) {
+            std::uint64_t requester_id = 0;
+            stream.read(&requester_id, sizeof(requester_id));
+            stream.read(&request_status, sizeof(request_status));
+
+            requester = std::dynamic_pointer_cast<kernel::thread>
+                (kern->get_kernel_obj_by_id(requester_id));
         }
     }
 }

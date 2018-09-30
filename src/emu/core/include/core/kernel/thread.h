@@ -262,7 +262,7 @@ namespace eka2l1 {
                 return own_process;
             }
 
-            arm::jit_interface::thread_context get_thread_context() {
+            arm::jit_interface::thread_context &get_thread_context() {
                 return ctx;
             }
 

@@ -138,5 +138,25 @@ namespace eka2l1 {
 
             return true;
         }
+
+        void library::write_object_to_snapshot(common::wo_buf_stream &stream) {
+            kernel_obj::write_object_to_snapshot(stream);
+
+            stream.write(&state, sizeof(state));
+            stream.write(&lib_type, sizeof(lib_type));
+        }
+
+        void library::do_state(common::ro_buf_stream &stream) {
+            kernel_obj::do_state(stream);
+
+            stream.read(&state, sizeof(state));
+            stream.read(&lib_type, sizeof(lib_type));
+
+            if (lib_type == e32_img_library) {
+                e32_img = kern->get_lib_manager()->load_e32img(common::utf8_to_ucs2(obj_name));
+            } else {
+                rom_img = kern->get_lib_manager()->load_romimg(common::utf8_to_ucs2(obj_name));
+            }
+        }
     }
 }

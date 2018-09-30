@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <common/buffer.h>
+
 #include <cstdint>
 #include <string>
 
@@ -131,6 +133,9 @@ namespace eka2l1 {
             virtual void rename(const std::string &new_name) {
                 obj_name = new_name;
             }
+
+            virtual void write_object_to_snapshot(common::wo_buf_stream &stream);
+            virtual void do_state(common::ro_buf_stream &stream);
         };
     }
 }

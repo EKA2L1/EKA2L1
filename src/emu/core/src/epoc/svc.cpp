@@ -1833,7 +1833,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        bool res = cnot->logon(aRequestStatus.get(mem));
+        bool res = cnot->logon(aRequestStatus);
 
         if (!res) {
             return KErrGeneral;

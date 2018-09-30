@@ -191,7 +191,6 @@ namespace eka2l1 {
         void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len,
             address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
-
             info.allocator = allocator.ptr_address();
             info.func_ptr = epa;
             info.ptr = usrdata.ptr_address();
@@ -485,6 +484,12 @@ namespace eka2l1 {
         void thread::owning_process(process_ptr pr) {
             own_process = pr;
             own_process->increase_thread_count();
+
+            chunk_ptr name_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
+            chunk_ptr stack_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
+
+            name_chunk_ptr->set_own_process(own_process);
+            stack_chunk_ptr->set_own_process(own_process);
 
             update_priority();
             last_priority = real_priority;

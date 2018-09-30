@@ -33,8 +33,8 @@
 #include <core/kernel/thread.h>
 #include <core/loader/romimage.h>
 #include <core/manager/manager.h>
-#include <core/services/posix/posix.h>
 #include <core/ptr.h>
+#include <core/services/posix/posix.h>
 #include <core/vfs.h>
 
 #include <core/services/init.h>
@@ -204,7 +204,8 @@ namespace eka2l1 {
 
     uint32_t kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
         kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner) {
-        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib);
+        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, crr_process(), name, bottom, top, size,
+            protection, type, access, attrib);
         objects.push_back(std::move(new_chunk));
 
         return create_handle_lastest(owner);
@@ -680,5 +681,9 @@ namespace eka2l1 {
 
     bool kernel_system::should_terminate() {
         return thr_sch->should_terminate();
+    }
+
+    bool kernel_system::save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids) {
+        return true;
     }
 }

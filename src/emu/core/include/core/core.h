@@ -119,7 +119,10 @@ namespace eka2l1 {
         /*! \brief Save the core configs. */
         void write_configs();
 
-    public:
+        bool save_snapshot_processes(const std::string &path,
+            const std::vector<uint32_t> &inclue_uids);
+
+     public :
         bool get_bool_config(const std::string name) {
             return bool_configs[name];
         }
@@ -158,7 +161,35 @@ namespace eka2l1 {
         int loop();
         void shutdown();
 
-        manager_system *get_manager_system(){
+        /*!\brief Snapshot is a way to save the state of the system.
+         *
+         * Snapshot can be used for fast startup. Here, in EKA2L1,
+         * after the first UI process runs well, the state of all
+         * processes will be saved and load in the next running
+         * session.
+         *
+         * The snapshot will save all of the following:
+         * - The EPOC version
+         * - All kernel objects (semaphore, mutex, etc...)
+         * - Global memory data that is committed.
+         * - Local data for each process
+         * - Thread state, current running thread and process
+         *
+         * The following will not be saved:
+         * - The ROM content.
+         * - Page that is marked as free.
+         *
+         * \params name The path to save the snapshot. Note that the snapshot
+         *              can be really large.
+         *
+         * \returns     True if successfully save the snapshot
+         */
+        bool save_snapshot(const std::string &name);
+        bool save_snapshot_exclude_current_process(const std::string &name);
+
+        bool load_snapshot(const std::string &name);
+
+        manager_system *get_manager_system() {
             return &mngr;
         }
 
@@ -198,9 +229,9 @@ namespace eka2l1 {
             return cpu;
         }
 
-        void mount(drive_number drv, const drive_media media, std::string path, 
+        void mount(drive_number drv, const drive_media media, std::string path,
             const io_attrib attrib = io_attrib::none);
-            
+
         void reset();
 
         bool install_rpkg(const std::string &path);

@@ -135,13 +135,12 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
             LOG_INFO("Passing through: {} addr = 0x{:x}", *mngr->get_func_name(*res), address);
         }
     }
+    const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
+    size_t buffer_size = eka2l1::common::GB(4) - address;
+    bool thumb = thumb_mode(uc);
+    std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
 
-    if (log_code) {
-        const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
-        size_t buffer_size = eka2l1::common::GB(4) - address;
-        bool thumb = thumb_mode(uc);
-        std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
-
+    if (log_code) {        
         LOG_TRACE("{:#08x} {} 0x{:x}", address, disassembly, thumb ? *(uint16_t *)code : *(uint32_t *)code);
     }
 }

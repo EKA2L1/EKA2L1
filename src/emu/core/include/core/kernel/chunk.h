@@ -27,12 +27,19 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 namespace eka2l1 {
     using address = uint32_t;
     
     class memory_system;
     class kernel_system;
+
+    namespace kernel {
+        class process;
+    }
+
+    using process_ptr = std::shared_ptr<kernel::process>;
 
 	/*! \brief Contains kernel objects implementation. */
     namespace kernel {
@@ -78,9 +85,12 @@ namespace eka2l1 {
             kernel_system* kern;
             memory_system* mem;
 
+            process_ptr own_process;
+
         public:
-            chunk(kernel_system* kern, memory_system* mem, std::string name, address bottom, const address top, const size_t max_grow_size, prot protection,
-                chunk_type type, chunk_access access, chunk_attrib attrib);
+            chunk(kernel_system* kern, memory_system* mem, process_ptr own_process, std::string name, address bottom,
+                const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
+                chunk_attrib attrib);
 
             /*! \brief Commit to a disconnected chunk. 
 			 *
@@ -146,6 +156,17 @@ namespace eka2l1 {
             size_t get_size() {
                 return commited_size;
             }
+
+            process_ptr get_own_process() {
+                return own_process;
+            }
+
+            void set_own_process(process_ptr new_own) {
+                own_process = new_own;
+            }
+
+            void write_object_to_snapshot(common::wo_buf_stream &stream) override;
+            void do_state(common::ro_buf_stream &stream) override;
         };
     }
 }

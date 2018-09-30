@@ -123,8 +123,7 @@ namespace eka2l1 {
         kern.run_process(process_handle);
 
         // Change window title to game title
-        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) +
-            " (" + common::to_string(id, std::hex) + ")");
+        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
 
         return process_handle;
     }
@@ -287,5 +286,26 @@ namespace eka2l1 {
 
     hal_ptr system::get_hal(uint32_t cagetory) {
         return hals[cagetory];
+    }
+
+    bool system::save_snapshot_processes(const std::string &path,
+        const std::vector<uint32_t> &include_uids) {
+        page_table *pt = mem.get_current_page_table();
+
+        // Can't snapshot if no memory page table is present
+        if (!pt) {
+            return false;
+        }
+
+        FILE *f = fopen(path.data(), "wb");
+
+        // Start writing the magic header
+        static constexpr char *magic_header = "SNAE";
+        fwrite(magic_header, 1, 4, f);
+
+        // Kernel object saving
+        kern.save_snapshot_for_processes(f, include_uids);
+        
+        return true;
     }
 }

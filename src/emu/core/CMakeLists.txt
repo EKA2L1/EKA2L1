@@ -26,6 +26,7 @@ add_subdirectory(src/kernel)
 add_subdirectory(src/abi)
 add_subdirectory(src/services)
 add_subdirectory(src/epoc)
+add_subdirectory(src/gdbstub)
 
 target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)

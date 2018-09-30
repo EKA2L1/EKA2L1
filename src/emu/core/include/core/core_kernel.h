@@ -258,7 +258,8 @@ namespace eka2l1 {
         process_ptr crr_process();
 
         void set_handle_owner_type(int handle);
-
         bool should_terminate();
+
+        bool save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids);
     };
 }

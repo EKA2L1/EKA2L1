@@ -7,6 +7,8 @@
 #include <memory>
 
 namespace eka2l1 {
+    class system;
+
     namespace arm {
         class jit_interface;
 
@@ -14,6 +16,8 @@ namespace eka2l1 {
     }
 
     class memory_system {
+        friend class system;
+
         page_table *current_page_table = nullptr;
         page_table *previous_page_table = nullptr;
 
