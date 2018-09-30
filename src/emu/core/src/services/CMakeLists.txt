@@ -9,14 +9,16 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/domain/database.h
     ${CORE_INCLUDE_DIR}/services/domain/defs.h
     ${CORE_INCLUDE_DIR}/services/domain/domain.h
+    ${CORE_INCLUDE_DIR}/services/drm/rights.h
     ${CORE_INCLUDE_DIR}/services/featmgr/featmgr.h
     ${CORE_INCLUDE_DIR}/services/fs/fs.h
-    ${CORE_INCLUDE_DIR}/services/window/window.h
     ${CORE_INCLUDE_DIR}/services/loader/loader.h
+    ${CORE_INCLUDE_DIR}/services/install/install.h
     ${CORE_INCLUDE_DIR}/services/loader/op.h
     ${CORE_INCLUDE_DIR}/services/posix/posix.h
     ${CORE_INCLUDE_DIR}/services/posix/op.h
     ${CORE_INCLUDE_DIR}/services/ui/oom_app.h
+    ${CORE_INCLUDE_DIR}/services/window/window.h
     ${CORE_INCLUDE_DIR}/ipc.h
     context.cpp
     init.cpp
@@ -25,12 +27,14 @@ add_library(services
     session.cpp
     applist/applist.cpp
     domain/domain.cpp
+    drm/rights.cpp
     featmgr/featmgr.cpp
     fs/fs.cpp
+    install/install.cpp
     loader/loader.cpp
-    window/window.cpp
     posix/posix.cpp
     ui/oom_app.cpp
+    window/window.cpp
     ../ipc.cpp)
 
 target_include_directories(services PUBLIC ${CORE_OUTER_INCLUDE_DIR} ${EPOC32_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR}) 

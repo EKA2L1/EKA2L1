@@ -80,6 +80,9 @@ namespace eka2l1 {
                 break;
             case relocation_type::data:
                 // TODO: Remove the hack
+                // This hack along with the chunk 0x400000 hack make a complete
+                // resolve about this situation. It's not from our side, it's from
+                // the broken post-linker tool.
                 if (*dest_ptr == 0x400000) {
                     LOG_WARN("Destination relocation has value of 0x400000, ignored");
                 } else {

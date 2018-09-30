@@ -20,8 +20,10 @@
 
 #include <core/services/applist/applist.h>
 #include <core/services/domain/domain.h>
+#include <core/services/drm/rights.h>
 #include <core/services/featmgr/featmgr.h>
 #include <core/services/fs/fs.h>
+#include <core/services/install/install.h>
 #include <core/services/loader/loader.h>
 #include <core/services/ui/oom_app.h>
 #include <core/services/window/window.h>
@@ -236,6 +238,8 @@ namespace eka2l1 {
             CREATE_SERVER(sys, window_server);
             CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, domainmngr_server);
+            CREATE_SERVER(sys, install_server);
+            CREATE_SERVER(sys, rights_server);
 
             auto &dmmngr = std::dynamic_pointer_cast<domainmngr_server>(temp)->get_domain_manager();
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
