@@ -212,5 +212,56 @@ namespace eka2l1 {
 
             thr_sptr->state = thread_state::wait_mutex;
         }
+
+        void mutex::write_object_to_snapshot(common::wo_buf_stream &stream) {
+            kernel_obj::write_object_to_snapshot(stream);
+
+            stream.write(&holding->uid, sizeof(holding->uid));
+
+            const std::size_t total_waits = waits.size();
+            const std::size_t total_suspend = suspended.size();
+
+            stream.write(&total_waits, sizeof(total_waits));
+            for (const auto &wait : waits) {
+                stream.write(&wait->uid, sizeof(wait->uid));
+            }
+
+            stream.write(&total_suspend, sizeof(total_suspend));
+            for (const auto &sus : suspended) {
+                stream.write(&sus->uid, sizeof(sus->uid));
+            }
+        }
+
+        void mutex::do_state(common::ro_buf_stream &stream) {
+            kernel_obj::do_state(stream);
+
+            std::uint64_t holding_id;
+            stream.read(&holding_id, sizeof(holding_id));
+
+            holding = std::dynamic_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj(holding_id));
+
+            std::size_t total_waits;
+            stream.read(&total_waits, sizeof(total_waits));
+
+            for (size_t i = 0; i < total_waits; i++) {
+                std::uint64_t wait_thr_id;
+                stream.read(&wait_thr_id, sizeof(wait_thr_id));
+
+                waits.push(std::dynamic_pointer_cast<kernel::thread>(
+                        kern->get_kernel_obj(wait_thr_id)));
+            }
+
+            std::size_t total_suspend;
+            stream.read(&total_suspend, sizeof(total_suspend));
+
+            for (size_t i = 0; i < total_suspend; i++) {
+                std::uint64_t sus_thr_id;
+                stream.read(&sus_thr_id, sizeof(sus_thr_id));
+
+                suspended.push_back(std::dynamic_pointer_cast<kernel::thread>(
+                    kern->get_kernel_obj(sus_thr_id)));
+            }
+        }
     }
 }

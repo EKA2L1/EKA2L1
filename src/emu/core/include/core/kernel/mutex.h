@@ -75,6 +75,9 @@ namespace eka2l1 {
             bool suspend_thread(thread *thr);
 
             bool unsuspend_thread(thread *thr);
+
+            void write_object_to_snapshot(common::wo_buf_stream &stream) override;
+            void do_state(common::ro_buf_stream &stream) override;
         };
     }
 }
