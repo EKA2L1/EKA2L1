@@ -12,4 +12,3 @@ target_include_directories(coremanager PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 # it will be used very common
 target_link_libraries(coremanager PUBLIC common pybind11::embed)
 target_link_libraries(coremanager PRIVATE coreloader symemu)
-	

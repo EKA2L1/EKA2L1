@@ -52,7 +52,7 @@ target_link_libraries(core PRIVATE
         drivers
         yaml-cpp)
 
-if (UNIX OR APPLE)
+if (NOT MSVC)
     target_link_libraries(core PRIVATE pthread stdc++fs)
 endif()
 

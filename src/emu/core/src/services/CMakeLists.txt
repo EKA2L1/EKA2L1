@@ -44,6 +44,6 @@ target_include_directories(services PUBLIC
 
 target_link_libraries(services PRIVATE epoc common core freetype)
 
-if (UNIX OR APPLE)
+if (NOT MSVC)
     target_link_libraries(services PRIVATE stdc++fs)
 endif()

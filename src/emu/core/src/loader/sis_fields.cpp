@@ -64,7 +64,7 @@ namespace eka2l1 {
 
             switch (arr.element_type) {
             case sis_field_type::SISString:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_string>(parse_string(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -74,7 +74,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISSupportedOption:
-                while ((uint32_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint32_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_supported_option>(parse_supported_option(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -84,7 +84,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISLanguage:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_supported_lang>(parse_supported_lang(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -94,7 +94,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISDependency:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_dependency>(parse_dependency(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -104,7 +104,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISProperty:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_property>(parse_property(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -114,7 +114,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISFileDes:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_file_des>(parse_file_description(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -124,7 +124,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISController:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_controller>(parse_controller(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -134,7 +134,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISFileData:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_file_data>(parse_file_data(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -144,7 +144,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISdataUnit:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_data_unit>(parse_data_unit(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -154,7 +154,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISExpression:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_expression>(parse_expression(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -164,7 +164,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISIf:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_if>(parse_if(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -174,7 +174,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISElseIf:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_else_if>(parse_if_else(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -184,7 +184,7 @@ namespace eka2l1 {
                 break;
 
             case sis_field_type::SISSignature:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | (arr.len_high << 32)) - 4) {
+                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
                     auto str = std::make_shared<sis_sig>(parse_signature(true));
                     str->type = arr.element_type;
                     arr.fields.push_back(str);
@@ -373,7 +373,7 @@ namespace eka2l1 {
                         compressed.uncompressed_size);
                 }
             } else {
-                uint64_t us = (compressed.len_low | (compressed.len_high << 32)) - 12;
+                uint64_t us = (compressed.len_low | ((uint64_t)compressed.len_high << 32)) - 12;
 
                 if (!no_extract) {
                     compressed.compressed_data.resize(us);
@@ -517,7 +517,7 @@ namespace eka2l1 {
             sis_string str;
             parse_field_child(&str, no_arr);
 
-            str.unicode_string.resize(((str.len_low) | (str.len_high << 32)) / 2);
+            str.unicode_string.resize(((str.len_low) | ((uint64_t)str.len_high << 32)) / 2);
 
             stream->read(reinterpret_cast<char *>(&str.unicode_string[0]),
                 str.unicode_string.size() * 2);
@@ -625,7 +625,7 @@ namespace eka2l1 {
             sis_blob blob;
             parse_field_child(&blob);
 
-            blob.raw_data.resize(blob.len_low | (blob.len_high << 32));
+            blob.raw_data.resize(blob.len_low | ((uint64_t)blob.len_high << 32));
 
             stream->read(blob.raw_data.data(), blob.raw_data.size());
             valid_offset();
@@ -636,7 +636,7 @@ namespace eka2l1 {
             sis_capabilities blob;
             parse_field_child(&blob);
 
-            blob.raw_data.resize(blob.len_low | (blob.len_high << 32));
+            blob.raw_data.resize(blob.len_low | ((uint64_t)blob.len_high << 32));
 
             stream->read(blob.raw_data.data(), blob.raw_data.size());
             valid_offset();

@@ -16,7 +16,15 @@ add_library(coreloader
     rpkg.cpp
 	rom.cpp)
 
-target_link_libraries(coreloader PRIVATE common coremem miniz core yaml-cpp hle coreio) 
+target_link_libraries(coreloader 
+    PRIVATE
+    common 
+    coreio
+    coremem
+    corekernel
+    hle
+    miniz
+    yaml-cpp) 
 
 target_include_directories(coreloader PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 target_include_directories(coreloader
