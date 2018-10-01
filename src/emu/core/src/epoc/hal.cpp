@@ -30,10 +30,10 @@
 #include <core/epoc/des.h>
 
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
-    funcs.emplace(op, std::bind(&##hal_name::##func, this, std::placeholders::_1, std::placeholders::_2))
+    funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2))
 
 #define REGISTER_HAL(sys, cage, hal_name) \
-    sys->add_new_hal(cage, std::make_shared<##hal_name>(sys))
+    sys->add_new_hal(cage, std::make_shared<hal_name>(sys))
 
 namespace eka2l1::epoc {
     hal::hal(eka2l1::system *sys)

@@ -40,6 +40,8 @@ namespace eka2l1 {
                 uint32_t fpscr;
             };
 
+            virtual ~jit_interface() {}
+
             /*! Run the CPU */
             virtual void run() = 0;
 

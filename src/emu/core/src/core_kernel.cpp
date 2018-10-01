@@ -90,7 +90,8 @@ namespace eka2l1 {
         return thr_sch->current_process();
     }
 
-    uint32_t kernel_system::spawn_new_process(std::string &path, std::string name, uint32_t uid, kernel::owner_type owner) {
+    uint32_t kernel_system::spawn_new_process(const std::string &path, const std::string &name,
+        uint32_t uid, kernel::owner_type owner) {
         std::u16string path16 = common::utf8_to_ucs2(path);
         symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
@@ -332,7 +333,7 @@ namespace eka2l1 {
     }
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
-        auto &slot_free = std::find_if(msgs.begin(), msgs.end(),
+        auto slot_free = std::find_if(msgs.begin(), msgs.end(),
             [](auto slot) { return !slot || slot->free; });
 
         if (slot_free != msgs.end()) {
@@ -361,7 +362,7 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
-        auto &obj_ite = std::find(objects.begin(), objects.end(), obj);
+        auto obj_ite = std::find(objects.begin(), objects.end(), obj);
 
         if (obj_ite != objects.end()) {
             objects.erase(obj_ite);
@@ -431,7 +432,7 @@ namespace eka2l1 {
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj_by_id(uint64_t id) {
-        auto &res = std::find_if(objects.begin(), objects.end(),
+        auto res = std::find_if(objects.begin(), objects.end(),
             [=](kernel_obj_ptr obj) { return obj && (obj->unique_id() == id); });
 
         if (res != objects.end()) {
@@ -534,7 +535,7 @@ namespace eka2l1 {
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {
-        auto &prop_res = std::find_if(objects.begin(), objects.end(),
+        auto prop_res = std::find_if(objects.begin(), objects.end(),
             [=](const auto &prop) {
                 if (prop && prop->get_object_type() == kernel::object_type::prop) {
                     property_ptr real_prop = std::dynamic_pointer_cast<service::property>(prop);

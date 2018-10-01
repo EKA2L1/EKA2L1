@@ -1,13 +1,15 @@
 #pragma once
 
 #include <core/page_table.h>
-#include <core/ptr.h>
 
 #include <functional>
 #include <memory>
 
 namespace eka2l1 {
     class system;
+
+    template <typename T>
+    class ptr;
 
     namespace arm {
         class jit_interface;

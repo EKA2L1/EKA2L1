@@ -20,6 +20,7 @@
 
 #include <core/core_kernel.h>
 #include <core/core_mem.h>
+#include <core/ptr.h>
 
 #include <core/kernel/change_notifier.h>
 

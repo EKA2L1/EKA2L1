@@ -38,7 +38,10 @@
 #include <yaml-cpp/yaml.h>
 
 #include <experimental/filesystem>
+
+#include <atomic>
 #include <fstream>
+#include <string>
 
 namespace fs = std::experimental::filesystem;
 
@@ -163,7 +166,7 @@ namespace eka2l1 {
     }
 
     bool system::load_rom(const std::string &path) {
-        auto romf_res = loader::load_rom(path);
+        std::optional<loader::rom> romf_res = loader::load_rom(path);
 
         if (!romf_res) {
             return false;
@@ -208,7 +211,7 @@ namespace eka2l1 {
 
     bool system::install_rpkg(const std::string &path) {
         std::atomic_int holder;
-        bool res = loader::install_rpkg(&io, path, holder);
+        bool res = eka2l1::loader::install_rpkg(&io, path, holder);
 
         if (!res) {
             return false;
@@ -300,7 +303,7 @@ namespace eka2l1 {
         FILE *f = fopen(path.data(), "wb");
 
         // Start writing the magic header
-        static constexpr char *magic_header = "SNAE";
+        const char *magic_header = "SNAE";
         fwrite(magic_header, 1, 4, f);
 
         // Kernel object saving

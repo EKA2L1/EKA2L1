@@ -22,8 +22,16 @@ pybind11_add_module(symemu_common
 target_include_directories(symemu PUBLIC include  ${EPOC32_INCLUDE_DIR})
 target_link_libraries(symemu PRIVATE common pybind11 core corekernel)
 
+if (UNIX OR APPLE)
+    target_link_libraries(symemu PRIVATE util)
+endif()
+
 target_include_directories(symemu_common PUBLIC include)
 target_link_libraries(symemu_common PRIVATE common pybind11)
+
+if (UNIX OR APPLE)
+    target_link_libraries(symemu_common PRIVATE util)
+endif()
 
 # Move the syemu to script folder
 set_target_properties(symemu PROPERTIES OUTPUT_NAME symemu
@@ -32,9 +40,9 @@ set_target_properties(symemu PROPERTIES OUTPUT_NAME symemu
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/")
 
 set_target_properties(symemu_common PROPERTIES OUTPUT_NAME common
-	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
-	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/")
+	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/scripts/symemu2"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/scripts/symemu2"
+	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/scripts/symemu2")
 
 add_custom_command(
 	TARGET symemu
@@ -49,8 +57,6 @@ add_custom_command(
 add_custom_command(
 	TARGET symemu_common
 			POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:symemu>/scripts/symemu2"
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_NAME:symemu_common>" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/__init__.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/events.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/svc.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"

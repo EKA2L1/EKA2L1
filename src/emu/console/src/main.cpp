@@ -129,7 +129,9 @@ void parse_args(int argc, char **argv) {
                 mount_e = argv[++i];
             }
         } else if (strncmp(argv[i], "-irpkg", 6) == 0) {
-            fetch_rpkg(argv[i++], argv[++i]);
+            i += 2;
+
+            fetch_rpkg(argv[i - 1], argv[i]);
         } else {
             std::cout << "Invalid request." << std::endl;
 

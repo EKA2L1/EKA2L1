@@ -97,6 +97,8 @@ namespace eka2l1 {
             suspended.push_back(thr_sptr);
 
             thr_sptr->state = thread_state::wait_fast_sema_suspend;
+
+            return true;
         }
 
         bool semaphore::unsuspend_waiting_thread(thread *thr) {
@@ -119,6 +121,8 @@ namespace eka2l1 {
             waits.push(thr_sptr);
 
             thr_sptr->state = thread_state::wait_fast_sema;
+
+            return true;
         }
     }
 }

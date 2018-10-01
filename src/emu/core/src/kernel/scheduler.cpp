@@ -183,16 +183,13 @@ namespace eka2l1 {
             }
 
             switch (thr->state) {
-            case thread_state::wait:
-            case thread_state::wait_fast_sema:
-            case thread_state::wait_hle:
-            case thread_state::wait_mutex:
-                break;
-
             case thread_state::ready:
             case thread_state::run:
             case thread_state::stop:
                 return false;
+
+            default:
+                break;
             }
 
             thr->state = thread_state::ready;
@@ -226,7 +223,7 @@ namespace eka2l1 {
                     return false;
                 }
             } else if (thr->state == thread_state::wait || thr->state == thread_state::wait_fast_sema) {
-                auto &thr_wait = std::find(waiting_threads.begin(), waiting_threads.end(), thr);
+                auto thr_wait = std::find(waiting_threads.begin(), waiting_threads.end(), thr);
 
                 if (thr_wait != waiting_threads.end()) {
                     waiting_threads.erase(thr_wait);

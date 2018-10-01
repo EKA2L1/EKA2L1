@@ -2,10 +2,9 @@
 
 #include <common/types.h>
 
+#include <atomic>
 #include <cstdint>
 #include <string>
-
-#include <atomic>
 
 namespace eka2l1 {
     class io_system;

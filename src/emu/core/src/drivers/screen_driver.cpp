@@ -8,6 +8,9 @@ namespace eka2l1 {
                 case driver_type::opengl: {
                     return std::make_shared<screen_driver_ogl>();
                 }
+
+                default:
+                    break;
             }
 
             return screen_driver_ptr(nullptr);

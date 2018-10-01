@@ -57,7 +57,8 @@ namespace eka2l1 {
 			 * \param screen_size The screen size.
 			 * \param font_size The font size.
 			*/
-            virtual void init(emu_window_ptr win, object_size &screen_size, object_size &font_size) = 0;
+            virtual void init(emu_window_ptr win, const object_size &screen_size, 
+                const object_size &font_size) = 0;
             
 			/*! \brief Shutdown the screen driver */
 			virtual void shutdown() = 0;

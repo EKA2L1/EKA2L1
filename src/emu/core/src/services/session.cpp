@@ -44,12 +44,12 @@ namespace eka2l1 {
             }
         }
 
-        ipc_msg_ptr &session::get_free_msg() {
+        ipc_msg_ptr session::get_free_msg() {
             if (msgs_pool.empty()) {
                 return kern->create_msg(kernel::owner_type::process);
             }
 
-            auto &free_msg_in_pool = std::find_if(msgs_pool.begin(), msgs_pool.end(),
+            auto free_msg_in_pool = std::find_if(msgs_pool.begin(), msgs_pool.end(),
                 [](const auto &msg) { return msg.first; });
 
             if (free_msg_in_pool != msgs_pool.end()) {
@@ -70,7 +70,7 @@ namespace eka2l1 {
                 return;
             }
 
-            auto &wrap_msg = std::find_if(msgs_pool.begin(), msgs_pool.end(),
+            auto wrap_msg = std::find_if(msgs_pool.begin(), msgs_pool.end(),
                 [&](const auto &wrap_msg) { return wrap_msg.second == msg; });
 
             if (wrap_msg != msgs_pool.end()) {

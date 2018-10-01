@@ -54,7 +54,7 @@ namespace eka2l1 {
             uint32_t cookie_address;
 
         private:
-            ipc_msg_ptr &get_free_msg();
+            ipc_msg_ptr get_free_msg();
 
         public:
             session(kernel_system *kern, server_ptr svr, int async_slot_count);

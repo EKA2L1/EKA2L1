@@ -24,6 +24,7 @@
 #include <core/epoc/des.h>
 
 #include <clocale>
+#include <experimental/filesystem>
 #include <memory>
 
 #include <common/algorithm.h>
@@ -34,8 +35,6 @@
 #include <common/e32inc.h>
 
 #include <core/vfs.h>
-#include <filesystem>
-
 #include <core/core.h>
 
 namespace fs = std::experimental::filesystem;
@@ -332,7 +331,7 @@ namespace eka2l1 {
         }
 
         char16_t drive_dos_char = char16_t(0x41 + *drive_ordinal);
-        std::u16string drive_u16 = drive_dos_char + u":";
+        std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
 
         // Try to get the app uid
         uint32_t uid = std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type());
@@ -868,6 +867,8 @@ namespace eka2l1 {
 
             return nodes_table.add_node(new_node);
         }
+
+        return KErrGeneral;
     }
 
     bool is_e32img(symfile f) {

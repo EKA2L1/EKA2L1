@@ -22,9 +22,12 @@
 
 #include <common/types.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 #include <string>
+#include <vector>
 
 namespace eka2l1 {
     /*! \brief Contains functions that use frequently in the emulator */
@@ -132,7 +135,8 @@ namespace eka2l1 {
                 return target;
             }
 
-            uint32_t new_alignment = is_power_of_two(alignment) ? alignment : next_power_of_two(alignment);
+            uint32_t new_alignment = is_power_of_two(alignment) ? alignment : 
+                next_power_of_two(alignment);
 
             // No more align if it's already aligned
             if (target % new_alignment == 0) {

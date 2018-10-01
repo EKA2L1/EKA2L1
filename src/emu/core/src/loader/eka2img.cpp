@@ -197,7 +197,9 @@ namespace eka2l1 {
                 }
             }
 
-            for (uint32_t i = crr_idx, j = 0; i < crr_idx + import_block.ordinals.size(), j < import_block.ordinals.size(); i++, j++) {
+            for (uint32_t i = crr_idx, j = 0; 
+                i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
+                i++, j++) {
                 uint32_t iat_off = img->header.code_offset + img->header.code_size;
                 img->data[iat_off + i * 4] = expdir[import_block.ordinals[j] - 1];
             }

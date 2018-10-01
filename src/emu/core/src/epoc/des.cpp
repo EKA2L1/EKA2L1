@@ -45,6 +45,9 @@ namespace eka2l1::epoc {
 
         case EPtr:
             return (reinterpret_cast<TPtr8 *>(aDes8))->iPtr;
+
+        default:
+            break;
         }
 
         return eka2l1::ptr<TUint8>(0);
@@ -87,6 +90,9 @@ namespace eka2l1::epoc {
 
         case EPtr:
             return (reinterpret_cast<TPtr16 *>(aDes16))->iPtr;
+
+        default:
+            break;
         }
 
         return ptr<TUint16>(0);

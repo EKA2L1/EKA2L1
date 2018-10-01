@@ -75,6 +75,8 @@ namespace eka2l1::scripting {
     }
 
     std::unique_ptr<scripting::process> thread::get_owning_process() {
-        return std::make_unique<scripting::process>((uint64_t)(&thread_handle->owning_process()));
+        process_ptr pr = thread_handle->owning_process();
+        return std::make_unique<scripting::process>((uint64_t)(
+            &pr));
     }
 }

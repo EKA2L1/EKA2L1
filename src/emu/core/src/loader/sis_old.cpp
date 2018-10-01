@@ -91,7 +91,7 @@ namespace eka2l1::loader {
         loader::sis_old res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
         std::u16string main_path = res.app_path ? *res.app_path : (res.exe_path ? *res.exe_path : u"");
 
-        std::transform(main_path.begin(), main_path.end(), main_path.begin(), std::tolower);
+        std::transform(main_path.begin(), main_path.end(), main_path.begin(), std::towlower);
 
         if (main_path != u"") {
             if (main_path.find(u"!") == std::u16string::npos) {
@@ -183,5 +183,7 @@ namespace eka2l1::loader {
                     inflateEnd(&stream);
             }
         }
+
+        return false;
     }
 }

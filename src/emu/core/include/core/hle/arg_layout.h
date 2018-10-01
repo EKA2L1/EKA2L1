@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <array>
 
 namespace eka2l1 {
@@ -36,7 +37,7 @@ namespace eka2l1 {
 		/*! \brief The layout of the argument in EABI */
         struct arg_layout {
             arg_where loc;
-            uint32_t offset;
+            size_t offset;
         };
 
         template <typename... args>

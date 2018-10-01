@@ -7,7 +7,6 @@ add_definitions(-DCURL_STATICLIB)
 
 add_subdirectory(freetype)
 add_subdirectory(pybind11)
-add_subdirectory(FRSML)
 add_subdirectory(spdlog)
 add_subdirectory(glfw)
 add_subdirectory(glm)
@@ -51,9 +50,6 @@ target_include_directories(imgui PUBLIC imgui)
 add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
 add_library(unicorn INTERFACE)
-
-add_library(simini INTERFACE)
-target_include_directories(simini INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/simpleini")
 
 if(APPLE)
 	target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/include")

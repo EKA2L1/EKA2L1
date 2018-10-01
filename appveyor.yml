@@ -12,12 +12,6 @@ image:
 install:
   - ps: |
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-  - appveyor AddMessage -Category Information "Downloading NewPascal (bentokun)..."
-  - appveyor DownloadFile https://github.com/bentokun/newpascal/releases/download/newpascalpack-v1.0.84/newpascal.zip
-  - appveyor AddMessage "Unpacking NewPascal..."
-  - 7z x -y "newpascal.zip" -o"C:\" > nul
-  - appveyor AddMessage -Category Information "Configuring NewPascal..."
-  - c:\newpascal\configure.bat
   - cd c:\tools\vcpkg
   - vcpkg integrate install
   - git pull
@@ -39,9 +33,6 @@ install:
 build_script:
   - appveyor AddMessage -Cagetory Information "Building EKA2L1 Core..."
   - msbuild build\EKA2L1.sln /maxcpucount:3  /p:Configuration=Release /p:Platform=x64
-  - appveyor AddMessage -Category Information "Building EKA2L1 GUI..."
-  - c:\newpascal\lazarus\lazbuild src\emu\lazarus\EKA2L1.lpi --lazarusdir=c:\newpascal\lazarus
-  - copy src\emu\lazarus\EKA2L1.exe build\bin\Release\EKA2L1.exe
   - 7z a -m0=LZMA2 -mx9 EKA2L1.7z .\build\bin\Release\*
   - appveyor AddMessage -Category Information "Done." 
 

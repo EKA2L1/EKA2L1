@@ -327,7 +327,7 @@ namespace eka2l1 {
         }
 
         void thread::after(epoc::request_status *sts, uint32_t mssecs) {
-            assert(!timeout_sts, "After request outstanding");
+            assert(!timeout_sts && "After request outstanding");
             timeout_sts = sts;
 
             timing->schedule_event(timing->us_to_cycles((uint64_t)mssecs), 
@@ -335,15 +335,16 @@ namespace eka2l1 {
         }
 
         bool thread::sleep(uint32_t mssecs) {
-            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)), mssecs);
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj_by_id(uid)), mssecs);
         }
 
         bool thread::sleep_nof(epoc::request_status *sts, uint32_t mssecs) {
-            assert(!sleep_nof_sts, "Thread supposed to sleep already");
+            assert(!sleep_nof_sts && "Thread supposed to sleep already");
             sleep_nof_sts = sts;
 
-            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)),
-                mssecs);
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj_by_id(uid)), mssecs);
         }
 
         void thread::notify_sleep(const int errcode) {

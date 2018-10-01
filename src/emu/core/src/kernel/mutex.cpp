@@ -211,6 +211,8 @@ namespace eka2l1 {
             waits.push(thr_sptr);
 
             thr_sptr->state = thread_state::wait_mutex;
+
+            return true;
         }
 
         void mutex::write_object_to_snapshot(common::wo_buf_stream &stream) {

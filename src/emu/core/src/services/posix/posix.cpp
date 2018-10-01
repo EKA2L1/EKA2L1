@@ -36,6 +36,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifndef WIN32
+#include <unistd.h>
+#endif
+
 namespace fs = std::experimental::filesystem;
 
 #define POSIX_REQUEST_FINISH_WITH_ERR(ctx, err) \
@@ -224,8 +228,9 @@ namespace eka2l1 {
         POSIX_REQUEST_INIT(ctx);
 
         working_dir = std::move(fs::absolute(
-            params->cwptr[0].get(ctx.sys->get_memory_system()), working_dir)
-                                    .u16string());
+            std::u16string(reinterpret_cast<char16_t*>(
+                params->cwptr[0].get(ctx.sys->get_memory_system()))), 
+                working_dir).u16string());
 
         params->ret = 0;
 
@@ -237,8 +242,9 @@ namespace eka2l1 {
 
         // Get the absolute path
         const std::u16string full_new_path = std::move(fs::absolute(
-            params->cwptr[0].get(ctx.sys->get_memory_system()), working_dir)
-                                                           .u16string());
+            std::u16string(reinterpret_cast<char16_t*>(
+                params->cwptr[0].get(ctx.sys->get_memory_system()))),
+                working_dir).u16string());
 
         const std::string path_utf8 = ctx.sys->get_io_system()->get(
             common::ucs2_to_utf8(full_new_path));
@@ -267,13 +273,15 @@ namespace eka2l1 {
         if (posix_open_mode & O_TMPFILE) {
 #endif
             // Put the temporary file in tmp folder of the correspond private space of process in C drive
-            base_dir = "C:\\private\\" + common::to_string(associated_process->get_uid(), std::hex) + "\\tmp\\";
+            base_dir = std::string("C:\\private\\") +
+                common::to_string(associated_process->get_uid(), std::hex) + "\\tmp\\";
         }
 
         // Get the absolute path
         const std::u16string full_new_path = std::move(fs::absolute(
-            params->cwptr[0].get(ctx.sys->get_memory_system()), base_dir)
-                                                           .u16string());
+            std::u16string(reinterpret_cast<char16_t*>(
+                params->cwptr[0].get(ctx.sys->get_memory_system()))), 
+                base_dir).u16string());
 
         const std::string path_utf8 = common::ucs2_to_utf8(full_new_path);
 
@@ -286,7 +294,7 @@ namespace eka2l1 {
 #ifdef WIN32
                    O_TEMPORARY
 #else
-                   O_TEMPFILE
+                   O_TMPFILE
 #endif
                    )) {
             write_flag_emu = WRITE_MODE;

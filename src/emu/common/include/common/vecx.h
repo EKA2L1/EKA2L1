@@ -49,11 +49,11 @@ namespace eka2l1 {
         object_size(const int x, const int y)
             : vec2(x, y) {}
 
-        int width() {
+        int width() const {
             return x;
         }
 
-        int height() {
+        int height() const {
             return y;
         }
     };

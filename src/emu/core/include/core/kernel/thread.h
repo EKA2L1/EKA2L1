@@ -108,8 +108,9 @@ namespace eka2l1 {
         };
 
         class thread : public kernel_obj {
+            friend class eka2l1::kernel_system;
+            
             friend class thread_scheduler;
-            friend class kernel_system;
             friend class mutex;
             friend class semaphore;
 

@@ -2,6 +2,8 @@
 
 #include <core/kernel/kernel_obj.h>
 #include <core/epoc/reqsts.h>
+
+#include <core/core_mem.h>
 #include <core/ptr.h>
 
 #include <memory>

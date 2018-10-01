@@ -33,7 +33,7 @@ namespace eka2l1 {
         }
 
         bool server::is_msg_delivered(ipc_msg_ptr &msg) {
-            auto &res = std::find_if(delivered_msgs.begin(), delivered_msgs.end(),
+            auto res = std::find_if(delivered_msgs.begin(), delivered_msgs.end(),
                 [&](const auto &svr_msg) { return svr_msg.real_msg->id == msg->id; });
 
             if (res != delivered_msgs.end()) {

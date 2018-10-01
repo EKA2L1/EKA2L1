@@ -19,9 +19,12 @@
  */
 #pragma once
 
-#include <core/arm/jit_factory.h>
 #include <core/core_kernel.h>
 #include <core/core_mem.h>
+#include <core/ptr.h>
+
+#include <core/arm/jit_factory.h>
+
 #include <core/core_timing.h>
 #include <core/disasm/disasm.h>
 #include <core/hle/libmanager.h>
@@ -33,7 +36,6 @@
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <process.h>
 #include <tuple>
 
 #include <core/drivers/emu_window.h>

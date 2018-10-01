@@ -28,6 +28,11 @@
 
 #include <vector>
 
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 namespace eka2l1 {
     struct posix_params {
         int ret;

@@ -40,8 +40,8 @@ namespace eka2l1 {
 
             YAML::Node sdb_node = YAML::LoadFile(path);
 
-            for (auto &maybe_app : sdb_node) {
-                YAML::Node app = maybe_app.second;
+            for (const auto &maybe_app : sdb_node) {
+                const YAML::Node app = maybe_app.second;
 
                 app_info info;
 

@@ -26,8 +26,9 @@
 
 #include <core/loader/sis_script_interpreter.h>
 #include <core/manager/package_manager.h>
-
 #include <core/vfs.h>
+
+#include <cwctype>
 
 #include <miniz.h>
 
@@ -104,7 +105,7 @@ namespace eka2l1 {
                 reinterpret_cast<sis_data_unit *>(install_data.data_units.fields[crr_blck_idx].get())->data_unit.fields[data_idx].get());
             sis_compressed compressed = data->raw_data;
 
-            uint64_t us = ((compressed.len_low) | (compressed.len_high << 32)) - 4;
+            uint64_t us = ((compressed.len_low) | ((uint64_t)compressed.len_high << 32)) - 4;
 
             compressed.compressed_data.resize(us);
 
@@ -162,8 +163,6 @@ namespace eka2l1 {
 
             uint32_t us = ((compressed.len_low) | (compressed.len_high << 31)) - 4;
             compressed.compressed_data.resize(us);
-
-            data_stream->setf(std::ios::binary);
 
             data_stream->seekg(compressed.offset, std::ios::beg);
 
@@ -343,7 +342,8 @@ namespace eka2l1 {
                         extract_file(raw_path, file->idx, crr_blck_idx);
                         LOG_INFO("EOpInstall {}", raw_path);
 
-                        std::transform(raw_path.begin(), raw_path.end(), raw_path.begin(), std::tolower);
+                        std::transform(raw_path.begin(), raw_path.end(), raw_path.begin(), 
+                            std::towlower);
 
                         if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
                             LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);

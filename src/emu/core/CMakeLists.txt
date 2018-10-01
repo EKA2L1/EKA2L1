@@ -41,7 +41,6 @@ add_library(core include/core/ptr.h
                  src/core.cpp)
 
 target_link_libraries(core PRIVATE
-        simini
         coremem
         corekernel
         coretiming 
@@ -49,12 +48,12 @@ target_link_libraries(core PRIVATE
         arm
         coreloader
         coremanager
-	    common
+        common
         drivers
         yaml-cpp)
 
 if (UNIX OR APPLE)
-        target_link_libraries(core PRIVATE pthread)
+    target_link_libraries(core PRIVATE pthread stdc++fs)
 endif()
 
 # Disasm on the go in the future

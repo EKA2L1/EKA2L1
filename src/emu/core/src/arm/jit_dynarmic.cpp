@@ -99,7 +99,7 @@ namespace eka2l1 {
                 }
             }
 
-            void InterpreterFallback(Dynarmic::A32::VAddr addr, size_t num_insts) {
+            void InterpreterFallback(Dynarmic::A32::VAddr addr, size_t num_insts) override {
                 jit_interface::thread_context context;
                 parent.save_context(context);
                 parent.fallback_jit.load_context(context);

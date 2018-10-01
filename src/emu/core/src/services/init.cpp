@@ -39,11 +39,11 @@
 #endif
 
 #define CREATE_SERVER_D(sys, svr)                   \
-    server_ptr temp = std::make_shared<##svr>(sys); \
+    server_ptr temp = std::make_shared<svr>(sys);   \
     sys->get_kernel_system()->add_custom_server(temp)
 
 #define CREATE_SERVER(sys, svr)          \
-    temp = std::make_shared<##svr>(sys); \
+    temp = std::make_shared<svr>(sys); \
     sys->get_kernel_system()->add_custom_server(temp)
 
 #define DEFINE_INT_PROP_D(sys, category, key, data)                      \

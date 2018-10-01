@@ -84,7 +84,7 @@ namespace eka2l1::kernel {
     };
 
     class process : public kernel_obj {
-        friend class kernel_system;
+        friend class eka2l1::kernel_system;
         friend class thread_scheduler;
 
         uint32_t uid, primary_thread;

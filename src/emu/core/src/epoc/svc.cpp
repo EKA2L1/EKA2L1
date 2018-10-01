@@ -209,7 +209,7 @@ namespace eka2l1::epoc {
         }
 
         TUidType *type = uid_type.get(mem);
-        auto &tup = pr_real->get_uid_type();
+        auto tup = pr_real->get_uid_type();
 
         type->uid1 = std::get<0>(tup);
         type->uid2 = std::get<1>(tup);
@@ -647,7 +647,7 @@ namespace eka2l1::epoc {
         context.msg = msg;
 
         std::string content;
-        content.resize(aStartOffset + des8 ? info->iTargetLength : info->iTargetLength * 2);
+        content.resize(aStartOffset + (des8 ? info->iTargetLength : info->iTargetLength * 2));
 
         memcpy(&content[aStartOffset], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
         bool result = context.write_arg_pkg(aParam, reinterpret_cast<uint8_t *>(&content[0]), content.length());

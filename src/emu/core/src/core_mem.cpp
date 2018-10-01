@@ -23,6 +23,7 @@
 
 #include <core/arm/jit_interface.h>
 #include <core/core_mem.h>
+#include <core/ptr.h>
 
 #include <algorithm>
 
@@ -318,7 +319,7 @@ namespace eka2l1 {
 
         page holder;
 
-        auto &suitable_pages = std::search_n(page_begin, page_end, page_count, holder,
+        auto suitable_pages = std::search_n(page_begin, page_end, page_count, holder,
             [](const auto &lhs, const auto &rhs) {
                 return (lhs.sts == page_status::free) && (lhs.generation == 0);
             });
@@ -377,7 +378,7 @@ namespace eka2l1 {
 
         auto page_begin_orginal = page_begin;
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        for (; page_begin != page_end; page_begin++) {
             // Only a commited region can have a protection
             if (page_begin->sts != page_status::committed) {
                 return -1;
@@ -475,7 +476,7 @@ namespace eka2l1 {
             page_end = current_page_table->pages.begin() + end;
         }
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        for (; page_begin != page_end; page_begin++) {
             page_begin->sts = page_status::free;
             page_begin->page_protection = prot::none;
             page_begin->generation = 0;
@@ -537,7 +538,7 @@ namespace eka2l1 {
 
         prot nprot = page_begin->page_protection;
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        for (; page_begin != page_end; page_begin++) {
             // Can commit on commited region or reserved region
             if (page_begin->sts == page_status::free) {
                 return -1;
@@ -643,7 +644,7 @@ namespace eka2l1 {
 
         prot nprot = page_begin->page_protection;
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        for (; page_begin != page_end; page_begin++) {
             if (page_begin->sts == page_status::committed) {
                 page_begin->sts = page_status::reserved;
             }

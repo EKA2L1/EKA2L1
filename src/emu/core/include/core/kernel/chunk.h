@@ -21,6 +21,7 @@
 #pragma once
 
 #include <core/kernel/kernel_obj.h>
+#include <core/core_mem.h>
 #include <core/ptr.h>
 
 #include <common/types.h>

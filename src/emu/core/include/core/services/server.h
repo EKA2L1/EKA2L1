@@ -35,7 +35,7 @@
 
 #define REGISTER_IPC(server, func, op, func_name) \
     register_ipc_func(op,                         \
-        service::ipc_func(func_name, std::bind(&##server::##func, this, std::placeholders::_1)));
+        service::ipc_func(func_name, std::bind(&server::func, this, std::placeholders::_1)));
 
 namespace eka2l1 {
     class system;

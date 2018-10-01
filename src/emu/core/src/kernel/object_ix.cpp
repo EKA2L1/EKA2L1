@@ -66,7 +66,7 @@ namespace eka2l1 {
         }
 
         uint32_t object_ix::add_object(kernel_obj_ptr obj) {
-            auto &slot = std::find_if(objects.begin(), objects.end(),
+            auto slot = std::find_if(objects.begin(), objects.end(),
                 [](object_ix_record record) { return record.free; });
 
             if (slot != objects.end()) {

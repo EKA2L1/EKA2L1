@@ -227,7 +227,7 @@ namespace eka2l1 {
         kernel_obj_ptr get_kernel_obj_by_id(uint64_t id);
 
         thread_ptr get_thread_by_name(const std::string &name);
-        thread_ptr kernel_system::get_thread_by_handle(uint32_t handle);
+        thread_ptr get_thread_by_handle(uint32_t handle);
 
         session_ptr get_session(uint32_t handle);
 
@@ -240,7 +240,9 @@ namespace eka2l1 {
         bool run_thread(uint32_t handle);
         bool run_process(uint32_t handle);
 
-        uint32_t spawn_new_process(std::string &path, std::string name, uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
+        uint32_t spawn_new_process(const std::string &path, const std::string &name,
+            uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
+
         uint32_t spawn_new_process(uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
 
         bool destroy_process(process_ptr pr);

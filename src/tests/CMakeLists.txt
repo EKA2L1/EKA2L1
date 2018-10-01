@@ -12,8 +12,8 @@ target_link_libraries(ekatests PRIVATE
     gmock 
     gtest
     common
-    coreio
-    coretiming)
+    coreloader
+    core)
 
 add_test(
   NAME ekatests

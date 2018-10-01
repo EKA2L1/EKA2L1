@@ -69,7 +69,7 @@ namespace eka2l1 {
         }
 
         ptr<uint32_t> lib_manager::get_stub(uint32_t id) {
-            auto &res = stubbed.find(id);
+            auto res = stubbed.find(id);
 
             if (res == stubbed.end()) {
                 uint32_t *stub_ptr_real = stub_ptr.get(mem);
@@ -86,7 +86,7 @@ namespace eka2l1 {
         }
 
         ptr<uint32_t> lib_manager::do_custom_stub(uint32_t addr) {
-            auto &res = custom_stubbed.find(addr);
+            auto res = custom_stubbed.find(addr);
 
             if (res == custom_stubbed.end()) {
                 uint32_t *cstub_ptr_real = custom_stub_ptr.get(mem);
@@ -358,7 +358,7 @@ namespace eka2l1 {
 
         // Open the image code segment
         void lib_manager::open_e32img(loader::e32img_ptr &img) {
-            auto &res = e32imgs_cache.find(img->header.check);
+            auto res = e32imgs_cache.find(img->header.check);
 
             if (res == e32imgs_cache.end()) {
                 LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
@@ -376,7 +376,7 @@ namespace eka2l1 {
 
         // Close the image code segment. Means that the image will be unloaded, XIP turns to false
         void lib_manager::close_e32img(loader::e32img_ptr &img) {
-            auto &res = e32imgs_cache.find(img->header.check);
+            auto res = e32imgs_cache.find(img->header.check);
 
             if (res == e32imgs_cache.end()) {
                 LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
