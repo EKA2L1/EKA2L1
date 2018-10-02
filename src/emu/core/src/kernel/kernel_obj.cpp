@@ -20,6 +20,8 @@
 #include <core/core_kernel.h>
 #include <core/kernel/kernel_obj.h>
 
+#include <cstdio>
+
 namespace eka2l1 {
     namespace kernel {
         kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::access_type access)
@@ -28,6 +30,24 @@ namespace eka2l1 {
             , access(access)
             , uid(kern->next_uid()) {
         }
+
+        void kernel_obj::write_object_to_snapshot(common::wo_buf_stream &stream) {
+            // Write neccessary informations
+            stream.write(&uid, sizeof(std::uint64_t));
+            stream.write(&obj_type, sizeof(obj_type));
+            stream.write(&access, sizeof(access));
+            stream.write(&access_count, sizeof(access_count));
+
+            stream.write_string(obj_name);
+        }
+
+        void kernel_obj::do_state(common::ro_buf_stream &stream) {
+            stream.read(&uid, sizeof(std::uint64_t));
+            stream.read(&obj_type, sizeof(obj_type));
+            stream.read(&access, sizeof(access));
+            stream.read(&access_count, sizeof(access_count));
+
+            obj_name = std::move(stream.read_string());
+        }
     }
 }
-

@@ -29,7 +29,7 @@ namespace eka2l1 {
 		 * \param cpu The CPU.
 		*/
         template <typename ret>
-        void write_return_value(arm::jitter &cpu, ret ret);
+        void write_return_value(arm::jitter &cpu, ret r);
 
 		/*! \brief Writing the return value to r0. 
 		 * \param cpu The CPU.

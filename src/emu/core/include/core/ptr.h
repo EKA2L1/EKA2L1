@@ -21,6 +21,8 @@
 
 #include <cstdint>
 
+#include <core/core_mem.h>
+
 namespace eka2l1 {
     class memory_system;
 
@@ -43,7 +45,8 @@ namespace eka2l1 {
         }
 
         T *get(memory_system *mem) const {
-            return reinterpret_cast<T*>(mem->get_real_pointer(mem_address));
+            return reinterpret_cast<T*>(mem->
+                get_real_pointer(mem_address));
         }
 
         void reset() {

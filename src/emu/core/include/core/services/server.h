@@ -35,7 +35,7 @@
 
 #define REGISTER_IPC(server, func, op, func_name) \
     register_ipc_func(op,                         \
-        service::ipc_func(func_name, std::bind(&##server::##func, this, std::placeholders::_1)));
+        service::ipc_func(func_name, std::bind(&server::func, this, std::placeholders::_1)));
 
 namespace eka2l1 {
     class system;
@@ -113,6 +113,7 @@ namespace eka2l1 {
             void finish_request_lle(ipc_msg_ptr &session_msg, bool notify_owner);
 
             bool hle = false;
+            bool unhandle_callback_enable = false;
 
         protected:
             bool is_msg_delivered(ipc_msg_ptr &msg);
@@ -124,8 +125,11 @@ namespace eka2l1 {
             // Servers can override this method
             virtual void connect(service::ipc_context ctx);
             virtual void disconnect(service::ipc_context ctx);
+
+            virtual void on_unhandled_opcode(service::ipc_context ctx) {}
         public:
-            server(system *sys, const std::string name, bool hle = false);
+            server(system *sys, const std::string name, bool hle = false, 
+                bool unhandle_callback_enable = false);
 
             void attach(session *svse) {
                 sessions.push_back(svse);

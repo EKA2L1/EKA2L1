@@ -21,8 +21,8 @@
 #include <core/arm/jit_interface.h>
 #include <core/arm/jit_unicorn.h>
 
-#include <dynarmic/A32/config.h>
 #include <dynarmic/A32/a32.h>
+#include <dynarmic/A32/config.h>
 
 #include <memory>
 
@@ -39,6 +39,7 @@ namespace eka2l1 {
     namespace arm {
         class arm_dynarmic_callback;
 
+        /* UNUSABLE */
         class jit_dynarmic : public jit_interface {
             friend class arm_dynarmic_callback;
 
@@ -54,8 +55,9 @@ namespace eka2l1 {
 
             hle::lib_manager *lib_mngr;
 
-            std::array<uint8_t*, 
-                Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> page_table_dyn;
+            std::array<uint8_t *,
+                Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
+                page_table_dyn;
 
         public:
             timing_system *get_timing_sys() {

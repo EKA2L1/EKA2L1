@@ -9,6 +9,17 @@ option(BUILD_TESTS "Build EKA2L1's tests" ON)
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
+
+if (MSVC)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+    add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+endif(MSVC)
+
 add_subdirectory(src/external)
 add_subdirectory(src/emu)
 

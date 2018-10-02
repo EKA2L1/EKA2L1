@@ -34,6 +34,7 @@
 #include <core/loader/romimage.h>
 #include <core/manager/manager.h>
 #include <core/ptr.h>
+#include <core/services/posix/posix.h>
 #include <core/vfs.h>
 
 #include <core/services/init.h>
@@ -89,7 +90,8 @@ namespace eka2l1 {
         return thr_sch->current_process();
     }
 
-    uint32_t kernel_system::spawn_new_process(std::string &path, std::string name, uint32_t uid, kernel::owner_type owner) {
+    uint32_t kernel_system::spawn_new_process(const std::string &path, const std::string &name,
+        uint32_t uid, kernel::owner_type owner) {
         std::u16string path16 = common::utf8_to_ucs2(path);
         symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
@@ -104,37 +106,12 @@ namespace eka2l1 {
             auto romimg = loader::parse_romimg(f, mem);
 
             if (romimg) {
-                // Lib manager needs the system to call HLE function
-                libmngr->init(sys, this, io, mem, kern_ver);
-
                 loader::romimg_ptr img_ptr = libmngr->load_romimg(path16, false);
                 libmngr->open_romimg(img_ptr);
 
-                if (sys->get_bool_config("force_load_euser")) {
-                    // Use for debugging rom image
-                    loader::romimg_ptr euser_force = libmngr->load_romimg(u"euser", false);
-                    libmngr->open_romimg(euser_force);
-                }
+                uint32_t h = create_process(img_ptr->header.uid3, name, path16, u"", img_ptr,
+                    static_cast<kernel::process_priority>(img_ptr->header.priority), owner);
 
-                if (sys->get_bool_config("force_load_bafl")) {
-                    // Use for debugging rom image
-                    loader::romimg_ptr bafl_force = libmngr->load_romimg(u"bafl", false);
-                    libmngr->open_romimg(bafl_force);
-                }
-
-                if (sys->get_bool_config("force_load_efsrv")) {
-                    // Use for debugging rom image
-                    loader::romimg_ptr efsrv_force = libmngr->load_romimg(u"efsrv", false);
-                    libmngr->open_romimg(efsrv_force);
-                }
-
-                process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", img_ptr,
-                    static_cast<kernel::process_priority>(img_ptr->header.priority));
-
-                get_thread_by_handle(pr->primary_thread)->owning_process(pr);
-                objects.push_back(std::move(pr));
-
-                uint32_t h = create_handle_lastest(owner);
                 run_process(h);
 
                 f->close();
@@ -144,9 +121,6 @@ namespace eka2l1 {
 
             f->close();
             return false;
-        } else {
-            // Lib manager needs the system to call HLE function
-            libmngr->init(sys, this, io, mem, kern_ver);
         }
 
         auto res2 = libmngr->load_e32img(path16);
@@ -158,12 +132,8 @@ namespace eka2l1 {
         libmngr->open_e32img(res2);
         libmngr->patch_hle();
 
-        process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, name, path16, u"", res2,
-            static_cast<kernel::process_priority>(res2->header.priority));
-
-        objects.push_back(std::move(pr));
-
-        uint32_t h = create_handle_lastest(owner);
+        uint32_t h = create_process(res2->header.uid3, name, path16, u"", res2,
+            static_cast<kernel::process_priority>(res2->header.priority), owner);
         run_process(h);
 
         f->close();
@@ -192,6 +162,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::process && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (pr_find == objects.end()) {
@@ -233,7 +205,8 @@ namespace eka2l1 {
 
     uint32_t kernel_system::create_chunk(std::string name, const address bottom, const address top, const size_t size, prot protection,
         kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner) {
-        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, name, bottom, top, size, protection, type, access, attrib);
+        chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, crr_process(), name, bottom, top, size,
+            protection, type, access, attrib);
         objects.push_back(std::move(new_chunk));
 
         return create_handle_lastest(owner);
@@ -278,9 +251,10 @@ namespace eka2l1 {
         const size_t min_heap_size, const size_t max_heap_size,
         bool initial,
         ptr<void> usrdata,
+        ptr<void> allocator,
         kernel::thread_priority pri) {
         thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, timing, own_pr, access,
-            name, epa, stack_size, min_heap_size, max_heap_size, initial, usrdata, pri);
+            name, epa, stack_size, min_heap_size, max_heap_size, initial, usrdata, allocator, pri);
 
         objects.push_back(std::move(new_thread));
 
@@ -315,6 +289,10 @@ namespace eka2l1 {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
 
+        // Create a POSIX server for the process
+        std::shared_ptr<eka2l1::posix_server> ps_srv = std::make_shared<eka2l1::posix_server>(sys, pr);
+        add_custom_server(std::move(ps_srv));
+
         get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
 
@@ -327,6 +305,10 @@ namespace eka2l1 {
         const kernel::process_priority pri, kernel::owner_type own) {
         process_ptr pr = std::make_shared<kernel::process>(this, mem, uid, process_name, exe_path, cmd_args, img,
             pri);
+
+        // Create a POSIX server for the process
+        std::shared_ptr<eka2l1::posix_server> ps_srv = std::make_shared<eka2l1::posix_server>(sys, pr);
+        add_custom_server(std::move(ps_srv));
 
         get_thread_by_handle(pr->primary_thread)->owning_process(pr);
         objects.push_back(std::move(pr));
@@ -351,7 +333,7 @@ namespace eka2l1 {
     }
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
-        auto &slot_free = std::find_if(msgs.begin(), msgs.end(),
+        auto slot_free = std::find_if(msgs.begin(), msgs.end(),
             [](auto slot) { return !slot || slot->free; });
 
         if (slot_free != msgs.end()) {
@@ -380,7 +362,7 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
-        auto &obj_ite = std::find(objects.begin(), objects.end(), obj);
+        auto obj_ite = std::find(objects.begin(), objects.end(), obj);
 
         if (obj_ite != objects.end()) {
             objects.erase(obj_ite);
@@ -450,7 +432,7 @@ namespace eka2l1 {
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj_by_id(uint64_t id) {
-        auto &res = std::find_if(objects.begin(), objects.end(),
+        auto res = std::find_if(objects.begin(), objects.end(),
             [=](kernel_obj_ptr obj) { return obj && (obj->unique_id() == id); });
 
         if (res != objects.end()) {
@@ -466,6 +448,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (thr_find == objects.end()) {
@@ -519,6 +503,8 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::server && obj->name() == name) {
                     return true;
                 }
+
+                return false;
             });
 
         if (svr_find == objects.end()) {
@@ -549,7 +535,7 @@ namespace eka2l1 {
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {
-        auto &prop_res = std::find_if(objects.begin(), objects.end(),
+        auto prop_res = std::find_if(objects.begin(), objects.end(),
             [=](const auto &prop) {
                 if (prop && prop->get_object_type() == kernel::object_type::prop) {
                     property_ptr real_prop = std::dynamic_pointer_cast<service::property>(prop);
@@ -696,5 +682,9 @@ namespace eka2l1 {
 
     bool kernel_system::should_terminate() {
         return thr_sch->should_terminate();
+    }
+
+    bool kernel_system::save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids) {
+        return true;
     }
 }

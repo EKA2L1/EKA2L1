@@ -26,6 +26,7 @@ add_subdirectory(src/kernel)
 add_subdirectory(src/abi)
 add_subdirectory(src/services)
 add_subdirectory(src/epoc)
+add_subdirectory(src/gdbstub)
 
 target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)
@@ -40,7 +41,6 @@ add_library(core include/core/ptr.h
                  src/core.cpp)
 
 target_link_libraries(core PRIVATE
-        simini
         coremem
         corekernel
         coretiming 
@@ -48,12 +48,12 @@ target_link_libraries(core PRIVATE
         arm
         coreloader
         coremanager
-	    common
+        common
         drivers
         yaml-cpp)
 
-if (UNIX OR APPLE)
-        target_link_libraries(core PRIVATE pthread)
+if (NOT MSVC)
+    target_link_libraries(core PRIVATE pthread stdc++fs)
 endif()
 
 # Disasm on the go in the future

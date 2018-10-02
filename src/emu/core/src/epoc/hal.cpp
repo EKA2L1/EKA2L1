@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <core/core.h>
 #include <core/epoc/hal.h>
 
@@ -10,10 +30,10 @@
 #include <core/epoc/des.h>
 
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
-    funcs.emplace(op, std::bind(&##hal_name::##func, this, std::placeholders::_1, std::placeholders::_2))
+    funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2))
 
 #define REGISTER_HAL(sys, cage, hal_name) \
-    sys->add_new_hal(cage, std::make_shared<##hal_name>(sys))
+    sys->add_new_hal(cage, std::make_shared<hal_name>(sys))
 
 namespace eka2l1::epoc {
     hal::hal(eka2l1::system *sys)

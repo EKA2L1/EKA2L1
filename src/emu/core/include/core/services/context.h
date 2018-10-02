@@ -23,6 +23,7 @@
 #include <core/ipc.h>
 #include <core/ptr.h>
 
+#include <cstring>
 #include <optional>
 #include <string>
 

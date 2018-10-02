@@ -1,8 +1,29 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <common/algorithm.h>
 #include <common/log.h>
 
 #include <core/arm/jit_interface.h>
 #include <core/core_mem.h>
+#include <core/ptr.h>
 
 #include <algorithm>
 
@@ -100,27 +121,30 @@ namespace eka2l1 {
     }
 
     void *memory_system::get_real_pointer(address addr) {
-        if (addr >= codeseg_addr && addr < codeseg_addr + 0x10000000) {
-            if (!codeseg_pointers[(addr - codeseg_addr) / page_size].get()) {
-                return nullptr;
+        // Fallback to slow get if there is no page table
+        if (!current_page_table) {
+            if (addr >= codeseg_addr && addr < codeseg_addr + 0x10000000) {
+                if (!codeseg_pointers[(addr - codeseg_addr) / page_size].get()) {
+                    return nullptr;
+                }
+
+                return static_cast<void *>(codeseg_pointers[(addr - codeseg_addr) / page_size].get() + (addr - codeseg_addr) % page_size);
             }
 
-            return static_cast<void *>(codeseg_pointers[(addr - codeseg_addr) / page_size].get() + (addr - codeseg_addr) % page_size);
-        }
-
-        if (addr >= rom_addr && addr < rom_addr + 0x10000000) {
-            return &reinterpret_cast<uint8_t *>(rom_map)[addr - rom_addr];
-        }
-
-        if (addr >= shared_addr && addr < shared_addr + shared_size) {
-            if (!global_pointers[(addr - shared_addr) / page_size].get()) {
-                return nullptr;
+            if (addr >= rom_addr && addr < rom_addr + 0x10000000) {
+                return &reinterpret_cast<uint8_t *>(rom_map)[addr - rom_addr];
             }
 
-            return static_cast<void *>(global_pointers[(addr - shared_addr) / page_size].get() + (addr - shared_addr) % page_size);
+            if (addr >= shared_addr && addr < shared_addr + shared_size) {
+                if (!global_pointers[(addr - shared_addr) / page_size].get()) {
+                    return nullptr;
+                }
+
+                return static_cast<void *>(global_pointers[(addr - shared_addr) / page_size].get() + (addr - shared_addr) % page_size);
+            }
         }
 
-        if (!current_page_table->pointers[addr / page_size].get()) {
+        if (!current_page_table->pointers[addr / page_size]) {
             return nullptr;
         }
 
@@ -196,9 +220,10 @@ namespace eka2l1 {
 
             for (size_t i = page_begin_off - (shared_addr / page_size) + 1; i < page_end_off - (shared_addr / page_size); i++) {
                 global_pointers[i] = mem_ptr(global_pointers[i - 1].get() + page_size
-                    #ifndef WIN32
-                    , _free_mem
-                    #endif
+#ifndef WIN32
+                    ,
+                    _free_mem
+#endif
                 );
             }
 
@@ -225,9 +250,10 @@ namespace eka2l1 {
 #endif
             for (size_t i = page_begin_off - (ram_code_addr / page_size) + 1; i < page_end_off - (ram_code_addr / page_size); i++) {
                 codeseg_pointers[i] = mem_ptr(codeseg_pointers[i - 1].get() + page_size
-                #ifndef WIN32
-                   , _free_mem
-                #endif
+#ifndef WIN32
+                    ,
+                    _free_mem
+#endif
                 );
             }
 
@@ -255,9 +281,10 @@ namespace eka2l1 {
 
             for (size_t i = page_begin_off + 1; i < page_end_off; i++) {
                 current_page_table->pointers[i] = mem_ptr(current_page_table->pointers[i - 1].get() + page_size
-                #ifndef WIN32
-                    , _free_mem
-                #endif
+#ifndef WIN32
+                    ,
+                    _free_mem
+#endif
                 );
             }
         }
@@ -292,7 +319,7 @@ namespace eka2l1 {
 
         page holder;
 
-        auto &suitable_pages = std::search_n(page_begin, page_end, page_count, holder,
+        auto suitable_pages = std::search_n(page_begin, page_end, page_count, holder,
             [](const auto &lhs, const auto &rhs) {
                 return (lhs.sts == page_status::free) && (lhs.generation == 0);
             });
@@ -349,13 +376,16 @@ namespace eka2l1 {
             page_end = current_page_table->pages.begin() + end;
         }
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        auto page_begin_orginal = page_begin;
+
+        for (; page_begin != page_end; page_begin++) {
             // Only a commited region can have a protection
             if (page_begin->sts != page_status::committed) {
                 return -1;
             }
 
             page_begin->page_protection = nprot;
+            cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin_orginal, page_begin) * page_size, page_size);
         }
 
         if (addr.ptr_address() >= shared_addr && addr.ptr_address() < shared_addr + shared_size) {
@@ -446,7 +476,7 @@ namespace eka2l1 {
             page_end = current_page_table->pages.begin() + end;
         }
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        for (; page_begin != page_end; page_begin++) {
             page_begin->sts = page_status::free;
             page_begin->page_protection = prot::none;
             page_begin->generation = 0;
@@ -504,12 +534,18 @@ namespace eka2l1 {
             page_end = current_page_table->pages.begin() + end;
         }
 
+        const auto page_begin_org = page_begin;
+
         prot nprot = page_begin->page_protection;
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        for (; page_begin != page_end; page_begin++) {
             // Can commit on commited region or reserved region
             if (page_begin->sts == page_status::free) {
                 return -1;
+            }
+
+            if (page_begin->sts == page_status::committed) {
+                cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin_org, page_begin) * page_size, page_size);
             }
 
             page_begin->sts = page_status::committed;
@@ -608,7 +644,7 @@ namespace eka2l1 {
 
         prot nprot = page_begin->page_protection;
 
-        for (page_begin; page_begin != page_end; page_begin++) {
+        for (; page_begin != page_end; page_begin++) {
             if (page_begin->sts == page_status::committed) {
                 page_begin->sts = page_status::reserved;
             }
@@ -681,6 +717,11 @@ namespace eka2l1 {
             return;
         }
 
+        if (size == 4) {
+            *reinterpret_cast<int *>(data) = *reinterpret_cast<int *>(fptr);
+            return;
+        }
+
         memcpy(data, fptr, size);
     }
 
@@ -730,7 +771,7 @@ namespace eka2l1 {
 
         current_page_table->pages[rom_addr / page_size] = rom_page;
 
-        for (size_t i = 1; i < common::align(common::MB(41), page_size) / page_size; i++) {
+        for (size_t i = 1; i < common::align(common::MB(42), page_size) / page_size; i++) {
             current_page_table->pointers[rom_addr / page_size + i] = mem_ptr(
                 current_page_table->pointers[rom_addr / page_size + i - 1].get() + page_size, [](uint8_t *) {});
             current_page_table->pages[rom_addr / page_size + i] = rom_page;

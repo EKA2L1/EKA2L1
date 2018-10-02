@@ -17,14 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <core/core.h>
 #include <core/kernel/process.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <common/random.h>
 #include <common/path.h>
+#include <common/random.h>
 
 #include <core/disasm/disasm.h>
 
@@ -37,7 +38,10 @@
 #include <yaml-cpp/yaml.h>
 
 #include <experimental/filesystem>
+
+#include <atomic>
 #include <fstream>
+#include <string>
 
 namespace fs = std::experimental::filesystem;
 
@@ -84,6 +88,17 @@ namespace eka2l1 {
     }
 
     uint32_t system::load(uint32_t id) {
+        hlelibmngr.reset();
+        hlelibmngr.init(this, &kern, &io, &mem, get_symbian_version_use());
+
+        for (const auto &force_load_lib : force_load_libs) {
+            loader::romimg_ptr img = hlelibmngr.load_romimg(common::utf8_to_ucs2(force_load_lib), false);
+
+            if (img) {
+                hlelibmngr.open_romimg(img);
+            }
+        }
+
         if (!startup_inited) {
             emu_win->init("EKA2L1", vec2(360, 640));
             emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
@@ -151,7 +166,7 @@ namespace eka2l1 {
     }
 
     bool system::load_rom(const std::string &path) {
-        auto romf_res = loader::load_rom(path);
+        std::optional<loader::rom> romf_res = loader::load_rom(path);
 
         if (!romf_res) {
             return false;
@@ -179,8 +194,8 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system::mount(drive_number drv, drive_media media, std::string path) {
-        io.mount(drv, media, path);
+    void system::mount(drive_number drv, const drive_media media, std::string path, const io_attrib attrib) {
+        io.mount(drv, media, path, attrib);
     }
 
     void system::request_exit() {
@@ -196,7 +211,15 @@ namespace eka2l1 {
 
     bool system::install_rpkg(const std::string &path) {
         std::atomic_int holder;
-        return loader::install_rpkg(&io, path, holder);
+        bool res = eka2l1::loader::install_rpkg(&io, path, holder);
+
+        if (!res) {
+            return false;
+        }
+
+        // Post build, install folders
+        const std::string install_folder = io.get("Z:\\system\\install\\");
+        return true;
     }
 
     void system::write_configs() {
@@ -232,6 +255,12 @@ namespace eka2l1 {
                     }
 
                     continue;
+                } else if (subnode.first.as<std::string>() == "force_load") {
+                    for (const auto &startup_app : subnode.second) {
+                        force_load_libs.push_back(startup_app.as<std::string>());
+                    }
+
+                    continue;
                 }
 
                 bool_configs.emplace(subnode.first.as<std::string>(), subnode.second.as<bool>());
@@ -260,5 +289,26 @@ namespace eka2l1 {
 
     hal_ptr system::get_hal(uint32_t cagetory) {
         return hals[cagetory];
+    }
+
+    bool system::save_snapshot_processes(const std::string &path,
+        const std::vector<uint32_t> &include_uids) {
+        page_table *pt = mem.get_current_page_table();
+
+        // Can't snapshot if no memory page table is present
+        if (!pt) {
+            return false;
+        }
+
+        FILE *f = fopen(path.data(), "wb");
+
+        // Start writing the magic header
+        const char *magic_header = "SNAE";
+        fwrite(magic_header, 1, 4, f);
+
+        // Kernel object saving
+        kern.save_snapshot_for_processes(f, include_uids);
+        
+        return true;
     }
 }

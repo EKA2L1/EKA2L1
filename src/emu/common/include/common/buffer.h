@@ -21,10 +21,11 @@
 
 #include <cstdint>
 #include <cstring>
+#include <string>
 
 namespace eka2l1 {
     namespace common {
-		/*! \brief Another buffer stream, base on LLVM's Buffer 
+        /*! \brief Another buffer stream, base on LLVM's Buffer 
 		*/
         class buffer_stream_base {
         protected:
@@ -50,7 +51,7 @@ namespace eka2l1 {
             end
         };
 
-		/*! A read only buffer stream */
+        /*! A read only buffer stream */
         class ro_buf_stream : public buffer_stream_base {
         public:
             ro_buf_stream(uint8_t *beg, uint64_t size)
@@ -73,6 +74,59 @@ namespace eka2l1 {
             void read(void *buf, uint32_t size) {
                 memcpy(buf, beg + crr_pos, size);
                 crr_pos += size;
+            }
+
+            std::string read_string() {
+                std::string str;
+                std::size_t len;
+
+                read(&len, sizeof(len));
+                str.resize(len);
+
+                read(&str[0], len);
+
+                return str;
+            }
+
+            uint64_t tell() const {
+                return crr_pos;
+            }
+        };
+
+        class wo_buf_stream : public buffer_stream_base {
+        public:
+            wo_buf_stream(uint8_t *beg)
+                : buffer_stream_base(beg, 0) {}
+
+            void seek(uint32_t amount, seek_where wh) {
+                if (wh == seek_where::beg) {
+                    crr_pos = amount;
+                    return;
+                }
+
+                if (wh == seek_where::cur) {
+                    crr_pos += amount;
+                    return;
+                }
+
+                crr_pos = (end - beg) + amount;
+            }
+
+            void write(const void *buf, uint32_t size) {
+                memcpy(beg + crr_pos, buf, size);
+
+                if (beg + crr_pos > end) {
+                    end = beg + crr_pos;
+                }
+
+                crr_pos += size;
+            }
+
+            void write_string(const std::string &str) {
+                const std::size_t len = str.length();
+
+                write(&len, sizeof(len));
+                write(&str[0], len);
             }
 
             uint64_t tell() const {

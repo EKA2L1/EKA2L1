@@ -77,7 +77,7 @@ namespace eka2l1 {
              *
              * \param val The value to set.		 
 			*/
-            bool set(int val);
+            bool set_int(int val);
 
             /*! \brief Set the property value (bin).
              *

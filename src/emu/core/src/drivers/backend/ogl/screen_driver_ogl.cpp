@@ -91,7 +91,7 @@ namespace eka2l1 {
                 
                 ttf_char tchar = {
                     tex, 
-                    face->glyph->advance.x,
+                    static_cast<unsigned int>(face->glyph->advance.x),
                     vec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
                     vec2(face->glyph->bitmap_left, face->glyph->bitmap_top)
                 };
@@ -103,7 +103,8 @@ namespace eka2l1 {
             FT_Done_FreeType(ft);
         }
 
-        void screen_driver_ogl::init(emu_window_ptr win, object_size &screen_size, object_size &font_size) {
+        void screen_driver_ogl::init(emu_window_ptr win, const object_size &screen_size,
+            const object_size &font_size) {
             ssize = screen_size;
             fsize = font_size;
 

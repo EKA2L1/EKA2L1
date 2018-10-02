@@ -195,6 +195,146 @@ enum TWsScreenDeviceOpcodes {
     EWsSdOpXTestScreenCaptureSize,
 };
 
+enum TWsGcOpcodes {
+    EWsGcOpFree = 0x0000,
+    EWsGcOpActivate,
+    EWsGcOpDeactivate,
+    EWsGcOpSetClippingRegion,
+    EWsGcOpSetClippingRect,
+    EWsGcOpCancelClippingRegion,
+    EWsGcOpCancelClippingRect,
+    EWsGcOpSetWordJustification,
+    EWsGcOpSetCharJustification,
+    EWsGcOpSetPenColor,
+    EWsGcOpSetPenStyle,
+    EWsGcOpSetPenSize,
+    EWsGcOpSetBrushColor,
+    EWsGcOpSetBrushStyle,
+    EWsGcOpSetBrushOrigin,
+    EWsGcOpUseBrushPattern,
+    EWsGcOpDiscardBrushPattern,
+    EWsGcOpDrawArc,
+    EWsGcOpDrawLine,
+    EWsGcOpPlot,
+    EWsGcOpDrawTo,
+    EWsGcOpDrawBy,
+    EWsGcOpDrawPolyLine,
+    EWsGcOpDrawPolyLineContinued, //Quater Way
+
+    EWsGcOpDrawPie,
+    EWsGcOpDrawRoundRect,
+    EWsGcOpDrawPolygon,
+    EWsGcOpStartSegmentedDrawPolygon,
+    EWsGcOpSegmentedDrawPolygonData,
+    EWsGcOpDrawSegmentedPolygon,
+    EWsGcOpDrawBitmap,
+    EWsGcOpDrawBitmap2,
+    EWsGcOpDrawBitmap3,
+    EWsGcOpDrawBitmapMasked,
+    EWsGcOpWsDrawBitmapMasked,
+    EWsGcOpDrawText,
+    EWsGcOpDrawTextPtr,
+    EWsGcOpDrawTextInContextPtr,
+    EWsGcOpDrawTextInContext,
+    EWsGcOpDrawTextVertical,
+    EWsGcOpDrawTextInContextVertical,
+    EWsGcOpDrawTextInContextVerticalPtr,
+    EWsGcOpDrawTextVerticalPtr,
+    EWsGcOpDrawBoxTextOptimised1,
+    EWsGcOpDrawBoxTextOptimised2,
+    EWsGcOpDrawBoxTextInContextOptimised1,
+    EWsGcOpDrawBoxTextInContextOptimised2,
+    EWsGcOpDrawBoxText,
+    EWsGcOpDrawBoxTextInContext,
+    EWsGcOpDrawBoxTextPtr,
+    EWsGcOpDrawBoxTextInContextPtr,
+    EWsGcOpDrawBoxTextVertical,
+    EWsGcOpDrawBoxTextInContextVertical,
+    EWsGcOpDrawBoxTextVerticalPtr,
+    EWsGcOpDrawBoxTextInContextVerticalPtr,
+    EWsGcOpMoveBy,
+    EWsGcOpMoveTo,
+    EWsGcOpSetOrigin,
+    EWsGcOpCopyRect,
+    EWsGcOpDrawRect,
+    EWsGcOpDrawEllipse, //Half Way
+
+    EWsGcOpGdiBlt2,
+    EWsGcOpGdiBlt3,
+    EWsGcOpGdiBltMasked,
+    EWsGcOpGdiWsBlt2,
+    EWsGcOpGdiWsBlt3,
+    EWsGcOpGdiWsBltMasked,
+    EWsGcOpSize,
+    EWsGcOpUseFont,
+    //Two unused codes deleted
+    EWsGcOpDiscardFont = EWsGcOpUseFont + 3,
+    EWsGcOpSetUnderlineStyle,
+    EWsGcOpSetStrikethroughStyle,
+    EWsGcOpSetDrawMode,
+    EWsGcOpTestInvariant,
+    EWsGcOpClearRect,
+    EWsGcOpClear,
+    EWsGcOpReset,
+    EWsGcOpSetDitherOrigin,
+    EWsGcOpMapColors,
+    EWsGcOpDrawWsGraphic, //PREQ1246 Bravo
+    EWsGcOpDrawWsGraphicPtr,
+    //
+    // Local opcodes used internally access GC drawing code
+    //
+    EWsGcOpDrawPolyLineLocal,
+    EWsGcOpDrawPolyLineLocalBufLen,
+    EWsGcOpDrawPolygonLocal,
+    EWsGcOpDrawPolygonLocalBufLen,
+    EWsGcOpDrawTextLocal,
+    EWsGcOpDrawTextInContextLocal,
+    EWsGcOpDrawBoxTextLocal,
+    EWsGcOpDrawBoxTextInContextLocal,
+    EWsGcOpDrawBitmapLocal,
+    EWsGcOpDrawBitmap2Local,
+    EWsGcOpDrawBitmap3Local,
+    EWsGcOpDrawBitmapMaskedLocal,
+    EWsGcOpGdiBlt2Local,
+    EWsGcOpGdiBlt3Local,
+    EWsGcOpGdiBltMaskedLocal,
+
+    //
+    // Local opcodes used when reading long strings
+    //
+    EWsGcOpDrawTextPtr1,
+    EWsGcOpDrawTextInContextPtr1,
+    EWsGcOpDrawTextVerticalPtr1,
+    EWsGcOpDrawTextInContextVerticalPtr1,
+    EWsGcOpDrawBoxTextPtr1,
+    EWsGcOpDrawBoxTextInContextPtr1,
+    EWsGcOpDrawBoxTextVerticalPtr1,
+    EWsGcOpDrawBoxTextInContextVerticalPtr1,
+
+    //
+    // New functions added leaving a space just in case it may be useful
+    //
+    EWsGcOpSetFaded = 200,
+    EWsGcOpSetFadeParams,
+    EWsGcOpGdiAlphaBlendBitmaps,
+    EWsGcOpGdiWsAlphaBlendBitmaps,
+    EWsGcOpSetOpaque,
+    EWsGcOpMapColorsLocal,
+    EWsGcOpAlphaBlendBitmapsLocal,
+    EWsGcOpSetShadowColor,
+    EWsGcOpSetDrawTextInContext,
+    EWsGcOpDrawResourceToPos,
+    EWsGcOpDrawResourceToRect,
+    EWsGcOpDrawResourceFromRectToRect,
+    EWsGcOpDrawResourceWithData,
+    //
+    // Codes for internal use only
+    //
+    EWsStoreAllGcAttributes = 1000,
+    EWsStoreClippingRegion,
+    EWsGcOpFlagDrawOp = 0x8000
+};
+
 enum THotKey {
     /** Enables logging of all messages to and from the window server.
 	Note that the required type of logging must have been specified in the wsini.ini

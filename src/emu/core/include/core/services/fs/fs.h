@@ -26,8 +26,8 @@
 #include <atomic>
 #include <clocale>
 #include <memory>
-#include <unordered_map>
 #include <regex>
+#include <unordered_map>
 
 namespace eka2l1::epoc {
     struct TTime {
@@ -114,6 +114,7 @@ namespace eka2l1 {
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);
         void file_replace(service::ipc_context ctx);
+        void file_flush(service::ipc_context ctx);
         void file_close(service::ipc_context ctx);
 
         void new_file_subsession(service::ipc_context ctx, bool overwrite = false);
@@ -123,6 +124,9 @@ namespace eka2l1 {
         void file_size(service::ipc_context ctx);
         void file_seek(service::ipc_context ctx);
         void file_read(service::ipc_context ctx);
+        void file_write(service::ipc_context ctx);
+
+        void file_rename(service::ipc_context ctx);
 
         void open_dir(service::ipc_context ctx);
         void read_dir_packed(service::ipc_context ctx);
@@ -131,6 +135,7 @@ namespace eka2l1 {
 
         void drive_list(service::ipc_context ctx);
         void drive(service::ipc_context ctx);
+        void volume(service::ipc_context ctx);
 
         void is_file_in_rom(service::ipc_context ctx);
 
@@ -140,6 +145,14 @@ namespace eka2l1 {
 
         void synchronize_driver(service::ipc_context ctx);
         void notify_change_ex(service::ipc_context ctx);
+        void notify_change(service::ipc_context ctx);
+
+        void private_path(service::ipc_context ctx);
+        void mkdir(service::ipc_context ctx);
+        void rename(service::ipc_context ctx);
+        void replace(service::ipc_context ctx);
+
+        void delete_entry(service::ipc_context ctx);
 
         void connect(service::ipc_context ctx) override;
 
@@ -159,7 +172,7 @@ namespace eka2l1 {
         struct notify_entry {
             std::regex match_pattern;
             notify_type type;
-            int *request_status;
+            epoc::request_status *request_status;
         };
 
         std::vector<notify_entry> notify_entries;

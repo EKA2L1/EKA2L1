@@ -33,6 +33,18 @@
 #include <common/e32inc.h>
 #include <e32err.h>
 
+int after_timout_evt = -1;
+
+static void after_thread_timeout(std::uint64_t data, int cycles_late) {
+    eka2l1::kernel::thread *thr = reinterpret_cast<decltype(thr)>(data);
+
+    if (thr == nullptr) {
+        return;
+    }
+
+    thr->notify_after(0);
+}
+
 namespace eka2l1 {
     namespace kernel {
         struct epoc9_thread_create_info {
@@ -158,13 +170,13 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool initial) {
+        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool should_create_heap) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
 
             ctx.pc = entry_point;
 
-            if (!initial) {
+            if (should_create_heap) {
                 ctx.pc = kern->get_lib_manager()->get_export_addr(4238211793); // Setup thread heap
                 ctx.lr = entry_point;
 
@@ -173,13 +185,13 @@ namespace eka2l1 {
             }
 
             ctx.sp = stack_top;
-            ctx.cpsr = ((entry_point & 1) << 5);
+            ctx.cpsr = ((ctx.pc & 1) << 5);
         }
 
-        void thread::create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, const address epa) {
+        void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len,
+            address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
-
-            info.allocator = 0;
+            info.allocator = allocator.ptr_address();
             info.func_ptr = epa;
             info.ptr = usrdata.ptr_address();
 
@@ -210,6 +222,7 @@ namespace eka2l1 {
             const size_t min_heap_size, const size_t max_heap_size,
             bool inital,
             ptr<void> usrdata,
+            ptr<void> allocator,
             thread_priority pri)
             : kernel_obj(kern, name, access)
             , own_process(owner)
@@ -220,8 +233,14 @@ namespace eka2l1 {
             , mem(mem)
             , priority(pri)
             , timing(timing)
+            , timeout_sts(nullptr)
             , wait_obj(nullptr)
+            , sleep_nof_sts(nullptr)
             , thread_handles(kern, handle_array_owner::thread) {
+            if (after_timout_evt == -1) {
+                after_timout_evt = timing->register_event("ThreadAfterTimoutEvt", &after_thread_timeout);
+            }
+
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = caculate_thread_priority(own_process, pri);
@@ -268,10 +287,16 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(start, end, 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), name.length(), name_chunk_ptr->base().ptr_address(), epa);
+            create_stack_metadata(ptr<void>(stack_top), allocator, name.length(), name_chunk_ptr->base().ptr_address(), epa);
 
-            reset_thread_ctx(epa, stack_top, inital);
+            bool should_create_heap = (!allocator.ptr_address()) && (!inital);
+
+            reset_thread_ctx(epa, stack_top, should_create_heap);
             scheduler = kern->get_thread_scheduler();
+
+            if (allocator.ptr_address()) {
+                ldata.heap = allocator;
+            }
         }
 
         thread::~thread() {
@@ -301,8 +326,45 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
-        bool thread::sleep(uint32_t secs) {
-            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)), secs);
+        void thread::after(epoc::request_status *sts, uint32_t mssecs) {
+            assert(!timeout_sts && "After request outstanding");
+            timeout_sts = sts;
+
+            timing->schedule_event(timing->us_to_cycles((uint64_t)mssecs), 
+                after_timout_evt, reinterpret_cast<uint64_t>(this));
+        }
+
+        bool thread::sleep(uint32_t mssecs) {
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj_by_id(uid)), mssecs);
+        }
+
+        bool thread::sleep_nof(epoc::request_status *sts, uint32_t mssecs) {
+            assert(!sleep_nof_sts && "Thread supposed to sleep already");
+            sleep_nof_sts = sts;
+
+            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj_by_id(uid)), mssecs);
+        }
+
+        void thread::notify_sleep(const int errcode) {
+            if (sleep_nof_sts) {
+                sleep_nof_sts->status = errcode;
+                sleep_nof_sts = 0;
+            }
+
+            sleep_nof_sts = nullptr;
+        }
+
+        void thread::notify_after(const int errcode) {
+            if (timeout_sts) {
+                timeout_sts->status = errcode;
+                timeout_sts = 0;
+
+                signal_request();
+            }
+
+            timeout_sts = nullptr;
         }
 
         bool thread::stop() {
@@ -358,8 +420,7 @@ namespace eka2l1 {
         }
 
         bool thread::suspend() {
-            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>
-                (kern->get_kernel_obj_by_id(uid)));
+            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
 
             if (!res) {
                 return false;
@@ -424,6 +485,12 @@ namespace eka2l1 {
         void thread::owning_process(process_ptr pr) {
             own_process = pr;
             own_process->increase_thread_count();
+
+            chunk_ptr name_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
+            chunk_ptr stack_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
+
+            name_chunk_ptr->set_own_process(own_process);
+            stack_chunk_ptr->set_own_process(own_process);
 
             update_priority();
             last_priority = real_priority;

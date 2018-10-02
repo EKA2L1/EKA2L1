@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <common/log.h>
 #include <core/core_timing.h>
 
@@ -124,6 +125,11 @@ namespace eka2l1 {
         evt.event_user_data = userdata;
 
         events.push_back(evt);
+
+        std::stable_sort(events.begin(), events.end(),
+            [](const event &lhs, const event &rhs) {
+                return lhs.event_time > rhs.event_time;
+            });
     }
 
     void timing_system::schedule_event_imm(int event_type, uint64_t userdata) {
@@ -189,10 +195,17 @@ namespace eka2l1 {
         global_timer += cycles_executed;
         slice_len = INITIAL_SLICE_LENGTH;
 
-        while (!events.empty() && events.front().event_time <= global_timer) {
-            event evt = std::move(events.front());
+        while (!events.empty() && events.back().event_time <= global_timer) {
+            event evt = std::move(events.back());
             events.pop_back();
-            event_types[evt.event_type].callback(evt.event_user_data, global_timer - evt.event_time);
+
+            std::stable_sort(events.begin(), events.end(), 
+                [](const event &lhs, const event &rhs) {
+                    return lhs.event_time > rhs.event_time;
+            });
+
+            event_types[evt.event_type]
+                .callback(evt.event_user_data, global_timer - evt.event_time);
         }
 
         if (!events.empty()) {
@@ -207,6 +220,12 @@ namespace eka2l1 {
 
         for (uint32_t i = 0; i < ts_events.size(); i++) {
             events.push_back(ts_events[i]);
+
+            std::stable_sort(events.begin(), events.end(),
+                [](const event &lhs, const event &rhs) {
+                    return lhs.event_time > rhs.event_time;
+                });
+
             ts_events.erase(events.begin() + i);
         }
     }

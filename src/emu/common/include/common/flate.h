@@ -32,7 +32,7 @@ namespace eka2l1 {
         bool inflate_data(mz_stream *stream, void *in, void *out, uint32_t in_size, uint32_t *out_size = nullptr);
 
         // Made specificlly for Image Compressing
-        enum {
+        enum : uint64_t {
             DEFLATE_LENGTH_MAG = 8,
             DEFLATE_DIST_MAG = 12,
             DEFLATE_MIN_LENGTH = 3,
@@ -60,7 +60,7 @@ namespace eka2l1 {
         /*! \brief Represents a Deflate bit output */
         class bit_output {
             uint32_t code;
-            uint32_t bits;
+            int bits;
             uint8_t *start;
             uint8_t *end;
 
@@ -103,7 +103,7 @@ namespace eka2l1 {
             /*! \brief Read a huffman byte. */
             uint32_t read();
 
-            uint32_t read(size_t size);
+            uint32_t read(int size);
             uint32_t huffman(const uint32_t *tree);
         };
 

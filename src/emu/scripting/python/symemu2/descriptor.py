@@ -1,3 +1,21 @@
+# Copyright (c) 2018 EKA2L1 Team.
+# 
+# This file is part of EKA2L1 project 
+# (see bentokun.github.com/EKA2L1).
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import ctypes
 import symemu
 
@@ -43,12 +61,6 @@ class DescriptorBase(object):
         self.length = lengthAndType & 0xFFFFFF
         self.type = DescriptorType(lengthAndType >> 28)
         self.ptr = ptr_switcher.get(self.type, lambda: 'Invalid descriptor type')()
-        
-    def type(self):
-        return self.type
-        
-    def length(self):
-        return self.length
         
 class Descriptor8(DescriptorBase):
     def __init__(self, address):

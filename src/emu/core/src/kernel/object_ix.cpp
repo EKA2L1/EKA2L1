@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <core/core_kernel.h>
 #include <core/kernel/object_ix.h>
 
@@ -46,7 +66,7 @@ namespace eka2l1 {
         }
 
         uint32_t object_ix::add_object(kernel_obj_ptr obj) {
-            auto &slot = std::find_if(objects.begin(), objects.end(),
+            auto slot = std::find_if(objects.begin(), objects.end(),
                 [](object_ix_record record) { return record.free; });
 
             if (slot != objects.end()) {
@@ -96,9 +116,14 @@ namespace eka2l1 {
 
             if (info.object_ix_index < objects.size() && info.object_ix_next_instance < objects.size() - 1) {
                 kernel_obj_ptr obj = objects[info.object_ix_index].object;
+                
+                if (!obj) {
+                    return false;
+                }
+
                 obj->decrease_access_count();
 
-                if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process) {
+                if (obj && obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process) {
                     kern->destroy(obj);
                 }
 

@@ -19,7 +19,12 @@
  */
 
 #include <common/algorithm.h>
+
+#ifdef WIN32
 #include <Windows.h>
+#endif
+
+#include <cwctype>
 
 namespace eka2l1 {
     namespace common {
@@ -82,7 +87,7 @@ namespace eka2l1 {
             if (s1.size() == s2.size()) {
                 for (size_t i = 0; i < s1.size(); i++) {
                     const wchar_t t1 = towlower(s1[i]);
-                    const wchar_t t2 = towlower(s2[i])
+                    const wchar_t t2 = towlower(s2[i]);
 
                         if (t1 > t2) {
                         return 1;

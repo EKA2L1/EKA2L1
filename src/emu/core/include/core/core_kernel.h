@@ -160,6 +160,7 @@ namespace eka2l1 {
             const size_t min_heap_size, const size_t max_heap_size,
             bool initial,
             ptr<void> usrdata = 0,
+            ptr<void> allocator = 0,
             kernel::thread_priority pri = kernel::priority_normal);
 
         uint32_t create_mutex(std::string name, bool init_locked,
@@ -226,7 +227,7 @@ namespace eka2l1 {
         kernel_obj_ptr get_kernel_obj_by_id(uint64_t id);
 
         thread_ptr get_thread_by_name(const std::string &name);
-        thread_ptr kernel_system::get_thread_by_handle(uint32_t handle);
+        thread_ptr get_thread_by_handle(uint32_t handle);
 
         session_ptr get_session(uint32_t handle);
 
@@ -239,7 +240,9 @@ namespace eka2l1 {
         bool run_thread(uint32_t handle);
         bool run_process(uint32_t handle);
 
-        uint32_t spawn_new_process(std::string &path, std::string name, uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
+        uint32_t spawn_new_process(const std::string &path, const std::string &name,
+            uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
+
         uint32_t spawn_new_process(uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
 
         bool destroy_process(process_ptr pr);
@@ -257,7 +260,8 @@ namespace eka2l1 {
         process_ptr crr_process();
 
         void set_handle_owner_type(int handle);
-
         bool should_terminate();
+
+        bool save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids);
     };
 }

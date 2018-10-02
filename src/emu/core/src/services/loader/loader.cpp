@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <core/services/loader/loader.h>
 #include <core/services/loader/op.h>
 
@@ -33,27 +53,14 @@ namespace eka2l1 {
         }
 
         std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
+        auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
 
-        if (process_name16->find(u".exe") == std::string::npos) {
-            // Add the executable extension
-            *process_name16 += u".exe";
-        }
+        LOG_TRACE("Trying to summon: {}", name_process);
 
-        eka2l1::symfile f = ctx.sys->get_io_system()->open_file(*process_name16, READ_MODE | BIN_MODE);
+        if (!eimg) {
+            loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*process_name16, false);
 
-        if (!f) {
-            ctx.set_request_status(KErrNotFound);
-            return;
-        }
-
-        auto temp = loader::parse_eka2img(f, true);
-
-        if (!temp) {
-            f->seek(0, eka2l1::file_seek_mode::beg);
-            auto romimg = loader::parse_romimg(f, ctx.sys->get_memory_system());
-
-            if (romimg && romimg->header.uid3 == info->uid3) {
-                loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*process_name16, false);
+            if (img_ptr && ((info->uid3 == 0) || (info->uid3 != 0 && img_ptr->header.uid3 == info->uid3))) {
                 ctx.sys->get_lib_manager()->open_romimg(img_ptr);
 
                 int32_t stack_size_img = img_ptr->header.stack_size;
@@ -65,9 +72,6 @@ namespace eka2l1 {
                     static_cast<kernel::owner_type>(info->owner_type));
 
                 img_ptr->header.stack_size = stack_size_img;
-
-                f->close();
-
                 LOG_TRACE("Spawned process: {}, entry point: 0x{:x}", name_process, img_ptr->header.entry_point);
 
                 info->handle = handle;
@@ -75,38 +79,25 @@ namespace eka2l1 {
 
                 ctx.set_request_status(KErrNone);
                 return;
-            }
-
-            f->close();
+            } 
 
             ctx.set_request_status(KErrUnknown);
             return;
         }
 
-        auto res2 = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
-
-        if (!res2) {
-            ctx.set_request_status(KErrUnknown);
-            f->close();
-
-            return;
-        }
-
-        ctx.sys->get_lib_manager()->open_e32img(res2);
+        ctx.sys->get_lib_manager()->open_e32img(eimg);
         ctx.sys->get_lib_manager()->patch_hle();
 
         /* Create process through kernel system */
-        int32_t stack_size_img = res2->header.stack_size;
-        res2->header.stack_size = std::min(res2->header.stack_size, (uint32_t)info->min_stack_size);
+        int32_t stack_size_img = eimg->header.stack_size;
+        eimg->header.stack_size = std::min(eimg->header.stack_size, (uint32_t)info->min_stack_size);
 
         /* Create process through kernel system. */
         uint32_t handle = ctx.sys->get_kernel_system()->create_process(info->uid3, name_process,
-            *process_name16, *process_args, res2, static_cast<kernel::process_priority>(res2->header.priority),
+            *process_name16, *process_args, eimg, static_cast<kernel::process_priority>(eimg->header.priority),
             static_cast<kernel::owner_type>(info->owner_type));
 
-        res2->header.stack_size = stack_size_img;
-
-        f->close();
+        eimg->header.stack_size = stack_size_img;
 
         LOG_TRACE("Spawned process: {}", name_process);
 
@@ -133,21 +124,23 @@ namespace eka2l1 {
 
         std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
 
-        loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*lib_path, false);
+        loader::e32img_ptr e32img_ptr = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
 
-        if (!img_ptr) {
-            loader::e32img_ptr e32img_ptr = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
+        if (!e32img_ptr) {
+            loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*lib_path);
 
-            if (!e32img_ptr) {
+            if (!img_ptr) {
                 LOG_TRACE("Invalid library provided {}", lib_name);
                 ctx.set_request_status(KErrArgument);
 
                 return;
             }
 
+            ctx.sys->get_lib_manager()->open_romimg(img_ptr);
+
             /* Create process through kernel system. */
             uint32_t handle = ctx.sys->get_kernel_system()->create_library(lib_name,
-                e32img_ptr, static_cast<kernel::owner_type>(info->owner_type));
+                img_ptr, static_cast<kernel::owner_type>(info->owner_type));
 
             LOG_TRACE("Loaded library: {}", lib_name);
 
@@ -158,11 +151,11 @@ namespace eka2l1 {
             ctx.write_arg_pkg(0, *info);
             ctx.set_request_status(KErrNone);
         } else {
-            ctx.sys->get_lib_manager()->open_romimg(img_ptr);
+            ctx.sys->get_lib_manager()->open_e32img(e32img_ptr);
 
             /* Create process through kernel system. */
             uint32_t handle = ctx.sys->get_kernel_system()->create_library(
-                lib_name, img_ptr, static_cast<kernel::owner_type>(info->owner_type));
+                lib_name, e32img_ptr, static_cast<kernel::owner_type>(info->owner_type));
 
             LOG_TRACE("Loaded library: {}", lib_name);
 

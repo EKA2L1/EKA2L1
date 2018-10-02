@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <core/epoc/des.h>
 #include <core/core.h>
 
@@ -25,6 +45,9 @@ namespace eka2l1::epoc {
 
         case EPtr:
             return (reinterpret_cast<TPtr8 *>(aDes8))->iPtr;
+
+        default:
+            break;
         }
 
         return eka2l1::ptr<TUint8>(0);
@@ -67,6 +90,9 @@ namespace eka2l1::epoc {
 
         case EPtr:
             return (reinterpret_cast<TPtr16 *>(aDes16))->iPtr;
+
+        default:
+            break;
         }
 
         return ptr<TUint16>(0);
@@ -168,11 +194,10 @@ namespace eka2l1::epoc {
 
         if (GetTDesC8Type(des) == EBufCPtr) {
             TBufCPtr8 *buf_ptr = reinterpret_cast<TBufCPtr8 *>(des);
-
             eka2l1::ptr<TBufC8> buf_hle = buf_ptr->iPtr;
 
             TBufC8 *real_buf = static_cast<TBufC8*>(sys->get_ptr_on_addr_space(buf_hle.ptr_address()));
-            real_buf->iLength = len | (EBufC << 28);
+            real_buf->iLength = len;
         }
     }
 

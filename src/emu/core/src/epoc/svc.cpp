@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <core/epoc/chunk.h>
 #include <core/epoc/dll.h>
 #include <core/epoc/hal.h>
@@ -11,6 +31,17 @@
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/random.h>
+
+#define CURL_STATICLIB
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "Normaliz.lib")
+#endif
+
+#include <date/tz.h>
 
 #ifdef WIN32
 #include <Windows.h>
@@ -74,6 +105,11 @@ namespace eka2l1::epoc {
         local_data.scheduler = aNewScheduler;
     }
 
+    BRIDGE_FUNC(void, After, TInt aMicroSecs, eka2l1::ptr<epoc::request_status> aStatus) {
+        sys->get_kernel_system()->crr_thread()->after(aStatus.get(sys->get_memory_system()),
+            aMicroSecs);
+    }
+
     /****************************/
     /* PROCESS */
     /***************************/
@@ -129,6 +165,29 @@ namespace eka2l1::epoc {
         des->Assign(sys, pr_real->name());
     }
 
+    BRIDGE_FUNC(TInt, ProcessGetId, TInt aHandle) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr_real;
+
+        // 0xffff8000 is a kernel mapping for current process
+        if (aHandle != 0xffff8000) {
+            // Unlike Symbian, process is not a kernel object here
+            // Its handle contains the process's uid
+            pr_real = kern->get_process(aHandle);
+        } else {
+            pr_real = kern->crr_process();
+        }
+
+        if (!pr_real) {
+            LOG_ERROR("ProcessGetId: Invalid process");
+            return KErrBadHandle;
+        }
+
+        return pr_real->unique_id();
+    }
+
     BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -150,7 +209,7 @@ namespace eka2l1::epoc {
         }
 
         TUidType *type = uid_type.get(mem);
-        auto &tup = pr_real->get_uid_type();
+        auto tup = pr_real->get_uid_type();
 
         type->uid1 = std::get<0>(tup);
         type->uid2 = std::get<1>(tup);
@@ -212,6 +271,56 @@ namespace eka2l1::epoc {
         memcpy(data, ptr2, slot.data_size);
 
         return slot.data_size;
+    }
+
+    BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        process_ptr pr = kern->crr_process();
+
+        auto slot = *pr->get_arg_slot(1);
+
+        if (slot.data_size == -1) {
+            return KErrNotFound;
+        }
+
+        return (slot.data_size / 2) + 1;
+    }
+
+    BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<TDes8> aData) {
+        kernel_system *kern = sys->get_kernel_system();
+        process_ptr pr = kern->crr_process();
+
+        auto slot = *pr->get_arg_slot(1);
+
+        if (slot.data_size == -1) {
+            return;
+        }
+
+        TDes8 *data = aData.get(sys->get_memory_system());
+
+        if (!data) {
+            return;
+        }
+
+        if (data->iMaxLength < slot.data_size) {
+            LOG_WARN("Not enough data to store command line, abort");
+            return;
+        }
+
+        std::u16string arg = u"\0l" + pr->get_exe_path();
+
+        if (!pr->get_cmd_args().empty()) {
+            arg += u" " + pr->get_cmd_args();
+        }
+
+        char src = 0x00;
+        char src2 = 0x6C;
+
+        TUint8 *data_ptr = data->Ptr(sys);
+
+        memcpy(data_ptr + 2, common::ucs2_to_utf8(arg).data(), arg.length());
+        memcpy(data_ptr, &src, 1);
+        memcpy(data_ptr + 1, &src2, 1);
     }
 
     BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
@@ -284,7 +393,7 @@ namespace eka2l1::epoc {
 
         for (const auto &tls : dat.tls_slots) {
             if (tls.handle == aHandle) {
-                return tls.ptr;
+                return tls.pointer;
             }
         }
 
@@ -298,7 +407,7 @@ namespace eka2l1::epoc {
             return KErrNoMemory;
         }
 
-        slot->ptr = aPtr;
+        slot->pointer = aPtr;
 
         return KErrNone;
     }
@@ -312,9 +421,39 @@ namespace eka2l1::epoc {
     /* LOCALE */
     /**********************************/
 
+    /*
+    * Warning: It's not possible to set the UTC time and offset in the emulator at the moment.
+    */
+
+    /*! \brief Get the UTC offset in seconds. 
+     *
+     * This was proved to be in seconds by the use of it in us_time.cpp (TTime::HomeTimeSecure), where 
+     * the offset was passed as a constructor argument to TTimeIntervalSeconds.
+     *
+     * \returns The UTC offset, in seconds.
+     */
     BRIDGE_FUNC(TInt, UTCOffset) {
-        // Stubbed
-        return -14400;
+        return date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count();
+    }
+
+    enum : uint64_t {
+        microsecs_per_sec = 1000000,
+        ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec
+    };
+
+    BRIDGE_FUNC(TInt, TimeNow, eka2l1::ptr<TUint64> aTime, eka2l1::ptr<TInt> aUTCOffset) {
+        TUint64 *time = aTime.get(sys->get_memory_system());
+        TInt *offset = aUTCOffset.get(sys->get_memory_system());
+
+        LOG_INFO("EKA2L1 may download timezone database to your Downloads folder if the database doesn't exist");
+        LOG_INFO("Disable this info using core option: disableadd");
+
+        // The time is since EPOC, we need to convert it to first of AD
+        *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
+            + ad_epoc_dist_microsecs;
+        *offset = date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count();
+
+        return KErrNone;
     }
 
     /********************************************/
@@ -347,7 +486,7 @@ namespace eka2l1::epoc {
         *msg->request_sts = aVal;
         msg->own_thr->signal_request();
 
-        LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
+        // LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
     }
@@ -508,7 +647,7 @@ namespace eka2l1::epoc {
         context.msg = msg;
 
         std::string content;
-        content.resize(aStartOffset + des8 ? info->iTargetLength : info->iTargetLength * 2);
+        content.resize(aStartOffset + (des8 ? info->iTargetLength : info->iTargetLength * 2));
 
         memcpy(&content[aStartOffset], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
         bool result = context.write_arg_pkg(aParam, reinterpret_cast<uint8_t *>(&content[0]), content.length());
@@ -592,6 +731,19 @@ namespace eka2l1::epoc {
             reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
     }
 
+    BRIDGE_FUNC(void, ServerCancel, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        server_ptr server = kern->get_server(aHandle);
+
+        if (!server) {
+            return;
+        }
+
+        server->cancel_async_lle();
+    }
+
     BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -645,7 +797,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
-        eka2l1::ptr<TInt> aStatus) {
+        eka2l1::ptr<epoc::request_status> aStatus) {
         //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
         memory_system *mem = sys->get_memory_system();
@@ -673,7 +825,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
-        eka2l1::ptr<TInt> aStatus) {
+        eka2l1::ptr<epoc::request_status> aStatus) {
         //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
         memory_system *mem = sys->get_memory_system();
@@ -872,6 +1024,50 @@ namespace eka2l1::epoc {
         }
 
         return sema;
+    }
+
+    BRIDGE_FUNC(TInt, SemaphoreWait, TInt aSemaHandle, TInt aTimeout) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+
+        if (!sema) {
+            return KErrBadHandle;
+        }
+
+        if (aTimeout) {
+            LOG_WARN("Semaphore timeout unimplemented");
+        }
+
+        sema->wait();
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(void, SemaphoreSignal, TInt aSemaHandle) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+
+        if (!sema) {
+            return;
+        }
+
+        sema->signal(1);
+    }
+
+    BRIDGE_FUNC(void, SemaphoreSignalN, TInt aSemaHandle, TInt aSigCount) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+
+        if (!sema) {
+            return;
+        }
+
+        sema->signal(aSigCount);
     }
 
     BRIDGE_FUNC(TInt, MutexCreate, eka2l1::ptr<TDesC8> aMutexName, TOwnerType aOwnerType) {
@@ -1125,7 +1321,7 @@ namespace eka2l1::epoc {
 
         uint32_t thr_handle = kern->create_thread(static_cast<kernel::owner_type>(aOwnerType), kern->crr_process(),
             kernel::access_type::local_access, thr_name, info->func_ptr, info->user_stack_size,
-            info->heap_initial_size, info->heap_max_size, false, info->ptr, kernel::thread_priority::priority_normal);
+            info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal);
 
         if (thr_handle == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1463,7 +1659,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        bool res = prop->set(aValue);
+        bool res = prop->set_int(aValue);
 
         if (!res) {
             return KErrArgument;
@@ -1581,6 +1777,12 @@ namespace eka2l1::epoc {
             kernel::owner_type::process);
     }
 
+    /* 
+    * Note: the difference between At and After on hardware is At request still actives when the phone shutdown.
+    * At is extremely important to implement the alarm in S60 (i believe S60v4 is a part based on S60 so it maybe related).
+    * In emulator, it's the same, so i implement it as TimerAffter.
+    */
+
     BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds) {
         kernel_system *kern = sys->get_kernel_system();
         timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
@@ -1590,6 +1792,17 @@ namespace eka2l1::epoc {
         }
 
         timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSeconds);
+    }
+
+    BRIDGE_FUNC(void, TimerAtUtc, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TUint64 aMicroSecondsAt) {
+        kernel_system *kern = sys->get_kernel_system();
+        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+
+        if (!timer) {
+            return;
+        }
+
+        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSecondsAt - std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - ad_epoc_dist_microsecs);
     }
 
     BRIDGE_FUNC(void, TimerCancel, TInt aHandle) {
@@ -1620,13 +1833,29 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        bool res = cnot->logon(aRequestStatus.get(mem));
+        bool res = cnot->logon(aRequestStatus);
 
         if (!res) {
             return KErrGeneral;
         }
 
         return KErrNone;
+    }
+
+    /* DEBUG AND SECURITY */
+
+    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<TDesC8> aDes, TInt aMode) {
+        LOG_TRACE("{}", aDes.get(sys->get_memory_system())->StdString(sys));
+    }
+
+    // Let all pass for now
+    BRIDGE_FUNC(TInt, PlatSecDiagnostic, eka2l1::ptr<TAny> aPlatSecInfo) {
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(eka2l1::ptr<void>, GetGlobalUserData) {
+        LOG_INFO("GetGlobalUserData stubbed with zero");
+        return 0;
     }
 
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
@@ -1642,17 +1871,24 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0080000D, DebugMaskIndex),
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
         BRIDGE_REGISTER(0x00800019, UTCOffset),
+        BRIDGE_REGISTER(0x0080001A, GetGlobalUserData),
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, ObjectNext),
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
+        BRIDGE_REGISTER(0x13, ProcessGetId),
         BRIDGE_REGISTER(0x15, ProcessResume),
         BRIDGE_REGISTER(0x16, ProcessFilename),
+        BRIDGE_REGISTER(0x17, ProcessCommandLine),
         BRIDGE_REGISTER(0x18, ProcessExitType),
         BRIDGE_REGISTER(0x1C, ProcessSetPriority),
         BRIDGE_REGISTER(0x1E, ProcessSetFlags),
+        BRIDGE_REGISTER(0x1F, SemaphoreWait),
+        BRIDGE_REGISTER(0x20, SemaphoreSignal),
+        BRIDGE_REGISTER(0x21, SemaphoreSignalN),
         BRIDGE_REGISTER(0x22, ServerReceive),
+        BRIDGE_REGISTER(0x23, ServerCancel),
         BRIDGE_REGISTER(0x24, SetSessionPtr),
         BRIDGE_REGISTER(0x25, SessionSend),
         BRIDGE_REGISTER(0x27, SessionShare),
@@ -1661,13 +1897,18 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x35, TimerCancel),
         BRIDGE_REGISTER(0x36, TimerAfter),
+        BRIDGE_REGISTER(0x37, TimerAtUtc),
         BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
         BRIDGE_REGISTER(0x3B, RequestSignal),
         BRIDGE_REGISTER(0x3C, HandleName),
+        BRIDGE_REGISTER(0x40, After),
         BRIDGE_REGISTER(0x42, MessageComplete),
+        BRIDGE_REGISTER(0x44, TimeNow),
         BRIDGE_REGISTER(0x4D, SessionSendSync),
         BRIDGE_REGISTER(0x4E, DllTls),
         BRIDGE_REGISTER(0x4F, HalFunction),
+        BRIDGE_REGISTER(0x52, ProcessCommandLineLength),
+        BRIDGE_REGISTER(0x56, DebugPrint),
         BRIDGE_REGISTER(0x6A, HandleClose),
         BRIDGE_REGISTER(0x64, ProcessType),
         BRIDGE_REGISTER(0x68, ThreadCreate),
@@ -1716,6 +1957,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC8, PropertyFindSetBin),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
+        BRIDGE_REGISTER(0xDB, PlatSecDiagnostic),
         BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd)

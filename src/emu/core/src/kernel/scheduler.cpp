@@ -26,14 +26,17 @@
 #include <core/kernel/thread.h>
 #include <functional>
 
-void wake_thread(uint64_t ud, int cycles_late);
+static void wake_thread(uint64_t ud, int cycles_late);
 
-void wake_thread(uint64_t ud, int cycles_late) {
+static void wake_thread(uint64_t ud, int cycles_late) {
     eka2l1::kernel::thread *thr = reinterpret_cast<decltype(thr)>(ud);
 
     if (thr == nullptr) {
         return;
     }
+
+    thr->notify_sleep(0);
+    thr->signal_request();
 }
 
 namespace eka2l1 {
@@ -85,7 +88,7 @@ namespace eka2l1 {
                 ready_threads.remove(newt);
                 jitter->load_context(crr_thread->ctx);
 
-                LOG_INFO("Thread switch to: {}", crr_thread->name());
+                LOG_TRACE("Thread switched to {}", newt->name());
             } else {
                 // Nope
                 crr_thread = nullptr;
@@ -148,7 +151,8 @@ namespace eka2l1 {
             waiting_threads.push_back(thr);
 
             // Schedule the thread to be waken up
-            timing->schedule_event(sl_time, wakeup_evt, reinterpret_cast<uint64_t>(thr.get()));
+            timing->schedule_event(sl_time, wakeup_evt, 
+                timing->us_to_cycles(reinterpret_cast<uint64_t>(thr.get())));
 
             return true;
         }
@@ -179,16 +183,13 @@ namespace eka2l1 {
             }
 
             switch (thr->state) {
-            case thread_state::wait:
-            case thread_state::wait_fast_sema:
-            case thread_state::wait_hle:
-            case thread_state::wait_mutex:
-                break;
-
             case thread_state::ready:
             case thread_state::run:
             case thread_state::stop:
                 return false;
+
+            default:
+                break;
             }
 
             thr->state = thread_state::ready;
@@ -222,7 +223,7 @@ namespace eka2l1 {
                     return false;
                 }
             } else if (thr->state == thread_state::wait || thr->state == thread_state::wait_fast_sema) {
-                auto &thr_wait = std::find(waiting_threads.begin(), waiting_threads.end(), thr);
+                auto thr_wait = std::find(waiting_threads.begin(), waiting_threads.end(), thr);
 
                 if (thr_wait != waiting_threads.end()) {
                     waiting_threads.erase(thr_wait);

@@ -73,6 +73,9 @@ namespace eka2l1 {
 
         void ipc_context::set_request_status(int res) {
             *msg->request_sts = res;
+
+            // Only signal when setting the request status
+            msg->own_thr->signal_request();
         }
 
         int ipc_context::flag() const {
@@ -117,12 +120,11 @@ namespace eka2l1 {
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
                 eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
                     msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                
                 std::string bin;
-
                 bin.resize(len);
 
                 memcpy(bin.data(), data, len);
-
                 des->Assign(msg->own_thr->owning_process(), bin);
 
                 return true;

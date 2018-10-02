@@ -18,16 +18,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <common/algorithm.h>
 #include <common/log.h>
-#include <core/core_mem.h>
-#include <cstdio>
-#include <core/disasm/disasm.h>
-#include <core/hle/libmanager.h>
+
 #include <core/loader/romimage.h>
 #include <core/vfs.h>
+#include <core/ptr.h>
 
+#include <algorithm>
+#include <cstdio>
 #include <set>
 
 namespace eka2l1 {
@@ -54,4 +53,3 @@ namespace eka2l1 {
         }
     }
 }
-

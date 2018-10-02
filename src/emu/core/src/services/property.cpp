@@ -41,7 +41,7 @@ namespace eka2l1 {
             }
         }
 
-        bool property::set(int val) {
+        bool property::set_int(int val) {
             if (data_type == service::property_type::int_data) {
                 data.ndata = val;
                 notify_request();

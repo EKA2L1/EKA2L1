@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <queue>
 
 namespace eka2l1 {
@@ -19,10 +20,10 @@ namespace eka2l1 {
 		 * \returns true if remove successes.
 		*/
         bool remove(const T& val) {
-            auto it = std::find(c.begin(), c.end(), val);
-            if (it != c.end()) {
-                c.erase(it);
-                std::make_heap(c.begin(), c.end(), comp);
+            auto it = std::find(this->c.begin(), this->c.end(), val);
+            if (it != this->c.end()) {
+                this->c.erase(it);
+                std::make_heap(this->c.begin(), this->c.end(), this->comp);
                 return true;
             }
             else {
@@ -31,17 +32,17 @@ namespace eka2l1 {
         }
 
         iterator begin()  {
-            return c.begin();
+            return this->c.begin();
         }
 
         iterator end() {
-            return c.end();
+            return this->c.end();
         }
 
 		/*! \brief Resort the queue.
 		*/
         void resort() {
-            std::make_heap(c.begin(), c.end(), comp);
+            std::make_heap(this->c.begin(), this->c.end(), this->comp);
         }
     };
 

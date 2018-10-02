@@ -54,18 +54,22 @@ namespace eka2l1 {
             uint32_t cookie_address;
 
         private:
-            ipc_msg_ptr &get_free_msg();
+            ipc_msg_ptr get_free_msg();
 
         public:
             session(kernel_system *kern, server_ptr svr, int async_slot_count);
 
+            server_ptr get_server() {
+                return svr;
+            }
+
             void prepare_destroy();
 
-            int send_receive_sync(int function, ipc_arg args, int *request_sts);
+            int send_receive_sync(int function, ipc_arg args, epoc::request_status *request_sts);
             int send_receive_sync(int function, ipc_arg args);
             int send_receive_sync(int function);
-            int send_receive(int function, ipc_arg args, int *request_sts);
-            int send_receive(int function, int *request_sts);
+            int send_receive(int function, ipc_arg args, epoc::request_status *request_sts);
+            int send_receive(int function, epoc::request_status *request_sts);
             int send(int function, ipc_arg args);
             int send(int function);
 

@@ -40,8 +40,8 @@ namespace eka2l1 {
 
             YAML::Node sdb_node = YAML::LoadFile(path);
 
-            for (auto &maybe_app : sdb_node) {
-                YAML::Node app = maybe_app.second;
+            for (const auto &maybe_app : sdb_node) {
+                const YAML::Node app = maybe_app.second;
 
                 app_info info;
 
@@ -65,6 +65,8 @@ namespace eka2l1 {
                     e_apps.emplace(info.id, info);
                 }
             }
+
+            return true;
         }
 
         bool package_manager::write_sdb_yaml(const std::string &path) {
@@ -180,28 +182,28 @@ namespace eka2l1 {
             }
 
             for (auto &c_app : c_apps) {
-                int size = c_app.second.name.size();
+                int size = static_cast<int>(c_app.second.name.size());
 
                 fwrite(&size, 1, 4, file);
                 fwrite(c_app.second.vendor_name.data(), 2, c_app.second.vendor_name.size(), file);
             }
 
             for (auto &e_app : e_apps) {
-                int size = e_app.second.name.size();
+                int size = static_cast<int>(e_app.second.name.size());
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&e_app.second.vendor_name[0], 2, e_app.second.vendor_name.size(), file);
             }
 
             for (auto &c_app : c_apps) {
-                int size = c_app.second.executable_name.size();
+                int size = static_cast<int>(c_app.second.executable_name.size());
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&c_app.second.executable_name[0], 2, c_app.second.executable_name.size(), file);
             }
 
             for (auto &e_app : e_apps) {
-                int size = e_app.second.executable_name.size();
+                int size = static_cast<int>(e_app.second.executable_name.size());
 
                 fwrite(&size, 1, 4, file);
                 fwrite(&e_app.second.executable_name[0], 2, e_app.second.executable_name.size(), file);

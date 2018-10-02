@@ -85,7 +85,7 @@ namespace eka2l1 {
 
             write_args<args...>(mcpu, layouts, indices(), mem, lle_args...);
 
-            mcpu->set_lr(1ULL << 63);
+            mcpu->set_lr(static_cast<std::uint32_t>(1ULL << 63));
             mcpu->set_pc(addr);
             mcpu->set_lr(crr_caller_context.pc);
 
@@ -110,7 +110,7 @@ namespace eka2l1 {
 
             write_args<args...>(mcpu, layouts, indices(), mem, lle_args...);
 
-            mcpu->set_lr(1ULL << 63);
+            mcpu->set_lr(static_cast<std::uint32_t>(1ULL << 63));
             mcpu->set_pc(addr);
 
             arm::jit_interface::thread_context test_caller_context;

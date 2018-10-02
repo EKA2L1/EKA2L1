@@ -81,7 +81,7 @@ namespace eka2l1 {
 
         template <typename arg>
         constexpr std::tuple<arg_layout, layout_args_state> add_arg_to_layout(const layout_args_state &state) {
-            if (constexpr(std::is_same_v<arg, float>)) {
+            if constexpr(std::is_same_v<arg, float>) {
                 return add_to_stack<arg>(state);
             }
             else {
@@ -108,8 +108,11 @@ namespace eka2l1 {
         template <typename... args>
         constexpr args_layout<args...> lay_out() {
             args_layout<args...> layout = {};
-            layout_args_state state = {};
-            add_args_to_layout<args...>(*layout.data(), state);
+            
+            if constexpr(sizeof...(args) != 0) {
+                layout_args_state state = {};
+                add_args_to_layout<args...>(*layout.data(), state);   
+            }
 
             return layout;
         }

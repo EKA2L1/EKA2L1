@@ -33,7 +33,7 @@ namespace eka2l1 {
         }
 
         bool server::is_msg_delivered(ipc_msg_ptr &msg) {
-            auto &res = std::find_if(delivered_msgs.begin(), delivered_msgs.end(),
+            auto res = std::find_if(delivered_msgs.begin(), delivered_msgs.end(),
                 [&](const auto &svr_msg) { return svr_msg.real_msg->id == msg->id; });
 
             if (res != delivered_msgs.end()) {
@@ -44,9 +44,10 @@ namespace eka2l1 {
         }
 
         // Create a server with name
-        server::server(system *sys, const std::string name, bool hle)
+        server::server(system *sys, const std::string name, bool hle, bool unhandle_callback_enable)
             : sys(sys)
             , hle(hle)
+            , unhandle_callback_enable(unhandle_callback_enable)
             , kernel_obj(sys->get_kernel_system(), name, kernel::access_type::global_access) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
@@ -137,6 +138,13 @@ namespace eka2l1 {
             auto func_ite = ipc_funcs.find(func);
 
             if (func_ite == ipc_funcs.end()) {
+                if (unhandle_callback_enable) {
+                    ipc_context context{ sys, process_msg };
+                    on_unhandled_opcode(context);
+
+                    return;
+                }
+
                 LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
 
                 // Signal request semaphore, to tell everyone that it has finished random request
@@ -153,9 +161,6 @@ namespace eka2l1 {
             }
 
             ipf.wrapper(context);
-
-            // Signal request semaphore, to tell everyone that it has finished random request
-            process_msg->own_thr->signal_request();
         }
 
         void server::destroy() {
@@ -189,6 +194,7 @@ namespace eka2l1 {
             int res = receive(msg);
 
             request_status = msg_request_status;
+
             request_own_thread = sys->get_kernel_system()->crr_thread();
             request_data = data;
 
@@ -202,6 +208,11 @@ namespace eka2l1 {
         }
 
         void server::cancel_async_lle() {
+            if (!request_status) {
+                request_own_thread->signal_request();
+                return;
+            }
+
             *request_status = -3; // KErrCancel
 
             request_own_thread->signal_request();
@@ -209,8 +220,6 @@ namespace eka2l1 {
             request_data = nullptr;
             request_own_thread = nullptr;
             request_status = nullptr;
-
-            sys->get_kernel_system()->free_msg(request_msg);
 
             request_msg = nullptr;
         }

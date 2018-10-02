@@ -3,13 +3,18 @@ target_include_directories(miniz PUBLIC miniz)
 
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 
+add_definitions(-DCURL_STATICLIB)
+
 add_subdirectory(freetype)
 add_subdirectory(pybind11)
-add_subdirectory(FRSML)
 add_subdirectory(spdlog)
 add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(dynarmic)
+
+set (ENABLE_DATE_TESTING "Enable testing for Date" OFF)
+
+add_subdirectory(date)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPy_DEBUG)
@@ -46,16 +51,6 @@ add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
 add_library(unicorn INTERFACE)
 
-#add_library(imgui_igs
-#	Imgui-IGS-Snippets/ImguiWindowsFileIO.hpp
-#	Imgui-IGS-Snippets/ImguiWindowsFileIO.cpp)
-
-#target_link_libraries(imgui_igs PRIVATE imgui)
-#target_include_directories(imgui_igs PUBLIC Imgui-IGS-Snippets)
-
-add_library(simini INTERFACE)
-target_include_directories(simini INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/simpleini")
-
 if(APPLE)
 	target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/include")
 	target_link_libraries(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/lib/libunicorn.a")
@@ -68,9 +63,11 @@ elseif(UNIX)
 endif()
 
 if (BUILD_TOOLS)
-    find_package(LibClang)
+    find_package(LibClang QUIET)
 
     if (LIBCLANG_FOUND)
+        set (LIBCLANG_AVAILABLE TRUE PARENT_SCOPE)
+
         add_library(libclang INTERFACE)
         target_link_libraries(libclang INTERFACE ${libclang_lib})
         target_include_directories(libclang INTERFACE ${libclang_include_dir})

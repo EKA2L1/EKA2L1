@@ -252,6 +252,10 @@ namespace eka2l1 {
     std::string filename(std::string path, bool symbian_use) {
         std::string fn = "";
 
+        if (path.length() < 1) {
+            return "";
+        }
+
         if (is_separator(path[path.length() - 1])) {
             // It's directory
             return fn;

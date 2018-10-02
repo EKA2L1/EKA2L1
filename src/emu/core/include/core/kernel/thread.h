@@ -93,7 +93,7 @@ namespace eka2l1 {
         struct tls_slot {
             int handle = -1;
             int uid = -1;
-            ptr<void> ptr;
+            ptr<void> pointer;
         };
 
         struct thread_local_data {
@@ -108,8 +108,9 @@ namespace eka2l1 {
         };
 
         class thread : public kernel_obj {
+            friend class eka2l1::kernel_system;
+            
             friend class thread_scheduler;
-            friend class kernel_system;
             friend class mutex;
             friend class semaphore;
 
@@ -149,8 +150,8 @@ namespace eka2l1 {
             uint32_t flags;
             ipc_msg_ptr sync_msg;
 
-            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool initial);
-            void create_stack_metadata(ptr<void> stack_ptr, uint32_t name_len, address name_ptr, address epa);
+            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool should_create_heap);
+            void create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator_ptr, uint32_t name_len, address name_ptr, address epa);
 
             int leave_depth = -1;
 
@@ -174,6 +175,9 @@ namespace eka2l1 {
             std::vector<logon_request_form> rendezvous_requests;
 
             uint64_t create_time = 0;
+
+            epoc::request_status *sleep_nof_sts;
+            epoc::request_status *timeout_sts;
 
         public:
             kernel_obj_ptr get_object(uint32_t handle);
@@ -200,6 +204,7 @@ namespace eka2l1 {
                 const size_t min_heap_size, const size_t max_heap_size,
                 bool initial,
                 ptr<void> usrdata = 0,
+                ptr<void> allocator = 0,
                 thread_priority pri = priority_normal);
 
             ~thread();
@@ -224,7 +229,14 @@ namespace eka2l1 {
 
             void set_priority(const thread_priority new_pri);
 
-            bool sleep(uint32_t secs);
+            bool sleep(uint32_t mssecs);
+            bool sleep_nof(epoc::request_status *sts, uint32_t mssecs);
+
+            void after(epoc::request_status *sts, uint32_t mssecs);
+
+            void notify_sleep(const int errcode);
+            void notify_after(const int errcode);
+
             bool stop();
 
             thread_priority get_priority() const {
@@ -251,7 +263,7 @@ namespace eka2l1 {
                 return own_process;
             }
 
-            arm::jit_interface::thread_context get_thread_context() {
+            arm::jit_interface::thread_context &get_thread_context() {
                 return ctx;
             }
 

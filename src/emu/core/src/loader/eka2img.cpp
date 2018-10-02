@@ -79,7 +79,16 @@ namespace eka2l1 {
                 write(dest_ptr, reloc_offset + code_delta);
                 break;
             case relocation_type::data:
-                write(dest_ptr, reloc_offset + data_delta);
+                // TODO: Remove the hack
+                // This hack along with the chunk 0x400000 hack make a complete
+                // resolve about this situation. It's not from our side, it's from
+                // the broken post-linker tool.
+                if (*dest_ptr == 0x400000) {
+                    LOG_WARN("Destination relocation has value of 0x400000, ignored");
+                } else {
+                    write(dest_ptr, reloc_offset + data_delta);
+                }
+
                 break;
             case relocation_type::inffered:
             default:
@@ -188,12 +197,14 @@ namespace eka2l1 {
                 }
             }
 
-            for (uint32_t i = crr_idx, j = 0; i < crr_idx + import_block.ordinals.size(), j < import_block.ordinals.size(); i++, j++) {
+            for (uint32_t i = crr_idx, j = 0; 
+                i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
+                i++, j++) {
                 uint32_t iat_off = img->header.code_offset + img->header.code_size;
                 img->data[iat_off + i * 4] = expdir[import_block.ordinals[j] - 1];
             }
 
-            crr_idx += import_block.ordinals.size();
+            crr_idx += static_cast<uint32_t>(import_block.ordinals.size());
 
             return true;
         }
@@ -302,10 +313,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool import_exe_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
-            // LOG_TRACE("Mở chunk cho code và data");
-            
-            // Create the code + static data chunk
+        bool import_image(eka2img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
                 prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
@@ -351,7 +359,7 @@ namespace eka2l1 {
                 }
             }
 
-            LOG_INFO("Load executable success");
+            LOG_INFO("Load e32img success");
 
             return true;
         }
@@ -402,7 +410,7 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<void *>(&section.size), 4);
             stream->read(reinterpret_cast<void *>(&section.num_relocs), 4);
 
-            for (int i = 0; i < section.num_relocs; i++) {
+            for (uint32_t i = 0; i < section.num_relocs; i++) {
                 eka2_reloc_entry reloc_entry;
 
                 stream->read(reinterpret_cast<void *>(&reloc_entry.base), 4);
@@ -416,7 +424,7 @@ namespace eka2l1 {
                     stream->read(reinterpret_cast<void *>(&rel_info), 2);
                 }
 
-                i += reloc_entry.rels_info.size();
+                i += static_cast<int>(reloc_entry.rels_info.size());
 
                 section.entries.push_back(reloc_entry);
             }
@@ -548,14 +556,16 @@ namespace eka2l1 {
                 std::vector<char> temp_buf(file_size - img.header.code_offset);
 
                 ef->seek(img.header.code_offset, file_seek_mode::beg);
-                auto bytes_read = ef->read_file(temp_buf.data(), 1, temp_buf.size());
+                size_t bytes_read = ef->read_file(temp_buf.data(), 1, static_cast<uint32_t>(temp_buf.size()));
 
                 if (bytes_read != temp_buf.size()) {
                     LOG_ERROR("File reading unproperly");
                 }
 
                 if (ctype == compress_type::deflate_c) {
-                    flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), temp_buf.size() * 8);
+                    flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), 
+                        static_cast<int>(temp_buf.size() * 8));
+
                     flate::inflater inflate_machine(input);
 
                     inflate_machine.init();
@@ -574,7 +584,7 @@ namespace eka2l1 {
                     std::vector<char> temp(ef->size() - img.header.code_offset);
                     ef->seek(img.header.code_offset, file_seek_mode::beg);
 
-                    ef->read_file(temp.data(), 1, temp.size());
+                    ef->read_file(temp.data(), 1, static_cast<uint32_t>(temp.size()));
 
                     FILE *tempfile = fopen("bytepairTemp.seg", "wb");
                     fwrite(temp.data(), 1, temp.size(), tempfile);
@@ -587,11 +597,11 @@ namespace eka2l1 {
                 }
 
             } else {
-                img.uncompressed_size = file_size;
+                img.uncompressed_size = static_cast<uint32_t>(file_size);
 
                 img.data.resize(file_size);
                 ef->seek(0, file_seek_mode::beg);
-                ef->read_file(img.data.data(), 1, img.data.size());
+                ef->read_file(img.data.data(), 1, static_cast<uint32_t>(img.data.size()));
             }
 
             switch (img.header.cpu) {
@@ -648,7 +658,7 @@ namespace eka2l1 {
 
                 LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
 
-                stream.seek(crr_size, common::beg);
+                stream.seek(static_cast<uint32_t>(crr_size), common::beg);
 
                 import.ordinals.resize(import.number_of_imports);
 
@@ -669,10 +679,7 @@ namespace eka2l1 {
         }
 
         bool load_eka2img(eka2img &img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
-            if (img.header.uid1 == loader::eka2_img_type::dll) {
-            }
-
-            return import_exe_image(&img, mem, kern, mngr);
+            return import_image(&img, mem, kern, mngr);
         }
     }
 }

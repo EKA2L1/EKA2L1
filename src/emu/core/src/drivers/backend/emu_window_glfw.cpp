@@ -2,7 +2,7 @@
 #include <common/log.h>
 #include <common/raw_bind.h>
 
-#define CALL_IF_VALID(_a, ...) if (_a) {_a(##__VA_ARGS__);}
+#define CALL_IF_VALID(_a, ...) if (_a) {_a( __VA_ARGS__ );}
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
