@@ -1,5 +1,11 @@
 language: cpp
+
 cache: ccache
+
+env:
+  global:
+    secure: YdQjksdi5l3kyO5fvAUbKSM3ryFHkuxWmA+0+izFmyyMQ14JlEzMuGWZ3SkKq9fYW5tErOZYBdRrGo6esyLDlKFQvmJrMMUFq0zE8s9I6qpPIIzFlC8kZ/OgKe/gNHa5OZi4+lfBnxVWzxwS8zYs8pC1X7vj17FWQ7nfS1cxneWVrfNHHNJ2/70KQJ5QkRP2TtXsBCmjBQufVwmG9O09cuvwa+2spkZdRtQoMXJYWrc+buK/hjG/ARc4pU6UTjBe+/RS1L51TdzfhYQQppKyIOOVuPj21/hyR+2HGZSk25QUlv9lyAl/Opv9ME5Ue/jfJwhAoHvO7kk9+5X6qljkXb5doOvbrVUgGaXVfu87AaQw+PR32aaDrrihLXP/iyoGpUarvgZqa+VaCzaDrTsw/iMWzSnrYBPoMCFgoBYM6QyfE4GjJbvh+OYlqbCkDdIudXf7iY9Yi35Ye+3nfhsPMUhZQzZiXdIuZOoVtDNbk/7XtUYtqHX1fydowf89SBUxICAaoZ4KDmtkd8u4W/04SA0XBhdMuzhinlyw3S3agnHT9lKW1dWL4EvsZc2qCCEyzNH26SKwhj9EfwFmaCmKMDoVw7HkfiRg+Veje55xDjgcTdxmUOTNmWI1kpXQZSMbFXTYm3fpTW3DoOZ5CjWSoc3UPY8xgHSo28cDgFCOEzw=
+
 matrix:
   include:
     - os: linux
@@ -18,6 +24,7 @@ matrix:
            - libglu1-mesa-dev
            - g++-7
            - gcc-7
+           - binutils-2.26
       before_script:    
          - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
          - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
@@ -25,6 +32,8 @@ matrix:
          - curl -Ls https://cmake.org/files/v3.10/cmake-3.10.3-Linux-x86_64.sh -o cmake-3.10.3-Linux-x86_64.sh
          - bash cmake-3.10.3-Linux-x86_64.sh --skip-license
          - export CMAKE=$(pwd)/bin/cmake
+         - export PATH=/usr/lib/binutils-2.26/bin:${PATH}
+         - ld -v
          
 script:
   - mkdir build
@@ -37,7 +46,3 @@ script:
 after_script:
   - cd ${TRAVIS_BUILD_DIR}
   - ./deploy.sh
-
-env:
-  global:
-    secure: YdQjksdi5l3kyO5fvAUbKSM3ryFHkuxWmA+0+izFmyyMQ14JlEzMuGWZ3SkKq9fYW5tErOZYBdRrGo6esyLDlKFQvmJrMMUFq0zE8s9I6qpPIIzFlC8kZ/OgKe/gNHa5OZi4+lfBnxVWzxwS8zYs8pC1X7vj17FWQ7nfS1cxneWVrfNHHNJ2/70KQJ5QkRP2TtXsBCmjBQufVwmG9O09cuvwa+2spkZdRtQoMXJYWrc+buK/hjG/ARc4pU6UTjBe+/RS1L51TdzfhYQQppKyIOOVuPj21/hyR+2HGZSk25QUlv9lyAl/Opv9ME5Ue/jfJwhAoHvO7kk9+5X6qljkXb5doOvbrVUgGaXVfu87AaQw+PR32aaDrrihLXP/iyoGpUarvgZqa+VaCzaDrTsw/iMWzSnrYBPoMCFgoBYM6QyfE4GjJbvh+OYlqbCkDdIudXf7iY9Yi35Ye+3nfhsPMUhZQzZiXdIuZOoVtDNbk/7XtUYtqHX1fydowf89SBUxICAaoZ4KDmtkd8u4W/04SA0XBhdMuzhinlyw3S3agnHT9lKW1dWL4EvsZc2qCCEyzNH26SKwhj9EfwFmaCmKMDoVw7HkfiRg+Veje55xDjgcTdxmUOTNmWI1kpXQZSMbFXTYm3fpTW3DoOZ5CjWSoc3UPY8xgHSo28cDgFCOEzw=
