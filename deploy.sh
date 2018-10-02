@@ -1,6 +1,6 @@
 #!/bin/sh
 FIXED_BRANCH=$(echo $BRANCH | sed 's/\//-/g')
-ARCHIVE=$REPO_NAME-$FIXED_BRANCH-$(date +%Y-%m-%d_%H_%M_%S)-$COMMIT.tar.bz2
+ARCHIVE=EKA2L1-$TRAVIS_BRANCH-$(date +%Y-%m-%d_%H_%M_%S)-$TRAVIS_COMMIT.tar.bz2
 echo "Creating archive $ARCHIVE"
 tar cfj $ARCHIVE build/bin
 FILESIZE=$(stat -c%s "$ARCHIVE")

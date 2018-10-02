@@ -4,7 +4,7 @@ cache: ccache
 
 env:
   global:
-    secure: YdQjksdi5l3kyO5fvAUbKSM3ryFHkuxWmA+0+izFmyyMQ14JlEzMuGWZ3SkKq9fYW5tErOZYBdRrGo6esyLDlKFQvmJrMMUFq0zE8s9I6qpPIIzFlC8kZ/OgKe/gNHa5OZi4+lfBnxVWzxwS8zYs8pC1X7vj17FWQ7nfS1cxneWVrfNHHNJ2/70KQJ5QkRP2TtXsBCmjBQufVwmG9O09cuvwa+2spkZdRtQoMXJYWrc+buK/hjG/ARc4pU6UTjBe+/RS1L51TdzfhYQQppKyIOOVuPj21/hyR+2HGZSk25QUlv9lyAl/Opv9ME5Ue/jfJwhAoHvO7kk9+5X6qljkXb5doOvbrVUgGaXVfu87AaQw+PR32aaDrrihLXP/iyoGpUarvgZqa+VaCzaDrTsw/iMWzSnrYBPoMCFgoBYM6QyfE4GjJbvh+OYlqbCkDdIudXf7iY9Yi35Ye+3nfhsPMUhZQzZiXdIuZOoVtDNbk/7XtUYtqHX1fydowf89SBUxICAaoZ4KDmtkd8u4W/04SA0XBhdMuzhinlyw3S3agnHT9lKW1dWL4EvsZc2qCCEyzNH26SKwhj9EfwFmaCmKMDoVw7HkfiRg+Veje55xDjgcTdxmUOTNmWI1kpXQZSMbFXTYm3fpTW3DoOZ5CjWSoc3UPY8xgHSo28cDgFCOEzw=
+    - secure: YdQjksdi5l3kyO5fvAUbKSM3ryFHkuxWmA+0+izFmyyMQ14JlEzMuGWZ3SkKq9fYW5tErOZYBdRrGo6esyLDlKFQvmJrMMUFq0zE8s9I6qpPIIzFlC8kZ/OgKe/gNHa5OZi4+lfBnxVWzxwS8zYs8pC1X7vj17FWQ7nfS1cxneWVrfNHHNJ2/70KQJ5QkRP2TtXsBCmjBQufVwmG9O09cuvwa+2spkZdRtQoMXJYWrc+buK/hjG/ARc4pU6UTjBe+/RS1L51TdzfhYQQppKyIOOVuPj21/hyR+2HGZSk25QUlv9lyAl/Opv9ME5Ue/jfJwhAoHvO7kk9+5X6qljkXb5doOvbrVUgGaXVfu87AaQw+PR32aaDrrihLXP/iyoGpUarvgZqa+VaCzaDrTsw/iMWzSnrYBPoMCFgoBYM6QyfE4GjJbvh+OYlqbCkDdIudXf7iY9Yi35Ye+3nfhsPMUhZQzZiXdIuZOoVtDNbk/7XtUYtqHX1fydowf89SBUxICAaoZ4KDmtkd8u4W/04SA0XBhdMuzhinlyw3S3agnHT9lKW1dWL4EvsZc2qCCEyzNH26SKwhj9EfwFmaCmKMDoVw7HkfiRg+Veje55xDjgcTdxmUOTNmWI1kpXQZSMbFXTYm3fpTW3DoOZ5CjWSoc3UPY8xgHSo28cDgFCOEzw=
 
 matrix:
   include:
@@ -40,7 +40,7 @@ script:
   - cd build
   - ${CMAKE} -DCMAKE_BUILD_TYPE=Release ..
   - make -j4
-  - make CTEST_OUTPUT_ON_FAILURE=1 test
+  - make CTEST_OUTPUT_ON_FAILURE=1 ekatest
   - cd ..
 
 after_script:
