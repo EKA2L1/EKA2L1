@@ -108,8 +108,11 @@ namespace eka2l1 {
         template <typename... args>
         constexpr args_layout<args...> lay_out() {
             args_layout<args...> layout = {};
-            layout_args_state state = {};
-            add_args_to_layout<args...>(*layout.data(), state);
+            
+            if constexpr(sizeof...(args) != 0) {
+                layout_args_state state = {};
+                add_args_to_layout<args...>(*layout.data(), state);   
+            }
 
             return layout;
         }

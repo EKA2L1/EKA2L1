@@ -393,7 +393,7 @@ namespace eka2l1::epoc {
 
         for (const auto &tls : dat.tls_slots) {
             if (tls.handle == aHandle) {
-                return tls.ptr;
+                return tls.pointer;
             }
         }
 
@@ -407,7 +407,7 @@ namespace eka2l1::epoc {
             return KErrNoMemory;
         }
 
-        slot->ptr = aPtr;
+        slot->pointer = aPtr;
 
         return KErrNone;
     }

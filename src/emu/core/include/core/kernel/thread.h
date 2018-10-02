@@ -93,7 +93,7 @@ namespace eka2l1 {
         struct tls_slot {
             int handle = -1;
             int uid = -1;
-            ptr<void> ptr;
+            ptr<void> pointer;
         };
 
         struct thread_local_data {
