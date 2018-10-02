@@ -34,15 +34,16 @@ matrix:
          - export CMAKE=$(pwd)/bin/cmake
          - export PATH=/usr/lib/binutils-2.26/bin:${PATH}
          - ld -v
+      deploy:
+         provider: script
+         script: bash $TRAVIS_BUILD_DIR/deploy.sh
+         on:
+            repo: EKA2L1/EKA2L1
          
 script:
   - mkdir build
   - cd build
   - ${CMAKE} -DCMAKE_BUILD_TYPE=Release ..
   - make -j4
-  - make CTEST_OUTPUT_ON_FAILURE=1 ekatest
+  - make CTEST_OUTPUT_ON_FAILURE=1 ekatests
   - cd ..
-
-after_script:
-  - cd ${TRAVIS_BUILD_DIR}
-  - ./deploy.sh

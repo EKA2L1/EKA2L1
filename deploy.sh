@@ -1,4 +1,5 @@
 #!/bin/sh
+cd $TRAVIS_BUILD_DIR
 FIXED_BRANCH=$(echo $BRANCH | sed 's/\//-/g')
 ARCHIVE=EKA2L1-$TRAVIS_BRANCH-$(date +%Y-%m-%d_%H_%M_%S)-$TRAVIS_COMMIT.tar.bz2
 echo "Creating archive $ARCHIVE"
