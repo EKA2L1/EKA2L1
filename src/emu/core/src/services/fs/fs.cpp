@@ -196,11 +196,14 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
+        std::string ss_path = common::ucs2_to_utf8(
+            session_paths[ctx.msg->msg_session->unique_id()]);
+
         std::string target = common::ucs2_to_utf8(*given_path_target);
-        target = fs::absolute(target, session_paths[ctx.msg->msg_session->unique_id()]).string();
+        target = eka2l1::absolute_path(target, ss_path);
 
         std::string dest = common::ucs2_to_utf8(*given_path_dest);
-        dest = fs::absolute(dest, session_paths[ctx.msg->msg_session->unique_id()]).string();
+        dest = eka2l1::absolute_path(dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
         const std::string target_real_path = io->get(target);
@@ -229,11 +232,14 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
+        std::string ss_path = common::ucs2_to_utf8(
+            session_paths[ctx.msg->msg_session->unique_id()]);
+
         std::string target = common::ucs2_to_utf8(*given_path_target);
-        target = fs::absolute(target, session_paths[ctx.msg->msg_session->unique_id()]).string();
+        target = eka2l1::absolute_path(target, ss_path);
 
         std::string dest = common::ucs2_to_utf8(*given_path_dest);
-        dest = fs::absolute(dest, session_paths[ctx.msg->msg_session->unique_id()]).string();
+        dest = eka2l1::absolute_path(dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
         const std::string target_real_path = io->get(target);
@@ -261,7 +267,10 @@ namespace eka2l1 {
         }
 
         std::string path = common::ucs2_to_utf8(*given_path);
-        path = fs::absolute(path, session_paths[ctx.msg->msg_session->unique_id()]).string();
+        std::string ss_path = common::ucs2_to_utf8(
+            session_paths[ctx.msg->msg_session->unique_id()]);
+
+        path = eka2l1::absolute_path(path, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
         const std::string real_path = io->get(path);
@@ -464,7 +473,10 @@ namespace eka2l1 {
         }
 
         std::string path = common::ucs2_to_utf8(*new_path);
-        path = fs::absolute(path, session_paths[ctx.msg->msg_session->unique_id()]).string();
+        std::string ss_path = common::ucs2_to_utf8(
+            session_paths[ctx.msg->msg_session->unique_id()]);
+
+        path = eka2l1::absolute_path(path, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
         const std::string real_path = io->get(path);
@@ -642,7 +654,8 @@ namespace eka2l1 {
         std::string final_path = common::ucs2_to_utf8(*path);
 
         if (!eka2l1::is_absolute(final_path, common::ucs2_to_utf8(session_path), true)) {
-            final_path = eka2l1::absolute_path(final_path, common::ucs2_to_utf8(session_path), true);
+            final_path = eka2l1::absolute_path(
+                final_path, common::ucs2_to_utf8(session_path), true);
         }
 
         symfile f = ctx.sys->get_io_system()->open_file(common::utf8_to_ucs2(final_path), READ_MODE);
