@@ -1231,7 +1231,7 @@ namespace eka2l1::epoc {
         *aNumEps.get(mem) = entries.size();
 
         for (size_t i = 0; i < entries.size(); i++) {
-            aEpList.get(mem)[i] = entries[i];
+            (aEpList.get(mem))[i] = entries[i];
         }
 
         return KErrNone;
