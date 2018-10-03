@@ -461,6 +461,12 @@ namespace eka2l1 {
                 ctx.cpu_registers[i] = get_reg(i);
             }
 
+            for (auto i = 0; i < ctx.fpu_registers.size(); i++) {
+                uc_err err = uc_reg_read(engine, UC_ARM_REG_D0, &(ctx.fpu_registers[i]));
+            }
+
+            uc_reg_read(engine, UC_ARM_REG_FPSCR, &(ctx.fpscr));
+
             ctx.sp = get_sp();
             ctx.lr = get_lr();
             ctx.pc = get_pc();
@@ -471,6 +477,12 @@ namespace eka2l1 {
             for (auto i = 0; i < ctx.cpu_registers.size(); i++) {
                 set_reg(i, ctx.cpu_registers[i]);
             }
+
+            for (auto i = 0; i < ctx.fpu_registers.size(); i++) {
+                uc_err err = uc_reg_write(engine, UC_ARM_REG_D0, &(ctx.fpu_registers[i]));
+            }
+
+            uc_reg_write(engine, UC_ARM_REG_FPSCR, &(ctx.fpscr));
 
             set_sp(ctx.sp);
             set_lr(ctx.lr);

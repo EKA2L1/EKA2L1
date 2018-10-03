@@ -36,7 +36,7 @@ namespace eka2l1 {
                 uint32_t pc;
                 uint32_t lr;
                 uint32_t cpsr;
-                std::array<uint32_t, 32> fpu_registers;
+                std::array<uint64_t, 32> fpu_registers;
                 uint32_t fpscr;
             };
 
