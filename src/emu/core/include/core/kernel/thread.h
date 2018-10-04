@@ -24,6 +24,7 @@
 #include <condition_variable>
 #include <memory>
 #include <optional>
+#include <stack>
 #include <string>
 
 #include <common/resource.h>
@@ -100,11 +101,16 @@ namespace eka2l1 {
             ptr<void> heap;
             ptr<void> scheduler;
             ptr<void> trap_handler;
-            uint32_t thread_id;
+            std::uint32_t thread_id;
 
             // We don't use this. We use our own heap
             ptr<void> tls_heap;
             std::array<tls_slot, 50> tls_slots;
+        };
+
+        struct debug_function_trace {
+            arm::jit_interface::thread_context ctx;
+            std::string func_name;
         };
 
         class thread : public kernel_obj {
@@ -145,6 +151,7 @@ namespace eka2l1 {
             thread_local_data ldata;
 
             std::shared_ptr<thread_scheduler> scheduler;
+            std::stack<debug_function_trace> call_stacks;
 
             sema_ptr request_sema;
             uint32_t flags;
@@ -197,6 +204,19 @@ namespace eka2l1 {
             int get_exit_reason() const {
                 return exit_reason;
             }
+
+            std::optional<debug_function_trace> get_top_call() {
+                if (call_stacks.size() == 0) {
+                    return std::optional<debug_function_trace>{};
+                }
+
+                return call_stacks.top();
+            }
+
+            void push_call(const std::string &func_name,
+                const arm::jit_interface::thread_context &ctx);
+
+            void pop_call();
 
             thread();
             thread(kernel_system *kern, memory_system *mem, timing_system *timing, process_ptr owner, kernel::access_type access,

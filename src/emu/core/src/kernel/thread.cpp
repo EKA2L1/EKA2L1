@@ -170,6 +170,15 @@ namespace eka2l1 {
             return pris[idx];
         }
 
+        void thread::push_call(const std::string &func_name,
+            const arm::jit_interface::thread_context &ctx) {
+            call_stacks.push({ ctx, func_name });
+        }
+
+        void thread::pop_call() {
+            call_stacks.pop();
+        }
+
         void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool should_create_heap) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
