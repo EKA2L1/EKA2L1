@@ -20,6 +20,7 @@
 
 #include <core/services/applist/applist.h>
 #include <core/services/domain/domain.h>
+#include <core/services/drm/helper.h>
 #include <core/services/drm/rights.h>
 #include <core/services/featmgr/featmgr.h>
 #include <core/services/fs/fs.h>
@@ -239,6 +240,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, install_server);
             CREATE_SERVER(sys, rights_server);
+            CREATE_SERVER(sys, drm_helper_server);
 
             // Don't change order
             CREATE_SERVER(sys, domainmngr_server);
