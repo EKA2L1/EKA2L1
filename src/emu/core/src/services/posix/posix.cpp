@@ -227,10 +227,12 @@ namespace eka2l1 {
     void posix_server::chdir(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        working_dir = std::move(fs::absolute(
-            std::u16string(reinterpret_cast<char16_t*>(
-                params->cwptr[0].get(ctx.sys->get_memory_system()))), 
-                working_dir).u16string());
+        std::u16string current_dir(reinterpret_cast<char16_t*>(
+                params->cwptr[0].get(ctx.sys->get_memory_system())));
+
+        working_dir = common::utf8_to_ucs2(eka2l1::absolute_path(
+                common::ucs2_to_utf8(current_dir), 
+                common::ucs2_to_utf8(working_dir)));
 
         params->ret = 0;
 
@@ -240,11 +242,13 @@ namespace eka2l1 {
     void posix_server::mkdir(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        // Get the absolute path
-        const std::u16string full_new_path = std::move(fs::absolute(
-            std::u16string(reinterpret_cast<char16_t*>(
-                params->cwptr[0].get(ctx.sys->get_memory_system()))),
-                working_dir).u16string());
+        std::u16string current_dir(reinterpret_cast<char16_t*>(
+                params->cwptr[0].get(ctx.sys->get_memory_system())));
+
+        const std::u16string full_new_path = 
+            common::utf8_to_ucs2(eka2l1::absolute_path(
+                common::ucs2_to_utf8(current_dir), 
+                common::ucs2_to_utf8(working_dir)));
 
         const std::string path_utf8 = ctx.sys->get_io_system()->get(
             common::ucs2_to_utf8(full_new_path));
@@ -277,13 +281,12 @@ namespace eka2l1 {
                 common::to_string(associated_process->get_uid(), std::hex) + "\\tmp\\";
         }
 
-        // Get the absolute path
-        const std::u16string full_new_path = std::move(fs::absolute(
-            std::u16string(reinterpret_cast<char16_t*>(
-                params->cwptr[0].get(ctx.sys->get_memory_system()))), 
-                base_dir).u16string());
+        std::u16string current_dir(reinterpret_cast<char16_t*>(
+                params->cwptr[0].get(ctx.sys->get_memory_system())));
 
-        const std::string path_utf8 = common::ucs2_to_utf8(full_new_path);
+        const std::string path_utf8 = eka2l1::absolute_path(
+                common::ucs2_to_utf8(current_dir), 
+                base_dir);
 
         int write_flag_emu = APPEND_MODE;
 

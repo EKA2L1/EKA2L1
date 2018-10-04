@@ -1113,7 +1113,9 @@ namespace eka2l1 {
             std::optional<entry_info> info = dir->peek_next_entry();
 
             if (!info) {
-                entry_arr->SetLength(ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
+                entry_arr->SetLength(
+                    ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
+                    
                 ctx.set_request_status(KErrEof);
 
                 return;
