@@ -103,7 +103,8 @@ namespace eka2l1 {
             }
 
             if (crr && crr->current_state() == thread_state::run) {
-                if (ready_threads.top()->current_real_priority() <= crr->current_real_priority()) {
+                if (ready_threads.top()->current_real_priority() <= 
+                    crr->current_real_priority()) {
                     return crr;
                 }
 
