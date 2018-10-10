@@ -40,11 +40,15 @@ namespace eka2l1::epoc {
         // Symbian wants to keep it as safe as possible, so they turn them
         // into this mess
         switch (static_cast<TDesType>(GetTDesC8Type(aDes8))) {
-        case EPtrC:
-            return (reinterpret_cast<TPtrC8 *>(aDes8))->iPtr;
+        case EPtrC: {
+            TPtrC8 *ptr = reinterpret_cast<TPtrC8 *>(aDes8);
+            return ptr->iPtr;
+        }
 
-        case EPtr:
-            return (reinterpret_cast<TPtr8 *>(aDes8))->iPtr;
+        case EPtr: {
+            TPtr8 *ptr = reinterpret_cast<TPtr8 *>(aDes8);
+            return ptr->iPtr;
+        }
 
         default:
             break;
