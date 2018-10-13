@@ -89,6 +89,8 @@ namespace eka2l1 {
 
                 ready_threads.remove(newt);
                 jitter->load_context(crr_thread->ctx);
+
+                LOG_TRACE("Thread switched to {}", newt->name());
             } else {
                 // Nope
                 crr_thread = nullptr;
@@ -103,7 +105,8 @@ namespace eka2l1 {
             }
 
             if (crr && crr->current_state() == thread_state::run) {
-                if (ready_threads.top()->current_real_priority() <= crr->current_real_priority()) {
+                if (ready_threads.top()->current_real_priority() <= 
+                    crr->current_real_priority()) {
                     return crr;
                 }
 

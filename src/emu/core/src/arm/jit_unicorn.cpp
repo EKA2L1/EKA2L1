@@ -104,7 +104,8 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
     jit->save_context(context_debug);
 
-    bool enable_breakpoint_script = jit->get_lib_manager()->get_sys()->get_bool_config("enable_breakpoint_script");
+    bool enable_breakpoint_script = 
+        jit->get_lib_manager()->get_sys()->get_bool_config("enable_breakpoint_script");
 
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
@@ -119,28 +120,21 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     if (log_passed && mngr) {
         auto res = mngr->get_sid(address);
 
-        if (enable_breakpoint_script && res) {
-            jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
-        }
-
         if (!res && thumb_mode(uc)) {
             res = mngr->get_sid(address + 1);
-
-            if (enable_breakpoint_script && res) {
-                jit->get_manager_sys()->get_script_manager()->call_breakpoints(address + 1);
-            }
         }
 
         if (res) {
             LOG_INFO("Passing through: {} addr = 0x{:x}", *mngr->get_func_name(*res), address);
         }
     }
-    const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
-    size_t buffer_size = eka2l1::common::GB(4) - address;
-    bool thumb = thumb_mode(uc);
-    std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
 
     if (log_code) {        
+        const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
+        size_t buffer_size = eka2l1::common::GB(4) - address;
+        bool thumb = thumb_mode(uc);
+        std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
+
         LOG_TRACE("{:#08x} {} 0x{:x}", address, disassembly, thumb ? *(uint16_t *)code : *(uint32_t *)code);
     }
 }
@@ -194,7 +188,8 @@ void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
             call_addr -= 4;
         }
 
-        bool res = jit->get_lib_manager()->call_hle(*jit->get_lib_manager()->get_sid(call_addr));
+        bool res = jit->get_lib_manager()->call_hle(
+            *jit->get_lib_manager()->get_sid(call_addr));
 
         if (res) {
             uint32_t lr = 0;
@@ -293,6 +288,11 @@ namespace eka2l1 {
 
                     save_context(context);
                     dump_context(context);
+
+                    system *sys = get_lib_manager()->get_sys();
+                    thread_ptr thr = sys->get_kernel_system()->crr_thread();
+
+                    thr->stop();
 
                     return false;
                 }

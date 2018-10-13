@@ -114,11 +114,26 @@ void parse_args(int argc, char **argv) {
                 config["epoc_ver"] = (int)ever;
             }
         } else if (strncmp(argv[i], "-app", 4) == 0) {
-            app_idx = std::atoi(argv[++i]);
+            try {
+                app_idx = std::atoi(argv[++i]);
+            } catch (...) {
+                std::cout << "Invalid request." << std::endl;
+
+                quit = true;
+                break;
+            }
         } else if (strncmp(argv[i], "-listapp", 8) == 0) {
             list_app = true;
         } else if (strncmp(argv[i], "-install", 8) == 0) {
-            adrive = std::atoi(argv[++i]);
+            try {
+                adrive = std::atoi(argv[++i]);
+            } catch (...) {
+                std::cout << "Invalid request." << std::endl;
+
+                quit = true;
+                break;
+            }
+
             sis_install_path = argv[++i];
         } else if (strncmp(argv[i], "-mount", 6) == 0) {
             drive_mount = std::atoi(argv[++i]);
@@ -164,7 +179,8 @@ void do_args() {
 
     if (list_app) {
         for (auto &info : infos) {
-            std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: " << common::ucs2_to_utf8(info.name) << " (drive: " << ((info.drive == 0) ? 'C' : 'E')
+            std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: " 
+                      << common::ucs2_to_utf8(info.name) << " (drive: " << ((info.drive == 0) ? 'C' : 'E')
                       << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
         }
 
@@ -254,19 +270,23 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    init();
-    do_args();
+    try {
+        init();
+        do_args();
 
-    if (quit) {
+        if (quit) {
+            do_quit();
+            return 0;
+        }
+
+        while (!symsys.should_exit()) {
+            symsys.loop();
+        }
+    } catch (...) {
+        std::cout << "Internal error happens in the compiler" << std::endl;
+
         do_quit();
-        return 0;
     }
-
-    while (!symsys.should_exit()) {
-        symsys.loop();
-    }
-
-    do_quit();
 
     return 0;
 }
