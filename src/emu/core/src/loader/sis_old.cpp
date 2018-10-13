@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cwctype>
 
 #include <miniz.h>
 

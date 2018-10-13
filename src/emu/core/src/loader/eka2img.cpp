@@ -574,7 +574,7 @@ namespace eka2l1 {
 
                     LOG_INFO("Readed compress, size: {}", readed);
 
-                    FILE *tempfile = fopen("nokiaDefaltedTemp.seg", "wb");
+                    FILE *tempfile = fopen("nokiaDeflatedTemp.seg", "wb");
                     fwrite(img.data.data(), 1, img.data.size(), tempfile);
                     fclose(tempfile);
 
