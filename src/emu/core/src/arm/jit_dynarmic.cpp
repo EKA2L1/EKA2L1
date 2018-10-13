@@ -16,7 +16,7 @@ namespace eka2l1 {
             uint64_t interpreted = 0;
 
             bool log_read = false;
-            bool log_write = true;
+            bool log_write = false;
             bool log_code = true;
 
         public:
@@ -332,7 +332,7 @@ namespace eka2l1 {
 
         void jit_dynarmic::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
             for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
-                page_table_dyn[vaddr / mem->get_page_size()] = ptr + mem->get_page_size() * i;
+                page_table_dyn[(vaddr / mem->get_page_size()) + i] = ptr + mem->get_page_size() * i;
             }
 
             fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
@@ -340,7 +340,7 @@ namespace eka2l1 {
 
         void jit_dynarmic::unmap_memory(address addr, size_t size) {
             for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
-                page_table_dyn[addr / mem->get_page_size()] = nullptr;
+                page_table_dyn[(addr / mem->get_page_size()) + i] = nullptr;
             }
 
             fallback_jit.unmap_memory(addr, size);
