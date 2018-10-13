@@ -999,9 +999,10 @@ namespace eka2l1::epoc {
 
         bool res = fetch(chunk, a1, a2);
 
-        if (!res)
+        if (!res) {
             return KErrGeneral;
-
+        }
+            
         return KErrNone;
     }
 
@@ -1311,6 +1312,9 @@ namespace eka2l1::epoc {
         int heap_max_size;
         int flags;
     };
+
+    static_assert(sizeof(thread_create_info_expand) == 64, 
+        "Thread create info struct size invalid");
 
     BRIDGE_FUNC(TInt, ThreadCreate, eka2l1::ptr<TDesC8> aThreadName, TOwnerType aOwnerType, eka2l1::ptr<thread_create_info_expand> aInfo) {
         kernel_system *kern = sys->get_kernel_system();

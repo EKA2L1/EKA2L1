@@ -401,6 +401,10 @@ namespace eka2l1 {
 
     // Commit to page
     int memory_system::commit(ptr<void> addr, uint32_t size) {
+        if (size == 0) {
+            return 0;
+        }
+
         address beg = addr.ptr_address() / page_size;
         address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
 
@@ -480,6 +484,10 @@ namespace eka2l1 {
 
     // Decommit
     int memory_system::decommit(ptr<void> addr, uint32_t size) {
+        if (size == 0) {
+            return 0;
+        }
+
         address beg = addr.ptr_address() / page_size;
         address end = (addr.ptr_address() + size - 1 + page_size) / page_size;
 
