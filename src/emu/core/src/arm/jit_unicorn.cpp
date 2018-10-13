@@ -143,7 +143,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     eka2l1::gdbstub *stub = jit->get_gdb_stub();
 
     if (stub) {
-        eka2l1::breakpoint_address bkpt = stub->get_next_breakpoint_from_address(
+        eka2l1::breakpoint_address bkpt = stub->get_next_breakpoint_from_addr(
             address, eka2l1::breakpoint_type::Execute);
 
         if (stub->is_memory_break() && bkpt.type != eka2l1::breakpoint_type::None
