@@ -153,7 +153,7 @@ namespace eka2l1 {
         } else {
             timing.advance();
 
-            if (should_step) {
+            if (!should_step) {
                 cpu->run();
             } else {
                 cpu->step();

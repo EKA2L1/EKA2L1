@@ -242,6 +242,7 @@ void init() {
 
     if (enable_gdbstub) {
         symsys.get_gdb_stub()->set_server_port(gdb_port);
+        symsys.get_gdb_stub()->init(&symsys);
         symsys.get_gdb_stub()->toggle_server(true);
     }
 

@@ -445,8 +445,12 @@ namespace eka2l1 {
         }
 
         if (addr.ptr_address() >= shared_addr && addr.ptr_address() < shared_addr + shared_size) {
-            common::commit(global_pointers[beg - (shared_addr / page_size)].get(),
+            bool success = common::commit(global_pointers[beg - (shared_addr / page_size)].get(),
                 count * page_size, nprot);
+
+            if (!success) {
+                LOG_WARN("Host commit failed");
+            }
 
             if (current_page_table) {
                 std::copy(global_pages.begin() + (beg - (shared_addr / page_size)),
@@ -550,31 +554,35 @@ namespace eka2l1 {
         return 0;
     }
 
-    void memory_system::read(address addr, void *data, uint32_t size) {
+    bool memory_system::read(address addr, void *data, uint32_t size) {
         void *fptr = get_real_pointer(addr);
 
         if (fptr == nullptr) {
             LOG_WARN("Reading invalid address: 0x{:x}", addr);
-            return;
+            return false;
         }
 
         if (size == 4) {
             *reinterpret_cast<int *>(data) = *reinterpret_cast<int *>(fptr);
-            return;
+            return true;
         }
 
         memcpy(data, fptr, size);
+
+        return true;
     }
 
-    void memory_system::write(address addr, void *data, uint32_t size) {
+    bool memory_system::write(address addr, void *data, uint32_t size) {
         void *to = get_real_pointer(addr);
 
         if (to == nullptr) {
             LOG_WARN("Writing invalid address: 0x{:x}", addr);
-            return;
+            return false;
         }
 
         memcpy(to, data, size);
+
+        return true;
     }
 
     page_table *memory_system::get_current_page_table() const {
