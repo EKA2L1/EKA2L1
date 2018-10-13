@@ -42,6 +42,8 @@ eka2l1::system symsys;
 eka2l1::arm::jitter_arm_type jit_type = decltype(jit_type)::unicorn;
 epocver ever = epocver::epoc9;
 
+bool enable_gdbstub = false;
+
 YAML::Node config;
 
 int drive_mount;
@@ -53,6 +55,7 @@ bool list_app = false;
 bool install_rpkg = false;
 
 std::string rpkg_path;
+std::uint16_t gdb_port = 24689;
 
 bool quit = false;
 
@@ -168,8 +171,10 @@ void read_config() {
         if (jit_type_raw == "dynarmic") {
             jit_type = decltype(jit_type)::dynarmic;
         }
+
+        enable_gdbstub = config["enable_gdbstub"].as<bool>();
+        gdb_port = config["gdb_port"].as<int>();
     } catch (...) {
-        //LOG_INFO("Can not load config, use default configuration");
         return;
     }
 }
@@ -235,6 +240,11 @@ void init() {
     symsys.mount(drive_z, drive_media::rom,
         mount_z, io_attrib::internal | io_attrib::write_protected);
 
+    if (enable_gdbstub) {
+        symsys.get_gdb_stub()->set_server_port(gdb_port);
+        symsys.get_gdb_stub()->toggle_server(true);
+    }
+
     bool res = symsys.load_rom(rom_path);
 }
 
@@ -247,6 +257,7 @@ void save_config() {
     config["epoc_ver"] = (int)ever;
     config["c_mount"] = mount_c;
     config["e_mount"] = mount_e;
+    config["enable_gdbstub"] = enable_gdbstub;
 
     std::ofstream config_file("config.yml");
     config_file << config;

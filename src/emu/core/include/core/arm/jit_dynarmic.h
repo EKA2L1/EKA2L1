@@ -27,10 +27,13 @@
 #include <memory>
 
 namespace eka2l1 {
-    class disasm;
+    class kernel_system;
     class timing_system;
     class manager_system;
     class memory_system;
+
+    class disasm;
+    class gdbstub;
 
     namespace hle {
         class lib_manager;
@@ -52,8 +55,11 @@ namespace eka2l1 {
             timing_system *timing;
             manager_system *mngr;
             memory_system *mem;
+            kernel_system *kern;
 
             hle::lib_manager *lib_mngr;
+
+            gdbstub *stub;
 
             std::array<uint8_t *,
                 Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
@@ -76,7 +82,9 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            jit_dynarmic(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr);
+            jit_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem, 
+                disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
+                
             ~jit_dynarmic();
 
             void run() override;

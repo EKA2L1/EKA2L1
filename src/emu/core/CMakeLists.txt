@@ -46,6 +46,7 @@ target_link_libraries(core PRIVATE
         coretiming 
         coreio
         arm
+        gdbstub
         coreloader
         coremanager
         common

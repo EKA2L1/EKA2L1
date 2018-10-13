@@ -27,6 +27,7 @@
 
 #include <core/core_timing.h>
 #include <core/disasm/disasm.h>
+#include <core/gdbstub/gdbstub.h>
 #include <core/hle/libmanager.h>
 #include <core/loader/rom.h>
 #include <core/manager/manager.h>
@@ -91,6 +92,8 @@ namespace eka2l1 {
 
         //! Disassmebly helper.
         disasm asmdis;
+
+        gdbstub gdb_stub;
 
         //! The ROM
         /*! This is the information parsed
@@ -217,6 +220,10 @@ namespace eka2l1 {
 
         disasm *get_disasm() {
             return &asmdis;
+        }
+
+        gdbstub *get_gdb_stub() {
+            return &gdb_stub;
         }
 
         driver::emu_window_ptr get_emu_window() {

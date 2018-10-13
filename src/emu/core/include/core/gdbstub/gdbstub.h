@@ -10,6 +10,7 @@
 #include <atomic>
 #include <cstdint>
 #include <map>
+#include <memory>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -133,7 +134,6 @@ namespace eka2l1 {
         breakpoint_map &get_breakpoint_map(breakpoint_type type);
 
         void remove_breakpoint(breakpoint_type type, std::uint32_t addr);
-        breakpoint_address get_next_breakpoint_from_addr(std::uint32_t addr, breakpoint_type type);
         
         void send_packet(const char packet);
         void send_reply(const char *reply);
@@ -150,7 +150,6 @@ namespace eka2l1 {
         void add_breakpoint();
         void remove_breakpoint();
 
-        void toggle_server(bool status);
         void init(const std::uint16_t port);
 
     public:
@@ -167,7 +166,7 @@ namespace eka2l1 {
          *
          * @param status Set the server to enabled or disabled.
          */
-        void toggle_port(const bool status);
+        void toggle_server(bool status);
 
         /// Start the gdbstub server.
         void init(eka2l1::system *sys);
@@ -194,7 +193,7 @@ namespace eka2l1 {
         /// Read and handle packet from gdb client.
         void handle_packet();
 
-        breakpoint_address get_next_breakpoint_from_address(std::uint32_t addr,
+        breakpoint_address get_next_breakpoint_from_addr(std::uint32_t addr, 
             breakpoint_type type);
 
         /**

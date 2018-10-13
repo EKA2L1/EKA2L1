@@ -20,13 +20,18 @@
 #pragma once
 
 #include <core/arm/jit_interface.h>
+#include <core/gdbstub/gdbstub.h>
+
 #include <unicorn/unicorn.h>
 
 namespace eka2l1 {
     class timing_system;
     class manager_system;
-    class disasm;
+    class kernel_system;
     class memory_system;
+
+    class disasm;
+    class gdbstub;
 
     namespace hle {
         class lib_manager;
@@ -41,8 +46,13 @@ namespace eka2l1 {
             disasm *asmdis;
             memory_system *mem;
             manager_system *mngr;
+            kernel_system *kern;
 
             hle::lib_manager *lib_mngr;
+            gdbstub *stub;
+
+            breakpoint_address last_breakpoint;
+            bool last_breakpoint_hit;
 
         public:
             bool execute_instructions(uint32_t num_instructions);
@@ -67,7 +77,18 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            jit_unicorn(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr);
+            gdbstub *get_gdb_stub() {
+                return stub;
+            }
+
+            void record_break(breakpoint_address bkpt) {
+                last_breakpoint = bkpt;
+                last_breakpoint_hit = true;
+            }
+
+            jit_unicorn(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
+                disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
+                
             ~jit_unicorn();
 
             void run() override;

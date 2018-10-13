@@ -26,6 +26,7 @@
 #include <core/core.h>
 #include <core/core_timing.h>
 #include <core/disasm/disasm.h>
+#include <core/gdbstub/gdbstub.h>
 #include <core/hle/libmanager.h>
 #include <core/manager/manager.h>
 #include <core/ptr.h>
@@ -55,8 +56,9 @@ void dump_context(eka2l1::arm::jit_interface::thread_context uni) {
     LOG_TRACE("sp: 0x{:x}", uni.sp);
     LOG_TRACE("cpsr: 0x{:x}", uni.cpsr);
 
-    for (size_t i = 0; i < uni.cpu_registers.size(); i++)
+    for (size_t i = 0; i < uni.cpu_registers.size(); i++) {
         LOG_TRACE("r{}: 0x{:x}", i, uni.cpu_registers[i]);
+    }
 }
 
 void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
@@ -136,6 +138,19 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         std::string disassembly = jit->get_disasm_sys()->disassemble(code, buffer_size, address, thumb);
 
         LOG_TRACE("{:#08x} {} 0x{:x}", address, disassembly, thumb ? *(uint16_t *)code : *(uint32_t *)code);
+    }
+
+    eka2l1::gdbstub *stub = jit->get_gdb_stub();
+
+    if (stub) {
+        eka2l1::breakpoint_address bkpt = stub->get_next_breakpoint_from_address(
+            address, eka2l1::breakpoint_type::Execute);
+
+        if (stub->is_memory_break() && bkpt.type != eka2l1::breakpoint_type::None
+            && address == bkpt.address) {
+            jit->record_break(bkpt);
+            uc_emu_stop(uc);
+        }
     }
 }
 
@@ -239,11 +254,14 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        jit_unicorn::jit_unicorn(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr)
+        jit_unicorn::jit_unicorn(kernel_system *kern, timing_system *sys, manager_system *mngr, 
+            memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
             , lib_mngr(lmngr)
+            , stub(stub)
+            , kern(kern)
             , mngr(mngr) {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);
@@ -257,6 +275,10 @@ namespace eka2l1 {
             assert(err == UC_ERR_OK);
 
             enable_vfp_fp(engine);
+
+            if (stub && stub->is_server_enabled()) {
+                last_breakpoint_hit = false;
+            }
         }
 
         jit_unicorn::~jit_unicorn() {
@@ -265,12 +287,6 @@ namespace eka2l1 {
 
         bool jit_unicorn::execute_instructions(uint32_t num_instructions) {
             uint32_t pc = get_pc();
-
-            bool tm = thumb_mode(engine);
-            if (tm) {
-                pc |= 1;
-            }
-
             uc_err err;
 
             if (num_instructions >= 1 || num_instructions == -1) {
@@ -299,16 +315,25 @@ namespace eka2l1 {
 
                 assert(err == UC_ERR_OK);
 
-                pc = get_pc();
-
-                tm = thumb_mode(engine);
-
-                if (tm) {
-                    pc |= 1;
+                if (timing) {
+                    timing->add_ticks(num_instructions - 1);
                 }
 
-                if (timing)
-                    timing->add_ticks(num_instructions - 1);
+                if (stub && stub->is_server_enabled()) {
+                    if (last_breakpoint_hit) {
+                        set_pc(last_breakpoint.address);
+                    }
+
+                    thread_ptr crr_thread = kern->crr_thread();
+                    save_context(crr_thread->get_thread_context());
+
+                    if (last_breakpoint_hit && stub->get_cpu_step_flag()) {
+                        last_breakpoint_hit = false;
+                        
+                        stub->break_exec();
+                        stub->send_trap_gdb(crr_thread, 5);
+                    }
+                }
             }
 
             return true;

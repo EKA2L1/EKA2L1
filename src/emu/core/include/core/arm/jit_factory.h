@@ -23,10 +23,13 @@
 #include <memory>
 
 namespace eka2l1 {
+    class kernel_system;
     class timing_system;
     class memory_system;
     class manager_system;
+
     class disasm;
+    class gdbstub;
 
     namespace hle {
         class lib_manager;
@@ -42,8 +45,8 @@ namespace eka2l1 {
         using jitter = std::unique_ptr<jit_interface>;
 
         /*! Create a jitter. A JITter is unique by itself. */
-        jitter create_jitter(timing_system *timing, manager_system *mngr, memory_system *mem,
-            disasm *asmdis, hle::lib_manager *lmngr, jitter_arm_type arm_type);
+        jitter create_jitter(kernel_system *kern, timing_system *timing, manager_system *mngr, memory_system *mem,
+            disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, jitter_arm_type arm_type);
     }
 }
 

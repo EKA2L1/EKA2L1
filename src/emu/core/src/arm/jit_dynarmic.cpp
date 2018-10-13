@@ -2,7 +2,10 @@
 #include <common/log.h>
 
 #include <core/arm/jit_dynarmic.h>
+#include <core/disasm/disasm.h>
+#include <core/gdbstub/gdbstub.h>
 
+#include <core/core_kernel.h>
 #include <core/core_mem.h>
 #include <core/core_timing.h>
 #include <core/hle/libmanager.h>
@@ -112,12 +115,45 @@ namespace eka2l1 {
 
             void ExceptionRaised(uint32_t pc, Dynarmic::A32::Exception exception) override {
                 switch (exception) {
-                case Dynarmic::A32::Exception::Breakpoint:
-                case Dynarmic::A32::Exception::UndefinedInstruction:
-                    return;
-                default:
-                    LOG_WARN("Exception Raised at pc = 0x{:x}", pc);
+                case Dynarmic::A32::Exception::UndefinedInstruction: {
+                    const std::string disassemble_inst = parent.asmdis->disassemble(
+                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(pc)),
+                        (parent.jit->Cpsr() & 0x20) ? 2 : 4, pc,
+                        (parent.jit->Cpsr() & 0x20) ? true : false);
+
+                    LOG_TRACE("Unknown instruction by Dynarmic, disassemble with external results: {}",
+                        disassemble_inst);
+
                     break;
+                }
+
+                case Dynarmic::A32::Exception::Breakpoint: {
+                    gdbstub *stub = parent.stub;
+
+                    if (stub && stub->is_connected()) {
+                        parent.jit->HaltExecution();
+                        parent.set_pc(pc);
+
+                        thread_ptr crr_thread = parent.kern->crr_thread();
+                        parent.save_context(crr_thread->get_thread_context());
+
+                        stub->break_exec();
+                        stub->send_trap_gdb(crr_thread, 5);
+                    }
+
+                    break;
+                }
+
+                default: {
+                    const std::string disassemble_inst = parent.asmdis->disassemble(
+                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(pc)),
+                        (parent.jit->Cpsr() & 0x20) ? 2 : 4, pc,
+                        (parent.jit->Cpsr() & 0x20) ? true : false);
+
+                    LOG_WARN("Exception Raised at pc = 0x{:x}, disassbmle: {}", pc, disassemble_inst);
+
+                    break;
+                }
                 }
             }
 
@@ -194,13 +230,16 @@ namespace eka2l1 {
             return std::make_unique<Dynarmic::A32::Jit>(config);
         }
 
-        jit_dynarmic::jit_dynarmic(timing_system *sys, manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr)
+        jit_dynarmic::jit_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem, 
+            disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
             , lib_mngr(lmngr)
             , mngr(mngr)
-            , fallback_jit(sys, mngr, mem, asmdis, lmngr)
+            , stub(stub)
+            , kern(kern)
+            , fallback_jit(kern, sys, mngr, mem, asmdis, lmngr, stub)
             , cb(std::make_unique<arm_dynarmic_callback>(*this)) {
             jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
         }

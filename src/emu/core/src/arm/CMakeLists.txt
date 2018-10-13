@@ -12,9 +12,11 @@ target_include_directories(arm PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 target_link_libraries(arm PUBLIC common)
 target_link_libraries(arm 
 	PRIVATE 
-	disasm 
 	coremem 
-	coretiming
-	unicorn
+    coretiming
+    corekernel
+	disasm
     dynarmic
+    gdbstub
+    unicorn
     pybind11::embed)

@@ -70,7 +70,7 @@ namespace eka2l1 {
         mngr.init(this, &io);
         asmdis.init(&mem);
 
-        cpu = arm::create_jitter(&timing, &mngr, &mem, &asmdis, &hlelibmngr, jit_type);
+        cpu = arm::create_jitter(&kern, &timing, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, jit_type);
 
         mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
             get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
@@ -132,13 +132,32 @@ namespace eka2l1 {
     }
 
     int system::loop() {
+        bool should_step = false;
+
+        if (gdb_stub.is_server_enabled()) {
+            gdb_stub.handle_packet();
+
+            if (gdb_stub.get_cpu_halt_flag()) {
+                if (gdb_stub.get_cpu_step_flag()) {
+                    should_step = true;
+                } else {
+                    return 1;
+                }
+            }
+        }
+
         if (kern.crr_thread() == nullptr) {
             timing.idle();
             timing.advance();
             prepare_reschedule();
         } else {
             timing.advance();
-            cpu->run();
+
+            if (should_step) {
+                cpu->run();
+            } else {
+                cpu->step();
+            }
         }
 
         if (!kern.should_terminate()) {
