@@ -24,6 +24,7 @@
 
 #include <core/arm/jit_unicorn.h>
 #include <core/core.h>
+#include <core/arm/jit_utils.h>
 #include <core/core_timing.h>
 #include <core/disasm/disasm.h>
 #include <core/gdbstub/gdbstub.h>
@@ -47,18 +48,6 @@ bool thumb_mode(uc_engine *uc) {
     }
 
     return mode & UC_MODE_THUMB;
-}
-
-void dump_context(eka2l1::arm::jit_interface::thread_context uni) {
-    LOG_TRACE("Dumping CPU context: ");
-    LOG_TRACE("pc: 0x{:x}", uni.pc);
-    LOG_TRACE("lr: 0x{:x}", uni.lr);
-    LOG_TRACE("sp: 0x{:x}", uni.sp);
-    LOG_TRACE("cpsr: 0x{:x}", uni.cpsr);
-
-    for (size_t i = 0; i < uni.cpu_registers.size(); i++) {
-        LOG_TRACE("r{}: 0x{:x}", i, uni.cpu_registers[i]);
-    }
 }
 
 void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
@@ -287,6 +276,12 @@ namespace eka2l1 {
 
         bool jit_unicorn::execute_instructions(uint32_t num_instructions) {
             uint32_t pc = get_pc();
+
+            bool tm = thumb_mode(engine);
+            if (tm) {
+                pc |= 1;
+            }
+
             uc_err err;
 
             if (num_instructions >= 1 || num_instructions == -1) {

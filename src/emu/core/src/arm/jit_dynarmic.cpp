@@ -2,6 +2,7 @@
 #include <common/log.h>
 
 #include <core/arm/jit_dynarmic.h>
+#include <core/arm/jit_utils.h>
 #include <core/disasm/disasm.h>
 #include <core/gdbstub/gdbstub.h>
 
@@ -26,80 +27,139 @@ namespace eka2l1 {
             explicit arm_dynarmic_callback(jit_dynarmic &parent)
                 : parent(parent) {}
 
+            void handle_thread_exception() {
+                const std::string disassemble_inst = parent.asmdis->disassemble(
+                    reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(parent.get_pc())),
+                    (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
+                    (parent.jit->Cpsr() & 0x20) ? true : false);
+
+                LOG_TRACE("Last instruction: {}", disassemble_inst);
+
+                thread_ptr crr_thread = parent.kern->crr_thread();
+
+                crr_thread->stop();
+                parent.save_context(crr_thread->get_thread_context());
+                dump_context(crr_thread->get_thread_context());
+            }
+
+            void invalid_memory_read(const Dynarmic::A32::VAddr addr) {
+                thread_ptr crr_thread = parent.kern->crr_thread();
+                LOG_CRITICAL("Reading unmapped address (0x{:x}), panic thread {}", addr,
+                    crr_thread->name());
+                
+                handle_thread_exception();
+            }
+
+            void invalid_memory_write(const Dynarmic::A32::VAddr addr) {
+                thread_ptr crr_thread = parent.kern->crr_thread();
+                LOG_CRITICAL("Writing unmapped address (0x{:x}), panic thread {}", addr,
+                    crr_thread->name());
+                
+                handle_thread_exception();
+            }
+
+            void handle_read_status(const bool status, const Dynarmic::A32::VAddr addr) {
+                if (!status) {
+                    invalid_memory_read(addr);
+                }
+            }
+
+            void handle_write_status(const bool status, const Dynarmic::A32::VAddr addr) {
+                if (!status) {
+                    invalid_memory_write(addr);
+                }
+            }
+
             uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {
                 uint8_t ret = 0;
-                parent.get_memory_sys()->read(addr, &ret, sizeof(uint8_t));
+                bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint8_t));
 
                 if (log_read) {
-                    LOG_TRACE("[Dynarmic] Read uint8_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
+                    LOG_TRACE("Read uint8_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
+
+                handle_read_status(success, addr);
 
                 return ret;
             }
 
             uint16_t MemoryRead16(Dynarmic::A32::VAddr addr) override {
                 uint16_t ret = 0;
-                parent.get_memory_sys()->read(addr, &ret, sizeof(uint16_t));
+                bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint16_t));
 
                 if (log_read) {
-                    LOG_TRACE("[Dynarmic] Read uint16_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
+                    LOG_TRACE("Read uint16_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
+
+                handle_read_status(success, addr);
 
                 return ret;
             }
 
             uint32_t MemoryRead32(Dynarmic::A32::VAddr addr) override {
                 uint32_t ret = 0;
-                parent.get_memory_sys()->read(addr, &ret, sizeof(uint32_t));
+                bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint32_t));
 
                 if (log_read) {
-                    LOG_TRACE("[Dynarmic] Read uint32_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
+                    LOG_TRACE("Read uint32_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
+
+                handle_read_status(success, addr);
 
                 return ret;
             }
 
             uint64_t MemoryRead64(Dynarmic::A32::VAddr addr) override {
                 uint64_t ret = 0;
-                parent.get_memory_sys()->read(addr, &ret, sizeof(uint64_t));
+                bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint64_t));
 
                 if (log_read) {
-                    LOG_TRACE("[Dynarmic] Read uint64_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
+                    LOG_TRACE("Read uint64_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
+
+                handle_read_status(success, addr);
 
                 return ret;
             }
 
             void MemoryWrite8(Dynarmic::A32::VAddr addr, uint8_t value) override {
-                parent.get_memory_sys()->write(addr, &value, sizeof(value));
+                bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
-                    LOG_TRACE("[Dynarmic] Write uint8_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
+                    LOG_TRACE("Write uint8_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
+
+                handle_write_status(success, addr);
             }
 
             void MemoryWrite16(Dynarmic::A32::VAddr addr, uint16_t value) override {
-                parent.get_memory_sys()->write(addr, &value, sizeof(value));
+                bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
-                    LOG_TRACE("[Dynarmic] Write uint16_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
+                    LOG_TRACE("Write uint16_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
+
+                handle_write_status(success, addr);
             }
 
             void MemoryWrite32(Dynarmic::A32::VAddr addr, uint32_t value) override {
-                parent.get_memory_sys()->write(addr, &value, sizeof(value));
+                bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
-                    LOG_TRACE("[Dynarmic] Write uint32_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
+                    LOG_TRACE("Write uint32_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
+
+                handle_write_status(success, addr);
             }
 
             void MemoryWrite64(Dynarmic::A32::VAddr addr, uint64_t value) override {
-                parent.get_memory_sys()->write(addr, &value, sizeof(value));
+                bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
                 if (log_write) {
-                    LOG_TRACE("[Dynarmic] Write uint64_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
+                    LOG_TRACE("Write uint64_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
+
+                handle_write_status(success, addr);
             }
 
             void InterpreterFallback(Dynarmic::A32::VAddr addr, size_t num_insts) override {
@@ -116,13 +176,9 @@ namespace eka2l1 {
             void ExceptionRaised(uint32_t pc, Dynarmic::A32::Exception exception) override {
                 switch (exception) {
                 case Dynarmic::A32::Exception::UndefinedInstruction: {
-                    const std::string disassemble_inst = parent.asmdis->disassemble(
-                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(pc)),
-                        (parent.jit->Cpsr() & 0x20) ? 2 : 4, pc,
-                        (parent.jit->Cpsr() & 0x20) ? true : false);
-
-                    LOG_TRACE("Unknown instruction by Dynarmic, disassemble with external results: {}",
-                        disassemble_inst);
+                    thread_ptr crr_thread = parent.kern->crr_thread();
+                    LOG_TRACE("Unknown instruction by Dynarmic raised in thread {}",
+                        crr_thread->name());
 
                     break;
                 }
@@ -141,20 +197,18 @@ namespace eka2l1 {
                         stub->send_trap_gdb(crr_thread, 5);
                     }
 
-                    break;
+                    return;
                 }
 
                 default: {
-                    const std::string disassemble_inst = parent.asmdis->disassemble(
-                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(pc)),
-                        (parent.jit->Cpsr() & 0x20) ? 2 : 4, pc,
-                        (parent.jit->Cpsr() & 0x20) ? true : false);
-
-                    LOG_WARN("Exception Raised at pc = 0x{:x}, disassbmle: {}", pc, disassemble_inst);
+                    thread_ptr crr_thread = parent.kern->crr_thread();
+                    LOG_WARN("Exception Raised at thread {}", crr_thread->name());
 
                     break;
                 }
                 }
+
+                handle_thread_exception();
             }
 
             void CallSVC(uint32_t svc) override {

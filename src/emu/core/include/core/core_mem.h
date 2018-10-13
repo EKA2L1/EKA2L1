@@ -55,8 +55,8 @@ namespace eka2l1 {
 
         void *get_real_pointer(address addr);
 
-        void read(address addr, void *data, uint32_t size);
-        void write(address addr, void *data, uint32_t size);
+        bool read(address addr, void *data, uint32_t size);
+        bool write(address addr, void *data, uint32_t size);
 
         // Create a new chunk with specified address. Return base of chunk
         ptr<void> chunk(address addr, uint32_t bottom, uint32_t top, uint32_t max_grow, prot cprot);
