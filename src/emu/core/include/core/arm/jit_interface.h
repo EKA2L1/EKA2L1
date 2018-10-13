@@ -103,6 +103,8 @@ namespace eka2l1 {
             virtual void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) = 0;
 
             virtual void unmap_memory(address addr, size_t size) = 0;
+
+            virtual void clear_instruction_cache() = 0;
         };
     }
 }

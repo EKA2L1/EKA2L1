@@ -16,7 +16,7 @@ namespace eka2l1 {
             uint64_t interpreted = 0;
 
             bool log_read = false;
-            bool log_write = false;
+            bool log_write = true;
             bool log_code = true;
 
         public:
@@ -344,6 +344,10 @@ namespace eka2l1 {
             }
 
             fallback_jit.unmap_memory(addr, size);
+        }
+
+        void jit_dynarmic::clear_instruction_cache() {
+            jit->ClearCache();
         }
     }
 }

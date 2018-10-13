@@ -551,5 +551,9 @@ namespace eka2l1 {
                 LOG_WARN("Error unmapping backing memory at addr: 0x{:x}, err: {}", addr, uc_strerror(err));
             }
         }
+
+        void jit_unicorn::clear_instruction_cache() {
+            // Empty
+        }
     }
 }

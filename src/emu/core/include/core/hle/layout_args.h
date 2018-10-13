@@ -50,10 +50,10 @@ namespace eka2l1 {
 
             return { layout, next_state };
         }
-     
+
         template <typename arg>
         constexpr std::tuple<arg_layout, layout_args_state> add_to_gpr_or_stack(const layout_args_state &state) {
-            const size_t gpr_required = (sizeof(arg) + 3) / 4;   // r0 - r3, and stack
+            const size_t gpr_required = (sizeof(arg) + 3) / 4; // r0 - r3, and stack
             const size_t gpr_alignment = gpr_required;
             const size_t gpr_idx = align(state.gpr_used, gpr_alignment);
             const size_t next_gpr_used = gpr_idx + gpr_required;
@@ -81,10 +81,9 @@ namespace eka2l1 {
 
         template <typename arg>
         constexpr std::tuple<arg_layout, layout_args_state> add_arg_to_layout(const layout_args_state &state) {
-            if constexpr(std::is_same_v<arg, float>) {
+            if constexpr (std::is_same_v<arg, float>) {
                 return add_to_stack<arg>(state);
-            }
-            else {
+            } else {
                 return add_to_gpr_or_stack<arg>(state);
             }
         }
@@ -97,22 +96,29 @@ namespace eka2l1 {
         template <typename head, typename... tail>
         constexpr void add_args_to_layout(arg_layout &mhead, layout_args_state &state) {
             const std::tuple<arg_layout, layout_args_state> res = add_arg_to_layout<head>(state);
-            
+
             mhead = std::get<0>(res);
             state = std::get<1>(res);
 
             add_args_to_layout<tail...>(*(&mhead + 1), state);
         }
 
-		/*! \brief Given arguments and its types, make layout of those arguments in EABI */
+        /*! \brief Given arguments and its types, make layout of those arguments in EABI */
         template <typename... args>
         constexpr args_layout<args...> lay_out() {
             args_layout<args...> layout = {};
-            
-            if constexpr(sizeof...(args) != 0) {
+
+            // The check was for GCC, but it crashed MSVC, so disable this for MSVC
+            // Clang works fine when there is check and when there isn't, which is best.
+
+#ifndef _MSC_VER
+            if constexpr (sizeof...(args) != 0) {
+#endif
                 layout_args_state state = {};
-                add_args_to_layout<args...>(*layout.data(), state);   
+                add_args_to_layout<args...>(*layout.data(), state);
+#ifndef _MSC_VER
             }
+#endif
 
             return layout;
         }

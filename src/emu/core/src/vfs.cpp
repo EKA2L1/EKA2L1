@@ -338,21 +338,28 @@ namespace eka2l1 {
             }
 
             while (true) {
+                if (dir_iterator == fs::directory_iterator{}) {
+                    return std::optional<entry_info>{};
+                }
+
                 std::string name = "";
 
                 try {
                     name = dir_iterator->path().filename().string();
-                }
-                catch (...) {
-                    return std::optional<entry_info>{};
-                }
-
-                if (!static_cast<int>(attrib & io_attrib::include_dir) && 
-                    dir_iterator->status().type() == fs::file_type::directory) {
+                } catch (...) {
                     std::error_code err;
                     dir_iterator.increment(err);
 
-                    continue;      
+                    if (err.value()) {
+                        return std::optional<entry_info>{};
+                    }
+                }
+
+                if (!static_cast<int>(attrib & io_attrib::include_dir) && dir_iterator->status().type() == fs::file_type::directory) {
+                    std::error_code err;
+                    dir_iterator.increment(err);
+
+                    continue;
                 }
 
                 // If it doesn't meet the filter, continue until find one or there is no one
@@ -373,7 +380,7 @@ namespace eka2l1 {
                                                                                     : 0;
                 std::error_code err;
                 dir_iterator.increment(err);
-                
+
                 return info;
             }
 
