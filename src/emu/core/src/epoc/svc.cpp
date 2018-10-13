@@ -991,10 +991,10 @@ namespace eka2l1::epoc {
 
             case 5:
             case 6:
-                return KErrNone;
+                return true;
             }
 
-            return KErrGeneral;
+            return false;
         };
 
         bool res = fetch(chunk, a1, a2);
