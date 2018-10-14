@@ -18,10 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/epoc/des.h>
 #include <core/core.h>
-
+#include <core/epoc/des.h>
 #include <core/kernel/process.h>
+
+#include <common/log.h>
 
 namespace eka2l1::epoc {
     TInt GetTDesC8Type(const TDesC8 *aDes8) {
@@ -218,12 +219,26 @@ namespace eka2l1::epoc {
         auto t = des->iLength >> 28;
         des->iLength = len | (t << 28);
 
-        if (GetTDesC8Type(des) == EBufCPtr) {
+        TInt type = GetTDesC8Type(des);
+
+        if (type == EBufCPtr) {
             TBufCPtr8 *buf_ptr = reinterpret_cast<TBufCPtr8 *>(des);
             eka2l1::ptr<TBufC8> buf_hle = buf_ptr->iPtr;
 
             TBufC8 *real_buf = static_cast<TBufC8*>(sys->get_ptr_on_addr_space(buf_hle.ptr_address()));
             real_buf->iLength = len;
+
+            if (len > buf_ptr->iMaxLength) {
+                LOG_ERROR("The new length has exceeded the max length ({} > {})", 
+                    len, buf_ptr->iMaxLength);
+            }
+        } else if ((type == EBuf) || (type == EPtr)) {
+            TDes8 *real_buf = static_cast<TDes8 *>(des);
+
+            if (len > real_buf->iMaxLength) {
+                LOG_ERROR("The new length has exceeded the max length ({} > {})",
+                    len, real_buf->iMaxLength);
+            }
         }
     }
 
