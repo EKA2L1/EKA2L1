@@ -50,7 +50,22 @@
 #include <chrono>
 #include <ctime>
 
+#include <common/e32inc.h>
+#include <e32def.h>
+
 namespace eka2l1::epoc {
+    /* Do a final static assert check */
+    static_assert(sizeof(TInt) == 4, "TInt Symbian size is not 4 bytes!");
+    static_assert(sizeof(TUint) == 4, "TUint Symbian size is not 4 bytes!");
+    static_assert(sizeof(TInt32) == 4, "TInt32 Symbian size is not 4 bytes!");
+    static_assert(sizeof(TUint32) == 4, "TUint32 Symbian size is not 4 bytes!");
+    static_assert(sizeof(TUint8) == 1, "TUint8 Symbian size is not 1 bytes!");
+    static_assert(sizeof(TInt8) == 1, "TInt8 Symbian size is not 1 bytes!");
+    static_assert(sizeof(TUint16) == 2, "TUint16 Symbian size is not 2 bytes!");
+    static_assert(sizeof(TInt16) == 2, "TInt16 Symbian size is not 2 bytes!");
+    static_assert(sizeof(TUint64) == 8, "TUint64 Symbian size is not 8 bytes!");
+    static_assert(sizeof(TInt64) == 8, "TInt64 Symbian size is not 8 bytes!");
+
     /* TODO:                                       
      * 1. (bentokun) Implement global user data. Global user data should be allocated in global memory region.
     */
@@ -575,6 +590,8 @@ namespace eka2l1::epoc {
         int iTargetLength;
         int iFlags;
     };
+
+    static_assert(sizeof(TIpcCopyInfo) == 12, "Size of IPCCopy struct is 12");
 
     const TInt KChunkShiftBy0 = 0;
     const TInt KChunkShiftBy1 = -2147483647;
