@@ -74,12 +74,14 @@ namespace eka2l1 {
             loader::e32img_ptr img;
             bool is_xip;
             bool is_rom;
+            std::u16string full_path;
             std::vector<process_ptr> loader;
         };
 
         struct romimg_inf {
             loader::romimg_ptr img;
             std::vector<process_ptr> loader;
+            std::u16string full_path;
         };
 
         /*! \brief Manage libraries and HLE functions.

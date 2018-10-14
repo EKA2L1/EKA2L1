@@ -19,6 +19,7 @@
  */
 
 #include <core/epoc/chunk.h>
+#include <core/epoc/des.h>
 #include <core/epoc/dll.h>
 #include <core/epoc/hal.h>
 #include <core/epoc/handle.h>
@@ -417,6 +418,20 @@ namespace eka2l1::epoc {
         thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
     }
 
+    BRIDGE_FUNC(void, DllFileName, TInt aEntryAddress, eka2l1::ptr<TDes8> aFullPathPtr) {
+        std::optional<std::u16string> dll_full_path = get_dll_full_path(sys, aEntryAddress);
+
+        if (!dll_full_path) {
+            LOG_WARN("Unable to find DLL name for address: 0x{:x}", aEntryAddress);
+            return;
+        }
+
+        std::string path_utf8 = common::ucs2_to_utf8(*dll_full_path);
+        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", aEntryAddress, path_utf8);
+
+        aFullPathPtr.get(sys->get_memory_system())->Assign(sys, path_utf8);
+    }
+
     /***********************************/
     /* LOCALE */
     /**********************************/
@@ -568,6 +583,33 @@ namespace eka2l1::epoc {
         }
 
         return try_des8->length();
+    }
+
+    BRIDGE_FUNC(TInt, MessageGetDesMaxLength, TInt aHandle, TInt aParam) {
+        if (aParam < 0) {
+            return KErrArgument;
+        }
+
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        ipc_msg_ptr msg = kern->get_msg(aHandle);
+
+        if (!msg) {
+            return KErrBadHandle;
+        }
+
+        service::ipc_context context;
+        context.msg = msg;
+        context.sys = sys;
+
+        const ipc_arg_type type = context.msg->args.get_arg_type(aParam);
+
+        if ((int)type & (int)ipc_arg_type::flag_des) {
+            return ExtractDesMaxLength(reinterpret_cast<TDes8 *>(mem->get_real_pointer(msg->args.args[aParam])));
+        }
+
+        return KErrGeneral;
     }
 
     struct TIpcCopyInfo {
@@ -1002,7 +1044,7 @@ namespace eka2l1::epoc {
         if (!res) {
             return KErrGeneral;
         }
-            
+
         return KErrNone;
     }
 
@@ -1313,7 +1355,7 @@ namespace eka2l1::epoc {
         int flags;
     };
 
-    static_assert(sizeof(thread_create_info_expand) == 64, 
+    static_assert(sizeof(thread_create_info_expand) == 64,
         "Thread create info struct size invalid");
 
     BRIDGE_FUNC(TInt, ThreadCreate, eka2l1::ptr<TDesC8> aThreadName, TOwnerType aOwnerType, eka2l1::ptr<thread_create_info_expand> aInfo) {
@@ -1882,6 +1924,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
         BRIDGE_REGISTER(0x13, ProcessGetId),
+        BRIDGE_REGISTER(0x14, DllFileName),
         BRIDGE_REGISTER(0x15, ProcessResume),
         BRIDGE_REGISTER(0x16, ProcessFilename),
         BRIDGE_REGISTER(0x17, ProcessCommandLine),
@@ -1942,6 +1985,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xA5, ProcessRendezvous),
         BRIDGE_REGISTER(0xA6, MessageGetDesLength),
+        BRIDGE_REGISTER(0xA7, MessageGetDesMaxLength),
         BRIDGE_REGISTER(0xA8, MessageIpcCopy),
         BRIDGE_REGISTER(0xAC, MessageKill),
         BRIDGE_REGISTER(0xAE, ProcessSecurityInfo),

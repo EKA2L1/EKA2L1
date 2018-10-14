@@ -313,5 +313,9 @@ namespace eka2l1::epoc {
 
     uint32_t ExtractDesLength(uint32_t len);
 
+    // It doesn't really matter if it's Des8 or Des16, they have the same structure
+    // So the size and offset stay the same
+    uint32_t ExtractDesMaxLength(TDes8 *des);
+
     using TLit = TLit16;
 }

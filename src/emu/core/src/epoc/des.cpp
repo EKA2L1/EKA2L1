@@ -79,6 +79,28 @@ namespace eka2l1::epoc {
         return GetTDesC8Type(reinterpret_cast<const TDesC8 *>(aDes16));
     }
 
+    uint32_t ExtractDesMaxLength(TDes8 *des) {
+        if (!des) {
+            return 0;
+        }
+
+        TDesType destype = static_cast<TDesType>(GetTDesC8Type(des));
+
+        switch (destype) {
+        case EPtrC:
+        case EBufC:
+            return des->iLength;
+
+        case EBufCPtr:
+            return reinterpret_cast<TBufCPtr8 *>(des)->iMaxLength;
+
+        default:
+            break;
+        }
+
+        return des->iMaxLength;
+    }
+
     ptr<TUint16> GetTDes16HLEPtr(eka2l1::process_ptr sys, TDesC16 *aDes16) {
         if (!aDes16) {
             return ptr<TUint16>(0);
