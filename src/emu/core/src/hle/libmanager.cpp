@@ -275,8 +275,6 @@ namespace eka2l1 {
                         img = io->open_file(common::utf8_to_ucs2(full), READ_MODE | BIN_MODE);
                         res = loader::parse_eka2img(img);
 
-                        img->close();
-
                         if (res) {
                             break;
                         }
@@ -295,7 +293,6 @@ namespace eka2l1 {
             loader::e32img_ptr pimg = std::make_shared<loader::eka2img>(res.value());
 
             if (e32imgs_cache.find(pimg->header.check) != e32imgs_cache.end()) {
-                int a = 5;
                 return e32imgs_cache[pimg->header.check].img;
             }
 
@@ -304,6 +301,9 @@ namespace eka2l1 {
             info.img = pimg;
             info.is_xip = xip;
             info.is_rom = is_rom;
+            info.full_path = std::move(img->file_name());
+            
+            img->close();
 
             uint32_t check = info.img->header.check;
 
@@ -351,6 +351,9 @@ namespace eka2l1 {
             //loader::stub_romimg()
             romimg_inf info;
             info.img = std::make_shared<loader::romimg>(res.value());
+            info.full_path = std::move(romimgf->file_name());
+
+            romimgf->close();
 
             romimgs_cache.emplace(res->header.entry_point, std::move(info));
             return romimgs_cache[res->header.entry_point].img;

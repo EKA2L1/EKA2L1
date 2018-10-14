@@ -18,14 +18,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/epoc/dll.h>
 #include <core/core.h>
+#include <core/epoc/dll.h>
+
+#include <core/loader/eka2img.h>
+#include <core/loader/romimage.h>
 
 namespace eka2l1::epoc {
     std::vector<uint32_t> query_entries(eka2l1::system *sys) {
         hle::lib_manager &mngr = *sys->get_lib_manager();
         std::vector<uint32_t> entries;
-        
+
         auto cache_maps = mngr.get_e32imgs_cache();
         address exe_addr = 0;
 
@@ -43,5 +46,23 @@ namespace eka2l1::epoc {
         entries.push_back(0x2);
 
         return entries;
+    }
+
+    std::optional<std::u16string> get_dll_full_path(eka2l1::system *sys, const std::uint32_t addr) {
+        hle::lib_manager &mngr = *sys->get_lib_manager();
+
+        for (const auto & [ id, imgwr ] : mngr.get_romimgs_cache()) {
+            if (imgwr.img->header.entry_point == addr) {
+                return imgwr.full_path;
+            }
+        }
+        
+        for (const auto & [ id, imgwr ] : mngr.get_e32imgs_cache()) {
+            if (imgwr.img->header.entry_point + imgwr.img->rt_code_addr == addr) {
+                return imgwr.full_path;
+            }
+        }
+
+        return std::optional<std::u16string>{};
     }
 }

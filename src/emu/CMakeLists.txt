@@ -1,3 +1,8 @@
+if (WIN32)
+    add_definitions(-DNOMINMAX)
+    message("NOMINMAX")
+endif()
+
 add_subdirectory(common)
 add_subdirectory(core)
 add_subdirectory(scripting)
