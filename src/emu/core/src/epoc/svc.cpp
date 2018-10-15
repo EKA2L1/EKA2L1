@@ -406,12 +406,16 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
         eka2l1::kernel::thread_local_data dat = current_local_data(sys);
+        thread_ptr thr = sys->get_kernel_system()->crr_thread();
 
         for (const auto &tls : dat.tls_slots) {
             if (tls.handle == aHandle) {
                 return tls.pointer;
             }
         }
+
+        LOG_WARN("TLS for 0x{:x}, thread {} return 0, may results unexpected crash", aHandle,
+            thr->name());
 
         return eka2l1::ptr<void>(0);
     }
@@ -425,12 +429,19 @@ namespace eka2l1::epoc {
 
         slot->pointer = aPtr;
 
+        thread_ptr thr = sys->get_kernel_system()->crr_thread();
+
+        LOG_TRACE("TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", aHandle, aPtr.ptr_address(),
+            thr->name());
+
         return KErrNone;
     }
 
     BRIDGE_FUNC(void, DllFreeTLS, TInt iHandle) {
         thread_ptr thr = sys->get_kernel_system()->crr_thread();
         thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
+
+        LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", iHandle, thr->name());
     }
 
     BRIDGE_FUNC(void, DllFileName, TInt aEntryAddress, eka2l1::ptr<TDes8> aFullPathPtr) {
@@ -1393,7 +1404,6 @@ namespace eka2l1::epoc {
                 info->func_ptr, info->user_stack_size);
         }
 
-        kern->get_thread_by_handle(thr_handle)->owning_process(kern->crr_process());
         return thr_handle;
     }
 
