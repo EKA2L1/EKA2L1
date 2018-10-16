@@ -179,22 +179,28 @@ namespace eka2l1 {
             call_stacks.pop();
         }
 
-        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool should_create_heap) {
+        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool inital) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
 
-            ctx.pc = entry_point;
+            /* Userland process and thread are all initalized with _E32Startup, which is the first
+               entry point of an process. _E32Startup required:
+               - r1: thread creation info register.
+               - r4: Startup reason. Thread startup is 1, process startup is 0.
+            */
 
-            if (should_create_heap) {
-                ctx.pc = kern->get_lib_manager()->get_export_addr(4238211793); // Setup thread heap
-                ctx.lr = entry_point;
-
-                ctx.cpu_registers[1] = stack_top;
-                ctx.cpu_registers[0] = 0;
-            }
+            ctx.pc = own_process ? (inital ? entry_point : own_process->get_entry_point_address()) 
+                : entry_point;
 
             ctx.sp = stack_top;
             ctx.cpsr = ((ctx.pc & 1) << 5);
+
+            ctx.cpu_registers[1] = stack_top;
+
+            if (!inital) {
+                // Thread initalization, not process
+                ctx.cpu_registers[4] = 1;
+            }
         }
 
         void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len,
@@ -298,14 +304,8 @@ namespace eka2l1 {
             std::fill(start, end, 0xcc);
             create_stack_metadata(ptr<void>(stack_top), allocator, name.length(), name_chunk_ptr->base().ptr_address(), epa);
 
-            bool should_create_heap = (!allocator.ptr_address()) && (!inital);
-
-            reset_thread_ctx(epa, stack_top, should_create_heap);
+            reset_thread_ctx(epa, stack_top, inital);
             scheduler = kern->get_thread_scheduler();
-
-            if (allocator.ptr_address()) {
-                ldata.heap = allocator;
-            }
         }
 
         thread::~thread() {
