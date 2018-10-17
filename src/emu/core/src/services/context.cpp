@@ -72,7 +72,9 @@ namespace eka2l1 {
         }
 
         void ipc_context::set_request_status(int res) {
-            *msg->request_sts = res;
+            if (msg->request_sts) {
+                *msg->request_sts = res;
+            }
 
             // Only signal when setting the request status
             msg->own_thr->signal_request();

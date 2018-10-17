@@ -129,6 +129,10 @@ namespace eka2l1 {
             void unmap_memory(address addr, size_t size) override;
 
             void clear_instruction_cache() override;
+
+            bool should_clear_old_memory_map() const override {
+                return false;
+            }
         };
     }
 }

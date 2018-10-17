@@ -597,15 +597,6 @@ namespace eka2l1 {
         previous_page_table = current_page_table;
         current_page_table = &table;
 
-        // Unmap all previous local data
-        if (previous_page_table) {
-            for (uint32_t i = shared_data / page_size; i >= local_data / page_size; i--) {
-                if (previous_page_table->pointers[i] && previous_page_table->pages[i].sts == page_status::committed) {
-                    cpu->unmap_memory(i * page_size, page_size);
-                }
-            }
-        }
-
         std::copy(codeseg_pages.begin(), codeseg_pages.end(), current_page_table->pages.begin() + (codeseg_addr / page_size));
         std::copy(codeseg_pointers.begin(), codeseg_pointers.end(), current_page_table->pointers.begin() + (codeseg_addr / page_size));
 
@@ -629,11 +620,17 @@ namespace eka2l1 {
             }
         }
 
-        // Map new local data
-        for (uint32_t i = local_data / page_size; i <= shared_data / page_size; i++) {
-            if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed)
-                cpu->map_backing_mem(i * page_size, page_size, current_page_table->pointers[i].get(),
-                    current_page_table->pages[i].page_protection);
+        if (previous_page_table) {
+            for (uint32_t i = shared_data / page_size; i >= local_data / page_size; i--) {
+                if (previous_page_table->pointers[i] && previous_page_table->pages[i].sts == page_status::committed) {
+                    cpu->unmap_memory(i * page_size, page_size);
+                }
+                
+                if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed) {
+                    cpu->map_backing_mem(i * page_size, page_size, current_page_table->pointers[i].get(),
+                        current_page_table->pages[i].page_protection);
+                }
+            }
         }
 
         cpu->page_table_changed();
