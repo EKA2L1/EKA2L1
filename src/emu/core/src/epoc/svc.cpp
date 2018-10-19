@@ -431,7 +431,7 @@ namespace eka2l1::epoc {
 
         thread_ptr thr = sys->get_kernel_system()->crr_thread();
 
-        LOG_TRACE("TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", aHandle, aPtr.ptr_address(),
+        LOG_TRACE("TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<TUint>(aHandle), aPtr.ptr_address(),
             thr->name());
 
         return KErrNone;
@@ -441,7 +441,7 @@ namespace eka2l1::epoc {
         thread_ptr thr = sys->get_kernel_system()->crr_thread();
         thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
 
-        LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", iHandle, thr->name());
+        LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", static_cast<TUint>(iHandle), thr->name());
     }
 
     BRIDGE_FUNC(void, DllFileName, TInt aEntryAddress, eka2l1::ptr<TDes8> aFullPathPtr) {
