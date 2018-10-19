@@ -19,6 +19,7 @@
  */
 
 #include <core/services/applist/applist.h>
+#include <core/services/backup/backup.h>
 #include <core/services/domain/domain.h>
 #include <core/services/drm/helper.h>
 #include <core/services/drm/rights.h>

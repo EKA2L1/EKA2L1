@@ -179,11 +179,14 @@ namespace eka2l1 {
             return "";
         }
 
-#define WARN_CLOSE \
-    if (closed)    \
-        LOG_WARN("File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
+        #define WARN_CLOSE \
+            if (closed)    \
+                LOG_WARN("File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
 
-        physical_file(utf16_str vfs_path, utf16_str real_path, int mode) { init(vfs_path, real_path, mode); }
+        physical_file(utf16_str vfs_path, utf16_str real_path, int mode)
+            : file(nullptr) { 
+            init(vfs_path, real_path, mode);
+        }
 
         ~physical_file() {
             shutdown();
@@ -194,6 +197,10 @@ namespace eka2l1 {
         }
 
         void init(utf16_str vfs_path, utf16_str real_path, int mode) {
+            if (fs::is_directory(real_path)) {
+                return;
+            }
+
             closed = false;
 
             const char *cmode = translate_mode(mode);
@@ -211,8 +218,9 @@ namespace eka2l1 {
         }
 
         void shutdown() {
-            if (file && !closed)
+            if (file && !closed) {
                 fclose(file);
+            }
         }
 
         size_t write_file(void *data, uint32_t size, uint32_t count) override {

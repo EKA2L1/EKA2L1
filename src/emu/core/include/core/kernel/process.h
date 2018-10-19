@@ -195,9 +195,11 @@ namespace eka2l1::kernel {
             flags = new_flags;
         }
 
-        uint32_t get_flags() const {
+        std::uint32_t get_flags() const {
             return flags;
         }
+
+        std::uint32_t get_entry_point_address();
 
         process_priority get_priority() const {
             return priority;

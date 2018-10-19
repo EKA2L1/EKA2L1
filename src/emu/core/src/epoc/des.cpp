@@ -90,7 +90,7 @@ namespace eka2l1::epoc {
         switch (destype) {
         case EPtrC:
         case EBufC:
-            return des->iLength;
+            return des->Length();
 
         case EBufCPtr:
             return reinterpret_cast<TBufCPtr8 *>(des)->iMaxLength;

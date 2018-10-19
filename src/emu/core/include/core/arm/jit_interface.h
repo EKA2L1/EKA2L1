@@ -105,6 +105,10 @@ namespace eka2l1 {
             virtual void unmap_memory(address addr, size_t size) = 0;
 
             virtual void clear_instruction_cache() = 0;
+
+            virtual bool should_clear_old_memory_map() const {
+                return true;
+            }
         };
     }
 }

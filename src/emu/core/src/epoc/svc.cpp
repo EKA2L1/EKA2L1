@@ -414,7 +414,7 @@ namespace eka2l1::epoc {
             }
         }
 
-        LOG_WARN("TLS for 0x{:x}, thread {} return 0, may results unexpected crash", aHandle,
+        LOG_WARN("TLS for 0x{:x}, thread {} return 0, may results unexpected crash", static_cast<TUint>(aHandle),
             thr->name());
 
         return eka2l1::ptr<void>(0);
@@ -453,7 +453,8 @@ namespace eka2l1::epoc {
         }
 
         std::string path_utf8 = common::ucs2_to_utf8(*dll_full_path);
-        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", aEntryAddress, path_utf8);
+        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<TUint>(aEntryAddress),
+            path_utf8);
 
         aFullPathPtr.get(sys->get_memory_system())->Assign(sys, path_utf8);
     }
@@ -632,7 +633,8 @@ namespace eka2l1::epoc {
         const ipc_arg_type type = context.msg->args.get_arg_type(aParam);
 
         if ((int)type & (int)ipc_arg_type::flag_des) {
-            return ExtractDesMaxLength(reinterpret_cast<TDes8 *>(mem->get_real_pointer(msg->args.args[aParam])));
+            return ExtractDesMaxLength(reinterpret_cast<TDes8 *>(
+                mem->get_real_pointer(msg->args.args[aParam])));
         }
 
         return KErrGeneral;
@@ -795,7 +797,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        // LOG_TRACE("Receive requested from {}", server->name());
+        LOG_TRACE("Receive requested from {}", server->name());
 
         server->receive_async_lle(aRequestStatus.get(mem),
             reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
@@ -891,13 +893,15 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
+        if (!aStatus) {
+            LOG_TRACE("Sending a blind sync message");
+        }
+
         return ss->send_receive_sync(aOrd, arg, aStatus.get(mem));
     }
 
     BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
         eka2l1::ptr<epoc::request_status> aStatus) {
-        //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
-
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -917,6 +921,10 @@ namespace eka2l1::epoc {
 
         if (!ss) {
             return KErrBadHandle;
+        }
+
+        if (!aStatus) {
+            LOG_TRACE("Sending a blind async message");
         }
 
         return ss->send_receive(aOrd, arg, aStatus.get(mem));

@@ -938,7 +938,8 @@ namespace eka2l1 {
         epoc::TEntry entry;
         entry.aSize = dir ? 0 : file->size();
 
-        if ((*fname_op)[0] == u'Z' || (*fname_op)[0] == u'z') {
+        if (static_cast<int>(io->get_drive_entry(static_cast<drive_number>(std::tolower(path[0]) - 'a')).media_type)
+            & static_cast<int>(drive_media::rom)) {
             entry.aAttrib = KEntryAttReadOnly | KEntryAttSystem;
 
             if (!dir && (*fname_op).find(u".dll") && !is_e32img(file)) {

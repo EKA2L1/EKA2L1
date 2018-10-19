@@ -157,7 +157,7 @@ namespace eka2l1 {
             uint32_t flags;
             ipc_msg_ptr sync_msg;
 
-            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool should_create_heap);
+            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool inital);
             void create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator_ptr, uint32_t name_len, address name_ptr, address epa);
 
             int leave_depth = -1;

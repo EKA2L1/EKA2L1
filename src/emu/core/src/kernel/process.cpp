@@ -146,6 +146,10 @@ namespace eka2l1::kernel {
         return true;
     }
 
+    std::uint32_t process::get_entry_point_address() {
+        return romimg ? romimg->header.entry_point : (img->rt_code_addr + img->header.entry_point);
+    }
+
     void process::set_priority(const process_priority new_pri) {
         std::vector<thread_ptr> all_own_threads = kern->get_all_thread_own_process(kern->get_process(obj_name));
         priority = new_pri;
