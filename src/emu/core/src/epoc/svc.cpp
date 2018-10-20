@@ -529,9 +529,9 @@ namespace eka2l1::epoc {
 
         if (msg->request_sts) {
             *msg->request_sts = aVal;
+            msg->own_thr->signal_request();
         }
-
-        msg->own_thr->signal_request();
+        
         // LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
