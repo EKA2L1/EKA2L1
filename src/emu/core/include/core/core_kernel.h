@@ -81,7 +81,7 @@ namespace eka2l1 {
         friend class process;
 
         /* Kernel objects map */
-        std::array<ipc_msg_ptr, 0x80> msgs;
+        std::array<ipc_msg_ptr, 0x1000> msgs;
 
         /* End kernel objects map */
         std::mutex mut;
