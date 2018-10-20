@@ -37,6 +37,8 @@ namespace eka2l1 {
             eka2l1::system *sys;
             ipc_msg_ptr msg;
 
+            bool signaled = false;
+
             template <typename T>
             std::optional<T> get_arg(int idx);
 

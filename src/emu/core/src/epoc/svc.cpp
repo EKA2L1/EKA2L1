@@ -375,6 +375,8 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, ProcessLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
+        LOG_TRACE("Logon requested from thread {}", sys->get_kernel_system()->crr_thread()->name());
+
         process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
 
         if (!pr) {
@@ -525,9 +527,11 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        *msg->request_sts = aVal;
-        msg->own_thr->signal_request();
+        if (msg->request_sts) {
+            *msg->request_sts = aVal;
+        }
 
+        msg->own_thr->signal_request();
         // LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
