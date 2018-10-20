@@ -86,6 +86,8 @@ namespace eka2l1 {
         if (!entry) {
             ctx.write_arg_pkg(1, 1);
             ctx.set_request_status(KErrNone);
+
+            return;
         }
 
         ctx.write_arg_pkg(1, features[entry->uid]);
