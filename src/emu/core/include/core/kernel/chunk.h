@@ -88,10 +88,12 @@ namespace eka2l1 {
 
             process_ptr own_process;
 
+            bool is_heap;
+
         public:
             chunk(kernel_system* kern, memory_system* mem, process_ptr own_process, std::string name, address bottom,
                 const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
-                chunk_attrib attrib);
+                chunk_attrib attrib, const bool is_heap = false);
 
             /*! \brief Commit to a disconnected chunk. 
 			 *
@@ -164,6 +166,10 @@ namespace eka2l1 {
 
             void set_own_process(process_ptr new_own) {
                 own_process = new_own;
+            }
+
+            bool is_chunk_heap() const {
+                return is_heap;
             }
 
             void write_object_to_snapshot(common::wo_buf_stream &stream) override;

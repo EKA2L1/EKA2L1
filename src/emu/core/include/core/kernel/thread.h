@@ -55,7 +55,7 @@ namespace eka2l1 {
     using process_ptr = std::shared_ptr<kernel::process>;
 
     namespace kernel {
-        using address = uint32_t;
+        using address = std::uint32_t;
         using thread_stack = common::resource<address>;
         using thread_stack_ptr = std::unique_ptr<thread_stack>;
 
@@ -142,11 +142,11 @@ namespace eka2l1 {
             memory_system *mem;
             timing_system *timing;
 
-            uint64_t lrt;
+            std::uint64_t lrt;
 
-            uint32_t stack_chunk;
-            uint32_t name_chunk;
-            uint32_t tls_chunk;
+            std::uint32_t stack_chunk;
+            std::uint32_t name_chunk;
+            std::uint32_t tls_chunk;
 
             thread_local_data ldata;
 
@@ -154,11 +154,11 @@ namespace eka2l1 {
             std::stack<debug_function_trace> call_stacks;
 
             sema_ptr request_sema;
-            uint32_t flags;
+            std::uint32_t flags;
             ipc_msg_ptr sync_msg;
 
-            void reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool inital);
-            void create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator_ptr, uint32_t name_len, address name_ptr, address epa);
+            void reset_thread_ctx(std::uint32_t entry_point, std::uint32_t stack_top, bool inital);
+            void create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator_ptr, std::uint32_t name_len, address name_ptr, address epa);
 
             int leave_depth = -1;
 
@@ -181,13 +181,13 @@ namespace eka2l1 {
             std::vector<logon_request_form> logon_requests;
             std::vector<logon_request_form> rendezvous_requests;
 
-            uint64_t create_time = 0;
+            std::uint64_t create_time = 0;
 
             epoc::request_status *sleep_nof_sts;
             epoc::request_status *timeout_sts;
 
         public:
-            kernel_obj_ptr get_object(uint32_t handle);
+            kernel_obj_ptr get_object(std::uint32_t handle);
             kernel_obj *wait_obj;
 
             void logon(epoc::request_status *logon_request, bool rendezvous);
@@ -236,7 +236,7 @@ namespace eka2l1 {
             bool operator>=(const thread &rhs);
             bool operator<=(const thread &rhs);
 
-            tls_slot *get_tls_slot(uint32_t handle, uint32_t dll_uid);
+            tls_slot *get_tls_slot(std::uint32_t handle, std::uint32_t dll_uid);
             void close_tls_slot(tls_slot &slot);
 
             void update_priority();
@@ -249,10 +249,10 @@ namespace eka2l1 {
 
             void set_priority(const thread_priority new_pri);
 
-            bool sleep(uint32_t mssecs);
-            bool sleep_nof(epoc::request_status *sts, uint32_t mssecs);
+            bool sleep(std::uint32_t mssecs);
+            bool sleep_nof(epoc::request_status *sts, std::uint32_t mssecs);
 
-            void after(epoc::request_status *sts, uint32_t mssecs);
+            void after(epoc::request_status *sts, std::uint32_t mssecs);
 
             void notify_sleep(const int errcode);
             void notify_after(const int errcode);
@@ -263,11 +263,11 @@ namespace eka2l1 {
                 return priority;
             }
 
-            uint32_t get_flags() const {
+            std::uint32_t get_flags() const {
                 return flags;
             }
 
-            void set_flags(const uint32_t new_flags) {
+            void set_flags(const std::uint32_t new_flags) {
                 flags = new_flags;
             }
 
@@ -319,6 +319,10 @@ namespace eka2l1 {
 
             int get_leave_depth() const {
                 return leave_depth;
+            }
+
+            std::uint32_t last_handle() {
+                return thread_handles.last_handle();
             }
         };
 

@@ -1419,6 +1419,10 @@ namespace eka2l1::epoc {
         return thr_handle;
     }
 
+    BRIDGE_FUNC(TInt, LastThreadHandle) {
+        return sys->get_kernel_system()->crr_thread()->last_handle();
+    }
+
     BRIDGE_FUNC(TInt, ThreadKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aReasonDes) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
@@ -1429,7 +1433,12 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        std::string exit_cage = aReasonDes.get(mem)->StdString(sys);
+        std::string exit_cage = "None";
+
+        if (aReasonDes) {
+            exit_cage = aReasonDes.get(mem)->StdString(sys);
+        }
+
         std::optional<std::string> exit_description;
 
         if (is_panic_category_action_default(exit_cage)) {
@@ -2022,6 +2031,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9E, LibraryAttach),
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
+        BRIDGE_REGISTER(0xA3, LastThreadHandle),
         BRIDGE_REGISTER(0xA5, ProcessRendezvous),
         BRIDGE_REGISTER(0xA6, MessageGetDesLength),
         BRIDGE_REGISTER(0xA7, MessageGetDesMaxLength),

@@ -31,7 +31,7 @@ namespace eka2l1 {
     namespace kernel {
         chunk::chunk(kernel_system *kern, memory_system *mem, process_ptr own_process, std::string name,
             address bottom, const address top, const size_t max_size, prot protection,
-            chunk_type type, chunk_access chnk_access, chunk_attrib attrib)
+            chunk_type type, chunk_access chnk_access, chunk_attrib attrib, const bool is_heap)
             : kernel_obj(kern, name, access_type::local_access)
             , type(type)
             , caccess(chnk_access)
@@ -40,7 +40,8 @@ namespace eka2l1 {
             , protection(protection)
             , kern(kern)
             , mem(mem)
-            , own_process(own_process) {
+            , own_process(own_process)
+            , is_heap(is_heap) {
             obj_type = object_type::chunk;
 
             if (caccess == chunk_access::global) {

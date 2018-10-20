@@ -362,7 +362,9 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
-        auto obj_ite = std::find(objects.begin(), objects.end(), obj);
+        auto obj_ite = std::find_if(objects.begin(), objects.end(), [=](kernel_obj_ptr &obj2) {
+            return obj2->unique_id() == obj->unique_id();    
+        });
 
         if (obj_ite != objects.end()) {
             objects.erase(obj_ite);

@@ -6,6 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <stack>
 
 namespace eka2l1 {
     using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
@@ -46,7 +47,9 @@ namespace eka2l1 {
             uint64_t uid;
 
             size_t next_instance;
+
             std::array<object_ix_record, 0x100> objects;
+            std::stack<std::uint32_t> handles;
 
             handle_array_owner owner;
 
@@ -61,16 +64,26 @@ namespace eka2l1 {
             /*! \brief Add new object to the ix. 
              * \returns Handle to the object
             */
-            uint32_t add_object(kernel_obj_ptr obj);
-            uint32_t duplicate(uint32_t handle);
+            std::uint32_t add_object(kernel_obj_ptr obj);
 
+            /*! \brief Duplicate an existing object handle. 
+                \returns New handle. 0 if fail to create.
+            */
+            std::uint32_t duplicate(uint32_t handle);
+
+            /*! \brief Get the kernel object reference by the handle. 
+                \returns The kernel object referenced. Nullptr if there is none found.
+            */
             kernel_obj_ptr get_object(uint32_t handle);
 
-            bool close(uint32_t handle);
+            int close(uint32_t handle);
 
             uint64_t unique_id() {
                 return uid;
             }
+
+            /*! \brief Get the last handle created. 0 if none left */
+            std::uint32_t last_handle();
         };
     }
 }

@@ -25,7 +25,7 @@
 
 namespace eka2l1 {
     namespace kernel {
-        handle_inspect_info inspect_handle(uint32_t handle) {
+        handle_inspect_info inspect_handle(std::uint32_t handle) {
             handle_inspect_info info;
 
             if (handle >> 31 == 1) {
@@ -51,8 +51,8 @@ namespace eka2l1 {
             return info;
         }
 
-        uint32_t object_ix::make_handle(size_t index) {
-            uint32_t handle = 0;
+       std::uint32_t object_ix::make_handle(size_t index) {
+            std::uint32_t handle = 0;
 
             if (owner == handle_array_owner::thread) {
                 // If handle array owner is thread, the 30th bit must be 1
@@ -62,16 +62,18 @@ namespace eka2l1 {
             handle |= next_instance << 16;
             handle |= index;
 
+            handles.push(handle);
+
             return handle;
         }
 
-        uint32_t object_ix::add_object(kernel_obj_ptr obj) {
+        std::uint32_t object_ix::add_object(kernel_obj_ptr obj) {
             auto slot = std::find_if(objects.begin(), objects.end(),
                 [](object_ix_record record) { return record.free; });
 
             if (slot != objects.end()) {
                 next_instance++;
-                uint32_t ret_handle = make_handle(slot - objects.begin());
+                std::uint32_t ret_handle = make_handle(slot - objects.begin());
 
                 slot->associated_handle = ret_handle;
                 slot->free = false;
@@ -85,7 +87,18 @@ namespace eka2l1 {
             return INVALID_HANDLE;
         }
 
-        uint32_t object_ix::duplicate(uint32_t handle) {
+        std::uint32_t object_ix::last_handle() {
+            if (!handles.size()) {
+                return 0;
+            }
+
+            std::uint32_t last = handles.top();
+            handles.pop();
+
+            return last;
+        }
+
+        std::uint32_t object_ix::duplicate(std::uint32_t handle) {
             handle_inspect_info info = inspect_handle(handle);
 
             if (!info.handle_array_local && owner == handle_array_owner::process) {
@@ -101,7 +114,7 @@ namespace eka2l1 {
             return add_object(obj);
         }
 
-        kernel_obj_ptr object_ix::get_object(uint32_t handle) {
+        kernel_obj_ptr object_ix::get_object(std::uint32_t handle) {
             handle_inspect_info info = inspect_handle(handle);
 
             if (info.object_ix_index < objects.size() && info.object_ix_next_instance < objects.size() - 1) {
@@ -111,8 +124,10 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        bool object_ix::close(uint32_t handle) {
+        int object_ix::close(std::uint32_t handle) {
             handle_inspect_info info = inspect_handle(handle);
+            int ret_value = 0;
+
 
             if (info.object_ix_index < objects.size() && info.object_ix_next_instance < objects.size() - 1) {
                 kernel_obj_ptr obj = objects[info.object_ix_index].object;
@@ -123,7 +138,11 @@ namespace eka2l1 {
 
                 obj->decrease_access_count();
 
-                if (obj && obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process) {
+                if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process &&
+                    obj->get_object_type() != object_type::thread) {
+                    if (obj->get_object_type() == object_type::chunk) {
+                    
+                    }
                     kern->destroy(obj);
                 }
 
