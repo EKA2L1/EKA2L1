@@ -1208,16 +1208,12 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, HandleClose, TInt aHandle) {
         if (aHandle & 0x8000) {
-            return false;
+            return KErrGeneral;
         }
 
-        bool res = sys->get_kernel_system()->close(aHandle);
+        int res = sys->get_kernel_system()->close(aHandle);
 
-        if (res) {
-            return KErrNone;
-        }
-
-        return KErrBadHandle;
+        return res;
     }
 
     BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, TOwnerType aOwnerType, TInt aDupHandle) {
@@ -1261,8 +1257,9 @@ namespace eka2l1::epoc {
         if (!obj) {
             if (aHandle == 0xFFFF8001) {
                 obj = kern->crr_thread();
-            } else
+            } else {
                 return;
+            }
         }
 
         TDes8 *desname = aName.get(sys->get_memory_system());

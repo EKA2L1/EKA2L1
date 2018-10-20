@@ -20,6 +20,9 @@
 
 #include <core/core_kernel.h>
 #include <core/kernel/object_ix.h>
+#include <core/kernel/chunk.h>
+
+#include <common/log.h>
 
 #include <algorithm>
 
@@ -32,8 +35,6 @@ namespace eka2l1 {
                 // Special
                 info.special = true;
                 info.special_type = static_cast<special_handle_type>(handle);
-
-                return info;
             } else {
                 info.special = false;
             }
@@ -44,8 +45,15 @@ namespace eka2l1 {
                 info.handle_array_local = false;
             }
 
+            // On emulator, use bit 29 to determine if it's a kernel handle
+            if (handle & (1 << 29)) {
+                info.handle_array_kernel = true;
+            } else {
+                info.handle_array_kernel = false;
+            }
+
             info.no_close = handle & 0x8000;
-            info.object_ix_next_instance = (handle >> 16) & 0b0011111111111111;
+            info.object_ix_next_instance = (handle >> 16) & 0b0001111111111111;
             info.object_ix_index = handle & 0x7FFF;
 
             return info;
@@ -54,13 +62,17 @@ namespace eka2l1 {
        std::uint32_t object_ix::make_handle(size_t index) {
             std::uint32_t handle = 0;
 
+            handle |= next_instance << 16;
+            handle |= index;
+
             if (owner == handle_array_owner::thread) {
                 // If handle array owner is thread, the 30th bit must be 1
                 handle |= 0x40000000;
             }
 
-            handle |= next_instance << 16;
-            handle |= index;
+            if (owner == handle_array_owner::kernel) {
+                handle |= (1 << 29);
+            }
 
             handles.push(handle);
 
@@ -117,9 +129,11 @@ namespace eka2l1 {
         kernel_obj_ptr object_ix::get_object(std::uint32_t handle) {
             handle_inspect_info info = inspect_handle(handle);
 
-            if (info.object_ix_index < objects.size() && info.object_ix_next_instance < objects.size() - 1) {
+            if (info.object_ix_index < objects.size()) {
                 return objects[info.object_ix_index].object;
             }
+
+            LOG_WARN("Can't find object with handle: 0x{:x}", handle);
 
             return nullptr;
         }
@@ -128,12 +142,11 @@ namespace eka2l1 {
             handle_inspect_info info = inspect_handle(handle);
             int ret_value = 0;
 
-
-            if (info.object_ix_index < objects.size() && info.object_ix_next_instance < objects.size() - 1) {
+            if (info.object_ix_index < objects.size()) {
                 kernel_obj_ptr obj = objects[info.object_ix_index].object;
                 
                 if (!obj) {
-                    return false;
+                    return -1;
                 }
 
                 obj->decrease_access_count();
@@ -141,17 +154,22 @@ namespace eka2l1 {
                 if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process &&
                     obj->get_object_type() != object_type::thread) {
                     if (obj->get_object_type() == object_type::chunk) {
-                    
+                        chunk_ptr c = std::dynamic_pointer_cast<kernel::chunk>(obj);
+
+                        if (c->is_chunk_heap()) {
+                            ret_value = 1;
+                        }
                     }
+
                     kern->destroy(obj);
                 }
 
                 objects[info.object_ix_index].free = true;
 
-                return true;
+                return ret_value;
             }
 
-            return false;
+            return -1;
         }
 
         object_ix::object_ix(kernel_system *kern, handle_array_owner owner)

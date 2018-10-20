@@ -14,12 +14,15 @@ namespace eka2l1 {
 
     namespace kernel {
         enum class special_handle_type : uint32_t {
+            kernel,
             crr_process = 0xFFFF8000,
             crr_thread = 0xFFFF8001
         };
 
         struct handle_inspect_info {
             bool handle_array_local;
+            bool handle_array_kernel;
+
             int object_ix_index;
             int object_ix_next_instance;
             bool no_close;

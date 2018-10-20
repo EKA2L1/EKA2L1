@@ -221,7 +221,7 @@ namespace eka2l1 {
         }
 
         bool destroy(kernel_obj_ptr obj);
-        bool close(uint32_t handle);
+        int close(uint32_t handle);
 
         kernel_obj_ptr get_kernel_obj(uint32_t handle);
         kernel_obj_ptr get_kernel_obj_by_id(uint64_t id);

@@ -363,7 +363,7 @@ namespace eka2l1 {
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
         auto obj_ite = std::find_if(objects.begin(), objects.end(), [=](kernel_obj_ptr &obj2) {
-            return obj2->unique_id() == obj->unique_id();    
+            return obj && obj2 && (obj2->unique_id() == obj->unique_id());   
         });
 
         if (obj_ite != objects.end()) {
@@ -374,26 +374,22 @@ namespace eka2l1 {
         return false;
     }
 
-    bool kernel_system::close(uint32_t handle) {
+    int kernel_system::close(std::uint32_t handle) {
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
         if (info.no_close) {
-            return false;
+            return -1;
         }
 
         if (info.handle_array_local) {
             return crr_thread()->thread_handles.close(handle);
         }
 
-        bool res = crr_process()->process_handles.close(handle);
-
-        if (!res) {
-            res = kernel_handles.close(handle);
-
-            return res;
+        if (info.handle_array_kernel) {
+            return kernel_handles.close(handle);
         }
 
-        return true;
+        return crr_process()->process_handles.close(handle);
     }
 
     thread_ptr kernel_system::get_thread_by_handle(uint32_t handle) {
@@ -419,21 +415,14 @@ namespace eka2l1 {
             return crr_thread()->thread_handles.get_object(handle);
         }
 
-        kernel_obj_ptr res;
-
-        if (crr_process())
-            res = crr_process()->process_handles.get_object(handle);
-
-        if (!res) {
-            res = kernel_handles.get_object(handle);
-
-            return res;
+        if (info.handle_array_kernel) {
+            return kernel_handles.get_object(handle);
         }
 
-        return res;
+        return crr_process()->process_handles.get_object(handle);
     }
 
-    kernel_obj_ptr kernel_system::get_kernel_obj_by_id(uint64_t id) {
+    kernel_obj_ptr kernel_system::get_kernel_obj_by_id(std::uint64_t id) {
         auto res = std::find_if(objects.begin(), objects.end(),
             [=](kernel_obj_ptr obj) { return obj && (obj->unique_id() == id); });
 
@@ -465,7 +454,7 @@ namespace eka2l1 {
         std::vector<thread_ptr> thr_list;
 
         for (kernel_obj_ptr &obj : objects) {
-            if (obj->get_object_type() == kernel::object_type::thread) {
+            if (obj && obj->get_object_type() == kernel::object_type::thread) {
                 thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
 
                 if (thr->own_process == pr) {
@@ -575,9 +564,6 @@ namespace eka2l1 {
             target_obj = crr_process();
         } else if (handle == 0xFFFF8001) {
             target_obj = crr_thread();
-        } else if (info.handle_array_local) {
-            // Use the thread to get the kernel object
-            target_obj = own_thread->thread_handles.get_object(handle);
         } else {
             target_obj = get_kernel_obj(handle);
         }
