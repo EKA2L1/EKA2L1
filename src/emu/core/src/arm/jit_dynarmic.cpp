@@ -28,12 +28,23 @@ namespace eka2l1 {
                 : parent(parent) {}
 
             void handle_thread_exception() {
-                const std::string disassemble_inst = parent.asmdis->disassemble(
-                    reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(parent.get_pc())),
-                    (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
-                    (parent.jit->Cpsr() & 0x20) ? true : false);
+                if (parent.mem->get_real_pointer(parent.get_pc())) {
+                    const std::string disassemble_inst = parent.asmdis->disassemble(
+                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(parent.get_pc())),
+                        (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
+                        (parent.jit->Cpsr() & 0x20) ? true : false);
 
-                LOG_TRACE("Last instruction: {}", disassemble_inst);
+                    LOG_TRACE("Last instruction: {}", disassemble_inst);
+                }
+
+                if (parent.mem->get_real_pointer(parent.get_lr())) {
+                    const std::string disassemble_inst = parent.asmdis->disassemble(
+                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(parent.get_lr())),
+                        (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_lr(),
+                        (parent.jit->Cpsr() & 0x20) ? true : false);
+
+                    LOG_TRACE("LR instruction: {}", disassemble_inst);
+                }
 
                 thread_ptr crr_thread = parent.kern->crr_thread();
 
