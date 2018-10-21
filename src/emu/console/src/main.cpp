@@ -17,18 +17,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <atomic>
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <string>
+#include <thread>
 
 #include <common/cvt.h>
 #include <common/log.h>
 #include <core/core.h>
 #include <core/loader/rom.h>
+
+#include <debugger/debugger.h>
+#include <debugger/renderer/renderer.h>
+#include <core/drivers/emu_window.h>
+
+#include <imgui.h>
 #include <yaml-cpp/yaml.h>
 
 using namespace eka2l1;
+
+eka2l1::system symsys;
+eka2l1::arm::jitter_arm_type jit_type = decltype(jit_type)::unicorn;
+epocver ever = epocver::epoc9;
 
 std::string rom_path = "SYM.ROM";
 std::string mount_c = "drives/c/";
@@ -36,28 +50,26 @@ std::string mount_e = "drives/e/";
 std::string mount_z = "drives/z/";
 std::string sis_install_path = "-1";
 
-uint8_t adrive;
-
-eka2l1::system symsys;
-eka2l1::arm::jitter_arm_type jit_type = decltype(jit_type)::unicorn;
-epocver ever = epocver::epoc9;
+std::string rpkg_path;
+std::uint16_t gdb_port = 24689;
+std::uint8_t adrive;
 
 bool enable_gdbstub = false;
 
 YAML::Node config;
 
 int drive_mount;
-
 int app_idx = -1;
 
 bool help_printed = false;
 bool list_app = false;
 bool install_rpkg = false;
 
-std::string rpkg_path;
-std::uint16_t gdb_port = 24689;
+std::atomic<bool> quit(false);
+std::mutex ui_debugger_mutex;
 
-bool quit = false;
+ImGuiContext *ui_debugger_context;
+std::shared_ptr<eka2l1::driver::emu_window> debugger_window;
 
 void print_help() {
     std::cout << "Usage: Drag and drop Symbian file here, ignore missing dependencies" << std::endl;
@@ -269,6 +281,63 @@ void do_quit() {
     symsys.shutdown();
 }
 
+void on_ui_window_mouse_evt(eka2l1::point mouse_pos, int button, int action) {
+    ImGuiIO &io = ImGui::GetIO();
+    io.MousePos = ImVec2(static_cast<float>(mouse_pos.x), 
+        static_cast<float>(mouse_pos.y));
+
+    if (action <= 1 || debugger_window->get_mouse_button_hold(button)) {
+        io.MouseDown[button] = true;
+    }
+}
+
+void on_ui_window_mouse_scrolling(eka2l1::vec2 v) {
+    ImGuiIO &io = ImGui::GetIO();
+    io.MouseWheel += static_cast<float>(v.y);
+}
+
+int ui_debugger_thread() {
+    debugger_window = eka2l1::driver::new_emu_window(eka2l1::driver::window_type::glfw);
+    
+    debugger_window->raw_mouse_event = on_ui_window_mouse_evt;
+    debugger_window->mouse_wheeling = on_ui_window_mouse_scrolling;
+
+    debugger_window->init("Debugging Window", eka2l1::vec2(500, 500));
+    debugger_window->make_current();
+
+    /* Consider main thread not touching this, no need for mutex */
+    ui_debugger_context = ImGui::CreateContext();
+
+    auto debugger = std::make_shared<eka2l1::debugger>(&symsys);
+    auto debugger_renderer = 
+        eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
+
+    debugger_renderer->init(debugger);
+
+    while (!quit) {
+        vec2 nws = debugger_window->window_size();
+        vec2 nwsb = debugger_window->window_fb_size();
+
+        debugger_window->poll_events();
+        debugger_renderer->draw(nws.x, nws.y, nwsb.x, nwsb.y);
+        debugger_window->swap_buffer();
+
+        ImGuiIO &io = ImGui::GetIO();
+        
+        io.MouseWheel = 0;
+        io.MouseDown[0] = false;
+        io.MouseDown[1] = false;
+        io.MouseDown[2] = false;
+    }
+
+    ImGui::DestroyContext();
+    debugger_renderer->deinit();
+    debugger_window->done_current();
+    debugger_window->shutdown();
+
+    return 0;
+}
+
 #define FOREVER for (;;)
 
 int main(int argc, char **argv) {
@@ -282,6 +351,8 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    eka2l1::driver::init_window_library(eka2l1::driver::window_type::glfw);
+
     try {
         init();
         do_args();
@@ -290,15 +361,26 @@ int main(int argc, char **argv) {
             do_quit();
             return 0;
         }
-
-        while (!symsys.should_exit()) {
-            symsys.loop();
-        }
     } catch (...) {
         std::cout << "Internal error happens in the compiler" << std::endl;
 
         do_quit();
     }
+
+    std::thread debug_window_thread(ui_debugger_thread);
+
+    try {
+        while (!symsys.should_exit()) {
+            symsys.loop();
+        }
+    } catch (...) {
+        std::cout << "Internal error happens in the compiler" << std::endl;
+    }
+
+    debug_window_thread.join();
+    do_quit();
+
+    eka2l1::driver::destroy_window_library(eka2l1::driver::window_type::glfw);
 
     return 0;
 }

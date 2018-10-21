@@ -238,7 +238,6 @@ namespace eka2l1 {
             CREATE_SERVER(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);
-            //CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, install_server);
             CREATE_SERVER(sys, rights_server);
             CREATE_SERVER(sys, drm_helper_server);

@@ -28,6 +28,13 @@ void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
     double x; double y;
     glfwGetCursorPos(window, &x, &y);
 
+    int but_map = (button == GLFW_MOUSE_BUTTON_LEFT) ? 0 : 
+        ((button == GLFW_MOUSE_BUTTON_RIGHT) ? 1 : 2);
+
+    int but_action = (action == GLFW_PRESS) ? 0 : ((action == GLFW_REPEAT) ? 1 : 2);
+
+    CALL_IF_VALID(win->raw_mouse_event, eka2l1::point(x, y), but_map, but_action);
+
     if (action == GLFW_PRESS) {
         CALL_IF_VALID(win->touch_pressed, eka2l1::point(x, y));
     }
@@ -37,6 +44,11 @@ void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
     else {
         CALL_IF_VALID(win->touch_released);
     }
+}
+
+void mouse_wheel_callback(GLFWwindow *window, double xoff, double yoff) {
+    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    CALL_IF_VALID(win->mouse_wheeling, eka2l1::vec2(xoff, yoff));
 }
 
 void fb_resize_callback(GLFWwindow* window, int width, int height) {
@@ -55,9 +67,25 @@ namespace eka2l1 {
         const uint32_t default_width_potrait = 360;
         const uint32_t default_height_potrait = 640;
 
-        void emu_window_glfw3::init(std::string title, vec2 size) {
-            glfwInit();
+        bool emu_window_glfw3::get_mouse_button_hold(const int mouse_btt) {
+            return (glfwGetMouseButton(emu_win, mouse_btt) != 0) ? true : false;
+        }
 
+        vec2 emu_window_glfw3::window_size() {
+            vec2 v;
+            glfwGetWindowSize(emu_win, &v.x, &v.y);
+
+            return v;
+        }
+
+        vec2 emu_window_glfw3::window_fb_size() {
+            vec2 v;
+            glfwGetFramebufferSize(emu_win, &v.x, &v.y);
+
+            return v;
+        }
+
+        void emu_window_glfw3::init(std::string title, vec2 size) {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -65,7 +93,7 @@ namespace eka2l1 {
             emu_win = glfwCreateWindow(size.x, size.y, title.data(), nullptr, nullptr);
 
             if (!emu_win) {
-                LOG_ERROR("Can't create emulator window!");
+                LOG_ERROR("Can't create window!");
             }
 
             using namespace std::placeholders;
@@ -76,6 +104,7 @@ namespace eka2l1 {
             glfwSetMouseButtonCallback(emu_win, &mouse_callback);
             glfwSetFramebufferSizeCallback(emu_win, &fb_resize_callback);
             glfwSetWindowCloseCallback(emu_win, &close_callback);
+            glfwSetScrollCallback(emu_win, &mouse_wheel_callback);
 
             emu_screen_size = size;
         }
@@ -98,7 +127,6 @@ namespace eka2l1 {
 
         void emu_window_glfw3::shutdown() {
             glfwDestroyWindow(emu_win);
-            glfwTerminate();
         }
 
         void emu_window_glfw3::poll_events() {

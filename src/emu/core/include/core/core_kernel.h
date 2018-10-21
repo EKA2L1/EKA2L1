@@ -78,6 +78,7 @@ namespace eka2l1 {
     };
 
     class kernel_system {
+        friend class debugger;
         friend class process;
 
         /* Kernel objects map */

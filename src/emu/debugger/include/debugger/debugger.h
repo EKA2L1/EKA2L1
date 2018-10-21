@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team
+ * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project
+ * This file is part of EKA2L1 project 
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -18,22 +18,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/services/server.h>
-#include <core/services/context.h>
+#include <cstdint>
 
 namespace eka2l1 {
-    /*! \brief OOM App Server Memebers can receive notification when memory ran out and can't be
-       freed. 
-      
-      - Server type: critical.
+    class system;
 
-      - Launching: HLE when not doing a full startup. A full startup should launch this server automaticlly.
-    */
-    class oom_ui_app_server : public service::server {
-        void add_to_menu_list(service::ipc_context ctx);
-        void add_to_menu_list2(service::ipc_context ctx);
-    
+    class debugger {
+        system *sys;
+
+        bool should_show_threads;
+        bool should_show_mutexs;
+        bool should_show_chunks;
+
+        void show_threads();
+        void show_mutexs();
+        void show_chunks();
+        void show_timers();
+        void show_disassembler();
+        void show_menu();
+
     public:
-        explicit oom_ui_app_server(eka2l1::system *sys);
+        explicit debugger(eka2l1::system *sys)
+            : sys(sys) {}
+
+        void show_debugger(std::uint32_t width, std::uint32_t height
+            , std::uint32_t fb_width, std::uint32_t fb_height);
     };
 }

@@ -50,9 +50,17 @@ namespace eka2l1 {
 			*/
             virtual void change_title(std::string) = 0;
 
+            virtual vec2 window_size() = 0;
+            virtual vec2 window_fb_size() = 0;
+
+            virtual bool get_mouse_button_hold(const int mouse_btt) = 0;
+
             std::function<void(vec2)> resize_hook;
 
             /* Callback handler */
+            std::function<void(point, int, int)> raw_mouse_event;
+
+            std::function<void(vec2)> mouse_wheeling;
 
             /*! Call when a touch input is triggered */
             std::function<void(point)> touch_pressed;
@@ -82,5 +90,8 @@ namespace eka2l1 {
 
 		/*! \brief Create a new window emulator. */
         std::shared_ptr<emu_window> new_emu_window(window_type win_type);
+        
+        bool init_window_library(window_type win_type);
+        bool destroy_window_library(window_type win_type);
     }
 }

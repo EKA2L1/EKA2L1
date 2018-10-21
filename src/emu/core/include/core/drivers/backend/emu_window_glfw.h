@@ -39,6 +39,8 @@ namespace eka2l1 {
             vec2 emu_screen_size;
 
         public:
+            bool get_mouse_button_hold(const int mouse_btt) override;
+
             void change_title(std::string new_title) override;
 
             void init(std::string title, vec2 size) override;
@@ -48,6 +50,9 @@ namespace eka2l1 {
             void poll_events() override;
 
             void shutdown() override;
+
+            vec2 window_size() override;
+            vec2 window_fb_size() override;
         };
     }
 }

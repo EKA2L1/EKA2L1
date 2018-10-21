@@ -6,9 +6,11 @@ endif()
 add_subdirectory(common)
 add_subdirectory(core)
 add_subdirectory(scripting)
+add_subdirectory(debugger)
 
 add_executable(EKA2L1_CONS console/src/main.cpp)
-target_link_libraries(EKA2L1_CONS PRIVATE common core gdbstub yaml-cpp)
+target_link_libraries(EKA2L1_CONS PRIVATE common core debugger drivers 
+	gdbstub imgui yaml-cpp)
 
 target_include_directories(EKA2L1_CONS PRIVATE ${YAML_CPP_INCLUDE_DIR})
 
