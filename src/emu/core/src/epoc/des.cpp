@@ -349,13 +349,31 @@ namespace eka2l1::epoc {
     }
 
     void TDesC8::Assign(eka2l1::system *sys, std::string iNewString) {
-        memcpy(Ptr(sys), iNewString.data(), iNewString.length());
-        SetLength(sys, iNewString.length());
+        size_t cop_len = ExtractDesMaxLength(reinterpret_cast<TDes8*>(this));
+
+        if (iNewString.length() > cop_len) {
+            LOG_WARN("String length exceed maximum, reduce from {} to {}", iNewString.length(),
+                cop_len);
+        }
+
+        cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
+
+        memcpy(Ptr(sys), iNewString.data(), cop_len);
+        SetLength(sys, cop_len);
     }
 
     void TDesC8::Assign(eka2l1::process_ptr pr, std::string iNewString) {
-        memcpy(Ptr(pr), iNewString.data(), iNewString.length());
-        SetLength(pr, iNewString.length());
+        size_t cop_len = ExtractDesMaxLength(reinterpret_cast<TDes8*>(this));
+
+        if (iNewString.length() > cop_len) {
+            LOG_WARN("String length exceed maximum, reduce from {} to {}", iNewString.length(),
+                cop_len);
+        }
+        
+        cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
+
+        memcpy(Ptr(pr), iNewString.data(), cop_len);
+        SetLength(pr, cop_len);
     }
 
     void TDesC16::SetLength(eka2l1::system *sys, TUint32 iNewLength) {
@@ -363,12 +381,30 @@ namespace eka2l1::epoc {
     }
 
     void TDesC16::Assign(eka2l1::system *sys, std::u16string iNewString) {
-        memcpy(Ptr(sys), iNewString.data(), iNewString.length() * 2);
-        SetLength(sys, iNewString.length());
+        size_t cop_len = ExtractDesMaxLength(reinterpret_cast<TDes8*>(this));
+
+        if (iNewString.length() > cop_len) {
+            LOG_WARN("String length exceed maximum, reduce from {} to {}", iNewString.length(),
+                cop_len);
+        }
+        
+        cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
+
+        memcpy(Ptr(sys), iNewString.data(), cop_len * 2);
+        SetLength(sys, cop_len);
     }
 
     void TDesC16::Assign(eka2l1::process_ptr pr, std::u16string iNewString) {
-        memcpy(Ptr(pr), iNewString.data(), iNewString.length() * 2);
-        SetLength(pr, iNewString.length());
+        size_t cop_len = ExtractDesMaxLength(reinterpret_cast<TDes8*>(this));
+
+        if (iNewString.length() > cop_len) {
+            LOG_WARN("String length exceed maximum, reduce from {} to {}", iNewString.length(),
+                cop_len);
+        }
+        
+        cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
+
+        memcpy(Ptr(pr), iNewString.data(), cop_len * 2);
+        SetLength(pr, cop_len);
     }
 }
