@@ -19,7 +19,41 @@
  */
 #pragma once
 
+#include <cstdint>
+#include <cmath>
+#include <array>
+#include <initializer_list>
+#include <numeric>
+
 namespace eka2l1 {
+    /*! \brief A basic template type vector 
+    */
+    template <typename T, int len = 2>
+    struct vecx {
+        std::array<T, len> elements;
+
+    public:
+        T &operator[](const std::size_t idx) {
+            return elements[idx];
+        }
+
+        vecx() = default;
+
+        // Allow non-explicit
+        vecx(const std::initializer_list<T> list)
+            : elements(list) {
+        }
+
+        T normalize() {
+            return static_cast<T>(std::sqrt(std::accumulate(elements.begin(), elements.end(), 0, 
+                [](const T &lhs, const T &rhs) {
+                    return lhs + rhs * rhs;
+                })));
+        }
+    };
+
+    using vec2d = vecx<double, 2>;
+
 	/*! \brief A 2D Vector */
     struct vec2 {
         int x, y;

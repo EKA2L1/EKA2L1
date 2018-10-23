@@ -53,6 +53,7 @@ namespace eka2l1 {
 
             vec2 window_size() override;
             vec2 window_fb_size() override;
+            vec2d get_mouse_pos() override;
         };
     }
 }

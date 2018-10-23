@@ -467,10 +467,12 @@ namespace eka2l1 {
     }
 
     std::vector<process_ptr> kernel_system::get_all_processes() {
+        const std::lock_guard<std::mutex> guard(mut);
+
         std::vector<process_ptr> process_list;
 
         for (kernel_obj_ptr &obj : objects) {
-            if (obj->get_object_type() == kernel::object_type::process) {
+            if (obj && obj->get_object_type() == kernel::object_type::process) {
                 process_ptr pr = std::dynamic_pointer_cast<kernel::process>(obj);
                 process_list.push_back(pr);
             }
@@ -486,6 +488,18 @@ namespace eka2l1 {
     /*! \brief Completely destroy a message. */
     void kernel_system::destroy_msg(ipc_msg_ptr msg) {
         (msgs.begin() + msg->id)->reset();
+    }
+
+    std::vector<process_ptr> kernel_system::get_process_list() {
+        std::vector<process_ptr> processes;
+        
+        for (const auto &obj: objects) {
+            if (obj && obj->get_object_type() == kernel::object_type::process) {
+                processes.push_back(std::dynamic_pointer_cast<kernel::process>(obj));
+            }
+        }
+
+        return processes;
     }
 
     server_ptr kernel_system::get_server_by_name(const std::string name) {

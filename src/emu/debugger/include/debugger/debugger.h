@@ -19,6 +19,9 @@
  */
 
 #include <cstdint>
+#include <memory>
+
+struct MemoryEditor;
 
 namespace eka2l1 {
     class system;
@@ -29,6 +32,15 @@ namespace eka2l1 {
         bool should_show_threads;
         bool should_show_mutexs;
         bool should_show_chunks;
+        
+        bool should_pause;
+        bool should_stop;
+        bool should_load_state;
+        bool should_save_state;
+        bool should_install_package;
+        bool should_show_memory;
+
+        bool should_show_logger;
 
         void show_threads();
         void show_mutexs();
@@ -36,10 +48,12 @@ namespace eka2l1 {
         void show_timers();
         void show_disassembler();
         void show_menu();
+        void show_memory();
+
+        std::shared_ptr<MemoryEditor> mem_editor;
 
     public:
-        explicit debugger(eka2l1::system *sys)
-            : sys(sys) {}
+        explicit debugger(eka2l1::system *sys);
 
         void show_debugger(std::uint32_t width, std::uint32_t height
             , std::uint32_t fb_width, std::uint32_t fb_height);

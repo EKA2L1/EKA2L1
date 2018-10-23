@@ -130,6 +130,8 @@ namespace eka2l1 {
         process_ptr get_process(std::string &name);
         process_ptr get_process(uint32_t handle);
 
+        std::vector<process_ptr> get_process_list();
+
         void reschedule() {
             thr_sch->reschedule();
         }

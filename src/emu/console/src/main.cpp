@@ -69,7 +69,8 @@ std::atomic<bool> quit(false);
 std::mutex ui_debugger_mutex;
 
 ImGuiContext *ui_debugger_context;
-std::shared_ptr<eka2l1::driver::emu_window> debugger_window;
+
+bool ui_window_mouse_down[5] = { false, false, false, false, false };
 
 void print_help() {
     std::cout << "Usage: Drag and drop Symbian file here, ignore missing dependencies" << std::endl;
@@ -281,13 +282,18 @@ void do_quit() {
     symsys.shutdown();
 }
 
+void set_mouse_down(const int button, const bool op) {
+    const std::lock_guard<std::mutex> guard(ui_debugger_mutex);
+    ui_window_mouse_down[button] = op;
+}
+
 void on_ui_window_mouse_evt(eka2l1::point mouse_pos, int button, int action) {
     ImGuiIO &io = ImGui::GetIO();
     io.MousePos = ImVec2(static_cast<float>(mouse_pos.x), 
         static_cast<float>(mouse_pos.y));
 
-    if (action <= 1 || debugger_window->get_mouse_button_hold(button)) {
-        io.MouseDown[button] = true;
+    if (action == 0) {
+        set_mouse_down(button, true);
     }
 }
 
@@ -296,11 +302,61 @@ void on_ui_window_mouse_scrolling(eka2l1::vec2 v) {
     io.MouseWheel += static_cast<float>(v.y);
 }
 
+#define KEY_TAB 258
+#define KEY_BACKSPACE 259
+#define KEY_LEFT_SHIFT 340
+#define KEY_LEFT_CONTROL 341
+#define KEY_LEFT_ALT 342
+#define KEY_LEFT_SUPER 343
+#define KEY_RIGHT_SHIFT 344
+#define KEY_RIGHT_CONTROL 345
+#define KEY_RIGHT_ALT 346
+#define KEY_RIGHT_SUPER 347
+
+#define KEY_RIGHT 262
+#define KEY_LEFT 263
+#define KEY_DOWN 264
+#define KEY_UP 265
+
+#define KEY_ENTER 257
+#define KEY_ESCAPE 256
+
+void on_ui_window_key_release(const int key) {
+    ImGuiIO &io = ImGui::GetIO();
+    io.KeysDown[key] = false;
+
+    io.KeyCtrl = io.KeysDown[KEY_LEFT_CONTROL] || io.KeysDown[KEY_RIGHT_CONTROL];
+    io.KeyShift = io.KeysDown[KEY_LEFT_SHIFT] || io.KeysDown[KEY_RIGHT_SHIFT];
+    io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
+    io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
+}
+
+void on_ui_window_key_press(const int key) {
+    ImGuiIO &io = ImGui::GetIO();
+    
+    io.KeysDown[key] = true;
+    
+    io.KeyCtrl = io.KeysDown[KEY_LEFT_CONTROL] || io.KeysDown[KEY_RIGHT_CONTROL];
+    io.KeyShift = io.KeysDown[KEY_LEFT_SHIFT] || io.KeysDown[KEY_RIGHT_SHIFT];
+    io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
+    io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
+}
+
+void on_ui_window_char_type(std::uint32_t c) {
+    ImGuiIO &io = ImGui::GetIO();
+
+    if (c > 0 && c < 0x10000)
+        io.AddInputCharacter(static_cast<unsigned short>(c));
+}
+
 int ui_debugger_thread() {
-    debugger_window = eka2l1::driver::new_emu_window(eka2l1::driver::window_type::glfw);
+    auto debugger_window = eka2l1::driver::new_emu_window(eka2l1::driver::window_type::glfw);
     
     debugger_window->raw_mouse_event = on_ui_window_mouse_evt;
     debugger_window->mouse_wheeling = on_ui_window_mouse_scrolling;
+    debugger_window->button_pressed = on_ui_window_key_press;
+    debugger_window->button_released = on_ui_window_key_release;
+    debugger_window->char_hook = on_ui_window_char_type;
 
     debugger_window->init("Debugging Window", eka2l1::vec2(500, 500));
     debugger_window->make_current();
@@ -314,20 +370,45 @@ int ui_debugger_thread() {
 
     debugger_renderer->init(debugger);
 
+    ImGuiIO &io = ImGui::GetIO();
+
+    io.KeyMap[ImGuiKey_A] = 'A';
+    io.KeyMap[ImGuiKey_C] = 'C';
+    io.KeyMap[ImGuiKey_V] = 'V';
+    io.KeyMap[ImGuiKey_X] = 'X';
+    io.KeyMap[ImGuiKey_Y] = 'Y';
+    io.KeyMap[ImGuiKey_Z] = 'Z';
+
+    io.KeyMap[ImGuiKey_Tab] = KEY_TAB;
+    io.KeyMap[ImGuiKey_Backspace] = KEY_BACKSPACE;
+    io.KeyMap[ImGuiKey_LeftArrow] = KEY_LEFT;
+    io.KeyMap[ImGuiKey_RightArrow] = KEY_RIGHT;
+    io.KeyMap[ImGuiKey_UpArrow] = KEY_UP;
+    io.KeyMap[ImGuiKey_Escape] = KEY_ESCAPE;
+    io.KeyMap[ImGuiKey_DownArrow] = KEY_DOWN;
+    io.KeyMap[ImGuiKey_Enter] = KEY_ENTER;
+
     while (!quit) {
         vec2 nws = debugger_window->window_size();
         vec2 nwsb = debugger_window->window_fb_size();
 
         debugger_window->poll_events();
+
+        for (std::uint8_t i = 0; i < 5; i++) {
+            io.MouseDown[i] = ui_window_mouse_down[i] || 
+                debugger_window->get_mouse_button_hold(i);
+
+            set_mouse_down(i, false);
+        }
+
+        vec2d mouse_pos = debugger_window->get_mouse_pos();
+
+        io.MousePos = ImVec2(mouse_pos[0], mouse_pos[1]);
+
         debugger_renderer->draw(nws.x, nws.y, nwsb.x, nwsb.y);
         debugger_window->swap_buffer();
-
-        ImGuiIO &io = ImGui::GetIO();
         
         io.MouseWheel = 0;
-        io.MouseDown[0] = false;
-        io.MouseDown[1] = false;
-        io.MouseDown[2] = false;
     }
 
     ImGui::DestroyContext();
@@ -342,6 +423,8 @@ int ui_debugger_thread() {
 
 int main(int argc, char **argv) {
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
+
+    log::setup_log(nullptr);
 
     read_config();
     parse_args(argc, argv);

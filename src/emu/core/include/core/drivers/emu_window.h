@@ -52,6 +52,7 @@ namespace eka2l1 {
 
             virtual vec2 window_size() = 0;
             virtual vec2 window_fb_size() = 0;
+            virtual vec2d get_mouse_pos() = 0;
 
             virtual bool get_mouse_button_hold(const int mouse_btt) = 0;
 
@@ -75,13 +76,15 @@ namespace eka2l1 {
             std::function<void(uint16_t)> button_pressed;
 
             /*! Call when a button is released */
-            std::function<void()> button_released;
+            std::function<void(uint16_t)> button_released;
 
             /*! Call when a button is held */
             std::function<void(uint16_t)> button_hold;
 
 			/*! Call when the window is closed */
             std::function<void()> close_hook;
+
+            std::function<void(char)> char_hook;
         };
 
         enum class window_type {

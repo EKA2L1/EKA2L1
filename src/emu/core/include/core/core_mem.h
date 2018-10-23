@@ -29,6 +29,8 @@ namespace eka2l1 {
         std::vector<page> codeseg_pages;
         std::vector<mem_ptr> codeseg_pointers;
 
+        std::size_t rom_size;
+
         int page_size;
         uint32_t generations = 0;
 

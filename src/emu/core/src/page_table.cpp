@@ -30,28 +30,29 @@ namespace eka2l1 {
         pages.resize(total_page);
     }
 
+    std::vector<page> &page_table::get_pages() {
+        const std::lock_guard<std::mutex> guard(mut);
+        return pages;
+    }
+
+    std::vector<mem_ptr> &page_table::get_pointers() {
+        const std::lock_guard<std::mutex> guard(mut);
+        return pointers;
+    }
+
     void page_table::read(uint32_t addr, void *dest, int size) {
-        if (addr >= global_data && addr <= ram_drive) {
-            LOG_WARN("Access global data passthroughed on process page table.");
-            return;
-        }
-
-        if (addr >= null_trap && addr <= local_data) {
-            LOG_WARN("Accessing null trap region, exception won't be thrown");
-            return;
-        }   
-
         int page = addr / page_size;
-        uint32_t page_addr = page * page_size;
 
-        switch (pages[page].sts) {
+        std::fill(reinterpret_cast<std::uint8_t*>(dest), reinterpret_cast<std::uint8_t*>(dest) + size,
+            0);
+
+        switch (get_pages()[page].sts) {
         case page_status::free:
         case page_status::reserved:
-            LOG_WARN("Reading free / reserved page at addr: 0x{:x}", addr);
             break;
 
         case page_status::committed:
-            memcpy(dest, &((pointers[page]).get()[page_addr - addr]), size);
+            memcpy(dest, &((pointers[page]).get()[addr % page_size]), size);
         }
 
         return;
@@ -69,7 +70,6 @@ namespace eka2l1 {
         }
 
         int page = addr / page_size;
-        uint32_t page_addr = page * page_size;
 
         switch (pages[page].sts) {
         case page_status::free:
@@ -77,8 +77,13 @@ namespace eka2l1 {
             LOG_WARN("Writing free / reserved page at addr: 0x{:x}", addr);
             break;
 
+        /* Maybe get an invalid data when the main thread is writing new page status and 
+           this threading is reading (only happens with shared and ram code).
+        
+           Block all pointers modification.
+        */
         case page_status::committed:
-            memcpy(&((pointers[page]).get()[page_addr - addr]), src, size);
+            memcpy(&((get_pointers()[page]).get()[addr % page_size]), src, size);
         }
 
         return;
@@ -98,14 +103,16 @@ namespace eka2l1 {
         int page = addr / page_size;
         uint32_t page_addr = page * page_size;
 
-        switch (pages[page].sts) {
+        switch (get_pages()[page].sts) {
         case page_status::free:
         case page_status::reserved:
             LOG_WARN("Reading free / reserved page at addr: 0x{:x}", addr);
             return nullptr;
 
+        /* This time, can't gurantee memory read/write safe, since other thread may 
+           write async with the JIT. */
         case page_status::committed:
-            return &((pointers[page]).get()[page_addr - addr]);
+            return &((get_pointers()[page]).get()[page_addr - addr]);
         }
 
         return nullptr;        

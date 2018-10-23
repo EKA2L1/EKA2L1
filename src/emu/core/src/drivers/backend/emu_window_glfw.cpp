@@ -4,16 +4,19 @@
 
 #define CALL_IF_VALID(_a, ...) if (_a) {_a( __VA_ARGS__ );}
 
+void char_callback(GLFWwindow* window, unsigned int c) {
+    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    CALL_IF_VALID(win->char_hook, c);
+}
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
     if (action == GLFW_PRESS) {
         CALL_IF_VALID(win->button_pressed, key);
-    }
-    else if (action == GLFW_RELEASE) {
-        CALL_IF_VALID(win->button_released);
-    }
-    else {
+    } else if (action == GLFW_RELEASE) {
+        CALL_IF_VALID(win->button_released, key);
+    } else {
         CALL_IF_VALID(win->button_hold, key);
     }
 }
@@ -85,6 +88,13 @@ namespace eka2l1 {
             return v;
         }
 
+        vec2d emu_window_glfw3::get_mouse_pos() {
+            vec2d v;
+            glfwGetCursorPos(emu_win, &(v[0]), &(v[1]));
+
+            return v;
+        }
+
         void emu_window_glfw3::init(std::string title, vec2 size) {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -105,6 +115,7 @@ namespace eka2l1 {
             glfwSetFramebufferSizeCallback(emu_win, &fb_resize_callback);
             glfwSetWindowCloseCallback(emu_win, &close_callback);
             glfwSetScrollCallback(emu_win, &mouse_wheel_callback);
+            glfwSetCharCallback(emu_win, &char_callback);
 
             emu_screen_size = size;
         }

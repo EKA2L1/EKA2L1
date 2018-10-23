@@ -57,10 +57,6 @@ namespace eka2l1 {
 
     void system::init() {
         exit = false;
-
-        if (!already_setup)
-            log::setup_log(nullptr);
-
         load_configs();
 
         // Initialize all the system that doesn't depend on others first

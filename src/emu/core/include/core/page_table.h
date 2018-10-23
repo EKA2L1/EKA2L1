@@ -8,6 +8,8 @@
 #include <memory>
 #include <vector>
 
+#include <mutex>
+
 enum : uint32_t {
     null_trap = 0x00000000,
     local_data = 0x00400000,
@@ -49,6 +51,11 @@ namespace eka2l1 {
     struct page_table {
         std::vector<mem_ptr> pointers;
         std::vector<page> pages;
+
+        std::vector<page> &get_pages();
+        std::vector<mem_ptr> &get_pointers();
+
+        std::mutex mut;
 
         int page_size;
 
