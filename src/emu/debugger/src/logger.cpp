@@ -1,15 +1,13 @@
 #include <debugger/logger.h>
 
 namespace eka2l1 {
-    void imgui_logger::clear() {
+    void imgui_logger::clear() { 
         buf.clear(); 
-        line_offsets.clear(); 
+        line_offsets.clear();
     }
 
     void imgui_logger::log(const char* fmt, ...) {
-        const std::lock_guard<std::mutex> guard(log_mut);
         int old_size = buf.size();
-
         va_list args;
         va_start(args, fmt);
         buf.appendfv(fmt, args);
@@ -24,14 +22,15 @@ namespace eka2l1 {
         scroll_to_bottom = true;
     }
 
-    void imgui_logger::draw(const char *title, bool* p_opened = nullptr)
-    {
+    /* Data not change but only be added, corruption is small chance */
+    void imgui_logger::draw(const char *title, bool* p_opened) {
         ImGui::SetNextWindowSize(ImVec2(500,400), ImGuiSetCond_FirstUseEver);
         ImGui::Begin(title, p_opened);
+
         if (ImGui::Button("Clear")) {
             clear();
         }
-
+        
         ImGui::SameLine();
         bool copy = ImGui::Button("Copy");
         ImGui::SameLine();
@@ -39,26 +38,26 @@ namespace eka2l1 {
         ImGui::Separator();
         ImGui::BeginChild("scrolling");
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,1));
+
         if (copy) {
             ImGui::LogToClipboard();
         }
 
-        if (filter.IsActive())
-        {
+        if (filter.IsActive()) {
             const char* buf_begin = buf.begin();
             const char* line = buf_begin;
-            for (int line_no = 0; line != NULL; line_no++)
-            {
+
+            for (int line_no = 0; line != nullptr; line_no++) {
                 const char* line_end = (line_no < line_offsets.Size) ? buf_begin + line_offsets[line_no] : NULL;
                 
                 if (filter.PassFilter(line, line_end)) {
                     ImGui::TextUnformatted(line, line_end);
                 }
 
-                line = line_end && line_end[1] ? line_end + 1 : NULL;
+                line = line_end && line_end[1] ? line_end + 1 : nullptr;
             }
         } else {
-            ImGui::TextUnformatted(buf.begin());
+            ImGui::TextUnformatted(buf.begin(), buf.end());
         }
 
         if (scroll_to_bottom) {

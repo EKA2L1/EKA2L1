@@ -25,6 +25,7 @@ struct MemoryEditor;
 
 namespace eka2l1 {
     class system;
+    struct imgui_logger;
 
     class debugger {
         system *sys;
@@ -51,9 +52,10 @@ namespace eka2l1 {
         void show_memory();
 
         std::shared_ptr<MemoryEditor> mem_editor;
+        std::shared_ptr<imgui_logger> logger;
 
     public:
-        explicit debugger(eka2l1::system *sys);
+        explicit debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger);
 
         void show_debugger(std::uint32_t width, std::uint32_t height
             , std::uint32_t fb_width, std::uint32_t fb_height);

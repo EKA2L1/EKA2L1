@@ -653,7 +653,10 @@ namespace eka2l1 {
 
                 while (temp != 0) {
                     stream.read(&temp, 1);
-                    import.dll_name += temp;
+
+                    if (temp != 0) {
+                        import.dll_name += temp;
+                    }
                 }
 
                 LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);

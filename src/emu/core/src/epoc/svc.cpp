@@ -1099,7 +1099,7 @@ namespace eka2l1::epoc {
         TDesC8 *desname = aSemaName.get(mem);
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        uint32_t sema = kern->create_sema(!desname ? "" : desname->StdString(sys),
+        uint32_t sema = kern->create_sema(!desname ? "" : desname->StdString(sys).c_str(),
             aInitCount, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
 
         if (sema == INVALID_HANDLE) {
@@ -1399,7 +1399,8 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        std::string thr_name = aThreadName.get(mem)->StdString(sys);
+        // Get rid of null terminator
+        std::string thr_name = aThreadName.get(mem)->StdString(sys).c_str();
         thread_create_info_expand *info = aInfo.get(mem);
 
         uint32_t thr_handle = kern->create_thread(static_cast<kernel::owner_type>(aOwnerType), kern->crr_process(),

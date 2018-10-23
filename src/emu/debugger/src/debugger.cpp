@@ -19,6 +19,7 @@
  */
 
 #include <debugger/debugger.h>
+#include <debugger/logger.h>
 #include <debugger/mem_editor.h>
 
 #include <imgui.h>
@@ -33,8 +34,8 @@ const ImVec4 GUI_COLOR_TEXT_TITLE = RGBA_TO_FLOAT(247, 198, 51, 255);
 const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
 
 namespace eka2l1 {
-    debugger::debugger(eka2l1::system *sys)
-        : sys(sys) {
+    debugger::debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger)
+        : sys(sys), logger(logger) {
         mem_editor = std::make_shared<MemoryEditor>(sys->get_kernel_system());
     }
 
@@ -141,13 +142,13 @@ namespace eka2l1 {
     void debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Advance")) {
-                ImGui::MenuItem("Pause", nullptr, &should_pause);
+                ImGui::MenuItem("Pause", "CTRL+P", &should_pause);
                 ImGui::MenuItem("Stop", nullptr, &should_stop);
                 ImGui::MenuItem("Load state", nullptr, &should_load_state);
                 ImGui::MenuItem("Save state", nullptr, &should_save_state);
                 ImGui::MenuItem("Install package", nullptr, &should_install_package);
-                ImGui::MenuItem("Logger", "Ctrl + Shift + L", &should_show_logger);
-                ImGui::MenuItem("Memory Viewer", "Ctrl + M", &(mem_editor->Open));
+                ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
+                ImGui::MenuItem("Memory Viewer", "CTRL+M", &(mem_editor->Open));
 
                 ImGui::EndMenu();
             }
@@ -194,6 +195,10 @@ namespace eka2l1 {
 
         if (mem_editor->Open) {
             show_memory();
+        }
+
+        if (should_show_logger) {
+            logger->draw("Logger", &should_show_logger);
         }
 
         ImGui::EndFrame();

@@ -29,11 +29,12 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <core/core.h>
+#include <core/drivers/emu_window.h>
 #include <core/loader/rom.h>
 
 #include <debugger/debugger.h>
+#include <debugger/logger.h>
 #include <debugger/renderer/renderer.h>
-#include <core/drivers/emu_window.h>
 
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
@@ -71,6 +72,7 @@ std::mutex ui_debugger_mutex;
 ImGuiContext *ui_debugger_context;
 
 bool ui_window_mouse_down[5] = { false, false, false, false, false };
+std::shared_ptr<eka2l1::imgui_logger> logger;
 
 void print_help() {
     std::cout << "Usage: Drag and drop Symbian file here, ignore missing dependencies" << std::endl;
@@ -345,8 +347,9 @@ void on_ui_window_key_press(const int key) {
 void on_ui_window_char_type(std::uint32_t c) {
     ImGuiIO &io = ImGui::GetIO();
 
-    if (c > 0 && c < 0x10000)
+    if (c > 0 && c < 0x10000) {
         io.AddInputCharacter(static_cast<unsigned short>(c));
+    }
 }
 
 int ui_debugger_thread() {
@@ -364,7 +367,7 @@ int ui_debugger_thread() {
     /* Consider main thread not touching this, no need for mutex */
     ui_debugger_context = ImGui::CreateContext();
 
-    auto debugger = std::make_shared<eka2l1::debugger>(&symsys);
+    auto debugger = std::make_shared<eka2l1::debugger>(&symsys, logger);
     auto debugger_renderer = 
         eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
 
@@ -424,7 +427,8 @@ int ui_debugger_thread() {
 int main(int argc, char **argv) {
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
 
-    log::setup_log(nullptr);
+    logger = std::make_shared<eka2l1::imgui_logger>();
+    log::setup_log(logger);
 
     read_config();
     parse_args(argc, argv);
