@@ -27,10 +27,6 @@
 
 namespace eka2l1 {
     namespace common {
-        // Given a chunk of data compress by byte-pair compression as specified by Nokia,
-        // decompress the chunk.
-        // The game which I'm testing that use this type of compression (and even its pak file),
-        // is Super Miners by ID
         int nokia_bytepair_decompress(void *destination, unsigned int dest_size, void *buffer, unsigned int buf_size) {
             uint8_t *data8 = reinterpret_cast<uint8_t *>(buffer);
             uint32_t lookup_table[0x200];

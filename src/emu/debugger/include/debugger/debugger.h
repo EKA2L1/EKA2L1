@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 
@@ -40,7 +41,7 @@ namespace eka2l1 {
         bool should_save_state;
         bool should_install_package;
         bool should_show_memory;
-
+        bool should_show_disassembler;
         bool should_show_logger;
 
         void show_threads();
@@ -50,6 +51,8 @@ namespace eka2l1 {
         void show_disassembler();
         void show_menu();
         void show_memory();
+
+        std::atomic<std::uint64_t> debug_thread_id;
 
         std::shared_ptr<MemoryEditor> mem_editor;
         std::shared_ptr<imgui_logger> logger;

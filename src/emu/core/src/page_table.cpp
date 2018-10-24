@@ -101,7 +101,6 @@ namespace eka2l1 {
         }
 
         int page = addr / page_size;
-        uint32_t page_addr = page * page_size;
 
         switch (get_pages()[page].sts) {
         case page_status::free:
@@ -112,7 +111,7 @@ namespace eka2l1 {
         /* This time, can't gurantee memory read/write safe, since other thread may 
            write async with the JIT. */
         case page_status::committed:
-            return &((get_pointers()[page]).get()[page_addr - addr]);
+            return &((get_pointers()[page]).get()[addr % page_size]);
         }
 
         return nullptr;        
