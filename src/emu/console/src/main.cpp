@@ -20,6 +20,7 @@
 
 #include <atomic>
 #include <cstring>
+#include <condition_variable>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -29,19 +30,21 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <core/core.h>
-#include <core/drivers/emu_window.h>
 #include <core/loader/rom.h>
 
 #include <debugger/debugger.h>
 #include <debugger/logger.h>
 #include <debugger/renderer/renderer.h>
 
+#include <drivers/graphics/emu_window.h>
+#include <drivers/graphics/graphics.h>
+
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
 
 using namespace eka2l1;
 
-eka2l1::system symsys;
+eka2l1::system symsys(nullptr);
 eka2l1::arm::jitter_arm_type jit_type = decltype(jit_type)::unicorn;
 epocver ever = epocver::epoc9;
 
@@ -73,6 +76,10 @@ ImGuiContext *ui_debugger_context;
 
 bool ui_window_mouse_down[5] = { false, false, false, false, false };
 std::shared_ptr<eka2l1::imgui_logger> logger;
+std::shared_ptr<eka2l1::drivers::graphics_driver> gdriver;
+
+std::mutex lock;
+std::condition_variable cond;
 
 void print_help() {
     std::cout << "Usage: Drag and drop Symbian file here, ignore missing dependencies" << std::endl;
@@ -352,14 +359,21 @@ void on_ui_window_char_type(std::uint32_t c) {
     }
 }
 
+void on_ui_window_resize(vec2 s) {
+    if (gdriver) {
+        gdriver->set_screen_size(s);
+    }
+}
+
 int ui_debugger_thread() {
-    auto debugger_window = eka2l1::driver::new_emu_window(eka2l1::driver::window_type::glfw);
+    auto debugger_window = eka2l1::drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
     
     debugger_window->raw_mouse_event = on_ui_window_mouse_evt;
     debugger_window->mouse_wheeling = on_ui_window_mouse_scrolling;
     debugger_window->button_pressed = on_ui_window_key_press;
     debugger_window->button_released = on_ui_window_key_release;
     debugger_window->char_hook = on_ui_window_char_type;
+    debugger_window->resize_hook = on_ui_window_resize;
 
     debugger_window->init("Debugging Window", eka2l1::vec2(500, 500));
     debugger_window->make_current();
@@ -371,7 +385,13 @@ int ui_debugger_thread() {
     auto debugger_renderer = 
         eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
 
-    debugger_renderer->init(debugger);
+    gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl, 
+        eka2l1::vec2(500, 500));
+
+    debugger_renderer->init(gdriver, debugger);
+
+    symsys.set_graphics_driver(gdriver);
+    cond.notify_one();
 
     ImGuiIO &io = ImGui::GetIO();
 
@@ -438,7 +458,8 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    eka2l1::driver::init_window_library(eka2l1::driver::window_type::glfw);
+    eka2l1::drivers::init_window_library(eka2l1::drivers::window_type::glfw);
+    eka2l1::drivers::init_graphics_library(eka2l1::drivers::graphic_api::opengl);
 
     try {
         init();
@@ -455,6 +476,10 @@ int main(int argc, char **argv) {
     }
 
     std::thread debug_window_thread(ui_debugger_thread);
+    std::unique_lock<std::mutex> ulock(lock);
+
+    // Wait for debug thread to intialize
+    cond.wait(ulock);
 
     try {
         while (!symsys.should_exit()) {
@@ -467,7 +492,7 @@ int main(int argc, char **argv) {
     debug_window_thread.join();
     do_quit();
 
-    eka2l1::driver::destroy_window_library(eka2l1::driver::window_type::glfw);
+    eka2l1::drivers::destroy_window_library(eka2l1::drivers::window_type::glfw);
 
     return 0;
 }

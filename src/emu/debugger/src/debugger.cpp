@@ -72,15 +72,15 @@ namespace eka2l1 {
 
     void debugger::show_threads() {
         if (ImGui::Begin("Threads", &should_show_threads)) {
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s", "ID",
-                "Thread name", "State");
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s    %-32s", "ID",
+                "Thread name", "State", "Stack", "Heap");
 
             for (const auto &obj : sys->get_kernel_system()->objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::thread) {
                     std::string obj_name = obj->name();
                     thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
 
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s    %-32s", obj->unique_id(),
+                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s    %-32s    0x%08X    0x%08X", obj->unique_id(),
                         obj_name.c_str(), thread_state_to_string(thr->current_state()));
                 }
             }

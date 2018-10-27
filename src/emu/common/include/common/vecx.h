@@ -77,6 +77,27 @@ namespace eka2l1 {
         }
     };
 
+    struct vec3: public vec2 {
+        int z;
+
+        vec3() {}
+
+        vec3(const int x, const int y, const int z)
+            : vec2(x, y), z(z) {}
+
+        vec3 operator+(const vec3 &rhs) {
+            return vec3(x + rhs.x, y + rhs.y, z + rhs.z);
+        }
+
+        vec3 operator-(const vec3 &rhs) {
+            return vec3(x - rhs.x, y - rhs.y, z -rhs.z);
+        }
+
+        vec3 operator*(const int rhs) {
+            return vec3(x * rhs, y * rhs, z * rhs);
+        }
+    };
+
     struct object_size : public vec2 {
         object_size() : vec2() {}
 

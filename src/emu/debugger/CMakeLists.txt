@@ -10,4 +10,4 @@ add_library(debugger
 )
 
 target_include_directories(debugger PUBLIC include)
-target_link_libraries(debugger PRIVATE common core imgui glad)
+target_link_libraries(debugger PRIVATE common core imgui glad drivers)

@@ -23,7 +23,7 @@
 #include <Windows.h>
 #endif
 
-#include <core/drivers/emu_window.h>
+#include <drivers/graphics/emu_window.h>
 #include <common/vecx.h>
 
 #include <glad/glad.h>
@@ -33,7 +33,7 @@
 #include <any>
 
 namespace eka2l1 {
-    namespace driver {
+    namespace drivers {
         class emu_window_glfw3 : public emu_window {
             GLFWwindow* emu_win;
             vec2 emu_screen_size;

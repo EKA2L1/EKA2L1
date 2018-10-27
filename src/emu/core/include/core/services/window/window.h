@@ -8,7 +8,9 @@
 
 #include <common/queue.h>
 
-#include <core/drivers/screen_driver.h>
+#include <drivers/graphics/graphics.h>
+#include <drivers/itc.h>
+
 #include <core/ptr.h>
 #include <core/services/server.h>
 
@@ -131,10 +133,10 @@ namespace eka2l1::epoc {
     };
 
     struct screen_device : public window_client_obj {
-        eka2l1::driver::screen_driver_ptr driver;
+        eka2l1::graphics_driver_client_ptr driver;
         int screen;
 
-        screen_device(window_server_client_ptr client, eka2l1::driver::screen_driver_ptr driver);
+        screen_device(window_server_client_ptr client, eka2l1::graphics_driver_client_ptr driver);
         void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) override;
     };
 
@@ -144,7 +146,7 @@ namespace eka2l1::epoc {
         }
 
         eka2l1::vec2 get_screen_size() const {
-            return dvc->driver->get_window_size();
+            return dvc->driver->screen_size();
         }
 
         void adjust_screen_size(const eka2l1::object_size scr_size) const {

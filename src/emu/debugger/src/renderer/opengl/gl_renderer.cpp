@@ -1,6 +1,8 @@
 #include <debugger/renderer/opengl/gl_renderer.h>
 #include <debugger/debugger.h>
 
+#include <drivers/graphics/graphics.h>
+
 #include <glad/glad.h>
 #include <imgui.h>
 
@@ -31,27 +33,17 @@ namespace eka2l1 {
     "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
     "}\n";
 
-    void debugger_gl_renderer::init(debugger_ptr &dbg)
+    void debugger_gl_renderer::init(drivers::graphics_driver_ptr driver, debugger_ptr &dbg)
     {
-        debugger_renderer::init(dbg);
-        gladLoadGL();
+        debugger_renderer::init(driver, dbg);
 
-        shader_handle = glCreateProgram();
-        vert_handle = glCreateShader(GL_VERTEX_SHADER);
-        frag_handle = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(vert_handle, 1, &vertex_shader_debugger, 0);
-        glShaderSource(frag_handle, 1, &fragment_shader_renderer, 0);
-        glCompileShader(vert_handle);
-        glCompileShader(frag_handle);
-        glAttachShader(shader_handle, vert_handle);
-        glAttachShader(shader_handle, frag_handle);
-        glLinkProgram(shader_handle);
+        shader.create(vertex_shader_debugger, 0, fragment_shader_renderer, 0);
 
-        attrib_loc_tex = glGetUniformLocation(shader_handle, "Texture");
-        attrib_loc_proj_matrix = glGetUniformLocation(shader_handle, "ProjMtx");
-        attrib_loc_pos = glGetAttribLocation(shader_handle, "Position");
-        attrib_loc_uv = glGetAttribLocation(shader_handle, "UV");
-        attrib_loc_color = glGetAttribLocation(shader_handle, "Color");
+        attrib_loc_tex = *shader.get_uniform_location("Texture");
+        attrib_loc_proj_matrix = *shader.get_uniform_location("ProjMtx");
+        attrib_loc_pos = *shader.get_attrib_location("Position");
+        attrib_loc_uv = *shader.get_attrib_location("UV");
+        attrib_loc_color = *shader.get_attrib_location("Color");
 
         glGenBuffers(1, &vbo_handle);
         glGenBuffers(1, &elements_handle);
@@ -74,17 +66,20 @@ namespace eka2l1 {
         int width, height;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-        glGenTextures(1, &font_texture);
-        glBindTexture(GL_TEXTURE_2D, font_texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(GL_LINEAR));
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLint>(GL_LINEAR));
-        glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_RGBA), width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        io.Fonts->TexID = reinterpret_cast<void*>(static_cast<int64_t>(font_texture));
+        font_texture.create(2, 0, vec3(width, height, 0), drivers::texture_format::rgba, 
+            drivers::texture_format::rgba, drivers::texture_data_type::ubyte, pixels);
+        font_texture.set_filter_minmag(true, drivers::filter_option::linear);
+        font_texture.set_filter_minmag(false, drivers::filter_option::linear);
+
+        io.Fonts->TexID = reinterpret_cast<void*>(
+            static_cast<int64_t>(font_texture.texture_handle()));
     }
 
-    void debugger_gl_renderer::deinit()
-    {
-        // TODO: Cleanup our resources
+    void debugger_gl_renderer::deinit() {
+        glDeleteVertexArrays(1, &vao_handle);
+        
+        glDeleteBuffers(1, &vbo_handle);
+        glDeleteBuffers(1, &elements_handle);
     }
 
     struct State
@@ -181,6 +176,26 @@ namespace eka2l1 {
             , std::uint32_t fb_width, std::uint32_t fb_height) {
         // Draw the imgui ui
         debugger->show_debugger(width, height, fb_width, fb_height);
+        driver->process_requests();
+
+        ImGui::Begin("Emulating Window");
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+
+        //pass the texture of the FBO
+        //window.getRenderTexture() is the texture of the FBO
+        //the next parameter is the upper left corner for the uvs to be applied at
+        //the third parameter is the lower right corner
+        //the last two parameters are the UVs
+        //they have to be flipped (normally they would be (0,0);(1,1) 
+        ImGui::GetWindowDrawList()->AddImage(
+            (ImTextureID)driver->get_render_texture_handle(),
+            ImVec2(ImGui::GetCursorScreenPos()),
+            ImVec2(ImGui::GetCursorScreenPos().x + driver->get_screen_size().x /2, 
+            ImGui::GetCursorScreenPos().y + driver->get_screen_size().y /2), 
+            ImVec2(0, 1), ImVec2(1, 0));
+
+        //we are done working with this window
+        ImGui::End();
         ImGui::Render();
 
         // Scale clip rects
@@ -214,7 +229,8 @@ namespace eka2l1 {
             {  0.0f,                    0.0f,                     -1.0f, 0.0f },
             { -1.0f,                    1.0f,                      0.0f, 1.0f },
         };
-        glUseProgram(shader_handle);
+
+        shader.use();
         glUniform1i(attrib_loc_tex, 0);
         glUniformMatrix4fv(attrib_loc_proj_matrix, 1, GL_FALSE, &ortho_projection[0][0]);
         glBindVertexArray(vao_handle);

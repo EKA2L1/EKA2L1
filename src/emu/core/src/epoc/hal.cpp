@@ -28,6 +28,7 @@
 #include <e32err.h>
 
 #include <core/epoc/des.h>
+#include <drivers/graphics/graphics.h>
 
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
     funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2))
@@ -119,7 +120,7 @@ namespace eka2l1::epoc {
             epoc::TDes8 *package = reinterpret_cast<epoc::TDes8 *>(a1);
             epoc::TVideoInfoV01 *info_ptr = reinterpret_cast<epoc::TVideoInfoV01 *>(package->Ptr(sys));
 
-            info_ptr->iSizeInPixels = sys->get_screen_driver()->get_window_size();
+            info_ptr->iSizeInPixels = sys->get_graphic_driver_client()->screen_size();
             info_ptr->iSizeInTwips = info_ptr->iSizeInPixels * 15;
             info_ptr->iIsMono = false; // This can be changed
             info_ptr->iBitsPerPixel = 3;

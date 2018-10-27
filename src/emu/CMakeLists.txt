@@ -4,6 +4,7 @@ if (WIN32)
 endif()
 
 add_subdirectory(common)
+add_subdirectory(drivers)
 add_subdirectory(core)
 add_subdirectory(scripting)
 add_subdirectory(debugger)

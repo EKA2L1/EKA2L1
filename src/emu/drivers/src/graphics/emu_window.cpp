@@ -1,8 +1,8 @@
-#include <core/drivers/emu_window.h>
-#include <core/drivers/backend/emu_window_glfw.h>
+#include <drivers/graphics/emu_window.h>
+#include <drivers/graphics/backend/emu_window_glfw.h>
 
 namespace eka2l1 {
-    namespace driver {
+    namespace drivers {
         std::shared_ptr<emu_window> new_emu_window(window_type win_type) {
             switch (win_type) {
                 case window_type::glfw: {

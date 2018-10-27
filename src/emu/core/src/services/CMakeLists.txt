@@ -46,7 +46,7 @@ target_include_directories(services PUBLIC
     ${EPOC32_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIR}) 
 
-target_link_libraries(services PRIVATE epoc common core freetype)
+target_link_libraries(services PRIVATE epoc common core drivers freetype)
 
 if (NOT MSVC)
     target_link_libraries(services PRIVATE stdc++fs)

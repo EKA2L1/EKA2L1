@@ -2,14 +2,13 @@
 
 #include <debugger/renderer/renderer.h>
 
+#include <drivers/graphics/backend/ogl/shader_ogl.h>
+#include <drivers/graphics/backend/ogl/texture_ogl.h>
+
 namespace eka2l1 {
     using GLuint = unsigned int;
     
     class debugger_gl_renderer: public debugger_renderer {
-        GLuint font_texture;
-        GLuint shader_handle;
-        GLuint vert_handle;
-        GLuint frag_handle;
         GLuint vbo_handle;
         GLuint vao_handle;
         GLuint elements_handle;
@@ -19,8 +18,11 @@ namespace eka2l1 {
         GLuint attrib_loc_uv;
         GLuint attrib_loc_color;
 
+        drivers::ogl_shader shader;
+        drivers::ogl_texture font_texture;
+
     public:
-        void init(debugger_ptr &debugger) override;
+        void init(drivers::graphics_driver_ptr driver, debugger_ptr &debugger) override;
         void draw(std::uint32_t width, std::uint32_t height
             , std::uint32_t fb_width, std::uint32_t fb_height) override;
         void deinit() override;

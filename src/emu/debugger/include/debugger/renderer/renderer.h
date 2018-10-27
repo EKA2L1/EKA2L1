@@ -7,12 +7,18 @@ namespace eka2l1 {
     class debugger;
     using debugger_ptr = std::shared_ptr<debugger>;
 
+    namespace drivers {
+        class graphics_driver;
+        using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
+    }
+
     class debugger_renderer {
     protected:
         debugger_ptr debugger;
+        drivers::graphics_driver_ptr driver;
 
     public:
-        virtual void init(debugger_ptr &debugger);
+        virtual void init(drivers::graphics_driver_ptr driver, debugger_ptr &debugger);
         virtual void draw(std::uint32_t width, std::uint32_t height
             , std::uint32_t fb_width, std::uint32_t fb_height) = 0;
         virtual void deinit() = 0;

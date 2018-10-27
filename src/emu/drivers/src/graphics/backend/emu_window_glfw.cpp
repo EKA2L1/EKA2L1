@@ -1,16 +1,16 @@
-#include <core/drivers/backend/emu_window_glfw.h>
+#include <drivers/graphics/backend/emu_window_glfw.h>
 #include <common/log.h>
 #include <common/raw_bind.h>
 
 #define CALL_IF_VALID(_a, ...) if (_a) {_a( __VA_ARGS__ );}
 
 void char_callback(GLFWwindow* window, unsigned int c) {
-    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
     CALL_IF_VALID(win->char_hook, c);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
     if (action == GLFW_PRESS) {
         CALL_IF_VALID(win->button_pressed, key);
@@ -22,7 +22,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
-    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
     if (button != GLFW_MOUSE_BUTTON_LEFT) {
         return;
@@ -50,23 +50,23 @@ void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
 }
 
 void mouse_wheel_callback(GLFWwindow *window, double xoff, double yoff) {
-    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
     CALL_IF_VALID(win->mouse_wheeling, eka2l1::vec2(xoff, yoff));
 }
 
 void fb_resize_callback(GLFWwindow* window, int width, int height) {
-    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
     CALL_IF_VALID(win->resize_hook, eka2l1::vec2(width, height));
 }
 
 void close_callback(GLFWwindow *window) {
-    eka2l1::driver::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
     CALL_IF_VALID(win->close_hook);
 }
 
 namespace eka2l1 {
-    namespace driver {
+    namespace drivers {
         const uint32_t default_width_potrait = 360;
         const uint32_t default_height_potrait = 640;
 

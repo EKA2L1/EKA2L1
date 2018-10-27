@@ -43,6 +43,8 @@
 #include <fstream>
 #include <string>
 
+#include <drivers/itc.h>
+
 namespace fs = std::experimental::filesystem;
 
 namespace eka2l1 {
@@ -72,15 +74,22 @@ namespace eka2l1 {
             get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
             get_symbian_version_use() <= epocver::epoc6 ? shared_data_end_eka1 - shared_data_eka1 : ram_code_addr - shared_data);
 
-        emu_win = driver::new_emu_window(win_type);
-        emu_screen_driver = driver::new_screen_driver(dr_type);
-
         kern.init(this, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
 
         epoc::init_hal(this);
         epoc::init_panic_descriptions();
 
         load_scripts();
+    }
+
+    system::system(drivers::driver_instance graphics_driver,
+        arm::jitter_arm_type jit_type)
+        : jit_type(jit_type) {
+        gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
+    }
+
+    void system::set_graphics_driver(drivers::driver_instance graphics_driver) {
+        gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
     }
 
     uint32_t system::load(uint32_t id) {
@@ -96,17 +105,12 @@ namespace eka2l1 {
         }
 
         if (!startup_inited) {
-            emu_win->init("EKA2L1", vec2(360, 640));
-            emu_screen_driver->init(emu_win, object_size(360, 640), object_size(15, 15));
-
-            emu_win->close_hook = [&]() {
-                exit = true;
-            };
-
             for (auto &startup_app : startup_apps) {
                 // Some ROM apps have UID3 left blank, until we figured out how to get the UID3 uniquely, we gonna just hash
                 // the path to get the UID
-                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app), common::hash(startup_app));
+                uint32_t process = kern.spawn_new_process(
+                    startup_app, eka2l1::filename(startup_app), common::hash(startup_app));
+                
                 kern.run_process(process);
             }
 
@@ -120,10 +124,6 @@ namespace eka2l1 {
         }
 
         kern.run_process(process_handle);
-
-        // Change window title to game title
-        emu_win->change_title("EKA2L1 | " + common::ucs2_to_utf8(mngr.get_package_manager()->app_name(id)) + " (" + common::to_string(id, std::hex) + ")");
-
         return process_handle;
     }
 
@@ -164,9 +164,6 @@ namespace eka2l1 {
 
             reschedule_pending = false;
         } else {
-            emu_screen_driver->shutdown();
-            emu_win->shutdown();
-
             kern.crr_process().reset();
 
             exit = true;
@@ -220,7 +217,6 @@ namespace eka2l1 {
 
     void system::reset() {
         exit = false;
-        emu_screen_driver->reset();
         hlelibmngr.reset();
     }
 

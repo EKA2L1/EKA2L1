@@ -39,15 +39,20 @@
 #include <optional>
 #include <tuple>
 
-#include <core/drivers/emu_window.h>
-#include <core/drivers/screen_driver.h>
-
 namespace eka2l1 {
     namespace epoc {
         struct hal;
     }
 
+    namespace drivers {
+        class graphics_driver_client;
+        class driver;
+
+        using driver_instance = std::shared_ptr<driver>;
+    }
+
     using hal_ptr = std::shared_ptr<epoc::hal>;
+    using graphics_driver_client_ptr = std::shared_ptr<drivers::graphics_driver_client>;
 
     /*! A system instance, where all the magic happens. 
      *
@@ -66,11 +71,7 @@ namespace eka2l1 {
         //! Jit type.
         arm::jitter_arm_type jit_type;
 
-        //! The window type to use.
-        driver::window_type win_type;
-
-        //! The driver type to use (GL, Vulkan, ...)
-        driver::driver_type dr_type;
+        graphics_driver_client_ptr gdriver_client;
 
         //! The memory system.
         memory_system mem;
@@ -106,9 +107,6 @@ namespace eka2l1 {
         epocver ver = epocver::epoc9;
         bool exit = false;
 
-        driver::emu_window_ptr emu_win;
-        driver::screen_driver_ptr emu_screen_driver;
-
         std::unordered_map<std::string, bool> bool_configs;
         std::unordered_map<uint32_t, hal_ptr> hals;
 
@@ -132,12 +130,10 @@ namespace eka2l1 {
             return bool_configs[name];
         }
 
-        system(driver::window_type emu_win_type = driver::window_type::glfw,
-            driver::driver_type emu_driver_type = driver::driver_type::opengl,
-            arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn)
-            : jit_type(jit_type)
-            , win_type(emu_win_type)
-            , dr_type(emu_driver_type) {}
+        system(drivers::driver_instance graphics_driver,
+            arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn);
+
+        void set_graphics_driver(drivers::driver_instance graphics_driver);
 
         void set_symbian_version_use(const epocver ever) {
             kern.set_epoc_version(ever);
@@ -226,12 +222,8 @@ namespace eka2l1 {
             return &gdb_stub;
         }
 
-        driver::emu_window_ptr get_emu_window() {
-            return emu_win;
-        }
-
-        driver::screen_driver_ptr get_screen_driver() {
-            return emu_screen_driver;
+        graphics_driver_client_ptr get_graphic_driver_client() {
+            return gdriver_client;
         }
 
         arm::jitter &get_cpu() {

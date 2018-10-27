@@ -30,7 +30,8 @@
 #include <optional>
 #include <string>
 
-#include <core/drivers/screen_driver.h>
+#include <drivers/graphics/graphics.h>
+#include <drivers/itc.h>
 
 namespace eka2l1::epoc {
     enum {
@@ -42,7 +43,7 @@ namespace eka2l1::epoc {
         , id(client->objects.size() + base_handle + 1) {
     }
 
-    screen_device::screen_device(window_server_client_ptr client, eka2l1::driver::screen_driver_ptr driver)
+    screen_device::screen_device(window_server_client_ptr client, eka2l1::graphics_driver_client_ptr driver)
         : window_client_obj(client)
         , driver(driver) {
     }
@@ -53,7 +54,7 @@ namespace eka2l1::epoc {
         switch (op) {
         case EWsSdOpPixelSize: {
             // This doesn't take any arguments
-            eka2l1::vec2 screen_size = driver->get_window_size();
+            eka2l1::vec2 screen_size = driver->screen_size();
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
             ctx.set_request_status(0);
 
@@ -62,7 +63,7 @@ namespace eka2l1::epoc {
 
         case EWsSdOpTwipsSize: {
             // This doesn't take any arguments
-            eka2l1::vec2 screen_size = driver->get_window_size();
+            eka2l1::vec2 screen_size = driver->screen_size();
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size * 15);
             ctx.set_request_status(0);
 
@@ -193,7 +194,7 @@ namespace eka2l1::epoc {
 
         epoc::screen_device_ptr device
             = std::make_shared<epoc::screen_device>(
-                this, ctx.sys->get_screen_driver());
+                this, ctx.sys->get_graphic_driver_client());
 
         if (!primary_device) {
             primary_device = device;

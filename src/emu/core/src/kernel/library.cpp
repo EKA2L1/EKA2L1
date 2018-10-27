@@ -27,6 +27,8 @@
 #include <core/core_kernel.h>
 #include <core/core_mem.h>
 
+#include <common/log.h>
+
 namespace eka2l1 {
     namespace kernel {
         library::library(kernel_system *kern, const std::string &lib_name, loader::romimg_ptr img)
@@ -55,6 +57,7 @@ namespace eka2l1 {
                     return std::optional<uint32_t>{};
                 }
 
+                LOG_TRACE("0x{:x}", e32_img->rt_code_addr + e32_img->ed.syms[idx - 1] - e32_img->header.code_base);
                 return e32_img->rt_code_addr + e32_img->ed.syms[idx - 1] - e32_img->header.code_base;
             }
 
