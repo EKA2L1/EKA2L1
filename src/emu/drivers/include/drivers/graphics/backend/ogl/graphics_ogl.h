@@ -39,9 +39,7 @@ namespace eka2l1::drivers {
             return framebuffer.get_size();
         }
 
-        void set_screen_size(const vec2 &s) override {
-            framebuffer.resize(s);
-        }
+        void set_screen_size(const vec2 &s) override;
 
         std::vector<std::uint8_t> get_render_texture_data(std::size_t stride) override {
             return framebuffer.data(stride);

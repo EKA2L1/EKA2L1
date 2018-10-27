@@ -360,9 +360,6 @@ void on_ui_window_char_type(std::uint32_t c) {
 }
 
 void on_ui_window_resize(vec2 s) {
-    if (gdriver) {
-        gdriver->set_screen_size(s);
-    }
 }
 
 int ui_debugger_thread() {
@@ -377,6 +374,8 @@ int ui_debugger_thread() {
 
     debugger_window->init("Debugging Window", eka2l1::vec2(500, 500));
     debugger_window->make_current();
+
+    eka2l1::drivers::init_graphics_library(eka2l1::drivers::graphic_api::opengl);
 
     /* Consider main thread not touching this, no need for mutex */
     ui_debugger_context = ImGui::CreateContext();
@@ -459,7 +458,6 @@ int main(int argc, char **argv) {
     }
 
     eka2l1::drivers::init_window_library(eka2l1::drivers::window_type::glfw);
-    eka2l1::drivers::init_graphics_library(eka2l1::drivers::graphic_api::opengl);
 
     try {
         init();

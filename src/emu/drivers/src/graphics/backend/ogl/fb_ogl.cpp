@@ -21,32 +21,34 @@
 #include <drivers/graphics/backend/ogl/fb_ogl.h>
 #include <glad/glad.h>
 
+#include <common/log.h>
+
 namespace eka2l1::drivers {
     ogl_framebuffer::ogl_framebuffer(const vec2 &size)
         : framebuffer(size) {
-        glCreateFramebuffers(1, &fbo);
-        
-        depth_buffer.create(2, 0, vec3(size.x, size.y, 0), texture_format::depth24_stencil8,
-            texture_format::depth_stencil, texture_data_type::uint_24_8, nullptr);
+        glGenFramebuffers(1, &fbo);
+        bind();
+
         texture.create(2, 0, vec3(size.x, size.y, 0), texture_format::rgba, texture_format::rgba,
             texture_data_type::ubyte, nullptr);
 
         texture.set_filter_minmag(true, drivers::filter_option::linear);
         texture.set_filter_minmag(false, drivers::filter_option::linear);
 
-        depth_buffer.set_filter_minmag(true, drivers::filter_option::linear);
-        depth_buffer.set_filter_minmag(false, drivers::filter_option::linear);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depth_buffer.texture_handle(),
-            depth_buffer.get_mip_level());
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.texture_handle(),
-            depth_buffer.get_mip_level());
+            texture.get_mip_level());
 
-        glCreateRenderbuffers(1, &rbo);
+        glGenRenderbuffers(1, &rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
         glFramebufferRenderbuffer(GL_RENDERBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            LOG_INFO("Framebuffer not complete!");
+        }
+
+        unbind();
     }
 
     ogl_framebuffer::~ogl_framebuffer() {
@@ -63,15 +65,19 @@ namespace eka2l1::drivers {
 
     void ogl_framebuffer::resize(const vec2 &s) {
         size = s;
+        bind();
+        
+        texture.change_size(vec3(size.x, size.y, 0));
 
-        if (rbo) {    
-            glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            LOG_INFO("Framebuffer not complete!");
         }
         
-        depth_buffer.change_size(vec3(size.x, size.y, 0));
-        texture.change_size(vec3(size.x, size.y, 0));
+        unbind(); 
     }
 
     std::vector<std::uint8_t> ogl_framebuffer::data(std::size_t stride_pixels) {

@@ -82,19 +82,19 @@ namespace eka2l1::drivers {
     bool ogl_texture::tex() {
         switch (dimensions) {
         case 1:
-            glTexImage1D(GL_TEXTURE_1D, mip_level, to_gl_format(internal_format), tex_size.x, 0, to_gl_format(internal_format),
+            glTexImage1D(GL_TEXTURE_1D, mip_level, to_gl_format(internal_format), tex_size.x, 0, to_gl_format(format),
                 to_gl_data_type(tex_data_type), tex_data);
 
             break;
 
         case 2: 
-            glTexImage2D(GL_TEXTURE_2D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, 0, to_gl_format(internal_format),
+            glTexImage2D(GL_TEXTURE_2D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, 0, to_gl_format(format),
                 to_gl_data_type(tex_data_type), tex_data);
 
             break;
 
         case 3:
-            glTexImage3D(GL_TEXTURE_3D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, to_gl_format(internal_format),
+            glTexImage3D(GL_TEXTURE_3D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, to_gl_format(format),
                 to_gl_data_type(tex_data_type), tex_data);
 
             break;
@@ -112,14 +112,15 @@ namespace eka2l1::drivers {
 
     bool ogl_texture::create(const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
         const texture_format format, const texture_data_type data_type, void *data) {
-        glCreateTextures(GL_TEXTURE, 1, &texture);
-        bind();
+        glGenTextures(1, &texture);
 
         dimensions = dim;
         tex_size = size;
         tex_data_type = data_type;
         tex_data = data;
         mip_level = miplvl;
+
+        bind();
 
         this->internal_format = internal_format;
         this->format = format;
@@ -154,6 +155,7 @@ namespace eka2l1::drivers {
 
         tex_data_type = data_type;
         tex_data = data;
+
         tex();
 
         unbind();

@@ -32,7 +32,6 @@ namespace eka2l1::drivers {
         std::uint32_t fbo;
         std::uint32_t rbo;
 
-        ogl_texture depth_buffer;
         ogl_texture texture;
 
     public:

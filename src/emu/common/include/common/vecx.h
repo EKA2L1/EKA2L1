@@ -24,20 +24,23 @@
 #include <array>
 #include <initializer_list>
 #include <numeric>
+#include <vector>
 
 namespace eka2l1 {
     /*! \brief A basic template type vector 
     */
-    template <typename T, int len = 2>
+    template <typename T, int SIZE>
     struct vecx {
-        std::array<T, len> elements;
+        std::vector<T> elements;
 
     public:
         T &operator[](const std::size_t idx) {
             return elements[idx];
         }
 
-        vecx() = default;
+        vecx() {
+            elements.resize(SIZE);
+        }
 
         // Allow non-explicit
         vecx(const std::initializer_list<T> list)

@@ -57,7 +57,7 @@ namespace eka2l1::drivers {
     /*! \brief Clear the screen with color.
         \params color A RGBA vector 4 color
     */
-    void graphics_driver_client::clear(vecx<int, 4> color) {
+    void graphics_driver_client::clear(vecx<float, 4> color) {
         itc_context context;
         context.push(color);
 

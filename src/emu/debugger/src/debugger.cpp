@@ -257,14 +257,6 @@ namespace eka2l1 {
     }
 
     void debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
-        ImGuiIO &io = ImGui::GetIO();
-
-        io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-        io.DisplayFramebufferScale = ImVec2(
-            width > 0 ? ((float)fb_width / width) : 0, height > 0 ? ((float)fb_height / height) : 0);
-
-        ImGui::NewFrame();
-
         show_menu();
 
         if (should_show_threads) {
@@ -290,7 +282,5 @@ namespace eka2l1 {
         if (should_show_logger) {
             logger->draw("Logger", &should_show_logger);
         }
-
-        ImGui::EndFrame();
     }
 }

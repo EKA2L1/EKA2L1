@@ -103,7 +103,7 @@ namespace eka2l1::drivers {
         /*! \brief Clear the screen with color.
             \params color A RGBA vector 4 color
         */
-        void clear(vecx<int, 4> color);
+        void clear(vecx<float, 4> color);
     };
 }
 

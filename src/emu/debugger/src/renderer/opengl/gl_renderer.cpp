@@ -174,32 +174,47 @@ namespace eka2l1 {
 
     void debugger_gl_renderer::draw(std::uint32_t width, std::uint32_t height
             , std::uint32_t fb_width, std::uint32_t fb_height) {
+        auto &io = ImGui::GetIO();
+
+        io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+        io.DisplayFramebufferScale = ImVec2(
+            width > 0 ? ((float)fb_width / width) : 0, height > 0 ? ((float)fb_height / height) : 0);
+
+        ImGui::NewFrame();
+
         // Draw the imgui ui
         debugger->show_debugger(width, height, fb_width, fb_height);
+        
         driver->process_requests();
 
         ImGui::Begin("Emulating Window");
         ImVec2 pos = ImGui::GetCursorScreenPos();
+
+        if (driver->get_screen_size().x != ImGui::GetContentRegionAvail().x
+            || driver->get_screen_size().y != ImGui::GetContentRegionAvail().y) {
+            driver->set_screen_size(vec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y));
+        }
 
         //pass the texture of the FBO
         //window.getRenderTexture() is the texture of the FBO
         //the next parameter is the upper left corner for the uvs to be applied at
         //the third parameter is the lower right corner
         //the last two parameters are the UVs
-        //they have to be flipped (normally they would be (0,0);(1,1) 
+        //they have to be flipped (normally they would be (0,0);(1,1)
         ImGui::GetWindowDrawList()->AddImage(
             (ImTextureID)driver->get_render_texture_handle(),
             ImVec2(ImGui::GetCursorScreenPos()),
-            ImVec2(ImGui::GetCursorScreenPos().x + driver->get_screen_size().x /2, 
-            ImGui::GetCursorScreenPos().y + driver->get_screen_size().y /2), 
+            ImVec2(ImGui::GetCursorScreenPos().x + driver->get_screen_size().x, 
+            ImGui::GetCursorScreenPos().y + driver->get_screen_size().y), 
             ImVec2(0, 1), ImVec2(1, 0));
 
         //we are done working with this window
         ImGui::End();
+        ImGui::EndFrame();
+
         ImGui::Render();
 
         // Scale clip rects
-        auto &io = ImGui::GetIO();
         auto drawData = ImGui::GetDrawData();
         auto fbWidth = static_cast<int>(io.DisplaySize.x * io.DisplayFramebufferScale.x);
         auto fbHeight = static_cast<int>(io.DisplaySize.y * io.DisplayFramebufferScale.y);
@@ -209,6 +224,7 @@ namespace eka2l1 {
         auto state = State {};
         saveState(state);
 
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
