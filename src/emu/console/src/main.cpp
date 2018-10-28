@@ -296,7 +296,7 @@ void set_mouse_down(const int button, const bool op) {
     ui_window_mouse_down[button] = op;
 }
 
-void on_ui_window_mouse_evt(eka2l1::point mouse_pos, int button, int action) {
+static void on_ui_window_mouse_evt(eka2l1::point mouse_pos, int button, int action) {
     ImGuiIO &io = ImGui::GetIO();
     io.MousePos = ImVec2(static_cast<float>(mouse_pos.x), 
         static_cast<float>(mouse_pos.y));
@@ -306,7 +306,7 @@ void on_ui_window_mouse_evt(eka2l1::point mouse_pos, int button, int action) {
     }
 }
 
-void on_ui_window_mouse_scrolling(eka2l1::vec2 v) {
+static void on_ui_window_mouse_scrolling(eka2l1::vec2 v) {
     ImGuiIO &io = ImGui::GetIO();
     io.MouseWheel += static_cast<float>(v.y);
 }
@@ -330,7 +330,7 @@ void on_ui_window_mouse_scrolling(eka2l1::vec2 v) {
 #define KEY_ENTER 257
 #define KEY_ESCAPE 256
 
-void on_ui_window_key_release(const int key) {
+static void on_ui_window_key_release(const int key) {
     ImGuiIO &io = ImGui::GetIO();
     io.KeysDown[key] = false;
 
@@ -340,7 +340,7 @@ void on_ui_window_key_release(const int key) {
     io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
 }
 
-void on_ui_window_key_press(const int key) {
+static void on_ui_window_key_press(const int key) {
     ImGuiIO &io = ImGui::GetIO();
     
     io.KeysDown[key] = true;
@@ -351,15 +351,12 @@ void on_ui_window_key_press(const int key) {
     io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
 }
 
-void on_ui_window_char_type(std::uint32_t c) {
+static void on_ui_window_char_type(std::uint32_t c) {
     ImGuiIO &io = ImGui::GetIO();
 
     if (c > 0 && c < 0x10000) {
         io.AddInputCharacter(static_cast<unsigned short>(c));
     }
-}
-
-void on_ui_window_resize(vec2 s) {
 }
 
 int ui_debugger_thread() {
@@ -370,7 +367,6 @@ int ui_debugger_thread() {
     debugger_window->button_pressed = on_ui_window_key_press;
     debugger_window->button_released = on_ui_window_key_release;
     debugger_window->char_hook = on_ui_window_char_type;
-    debugger_window->resize_hook = on_ui_window_resize;
 
     debugger_window->init("Debugging Window", eka2l1::vec2(500, 500));
     debugger_window->make_current();
