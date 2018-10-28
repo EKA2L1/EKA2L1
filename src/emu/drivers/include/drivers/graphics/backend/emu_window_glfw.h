@@ -49,6 +49,8 @@ namespace eka2l1 {
             void swap_buffer() override;
             void poll_events() override;
 
+            bool should_quit() override;
+
             void shutdown() override;
 
             vec2 window_size() override;

@@ -19,8 +19,8 @@
  */
 
 #include <atomic>
-#include <cstring>
 #include <condition_variable>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -32,7 +32,7 @@
 #include <core/core.h>
 #include <core/loader/rom.h>
 
-#include <debugger/debugger.h>
+#include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
 #include <debugger/renderer/renderer.h>
 
@@ -70,6 +70,10 @@ bool list_app = false;
 bool install_rpkg = false;
 
 std::atomic<bool> quit(false);
+std::atomic<bool> pause(false);
+
+bool debugger_quit = false;
+
 std::mutex ui_debugger_mutex;
 
 ImGuiContext *ui_debugger_context;
@@ -206,7 +210,7 @@ void do_args() {
 
     if (list_app) {
         for (auto &info : infos) {
-            std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: " 
+            std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: "
                       << common::ucs2_to_utf8(info.name) << " (drive: " << ((info.drive == 0) ? 'C' : 'E')
                       << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
         }
@@ -298,7 +302,7 @@ void set_mouse_down(const int button, const bool op) {
 
 static void on_ui_window_mouse_evt(eka2l1::point mouse_pos, int button, int action) {
     ImGuiIO &io = ImGui::GetIO();
-    io.MousePos = ImVec2(static_cast<float>(mouse_pos.x), 
+    io.MousePos = ImVec2(static_cast<float>(mouse_pos.x),
         static_cast<float>(mouse_pos.y));
 
     if (action == 0) {
@@ -342,9 +346,9 @@ static void on_ui_window_key_release(const int key) {
 
 static void on_ui_window_key_press(const int key) {
     ImGuiIO &io = ImGui::GetIO();
-    
+
     io.KeysDown[key] = true;
-    
+
     io.KeyCtrl = io.KeysDown[KEY_LEFT_CONTROL] || io.KeysDown[KEY_RIGHT_CONTROL];
     io.KeyShift = io.KeysDown[KEY_LEFT_SHIFT] || io.KeysDown[KEY_RIGHT_SHIFT];
     io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
@@ -361,7 +365,7 @@ static void on_ui_window_char_type(std::uint32_t c) {
 
 int ui_debugger_thread() {
     auto debugger_window = eka2l1::drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
-    
+
     debugger_window->raw_mouse_event = on_ui_window_mouse_evt;
     debugger_window->mouse_wheeling = on_ui_window_mouse_scrolling;
     debugger_window->button_pressed = on_ui_window_key_press;
@@ -376,11 +380,21 @@ int ui_debugger_thread() {
     /* Consider main thread not touching this, no need for mutex */
     ui_debugger_context = ImGui::CreateContext();
 
-    auto debugger = std::make_shared<eka2l1::debugger>(&symsys, logger);
-    auto debugger_renderer = 
-        eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
+    auto debugger = std::make_shared<eka2l1::imgui_debugger>(&symsys, logger);
+    auto debugger_renderer = eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
 
-    gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl, 
+    debugger->on_pause_toogle = [&](bool should_pause) {
+        if (should_pause != pause) {
+            if (should_pause == false && pause == true) {
+                pause = should_pause;
+                cond.notify_all();
+            }
+        }
+
+        pause = should_pause;
+    };
+
+    gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
         eka2l1::vec2(500, 500));
 
     debugger_renderer->init(gdriver, debugger);
@@ -406,15 +420,26 @@ int ui_debugger_thread() {
     io.KeyMap[ImGuiKey_DownArrow] = KEY_DOWN;
     io.KeyMap[ImGuiKey_Enter] = KEY_ENTER;
 
-    while (!quit) {
+    while (!debugger_quit) {
         vec2 nws = debugger_window->window_size();
         vec2 nwsb = debugger_window->window_fb_size();
 
         debugger_window->poll_events();
 
+        if (debugger_window->should_quit()) {
+            quit = true;
+            debugger_quit = true;
+
+            break;
+        }
+
+        // Stop the emulation but keep the debugger
+        if (debugger->should_emulate_stop()) {
+            quit = true;
+        }
+
         for (std::uint8_t i = 0; i < 5; i++) {
-            io.MouseDown[i] = ui_window_mouse_down[i] || 
-                debugger_window->get_mouse_button_hold(i);
+            io.MouseDown[i] = ui_window_mouse_down[i] || debugger_window->get_mouse_button_hold(i);
 
             set_mouse_down(i, false);
         }
@@ -425,7 +450,7 @@ int ui_debugger_thread() {
 
         debugger_renderer->draw(nws.x, nws.y, nwsb.x, nwsb.y);
         debugger_window->swap_buffer();
-        
+
         io.MouseWheel = 0;
     }
 
@@ -437,11 +462,29 @@ int ui_debugger_thread() {
     return 0;
 }
 
-#define FOREVER for (;;)
+void run() {
+    try {
+        while (!quit && !symsys.should_exit()) {
+            symsys.loop();
+
+            if (pause && !quit) {
+                std::unique_lock<std::mutex> ulock(ui_debugger_mutex);
+
+                // Wait for the other thread to unpause
+                cond.wait(ulock, [&]() {
+                    return pause == false;
+                });
+            }
+        }
+    } catch (...) {
+        std::cout << "Internal error happens in the compiler" << std::endl;
+    }
+}
 
 int main(int argc, char **argv) {
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
 
+    /* Setup the UI logger. */
     logger = std::make_shared<eka2l1::imgui_logger>();
     log::setup_log(logger);
 
@@ -475,13 +518,7 @@ int main(int argc, char **argv) {
     // Wait for debug thread to intialize
     cond.wait(ulock);
 
-    try {
-        while (!symsys.should_exit()) {
-            symsys.loop();
-        }
-    } catch (...) {
-        std::cout << "Internal error happens in the compiler" << std::endl;
-    }
+    run();
 
     debug_window_thread.join();
     do_quit();

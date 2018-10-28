@@ -22,7 +22,7 @@ namespace eka2l1 {
         drivers::ogl_texture font_texture;
 
     public:
-        void init(drivers::graphics_driver_ptr driver, debugger_ptr &debugger) override;
+        void init(drivers::graphics_driver_ptr driver, debugger_ptr debugger) override;
         void draw(std::uint32_t width, std::uint32_t height
             , std::uint32_t fb_width, std::uint32_t fb_height) override;
         void deinit() override;

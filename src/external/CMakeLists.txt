@@ -5,7 +5,6 @@ set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost
 
 add_definitions(-DCURL_STATICLIB)
 
-add_subdirectory(freetype)
 add_subdirectory(pybind11)
 add_subdirectory(spdlog)
 add_subdirectory(glfw)
@@ -91,7 +90,6 @@ set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT
 set (GTEST_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/googletest/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)
-set (FREETYPE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/freetype/include" PARENT_SCOPE)
 set (FRSML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/FRSML/include" PARENT_SCOPE)
 set (GLM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/glm" PARENT_SCOPE)
 set (EPOC32_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/epocapi/epoc32/include" PARENT_SCOPE)

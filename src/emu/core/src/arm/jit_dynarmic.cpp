@@ -30,7 +30,7 @@ namespace eka2l1 {
             void handle_thread_exception() {
                 if (parent.mem->get_real_pointer(parent.get_pc())) {
                     const std::string disassemble_inst = parent.asmdis->disassemble(
-                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(parent.get_pc())),
+                        reinterpret_cast<const uint8_t *>(parent.mem->get_real_pointer(parent.get_pc())),
                         (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
                         (parent.jit->Cpsr() & 0x20) ? true : false);
 
@@ -39,7 +39,7 @@ namespace eka2l1 {
 
                 if (parent.mem->get_real_pointer(parent.get_lr())) {
                     const std::string disassemble_inst = parent.asmdis->disassemble(
-                        reinterpret_cast<const uint8_t*>(parent.mem->get_real_pointer(parent.get_lr())),
+                        reinterpret_cast<const uint8_t *>(parent.mem->get_real_pointer(parent.get_lr())),
                         (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_lr(),
                         (parent.jit->Cpsr() & 0x20) ? true : false);
 
@@ -57,7 +57,7 @@ namespace eka2l1 {
                 thread_ptr crr_thread = parent.kern->crr_thread();
                 LOG_CRITICAL("Reading unmapped address (0x{:x}), panic thread {}", addr,
                     crr_thread->name());
-                
+
                 handle_thread_exception();
             }
 
@@ -65,7 +65,7 @@ namespace eka2l1 {
                 thread_ptr crr_thread = parent.kern->crr_thread();
                 LOG_CRITICAL("Writing unmapped address (0x{:x}), panic thread {}", addr,
                     crr_thread->name());
-                
+
                 handle_thread_exception();
             }
 
@@ -131,6 +131,16 @@ namespace eka2l1 {
                 handle_read_status(success, addr);
 
                 return ret;
+            }
+
+            std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
+                std::uint32_t code = MemoryRead32(addr);
+
+                // Check if we are near the breakpoint. If we are near, and the cpsr
+                // is currently thumb, write a thumb instruction and store the original.
+                // Else write an arm instruction of bkpt for Dynarmic
+
+                return code;
             }
 
             void MemoryWrite8(Dynarmic::A32::VAddr addr, uint8_t value) override {
@@ -295,7 +305,7 @@ namespace eka2l1 {
             return std::make_unique<Dynarmic::A32::Jit>(config);
         }
 
-        jit_dynarmic::jit_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem, 
+        jit_dynarmic::jit_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
             disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
             : timing(sys)
             , mem(mem)

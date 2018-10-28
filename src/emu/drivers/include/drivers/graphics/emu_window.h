@@ -47,6 +47,8 @@ namespace eka2l1 {
             virtual void poll_events() = 0;
             virtual void shutdown() = 0;
 
+            virtual bool should_quit() = 0;
+
 			/*! \brief Change the window title.
 			*/
             virtual void change_title(std::string) = 0;

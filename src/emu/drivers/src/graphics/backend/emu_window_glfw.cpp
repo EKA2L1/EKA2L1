@@ -95,6 +95,10 @@ namespace eka2l1 {
             return v;
         }
 
+        bool emu_window_glfw3::should_quit() {
+            return (glfwWindowShouldClose(emu_win) == GL_TRUE);
+        }
+
         void emu_window_glfw3::init(std::string title, vec2 size) {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
