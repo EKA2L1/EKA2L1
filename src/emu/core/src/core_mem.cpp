@@ -103,6 +103,8 @@ namespace eka2l1 {
 
                 return static_cast<void *>(global_pointers[(addr - shared_addr) / page_size].get() + (addr - shared_addr) % page_size);
             }
+
+            return nullptr;
         }
 
         if (!current_page_table->get_pointers()[addr / page_size]) {

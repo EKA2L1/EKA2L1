@@ -93,7 +93,7 @@ namespace eka2l1::analysis {
 
     std::uint32_t get_capstone_constant_as_number(std::string n) {
         if (n.length() >= 4 && n.substr(1, 2) == "0x") {
-            return std::stoul(n.substr(4));
+            return std::stoul(n.substr(3), 0, 16);
         }
 
         auto v = n.substr(1);
@@ -117,7 +117,7 @@ namespace eka2l1::analysis {
             }
 
             while (colon_pos != std::string::npos) {
-                std::string v = target.substr(0, colon_pos - 1);
+                std::string v = target.substr(0, colon_pos);
                 std::size_t separate_pos = v.find('-');
 
                 if (separate_pos != std::string::npos) {
@@ -131,9 +131,13 @@ namespace eka2l1::analysis {
                     result += v + ", ";
                 }
 
-                target.erase(0, colon_pos);
+                target.erase(0, colon_pos + 2);
 
-                std::size_t colon_pos = target.find_first_of(',');
+                colon_pos = target.find_first_of(',');
+            }
+
+            if (target.length() > 0) {
+                result += target;
             }
         } else {
             result = target;
@@ -267,20 +271,33 @@ namespace eka2l1::analysis {
         s.erase(0, op_end_pos + 1);
 
         i.left = std::string{};
-        std::size_t seperator = s.find_first_of(',');
+        
+        if (s[0] == '{') {
+            auto e = s.find_first_of('}');
+            i.left = expand_side(s.substr(0, e + 1));
 
-        if (seperator == std::string::npos) {
-            i.left = expand_side(s);
-            return i;
+            s.erase(0, e + 1);
+
+            if (s.substr(0, 2) == ", ") {
+                s.erase(0, 2);
+            }
+        } else {
+            std::size_t seperator = s.find_first_of(',');
+
+            if (seperator == std::string::npos) {
+                i.left = expand_side(s);
+                return i;
+            }
+
+            i.left = s.substr(0, seperator);
+            s.erase(0, seperator + 2);
+
+            i.left = expand_side(*i.left);
         }
 
-        i.left = s.substr(0, seperator);
-        s.erase(0, seperator + 2);
-
-        i.right = s;
-
-        i.left = expand_side(*i.left);
-        i.right = expand_side(*i.right);
+        if (s.length() > 0) {
+            i.right = expand_side(s);
+        }
 
         return i;
     }
@@ -291,15 +308,14 @@ namespace eka2l1::analysis {
         }) != subs.end());
     }
 
-    bool calculate_side(std::string s, std::uint32_t *ip, memory_system *mem, std::uint32_t addr) {
+    bool calculate_side(std::string s, std::uint32_t *ip, memory_system *mem, std::uint32_t addr, int opc, bool thumb) {
         std::vector<inst_reg> regs = breakup_to_regs(s);
         bool calc_value_in_expression_point_tp = (s[0] == '[');
 
-        int opc = -1;
         std::uint32_t old_ip = *ip;
 
         for (auto &reg: regs) {
-            if (static_cast<int>(reg) <= 15 && (reg != inst_reg::r12 || reg != inst_reg::r15)) {
+            if (static_cast<int>(reg) <= 15 && reg != inst_reg::r12 && reg != inst_reg::r15) {
                 return false;
             }
 
@@ -321,15 +337,19 @@ namespace eka2l1::analysis {
         }
 
         if (calc_value_in_expression_point_tp) {
-            mem->read(*ip, ip, 4);
+            std::uint32_t t = (*ip);
+            t += thumb ? 4: 8;
+            mem->read(t, ip, thumb ? 2 : 4);
         }
 
         return true;
     }
 
-    bool interpret_r12(inst &i, uint32_t *ip, memory_system *mem, uint32_t addr) {
+    bool interpret_r12(inst &i, uint32_t *ip, memory_system *mem, uint32_t addr, bool thumb) {
         if (i.is_mov_inst() || i.is_load_inst()) {
-            if (calculate_side((*i.right), ip, mem, addr)) {
+            *ip = 0;
+
+            if (calculate_side((*i.right), ip, mem, addr, 0, thumb)) {
                 return true;
             }
         } else {
@@ -346,7 +366,7 @@ namespace eka2l1::analysis {
             }
 
             if (opc != -1) {
-                if (calculate_side((*i.right), ip, mem, addr)) {
+                if (calculate_side((*i.right), ip, mem, addr, opc, thumb)) {
                     return true;
                 }
             }
@@ -363,6 +383,8 @@ namespace eka2l1::analysis {
             LOG_WARN("A branch or PC jumped here with invalid address, cut this");
             return;
         }
+
+        LOG_TRACE("Detect subroutine 0x{:x}", start);
 
         subroutine sub;
 
@@ -392,27 +414,47 @@ namespace eka2l1::analysis {
             inst i = breakup_disasm_string(dis);
 
             if (ip_caculate && i.is_reg_in_left(inst_reg::r12)) {
-                ip_caculate = interpret_r12(i, &ip, mem, start);
+                ip_caculate = interpret_r12(i, &ip, mem, start, sub.thumb);
             }
 
             if (i.is_branch_unconditional() || i.is_ldm_reg(inst_reg::r15) 
                 || i.is_mov_reg(inst_reg::r15) || i.is_load_reg(inst_reg::r15)) {
+                if (i.op == "blx") {
+                    sub.thumb = !sub.thumb;
+                } else {
+                    should_cont = false;
+                }
+
                 // PC is definitely moving
                 if (i.is_branch_unconditional()) {
                     if (i.is_left_constant()) {
-                        run_through_subroutine(subroutines, asmdis, mem, 
-                            i.get_left_as_constant());
-                    } else if (i.is_reg_in_left(inst_reg::r12) && ip_caculate) {
+                        std::uint32_t addr = i.get_left_as_constant();
+
+                        if (addr != 0) {
+                            run_through_subroutine(subroutines, asmdis, mem,
+                                addr);
+                        } else {
+                            LOG_TRACE("Nullopt for switching mode, not jumping");
+                        }
+                    } else if (i.is_reg_in_left(inst_reg::r12)) {
                         run_through_subroutine(subroutines, asmdis, mem, 
                             ip);
                     }
                 }
-
-                should_cont = false;
             } else {
                 if (i.is_branch_inst() && i.is_left_constant()) {
-                    run_through_subroutine(subroutines, asmdis, mem, 
-                        i.get_left_as_constant());
+                    if (i.op == "blx") {
+                        sub.thumb = !sub.thumb;
+                    }
+
+                    std::uint32_t addr = i.get_left_as_constant();
+
+                    if (addr != 0) {
+                        run_through_subroutine(subroutines, asmdis, mem,
+                            addr);
+                    } else {
+                        LOG_TRACE("Nullopt for switching mode, not jumping");
+                    }
                 }
             }
 
