@@ -69,8 +69,8 @@ bool help_printed = false;
 bool list_app = false;
 bool install_rpkg = false;
 
-std::atomic<bool> quit(false);
-std::atomic<bool> pause(false);
+std::atomic<bool> should_quit(false);
+std::atomic<bool> should_pause(false);
 
 bool debugger_quit = false;
 
@@ -119,7 +119,7 @@ void fetch_rpkg(const char *ver, const char *path) {
 void parse_args(int argc, char **argv) {
     if (argc <= 1) {
         print_help();
-        quit = true;
+        should_quit = true;
         return;
     }
 
@@ -131,7 +131,7 @@ void parse_args(int argc, char **argv) {
             && (!help_printed)) {
             print_help();
             help_printed = true;
-            quit = true;
+            should_quit = true;
         } else if ((strncmp(argv[i], "-ver", 4) == 0 || (strncmp(argv[i], "-v", 2) == 0))) {
             int ver = std::atoi(argv[++i]);
 
@@ -148,7 +148,7 @@ void parse_args(int argc, char **argv) {
             } catch (...) {
                 std::cout << "Invalid request." << std::endl;
 
-                quit = true;
+                should_quit = true;
                 break;
             }
         } else if (strncmp(argv[i], "-listapp", 8) == 0) {
@@ -159,7 +159,7 @@ void parse_args(int argc, char **argv) {
             } catch (...) {
                 std::cout << "Invalid request." << std::endl;
 
-                quit = true;
+                should_quit = true;
                 break;
             }
 
@@ -179,7 +179,7 @@ void parse_args(int argc, char **argv) {
         } else {
             std::cout << "Invalid request." << std::endl;
 
-            quit = true;
+            should_quit = true;
             break;
         }
     }
@@ -215,14 +215,14 @@ void do_args() {
                       << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
         }
 
-        quit = true;
+        should_quit = true;
         return;
     }
 
     if (app_idx > -1) {
         if (app_idx >= infos.size()) {
             LOG_ERROR("Invalid app index.");
-            quit = true;
+            should_quit = true;
             return;
         }
 
@@ -239,7 +239,7 @@ void do_args() {
             std::cout << "Install failed" << std::endl;
         }
 
-        quit = true;
+        should_quit = true;
     }
 
     if (install_rpkg) {
@@ -252,7 +252,7 @@ void do_args() {
             std::cout << "RPKG install successfully." << std::endl;
         }
 
-        quit = true;
+        should_quit = true;
     }
 }
 
@@ -383,15 +383,15 @@ int ui_debugger_thread() {
     auto debugger = std::make_shared<eka2l1::imgui_debugger>(&symsys, logger);
     auto debugger_renderer = eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
 
-    debugger->on_pause_toogle = [&](bool should_pause) {
-        if (should_pause != pause) {
-            if (should_pause == false && pause == true) {
-                pause = should_pause;
+    debugger->on_pause_toogle = [&](bool spause) {
+        if (spause != should_pause) {
+            if (spause == false && should_pause == true) {
+                should_pause = spause;
                 cond.notify_all();
             }
         }
 
-        pause = should_pause;
+        should_pause = spause;
     };
 
     gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
@@ -427,7 +427,7 @@ int ui_debugger_thread() {
         debugger_window->poll_events();
 
         if (debugger_window->should_quit()) {
-            quit = true;
+            should_quit = true;
             debugger_quit = true;
 
             break;
@@ -435,7 +435,7 @@ int ui_debugger_thread() {
 
         // Stop the emulation but keep the debugger
         if (debugger->should_emulate_stop()) {
-            quit = true;
+            should_quit = true;
         }
 
         for (std::uint8_t i = 0; i < 5; i++) {
@@ -464,15 +464,15 @@ int ui_debugger_thread() {
 
 void run() {
     try {
-        while (!quit && !symsys.should_exit()) {
+        while (!should_quit && !symsys.should_exit()) {
             symsys.loop();
 
-            if (pause && !quit) {
+            if (should_pause && !should_quit) {
                 std::unique_lock<std::mutex> ulock(ui_debugger_mutex);
 
                 // Wait for the other thread to unpause
                 cond.wait(ulock, [&]() {
-                    return pause == false;
+                    return should_pause == false;
                 });
             }
         }
@@ -491,7 +491,7 @@ int main(int argc, char **argv) {
     read_config();
     parse_args(argc, argv);
 
-    if (quit) {
+    if (should_quit) {
         do_quit();
         return 0;
     }
@@ -502,7 +502,7 @@ int main(int argc, char **argv) {
         init();
         do_args();
 
-        if (quit) {
+        if (should_quit) {
             do_quit();
             return 0;
         }
