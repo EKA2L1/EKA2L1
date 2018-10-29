@@ -153,24 +153,24 @@ namespace eka2l1 {
             if (mode & READ_MODE) {
                 if (mode & BIN_MODE) {
                     if (mode & WRITE_MODE) {
-                        return "rwb";
+                        return "rb+";
                     }
 
                     return "rb";
                 } else if (mode & WRITE_MODE) {
-                    return "rw";
+                    return "r+";
                 }
 
                 return "r";
             } else if (mode & WRITE_MODE) {
                 if (mode & BIN_MODE) {
-                    return "wb";
+                    return "wb+";
                 }
 
                 return "w";
             } else if (mode & APPEND_MODE) {
                 if (mode & BIN_MODE) {
-                    return "ab";
+                    return "ab+";
                 }
 
                 return "a";
