@@ -147,6 +147,8 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy_all_processes() {
+        SYNCHRONIZE_ACCESS;
+
         for (auto &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
                 obj.reset();
@@ -256,28 +258,43 @@ namespace eka2l1 {
         thread_ptr new_thread = std::make_shared<kernel::thread>(this, mem, timing, own_pr, access,
             name, epa, stack_size, min_heap_size, max_heap_size, initial, usrdata, allocator, pri);
 
-        objects.push_back(std::move(new_thread));
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_thread));
+        }
 
         return create_handle_lastest(owner);
     }
 
     uint32_t kernel_system::create_server(std::string name) {
         server_ptr new_server = std::make_shared<service::server>(sys, name);
-        objects.push_back(std::move(new_server));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_server));
+        }
 
         return create_handle_lastest(kernel::owner_type::kernel);
     }
 
     uint32_t kernel_system::create_session(server_ptr cnn_svr, int async_slots) {
         session_ptr new_session = std::make_shared<service::session>(this, cnn_svr, async_slots);
-        objects.push_back(std::move(new_session));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_session));
+        }
 
         return create_handle_lastest(kernel::owner_type::thread);
     }
 
     uint32_t kernel_system::create_prop(kernel::owner_type owner) {
         property_ptr new_prop = std::make_shared<service::property>(this);
-        objects.push_back(std::move(new_prop));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_prop));
+        }
 
         return create_handle_lastest(owner);
     }
@@ -294,7 +311,11 @@ namespace eka2l1 {
         add_custom_server(std::move(ps_srv));
 
         get_thread_by_handle(pr->primary_thread)->owning_process(pr);
-        objects.push_back(std::move(pr));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(pr));
+        }
 
         return create_handle_lastest(own);
     }
@@ -311,7 +332,11 @@ namespace eka2l1 {
         add_custom_server(std::move(ps_srv));
 
         get_thread_by_handle(pr->primary_thread)->owning_process(pr);
-        objects.push_back(std::move(pr));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(pr));
+        }
 
         return create_handle_lastest(own);
     }
@@ -319,7 +344,11 @@ namespace eka2l1 {
     uint32_t kernel_system::create_library(const std::string &name, loader::romimg_ptr &img,
         kernel::owner_type own) {
         library_ptr lib = std::make_shared<kernel::library>(this, name, img);
-        objects.push_back(std::move(lib));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(lib));
+        }
 
         return create_handle_lastest(own);
     }
@@ -327,7 +356,11 @@ namespace eka2l1 {
     uint32_t kernel_system::create_library(const std::string &name, loader::e32img_ptr &img,
         kernel::owner_type own) {
         library_ptr lib = std::make_shared<kernel::library>(this, name, img);
-        objects.push_back(std::move(lib));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(lib));
+        }
 
         return create_handle_lastest(own);
     }
@@ -362,6 +395,8 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
+        SYNCHRONIZE_ACCESS;
+
         auto obj_ite = std::find_if(objects.begin(), objects.end(), [=](kernel_obj_ptr &obj2) {
             return obj && obj2 && (obj2->unique_id() == obj->unique_id());   
         });
@@ -467,8 +502,6 @@ namespace eka2l1 {
     }
 
     std::vector<process_ptr> kernel_system::get_all_processes() {
-        const std::lock_guard<std::mutex> guard(mut);
-
         std::vector<process_ptr> process_list;
 
         for (kernel_obj_ptr &obj : objects) {

@@ -79,6 +79,7 @@ std::mutex ui_debugger_mutex;
 ImGuiContext *ui_debugger_context;
 
 bool ui_window_mouse_down[5] = { false, false, false, false, false };
+
 std::shared_ptr<eka2l1::imgui_logger> logger;
 std::shared_ptr<eka2l1::drivers::graphics_driver> gdriver;
 

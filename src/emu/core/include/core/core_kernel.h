@@ -47,6 +47,8 @@
 #include <mutex>
 
 namespace eka2l1 {
+    #define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
+
     class timing_system;
     class memory_system;
     class manager_system;
@@ -87,7 +89,7 @@ namespace eka2l1 {
         std::array<ipc_msg_ptr, 0x1000> msgs;
 
         /* End kernel objects map */
-        std::mutex mut;
+        std::mutex kern_lock;
         std::shared_ptr<kernel::thread_scheduler> thr_sch;
 
         std::vector<kernel_obj_ptr> objects;
@@ -222,6 +224,7 @@ namespace eka2l1 {
         std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type);
 
         void add_custom_server(server_ptr svr) {
+            SYNCHRONIZE_ACCESS;
             objects.push_back(std::move(std::dynamic_pointer_cast<kernel::kernel_obj>(svr)));
         }
 

@@ -77,6 +77,8 @@ namespace eka2l1 {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s    %-32s", "ID",
                 "Thread name", "State", "Stack", "Heap");
 
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+
             for (const auto &obj : sys->get_kernel_system()->objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::thread) {
                     std::string obj_name = obj->name();
@@ -96,6 +98,8 @@ namespace eka2l1 {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s", "ID",
                 "Mutex name");
 
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+
             for (const auto &obj : sys->get_kernel_system()->objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::mutex) {
                     std::string obj_name = obj->name();
@@ -113,6 +117,8 @@ namespace eka2l1 {
         if (ImGui::Begin("Chunks", &should_show_chunks)) {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-8s    %-8s    %-8s    %-8s      %-32s", "ID",
                 "Chunk name", "Base", "Bottom", "Top", "Max", "Creator process");
+
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
             for (const auto &obj : sys->get_kernel_system()->objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::chunk) {
@@ -138,12 +144,17 @@ namespace eka2l1 {
             std::vector<thread_ptr> threads;
             thread_ptr debug_thread = nullptr;
 
-            for (const auto &obj : sys->get_kernel_system()->objects) {
-                if (obj && obj->get_object_type() == kernel::object_type::thread) {
-                    threads.push_back(std::dynamic_pointer_cast<kernel::thread>(obj));
+            // Thread can't be deleted, but there can be data race when a new thread is added
+            {
+                const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-                    if (debug_thread_id == obj->unique_id()) {
-                        debug_thread = threads.back();
+                for (const auto &obj : sys->get_kernel_system()->objects) {
+                    if (obj && obj->get_object_type() == kernel::object_type::thread) {
+                        threads.push_back(std::dynamic_pointer_cast<kernel::thread>(obj));
+
+                        if (debug_thread_id == obj->unique_id()) {
+                            debug_thread = threads.back();
+                        }
                     }
                 }
             }

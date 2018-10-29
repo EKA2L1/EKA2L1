@@ -51,6 +51,8 @@ namespace eka2l1 {
                 crr_thread->stop();
                 parent.save_context(crr_thread->get_thread_context());
                 dump_context(crr_thread->get_thread_context());
+
+                parent.stop();
             }
 
             void invalid_memory_read(const Dynarmic::A32::VAddr addr) {
@@ -134,7 +136,8 @@ namespace eka2l1 {
             }
 
             std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
-                std::uint32_t code = MemoryRead32(addr);
+                std::uint32_t code = 
+                    *reinterpret_cast<std::uint32_t*>(parent.page_table_dyn[addr / parent.mem->get_page_size()] + addr % parent.mem->get_page_size());
 
                 // Check if we are near the breakpoint. If we are near, and the cpsr
                 // is currently thumb, write a thumb instruction and store the original.
