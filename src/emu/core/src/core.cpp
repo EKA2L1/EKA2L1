@@ -44,7 +44,6 @@
 #include <string>
 
 #include <drivers/itc.h>
-#include <debugger/analysis/analysis.h>
 
 namespace fs = std::experimental::filesystem;
 
@@ -99,8 +98,6 @@ namespace eka2l1 {
 
         for (const auto &force_load_lib : force_load_libs) {
             loader::romimg_ptr img = hlelibmngr.load_romimg(common::utf8_to_ucs2(force_load_lib), false);
-
-            auto a = analysis::analysis_image(*img, &asmdis, &mem);
 
             if (img) {
                 hlelibmngr.open_romimg(img);
