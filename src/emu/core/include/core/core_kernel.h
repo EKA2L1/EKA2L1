@@ -80,7 +80,7 @@ namespace eka2l1 {
     };
 
     class kernel_system {
-        friend class debugger;
+        friend class debugger_base;
         friend class imgui_debugger;
 
         friend class process;

@@ -17,6 +17,7 @@ target_link_libraries(arm
 	coremem 
     coretiming
     corekernel
+    debugger
 	disasm
     dynarmic
     gdbstub

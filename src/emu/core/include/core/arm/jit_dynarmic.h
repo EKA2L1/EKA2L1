@@ -61,6 +61,8 @@ namespace eka2l1 {
 
             gdbstub *stub;
 
+            debugger_ptr debugger;
+
             std::array<uint8_t *,
                 Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
                 page_table_dyn;
@@ -83,7 +85,7 @@ namespace eka2l1 {
             }
 
             jit_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem, 
-                disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
+                disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger);
                 
             ~jit_dynarmic();
 

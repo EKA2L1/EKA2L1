@@ -60,6 +60,19 @@ namespace eka2l1 {
         bool read(address addr, void *data, uint32_t size);
         bool write(address addr, void *data, uint32_t size);
 
+        template <typename T>
+        T read(address addr) {
+            T data{};
+            read(addr, &data, sizeof(T));
+
+            return data;
+        }
+
+        template <typename T>
+        bool write(address addr, const T &val) {
+            return write(addr, &val, sizeof(T));
+        }
+
         // Create a new chunk with specified address. Return base of chunk
         ptr<void> chunk(address addr, uint32_t bottom, uint32_t top, uint32_t max_grow, prot cprot);
         ptr<void> chunk_range(address beg_addr, address end_addr, uint32_t bottom, uint32_t top, uint32_t max_grow, prot cprot);

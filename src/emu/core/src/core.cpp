@@ -68,7 +68,7 @@ namespace eka2l1 {
         mngr.init(this, &io);
         asmdis.init(&mem);
 
-        cpu = arm::create_jitter(&kern, &timing, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, jit_type);
+        cpu = arm::create_jitter(&kern, &timing, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, debugger, jit_type);
 
         mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
             get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
@@ -82,7 +82,7 @@ namespace eka2l1 {
         load_scripts();
     }
 
-    system::system(drivers::driver_instance graphics_driver,
+    system::system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
         arm::jitter_arm_type jit_type)
         : jit_type(jit_type) {
         gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
@@ -228,8 +228,6 @@ namespace eka2l1 {
             return false;
         }
 
-        // Post build, install folders
-        const std::string install_folder = io.get("Z:\\system\\install\\");
         return true;
     }
 

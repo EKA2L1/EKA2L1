@@ -11,6 +11,7 @@
 #include <core/core_timing.h>
 #include <core/hle/libmanager.h>
 
+#include <debugger/debugger.h>
 #include <dynarmic/A32/context.h>
 
 namespace eka2l1 {
@@ -34,16 +35,21 @@ namespace eka2l1 {
                         (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
                         (parent.jit->Cpsr() & 0x20) ? true : false);
 
-                    LOG_TRACE("Last instruction: {}", disassemble_inst);
+                    LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (parent.jit->Cpsr() & 0x20) ? parent.mem->read<std::uint16_t>(parent.get_pc()) : parent.mem->read<std::uint32_t>(parent.get_pc()));
                 }
 
-                if (parent.mem->get_real_pointer(parent.get_lr())) {
+                if (parent.mem->get_real_pointer(parent.get_lr() - parent.get_lr() % 2)) {
                     const std::string disassemble_inst = parent.asmdis->disassemble(
-                        reinterpret_cast<const uint8_t *>(parent.mem->get_real_pointer(parent.get_lr())),
-                        (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_lr(),
-                        (parent.jit->Cpsr() & 0x20) ? true : false);
+                        reinterpret_cast<const uint8_t *>(parent.mem->get_real_pointer(parent.get_lr() - parent.get_lr() % 2)),
+                        parent.get_lr() % 2 != 0 ? 2 : 4, parent.get_lr() - parent.get_lr() % 2,
+                        parent.get_lr() % 2 != 0 ? true : false);
 
-                    LOG_TRACE("LR instruction: {}", disassemble_inst);
+                    LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, -parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) : parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
+
+                    // LOG_TRACE("{}", parent.asmdis->disassemble(
+                    //    reinterpret_cast<const uint8_t *>(parent.mem->get_real_pointer(parent.get_lr() - parent.get_lr() % 2 - 4)),
+                    //    4, parent.get_lr() - parent.get_lr() % 2 - 4,
+                    //    true));
                 }
 
                 thread_ptr crr_thread = parent.kern->crr_thread();
@@ -81,6 +87,23 @@ namespace eka2l1 {
                 if (!status) {
                     invalid_memory_write(addr);
                 }
+            }
+
+            std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
+                if (parent.debugger) {
+                    bool is_thumb = parent.get_cpsr() & 0x20;
+                    auto bkpt = parent.debugger->get_nearest_breakpoint(addr);
+
+                    if (bkpt->addr == addr) {
+                        parent.debugger->set_breakpoint(addr, true);
+                    } else {
+                        if (is_thumb && bkpt->addr == addr + 2) {
+                            parent.debugger->set_breakpoint(addr, true);
+                        }
+                    }
+                }
+
+                return MemoryRead32(addr);
             }
 
             uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {
@@ -133,17 +156,6 @@ namespace eka2l1 {
                 handle_read_status(success, addr);
 
                 return ret;
-            }
-
-            std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
-                std::uint32_t code = 
-                    *reinterpret_cast<std::uint32_t*>(parent.page_table_dyn[addr / parent.mem->get_page_size()] + addr % parent.mem->get_page_size());
-
-                // Check if we are near the breakpoint. If we are near, and the cpsr
-                // is currently thumb, write a thumb instruction and store the original.
-                // Else write an arm instruction of bkpt for Dynarmic
-
-                return code;
             }
 
             void MemoryWrite8(Dynarmic::A32::VAddr addr, uint8_t value) override {
@@ -309,7 +321,7 @@ namespace eka2l1 {
         }
 
         jit_dynarmic::jit_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
-            disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
+            disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
@@ -318,7 +330,8 @@ namespace eka2l1 {
             , stub(stub)
             , kern(kern)
             , fallback_jit(kern, sys, mngr, mem, asmdis, lmngr, stub)
-            , cb(std::make_unique<arm_dynarmic_callback>(*this)) {
+            , cb(std::make_unique<arm_dynarmic_callback>(*this))
+            , debugger(debugger) {
             jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
         }
 

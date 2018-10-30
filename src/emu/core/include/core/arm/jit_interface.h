@@ -23,6 +23,9 @@
 #include <common/types.h>
 
 namespace eka2l1 {
+    class debugger_base;
+    using debugger_ptr = std::shared_ptr<debugger_base>;
+
     namespace arm {
         /*! \brief An interface to all JIT implementation */
         class jit_interface {

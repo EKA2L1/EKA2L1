@@ -28,7 +28,6 @@ namespace eka2l1 {
         virtual void unset_breakpoint(const std::uint32_t bkpt);
 
         std::optional<debug_breakpoint> get_nearest_breakpoint(const std::uint32_t bkpt);
-        void set_breakpoint_hit(const std::uint32_t bkpt, bool hit);
 
         virtual void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width,
             std::uint32_t fb_height) {}

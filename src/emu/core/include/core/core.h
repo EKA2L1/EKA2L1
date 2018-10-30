@@ -51,6 +51,9 @@ namespace eka2l1 {
         using driver_instance = std::shared_ptr<driver>;
     }
 
+    class debugger_base;
+    using debugger_ptr = std::shared_ptr<debugger_base>;
+
     using hal_ptr = std::shared_ptr<epoc::hal>;
     using graphics_driver_client_ptr = std::shared_ptr<drivers::graphics_driver_client>;
 
@@ -96,6 +99,8 @@ namespace eka2l1 {
 
         gdbstub gdb_stub;
 
+        debugger_ptr debugger;
+
         //! The ROM
         /*! This is the information parsed
          * from the ROM, used as utility.
@@ -125,15 +130,19 @@ namespace eka2l1 {
         bool save_snapshot_processes(const std::string &path,
             const std::vector<uint32_t> &inclue_uids);
 
-     public :
+    public:
         bool get_bool_config(const std::string name) {
             return bool_configs[name];
         }
 
-        system(drivers::driver_instance graphics_driver,
+        system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
             arm::jitter_arm_type jit_type = arm::jitter_arm_type::unicorn);
 
         void set_graphics_driver(drivers::driver_instance graphics_driver);
+
+        void set_debugger(debugger_ptr new_debugger) {
+            debugger = std::move(new_debugger);
+        }
 
         void set_symbian_version_use(const epocver ever) {
             kern.set_epoc_version(ever);
@@ -235,9 +244,14 @@ namespace eka2l1 {
 
         void reset();
 
+        /*! \brief Install an Z drive repackage. 
+         *
+         * \returns True on success.
+         */
         bool install_rpkg(const std::string &path);
         void load_scripts();
 
+        /*! \brief Install a SIS/SISX. */
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);
 

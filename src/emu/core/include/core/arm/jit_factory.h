@@ -46,7 +46,7 @@ namespace eka2l1 {
 
         /*! Create a jitter. A JITter is unique by itself. */
         jitter create_jitter(kernel_system *kern, timing_system *timing, manager_system *mngr, memory_system *mem,
-            disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, jitter_arm_type arm_type);
+            disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger, jitter_arm_type arm_type);
     }
 }
 

@@ -44,7 +44,7 @@
 
 using namespace eka2l1;
 
-eka2l1::system symsys(nullptr);
+eka2l1::system symsys(nullptr, nullptr);
 eka2l1::arm::jitter_arm_type jit_type = decltype(jit_type)::unicorn;
 epocver ever = epocver::epoc9;
 
@@ -82,6 +82,7 @@ bool ui_window_mouse_down[5] = { false, false, false, false, false };
 
 std::shared_ptr<eka2l1::imgui_logger> logger;
 std::shared_ptr<eka2l1::drivers::graphics_driver> gdriver;
+std::shared_ptr<eka2l1::imgui_debugger> debugger;
 
 std::mutex lock;
 std::condition_variable cond;
@@ -260,6 +261,7 @@ void do_args() {
 void init() {
     symsys.set_symbian_version_use(ever);
     symsys.set_jit_type(jit_type);
+    symsys.set_debugger(debugger);
 
     symsys.init();
     symsys.mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
@@ -380,8 +382,6 @@ int ui_debugger_thread() {
 
     /* Consider main thread not touching this, no need for mutex */
     ui_debugger_context = ImGui::CreateContext();
-
-    auto debugger = std::make_shared<eka2l1::imgui_debugger>(&symsys, logger);
     auto debugger_renderer = eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
 
     debugger->on_pause_toogle = [&](bool spause) {
@@ -498,6 +498,7 @@ int main(int argc, char **argv) {
     }
 
     eka2l1::drivers::init_window_library(eka2l1::drivers::window_type::glfw);
+    debugger = std::make_shared<eka2l1::imgui_debugger>(&symsys, logger);
 
     try {
         init();
