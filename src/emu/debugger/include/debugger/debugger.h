@@ -24,8 +24,12 @@ namespace eka2l1 {
         
         virtual bool should_emulate_stop() = 0;
 
-        virtual void set_breakpoint(const std::uint32_t bkpt, const bool hit = false);
+        virtual void set_breakpoint(const std::uint32_t bkpt, const bool hit = false,
+            const bool new_one = false);
         virtual void unset_breakpoint(const std::uint32_t bkpt);
+
+        virtual void wait_for_debugger() = 0;
+        virtual void notify_clients() = 0;
 
         std::optional<debug_breakpoint> get_nearest_breakpoint(const std::uint32_t bkpt);
 

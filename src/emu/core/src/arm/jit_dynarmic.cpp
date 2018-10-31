@@ -35,7 +35,8 @@ namespace eka2l1 {
                         (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
                         (parent.jit->Cpsr() & 0x20) ? true : false);
 
-                    LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (parent.jit->Cpsr() & 0x20) ? parent.mem->read<std::uint16_t>(parent.get_pc()) : parent.mem->read<std::uint32_t>(parent.get_pc()));
+                    LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (parent.jit->Cpsr() & 0x20) ? parent.mem->read<std::uint16_t>(parent.get_pc()) : 
+                        parent.mem->read<std::uint32_t>(parent.get_pc()));
                 }
 
                 if (parent.mem->get_real_pointer(parent.get_lr() - parent.get_lr() % 2)) {
@@ -44,12 +45,8 @@ namespace eka2l1 {
                         parent.get_lr() % 2 != 0 ? 2 : 4, parent.get_lr() - parent.get_lr() % 2,
                         parent.get_lr() % 2 != 0 ? true : false);
 
-                    LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, -parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) : parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
-
-                    // LOG_TRACE("{}", parent.asmdis->disassemble(
-                    //    reinterpret_cast<const uint8_t *>(parent.mem->get_real_pointer(parent.get_lr() - parent.get_lr() % 2 - 4)),
-                    //    4, parent.get_lr() - parent.get_lr() % 2 - 4,
-                    //    true));
+                    LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, -parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) :
+                        parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
                 }
 
                 thread_ptr crr_thread = parent.kern->crr_thread();
@@ -59,6 +56,7 @@ namespace eka2l1 {
                 dump_context(crr_thread->get_thread_context());
 
                 parent.stop();
+                parent.debugger->wait_for_debugger();
             }
 
             void invalid_memory_read(const Dynarmic::A32::VAddr addr) {
@@ -94,11 +92,21 @@ namespace eka2l1 {
                     bool is_thumb = parent.get_cpsr() & 0x20;
                     auto bkpt = parent.debugger->get_nearest_breakpoint(addr);
 
-                    if (bkpt->addr == addr) {
+                    if (bkpt && (bkpt->addr == addr) && !bkpt->is_hit) {
                         parent.debugger->set_breakpoint(addr, true);
+                        LOG_TRACE("Breakpoint hit at address 0x{:x}", addr);
+
+                        parent.debugger->wait_for_debugger();
+                        parent.debugger->set_breakpoint(addr, false);
                     } else {
-                        if (is_thumb && bkpt->addr == addr + 2) {
+                        if (bkpt && (is_thumb) && (bkpt->addr == addr + 2)
+                            && !bkpt->is_hit) {
                             parent.debugger->set_breakpoint(addr, true);
+
+                            LOG_TRACE("Breakpoint hit at address 0x{:x}", addr + 2);
+
+                            parent.debugger->wait_for_debugger();
+                            parent.debugger->set_breakpoint(addr, false);
                         }
                     }
                 }
@@ -216,6 +224,8 @@ namespace eka2l1 {
                     LOG_TRACE("Unknown instruction by Dynarmic raised in thread {}",
                         crr_thread->name());
 
+                    parent.debugger->wait_for_debugger();
+
                     break;
                 }
 
@@ -239,6 +249,8 @@ namespace eka2l1 {
                 default: {
                     thread_ptr crr_thread = parent.kern->crr_thread();
                     LOG_WARN("Exception Raised at thread {}", crr_thread->name());
+
+                    parent.debugger->wait_for_debugger();
 
                     break;
                 }

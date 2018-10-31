@@ -33,6 +33,7 @@ const ImVec4 GUI_COLOR_TEXT_MENUBAR = RGBA_TO_FLOAT(242, 150, 58, 255);
 const ImVec4 GUI_COLOR_TEXT_MENUBAR_OPTIONS = RGBA_TO_FLOAT(242, 150, 58, 255);
 const ImVec4 GUI_COLOR_TEXT_TITLE = RGBA_TO_FLOAT(247, 198, 51, 255);
 const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
+const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125, 251, 143, 255);
 
 namespace eka2l1 {
     imgui_debugger::imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger)
@@ -74,8 +75,9 @@ namespace eka2l1 {
 
     void imgui_debugger::show_threads() {
         if (ImGui::Begin("Threads", &should_show_threads)) {
+            // Only the stack are created by the OS
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s    %-32s", "ID",
-                "Thread name", "State", "Stack", "Heap");
+                "Thread name", "State", "Stack");
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
@@ -84,8 +86,10 @@ namespace eka2l1 {
                     std::string obj_name = obj->name();
                     thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
 
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s    %-32s    0x%08X    0x%08X", obj->unique_id(),
-                        obj_name.c_str(), thread_state_to_string(thr->current_state()));
+                    chunk_ptr chnk = thr->get_stack_chunk();
+
+                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s    %-32s    0x%08X", obj->unique_id(),
+                        obj_name.c_str(), thread_state_to_string(thr->current_state()), chnk->base().ptr_address());
                 }
             }
         }
@@ -235,6 +239,92 @@ namespace eka2l1 {
         mem_editor->DrawWindow("Memory Editor");
     }
 
+    void imgui_debugger::show_breakpoint_list() {
+        ImGui::Begin("Breakpoints", &should_show_breakpoint_list);
+
+        ImGuiStyle& style = ImGui::GetStyle();
+        
+        const float height_separator = style.ItemSpacing.y;
+        float footer_height = height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
+
+        ImGui::BeginChild("##breakpoints_scroll", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove);
+        ImGuiListClipper clipper(breakpoints.size(), ImGui::GetTextLineHeight());
+
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-8s        %-32s", "Number",
+            "Address");
+
+        for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+            std::string bkpt_info;
+            bkpt_info.resize(22);
+            
+            sprintf(&bkpt_info[0], "0x%08X    0x%08X", i, breakpoints[i].addr);
+
+            bool pushed = false;
+
+            if (modify_element == i) {
+                ImGui::PushStyleColor(ImGuiCol_Text, GUI_COLOR_TEXT_SELECTED);
+                pushed = true;
+            }
+
+            if (ImGui::Selectable(bkpt_info.c_str(), i == modify_element)) {
+                modify_element = i;
+            }
+
+            if (pushed) {
+                ImGui::PopStyleColor();
+            }
+        }
+
+        clipper.End();
+        ImGui::EndChild();
+
+        ImGui::Separator();
+        
+        std::string buf;
+        buf.resize(18);
+
+        if (ImGui::InputText("", &buf[0], 18)) {
+            try {
+                if (buf.substr(0, 2) == "0x") {
+                    buf = buf.c_str();
+                    addr = std::stoul(buf, 0, 16);
+                } else {
+                    addr = std::atol(buf.data());
+                }
+            } catch (...) {
+                addr = 0;
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Add")) {
+            if (addr != 0) {
+                set_breakpoint(addr, false, true);
+                addr = 0;
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Remove")) {
+            if (addr != 0) {
+                unset_breakpoint(addr);
+                addr = 0;
+            } else if (modify_element != -1) {
+                unset_breakpoint(breakpoints[modify_element].addr);
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Deselect")) {
+            modify_element = -1;
+        }
+
+        ImGui::End();
+    }
+
     void imgui_debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Miscs")) {
@@ -250,10 +340,11 @@ namespace eka2l1 {
                 ImGui::MenuItem("Pause", "CTRL+P", &should_pause);
                 ImGui::MenuItem("Stop", nullptr, &should_stop);
 
-                ImGui::NewLine();
+                ImGui::Separator();
 
                 ImGui::MenuItem("Memory Viewer", "CTRL+M", &(mem_editor->Open));
                 ImGui::MenuItem("Disassembler", nullptr, &should_show_disassembler);
+                ImGui::MenuItem("Breakpoints", nullptr, &should_show_breakpoint_list);
 
                 ImGui::EndMenu();
             }
@@ -292,10 +383,25 @@ namespace eka2l1 {
             show_disassembler();
         }
 
+        if (should_show_breakpoint_list) {
+            show_breakpoint_list();
+        }
+
         on_pause_toogle(should_pause);
 
         if (should_show_logger) {
             logger->draw("Logger", &should_show_logger);
         }
+    }
+
+    void imgui_debugger::wait_for_debugger() {
+        should_pause = true;
+
+        std::unique_lock ulock(debug_lock);
+        debug_cv.wait(ulock);
+    }
+
+    void imgui_debugger::notify_clients() {
+        debug_cv.notify_all();
     }
 }

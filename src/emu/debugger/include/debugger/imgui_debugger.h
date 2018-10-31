@@ -20,7 +20,9 @@
 
 #include <atomic>
 #include <cstdint>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 
 #include <debugger/debugger.h>
 
@@ -45,6 +47,7 @@ namespace eka2l1 {
         bool should_show_memory;
         bool should_show_disassembler;
         bool should_show_logger;
+        bool should_show_breakpoint_list;
 
         void show_threads();
         void show_mutexs();
@@ -53,11 +56,18 @@ namespace eka2l1 {
         void show_disassembler();
         void show_menu();
         void show_memory();
+        void show_breakpoint_list();
 
         std::atomic<std::uint64_t> debug_thread_id;
 
         std::shared_ptr<MemoryEditor> mem_editor;
         std::shared_ptr<imgui_logger> logger;
+
+        std::uint32_t addr = 0;
+        std::int32_t modify_element = -1;
+
+        std::mutex debug_lock;
+        std::condition_variable debug_cv;
 
     public:
         explicit imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger);
@@ -68,5 +78,8 @@ namespace eka2l1 {
 
         void show_debugger(std::uint32_t width, std::uint32_t height
             , std::uint32_t fb_width, std::uint32_t fb_height) override;
+
+        void wait_for_debugger() override;
+        void notify_clients() override;
     };
 }

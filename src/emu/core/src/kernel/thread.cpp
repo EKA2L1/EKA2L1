@@ -627,5 +627,10 @@ namespace eka2l1 {
             logon_requests.clear();
             rendezvous_requests.clear();
         }
+
+        chunk_ptr thread::get_stack_chunk() {
+            return std::dynamic_pointer_cast<kernel::chunk>(
+                kern->get_kernel_obj(stack_chunk));
+        }
     }
 }

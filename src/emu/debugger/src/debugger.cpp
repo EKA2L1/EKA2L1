@@ -22,20 +22,21 @@
 #include <debugger/debugger.h>
 
 namespace eka2l1 {
-    void debugger_base::set_breakpoint(const std::uint32_t bkpt_addr, const bool hit) {
+    void debugger_base::set_breakpoint(const std::uint32_t bkpt_addr, const bool hit,
+        const bool new_one) {
         const std::lock_guard<std::mutex> guard(lock);
 
         auto bkpt = std::find_if(breakpoints.begin(), breakpoints.end(), [bkpt_addr](debug_breakpoint &b) {
             return b.addr == bkpt_addr;
         });
 
-        if (bkpt == breakpoints.end()) {
+        if (bkpt == breakpoints.end() && new_one) {
             breakpoints.push_back(debug_breakpoint{ bkpt_addr, hit });
-        }
 
-        std::sort_heap(breakpoints.begin(), breakpoints.end(), [](const debug_breakpoint &lhs, const debug_breakpoint &rhs) {
-            return lhs.addr < rhs.addr;
-        });
+            std::stable_sort(breakpoints.begin(), breakpoints.end(), [](const debug_breakpoint &lhs, const debug_breakpoint &rhs) {
+                return lhs.addr < rhs.addr;
+            });
+        }
     }
 
     void debugger_base::unset_breakpoint(const std::uint32_t bkpt_addr) {
@@ -47,14 +48,18 @@ namespace eka2l1 {
 
         if (bkpt != breakpoints.end()) {
             breakpoints.erase(bkpt);
-        }
 
-        std::sort_heap(breakpoints.begin(), breakpoints.end(), [](const debug_breakpoint &lhs, const debug_breakpoint &rhs) {
-            return lhs.addr < rhs.addr;
-        });
+            std::stable_sort(breakpoints.begin(), breakpoints.end(), [](const debug_breakpoint &lhs, const debug_breakpoint &rhs) {
+                return lhs.addr < rhs.addr;
+            });
+        }
     }
 
      std::optional<debug_breakpoint> debugger_base::get_nearest_breakpoint(const std::uint32_t bkpt) {
+        if (breakpoints.size() == 0) {
+            return std::optional<debug_breakpoint>{};
+        }
+
         for (std::size_t i = 0; i < breakpoints.size(); i++) {
             if (breakpoints[i].addr > bkpt) {
                 if (i == 0) {
@@ -65,6 +70,6 @@ namespace eka2l1 {
             }
         }
 
-        return std::optional<debug_breakpoint>{};
+        return breakpoints[breakpoints.size() - 1];
     }
 }

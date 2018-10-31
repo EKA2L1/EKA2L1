@@ -20,6 +20,8 @@
 #pragma once
 
 #include <array>
+#include <memory>
+
 #include <common/types.h>
 
 namespace eka2l1 {

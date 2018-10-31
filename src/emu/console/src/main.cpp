@@ -384,11 +384,12 @@ int ui_debugger_thread() {
     ui_debugger_context = ImGui::CreateContext();
     auto debugger_renderer = eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
 
+    /* This will be called by the debug thread */
     debugger->on_pause_toogle = [&](bool spause) {
         if (spause != should_pause) {
             if (spause == false && should_pause == true) {
                 should_pause = spause;
-                cond.notify_all();
+                debugger->notify_clients();
             }
         }
 
@@ -431,6 +432,9 @@ int ui_debugger_thread() {
             should_quit = true;
             debugger_quit = true;
 
+            // Notify that debugger is dead
+            debugger->notify_clients();
+
             break;
         }
 
@@ -456,8 +460,10 @@ int ui_debugger_thread() {
     }
 
     ImGui::DestroyContext();
+
     debugger_renderer->deinit();
     debugger_window->done_current();
+
     debugger_window->shutdown();
 
     return 0;
@@ -469,12 +475,7 @@ void run() {
             symsys.loop();
 
             if (should_pause && !should_quit) {
-                std::unique_lock<std::mutex> ulock(ui_debugger_mutex);
-
-                // Wait for the other thread to unpause
-                cond.wait(ulock, [&]() {
-                    return should_pause == false;
-                });
+                debugger->wait_for_debugger();
             }
         }
     } catch (...) {
