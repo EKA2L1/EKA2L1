@@ -294,6 +294,8 @@ namespace eka2l1 {
             } catch (...) {
                 addr = 0;
             }
+
+            addr -= addr % 2;
         }
 
         ImGui::SameLine();

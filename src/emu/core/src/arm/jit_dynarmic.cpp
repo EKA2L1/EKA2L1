@@ -13,9 +13,58 @@
 
 #include <debugger/debugger.h>
 #include <dynarmic/A32/context.h>
+#include <dynarmic/A32/coprocessor.h>
 
 namespace eka2l1 {
     namespace arm {
+        class arm_dynarmic_cp15 : public Dynarmic::A32::Coprocessor {
+        public:
+            using coproc_reg = Dynarmic::A32::CoprocReg;
+
+            explicit arm_dynarmic_cp15() {
+
+            }
+
+            ~arm_dynarmic_cp15() override {
+
+            }
+
+            boost::optional<Callback> CompileInternalOperation(bool two, unsigned opc1, coproc_reg CRd,
+                coproc_reg CRn, coproc_reg CRm,
+                unsigned opc2) override {
+                return boost::none;
+            }
+
+            CallbackOrAccessOneWord CompileSendOneWord(bool two, unsigned opc1, coproc_reg CRn,
+                coproc_reg CRm, unsigned opc2) override {
+                return boost::blank{};
+            }
+
+            CallbackOrAccessTwoWords CompileSendTwoWords(bool two, unsigned opc, coproc_reg CRm) override {
+                return boost::blank{};
+            }
+
+            CallbackOrAccessOneWord CompileGetOneWord(bool two, unsigned opc1, coproc_reg CRn, coproc_reg CRm,
+                unsigned opc2) override {
+                return boost::blank{};
+            }
+
+            CallbackOrAccessTwoWords CompileGetTwoWords(bool two, unsigned opc, coproc_reg CRm) override {
+                return boost::blank{};
+            }
+
+            boost::optional<Callback> CompileLoadWords(bool two, bool long_transfer, coproc_reg CRd,
+                boost::optional<std::uint8_t> option) override {
+                return boost::none;
+            }
+
+            boost::optional<Callback> CompileStoreWords(bool two, bool long_transfer, coproc_reg CRd,
+                boost::optional<std::uint8_t> option) override {
+                return boost::none;
+            }
+        };
+
+
         class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
             jit_dynarmic &parent;
             uint64_t interpreted = 0;
@@ -35,8 +84,7 @@ namespace eka2l1 {
                         (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
                         (parent.jit->Cpsr() & 0x20) ? true : false);
 
-                    LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (parent.jit->Cpsr() & 0x20) ? parent.mem->read<std::uint16_t>(parent.get_pc()) : 
-                        parent.mem->read<std::uint32_t>(parent.get_pc()));
+                    LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (parent.jit->Cpsr() & 0x20) ? parent.mem->read<std::uint16_t>(parent.get_pc()) : parent.mem->read<std::uint32_t>(parent.get_pc()));
                 }
 
                 if (parent.mem->get_real_pointer(parent.get_lr() - parent.get_lr() % 2)) {
@@ -45,8 +93,7 @@ namespace eka2l1 {
                         parent.get_lr() % 2 != 0 ? 2 : 4, parent.get_lr() - parent.get_lr() % 2,
                         parent.get_lr() % 2 != 0 ? true : false);
 
-                    LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, -parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) :
-                        parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
+                    LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, -parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) : parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
                 }
 
                 thread_ptr crr_thread = parent.kern->crr_thread();
@@ -92,21 +139,19 @@ namespace eka2l1 {
                     bool is_thumb = parent.get_cpsr() & 0x20;
                     auto bkpt = parent.debugger->get_nearest_breakpoint(addr);
 
+                    // 0x70BE for Thumb bkpt instruction
+                    // 0x70BE20E1 for ARM bkpt instruction
                     if (bkpt && (bkpt->addr == addr) && !bkpt->is_hit) {
-                        parent.debugger->set_breakpoint(addr, true);
-                        LOG_TRACE("Breakpoint hit at address 0x{:x}", addr);
+                        if (is_thumb) {
+                            return (0xBE70 << 16) | (MemoryRead16(addr + 2));
+                        }
 
-                        parent.debugger->wait_for_debugger();
-                        parent.debugger->set_breakpoint(addr, false);
+
+                        return 0xE120BE70;
                     } else {
                         if (bkpt && (is_thumb) && (bkpt->addr == addr + 2)
                             && !bkpt->is_hit) {
-                            parent.debugger->set_breakpoint(addr, true);
-
-                            LOG_TRACE("Breakpoint hit at address 0x{:x}", addr + 2);
-
-                            parent.debugger->wait_for_debugger();
-                            parent.debugger->set_breakpoint(addr, false);
+                            return (MemoryRead16(addr) << 16) | (0xBE70);
                         }
                     }
                 }
@@ -243,6 +288,33 @@ namespace eka2l1 {
                         stub->send_trap_gdb(crr_thread, 5);
                     }
 
+                    if (parent.debugger) {
+                        auto bkpt = parent.debugger->get_nearest_breakpoint(pc);
+
+                        if (bkpt) {
+                            parent.debugger->set_breakpoint(bkpt->addr, true);
+                            LOG_TRACE("Breakpoint hit at address 0x{:x}", bkpt->addr);
+                        } else {
+                            LOG_TRACE("Breakpoint deleted but cache still exist, hit with pc after: 0x{:x}", pc);
+                        }
+
+                        parent.save_context(parent.kern->crr_thread()->get_thread_context());
+
+                        parent.debugger->wait_for_debugger();
+
+                        if (bkpt) {
+                            parent.debugger->set_breakpoint(bkpt->addr, false);
+                        }
+
+                        parent.stop();
+                        parent.set_pc(pc);
+
+                        parent.save_context(parent.kern->crr_thread()->get_thread_context());
+
+                        // Delete the cache so it will reread the instruction
+                        parent.clear_instruction_cache();
+                    }
+
                     return;
                 }
 
@@ -318,6 +390,7 @@ namespace eka2l1 {
             std::unique_ptr<arm_dynarmic_callback> &callback, page_table *table) {
             Dynarmic::A32::UserConfig config;
             config.callbacks = callback.get();
+            config.coprocessors[15] = std::make_shared<arm_dynarmic_cp15>();
 
             if (table) {
                 using config_table_array = decltype(*config.page_table);
