@@ -57,7 +57,9 @@ namespace eka2l1 {
                     return std::optional<uint32_t>{};
                 }
 
-                LOG_TRACE("{}-{} (0x{:x}) 0x{:x}", obj_name, idx, e32_img->rt_code_addr, e32_img->rt_code_addr + e32_img->ed.syms[idx - 1] - e32_img->header.code_base);
+                LOG_TRACE("{}-{} (0x{:x}) 0x{:x}", obj_name, idx, e32_img->rt_code_addr, e32_img->rt_code_addr + 
+                    e32_img->ed.syms[idx - 1] - e32_img->header.code_base);
+
                 return e32_img->rt_code_addr + e32_img->ed.syms[idx - 1] - e32_img->header.code_base;
             }
 
@@ -156,9 +158,11 @@ namespace eka2l1 {
             stream.read(&lib_type, sizeof(lib_type));
 
             if (lib_type == e32_img_library) {
-                e32_img = kern->get_lib_manager()->load_e32img(common::utf8_to_ucs2(obj_name));
+                e32_img = kern->get_lib_manager()->load_e32img(
+                    common::utf8_to_ucs2(obj_name));
             } else {
-                rom_img = kern->get_lib_manager()->load_romimg(common::utf8_to_ucs2(obj_name));
+                rom_img = kern->get_lib_manager()->load_romimg(
+                    common::utf8_to_ucs2(obj_name));
             }
         }
     }

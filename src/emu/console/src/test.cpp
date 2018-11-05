@@ -21,6 +21,19 @@ int main(int argc, char **argv) {
 
     sys.get_lib_manager()->open_e32img(img);
 
+    eka2l1::loader::e32img_ptr imgcommon = 
+        sys.get_lib_manager()->load_e32img(u"mpxcommon.dll");
+
+    // Test library address
+    std::uint32_t lib_handle = sys.get_kernel_system()->create_library("Test", imgcommon, 
+        eka2l1::kernel::owner_type::kernel);
+
+    eka2l1::library_ptr lib = std::dynamic_pointer_cast<eka2l1::kernel::library>
+        (sys.get_kernel_system()->get_kernel_obj(lib_handle));
+
+    auto att = lib->attach();
+    auto addr = lib->get_ordinal_address(1);
+
     sys.shutdown();
     return 0;
 }
