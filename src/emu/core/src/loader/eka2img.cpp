@@ -146,9 +146,10 @@ namespace eka2l1 {
             loader::e32img_ptr img = mngr.load_e32img(dll_name);
             loader::romimg_ptr rimg;
 
-            if (!img)
+            if (!img) {
                 rimg = mngr.load_romimg(dll_name);
-
+            }
+            
             uint32_t *imdir = &(import_block.ordinals[0]);
             uint32_t *expdir;
 
@@ -166,33 +167,24 @@ namespace eka2l1 {
                 if (img) {
                     mngr.open_e32img(img);
 
-                    code_start = img->rt_code_addr;
-                    data_start = img->rt_data_addr;
-                    code_end = code_start + img->header.code_size;
-                    data_end = data_start + img->header.data_size;
+                    const std::uint32_t data_start = img->rt_data_addr;
+                    const std::uint32_t data_end = data_start + img->header.data_size;
 
-                    code_delta = img->rt_code_addr - img->header.code_base;
-                    data_delta = img->rt_data_addr - img->header.data_base;
+                    const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
+                    const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
 
                     expdir = img->ed.syms.data();
 
                     for (auto &exp : img->ed.syms) {
-                        if (exp > img->header.data_offset && exp < img->header.data_offset + img->header.data_size)
+                        // Add with the relative section delta.
+                        if (exp > data_start && exp < data_end) {
                             exp += data_delta;
-                        else
+                        } else {
                             exp += code_delta;
+                        }
                     }
                 } else {
                     mngr.open_romimg(rimg);
-
-                    code_start = rimg->header.code_address;
-                    code_end = code_start + rimg->header.code_size;
-                    data_start = rimg->header.data_address;
-                    data_end = data_start + rimg->header.data_size + rimg->header.bss_size;
-
-                    code_delta = 0;
-                    data_delta = 0;
-
                     expdir = rimg->exports.data();
                 }
             }
@@ -222,16 +214,8 @@ namespace eka2l1 {
                 rimg = mngr.load_romimg(dll_name);
             }
 
-            uint32_t *imdir = &(import_block.ordinals[0]);
-            uint32_t *expdir;
-
-            uint32_t code_start;
-            uint32_t code_end;
-            uint32_t data_start;
-            uint32_t data_end;
-
-            uint32_t code_delta;
-            uint32_t data_delta;
+            std::uint32_t *imdir = &(import_block.ordinals[0]);
+            std::uint32_t *expdir;
 
             if (!img && !rimg) {
                 LOG_WARN("Can't find image or rom image for: {}", dll_name8);
@@ -240,34 +224,24 @@ namespace eka2l1 {
                 if (img) {
                     mngr.open_e32img(img);
 
-                    code_start = img->rt_code_addr;
-                    data_start = img->rt_data_addr;
-                    code_end = code_start + img->header.code_size;
-                    data_end = data_start + img->header.data_size;
+                    const std::uint32_t data_start = img->rt_data_addr;
+                    const std::uint32_t data_end = data_start + img->header.data_size;
 
-                    code_delta = img->rt_code_addr - img->header.code_base;
-                    data_delta = img->rt_data_addr - img->header.data_base;
+                    const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
+                    const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
 
                     expdir = img->ed.syms.data();
 
                     for (auto &exp : img->ed.syms) {
-                        if (exp > img->header.data_offset && exp < img->header.data_offset + img->header.data_size)
+                        // Add with the relative section delta.
+                        if (exp > data_start && exp < data_end) {
                             exp += data_delta;
-                        else
+                        } else {
                             exp += code_delta;
+                        }
                     }
-
                 } else {
                     mngr.open_romimg(rimg);
-
-                    code_start = rimg->header.code_address;
-                    code_end = code_start + rimg->header.code_size;
-                    data_start = rimg->header.data_address;
-                    data_end = data_start + rimg->header.data_size + rimg->header.bss_size;
-
-                    code_delta = 0;
-                    data_delta = 0;
-
                     expdir = rimg->exports.data();
                 }
             }
@@ -298,15 +272,12 @@ namespace eka2l1 {
                         }
                     }
 
-                    if (export_addr >= code_start && export_addr <= code_end) {
-                        section_delta = code_delta;
-                    } else {
-                        section_delta = data_delta;
-                    }
-
-                    val = export_addr + section_delta + adj;
+                    // The export address provided is already added with relative code/data
+                    // delta, so add this directly to the adjustment address
+                    val = export_addr + adj;
                 }
 
+                // LOG_TRACE("Writing 0x{:x} to 0x{:x}", val, me.header.code_base + off);
                 write(code_ptr, val);
             }
 
@@ -595,7 +566,6 @@ namespace eka2l1 {
                     auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
                     auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
                 }
-
             } else {
                 img.uncompressed_size = static_cast<uint32_t>(file_size);
 
