@@ -22,13 +22,13 @@
 #include <common/types.h>
 
 #include <array>
+#include <atomic>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 
-// VFS
 namespace eka2l1 {
     class memory_system;
 
@@ -213,12 +213,16 @@ namespace eka2l1 {
 
     struct entry_info {
         io_attrib attribute;
+        int raw_attribute;
+
+        bool has_raw_attribute = false;
 
         std::string name;
         std::string full_path;
 
         io_component_type type;
-        size_t size;
+        std::size_t size;
+        std::uint64_t last_write;
     };
 
     struct directory : public io_component {
@@ -235,55 +239,164 @@ namespace eka2l1 {
         virtual std::optional<entry_info> peek_next_entry() = 0;
     };
 
+    enum class abstract_file_system_err_code {
+        unsupported,
+        failed,
+        no,
+        ok
+    };
+
+    /* \brief An abstract filesystem
+    */
+    class abstract_file_system {
+    public:
+        virtual bool exists(const std::u16string &path) = 0;
+        virtual bool replace(const std::u16string &old_path, const std::u16string &new_path) = 0;
+
+        /*! \brief Mount a drive with a physical host path.
+        */
+        virtual bool mount_volume_from_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+            const std::u16string &physical_path) {
+            return false;
+        }
+
+        virtual bool unmount(const drive_number drv) = 0;
+
+        virtual std::shared_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
+        virtual std::shared_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) = 0;
+
+        virtual std::optional<entry_info> get_entry_info(const std::u16string &path) = 0;
+
+        virtual abstract_file_system_err_code is_entry_in_rom(const std::u16string &path) {
+            return abstract_file_system_err_code::unsupported;
+        }
+
+        virtual bool delete_entry(const std::u16string &path) = 0;
+        virtual bool create_directories(const std::u16string &path) = 0;
+
+        virtual std::optional<drive> get_drive_entry(const drive_number drv) = 0;
+
+        virtual void set_epoc_version(const epocver ver) {
+            return;
+        }
+
+        virtual std::optional<std::u16string> get_raw_path(const std::u16string &path) = 0;
+    };
+
+    std::shared_ptr<abstract_file_system> create_physical_filesystem(epocver ver);
+    std::shared_ptr<abstract_file_system> create_rom_filesystem(loader::rom *rom_cache, memory_system *mem,
+        epocver ver);
+
+    using file_system_inst = std::shared_ptr<abstract_file_system>;
+    using filesystem_id = std::size_t;
+
     class io_system {
-        std::map<std::string, symfile> file_caches;
-        std::array<drive, drive_count> drives;
+        std::map<filesystem_id, file_system_inst> filesystems;
+        std::mutex access_lock;
 
-        loader::rom *rom_cache;
-
-        std::string pref_path;
-
-        std::mutex mut;
-
-        memory_system *mem;
-
-        std::optional<drive> find_dvc(std::string vir_path);
-
-        // Burn the tree down and look for entry in the dust
-        std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path);
-
-        epocver ver;
+        std::atomic<filesystem_id> id_counter;
 
     public:
-        // Initialize the IO system
-        void init(memory_system *smem, epocver ever);
+        void init();
 
-        void set_epoc_version(epocver ever) {
-            ver = ever;
-        }
+        void set_epoc_version(const epocver ver);
 
-        void set_rom_cache(loader::rom *cache) {
-            rom_cache = cache;
-        }
+        std::optional<std::u16string> get_raw_path(const std::u16string &path);
+        
+        /*! \brief Add a new file system to the IO system
+        *
+        * Each filesystem will be assigned an ID for management.
+        * 
+        * \returns The filesystem ID in the IO system if success.
+        */
+        std::optional<filesystem_id> add_filesystem(file_system_inst &inst);
 
-        // Shutdown the IO system
+        /*! \brief Remove the filesystem from the IO system
+        */
+        bool remove_filesystem(const filesystem_id id);
+
+        /*! \brief Check if the file exist in VFS.
+        *
+        * Iterates through all filesystem. If at least one filesystem
+        * report that this file exist, stop and returns true. Else
+        * return false.
+        */
+        bool exist(const std::u16string &path);
+
+        /*! \brief Replace the old file with new file.
+        *
+        * Iterates through all system and rename until at least one FS reports
+        * that the operation success.
+        * 
+        * \params old_path The target path.
+        * \params new_path The new path to replaced the old.
+        */
+        bool rename(const std::u16string &old_path, const std::u16string &new_path);
+
+        /*! \brief Shutdown the IO system.
+        */
         void shutdown();
 
-        // Mount a physical path to a device
-        void mount(const drive_number dvc, const drive_media media, const std::string &real_path,
+        /*! \brief Mount a physical path.
+        *
+        * Call all filesystem trying to mount this drive. Continue
+        * until all fail or one success.
+        * 
+        * \returns True if at least one file system can mount this drive.
+        */
+        bool mount_physical_path(const drive_number dvc, const drive_media media, const io_attrib attrib,
+            const std::u16string &path);
+
+        /*! \brief Unount a drive.
+        *
+        * Call all filesystem trying to unmount this drive. Continue
+        * until all fail or one success.
+        * 
+        * \returns True if at least one file system can unmount this drive.
+        */
+        bool unmount(const drive_number dvc);
+
+        /*! \brief Check if the entry provided is a directory
+        *
+        * \returns False if the entry doesn't exist or is not a directory.
+        */
+        bool is_directory(const std::u16string &path);
+
+        /*! \brief Open the file in guest.
+        *
+        * \returns Null if the file doesn't exist or can't be open with given mode.
+        */
+        std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
+
+        /*! \brief Open the directory in guest.
+        */
+        std::shared_ptr<directory> open_dir(std::u16string vir_path, 
             const io_attrib attrib = io_attrib::none);
 
-        // Unmount a device
-        void unmount(const drive_number dvc);
+        /*! \brief Get a drive info.
+        */
+        std::optional<drive> get_drive_entry(const drive_number drv);
 
-        // Map a virtual path to real path. Return "" if this can't be mapped to real
-        std::string get(std::string vir_path);
+        /*! \brief Get entry info of a directory/file/socket.
+        *
+        * Note that ROM file/directory is only given the raw attribute (that
+        * Symbian use), if there is a ROM Filesystem added.
+        * 
+        * \returns Nullopt if the given path doesn't exist, else the info
+        */
+        std::optional<entry_info> get_entry_info(const std::u16string &path);
 
-        // Open a file. Return is a shared pointer of the file interface.
-        std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
-        std::shared_ptr<directory> open_dir(std::u16string vir_path, const io_attrib attrib = io_attrib::none);
+        /*! \brief Check the entry is in ROM or not
+        *
+        * All filesystems will returns an error code to either tell
+        * the IO that it supported or is the entry actually in the filesystem,
+        * here the case is ROM. 
+        */
+        bool is_entry_in_rom(const std::u16string &path);
 
-        drive get_drive_entry(drive_number drv);
+        bool delete_entry(const std::u16string &path);
+
+        bool create_directories(const std::u16string &path);
     };
 
     symfile physical_file_proxy(const std::string &path, int mode);

@@ -377,10 +377,10 @@ namespace eka2l1 {
                             info.drive = 1;
                         }
 
-                        FILE *f = fopen(io->get(common::ucs2_to_utf8(file_des->target.unicode_string)).data(), "rb");
-                        fseek(f, 8, SEEK_SET);
-                        fread(&info.id, 1, 4, f);
-                        fclose(f);
+                        symfile f = io->open_file(file_des->target.unicode_string, READ_MODE | BIN_MODE);
+                        f->seek(8, file_seek_mode::beg);
+                        f->read_file(&info.id, 1, 4);
+                        f->close();
                     }
 
                     LOG_INFO("Executable_name: {}", std::string(info.executable_name.begin(), info.executable_name.end()));
@@ -390,11 +390,11 @@ namespace eka2l1 {
                     else
                         info.executable_name[0] = u'E';
 
-                    FILE *f = fopen(io->get(common::ucs2_to_utf8(info.executable_name)).data(), "rb");
-                    fseek(f, 8, SEEK_SET);
-                    fread(&info.id, 1, 4, f);
-                    fclose(f);
-
+                    symfile f = io->open_file(file_des->target.unicode_string, READ_MODE | BIN_MODE);
+                    f->seek(8, file_seek_mode::beg);
+                    f->read_file(&info.id, 1, 4);
+                    f->close();
+                
                     // Get file name
                     size_t slash_pos = info.executable_name.find_last_of(u"\\");
 

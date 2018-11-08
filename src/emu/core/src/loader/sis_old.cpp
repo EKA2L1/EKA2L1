@@ -125,8 +125,8 @@ namespace eka2l1::loader {
                 }
 
                 if (file.record.file_type != 1 && dest != u"") {
-                    std::string rp = eka2l1::file_directory(io->get(common::ucs2_to_utf8(dest)));
-                    eka2l1::create_directories(rp);
+                    std::string rp = eka2l1::file_directory(common::ucs2_to_utf8(dest));
+                    io->create_directories(common::utf8_to_ucs2(rp));
                 } else {
                     continue;
                 }

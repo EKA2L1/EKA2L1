@@ -153,6 +153,8 @@ namespace eka2l1 {
             uint32_t *imdir = &(import_block.ordinals[0]);
             uint32_t *expdir;
 
+            std::vector<std::uint32_t> relocated_export_addresses;
+
             uint32_t code_start;
             uint32_t code_end;
             uint32_t data_start;
@@ -167,13 +169,14 @@ namespace eka2l1 {
                 if (img) {
                     mngr.open_e32img(img);
 
-                    const std::uint32_t data_start = img->rt_data_addr;
+                    const std::uint32_t data_start = img->header.data_offset;
                     const std::uint32_t data_end = data_start + img->header.data_size;
 
                     const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
                     const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
 
-                    expdir = img->ed.syms.data();
+                    relocated_export_addresses.assign(img->ed.syms.begin(), img->ed.syms.end());
+                    expdir = relocated_export_addresses.data();
 
                     for (auto &exp : img->ed.syms) {
                         // Add with the relative section delta.
@@ -280,7 +283,7 @@ namespace eka2l1 {
                     val = export_addr + adj;
                 }
 
-                LOG_TRACE("Writing 0x{:x} to 0x{:x}", val, me.header.code_base + off);
+                // LOG_TRACE("Writing 0x{:x} to 0x{:x}", val, me.header.code_base + off);
                 write(code_ptr, val);
             }
 

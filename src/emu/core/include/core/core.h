@@ -120,6 +120,8 @@ namespace eka2l1 {
 
         bool startup_inited = false;
 
+        std::optional<filesystem_id> rom_fs_id = std::nullopt;
+
         /*! \brief Load the core configs.
         */
         void load_configs();

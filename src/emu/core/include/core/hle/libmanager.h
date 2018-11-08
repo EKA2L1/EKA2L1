@@ -102,8 +102,6 @@ namespace eka2l1 {
             std::map<uint32_t, e32img_inf> e32imgs_cache;
             std::map<uint32_t, romimg_inf> romimgs_cache;
 
-            void load_all_sids(const epocver ver);
-
             io_system *io;
             memory_system *mem;
             kernel_system *kern;

@@ -34,10 +34,10 @@ namespace fs = std::experimental::filesystem;
 namespace eka2l1 {
     namespace loader {
         bool extract_file(io_system *io, FILE *parent, rpkg_entry &ent) {
-            std::string real_path = io->get(common::ucs2_to_utf8(ent.path));
+            std::string real_path = common::ucs2_to_utf8(ent.path);
 
             std::string dir = eka2l1::file_directory(real_path);
-            create_directories(dir);
+            io->create_directories(common::utf8_to_ucs2(dir));
 
             FILE *wf
                 = fopen(real_path.c_str(), "wb");

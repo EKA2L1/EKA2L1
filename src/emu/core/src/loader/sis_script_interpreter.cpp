@@ -326,8 +326,10 @@ namespace eka2l1 {
                     sis_file_des *file = (sis_file_des *)(wrap_file.get());
                     std::string raw_path = "";
 
-                    if (file->target.unicode_string.length() > 0)
-                        raw_path = io->get(get_install_path(file->target.unicode_string, install_drive));
+                    if (file->target.unicode_string.length() > 0) {
+                        raw_path = common::ucs2_to_utf8(*(io->get_raw_path(
+                            common::utf8_to_ucs2(get_install_path(file->target.unicode_string, install_drive)))));
+                    }
 
                     if (file->op == ss_op::EOpText) {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);

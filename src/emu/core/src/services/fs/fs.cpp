@@ -166,6 +166,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_flush, EFsFileFlush, "Fs::FileFlush");
         REGISTER_IPC(fs_server, file_rename, EFsFileRename, "Fs::FileRename(Move)");
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
+        REGISTER_IPC(fs_server, file_create, EFsFileCreate, "Fs::FileCreate");
         REGISTER_IPC(fs_server, file_close, EFsFileSubClose, "Fs::FileSubClose");
         REGISTER_IPC(fs_server, is_file_in_rom, EFsIsFileInRom, "Fs::IsFileInRom");
         REGISTER_IPC(fs_server, open_dir, EFsDirOpen, "Fs::OpenDir");
@@ -206,21 +207,14 @@ namespace eka2l1 {
         dest = eka2l1::absolute_path(dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
-        const std::string target_real_path = io->get(target);
-        const std::string dest_real_path = io->get(dest);
+        
+        bool res = io->rename(common::utf8_to_ucs2(target), common::utf8_to_ucs2(dest));
 
-        eka2l1::drive dr_tar = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(target)[0] - 'A'));
-        eka2l1::drive dr_dest = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(dest)[0] - 'A'));
-
-        if (static_cast<int>(dr_tar.attribute & io_attrib::write_protected)
-            || static_cast<int>(dr_dest.attribute & io_attrib::write_protected)
-            || fs::is_directory(target_real_path) || fs::is_directory(dest_real_path)) {
-            LOG_ERROR("Trying to replace a file in a protected drive or replace a whole directory (unsupported)");
-            ctx.set_request_status(KErrAccessDenied);
-            return;
+        if (!res) {
+            ctx.set_request_status(KErrGeneral);
         }
 
-        fs::rename(target_real_path, dest_real_path);
+        // A new app list may be created
         ctx.set_request_status(KErrNone);
     }
 
@@ -242,20 +236,14 @@ namespace eka2l1 {
         dest = eka2l1::absolute_path(dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
-        const std::string target_real_path = io->get(target);
-        const std::string dest_real_path = io->get(dest);
 
-        eka2l1::drive dr_tar = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(target)[0] - 'A'));
-        eka2l1::drive dr_dest = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(dest)[0] - 'A'));
+        bool res = io->rename(common::utf8_to_ucs2(target), common::utf8_to_ucs2(dest));
 
-        if (static_cast<int>(dr_tar.attribute & io_attrib::write_protected)
-            || static_cast<int>(dr_dest.attribute & io_attrib::write_protected)) {
-            LOG_ERROR("Trying to rename a file in a protected drive");
-            ctx.set_request_status(KErrAccessDenied);
+        if (!res) {
+            ctx.set_request_status(KErrGeneral);
             return;
         }
 
-        fs::rename(target_real_path, dest_real_path);
         ctx.set_request_status(KErrNone);
     }
 
@@ -271,28 +259,9 @@ namespace eka2l1 {
             session_paths[ctx.msg->msg_session->unique_id()]);
 
         path = eka2l1::absolute_path(path, ss_path);
-
         io_system *io = ctx.sys->get_io_system();
-        const std::string real_path = io->get(path);
-
-        eka2l1::drive dr = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(path)[0] - 'A'));
-        if (static_cast<int>(dr.attribute & io_attrib::write_protected)) {
-            LOG_ERROR("Trying to delete a protected drive");
-            ctx.set_request_status(KErrAccessDenied);
-            return;
-        }
-
-        if (!fs::exists(real_path)) {
-            ctx.set_request_status(KErrNotFound);
-            return;
-        }
-
-        if (fs::status(real_path).type() != fs::file_type::regular) {
-            ctx.set_request_status(KErrArgument);
-            return;
-        }
-
-        bool success = fs::remove(real_path);
+        
+        bool success = io->delete_entry(common::utf8_to_ucs2(path));
 
         if (!success) {
             ctx.set_request_status(KErrGeneral);
@@ -465,7 +434,6 @@ namespace eka2l1 {
         }
 
         symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
-
         auto new_path = ctx.get_arg<std::u16string>(0);
 
         if (!new_path) {
@@ -476,36 +444,22 @@ namespace eka2l1 {
         std::string ss_path = common::ucs2_to_utf8(
             session_paths[ctx.msg->msg_session->unique_id()]);
 
-        path = eka2l1::absolute_path(path, ss_path);
+        auto new_path_abs = common::utf8_to_ucs2(eka2l1::absolute_path(path, ss_path));
 
-        io_system *io = ctx.sys->get_io_system();
-        const std::string real_path = io->get(path);
+        bool res = ctx.sys->get_io_system()->rename(vfs_file->file_name(), new_path_abs);
 
-        eka2l1::drive dr = io->get_drive_entry(static_cast<drive_number>(eka2l1::root_path(path)[0] - 'A'));
-        if (static_cast<int>(dr.attribute & io_attrib::write_protected)) {
-            LOG_ERROR("Trying to delete a protected drive");
-            ctx.set_request_status(KErrAccessDenied);
+        if (!res) {
+            ctx.set_request_status(KErrGeneral);
             return;
         }
-
-        if (!fs::exists(real_path)) {
-            ctx.set_request_status(KErrNotFound);
-            return;
-        }
-
-        if (fs::status(real_path).type() != fs::file_type::regular) {
-            ctx.set_request_status(KErrArgument);
-            return;
-        }
-
-        fs::rename(io->get(common::ucs2_to_utf8(vfs_file->file_name())), real_path);
 
         // Save state of file and reopening it
         size_t last_pos = vfs_file->tell();
         int last_mode = vfs_file->file_mode();
 
         vfs_file->close();
-        vfs_file = io->open_file(common::utf8_to_ucs2(real_path), last_mode);
+
+        vfs_file = ctx.sys->get_io_system()->open_file(new_path_abs, last_mode);
         vfs_file->seek(last_pos, file_seek_mode::beg);
 
         node->vfs_node = std::move(vfs_file);
@@ -688,12 +642,30 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::file_open(service::ipc_context ctx) {
+    void fs_server::file_open(service::ipc_context ctx) {        
+        std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
+        std::optional<int> open_mode_res = ctx.get_arg<int>(1);
+
+        if (!name_res || !open_mode_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        // If the file already exist, stop
+        if (ctx.sys->get_io_system()->exist(*name_res)) {
+            ctx.set_request_status(KErrAlreadyExists);
+            return;
+        }
+
         new_file_subsession(ctx);
     }
 
     void fs_server::file_replace(service::ipc_context ctx) {
         new_file_subsession(ctx, true);
+    }
+
+    void fs_server::file_create(service::ipc_context ctx) {
+        
     }
 
     std::string replace_all(std::string str, const std::string &from, const std::string &to) {
@@ -774,10 +746,11 @@ namespace eka2l1 {
         }
 
         if (real_mode & epoc::EFileWrite) {
-            if (overwrite)
+            if (overwrite) {
                 access_mode |= WRITE_MODE;
-            else
+            } else {
                 access_mode |= APPEND_MODE;
+            }
         } else {
             // Since EFileRead = 0, they default to read mode if nothing is specified more
             access_mode |= READ_MODE;
@@ -904,8 +877,11 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
-        std::string path = ctx.sys->get_io_system()->get(common::ucs2_to_utf8(*dir));
-        fs::create_directories(path);
+        bool res = ctx.sys->get_io_system()->create_directories(*dir);
+
+        if (!res) {
+            ctx.set_request_status(KErrGeneral);
+        }
 
         ctx.set_request_status(KErrNone);
     }
@@ -917,56 +893,53 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
-        std::string path = common::ucs2_to_utf8(*fname_op);
+        std::u16string fname = std::move(*fname_op);
 
-        LOG_INFO("Get entry of: {}", path);
+        LOG_INFO("Get entry of: {}", common::ucs2_to_utf8(fname));
 
         bool dir = false;
 
         io_system *io = ctx.sys->get_io_system();
-        symfile file = io->open_file(*fname_op, READ_MODE | BIN_MODE);
 
-        if (!file) {
-            if (eka2l1::is_dir(io->get(path))) {
-                dir = true;
-            } else {
-                ctx.set_request_status(KErrNotFound);
-                return;
-            }
+        std::optional<entry_info> entry_hle = io->get_entry_info(fname);
+
+        if (!entry_hle) {
+            ctx.set_request_status(KErrNotFound);
         }
 
         epoc::TEntry entry;
-        entry.aSize = dir ? 0 : file->size();
+        entry.aSize = entry_hle->size;
 
-        if (static_cast<int>(io->get_drive_entry(static_cast<drive_number>(std::tolower(path[0]) - 'a')).media_type)
-            & static_cast<int>(drive_media::rom)) {
-            entry.aAttrib = KEntryAttReadOnly | KEntryAttSystem;
+        if (entry_hle->has_raw_attribute) {
+            entry.aAttrib = entry_hle->raw_attribute;
+        } else {
+            bool dir = (entry_hle->type == io_component_type::dir);
 
-            if (!dir && (*fname_op).find(u".dll") && !is_e32img(file)) {
-                entry.aAttrib |= KEntryAttXIP;
+            if (static_cast<int>(entry_hle->attribute) & static_cast<int>(io_attrib::internal)) {
+                entry.aAttrib = KEntryAttReadOnly | KEntryAttSystem;
+
+                /*
+                if (!dir && fname.find(u".dll") && !is_e32img(file)) {
+                    entry.aAttrib |= KEntryAttXIP;
+                }
+                */
+            }
+
+            if (dir) {
+                entry.aAttrib |= KEntryAttDir;
+            } else {
+                entry.aAttrib |= KEntryAttNormal;
             }
         }
 
-        if (dir) {
-            entry.aAttrib |= KEntryAttDir;
-        } else {
-            entry.aAttrib |= KEntryAttNormal;
-        }
-
-        entry.aNameLength = (*fname_op).length();
+        entry.aNameLength = fname.length();
         entry.aSizeHigh = 0; // This is never used, since the size is never >= 4GB as told by Nokia Doc
 
-        memcpy(entry.aName, (*fname_op).data(), entry.aNameLength * 2);
+        memcpy(entry.aName, fname.data(), entry.aNameLength * 2);
 
-        auto last_mod = fs::last_write_time(io->get(path));
-
-        entry.aModified = epoc::TTime{ static_cast<uint64_t>(last_mod.time_since_epoch().count()) };
+        entry.aModified = epoc::TTime { entry_hle->last_write };        
+        
         ctx.write_arg_pkg<epoc::TEntry>(1, entry);
-
-        if (!dir) {
-            file->close();
-        }
-
         ctx.set_request_status(KErrNone);
     }
 
@@ -1045,9 +1018,10 @@ namespace eka2l1 {
             return;
         }
 
-        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
-        epoc::TEntry entry;
+        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(
+            dir_node->vfs_node);
 
+        epoc::TEntry entry;
         std::optional<entry_info> info = dir->get_next_entry();
 
         if (!info) {
@@ -1055,20 +1029,24 @@ namespace eka2l1 {
             return;
         }
 
-        switch (info->attribute) {
-        case io_attrib::hidden: {
-            entry.aAttrib = KEntryAttHidden;
-            break;
-        }
-
-        default:
-            break;
-        }
-
-        if (info->type == io_component_type::dir) {
-            entry.aAttrib &= KEntryAttDir;
+        if (info->has_raw_attribute) {
+            entry.aAttrib = info->raw_attribute;
         } else {
-            entry.aAttrib &= KEntryAttNormal;
+            switch (info->attribute) {
+            case io_attrib::hidden: {
+                entry.aAttrib = KEntryAttHidden;
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            if (info->type == io_component_type::dir) {
+                entry.aAttrib &= KEntryAttDir;
+            } else {
+                entry.aAttrib &= KEntryAttNormal;
+            }
         }
 
         entry.aSize = info->size;
@@ -1077,6 +1055,8 @@ namespace eka2l1 {
         // TODO: Convert this using a proper function
         std::u16string path_u16(info->full_path.begin(), info->full_path.end());
         std::copy(path_u16.begin(), path_u16.end(), entry.aName);
+
+        entry.aModified = epoc::TTime { info->last_write };
 
         ctx.set_request_status(KErrNone);
     }
@@ -1126,20 +1106,24 @@ namespace eka2l1 {
                 break;
             }
 
-            switch (info->attribute) {
-            case io_attrib::hidden: {
-                entry.aAttrib = KEntryAttHidden;
-                break;
-            }
-
-            default:
-                break;
-            }
-
-            if (info->type == io_component_type::dir) {
-                entry.aAttrib &= KEntryAttDir;
+            if (info->has_raw_attribute) {
+                entry.aAttrib = info->raw_attribute;
             } else {
-                entry.aAttrib &= KEntryAttNormal;
+                switch (info->attribute) {
+                case io_attrib::hidden: {
+                    entry.aAttrib = KEntryAttHidden;
+                    break;
+                }
+
+                default:
+                    break;
+                }
+
+                if (info->type == io_component_type::dir) {
+                    entry.aAttrib &= KEntryAttDir;
+                } else {
+                    entry.aAttrib &= KEntryAttNormal;
+                }
             }
 
             entry.aSize = info->size;
@@ -1148,6 +1132,8 @@ namespace eka2l1 {
             // TODO: Convert this using a proper function
             std::u16string path_u16(info->name.begin(), info->name.end());
             std::copy(path_u16.begin(), path_u16.end(), entry.aName);
+
+            entry.aModified = epoc::TTime { info->last_write };
 
             memcpy(entry_buf, &entry, offsetof(epoc::TEntry, aName));
             entry_buf += offsetof(epoc::TEntry, aName);
@@ -1197,38 +1183,44 @@ namespace eka2l1 {
         std::fill(dlist.begin(), dlist.end(), 0);
 
         for (size_t i = drive_a; i < drive_count; i += 1) {
-            eka2l1::drive drv = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(i));
+            auto drv_op = ctx.sys->get_io_system()->get_drive_entry(
+                static_cast<drive_number>(i));
 
-            bool out = false;
+            if (drv_op) {
+                eka2l1::drive drv = std::move(*drv_op);
 
-            for (const auto &exclude : exclude_attribs) {
-                if (static_cast<int>(exclude) & static_cast<int>(drv.attribute)) {
-                    dlist[i] = 0;
-                    out = true;
+                bool out = false;
 
-                    break;
+                for (const auto &exclude : exclude_attribs) {
+                    if (static_cast<int>(exclude) & static_cast<int>(drv.attribute)) {
+                        dlist[i] = 0;
+                        out = true;
+
+                        break;
+                    }
                 }
-            }
 
-            if (!out) {
-                if (include_attribs.empty()) {
-                    if (drv.media_type != drive_media::none) {
-                        dlist[i] = 1;
+                if (!out) {
+                    if (include_attribs.empty()) {
+                        if (drv.media_type != drive_media::none) {
+                            dlist[i] = 1;
+                        }
+
+                        continue;
                     }
 
-                    continue;
-                }
+                    auto meet_one_condition = std::find_if(include_attribs.begin(), include_attribs.end(),
+                        [=](io_attrib attrib) { return static_cast<int>(attrib) & static_cast<int>(drv.attribute); });
 
-                auto meet_one_condition = std::find_if(include_attribs.begin(), include_attribs.end(),
-                    [=](io_attrib attrib) { return static_cast<int>(attrib) & static_cast<int>(drv.attribute); });
-
-                if (meet_one_condition != include_attribs.end()) {
-                    dlist[i] = 1;
+                    if (meet_one_condition != include_attribs.end()) {
+                        dlist[i] = 1;
+                    }
                 }
             }
         }
 
-        bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]), dlist.size());
+        bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]), 
+            dlist.size());
 
         if (!success) {
             ctx.set_request_status(KErrArgument);
@@ -1374,8 +1366,14 @@ namespace eka2l1 {
             return;
         }
 
-        eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
-        fill_drive_info(&(*info), io_drive);
+        std::optional<eka2l1::drive> io_drive = 
+            ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+        
+        if (!io_drive) {
+            info->iType = EMediaUnknown;
+        } else {
+            fill_drive_info(&(*info), *io_drive);
+        }
 
         ctx.write_arg_pkg<TDriveInfo>(0, *info);
         ctx.set_request_status(KErrNone);
@@ -1415,9 +1413,15 @@ namespace eka2l1 {
         }
 
         TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
-        eka2l1::drive io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+        std::optional<eka2l1::drive> io_drive = 
+            ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
    
-        fill_drive_info(&info->iDriveInfo, io_drive);
+        if (!io_drive) {
+            info->iDriveInfo.iType = EMediaUnknown;
+        } else {
+            fill_drive_info(&info->iDriveInfo, *io_drive);
+        }
+
         info->iUniqueId = drv;
 
         LOG_WARN("Volume size stubbed with 1GB");

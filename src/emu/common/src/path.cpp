@@ -39,7 +39,7 @@ namespace eka2l1 {
         return false;
     }
 
-    const char get_separator(bool symbian_use = false) {
+    const char get_separator(bool symbian_use) {
         if (symbian_use) {
             return '\\';
         }
@@ -326,7 +326,7 @@ namespace eka2l1 {
         path_iterator ite;
 
         for (ite = path_iterator(path);
-             ite; ++ite) {
+             ite; ite++) {
             if ((*ite).length() != 0) {
                 crr_path = add_path(crr_path, add_path(*ite, "/"));
 

@@ -45,7 +45,8 @@ namespace eka2l1 {
             mem = mems;
             kern = kerns;
 
-            load_all_sids(ver);
+            // TODO (pent0): Implement external id loading
+            // load_all_sids(ver);
 
             if (ver == epocver::epoc9) {
                 epoc::register_epocv94(*this);
@@ -125,29 +126,6 @@ namespace eka2l1 {
             svc_funcs.clear();
             custom_funcs.clear();
             import_funcs.clear();
-        }
-
-        void lib_manager::load_all_sids(const epocver ver) {
-            std::vector<sid> tids;
-            std::string lib_name;
-
-#define LIB(x) lib_name = #x;
-#define EXPORT(x, y)   \
-    tids.push_back(y); \
-    func_names.insert(std::make_pair(y, x));
-#define ENDLIB()                                                      \
-    ids.insert(std::make_pair(common::utf8_to_ucs2(lib_name), tids)); \
-    tids.clear();
-
-            if (ver == epocver::epoc6) {
-#include <core/hle/epoc6_n.def>
-            } else {
-#include <core/hle/epoc9_n.def>
-            }
-
-#undef LIB
-#undef EXPORT
-#undef ENLIB
         }
 
         std::optional<sids> lib_manager::get_sids(const std::u16string &lib_name) {
@@ -268,11 +246,10 @@ namespace eka2l1 {
                 bool should_append_ext = (fs::path(img_name).extension() == "");
 
                 for (const auto &pattern : patterns) {
-                    std::string full = common::ucs2_to_utf8(pattern.first + img_name + 
-                        (should_append_ext ? pattern.second : u""));
+                    std::u16string full = pattern.first + img_name + (should_append_ext ? pattern.second : u"");
 
-                    if (fs::exists(io->get(full))) {
-                        img = io->open_file(common::utf8_to_ucs2(full), READ_MODE | BIN_MODE);
+                    if (io->exist(full)) {
+                        img = io->open_file(full, READ_MODE | BIN_MODE);
                         res = loader::parse_eka2img(img);
 
                         if (res) {

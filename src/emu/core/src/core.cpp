@@ -64,9 +64,17 @@ namespace eka2l1 {
         // Initialize all the system that doesn't depend on others first
         timing.init();
 
-        io.init(&mem, get_symbian_version_use());
+        io.init();
         mngr.init(this, &io);
         asmdis.init(&mem);
+
+        file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use());
+        io.add_filesystem(physical_fs);
+
+        file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem, 
+            get_symbian_version_use());
+
+        rom_fs_id = io.add_filesystem(rom_fs);
 
         cpu = arm::create_jitter(&kern, &timing, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, debugger, jit_type);
 
@@ -184,8 +192,16 @@ namespace eka2l1 {
             return false;
         }
 
-        romf = *romf_res;
-        io.set_rom_cache(&romf);
+        romf = std::move(*romf_res);
+
+        if (rom_fs_id) {
+            io.remove_filesystem(*rom_fs_id);
+        }
+
+        file_system_inst rom_fs = create_rom_filesystem(&romf, &mem, 
+            get_symbian_version_use());
+
+        rom_fs_id = io.add_filesystem(rom_fs);
 
         bool res1 = mem.map_rom(romf.header.rom_base, path);
 
@@ -206,8 +222,9 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system::mount(drive_number drv, const drive_media media, std::string path, const io_attrib attrib) {
-        io.mount(drv, media, path, attrib);
+    void system::mount(drive_number drv, const drive_media media, std::string path, 
+        const io_attrib attrib) {
+        io.mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
     }
 
     void system::request_exit() {

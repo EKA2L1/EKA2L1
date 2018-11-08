@@ -183,13 +183,13 @@ namespace eka2l1 {
         }
 
         symfile &f = files[id - 1];
-        const std::string full_real_path = io->get(common::ucs2_to_utf8(f->file_name()));
+        const std::u16string full_path = f->file_name();
 
-        fs::file_status sts(fs::status(full_real_path));
+        entry_info info = *io->get_entry_info(full_path);
 
-        filestat->st_size = fs::file_size(full_real_path);
-        filestat->st_mode = static_cast<decltype(filestat->st_mode)>(sts.permissions());
-        filestat->st_mtime = std::chrono::system_clock::to_time_t(fs::last_write_time(full_real_path));
+        filestat->st_size = info.size;
+        filestat->st_mode = static_cast<decltype(filestat->st_mode)>(fs::perms::all);
+        filestat->st_mtime = info.last_write / 1000000000;
     }
 
     size_t posix_file_manager::read(const fid id, const size_t len, char *buf, int &terrno) {
@@ -250,16 +250,10 @@ namespace eka2l1 {
                 common::ucs2_to_utf8(current_dir), 
                 common::ucs2_to_utf8(working_dir)));
 
-        const std::string path_utf8 = ctx.sys->get_io_system()->get(
-            common::ucs2_to_utf8(full_new_path));
+        bool res = ctx.sys->get_io_system()->create_directories(full_new_path);
+        params->ret = res ? -1 : 0;
 
-        // Take advantage of the standard filesystem, which give back the error code
-        std::error_code code;
-        fs::create_directory(path_utf8, code);
-
-        params->ret = code.value() ? -1 : 0;
-
-        POSIX_REQUEST_FINISH_WITH_ERR(ctx, code.value());
+        POSIX_REQUEST_FINISH_WITH_ERR(ctx, res ? EIO : 0);
     }
 
     void posix_server::open(service::ipc_context ctx) {

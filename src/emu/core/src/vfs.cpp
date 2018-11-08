@@ -30,8 +30,8 @@
 
 #include <experimental/filesystem>
 
+#include <array>
 #include <iostream>
-
 #include <map>
 #include <mutex>
 #include <regex>
@@ -71,7 +71,9 @@ namespace eka2l1 {
         rom_file(memory_system *mem, loader::rom *supereme_mother, loader::rom_entry entry)
             : parent(supereme_mother)
             , file(entry)
-            , mem(mem) { init(); }
+            , mem(mem) { 
+            init(); 
+        }
 
         void init() {
             file_ptr = ptr<char>(file.address_lin);
@@ -205,6 +207,12 @@ namespace eka2l1 {
 
             const char *cmode = translate_mode(mode);
             file = fopen(common::ucs2_to_utf8(real_path).c_str(), cmode);
+            
+            if (!file) {
+                LOG_ERROR("Can't open file: {}", common::ucs2_to_utf8(real_path));
+                return;
+            }
+
             input_name = std::move(vfs_path);
             fmode = mode;
 
@@ -311,6 +319,8 @@ namespace eka2l1 {
 
         io_attrib attrib;
 
+        abstract_file_system *inst;
+
     protected:
         std::string replace_all(std::string str, const std::string &from, const std::string &to) {
             size_t start_pos = 0;
@@ -331,11 +341,13 @@ namespace eka2l1 {
         }
 
     public:
-        physical_directory(const std::string &phys_path, const std::string &vir_path, const std::string &filter, const io_attrib attrib)
+        physical_directory(abstract_file_system *inst, const std::string &phys_path, 
+            const std::string &vir_path, const std::string &filter, const io_attrib attrib)
             : filter(construct_regex_string(filter))
             , dir_iterator(phys_path)
             , vir_path(vir_path)
             , attrib(attrib)
+            , inst(inst)
             , peeking(false) {
         }
 
@@ -378,14 +390,9 @@ namespace eka2l1 {
                     continue;
                 }
 
-                entry_info info;
-                info.attribute = io_attrib::none;
-                info.full_path = eka2l1::add_path(vir_path, name);
-                info.name = name;
-                info.type = dir_iterator->status().type() == fs::file_type::regular ? io_component_type::file
-                                                                                    : io_component_type::dir;
-                info.size = dir_iterator->status().type() == fs::file_type::regular ? fs::file_size(dir_iterator->path())
-                                                                                    : 0;
+                entry_info info = *(inst->get_entry_info(common::utf8_to_ucs2(
+                    eka2l1::add_path(vir_path, name))));
+
                 std::error_code err;
                 dir_iterator.increment(err);
 
@@ -405,275 +412,607 @@ namespace eka2l1 {
         }
     };
 
+    class physical_file_system: public abstract_file_system {
+        std::mutex fs_mutex;
+        epocver ver;
+
+    protected:
+        // Use a flat array for drive mapping
+        std::array<std::pair<drive, bool>, drive_z + 1> mappings;
+
+        constexpr char drive_number_to_ascii(const drive_number drv) {
+            return static_cast<char>(drv) + 0x61;
+        }
+
+        constexpr drive_number ascii_to_drive_number(const char c) {
+            return static_cast<drive_number>(c - 0x61);
+        }
+
+        bool do_mount(const drive_number drv, const drive_media media, const io_attrib attrib,
+            const std::u16string &physical_path) {
+            const std::lock_guard<std::mutex> guard(fs_mutex);
+
+            if (mappings[static_cast<int>(drv)].second) {
+                return false;
+            }
+
+            drive &map_drive = mappings[static_cast<int>(drv)].first;
+
+            map_drive.attribute = attrib;
+            map_drive.type = io_component_type::drive;
+            map_drive.drive_name += drive_number_to_ascii(drv) + ':';
+            map_drive.media_type = media;
+            map_drive.real_path = common::ucs2_to_utf8(physical_path);
+
+            // Mark as mapped
+            mappings[static_cast<int>(drv)].second = true;
+
+            return true;
+        }
+
+        std::optional<std::u16string> get_real_physical_path(const std::u16string &vert_path) {
+            std::string path_ucs8 = common::ucs2_to_utf8(vert_path);
+            const std::string root = eka2l1::root_name(path_ucs8);
+
+            if (root == "" || 
+                !mappings[ascii_to_drive_number(std::towlower(root[0]))].second) {
+                return std::nullopt;
+            }
+
+            drive &drv = mappings[ascii_to_drive_number(std::towlower(root[0]))].first;
+            std::u16string map_path = common::utf8_to_ucs2(drv.real_path);
+
+            if (eka2l1::is_separator(static_cast<char>(map_path.back()))) {
+                map_path.erase(map_path.length() - 1);
+            }
+
+            if (drv.media_type == drive_media::rom) {
+                switch (ver) {
+                case epocver::epoc93: {
+                    map_path += u"v93\\";
+                    break;
+                }
+
+                case epocver::epoc9: {
+                    map_path += u"v94\\";
+                    break;
+                }
+
+                case epocver::epoc10: {
+                    map_path += u"belle\\";
+                    break;
+                }
+
+                case epocver::epoc6: {
+                    map_path += u"v60\\";
+                    break;
+                }
+
+                default:
+                    break;
+                }
+            }
+            
+            std::u16string new_path = map_path + vert_path.substr(root.size());
+            auto sep_char = eka2l1::get_separator();
+
+            // Make it case-insensitive
+            for (auto &c : new_path) {
+                c = std::towlower(c);
+
+                if (eka2l1::is_separator(c)) {
+                    c = sep_char;
+                }
+            }
+
+            size_t lib_pos = new_path.find(u"\\system\\lib");
+
+            // TODO (bentokun): Remove this hack with a proper symlink system.
+            if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+                new_path.replace(lib_pos, 12, u"\\sys\\bin");
+            }
+    
+            return new_path;
+        }
+
+    public:
+        explicit physical_file_system(const epocver ver)
+            : ver(ver) {
+            for (auto &[drv, mapped]: mappings) {
+                mapped = false;
+            }
+        }
+
+        std::optional<std::u16string> get_raw_path(const std::u16string &path) override {
+            return get_real_physical_path(path);
+        }
+
+        bool delete_entry(const std::u16string &path) override {
+            std::optional<std::u16string> path_real = get_real_physical_path(path);
+
+            if (!path_real || !fs::exists(*path_real)) {
+                return false;
+            }
+
+            std::error_code err;
+            fs::remove(*path_real, err);
+
+            return err ? false : true;
+        }
+
+        void set_epoc_version(const epocver nver) override {
+            ver = nver;
+        }
+
+        bool exists(const std::u16string &path) override {
+            std::optional<std::u16string> real_path = get_real_physical_path(path);
+            return real_path ? fs::exists(*real_path) : false;
+        }
+
+        bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
+            std::optional<std::u16string> old_path_real = get_real_physical_path(old_path);
+            std::optional<std::u16string> new_path_real = get_real_physical_path(new_path);
+
+            if (!old_path_real || !new_path_real || !fs::exists(*old_path_real)) {
+                return false;
+            }
+
+            std::error_code err;
+            fs::rename(*old_path_real, *new_path_real);
+
+            return err ? false : true;
+        }
+
+        bool create_directories(const std::u16string &path) override {
+            std::optional<std::u16string> real_path = get_real_physical_path(path);
+            
+            if (!real_path) {
+                return false;
+            }
+
+            std::error_code err;
+            fs::create_directories(*real_path, err);
+
+            return err ? false : true;
+        }
+
+        bool mount_volume_from_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+            const std::u16string &physical_path) override {
+            if (media == drive_media::rom) {
+                return false;
+            }
+            
+            return do_mount(drv, media, attrib, physical_path);
+        }
+
+        bool unmount(const drive_number drv) override {
+            if (mappings[static_cast<int>(drv)].second) {
+                mappings[static_cast<int>(drv)].second = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        std::optional<drive> get_drive_entry(const drive_number drv) override {
+            if (!mappings[static_cast<int>(drv)].second) {
+                return std::nullopt;
+            }
+
+            return mappings[static_cast<int>(drv)].first;
+        }
+
+        std::shared_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) override {
+            std::u16string vir_path = path;
+            
+            size_t pos_bs = vir_path.find_last_of(u"\\");
+            size_t pos_fs = vir_path.find_last_of(u"//");
+
+            size_t pos_check = std::string::npos;
+
+            if (pos_bs != std::string::npos && pos_fs != std::string::npos) {
+                pos_check = std::max(pos_bs, pos_fs);
+            } else if (pos_bs != std::string::npos) {
+                pos_check = pos_bs;
+            } else if (pos_fs != std::string::npos) {
+                pos_check = pos_fs;
+            }
+
+            std::string filter("*");
+
+            // Check if there should be a filter
+            if (pos_check != std::string::npos && pos_check != vir_path.length() - 1) {
+                // Substring this, get the filter
+                filter = common::ucs2_to_utf8(vir_path.substr(pos_check + 1, vir_path.length() - pos_check - 1));
+                vir_path.erase(vir_path.begin() + pos_check + 1, vir_path.end());
+            }
+
+            auto new_path = get_real_physical_path(vir_path);
+
+            if (!new_path || !fs::exists(*new_path)) {
+                return std::shared_ptr<directory>(nullptr);
+            }
+
+            return std::make_shared<physical_directory>(this, common::ucs2_to_utf8(*new_path),
+                common::ucs2_to_utf8(vir_path), filter, attrib);
+        }
+
+        std::optional<entry_info> get_entry_info(const std::u16string &path) override {
+            std::optional<std::u16string> real_path = get_real_physical_path(path);
+            
+            if (!real_path || !fs::exists(*real_path)) {
+                return std::nullopt;
+            }
+
+            entry_info info;
+
+            if (fs::is_directory(*real_path)) {
+                info.type = io_component_type::dir;
+                info.size = 0;
+            } else {
+                info.type = io_component_type::file;
+                info.size = fs::file_size(*real_path);
+            }
+            
+            auto last_mod = fs::last_write_time(*real_path);
+
+            info.last_write = static_cast<uint64_t>(last_mod.time_since_epoch().count());
+            
+            std::string path_ucs8 = common::ucs2_to_utf8(path);
+            
+            info.full_path = path_ucs8;
+            info.name = eka2l1::filename(path_ucs8);
+            
+            const std::string root = eka2l1::root_name(path_ucs8);
+            drive &drv = mappings[ascii_to_drive_number(std::towlower(root[0]))].first;
+            
+            info.attribute = drv.attribute;
+
+            return info;
+        }
+
+        std::shared_ptr<file> open_file(const std::u16string &path, const int mode) override {
+            std::optional<std::u16string> real_path = get_real_physical_path(path);
+
+            if (!real_path || !exists(*real_path)) {
+                return nullptr;
+            }
+            
+            return std::make_shared<physical_file>(path, *real_path, mode);
+        }
+    };
+
+    class rom_file_system: public physical_file_system {
+        loader::rom *rom_cache;
+        memory_system *mem;
+
+        std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path) {
+            std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
+            auto ite = path_iterator(vir_path);
+
+            loader::rom_dir last_dir_found;
+
+            ite++;
+
+            std::vector<std::string> components;
+
+            for (; ite; ite++) {
+                components.push_back(*ite);
+                LOG_TRACE("{}", *ite);
+            }
+
+            if (components.size() == 0) {
+                return std::nullopt;
+            }
+
+            for (std::size_t i = 0; i < components.size() - 1; i++) {
+                loader::rom_dir temp;
+                temp.name = common::utf8_to_ucs2(components[i]);
+
+                auto res1 = std::lower_bound(dirs.begin(), dirs.end(), temp,
+                    [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+
+                if (res1 != dirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
+                    last_dir_found = *res1;
+                    dirs = res1->subdirs;
+                } else {
+                    return std::optional<loader::rom_entry>{};
+                }
+            }
+
+            // Save the last
+            auto entries = last_dir_found.entries;
+
+            loader::rom_entry temp_entry;
+            temp_entry.name = common::utf8_to_ucs2(components[components.size() - 1]);
+
+            auto res2 = std::lower_bound(entries.begin(), entries.end(), temp_entry,
+                [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+
+            if (res2 != entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
+                return *res2;
+            }
+
+            return std::nullopt;
+        }
+
+    public:
+        explicit rom_file_system(loader::rom *cache, memory_system *mem, epocver ver)
+            : rom_cache(cache)
+            , mem(mem)
+            , physical_file_system(ver) {
+
+        }
+ 
+        bool delete_entry(const std::u16string &path) override {
+            return false;
+        }
+
+        bool create_directories(const std::u16string &path) override {
+            return false;
+        }
+
+        bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
+            return false;
+        }
+ 
+        bool mount_volume_from_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+            const std::u16string &physical_path) override {
+            if (media != drive_media::rom) {
+                return false;
+            }
+            
+            return do_mount(drv, media, attrib, physical_path);
+        }
+
+        abstract_file_system_err_code is_entry_in_rom(const std::u16string &path) override {
+            if (burn_tree_find_entry(common::ucs2_to_utf8(path))) {
+                return abstract_file_system_err_code::ok;
+            }
+
+            return abstract_file_system_err_code::no;
+        }
+
+
+        std::shared_ptr<file> open_file(const std::u16string &path, const int mode) override {
+            if (mode & WRITE_MODE) {
+                LOG_ERROR("Opening a read-only file (ROM + ROFS) with write mode");
+                return nullptr;
+            }
+            
+            auto entry = burn_tree_find_entry(common::ucs2_to_utf8(path));
+
+            if (!entry) {
+                return physical_file_system::open_file(path, mode);
+            }
+
+            return std::make_shared<rom_file>(mem, rom_cache, *entry);            
+        }
+
+        std::optional<entry_info> get_entry_info(const std::u16string &path) override {
+            auto entry = burn_tree_find_entry(common::ucs2_to_utf8(path));
+
+            if (!entry) {
+                return physical_file_system::get_entry_info(path);
+            }
+
+            entry_info info;
+            info.type = entry->attrib & 0x10 ? io_component_type::dir : io_component_type::drive;
+            info.has_raw_attribute = true;
+            info.raw_attribute = entry->attrib;
+            info.size = entry->size;
+            info.name = common::ucs2_to_utf8(entry->name);
+            info.full_path = common::ucs2_to_utf8(path);
+
+            return info;
+        }
+    };
+
+    std::shared_ptr<abstract_file_system> create_physical_filesystem(epocver ver) {
+        return std::make_shared<physical_file_system>(ver);
+    }
+
+    std::shared_ptr<abstract_file_system> create_rom_filesystem(loader::rom *rom_cache, memory_system *mem,
+        epocver ver) {
+        return std::make_shared<rom_file_system>(rom_cache, mem, ver);
+    }
+    
     io_component::io_component(io_component_type type, io_attrib attrib)
         : type(type)
         , attribute(attrib) {
     }
 
-    void io_system::init(memory_system *smem, epocver ever) {
-        mem = smem;
-        ver = ever;
+    void io_system::init() {
 
-        drive drvt;
-        drvt.media_type = drive_media::none;
-
-        std::fill(drives.begin(), drives.end(), drvt);
     }
 
     void io_system::shutdown() {
-        if (mem) {
-            file_caches.clear();
-        }
+        filesystems.clear();
     }
 
-    void io_system::mount(const drive_number drv, const drive_media media, const std::string &real_path, const io_attrib attrib) {
-        std::lock_guard<std::mutex> guard(mut);
+    std::optional<filesystem_id> io_system::add_filesystem(file_system_inst &inst) {
+        const std::lock_guard<std::mutex> guard(access_lock);
 
-        drive &drvm = drives[drv];
+        ++id_counter;
 
-        if (drvm.media_type != drive_media::none) {
-            return;
-        }
-
-        char drive_dos_char = char(0x41 + drv);
-
-        drvm.media_type = media;
-        drvm.drive_name = std::string(&drive_dos_char, 1) + ":";
-        drvm.real_path = real_path;
-        drvm.attribute = attrib;
+        filesystems.emplace(id_counter, inst);
+        return id_counter;
     }
 
-    void io_system::unmount(const drive_number drv) {
-        std::lock_guard<std::mutex> guard(mut);
+    /*! \brief Remove the filesystem from the IO system
+    */
+    bool io_system::remove_filesystem(const filesystem_id id) {
+        const std::lock_guard<std::mutex> guard(access_lock);
 
-        drives[drv].media_type = drive_media::none;
+        if (id > id_counter) {
+            return false;
+        }
+
+        filesystems.erase(id);
+        return true;
     }
 
-    std::string io_system::get(std::string vir_path) {
-        std::string abs_path = "";
+    bool io_system::mount_physical_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+        const std::u16string &real_path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
 
-        // Current directory is always an absolute path
-        std::string partition;
-
-        if (vir_path.find_first_of(':') == 1) {
-            partition = vir_path.substr(0, 2);
-        } else {
-            return "";
-        }
-
-        auto res = std::find_if(drives.begin(), drives.end(),
-            [&](drive &drv) { return drv.drive_name == partition; });
-
-        if (res == drives.end() || (res->media_type == drive_media::rom)) {
-            partition[0] = std::toupper(partition[0]);
-
-            res = std::find_if(drives.begin(), drives.end(),
-                [&](drive &drv) { return drv.drive_name == partition; });
-
-            if (res == drives.end()) {
-                return "";
+        for (auto &[id, file_system]: filesystems) {
+            if (file_system->mount_volume_from_path(drv, media, attrib, real_path)) {
+                return true;
             }
         }
 
-        std::string rp = res->real_path;
-
-        if (res->media_type == drive_media::rom) {
-            switch (ver) {
-            case epocver::epoc93: {
-                rp = add_path(rp, "v93\\");
-                break;
-            }
-
-            case epocver::epoc9: {
-                rp = add_path(rp, "v94\\");
-                break;
-            }
-
-            case epocver::epoc10: {
-                rp = add_path(rp, "belle\\");
-                break;
-            }
-
-            case epocver::epoc6: {
-                rp = add_path(rp, "v60\\");
-                break;
-            }
-
-            default:
-                break;
-            }
-        }
-
-        // Make it case-insensitive
-        for (auto &c : vir_path) {
-            c = std::tolower(c);
-        }
-
-        size_t lib_pos = vir_path.find("\\system\\lib");
-
-        // TODO (bentokun): Remove this hack with a proper symlink system.
-        if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-            vir_path.replace(lib_pos, 12, "\\sys\\bin");
-        }
-
-        abs_path = add_path(rp, vir_path.substr(2));
-
-        return abs_path;
+        return false;
     }
 
-    std::optional<drive> io_system::find_dvc(std::string vir_path) {
-        auto first_dvc_colon = vir_path.find_first_of(":");
+    bool io_system::unmount(const drive_number drv) {
+        const std::lock_guard<std::mutex> guard(access_lock);
 
-        if (!(FOUND_STR(first_dvc_colon))) {
-            return std::optional<drive>{};
-        }
-
-        std::string path_dvc = vir_path.substr(0, 2);
-
-        auto findres = std::find_if(drives.begin(), drives.end(),
-            [&](drive &drv) { return drv.drive_name == path_dvc; });
-
-        if (findres != drives.end()) {
-            return *findres;
-        } else {
-            if (std::islower(path_dvc[0]))
-                path_dvc[0] = std::toupper(path_dvc[0]);
-            else
-                path_dvc[0] = std::tolower(path_dvc[0]);
-
-            findres = std::find_if(drives.begin(), drives.end(),
-                [&](drive &drv) { return drv.drive_name == path_dvc; });
-
-            if (findres != drives.end()) {
-                return *findres;
+        for (auto &[id, file_system]: filesystems) {
+            if (file_system->unmount(drv)) {
+                return true;
             }
         }
 
-        return std::optional<drive>{};
+        return false;
     }
 
-    // Gurantees that these path are ASCII (ROM you says ;) )
-    // This is only invoked when user check search in ROM config if can't find needed file.
-    std::optional<loader::rom_entry> io_system::burn_tree_find_entry(const std::string &vir_path) {
-        std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
-        auto ite = path_iterator(vir_path);
+    std::optional<drive> io_system::get_drive_entry(const drive_number drv) {    
+        const std::lock_guard<std::mutex> guard(access_lock);
 
-        loader::rom_dir last_dir_found;
-
-        ++ite;
-
-        for (; ite; ++ite) {
-            loader::rom_dir temp;
-            temp.name = common::utf8_to_ucs2(*ite);
-
-            auto res1 = std::lower_bound(dirs.begin(), dirs.end(), temp,
-                [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
-
-            if (res1 != dirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
-                last_dir_found = *res1;
-                dirs = res1->subdirs;
+        for (auto &[id, fs]: filesystems) {
+            if (auto entry = fs->get_drive_entry(drv)) {
+                return entry;
             }
         }
 
-        if (ite) {
-            return std::optional<loader::rom_entry>{};
-        }
-
-        // Save the last
-        auto entries = last_dir_found.entries;
-
-        loader::rom_entry temp_entry;
-        temp_entry.name = common::utf8_to_ucs2(*ite);
-
-        auto res2 = std::lower_bound(entries.begin(), entries.end(), temp_entry,
-            [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
-
-        if (res2 != entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
-            return *res2;
-        }
-
-        return std::optional<loader::rom_entry>{};
+        return std::nullopt;
     }
 
-    // USC2 is not even supported yet, as this is retarded
     std::shared_ptr<file> io_system::open_file(utf16_str vir_path, int mode) {
-        std::string path_u8 = common::ucs2_to_utf8(vir_path);
-        auto res = find_dvc(path_u8);
+        const std::lock_guard<std::mutex> guard(access_lock);
 
-        if (!res) {
-            return std::shared_ptr<file>(nullptr);
-        }
-
-        drive drv = res.value();
-
-        if (drv.media_type == drive_media::rom) {
-            if (mode & WRITE_MODE) {
-                LOG_INFO("No writing in in-memory!");
-                return std::shared_ptr<file>(nullptr);
-            }
-
-            std::optional<loader::rom_entry> entry = burn_tree_find_entry(path_u8);
-
-            if (entry) {
-                auto romf = std::make_shared<rom_file>(mem, rom_cache, *entry);
-
-                if (romf) {
-                    return romf;
-                }
+        for (auto &[id, fs]: filesystems) {
+            if (auto f = fs->open_file(vir_path, mode)) {
+                return f;
             }
         }
 
-        auto new_path = get(path_u8);
-        auto pf = std::make_shared<physical_file>(vir_path, common::utf8_to_ucs2(new_path), mode);
-
-        if (!pf->file) {
-            return std::shared_ptr<file>(nullptr);
-        }
-
-        return pf;
+        return nullptr;   
     }
 
     std::shared_ptr<directory> io_system::open_dir(std::u16string vir_path, const io_attrib attrib) {
-        size_t pos_bs = vir_path.find_last_of(u"\\");
-        size_t pos_fs = vir_path.find_last_of(u"//");
+        const std::lock_guard<std::mutex> guard(access_lock);
 
-        size_t pos_check = std::string::npos;
-
-        if (pos_bs != std::string::npos && pos_fs != std::string::npos) {
-            pos_check = std::max(pos_bs, pos_fs);
-        } else if (pos_bs != std::string::npos) {
-            pos_check = pos_bs;
-        } else if (pos_fs != std::string::npos) {
-            pos_check = pos_fs;
+        for (auto &[id, fs]: filesystems) {
+            if (auto dir = fs->open_directory(vir_path, attrib)) {
+                return dir;
+            }
         }
 
-        std::string filter("*");
-
-        // Check if there should be a filter
-        if (pos_check != std::string::npos && pos_check != vir_path.length() - 1) {
-            // Substring this, get the filter
-            filter = common::ucs2_to_utf8(vir_path.substr(pos_check + 1, vir_path.length() - pos_check - 1));
-            vir_path.erase(vir_path.begin() + pos_check + 1, vir_path.end());
-        }
-
-        auto res = find_dvc(common::ucs2_to_utf8(vir_path));
-
-        if (!res) {
-            return std::shared_ptr<directory>(nullptr);
-        }
-
-        drive drv = res.value();
-        auto new_path = get(common::ucs2_to_utf8(vir_path));
-
-        if (!fs::exists(new_path)) {
-            return std::shared_ptr<directory>(nullptr);
-        }
-
-        return std::make_shared<physical_directory>(new_path, common::ucs2_to_utf8(vir_path), filter, attrib);
+        return nullptr;
     }
 
-    drive io_system::get_drive_entry(drive_number drv) {
-        return drives[drv];
+    bool io_system::exist(const std::u16string &path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (fs->exists(path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool io_system::rename(const std::u16string &old_path, const std::u16string &new_path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (fs->replace(old_path, new_path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool io_system::delete_entry(const std::u16string &path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (fs->delete_entry(path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool io_system::is_entry_in_rom(const std::u16string &path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (fs->is_entry_in_rom(path) == abstract_file_system_err_code::ok) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    bool io_system::create_directories(const std::u16string &path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (fs->create_directories(path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    std::optional<entry_info> io_system::get_entry_info(const std::u16string &path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (auto e = fs->get_entry_info(path)) {
+                return e;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<std::u16string> io_system::get_raw_path(const std::u16string &path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (auto p = fs->get_raw_path(path)) {
+                return p;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    bool io_system::is_directory(const std::u16string &path) {
+        std::optional<entry_info> ent = get_entry_info(path);
+
+        if (!ent) {
+            return false;
+        }
+
+        return ent->type == io_component_type::dir;
+    }
+    
+    void io_system::set_epoc_version(const epocver ver) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            fs->set_epoc_version(ver);
+        }
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {

@@ -266,9 +266,7 @@ void init() {
     symsys.init();
     symsys.mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
     symsys.mount(drive_e, drive_media::physical, mount_e, io_attrib::removeable);
-    symsys.mount(drive_z, drive_media::rom,
-        mount_z, io_attrib::internal | io_attrib::write_protected);
-
+    
     if (enable_gdbstub) {
         symsys.get_gdb_stub()->set_server_port(gdb_port);
         symsys.get_gdb_stub()->init(&symsys);
@@ -276,6 +274,11 @@ void init() {
     }
 
     bool res = symsys.load_rom(rom_path);
+
+    // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
+    // created for ROM purpose.
+    symsys.mount(drive_z, drive_media::rom,
+        mount_z, io_attrib::internal | io_attrib::write_protected);
 }
 
 void shutdown() {
@@ -470,16 +473,12 @@ int ui_debugger_thread() {
 }
 
 void run() {
-    try {
-        while (!should_quit && !symsys.should_exit()) {
-            symsys.loop();
+    while (!should_quit && !symsys.should_exit()) {
+        symsys.loop();
 
-            if (should_pause && !should_quit) {
-                debugger->wait_for_debugger();
-            }
+        if (should_pause && !should_quit) {
+            debugger->wait_for_debugger();
         }
-    } catch (...) {
-        std::cout << "Internal error happens in the compiler" << std::endl;
     }
 }
 
@@ -501,18 +500,12 @@ int main(int argc, char **argv) {
     eka2l1::drivers::init_window_library(eka2l1::drivers::window_type::glfw);
     debugger = std::make_shared<eka2l1::imgui_debugger>(&symsys, logger);
 
-    try {
-        init();
-        do_args();
+    init();
+    do_args();
 
-        if (should_quit) {
-            do_quit();
-            return 0;
-        }
-    } catch (...) {
-        std::cout << "Internal error happens in the compiler" << std::endl;
-
+    if (should_quit) {
         do_quit();
+        return 0;
     }
 
     std::thread debug_window_thread(ui_debugger_thread);

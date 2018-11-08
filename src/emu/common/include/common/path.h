@@ -91,45 +91,6 @@ namespace eka2l1 {
 	*/
     std::string file_directory(std::string path, bool symbian_use = false);
 
-	/*! \brief Iterate through components of a path */
-    struct path_iterator {
-        std::string path;
-        std::string comp;
-        uint32_t crr_pos;
-
-    public:
-        path_iterator()
-            : crr_pos(0) {
-            ++(*this);
-        }
-
-        path_iterator(std::string p)
-            : path(p)
-            , crr_pos(0) {
-            ++(*this);
-        }
-
-        void operator++() {
-            if (crr_pos < path.length())
-                comp = "";
-
-            while ((crr_pos < path.length()) && (path[crr_pos] != '/') && (path[crr_pos] != '\\')) {
-                comp += path[crr_pos];
-                crr_pos += 1;
-            }
-
-            crr_pos += 1;
-        }
-
-        std::string operator*() const {
-            return comp;
-        }
-
-        operator bool() const {
-            return path.length() >= crr_pos - 1;
-        }
-    };
-
 	/*! \brief Create a directory. */
     void create_directory(std::string path);
 	
@@ -141,5 +102,52 @@ namespace eka2l1 {
 	
 	/*! \brief Create directories. */
     void create_directories(std::string path);
+
+    bool is_separator(const char sep);
+
+    const char get_separator(bool symbian_use = false);
+
+	/*! \brief Iterate through components of a path */
+    struct path_iterator {
+        std::string path;
+        std::string comp;
+        uint32_t crr_pos;
+
+    public:
+        path_iterator()
+            : crr_pos(0) {
+            (*this)++;
+        }
+
+        path_iterator(std::string p)
+            : path(p)
+            , crr_pos(0) {
+            (*this)++;
+        }
+
+        path_iterator operator++(int dummy) {
+            if (crr_pos < path.length())
+                comp = "";
+
+            while (crr_pos < path.length() && !is_separator(path[crr_pos])) {
+                comp += path[crr_pos];
+                crr_pos += 1;
+            }
+
+            while (crr_pos < path.length() && is_separator(path[crr_pos])) {
+                crr_pos += 1;
+            }
+
+            return *this;
+        }
+
+        std::string operator*() const {
+            return comp;
+        }
+
+        operator bool() const {
+            return crr_pos < path.length();
+        }
+    };
 }
 
