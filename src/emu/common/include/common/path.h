@@ -126,8 +126,17 @@ namespace eka2l1 {
         }
 
         path_iterator operator++(int dummy) {
-            if (crr_pos < path.length())
+            if (crr_pos > path.length()) {
+                throw std::exception("Iterator is invalid");
+                return *this;
+            }
+
+            if (crr_pos < path.length()) {
                 comp = "";
+            } else {
+                crr_pos++;
+                return *this;
+            }
 
             while (crr_pos < path.length() && !is_separator(path[crr_pos])) {
                 comp += path[crr_pos];
@@ -146,7 +155,7 @@ namespace eka2l1 {
         }
 
         operator bool() const {
-            return crr_pos < path.length();
+            return crr_pos <= path.length();
         }
     };
 }

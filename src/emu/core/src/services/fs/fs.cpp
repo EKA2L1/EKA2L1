@@ -905,6 +905,7 @@ namespace eka2l1 {
 
         if (!entry_hle) {
             ctx.set_request_status(KErrNotFound);
+            return;
         }
 
         epoc::TEntry entry;
@@ -917,13 +918,9 @@ namespace eka2l1 {
 
             if (static_cast<int>(entry_hle->attribute) & static_cast<int>(io_attrib::internal)) {
                 entry.aAttrib = KEntryAttReadOnly | KEntryAttSystem;
-
-                /*
-                if (!dir && fname.find(u".dll") && !is_e32img(file)) {
-                    entry.aAttrib |= KEntryAttXIP;
-                }
-                */
             }
+            
+            // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).
 
             if (dir) {
                 entry.aAttrib |= KEntryAttDir;

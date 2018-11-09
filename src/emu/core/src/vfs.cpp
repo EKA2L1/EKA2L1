@@ -28,14 +28,15 @@
 #include <core/ptr.h>
 #include <core/vfs.h>
 
-#include <experimental/filesystem>
-
 #include <array>
+#include <cwctype>
 #include <iostream>
 #include <map>
 #include <mutex>
 #include <regex>
 #include <thread>
+
+#include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem;
 
@@ -462,8 +463,8 @@ namespace eka2l1 {
             drive &drv = mappings[ascii_to_drive_number(std::towlower(root[0]))].first;
             std::u16string map_path = common::utf8_to_ucs2(drv.real_path);
 
-            if (eka2l1::is_separator(static_cast<char>(map_path.back()))) {
-                map_path.erase(map_path.length() - 1);
+            if (!eka2l1::is_separator(static_cast<char>(map_path.back()))) {
+                map_path += static_cast<char16_t>(eka2l1::get_separator());
             }
 
             if (drv.media_type == drive_media::rom) {
@@ -687,18 +688,17 @@ namespace eka2l1 {
         memory_system *mem;
 
         std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path) {
-            std::vector<loader::rom_dir> dirs = rom_cache->root.root_dirs[0].dir.subdirs;
             auto ite = path_iterator(vir_path);
 
-            loader::rom_dir last_dir_found;
+            loader::rom_dir *last_dir_found = &(rom_cache->root.root_dirs[0].dir);
 
+            // Skip through the drive
             ite++;
 
             std::vector<std::string> components;
 
             for (; ite; ite++) {
                 components.push_back(*ite);
-                LOG_TRACE("{}", *ite);
             }
 
             if (components.size() == 0) {
@@ -709,27 +709,23 @@ namespace eka2l1 {
                 loader::rom_dir temp;
                 temp.name = common::utf8_to_ucs2(components[i]);
 
-                auto res1 = std::lower_bound(dirs.begin(), dirs.end(), temp,
+                auto res1 = std::lower_bound(last_dir_found->subdirs.begin(), last_dir_found->subdirs.end(), temp,
                     [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
 
-                if (res1 != dirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
-                    last_dir_found = *res1;
-                    dirs = res1->subdirs;
+                if (res1 != last_dir_found->subdirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
+                    last_dir_found = &(last_dir_found->subdirs[std::distance(last_dir_found->subdirs.begin(), res1)]);
                 } else {
                     return std::optional<loader::rom_entry>{};
                 }
             }
 
-            // Save the last
-            auto entries = last_dir_found.entries;
-
             loader::rom_entry temp_entry;
             temp_entry.name = common::utf8_to_ucs2(components[components.size() - 1]);
 
-            auto res2 = std::lower_bound(entries.begin(), entries.end(), temp_entry,
+            auto res2 = std::lower_bound(last_dir_found->entries.begin(), last_dir_found->entries.end(), temp_entry,
                 [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
 
-            if (res2 != entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
+            if (res2 != last_dir_found->entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
                 return *res2;
             }
 
@@ -766,6 +762,11 @@ namespace eka2l1 {
         }
 
         abstract_file_system_err_code is_entry_in_rom(const std::u16string &path) override {
+            // Don't bother getting an entry if it's not even available on host
+            if (!exists(path)) {
+                return abstract_file_system_err_code::no;
+            }
+
             if (burn_tree_find_entry(common::ucs2_to_utf8(path))) {
                 return abstract_file_system_err_code::ok;
             }
@@ -780,6 +781,11 @@ namespace eka2l1 {
                 return nullptr;
             }
             
+            // Don't bother getting an entry if it's not even available on host
+            if (!exists(path)) {
+                return nullptr;
+            }
+            
             auto entry = burn_tree_find_entry(common::ucs2_to_utf8(path));
 
             if (!entry) {
@@ -790,6 +796,11 @@ namespace eka2l1 {
         }
 
         std::optional<entry_info> get_entry_info(const std::u16string &path) override {
+            // Don't bother getting an entry if it's not even available on host
+            if (!exists(path)) {
+                return std::nullopt;
+            }
+
             auto entry = burn_tree_find_entry(common::ucs2_to_utf8(path));
 
             if (!entry) {
