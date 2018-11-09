@@ -1546,6 +1546,7 @@ namespace eka2l1::epoc {
         thread_ptr thr = kern->get_thread_by_handle(aHandle);
 
         if (!thr) {
+            LOG_ERROR("invalid thread handle 0x{:x}", aHandle);
             return;
         }
 
@@ -1557,6 +1558,27 @@ namespace eka2l1::epoc {
 
         default: {
             thr->resume();
+            break;
+        }
+        }
+    }
+
+    BRIDGE_FUNC(void, ThreadSuspend, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            LOG_ERROR("invalid thread handle 0x{:x}", aHandle);
+            return;
+        }
+
+        switch (thr->current_state()) {
+        case kernel::thread_state::create: {
+            break;
+        }
+
+        default: {
+            thr->suspend();
             break;
         }
         }
@@ -1986,6 +2008,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x25, SessionSend),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
+        BRIDGE_REGISTER(0x29, ThreadSuspend),
         BRIDGE_REGISTER(0x2B, ThreadSetPriority),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
         BRIDGE_REGISTER(0x35, TimerCancel),
