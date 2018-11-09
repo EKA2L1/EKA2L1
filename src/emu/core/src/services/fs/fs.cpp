@@ -164,6 +164,8 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
         REGISTER_IPC(fs_server, file_write, EFsFileWrite, "Fs::FileWrite");
         REGISTER_IPC(fs_server, file_flush, EFsFileFlush, "Fs::FileFlush");
+        REGISTER_IPC(fs_server, file_duplicate, EFsFileDuplicate, "Fs::FileDuplicate");
+        REGISTER_IPC(fs_server, file_adopt, EFsFileAdopt, "Fs::FileAdopt");
         REGISTER_IPC(fs_server, file_rename, EFsFileRename, "Fs::FileRename(Move)");
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
         REGISTER_IPC(fs_server, file_create, EFsFileCreate, "Fs::FileCreate");
@@ -632,7 +634,8 @@ namespace eka2l1 {
 
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
 
-        int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res, *open_mode_res, overwrite);
+        int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res, 
+            *open_mode_res, overwrite);
 
         if (handle <= 0) {
             ctx.set_request_status(handle);
@@ -675,6 +678,28 @@ namespace eka2l1 {
         }
 
         new_file_subsession(ctx, true);
+    }
+    
+    void fs_server::file_duplicate(service::ipc_context ctx) {
+        int target_handle = *ctx.get_arg<int>(0);
+        fs_node *node = nodes_table.get_node(target_handle);
+
+        if (!node) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        size_t dup_handle = nodes_table.add_node(*node);
+
+        ctx.write_arg_pkg<int>(3, static_cast<int>(dup_handle));
+        ctx.set_request_status(KErrNone);
+    }
+    
+    void fs_server::file_adopt(service::ipc_context ctx) {
+        LOG_TRACE("Fs::FileAdopt stubbed");
+        // TODO (pent0) : Do an adopt implementation
+
+        ctx.set_request_status(KErrNone);
     }
 
     std::string replace_all(std::string str, const std::string &from, const std::string &to) {

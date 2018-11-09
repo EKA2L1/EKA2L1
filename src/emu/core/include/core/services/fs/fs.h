@@ -116,6 +116,8 @@ namespace eka2l1 {
         void file_replace(service::ipc_context ctx);
         void file_flush(service::ipc_context ctx);
         void file_close(service::ipc_context ctx);
+        void file_duplicate(service::ipc_context ctx);
+        void file_adopt(service::ipc_context ctx);
 
         void new_file_subsession(service::ipc_context ctx, bool overwrite = false);
 
