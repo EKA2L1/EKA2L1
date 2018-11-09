@@ -675,7 +675,11 @@ namespace eka2l1 {
         std::shared_ptr<file> open_file(const std::u16string &path, const int mode) override {
             std::optional<std::u16string> real_path = get_real_physical_path(path);
 
-            if (!real_path || !exists(*real_path)) {
+            if (!real_path) {
+                return nullptr;
+            }
+
+            if (!(mode & WRITE_MODE) && !fs::exists(*real_path)) {
                 return nullptr;
             }
             

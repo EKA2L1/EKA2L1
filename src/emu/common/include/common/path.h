@@ -17,6 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <stdexcept>
 #include <string>
 
 namespace eka2l1 {
@@ -127,7 +129,7 @@ namespace eka2l1 {
 
         path_iterator operator++(int dummy) {
             if (crr_pos > path.length()) {
-                throw std::exception("Iterator is invalid");
+                throw std::runtime_error("Iterator is invalid");
                 return *this;
             }
 

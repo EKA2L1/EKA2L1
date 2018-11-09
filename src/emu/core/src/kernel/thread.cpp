@@ -429,7 +429,8 @@ namespace eka2l1 {
         }
 
         bool thread::suspend() {
-            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
+            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj_by_id(uid)));
 
             if (!res) {
                 return false;
