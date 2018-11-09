@@ -513,7 +513,8 @@ namespace eka2l1 {
         vfs_file->seek(write_pos, file_seek_mode::beg);
         size_t wrote_size = vfs_file->write_file(&(*write_data)[0], 1, write_len);
 
-        LOG_TRACE("File {} wroted with size: {}", common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
+        LOG_TRACE("File {} wroted with size: {}", 
+            common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
 
         ctx.set_request_status(KErrNone);
     }
@@ -651,12 +652,6 @@ namespace eka2l1 {
             return;
         }
 
-        // If the file already exist, stop
-        if (ctx.sys->get_io_system()->exist(*name_res)) {
-            ctx.set_request_status(KErrAlreadyExists);
-            return;
-        }
-
         new_file_subsession(ctx);
     }
 
@@ -664,8 +659,22 @@ namespace eka2l1 {
         new_file_subsession(ctx, true);
     }
 
-    void fs_server::file_create(service::ipc_context ctx) {
-        
+    void fs_server::file_create(service::ipc_context ctx) { 
+        std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
+        std::optional<int> open_mode_res = ctx.get_arg<int>(1);
+
+        if (!name_res || !open_mode_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        // If the file already exist, stop
+        if (ctx.sys->get_io_system()->exist(*name_res)) {
+            ctx.set_request_status(KErrAlreadyExists);
+            return;
+        }
+
+        new_file_subsession(ctx, true);
     }
 
     std::string replace_all(std::string str, const std::string &from, const std::string &to) {
