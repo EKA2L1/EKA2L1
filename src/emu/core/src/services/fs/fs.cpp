@@ -655,6 +655,12 @@ namespace eka2l1 {
             return;
         }
 
+        // If the file already exist, stop
+        if (!ctx.sys->get_io_system()->exist(*name_res)) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
         new_file_subsession(ctx);
     }
 
