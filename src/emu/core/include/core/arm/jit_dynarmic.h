@@ -24,6 +24,7 @@
 #include <dynarmic/A32/a32.h>
 #include <dynarmic/A32/config.h>
 
+#include <map>
 #include <memory>
 
 namespace eka2l1 {
@@ -34,6 +35,8 @@ namespace eka2l1 {
 
     class disasm;
     class gdbstub;
+
+    class page_table;
 
     namespace hle {
         class lib_manager;
@@ -48,7 +51,9 @@ namespace eka2l1 {
 
             jit_unicorn fallback_jit;
 
-            std::unique_ptr<Dynarmic::A32::Jit> jit;
+            std::map<page_table*, std::unique_ptr<Dynarmic::A32::Jit>> jit_map;
+
+            Dynarmic::A32::Jit *jit;
             std::unique_ptr<arm_dynarmic_callback> cb;
 
             disasm *asmdis;
@@ -60,12 +65,7 @@ namespace eka2l1 {
             hle::lib_manager *lib_mngr;
 
             gdbstub *stub;
-
             debugger_ptr debugger;
-
-            std::array<uint8_t *,
-                Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
-                page_table_dyn;
 
         public:
             timing_system *get_timing_sys() {

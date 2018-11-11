@@ -160,11 +160,11 @@ namespace eka2l1::kernel {
     }
 
     void *process::get_ptr_on_addr_space(address addr) {
-        if (!page_tab.pointers[addr / page_tab.page_size].get()) {
+        if (!page_tab.pointers[addr / page_tab.page_size]) {
             return nullptr;
         }
 
-        return static_cast<void *>(page_tab.pointers[addr / page_tab.page_size].get()
+        return static_cast<void *>(page_tab.pointers[addr / page_tab.page_size]
             + addr % page_tab.page_size);
     }
 

@@ -401,20 +401,13 @@ namespace eka2l1 {
             }
         };
 
-        std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::array<uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES> &pages,
-            std::unique_ptr<arm_dynarmic_callback> &callback, page_table *table) {
+        std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::unique_ptr<arm_dynarmic_callback> &callback, page_table *table) {
             Dynarmic::A32::UserConfig config;
             config.callbacks = callback.get();
             config.coprocessors[15] = std::make_shared<arm_dynarmic_cp15>();
 
             if (table) {
-                using config_table_array = decltype(*config.page_table);
-
-                for (size_t i = 0; i < table->pointers.size(); i++) {
-                    pages[i] = table->pointers[i].get();
-                }
-
-                config.page_table = &pages;
+                config.page_table = &table->get_pointers();
             }
 
             return std::make_unique<Dynarmic::A32::Jit>(config);
@@ -432,7 +425,7 @@ namespace eka2l1 {
             , fallback_jit(kern, sys, mngr, mem, asmdis, lmngr, stub)
             , cb(std::make_unique<arm_dynarmic_callback>(*this))
             , debugger(debugger) {
-            jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
+            page_table_changed();
         }
 
         jit_dynarmic::~jit_dynarmic() {}
@@ -553,27 +546,27 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::page_table_changed() {
-            arm::jit_interface::thread_context ctx;
-            save_context(ctx);
+            page_table *crr_page = mem->get_current_page_table();
 
-            jit = std::move(make_jit(page_table_dyn, cb, mem->get_current_page_table()));
-            load_context(ctx);
+            if (crr_page) {
+                auto iter = jit_map.find(crr_page);
+
+                if (iter != jit_map.end()) {
+                    jit = iter->second.get();
+                } else {
+                    auto new_jit = std::move(make_jit(cb, crr_page));
+                    jit = new_jit.get();
+                    jit_map.emplace(crr_page, std::move(new_jit));
+                }
+            }
         }
 
         void jit_dynarmic::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
-            for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
-                page_table_dyn[(vaddr / mem->get_page_size()) + i] = ptr + mem->get_page_size() * i;
-            }
-
-            fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
+            // fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
         }
 
         void jit_dynarmic::unmap_memory(address addr, size_t size) {
-            for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
-                page_table_dyn[(addr / mem->get_page_size()) + i] = nullptr;
-            }
-
-            fallback_jit.unmap_memory(addr, size);
+            // fallback_jit.unmap_memory(addr, size);
         }
 
         void jit_dynarmic::clear_instruction_cache() {

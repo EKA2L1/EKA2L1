@@ -24,18 +24,16 @@
 namespace eka2l1 {
     page_table::page_table(int page_size)
         : page_size(page_size) {
-        int total_page = 0xFFFFFFFF / page_size;
-
-        pointers.resize(total_page);
-        pages.resize(total_page);
+        page clear = { 0, page_status::free, prot::none };
+        std::fill(pages.begin(), pages.end(), clear);
     }
 
-    std::vector<page> &page_table::get_pages() {
+    std::array<page, page_table_number_entries> &page_table::get_pages() {
         const std::lock_guard<std::mutex> guard(mut);
         return pages;
     }
 
-    std::vector<mem_ptr> &page_table::get_pointers() {
+    std::array<std::uint8_t*, page_table_number_entries> &page_table::get_pointers() {
         const std::lock_guard<std::mutex> guard(mut);
         return pointers;
     }
@@ -52,7 +50,7 @@ namespace eka2l1 {
             break;
 
         case page_status::committed:
-            memcpy(dest, &((pointers[page]).get()[addr % page_size]), size);
+            memcpy(dest, &((pointers[page])[addr % page_size]), size);
         }
 
         return;
@@ -83,7 +81,7 @@ namespace eka2l1 {
            Block all pointers modification.
         */
         case page_status::committed:
-            memcpy(&((get_pointers()[page]).get()[addr % page_size]), src, size);
+            memcpy(&((get_pointers()[page])[addr % page_size]), src, size);
         }
 
         return;
@@ -111,7 +109,7 @@ namespace eka2l1 {
         /* This time, can't gurantee memory read/write safe, since other thread may 
            write async with the JIT. */
         case page_status::committed:
-            return &((get_pointers()[page]).get()[addr % page_size]);
+            return &((get_pointers()[page])[addr % page_size]);
         }
 
         return nullptr;        

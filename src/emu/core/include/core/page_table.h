@@ -3,6 +3,7 @@
 #include <common/types.h>
 #include <common/resource.h>
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -28,7 +29,14 @@ enum : uint32_t {
     ram_code_addr_eka1 = 0xE0000000,
     ram_code_addr_eka1_end = 0xF0000000,
     shared_data_eka1 = 0x10000000,
-    shared_data_end_eka1 = 0x30000000
+    shared_data_end_eka1 = 0x30000000,
+    global_data_section_size = 0x10000000,
+    code_seg_section_size = 0x10000000,
+    page_size = 0x1000,
+    page_bits = 12,
+    page_table_number_entries = 1 << (32 - page_bits),
+    global_data_section_number_entries = global_data_section_size / page_size,
+    code_seg_section_number_entries = code_seg_section_size / page_size
 };
 
 namespace eka2l1 {
@@ -46,14 +54,12 @@ namespace eka2l1 {
         prot page_protection;
     };
 
-    using mem_ptr = std::shared_ptr<uint8_t[]>;
-
     struct page_table {
-        std::vector<mem_ptr> pointers;
-        std::vector<page> pages;
+        std::array<std::uint8_t*, page_table_number_entries> pointers;
+        std::array<page, page_table_number_entries> pages;
 
-        std::vector<page> &get_pages();
-        std::vector<mem_ptr> &get_pointers();
+        std::array<page, page_table_number_entries> &get_pages();
+        std::array<std::uint8_t*, page_table_number_entries> &get_pointers();
 
         std::mutex mut;
 

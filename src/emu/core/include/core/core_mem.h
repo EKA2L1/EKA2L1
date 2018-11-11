@@ -2,6 +2,7 @@
 
 #include <core/page_table.h>
 
+#include <array>
 #include <functional>
 #include <memory>
 
@@ -23,11 +24,11 @@ namespace eka2l1 {
         page_table *current_page_table = nullptr;
         page_table *previous_page_table = nullptr;
 
-        std::vector<page> global_pages;
-        std::vector<mem_ptr> global_pointers;
+        std::array<page, global_data_section_number_entries> global_pages;
+        std::array<std::uint8_t*, global_data_section_number_entries> global_pointers;
 
-        std::vector<page> codeseg_pages;
-        std::vector<mem_ptr> codeseg_pointers;
+        std::array<page, code_seg_section_number_entries> codeseg_pages;
+        std::array<std::uint8_t*, code_seg_section_number_entries> codeseg_pointers;
 
         std::size_t rom_size;
 
