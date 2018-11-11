@@ -562,15 +562,17 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
-            // fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
+            fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
         }
 
         void jit_dynarmic::unmap_memory(address addr, size_t size) {
-            // fallback_jit.unmap_memory(addr, size);
+            fallback_jit.unmap_memory(addr, size);
         }
 
         void jit_dynarmic::clear_instruction_cache() {
-            jit->ClearCache();
+            for (auto &[pt, jit]: jit_map) {
+                jit->ClearCache();
+            }
         }
     }
 }

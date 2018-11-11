@@ -446,8 +446,8 @@ namespace eka2l1 {
         }
 
         std::optional<eka2img> parse_eka2img(symfile ef, bool read_reloc) {
-            if (!ef) {
-                return std::optional<eka2img>{};
+            if (!ef || ef->is_in_rom()) {
+                return std::nullopt;
             }
 
             eka2img img;
@@ -461,7 +461,7 @@ namespace eka2l1 {
             ef->read_file(&img.header.sig, 1, 4);
 
             if (img.header.sig != 0x434F5045) {
-                return std::optional<eka2img>{};
+                return std::nullopt;
             }
 
             uint32_t temp = 0;

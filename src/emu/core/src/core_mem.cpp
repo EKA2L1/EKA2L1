@@ -226,21 +226,22 @@ namespace eka2l1 {
 
         auto ite = std::search_n(std::reverse_iterator<page*>(page_end),
             std::reverse_iterator<page*>(page_begin), page_count, holder, [](const page &lhs, const page &rhs) {
-            return (lhs.sts == page_status::free) && (lhs.generation == 0);
+            return (lhs.sts == page_status::free);
         });
 
         if (ite == std::reverse_iterator<page*>(page_begin)) {
             return ptr<void>(0);
         }
 
-        auto idx = std::distance(ite, std::reverse_iterator<page*>(page_begin)) - page_count + 1;
-
         if (beg_addr >= shared_addr && beg_addr < shared_addr + shared_size) {
+            auto idx = ite.base() - global_pages.data() - page_count;
             return chunk(shared_addr + idx * page_size, bottom, top, max_grow, cprot);
         } else if (beg_addr >= ram_code_addr && beg_addr < codeseg_addr + 0x10000000) {
+            auto idx = ite.base() - codeseg_pages.data() - page_count;
             return chunk(ram_code_addr + idx * page_size, bottom, top, max_grow, cprot);
         }
 
+        auto idx = ite.base() - current_page_table->pages.data() - page_count;
         return chunk(idx * page_size, bottom, top, max_grow, cprot);
     }
 
@@ -577,8 +578,8 @@ namespace eka2l1 {
         std::copy(codeseg_pages.begin(), codeseg_pages.end(), current_page_table->pages.begin() + (codeseg_addr / page_size));
         std::copy(codeseg_pointers.begin(), codeseg_pointers.end(), current_page_table->get_pointers().begin() + (codeseg_addr / page_size));
 
-        std::copy(global_pages.begin(), global_pages.end(), current_page_table->pages.begin() + (shared_addr / page_size));
-        std::copy(global_pointers.begin(), global_pointers.end(), current_page_table->get_pointers().begin() + (shared_addr / page_size));
+        std::copy(global_pages.begin(), global_pages.begin() + (shared_size / page_size), current_page_table->pages.begin() + (shared_addr / page_size));
+        std::copy(global_pointers.begin(), global_pointers.begin() + (shared_size / page_size), current_page_table->get_pointers().begin() + (shared_addr / page_size));
 
         if (!current_page_table->get_pointers()[rom_addr / page_size]) {
             current_page_table->get_pointers()[rom_addr / page_size] = reinterpret_cast<uint8_t *>(rom_map);

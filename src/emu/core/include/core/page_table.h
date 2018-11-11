@@ -30,12 +30,14 @@ enum : uint32_t {
     ram_code_addr_eka1_end = 0xF0000000,
     shared_data_eka1 = 0x10000000,
     shared_data_end_eka1 = 0x30000000,
-    global_data_section_size = 0x10000000,
+    shared_data_section_size_eka2 = 0x30000000,
+    shared_data_section_size_eka1 = 0x20000000,
+    shared_data_section_size_max = shared_data_section_size_eka2,
     code_seg_section_size = 0x10000000,
     page_size = 0x1000,
     page_bits = 12,
     page_table_number_entries = 1 << (32 - page_bits),
-    global_data_section_number_entries = global_data_section_size / page_size,
+    shared_data_section_max_number_entries = shared_data_section_size_max / page_size,
     code_seg_section_number_entries = code_seg_section_size / page_size
 };
 

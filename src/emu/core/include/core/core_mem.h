@@ -24,8 +24,8 @@ namespace eka2l1 {
         page_table *current_page_table = nullptr;
         page_table *previous_page_table = nullptr;
 
-        std::array<page, global_data_section_number_entries> global_pages;
-        std::array<std::uint8_t*, global_data_section_number_entries> global_pointers;
+        std::array<page, shared_data_section_max_number_entries> global_pages;
+        std::array<std::uint8_t*, shared_data_section_max_number_entries> global_pointers;
 
         std::array<page, code_seg_section_number_entries> codeseg_pages;
         std::array<std::uint8_t*, code_seg_section_number_entries> codeseg_pointers;

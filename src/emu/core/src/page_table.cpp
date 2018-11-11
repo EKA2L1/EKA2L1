@@ -26,6 +26,7 @@ namespace eka2l1 {
         : page_size(page_size) {
         page clear = { 0, page_status::free, prot::none };
         std::fill(pages.begin(), pages.end(), clear);
+        std::fill(pointers.begin(), pointers.end(), nullptr);
     }
 
     std::array<page, page_table_number_entries> &page_table::get_pages() {
