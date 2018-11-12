@@ -49,7 +49,7 @@ namespace eka2l1 {
 
             jit_unicorn fallback_jit;
 
-            Dynarmic::A32::Jit *jit;
+            std::unique_ptr<Dynarmic::A32::Jit> jit;
             std::unique_ptr<arm_dynarmic_callback> cb;
 
             disasm *asmdis;
