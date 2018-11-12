@@ -19,6 +19,7 @@
  */
 
 #include <core/core.h>
+#include <core/configure.h>
 #include <core/kernel/process.h>
 
 #include <common/algorithm.h>
@@ -49,12 +50,14 @@ namespace fs = std::experimental::filesystem;
 
 namespace eka2l1 {
     void system::load_scripts() {
+#ifdef ENABLE_SCRIPTING
         for (const auto &entry : fs::directory_iterator("scripts")) {
             if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".py") {
                 auto module_name = entry.path().filename().replace_extension("").string();
                 mngr.get_script_manager()->import_module("scripts/" + module_name);
             }
         }
+#endif
     }
 
     void system::init() {
@@ -87,7 +90,9 @@ namespace eka2l1 {
         epoc::init_hal(this);
         epoc::init_panic_descriptions();
 
+#if ENABLE_SCRIPTING == 1
         load_scripts();
+#endif
     }
 
     system::system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
@@ -167,7 +172,10 @@ namespace eka2l1 {
         if (!kern.should_terminate()) {
             kern.processing_requests();
 
+#ifdef ENABLE_SCRIPTING
             mngr.get_script_manager()->call_reschedules();
+#endif
+            
             kern.reschedule();
 
             reschedule_pending = false;

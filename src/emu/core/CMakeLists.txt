@@ -1,6 +1,23 @@
 set (CORE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core/)
 set (CORE_OUTER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+  COMMAND git log -1 --format=%h
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+configure_file(${CORE_INCLUDE_DIR}/configure.h.in ${CORE_INCLUDE_DIR}/configure.h)
+
 add_library(coremem
         include/core/core_mem.h
         include/core/ptr.h
@@ -31,9 +48,9 @@ target_include_directories(coremem PUBLIC include)
 target_include_directories(coretiming PUBLIC include)
 target_include_directories(coreio PUBLIC include)
 
-target_link_libraries(coremem PUBLIC common pybind11::embed)
-target_link_libraries(coretiming PUBLIC common pybind11::embed)
-target_link_libraries(coreio PUBLIC common coreloader pybind11::embed)
+target_link_libraries(coremem PUBLIC common)
+target_link_libraries(coretiming PUBLIC common)
+target_link_libraries(coreio PUBLIC common coreloader)
 
 add_library(core include/core/ptr.h
                  include/core/core.h
@@ -59,7 +76,6 @@ endif()
 # Disasm on the go in the future
 target_link_libraries(core PUBLIC
         disasm
-        hle
-        pybind11::embed)       
+        hle)       
         
 target_include_directories(core PUBLIC include)

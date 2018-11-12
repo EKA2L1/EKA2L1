@@ -36,8 +36,6 @@ namespace eka2l1 {
     class disasm;
     class gdbstub;
 
-    class page_table;
-
     namespace hle {
         class lib_manager;
     }
@@ -50,8 +48,6 @@ namespace eka2l1 {
             friend class arm_dynarmic_callback;
 
             jit_unicorn fallback_jit;
-
-            std::map<page_table*, std::unique_ptr<Dynarmic::A32::Jit>> jit_map;
 
             Dynarmic::A32::Jit *jit;
             std::unique_ptr<arm_dynarmic_callback> cb;

@@ -113,7 +113,7 @@ namespace eka2l1 {
                         parent.get_lr() % 2 != 0 ? 2 : 4, parent.get_lr() - parent.get_lr() % 2,
                         parent.get_lr() % 2 != 0 ? true : false);
 
-                    LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, -parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) : parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
+                    LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) : parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
                 }
 
                 thread_ptr crr_thread = parent.kern->crr_thread();

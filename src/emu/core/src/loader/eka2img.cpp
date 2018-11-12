@@ -155,14 +155,6 @@ namespace eka2l1 {
 
             std::vector<std::uint32_t> relocated_export_addresses;
 
-            uint32_t code_start;
-            uint32_t code_end;
-            uint32_t data_start;
-            uint32_t data_end;
-
-            uint32_t code_delta;
-            uint32_t data_delta;
-
             if (!img && !rimg) {
                 return false;
             } else {

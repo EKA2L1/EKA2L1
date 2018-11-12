@@ -5,7 +5,10 @@ set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost
 
 add_definitions(-DCURL_STATICLIB)
 
-add_subdirectory(pybind11)
+if (ENABLE_SCRIPTING_ABILITY)
+    add_subdirectory(pybind11)
+endif()
+
 add_subdirectory(spdlog)
 add_subdirectory(glfw)
 add_subdirectory(glm)

@@ -31,6 +31,7 @@
 #include <core/vfs.h>
 
 #include <core/core.h>
+#include <core/configure.h>
 #include <core/core_kernel.h>
 
 #include <experimental/filesystem>
@@ -174,7 +175,9 @@ namespace eka2l1 {
                 for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
                     addr_map.insert(std::make_pair(addrs[i], libids[i]));
 
+#ifdef ENABLE_SCRIPTING
                     sys->get_manager_system()->get_script_manager()->patch_sid_breakpoints(libids[i], addrs[i]);
+#endif
 
                     std::string name_imp = get_func_name(libids[i]).value();
                     size_t vtab_start = name_imp.find("vtable for ");
@@ -483,7 +486,9 @@ namespace eka2l1 {
                 LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
             }
 
+#ifdef ENABLE_SCRIPTING
             sys->get_manager_system()->get_script_manager()->call_svcs(svcnum);
+#endif
 
             func.func(sys);
 
