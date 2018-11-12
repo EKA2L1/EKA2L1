@@ -18,6 +18,7 @@ target_link_libraries(coremanager PUBLIC common)
 
 if (ENABLE_SCRIPTING_ABILITY)
 	target_link_libraries(coremanager PUBLIC pybind11::embed)
+	target_link_libraries(coremanager PRIVATE symemu)
 endif (ENABLE_SCRIPTING_ABILITY)
 
-target_link_libraries(coremanager PRIVATE coreloader symemu)
+target_link_libraries(coremanager PRIVATE coreloader)

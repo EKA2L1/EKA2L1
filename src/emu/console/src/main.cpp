@@ -380,7 +380,8 @@ int ui_debugger_thread() {
     debugger_window->button_released = on_ui_window_key_release;
     debugger_window->char_hook = on_ui_window_char_type;
 
-    std::string window_title = "Debugging Window (" + GIT_BRANCH + " " + GIT_COMMIT_HASH + ")";
+    std::string window_title = std::string("Debugging Window (") + GIT_BRANCH + " " + 
+        GIT_COMMIT_HASH + ")";
 
     debugger_window->init(window_title, eka2l1::vec2(500, 500));
     debugger_window->make_current();

@@ -5,13 +5,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 option(BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(BUILD_TESTS "Build EKA2L1's tests" ON)
-
-# Auto turning off scripting if MSVC
-if (MSVC)
-    option(ENABLE_SCRIPTING_ABILITY "Enable to script with Python" OFF)
-else (MSVC)
-    option(ENABLE_SCRIPTING_ABILITY "Enable to script with Python" ON)
-endif(MSVC)
+option(ENABLE_SCRIPTING_ABILITY "Enable to script with Python" OFF)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})
