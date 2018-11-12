@@ -655,7 +655,7 @@ namespace eka2l1 {
             return;
         }
 
-        // If the file already exist, stop
+        // Don't open file if it doesn't exist
         if (!ctx.sys->get_io_system()->exist(*name_res)) {
             ctx.set_request_status(KErrNotFound);
             return;

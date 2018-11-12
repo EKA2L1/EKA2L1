@@ -49,10 +49,10 @@ namespace eka2l1 {
 
             }
 
-            boost::optional<Callback> CompileInternalOperation(bool two, unsigned opc1, coproc_reg CRd,
+            std::optional<Callback> CompileInternalOperation(bool two, unsigned opc1, coproc_reg CRd,
                 coproc_reg CRn, coproc_reg CRm,
                 unsigned opc2) override {
-                return boost::none;
+                return std::nullopt;
             }
 
             CallbackOrAccessOneWord CompileSendOneWord(bool two, unsigned opc1, coproc_reg CRn,
@@ -73,14 +73,14 @@ namespace eka2l1 {
                 return boost::blank{};
             }
 
-            boost::optional<Callback> CompileLoadWords(bool two, bool long_transfer, coproc_reg CRd,
-                boost::optional<std::uint8_t> option) override {
-                return boost::none;
+            std::optional<Callback> CompileLoadWords(bool two, bool long_transfer, coproc_reg CRd,
+                std::optional<std::uint8_t> option) override {
+                return std::nullopt;
             }
 
-            boost::optional<Callback> CompileStoreWords(bool two, bool long_transfer, coproc_reg CRd,
-                boost::optional<std::uint8_t> option) override {
-                return boost::none;
+            std::optional<Callback> CompileStoreWords(bool two, bool long_transfer, coproc_reg CRd,
+                std::optional<std::uint8_t> option) override {
+                return std::nullopt;
             }
         };
 
@@ -548,16 +548,20 @@ namespace eka2l1 {
         void jit_dynarmic::page_table_changed() {
             page_table *crr_page = mem->get_current_page_table();
 
-            if (crr_page) {
-                auto iter = jit_map.find(crr_page);
+            bool should_save_load = (jit) ? true : false;
 
-                if (iter != jit_map.end()) {
-                    jit = iter->second.get();
-                } else {
-                    auto new_jit = std::move(make_jit(cb, crr_page));
-                    jit = new_jit.get();
-                    jit_map.emplace(crr_page, std::move(new_jit));
-                }
+            arm::jit_interface::thread_context ctx;
+
+            if (should_save_load) {
+                save_context(ctx);
+            }
+
+            if (crr_page) {
+                jit = std::move(make_jit(cb, crr_page));
+            }
+
+            if (should_save_load) {
+                load_context(ctx);
             }
         }
 
@@ -570,9 +574,7 @@ namespace eka2l1 {
         }
 
         void jit_dynarmic::clear_instruction_cache() {
-            for (auto &[pt, jit]: jit_map) {
-                jit->ClearCache();
-            }
+            jit->ClearCache();
         }
     }
 }
