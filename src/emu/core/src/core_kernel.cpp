@@ -91,7 +91,7 @@ namespace eka2l1 {
     }
 
     uint32_t kernel_system::spawn_new_process(const std::string &path, const std::string &name,
-        uint32_t uid, kernel::owner_type owner) {
+		kernel::owner_type owner) {
         std::u16string path16 = common::utf8_to_ucs2(path);
         symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
@@ -143,7 +143,7 @@ namespace eka2l1 {
 
     uint32_t kernel_system::spawn_new_process(uint32_t uid, kernel::owner_type owner) {
         return spawn_new_process(mngr->get_package_manager()->get_app_executable_path(uid),
-            mngr->get_package_manager()->get_app_name(uid), uid, owner);
+            mngr->get_package_manager()->get_app_name(uid), owner);
     }
 
     bool kernel_system::destroy_all_processes() {

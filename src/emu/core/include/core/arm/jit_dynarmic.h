@@ -65,6 +65,9 @@ namespace eka2l1 {
             gdbstub *stub;
             debugger_ptr debugger;
 
+			std::array<std::uint8_t*, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
+				page_dyn;
+
         public:
             timing_system *get_timing_sys() {
                 return timing;

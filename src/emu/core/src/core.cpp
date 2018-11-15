@@ -114,10 +114,7 @@ namespace eka2l1 {
 
         if (!startup_inited) {
             for (auto &startup_app : startup_apps) {
-                // Some ROM apps have UID3 left blank, until we figured out how to get the UID3 uniquely, we gonna just hash
-                // the path to get the UID
-                uint32_t process = kern.spawn_new_process(
-                    startup_app, eka2l1::filename(startup_app), common::hash(startup_app));
+                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app));
                 
                 kern.run_process(process);
             }
