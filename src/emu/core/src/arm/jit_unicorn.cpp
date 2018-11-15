@@ -24,6 +24,7 @@
 
 #include <core/arm/jit_unicorn.h>
 #include <core/core.h>
+#include <core/configure.h>
 #include <core/arm/jit_utils.h>
 #include <core/core_timing.h>
 #include <core/disasm/disasm.h>
@@ -103,10 +104,12 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     bool log_code = jit->get_lib_manager()->get_sys()->get_bool_config("log_code");
     bool log_passed = jit->get_lib_manager()->get_sys()->get_bool_config("log_passed");
 
+#if ENABLE_SCRIPTING == 1
     if (enable_breakpoint_script) {
         jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
         jit->get_manager_sys()->get_script_manager()->call_breakpoints(address + 1);
     }
+#endif
 
     if (log_passed && mngr) {
         auto res = mngr->get_sid(address);

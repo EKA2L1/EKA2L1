@@ -7,12 +7,15 @@ set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost
 add_definitions(-DCURL_STATICLIB)
 
 # Pybind11
-set (PYBIND11_TEST OFF CACHE BOOL "" FORCE)
-add_subdirectory(pybind11)
+if (ENABLE_SCRIPTING_ABILITY)
+	set (PYBIND11_TEST OFF CACHE BOOL "" FORCE)
+	add_subdirectory(pybind11)
+endif()
 
 # SPDLOG - Build examples off
 set (SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
 set (SPDLOG_BUILD_BENCH OFF CACHE BOOL "" FORCE)
+
 add_subdirectory(spdlog)
 
 # GLM

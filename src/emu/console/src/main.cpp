@@ -29,7 +29,9 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+
 #include <core/core.h>
+#include <core/configure.h>
 #include <core/loader/rom.h>
 
 #include <debugger/imgui_debugger.h>
@@ -378,7 +380,10 @@ int ui_debugger_thread() {
     debugger_window->button_released = on_ui_window_key_release;
     debugger_window->char_hook = on_ui_window_char_type;
 
-    debugger_window->init("Debugging Window", eka2l1::vec2(500, 500));
+    std::string window_title = std::string("Debugging Window (") + GIT_BRANCH + " " + 
+        GIT_COMMIT_HASH + ")";
+
+    debugger_window->init(window_title, eka2l1::vec2(500, 500));
     debugger_window->make_current();
 
     eka2l1::drivers::init_graphics_library(eka2l1::drivers::graphic_api::opengl);

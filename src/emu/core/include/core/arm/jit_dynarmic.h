@@ -36,8 +36,6 @@ namespace eka2l1 {
     class disasm;
     class gdbstub;
 
-    class page_table;
-
     namespace hle {
         class lib_manager;
     }

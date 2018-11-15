@@ -29,6 +29,8 @@
 #include <core/epoc/tl.h>
 #include <core/epoc/uid.h>
 
+#include <core/configure.h>
+
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/random.h>
@@ -569,7 +571,9 @@ namespace eka2l1::epoc {
             }
         }
 
+#ifdef ENABLE_SCRIPTING
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
+#endif
 
         ipc_msg_ptr msg = kern->get_msg(aHandle);
 
@@ -1468,7 +1472,9 @@ namespace eka2l1::epoc {
             thr->owning_process()->set_exit_type(static_cast<kernel::process_exit_type>(aExitType));
         }
 
+#ifdef ENABLE_SCRIPTING
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
+#endif
 
         kern->get_thread_scheduler()->stop(thr);
         kern->prepare_reschedule();

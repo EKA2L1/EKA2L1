@@ -20,7 +20,11 @@ pybind11_add_module(symemu_common
     src/common.cpp)
 
 target_include_directories(symemu PUBLIC include  ${EPOC32_INCLUDE_DIR})
-target_link_libraries(symemu PRIVATE common pybind11 core corekernel)
+target_link_libraries(symemu PRIVATE common core corekernel)
+
+if (ENABLE_SCRIPTING_ABILITY)
+    target_link_libraries(symemu PUBLIC pybind11)
+endif (ENABLE_SCRIPTING_ABILITY)
 
 if (UNIX OR APPLE)
     target_link_libraries(symemu PRIVATE util)

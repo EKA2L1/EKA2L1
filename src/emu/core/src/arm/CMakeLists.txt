@@ -17,9 +17,9 @@ target_link_libraries(arm
 	coremem 
     coretiming
     corekernel
+    coremanager
     debugger
 	disasm
     dynarmic
     gdbstub
-    unicorn
-    pybind11::embed)
+    unicorn)

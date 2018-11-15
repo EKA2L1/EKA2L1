@@ -34,10 +34,17 @@ namespace fs = std::experimental::filesystem;
 namespace eka2l1 {
     namespace loader {
         bool extract_file(io_system *io, FILE *parent, rpkg_entry &ent) {
-            std::string real_path = common::ucs2_to_utf8(ent.path);
+            auto path_ucs16_real = io->get_raw_path(ent.path);
+
+            if (!path_ucs16_real) {
+                LOG_WARN("Drive Z: not mounted");
+                return false;
+            }
+
+            std::string real_path = common::ucs2_to_utf8(*path_ucs16_real);
 
             std::string dir = eka2l1::file_directory(real_path);
-            io->create_directories(common::utf8_to_ucs2(dir));
+            fs::create_directories(common::utf8_to_ucs2(dir));
 
             FILE *wf
                 = fopen(real_path.c_str(), "wb");

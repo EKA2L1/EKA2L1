@@ -6,6 +6,10 @@ endif()
 add_subdirectory(common)
 add_subdirectory(drivers)
 add_subdirectory(core)
-add_subdirectory(scripting)
+
+if (ENABLE_SCRIPTING_ABILITY)
+    add_subdirectory(scripting)
+endif()
+
 add_subdirectory(debugger)
 add_subdirectory(console)
