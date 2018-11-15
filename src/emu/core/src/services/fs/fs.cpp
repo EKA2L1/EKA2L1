@@ -641,7 +641,9 @@ namespace eka2l1 {
             ctx.set_request_status(handle);
             return;
         }
-
+        
+        LOG_TRACE("Handle opended: {}", handle);
+        
         ctx.write_arg_pkg<int>(3, handle);
         ctx.set_request_status(KErrNone);
     }

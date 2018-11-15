@@ -249,7 +249,7 @@ namespace eka2l1 {
         bool run_process(uint32_t handle);
 
         uint32_t spawn_new_process(const std::string &path, const std::string &name,
-            uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
+			kernel::owner_type owner = kernel::owner_type::kernel);
 
         uint32_t spawn_new_process(uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
 

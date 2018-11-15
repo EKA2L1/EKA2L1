@@ -7,6 +7,7 @@ add_library(services
     ${CORE_INCLUDE_DIR}/services/applist/op.h
     ${CORE_INCLUDE_DIR}/services/applist/applist.h
     ${CORE_INCLUDE_DIR}/services/backup/backup.h
+    ${CORE_INCLUDE_DIR}/services/centralrepo/centralrepo.h
     ${CORE_INCLUDE_DIR}/services/domain/database.h
     ${CORE_INCLUDE_DIR}/services/domain/defs.h
     ${CORE_INCLUDE_DIR}/services/domain/domain.h
@@ -29,6 +30,7 @@ add_library(services
     session.cpp
     applist/applist.cpp
     backup/backup.cpp
+	centralrepo/centralrepo.cpp
     domain/domain.cpp
     drm/helper.cpp
     drm/rights.cpp
