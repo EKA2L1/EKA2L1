@@ -208,6 +208,8 @@ namespace eka2l1 {
 
             const char *cmode = translate_mode(mode);
             file = fopen(common::ucs2_to_utf8(real_path).c_str(), cmode);
+
+            LOG_TRACE("Open with mode: {}", cmode);
             
             if (!file) {
                 LOG_ERROR("Can't open file: {}", common::ucs2_to_utf8(real_path));

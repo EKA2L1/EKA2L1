@@ -1,18 +1,37 @@
 ﻿add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
+# Force Boost directory for Dynarmic - we never use one
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 
 add_definitions(-DCURL_STATICLIB)
 
+# Pybind11
+set (PYBIND11_TEST OFF CACHE BOOL "" FORCE)
 add_subdirectory(pybind11)
+
+# SPDLOG - Build examples off
+set (SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
+set (SPDLOG_BUILD_BENCH OFF CACHE BOOL "" FORCE)
 add_subdirectory(spdlog)
-add_subdirectory(glfw)
+
+# GLM
+set (GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
 add_subdirectory(glm)
+
+# Dynarmic: disable tests
+set(DYNARMIC_TESTS OFF)
 add_subdirectory(dynarmic)
 
-set (ENABLE_DATE_TESTING "Enable testing for Date" OFF)
+# GLFW - Disable docs, tests and examples
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+add_subdirectory(glfw)
+
+# Date TZ - Disable tests units
+set (ENABLE_DATE_TESTING OFF CACHE BOOL "" FORCE)
 add_subdirectory(date)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
