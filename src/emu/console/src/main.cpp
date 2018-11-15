@@ -459,7 +459,7 @@ int ui_debugger_thread() {
 
         vec2d mouse_pos = debugger_window->get_mouse_pos();
 
-        io.MousePos = ImVec2(mouse_pos[0], mouse_pos[1]);
+        io.MousePos = ImVec2(static_cast<float>(mouse_pos[0]), static_cast<float>(mouse_pos[1]));
 
         debugger_renderer->draw(nws.x, nws.y, nwsb.x, nwsb.y);
         debugger_window->swap_buffer();

@@ -40,7 +40,7 @@ namespace eka2l1 {
             std::u16string name;
             std::u16string vendor_name;
             std::u16string executable_name;
-            uint8_t drive;
+            std::uint8_t drive;
 
             uid id;
             epocver ver;
@@ -51,9 +51,6 @@ namespace eka2l1 {
         class package_manager {
             std::map<uid, app_info> c_apps;
             std::map<uid, app_info> e_apps;
-
-            bool load_sdb(const std::string &path);
-            bool write_sdb(const std::string &path);
 
             bool load_sdb_yaml(const std::string &path);
             bool write_sdb_yaml(const std::string &path);
