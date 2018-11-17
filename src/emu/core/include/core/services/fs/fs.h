@@ -124,6 +124,8 @@ namespace eka2l1 {
         void entry(service::ipc_context ctx);
 
         void file_size(service::ipc_context ctx);
+        void file_set_size(service::ipc_context ctx);
+
         void file_seek(service::ipc_context ctx);
         void file_read(service::ipc_context ctx);
         void file_write(service::ipc_context ctx);

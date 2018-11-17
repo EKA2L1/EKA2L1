@@ -34,8 +34,8 @@
 
 #include <common/e32inc.h>
 
-#include <core/vfs.h>
 #include <core/core.h>
+#include <core/vfs.h>
 
 namespace fs = std::experimental::filesystem;
 
@@ -160,6 +160,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, entry, EFsEntry, "Fs::Entry");
         REGISTER_IPC(fs_server, file_open, EFsFileOpen, "Fs::FileOpen");
         REGISTER_IPC(fs_server, file_size, EFsFileSize, "Fs::FileSize");
+        REGISTER_IPC(fs_server, file_set_size, EFsFileSetSize, "Fs::FileSetSize");
         REGISTER_IPC(fs_server, file_seek, EFsFileSeek, "Fs::FileSeek");
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
         REGISTER_IPC(fs_server, file_write, EFsFileWrite, "Fs::FileWrite");
@@ -204,7 +205,7 @@ namespace eka2l1 {
         auto dest = eka2l1::absolute_path(*given_path_dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
-        
+
         // If exists, delete it so the new file can be replaced
         if (io->exist(dest)) {
             io->delete_entry(dest);
@@ -222,7 +223,7 @@ namespace eka2l1 {
     }
 
     void fs_server::rename(service::ipc_context ctx) {
-                auto given_path_target = ctx.get_arg<std::u16string>(0);
+        auto given_path_target = ctx.get_arg<std::u16string>(0);
         auto given_path_dest = ctx.get_arg<std::u16string>(1);
 
         if (!given_path_target || !given_path_dest) {
@@ -235,7 +236,7 @@ namespace eka2l1 {
         std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
-        
+
         if (io->exist(dest)) {
             ctx.set_request_status(KErrAlreadyExists);
             return;
@@ -263,7 +264,7 @@ namespace eka2l1 {
 
         auto path = eka2l1::absolute_path(*given_path, ss_path);
         io_system *io = ctx.sys->get_io_system();
-        
+
         bool success = io->delete_entry(path);
 
         if (!success) {
@@ -343,6 +344,59 @@ namespace eka2l1 {
         } else {
             ctx.write_arg_pkg<uint32_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
         }
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::file_set_size(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        if (node->open_mode & READ_MODE) {
+            // Can't set file size if the file is open for read mode
+            ctx.set_request_status(KErrPermissionDenied);
+            return;
+        }
+
+        int size = *ctx.get_arg<int>(0);
+        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        std::size_t fsize = f->size();
+
+        if (size == fsize) {
+            ctx.set_request_status(KErrNone);
+            return;
+        }
+
+        // This is trying to prevent from data corruption that will affect the host
+        if (size >= common::GB(1)) {
+            LOG_ERROR("File trying to resize to 1GB, operation not permitted");
+            ctx.set_request_status(KErrTooBig);
+
+            return;
+        }
+
+        bool res = f->resize(size);
+
+        if (!res) {
+            ctx.set_request_status(KErrGeneral);
+            return;
+        }
+
+		// If the file is truncated, move the file pointer to the maximum new size
+        if (size < fsize) {
+            f->seek(size, file_seek_mode::beg);
+		}
 
         ctx.set_request_status(KErrNone);
     }
@@ -513,7 +567,7 @@ namespace eka2l1 {
         vfs_file->seek(write_pos, file_seek_mode::beg);
         size_t wrote_size = vfs_file->write_file(&(*write_data)[0], 1, write_len);
 
-        LOG_TRACE("File {} wroted with size: {}", 
+        LOG_TRACE("File {} wroted with size: {}",
             common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
 
         ctx.set_request_status(KErrNone);
@@ -631,21 +685,21 @@ namespace eka2l1 {
 
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
 
-        int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res, 
+        int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res,
             *open_mode_res, overwrite);
 
         if (handle <= 0) {
             ctx.set_request_status(handle);
             return;
         }
-        
+
         LOG_TRACE("Handle opended: {}", handle);
-        
+
         ctx.write_arg_pkg<int>(3, handle);
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::file_open(service::ipc_context ctx) {        
+    void fs_server::file_open(service::ipc_context ctx) {
         std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
         std::optional<int> open_mode_res = ctx.get_arg<int>(1);
 
@@ -667,7 +721,7 @@ namespace eka2l1 {
         new_file_subsession(ctx, true);
     }
 
-    void fs_server::file_create(service::ipc_context ctx) { 
+    void fs_server::file_create(service::ipc_context ctx) {
         std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
         std::optional<int> open_mode_res = ctx.get_arg<int>(1);
 
@@ -684,7 +738,7 @@ namespace eka2l1 {
 
         new_file_subsession(ctx, true);
     }
-    
+
     void fs_server::file_duplicate(service::ipc_context ctx) {
         int target_handle = *ctx.get_arg<int>(0);
         fs_node *node = nodes_table.get_node(target_handle);
@@ -699,7 +753,7 @@ namespace eka2l1 {
         ctx.write_arg_pkg<int>(3, static_cast<int>(dup_handle));
         ctx.set_request_status(KErrNone);
     }
-    
+
     void fs_server::file_adopt(service::ipc_context ctx) {
         LOG_TRACE("Fs::FileAdopt stubbed");
         // TODO (pent0) : Do an adopt implementation
@@ -967,7 +1021,7 @@ namespace eka2l1 {
             if (static_cast<int>(entry_hle->attribute) & static_cast<int>(io_attrib::internal)) {
                 entry.aAttrib = KEntryAttReadOnly | KEntryAttSystem;
             }
-            
+
             // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).
 
             if (dir) {
@@ -982,8 +1036,8 @@ namespace eka2l1 {
 
         memcpy(entry.aName, fname.data(), entry.aNameLength * 2);
 
-        entry.aModified = epoc::TTime { entry_hle->last_write };        
-        
+        entry.aModified = epoc::TTime{ entry_hle->last_write };
+
         ctx.write_arg_pkg<epoc::TEntry>(1, entry);
         ctx.set_request_status(KErrNone);
     }
@@ -1101,7 +1155,7 @@ namespace eka2l1 {
         std::u16string path_u16(info->full_path.begin(), info->full_path.end());
         std::copy(path_u16.begin(), path_u16.end(), entry.aName);
 
-        entry.aModified = epoc::TTime { info->last_write };
+        entry.aModified = epoc::TTime{ info->last_write };
 
         ctx.set_request_status(KErrNone);
     }
@@ -1141,7 +1195,7 @@ namespace eka2l1 {
             if (!info) {
                 entry_arr->SetLength(
                     ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
-                    
+
                 ctx.set_request_status(KErrEof);
 
                 return;
@@ -1178,7 +1232,7 @@ namespace eka2l1 {
             std::u16string path_u16(info->name.begin(), info->name.end());
             std::copy(path_u16.begin(), path_u16.end(), entry.aName);
 
-            entry.aModified = epoc::TTime { info->last_write };
+            entry.aModified = epoc::TTime{ info->last_write };
 
             memcpy(entry_buf, &entry, offsetof(epoc::TEntry, aName));
             entry_buf += offsetof(epoc::TEntry, aName);
@@ -1264,7 +1318,7 @@ namespace eka2l1 {
             }
         }
 
-        bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]), 
+        bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]),
             dlist.size());
 
         if (!success) {
@@ -1411,9 +1465,8 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<eka2l1::drive> io_drive = 
-            ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
-        
+        std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+
         if (!io_drive) {
             info->iType = EMediaUnknown;
         } else {
@@ -1446,7 +1499,7 @@ namespace eka2l1 {
         TUint8 i8Reserved1;
         TUint16 i16Reserved1;
         TUint32 i32Reserved1;
-        TUint32 i32Reserved2;	
+        TUint32 i32Reserved2;
     };
 
     void fs_server::volume(service::ipc_context ctx) {
@@ -1458,9 +1511,8 @@ namespace eka2l1 {
         }
 
         TDriveNumber drv = static_cast<TDriveNumber>(*ctx.get_arg<int>(1));
-        std::optional<eka2l1::drive> io_drive = 
-            ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
-   
+        std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+
         if (!io_drive) {
             info->iDriveInfo.iType = EMediaUnknown;
         } else {
