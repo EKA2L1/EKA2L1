@@ -199,21 +199,22 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
-        std::string ss_path = common::ucs2_to_utf8(
-            session_paths[ctx.msg->msg_session->unique_id()]);
-
-        std::string target = common::ucs2_to_utf8(*given_path_target);
-        target = eka2l1::absolute_path(target, ss_path);
-
-        std::string dest = common::ucs2_to_utf8(*given_path_dest);
-        dest = eka2l1::absolute_path(dest, ss_path);
+        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
+        auto target = eka2l1::absolute_path(*given_path_target, ss_path);
+        auto dest = eka2l1::absolute_path(*given_path_dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
         
-        bool res = io->rename(common::utf8_to_ucs2(target), common::utf8_to_ucs2(dest));
+        // If exists, delete it so the new file can be replaced
+        if (io->exist(dest)) {
+            io->delete_entry(dest);
+        }
+
+        bool res = io->rename(target, dest);
 
         if (!res) {
             ctx.set_request_status(KErrGeneral);
+            return;
         }
 
         // A new app list may be created
@@ -221,31 +222,33 @@ namespace eka2l1 {
     }
 
     void fs_server::rename(service::ipc_context ctx) {
-        auto given_path_target = ctx.get_arg<std::u16string>(0);
+                auto given_path_target = ctx.get_arg<std::u16string>(0);
         auto given_path_dest = ctx.get_arg<std::u16string>(1);
 
         if (!given_path_target || !given_path_dest) {
             ctx.set_request_status(KErrArgument);
         }
 
-        std::string ss_path = common::ucs2_to_utf8(
-            session_paths[ctx.msg->msg_session->unique_id()]);
+        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
 
-        std::string target = common::ucs2_to_utf8(*given_path_target);
-        target = eka2l1::absolute_path(target, ss_path);
-
-        std::string dest = common::ucs2_to_utf8(*given_path_dest);
-        dest = eka2l1::absolute_path(dest, ss_path);
+        std::u16string target = eka2l1::absolute_path(*given_path_target, ss_path);
+        std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path);
 
         io_system *io = ctx.sys->get_io_system();
+        
+        if (io->exist(dest)) {
+            ctx.set_request_status(KErrAlreadyExists);
+            return;
+        }
 
-        bool res = io->rename(common::utf8_to_ucs2(target), common::utf8_to_ucs2(dest));
+        bool res = io->rename(target, dest);
 
         if (!res) {
             ctx.set_request_status(KErrGeneral);
             return;
         }
 
+        // A new app list may be created
         ctx.set_request_status(KErrNone);
     }
 
@@ -256,14 +259,12 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
-        std::string path = common::ucs2_to_utf8(*given_path);
-        std::string ss_path = common::ucs2_to_utf8(
-            session_paths[ctx.msg->msg_session->unique_id()]);
+        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
 
-        path = eka2l1::absolute_path(path, ss_path);
+        auto path = eka2l1::absolute_path(*given_path, ss_path);
         io_system *io = ctx.sys->get_io_system();
         
-        bool success = io->delete_entry(common::utf8_to_ucs2(path));
+        bool success = io->delete_entry(path);
 
         if (!success) {
             ctx.set_request_status(KErrGeneral);
@@ -442,12 +443,9 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
-        std::string path = common::ucs2_to_utf8(*new_path);
-        std::string ss_path = common::ucs2_to_utf8(
-            session_paths[ctx.msg->msg_session->unique_id()]);
+        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
 
-        auto new_path_abs = common::utf8_to_ucs2(eka2l1::absolute_path(path, ss_path));
-
+        auto new_path_abs = eka2l1::absolute_path(*new_path, ss_path);
         bool res = ctx.sys->get_io_system()->rename(vfs_file->file_name(), new_path_abs);
 
         if (!res) {
@@ -608,14 +606,13 @@ namespace eka2l1 {
             return;
         }
 
-        std::string final_path = common::ucs2_to_utf8(*path);
+        auto final_path = std::move(*path);
 
-        if (!eka2l1::is_absolute(final_path, common::ucs2_to_utf8(session_path), true)) {
-            final_path = eka2l1::absolute_path(
-                final_path, common::ucs2_to_utf8(session_path), true);
+        if (!eka2l1::is_absolute(final_path, session_path, true)) {
+            final_path = eka2l1::absolute_path(final_path, session_path, true);
         }
 
-        symfile f = ctx.sys->get_io_system()->open_file(common::utf8_to_ucs2(final_path), READ_MODE);
+        symfile f = ctx.sys->get_io_system()->open_file(final_path, READ_MODE);
         address addr = f->rom_address();
 
         f->close();
@@ -633,10 +630,6 @@ namespace eka2l1 {
         }
 
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
-
-        if (*name_res == u"C:\\private\\10003a3f\\Dtstor.ini") {
-            LOG_ERROR("a");
-        }
 
         int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res, 
             *open_mode_res, overwrite);
@@ -923,10 +916,19 @@ namespace eka2l1 {
             ctx.set_request_status(KErrArgument);
         }
 
-        bool res = ctx.sys->get_io_system()->create_directories(*dir);
+        bool res = false;
+
+        if (*ctx.get_arg<int>(1)) {
+            res = ctx.sys->get_io_system()->create_directories(eka2l1::file_directory(*dir));
+        } else {
+            res = ctx.sys->get_io_system()->create_directory(eka2l1::file_directory(*dir));
+        }
 
         if (!res) {
-            ctx.set_request_status(KErrGeneral);
+            // The guide specified: if it's parent does not exist or the sub-directory
+            // already created, this should returns
+            ctx.set_request_status(KErrAlreadyExists);
+            return;
         }
 
         ctx.set_request_status(KErrNone);

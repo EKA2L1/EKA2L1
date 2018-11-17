@@ -496,7 +496,7 @@ namespace eka2l1 {
                 }
             }
             
-            std::u16string new_path = map_path + vert_path.substr(root.size());
+            std::u16string new_path = eka2l1::add_path(map_path, vert_path.substr(root.size()));
             auto sep_char = eka2l1::get_separator();
 
             // Make it case-insensitive
@@ -576,7 +576,18 @@ namespace eka2l1 {
             std::error_code err;
             fs::create_directories(*real_path, err);
 
-            LOG_TRACE("{}", common::ucs2_to_utf8(*real_path));
+            return err ? false : true;
+        }
+        
+        bool create_directory(const std::u16string &path) override {
+            std::optional<std::u16string> real_path = get_real_physical_path(path);
+            
+            if (!real_path) {
+                return false;
+            }
+
+            std::error_code err;
+            fs::create_directory(*real_path, err);
 
             return err ? false : true;
         }
@@ -683,8 +694,8 @@ namespace eka2l1 {
                 return nullptr;
             }
 
-            if (!(mode & WRITE_MODE) && !fs::exists(*real_path) && 
-                !fs::is_regular_file(*real_path)) {
+            if (!(mode & WRITE_MODE) && (!fs::exists(*real_path) ||
+                fs::is_directory(*real_path))) {
                 return nullptr;
             }
             
@@ -754,6 +765,10 @@ namespace eka2l1 {
         }
 
         bool create_directories(const std::u16string &path) override {
+            return false;
+        }
+
+        bool create_directory(const std::u16string &path) override {
             return false;
         }
 
@@ -986,6 +1001,18 @@ namespace eka2l1 {
 
         for (auto &[id, fs]: filesystems) {
             if (fs->create_directories(path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    bool io_system::create_directory(const std::u16string &path) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            if (fs->create_directory(path)) {
                 return true;
             }
         }

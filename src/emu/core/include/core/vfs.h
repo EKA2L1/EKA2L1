@@ -272,6 +272,8 @@ namespace eka2l1 {
         }
 
         virtual bool delete_entry(const std::u16string &path) = 0;
+        
+        virtual bool create_directory(const std::u16string &path) = 0;
         virtual bool create_directories(const std::u16string &path) = 0;
 
         virtual std::optional<drive> get_drive_entry(const drive_number drv) = 0;
@@ -395,6 +397,8 @@ namespace eka2l1 {
         bool is_entry_in_rom(const std::u16string &path);
 
         bool delete_entry(const std::u16string &path);
+
+        bool create_directory(const std::u16string &path);
 
         bool create_directories(const std::u16string &path);
     };
