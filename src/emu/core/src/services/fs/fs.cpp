@@ -726,28 +726,28 @@ namespace eka2l1 {
 	void fs_server::file_temp(service::ipc_context ctx) {
         auto dir_create = ctx.get_arg<std::u16string>(0);
 
-		if (!dir_create) {
+        if (!dir_create) {
             ctx.set_request_status(KErrArgument);
             return;
-		}
+        }
 
         io_system *io = ctx.sys->get_io_system();
 
         auto full_path = eka2l1::absolute_path(
             session_paths[ctx.msg->msg_session->unique_id()], *dir_create);
 
-		if (!io->exist(full_path)) {
-			ctx.set_request_status(KErrNotFound);
-			return;
-		}
+        if (!io->exist(full_path)) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
 
         std::u16string temp_name { u"temp" };
         temp_name += common::utf8_to_ucs2(common::to_string(eka2l1::random_range(0, 0xFFFFFFFE), std::hex));
 
-		full_path = eka2l1::add_path(full_path, temp_name);
+        full_path = eka2l1::add_path(full_path, temp_name);
 
-		// Create the file if it doesn't exist
-		symfile f = io->open_file(full_path, WRITE_MODE);
+        // Create the file if it doesn't exist
+        symfile f = io->open_file(full_path, WRITE_MODE);
         f->close();
 
         LOG_INFO("Opening temp file: {}", common::ucs2_to_utf8(full_path));
@@ -763,7 +763,7 @@ namespace eka2l1 {
 
         ctx.write_arg_pkg<int>(3, handle);
 
-		// Arg2 take the temp path
+        // Arg2 take the temp path
         ctx.write_arg(2, full_path);
 
         ctx.set_request_status(KErrNone);
