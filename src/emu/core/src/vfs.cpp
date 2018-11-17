@@ -576,6 +576,8 @@ namespace eka2l1 {
             std::error_code err;
             fs::create_directories(*real_path, err);
 
+            LOG_TRACE("{}", common::ucs2_to_utf8(*real_path));
+
             return err ? false : true;
         }
 
@@ -682,7 +684,7 @@ namespace eka2l1 {
             }
 
             if (!(mode & WRITE_MODE) && !fs::exists(*real_path) && 
-                !fs::is_regular_file(&real_path)) {
+                !fs::is_regular_file(*real_path)) {
                 return nullptr;
             }
             
