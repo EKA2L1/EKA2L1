@@ -177,6 +177,8 @@ namespace eka2l1 {
         */
         virtual address rom_address() const = 0;
 
+		virtual bool resize(const std::size_t new_size) = 0;
+
         virtual bool flush();
     };
 

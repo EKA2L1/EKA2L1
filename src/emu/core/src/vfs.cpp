@@ -142,11 +142,18 @@ namespace eka2l1 {
         bool close() override {
             return true;
         }
+
+		bool resize(const std::size_t new_size) override {
+            return false;
+		}
     };
 
     struct physical_file : public file {
         FILE *file;
+
         std::u16string input_name;
+        std::u16string physical_path;
+
         int fmode;
 
         size_t file_size;
@@ -208,6 +215,7 @@ namespace eka2l1 {
 
             const char *cmode = translate_mode(mode);
             file = fopen(common::ucs2_to_utf8(real_path).c_str(), cmode);
+            physical_path = real_path;
 
             LOG_TRACE("Open with mode: {}", cmode);
             
@@ -295,6 +303,17 @@ namespace eka2l1 {
             WARN_CLOSE
 
             return (fflush(file) == 0);
+        }
+
+        bool resize(const std::size_t new_size) override {
+            if (fmode & READ_MODE) {
+                return false;
+			}
+
+			std::error_code err;
+			fs::resize_file(physical_path, new_size, err);
+
+            return err ? false : true;
         }
 
         std::string get_error_descriptor() override {
