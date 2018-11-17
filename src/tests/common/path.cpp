@@ -34,6 +34,16 @@ TEST(path_resolving_test, filename) {
     ASSERT_EQ(strncmp(eka2l1::filename(example_path, true).data(), "euser.dll", 9), 0);
 }
 
+TEST(path_resolving_test, filedirectory) {
+    const std::string example_path = "Z:\\sys\\bin\\euser.dll";
+    ASSERT_EQ(strncmp(eka2l1::file_directory(example_path, true).data(), "Z:\\sys\\bin\\", 11), 0);
+}
+
+TEST(path_resolving_test, file_directory_directory_alone) {
+    const std::string example_path = "Z:\\sys\\bin\\";
+    ASSERT_EQ(strncmp(eka2l1::file_directory(example_path, true).data(), "Z:\\sys\\bin\\", 11), 0);
+}
+
 TEST(path_resolving_test, path_iterator) {
     const std::string path = "z:\\private\\10202bef\\";
     const std::string expected_components[3] = { "z:", "private", "10202bef" };
@@ -50,7 +60,7 @@ TEST(path_resolving_test, path_iterator) {
         ASSERT_EQ(expected_components[i], *iterator);
     }
 
-    ASSERT_EQ(i, 2);
+    ASSERT_EQ(i, 3);
 }
 
 TEST(path_resolving_test, path_iterator_file) {
@@ -69,5 +79,5 @@ TEST(path_resolving_test, path_iterator_file) {
         ASSERT_EQ(expected_components[i], *iterator);
     }
 
-    ASSERT_EQ(3, i);
+    ASSERT_EQ(4, i);
 }
