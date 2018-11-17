@@ -634,6 +634,10 @@ namespace eka2l1 {
 
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
 
+        if (*name_res == u"C:\\private\\10003a3f\\Dtstor.ini") {
+            LOG_ERROR("a");
+        }
+
         int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res, 
             *open_mode_res, overwrite);
 

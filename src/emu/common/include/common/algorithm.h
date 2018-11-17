@@ -152,6 +152,8 @@ namespace eka2l1 {
 
         int compare_ignore_case(const utf16_str &s1,
             const utf16_str &s2);
+
+        std::string trim_spaces(std::string str);
     }
 }
 

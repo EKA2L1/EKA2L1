@@ -681,7 +681,8 @@ namespace eka2l1 {
                 return nullptr;
             }
 
-            if (!(mode & WRITE_MODE) && !fs::exists(*real_path)) {
+            if (!(mode & WRITE_MODE) && !fs::exists(*real_path) && 
+                !fs::is_regular_file(&real_path)) {
                 return nullptr;
             }
             
