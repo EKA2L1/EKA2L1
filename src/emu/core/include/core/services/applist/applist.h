@@ -27,6 +27,8 @@ namespace eka2l1 {
      *
      * Provide external information about application management,
      * and HAL information regards to each app.
+	 *
+	 * Disable for LLE testings.
      */
     class applist_server : public service::server {
         /*! \brief Get the number of screen shared for an app. 
@@ -45,6 +47,8 @@ namespace eka2l1 {
          * Expected request status: KErrNone. 
         */
         void app_language(service::ipc_context ctx);
+
+		void is_accepted_to_run(service::ipc_context ctx);
 
     public:
         applist_server(system *sys);

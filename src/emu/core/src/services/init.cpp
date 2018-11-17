@@ -233,8 +233,8 @@ namespace eka2l1 {
     namespace service {
         // Mostly replace startup process of a normal EPOC startup
         void init_services(system *sys) {
-            CREATE_SERVER_D(sys, applist_server);
-            CREATE_SERVER(sys, featmgr_server);
+            // CREATE_SERVER_D(sys, applist_server);
+            CREATE_SERVER_D(sys, featmgr_server);
             CREATE_SERVER(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);

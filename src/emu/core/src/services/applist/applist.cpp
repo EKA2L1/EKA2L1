@@ -21,6 +21,9 @@
 #include <core/services/applist/applist.h>
 #include <core/services/applist/op.h>
 
+#include <common/cvt.h>
+#include <common/log.h>
+
 #include <core/core.h>
 #include <functional>
 
@@ -33,6 +36,20 @@ namespace eka2l1 {
             EAppListServGetDefaultScreenNumber, "GetDefaultScreenNumber");
         REGISTER_IPC(applist_server, app_language,
             EAppListServApplicationLanguage, "ApplicationLanguageL");
+        REGISTER_IPC(applist_server, is_accepted_to_run,
+            EAppListServRuleBasedLaunching, "RuleBasedLaunching");
+    }
+
+    void applist_server::is_accepted_to_run(service::ipc_context ctx) {
+        auto exe_name = ctx.get_arg<std::u16string>(0);
+
+        if (!exe_name) {
+            ctx.set_request_status(false);
+            return;
+        }
+
+        LOG_TRACE("Asking permission to launch: {}, accepted", common::ucs2_to_utf8(*exe_name));
+        ctx.set_request_status(true);
     }
 
     /*! \brief Get the number of screen shared for an app. 
