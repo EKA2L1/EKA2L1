@@ -79,6 +79,7 @@ namespace eka2l1 {
         process_ptr own_process;
 
         bool is_active = false;
+        bool temporary = false;
 
         uint32_t id;
     };
@@ -114,12 +115,13 @@ namespace eka2l1 {
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);
         void file_replace(service::ipc_context ctx);
+        void file_temp(service::ipc_context ctx);
         void file_flush(service::ipc_context ctx);
         void file_close(service::ipc_context ctx);
         void file_duplicate(service::ipc_context ctx);
         void file_adopt(service::ipc_context ctx);
 
-        void new_file_subsession(service::ipc_context ctx, bool overwrite = false);
+        void new_file_subsession(service::ipc_context ctx, bool overwrite = false, bool temporary = false);
 
         void entry(service::ipc_context ctx);
 
@@ -183,7 +185,7 @@ namespace eka2l1 {
 
         void notify(const utf16_str &entry, const notify_type type);
 
-        int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false);
+        int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false, bool temporary = false);
         fs_node *get_file_node(int handle);
 
     public:

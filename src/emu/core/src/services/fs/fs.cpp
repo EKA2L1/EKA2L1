@@ -29,6 +29,7 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/random.h>
 #include <common/log.h>
 #include <common/path.h>
 
@@ -165,6 +166,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_read, EFsFileRead, "Fs::FileRead");
         REGISTER_IPC(fs_server, file_write, EFsFileWrite, "Fs::FileWrite");
         REGISTER_IPC(fs_server, file_flush, EFsFileFlush, "Fs::FileFlush");
+        REGISTER_IPC(fs_server, file_temp, EFsFileTemp, "Fs::FileTemp");
         REGISTER_IPC(fs_server, file_duplicate, EFsFileDuplicate, "Fs::FileDuplicate");
         REGISTER_IPC(fs_server, file_adopt, EFsFileAdopt, "Fs::FileAdopt");
         REGISTER_IPC(fs_server, file_rename, EFsFileRename, "Fs::FileRename(Move)");
@@ -363,8 +365,8 @@ namespace eka2l1 {
             return;
         }
 
-        if (node->open_mode & READ_MODE) {
-            // Can't set file size if the file is open for read mode
+        if (!(node->open_mode & WRITE_MODE) && !(node->open_mode & APPEND_MODE)) {
+            // Can't set file size if the file is not open for write
             ctx.set_request_status(KErrPermissionDenied);
             return;
         }
@@ -675,7 +677,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::new_file_subsession(service::ipc_context ctx, bool overwrite) {
+    void fs_server::new_file_subsession(service::ipc_context ctx, bool overwrite, bool temporary) {
         std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
         std::optional<int> open_mode_res = ctx.get_arg<int>(1);
 
@@ -686,7 +688,7 @@ namespace eka2l1 {
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
 
         int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res,
-            *open_mode_res, overwrite);
+            *open_mode_res, overwrite, temporary);
 
         if (handle <= 0) {
             ctx.set_request_status(handle);
@@ -720,6 +722,52 @@ namespace eka2l1 {
     void fs_server::file_replace(service::ipc_context ctx) {
         new_file_subsession(ctx, true);
     }
+
+	void fs_server::file_temp(service::ipc_context ctx) {
+        auto dir_create = ctx.get_arg<std::u16string>(0);
+
+		if (!dir_create) {
+            ctx.set_request_status(KErrArgument);
+            return;
+		}
+
+        io_system *io = ctx.sys->get_io_system();
+
+        auto full_path = eka2l1::absolute_path(
+            session_paths[ctx.msg->msg_session->unique_id()], *dir_create);
+
+		if (!io->exist(full_path)) {
+			ctx.set_request_status(KErrNotFound);
+			return;
+		}
+
+        std::u16string temp_name { u"temp" };
+        temp_name += common::utf8_to_ucs2(common::to_string(eka2l1::random_range(0, 0xFFFFFFFE), std::hex));
+
+		full_path = eka2l1::add_path(full_path, temp_name);
+
+		// Create the file if it doesn't exist
+		symfile f = io->open_file(full_path, WRITE_MODE);
+        f->close();
+
+        LOG_INFO("Opening temp file: {}", common::ucs2_to_utf8(full_path));
+        int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, full_path,
+            *ctx.get_arg<int>(1), true, true);
+
+        if (handle <= 0) {
+            ctx.set_request_status(handle);
+            return;
+        }
+
+        LOG_TRACE("Handle opended: {}", handle);
+
+        ctx.write_arg_pkg<int>(3, handle);
+
+		// Arg2 take the temp path
+        ctx.write_arg(2, full_path);
+
+        ctx.set_request_status(KErrNone);
+	}
 
     void fs_server::file_create(service::ipc_context ctx) {
         std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
@@ -815,7 +863,7 @@ namespace eka2l1 {
         LOG_TRACE("Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
     }
 
-    int fs_server::new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite) {
+    int fs_server::new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {
         int real_mode = org_mode & ~(epoc::EFileStreamText | epoc::EFileReadAsyncAll | epoc::EFileBigFile);
         fs_node_share share_mode = (fs_node_share)-1;
 
@@ -865,6 +913,7 @@ namespace eka2l1 {
         if (!cache_node) {
             fs_node new_node;
             new_node.vfs_node = io->open_file(name, access_mode);
+            new_node.temporary = temporary;
 
             if (!new_node.vfs_node) {
                 return KErrNotFound;
