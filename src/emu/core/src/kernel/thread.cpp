@@ -440,7 +440,7 @@ namespace eka2l1 {
             state = thread_state::wait;
 
             // Call wait object to handle suspend event
-            if (!wait_obj) {
+            if (wait_obj) {
                 switch (wait_obj->get_object_type()) {
                 case object_type::mutex: {
                     res = reinterpret_cast<mutex *>(wait_obj)->suspend_thread(this);
@@ -472,7 +472,7 @@ namespace eka2l1 {
             state = thread_state::ready;
 
             // Call wait object to handle suspend event
-            if (!wait_obj) {
+            if (wait_obj) {
                 switch (wait_obj->get_object_type()) {
                 case object_type::mutex: {
                     res = reinterpret_cast<mutex *>(wait_obj)->unsuspend_thread(this);
