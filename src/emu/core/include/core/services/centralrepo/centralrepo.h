@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-#define CENTRAL_REPO_UID_STRING "1020be9"
+#define CENTRAL_REPO_UID_STRING "10202be9"
 
 namespace eka2l1 {
 	enum {
@@ -24,12 +24,10 @@ namespace eka2l1 {
 	struct central_repo_entry_variant {
         central_repo_entry_type etype;
 
-		union {
-            std::uint64_t intd;
-            double reald;
-            std::string strd;
-            std::u16string str16d;
-		};
+		std::uint64_t intd;
+		double reald;
+		std::string strd;
+		std::u16string str16d;
 	};
 
 	struct central_repo_entry {
@@ -50,7 +48,15 @@ namespace eka2l1 {
 		// TODO (pent0): Add read/write cap
         std::size_t owner;
 		std::unordered_map<std::size_t, central_repo_entry> entries;
+
+		bool read_only;
 	};
+
+	/*! \brief Parse a new centrep ini file.
+	 *
+	 * \returns False if IO error or invalid centrep configs.
+	*/
+    bool parse_new_centrep_ini(const std::string &path, central_repo &repo);
 
 	enum class central_repo_srv_request {
 		init,
@@ -98,5 +104,16 @@ namespace eka2l1 {
 		// Cached repos. The key is the owner of the repo.
 		std::unordered_map<std::uint32_t, central_repo> repos;
         std::map<std::uint32_t, central_repo_client_session> client_sessions;
+
+	public:
+		void init(service::ipc_context ctx);
+		
+		void create_int(service::ipc_context ctx);
+		void create_real(service::ipc_context ctx);
+		void create_string8(service::ipc_context ctx);
+		void create_string16(service::ipc_context ctx);
+
+		void transaction_start(service::ipc_context ctx);
+		void transaction_commit(service::ipc_context ctx);
 	};
 }
