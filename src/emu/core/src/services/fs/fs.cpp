@@ -646,10 +646,16 @@ namespace eka2l1 {
         }
 
         symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        std::u16string path = vfs_file->file_name();
 
         vfs_file->close();
-        nodes_table.close_nodes(*handle_res);
 
+        // Delete temporary file
+        if (node->temporary) {
+            ctx.sys->get_io_system()->delete_entry(path);
+        }
+
+        nodes_table.close_nodes(*handle_res);
         ctx.set_request_status(KErrNone);
     }
 
