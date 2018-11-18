@@ -119,6 +119,12 @@ namespace eka2l1 {
     }
     
     template <typename T>
+    std::basic_string<T> relative_path_impl(std::basic_string<T> str, bool symbian_use) {
+        std::basic_string<T> root = root_path(str, symbian_use);
+        return str.substr(root.size());
+    }
+    
+    template <typename T>
     std::basic_string<T> absolute_path_impl(std::basic_string<T> str, std::basic_string<T> current_dir, 
         bool symbian_use, std::function<T(bool)> separator_func) {
         using generic_string = std::basic_string<T>;
@@ -281,12 +287,6 @@ namespace eka2l1 {
         }
 
         return path.substr(0, path.length() - fn.length() + 1);
-    }
-
-    template <typename T>
-    std::basic_string<T> relative_path_impl(std::basic_string<T> str, bool symbian_use) {
-        std::basic_string<T> root = root_path(str, symbian_use);
-        return str.substr(root.size());
     }
 
     std::string absolute_path(std::string str, std::string current_dir, bool symbian_use) {
