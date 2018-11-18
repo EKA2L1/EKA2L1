@@ -24,6 +24,7 @@
 #include <core/epoc/des.h>
 
 #include <clocale>
+#include <cwctype>
 #include <experimental/filesystem>
 #include <memory>
 
@@ -173,6 +174,9 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, file_replace, EFsFileReplace, "Fs::FileReplace");
         REGISTER_IPC(fs_server, file_create, EFsFileCreate, "Fs::FileCreate");
         REGISTER_IPC(fs_server, file_close, EFsFileSubClose, "Fs::FileSubClose");
+        REGISTER_IPC(fs_server, file_drive, EFsFileDrive, "Fs::FileDrive");
+        REGISTER_IPC(fs_server, file_name, EFsFileName, "Fs::FileName");
+        REGISTER_IPC(fs_server, file_full_name, EFsFileFullName, "Fs::FileFullName");
         REGISTER_IPC(fs_server, is_file_in_rom, EFsIsFileInRom, "Fs::IsFileInRom");
         REGISTER_IPC(fs_server, open_dir, EFsDirOpen, "Fs::OpenDir");
         REGISTER_IPC(fs_server, close_dir, EFsDirSubClose, "Fs::CloseDir");
@@ -401,6 +405,89 @@ namespace eka2l1 {
 		}
 
         ctx.set_request_status(KErrNone);
+    }
+
+    struct TDriveInfo {
+        TMediaType iType;
+        TBatteryState iBattery;
+        TUint iDriveAtt;
+        TUint iMediaAtt;
+        TConnectionBusType iConnectionBusType;
+    };
+
+    void fill_drive_info(TDriveInfo *info, eka2l1::drive &io_drive);
+
+	void fs_server::file_drive(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+
+        TDriveNumber drv = static_cast<TDriveNumber>(std::towlower(f->file_name()[0]) - 'a');
+        TDriveInfo info;
+
+        std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(
+			static_cast<drive_number>(drv));
+
+        if (!io_drive) {
+            info.iType = EMediaUnknown;
+        } else {
+            fill_drive_info(&(info), *io_drive);
+        }
+
+        ctx.write_arg_pkg<TDriveNumber>(0, drv);
+        ctx.write_arg_pkg<TDriveInfo>(1, info);
+
+        ctx.set_request_status(KErrNone);
+	}
+
+	void fs_server::file_name(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        ctx.write_arg(0, eka2l1::filename(f->file_name(), true));
+	}
+
+    void fs_server::file_full_name(service::ipc_context ctx) {
+        std::optional<int> handle_res = ctx.get_arg<int>(3);
+
+        if (!handle_res) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx.set_request_status(KErrBadHandle);
+            return;
+        }
+
+        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        ctx.write_arg(0, f->file_name());
     }
 
     void fs_server::file_seek(service::ipc_context ctx) {
@@ -1383,68 +1470,6 @@ namespace eka2l1 {
 
         ctx.set_request_status(KErrNone);
     }
-
-    enum TMediaType {
-        EMediaNotPresent,
-        EMediaUnknown,
-        EMediaFloppy,
-        EMediaHardDisk,
-        EMediaCdRom,
-        EMediaRam,
-        EMediaFlash,
-        EMediaRom,
-        EMediaRemote,
-        EMediaNANDFlash,
-        EMediaRotatingMedia
-    };
-
-    enum TBatteryState {
-        EBatNotSupported,
-        EBatGood,
-        EBatLow
-    };
-
-    enum TConnectionBusType {
-        EConnectionBusInternal,
-        EConnectionBusUsb
-    };
-
-    struct TDriveInfo {
-        TMediaType iType;
-        TBatteryState iBattery;
-        TUint iDriveAtt;
-        TUint iMediaAtt;
-        TConnectionBusType iConnectionBusType;
-    };
-
-    enum TDriveNumber {
-        EDriveA,
-        EDriveB,
-        EDriveC,
-        EDriveD,
-        EDriveE,
-        EDriveF,
-        EDriveG,
-        EDriveH,
-        EDriveI,
-        EDriveJ,
-        EDriveK,
-        EDriveL,
-        EDriveM,
-        EDriveN,
-        EDriveO,
-        EDriveP,
-        EDriveQ,
-        EDriveR,
-        EDriveS,
-        EDriveT,
-        EDriveU,
-        EDriveV,
-        EDriveW,
-        EDriveX,
-        EDriveY,
-        EDriveZ
-    };
 
     void fs_server::private_path(service::ipc_context ctx) {
         std::u16string path = u"\\private\\"

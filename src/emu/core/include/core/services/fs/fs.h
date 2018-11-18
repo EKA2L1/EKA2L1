@@ -67,6 +67,60 @@ namespace eka2l1 {
         any
     };
 
+    enum TMediaType {
+        EMediaNotPresent,
+        EMediaUnknown,
+        EMediaFloppy,
+        EMediaHardDisk,
+        EMediaCdRom,
+        EMediaRam,
+        EMediaFlash,
+        EMediaRom,
+        EMediaRemote,
+        EMediaNANDFlash,
+        EMediaRotatingMedia
+    };
+
+    enum TBatteryState {
+        EBatNotSupported,
+        EBatGood,
+        EBatLow
+    };
+
+    enum TConnectionBusType {
+        EConnectionBusInternal,
+        EConnectionBusUsb
+    };
+
+    enum TDriveNumber {
+        EDriveA,
+        EDriveB,
+        EDriveC,
+        EDriveD,
+        EDriveE,
+        EDriveF,
+        EDriveG,
+        EDriveH,
+        EDriveI,
+        EDriveJ,
+        EDriveK,
+        EDriveL,
+        EDriveM,
+        EDriveN,
+        EDriveO,
+        EDriveP,
+        EDriveQ,
+        EDriveR,
+        EDriveS,
+        EDriveT,
+        EDriveU,
+        EDriveV,
+        EDriveW,
+        EDriveX,
+        EDriveY,
+        EDriveZ
+    };
+
     struct fs_node {
         io_component_ptr vfs_node;
         uint32_t access_count;
@@ -120,6 +174,9 @@ namespace eka2l1 {
         void file_close(service::ipc_context ctx);
         void file_duplicate(service::ipc_context ctx);
         void file_adopt(service::ipc_context ctx);
+        void file_drive(service::ipc_context ctx);
+        void file_name(service::ipc_context ctx);
+        void file_full_name(service::ipc_context ctx);
 
         void new_file_subsession(service::ipc_context ctx, bool overwrite = false, bool temporary = false);
 
