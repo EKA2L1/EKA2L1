@@ -529,6 +529,10 @@ namespace eka2l1 {
 
             size_t lib_pos = new_path.find(u"\\system\\lib");
 
+            if (lib_pos == std::string::npos) {
+                lib_pos = new_path.find(u"\\system\\programs");
+            }
+
             // TODO (bentokun): Remove this hack with a proper symlink system.
             if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
                 new_path.replace(lib_pos, 12, u"\\sys\\bin");
