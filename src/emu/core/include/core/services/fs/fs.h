@@ -121,6 +121,15 @@ namespace eka2l1 {
         EDriveZ
     };
 
+    enum class extended_fs_query_command
+    {
+        file_system_sub_type,
+        io_param_info,
+        is_drive_sync,
+        is_drive_finalised,
+        extensions_supported
+    };
+
     struct fs_node {
         io_component_ptr vfs_node;
         uint32_t access_count;
@@ -177,6 +186,8 @@ namespace eka2l1 {
         void file_drive(service::ipc_context ctx);
         void file_name(service::ipc_context ctx);
         void file_full_name(service::ipc_context ctx);
+
+        void query_drive_info_ext(service::ipc_context ctx);
 
         void new_file_subsession(service::ipc_context ctx, bool overwrite = false, bool temporary = false);
 

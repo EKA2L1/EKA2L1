@@ -196,6 +196,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, rename, EFsRename, "Fs::Rename(Move)");
         REGISTER_IPC(fs_server, replace, EFsReplace, "Fs::Replace");
         REGISTER_IPC(fs_server, volume, EFsVolume, "Fs::Volume");
+        REGISTER_IPC(fs_server, query_drive_info_ext, EFsQueryVolumeInfoExt, "Fs::QueryVolumeInfoExt");
     }
 
     void fs_server::replace(service::ipc_context ctx) {
@@ -290,7 +291,8 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
-        session_paths[ctx.msg->msg_session->unique_id()] = common::utf8_to_ucs2(eka2l1::root_name(common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
+        session_paths[ctx.msg->msg_session->unique_id()] = common::utf8_to_ucs2(eka2l1::root_name(
+            common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
 
         server::connect(ctx);
     }
@@ -1608,6 +1610,47 @@ namespace eka2l1 {
         info->iFree = common::GB(1);
 
         ctx.write_arg_pkg<TVolumeInfo>(0, *info);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void fs_server::query_drive_info_ext(service::ipc_context ctx) {
+        drive_number drv = static_cast<drive_number>(*ctx.get_arg<int>(0));
+        std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(drv);
+
+        // If the drive hasn't been mounted yet, return KErrNotFound
+        if (!io_drive) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        extended_fs_query_command query_cmd = static_cast<extended_fs_query_command>(*ctx.get_arg<int>(1));
+
+        switch (query_cmd) {
+        case extended_fs_query_command::file_system_sub_type: {
+            // Query file system type. Using FAT32 as default.
+            ctx.write_arg(2, u"FAT32");
+            break;
+        }
+
+        case extended_fs_query_command::is_drive_sync: {
+            // Check if drive is sync. Yes in this case.
+            ctx.write_arg_pkg(2, true);
+            break;
+        }
+
+        case extended_fs_query_command::is_drive_finalised: {
+            // Check if drive is safe to remove. Yes ?
+            LOG_WARN("Checking if drive is finalised, stubbed");
+            ctx.write_arg_pkg(2, true);
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unimplemented extended query drive opcode: 0x{:x}", static_cast<int>(query_cmd));
+            break;
+        }
+        }
+
         ctx.set_request_status(KErrNone);
     }
 }
