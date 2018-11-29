@@ -24,9 +24,11 @@
 #include <core/loader/eka2img.h>
 #include <core/loader/romimage.h>
 
+#include <core/hle/libmanager.h>
+
 namespace eka2l1::epoc {
     std::vector<uint32_t> query_entries(eka2l1::system *sys) {
-        hle::lib_manager &mngr = *sys->get_lib_manager();
+        hle::lib_manager &mngr = *(sys->get_lib_manager());
         std::vector<uint32_t> entries;
 
         auto cache_maps = mngr.get_e32imgs_cache();
@@ -64,5 +66,33 @@ namespace eka2l1::epoc {
         }
 
         return std::optional<std::u16string>{};
+    }
+    
+    address get_exception_descriptor_addr(eka2l1::system *sys, address runtime_addr) {
+        hle::lib_manager *manager = sys->get_lib_manager();
+        auto &e32map = manager->get_e32imgs_cache();
+
+        for (const auto &e32imginf: e32map) {
+            const loader::e32img_ptr &e32img = e32imginf.second.img;
+
+            if (e32img->rt_code_addr <= runtime_addr && e32img->rt_code_addr + e32img->header.code_size >= runtime_addr) {
+                return e32img->has_extended_header ? 
+                    ((e32img->header_extended.exception_des & 1) ? (e32img->rt_code_addr + e32img->header_extended.exception_des & (~1)) :
+                     (e32img->rt_code_addr + e32img->header_extended.exception_des))
+                    : 0;
+            }
+        }
+
+        // Look for ROM exception descriptor
+        auto &rommap = manager->get_romimgs_cache();
+        for (const auto &romimginf: rommap) {
+            const loader::romimg_ptr &romimg = romimginf.second.img;
+
+            if (romimg->header.code_address <= runtime_addr && romimg->header.code_address + romimg->header.code_size >= runtime_addr) {
+                return romimg->header.exception_des;
+            }
+        }
+
+        return 0;
     }
 }

@@ -34,6 +34,7 @@
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/random.h>
+#include <common/types.h>
 
 #define CURL_STATICLIB
 #ifdef WIN32
@@ -1981,6 +1982,10 @@ namespace eka2l1::epoc {
         return 0;
     }
 
+    BRIDGE_FUNC(address, ExceptionDescriptor, address aInAddr) {
+        return epoc::get_exception_descriptor_addr(sys, aInAddr);
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),
@@ -2085,6 +2090,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
         BRIDGE_REGISTER(0xDB, PlatSecDiagnostic),
+        BRIDGE_REGISTER(0xDc, ExceptionDescriptor),
         BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd)
