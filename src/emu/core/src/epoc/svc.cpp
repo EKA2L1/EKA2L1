@@ -546,23 +546,31 @@ namespace eka2l1::epoc {
         std::string exit_cage = aCage.get(mem)->StdString(sys);
         std::optional<std::string> exit_description;
 
+        ipc_msg_ptr msg = kern->get_msg(aHandle);
+
+        if (!msg || !msg->own_thr) {
+            return KErrBadHandle;
+        }
+
+        std::string thread_name = msg->own_thr->name();
+
         if (is_panic_category_action_default(exit_cage)) {
             exit_description = get_panic_description(exit_cage, aReason);
 
             switch (aExitType) {
             case TExitType::panic:
-                LOG_TRACE("Thread paniced by message with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                LOG_TRACE("Thread {} paniced by message with cagetory: {} and exit code: {} {}", thread_name, exit_cage, aReason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case TExitType::kill:
-                LOG_TRACE("Thread forcefully killed by message with cagetory: {} and exit code: {}", exit_cage, aReason,
+                LOG_TRACE("Thread {} forcefully killed by message with cagetory: {} and exit code: {}", thread_name, exit_cage, aReason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case TExitType::terminate:
             case TExitType::pending:
-                LOG_TRACE("Thread terminated peacefully by message with cagetory: {} and exit code: {}", exit_cage, aReason,
+                LOG_TRACE("Thread {} terminated peacefully by message with cagetory: {} and exit code: {}", thread_name, exit_cage, aReason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
@@ -574,12 +582,6 @@ namespace eka2l1::epoc {
 #ifdef ENABLE_SCRIPTING
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
 #endif
-
-        ipc_msg_ptr msg = kern->get_msg(aHandle);
-
-        if (!msg) {
-            return KErrBadHandle;
-        }
 
         kern->get_thread_scheduler()->stop(msg->own_thr);
         kern->prepare_reschedule();
@@ -1436,6 +1438,7 @@ namespace eka2l1::epoc {
         }
 
         std::string exit_cage = "None";
+        std::string thread_name = thr->name();
 
         if (aReasonDes) {
             exit_cage = aReasonDes.get(mem)->StdString(sys);
@@ -1448,18 +1451,18 @@ namespace eka2l1::epoc {
 
             switch (aExitType) {
             case TExitType::panic:
-                LOG_TRACE("Thread paniced with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                LOG_TRACE("Thread {} paniced with cagetory: {} and exit code: {} {}", thread_name, exit_cage, aReason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case TExitType::kill:
-                LOG_TRACE("Thread forcefully killed with cagetory: {} and exit code: {} {}", exit_cage, aReason,
+                LOG_TRACE("Thread {} forcefully killed with cagetory: {} and exit code: {} {}", thread_name, exit_cage, aReason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case TExitType::terminate:
             case TExitType::pending:
-                LOG_TRACE("Thread terminated peacefully with cagetory: {} and exit code: {}", exit_cage, aReason,
+                LOG_TRACE("Thread {} terminated peacefully with cagetory: {} and exit code: {}", thread_name, exit_cage, aReason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
