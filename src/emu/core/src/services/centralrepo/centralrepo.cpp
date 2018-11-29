@@ -105,12 +105,12 @@ namespace eka2l1 {
                 main_found = true;
 
                 // Start processing entry
-                for (const auto &entry: section.data) {
-                    if (entry == "") {
+                for (const auto &et: section.data) {
+                    if (et == "") {
                         continue;
                     }
 
-                    std::istringstream token_stream(entry);
+                    std::istringstream token_stream(et);
                     std::string tok;
 
                     if (!(token_stream >> tok)) {
