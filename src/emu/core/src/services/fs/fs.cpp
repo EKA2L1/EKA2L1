@@ -1613,6 +1613,14 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
+    struct TIoDriveParamInfo {
+        TInt iBlockSize;
+        TInt iClusterSize;
+        TInt iRecReadBufSize;
+        TInt iRecWriteBufSize;
+        TUint64 iMaxSupportedFileSize;
+    };
+
     void fs_server::query_drive_info_ext(service::ipc_context ctx) {
         drive_number drv = static_cast<drive_number>(*ctx.get_arg<int>(0));
         std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(drv);
@@ -1642,6 +1650,20 @@ namespace eka2l1 {
             // Check if drive is safe to remove. Yes ?
             LOG_WARN("Checking if drive is finalised, stubbed");
             ctx.write_arg_pkg(2, true);
+            break;
+        }
+
+        case extended_fs_query_command::io_param_info: {
+            TIoDriveParamInfo param;
+            param.iBlockSize = 512;
+            param.iClusterSize = 4096;
+            param.iMaxSupportedFileSize = 0xFFFFFFFF;
+            param.iRecReadBufSize = 8192;
+            param.iRecWriteBufSize = 16384;
+
+            LOG_INFO("IOParamInfo stubbed");
+            ctx.write_arg_pkg(2, param);
+
             break;
         }
 
