@@ -205,6 +205,7 @@ namespace eka2l1 {
 
         if (!given_path_target || !given_path_dest) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
@@ -235,6 +236,7 @@ namespace eka2l1 {
 
         if (!given_path_target || !given_path_dest) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
@@ -265,6 +267,7 @@ namespace eka2l1 {
 
         if (!given_path) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
@@ -307,6 +310,7 @@ namespace eka2l1 {
 
         if (!new_path) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         session_paths[ctx.msg->msg_session->unique_id()] = *new_path;
@@ -318,6 +322,7 @@ namespace eka2l1 {
 
         if (!drive_ordinal) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         char16_t drive_dos_char = char16_t(0x41 + *drive_ordinal);
@@ -401,10 +406,10 @@ namespace eka2l1 {
             return;
         }
 
-		// If the file is truncated, move the file pointer to the maximum new size
+	    // If the file is truncated, move the file pointer to the maximum new size
         if (size < fsize) {
             f->seek(size, file_seek_mode::beg);
-		}
+	    }
 
         ctx.set_request_status(KErrNone);
     }
@@ -470,7 +475,9 @@ namespace eka2l1 {
         }
 
         symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+
         ctx.write_arg(0, eka2l1::filename(f->file_name(), true));
+        ctx.set_request_status(KErrNone);
 	}
 
     void fs_server::file_full_name(service::ipc_context ctx) {
@@ -489,7 +496,9 @@ namespace eka2l1 {
         }
 
         symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+
         ctx.write_arg(0, f->file_name());
+        ctx.set_request_status(KErrNone);
     }
 
     void fs_server::file_seek(service::ipc_context ctx) {
@@ -778,6 +787,7 @@ namespace eka2l1 {
 
         if (!name_res || !open_mode_res) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
@@ -1112,6 +1122,7 @@ namespace eka2l1 {
 
         if (!dir) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         bool res = false;
@@ -1137,6 +1148,7 @@ namespace eka2l1 {
 
         if (!fname_op) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         std::u16string fname = std::move(*fname_op);
