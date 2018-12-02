@@ -36,6 +36,10 @@
 #include <core/epoc/hal.h>
 #include <core/epoc/panic.h>
 
+#ifdef ENABLE_SCRIPTING
+#include <core/manager/script_manager.h>
+#endif
+
 #include <yaml-cpp/yaml.h>
 
 #include <experimental/filesystem>

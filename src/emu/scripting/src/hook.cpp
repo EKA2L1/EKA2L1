@@ -22,6 +22,7 @@
 #include <scripting/instance.h>
 
 #include <core/core.h>
+#include <core/manager/script_manager.h>
 
 namespace eka2l1::scripting {
     void register_panic_invokement(const std::string &category, pybind11::function ifunc) {

@@ -20,13 +20,8 @@
 
 #pragma once
 
-#include <core/manager/package_manager.h>
-
-#ifdef ENABLE_SCRIPTING
-    #include <core/manager/script_manager.h>
-#endif
-
 #include <core/configure.h>
+#include <core/manager/package_manager.h>
 
 #include <memory>
 
@@ -35,9 +30,15 @@ namespace eka2l1 {
 }
 
 namespace eka2l1 {
+    #ifdef ENABLE_SCRIPTING
+    namespace manager {
+        class script_manager;
+    }
+    #endif
+
     class manager_system {
         #ifdef ENABLE_SCRIPTING
-        std::unique_ptr<manager::script_manager> scrmngr;
+        std::shared_ptr<manager::script_manager> scrmngr;
         #endif
 
         manager::package_manager pkgmngr;

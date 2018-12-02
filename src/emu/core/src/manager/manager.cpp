@@ -21,6 +21,10 @@
 #include <core/manager/manager.h>
 #include <core/manager/package_manager.h>
 
+#ifdef ENABLE_SCRIPTING
+#include <core/manager/script_manager.h>
+#endif
+
 namespace eka2l1 {
     manager::package_manager *manager_system::get_package_manager() {
         return &pkgmngr;
@@ -28,7 +32,7 @@ namespace eka2l1 {
 
 #ifdef ENABLE_SCRIPTING
     manager::script_manager *manager_system::get_script_manager() {
-        return scrmngr.get();
+        return &(*scrmngr);
     }
 #endif
 
@@ -38,7 +42,7 @@ namespace eka2l1 {
         pkgmngr = manager::package_manager(ios);
 
 #ifdef ENABLE_SCRIPTING
-        scrmngr = std::make_unique<manager::script_manager>(sys);
+        scrmngr = std::make_shared<manager::script_manager>(sys);
 #endif
     }
 }

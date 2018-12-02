@@ -24,6 +24,7 @@ if (MSVC)
 endif(MSVC)
 
 if (ENABLE_SCRIPTING_ABILITY)
+    message("Enable scripting with Python with build")
     set (ENABLE_SCRIPTING 1)
 else (ENABLE_SCRIPTING_ABILITY)
     set (ENABLE_SCRIPTING 0)

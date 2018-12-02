@@ -25,6 +25,11 @@
 #include <core/arm/jit_unicorn.h>
 #include <core/core.h>
 #include <core/configure.h>
+
+#ifdef ENABLE_SCRIPTING
+#include <core/manager/script_manager.h>
+#endif
+
 #include <core/arm/jit_utils.h>
 #include <core/core_timing.h>
 #include <core/disasm/disasm.h>

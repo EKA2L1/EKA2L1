@@ -26,6 +26,12 @@
 #include <core/epoc/reg.h>
 #include <core/hle/libmanager.h>
 
+#include <core/configure.h>
+
+#ifdef ENABLE_SCRIPTING
+#include <core/manager/script_manager.h>
+#endif
+
 #include <core/loader/eka2img.h>
 #include <core/loader/romimage.h>
 #include <core/vfs.h>
@@ -47,7 +53,27 @@ namespace eka2l1 {
             kern = kerns;
 
             // TODO (pent0): Implement external id loading
-            // load_all_sids(ver);
+            
+            std::vector<sid> tids;
+            std::string lib_name;
+
+            #define LIB(x) lib_name = #x;
+            #define EXPORT(x, y)   \
+                tids.push_back(y); \
+                func_names.insert(std::make_pair(y, x));
+            #define ENDLIB()                                                                        \
+                ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); \
+                tids.clear();
+
+            if (ver == epocver::epoc6) {
+            #include <core/hle/epoc6_n.def>
+            } else {
+            #include <core/hle/epoc9_n.def>
+            }
+
+            #undef LIB
+            #undef EXPORT
+            #undef ENLIB
 
             if (ver == epocver::epoc9) {
                 epoc::register_epocv94(*this);

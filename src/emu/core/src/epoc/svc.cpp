@@ -31,6 +31,11 @@
 
 #include <core/configure.h>
 
+#ifdef ENABLE_SCRIPTING
+#include <core/manager/script_manager.h>
+#endif
+
+
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/random.h>

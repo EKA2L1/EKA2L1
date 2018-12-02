@@ -20,4 +20,4 @@ add_library(epoc
 target_include_directories(epoc PUBLIC ${CORE_OUTER_INCLUDE_DIR})
 
 target_link_libraries(epoc PUBLIC common)
-target_link_libraries(epoc PRIVATE corekernel drivers services hle tz)
+target_link_libraries(epoc PRIVATE corekernel coremanager drivers services hle tz)
