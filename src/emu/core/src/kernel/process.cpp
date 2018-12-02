@@ -51,7 +51,7 @@ namespace eka2l1::kernel {
         ++thread_count;
 
         args[0].data_size = 0;
-        args[1].data_size = (5 + exe_path.size() * 2 + cmd_args.size() * 2); // Contains some garbage :D
+        args[1].data_size = (exe_path.size() * 2 + cmd_args.size() * 2);
 
         if (last) {
             mem->set_current_page_table(*last);

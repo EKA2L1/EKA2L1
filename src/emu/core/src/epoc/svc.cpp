@@ -275,26 +275,21 @@ namespace eka2l1::epoc {
         TUint8 *data = aData.get(sys->get_memory_system());
 
         if (aSlot == 1) {
-            std::u16string arg = u"\0l" + pr->get_exe_path();
+            std::u16string arg = pr->get_exe_path();
 
             if (!pr->get_cmd_args().empty()) {
                 arg += u" " + pr->get_cmd_args();
             }
 
-            char src = 0x00;
-            char src2 = 0x6C;
+            memcpy(data, arg.data(), arg.length() * 2);
 
-            memcpy(data + 2, common::ucs2_to_utf8(arg).data(), arg.length());
-            memcpy(data, &src, 1);
-            memcpy(data + 1, &src2, 1);
-
-            return slot.data_size;
+            return KErrNone;
         }
 
         TUint8 *ptr2 = eka2l1::ptr<TUint8>(slot.data).get(sys->get_memory_system());
         memcpy(data, ptr2, slot.data_size);
 
-        return slot.data_size;
+        return KErrNone;
     }
 
     BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle) {
@@ -307,7 +302,7 @@ namespace eka2l1::epoc {
             return KErrNotFound;
         }
 
-        return (slot.data_size / 2) + 1;
+        return slot.data_size;
     }
 
     BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<TDes8> aData) {
@@ -331,20 +326,16 @@ namespace eka2l1::epoc {
             return;
         }
 
-        std::u16string arg = u"\0l" + pr->get_exe_path();
+        std::u16string arg = pr->get_exe_path();
 
         if (!pr->get_cmd_args().empty()) {
             arg += u" " + pr->get_cmd_args();
         }
 
-        char src = 0x00;
-        char src2 = 0x6C;
-
         TUint8 *data_ptr = data->Ptr(sys);
 
-        memcpy(data_ptr + 2, common::ucs2_to_utf8(arg).data(), arg.length());
-        memcpy(data_ptr, &src, 1);
-        memcpy(data_ptr + 1, &src2, 1);
+        memcpy(data_ptr, arg.data(), arg.length() * 2);
+        data->SetLength(sys, arg.length() * 2);
     }
 
     BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
