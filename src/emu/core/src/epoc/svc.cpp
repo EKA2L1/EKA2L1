@@ -1991,6 +1991,53 @@ namespace eka2l1::epoc {
         return epoc::get_exception_descriptor_addr(sys, aInAddr);
     }
 
+    /* ATOMIC OPERATION */
+    /* TODO: Use host atomic function when multi-core available */    
+    struct SAtomicOpInfo32
+    {
+        TAny*		iA;
+        union
+        {
+            TAny*	iQ;
+            TUint32	i0;
+        };
+
+        TUint32		i1;
+        TUint32		i2;
+    };
+
+    /*! \brief Increase value by 1 if it's positive (> 0)
+        \returns Original value
+    */
+    BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal)
+    {
+        TInt32 *val = aVal.get(sys->get_memory_system());
+        TInt32 org_val = *val;
+        *val > 0 ? val++ : 0;
+
+        return org_val;
+    }
+
+    BRIDGE_FUNC(TInt32, SafeDec32, eka2l1::ptr<TInt32> aVal)
+    {
+        TInt32 *val = aVal.get(sys->get_memory_system());
+        TInt32 org_val = *val;
+        *val > 0 ? val-- : 0;
+
+        return org_val;
+    }
+
+    BRIDGE_FUNC(TInt32, AtomicTas32, eka2l1::ptr<SAtomicOpInfo32> aAtomicInfo) {
+        SAtomicOpInfo32 *info = aAtomicInfo.get(sys->get_memory_system());
+
+        TInt32 *A = reinterpret_cast<TInt32*>(info->iA);
+        TInt32 old = *A;
+
+        (*A >= info->i0) ? (*A += info->i1) : (*A += info->i2);
+
+        return old;
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),
@@ -2003,6 +2050,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0080000C, DebugMask),
         BRIDGE_REGISTER(0x0080000D, DebugMaskIndex),
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
+        BRIDGE_REGISTER(0x00800015, SafeInc32),
         BRIDGE_REGISTER(0x00800019, UTCOffset),
         BRIDGE_REGISTER(0x0080001A, GetGlobalUserData),
         /* SLOW EXECUTIVE CALL */
