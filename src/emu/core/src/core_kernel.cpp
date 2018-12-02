@@ -209,7 +209,11 @@ namespace eka2l1 {
         kernel::chunk_type type, kernel::chunk_access access, kernel::chunk_attrib attrib, kernel::owner_type owner) {
         chunk_ptr new_chunk = std::make_shared<kernel::chunk>(this, mem, crr_process(), name, bottom, top, size,
             protection, type, access, attrib);
-        objects.push_back(std::move(new_chunk));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_chunk));
+        }
 
         return create_handle_lastest(owner);
     }
@@ -218,7 +222,11 @@ namespace eka2l1 {
         kernel::owner_type own,
         kernel::access_type access) {
         mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, access);
-        objects.push_back(std::move(new_mutex));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_mutex));
+        }
 
         return create_handle_lastest(own);
     }
@@ -228,7 +236,11 @@ namespace eka2l1 {
         kernel::owner_type own_type,
         kernel::access_type access) {
         sema_ptr new_sema = std::make_shared<kernel::semaphore>(this, sema_name, init_count, access);
-        objects.push_back(std::move(new_sema));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_sema));
+        }
 
         return create_handle_lastest(own_type);
     }
@@ -236,14 +248,22 @@ namespace eka2l1 {
     uint32_t kernel_system::create_timer(std::string name, kernel::owner_type owner,
         kernel::access_type access) {
         timer_ptr new_timer = std::make_shared<kernel::timer>(this, timing, name, access);
-        objects.push_back(std::move(new_timer));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_timer));
+        }
 
         return create_handle_lastest(owner);
     }
 
     uint32_t kernel_system::create_change_notifier(kernel::owner_type owner) {
         change_notifier_ptr new_nof = std::make_shared<kernel::change_notifier>(this);
-        objects.push_back(std::move(new_nof));
+
+        {
+            SYNCHRONIZE_ACCESS;
+            objects.push_back(std::move(new_nof));
+        }
 
         return create_handle_lastest(owner);
     }
@@ -458,6 +478,8 @@ namespace eka2l1 {
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj_by_id(std::uint64_t id) {
+        SYNCHRONIZE_ACCESS;
+
         auto res = std::find_if(objects.begin(), objects.end(),
             [=](kernel_obj_ptr obj) { return obj && (obj->unique_id() == id); });
 
@@ -469,6 +491,8 @@ namespace eka2l1 {
     }
 
     thread_ptr kernel_system::get_thread_by_name(const std::string &name) {
+        SYNCHRONIZE_ACCESS;
+        
         auto thr_find = std::find_if(objects.begin(), objects.end(),
             [&](auto &obj) {
                 if (obj && obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
@@ -488,6 +512,8 @@ namespace eka2l1 {
     std::vector<thread_ptr> kernel_system::get_all_thread_own_process(process_ptr pr) {
         std::vector<thread_ptr> thr_list;
 
+        SYNCHRONIZE_ACCESS;
+
         for (kernel_obj_ptr &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::thread) {
                 thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
@@ -503,6 +529,7 @@ namespace eka2l1 {
 
     std::vector<process_ptr> kernel_system::get_all_processes() {
         std::vector<process_ptr> process_list;
+        SYNCHRONIZE_ACCESS;
 
         for (kernel_obj_ptr &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
@@ -526,6 +553,8 @@ namespace eka2l1 {
     std::vector<process_ptr> kernel_system::get_process_list() {
         std::vector<process_ptr> processes;
         
+        SYNCHRONIZE_ACCESS;
+
         for (const auto &obj: objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
                 processes.push_back(std::dynamic_pointer_cast<kernel::process>(obj));
@@ -536,6 +565,8 @@ namespace eka2l1 {
     }
 
     server_ptr kernel_system::get_server_by_name(const std::string name) {
+        SYNCHRONIZE_ACCESS;
+
         auto svr_find = std::find_if(objects.begin(), objects.end(),
             [&](auto &obj) {
                 if (obj && obj->get_object_type() == kernel::object_type::server && obj->name() == name) {
@@ -553,6 +584,8 @@ namespace eka2l1 {
     }
 
     server_ptr kernel_system::get_server(uint32_t handle) {
+        SYNCHRONIZE_ACCESS;
+
         kernel_obj_ptr obj = get_kernel_obj(handle);
 
         if (!obj || obj->get_object_type() != kernel::object_type::server) {
@@ -573,6 +606,8 @@ namespace eka2l1 {
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {
+        SYNCHRONIZE_ACCESS;
+
         auto prop_res = std::find_if(objects.begin(), objects.end(),
             [=](const auto &prop) {
                 if (prop && prop->get_object_type() == kernel::object_type::prop) {
@@ -594,6 +629,8 @@ namespace eka2l1 {
     }
 
     property_ptr kernel_system::get_prop(uint32_t handle) {
+        SYNCHRONIZE_ACCESS;
+
         kernel_obj_ptr obj = get_kernel_obj(handle);
 
         if (!obj || obj->get_object_type() != kernel::object_type::prop) {
@@ -675,12 +712,16 @@ namespace eka2l1 {
     void kernel_system::processing_requests() {
         std::vector<server_ptr> svrs;
 
-        for (auto &obj : objects) {
-            if (obj && obj->get_object_type() == kernel::object_type::server) {
-                server_ptr svr = std::dynamic_pointer_cast<service::server>(obj);
+        {
+            SYNCHRONIZE_ACCESS;
 
-                if (svr->is_hle()) {
-                    svrs.push_back(svr);
+            for (auto &obj : objects) {
+                if (obj && obj->get_object_type() == kernel::object_type::server) {
+                    server_ptr svr = std::dynamic_pointer_cast<service::server>(obj);
+
+                    if (svr->is_hle()) {
+                        svrs.push_back(svr);
+                    }
                 }
             }
         }
@@ -697,6 +738,7 @@ namespace eka2l1 {
 
     std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type) {
         find_handle handle_find_info;
+        SYNCHRONIZE_ACCESS;
 
         if (start >= objects.size()) {
             return std::optional<find_handle>{};
