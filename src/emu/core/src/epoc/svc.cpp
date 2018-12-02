@@ -2001,9 +2001,30 @@ namespace eka2l1::epoc {
         TUint32		i2;
     };
 
+    /*! \brief Increase value by 1 if it's positive (> 0)
+        \returns Original value
+    */
+    BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal)
+    {
+        TInt32 *val = aVal.get(sys->get_memory_system());
+        TInt32 org_val = *val;
+        *val > 0 ? val++ : 0;
+
+        return org_val;
+    }
+
+    BRIDGE_FUNC(TInt32, SafeDec32, eka2l1::ptr<TInt32> aVal)
+    {
+        TInt32 *val = aVal.get(sys->get_memory_system());
+        TInt32 org_val = *val;
+        *val > 0 ? val-- : 0;
+
+        return org_val;
+    }
+
     BRIDGE_FUNC(TInt32, AtomicTas32, eka2l1::ptr<SAtomicOpInfo32> aAtomicInfo) {
         SAtomicOpInfo32 *info = aAtomicInfo.get(sys->get_memory_system());
-        
+
         TInt32 *A = reinterpret_cast<TInt32*>(info->iA);
         TInt32 old = *A;
 
@@ -2024,7 +2045,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0080000C, DebugMask),
         BRIDGE_REGISTER(0x0080000D, DebugMaskIndex),
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
-        BRIDGE_REGISTER(0x00800015, AtomicTas32),
+        BRIDGE_REGISTER(0x00800015, SafeInc32),
         BRIDGE_REGISTER(0x00800019, UTCOffset),
         BRIDGE_REGISTER(0x0080001A, GetGlobalUserData),
         /* SLOW EXECUTIVE CALL */
