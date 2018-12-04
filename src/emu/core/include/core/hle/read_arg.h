@@ -69,7 +69,7 @@ namespace eka2l1 {
         template <typename T>
         T read_from_stack(arm::jitter &cpu, const arg_layout &layout, memory_system *mem) {
             const address sp = cpu->get_stack_top();
-            const address stack_arg_offset = sp + layout.offset;
+            const address stack_arg_offset = sp + static_cast<address>(layout.offset);
 
             return *ptr<T>(stack_arg_offset).get(mem);
         }

@@ -50,9 +50,6 @@ namespace eka2l1::kernel {
 
         ++thread_count;
 
-        args[0].data_size = 0;
-        args[1].data_size = (exe_path.size() * 2 + cmd_args.size() * 2);
-
         if (last) {
             mem->set_current_page_table(*last);
         }
@@ -109,13 +106,15 @@ namespace eka2l1::kernel {
             romimg->header.stack_size, romimg->header.heap_minimum_size, romimg->header.heap_maximum_size);
     }
 
-    void process::set_arg_slot(uint8_t slot, uint32_t data, size_t data_size) {
-        if (slot >= 16) {
+    void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {
+        if (slot >= 16 || args[slot].used) {
             return;
         }
 
-        args[slot].data = data;
-        args[slot].data_size = data_size;
+        args[slot].data.resize(data_size);
+        args[slot].used = true;
+
+        std::copy(data, data + data_size, args[slot].data.begin());
     }
 
     std::optional<pass_arg> process::get_arg_slot(uint8_t slot) {

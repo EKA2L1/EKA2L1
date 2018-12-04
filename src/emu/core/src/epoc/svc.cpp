@@ -250,7 +250,7 @@ namespace eka2l1::epoc {
             return KErrNotFound;
         }
 
-        return static_cast<TInt>(slot->data_size);
+        return static_cast<TInt>(slot->data.size());
     }
 
     BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength) {
@@ -264,54 +264,37 @@ namespace eka2l1::epoc {
 
         auto slot = *pr->get_arg_slot(aSlot);
 
-        if (slot.data_size == -1) {
+        if (slot.used) {
             return KErrNotFound;
         }
 
-        if (aLength < slot.data_size) {
+        if (aLength < slot.data.size()) {
             return KErrArgument;
         }
 
         TUint8 *data = aData.get(sys->get_memory_system());
-
-        if (aSlot == 1) {
-            std::u16string arg = pr->get_exe_path();
-
-            if (!pr->get_cmd_args().empty()) {
-                arg += u" " + pr->get_cmd_args();
-            }
-
-            memcpy(data, arg.data(), arg.length() * 2);
-
-            return KErrNone;
-        }
-
-        TUint8 *ptr2 = eka2l1::ptr<TUint8>(slot.data).get(sys->get_memory_system());
-        memcpy(data, ptr2, slot.data_size);
+        std::copy(slot.data.begin(), slot.data.end(), data);
 
         return KErrNone;
     }
 
     BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->crr_process();
+        process_ptr pr = kern->get_process(aHandle);
 
-        auto slot = *pr->get_arg_slot(1);
-
-        if (slot.data_size == -1) {
-            return KErrNotFound;
+        if (!pr) {
+            return KErrBadHandle;
         }
 
-        return slot.data_size;
+        return static_cast<TInt>(pr->get_cmd_args().length());
     }
 
     BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<TDes8> aData) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->crr_process();
+        process_ptr pr = kern->get_process(aHandle);
 
-        auto slot = *pr->get_arg_slot(1);
-
-        if (slot.data_size == -1) {
+        if (!pr) {
+            LOG_WARN("Process not found with handle: 0x{:x}", aHandle);
             return;
         }
 
@@ -321,21 +304,18 @@ namespace eka2l1::epoc {
             return;
         }
 
-        if (data->iMaxLength < slot.data_size) {
+        std::u16string arg = pr->get_cmd_args();
+
+        // x2 the size of data since this is an u16string
+        if (data->iMaxLength < arg.length() * 2) {
             LOG_WARN("Not enough data to store command line, abort");
             return;
         }
-
-        std::u16string arg = pr->get_exe_path();
-
-        if (!pr->get_cmd_args().empty()) {
-            arg += u" " + pr->get_cmd_args();
-        }
-
+        
         TUint8 *data_ptr = data->Ptr(sys);
 
         memcpy(data_ptr, arg.data(), arg.length() * 2);
-        data->SetLength(sys, arg.length() * 2);
+        data->SetLength(sys, static_cast<TUint32>(arg.length() * 2));
     }
 
     BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
@@ -1034,7 +1014,7 @@ namespace eka2l1::epoc {
         }
 
         chunk_ptr chunk = std::dynamic_pointer_cast<kernel::chunk>(obj);
-        return chunk->get_max_size();
+        return static_cast<TInt>(chunk->get_max_size());
     }
 
     BRIDGE_FUNC(eka2l1::ptr<TUint8>, ChunkBase, TInt aChunkHandle) {

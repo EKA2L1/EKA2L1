@@ -30,8 +30,8 @@
 #include <core/page_table.h>
 
 #include <string>
-
 #include <tuple>
+#include <vector>
 
 namespace eka2l1 {
     class kernel_system;
@@ -48,13 +48,13 @@ namespace eka2l1::kernel {
     class thread_scheduler;
 
     struct process_info {
-        ptr<void> code_where;
-        uint64_t size;
+        ptr<void>     code_where;
+        std::uint64_t size;
     };
 
     struct pass_arg {
-        uint32_t data = 0;
-        size_t data_size = -1;
+        bool                      used = false;
+        std::vector<std::uint8_t> data;
     };
 
     struct security_info {
@@ -163,7 +163,7 @@ namespace eka2l1::kernel {
 
         bool run();
 
-        void set_arg_slot(uint8_t slot, uint32_t data, size_t data_size);
+        void set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size);
         std::optional<pass_arg> get_arg_slot(uint8_t slot);
 
         process_uid_type get_uid_type();

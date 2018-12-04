@@ -436,9 +436,10 @@ namespace eka2l1 {
 
     class physical_file_system: public abstract_file_system {
         std::mutex fs_mutex;
-        epocver ver;
 
     protected:
+        epocver ver;
+
         // Use a flat array for drive mapping
         std::array<std::pair<drive, bool>, drive_z + 1> mappings;
 
@@ -833,10 +834,34 @@ namespace eka2l1 {
                 return nullptr;
             }
             
-            auto entry = burn_tree_find_entry(common::ucs2_to_utf8(path));
+            std::u16string new_path = path;
+            auto sep_char = eka2l1::get_separator();
+
+            // Make it case-insensitive
+            for (auto &c : new_path) {
+                c = std::towlower(c);
+
+                if (eka2l1::is_separator(c)) {
+                    c = sep_char;
+                }
+            }
+
+            size_t lib_pos = new_path.find(u"\\system\\lib");
+
+            if (lib_pos == std::string::npos) {
+                lib_pos = new_path.find(u"\\system\\programs");
+            }
+
+            // TODO (bentokun): Remove this hack with a proper symlink system.
+            if (lib_pos != std::string::npos && 
+                static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+                new_path.replace(lib_pos, 12, u"\\sys\\bin");
+            }
+            
+            auto entry = burn_tree_find_entry(common::ucs2_to_utf8(new_path));
 
             if (!entry) {
-                return physical_file_system::open_file(path, mode);
+                return physical_file_system::open_file(new_path, mode);
             }
 
             return std::make_shared<rom_file>(mem, rom_cache, *entry);            

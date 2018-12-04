@@ -53,9 +53,10 @@ namespace eka2l1 {
         }
 
         std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
-        auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
-
+        
         LOG_TRACE("Trying to summon: {}", name_process);
+
+        auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
 
         if (!eimg) {
             loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*process_name16, false);
@@ -80,6 +81,8 @@ namespace eka2l1 {
                 ctx.set_request_status(KErrNone);
                 return;
             } 
+
+            LOG_ERROR("Can't found or load process executable: {}", )
 
             ctx.set_request_status(KErrUnknown);
             return;
