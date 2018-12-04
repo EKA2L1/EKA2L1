@@ -506,6 +506,12 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
+        if (msg->msg_session->get_server()->name() == "!AppListServer" &&
+            msg->function == 65)
+            {
+                LOG_TRACE("AppList rule-based");
+            }
+
         if (msg->request_sts) {
             *msg->request_sts = aVal;
             msg->own_thr->signal_request();
@@ -584,19 +590,20 @@ namespace eka2l1::epoc {
         context.msg = msg;
         context.sys = sys;
 
-        const auto try_des8 = context.get_arg<std::string>(aParam);
+        const auto try_des16 = context.get_arg<std::u16string>(aParam);
 
-        if (!try_des8) {
-            const auto try_des16 = context.get_arg<std::u16string>(aParam);
+        // Reverse the order for safety
+        if (!try_des16) {
+            const auto try_des8 = context.get_arg<std::string>(aParam);
 
-            if (!try_des16) {
+            if (!try_des8) {
                 return KErrBadDescriptor;
             }
 
-            return try_des16->length();
+            return static_cast<TInt>(try_des8->length());
         }
 
-        return try_des8->length();
+        return static_cast<TInt>(try_des16->length());
     }
 
     BRIDGE_FUNC(TInt, MessageGetDesMaxLength, TInt aHandle, TInt aParam) {
@@ -883,6 +890,15 @@ namespace eka2l1::epoc {
         if (!aStatus) {
             LOG_TRACE("Sending a blind sync message");
         }
+        
+        if (ss->get_server()->name() == "!AppListServer" &&
+            aOrd == 65)
+            {
+                auto load_path_des = (ptr<epoc::TDes8>(arg.args[0]).get(sys->get_memory_system()));
+                auto load_path = load_path_des->StdString(sys);
+
+                LOG_TRACE("{}", load_path);
+            }
 
         return ss->send_receive_sync(aOrd, arg, aStatus.get(mem));
     }
@@ -913,6 +929,15 @@ namespace eka2l1::epoc {
         if (!aStatus) {
             LOG_TRACE("Sending a blind async message");
         }
+
+        if (ss->get_server()->name() == "!AppListServer" &&
+            aOrd == 65)
+            {
+                auto load_path_des = (ptr<epoc::TDes8>(arg.args[0]).get(sys->get_memory_system()));
+                auto load_path = load_path_des->StdString(sys);
+
+                LOG_TRACE("{}", load_path);
+            }
 
         return ss->send_receive(aOrd, arg, aStatus.get(mem));
     }

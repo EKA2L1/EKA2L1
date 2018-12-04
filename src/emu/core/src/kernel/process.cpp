@@ -19,6 +19,7 @@
  */
 
 #include <common/cvt.h>
+#include <common/log.h>
 
 #include <core/core_kernel.h>
 #include <core/core_mem.h>
@@ -217,6 +218,9 @@ namespace eka2l1::kernel {
 
         for (auto &ren : rendezvous_requests) {
             *(ren.request_status) = rendezvous_reason;
+
+            LOG_TRACE("Rendezvous to: {}", ren.requester->name());
+
             ren.requester->signal_request();
         }
 

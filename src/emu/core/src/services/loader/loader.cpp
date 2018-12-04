@@ -82,7 +82,7 @@ namespace eka2l1 {
                 return;
             } 
 
-            LOG_ERROR("Can't found or load process executable: {}", )
+            LOG_ERROR("Can't found or load process executable: {}", name_process);
 
             ctx.set_request_status(KErrUnknown);
             return;
@@ -175,7 +175,8 @@ namespace eka2l1 {
 
     void loader_server::get_info(service::ipc_context ctx) {
         std::optional<utf16_str> lib_name = ctx.get_arg<utf16_str>(1);
-        epoc::TDes8 *buffer = reinterpret_cast<decltype(buffer)>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(ctx.msg->args.args[2]));
+        epoc::TDes8 *buffer =
+            eka2l1::ptr<epoc::TDes8>(ctx.msg->args.args[2]).get(ctx.sys->get_memory_system());
 
         if (!lib_name || !buffer) {
             ctx.set_request_status(KErrArgument);
@@ -190,6 +191,8 @@ namespace eka2l1 {
 
         epoc::ldr_info load_info;
         loader::e32img_ptr eimg = ctx.sys->get_lib_manager()->load_e32img(*lib_name);
+
+        LOG_TRACE("Get Info of {}", common::ucs2_to_utf8(*lib_name));
 
         if (!eimg) {
             loader::romimg_ptr rimg = ctx.sys->get_lib_manager()->load_romimg(*lib_name);

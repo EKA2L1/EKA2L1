@@ -61,7 +61,8 @@ namespace eka2l1 {
 
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
-            if ((int)iatype & (int)ipc_arg_type::flag_des) {
+            // If it has descriptor flag and it doesn't have an 16-bit flag, it should be 8-bit one.
+            if (((int)iatype & (int)ipc_arg_type::flag_des) && !((int)iatype & (int)ipc_arg_type::flag_16b)) {
                 eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
                     msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
 
