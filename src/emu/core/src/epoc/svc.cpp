@@ -244,9 +244,15 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr crr_process = kern->crr_process();
 
+        if (aSlot >= 16 || aSlot < 0) {
+            LOG_ERROR("Invalid slot (slot: {} >= 16 or < 0)", aSlot);
+            return KErrArgument;
+        }
+
         auto slot = crr_process->get_arg_slot(aSlot);
 
-        if (!slot) {
+        if (!slot || !slot->used) {
+            LOG_ERROR("Getting descriptor length of unused slot: {}", aSlot);
             return KErrNotFound;
         }
 
@@ -259,12 +265,13 @@ namespace eka2l1::epoc {
 
         if (aSlot >= 16 || aSlot < 0) {
             LOG_ERROR("Invalid slot (slot: {} >= 16 or < 0)", aSlot);
-            return KErrGeneral;
+            return KErrArgument;
         }
 
         auto slot = *pr->get_arg_slot(aSlot);
 
-        if (slot.used) {
+        if (!slot.used) {
+            LOG_ERROR("Parameter slot unused, error: {}", aSlot);
             return KErrNotFound;
         }
 
@@ -275,6 +282,30 @@ namespace eka2l1::epoc {
         TUint8 *data = aData.get(sys->get_memory_system());
         std::copy(slot.data.begin(), slot.data.end(), data);
 
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(TInt, ProcessSetDataParameter, TInt aHandle, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aDataSize) {
+        kernel_system *kern = sys->get_kernel_system();
+        process_ptr pr = kern->get_process(aHandle);
+
+        if (!pr) {
+            return KErrBadHandle;
+        }
+
+        if (aSlot < 0 || aSlot >= 16) {
+            LOG_ERROR("Invalid parameter slot: {}, slot number must be in range of 0-15", aSlot);
+            return KErrArgument;
+        }
+
+        auto slot = *pr->get_arg_slot(aSlot);
+
+        if (slot.used) {
+            LOG_ERROR("Can't set parameter of an used slot: {}", aSlot);
+            return KErrInUse;
+        }
+
+        pr->set_arg_slot(aSlot, aData.get(sys->get_memory_system()), aDataSize);
         return KErrNone;
     }
 
@@ -893,15 +924,6 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind sync message");
         }
         
-        if (ss->get_server()->name() == "!AppListServer" &&
-            aOrd == 65)
-            {
-                auto load_path_des = (ptr<epoc::TDes8>(arg.args[0]).get(sys->get_memory_system()));
-                auto load_path = load_path_des->StdString(sys);
-
-                LOG_TRACE("{}", load_path);
-            }
-
         return ss->send_receive_sync(aOrd, arg, aStatus.get(mem));
     }
 
@@ -931,15 +953,6 @@ namespace eka2l1::epoc {
         if (!aStatus) {
             LOG_TRACE("Sending a blind async message");
         }
-
-        if (ss->get_server()->name() == "!AppListServer" &&
-            aOrd == 65)
-            {
-                auto load_path_des = (ptr<epoc::TDes8>(arg.args[0]).get(sys->get_memory_system()));
-                auto load_path = load_path_des->StdString(sys);
-
-                LOG_TRACE("{}", load_path);
-            }
 
         return ss->send_receive(aOrd, arg, aStatus.get(mem));
     }
@@ -2138,10 +2151,11 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC6, PropertyFindGetBin),
         BRIDGE_REGISTER(0xC7, PropertyFindSetInt),
         BRIDGE_REGISTER(0xC8, PropertyFindSetBin),
+        BRIDGE_REGISTER(0xCF, ProcessSetDataParameter),
         BRIDGE_REGISTER(0xD1, ProcessGetDataParameter),
         BRIDGE_REGISTER(0xD2, ProcessDataParameterLength),
         BRIDGE_REGISTER(0xDB, PlatSecDiagnostic),
-        BRIDGE_REGISTER(0xDc, ExceptionDescriptor),
+        BRIDGE_REGISTER(0xDC, ExceptionDescriptor),
         BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd)
