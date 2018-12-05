@@ -643,7 +643,7 @@ namespace eka2l1::epoc {
     static_assert(sizeof(TIpcCopyInfo) == 12, "Size of IPCCopy struct is 12");
 
     const TInt KChunkShiftBy0 = 0;
-    const TInt KChunkShiftBy1 = -2147483647;
+    const TInt KChunkShiftBy1 = (TInt)0x80000000;
     const TInt KIpcDirRead = 0;
     const TInt KIpcDirWrite = 0x10000000;
 
@@ -684,6 +684,7 @@ namespace eka2l1::epoc {
                     return KErrBadDescriptor;
                 }
 
+                // Target length is the descriptor length, either 8-bit or 16-bit, not total bytes that can be stored.
                 if (arg_request->length() - aStartOffset > info->iTargetLength) {
                     return KErrNoMemory;
                 }
@@ -699,11 +700,12 @@ namespace eka2l1::epoc {
                 return KErrBadDescriptor;
             }
 
-            if (arg_request->length() * 2 - aStartOffset > info->iTargetLength) {
+            if (arg_request->length() - aStartOffset > info->iTargetLength) {
                 return KErrNoMemory;
             }
 
-            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset, arg_request->size() * 2 - aStartOffset);
+            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset * 2,
+                (arg_request->size() - aStartOffset) * 2);
 
             return KErrNone;
         }
@@ -713,9 +715,9 @@ namespace eka2l1::epoc {
         context.msg = msg;
 
         std::string content;
-        content.resize(aStartOffset + (des8 ? info->iTargetLength : info->iTargetLength * 2));
+        content.resize(des8 ? (aStartOffset + info->iTargetLength) : (aStartOffset + info->iTargetLength) * 2);
 
-        memcpy(&content[aStartOffset], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
+        memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
         bool result = context.write_arg_pkg(aParam, reinterpret_cast<uint8_t *>(&content[0]), content.length());
 
         if (!result) {
