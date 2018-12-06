@@ -44,7 +44,7 @@ namespace eka2l1::kernel {
             = kern->create_thread(kernel::owner_type::kernel,
                 nullptr,
                 kernel::access_type::local_access,
-                process_name, ep_off,
+                process_name + "::Main", ep_off,
                 stack_size, heap_min, heap_max,
                 true,
                 0, 0, kernel::priority_normal);
