@@ -317,7 +317,8 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        return static_cast<TInt>(pr->get_cmd_args().length());
+        // Exe Path + double quote + space + args
+        return static_cast<TInt>(pr->get_exe_path().length() + pr->get_cmd_args().length() + 3);
     }
 
     BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<TDes8> aData) {
@@ -335,18 +336,30 @@ namespace eka2l1::epoc {
             return;
         }
 
-        std::u16string arg = pr->get_cmd_args();
+        std::u16string cmdline;
+
+        {
+            std::u16string arg = pr->get_cmd_args();
+            std::u16string exe = pr->get_exe_path();
+
+            cmdline = u'"';
+            cmdline += exe + u'"';
+
+            if (!arg.empty()) {
+                cmdline += u' ' + arg;
+            }
+        }
 
         // x2 the size of data since this is an u16string
-        if (data->iMaxLength < arg.length() * 2) {
+        if (data->iMaxLength < cmdline.length() * 2) {
             LOG_WARN("Not enough data to store command line, abort");
             return;
         }
         
         TUint8 *data_ptr = data->Ptr(sys);
 
-        memcpy(data_ptr, arg.data(), arg.length() * 2);
-        data->SetLength(sys, static_cast<TUint32>(arg.length() * 2));
+        memcpy(data_ptr, cmdline.data(), cmdline.length() << 1);
+        data->SetLength(sys, static_cast<TUint32>(cmdline.length() << 1));
     }
 
     BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
