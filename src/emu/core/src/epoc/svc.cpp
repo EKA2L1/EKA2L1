@@ -956,6 +956,7 @@ namespace eka2l1::epoc {
 
         return ss->send_receive(aOrd, arg, aStatus.get(mem));
     }
+
     /**********************************/
     /* TRAP/LEAVE */
     /*********************************/
@@ -1442,6 +1443,17 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, LastThreadHandle) {
         return sys->get_kernel_system()->crr_thread()->last_handle();
+    }
+
+    BRIDGE_FUNC(TInt, ThreadID, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return KErrBadHandle;
+        }
+
+        return static_cast<TInt>(thr->unique_id());
     }
 
     BRIDGE_FUNC(TInt, ThreadKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aReasonDes) {
@@ -2084,6 +2096,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x23, ServerCancel),
         BRIDGE_REGISTER(0x24, SetSessionPtr),
         BRIDGE_REGISTER(0x25, SessionSend),
+        BRIDGE_REGISTER(0x26, ThreadID),
         BRIDGE_REGISTER(0x27, SessionShare),
         BRIDGE_REGISTER(0x28, ThreadResume),
         BRIDGE_REGISTER(0x29, ThreadSuspend),
