@@ -1,4 +1,4 @@
-#include <epoc/core_timing.h>
+#include <epoc/timing.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>

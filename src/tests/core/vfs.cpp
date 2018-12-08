@@ -1,5 +1,6 @@
 #include <epoc/vfs.h>
 #include <common/path.h>
+#include <common/types.h>
 #include <gtest/gtest.h>
 
 struct io_scope_guard {

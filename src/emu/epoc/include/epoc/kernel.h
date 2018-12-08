@@ -117,6 +117,14 @@ namespace eka2l1 {
     public:
         uint64_t next_uid() const;
 
+        explicit kernel_system()
+            : uid_counter(0), libmngr(nullptr),
+              io(nullptr), sys(nullptr), mem(nullptr),
+              mngr(nullptr), timing(nullptr)
+        {
+            
+        }
+
         memory_system *get_memory_system() {
             return mem;
         }

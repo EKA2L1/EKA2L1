@@ -278,7 +278,9 @@ namespace eka2l1::epoc {
         }
 
         if (aLength < slot.data.size()) {
-            return KErrArgument;
+            LOG_ERROR("Given length is not large enough to slot length ({} vs {})",
+                aLength, slot.data.size());
+            return KErrNoMemory;
         }
 
         TUint8 *data = aData.get(sys->get_memory_system());

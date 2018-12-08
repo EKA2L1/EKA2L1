@@ -19,7 +19,7 @@
  */
 
 #include <epoc/loader/e32img.h>
-#include <epoc/hle/libmanager.h>
+#include <epoc/kernel/libmanager.h>
 
 #include <epoc/vfs.h>
 
