@@ -286,7 +286,10 @@ namespace eka2l1::epoc {
         TUint8 *data = aData.get(sys->get_memory_system());
         std::copy(slot.data.begin(), slot.data.end(), data);
 
-        return slot.data.size();
+        std::uint32_t written_size = slot.data.size();
+        pr->mark_slot_free(static_cast<std::uint8_t>(slot));
+
+        return static_cast<TInt>(written_size);
     }
 
     BRIDGE_FUNC(TInt, ProcessSetDataParameter, TInt aHandle, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aDataSize) {
