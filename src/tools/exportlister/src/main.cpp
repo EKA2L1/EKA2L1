@@ -1,9 +1,9 @@
 #include <common/log.h>
 
-#include <core/loader/eka2img.h>
-#include <core/loader/romimage.h>
+#include <epoc/loader/e32img.h>
+#include <epoc/loader/romimage.h>
 
-#include <core/vfs.h>
+#include <epoc/vfs.h>
 
 #include <fstream>
 #include <iostream>
@@ -16,7 +16,7 @@ using namespace eka2l1::loader;
 
 std::vector<fs::path> libs;
 
-void dump_to_syms(const std::string &org_path, eka2img &img) {
+void dump_to_syms(const std::string &org_path, e32img &img) {
     std::string lib = fs::path(org_path).filename().replace_extension(fs::path("")).string();
     std::ofstream of(lib + ".nsd");
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     }
 
     for (auto &path : libs) {
-        auto img = parse_eka2img(eka2l1::physical_file_proxy(path.string(), READ_MODE | BIN_MODE), false);
+        auto img = parse_e32img(eka2l1::physical_file_proxy(path.string(), READ_MODE | BIN_MODE), false);
 
         if (img) {
             dump_to_syms(path.string(), img.value());

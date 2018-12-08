@@ -1,6 +1,15 @@
 add_executable(eka2l1 src/main.cpp)
-target_link_libraries(eka2l1 PRIVATE common core debugger drivers 
-	gdbstub imgui yaml-cpp)
+
+target_link_libraries(eka2l1 PRIVATE 
+	arm
+	common
+	debugger 
+	drivers
+	epoc
+	manager
+	gdbstub
+	imgui
+	yaml-cpp)
 
 target_include_directories(eka2l1 PRIVATE ${YAML_CPP_INCLUDE_DIR})
 
@@ -8,17 +17,6 @@ set_target_properties(eka2l1 PROPERTIES OUTPUT_NAME eka2l1
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-add_executable(etests src/test.cpp)
-
-target_link_libraries(etests PRIVATE common core 
-	gdbstub imgui yaml-cpp)
-
-target_include_directories(etests PRIVATE ${YAML_CPP_INCLUDE_DIR})
-
-set_target_properties(etests PROPERTIES OUTPUT_NAME etests
-	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-	
 if (WIN32)
 	add_custom_command(
 			TARGET eka2l1

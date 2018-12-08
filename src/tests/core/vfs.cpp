@@ -1,4 +1,4 @@
-#include <core/vfs.h>
+#include <epoc/vfs.h>
 #include <common/path.h>
 #include <gtest/gtest.h>
 

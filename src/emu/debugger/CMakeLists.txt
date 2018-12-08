@@ -12,4 +12,14 @@ add_library(debugger
 )
 
 target_include_directories(debugger PUBLIC include)
-target_link_libraries(debugger PRIVATE common core coreloader coremanager imgui glad drivers)
+target_link_libraries(debugger PRIVATE
+    arm
+    common 
+    disasm
+    epoc
+    epockern
+    epocloader 
+    manager
+    imgui
+    glad
+    drivers)

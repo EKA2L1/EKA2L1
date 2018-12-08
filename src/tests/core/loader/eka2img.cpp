@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/loader/eka2img.h>
-#include <core/hle/libmanager.h>
+#include <epoc/loader/e32img.h>
+#include <epoc/hle/libmanager.h>
 
-#include <core/vfs.h>
+#include <epoc/vfs.h>
 
 #include <gtest/gtest.h>

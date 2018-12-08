@@ -45,8 +45,8 @@
 
 #pragma once
 
-#include <core/ptr.h>
-#include <core/core_kernel.h>
+#include <epoc/ptr.h>
+#include <epoc/kernel.h>
 
 #include <imgui.h>
 

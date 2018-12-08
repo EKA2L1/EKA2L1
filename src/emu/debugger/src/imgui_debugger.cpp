@@ -24,7 +24,11 @@
 
 #include <imgui.h>
 
-#include <core/core.h>
+#include <epoc/epoc.h>
+#include <disasm/disasm.h>
+
+#include <epoc/kernel/libmanager.h>
+
 #include <common/cvt.h>
 
 #define RGBA_TO_FLOAT(r, g, b, a) ImVec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0)
@@ -191,7 +195,7 @@ namespace eka2l1 {
             ImGui::NewLine();
 
             if (debug_thread) {
-                arm::jit_interface::thread_context &ctx = debug_thread->get_thread_context();
+                arm::arm_interface::thread_context &ctx = debug_thread->get_thread_context();
 
                 // Using the table for also situation like local JIT code from guest
                 page_table &table = debug_thread->owning_process()->get_page_table();

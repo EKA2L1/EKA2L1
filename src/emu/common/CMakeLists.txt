@@ -23,7 +23,8 @@ add_library(common
     src/path.cpp
     src/random.cpp
     src/types.cpp
-    src/virtualmem.cpp)
+    src/virtualmem.cpp
+)
 
 target_include_directories(common PUBLIC include)
 target_link_libraries(common PUBLIC spdlog miniz)

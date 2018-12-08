@@ -29,10 +29,11 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/types.h>
 
-#include <core/core.h>
-#include <core/configure.h>
-#include <core/loader/rom.h>
+#include <epoc/epoc.h>
+#include <epoc/configure.h>
+#include <epoc/loader/rom.h>
 
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
@@ -44,10 +45,14 @@
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
 
+#include <manager/manager.h>
+#include <gdbstub/gdbstub.h>
+
 using namespace eka2l1;
 
 eka2l1::system symsys(nullptr, nullptr);
-eka2l1::arm::jitter_arm_type jit_type = decltype(jit_type)::unicorn;
+
+arm_emulator_type jit_type = decltype(jit_type)::unicorn;
 epocver ever = epocver::epoc9;
 
 std::string rom_path = "SYM.ROM";
@@ -210,7 +215,7 @@ void read_config() {
 }
 
 void do_args() {
-    auto infos = symsys.app_infos();
+    auto infos = symsys.get_manager_system()->get_package_manager()->get_apps_info();
 
     if (list_app) {
         for (auto &info : infos) {
