@@ -287,7 +287,7 @@ namespace eka2l1::epoc {
         std::copy(slot.data.begin(), slot.data.end(), data);
 
         std::uint32_t written_size = slot.data.size();
-        pr->mark_slot_free(static_cast<std::uint8_t>(slot));
+        pr->mark_slot_free(static_cast<std::uint8_t>(aSlot));
 
         return static_cast<TInt>(written_size);
     }
