@@ -31,6 +31,7 @@
 
 #include <epoc/page_table.h>
 
+#include <cstdint>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -168,6 +169,11 @@ namespace eka2l1::kernel {
 
         void set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size);
         std::optional<pass_arg> get_arg_slot(uint8_t slot);
+
+        void mark_slot_free(std::uint8_t slot) {
+            assert(slot < 16);
+            args[slot].used = false;
+        }
 
         process_uid_type get_uid_type();
         kernel_obj_ptr get_object(uint32_t handle);
