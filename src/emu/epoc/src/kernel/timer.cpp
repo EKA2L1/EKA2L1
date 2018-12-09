@@ -42,7 +42,9 @@ namespace eka2l1 {
             }
         }
 
-        timer::~timer() {}
+        timer::~timer() {
+            int a = 5;
+        }
 
         bool timer::after(thread_ptr requester, epoc::request_status *request_status, uint64_t ms_signal) {
             if (outstanding) {
@@ -89,6 +91,13 @@ namespace eka2l1 {
 
             *info.request_status = -3;
             info.own_thread->signal_request();
+
+            // If the timer hasn't finished yet, please unschedule it.
+            if (outstanding) {
+                // Cancel
+                timing->unschedule_event(callback_type, 
+                    reinterpret_cast<std::uint64_t>(&info));
+            }
 
             return request_finish();
         }

@@ -137,7 +137,7 @@ namespace eka2l1 {
     }
 
     domain::~domain() {
-        hierarchy->timing->unschedule_event(trans_timeout_event, 0);
+        hierarchy->timing->unschedule_event(trans_timeout_event, reinterpret_cast<std::uint64_t>(this));
     }
 
     void construct_domain_from_database(timing_system *timing, kernel_system *kern, hierarchy_ptr hier, const service::database::domain &domain_db) {
@@ -614,7 +614,7 @@ namespace eka2l1 {
         }
 
         if (!--transition_count) {
-            hierarchy->timing->unschedule_event(trans_timeout_event, 0);
+            hierarchy->timing->unschedule_event(trans_timeout_event, reinterpret_cast<std::uint64_t>(this));
             complete_members_transition();
         }
     }

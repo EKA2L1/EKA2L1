@@ -160,7 +160,8 @@ namespace eka2l1 {
         }
 
         void thread_scheduler::unschedule_wakeup() {
-            timing->unschedule_event(wakeup_evt, 0);
+            timing->unschedule_event(wakeup_evt, 
+                reinterpret_cast<std::uint64_t>(crr_thread.get()));
         }
 
         bool thread_scheduler::wait(thread_ptr thr) {
