@@ -136,7 +136,9 @@ target_include_directories(epocio PUBLIC include)
 
 target_link_libraries(epocio PUBLIC common)
 target_link_libraries(epocio PRIVATE
-    epocloader)
+    epocloader
+    epocmem
+)
 
 target_link_libraries(epocmem PUBLIC common)
 target_link_libraries(epocmem PRIVATE
