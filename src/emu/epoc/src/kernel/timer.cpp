@@ -43,7 +43,6 @@ namespace eka2l1 {
         }
 
         timer::~timer() {
-            int a = 5;
         }
 
         bool timer::after(thread_ptr requester, epoc::request_status *request_status, uint64_t ms_signal) {

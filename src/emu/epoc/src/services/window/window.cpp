@@ -70,6 +70,32 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsSdOpGetNumScreenModes: {
+            LOG_TRACE("Get number screen modes stubbed with 1");
+            ctx.set_request_status(1);
+
+            break;
+        }
+
+        case EWsSdOpSetScreenMode: {
+            LOG_TRACE("Set screen mode stubbed, why did you even use this");
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
+        case EWsSdOpGetScreenSizeModeList: {
+            static TInt mode_stub[] = {0};
+
+            LOG_TRACE("Screen size mode stubbed");
+
+            ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t*>(&mode_stub[0]),
+                sizeof(mode_stub));
+            ctx.set_request_status(1);
+
+            break;
+        }
+
         default: {
             LOG_WARN("Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
             break;
