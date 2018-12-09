@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <cstdint>
 #include <memory>
 #include <optional>

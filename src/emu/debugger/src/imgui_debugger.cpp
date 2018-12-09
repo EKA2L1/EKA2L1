@@ -31,13 +31,13 @@
 
 #include <common/cvt.h>
 
-#define RGBA_TO_FLOAT(r, g, b, a) ImVec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0)
+#define RGBA_TO_FLOAT(r, g, b, a) ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f)
 
-const ImVec4 GUI_COLOR_TEXT_MENUBAR = RGBA_TO_FLOAT(242, 150, 58, 255);
-const ImVec4 GUI_COLOR_TEXT_MENUBAR_OPTIONS = RGBA_TO_FLOAT(242, 150, 58, 255);
-const ImVec4 GUI_COLOR_TEXT_TITLE = RGBA_TO_FLOAT(247, 198, 51, 255);
+const ImVec4 GUI_COLOR_TEXT_MENUBAR = RGBA_TO_FLOAT(242.0f, 150.0f, 58.0f, 255.0f);
+const ImVec4 GUI_COLOR_TEXT_MENUBAR_OPTIONS = RGBA_TO_FLOAT(242.0f, 150.0f, 58.0f, 255.0f);
+const ImVec4 GUI_COLOR_TEXT_TITLE = RGBA_TO_FLOAT(247.0f, 198.0f, 51.0f, 255.0f);
 const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
-const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125, 251, 143, 255);
+const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255.0f);
 
 namespace eka2l1 {
     imgui_debugger::imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger)
@@ -252,7 +252,7 @@ namespace eka2l1 {
         float footer_height = height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
 
         ImGui::BeginChild("##breakpoints_scroll", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove);
-        ImGuiListClipper clipper(breakpoints.size(), ImGui::GetTextLineHeight());
+        ImGuiListClipper clipper(static_cast<int>(breakpoints.size()), ImGui::GetTextLineHeight());
 
         ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-8s        %-32s", "Number",
             "Address");

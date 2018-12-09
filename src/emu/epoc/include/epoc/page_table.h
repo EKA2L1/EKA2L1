@@ -73,7 +73,7 @@ namespace eka2l1 {
         void write(uint32_t addr, void *src, int size);
 
         template <typename T>
-        T read(uint32_t addr) {
+        T read(vaddress addr) {
             T temp;
             read(addr, &temp, sizeof(T));
 
@@ -81,10 +81,10 @@ namespace eka2l1 {
         }
 
         template <typename T>
-        void write(uint32_t addr, T data) {
+        void write(vaddress addr, T data) {
             write(addr, &data, sizeof(T));
         }
 
-        void *get_ptr(uint32_t addr);
+        void *get_ptr(vaddress addr);
     };
 }

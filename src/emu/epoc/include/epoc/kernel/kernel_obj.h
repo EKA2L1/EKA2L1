@@ -123,7 +123,7 @@ namespace eka2l1 {
 
             int get_access_count() { return access_count; }
 
-            uint64_t unique_id() const {
+            std::uint64_t unique_id() const {
                 return uid;
             }
 

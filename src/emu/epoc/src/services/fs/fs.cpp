@@ -98,7 +98,7 @@ namespace eka2l1::epoc {
 namespace eka2l1 {
     fs_handle_table::fs_handle_table() {
         for (size_t i = 0; i < nodes.size(); i++) {
-            nodes[i].id = i + 1;
+            nodes[i].id = static_cast<std::uint32_t>(i + 1);
         }
     }
 
@@ -209,7 +209,8 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
+        std::u16string ss_path = session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())];
+
         auto target = eka2l1::absolute_path(*given_path_target, ss_path);
         auto dest = eka2l1::absolute_path(*given_path_dest, ss_path);
 
@@ -240,7 +241,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
+        std::u16string ss_path = session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())];
 
         std::u16string target = eka2l1::absolute_path(*given_path_target, ss_path);
         std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path);
@@ -271,7 +272,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
+        std::u16string ss_path = session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())];
 
         auto path = eka2l1::absolute_path(*given_path, ss_path);
         io_system *io = ctx.sys->get_io_system();
@@ -295,14 +296,14 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
-        session_paths[ctx.msg->msg_session->unique_id()] = common::utf8_to_ucs2(eka2l1::root_name(
-            common::ucs2_to_utf8(ctx.msg->own_thr->owning_process()->get_exe_path()), true));
+        session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())] = 
+            eka2l1::root_name(ctx.msg->own_thr->owning_process()->get_exe_path(), true);
 
         server::connect(ctx);
     }
 
     void fs_server::session_path(service::ipc_context ctx) {
-        ctx.write_arg(0, session_paths[ctx.msg->msg_session->unique_id()]);
+        ctx.write_arg(0, session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())]);
         ctx.set_request_status(KErrNone);
     }
 
@@ -314,7 +315,7 @@ namespace eka2l1 {
             return;
         }
 
-        session_paths[ctx.msg->msg_session->unique_id()] = *new_path;
+        session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())] = *new_path;
         ctx.set_request_status(KErrNone);
     }
 

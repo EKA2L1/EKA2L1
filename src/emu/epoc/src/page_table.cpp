@@ -39,7 +39,7 @@ namespace eka2l1 {
         return pointers;
     }
 
-    void page_table::read(uint32_t addr, void *dest, int size) {
+    void page_table::read(vaddress addr, void *dest, int size) {
         int page = addr / page_size;
 
         std::fill(reinterpret_cast<std::uint8_t*>(dest), reinterpret_cast<std::uint8_t*>(dest) + size,
@@ -57,7 +57,7 @@ namespace eka2l1 {
         return;
     }
 
-    void page_table::write(uint32_t addr, void *src, int size) {
+    void page_table::write(vaddress addr, void *src, int size) {
         if (addr >= global_data && addr <= ram_drive) {
             LOG_WARN("Access global data passthroughed on process page table.");
             return;
@@ -88,7 +88,7 @@ namespace eka2l1 {
         return;
     }
 
-    void *page_table::get_ptr(uint32_t addr) {
+    void *page_table::get_ptr(vaddress addr) {
         if (addr >= global_data && addr <= ram_drive) {
             LOG_WARN("Access global data passthroughed on process page table.");
             return nullptr;

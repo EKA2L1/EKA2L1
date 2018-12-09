@@ -113,4 +113,6 @@ enum arm_emulator_type {
     dynarmic = 1
 };
 
+typedef std::uint32_t vaddress;
+
 int translate_protection(prot cprot);

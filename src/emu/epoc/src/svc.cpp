@@ -211,7 +211,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        return pr_real->unique_id();
+        return static_cast<TInt>(pr_real->unique_id());
     }
 
     BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
@@ -286,7 +286,7 @@ namespace eka2l1::epoc {
         TUint8 *data = aData.get(sys->get_memory_system());
         std::copy(slot.data.begin(), slot.data.end(), data);
 
-        std::uint32_t written_size = slot.data.size();
+        std::size_t written_size = slot.data.size();
         pr->mark_slot_free(static_cast<std::uint8_t>(aSlot));
 
         return static_cast<TInt>(written_size);
@@ -507,7 +507,8 @@ namespace eka2l1::epoc {
      * \returns The UTC offset, in seconds.
      */
     BRIDGE_FUNC(TInt, UTCOffset) {
-        return date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count();
+        return static_cast<TInt>
+            (date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
     }
 
     enum : uint64_t {

@@ -401,7 +401,8 @@ struct MemoryEditor
                         ImGui::SetKeyboardFocusHere();
                         ImGui::CaptureKeyboardFromApp(true);
                         sprintf(AddrInputBuf, format_data, s.AddrDigitsCount, base + addr);
-                        sprintf(DataInputBuf, format_byte, CurrentProcess->get_page_table().read<uint8_t>(base + addr));
+                        sprintf(DataInputBuf, format_byte, 
+                            CurrentProcess->get_page_table().read<uint8_t>(static_cast<vaddress>(base + addr)));
                     }
                     ImGui::PushItemWidth(s.GlyphWidth * 2);
                     struct UserData
@@ -427,7 +428,8 @@ struct MemoryEditor
                     };
                     UserData user_data;
                     user_data.CursorPos = -1;
-                    sprintf(user_data.CurrentBufOverwrite, format_byte, CurrentProcess->get_page_table().read<u8>(base + addr));
+                    sprintf(user_data.CurrentBufOverwrite, format_byte, 
+                        CurrentProcess->get_page_table().read<u8>(static_cast<vaddress>(base + addr)));
                     ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode | ImGuiInputTextFlags_CallbackAlways;
                     if (ImGui::InputText("##data", DataInputBuf, 32, flags, UserData::Callback, &user_data))
                         data_write = data_next = true;
@@ -442,14 +444,15 @@ struct MemoryEditor
                     int data_input_value;
                     if (data_write && sscanf(DataInputBuf, "%X", &data_input_value) == 1)
                     {
-                        CurrentProcess->get_page_table().write<u8>(base + addr, (u8)data_input_value);
+                        CurrentProcess->get_page_table().write<u8>(static_cast<vaddress>(base + addr),
+                            (u8)data_input_value);
                     }
                     ImGui::PopID();
                 }
                 else
                 {
                     // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
-                    u8 b = CurrentProcess->get_page_table().read<u8>(base + addr);
+                    u8 b = CurrentProcess->get_page_table().read<u8>(static_cast<address>(base + addr));
 
                     if (OptShowHexII)
                     {
@@ -497,7 +500,7 @@ struct MemoryEditor
                         draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
                         draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
                     }
-                    unsigned char c = CurrentProcess->get_page_table().read<u8>(base + addr);
+                    unsigned char c = CurrentProcess->get_page_table().read<u8>(static_cast<vaddress>(base + addr));
                     char display_c = (c < 32 || c >= 128) ? '.' : c;
                     draw_list->AddText(pos, (display_c == '.') ? color_disabled : color_text, &display_c, &display_c + 1);
                     pos.x += s.GlyphWidth;
@@ -703,7 +706,7 @@ struct MemoryEditor
         size_t elem_size = DataTypeGetSize(data_type);
         size_t size = addr + elem_size > mem_size ? mem_size - addr : elem_size;
         
-        CurrentProcess->get_page_table().read(addr, buf, size);
+        CurrentProcess->get_page_table().read(static_cast<address>(addr), buf, size);
 
         if (data_format == DataFormat_Bin)
         {
