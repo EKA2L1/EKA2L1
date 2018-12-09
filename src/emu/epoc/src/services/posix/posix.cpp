@@ -81,7 +81,7 @@ namespace eka2l1 {
         return std::distance(files.begin(), free_slot) + 1;
     }
 
-    fid posix_file_manager::open(const std::string &path, const int mode, int &terrno) {
+    fid posix_file_manager::open(const std::u16string &path, const int mode, int &terrno) {
         const fid suit_fid = get_lowest_useable_fid();
 
         if (!suit_fid) {
@@ -89,7 +89,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        files[suit_fid - 1] = io->open_file(common::utf8_to_ucs2(path), mode);
+        files[suit_fid - 1] = io->open_file(path, mode);
 
         if (!files[suit_fid - 1]) {
             terrno = ENOENT;
@@ -261,7 +261,8 @@ namespace eka2l1 {
     void posix_server::open(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        std::string base_dir = common::ucs2_to_utf8(working_dir);
+        std::u16string base_dir = working_dir;
+        io_system *io = ctx.sys->get_io_system();
 
         // Get mode
         const int posix_open_mode = params->pint[0];
@@ -273,22 +274,21 @@ namespace eka2l1 {
         if (posix_open_mode & O_TMPFILE) {
 #endif
             // Put the temporary file in tmp folder of the correspond private space of process in C drive
-            base_dir = std::string("C:\\private\\") +
-                common::to_string(associated_process->get_uid(), std::hex) + "\\tmp\\";
+            base_dir = std::u16string(u"C:\\private\\") +
+                common::utf8_to_ucs2(common::to_string(associated_process->get_uid(), std::hex)) +
+                u"\\tmp\\";
         }
 
         std::u16string current_dir(reinterpret_cast<char16_t*>(
                 params->cwptr[0].get(ctx.sys->get_memory_system())));
 
-        const std::string path_utf8 = eka2l1::absolute_path(
-                common::ucs2_to_utf8(current_dir), 
-                base_dir);
+        const std::u16string path_u16 = eka2l1::absolute_path(current_dir, base_dir);
 
         int write_flag_emu = APPEND_MODE;
 
         // If the file is temporary, override or create new one. Else
         // If the file exists and the flag is O_CREAT, also override existing file or create new one
-        if ((!fs::exists(path_utf8) && (posix_open_mode & O_CREAT))
+        if ((!io->exist(path_u16) && (posix_open_mode & O_CREAT))
             || (posix_open_mode &
 #ifdef WIN32
                    O_TEMPORARY
@@ -311,7 +311,7 @@ namespace eka2l1 {
         }
 
         // Open the associated file
-        const fid file_id = file_manager.open(path_utf8, emu_mode, *errnoptr);
+        const fid file_id = file_manager.open(path_u16, emu_mode, *errnoptr);
 
         params->fid = file_id;
         params->ret = *errnoptr ? -1 : file_id;

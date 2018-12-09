@@ -25,7 +25,6 @@
 
 #include <clocale>
 #include <cwctype>
-#include <experimental/filesystem>
 #include <memory>
 
 #include <common/algorithm.h>
@@ -39,8 +38,6 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 #include <epoc/vfs.h>
-
-namespace fs = std::experimental::filesystem;
 
 const TUint KEntryAttNormal = 0x0000;
 const TUint KEntryAttReadOnly = 0x0001;

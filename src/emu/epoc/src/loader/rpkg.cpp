@@ -26,10 +26,7 @@
 #include <common/path.h>
 
 #include <array>
-#include <experimental/filesystem>
 #include <vector>
-
-namespace fs = std::experimental::filesystem;
 
 namespace eka2l1 {
     namespace loader {
@@ -44,7 +41,7 @@ namespace eka2l1 {
             std::string real_path = common::ucs2_to_utf8(*path_ucs16_real);
 
             std::string dir = eka2l1::file_directory(real_path);
-            fs::create_directories(common::utf8_to_ucs2(dir));
+            eka2l1::create_directories(dir);
 
             FILE *wf
                 = fopen(real_path.c_str(), "wb");

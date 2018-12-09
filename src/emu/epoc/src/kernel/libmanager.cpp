@@ -243,7 +243,6 @@ namespace eka2l1 {
                 uint32_t adj = import_inf >> 16;
 
                 uint32_t export_addr;
-                uint32_t section_delta;
                 uint32_t val = 0;
 
                 if (ord > 0) {

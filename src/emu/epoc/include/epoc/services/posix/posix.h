@@ -64,7 +64,7 @@ namespace eka2l1 {
     public:
         explicit posix_file_manager(io_system *io);
 
-        fid open(const std::string &path, const int mode, int &terrno);
+        fid open(const std::u16string &path, const int mode, int &terrno);
         void close(const fid id, int &terrno);
         size_t seek(const fid id, const int off, const eka2l1::file_seek_mode whine, int &terrno);
 
