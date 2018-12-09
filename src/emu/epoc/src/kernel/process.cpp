@@ -170,9 +170,9 @@ namespace eka2l1::kernel {
 
     // EKA2L1 doesn't use multicore yet, so rendezvous and logon
     // are just simple.
-    void process::logon(epoc::request_status *logon_request, bool rendezvous) {
+    void process::logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
         if (!thread_count) {
-            *logon_request = exit_reason;
+            *(logon_request.get(kern->crr_process())) = exit_reason;
             return;
         }
 
@@ -184,13 +184,13 @@ namespace eka2l1::kernel {
         logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
     }
 
-    bool process::logon_cancel(epoc::request_status *logon_request, bool rendezvous) {
+    bool process::logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
         if (rendezvous) {
             auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
-                [&](logon_request_form &form) { return form.request_status == logon_request; });
+                [&](logon_request_form &form) { return form.request_status.ptr_address() == logon_request.ptr_address(); });
 
             if (req_info != rendezvous_requests.end()) {
-                *logon_request = -3;
+                *(logon_request.get(req_info->requester->owning_process())) = -3;
                 rendezvous_requests.erase(req_info);
 
                 return true;
@@ -200,10 +200,10 @@ namespace eka2l1::kernel {
         }
 
         auto req_info = std::find_if(logon_requests.begin(), logon_requests.end(),
-            [&](logon_request_form &form) { return form.request_status == logon_request; });
+            [&](logon_request_form &form) { return form.request_status.ptr_address() == logon_request.ptr_address(); });
 
         if (req_info != logon_requests.end()) {
-            *logon_request = -3;
+            *(logon_request.get(req_info->requester->owning_process())) = -3;
             logon_requests.erase(req_info);
 
             return true;
@@ -217,7 +217,7 @@ namespace eka2l1::kernel {
         exit_type = process_exit_type::pending;
 
         for (auto &ren : rendezvous_requests) {
-            *(ren.request_status) = rendezvous_reason;
+            *(ren.request_status.get(ren.requester->owning_process())) = rendezvous_reason;
 
             LOG_TRACE("Rendezvous to: {}", ren.requester->name());
 
@@ -229,12 +229,12 @@ namespace eka2l1::kernel {
 
     void process::finish_logons() {
         for (auto &req : logon_requests) {
-            *(req.request_status) = exit_reason;
+            *(req.request_status.get(req.requester->owning_process())) = exit_reason;
             req.requester->signal_request();
         }
 
         for (auto &req : rendezvous_requests) {
-            *(req.request_status) = exit_reason;
+            *(req.request_status.get(req.requester->owning_process())) = exit_reason;
             req.requester->signal_request();
         }
 

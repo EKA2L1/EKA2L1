@@ -23,6 +23,8 @@
 #include <epoc/services/context.h>
 #include <epoc/services/server.h>
 
+#include <epoc/ptr.h>
+
 #include <atomic>
 #include <clocale>
 #include <memory>
@@ -246,7 +248,8 @@ namespace eka2l1 {
         struct notify_entry {
             std::regex match_pattern;
             notify_type type;
-            epoc::request_status *request_status;
+            eka2l1::ptr<epoc::request_status> request_status;
+            thread_ptr request_thread;
         };
 
         std::vector<notify_entry> notify_entries;

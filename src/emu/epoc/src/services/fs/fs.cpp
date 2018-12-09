@@ -948,6 +948,7 @@ namespace eka2l1 {
         entry.match_pattern = ".*";
         entry.type = static_cast<notify_type>(*ctx.get_arg<int>(0));
         entry.request_status = ctx.msg->request_sts;
+        entry.request_thread = ctx.msg->own_thr;
 
         notify_entries.push_back(entry);
     }
@@ -964,6 +965,7 @@ namespace eka2l1 {
         entry.match_pattern = construct_filter_from_wildcard(*wildcard_match);
         entry.type = static_cast<notify_type>(*ctx.get_arg<int>(0));
         entry.request_status = ctx.msg->request_sts;
+        entry.request_thread = ctx.msg->own_thr;
 
         notify_entries.push_back(entry);
 

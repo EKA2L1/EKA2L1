@@ -52,7 +52,7 @@ namespace eka2l1 {
 
             // complete all deferrals
             for (auto[id, sts] : hierarchy->deferral_statuses) {
-                *sts = KErrNone;
+                *(sts.first.get(sts.second->owning_process())) = KErrNone;
             }
 
             hierarchy->deferral_statuses.clear();
@@ -64,7 +64,7 @@ namespace eka2l1 {
         if (hierarchy->fail_policy == ETransitionFailureStop) {
             LOG_ERROR("Transition fail for domain {} because of timeout. Stopping because of fail policy", id);
 
-            *hierarchy->trans_status = KErrTimedOut;
+            hierarchy->finish_trans_request(KErrTimedOut);
             cancel_transition();
 
             return;
@@ -125,7 +125,7 @@ namespace eka2l1 {
         // Now cancel all pending deferrals. Acknowledge should not be
         // needed anymore so why dont we lol
         for (auto & [ id, deferral_sts ] : hierarchy->deferral_statuses) {
-            *deferral_sts = KErrCancel;
+            *(deferral_sts.first.get(deferral_sts.second->owning_process())) = KErrCancel;
         }
 
         hierarchy->deferral_statuses.clear();
@@ -174,7 +174,7 @@ namespace eka2l1 {
     }
 
     hierarchy_ptr construct_hier_from_database(timing_system *timing, kernel_system *kern, const service::database::hierarchy &hier_db) {
-        hierarchy_ptr hier = std::make_shared<hierarchy>(timing);
+        hierarchy_ptr hier = std::make_shared<hierarchy>(kern->get_memory_system(), timing);
 
         std::copy(reinterpret_cast<const std::uint8_t *>(&hier_db), reinterpret_cast<const std::uint8_t *>(&hier_db) + sizeof(decltype(hier_db)),
             reinterpret_cast<std::uint8_t *>(&(*hier)));
@@ -187,8 +187,10 @@ namespace eka2l1 {
         hier->transition_id = 0;
         hier->observed_children = 0;
         hier->observer_started = 0;
-        hier->trans_status = nullptr;
-        hier->observe_status = nullptr;
+        hier->trans_status = 0;
+        hier->trans_status_thr = nullptr;
+        hier->observe_status = 0;
+        hier->obs_status_thr = nullptr;
 
         for (const auto &domain_db : hier_db.domains) {
             construct_domain_from_database(timing, kern, hier, domain_db);
@@ -336,9 +338,11 @@ namespace eka2l1 {
         }
 
         if (dm->hierarchy->acknowledge_pending[ssid] && dm->state_prop->get_int() == prop_val) {
-            if (dm->hierarchy->deferral_statuses[ssid]) {
-                *dm->hierarchy->deferral_statuses[ssid] = KErrNone;
-                dm->hierarchy->deferral_statuses[ssid] = nullptr;
+            if (dm->hierarchy->deferral_statuses[ssid].first) {
+                *(dm->hierarchy->deferral_statuses[ssid].first.get(
+                    dm->hierarchy->deferral_statuses[ssid].second->owning_process())) = KErrNone;
+                dm->hierarchy->deferral_statuses[ssid].first = 0;
+                dm->hierarchy->deferral_statuses[ssid].second = nullptr;
             }
 
             dm->complete_acknowledge_with_err(err_set);
@@ -360,13 +364,15 @@ namespace eka2l1 {
             return;
         }
 
-        if (dm->hierarchy->deferral_statuses[ssid]) {
+        if (dm->hierarchy->deferral_statuses[ssid].second) {
             ctx.set_request_status(KErrInUse);
             return;
         }
 
         if (dm->hierarchy->acknowledge_pending[ssid]) {
-            dm->hierarchy->deferral_statuses.emplace(ssid, ctx.msg->request_sts);
+            dm->hierarchy->deferral_statuses.emplace(ssid, 
+                std::make_pair(ctx.msg->request_sts, ctx.msg->own_thr));
+
             return;
         }
 
@@ -382,9 +388,11 @@ namespace eka2l1 {
             return;
         }
 
-        if (dm->hierarchy->deferral_statuses[ssid]) {
-            *dm->hierarchy->deferral_statuses[ssid] = KErrInUse;
-            dm->hierarchy->deferral_statuses[ssid] = nullptr;
+        if (dm->hierarchy->deferral_statuses[ssid].second) {
+            *(dm->hierarchy->deferral_statuses[ssid].first.get(
+                dm->hierarchy->deferral_statuses[ssid].second->owning_process())) = KErrInUse;
+            dm->hierarchy->deferral_statuses[ssid].first = 0;
+            dm->hierarchy->deferral_statuses[ssid].second = nullptr;
         }
 
         ctx.set_request_status(KErrNone);
@@ -424,7 +432,7 @@ namespace eka2l1 {
      *
      * \returns False, most likely of bad hierarchy ID or domain ID
     */
-    bool hierarchy::transition(epoc::request_status *trans_nof_sts, const std::uint32_t domain_id, const std::int32_t target_state,
+    bool hierarchy::transition(eka2l1::ptr<epoc::request_status> trans_nof_sts, const std::uint32_t domain_id, const std::int32_t target_state,
         const TDmTraverseDirection dir) {
         domain_ptr target_domain = lookup(domain_id);
 
@@ -572,7 +580,7 @@ namespace eka2l1 {
                 : KErrNone;
 
             cancel_transition();
-            *hierarchy->trans_status = err;
+            hierarchy->finish_trans_request(err);
         } else {
             if (!--parent->transition_count) {
                 parent->complete_children_transition();
@@ -595,10 +603,8 @@ namespace eka2l1 {
                 }
             }
 
-            if (hierarchy->fail_policy == ETransitionFailureStop) {
-                *hierarchy->trans_status = err;
-                hierarchy->trans_status = nullptr;
-
+            if (hierarchy->fail_policy == ETransitionFailureStop) {    
+                hierarchy->finish_trans_request(err);
                 return;
             }
         } else {
@@ -670,14 +676,18 @@ namespace eka2l1 {
             return;
         }
 
+        memory_system *mem = ctx.sys->get_memory_system();
+
         if (target_hier->trans_status) {
-            *target_hier->trans_status = KErrCancel;
-            target_hier->trans_status = nullptr;
+            *(target_hier->trans_status.get(target_hier->trans_status_thr->owning_process())) = KErrCancel;
+            target_hier->trans_status = 0;
+            target_hier->trans_status_thr = nullptr;
         }
 
         if (target_hier->observe_status && target_hier->observer_started) {
-            *target_hier->observe_status = KErrCancel;
-            target_hier->observe_status = nullptr;
+            *(target_hier->observe_status.get(target_hier->obs_status_thr->owning_process())) = KErrCancel;
+            target_hier->observe_status = 0;
+            target_hier->obs_status_thr = nullptr;
         }
 
         if (target_hier->trans_domain) {
@@ -783,7 +793,8 @@ namespace eka2l1 {
             return;
         }
 
-        target_hier->deferral_statuses.emplace(ctx.msg->msg_session->unique_id(), ctx.msg->request_sts);
+        target_hier->deferral_statuses.emplace(ctx.msg->msg_session->unique_id(), 
+            std::make_pair(ctx.msg->request_sts, ctx.msg->own_thr));
     }
 
     void domainmngr_server::observed_count(service::ipc_context ctx) {

@@ -37,6 +37,7 @@ add_library(epockern
     include/epoc/timing.h
     include/epoc/reg.h
     include/epoc/svc.h
+    include/epoc/ptr.h
     src/kernel/change_notifier.cpp
     src/kernel/chunk.cpp
     src/kernel/libmanager.cpp
@@ -54,12 +55,12 @@ add_library(epockern
     src/timing.cpp
     src/reg.cpp
     src/svc.cpp
+    src/ptr.cpp
 )
 
 add_library(epocmem
     include/epoc/mem.h
     include/epoc/page_table.h
-    include/epoc/ptr.h
     src/mem.cpp
     src/page_table.cpp)
 

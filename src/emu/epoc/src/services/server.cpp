@@ -170,39 +170,39 @@ namespace eka2l1 {
         }
 
         void server::finish_request_lle(ipc_msg_ptr &msg, bool notify_owner) {
-            request_data->ipc_msg_handle = msg->id;
-            request_data->flags = msg->args.flag;
-            request_data->function = msg->function;
-            request_data->session_ptr = msg->session_ptr_lle;
+            message2 *dat_hle = request_data.get(request_own_thread->owning_process());
 
-            std::copy(msg->args.args, msg->args.args + 4, request_data->args);
+            dat_hle->ipc_msg_handle = msg->id;
+            dat_hle->flags = msg->args.flag;
+            dat_hle->function = msg->function;
+            dat_hle->session_ptr = msg->session_ptr_lle;
 
-            *request_status = 0; // KErrNone
+            std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
+
+            *(request_status.get(request_own_thread->owning_process())) = 0; // KErrNone
 
             if (notify_owner) {
                 request_own_thread->signal_request();
             }
 
-            request_data = nullptr;
             request_own_thread = nullptr;
-            request_status = nullptr;
+            request_status = 0;
+            request_data = 0;
         }
 
-        void server::receive_async_lle(epoc::request_status *msg_request_status, message2 *data) {
+        void server::receive_async_lle(eka2l1::ptr<epoc::request_status> msg_request_status,
+            eka2l1::ptr<message2> data) {
             ipc_msg_ptr msg = sys->get_kernel_system()->create_msg(kernel::owner_type::process);
-
             msg->free = false;
 
             int res = receive(msg);
 
             request_status = msg_request_status;
-
             request_own_thread = sys->get_kernel_system()->crr_thread();
             request_data = data;
 
             if (res == -1) {
                 request_msg = msg;
-
                 return;
             }
 
@@ -215,13 +215,13 @@ namespace eka2l1 {
                 return;
             }
 
-            *request_status = -3; // KErrCancel
+            *(request_status.get(request_own_thread->owning_process())) = -3; // KErrCancel
 
             request_own_thread->signal_request();
 
-            request_data = nullptr;
             request_own_thread = nullptr;
-            request_status = nullptr;
+            request_status = 0;
+            request_data = 0;
 
             request_msg = nullptr;
         }

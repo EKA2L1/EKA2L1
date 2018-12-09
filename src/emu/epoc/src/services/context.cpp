@@ -74,7 +74,7 @@ namespace eka2l1 {
 
         void ipc_context::set_request_status(int res) {
             if (msg->request_sts) {
-                *msg->request_sts = res;
+                *(msg->request_sts.get(msg->own_thr->owning_process())) = res;
 
                 // Avoid signal twice to cause undefined behavior
                 if (!signaled) {

@@ -104,8 +104,8 @@ namespace eka2l1 {
             /** Placeholder message uses for processing */
             ipc_msg_ptr process_msg;
 
-            epoc::request_status *request_status = nullptr;
-            message2 *request_data = nullptr;
+            eka2l1::ptr<epoc::request_status> request_status = 0;
+            eka2l1::ptr<message2> request_data;
 
             thread_ptr request_own_thread;
             ipc_msg_ptr request_msg;
@@ -149,7 +149,8 @@ namespace eka2l1 {
             /*! Cancel a message in the delivered queue */
             int cancel();
 
-            void receive_async_lle(epoc::request_status *request_status, message2 *data);
+            void receive_async_lle(eka2l1::ptr<epoc::request_status> request_status, 
+                eka2l1::ptr<message2> data);
 
             void cancel_async_lle();
 

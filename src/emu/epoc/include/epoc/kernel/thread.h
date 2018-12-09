@@ -171,9 +171,9 @@ namespace eka2l1 {
 
             struct logon_request_form {
                 thread_ptr requester;
-                epoc::request_status *request_status;
+                eka2l1::ptr<epoc::request_status> request_status;
 
-                explicit logon_request_form(thread_ptr thr, epoc::request_status *rsts)
+                explicit logon_request_form(thread_ptr thr, eka2l1::ptr<epoc::request_status> rsts)
                     : requester(thr)
                     , request_status(rsts) {}
             };
@@ -190,8 +190,8 @@ namespace eka2l1 {
             kernel_obj_ptr get_object(std::uint32_t handle);
             kernel_obj *wait_obj;
 
-            void logon(epoc::request_status *logon_request, bool rendezvous);
-            bool logon_cancel(epoc::request_status *logon_request, bool rendezvous);
+            void logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
+            bool logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
 
             void rendezvous(int rendezvous_reason);
 

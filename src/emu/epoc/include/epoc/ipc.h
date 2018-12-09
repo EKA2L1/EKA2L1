@@ -96,7 +96,7 @@ namespace eka2l1 {
         session_ptr msg_session;
         int session_ptr_lle = 0;    // This should be null because the server check for it
 
-        epoc::request_status *request_sts;
+        eka2l1::ptr<epoc::request_status> request_sts;
 
         // Status of the message, if it's accepted or delivered
         ipc_message_status msg_status;

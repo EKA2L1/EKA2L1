@@ -413,7 +413,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        pr->logon(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+        pr->logon(aRequestSts, aRendezvous);
     }
 
     BRIDGE_FUNC(TInt, ProcessLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
@@ -423,9 +423,9 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        bool logon_success = pr->logon_cancel(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+        bool logon_cancel_success = pr->logon_cancel(aRequestSts, aRendezvous);
 
-        if (logon_success) {
+        if (logon_cancel_success) {
             return KErrNone;
         }
 
@@ -558,14 +558,8 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        if (msg->msg_session->get_server()->name() == "!AppListServer" &&
-            msg->function == 65)
-            {
-                LOG_TRACE("AppList rule-based");
-            }
-
         if (msg->request_sts) {
-            *msg->request_sts = aVal;
+            *(msg->request_sts.get(msg->own_thr->owning_process())) = aVal;
             msg->own_thr->signal_request();
         }
         
@@ -847,8 +841,7 @@ namespace eka2l1::epoc {
 
         LOG_TRACE("Receive requested from {}", server->name());
 
-        server->receive_async_lle(aRequestStatus.get(mem),
-            reinterpret_cast<service::message2 *>(aDataPtr.get(mem)));
+        server->receive_async_lle(aRequestStatus, aDataPtr.cast<service::message2>());
     }
 
     BRIDGE_FUNC(void, ServerCancel, TInt aHandle) {
@@ -945,7 +938,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind sync message");
         }
         
-        return ss->send_receive_sync(aOrd, arg, aStatus.get(mem));
+        return ss->send_receive_sync(aOrd, arg, aStatus);
     }
 
     BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
@@ -975,7 +968,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind async message");
         }
 
-        return ss->send_receive(aOrd, arg, aStatus.get(mem));
+        return ss->send_receive(aOrd, arg, aStatus);
     }
 
     /**********************************/
@@ -1650,7 +1643,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        thr->logon(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+        thr->logon(aRequestSts, aRendezvous);
     }
 
     BRIDGE_FUNC(TInt, ThreadLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
@@ -1660,7 +1653,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        bool logon_success = thr->logon_cancel(aRequestSts.get(sys->get_kernel_system()->get_memory_system()), aRendezvous);
+        bool logon_success = thr->logon_cancel(aRequestSts, aRendezvous);
 
         if (logon_success) {
             return KErrNone;

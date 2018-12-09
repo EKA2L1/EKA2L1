@@ -79,7 +79,8 @@ namespace eka2l1 {
         }
 
         // This behaves a little different then other
-        int session::send_receive_sync(int function, ipc_arg args, epoc::request_status *request_sts) {
+        int session::send_receive_sync(int function, ipc_arg args, 
+            eka2l1::ptr<epoc::request_status> request_sts) {
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -91,7 +92,7 @@ namespace eka2l1 {
             msg->own_thr = kern->crr_thread();
             msg->request_sts = request_sts;
 
-            send_receive(msg);
+            send(msg);
 
             if (msg->function == -1) {
                 struct version {
@@ -107,40 +108,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        int session::send_receive_sync(int function, ipc_arg args) {
-            epoc::request_status local_response = 0x80000001;
-            ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
-
-            if (!msg) {
-                return -1;
-            }
-
-            msg->function = function;
-            msg->args = args;
-            msg->own_thr = kern->crr_thread();
-            msg->request_sts = &local_response;
-
-            return send_receive_sync(msg);
-        }
-
-        int session::send_receive_sync(int function) {
-            epoc::request_status local_response = 0x80000001;
-
-            ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
-
-            if (!msg) {
-                return -1;
-            }
-
-            msg->function = function;
-            msg->args = ipc_arg(0, 0, 0, 0, 0);
-            msg->own_thr = kern->crr_thread();
-            msg->request_sts = &local_response;
-
-            return send_receive_sync(msg);
-        }
-
-        int session::send_receive(int function, ipc_arg args, epoc::request_status *request_sts) {
+        int session::send_receive(int function, ipc_arg args, eka2l1::ptr<epoc::request_status> request_sts) {
             ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
@@ -152,89 +120,18 @@ namespace eka2l1 {
             msg->request_sts = request_sts;
             msg->own_thr = kern->crr_thread();
 
-            send_receive(msg);
+            send(msg);
 
             return 0;
         }
 
-        int session::send_receive(int function, epoc::request_status *request_sts) {
-            ipc_msg_ptr msg = get_free_msg();
-
-            if (!msg) {
-                return -1;
-            }
-
-            msg->function = function;
-            msg->args = ipc_arg(0, 0, 0, 0, 0);
-            msg->request_sts = request_sts;
-
-            return send_receive(msg);
-        }
-
-        int session::send(int function, ipc_arg args) {
-            ipc_msg_ptr msg = get_free_msg();
-
-            if (!msg) {
-                return -1;
-            }
-
-            msg->function = function;
-            msg->args = args;
-
-            msg->request_sts = nullptr;
-
-            return send(msg);
-        }
-
-        int session::send(int function) {
-            ipc_msg_ptr msg = get_free_msg();
-
-            if (!msg) {
-                return -1;
-            }
-
-            msg->function = function;
-            msg->args = ipc_arg(0, 0, 0, 0, 0);
-
-            msg->request_sts = nullptr;
-
-            return send(msg);
-        }
-
-        int session::send_receive_sync(ipc_msg_ptr &msg) {
-            server_msg smsg;
-            smsg.real_msg = msg;
-            smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(kern->get_kernel_obj_by_id(uid));
-            smsg.real_msg->session_ptr_lle = cookie_address;
-
-            int deliver_success
-                = svr->deliver(smsg);
-
-            svr->process_accepted_msg();
-
-            return smsg.real_msg->request_sts->status;
-        }
-
-        int session::send_receive(ipc_msg_ptr &msg) {
-            server_msg smsg;
-
-            smsg.real_msg = msg;
-            smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(kern->get_kernel_obj_by_id(uid));
-            smsg.real_msg->session_ptr_lle = cookie_address;
-
-            return svr->deliver(smsg);
-        }
-
-        // Send blind message
         int session::send(ipc_msg_ptr &msg) {
             server_msg smsg;
 
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->request_sts = nullptr;
-            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(kern->get_kernel_obj_by_id(uid));
+            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(
+                kern->get_kernel_obj_by_id(uid));
             smsg.real_msg->session_ptr_lle = cookie_address;
 
             return svr->deliver(smsg);

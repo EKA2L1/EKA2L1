@@ -194,6 +194,10 @@ namespace eka2l1 {
         }
 
         void chunk::write_object_to_snapshot(common::wo_buf_stream &stream) {
+            // save_state_section sec = stream.section("Chunk", 1);
+            // if (!sec)
+            //    return;
+
             kernel_obj::write_object_to_snapshot(stream);
 
             size_t ptr_addr = chunk_base.ptr_address();

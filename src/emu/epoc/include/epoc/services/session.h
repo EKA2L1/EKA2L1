@@ -53,7 +53,8 @@ namespace eka2l1 {
             std::vector<std::pair<bool, ipc_msg_ptr>> msgs_pool;
             uint32_t cookie_address;
 
-        private:
+        protected:
+            int send(ipc_msg_ptr &msg);
             ipc_msg_ptr get_free_msg();
 
         public:
@@ -65,26 +66,12 @@ namespace eka2l1 {
 
             void prepare_destroy();
 
-            int send_receive_sync(int function, ipc_arg args, epoc::request_status *request_sts);
-            int send_receive_sync(int function, ipc_arg args);
-            int send_receive_sync(int function);
-            int send_receive(int function, ipc_arg args, epoc::request_status *request_sts);
-            int send_receive(int function, epoc::request_status *request_sts);
-            int send(int function, ipc_arg args);
-            int send(int function);
+            int send_receive_sync(int function, ipc_arg args, eka2l1::ptr<epoc::request_status> request_sts);
+            int send_receive(int function, ipc_arg args, eka2l1::ptr<epoc::request_status> request_sts);
 
             void set_cookie_address(const uint32_t addr) {
                 cookie_address = addr;
             }
-
-            /*! Send and receive an message synchronously */
-            int send_receive_sync(ipc_msg_ptr &msg);
-
-            /*! Send and receive an message asynchronously */
-            int send_receive(ipc_msg_ptr &msg);
-
-            /*! Send a message blind. Meaning that we don't care about what it returns */
-            int send(ipc_msg_ptr &msg);
 
             void set_slot_free(ipc_msg_ptr &msg);
         };

@@ -75,6 +75,7 @@ namespace eka2l1 {
         friend struct domain;
 
         eka2l1::timing_system *timing;
+        eka2l1::memory_system *mem;
 
         domain_ptr root_domain;
         session_ptr control_session;
@@ -96,14 +97,19 @@ namespace eka2l1 {
 
         bool observer_started;
 
-        epoc::request_status *trans_status;
-        epoc::request_status *observe_status;
+        eka2l1::ptr<epoc::request_status> trans_status;
+        eka2l1::ptr<epoc::request_status> observe_status;
+
+        thread_ptr trans_status_thr;
+        thread_ptr obs_status_thr;
 
         /* Functions */
         domain_ptr lookup(const std::uint16_t id);
 
+        using deferral_status = std::pair<eka2l1::ptr<epoc::request_status>, thread_ptr>;
+
         std::unordered_map<std::uint64_t, bool> acknowledge_pending;
-        std::unordered_map<std::uint64_t, epoc::request_status *> deferral_statuses;
+        std::unordered_map<std::uint64_t, deferral_status> deferral_statuses;
 
     private:
         void set_state(const std::int32_t next_state, const TDmTraverseDirection new_traverse_dir);
@@ -111,19 +117,24 @@ namespace eka2l1 {
         void add_transition_failure(const std::uint16_t id, const int err);
 
     public:
-        hierarchy(timing_system *tsys)
-            : timing(tsys) {}
+        hierarchy(memory_system *mem, timing_system *tsys)
+            : timing(tsys), mem(mem) {}
 
         bool is_observe_nof_outstanding() {
-            return observe_status;
+            return (bool)observe_status;
         }
 
         void finish_observe_request(const int err_code) {
-            *observe_status = err_code;
-            observe_status = nullptr;
+            *(observe_status.get(mem)) = err_code;
+            observe_status = 0;
         }
 
-        bool transition(epoc::request_status *trans_nof_sts, const std::uint32_t domain_id, const std::int32_t target_state,
+        void finish_trans_request(const int err_code) {
+            *(trans_status.get(mem)) = err_code;
+            trans_status = 0;
+        }
+
+        bool transition(eka2l1::ptr<epoc::request_status> trans_nof_sts, const std::uint32_t domain_id, const std::int32_t target_state,
             const TDmTraverseDirection dir);
     };
 
