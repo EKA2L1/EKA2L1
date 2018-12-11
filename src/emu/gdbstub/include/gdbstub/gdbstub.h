@@ -74,7 +74,7 @@ namespace eka2l1 {
     };
 
     struct breakpoint_address {
-        address address;
+        std::uint32_t address;
         breakpoint_type type;
     };
 
