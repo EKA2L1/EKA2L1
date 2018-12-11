@@ -83,7 +83,7 @@ namespace eka2l1 {
                 read(&len, sizeof(len));
                 str.resize(len);
 
-                read(&str[0], len);
+                read(&str[0], static_cast<std::uint32_t>(len));
 
                 return str;
             }
@@ -126,7 +126,7 @@ namespace eka2l1 {
                 const std::size_t len = str.length();
 
                 write(&len, sizeof(len));
-                write(&str[0], len);
+                write(&str[0], static_cast<std::uint32_t>(len));
             }
 
             uint64_t tell() const {

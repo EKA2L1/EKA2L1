@@ -34,9 +34,9 @@
 [submodule "src/external/date"]
 	path = src/external/date
 	url = https://github.com/HowardHinnant/date
-[submodule "src/external/oss.API_REF.Public_API"]
-	path = src/external/oss.API_REF.Public_API
-	url = https://github.com/SymbianSource/oss.API_REF.Public_API
 [submodule "src/external/pybind11"]
 	path = src/external/pybind11
 	url = https://github.com/pybind/pybind11
+[submodule "src/external/epocapi"]
+	path = src/external/epocapi
+	url = https://github.com/EKA2L1/oss.API_REF.Public_API

@@ -1,0 +1,5 @@
+#pragma once
+
+#cmakedefine ENABLE_SCRIPTING @ENABLE_SCRIPTING@
+#cmakedefine GIT_BRANCH "@GIT_BRANCH@"
+#cmakedefine GIT_COMMIT_HASH "@GIT_COMMIT_HASH@"

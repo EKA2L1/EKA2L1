@@ -1,19 +1,40 @@
 ﻿add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
+# Force Boost directory for Dynarmic - we never use one
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 
 add_definitions(-DCURL_STATICLIB)
 
-add_subdirectory(freetype)
-add_subdirectory(pybind11)
+# Pybind11
+if (ENABLE_SCRIPTING_ABILITY)
+	set (PYBIND11_TEST OFF CACHE BOOL "" FORCE)
+	add_subdirectory(pybind11)
+endif()
+
+# SPDLOG - Build examples off
+set (SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
+set (SPDLOG_BUILD_BENCH OFF CACHE BOOL "" FORCE)
+
 add_subdirectory(spdlog)
-add_subdirectory(glfw)
+
+# GLM
+set (GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
 add_subdirectory(glm)
+
+# Dynarmic: disable tests
+set(DYNARMIC_TESTS OFF)
 add_subdirectory(dynarmic)
 
-set (ENABLE_DATE_TESTING "Enable testing for Date" OFF)
+# GLFW - Disable docs, tests and examples
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+add_subdirectory(glfw)
+
+# Date TZ - Disable tests units
+set (ENABLE_DATE_TESTING OFF CACHE BOOL "" FORCE)
 add_subdirectory(date)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -30,11 +51,12 @@ add_subdirectory(googletest)
 add_library(imgui imgui/imgui.h imgui/imgui.cpp
     imgui/imgui_demo.cpp
     imgui/imgui_draw.cpp
+    imgui/imgui_widgets.cpp
     imgui/imgui_internal.h
     imgui/imconfig.h
-    imgui/stb_rect_pack.h
-    imgui/stb_textedit.h
-    imgui/stb_truetype.h
+    imgui/imstb_rectpack.h
+    imgui/imstb_textedit.h
+    imgui/imstb_truetype.h
 )
 
 if (MSVC)
@@ -91,7 +113,6 @@ set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT
 set (GTEST_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/googletest/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)
-set (FREETYPE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/freetype/include" PARENT_SCOPE)
 set (FRSML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/FRSML/include" PARENT_SCOPE)
 set (GLM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/glm" PARENT_SCOPE)
-set (EPOC32_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/oss.API_REF.Public_API/epoc32/include" PARENT_SCOPE)
+set (EPOC32_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/epocapi/epoc32/include" PARENT_SCOPE)

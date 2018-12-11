@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <functional>
 #include <string>
 
 #define FOUND_STR(x) x != std::string::npos
@@ -80,5 +81,38 @@ enum drive_number {
     drive_z,
     drive_count
 };
+
+enum class io_attrib {
+    none,
+    include_dir = 0x50,
+    hidden = 0x100,
+    write_protected = 0x200,
+    internal = 0x400,
+    removeable = 0x800
+};
+
+inline io_attrib operator|(io_attrib a, io_attrib b) {
+    return static_cast<io_attrib>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline io_attrib operator&(io_attrib a, io_attrib b) {
+    return static_cast<io_attrib>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+enum class drive_media {
+    none,
+    usb,
+    physical,
+    reflect,
+    rom,
+    ram
+};
+
+enum arm_emulator_type {
+    unicorn = 0,
+    dynarmic = 1
+};
+
+typedef std::uint32_t vaddress;
 
 int translate_protection(prot cprot);

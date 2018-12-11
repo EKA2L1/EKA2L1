@@ -21,8 +21,8 @@
 #include <scripting/cpu.h>
 #include <scripting/instance.h>
 
-#include <core/arm/jit_interface.h>
-#include <core/core.h>
+#include <epoc/arm/arm_interface.h>
+#include <epoc/epoc.h>
 
 namespace eka2l1::scripting {
     uint32_t cpu::get_register(const int index) {

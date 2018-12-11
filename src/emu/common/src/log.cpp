@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <common/log.h>
+#include <common/platform.h>
+
 #include <spdlog/spdlog.h>
 
 #include <iostream>
@@ -68,13 +70,13 @@ namespace eka2l1 {
                 sinks.push_back(std::make_shared<imgui_logger_sink>(gui_logger));
             }
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
             DeleteFileA(log_file_name);
 #else
             remove(log_file_name);
 #endif
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
             sinks.push_back(std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>());
 #else
             sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>());
@@ -102,4 +104,3 @@ namespace eka2l1 {
         }
     }
 }
-

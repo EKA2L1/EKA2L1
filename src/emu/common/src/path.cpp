@@ -17,20 +17,49 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <common/platform.h>
 #include <common/path.h>
+
 #include <cstring>
 #include <iostream>
 
 #include <common/log.h>
 
-#ifndef WIN32
+#if EKA2L1_PLATFORM(UNIX)
 #include <sys/stat.h>
 #include <unistd.h>
-#else
+#endif
+
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
 namespace eka2l1 {
+    char get_separator(bool symbian_use) {
+        if (symbian_use) {
+            return '\\';
+        }
+
+#if EKA2L1_PLATFORM(WIN32)
+        return '\\';
+#else
+        return '/';
+#endif
+    }
+
+    char16_t get_separator_16(bool symbian_use) {
+        if (symbian_use) {
+            return u'\\';
+        }
+
+#if EKA2L1_PLATFORM(WIN32)
+        return u'\\';
+#else
+        return u'/';
+#endif
+    }
+
     bool is_separator(const char sep) {
         if (sep == '/' || sep == '\\') {
             return true;
@@ -39,28 +68,42 @@ namespace eka2l1 {
         return false;
     }
 
-    const char get_separator(bool symbian_use = false) {
-        if (symbian_use) {
-            return '\\';
+    bool is_separator(const char16_t sep) {
+        return (sep == '/' || sep == '\\');
+    }
+    
+    template <typename T>
+    std::basic_string<T> path_extension_impl(const std::basic_string<T> &path) {
+        std::size_t last_dot_pos = path.find_last_of(static_cast<T>('.'));
+
+        if (last_dot_pos == std::string::npos) {
+            return std::basic_string<T>{};
         }
 
-#ifdef WIN32
-        return '\\';
-#else
-        return '/';
-#endif
+        return path.substr(last_dot_pos, path.length() - last_dot_pos);
     }
 
-    bool is_absolute(std::string str, std::string current_dir, bool symbian_use) {
-        return absolute_path(str, current_dir, symbian_use) == str;
+    template <typename T>
+    std::basic_string<T> replace_extension_impl(const std::basic_string<T> &path, const std::basic_string<T> &new_ext) {
+        std::size_t last_dot_pos = path.find_last_of(static_cast<T>('.'));
+
+        if (last_dot_pos == std::string::npos) {
+            return path;
+        }
+
+        return path.substr(0, last_dot_pos) + new_ext;
     }
 
-    std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use) {
-        std::string nstring = "";
-        std::string merge = "";
+    template <typename T>
+    std::basic_string<T> add_path_impl(const std::basic_string<T> &path1, const std::basic_string<T> &path2, 
+        bool symbian_use, std::function<T(bool)> separator_func) {
+        using generic_string = std::basic_string<T>;
+
+        generic_string nstring;
+        generic_string merge;
 
         if (path1.length() == 0 && path2.length() == 0) {
-            return "";
+            return generic_string {};
         } else if (path1.length() == 0) {
             merge = path2;
         } else if (path2.length() == 0) {
@@ -78,7 +121,7 @@ namespace eka2l1 {
 
                 nstring = path2.substr(pos_sub);
             } else if (!end_sep && !beg_sep) {
-                nstring = std::string("/") + path2;
+                nstring = generic_string{ separator_func(symbian_use) } + path2;
             } else {
                 nstring = path2;
             }
@@ -89,29 +132,30 @@ namespace eka2l1 {
         // Turn all slash into / (quick hack)
 
         size_t crr_point = 0;
-        char dsep = 0;
-        char rsep = get_separator(symbian_use);
-
-        if (get_separator(symbian_use) == '\\') {
-            dsep = '/';
-        } else
-            dsep = '\\';
+        T dsep = separator_func(symbian_use);
 
         while (crr_point < merge.size() - 1) {
-            crr_point = merge.find_first_of(dsep, crr_point);
-
-            if (crr_point == std::string::npos) {
-                break;
+            if (is_separator(merge[crr_point])) {
+                merge[crr_point] = dsep;
             }
 
-            merge[crr_point] = rsep;
             crr_point += 1;
         }
 
         return merge;
     }
+    
+    template <typename T>
+    std::basic_string<T> relative_path_impl(std::basic_string<T> str, bool symbian_use) {
+        std::basic_string<T> root = root_path(str, symbian_use);
+        return str.substr(root.size());
+    }
+    
+    template <typename T>
+    std::basic_string<T> absolute_path_impl(std::basic_string<T> str, std::basic_string<T> current_dir, 
+        bool symbian_use, std::function<T(bool)> separator_func) {
+        using generic_string = std::basic_string<T>;
 
-    std::string absolute_path(std::string str, std::string current_dir, bool symbian_use) {
         bool root_dirb = has_root_dir(str, symbian_use);
         bool root_drive = has_root_name(str, symbian_use);
 
@@ -120,7 +164,7 @@ namespace eka2l1 {
             return str;
         }
 
-        std::string new_str = "";
+        generic_string new_str;
 
         if (!root_dirb && !root_drive) {
             new_str = add_path(current_dir, str, symbian_use);
@@ -129,17 +173,17 @@ namespace eka2l1 {
         }
 
         if (!root_drive && root_dirb) {
-            std::string n_root_drive = root_name(current_dir, symbian_use);
+            generic_string n_root_drive = root_name(current_dir, symbian_use);
             new_str = add_path(n_root_drive, str, symbian_use);
 
             return new_str;
         }
 
         if (root_drive && !root_dirb) {
-            std::string root_drive_p = root_name(str, symbian_use);
-            std::string root_dir_n = root_dir(current_dir, symbian_use);
-            std::string relative_path_n = relative_path(current_dir, symbian_use);
-            std::string relative_path_p = relative_path(str, symbian_use);
+            generic_string root_drive_p = root_name(str, symbian_use);
+            generic_string root_dir_n = root_dir(current_dir, symbian_use);
+            generic_string relative_path_n = relative_path_impl<T>(current_dir, symbian_use);
+            generic_string relative_path_p = relative_path_impl<T>(str, symbian_use);
 
             new_str = add_path(root_drive_p, root_dir_n, symbian_use);
             new_str = add_path(new_str, relative_path_n, symbian_use);
@@ -148,49 +192,38 @@ namespace eka2l1 {
             return new_str;
         }
 
-        return "";
+        return generic_string{};
     }
+    
+    template <typename T>
+    std::basic_string<T> root_name_impl(std::basic_string<T> path, bool symbian_use,
+        std::function<T(bool)> separator_func) {
+        using generic_string = decltype(path);
 
-    bool is_relative(const std::string &str, bool symbian_use) {
-        return !relative_path(str, symbian_use).empty();
-    }
-
-    std::string relative_path(std::string str, bool symbian_use) {
-        std::string root = root_path(str, symbian_use);
-
-        return str.substr(root.size());
-    }
-
-    bool has_root_name(std::string path, bool symbian_use) {
-        return !root_name(path, symbian_use).empty();
-    }
-
-    std::string root_name(std::string path, bool symbian_use) {
-        bool has_drive = strncmp(&path[1], ":", 1) == 0;
-
+        bool has_drive = (path.length() >= 2) && (path[1] == ':');
         bool has_net = is_separator(path[0]) && (path[0] == path[1]);
 
         if (has_drive) {
             return path.substr(0, 2);
         } else if (has_net) {
-            auto res = path.find_first_of(get_separator(symbian_use), 2);
+            auto res = path.find_first_of(separator_func(symbian_use), 2);
 
-            if (res == std::string::npos) {
-                return "";
+            if (res == generic_string::npos) {
+                return generic_string{};
             }
 
             return path.substr(0, res);
         }
 
-        return "";
+        return generic_string{};
     }
+    
+    template <typename T>
+    std::basic_string<T> root_dir_impl(std::basic_string<T> path, bool symbian_use, 
+        std::function<T(bool)> separator_func) {
+        using generic_string = decltype(path);
 
-    bool has_root_dir(std::string path, bool symbian_use) {
-        return !root_dir(path, symbian_use).empty();
-    }
-
-    std::string root_dir(std::string path, bool symbian_use) {
-        bool has_drive = strncmp(&path[1], ":", 1) == 0;
+        bool has_drive = (path.length() >= 2) && (path[1] == ':');
         bool has_net = is_separator(path[0]) && (path[0] == path[1]);
 
         if (has_drive) {
@@ -200,8 +233,8 @@ namespace eka2l1 {
         } else if (has_net) {
             auto res = path.find_first_of(get_separator(symbian_use), 2);
 
-            if (res == std::string::npos) {
-                return "";
+            if (res == generic_string::npos) {
+                return generic_string{};
             }
 
             return path.substr(res, 1);
@@ -211,15 +244,15 @@ namespace eka2l1 {
             }
         }
 
-        return "";
+        return generic_string{};
     }
 
-    bool has_root_path(std::string path, bool symbian_use) {
-        return !root_path(path, symbian_use).empty();
-    }
+    template <typename T>
+    std::basic_string<T> root_path_impl(std::basic_string<T> path, bool symbian_use,
+        std::function<T(bool)> separator_func) {
+        using generic_string = decltype(path);
 
-    std::string root_path(std::string path, bool symbian_use) {
-        bool has_drive = strncmp(&path[1], ":", 1) == 0;
+        bool has_drive = (path.length() >= 2) && (path[1] == ':');
         bool has_net = is_separator(path[0]) && (path[0] == path[1]);
 
         if (has_drive) {
@@ -229,10 +262,10 @@ namespace eka2l1 {
                 return path.substr(0, 2);
             }
         } else if (has_net) {
-            auto res = path.find_first_of(get_separator(symbian_use), 2);
+            auto res = path.find_first_of(separator_func(symbian_use), 2);
 
             if (res == std::string::npos) {
-                return "";
+                return generic_string{};
             }
 
             return path.substr(0, res);
@@ -242,18 +275,17 @@ namespace eka2l1 {
             }
         }
 
-        return "";
+        return generic_string{};
     }
-
-    bool has_filename(std::string path, bool symbian_use) {
-        return filename(path, symbian_use) != "";
-    }
-
-    std::string filename(std::string path, bool symbian_use) {
-        std::string fn = "";
+    
+    template <typename T>
+    std::basic_string<T> filename_impl(std::basic_string<T> path, bool symbian_use, 
+        std::function<T(bool)> separator_func) {
+        using generic_string = decltype(path);
+        generic_string fn;
 
         if (path.length() < 1) {
-            return "";
+            return generic_string{};
         }
 
         if (is_separator(path[path.length() - 1])) {
@@ -271,40 +303,121 @@ namespace eka2l1 {
 
         return fn;
     }
-
-    std::string file_directory(std::string path, bool symbian_use) {
+    
+    template <typename T>
+    std::basic_string<T> file_directory_impl(std::basic_string<T> path, bool symbian_use) {
+        using generic_string = decltype(path);
         auto fn = filename(path, symbian_use);
 
-        if (fn == "") {
-            return "";
+        if (fn == generic_string{}) {
+            return path;
         }
 
-        return path.substr(0, path.length() - fn.length());
+        return path.substr(0, path.length() - fn.length() + 1);
+    }
+
+    std::string absolute_path(std::string str, std::string current_dir, bool symbian_use) {
+        return absolute_path_impl<char>(str, current_dir, symbian_use, get_separator);
+    }
+
+    std::u16string absolute_path(std::u16string str, std::u16string current_dir, bool symbian_use) {
+        return absolute_path_impl<char16_t>(str, current_dir, symbian_use, get_separator_16);
+    }
+
+    std::string relative_path(const std::string &str, bool symbian_use) {
+        return relative_path_impl<char>(str, symbian_use);
+    }
+
+    std::u16string relative_path(const std::u16string &str, bool symbian_use) {
+        return relative_path_impl<char16_t>(str, symbian_use);
+    }
+    
+    std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use) {
+        return add_path_impl<char>(path1, path2, symbian_use, get_separator);
+    }
+
+    std::u16string add_path(const std::u16string &path1, const std::u16string &path2, bool symbian_use) {
+        return add_path_impl<char16_t>(path1, path2, symbian_use, get_separator_16);
+    }
+
+    std::string filename(std::string path, bool symbian_use) {
+        return filename_impl<char>(path, symbian_use, get_separator);
+    }
+
+    std::u16string filename(std::u16string path, bool symbian_use) {
+        return filename_impl<char16_t>(path, symbian_use, get_separator);
+    }
+
+    std::string file_directory(std::string path, bool symbian_use) {
+        return file_directory_impl<char>(path, symbian_use);
+    }
+
+    std::u16string file_directory(std::u16string path, bool symbian_use) {
+        return file_directory_impl<char16_t>(path, symbian_use);
+    }
+    
+	std::string root_name(std::string path, bool symbian_use) {
+        return root_name_impl<char>(path, symbian_use, get_separator);
+    }
+
+	std::u16string root_name(std::u16string path, bool symbian_use) {
+        return root_name_impl<char16_t>(path, symbian_use, get_separator_16);
+    }
+    
+    std::string root_dir(std::string path, bool symbian_use) {
+        return root_dir_impl<char>(path, symbian_use, get_separator);
+    }
+	
+    std::u16string root_dir(std::u16string path, bool symbian_use) {
+        return root_dir_impl<char16_t>(path, symbian_use, get_separator_16);
+    }
+    
+    std::string root_path(std::string path, bool symbian_use) {
+        return root_path_impl<char>(path, symbian_use, get_separator);
+    }
+
+    std::u16string root_path(std::u16string path, bool symbian_use) {
+        return root_path_impl<char16_t>(path, symbian_use, get_separator_16);
+    }
+    
+    std::string path_extension(const std::string &path) {
+        return path_extension_impl<char>(path);
+    }
+
+    std::u16string path_extension(const std::u16string &path) {
+        return path_extension_impl<char16_t>(path);
+    }
+
+    std::string replace_extension(const std::string &path, const std::string &new_ext) {
+        return replace_extension_impl<char>(path, new_ext);
+    }
+
+    std::u16string replace_extension(const std::u16string &path, const std::u16string &new_ext) {
+        return replace_extension_impl<char16_t>(path, new_ext);
     }
 
     void create_directory(std::string path) {
-#ifndef WIN32
+#if EKA2L1_PLATFORM(POSIX)
         mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#else
+#elif EKA2L1_PLATFORM(WIN32)
         CreateDirectoryA(path.c_str(), NULL);
 #endif
     }
 
     bool exists(std::string path) {
-#ifndef WIN32
+#if EKA2L1_PLATFORM(POSIX)
         struct stat st;
         auto res = stat(path.c_str(), &st);
 
         return res != -1;
-#else
+#elif EKA2L1_PLATFORM(WIN32)
         DWORD dw_attrib = GetFileAttributesA(path.c_str());
-
-        return (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
+        return (dw_attrib != INVALID_FILE_ATTRIBUTES);
 #endif
     }
 
     bool is_dir(std::string path) {
-#ifndef WIN32
+#if EKA2L1_PLATFORM(POSIX)
         struct stat st;
         auto res = stat(path.c_str(), &st);
 
@@ -313,9 +426,8 @@ namespace eka2l1 {
         }
 
         return S_ISDIR(st.st_mode);
-#else
+#elif EKA2L1_PLATFORM(WIN32)
         DWORD dw_attrib = GetFileAttributesA(path.c_str());
-
         return (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
 #endif
     }
@@ -326,7 +438,7 @@ namespace eka2l1 {
         path_iterator ite;
 
         for (ite = path_iterator(path);
-             ite; ++ite) {
+             ite; ite++) {
             if ((*ite).length() != 0) {
                 crr_path = add_path(crr_path, add_path(*ite, "/"));
 
@@ -337,4 +449,3 @@ namespace eka2l1 {
         }
     }
 }
-

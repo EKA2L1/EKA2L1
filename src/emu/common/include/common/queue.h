@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <mutex>
+#include <optional>
 #include <queue>
 
 namespace eka2l1 {
@@ -52,9 +54,71 @@ namespace eka2l1 {
         typedef typename Container::iterator iterator;
         typedef typename Container::const_iterator const_iterator;
 
-        iterator begin() { return this->c.begin(); }
-        iterator end() { return this->c.end(); }
-        const_iterator begin() const { return this->c.begin(); }
-        const_iterator end() const { return this->c.end(); }
+        iterator begin() { 
+            return this->c.begin();
+        }
+
+        iterator end() { 
+            return this->c.end();
+        }
+
+        const_iterator begin() const { 
+            return this->c.begin(); 
+        }
+
+        const_iterator end() const { 
+            return this->c.end(); 
+        }
+    };
+
+    template <typename T, typename Container = std::deque<T>>
+    class threadsafe_cn_queue {
+        cn_queue<T, Container> queue;
+        std::mutex lock;
+    public:
+        void push(const T &val) {
+            const std::lock_guard<std::mutex> guard(lock);
+            queue.push(val);
+        }
+
+        std::optional<T> pop() {
+            if (queue.empty()) {
+                return std::optional<T>{};
+            }
+
+            const std::lock_guard<std::mutex> guard(lock);
+
+            T val = std::move(queue.front());
+            queue.pop();
+
+            return val;
+        }
+
+        typedef typename Container::iterator iterator;
+        typedef typename Container::const_iterator const_iterator;
+
+        iterator begin() { 
+            return queue.begin(); 
+        }
+
+        iterator end() { 
+            return queue.end();
+        }
+
+        const_iterator begin() const { 
+            return queue.begin();
+        }
+
+        const_iterator end() const { 
+            return queue.end();
+        }
+
+        T &front() const {
+            return queue.front();
+        }
+
+        T &back() const {
+            return queue.back();
+        }
     };
 }

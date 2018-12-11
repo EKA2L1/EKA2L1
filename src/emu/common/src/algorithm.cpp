@@ -19,8 +19,9 @@
  */
 
 #include <common/algorithm.h>
+#include <common/platform.h>
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
@@ -54,7 +55,8 @@ namespace eka2l1 {
 
         int compare_ignore_case(const utf16_str &s1,
             const utf16_str &s2) {
-#ifdef WIN32
+
+#if EKA2L1_PLATFORM(WIN32)
             // According to the MSDN documentation, the CompareStringEx function
             // is optimized for NORM_IGNORECASE and string lengths specified as -1.
 
@@ -107,5 +109,14 @@ namespace eka2l1 {
             return -1;
 #endif
         }
+    }
+
+    std::string trim_spaces(std::string str) {
+        std::string::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
+            return (lhs == rhs) && (lhs == ' ');
+        });
+
+        str.erase(new_end, str.end());
+        return str;
     }
 }

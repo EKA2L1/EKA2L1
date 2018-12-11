@@ -1,6 +1,6 @@
 include_directories(${GTEST_INCLUDE_DIR})
 
-add_subdirectory(core)
+add_subdirectory(epoc)
 add_subdirectory(common)
 
 add_executable(ekatests 
@@ -12,8 +12,8 @@ target_link_libraries(ekatests PRIVATE
     gmock 
     gtest
     common
-    coreloader
-    core)
+    epocloader
+    epoc)
 
 add_test(
   NAME ekatests

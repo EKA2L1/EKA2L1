@@ -19,7 +19,44 @@
  */
 #pragma once
 
+#include <cstdint>
+#include <cmath>
+#include <array>
+#include <initializer_list>
+#include <numeric>
+#include <vector>
+
 namespace eka2l1 {
+    /*! \brief A basic template type vector 
+    */
+    template <typename T, int SIZE>
+    struct vecx {
+        std::vector<T> elements;
+
+    public:
+        T &operator[](const std::size_t idx) {
+            return elements[idx];
+        }
+
+        vecx() {
+            elements.resize(SIZE);
+        }
+
+        // Allow non-explicit
+        vecx(const std::initializer_list<T> list)
+            : elements(list) {
+        }
+
+        T normalize() {
+            return static_cast<T>(std::sqrt(std::accumulate(elements.begin(), elements.end(), 0, 
+                [](const T &lhs, const T &rhs) {
+                    return lhs + rhs * rhs;
+                })));
+        }
+    };
+
+    using vec2d = vecx<double, 2>;
+
 	/*! \brief A 2D Vector */
     struct vec2 {
         int x, y;
@@ -40,6 +77,27 @@ namespace eka2l1 {
 
         vec2 operator*(const int rhs) {
             return vec2(x * rhs, y * rhs);
+        }
+    };
+
+    struct vec3: public vec2 {
+        int z;
+
+        vec3() {}
+
+        vec3(const int x, const int y, const int z)
+            : vec2(x, y), z(z) {}
+
+        vec3 operator+(const vec3 &rhs) {
+            return vec3(x + rhs.x, y + rhs.y, z + rhs.z);
+        }
+
+        vec3 operator-(const vec3 &rhs) {
+            return vec3(x - rhs.x, y - rhs.y, z -rhs.z);
+        }
+
+        vec3 operator*(const int rhs) {
+            return vec3(x * rhs, y * rhs, z * rhs);
         }
     };
 

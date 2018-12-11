@@ -1,7 +1,7 @@
 #pragma once
 
-#include <core/kernel/process.h>
-#include <core/page_table.h>
+#include <epoc/kernel/process.h>
+#include <epoc/page_table.h>
 
 #include <memory>
 #include <vector>

@@ -24,7 +24,7 @@
 
 #include <common/cvt.h>
 
-#include <core/core.h>
+#include <epoc/epoc.h>
 
 namespace scripting = eka2l1::scripting;
 

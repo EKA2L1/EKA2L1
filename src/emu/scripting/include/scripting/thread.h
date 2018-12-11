@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/kernel/thread.h>
+#include <epoc/kernel/thread.h>
 #include <memory>
 
 namespace eka2l1::scripting {
