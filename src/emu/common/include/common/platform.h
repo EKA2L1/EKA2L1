@@ -87,10 +87,6 @@
     #endif
 #endif
 
-#ifdef _POSIX_VERSION
-    #define EKA2L1_PLATFORM_POSIX 1
-#endif
-
 #ifdef __ANDROID__
     #define EKA2L1_PLATFORM_ANDROID
 #endif
@@ -103,4 +99,8 @@
     #elif defined(__S60_50__)
         #define EKA2L1_PLATFORM_S60V5
     #endif 
+#endif
+
+#if EKA2L1_PLATFORM(ANDROID) || EKA2L1_PLATFORM(UNIX)
+    #define EKA2L1_PLATFORM_POSIX 1
 #endif
