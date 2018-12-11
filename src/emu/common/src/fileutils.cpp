@@ -36,6 +36,8 @@
 #include <common/cvt.h>
 #endif
 
+#include <string.h>
+
 namespace eka2l1::common {
     std::int64_t file_size(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
@@ -85,10 +87,6 @@ namespace eka2l1::common {
             return FILE_REGULAR;
         }
 
-        if (S_IFBLK(att)) {
-            return FILE_DEVICE;
-        }
-
         return FILE_UNKN;
 #endif
     }
@@ -135,7 +133,7 @@ namespace eka2l1::common {
         
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
-        while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0)) {
+        while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0) {
             cycles_to_next_entry();
         };
 #elif EKA2L1_PLATFORM(WIN32)
@@ -190,8 +188,6 @@ namespace eka2l1::common {
         if (!find_data) {
             eof = true;
         }
-
-        return 0;
 #endif
     }
     
@@ -227,7 +223,7 @@ namespace eka2l1::common {
 
         if (detail) {
             entry.size = file_size(dir_name + "/" + entry.name);
-            entry.type = file_type(dir_name + "/" + entry.name);
+            entry.type = get_file_type(dir_name + "/" + entry.name);
         }
         
         do {
