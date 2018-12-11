@@ -55,7 +55,7 @@ namespace eka2l1::common {
         file_type type;
         std::size_t size;
 
-        std::string full_path;
+        std::string name;
     };
 
     /* !\brief An custom directory iterator that provides more detail if neccessary.
@@ -69,6 +69,8 @@ namespace eka2l1::common {
         bool eof;
 
         void cycles_to_next_entry();
+
+        std::string dir_name;
 
     public:
         bool detail;

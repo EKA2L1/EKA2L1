@@ -125,7 +125,7 @@ namespace eka2l1::common {
     }
 
     dir_iterator::dir_iterator(const std::string &name)
-        : handle(nullptr), eof(false), detail(false) {
+        : handle(nullptr), eof(false), detail(false), dir_name(name) {
 #if EKA2L1_PLATFORM(POSIX)
         handle = reinterpret_cast<void*>(opendir(name.c_str()));
 
@@ -211,7 +211,7 @@ namespace eka2l1::common {
 #if EKA2L1_PLATFORM(WIN32)
         LPWIN32_FIND_DATA fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
 
-        entry.full_path = fdata_win32->cFileName;
+        entry.name = fdata_win32->cFileName;
 
         if (detail) {   
             entry.size = (fdata_win32->nFileSizeLow | (__int64)fdata_win32->nFileSizeHigh << 32);   
@@ -226,13 +226,13 @@ namespace eka2l1::common {
         entry.name = d->d_name;
 
         if (detail) {
-            entry.size = file_size(entry.name);
-            entry.type = file_type(entry.name);
+            entry.size = file_size(dir_name + "/" + entry.name);
+            entry.type = file_type(dir_name + "/" + entry.name);
         }
         
         do {
             cycles_to_next_entry();
-        } (while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0));
+        } while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0);
 #endif
 
         return 0;

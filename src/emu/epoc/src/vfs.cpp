@@ -38,6 +38,8 @@
 #include <regex>
 #include <thread>
 
+#include <string.h>
+
 namespace eka2l1 {
     file::file(io_attrib attrib)
         : io_component(io_component_type::file, attrib) {
@@ -416,7 +418,7 @@ namespace eka2l1 {
                     return std::optional<entry_info>{};
                 }
 
-                name = eka2l1::filename(entry.full_path);
+                name = entry.name;
 
                 if (!static_cast<int>(attrib & io_attrib::include_dir) && 
                     entry.type == common::FILE_DIRECTORY) {
