@@ -25,24 +25,21 @@
 #include <common/e32inc.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/platform.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
 #include <e32err.h>
 
-#include <experimental/filesystem>
-
 /* These are in SDKS for ucrt on Windows SDK */
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#ifndef WIN32
+#if EKA2L1_PLATFORM(POSIX)
 #include <unistd.h>
 #endif
-
-namespace fs = std::experimental::filesystem;
 
 #define POSIX_REQUEST_FINISH_WITH_ERR(ctx, err) \
     *errnoptr = err;                            \
@@ -189,8 +186,8 @@ namespace eka2l1 {
 
         entry_info info = *io->get_entry_info(full_path);
 
-        filestat->st_size = info.size;
-        filestat->st_mode = static_cast<decltype(filestat->st_mode)>(fs::perms::all);
+        filestat->st_size = static_cast<_off_t>(info.size);
+        filestat->st_mode = static_cast<decltype(filestat->st_mode)>(0777);
         filestat->st_mtime = info.last_write / 1000000000;
     }
 
@@ -200,7 +197,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        size_t res = files[id - 1]->read_file(buf, 1, len);
+        size_t res = files[id - 1]->read_file(buf, 1, static_cast<std::uint32_t>(len));
 
         if (res == (size_t)-1) {
             terrno = EIO;
@@ -216,7 +213,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        size_t res = files[id - 1]->write_file(buf, 1, len);
+        size_t res = files[id - 1]->write_file(buf, 1, static_cast<std::uint32_t>(len));
 
         if (res == (size_t)-1) {
             terrno = EIO;
@@ -232,9 +229,7 @@ namespace eka2l1 {
         std::u16string current_dir(reinterpret_cast<char16_t*>(
                 params->cwptr[0].get(ctx.sys->get_memory_system())));
 
-        working_dir = common::utf8_to_ucs2(eka2l1::absolute_path(
-                common::ucs2_to_utf8(current_dir), 
-                common::ucs2_to_utf8(working_dir)));
+        working_dir = eka2l1::absolute_path(current_dir, working_dir);
 
         params->ret = 0;
 
@@ -268,7 +263,7 @@ namespace eka2l1 {
         const int posix_open_mode = params->pint[0];
         const int posix_open_perms = params->pint[1];
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         if (posix_open_mode & O_TEMPORARY) {
 #else
         if (posix_open_mode & O_TMPFILE) {
@@ -290,7 +285,7 @@ namespace eka2l1 {
         // If the file exists and the flag is O_CREAT, also override existing file or create new one
         if ((!io->exist(path_u16) && (posix_open_mode & O_CREAT))
             || (posix_open_mode &
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
                    O_TEMPORARY
 #else
                    O_TMPFILE

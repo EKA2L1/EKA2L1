@@ -401,7 +401,7 @@ namespace eka2l1 {
             }
 
             slot_free->get()->free = false;
-            slot_free->get()->id = slot_free - msgs.begin();
+            slot_free->get()->id = static_cast<std::uint32_t>(slot_free - msgs.begin());
 
             return *slot_free;
         }
@@ -751,7 +751,7 @@ namespace eka2l1 {
             [&](kernel_obj_ptr obj) { return obj && (obj->name() == name) && (obj->get_object_type() == type); });
 
         if (obj != objects.end()) {
-            handle_find_info.index = obj - objects.begin();
+            handle_find_info.index = static_cast<int>(obj - objects.begin());
             handle_find_info.object_id = (*obj)->unique_id();
 
             return handle_find_info;

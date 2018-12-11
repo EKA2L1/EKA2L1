@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/platform.h>
+
 #include <epoc/services/applist/applist.h>
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/domain/domain.h>
@@ -31,12 +33,10 @@
 #include <epoc/services/window/window.h>
 
 #include <epoc/services/init.h>
-
 #include <epoc/epoc.h>
-
 #include <e32lang.h>
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
@@ -214,10 +214,12 @@ namespace eka2l1::epoc {
 
     TLocale GetEpocLocaleInfo() {
         TLocale locale;
-#ifdef WIN32
+
+        // TODO: Move to common
+#if EKA2L1_PLATFORM(WIN32)
         locale.iCountryCode = static_cast<int>(GetProfileInt("intl", "iCountry", 0));
-#else
 #endif
+
         locale.iClockFormat = EClockDigital;
         locale.iStartOfWeek = epoc::TDay::EMonday;
         locale.iDateFormat = epoc::TDateFormat::EDateAmerican;

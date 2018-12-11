@@ -48,7 +48,7 @@ namespace eka2l1 {
         int addr;
     };
 
-    using fid = std::size_t;
+    using fid = int;
 
     class posix_file_manager {
         enum {

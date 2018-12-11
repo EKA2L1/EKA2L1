@@ -19,10 +19,11 @@
  */
 
 #include <common/virtualmem.h>
+#include <common/platform.h>
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
-#else
+#elif EKA2L1_PLATFORM(UNIX)
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -32,7 +33,7 @@
 
 namespace eka2l1::common {
     void *map_memory(const std::size_t size) {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         return VirtualAlloc(nullptr, size,
             MEM_RESERVE, PAGE_NOACCESS);
 #else
@@ -42,7 +43,7 @@ namespace eka2l1::common {
     }
 
     bool  unmap_memory(void *ptr, const std::size_t size) {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         const auto result = VirtualFree(ptr, 0, MEM_RELEASE);
 
         if (!result) {
@@ -58,7 +59,7 @@ namespace eka2l1::common {
     }
 
     bool commit(void *ptr, const std::size_t size, const prot commit_prot) {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         DWORD oldprot = 0;
 
         const auto res = VirtualAlloc(ptr, size, MEM_COMMIT, 
@@ -77,7 +78,7 @@ namespace eka2l1::common {
     }
 
     bool decommit(void *ptr, const std::size_t size) {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         const auto res = VirtualFree(ptr, size, MEM_DECOMMIT);
 
         if (!res) {
@@ -94,7 +95,7 @@ namespace eka2l1::common {
 
     bool change_protection(void *ptr, const std::size_t size,
         const prot new_prot) {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         DWORD oldprot = 0;
         const auto res = VirtualProtect(ptr, size,
             translate_protection(new_prot), &oldprot);
@@ -112,7 +113,7 @@ namespace eka2l1::common {
     }
     
     int get_host_page_size() {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         SYSTEM_INFO system_info = {};
         GetSystemInfo(&system_info);
 
@@ -123,7 +124,7 @@ namespace eka2l1::common {
     }
 
     void *map_file(const std::string &file_name) {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         HANDLE file_handle = CreateFileA(file_name.c_str(), GENERIC_READ, FILE_SHARE_READ,
             NULL, OPEN_ALWAYS, NULL, NULL);
 
@@ -158,7 +159,7 @@ namespace eka2l1::common {
     }
 
     bool unmap_file(void *ptr) {
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         UnmapViewOfFile(ptr);
 #endif
 

@@ -20,6 +20,7 @@
 
 #include <common/log.h>
 #include <common/path.h>
+#include <common/platform.h>
 
 #include <manager/script_manager.h>
 #include <experimental/filesystem>

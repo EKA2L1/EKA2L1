@@ -42,8 +42,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <experimental/filesystem>
-
 #include <atomic>
 #include <fstream>
 #include <string>
@@ -63,8 +61,6 @@
 
 #include <manager/manager.h>
 #include <arm/arm_factory.h>
-
-namespace fs = std::experimental::filesystem;
 
 namespace eka2l1 {
     /*! A system instance, where all the magic happens. 
@@ -270,9 +266,14 @@ namespace eka2l1 {
 
     void system_impl::load_scripts() {
 #ifdef ENABLE_SCRIPTING
-        for (const auto &entry : fs::directory_iterator("scripts")) {
-            if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".py") {
-                auto module_name = entry.path().filename().replace_extension("").string();
+        common::dir_iterator scripts_dir("scripts");
+        scripts_dir.detail = true;
+
+        common::dir_entry scripts_entry;
+
+        while (scripts_dir.next_entry(scripts_entry) == 0) {
+            if ((scripts_entry.type == FILE_REGULAR) && path_extension(scripts_entry.full_path) == ".py") {
+                auto module_name = replace_extension(filename(scripts_entry.full_path), ".py");
                 mngr.get_script_manager()->import_module("scripts/" + module_name);
             }
         }

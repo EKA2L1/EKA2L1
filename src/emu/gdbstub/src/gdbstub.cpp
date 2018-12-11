@@ -16,6 +16,8 @@
 #include <numeric>
 
 #include <common/log.h>
+#include <common/platform.h>
+
 #include <arm/arm_interface.h>
 #include <epoc/epoc.h>
 #include <gdbstub/gdbstub.h>
@@ -324,7 +326,8 @@ namespace eka2l1 {
         LOG_DEBUG("gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
             bp->second.len, bp->second.addr, static_cast<int>(type));
         
-        sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), bp->second.inst.size());
+        sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), 
+            static_cast<std::uint32_t>(bp->second.inst.size()));
         // TODO: Clear instruction cache
 
         p.erase(addr);
@@ -822,10 +825,14 @@ namespace eka2l1 {
         breakpoint br;
         br.active = true;
         br.addr = addr;
-        br.len = len;
-        sys->get_memory_system()->read(addr, &br.inst[0], br.inst.size());
+        br.len = static_cast<std::uint32_t>(len);
+        
+        sys->get_memory_system()->read(addr, &br.inst[0],
+            static_cast<std::uint32_t>(br.inst.size()));
+
         std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xe1 };
-        sys->get_memory_system()->write(addr, &(btrap[0]), btrap.size());
+        sys->get_memory_system()->write(addr, &(btrap[0]), 
+            static_cast<std::uint32_t>(btrap.size()));
 
         // TODO: Clear instructions cache
         p.insert({ addr, br });
@@ -1040,7 +1047,7 @@ namespace eka2l1 {
         saddr_server.sin_port = htons(port);
         saddr_server.sin_addr.s_addr = INADDR_ANY;
 
-#ifdef _WIN32
+#if EKA2L1_PLATFORM(WIN32)
         WSAStartup(MAKEWORD(2, 2), &InitData);
 #endif
 
@@ -1107,7 +1114,7 @@ namespace eka2l1 {
             gdbserver_socket = -1;
         }
 
-#ifdef _WIN32
+#if EKA2L1_PLATFORM(WIN32)
         WSACleanup();
 #endif
 

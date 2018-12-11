@@ -84,7 +84,7 @@ namespace eka2l1::drivers {
         std::vector<std::uint8_t> data;
         data.resize(size.x * size.y);
 
-        glPixelStorei(GL_PACK_ROW_LENGTH, stride_pixels);
+        glPixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(stride_pixels));
         glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
         glPixelStorei(GL_PACK_ROW_LENGTH, 0);
 

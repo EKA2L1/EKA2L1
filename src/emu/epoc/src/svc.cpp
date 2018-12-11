@@ -42,9 +42,10 @@
 #include <common/path.h>
 #include <common/random.h>
 #include <common/types.h>
+#include <common/platform.h>
 
 #define CURL_STATICLIB
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
 #pragma comment(lib, "wldap32.lib")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winmm.lib")
@@ -54,7 +55,7 @@
 
 #include <date/tz.h>
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
@@ -526,7 +527,9 @@ namespace eka2l1::epoc {
         // The time is since EPOC, we need to convert it to first of AD
         *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;
-        *offset = date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count();
+
+        *offset = 
+            static_cast<TInt>(date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
 
         return KErrNone;
     }
@@ -764,7 +767,8 @@ namespace eka2l1::epoc {
         content.resize(des8 ? (aStartOffset + info->iTargetLength) : (aStartOffset + info->iTargetLength) * 2);
 
         memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
-        bool result = context.write_arg_pkg(aParam, reinterpret_cast<uint8_t *>(&content[0]), content.length());
+        bool result = context.write_arg_pkg(aParam, 
+            reinterpret_cast<uint8_t *>(&content[0]), static_cast<std::uint32_t>(content.length()));
 
         if (!result) {
             return KErrBadDescriptor;
@@ -1346,7 +1350,7 @@ namespace eka2l1::epoc {
 
         std::vector<uint32_t> entries = lib->attach();
 
-        *aNumEps.get(mem) = entries.size();
+        *aNumEps.get(mem) = static_cast<TInt>(entries.size());
 
         for (size_t i = 0; i < entries.size(); i++) {
             (aEpList.get(mem))[i] = entries[i];

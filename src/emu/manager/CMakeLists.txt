@@ -20,6 +20,10 @@ target_link_libraries(manager PUBLIC common)
 if (ENABLE_SCRIPTING_ABILITY)
 	target_link_libraries(manager PUBLIC pybind11::embed)
 	target_link_libraries(manager PRIVATE symemu)
+
+	if (not MSVC)
+		target_link_libraries(manager PRIVATE stdc++fs)
+	endif()
 endif (ENABLE_SCRIPTING_ABILITY)
 
 target_link_libraries(manager PRIVATE epocloader)

@@ -19,6 +19,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/virtualmem.h>
 
@@ -27,18 +28,6 @@
 #include <epoc/ptr.h>
 
 #include <algorithm>
-
-#ifdef WIN32
-#include <Windows.h>
-#else
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
-#include <errno.h>
-
-#include <experimental/filesystem>
 
 namespace eka2l1 {
     void memory_system::init(arm::jitter &jit, uint32_t code_ram_addr,
@@ -69,7 +58,7 @@ namespace eka2l1 {
     bool memory_system::map_rom(uint32_t addr, const std::string &path) {
         rom_addr = addr;
         rom_map = common::map_file(path);
-        rom_size = std::experimental::filesystem::file_size(path);
+        rom_size = common::file_size(path);
 
         LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<uint64_t>(rom_map));
 
@@ -243,14 +232,14 @@ namespace eka2l1 {
 
         if (beg_addr >= shared_addr && beg_addr < shared_addr + shared_size) {
             auto idx = ite.base() - global_pages.data() - page_count;
-            return chunk(shared_addr + idx * page_size, bottom, top, max_grow, cprot);
+            return chunk(static_cast<address>(shared_addr + idx * page_size), bottom, top, max_grow, cprot);
         } else if (beg_addr >= ram_code_addr && beg_addr < codeseg_addr + 0x10000000) {
             auto idx = ite.base() - codeseg_pages.data() - page_count;
-            return chunk(ram_code_addr + idx * page_size, bottom, top, max_grow, cprot);
+            return chunk(static_cast<address>(ram_code_addr + idx * page_size), bottom, top, max_grow, cprot);
         }
 
         auto idx = ite.base() - current_page_table->pages.data() - page_count;
-        return chunk(idx * page_size, bottom, top, max_grow, cprot);
+        return chunk(static_cast<address>(idx * page_size), bottom, top, max_grow, cprot);
     }
 
     // Change the prot of pages
@@ -286,7 +275,8 @@ namespace eka2l1 {
             }
 
             page_begin->page_protection = nprot;
-            cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin_orginal, page_begin) * page_size, page_size);
+            cpu->unmap_memory(static_cast<address>(addr.ptr_address() + std::distance(page_begin_orginal, page_begin) * page_size),
+                page_size);
         }
 
         if (addr.ptr_address() >= shared_addr && addr.ptr_address() < shared_addr + shared_size) {
@@ -294,11 +284,11 @@ namespace eka2l1 {
                 count * page_size, nprot);
 
             if (current_page_table) {
-                std::copy(global_pages.begin() + beg - (shared_addr / page_size),
-                    global_pages.begin() + end - (shared_addr / page_size), current_page_table->pages.begin() + beg);
+                std::copy(global_pages.begin() + (beg - (shared_addr / page_size)),
+                    global_pages.begin() + (end - (shared_addr / page_size)), current_page_table->pages.begin() + beg);
 
-                std::copy(global_pointers.begin() + beg - (shared_addr / page_size),
-                    global_pointers.begin() + end - (shared_addr / page_size), current_page_table->get_pointers().begin() + beg);
+                std::copy(global_pointers.begin() + (beg - (shared_addr / page_size)),
+                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->get_pointers().begin() + beg);
             }
 
             cpu->map_backing_mem(addr.ptr_address(), size, global_pointers[beg - (shared_addr / page_size)], nprot);
@@ -307,11 +297,11 @@ namespace eka2l1 {
                 count * page_size, nprot);
 
             if (current_page_table) {
-                std::copy(codeseg_pages.begin() + beg - (codeseg_addr / page_size),
-                    codeseg_pages.begin() + end - (codeseg_addr / page_size), current_page_table->pages.begin() + beg);
+                std::copy(codeseg_pages.begin() + (beg - (codeseg_addr / page_size)),
+                    codeseg_pages.begin() + (end - (codeseg_addr / page_size)), current_page_table->pages.begin() + beg);
 
-                std::copy(codeseg_pointers.begin() + beg - (codeseg_addr / page_size),
-                    codeseg_pointers.begin() + end - (codeseg_addr / page_size), current_page_table->get_pointers().begin() + beg);
+                std::copy(codeseg_pointers.begin() + (beg - (codeseg_addr / page_size)),
+                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->get_pointers().begin() + beg);
             }
 
             cpu->map_backing_mem(addr.ptr_address(), size, codeseg_pointers[beg - (codeseg_addr / page_size)], nprot);
@@ -359,22 +349,22 @@ namespace eka2l1 {
             global_pointers[(beg - (shared_addr / page_size))] = nullptr;
 
             if (current_page_table) {
-                std::copy(global_pages.begin() + beg - (shared_addr / page_size),
-                    global_pages.begin() + end - (shared_addr / page_size), current_page_table->pages.begin() + beg);
+                std::copy(global_pages.begin() + (beg - (shared_addr / page_size)),
+                    global_pages.begin() + (end - (shared_addr / page_size)), current_page_table->pages.begin() + beg);
 
-                std::copy(global_pointers.begin() + beg - (shared_addr / page_size),
-                    global_pointers.begin() + end - (shared_addr / page_size), current_page_table->get_pointers().begin() + beg);
+                std::copy(global_pointers.begin() + (beg - (shared_addr / page_size)),
+                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->get_pointers().begin() + beg);
             }
         } else if (addr.ptr_address() >= ram_code_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
             eka2l1::common::unmap_memory(codeseg_pointers[(beg - (ram_code_addr / page_size))], eka2l1::common::get_host_page_size());
             codeseg_pointers[(beg - (ram_code_addr / page_size))] = nullptr;
 
             if (current_page_table) {
-                std::copy(codeseg_pages.begin() + beg - (codeseg_addr / page_size),
-                    codeseg_pages.begin() + end - (codeseg_addr / page_size), current_page_table->pages.begin() + beg);
+                std::copy(codeseg_pages.begin() + (beg - (codeseg_addr / page_size)),
+                    codeseg_pages.begin() + (end - (codeseg_addr / page_size)), current_page_table->pages.begin() + beg);
 
-                std::copy(codeseg_pointers.begin() + beg - (codeseg_addr / page_size),
-                    codeseg_pointers.begin() + end - (codeseg_addr / page_size), current_page_table->get_pointers().begin() + beg);
+                std::copy(codeseg_pointers.begin() + (beg - (codeseg_addr / page_size)),
+                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->get_pointers().begin() + beg);
             }
         } else {
             eka2l1::common::unmap_memory(current_page_table->get_pointers()[beg], eka2l1::common::get_host_page_size());
@@ -424,7 +414,8 @@ namespace eka2l1 {
             }
 
             if (page_begin->sts == page_status::committed) {
-                cpu->unmap_memory(addr.ptr_address() + std::distance(page_begin_org, page_begin) * page_size, page_size);
+                cpu->unmap_memory(static_cast<address>(addr.ptr_address() + std::distance(page_begin_org, page_begin) * page_size), 
+                    page_size);
             }
 
             page_begin->sts = page_status::committed;

@@ -1,6 +1,6 @@
 include_directories(${GTEST_INCLUDE_DIR})
 
-add_subdirectory(core)
+add_subdirectory(epoc)
 add_subdirectory(common)
 
 add_executable(ekatests 

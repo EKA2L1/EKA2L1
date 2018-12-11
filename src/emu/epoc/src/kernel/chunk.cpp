@@ -68,7 +68,7 @@ namespace eka2l1 {
                 // Adjust the top and bottom. Later
                 size_t init_commit_size = new_top - new_bottom;
 
-                new_top = init_commit_size;
+                new_top = static_cast<address>(init_commit_size);
                 new_bottom = 0;
             }
 
@@ -107,9 +107,8 @@ namespace eka2l1 {
             }
             }
 
-            chunk_base = ptr<uint8_t>(mem->chunk_range(range_beg, range_end, new_bottom,
-                                             new_top, max_size, protection)
-                                          .ptr_address());
+            chunk_base = mem->chunk_range(range_beg, range_end, new_bottom, new_top, max_size, protection)
+                .cast<std::uint8_t>();
 
             this->top = new_top;
             this->bottom = new_bottom;
@@ -122,7 +121,7 @@ namespace eka2l1 {
         }
 
         void chunk::destroy() {
-            mem->unchunk(ptr<void>(chunk_base.ptr_address()), max_size);
+            mem->unchunk(chunk_base.cast<void>(), static_cast<std::uint32_t>(max_size));
         }
 
         bool chunk::commit(uint32_t offset, size_t size) {
@@ -130,7 +129,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            mem->commit(ptr<void>(chunk_base.ptr_address() + offset), size);
+            mem->commit(chunk_base.cast<void>() + offset, size);
 
             if (offset + size > top) {
                 top = offset;
@@ -166,7 +165,7 @@ namespace eka2l1 {
             }
 
             mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), adj_size);
-            top = bottom + adj_size;
+            top = static_cast<address>(bottom + adj_size);
 
             return true;
         }
@@ -180,17 +179,17 @@ namespace eka2l1 {
                 return false;
             }
 
-            top = ntop;
-            bottom = nbottom;
+            top = static_cast<address>(ntop);
+            bottom = static_cast<address>(nbottom);
 
-            mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), top - bottom);
+            mem->commit(chunk_base.cast<void>() + bottom, top - bottom);
 
             return true;
         }
 
         uint32_t chunk::allocate(size_t size) {
             commit(top, size);
-            return top - size;
+            return static_cast<std::uint32_t>(top - size);
         }
 
         void chunk::write_object_to_snapshot(common::wo_buf_stream &stream) {
@@ -247,7 +246,7 @@ namespace eka2l1 {
             page_table *old = mem->get_current_page_table();
             mem->set_current_page_table(own_process->get_page_table());
 
-            mem->chunk(chunk_base.ptr_address(), bottom, top, max_size, protection);
+            mem->chunk(chunk_base.ptr_address(), bottom, top, static_cast<std::uint32_t>(max_size), protection);
             mem->set_current_page_table(*old);
         }
     }

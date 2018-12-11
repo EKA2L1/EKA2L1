@@ -81,3 +81,17 @@ TEST(path_resolving_test, path_iterator_file) {
 
     ASSERT_EQ(4, i);
 }
+
+TEST(path_resolving_test, extension) {
+    std::string test_path = "hiyou.ne.py";
+    std::string result_ext = eka2l1::path_extension(test_path);
+
+    ASSERT_EQ(".py", result_ext);
+}
+
+TEST(path_resolving_test, replace_extension) {
+    std::string test_path = "hiyou.ne.py";
+    std::string expected = eka2l1::replace_extension(test_path, ".mom");
+
+    ASSERT_EQ(expected, "hiyou.ne.mom");
+}

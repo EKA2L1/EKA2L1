@@ -40,10 +40,6 @@
 #include <epoc/configure.h>
 #include <epoc/kernel.h>
 
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
-
 namespace eka2l1 {
     namespace hle {
         // Write simple relocation
@@ -518,7 +514,7 @@ namespace eka2l1 {
 
             // It's a full path
             if (img_name.find(u":") == 1) {
-                bool should_append_ext = (fs::path(img_name).extension() == u"");
+                bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
 
                 img = io->open_file(img_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
 
@@ -554,7 +550,7 @@ namespace eka2l1 {
                     return nullptr;
                 }
             } else {
-                bool should_append_ext = (fs::path(img_name).extension() == "");
+                bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
 
                 for (const auto &pattern : patterns) {
                     std::u16string full = pattern.first + img_name + (should_append_ext ? pattern.second : u"");
@@ -604,7 +600,7 @@ namespace eka2l1 {
             symfile romimgf = nullptr;
 
             if (rom_name.find(u":") == 1) {
-                bool should_append_ext = (fs::path(rom_name).extension() == u"");
+                bool should_append_ext = (eka2l1::path_extension(rom_name) == u"");
 
                 // Normally by default, Symbian should append the extension itself if no extension provided.
                 romimgf = io->open_file(rom_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
@@ -619,7 +615,7 @@ namespace eka2l1 {
             }
 
             if (!romimgf) {
-                bool should_append_ext = (fs::path(rom_name).extension() == "");
+                bool should_append_ext = (eka2l1::path_extension(rom_name) == u"");
 
                 romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + (should_append_ext ? u".dll" : u""),
                     READ_MODE | BIN_MODE);

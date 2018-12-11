@@ -27,6 +27,8 @@
 #include <unistd.h>
 #endif
 
+#include <common/types.h>
+
 namespace eka2l1 {
     class system;
 
@@ -72,13 +74,13 @@ namespace eka2l1 {
     };
 
     struct breakpoint_address {
-        std::uint32_t address;
+        address address;
         breakpoint_type type;
     };
 
     struct breakpoint {
         bool active;
-        std::uint32_t addr;
+        address addr;
         std::uint32_t len;
         std::array<std::uint8_t, 4> inst;
     };

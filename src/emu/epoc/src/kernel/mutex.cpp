@@ -241,7 +241,7 @@ namespace eka2l1 {
             stream.read(&holding_id, sizeof(holding_id));
 
             holding = std::dynamic_pointer_cast<kernel::thread>(
-                kern->get_kernel_obj(holding_id));
+                kern->get_kernel_obj_by_id(holding_id));
 
             std::size_t total_waits;
             stream.read(&total_waits, sizeof(total_waits));

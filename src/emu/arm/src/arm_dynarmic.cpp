@@ -391,8 +391,7 @@ namespace eka2l1 {
             }
 
             void AddTicks(uint64_t ticks) override {
-                parent.get_timing_sys()->add_ticks(ticks - interpreted);
-
+                parent.get_timing_sys()->add_ticks(static_cast<std::uint32_t>(ticks - interpreted));
                 interpreted = 0;
             }
 

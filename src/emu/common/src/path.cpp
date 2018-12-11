@@ -17,16 +17,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <common/platform.h>
 #include <common/path.h>
+
 #include <cstring>
 #include <iostream>
 
 #include <common/log.h>
 
-#ifndef WIN32
+#if EKA2L1_PLATFORM(UNIX)
 #include <sys/stat.h>
 #include <unistd.h>
-#else
+#endif
+
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
@@ -36,7 +41,7 @@ namespace eka2l1 {
             return '\\';
         }
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         return '\\';
 #else
         return '/';
@@ -48,7 +53,7 @@ namespace eka2l1 {
             return u'\\';
         }
 
-#ifdef WIN32
+#if EKA2L1_PLATFORM(WIN32)
         return u'\\';
 #else
         return u'/';
@@ -67,6 +72,28 @@ namespace eka2l1 {
         return (sep == '/' || sep == '\\');
     }
     
+    template <typename T>
+    std::basic_string<T> path_extension_impl(const std::basic_string<T> &path) {
+        std::size_t last_dot_pos = path.find_last_of(static_cast<T>('.'));
+
+        if (last_dot_pos == std::string::npos) {
+            return std::basic_string<T>{};
+        }
+
+        return path.substr(last_dot_pos, path.length() - last_dot_pos);
+    }
+
+    template <typename T>
+    std::basic_string<T> replace_extension_impl(const std::basic_string<T> &path, const std::basic_string<T> &new_ext) {
+        std::size_t last_dot_pos = path.find_last_of(static_cast<T>('.'));
+
+        if (last_dot_pos == std::string::npos) {
+            return path;
+        }
+
+        return path.substr(0, last_dot_pos) + new_ext;
+    }
+
     template <typename T>
     std::basic_string<T> add_path_impl(const std::basic_string<T> &path1, const std::basic_string<T> &path2, 
         bool symbian_use, std::function<T(bool)> separator_func) {
@@ -352,30 +379,45 @@ namespace eka2l1 {
     std::u16string root_path(std::u16string path, bool symbian_use) {
         return root_path_impl<char16_t>(path, symbian_use, get_separator_16);
     }
+    
+    std::string path_extension(const std::string &path) {
+        return path_extension_impl<char>(path);
+    }
+
+    std::u16string path_extension(const std::u16string &path) {
+        return path_extension_impl<char16_t>(path);
+    }
+
+    std::string replace_extension(const std::string &path, const std::string &new_ext) {
+        return replace_extension_impl<char>(path, new_ext);
+    }
+
+    std::u16string replace_extension(const std::u16string &path, const std::u16string &new_ext) {
+        return replace_extension_impl<char16_t>(path, new_ext);
+    }
 
     void create_directory(std::string path) {
-#ifndef WIN32
+#if EKA2L1_PLATFORM(POSIX)
         mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#else
+#elif EKA2L1_PLATFORM(WIN32)
         CreateDirectoryA(path.c_str(), NULL);
 #endif
     }
 
     bool exists(std::string path) {
-#ifndef WIN32
+#if EKA2L1_PLATFORM(POSIX)
         struct stat st;
         auto res = stat(path.c_str(), &st);
 
         return res != -1;
-#else
+#elif EKA2L1_PLATFORM(WIN32)
         DWORD dw_attrib = GetFileAttributesA(path.c_str());
-
-        return (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
+        return (dw_attrib != INVALID_FILE_ATTRIBUTES);
 #endif
     }
 
     bool is_dir(std::string path) {
-#ifndef WIN32
+#if EKA2L1_PLATFORM(POSIX)
         struct stat st;
         auto res = stat(path.c_str(), &st);
 
@@ -384,9 +426,8 @@ namespace eka2l1 {
         }
 
         return S_ISDIR(st.st_mode);
-#else
+#elif EKA2L1_PLATFORM(WIN32)
         DWORD dw_attrib = GetFileAttributesA(path.c_str());
-
         return (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
 #endif
     }

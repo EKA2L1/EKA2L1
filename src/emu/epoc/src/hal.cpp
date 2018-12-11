@@ -72,10 +72,10 @@ namespace eka2l1::epoc {
             TDes8 *buf = reinterpret_cast<TDes8 *>(a1);
             TMemoryInfoV1 memInfo;
 
-            memInfo.iTotalRamInBytes = common::MB(256);
+            memInfo.iTotalRamInBytes = static_cast<int>(common::MB(256));
             memInfo.iRomIsReprogrammable = false;
-            memInfo.iMaxFreeRamInBytes = common::MB(256);
-            memInfo.iFreeRamInBytes = common::MB(256);
+            memInfo.iMaxFreeRamInBytes = static_cast<int>(common::MB(256));
+            memInfo.iFreeRamInBytes = static_cast<int>(common::MB(256));
             memInfo.iTotalRomInBytes = sys->get_rom_info()->header.rom_size;
             memInfo.iInternalDiskRamInBytes = memInfo.iTotalRomInBytes; // This value is appr. the same as rom.
 

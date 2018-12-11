@@ -102,6 +102,14 @@ namespace eka2l1 {
 	*/
     std::u16string file_directory(std::u16string path, bool symbian_use = false);
 
+    std::string path_extension(const std::string &path);
+
+    std::u16string path_extension(const std::u16string &path);
+
+    std::string replace_extension(const std::string &path, const std::string &new_ext);
+
+    std::u16string replace_extension(const std::u16string &path, const std::u16string &new_ext);
+
 	/*! \brief Create a directory. */
     void create_directory(std::string path);
 	
