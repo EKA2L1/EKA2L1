@@ -28,6 +28,10 @@
 #include <tuple>
 
 namespace eka2l1 {
+    namespace common {
+        class chunkyseri;
+    }
+
     namespace epoc {
         struct hal;
     }
@@ -106,12 +110,7 @@ namespace eka2l1 {
         int loop();
         void shutdown();
  
-        /*
-        bool save_snapshot(const std::string &name);
-        bool save_snapshot_exclude_current_process(const std::string &name);
-
-        bool load_snapshot(const std::string &name);
-        */
+        void do_state(common::chunkyseri &seri);
        
         manager_system *get_manager_system();
         memory_system *get_memory_system();

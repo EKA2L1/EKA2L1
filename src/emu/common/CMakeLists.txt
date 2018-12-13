@@ -3,6 +3,7 @@ add_library(common
     include/common/algorithm.h
     include/common/buffer.h
     include/common/bytepair.h
+    include/common/chunkyseri.h
     include/common/cvt.h
     include/common/data_displayer.h
     include/common/fileutils.h
@@ -19,6 +20,7 @@ add_library(common
     include/common/virtualmem.h
     src/algorithm.cpp
     src/bytepair.cpp
+    src/chunkyseri.cpp
     src/cvt.cpp
     src/data_displayer.cpp
     src/fileutils.cpp

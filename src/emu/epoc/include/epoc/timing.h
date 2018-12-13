@@ -46,6 +46,10 @@ namespace eka2l1 {
         uint64_t event_user_data;
     };
 
+    namespace common {
+        class chunkyseri;
+    }
+
     // class NTimer
     class timing_system {
         int slice_len;
@@ -121,6 +125,9 @@ namespace eka2l1 {
         void restore_register_event(int event_type, const std::string &name, timed_callback callback);
         void unregister_all_events();
 
+        // Swap userdata, returns doing nothing if event is not present
+        void swap_userdata_event(int event_type, std::uint64_t old_userdata, std::uint64_t new_userdata);
+
         void schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata = 0);
         void schedule_event_imm(int event_type, uint64_t userdata = 0);
         void unschedule_event(int event_type, uint64_t userdata);
@@ -143,6 +150,8 @@ namespace eka2l1 {
         void set_clock_frequency_mhz(int cpu_mhz);
         uint32_t get_clock_frequency_mhz();
         int get_downcount();
+        
+        void do_state(common::chunkyseri &seri);
     };
 }
 

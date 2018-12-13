@@ -24,6 +24,7 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/chunkyseri.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/random.h>
@@ -251,6 +252,8 @@ namespace eka2l1 {
         bool install_rpkg(const std::string &path);
         void load_scripts();
 
+        void do_state(common::chunkyseri &seri);
+
         /*! \brief Install a SIS/SISX. */
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);
@@ -278,6 +281,11 @@ namespace eka2l1 {
             }
         }
 #endif
+    }
+    
+    void system_impl::do_state(common::chunkyseri &seri) {
+        // Save timing first
+        timing.do_state(seri);
     }
 
     void system_impl::init() {
@@ -711,5 +719,9 @@ namespace eka2l1 {
 
     hal_ptr system::get_hal(uint32_t category) {
         return impl->get_hal(category);
+    }
+    
+    void system::do_state(common::chunkyseri &seri) {
+        return impl->do_state(seri);
     }
 }
