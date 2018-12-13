@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <common/log.h>
+#include <common/chunkyseri.h>
 
 #include <epoc/kernel.h>
 #include <epoc/kernel/mutex.h>
@@ -215,54 +216,39 @@ namespace eka2l1 {
             return true;
         }
 
-        void mutex::write_object_to_snapshot(common::wo_buf_stream &stream) {
-            kernel_obj::write_object_to_snapshot(stream);
+        void mutex::do_state(common::chunkyseri &seri) {
+            std::uint64_t holding_id = (holding ? holding->unique_id() : 0);
+            seri.absorb(holding_id);
 
-            stream.write(&holding->uid, sizeof(holding->uid));
-
-            const std::size_t total_waits = waits.size();
-            const std::size_t total_suspend = suspended.size();
-
-            stream.write(&total_waits, sizeof(total_waits));
-            for (const auto &wait : waits) {
-                stream.write(&wait->uid, sizeof(wait->uid));
+            if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+                holding = std::dynamic_pointer_cast<kernel::thread>(
+                    kern->get_kernel_obj_by_id(holding_id));
             }
 
-            stream.write(&total_suspend, sizeof(total_suspend));
-            for (const auto &sus : suspended) {
-                stream.write(&sus->uid, sizeof(sus->uid));
-            }
-        }
-
-        void mutex::do_state(common::ro_buf_stream &stream) {
-            kernel_obj::do_state(stream);
-
-            std::uint64_t holding_id;
-            stream.read(&holding_id, sizeof(holding_id));
-
-            holding = std::dynamic_pointer_cast<kernel::thread>(
-                kern->get_kernel_obj_by_id(holding_id));
-
-            std::size_t total_waits;
-            stream.read(&total_waits, sizeof(total_waits));
+            std::uint32_t total_waits = static_cast<std::uint32_t>(waits.size());
+            seri.absorb(total_waits);
 
             for (size_t i = 0; i < total_waits; i++) {
-                std::uint64_t wait_thr_id;
-                stream.read(&wait_thr_id, sizeof(wait_thr_id));
+                std::uint64_t wait_thr_id = (waits.empty() ? 0 : (*(waits.begin() + i))->unique_id());
+                seri.absorb(wait_thr_id);
 
-                waits.push(std::dynamic_pointer_cast<kernel::thread>(
-                        kern->get_kernel_obj(wait_thr_id)));
+                if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+                    waits.push(std::dynamic_pointer_cast<kernel::thread>(
+                            kern->get_kernel_obj_by_id(wait_thr_id)));
+                }
             }
 
-            std::size_t total_suspend;
-            stream.read(&total_suspend, sizeof(total_suspend));
+            std::uint32_t total_suspended = static_cast<std::uint32_t>(suspended.size());
+            seri.absorb(total_suspended);
 
-            for (size_t i = 0; i < total_suspend; i++) {
+            for (size_t i = 0; i < total_suspended; i++) {
                 std::uint64_t sus_thr_id;
-                stream.read(&sus_thr_id, sizeof(sus_thr_id));
+                seri.absorb(sus_thr_id);
 
-                suspended.push_back(std::dynamic_pointer_cast<kernel::thread>(
-                    kern->get_kernel_obj(sus_thr_id)));
+                if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+                    suspended.push_back(std::dynamic_pointer_cast<kernel::thread>(
+                        kern->get_kernel_obj_by_id(sus_thr_id)));
+                }
             }
         }
     }

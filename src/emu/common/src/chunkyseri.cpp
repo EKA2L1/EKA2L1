@@ -21,6 +21,8 @@
 #include <common/chunkyseri.h>
 #include <common/log.h>
 
+#include <type_traits>
+
 #include <string.h>
 
 namespace eka2l1::common {    
@@ -72,7 +74,6 @@ namespace eka2l1::common {
         return true;
     }
 
-    template <>
     void chunkyseri::absorb(std::string &dat) {
         std::uint32_t s = static_cast<std::uint32_t>(dat.size());
         absorb_impl(reinterpret_cast<std::uint8_t*>(&s), sizeof(std::uint32_t));
@@ -84,7 +85,6 @@ namespace eka2l1::common {
         absorb_impl(reinterpret_cast<std::uint8_t*>(&dat[0]), s);
     }
 
-    template <>
     void chunkyseri::absorb(std::u16string &dat) {
         std::uint32_t s = static_cast<std::uint32_t>(dat.size());
         absorb_impl(reinterpret_cast<std::uint8_t*>(&s), sizeof(std::uint32_t));
@@ -96,62 +96,6 @@ namespace eka2l1::common {
         absorb_impl(reinterpret_cast<std::uint8_t*>(&dat[0]), s * 2);
     }
 
-    template <>
-    void chunkyseri::absorb(std::uint8_t &dat) {
-        absorb_impl(&dat, sizeof(std::uint8_t));
-    }
-    
-    template <>
-    void chunkyseri::absorb(std::uint32_t &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(std::uint32_t));
-    }
-    
-    template <>
-    void chunkyseri::absorb(std::uint64_t &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(std::uint64_t));
-    }
-    
-    template <>
-    void chunkyseri::absorb(std::int8_t &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(std::int8_t));
-    }
-    
-    template <>
-    void chunkyseri::absorb(std::int32_t &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(std::int32_t));
-    }
-    
-    template <>
-    void chunkyseri::absorb(std::int64_t &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(std::int64_t));
-    }
-    
-    template <>
-    void chunkyseri::absorb(std::uint16_t &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(std::uint16_t));
-    }
-
-    template <>
-    void chunkyseri::absorb(std::int16_t &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(std::int16_t));
-    }
-
-    // TODO: The IEEE may different in many platforms and cpus
-    template <>
-    void chunkyseri::absorb(float &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(float));
-    }
-    
-    template <>
-    void chunkyseri::absorb(double &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(double));
-    }
-    
-    template <>
-    void chunkyseri::absorb(long double &dat) {
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(long double));
-    }
-    
     bool chunkyseri::do_marker(const std::string &name, std::uint16_t cookie) {
         std::uint16_t ca = cookie;
         absorb(ca);

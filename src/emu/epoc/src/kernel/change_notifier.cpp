@@ -24,6 +24,7 @@
 
 #include <epoc/kernel/change_notifier.h>
 
+#include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/random.h>
 
@@ -68,22 +69,16 @@ namespace eka2l1 {
             request_status = 0;
         }
 
-        void change_notifier::write_object_to_snapshot(common::wo_buf_stream &stream) {
-            kernel_obj::write_object_to_snapshot(stream);
+        void change_notifier::do_state(common::chunkyseri &seri) {
+            std::uint64_t requester_id = (requester ? 0 : requester->unique_id());
 
-            const std::uint64_t requester_id = requester->unique_id();
+            seri.absorb(requester_id);
+            seri.absorb(request_status.ptr_address());
 
-            stream.write(&requester_id, sizeof(requester_id));
-            stream.write(&request_status, sizeof(request_status));
-        }
-
-        void change_notifier::do_state(common::ro_buf_stream &stream) {
-            std::uint64_t requester_id = 0;
-            stream.read(&requester_id, sizeof(requester_id));
-            stream.read(&request_status, sizeof(request_status));
-
-            requester = std::dynamic_pointer_cast<kernel::thread>
-                (kern->get_kernel_obj_by_id(requester_id));
+            if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+                requester = std::dynamic_pointer_cast<kernel::thread>
+                    (kern->get_kernel_obj_by_id(requester_id));
+            }
         }
     }
 }

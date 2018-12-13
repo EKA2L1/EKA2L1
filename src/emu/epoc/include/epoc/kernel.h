@@ -82,6 +82,10 @@ namespace eka2l1 {
         class arm_interface;
     }
 
+    namespace common {
+        class chunkyseri;
+    }
+
     class kernel_system {
         friend class debugger_base;
         friend class imgui_debugger;
@@ -113,6 +117,8 @@ namespace eka2l1 {
         uint32_t create_handle_lastest(kernel::owner_type owner);
 
         mutable std::atomic<uint64_t> uid_counter;
+
+        void do_state_of(common::chunkyseri &seri, const kernel::object_type t);
 
     public:
         uint64_t next_uid() const;
@@ -281,6 +287,6 @@ namespace eka2l1 {
         void set_handle_owner_type(int handle);
         bool should_terminate();
 
-        bool save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids);
+        void do_state(common::chunkyseri &seri);
     };
 }

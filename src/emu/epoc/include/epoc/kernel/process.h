@@ -47,6 +47,10 @@ namespace eka2l1 {
 
     using thread_ptr = std::shared_ptr<kernel::thread>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
+
+    namespace common {
+        class chunkyseri;
+    }
 }
 
 namespace eka2l1::kernel {
@@ -123,6 +127,8 @@ namespace eka2l1::kernel {
             explicit logon_request_form(thread_ptr thr, eka2l1::ptr<epoc::request_status> rsts)
                 : requester(thr)
                 , request_status(rsts) {}
+
+            void do_state(common::chunkyseri &seri);
         };
 
         process_exit_type exit_type;

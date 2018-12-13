@@ -20,6 +20,8 @@
 #include <epoc/kernel.h>
 #include <epoc/kernel/kernel_obj.h>
 
+#include <common/chunkyseri.h>
+
 #include <cstdio>
 
 namespace eka2l1 {
@@ -31,23 +33,18 @@ namespace eka2l1 {
             , uid(kern->next_uid()) {
         }
 
-        void kernel_obj::write_object_to_snapshot(common::wo_buf_stream &stream) {
-            // Write neccessary informations
-            stream.write(&uid, sizeof(std::uint64_t));
-            stream.write(&obj_type, sizeof(obj_type));
-            stream.write(&access, sizeof(access));
-            stream.write(&access_count, sizeof(access_count));
+        void kernel_obj::do_state(common::chunkyseri &seri) {
+            auto s = seri.section("KernelObject", 1);
 
-            stream.write_string(obj_name);
-        }
+            if (!s) {
+                return;
+            }
 
-        void kernel_obj::do_state(common::ro_buf_stream &stream) {
-            stream.read(&uid, sizeof(std::uint64_t));
-            stream.read(&obj_type, sizeof(obj_type));
-            stream.read(&access, sizeof(access));
-            stream.read(&access_count, sizeof(access_count));
-
-            obj_name = std::move(stream.read_string());
+            seri.absorb(obj_name);
+            seri.absorb(uid);
+            seri.absorb(obj_type);
+            seri.absorb(access);
+            seri.absorb(access_count);
         }
     }
 }

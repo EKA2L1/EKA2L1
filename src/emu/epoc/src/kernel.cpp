@@ -26,6 +26,7 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/chunkyseri.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -764,7 +765,104 @@ namespace eka2l1 {
         return thr_sch->should_terminate();
     }
 
-    bool kernel_system::save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids) {
-        return true;
+    void kernel_system::do_state_of(common::chunkyseri &seri, const kernel::object_type t) {
+        for (auto &o: objects) {
+            if (o->get_object_type() == t) {
+                o->do_state(seri);
+            }
+        }
+    }
+    
+    struct kernel_info {
+        std::uint32_t total_chunks;
+        std::uint32_t total_mutex;
+        std::uint32_t total_semaphore;
+        std::uint32_t total_thread;
+        std::uint32_t total_timer;
+        std::uint32_t total_prop;
+        std::uint32_t total_process;
+    };
+
+    void kernel_system::do_state(common::chunkyseri &seri) {
+        auto s = seri.section("Kernel", 1);
+
+        if (!s) {
+            return;
+        }
+
+        kernel_info info;
+
+        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+            for (const auto &obj: objects) {
+                switch (obj->get_object_type()) {
+                case kernel::object_type::process: {
+                    info.total_process++;
+                    break;
+                }
+
+                case kernel::object_type::chunk: {
+                    info.total_chunks++;
+                    break;
+                }
+
+                case kernel::object_type::mutex: {
+                    info.total_mutex++;
+                    break;
+                }
+
+                case kernel::object_type::sema: {
+                    info.total_semaphore++;
+                    break;
+                }
+
+                case kernel::object_type::thread: {
+                    info.total_thread++;
+                    break;
+                }
+
+                case kernel::object_type::timer: {
+                    info.total_timer++;
+                    break;
+                }
+
+                case kernel::object_type::prop: {
+                    info.total_prop++;
+                    break;
+                }
+
+                default: {
+                    LOG_ERROR("Unsupported save object");
+                    return;
+                }
+                }
+            }
+        }
+
+        seri.absorb(info.total_process);
+        seri.absorb(info.total_chunks);
+        seri.absorb(info.total_mutex);
+        seri.absorb(info.total_semaphore);
+        seri.absorb(info.total_thread);
+        seri.absorb(info.total_timer);
+        seri.absorb(info.total_prop);
+        
+        // First, loading all the neccessary info first
+        
+        // NOTICE: The order of loading is alter with the absorb order of the kernel info struct
+
+        do_state_of(seri, kernel::object_type::process);
+        do_state_of(seri, kernel::object_type::chunk);
+        do_state_of(seri, kernel::object_type::mutex);
+        do_state_of(seri, kernel::object_type::sema);
+        do_state_of(seri, kernel::object_type::thread);
+        do_state_of(seri, kernel::object_type::timer);
+        do_state_of(seri, kernel::object_type::prop);
+
+        std::uint64_t uidc = uid_counter.load();
+        seri.absorb(uidc);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+            uid_counter = uidc;
+        }
     }
 }

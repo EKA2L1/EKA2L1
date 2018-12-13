@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 #include <string>
 #include <vector>
 
@@ -50,7 +51,6 @@ namespace eka2l1::common {
         std::uint8_t *buf;
         chunkyseri_mode mode;
 
-        void absorb_impl(std::uint8_t *dat, const std::size_t s);
         bool do_marker(const std::string &name, std::uint16_t cookie = 0x18);
 
     public:
@@ -66,9 +66,20 @@ namespace eka2l1::common {
             const std::int16_t ver);
 
         bool expect(const std::uint8_t *dat, const std::size_t s);
+        void absorb_impl(std::uint8_t *dat, const std::size_t s);
 
         template <typename T>
-        void absorb(T &dat);
+        std::enable_if_t<std::is_integral_v<T>> absorb(T &dat) {
+            absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(T));
+        }
+        
+        template <typename T>
+        std::enable_if_t<std::is_enum_v<T>> absorb(T &dat) {
+            absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(T));
+        }
+
+        void absorb(std::string &dat);
+        void absorb(std::u16string &dat);
 
         template <typename T, typename F>
         void absorb_container(std::vector<T> &c, F func) {

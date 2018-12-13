@@ -186,7 +186,7 @@ namespace eka2l1 {
 
         entry_info info = *io->get_entry_info(full_path);
 
-        filestat->st_size = static_cast<_off_t>(info.size);
+        filestat->st_size = static_cast<off_t>(info.size);
         filestat->st_mode = static_cast<decltype(filestat->st_mode)>(0777);
         filestat->st_mtime = info.last_write / 1000000000;
     }

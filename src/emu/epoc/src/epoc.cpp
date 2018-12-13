@@ -552,22 +552,6 @@ namespace eka2l1 {
 
     bool system_impl::save_snapshot_processes(const std::string &path,
         const std::vector<uint32_t> &include_uids) {
-        page_table *pt = mem.get_current_page_table();
-
-        // Can't snapshot if no memory page table is present
-        if (!pt) {
-            return false;
-        }
-
-        FILE *f = fopen(path.data(), "wb");
-
-        // Start writing the magic header
-        const char *magic_header = "SNAE";
-        fwrite(magic_header, 1, 4, f);
-
-        // Kernel object saving
-        kern.save_snapshot_for_processes(f, include_uids);
-        
         return true;
     }
     
