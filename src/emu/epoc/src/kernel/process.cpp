@@ -335,7 +335,7 @@ namespace eka2l1::kernel {
                 img = libmngr->load_e32img(common::utf8_to_ucs2(process_name));
                 romimg = nullptr;
 
-                // Lib manager only saves the cache list but not the loader list.
+                // Lib manager only saves a brief information of the cache list but not the loader list.
                 // Must open image again, however, it's XIP since the code memory region is preserved.
                 libmngr->open_e32img(img);
             } else {

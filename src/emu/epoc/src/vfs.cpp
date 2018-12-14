@@ -548,15 +548,17 @@ namespace eka2l1 {
                 }
             }
 
-            size_t lib_pos = new_path.find(u"\\system\\lib");
+            std::u16string replace_hack_str = u"\\system\\libs";
+            size_t lib_pos = new_path.find(replace_hack_str);
 
             if (lib_pos == std::string::npos) {
-                lib_pos = new_path.find(u"\\system\\programs");
+                replace_hack_str = u"\\system\\programs";
+                lib_pos = new_path.find(replace_hack_str);
             }
 
             // TODO (bentokun): Remove this hack with a proper symlink system.
             if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-                new_path.replace(lib_pos, 12, u"\\sys\\bin");
+                new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
             }
     
             return new_path;
@@ -873,16 +875,17 @@ namespace eka2l1 {
                 }
             }
 
-            size_t lib_pos = new_path.find(u"\\system\\lib");
+            std::u16string replace_hack_str = u"\\system\\libs";
+            size_t lib_pos = new_path.find(replace_hack_str);
 
             if (lib_pos == std::string::npos) {
-                lib_pos = new_path.find(u"\\system\\programs");
+                replace_hack_str = u"\\system\\programs";
+                lib_pos = new_path.find(replace_hack_str);
             }
 
             // TODO (bentokun): Remove this hack with a proper symlink system.
-            if (lib_pos != std::string::npos && 
-                static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-                new_path.replace(lib_pos, 12, u"\\sys\\bin");
+            if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+                new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
             }
             
             auto entry = burn_tree_find_entry(common::ucs2_to_utf8(new_path));
