@@ -277,7 +277,7 @@ namespace eka2l1 {
         bool success = io->delete_entry(path);
 
         if (!success) {
-            ctx.set_request_status(KErrGeneral);
+            ctx.set_request_status(KErrNotFound);
             return;
         }
 
@@ -293,8 +293,9 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
+        // Please don't remove the seperator, absolute path needs this to determine root directory
         session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())] = 
-            eka2l1::root_name(ctx.msg->own_thr->owning_process()->get_exe_path(), true);
+            eka2l1::root_name(ctx.msg->own_thr->owning_process()->get_exe_path(), true) + u'\\';
 
         server::connect(ctx);
     }
@@ -331,7 +332,9 @@ namespace eka2l1 {
         uint32_t uid = std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type());
         std::string hex_id = common::to_string(uid, std::hex);
 
-        session_paths[ctx.msg->msg_session->unique_id()] = drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+        session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())] = 
+            drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+
         ctx.set_request_status(KErrNone);
     }
 
@@ -354,7 +357,8 @@ namespace eka2l1 {
         if (ctx.sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
             ctx.write_arg_pkg<uint64_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
         } else {
-            ctx.write_arg_pkg<uint32_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
+            ctx.write_arg_pkg<uint32_t>(0, 
+                static_cast<std::uint32_t>(std::reinterpret_pointer_cast<file>(node->vfs_node)->size()));
         }
 
         ctx.set_request_status(KErrNone);
@@ -594,9 +598,10 @@ namespace eka2l1 {
 
         if (!new_path) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
-        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
+        std::u16string ss_path = session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())];
 
         auto new_path_abs = eka2l1::absolute_path(*new_path, ss_path);
         bool res = ctx.sys->get_io_system()->rename(vfs_file->file_name(), new_path_abs);
@@ -652,8 +657,8 @@ namespace eka2l1 {
         int write_len = *ctx.get_arg<int>(1);
         int write_pos_provided = *ctx.get_arg<int>(2);
 
-        int write_pos = 0;
-        uint64_t last_pos = vfs_file->tell();
+        std::uint64_t write_pos = 0;
+        std::uint64_t last_pos = vfs_file->tell();
         bool should_reseek = false;
 
         write_pos = last_pos;
@@ -789,6 +794,19 @@ namespace eka2l1 {
             return;
         }
 
+        *name_res = eka2l1::absolute_path(*name_res, 
+            session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())]);
+
+        {
+            auto file_dir = eka2l1::file_directory(*name_res);
+
+            // Do a check to return KErrPathNotFound
+            if (!ctx.sys->get_io_system()->exist(file_dir)) {
+                ctx.set_request_status(KErrPathNotFound);
+                return;
+            }
+        }
+
         LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
 
         int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res,
@@ -814,6 +832,11 @@ namespace eka2l1 {
             return;
         }
 
+        // LOG_TRACE("Opening exist {}", common::ucs2_to_utf8(*name_res));
+
+        *name_res = eka2l1::absolute_path(*name_res, 
+            session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())]);
+
         // Don't open file if it doesn't exist
         if (!ctx.sys->get_io_system()->exist(*name_res)) {
             ctx.set_request_status(KErrNotFound);
@@ -837,11 +860,11 @@ namespace eka2l1 {
 
         io_system *io = ctx.sys->get_io_system();
 
-        auto full_path = eka2l1::absolute_path(
-            session_paths[ctx.msg->msg_session->unique_id()], *dir_create);
+        auto full_path = eka2l1::absolute_path(*dir_create, 
+            session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())]);
 
         if (!io->exist(full_path)) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(KErrPathNotFound);
             return;
         }
 
@@ -1220,7 +1243,7 @@ namespace eka2l1 {
         node.vfs_node = ctx.sys->get_io_system()->open_dir(*dir, attrib);
 
         if (!node.vfs_node) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(KErrPathNotFound);
             return;
         }
 
