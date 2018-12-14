@@ -398,6 +398,7 @@ namespace eka2l1 {
             , attrib(attrib)
             , inst(inst)
             , peeking(false) {
+            iterator.detail = true;
         }
 
         std::optional<entry_info> get_next_entry() override {
