@@ -4,6 +4,7 @@ add_library(common
     include/common/buffer.h
     include/common/bytepair.h
     include/common/chunkyseri.h
+    include/common/cpudetect.h
     include/common/cvt.h
     include/common/data_displayer.h
     include/common/fileutils.h
@@ -19,6 +20,7 @@ add_library(common
     include/common/types.h
     include/common/virtualmem.h
     src/algorithm.cpp
+    src/arm_cpudetect.cpp
     src/bytepair.cpp
     src/chunkyseri.cpp
     src/cvt.cpp
