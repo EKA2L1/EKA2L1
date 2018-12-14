@@ -20,7 +20,7 @@ pybind11_add_module(symemu_common
     src/common.cpp)
 
 target_include_directories(symemu PUBLIC include  ${EPOC32_INCLUDE_DIR})
-target_link_libraries(symemu PRIVATE common core corekernel)
+target_link_libraries(symemu PRIVATE common epoc epockern manager)
 
 if (ENABLE_SCRIPTING_ABILITY)
     target_link_libraries(symemu PUBLIC pybind11)

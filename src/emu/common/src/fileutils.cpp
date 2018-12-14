@@ -73,7 +73,7 @@ namespace eka2l1::common {
             return FILE_DEVICE;
         }
 
-        if (att & FILE_ATTRIBUTE_NORMAL) {
+        if ((att & FILE_ATTRIBUTE_NORMAL) || (att & FILE_ATTRIBUTE_ARCHIVE)) {
             return FILE_REGULAR;
         }
 

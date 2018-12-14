@@ -29,6 +29,7 @@
 #include <epoc/configure.h>
 
 #ifdef ENABLE_SCRIPTING
+#include <manager/manager.h>
 #include <manager/script_manager.h>
 #endif
 

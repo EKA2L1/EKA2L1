@@ -28,6 +28,7 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/random.h>
+#include <common/fileutils.h>
 
 #include <disasm/disasm.h>
 
@@ -275,8 +276,8 @@ namespace eka2l1 {
         common::dir_entry scripts_entry;
 
         while (scripts_dir.next_entry(scripts_entry) == 0) {
-            if ((scripts_entry.type == FILE_REGULAR) && path_extension(scripts_entry.full_path) == ".py") {
-                auto module_name = replace_extension(filename(scripts_entry.full_path), ".py");
+            if ((scripts_entry.type == common::FILE_REGULAR) && path_extension(scripts_entry.name) == ".py") {
+                auto module_name = replace_extension(filename(scripts_entry.name), "");
                 mngr.get_script_manager()->import_module("scripts/" + module_name);
             }
         }

@@ -35,7 +35,8 @@
 #include <epoc/kernel.h>
 
 #ifdef ENABLE_SCRIPTING
-#include <epoc/manager/script_manager.h>
+#include <manager/manager.h>
+#include <manager/script_manager.h>
 #endif
 
 #include <common/cvt.h>

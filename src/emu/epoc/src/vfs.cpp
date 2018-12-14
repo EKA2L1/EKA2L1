@@ -438,6 +438,16 @@ namespace eka2l1 {
                 entry_info info = *(inst->get_entry_info(common::utf8_to_ucs2(
                     eka2l1::add_path(vir_path, name))));
 
+                // Symbian usually sensitive about null terminator.
+                // It's best not include them.
+                if (info.name.back() == '\0') {
+                    info.name.erase(info.name.length() - 1);
+                }
+
+                if (info.full_path.back() == '\0') {
+                    info.full_path.erase(info.full_path.length() - 1);
+                }
+
                 return info;
             }
 

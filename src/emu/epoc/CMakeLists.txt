@@ -189,6 +189,10 @@ target_link_libraries(epockern PRIVATE
     tz
 )
 
+if (ENABLE_SCRIPTING_ABILITY)
+    target_link_libraries(epockern PRIVATE manager)
+endif()
+
 add_library(epoc
     include/epoc/epoc.h
     src/epoc.cpp)
@@ -207,5 +211,20 @@ target_link_libraries(epoc PRIVATE
     gdbstub
     manager)
 
-configure_file(include/epoc/configure.h.in
-    include/epoc/configure.h)
+execute_process(
+    COMMAND git rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+    COMMAND git log -1 --format=%h
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+    
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/epoc/configure.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/epoc/configure.h)
