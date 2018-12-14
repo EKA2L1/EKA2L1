@@ -81,6 +81,18 @@ namespace eka2l1::common {
         void absorb(std::string &dat);
         void absorb(std::u16string &dat);
 
+        template <typename T>
+        void absorb_container(std::vector<T> &c) {
+            std::uint32_t s = static_cast<std::uint32_t>(c.size());
+            absorb(s);
+
+            if (mode == SERI_MODE_WRITE) {
+                c.resize(s);
+            }
+
+            absorb_impl(&c[0], s);
+        }
+
         template <typename T, typename F>
         void absorb_container(std::vector<T> &c, F func) {
             std::uint32_t s = static_cast<std::uint32_t>(c.size());
@@ -92,6 +104,20 @@ namespace eka2l1::common {
 
             for (auto &member: c) {
                 func(*this, member);
+            }
+        }
+
+        template <typename T>
+        void absorb_container_do(std::vector<T> &c) {
+            std::uint32_t s = static_cast<std::uint32_t>(c.size());
+            absorb(s);
+
+            if (mode == SERI_MODE_WRITE) {
+                c.resize(s);
+            }
+
+            for (auto &m: c) {
+                m.do_state(*this);
             }
         }
     };

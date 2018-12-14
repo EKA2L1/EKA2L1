@@ -64,6 +64,8 @@ namespace eka2l1::kernel {
     struct pass_arg {
         bool                      used = false;
         std::vector<std::uint8_t> data;
+
+        void do_state(common::chunkyseri &seri);
     };
 
     struct security_info {
@@ -96,7 +98,7 @@ namespace eka2l1::kernel {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
 
-        uint32_t uid, primary_thread;
+        uint32_t puid, primary_thread;
 
         std::string process_name;
 
@@ -124,11 +126,13 @@ namespace eka2l1::kernel {
             thread_ptr requester;
             eka2l1::ptr<epoc::request_status> request_status;
 
+            logon_request_form() = default;
+
             explicit logon_request_form(thread_ptr thr, eka2l1::ptr<epoc::request_status> rsts)
                 : requester(thr)
                 , request_status(rsts) {}
 
-            void do_state(common::chunkyseri &seri);
+            void do_state(kernel_system* kern, common::chunkyseri &seri);
         };
 
         process_exit_type exit_type;
@@ -160,7 +164,7 @@ namespace eka2l1::kernel {
 
         void finish_logons();
 
-        process() = default;
+        process(kernel_system *kern, memory_system *mem);
 
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
@@ -196,7 +200,7 @@ namespace eka2l1::kernel {
         }
 
         uint32_t get_uid() {
-            return uid;
+            return puid;
         }
 
         loader::e32img_ptr get_e32img() {
@@ -239,5 +243,7 @@ namespace eka2l1::kernel {
         void set_exit_type(const process_exit_type t) {
             exit_type = t;
         }
+
+        void do_state(common::chunkyseri &seri);
     };
 }

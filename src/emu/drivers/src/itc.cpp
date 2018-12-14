@@ -49,7 +49,7 @@ namespace eka2l1::drivers {
     vec2 graphics_driver_client::screen_size() {
         // Synchronize call should directly use the client
         std::shared_ptr<graphics_driver> gdriver = 
-            std::dynamic_pointer_cast<graphics_driver>(driver);
+            std::reinterpret_pointer_cast<graphics_driver>(driver);
 
         return gdriver->get_screen_size();
     }

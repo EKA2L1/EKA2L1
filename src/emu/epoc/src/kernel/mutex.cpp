@@ -221,7 +221,7 @@ namespace eka2l1 {
             seri.absorb(holding_id);
 
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                holding = std::dynamic_pointer_cast<kernel::thread>(
+                holding = std::reinterpret_pointer_cast<kernel::thread>(
                     kern->get_kernel_obj_by_id(holding_id));
             }
 
@@ -233,7 +233,7 @@ namespace eka2l1 {
                 seri.absorb(wait_thr_id);
 
                 if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                    waits.push(std::dynamic_pointer_cast<kernel::thread>(
+                    waits.push(std::reinterpret_pointer_cast<kernel::thread>(
                             kern->get_kernel_obj_by_id(wait_thr_id)));
                 }
             }
@@ -246,7 +246,7 @@ namespace eka2l1 {
                 seri.absorb(sus_thr_id);
 
                 if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                    suspended.push_back(std::dynamic_pointer_cast<kernel::thread>(
+                    suspended.push_back(std::reinterpret_pointer_cast<kernel::thread>(
                         kern->get_kernel_obj_by_id(sus_thr_id)));
                 }
             }

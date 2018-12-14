@@ -788,7 +788,7 @@ namespace eka2l1::epoc {
         epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr = std::dynamic_pointer_cast<kernel::process>(kern->get_kernel_obj(aProcessHandle));
+        process_ptr pr = std::reinterpret_pointer_cast<kernel::process>(kern->get_kernel_obj(aProcessHandle));
         query_security_info(pr, sec_info);
     }
 
@@ -796,7 +796,7 @@ namespace eka2l1::epoc {
         epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
-        thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj(aThreadHandle));
+        thread_ptr thr = std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj(aThreadHandle));
 
         if (!thr) {
             LOG_ERROR("Thread handle invalid 0x{:x}", aThreadHandle);
@@ -1072,7 +1072,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        chunk_ptr chunk = std::dynamic_pointer_cast<kernel::chunk>(obj);
+        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
         return static_cast<TInt>(chunk->get_max_size());
     }
 
@@ -1083,7 +1083,7 @@ namespace eka2l1::epoc {
             return 0;
         }
 
-        chunk_ptr chunk = std::dynamic_pointer_cast<kernel::chunk>(obj);
+        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
         return chunk->base();
     }
 
@@ -1094,7 +1094,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        chunk_ptr chunk = std::dynamic_pointer_cast<kernel::chunk>(obj);
+        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
 
         auto fetch = [aType](chunk_ptr chunk, int a1, int a2) -> bool {
             switch (aType) {
@@ -1155,7 +1155,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+        sema_ptr sema = std::reinterpret_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
 
         if (!sema) {
             return KErrBadHandle;
@@ -1173,7 +1173,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+        sema_ptr sema = std::reinterpret_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
 
         if (!sema) {
             return;
@@ -1186,7 +1186,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        sema_ptr sema = std::dynamic_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+        sema_ptr sema = std::reinterpret_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
 
         if (!sema) {
             return;
@@ -1342,7 +1342,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        library_ptr lib = std::dynamic_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+        library_ptr lib = std::reinterpret_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
 
         if (!lib) {
             return KErrBadHandle;
@@ -1363,7 +1363,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        library_ptr lib = std::dynamic_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+        library_ptr lib = std::reinterpret_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
 
         if (!lib) {
             return 0;
@@ -1382,7 +1382,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        library_ptr lib = std::dynamic_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+        library_ptr lib = std::reinterpret_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
 
         if (!lib) {
             return KErrBadHandle;
@@ -1955,7 +1955,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds) {
         kernel_system *kern = sys->get_kernel_system();
-        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+        timer_ptr timer = std::reinterpret_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
 
         if (!timer) {
             return;
@@ -1966,7 +1966,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, TimerAtUtc, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TUint64 aMicroSecondsAt) {
         kernel_system *kern = sys->get_kernel_system();
-        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+        timer_ptr timer = std::reinterpret_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
 
         if (!timer) {
             return;
@@ -1977,7 +1977,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, TimerCancel, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        timer_ptr timer = std::dynamic_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+        timer_ptr timer = std::reinterpret_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
 
         if (!timer) {
             return;
@@ -1997,7 +1997,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        change_notifier_ptr cnot = std::dynamic_pointer_cast<kernel::change_notifier>(kern->get_kernel_obj(aHandle));
+        change_notifier_ptr cnot = std::reinterpret_pointer_cast<kernel::change_notifier>(kern->get_kernel_obj(aHandle));
 
         if (!cnot) {
             return KErrBadHandle;

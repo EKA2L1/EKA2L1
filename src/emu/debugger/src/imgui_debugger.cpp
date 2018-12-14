@@ -88,7 +88,7 @@ namespace eka2l1 {
             for (const auto &obj : sys->get_kernel_system()->objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::thread) {
                     std::string obj_name = obj->name();
-                    thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
+                    thread_ptr thr = std::reinterpret_pointer_cast<kernel::thread>(obj);
 
                     chunk_ptr chnk = thr->get_stack_chunk();
 
@@ -131,7 +131,7 @@ namespace eka2l1 {
             for (const auto &obj : sys->get_kernel_system()->objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::chunk) {
                     std::string obj_name = obj->name();
-                    chunk_ptr chnk = std::dynamic_pointer_cast<kernel::chunk>(obj);
+                    chunk_ptr chnk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
                     std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
                     ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s    0x%08X    0x%08X    0x%08X    0x%08lX      %-32s",
@@ -158,7 +158,7 @@ namespace eka2l1 {
 
                 for (const auto &obj : sys->get_kernel_system()->objects) {
                     if (obj && obj->get_object_type() == kernel::object_type::thread) {
-                        threads.push_back(std::dynamic_pointer_cast<kernel::thread>(obj));
+                        threads.push_back(std::reinterpret_pointer_cast<kernel::thread>(obj));
 
                         if (debug_thread_id == obj->unique_id()) {
                             debug_thread = threads.back();

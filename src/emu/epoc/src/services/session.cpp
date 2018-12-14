@@ -130,7 +130,7 @@ namespace eka2l1 {
 
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = std::dynamic_pointer_cast<service::session>(
+            smsg.real_msg->msg_session = std::reinterpret_pointer_cast<service::session>(
                 kern->get_kernel_obj_by_id(uid));
             smsg.real_msg->session_ptr_lle = cookie_address;
 

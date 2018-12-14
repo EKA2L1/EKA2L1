@@ -105,7 +105,7 @@ namespace eka2l1::epoc {
 
     void graphic_context::active(service::ipc_context context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        attached_window = std::dynamic_pointer_cast<epoc::window>(client->get_object(window_to_attach_handle));
+        attached_window = std::reinterpret_pointer_cast<epoc::window>(client->get_object(window_to_attach_handle));
 
         // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
         // this.
@@ -182,7 +182,7 @@ namespace eka2l1::epoc {
     window_server_client::window_server_client(session_ptr guest_session)
         : guest_session(guest_session) {
         add_object(std::make_shared<epoc::window>(this));
-        root = std::dynamic_pointer_cast<epoc::window>(objects.back());
+        root = std::reinterpret_pointer_cast<epoc::window>(objects.back());
     }
 
     void window_server_client::execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds) {
@@ -259,7 +259,7 @@ namespace eka2l1::epoc {
         if (device_handle <= 0) {
             device_ptr = primary_device;
         } else {
-            device_ptr = std::dynamic_pointer_cast<epoc::screen_device>(get_object(device_handle));
+            device_ptr = std::reinterpret_pointer_cast<epoc::screen_device>(get_object(device_handle));
         }
 
         epoc::window_ptr group = std::make_shared<epoc::window_group>(this, device_ptr);
@@ -289,7 +289,7 @@ namespace eka2l1::epoc {
             LOG_WARN("Window handle is invalid, use root");
             win = root;
         } else {
-            win = std::dynamic_pointer_cast<epoc::window>(get_object(sprite_header->window_handle));
+            win = std::reinterpret_pointer_cast<epoc::window>(get_object(sprite_header->window_handle));
         }
 
         std::shared_ptr<epoc::sprite> spr = std::make_shared<epoc::sprite>(this, std::move(win), sprite_header->base_pos);

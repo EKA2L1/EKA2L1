@@ -247,7 +247,7 @@ namespace eka2l1 {
             // Don't change order
             CREATE_SERVER(sys, domainmngr_server);
             
-            auto &dmmngr = std::dynamic_pointer_cast<domainmngr_server>(temp)->get_domain_manager();
+            auto &dmmngr = std::reinterpret_pointer_cast<domainmngr_server>(temp)->get_domain_manager();
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);
 

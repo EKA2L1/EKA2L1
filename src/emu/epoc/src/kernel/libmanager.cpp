@@ -274,8 +274,8 @@ namespace eka2l1 {
             img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), 
                 prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            chunk_ptr code_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
-            chunk_ptr data_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
+            chunk_ptr code_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
+            chunk_ptr data_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
 
             uint32_t rtcode_addr = code_chunk_ptr->base().ptr_address();
             uint32_t rtdata_addr = data_chunk_ptr ? data_chunk_ptr->base().ptr_address() : 0;
@@ -359,8 +359,8 @@ namespace eka2l1 {
             custom_stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            chunk_ptr stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stub));
-            chunk_ptr custom_stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(custom_stub));
+            chunk_ptr stub_chunk_obj = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stub));
+            chunk_ptr custom_stub_chunk_obj = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(custom_stub));
 
             stub_ptr = stub_chunk_obj->base().cast<uint32_t>();
             custom_stub_ptr = custom_stub_chunk_obj->base().cast<uint32_t>();

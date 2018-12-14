@@ -458,12 +458,12 @@ namespace eka2l1 {
     }
 
     bool domain::is_notification_enabled(session_ptr ss) {
-        std::shared_ptr<domain_server> dmsrv = std::dynamic_pointer_cast<domain_server>(ss->get_server());
+        std::shared_ptr<domain_server> dmsrv = std::reinterpret_pointer_cast<domain_server>(ss->get_server());
         return dmsrv->nof_enable[ss->unique_id()];
     }
 
     void domain::set_notification_option(session_ptr ss, const bool val) {
-        std::shared_ptr<domain_server> dmsrv = std::dynamic_pointer_cast<domain_server>(ss->get_server());
+        std::shared_ptr<domain_server> dmsrv = std::reinterpret_pointer_cast<domain_server>(ss->get_server());
         dmsrv->nof_enable[ss->unique_id()] = val;
     }
 

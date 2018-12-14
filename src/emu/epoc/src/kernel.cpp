@@ -176,7 +176,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::process>(*pr_find);
+        return std::reinterpret_pointer_cast<kernel::process>(*pr_find);
     }
 
     process_ptr kernel_system::get_process(uint32_t handle) {
@@ -186,7 +186,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::process>(obj);
+        return std::reinterpret_pointer_cast<kernel::process>(obj);
     }
 
     void kernel_system::prepare_reschedule() {
@@ -458,7 +458,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::thread>(obj);
+        return std::reinterpret_pointer_cast<kernel::thread>(obj);
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj(uint32_t handle) {
@@ -510,7 +510,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::thread>(*thr_find);
+        return std::reinterpret_pointer_cast<kernel::thread>(*thr_find);
     }
 
     std::vector<thread_ptr> kernel_system::get_all_thread_own_process(process_ptr pr) {
@@ -520,7 +520,7 @@ namespace eka2l1 {
 
         for (kernel_obj_ptr &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::thread) {
-                thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
+                thread_ptr thr = std::reinterpret_pointer_cast<kernel::thread>(obj);
 
                 if (thr->own_process == pr) {
                     thr_list.push_back(thr);
@@ -537,7 +537,7 @@ namespace eka2l1 {
 
         for (kernel_obj_ptr &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
-                process_ptr pr = std::dynamic_pointer_cast<kernel::process>(obj);
+                process_ptr pr = std::reinterpret_pointer_cast<kernel::process>(obj);
                 process_list.push_back(pr);
             }
         }
@@ -561,7 +561,7 @@ namespace eka2l1 {
 
         for (const auto &obj: objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
-                processes.push_back(std::dynamic_pointer_cast<kernel::process>(obj));
+                processes.push_back(std::reinterpret_pointer_cast<kernel::process>(obj));
             }
         }
 
@@ -584,7 +584,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::server>(*svr_find);
+        return std::reinterpret_pointer_cast<service::server>(*svr_find);
     }
 
     server_ptr kernel_system::get_server(uint32_t handle) {
@@ -596,7 +596,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::server>(obj);
+        return std::reinterpret_pointer_cast<service::server>(obj);
     }
 
     session_ptr kernel_system::get_session(uint32_t handle) {
@@ -606,7 +606,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::session>(obj);
+        return std::reinterpret_pointer_cast<service::session>(obj);
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {
@@ -615,7 +615,7 @@ namespace eka2l1 {
         auto prop_res = std::find_if(objects.begin(), objects.end(),
             [=](const auto &prop) {
                 if (prop && prop->get_object_type() == kernel::object_type::prop) {
-                    property_ptr real_prop = std::dynamic_pointer_cast<service::property>(prop);
+                    property_ptr real_prop = std::reinterpret_pointer_cast<service::property>(prop);
 
                     if (real_prop->first == cagetory && real_prop->second == key) {
                         return true;
@@ -629,7 +629,7 @@ namespace eka2l1 {
             return property_ptr(nullptr);
         }
 
-        return std::dynamic_pointer_cast<service::property>(*prop_res);
+        return std::reinterpret_pointer_cast<service::property>(*prop_res);
     }
 
     property_ptr kernel_system::get_prop(uint32_t handle) {
@@ -641,7 +641,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::property>(obj);
+        return std::reinterpret_pointer_cast<service::property>(obj);
     }
 
     uint32_t kernel_system::mirror(thread_ptr own_thread, uint32_t handle, kernel::owner_type owner) {
@@ -721,7 +721,7 @@ namespace eka2l1 {
 
             for (auto &obj : objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::server) {
-                    server_ptr svr = std::dynamic_pointer_cast<service::server>(obj);
+                    server_ptr svr = std::reinterpret_pointer_cast<service::server>(obj);
 
                     if (svr->is_hle()) {
                         svrs.push_back(svr);
@@ -838,7 +838,7 @@ namespace eka2l1 {
             }
         }
 
-        seri.absorb(info.total_process);
+        seri.absorb(info.total_process);  
         seri.absorb(info.total_chunks);
         seri.absorb(info.total_mutex);
         seri.absorb(info.total_semaphore);
@@ -847,7 +847,19 @@ namespace eka2l1 {
         seri.absorb(info.total_prop);
         
         // First, loading all the neccessary info first
-        
+        // Create placeholder object
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            for (std::uint32_t i = 0; i < info.total_process; i++) {
+                auto pr = std::make_shared<kernel::process>(this, mem);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(pr)));
+            }
+
+            for (std::uint32_t i = 0; i < info.total_chunks; i++) {
+                auto c = std::make_shared<kernel::chunk>(this, mem);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
+        }
+
         // NOTICE: The order of loading is alter with the absorb order of the kernel info struct
 
         do_state_of(seri, kernel::object_type::process);

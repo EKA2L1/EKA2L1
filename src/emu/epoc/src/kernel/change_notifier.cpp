@@ -76,7 +76,7 @@ namespace eka2l1 {
             seri.absorb(request_status.ptr_address());
 
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                requester = std::dynamic_pointer_cast<kernel::thread>
+                requester = std::reinterpret_pointer_cast<kernel::thread>
                     (kern->get_kernel_obj_by_id(requester_id));
             }
         }

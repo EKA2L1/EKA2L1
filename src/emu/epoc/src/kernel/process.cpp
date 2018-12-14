@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
 
@@ -26,6 +27,7 @@
 
 #include <epoc/kernel/process.h>
 #include <epoc/kernel/scheduler.h>
+#include <epoc/kernel/libmanager.h>
 
 #include <epoc/loader/romimage.h>
 
@@ -55,10 +57,15 @@ namespace eka2l1::kernel {
             mem->set_current_page_table(*last);
         }
 
-        uint32_t dll_lock_handle = kern->create_mutex("dllLockMutexProcess" + common::to_string(uid),
+        uint32_t dll_lock_handle = kern->create_mutex("dllLockMutexProcess" + common::to_string(puid),
             false, kernel::owner_type::kernel, kernel::access_type::local_access);
 
-        dll_lock = std::dynamic_pointer_cast<kernel::mutex>(kern->get_kernel_obj(dll_lock_handle));
+        dll_lock = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(dll_lock_handle));
+    }
+    
+    process::process(kernel_system *kern, memory_system *mem)
+        : kernel_obj(kern), mem(mem), page_tab(mem->get_page_size()) {
+        obj_type = kernel::object_type::process;
     }
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
@@ -66,7 +73,7 @@ namespace eka2l1::kernel {
         const std::u16string &cmd_args, loader::e32img_ptr &img,
         const process_priority pri)
         : kernel_obj(kern, process_name, access_type::local_access)
-        , uid(uid)
+        , puid(uid)
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
@@ -89,7 +96,7 @@ namespace eka2l1::kernel {
         const std::u16string &cmd_args, loader::romimg_ptr &img,
         const process_priority pri)
         : kernel_obj(kern, process_name, access_type::local_access)
-        , uid(uid)
+        , puid(uid)
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
@@ -127,7 +134,7 @@ namespace eka2l1::kernel {
     }
 
     process_uid_type process::get_uid_type() {
-        return std::tuple(0x1000007A, 0x100039CE, uid);
+        return std::tuple(0x1000007A, 0x100039CE, puid);
     }
 
     kernel_obj_ptr process::get_object(uint32_t handle) {
@@ -268,5 +275,110 @@ namespace eka2l1::kernel {
         }
 
         return info;
+    }
+    
+    void process::logon_request_form::do_state(kernel_system *kern, common::chunkyseri &seri) {
+        auto s = seri.section("ProcessLogonRequest", 1);
+
+        if (!s) {
+            return;
+        }
+
+        std::uint64_t requester_id = (requester ? requester->unique_id() : 0);
+
+        seri.absorb(requester_id);
+        seri.absorb(request_status.ptr_address());
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            requester = std::reinterpret_pointer_cast<kernel::thread>(
+                kern->get_kernel_obj_by_id(requester_id));
+        }
+    }
+    
+    void pass_arg::do_state(common::chunkyseri &seri) {
+        auto s = seri.section("PassArg", 1);
+
+        if (!s) {
+            return;
+        }
+
+        seri.absorb(used);
+        seri.absorb_container(data);
+    }
+
+    void process::do_state(common::chunkyseri &seri) {
+        auto s = seri.section("Process", 1);
+
+        if (!s) {
+            return;
+        }
+
+        seri.absorb(puid);
+        seri.absorb(primary_thread);
+        seri.absorb(thread_count);
+        seri.absorb(flags);
+        seri.absorb(priority);
+        seri.absorb(exit_reason);
+        seri.absorb(exit_type);
+        
+        seri.absorb(process_name);
+        seri.absorb(exe_path);
+        seri.absorb(cmd_args);
+
+        bool xip = (img ? false : true);
+        seri.absorb(xip); 
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            hle::lib_manager *libmngr = kern->get_lib_manager();
+
+            if (xip) {
+                img = libmngr->load_e32img(common::utf8_to_ucs2(process_name));
+                romimg = nullptr;
+
+                // Lib manager only saves the cache list but not the loader list.
+                // Must open image again, however, it's XIP since the code memory region is preserved.
+                libmngr->open_e32img(img);
+            } else {
+                img = nullptr;
+                romimg = libmngr->load_romimg(common::utf8_to_ucs2(process_name));
+
+                libmngr->open_romimg(romimg);
+            }
+        }
+
+        for (std::uint8_t i = 0; i < 15; i++) {
+            args[i].do_state(seri);
+        }
+
+        std::uint32_t cs = static_cast<std::uint32_t>(logon_requests.size());
+        seri.absorb(cs);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            logon_requests.resize(cs);
+        }
+
+        for (auto &lr: logon_requests) {
+            lr.do_state(kern, seri);
+        }
+
+        cs = static_cast<std::uint32_t>(rendezvous_requests.size());
+        seri.absorb(cs);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            rendezvous_requests.resize(s);
+        }
+
+        for (auto &rr: rendezvous_requests) {
+            rr.do_state(kern, seri);
+        }
+
+        std::uint64_t dll_lock_uid = (dll_lock ? dll_lock->unique_id() : 0);
+        seri.absorb(dll_lock_uid);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            dll_lock = std::reinterpret_pointer_cast<kernel::mutex>(
+                kern->get_kernel_obj_by_id(dll_lock_uid)
+            );
+        }
     }
 }

@@ -275,7 +275,7 @@ namespace eka2l1 {
             name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
-            request_sema = std::dynamic_pointer_cast<kernel::semaphore>(
+            request_sema = std::reinterpret_pointer_cast<kernel::semaphore>(
                 kern->get_kernel_obj(kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, owner_type::kernel)));
 
             sync_msg = kern->create_msg(owner_type::kernel);
@@ -284,8 +284,8 @@ namespace eka2l1 {
 
             std::u16string name_16(name.begin(), name.end());
 
-            chunk_ptr name_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
-            chunk_ptr stack_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
+            chunk_ptr name_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
+            chunk_ptr stack_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
 
             memcpy(name_chunk_ptr->base().get(mem), name_16.data(), name.length() * 2);
 
@@ -344,7 +344,7 @@ namespace eka2l1 {
         }
 
         bool thread::sleep(uint32_t mssecs) {
-            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(
+            return scheduler->sleep(std::reinterpret_pointer_cast<kernel::thread>(
                 kern->get_kernel_obj_by_id(uid)), mssecs);
         }
 
@@ -352,7 +352,7 @@ namespace eka2l1 {
             assert(!sleep_nof_sts && "Thread supposed to sleep already");
             sleep_nof_sts = sts;
 
-            return scheduler->sleep(std::dynamic_pointer_cast<kernel::thread>(
+            return scheduler->sleep(std::reinterpret_pointer_cast<kernel::thread>(
                 kern->get_kernel_obj_by_id(uid)), mssecs);
         }
 
@@ -377,7 +377,7 @@ namespace eka2l1 {
         }
 
         bool thread::stop() {
-            return scheduler->stop(std::dynamic_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
+            return scheduler->stop(std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
         }
 
         void thread::update_priority() {
@@ -429,7 +429,7 @@ namespace eka2l1 {
         }
 
         bool thread::suspend() {
-            bool res = scheduler->wait(std::dynamic_pointer_cast<kernel::thread>(
+            bool res = scheduler->wait(std::reinterpret_pointer_cast<kernel::thread>(
                 kern->get_kernel_obj_by_id(uid)));
 
             if (!res) {
@@ -461,7 +461,7 @@ namespace eka2l1 {
         }
 
         bool thread::resume() {
-            bool res = scheduler->resume(std::dynamic_pointer_cast<kernel::thread>(
+            bool res = scheduler->resume(std::reinterpret_pointer_cast<kernel::thread>(
                 kern->get_kernel_obj_by_id(uid)));
 
             if (!res) {
@@ -496,8 +496,8 @@ namespace eka2l1 {
             own_process = pr;
             own_process->increase_thread_count();
 
-            chunk_ptr name_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
-            chunk_ptr stack_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
+            chunk_ptr name_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
+            chunk_ptr stack_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
 
             name_chunk_ptr->set_own_process(own_process);
             stack_chunk_ptr->set_own_process(own_process);
@@ -630,7 +630,7 @@ namespace eka2l1 {
         }
 
         chunk_ptr thread::get_stack_chunk() {
-            return std::dynamic_pointer_cast<kernel::chunk>(
+            return std::reinterpret_pointer_cast<kernel::chunk>(
                 kern->get_kernel_obj(stack_chunk));
         }
     }

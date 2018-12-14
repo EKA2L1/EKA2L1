@@ -154,7 +154,7 @@ namespace eka2l1 {
                 if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process &&
                     obj->get_object_type() != object_type::thread) {
                     if (obj->get_object_type() == object_type::chunk) {
-                        chunk_ptr c = std::dynamic_pointer_cast<kernel::chunk>(obj);
+                        chunk_ptr c = std::reinterpret_pointer_cast<kernel::chunk>(obj);
 
                         if (c->is_chunk_heap()) {
                             ret_value = 1;

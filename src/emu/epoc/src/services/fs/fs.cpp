@@ -132,7 +132,7 @@ namespace eka2l1 {
 
     fs_node *fs_handle_table::get_node(const std::u16string &path) {
         for (auto &file_node : nodes) {
-            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) && (std::dynamic_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
+            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) && (std::reinterpret_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
                 return &file_node;
             }
         }
@@ -352,9 +352,9 @@ namespace eka2l1 {
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
         if (ctx.sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
-            ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
+            ctx.write_arg_pkg<uint64_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
         } else {
-            ctx.write_arg_pkg<uint32_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
+            ctx.write_arg_pkg<uint32_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
         }
 
         ctx.set_request_status(KErrNone);
@@ -382,7 +382,7 @@ namespace eka2l1 {
         }
 
         int size = *ctx.get_arg<int>(0);
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
         std::size_t fsize = f->size();
 
         if (size == fsize) {
@@ -438,7 +438,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         TDriveNumber drv = static_cast<TDriveNumber>(std::towlower(f->file_name()[0]) - 'a');
         TDriveInfo info;
@@ -473,7 +473,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         ctx.write_arg(0, eka2l1::filename(f->file_name(), true));
         ctx.set_request_status(KErrNone);
@@ -494,7 +494,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         ctx.write_arg(0, f->file_name());
         ctx.set_request_status(KErrNone);
@@ -515,7 +515,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         std::optional<int> seek_mode = ctx.get_arg<int>(1);
         std::optional<int> seek_off = ctx.get_arg<int>(0);
@@ -564,7 +564,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         if (!vfs_file->flush()) {
             ctx.set_request_status(KErrGeneral);
@@ -589,7 +589,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
         auto new_path = ctx.get_arg<std::u16string>(0);
 
         if (!new_path) {
@@ -642,7 +642,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         if (!(node->open_mode & WRITE_MODE)) {
             ctx.set_request_status(KErrAccessDenied);
@@ -687,7 +687,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         if (!(node->open_mode & READ_MODE)) {
             ctx.set_request_status(KErrAccessDenied);
@@ -742,7 +742,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
         std::u16string path = vfs_file->file_name();
 
         vfs_file->close();
@@ -1274,7 +1274,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(
+        std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(
             dir_node->vfs_node);
 
         epoc::TEntry entry;
@@ -1333,7 +1333,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
+        std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(dir_node->vfs_node);
 
         epoc::TDes8 *entry_arr = reinterpret_cast<epoc::TDes8 *>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(*entry_arr_vir_ptr));
         epoc::TBuf8 *entry_arr_buf = reinterpret_cast<epoc::TBuf8 *>(entry_arr);

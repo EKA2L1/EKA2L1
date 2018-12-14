@@ -94,6 +94,7 @@ namespace eka2l1 {
             kernel_obj(kernel_system *kern) 
                 : kern(kern) { 
             }
+            
         public:
 
             virtual ~kernel_obj() {}
