@@ -23,6 +23,7 @@
 #include <epoc/kernel/chunk.h>
 
 #include <common/log.h>
+#include <common/chunkyseri.h>
 
 #include <algorithm>
 
@@ -74,7 +75,7 @@ namespace eka2l1 {
                 handle |= (1 << 29);
             }
 
-            handles.push(handle);
+            handles.push_back(handle);
 
             return handle;
         }
@@ -104,8 +105,8 @@ namespace eka2l1 {
                 return 0;
             }
 
-            std::uint32_t last = handles.top();
-            handles.pop();
+            std::uint32_t last = handles.back();
+            handles.pop_back();
 
             return last;
         }
@@ -177,5 +178,57 @@ namespace eka2l1 {
             , owner(owner)
             , next_instance(0)
             , uid(kern->next_uid()) {}
+
+    
+        void object_ix::do_state(common::chunkyseri &seri) {
+            auto s = seri.section("ObjectIx", 1);
+
+            if (!s) {
+                return;
+            }
+
+            seri.absorb(uid);
+            seri.absorb(next_instance);
+            seri.absorb(owner);
+
+            std::stack<std::uint16_t> slot_used;
+            std::uint32_t slot_count = 0;
+
+            if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+                for (std::size_t i = 0; i < objects.size(); i++) {
+                    if (!objects[i].free) {
+                        slot_count++;
+                        slot_used.push(static_cast<std::uint16_t>(i));
+                    }
+                }
+            }
+
+            seri.absorb(slot_count);
+
+            std::uint32_t next_slot_use = 0;
+
+            for (std::uint32_t i = 0; i < slot_count; i++) {
+                std::uint64_t obj_id = 0;
+
+                if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+                    next_slot_use = slot_used.top();
+                    slot_used.pop();
+
+                    obj_id = objects[next_slot_use].object->unique_id();
+                }
+
+                seri.absorb(next_slot_use);
+                seri.absorb(obj_id);
+                seri.absorb(objects[next_slot_use].associated_handle);
+
+                if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                    objects[next_slot_use].object = kern->get_kernel_obj_by_id(obj_id);
+                    objects[next_slot_use].free = false;
+                }
+            }
+
+            // Hey, we need to save last thread handle too
+            seri.absorb_container(handles);
+        }
     }
 }

@@ -380,5 +380,9 @@ namespace eka2l1::kernel {
                 kern->get_kernel_obj_by_id(dll_lock_uid)
             );
         }
+
+        // We don't need to do state for page table, eventaully it will be filled in by chunk
+        // Do state for object table
+        process_handles.do_state(seri);
     }
 }

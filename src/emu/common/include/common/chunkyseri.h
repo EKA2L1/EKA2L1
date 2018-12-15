@@ -90,7 +90,9 @@ namespace eka2l1::common {
                 c.resize(s);
             }
 
-            absorb_impl(&c[0], s);
+            for (std::uint32_t i = 0; i < s; i++) {
+                absorb(c[i]);
+            }
         }
 
         template <typename T, typename F>
