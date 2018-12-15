@@ -183,8 +183,8 @@ namespace eka2l1 {
 
             std::uint64_t create_time = 0;
 
-            epoc::request_status *sleep_nof_sts;
-            epoc::request_status *timeout_sts;
+            eka2l1::ptr<epoc::request_status> sleep_nof_sts;
+            eka2l1::ptr<epoc::request_status> timeout_sts;
 
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);
@@ -219,6 +219,12 @@ namespace eka2l1 {
             void pop_call();
 
             thread();
+
+            thread(kernel_system *kern, memory_system *mem, timing_system *timing)
+                : kernel_obj(kern), mem(mem), timing(timing) {
+                obj_type = kernel::object_type::thread;
+            }
+
             thread(kernel_system *kern, memory_system *mem, timing_system *timing, process_ptr owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
@@ -252,9 +258,9 @@ namespace eka2l1 {
             void set_priority(const thread_priority new_pri);
 
             bool sleep(std::uint32_t mssecs);
-            bool sleep_nof(epoc::request_status *sts, std::uint32_t mssecs);
+            bool sleep_nof(eka2l1::ptr<epoc::request_status> sts, std::uint32_t mssecs);
 
-            void after(epoc::request_status *sts, std::uint32_t mssecs);
+            void after(eka2l1::ptr<epoc::request_status> sts, std::uint32_t mssecs);
 
             void notify_sleep(const int errcode);
             void notify_after(const int errcode);

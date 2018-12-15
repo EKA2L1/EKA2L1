@@ -838,7 +838,7 @@ namespace eka2l1 {
             }
         }
 
-        seri.absorb(info.total_process);  
+        seri.absorb(info.total_process);
         seri.absorb(info.total_chunks);
         seri.absorb(info.total_mutex);
         seri.absorb(info.total_semaphore);
@@ -858,9 +858,46 @@ namespace eka2l1 {
                 auto c = std::make_shared<kernel::chunk>(this, mem);
                 objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
             }
+
+            for (std::uint32_t i = 0; i < info.total_mutex; i++) {
+                auto c = std::make_shared<kernel::mutex>(this);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
+            
+            for (std::uint32_t i = 0; i < info.total_semaphore; i++) {
+                auto c = std::make_shared<kernel::semaphore>(this);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
+            
+            for (std::uint32_t i = 0; i < info.total_thread; i++) {
+                auto c = std::make_shared<kernel::thread>(this, mem, timing);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
         }
 
-        // NOTICE: The order of loading is alter with the absorb order of the kernel info struct
+        auto do_state_base_kernel_obj_for_type = [&](kernel::object_type obj, std::uint32_t max_count) {
+            std::uint32_t count = 0;
+
+            for (auto &o: objects) {
+                if (o->get_object_type() == kernel::object_type::process) {
+                    o->kernel_obj::do_state(seri);
+                    count++;
+                }
+
+                if (count == max_count) {
+                    count = 0;
+                    break;
+                }
+            }
+        };
+
+        do_state_base_kernel_obj_for_type(kernel::object_type::process, info.total_process);
+        do_state_base_kernel_obj_for_type(kernel::object_type::chunk, info.total_chunks);
+        do_state_base_kernel_obj_for_type(kernel::object_type::mutex, info.total_mutex);
+        do_state_base_kernel_obj_for_type(kernel::object_type::sema, info.total_semaphore);
+        do_state_base_kernel_obj_for_type(kernel::object_type::thread, info.total_thread);
+        do_state_base_kernel_obj_for_type(kernel::object_type::timer, info.total_timer);
+        do_state_base_kernel_obj_for_type(kernel::object_type::timer, info.total_prop);
 
         do_state_of(seri, kernel::object_type::process);
         do_state_of(seri, kernel::object_type::chunk);

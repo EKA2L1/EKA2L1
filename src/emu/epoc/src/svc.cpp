@@ -134,8 +134,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, After, TInt aMicroSecs, eka2l1::ptr<epoc::request_status> aStatus) {
-        sys->get_kernel_system()->crr_thread()->after(aStatus.get(sys->get_memory_system()),
-            aMicroSecs);
+        sys->get_kernel_system()->crr_thread()->after(aStatus, aMicroSecs);
     }
 
     /****************************/

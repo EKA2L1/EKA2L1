@@ -1,5 +1,5 @@
 #pragma once
 
-#define ENABLE_SCRIPTING 1
+/* #undef ENABLE_SCRIPTING */
 #define GIT_BRANCH "save"
-#define GIT_COMMIT_HASH "e6c35d8"
+#define GIT_COMMIT_HASH "50001bf"

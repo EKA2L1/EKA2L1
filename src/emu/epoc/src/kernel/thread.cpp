@@ -248,9 +248,9 @@ namespace eka2l1 {
             , mem(mem)
             , priority(pri)
             , timing(timing)
-            , timeout_sts(nullptr)
+            , timeout_sts(0)
             , wait_obj(nullptr)
-            , sleep_nof_sts(nullptr)
+            , sleep_nof_sts(0)
             , thread_handles(kern, handle_array_owner::thread) {
             if (after_timout_evt == -1) {
                 after_timout_evt = timing->register_event("ThreadAfterTimoutEvt", &after_thread_timeout);
@@ -289,10 +289,12 @@ namespace eka2l1 {
 
             memcpy(name_chunk_ptr->base().get(mem), name_16.data(), name.length() * 2);
 
+            // TODO: Not hardcode this
             const size_t metadata_size = 0x40;
 
             // Left the space for the program to put thread create information
-            const address stack_top = stack_chunk_ptr->base().ptr_address() + stack_size - metadata_size;
+            const address stack_top = stack_chunk_ptr->base().ptr_address() + 
+                static_cast<address>(stack_size - metadata_size);
 
             ptr<uint8_t> stack_phys_beg(stack_chunk_ptr->base().ptr_address());
             ptr<uint8_t> stack_phys_end(stack_top);
@@ -302,7 +304,8 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(start, end, 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), allocator, name.length(), name_chunk_ptr->base().ptr_address(), epa);
+            create_stack_metadata(ptr<void>(stack_top), allocator, name.length(), 
+                name_chunk_ptr->base().ptr_address(), epa);
 
             reset_thread_ctx(epa, stack_top, inital);
             scheduler = kern->get_thread_scheduler();
@@ -335,7 +338,7 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
-        void thread::after(epoc::request_status *sts, uint32_t mssecs) {
+        void thread::after(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
             assert(!timeout_sts && "After request outstanding");
             timeout_sts = sts;
 
@@ -348,7 +351,7 @@ namespace eka2l1 {
                 kern->get_kernel_obj_by_id(uid)), mssecs);
         }
 
-        bool thread::sleep_nof(epoc::request_status *sts, uint32_t mssecs) {
+        bool thread::sleep_nof(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
             assert(!sleep_nof_sts && "Thread supposed to sleep already");
             sleep_nof_sts = sts;
 
@@ -358,22 +361,24 @@ namespace eka2l1 {
 
         void thread::notify_sleep(const int errcode) {
             if (sleep_nof_sts) {
-                sleep_nof_sts->status = errcode;
+                *(sleep_nof_sts.get(mem)) = errcode;
                 sleep_nof_sts = 0;
+                
+                signal_request();
             }
 
-            sleep_nof_sts = nullptr;
+            sleep_nof_sts = 0;
         }
 
         void thread::notify_after(const int errcode) {
             if (timeout_sts) {
-                timeout_sts->status = errcode;
+                *(timeout_sts.get(mem)) = errcode;
                 timeout_sts = 0;
 
                 signal_request();
             }
 
-            timeout_sts = nullptr;
+            timeout_sts = 0;
         }
 
         bool thread::stop() {
