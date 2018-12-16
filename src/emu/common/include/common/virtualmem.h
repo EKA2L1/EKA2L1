@@ -86,4 +86,8 @@ namespace eka2l1::common {
      * \returns True on success.
     */
     bool unmap_file(void *ptr);
+
+    /*!\brief Returns true if the platform doesn't allow write and executable memory at the same time.
+    */
+    bool is_memory_wx_exclusive();
 }

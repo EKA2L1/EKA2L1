@@ -1,9 +1,12 @@
 add_library(common
     include/common/advstream.h
     include/common/algorithm.h
+    include/common/armcommon.h
+    include/common/armemitter.h
     include/common/buffer.h
     include/common/bytepair.h
     include/common/chunkyseri.h
+    include/common/codeblock.h
     include/common/cpudetect.h
     include/common/cvt.h
     include/common/data_displayer.h
