@@ -361,7 +361,7 @@ namespace eka2l1 {
 
         void thread::notify_sleep(const int errcode) {
             if (sleep_nof_sts) {
-                *(sleep_nof_sts.get(mem)) = errcode;
+                *(sleep_nof_sts.get(own_process)) = errcode;
                 sleep_nof_sts = 0;
                 
                 signal_request();
@@ -372,7 +372,7 @@ namespace eka2l1 {
 
         void thread::notify_after(const int errcode) {
             if (timeout_sts) {
-                *(timeout_sts.get(mem)) = errcode;
+                *(timeout_sts.get(own_process)) = errcode;
                 timeout_sts = 0;
 
                 signal_request();
