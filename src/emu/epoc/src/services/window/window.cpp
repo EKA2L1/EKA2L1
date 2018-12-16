@@ -144,6 +144,16 @@ namespace eka2l1::epoc {
             break;
         }
 
+        // Get the current screen mode. AknCapServer uses this, compare with the saved screen mode
+        // to trigger the layout change event for registered app.
+        case EWsSdOpGetScreenMode: {
+            // Stub with the current screen mode
+            ctx.set_request_status(0);
+            LOG_TRACE("GetCurrentScreenMode stubbed with 0");
+
+            break;
+        }
+
         default: {
             LOG_WARN("Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
             break;
