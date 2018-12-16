@@ -217,7 +217,7 @@ namespace eka2l1 {
         }
 
         void mutex::do_state(common::chunkyseri &seri) {
-            std::uint64_t holding_id = (holding ? holding->unique_id() : 0);
+            std::uint32_t holding_id = (holding ? holding->unique_id() : 0);
             seri.absorb(holding_id);
 
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
@@ -229,7 +229,7 @@ namespace eka2l1 {
             seri.absorb(total_waits);
 
             for (size_t i = 0; i < total_waits; i++) {
-                std::uint64_t wait_thr_id = (waits.empty() ? 0 : (*(waits.begin() + i))->unique_id());
+                std::uint32_t wait_thr_id = (waits.empty() ? 0 : (*(waits.begin() + i))->unique_id());
                 seri.absorb(wait_thr_id);
 
                 if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
@@ -242,7 +242,7 @@ namespace eka2l1 {
             seri.absorb(total_suspended);
 
             for (size_t i = 0; i < total_suspended; i++) {
-                std::uint64_t sus_thr_id;
+                std::uint32_t sus_thr_id;
                 seri.absorb(sus_thr_id);
 
                 if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {

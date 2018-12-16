@@ -218,7 +218,7 @@ namespace eka2l1::epoc {
     }
 
     void SetLengthDes(eka2l1::process_ptr sys, TDesC8 *des, uint32_t len) {
-        auto t = des->iLength >> 28;
+        std::uint32_t t = des->iLength >> 28;
         des->iLength = len | (t << 28);
 
         TInt type = GetTDesC8Type(des);
@@ -230,14 +230,14 @@ namespace eka2l1::epoc {
             TBufC8 *real_buf = static_cast<TBufC8*>(sys->get_ptr_on_addr_space(buf_hle.ptr_address()));
             real_buf->iLength = len;
 
-            if (len > buf_ptr->iMaxLength) {
+            if (len > static_cast<std::uint32_t>(buf_ptr->iMaxLength)) {
                 LOG_ERROR("The new length has exceeded the max length ({} > {})", 
                     len, buf_ptr->iMaxLength);
             }
         } else if ((type == EBuf) || (type == EPtr)) {
             TDes8 *real_buf = static_cast<TDes8 *>(des);
 
-            if (len > real_buf->iMaxLength) {
+            if (len > static_cast<std::uint32_t>(real_buf->iMaxLength)) {
                 LOG_ERROR("The new length has exceeded the max length ({} > {})",
                     len, real_buf->iMaxLength);
             }
@@ -361,7 +361,7 @@ namespace eka2l1::epoc {
         cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
 
         memcpy(Ptr(sys), iNewString.data(), cop_len);
-        SetLength(sys, cop_len);
+        SetLength(sys, static_cast<std::uint32_t>(cop_len));
     }
 
     void TDesC8::Assign(eka2l1::process_ptr pr, std::string iNewString) {
@@ -375,7 +375,7 @@ namespace eka2l1::epoc {
         cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
 
         memcpy(Ptr(pr), iNewString.data(), cop_len);
-        SetLength(pr, cop_len);
+        SetLength(pr, static_cast<std::uint32_t>(cop_len));
     }
 
     void TDesC16::SetLength(eka2l1::system *sys, TUint32 iNewLength) {
@@ -393,7 +393,7 @@ namespace eka2l1::epoc {
         cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
 
         memcpy(Ptr(sys), iNewString.data(), cop_len * 2);
-        SetLength(sys, cop_len);
+        SetLength(sys, static_cast<std::uint32_t>(cop_len));
     }
 
     void TDesC16::Assign(eka2l1::process_ptr pr, std::u16string iNewString) {
@@ -407,6 +407,6 @@ namespace eka2l1::epoc {
         cop_len = iNewString.length() > cop_len ? cop_len : iNewString.length();
 
         memcpy(Ptr(pr), iNewString.data(), cop_len * 2);
-        SetLength(pr, cop_len);
+        SetLength(pr, static_cast<std::uint32_t>(cop_len));
     }
 }

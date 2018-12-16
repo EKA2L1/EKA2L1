@@ -89,7 +89,7 @@ namespace eka2l1 {
 
             int access_count = 0;
 
-            uint64_t uid;
+            uint32_t uid;
 
             kernel_obj(kernel_system *kern) 
                 : kern(kern) { 
@@ -130,7 +130,7 @@ namespace eka2l1 {
 
             int get_access_count() { return access_count; }
 
-            std::uint64_t unique_id() const {
+            std::uint32_t unique_id() const {
                 return uid;
             }
 

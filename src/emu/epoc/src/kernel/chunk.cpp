@@ -107,8 +107,8 @@ namespace eka2l1 {
             }
             }
 
-            chunk_base = mem->chunk_range(range_beg, range_end, new_bottom, new_top, max_size, protection)
-                .cast<std::uint8_t>();
+            chunk_base = mem->chunk_range(range_beg, range_end, new_bottom, new_top, static_cast<std::uint32_t>(max_size),
+                protection).cast<std::uint8_t>();
 
             this->top = new_top;
             this->bottom = new_bottom;
@@ -199,7 +199,7 @@ namespace eka2l1 {
                 return;
             }
 
-            std::uint64_t uid_pr = 0;
+            std::uint32_t uid_pr = 0;
 
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
                 uid_pr = own_process->unique_id();

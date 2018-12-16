@@ -70,7 +70,7 @@ namespace eka2l1 {
         }
 
         void change_notifier::do_state(common::chunkyseri &seri) {
-            std::uint64_t requester_id = (requester ? 0 : requester->unique_id());
+            std::uint32_t requester_id = (requester ? 0 : requester->unique_id());
 
             seri.absorb(requester_id);
             seri.absorb(request_status.ptr_address());

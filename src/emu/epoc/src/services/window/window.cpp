@@ -40,13 +40,33 @@ namespace eka2l1::epoc {
 
     window_client_obj::window_client_obj(window_server_client_ptr client)
         : client(client)
-        , id(client->objects.size() + base_handle + 1) {
+        , id(static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1) {
     }
 
     screen_device::screen_device(window_server_client_ptr client, eka2l1::graphics_driver_client_ptr driver)
         : window_client_obj(client)
         , driver(driver) {
     }
+
+    enum class graphics_orientation { 
+        normal,
+        rotated90, 
+        rotated180,
+        rotated270 
+    };
+
+    struct pixel_twips_and_rot {
+        eka2l1::vec2 pixel_size;
+        eka2l1::vec2 twips_size;
+        graphics_orientation orientation;
+    };
+
+    struct pixel_and_rot {
+        eka2l1::vec2 pixel_size;
+        graphics_orientation orientation;
+    };
+
+    constexpr int twips_mul = 15;
 
     void screen_device::execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
         TWsScreenDeviceOpcodes op = static_cast<decltype(op)>(cmd.header.op);
@@ -64,7 +84,7 @@ namespace eka2l1::epoc {
         case EWsSdOpTwipsSize: {
             // This doesn't take any arguments
             eka2l1::vec2 screen_size = driver->screen_size();
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size * 15);
+            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size * twips_mul);
             ctx.set_request_status(0);
 
             break;
@@ -85,6 +105,7 @@ namespace eka2l1::epoc {
         }
 
         case EWsSdOpGetScreenSizeModeList: {
+            // TODO: Support more orientation
             static TInt mode_stub[] = {0};
 
             LOG_TRACE("Screen size mode stubbed");
@@ -92,6 +113,39 @@ namespace eka2l1::epoc {
             ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t*>(&mode_stub[0]),
                 sizeof(mode_stub));
             ctx.set_request_status(1);
+
+            break;
+        }
+
+        // This get the screen size in pixels + twips and orientation for the given mode
+        case EWsSdOpSetScreenSizeAndRotation: {
+            int mode = *reinterpret_cast<int*>(cmd.data_ptr);
+            // Hey, mode, i don't really care right now
+            // TODO (pent0): support more orientation
+            
+            pixel_twips_and_rot data;
+            data.pixel_size = driver->screen_size();
+            data.twips_size = data.pixel_size * twips_mul;
+            data.orientation = graphics_orientation::normal;
+
+            ctx.write_arg_pkg(reply_slot, data);
+            ctx.set_request_status(0);
+
+            break;
+        }
+
+        // This get the screen size in pixels and orientation for the given mode
+        case EWsSdOpSetScreenSizeAndRotation2: {
+            int mode = *reinterpret_cast<int*>(cmd.data_ptr);
+            // Hey, mode, i don't really care right now
+            // TODO (pent0): support more orientation
+
+            pixel_and_rot data;
+            data.pixel_size = driver->screen_size();
+            data.orientation = graphics_orientation::normal;
+
+            ctx.write_arg_pkg(reply_slot, data);
+            ctx.set_request_status(0);
 
             break;
         }
@@ -199,9 +253,10 @@ namespace eka2l1::epoc {
 
     std::uint32_t window_server_client::add_object(window_client_obj_ptr obj) {
         objects.push_back(std::move(obj));
-        objects.back()->id = base_handle + objects.size();
+        std::uint32_t de_id = static_cast<std::uint32_t>(base_handle + objects.size());
+        objects.back()->id = de_id;
 
-        return objects.size() + base_handle;
+        return de_id;
     }
 
     window_client_obj_ptr window_server_client::get_object(const std::uint32_t handle) {
@@ -363,7 +418,9 @@ namespace eka2l1 {
     }
 
     void window_server::init(service::ipc_context ctx) {
-        clients.emplace(ctx.msg->msg_session->unique_id(), std::make_shared<epoc::window_server_client>(ctx.msg->msg_session));
+        clients.emplace(ctx.msg->msg_session->unique_id(), 
+            std::make_shared<epoc::window_server_client>(ctx.msg->msg_session));
+
         ctx.set_request_status(ctx.msg->msg_session->unique_id());
     }
 

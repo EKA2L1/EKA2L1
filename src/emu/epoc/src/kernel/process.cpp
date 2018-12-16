@@ -284,7 +284,7 @@ namespace eka2l1::kernel {
             return;
         }
 
-        std::uint64_t requester_id = (requester ? requester->unique_id() : 0);
+        std::uint32_t requester_id = (requester ? requester->unique_id() : 0);
 
         seri.absorb(requester_id);
         seri.absorb(request_status.ptr_address());
@@ -372,7 +372,7 @@ namespace eka2l1::kernel {
             rr.do_state(kern, seri);
         }
 
-        std::uint64_t dll_lock_uid = (dll_lock ? dll_lock->unique_id() : 0);
+        std::uint32_t dll_lock_uid = (dll_lock ? dll_lock->unique_id() : 0);
         seri.absorb(dll_lock_uid);
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {

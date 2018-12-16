@@ -1280,7 +1280,7 @@ namespace eka2l1::epoc {
             return KErrNotFound;
         }
 
-        uint64_t id = obj_info->object_id;
+        uint32_t id = obj_info->object_id;
         kernel_obj_ptr obj = kern->get_kernel_obj_by_id(id);
 
         uint32_t ret_handle = kern->mirror(obj, static_cast<eka2l1::kernel::owner_type>(aOwnerType));
@@ -2068,6 +2068,7 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
+    /*
     BRIDGE_FUNC(TInt32, AtomicTas32, eka2l1::ptr<SAtomicOpInfo32> aAtomicInfo) {
         SAtomicOpInfo32 *info = aAtomicInfo.get(sys->get_memory_system());
 
@@ -2078,7 +2079,8 @@ namespace eka2l1::epoc {
 
         return old;
     }
-
+    */
+   
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),

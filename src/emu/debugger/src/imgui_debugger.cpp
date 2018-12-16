@@ -92,7 +92,7 @@ namespace eka2l1 {
 
                     chunk_ptr chnk = thr->get_stack_chunk();
 
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s    %-32s    0x%08X", obj->unique_id(),
+                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", obj->unique_id(),
                         obj_name.c_str(), thread_state_to_string(thr->current_state()), chnk->base().ptr_address());
                 }
             }
@@ -112,7 +112,7 @@ namespace eka2l1 {
                 if (obj && obj->get_object_type() == kernel::object_type::mutex) {
                     std::string obj_name = obj->name();
 
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s", obj->unique_id(),
+                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s", obj->unique_id(),
                         obj_name.c_str());
                 }
             }
@@ -134,7 +134,7 @@ namespace eka2l1 {
                     chunk_ptr chnk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
                     std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08lX    %-32s    0x%08X    0x%08X    0x%08X    0x%08lX      %-32s",
+                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    0x%08X    0x%08X    0x%08X    0x%08lX      %-32s",
                         obj->unique_id(), obj_name.c_str(), chnk->base().ptr_address(), chnk->get_bottom(), chnk->get_top(),
                         chnk->get_max_size(), process_name.c_str());
                 }

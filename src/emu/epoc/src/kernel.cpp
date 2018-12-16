@@ -481,7 +481,7 @@ namespace eka2l1 {
         return crr_process()->process_handles.get_object(handle);
     }
 
-    kernel_obj_ptr kernel_system::get_kernel_obj_by_id(std::uint64_t id) {
+    kernel_obj_ptr kernel_system::get_kernel_obj_by_id(std::uint32_t id) {
         SYNCHRONIZE_ACCESS;
 
         auto res = std::find_if(objects.begin(), objects.end(),
@@ -735,7 +735,7 @@ namespace eka2l1 {
         }
     }
 
-    uint64_t kernel_system::next_uid() const {
+    uint32_t kernel_system::next_uid() const {
         ++uid_counter;
         return uid_counter.load();
     }
@@ -907,7 +907,7 @@ namespace eka2l1 {
         do_state_of(seri, kernel::object_type::timer);
         do_state_of(seri, kernel::object_type::prop);
 
-        std::uint64_t uidc = uid_counter.load();
+        std::uint32_t uidc = uid_counter.load();
         seri.absorb(uidc);
 
         if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
