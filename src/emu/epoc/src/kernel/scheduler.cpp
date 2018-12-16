@@ -90,7 +90,7 @@ namespace eka2l1 {
                 ready_threads.remove(newt);
                 jitter->load_context(crr_thread->ctx);
 
-                // LOG_TRACE("Switched to {}", crr_thread->name());
+                LOG_TRACE("Switched to {}", crr_thread->name());
             } else {
                 crr_thread = nullptr;
             }

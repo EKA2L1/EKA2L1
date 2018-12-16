@@ -1243,7 +1243,9 @@ namespace eka2l1::epoc {
 
         handle->iHandle = info->index;
         handle->iObjIdLow = static_cast<uint32_t>(info->object_id);
-        handle->iObjIdHigh = info->object_id >> 32;
+
+        // We are never gonna reached the high part
+        handle->iObjIdHigh = 0;
 
         return KErrNone;
     }

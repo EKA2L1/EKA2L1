@@ -133,7 +133,7 @@ namespace eka2l1::common {
         
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
-        while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0) {
+        while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0 && is_valid()) {
             cycles_to_next_entry();
         };
 #elif EKA2L1_PLATFORM(WIN32)
@@ -150,7 +150,8 @@ namespace eka2l1::common {
 
         LPWIN32_FIND_DATA fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
 
-        while (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0) {
+        while (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0
+            && is_valid()) {
            cycles_to_next_entry();
         }
 #endif
