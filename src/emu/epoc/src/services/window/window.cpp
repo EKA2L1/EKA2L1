@@ -48,24 +48,6 @@ namespace eka2l1::epoc {
         , driver(driver) {
     }
 
-    enum class graphics_orientation { 
-        normal,
-        rotated90, 
-        rotated180,
-        rotated270 
-    };
-
-    struct pixel_twips_and_rot {
-        eka2l1::vec2 pixel_size;
-        eka2l1::vec2 twips_size;
-        graphics_orientation orientation;
-    };
-
-    struct pixel_and_rot {
-        eka2l1::vec2 pixel_size;
-        graphics_orientation orientation;
-    };
-
     constexpr int twips_mul = 15;
 
     void screen_device::execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
@@ -118,7 +100,7 @@ namespace eka2l1::epoc {
         }
 
         // This get the screen size in pixels + twips and orientation for the given mode
-        case EWsSdOpSetScreenSizeAndRotation: {
+        case EWsSdOpGetScreenModeSizeAndRotation: {
             int mode = *reinterpret_cast<int*>(cmd.data_ptr);
             // Hey, mode, i don't really care right now
             // TODO (pent0): support more orientation
@@ -135,7 +117,7 @@ namespace eka2l1::epoc {
         }
 
         // This get the screen size in pixels and orientation for the given mode
-        case EWsSdOpSetScreenSizeAndRotation2: {
+        case EWsSdOpGetScreenModeSizeAndRotation2: {
             int mode = *reinterpret_cast<int*>(cmd.data_ptr);
             // Hey, mode, i don't really care right now
             // TODO (pent0): support more orientation
@@ -146,6 +128,18 @@ namespace eka2l1::epoc {
 
             ctx.write_arg_pkg(reply_slot, data);
             ctx.set_request_status(0);
+
+            break;
+        }
+
+        case EWsSdOpGetScreenModeDisplayMode: {
+            int mode = *reinterpret_cast<int*>(cmd.data_ptr);
+            // Hey, mode, i don't really care right now
+            // TODO (pent0): returns proper display mode.
+
+            LOG_TRACE("GetScreenModeDisplayMode stubbed with true color + alpha (color16ma)");
+            ctx.write_arg_pkg(reply_slot, display_mode::color16ma);
+            ctx.set_request_status(KErrNone);
 
             break;
         }

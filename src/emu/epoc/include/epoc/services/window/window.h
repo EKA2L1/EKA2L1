@@ -68,6 +68,46 @@ namespace eka2l1::epoc {
     struct screen_device;
     using screen_device_ptr = std::shared_ptr<epoc::screen_device>;
 
+    enum class graphics_orientation { 
+        normal,
+        rotated90, 
+        rotated180,
+        rotated270 
+    };
+
+    /*! \brief Screen display mode.
+     *
+     * Depend on the display mode, the bitmap sends it will have the specified attribute.
+    */
+    enum class display_mode {
+        none,
+        gray2,          ///< Monochrome display mode (1 bpp)
+        gray4,          ///< Four grayscales display mode (2 bpp)
+        gray16,         ///< 16 grayscales display mode (4 bpp) 
+        gray256,        ///< 256 grayscales display mode (8 bpp) 
+        color16,        ///< Low colour EGA 16 colour display mode (4 bpp) 
+        color256,       ///< 256 colour display mode (8 bpp) 
+        color64k,       ///< 64,000 colour display mode (16 bpp) 
+        color16m,       ///< True colour display mode (24 bpp) 
+        rgb,            ///< (Not an actual display mode used for moving buffers containing bitmaps)
+        color4k,        ///< 4096 colour display (12 bpp). 
+        color16mu,      ///< True colour display mode (32 bpp, but top byte is unused and unspecified) 
+        color16ma,      ///< Display mode with alpha (24bpp colour plus 8bpp alpha) 
+        color16map,     ///< Pre-multiplied Alpha display mode (24bpp color multiplied with the alpha channel value, plus 8bpp alpha)
+        color_last
+    };
+
+    struct pixel_twips_and_rot {
+        eka2l1::vec2 pixel_size;
+        eka2l1::vec2 twips_size;
+        graphics_orientation orientation;
+    };
+
+    struct pixel_and_rot {
+        eka2l1::vec2 pixel_size;
+        graphics_orientation orientation;
+    };
+
     struct window_client_obj {
         uint32_t id;
         window_server_client *client;
