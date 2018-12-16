@@ -395,6 +395,20 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(TInt, ProcessRename, TInt aHandle, eka2l1::ptr<TDes8> aNewName) {
+        kernel_system *kern = sys->get_kernel_system();
+        process_ptr pr = kern->get_process(aHandle);
+
+        if (!pr) {
+            return KErrBadHandle;
+        }
+
+        const std::string new_name = aNewName.get(sys->get_memory_system())->StdString(sys);
+        pr->rename(new_name);
+
+        return KErrNone;
+    }
+
     BRIDGE_FUNC(void, ProcessResume, TInt aHandle) {
         process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
 
@@ -2153,6 +2167,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x76, DllSetTls),
         BRIDGE_REGISTER(0x77, DllFreeTLS),
         BRIDGE_REGISTER(0x78, ThreadRename),
+        BRIDGE_REGISTER(0x79, ProcessRename),
         BRIDGE_REGISTER(0x7B, ProcessLogon),
         BRIDGE_REGISTER(0x7C, ProcessLogonCancel),
         BRIDGE_REGISTER(0x7D, ThreadProcess),
