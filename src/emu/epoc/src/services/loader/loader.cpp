@@ -36,7 +36,10 @@
 
 #include <epoc/kernel/libmanager.h>
 
+#include <common/algorithm.h>
+
 #include <e32err.h>
+#include <cwctype>
 
 namespace eka2l1 {
     void loader_server::load_process(eka2l1::service::ipc_context ctx) {
@@ -58,6 +61,13 @@ namespace eka2l1 {
         std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
         
         LOG_TRACE("Trying to summon: {}", name_process);
+
+        std::u16string pext = path_extension(*process_name16);
+
+        if (pext.empty()) {
+            // Just append it
+            *process_name16 += u".exe";    
+        }
 
         auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
 
@@ -129,6 +139,15 @@ namespace eka2l1 {
         }
 
         std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
+        std::u16string pext = path_extension(*lib_path);
+
+        // This hack prevents the lib manager from loading wrong file.
+        // For example, if there is no extension, and the file is load must be DLL, and two files with same name
+        // Wrong file might be loaded.
+        if (pext.empty()) {
+            // Just append it
+            *lib_path += u".dll";
+        }
 
         loader::e32img_ptr e32img_ptr = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
 

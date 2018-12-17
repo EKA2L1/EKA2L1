@@ -81,8 +81,6 @@ namespace eka2l1 {
                 if (!oldt || oldt->owning_process() != newt->owning_process()) {
                     crr_process = newt->owning_process();
 
-                    // jitter->clear_instruction_cache();
-
                     memory_system *mem = kern->get_memory_system();
                     mem->set_current_page_table(crr_process->get_page_table());
                 }
