@@ -318,7 +318,6 @@ namespace eka2l1 {
                         }
 
                         parent.save_context(parent.kern->crr_thread()->get_thread_context());
-
                         parent.debugger->wait_for_debugger();
 
                         if (bkpt) {
@@ -326,7 +325,9 @@ namespace eka2l1 {
                         }
 
                         parent.stop();
+
                         // Delete the cache so it will reread the instruction
+                        parent.set_pc(pc);
                         parent.clear_instruction_cache();
                     }
 

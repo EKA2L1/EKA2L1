@@ -50,7 +50,7 @@
 
 using namespace eka2l1;
 
-eka2l1::system symsys(nullptr, nullptr);
+std::unique_ptr<eka2l1::system> symsys = std::make_unique<eka2l1::system>(nullptr, nullptr);
 
 arm_emulator_type jit_type = decltype(jit_type)::unicorn;
 epocver ever = epocver::epoc9;
@@ -90,6 +90,7 @@ bool ui_window_mouse_down[5] = { false, false, false, false, false };
 std::shared_ptr<eka2l1::imgui_logger> logger;
 std::shared_ptr<eka2l1::drivers::graphics_driver> gdriver;
 std::shared_ptr<eka2l1::imgui_debugger> debugger;
+std::shared_ptr<eka2l1::drivers::emu_window> debugger_window;
 
 std::mutex lock;
 std::condition_variable cond;
@@ -215,7 +216,7 @@ void read_config() {
 }
 
 void do_args() {
-    auto infos = symsys.get_manager_system()->get_package_manager()->get_apps_info();
+    auto infos = symsys->get_manager_system()->get_package_manager()->get_apps_info();
 
     if (list_app) {
         for (auto &info : infos) {
@@ -235,12 +236,12 @@ void do_args() {
             return;
         }
 
-        symsys.load(infos[app_idx].id);
+        symsys->load(infos[app_idx].id);
         return;
     }
 
     if (sis_install_path != "-1") {
-        auto res = symsys.install_package(common::utf8_to_ucs2(sis_install_path), adrive);
+        auto res = symsys->install_package(common::utf8_to_ucs2(sis_install_path), adrive);
 
         if (res) {
             std::cout << "Install successfully!" << std::endl;
@@ -252,8 +253,8 @@ void do_args() {
     }
 
     if (install_rpkg) {
-        symsys.set_symbian_version_use(ever);
-        bool res = symsys.install_rpkg(rpkg_path);
+        symsys->set_symbian_version_use(ever);
+        bool res = symsys->install_rpkg(rpkg_path);
 
         if (!res) {
             std::cout << "RPKG install failed." << std::endl;
@@ -266,30 +267,30 @@ void do_args() {
 }
 
 void init() {
-    symsys.set_symbian_version_use(ever);
-    symsys.set_jit_type(jit_type);
-    symsys.set_debugger(debugger);
+    symsys->set_symbian_version_use(ever);
+    symsys->set_jit_type(jit_type);
+    symsys->set_debugger(debugger);
 
-    symsys.init();
-    symsys.mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
-    symsys.mount(drive_e, drive_media::physical, mount_e, io_attrib::removeable);
+    symsys->init();
+    symsys->mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
+    symsys->mount(drive_e, drive_media::physical, mount_e, io_attrib::removeable);
     
     if (enable_gdbstub) {
-        symsys.get_gdb_stub()->set_server_port(gdb_port);
-        symsys.get_gdb_stub()->init(&symsys);
-        symsys.get_gdb_stub()->toggle_server(true);
+        symsys->get_gdb_stub()->set_server_port(gdb_port);
+        symsys->get_gdb_stub()->init(symsys.get());
+        symsys->get_gdb_stub()->toggle_server(true);
     }
 
-    bool res = symsys.load_rom(rom_path);
+    bool res = symsys->load_rom(rom_path);
 
     // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
     // created for ROM purpose.
-    symsys.mount(drive_z, drive_media::rom,
+    symsys->mount(drive_z, drive_media::rom,
         mount_z, io_attrib::internal | io_attrib::write_protected);
 }
 
 void shutdown() {
-    symsys.shutdown();
+    symsys->shutdown();
 }
 
 void save_config() {
@@ -305,7 +306,7 @@ void save_config() {
 
 void do_quit() {
     save_config();
-    symsys.shutdown();
+    symsys->shutdown();
 }
 
 void set_mouse_down(const int button, const bool op) {
@@ -377,7 +378,7 @@ static void on_ui_window_char_type(std::uint32_t c) {
 }
 
 int ui_debugger_thread() {
-    auto debugger_window = eka2l1::drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
+    debugger_window = eka2l1::drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
 
     debugger_window->raw_mouse_event = on_ui_window_mouse_evt;
     debugger_window->mouse_wheeling = on_ui_window_mouse_scrolling;
@@ -414,7 +415,7 @@ int ui_debugger_thread() {
 
     debugger_renderer->init(gdriver, debugger);
 
-    symsys.set_graphics_driver(gdriver);
+    symsys->set_graphics_driver(gdriver);
     cond.notify_one();
 
     ImGuiIO &io = ImGui::GetIO();
@@ -475,16 +476,18 @@ int ui_debugger_thread() {
     ImGui::DestroyContext();
 
     debugger_renderer->deinit();
-    debugger_window->done_current();
+    debugger_renderer.reset();
 
-    debugger_window->shutdown();
+    // Kill the driver before killing the window.
+    // We need to destroy all graphics object, if we destroy the window, graphic context is not available
+    gdriver.reset();
 
     return 0;
 }
 
 void run() {
-    while (!should_quit && !symsys.should_exit()) {
-        symsys.loop();
+    while (!should_quit && !symsys->should_exit()) {
+        symsys->loop();
 
         if (should_pause && !should_quit) {
             debugger->wait_for_debugger();
@@ -508,7 +511,7 @@ int main(int argc, char **argv) {
     }
 
     eka2l1::drivers::init_window_library(eka2l1::drivers::window_type::glfw);
-    debugger = std::make_shared<eka2l1::imgui_debugger>(&symsys, logger);
+    debugger = std::make_shared<eka2l1::imgui_debugger>(symsys.get(), logger);
 
     init();
     do_args();
@@ -528,6 +531,12 @@ int main(int argc, char **argv) {
 
     debug_window_thread.join();
     do_quit();
+
+    // Kill the system
+    symsys.reset();
+    
+    debugger_window->done_current();
+    debugger_window->shutdown();
 
     eka2l1::drivers::destroy_window_library(eka2l1::drivers::window_type::glfw);
 
