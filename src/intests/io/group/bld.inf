@@ -1,0 +1,15 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : pent0
+ Copyright   : 2018-2019 pent0
+ Description : This file provides the information required for building the
+				whole of a io.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_MMPFILES
+io.mmp
