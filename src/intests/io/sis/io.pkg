@@ -1,0 +1,14 @@
+#{"EKA2L1 IO Tests"},(0xe6f75ec0),1,0,0
+
+;Localised Vendor name
+%{"pent0"}
+
+;Unique Vendor name
+:"pent0"
+
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\eiotests.exe"		-"!:\sys\bin\eiotests.exe"
+
+; Adding input files
+; FileIO
+
+"..\assets\FileIO\SeekPosTest.inp"		-"!:\private\e6f75ec0\FileIO\Assets\SeekPosTest.inp"

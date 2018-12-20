@@ -6,14 +6,17 @@
  */
 
 #include <e32std.h>
+#include <e32debug.h>
+
+#include <absorber.h>
 
 typedef void (*TTestFunc)();
 
 struct TTest
     {
         TTestFunc    iTestFunc;
-        HBufC8*      iName;
-        HBufC8*      iCategory;
+        HBufC*       iName;
+        HBufC*       iCategory;
     };
 
 class CTestManager
@@ -33,15 +36,28 @@ public:
         /* !\brief Add new test to test manager.
          * 
          */
-        void AddTestL(const TDesC8 &aName, const TDesC8 &aCategory, TTestFunc aFunc);
+        void AddTestL(const TDesC &aName, const TDesC &aCategory, TTestFunc aFunc);
+       
+        static CTestManager *NewLC(const TAbsorberMode aAbsorbMode);
+        static CTestManager *NewL(const TAbsorberMode aAbsorbMode);
         
         ~CTestManager();
         
+        void ExpectInputFileEqualL(const TDesC8 &aData);
+        
 private:
+        void ConstructL(const TAbsorberMode aAbsorbMode);
+        
         RArray<TTest> iTests;
+        TInt 		  iCurrentTest;
+        
+        CAbsorber    *iAbsorber;
     };
 
 #define ADD_TEST_CASE_L(name, category, func)                                 \
-    instance->AddTestL(_L8(#name), _L8(#category), func)
+    instance->AddTestL(_L(#name), _L(#category), func)
+
+#define EXPECT_INPUT_EQUAL_L(data)											  \
+	instance->ExpectInputFileEqualL(data)
 
 extern CTestManager *instance;

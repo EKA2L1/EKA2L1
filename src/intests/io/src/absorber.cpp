@@ -9,36 +9,59 @@
 
 #include <absorber.h>
 
+CAbsorber::CAbsorber()
+	{
+			
+	}
+
 CAbsorber::CAbsorber(const TAbsorberMode aMode)
-    : iAbsorbMode(aMode)
+    : iAbsorbMode(aMode), iFirst(ETrue)
     {
     }
    
 CAbsorber::~CAbsorber() 
     {
-        // Flush the file
-        iFile.Flush();
-        iFile.Close();
+		TryCloseAbsorbSession();
+		
+		iFs.Close();
     }
 
-void CAbsorber::ConstructL(const TDesC16 &aTestPath) 
+void CAbsorber::NewAbsorbSessionL(const TDesC16 &aTestPath)
+	{
+		if (iFirst == true) 
+			{
+				iFirst = EFalse; 
+			} else {
+				CloseAbsorbSessionL();
+			}
+		
+		if (iAbsorbMode == EAbsorbVerify)
+			{
+				User::LeaveIfError(iFile.Open(iFs, aTestPath, iOpenMode));
+				return;
+			}
+		
+        User::LeaveIfError(iFile.Replace(iFs, aTestPath, iOpenMode));
+	}
+
+void CAbsorber::ConstructL() 
     {
-        RFs fsSession;
-        User::LeaveIfError(fsSession.Connect(-1));
+        User::LeaveIfError(iFs.Connect(-1));
+        User::LeaveIfError(iFs.SetSessionToPrivate(EDriveC));
         
-        TUint openMode = EFileStreamText;
+        iOpenMode = EFileStreamText;
         
         switch (iAbsorbMode)
             {
             case EAbsorbWrite:
                 {
-                    openMode |= (EFileWrite | EFileShareAny);
+                    iOpenMode |= (EFileWrite | EFileShareAny);
                     break;
                 }
                 
             case EAbsorbVerify:
                 {
-                    openMode |= (EFileShareReadersOnly | EFileRead);
+					iOpenMode |= (EFileShareAny | EFileRead);
                     break;
                 }
                
@@ -47,23 +70,41 @@ void CAbsorber::ConstructL(const TDesC16 &aTestPath)
                     User::Leave(KErrNotSupported);
                 }
             }
-        
-        User::LeaveIfError(iFile.Replace(fsSession, aTestPath, openMode));
-        fsSession.Close();
     }
 
-CAbsorber *CAbsorber::NewLC(const TDesC16 &aTestPath, const TAbsorberMode aMode)
+TInt CAbsorber::TryCloseAbsorbSession()
+	{
+		if (iAbsorbMode == EAbsorbWrite)
+			{
+				TInt flushResult = iFile.Flush();
+				
+				if (flushResult != KErrNone)
+					{
+						return flushResult;
+					}
+			}
+		
+		iFile.Close();
+		return KErrNone;
+	}
+
+void CAbsorber::CloseAbsorbSessionL()
+	{
+		User::LeaveIfError(TryCloseAbsorbSession());
+	}
+
+CAbsorber *CAbsorber::NewLC(const TAbsorberMode aMode)
     {
         CAbsorber *self = new (ELeave) CAbsorber(aMode);
         CleanupStack::PushL(self);
-        self->ConstructL(aTestPath);
+        self->ConstructL();
         
         return self;
     }
 
-CAbsorber *CAbsorber::NewL(const TDesC16 &aTestPath, const TAbsorberMode aMode)
+CAbsorber *CAbsorber::NewL(const TAbsorberMode aMode)
     {
-        CAbsorber *self = NewLC(aTestPath, aMode);
+        CAbsorber *self = NewLC(aMode);
         CleanupStack::Pop();
         
         return self;
@@ -99,34 +140,51 @@ TBool CAbsorber::AbsorbL(const TDesC8 &aData)
                     TUint8 append;
                     TPtr8 appendWrap(&append, 1);
                     
-                    HBufC8 *buf = HBufC8::NewL(2);
-                    CleanupStack::PushL(buf);
+                    TInt count = 0;
+                    TInt crrPos = 0;
                     
-                    TPtr8 line = buf->Des();
+                    iFile.Seek(ESeekCurrent, crrPos);
                     
                     do
                         {
-                            TInt err = iFile.Read(appendWrap);
+                            TInt err = iFile.Read(appendWrap, 1);
+                            
+                            // No bytes read
+                            if (appendWrap.Length() == 0)
+                            	{
+                            		break;
+                            	}
+                            
                             User::LeaveIfError(err);
                             
                             if (append != '\n')
                                 {
-                                    line.Append(append);
+                            		count++;
                                 }
                         }
                     while (append != '\n');
+
+                    HBufC8 *buf = HBufC8::NewL(count);
                     
-                    // Pop the buffer
-                    CleanupStack::Pop();
+                    TPtr8 line = buf->Des();
                     
-                    TBool eres = aData.Compare(line);
+                    iFile.Read(crrPos, line, count);
+    
+                    // Also read the \n
+                    iFile.Read(appendWrap, 1);
                     
-                    if (!eres)
-                        {
-                            RDebug::Printf("Expect %s, got %s", &aData, &line);
-                        }
-                    
-                    return eres;
+                    TInt compareRes = aData.Compare(line);
+
+                    if (compareRes != 0)
+                    	{
+                    		RDebug::Print(_L("Expected %S, got %S"), &aData, &line);
+
+                            delete buf;
+                            return false;
+                    	}
+                
+                    delete buf;
+                    return true;
                 }
                 
             default:

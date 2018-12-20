@@ -12,15 +12,22 @@
 #include <file.h>
 #include <testmanager.h>
 
+#define GEN_TESTS 0
+
 void MainWrapperL()
     {
-        instance = new (ELeave) CTestManager;
-        CleanupStack::PushL(instance);
+#if GEN_TESTS
+		TAbsorberMode mode = EAbsorbWrite;
+#else
+		TAbsorberMode mode = EAbsorbVerify;
+#endif
+				
+        instance = CTestManager::NewLC(mode);
         
         // Add all tests back
         AddFileTestCasesL();
         
-        TInt totalPass = instance->Run();        
+        TInt totalPass = instance->Run();    
         RDebug::Printf("%d tests passed", totalPass);
         
         CleanupStack::PopAndDestroy();
@@ -29,8 +36,7 @@ void MainWrapperL()
 TInt E32Main()
     {
         // Setup the stack
-        CCleanup *cleanup = CCleanup::New();
-        
+        CTrapCleanup *cleanup = CTrapCleanup::New();
         TRAPD(err, MainWrapperL());
         
         // Returns to the dust

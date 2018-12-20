@@ -29,20 +29,38 @@ enum  TAbsorberMode
 class CAbsorber
     {
 public:
+		CAbsorber();
+	
         explicit CAbsorber(const TAbsorberMode aMode);
         ~CAbsorber();
         
         TBool AbsorbL(const TDesC8 &aData);
         void ExpectEqualL(const TDesC8 &aData);
         
-        static CAbsorber *NewL(const TDesC16 &aTestPath, const TAbsorberMode aMode);
-        static CAbsorber *NewLC(const TDesC16 &aTestPath, const TAbsorberMode aMode);
+        static CAbsorber *NewL(const TAbsorberMode aMode);
+        static CAbsorber *NewLC(const TAbsorberMode aMode);
+        
+        void NewAbsorbSessionL(const TDesC16 &aTestPath);
+        
+        TInt TryCloseAbsorbSession();
+        void CloseAbsorbSessionL();
+        
+        RFs &GetFsSession()
+        	{
+        		return iFs;
+        	}
         
 private:
-        void ConstructL(const TDesC16 &aTestPath);
+        void ConstructL();
         
         TAbsorberMode iAbsorbMode;
+        
+        TUint		  iOpenMode;
+        
+        RFs			  iFs;
         RFile         iFile;
+        
+        TBool 		  iFirst;
     };
 
 #endif /* ABSORBER_H_ */

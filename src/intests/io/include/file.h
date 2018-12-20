@@ -5,9 +5,5 @@
  *      Author: fewds
  */
 
-#include <e32std.h>
-
-class CTestManager;
-
-void DifferentFileOpenResultL();
+void SeekPosAfterCustomReadL();
 void AddFileTestCasesL();

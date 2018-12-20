@@ -7,7 +7,7 @@
 ============================================================================
 */
 
-TARGET		  io.exe
+TARGET		  eiotests.exe
 TARGETTYPE	  exe
 UID			 0 0xe6f75ec0
 
