@@ -797,17 +797,21 @@ namespace eka2l1 {
         *name_res = eka2l1::absolute_path(*name_res, 
             session_paths[ctx.msg->msg_session->unique_id()]);
 
+        std::string name_utf8 = common::ucs2_to_utf8(*name_res);
+
         {
             auto file_dir = eka2l1::file_directory(*name_res);
 
             // Do a check to return KErrPathNotFound
             if (!ctx.sys->get_io_system()->exist(file_dir)) {
+                LOG_TRACE("Base directory of file {} not found", name_utf8);
+
                 ctx.set_request_status(KErrPathNotFound);
                 return;
             }
         }
 
-        LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
+        LOG_INFO("Opening file: {}", name_utf8);
 
         int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res,
             *open_mode_res, overwrite, temporary);
@@ -839,6 +843,8 @@ namespace eka2l1 {
 
         // Don't open file if it doesn't exist
         if (!ctx.sys->get_io_system()->exist(*name_res)) {
+            LOG_TRACE("IO component not exists: {}", common::ucs2_to_utf8(*name_res));
+            
             ctx.set_request_status(KErrNotFound);
             return;
         }
@@ -864,6 +870,8 @@ namespace eka2l1 {
             session_paths[ctx.msg->msg_session->unique_id()]);
 
         if (!io->exist(full_path)) {
+            LOG_TRACE("Directory for temp file not exists", common::ucs2_to_utf8(full_path));
+
             ctx.set_request_status(KErrPathNotFound);
             return;
         }
@@ -1045,6 +1053,7 @@ namespace eka2l1 {
             new_node.temporary = temporary;
 
             if (!new_node.vfs_node) {
+                LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
                 return KErrNotFound;
             }
 
@@ -1103,6 +1112,7 @@ namespace eka2l1 {
             // Check if process is the same
             // Deninded if mode is exclusive
             if (cache_node->own_process != sender->owning_process()) {
+                LOG_TRACE("File open mode is exclusive, denide access");
                 return KErrAccessDenied;
             }
 
@@ -1115,6 +1125,7 @@ namespace eka2l1 {
             new_node.vfs_node = io->open_file(name, access_mode);
 
             if (!new_node.vfs_node) {
+                LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
                 return KErrNotFound;
             }
 

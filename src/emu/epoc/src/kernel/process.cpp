@@ -89,6 +89,8 @@ namespace eka2l1::kernel {
         // Preserve the page table
         create_prim_thread(img->rt_code_addr, img->rt_code_addr + img->header.entry_point, img->header.stack_size,
             img->header.heap_size_min, img->header.heap_size_max);
+
+        // TODO: Load all references DLL in the export list.
     }
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
@@ -112,6 +114,8 @@ namespace eka2l1::kernel {
         create_prim_thread(
             romimg->header.code_address, romimg->header.entry_point,
             romimg->header.stack_size, romimg->header.heap_minimum_size, romimg->header.heap_maximum_size);
+            
+        // TODO: Load all references DLL in the export list.
     }
 
     void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {

@@ -206,6 +206,7 @@ namespace eka2l1 {
                 return;
             }
 
+            LOG_TRACE("At least one message is on queue, popping and finish receive request");
             finish_request_lle(msg, true);
         }
 
