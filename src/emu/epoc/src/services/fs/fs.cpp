@@ -548,8 +548,8 @@ namespace eka2l1 {
             return;
         }
 
-        ctx.write_arg_pkg(3, seek_res);
-
+        // Slot order: (0) seek offset, (1) seek mode, (2) new pos
+        ctx.write_arg_pkg(2, seek_res);
         ctx.set_request_status(KErrNone);
     }
 
