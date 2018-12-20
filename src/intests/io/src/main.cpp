@@ -12,7 +12,7 @@
 #include <file.h>
 #include <testmanager.h>
 
-#define GEN_TESTS 0
+#define GEN_TESTS 1
 
 void MainWrapperL()
     {

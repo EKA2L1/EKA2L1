@@ -1,0 +1,2 @@
+RFile.Read(line, 15).Pos = 15
+RFile.Read(2, line, 7).Pos = 9
