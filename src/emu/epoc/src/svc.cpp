@@ -1666,6 +1666,42 @@ namespace eka2l1::epoc {
         }
     }
 
+    // Hide deep in the kernel is me! the context!
+    struct arm_context_epoc {
+        std::uint32_t regs[16];
+        std::uint32_t cpsr;
+
+        // We currently don't support this register
+        std::uint32_t dacr;
+    };
+
+    BRIDGE_FUNC(void, ThreadContext, TInt aHandle, eka2l1::ptr<TDes8> aContext) {
+        thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
+
+        if (!thr) {
+            return;
+        }
+
+        arm::arm_interface::thread_context &ctx = thr->get_thread_context();
+
+        // Save the context, get the fresh one
+        sys->get_cpu()->save_context(ctx);
+
+        memory_system *mem = sys->get_memory_system();
+
+        TDes8 *ctx_epoc_des = aContext.get(mem);
+        std::string ctx_epoc_str;
+        ctx_epoc_str.resize(sizeof(arm_context_epoc));
+
+        arm_context_epoc *context_epoc = reinterpret_cast<arm_context_epoc*>(&ctx_epoc_str[0]);
+
+        std::copy(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), context_epoc->regs);
+        context_epoc->cpsr = ctx.cpsr;
+        context_epoc->dacr = 0;
+
+        ctx_epoc_des->Assign(sys, ctx_epoc_str);
+    }
+
     BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
 
@@ -2166,6 +2202,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x4F, HalFunction),
         BRIDGE_REGISTER(0x52, ProcessCommandLineLength),
         BRIDGE_REGISTER(0x56, DebugPrint),
+        BRIDGE_REGISTER(0x5E, ThreadContext),
         BRIDGE_REGISTER(0x6A, HandleClose),
         BRIDGE_REGISTER(0x64, ProcessType),
         BRIDGE_REGISTER(0x68, ThreadCreate),
