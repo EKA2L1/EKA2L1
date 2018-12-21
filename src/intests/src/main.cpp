@@ -12,6 +12,7 @@
 // Add test file here
 #include <intests/cmd/cmd.h>
 #include <intests/io/file.h>
+#include <intests/kern/codeseg.h>
 
 #include <intests/testmanager.h>
 
@@ -28,6 +29,7 @@ void MainWrapperL()
         instance = CTestManager::NewLC(mode);
         
         // Add all tests back
+        AddCodeSegTestCasesL();
         AddCmdTestCaseL();
         AddFileTestCasesL();
         

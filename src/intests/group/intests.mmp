@@ -26,3 +26,5 @@ SOURCEPATH ..\src\io
 SOURCE file.cpp
 SOURCEPATH ..\src\cmd
 SOURCE cmd.cpp
+SOURCEPATH ..\src\kern
+SOURCE codeseg.cpp

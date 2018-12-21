@@ -90,6 +90,28 @@ void CommonSeekingL()
         expectedLine.Format(_L8("Seek EUSER.DLL ROM FILE with offset 2, mode address, return = %08X"), seekAddr);
         
         EXPECT_INPUT_EQUAL_L(expectedLine);
+        
+        seekAddr = 50;
+        romFile.Seek(ESeekStart, seekAddr);
+        
+        expectedLine.Format(_L8("Seek EUSER.DLL ROM FILE with offset 50, mode start, return = %08X"), seekAddr);
+        
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+        
+        // Let's seek backwards
+        seekAddr = -2;
+        romFile.Seek(ESeekCurrent, seekAddr);
+        
+        // Should be 48
+        expectedLine.Format(_L8("Seek EUSER.DLL ROM FILE with offset -2, mode current, return = %08X"), seekAddr);
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+        
+        // Let's seek end
+        seekAddr = 0;
+        romFile.Seek(ESeekEnd, seekAddr);
+
+        expectedLine.Format(_L8("Seek EUSER.DLL ROM FILE with offset 0, mode end, return = %08X"), seekAddr);
+        EXPECT_INPUT_EQUAL_L(expectedLine);        
     }
 
 void AddFileTestCasesL()
