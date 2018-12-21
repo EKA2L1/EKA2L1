@@ -16,6 +16,7 @@ install:
   - vcpkg integrate install
   - git pull
   - vcpkg update
+  - bootstrap-vcpkg.bat
   # Remove conflicting OpenSSL directories
   - rd /s /q c:\OpenSSL-v11-Win32
   - rd /s /q c:\OpenSSL-v11-Win64
