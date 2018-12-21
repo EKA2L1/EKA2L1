@@ -34,6 +34,8 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
+#include <epoc/loader/rom.h>
+
 #ifdef ENABLE_SCRIPTING
 #include <manager/manager.h>
 #include <manager/script_manager.h>
@@ -1017,6 +1019,10 @@ namespace eka2l1::epoc {
         return 0;
     }
 
+    BRIDGE_FUNC(void, SetDebugMask, TInt aDebugMask) {
+        // Doing nothing here
+    }
+
     BRIDGE_FUNC(TInt, DebugMaskIndex, TInt aIdx) {
         return 0;
     }
@@ -1425,6 +1431,10 @@ namespace eka2l1::epoc {
 
         // EKA2
         return 0x80000000;
+    }
+
+    BRIDGE_FUNC(TInt, UserSvrRomRootDirAddress) {
+        return sys->get_rom_info()->header.rom_root_dir_list;
     }
 
     /************************/
@@ -2045,7 +2055,9 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(address, ExceptionDescriptor, address aInAddr) {
-        return epoc::get_exception_descriptor_addr(sys, aInAddr);
+        // It's not really stable, so for now
+        // return epoc::get_exception_descriptor_addr(sys, aInAddr)
+        return 0;
     }
 
     /* ATOMIC OPERATION */
@@ -2108,7 +2120,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800009, SetTrapHandler),
         BRIDGE_REGISTER(0x0080000C, DebugMask),
         BRIDGE_REGISTER(0x0080000D, DebugMaskIndex),
+        BRIDGE_REGISTER(0x0080000E, SetDebugMask),
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
+        BRIDGE_REGISTER(0x00800014, UserSvrRomRootDirAddress),
         BRIDGE_REGISTER(0x00800015, SafeInc32),
         BRIDGE_REGISTER(0x00800019, UTCOffset),
         BRIDGE_REGISTER(0x0080001A, GetGlobalUserData),
