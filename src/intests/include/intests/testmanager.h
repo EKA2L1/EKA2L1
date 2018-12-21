@@ -5,10 +5,13 @@
  *      Author: fewds
  */
 
+#ifndef TESTMANAGER_H_
+#define TESTMANAGER_H_
+
 #include <e32std.h>
 #include <e32debug.h>
 
-#include <absorber.h>
+#include <intests/absorber.h>
 
 typedef void (*TTestFunc)();
 
@@ -61,3 +64,5 @@ private:
 	instance->ExpectInputFileEqualL(data)
 
 extern CTestManager *instance;
+
+#endif

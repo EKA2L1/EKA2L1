@@ -1,0 +1,19 @@
+#{"EKA2L1 Hardware Tests"},(0xe6f75ec0),1,0,0
+
+;Localised Vendor name
+%{"pent0"}
+
+;Unique Vendor name
+:"pent0"
+
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\eintests.exe"		-"!:\sys\bin\eintests.exe"
+
+; Adding input files
+
+"..\assets\FileIO\SeekPosTest.inp"		-"!:\private\e6f75ec0\Assets\FileIO\SeekPosTest.inp"
+
+"..\expected\FileIO\CommonSeeking.expected" 		  -"!:\private\e6f75ec0\Expected\FileIO\CommonSeeking.expected"
+"..\expected\FileIO\PositionAfterCustomRead.expected" -"!:\private\e6f75ec0\Expected\FileIO\PositionAfterCustomRead.expected"
+
+"..\expected\CmdAndParams\CheckCommandLineLength.expected" 		  -"!:\private\e6f75ec0\Expected\CmdAndParams\CheckCommandLineLength.expected"
+"..\expected\CmdAndParams\CheckCommandLineString.expected" 		  -"!:\private\e6f75ec0\Expected\CmdAndParams\CheckCommandLineString.expected"

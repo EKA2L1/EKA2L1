@@ -7,7 +7,7 @@
 ============================================================================
 */
 
-TARGET		  eiotests.exe
+TARGET		  eintests.exe
 TARGETTYPE	  exe
 UID			 0 0xe6f75ec0
 
@@ -15,9 +15,14 @@ SYSTEMINCLUDE   \epoc32\include
 
 DEBUGGABLE_UDEBONLY
 
-LIBRARY euser.lib efsrv.lib efile.lib
+LIBRARY charconv.lib efile.lib efsrv.lib euser.lib
 
 SOURCEPATH ..\src
-SOURCE absorber.cpp main.cpp file.cpp testmanager.cpp
+SOURCE absorber.cpp main.cpp testmanager.cpp
 
 USERINCLUDE ..\include
+
+SOURCEPATH ..\src\io
+SOURCE file.cpp
+SOURCEPATH ..\src\cmd
+SOURCE cmd.cpp

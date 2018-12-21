@@ -7,7 +7,7 @@
 
 #include <e32base.h>
 
-#include <absorber.h>
+#include <intests/absorber.h>
 
 CAbsorber::CAbsorber()
 	{
@@ -177,7 +177,7 @@ TBool CAbsorber::AbsorbL(const TDesC8 &aData)
 
                     if (compareRes != 0)
                     	{
-                    		RDebug::Print(_L("Expected %S, got %S"), &aData, &line);
+                    		RDebug::Printf("Expected \"%S\", got \"%S\"", &line, &aData);
 
                             delete buf;
                             return false;

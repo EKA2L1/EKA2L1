@@ -9,10 +9,13 @@
 #include <e32debug.h>
 #include <e32std.h>
 
-#include <file.h>
-#include <testmanager.h>
+// Add test file here
+#include <intests/cmd/cmd.h>
+#include <intests/io/file.h>
 
-#define GEN_TESTS 1
+#include <intests/testmanager.h>
+
+#define GEN_TESTS 0
 
 void MainWrapperL()
     {
@@ -25,6 +28,7 @@ void MainWrapperL()
         instance = CTestManager::NewLC(mode);
         
         // Add all tests back
+        AddCmdTestCaseL();
         AddFileTestCasesL();
         
         TInt totalPass = instance->Run();    

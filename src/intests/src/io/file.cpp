@@ -5,9 +5,9 @@
  *      Author: fewds
  */
 
-#include <absorber.h>
-#include <file.h>
-#include <testmanager.h>
+#include <intests/absorber.h>
+#include <intests/io/file.h>
+#include <intests/testmanager.h>
 
 struct SFsSessionGuard
 	{
@@ -25,18 +25,20 @@ struct SFsSessionGuard
 			}
 	};
 
-_LIT(KAssetsFolder, "FileIO\\Assets\\");
+_LIT(KAssetsFolder, "Assets\\FileIO\\");
 
-void SeekPosAfterCustomReadL()
+#define MAKE_ASSET_FILE_PATH(path, fn, fs)		\
+        fs.SessionPath(path);				\
+        path.Append(KAssetsFolder);			\
+        path.Append(fn)
+
+void PosAfterCustomReadL()
     {
 		SFsSessionGuard guard;
 		RFile f;
 		
 		TFileName fileName;
-		guard.iFs.SessionPath(fileName);
-		
-		fileName.Append(KAssetsFolder);
-		fileName.Append(_L("SeekPosTest.inp"));
+		MAKE_ASSET_FILE_PATH(fileName, _L("SeekPosTest.inp"), guard.iFs);
 		
 		User::LeaveIfError(f.Open(guard.iFs, fileName, EFileRead | EFileShareAny));
 		
@@ -71,7 +73,27 @@ void SeekPosAfterCustomReadL()
 		delete expectedLineDescriptionBuf;
     }
 
+void CommonSeekingL()
+    {
+        // Hey, let's try open a ROM file
+        // Assuming the most common ROM file I known: EUser.DLL, will always be available
+        SFsSessionGuard guard;
+        RFile romFile;
+        
+        User::LeaveIfError(romFile.Open(guard.iFs, _L("Z:\\sys\\bin\\EUser.DLL"), EFileShareAny | EFileRead));
+        
+        // Seek ROM address, are we gonna get an address?
+        TInt seekAddr = 2;
+        romFile.Seek(ESeekAddress, seekAddr);
+        
+        TBuf8<260> expectedLine;
+        expectedLine.Format(_L8("Seek EUSER.DLL ROM FILE with offset 2, mode address, return = %08X"), seekAddr);
+        
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+    }
+
 void AddFileTestCasesL()
     {
-        ADD_TEST_CASE_L(SeekPositionAfterCustomRead, FileIO, SeekPosAfterCustomReadL);
+        ADD_TEST_CASE_L(PositionAfterCustomRead, FileIO, PosAfterCustomReadL);
+        ADD_TEST_CASE_L(CommonSeeking, FileIO, CommonSeekingL);
     }

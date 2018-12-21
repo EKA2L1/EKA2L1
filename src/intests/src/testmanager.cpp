@@ -5,7 +5,7 @@
  *      Author: fewds
  */
 
-#include <testmanager.h>
+#include <intests/testmanager.h>
 
 #include <e32base.h>
 #include <e32debug.h>
@@ -42,10 +42,11 @@ TInt CTestManager::Run()
         		TTest &test = iTests[iCurrentTest];
         	
         		_LIT(KTestExt, ".expected");
+        		_LIT(KTestFolder, "expected\\");
         		
         		HBufC *testPathBuf;
         		TRAPD(err, testPathBuf = HBufC::NewL(test.iCategory->Length() + test.iName->Length()
-        				+ KTestExt.iTypeLength + 2 + sessionPath.Length()));
+        				+ KTestExt.iTypeLength + 2 + sessionPath.Length() + KTestFolder.iTypeLength));
         		
         		if (err != KErrNone)
         			{
@@ -56,6 +57,7 @@ TInt CTestManager::Run()
 					TPtr testPath = testPathBuf->Des();
 					
 					testPath.Append(sessionPath);
+					testPath.Append(KTestFolder);
 					testPath.Append(test.iCategory->Des());
 					testPath.Append('\\');
 					testPath.Append(test.iName->Des());
