@@ -100,9 +100,7 @@ namespace eka2l1::epoc {
             const loader::e32img_ptr &e32img = e32imginf.second.img;
 
             if (e32img->rt_code_addr <= runtime_addr && e32img->rt_code_addr + e32img->header.code_size >= runtime_addr) {
-                return e32img->has_extended_header ? 
-                    ((e32img->header_extended.exception_des & 1) ? (e32img->rt_code_addr + e32img->header_extended.exception_des & (~1)) :
-                     (e32img->rt_code_addr + e32img->header_extended.exception_des))
+                return (e32img->has_extended_header && (e32img->header_extended.exception_des & 1)) ? (e32img->rt_code_addr + e32img->header_extended.exception_des - 1)
                     : 0;
             }
         }

@@ -132,7 +132,7 @@ namespace eka2l1 {
 
         /*! \brief Seek the file with specified mode. 
          */
-        virtual size_t seek(size_t seek_off, file_seek_mode where) = 0;
+        virtual uint64_t seek(std::int64_t seek_off, file_seek_mode where) = 0;
 
         /*! \brief Get the position of the seek cursor.
          * \returns The position of the seek cursor.

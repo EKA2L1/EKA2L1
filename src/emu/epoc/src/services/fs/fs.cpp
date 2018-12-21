@@ -541,15 +541,22 @@ namespace eka2l1 {
             break;
         }
 
-        size_t seek_res = vfs_file->seek(*seek_off, vfs_seek_mode);
+        // This should also support negative
+        std::uint64_t seek_res = vfs_file->seek(*seek_off, vfs_seek_mode);
 
-        if (seek_res == 0xFFFFFFFF) {
-            ctx.set_request_status(KErrGeneral);
+        if (seek_res == 0xFFFFFFFFFFFFFFFF) {
+            ctx.set_request_status(KErrArgument);
             return;
         }
 
         // Slot order: (0) seek offset, (1) seek mode, (2) new pos
-        ctx.write_arg_pkg(2, seek_res);
+        
+        if ((int)ctx.sys->get_symbian_version_use() >= (int)epocver::epoc10) {
+            ctx.write_arg_pkg(2, seek_res);
+        } else {
+            ctx.write_arg_pkg(2, static_cast<TInt>(seek_res));
+        }
+
         ctx.set_request_status(KErrNone);
     }
 

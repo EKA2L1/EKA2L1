@@ -103,12 +103,27 @@ namespace eka2l1 {
             return -1;
         }
 
-        size_t seek(size_t seek_off, file_seek_mode where) override {
+        std::uint64_t seek(std::int64_t seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg || where == file_seek_mode::address) {
+                if (seek_off < 0) {
+                    LOG_ERROR("Attempting to seek set with negative offset ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
                 crr_pos = seek_off;
             } else if (where == file_seek_mode::crr) {
+                if (crr_pos + seek_off < 0) {
+                    LOG_ERROR("Attempting to seek current with offset that makes file pointer negative ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
                 crr_pos += seek_off;
             } else {
+                if (crr_pos + size() + seek_off < 0) {
+                    LOG_ERROR("Attempting to seek end with offset that makes file pointer negative ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
                 crr_pos += size() + seek_off;
             }
 
@@ -303,14 +318,19 @@ namespace eka2l1 {
             return ftell(file);
         }
 
-        size_t seek(size_t seek_off, file_seek_mode where) override {
+        std::uint64_t seek(std::int64_t seek_off, file_seek_mode where) override {
             WARN_CLOSE
 
             if (where == file_seek_mode::address) {
-                return 0xFFFFFFFF;
+                return 0xFFFFFFFFFFFFFFFF;
             }
 
             if (where == file_seek_mode::beg) {
+                if (seek_off < 0) {
+                    LOG_ERROR("Attempting to seek set with negative offset ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
                 fseek(file, static_cast<long>(seek_off), SEEK_SET);
             } else if (where == file_seek_mode::crr) {
                 fseek(file, static_cast<long>(seek_off), SEEK_CUR);
