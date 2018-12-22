@@ -124,7 +124,7 @@ namespace eka2l1 {
                     return 0xFFFFFFFFFFFFFFFF;
                 }
 
-                crr_pos += size() + seek_off;
+                crr_pos = size() + seek_off;
             }
 
             if (where == file_seek_mode::address) {
