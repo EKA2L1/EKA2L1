@@ -106,7 +106,7 @@ namespace eka2l1 {
                     stream->read(reinterpret_cast<void *>(&rel_info), 2);
                 }
 
-                i += static_cast<int>(reloc_entry.rels_info.size());
+                i += static_cast<int>(reloc_entry.rels_info.size()) - 1;
 
                 section.entries.push_back(reloc_entry);
             }
@@ -137,7 +137,7 @@ namespace eka2l1 {
 
             uint32_t *exp = reinterpret_cast<uint32_t *>(img.data.data() + img.header.export_dir_offset);
 
-            for (auto i = 0; i < img.header.export_dir_count; i++) {
+            for (std::uint32_t i = 0; i < img.header.export_dir_count; i++) {
                 img.ed.syms.push_back(*exp++);
             }
         }

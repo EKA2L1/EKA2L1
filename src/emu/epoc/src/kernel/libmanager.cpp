@@ -321,31 +321,6 @@ namespace eka2l1 {
                 }
             }
 
-            // Hack: open the descriptor address and relocate the type info
-            // Somehow Symbian doesn't do this
-            // TODO: Find out why and fix
-            if (img->has_extended_header && img->header_extended.exception_des & 1) {
-                // Let's fix this
-                address exception_des_addr = img->header_extended.exception_des - 1 + img->rt_code_addr;
-                address exception_struct_addr = *ptr<address>(exception_des_addr).get(mem);
-                address typeinfo_ptr_addr = exception_struct_addr - 0x10;
-
-                // The typeinfo should be relocated
-                auto do_relocate_typeinfo = [&](address addr) {
-                    address *typeinfo_relocate_val = ptr<address>(addr).get(mem);
-
-                    if (typeinfo_relocate_val == nullptr) {
-                        LOG_ERROR("Can't relocate exception typeinfo!");
-                    }
-
-                    *typeinfo_relocate_val = *typeinfo_relocate_val - img->header.code_base + img->rt_code_addr;
-                };
-
-                do_relocate_typeinfo(typeinfo_ptr_addr);
-                do_relocate_typeinfo(typeinfo_ptr_addr - 0x54);
-                do_relocate_typeinfo(typeinfo_ptr_addr - 0x54 - 0x78);
-            }
-            
             LOG_INFO("Load e32img success");
 
             return true;
