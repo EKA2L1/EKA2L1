@@ -18,17 +18,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/loader/sis_common.h>
 #include <epoc/loader/sis_fields.h>
-#include <epoc/loader/sis_old.h>
-#include <epoc/loader/sis_script_interpreter.h>
 
 #include <cassert>
 #include <cstdio>
 
-#include <iostream>
-#include <vector>
-
 #include <fstream>
+#include <iostream>
+#include <optional>
+#include <vector>
 
 namespace eka2l1 {
     namespace loader {
@@ -44,8 +43,8 @@ namespace eka2l1 {
                 return std::optional<epocver>{};
             }
 
-            uint32_t uid1 = 0;
-            uint32_t uid2 = 0;
+            std::uint32_t uid1 = 0;
+            std::uint32_t uid2 = 0;
 
             fread(&uid1, 1, 4, f);
             fread(&uid2, 1, 4, f);
@@ -54,7 +53,7 @@ namespace eka2l1 {
                 return epocver::epoc9;
             }
 
-            if (uid2 == static_cast<uint32_t>(epoc_sis_type::epocu6)) {
+            if (uid2 == static_cast<std::uint32_t>(epoc_sis_type::epocu6)) {
                 return epocver::epocu6;
             }
 

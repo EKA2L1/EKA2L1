@@ -7,8 +7,12 @@ endif()
 add_library(manager
 	include/manager/manager.h
 	include/manager/package_manager.h
+	include/manager/sis_script_interpreter.h
+	include/manager/sis_v1_installer.h
 	src/manager.cpp
 	src/package_manager.cpp
+	src/sis_script_interpreter.cpp
+	src/sis_v1_installer.cpp
 	${SCRIPT_MANAGER_FILES})
 
 target_include_directories(manager PUBLIC include)

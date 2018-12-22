@@ -3,7 +3,6 @@ add_library(epocloader
     include/epoc/loader/sis_fields.h
     include/epoc/loader/sis.h
     include/epoc/loader/sis_old.h
-    include/epoc/loader/sis_script_interpreter.h
     include/epoc/loader/e32img.h
     include/epoc/loader/romimage.h
     include/epoc/loader/rom.h
@@ -12,7 +11,6 @@ add_library(epocloader
     src/loader/sis.cpp
     src/loader/sis_fields.cpp
     src/loader/sis_old.cpp
-    src/loader/sis_script_interpreter.cpp
     src/loader/romimage.cpp
     src/loader/rpkg.cpp
     src/loader/rom.cpp
@@ -155,7 +153,6 @@ target_link_libraries(epocloader
     PRIVATE
     common
     epocio
-    manager
     miniz
     yaml-cpp
 )

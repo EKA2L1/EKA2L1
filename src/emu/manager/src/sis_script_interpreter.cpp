@@ -24,7 +24,7 @@
 #include <common/types.h>
 #include <common/flate.h>
 
-#include <epoc/loader/sis_script_interpreter.h>
+#include <manager/sis_script_interpreter.h>
 #include <manager/package_manager.h>
 #include <epoc/vfs.h>
 
