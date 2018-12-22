@@ -63,18 +63,12 @@ namespace eka2l1 {
             case loader::relocation_type::text:
                 write(dest_ptr, reloc_offset + code_delta);
                 break;
-            case loader::relocation_type::data:
-                // TODO: Remove the hack
-                // This hack along with the chunk 0x400000 hack make a complete
-                // resolve about this situation. It's not from our side, it's from
-                // the broken post-linker tool.
-                if (*dest_ptr == 0x400000) {
-                    LOG_WARN("Destination relocation has value of 0x400000, ignored");
-                } else {
-                    write(dest_ptr, reloc_offset + data_delta);
-                }
 
+            case loader::relocation_type::data:
+                // This is relocation for dynamic data.                
+                write(dest_ptr, reloc_offset + data_delta);
                 break;
+
             case loader::relocation_type::inffered:
             default:
                 LOG_WARN("Relocation not properly handle: {}", (int)type);
@@ -98,6 +92,8 @@ namespace eka2l1 {
                     uint8_t *dest_ptr = virtual_addr + dest_addr;
 
                     loader::relocation_type rel_type = (loader::relocation_type)(rel_info & 0xF000);
+
+                    // LOG_TRACE("{}", virtual_addr + 0x8000);
 
                     if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
                         LOG_WARN("Relocate fail at page: {}", i);
@@ -148,7 +144,7 @@ namespace eka2l1 {
                     mngr.open_e32img(img);
 
                     const std::uint32_t data_start = img->header.data_offset;
-                    const std::uint32_t data_end = data_start + img->header.data_size;
+                    const std::uint32_t data_end = data_start + img->header.data_size + img->header.bss_size;
 
                     const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
                     const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
@@ -209,7 +205,7 @@ namespace eka2l1 {
                     mngr.open_e32img(img);
 
                     const std::uint32_t data_start = img->header.data_offset;
-                    const std::uint32_t data_end = data_start + img->header.data_size;
+                    const std::uint32_t data_end = data_start + img->header.data_size + img->header.bss_size;
 
                     const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
                     const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
@@ -269,11 +265,13 @@ namespace eka2l1 {
         }
 
         bool import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
+            
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
                 prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), 
-                prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+            img->data_chunk = kern->create_chunk("", 0, common::align(data_seg_size, mem->get_page_size()), common::align(data_seg_size, mem->get_page_size()), 
+                prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
             chunk_ptr code_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
             chunk_ptr data_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
@@ -304,9 +302,18 @@ namespace eka2l1 {
             }
 
             memcpy(ptr<void>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
+            std::uint8_t *dt_ptr = ptr<std::uint8_t>(rtdata_addr).get(mem); 
 
-            if (img->header.data_size)
-                memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
+            if (img->header.data_size) {
+                // If there is initialized data, copy that
+                memcpy(dt_ptr + img->header.bss_size, img->data.data() + img->header.data_offset, 
+                    img->header.data_size);
+            }
+
+            // Definitely, there maybe bss, fill that with zero
+            // I usually depends on this to get my integer zero
+            // Filling zero from beginning of code segment, with size of bss size - 1
+            std::fill(dt_ptr, dt_ptr + img->header.bss_size, 0);
 
             if (img->epoc_ver == epocver::epoc9) {
                 for (auto &ib : img->import_section.imports) {
@@ -314,6 +321,31 @@ namespace eka2l1 {
                 }
             }
 
+            // Hack: open the descriptor address and relocate the type info
+            // Somehow Symbian doesn't do this
+            // TODO: Find out why and fix
+            if (img->has_extended_header && img->header_extended.exception_des & 1) {
+                // Let's fix this
+                address exception_des_addr = img->header_extended.exception_des - 1 + img->rt_code_addr;
+                address exception_struct_addr = *ptr<address>(exception_des_addr).get(mem);
+                address typeinfo_ptr_addr = exception_struct_addr - 0x10;
+
+                // The typeinfo should be relocated
+                auto do_relocate_typeinfo = [&](address addr) {
+                    address *typeinfo_relocate_val = ptr<address>(addr).get(mem);
+
+                    if (typeinfo_relocate_val == nullptr) {
+                        LOG_ERROR("Can't relocate exception typeinfo!");
+                    }
+
+                    *typeinfo_relocate_val = *typeinfo_relocate_val - img->header.code_base + img->rt_code_addr;
+                };
+
+                do_relocate_typeinfo(typeinfo_ptr_addr);
+                do_relocate_typeinfo(typeinfo_ptr_addr - 0x54);
+                do_relocate_typeinfo(typeinfo_ptr_addr - 0x54 - 0x78);
+            }
+            
             LOG_INFO("Load e32img success");
 
             return true;
@@ -339,9 +371,9 @@ namespace eka2l1 {
                 tids.clear();
 
             if (ver == epocver::epoc6) {
-            #include <hle/epoc6_n.def>
+           //  #include <hle/epoc6_n.def>
             } else {
-            #include <hle/epoc9_n.def>
+            // #include <hle/epoc9_n.def>
             }
 
             #undef LIB

@@ -285,8 +285,13 @@ namespace eka2l1::kernel {
         if (img) {
             info.rt_code_addr = img->rt_code_addr;
             info.rt_code_size = img->header.code_size;
-            info.rt_const_data_addr = img->rt_data_addr;
-            info.rt_const_data_size = img->header.data_size;
+            info.rt_const_data_addr = img->header.data_offset;
+            info.rt_const_data_size = img->header.text_size - img->header.data_size;
+            info.rt_bss_addr = img->rt_data_addr;
+            info.rt_bss_size = img->header.bss_size;
+
+            info.rt_initialized_data_addr = img->rt_data_addr + img->header.bss_size;
+            info.rt_initialized_data_size = img->header.data_size; 
         } else {
             info.rt_code_addr = romimg->header.code_address;
             info.rt_code_size = romimg->header.code_size;
