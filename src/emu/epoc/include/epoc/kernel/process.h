@@ -94,6 +94,20 @@ namespace eka2l1::kernel {
         pending
     };
 
+    struct memory_info {
+        address rt_code_addr;
+        address rt_code_size;
+
+        address rt_const_data_addr;
+        address rt_const_data_size;
+
+        address rt_initialized_data_addr;
+        address rt_initialized_data_size;
+
+        address rt_bss_addr;
+        address rt_bss_size;
+    };
+
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
@@ -190,6 +204,8 @@ namespace eka2l1::kernel {
         kernel_obj_ptr get_object(uint32_t handle);
 
         void *get_ptr_on_addr_space(address addr);
+
+        void get_memory_info(memory_info &info);
 
         std::u16string get_cmd_args() const {
             return cmd_args;

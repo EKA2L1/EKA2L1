@@ -280,7 +280,23 @@ namespace eka2l1::kernel {
 
         return info;
     }
-    
+
+    void process::get_memory_info(memory_info &info) {
+        if (img) {
+            info.rt_code_addr = img->rt_code_addr;
+            info.rt_code_size = img->header.code_size;
+            info.rt_const_data_addr = img->rt_data_addr;
+            info.rt_const_data_size = img->header.data_size;
+        } else {
+            info.rt_code_addr = romimg->header.code_address;
+            info.rt_code_size = romimg->header.code_size;
+            info.rt_bss_addr = romimg->header.data_bss_linear_base_address;
+            info.rt_bss_size = romimg->header.bss_size;
+            info.rt_const_data_addr = romimg->header.data_address;
+            info.rt_const_data_size = romimg->header.data_size;
+        }
+    }
+
     void process::logon_request_form::do_state(kernel_system *kern, common::chunkyseri &seri) {
         auto s = seri.section("ProcessLogonRequest", 1);
 

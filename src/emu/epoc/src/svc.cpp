@@ -194,6 +194,20 @@ namespace eka2l1::epoc {
         des->Assign(sys, pr_real->name());
     }
 
+    BRIDGE_FUNC(TInt, ProcessGetMemoryInfo, TInt aHandle, eka2l1::ptr<kernel::memory_info> aInfo) {
+        kernel::memory_info *info = aInfo.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr_real = kern->get_process(aHandle);
+        
+        if (!pr_real) {
+            return KErrBadHandle;
+        }
+
+        pr_real->get_memory_info(*info);
+        return KErrNone;
+    }
+
     BRIDGE_FUNC(TInt, ProcessGetId, TInt aHandle) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -327,8 +341,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        // Exe Path + double quote + space + args
-        return static_cast<TInt>(pr->get_exe_path().length() + pr->get_cmd_args().length() + 3);
+        return static_cast<TInt>(pr->get_cmd_args().length());
     }
 
     BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<TDes8> aData) {
@@ -346,26 +359,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        std::u16string cmdline;
-
-        {
-            std::u16string arg = pr->get_cmd_args();
-            std::u16string exe = pr->get_exe_path();
-
-            cmdline = u'"';
-            cmdline += exe + u'"';
-
-            if (!arg.empty()) {
-                cmdline += u' ' + arg;
-            }
-        }
-
-        // x2 the size of data since this is an u16string
-        if (data->iMaxLength < cmdline.length() * 2) {
-            LOG_WARN("Not enough data to store command line, abort");
-            return;
-        }
-        
+        std::u16string cmdline = pr->get_cmd_args();
         TUint8 *data_ptr = data->Ptr(sys);
 
         memcpy(data_ptr, cmdline.data(), cmdline.length() << 1);
@@ -2092,8 +2086,8 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(address, ExceptionDescriptor, address aInAddr) {
         // It's not really stable, so for now
-        // return epoc::get_exception_descriptor_addr(sys, aInAddr)
-        return 0;
+        return epoc::get_exception_descriptor_addr(sys, aInAddr);
+        // return 0;
     }
 
     /* ATOMIC OPERATION */
@@ -2203,6 +2197,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x52, ProcessCommandLineLength),
         BRIDGE_REGISTER(0x56, DebugPrint),
         BRIDGE_REGISTER(0x5E, ThreadContext),
+        BRIDGE_REGISTER(0x5F, ProcessGetMemoryInfo),
         BRIDGE_REGISTER(0x6A, HandleClose),
         BRIDGE_REGISTER(0x64, ProcessType),
         BRIDGE_REGISTER(0x68, ThreadCreate),
