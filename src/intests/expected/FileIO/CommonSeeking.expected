@@ -1,1 +1,4 @@
 Seek EUSER.DLL ROM FILE with offset 2, mode address, return = 802953D2
+Seek EUSER.DLL ROM FILE with offset 50, mode start, return = 00000032
+Seek EUSER.DLL ROM FILE with offset -2, mode current, return = 00000030
+Seek EUSER.DLL ROM FILE with offset 0, mode end, return = 0003B3DC

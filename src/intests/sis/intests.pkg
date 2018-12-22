@@ -17,3 +17,4 @@
 
 "..\expected\CmdAndParams\CheckCommandLineLength.expected" 		  -"!:\private\e6f75ec0\Expected\CmdAndParams\CheckCommandLineLength.expected"
 "..\expected\CmdAndParams\CheckCommandLineString.expected" 		  -"!:\private\e6f75ec0\Expected\CmdAndParams\CheckCommandLineString.expected"
+"..\expected\CodeSeg\ExceptionDescriptorForRamCode.expected"	  -"!:\private\e6f75ec0\Expected\CodeSeg\ExceptionDescriptorForRamCode.expected"
