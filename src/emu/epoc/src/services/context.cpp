@@ -124,14 +124,29 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
-                eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
-                    msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                // Please don't change the order
+                if ((int)arg_type & (int)ipc_arg_type::flag_16b) {
+                    eka2l1::epoc::TDesC16 *des = static_cast<eka2l1::epoc::TDesC16 *>(
+                        msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
                 
-                std::string bin;
-                bin.resize(len);
+                    // We can't handle odd length
+                    assert(len % 2 == 0);
 
-                memcpy(bin.data(), data, len);
-                des->Assign(msg->own_thr->owning_process(), bin);
+                    std::u16string bin;
+                    bin.resize(len / 2);
+
+                    memcpy(bin.data(), data, len);
+                    des->Assign(msg->own_thr->owning_process(), bin);
+                } else { 
+                    eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
+                        msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+
+                    std::string bin;
+                    bin.resize(len);
+
+                    memcpy(bin.data(), data, len);
+                    des->Assign(msg->own_thr->owning_process(), bin);
+                }
 
                 return true;
             }

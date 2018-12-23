@@ -706,6 +706,11 @@ namespace eka2l1::epoc {
     const TInt KIpcDirRead = 0;
     const TInt KIpcDirWrite = 0x10000000;
 
+    // In source code, the usage of this SVC call is like this:
+    // - Read: Success returns the length readed, and set the target receive descriptor to that length.
+    // - Write: returns KErrNone if success
+    // This call can be much optimized more, but will results in ugly code.
+    // TODO (pent0): Optimize this, since this is call frequently
     BRIDGE_FUNC(TInt, MessageIpcCopy, TInt aHandle, TInt aParam, eka2l1::ptr<TIpcCopyInfo> aInfo, TInt aStartOffset) {
         if (!aInfo || aParam < 0) {
             return KErrArgument;
@@ -750,7 +755,7 @@ namespace eka2l1::epoc {
 
                 memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, arg_request->size() - aStartOffset);
 
-                return KErrNone;
+                return arg_request->size() - aStartOffset;
             }
 
             const auto arg_request = context.get_arg<std::u16string>(aParam);
@@ -766,7 +771,7 @@ namespace eka2l1::epoc {
             memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset * 2,
                 (arg_request->size() - aStartOffset) * 2);
 
-            return KErrNone;
+            return arg_request->size() - aStartOffset;
         }
 
         service::ipc_context context;
@@ -774,9 +779,25 @@ namespace eka2l1::epoc {
         context.msg = msg;
 
         std::string content;
-        content.resize(des8 ? (aStartOffset + info->iTargetLength) : (aStartOffset + info->iTargetLength) * 2);
+        // We must keep the other part behind the offset
+
+        if (des8) {
+            content = std::move(*context.get_arg<std::string>(aParam));
+        } else {
+            std::u16string temp_content = *context.get_arg<std::u16string>(aParam);
+            content.resize(temp_content.length() * 2);
+            memcpy(&content[0], &temp_content[0], content.length());
+        }
+
+        std::uint32_t minimum_size = aStartOffset + info->iTargetLength;
+        des8 ? 0 : minimum_size *= 2;
+
+        if (content.length() < minimum_size) {
+            content.resize(minimum_size);
+        }
 
         memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
+
         bool result = context.write_arg_pkg(aParam, 
             reinterpret_cast<uint8_t *>(&content[0]), static_cast<std::uint32_t>(content.length()));
 
