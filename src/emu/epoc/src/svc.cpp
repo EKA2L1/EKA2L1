@@ -750,7 +750,7 @@ namespace eka2l1::epoc {
 
                 memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, arg_request->size() - aStartOffset);
 
-                return KErrNone;
+                return arg_request->size() - aStartOffset;
             }
 
             const auto arg_request = context.get_arg<std::u16string>(aParam);
@@ -766,7 +766,7 @@ namespace eka2l1::epoc {
             memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset * 2,
                 (arg_request->size() - aStartOffset) * 2);
 
-            return KErrNone;
+            return arg_request->size() - aStartOffset;
         }
 
         service::ipc_context context;
@@ -784,7 +784,7 @@ namespace eka2l1::epoc {
             return KErrBadDescriptor;
         }
 
-        return KErrNone;
+        return content.length();
     }
 
     void query_security_info(eka2l1::process_ptr process, epoc::TSecurityInfo *info) {
