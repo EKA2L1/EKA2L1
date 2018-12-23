@@ -576,7 +576,7 @@ namespace eka2l1::epoc {
             msg->own_thr->signal_request();
         }
         
-        // LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
+        LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
     }
@@ -951,6 +951,8 @@ namespace eka2l1::epoc {
         if (!aStatus) {
             LOG_TRACE("Sending a blind sync message");
         }
+
+        LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
         
         return ss->send_receive_sync(aOrd, arg, aStatus);
     }
@@ -982,6 +984,8 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind async message");
         }
 
+        LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
+        
         return ss->send_receive(aOrd, arg, aStatus);
     }
 
