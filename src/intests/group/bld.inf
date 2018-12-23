@@ -13,3 +13,4 @@ DEFAULT
 
 PRJ_MMPFILES
 intests.mmp
+dummyserv.mmp

@@ -28,3 +28,7 @@ SOURCEPATH ..\src\cmd
 SOURCE cmd.cpp
 SOURCEPATH ..\src\kern
 SOURCE codeseg.cpp
+SOURCEPATH ..\src\ext\dummycli
+SOURCE dummycli.cpp
+SOURCEPATH ..\src\ipc
+SOURCE ipc.cpp

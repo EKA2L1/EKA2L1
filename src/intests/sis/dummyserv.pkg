@@ -1,0 +1,9 @@
+#{"EKA2L1 Dummy IPC Server"},(0xe6075ec1),1,0,0
+
+;Localised Vendor name
+%{"pent0"}
+
+;Unique Vendor name
+:"pent0"
+
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\DummyServ.exe"		-"!:\sys\bin\DummyServ.exe"

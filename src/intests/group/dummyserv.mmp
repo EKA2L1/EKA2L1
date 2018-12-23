@@ -1,0 +1,13 @@
+TARGET DummyServ.exe
+TARGETTYPE exe
+UID 0 0xe6075ec1
+
+DEBUGGABLE_UDEBONLY
+
+LIBRARY euser.lib
+
+SYSTEMINCLUDE   \epoc32\include
+USERINCLUDE ../include
+
+SOURCEPATH ../src/ext/dummyserv
+SOURCE dummyserv.cpp dummyservsession.cpp dummyserventry.cpp
