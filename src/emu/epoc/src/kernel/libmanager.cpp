@@ -50,10 +50,9 @@ namespace eka2l1 {
             return true;
         }
 
-        bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, 
-            uint32_t data_delta) {
+        bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == loader::relocation_type::reserved) {
-                return true;
+               return true;
             }
 
             // What is in it ?? :))
@@ -93,7 +92,8 @@ namespace eka2l1 {
 
                     loader::relocation_type rel_type = (loader::relocation_type)(rel_info & 0xF000);
 
-                    // LOG_TRACE("{}", virtual_addr + 0x8000);
+                    // Compare with petran in case there are problems
+                    // LOG_TRACE("{:x}", virtual_addr);
 
                     if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
                         LOG_WARN("Relocate fail at page: {}", i);

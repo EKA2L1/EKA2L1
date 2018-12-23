@@ -108,6 +108,7 @@ namespace eka2l1 {
 
                 i += static_cast<int>(reloc_entry.rels_info.size()) - 1;
 
+                (!reloc_entry.rels_info.empty()) && (reloc_entry.rels_info.back() == 0) ? (i -= 1) : 0;
                 section.entries.push_back(reloc_entry);
             }
         }
