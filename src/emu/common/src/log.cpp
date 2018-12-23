@@ -77,9 +77,19 @@ namespace eka2l1 {
 #endif
 
 #if EKA2L1_PLATFORM(WIN32)
-            sinks.push_back(std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>());
+            auto color_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>();
 #else
-            sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>());
+            auto color_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+#endif
+            
+#if EKA2L1_PLATFORM(WIN32) || EKA2L1_PLATFORM(UNIX)
+            color_sink->set_color(spdlog::level::trace, color_sink->BOLD);
+            color_sink->set_color(spdlog::level::err, color_sink->CYAN);
+            color_sink->set_color(spdlog::level::critical, color_sink->RED);
+            color_sink->set_color(spdlog::level::warn, color_sink->YELLOW);
+            color_sink->set_color(spdlog::level::info, color_sink->GREEN);
+
+            sinks.push_back(std::move(color_sink));
 #endif
 
             sinks.push_back(std::make_shared<spdlog::sinks::simple_file_sink_mt>(log_file_name));
