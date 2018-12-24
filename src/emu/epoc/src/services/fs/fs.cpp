@@ -1074,7 +1074,8 @@ namespace eka2l1 {
             new_node.share_mode = share_mode;
             new_node.own_process = sender->owning_process();
 
-            return nodes_table.add_node(new_node);
+            std::size_t h = nodes_table.add_node(new_node);
+            return (h == 0) ? KErrNoMemory : static_cast<int>(h);
         }
 
         if ((int)share_mode != -1 && share_mode != cache_node->share_mode) {
@@ -1142,7 +1143,8 @@ namespace eka2l1 {
         new_node.open_mode = access_mode;
         new_node.share_mode = share_mode;
 
-        return nodes_table.add_node(new_node);
+        std::size_t h = nodes_table.add_node(new_node);
+        return (h == 0) ? KErrNoMemory : h;
     }
 
     bool is_e32img(symfile f) {
@@ -1224,7 +1226,7 @@ namespace eka2l1 {
             if (dir) {
                 entry.aAttrib |= KEntryAttDir;
             } else {
-                entry.aAttrib |= KEntryAttNormal;
+                entry.aAttrib |= KEntryAttArchive;
             }
         }
 
@@ -1341,7 +1343,7 @@ namespace eka2l1 {
             if (info->type == io_component_type::dir) {
                 entry.aAttrib &= KEntryAttDir;
             } else {
-                entry.aAttrib &= KEntryAttNormal;
+                entry.aAttrib &= KEntryAttArchive;
             }
         }
 
@@ -1418,7 +1420,7 @@ namespace eka2l1 {
                 if (info->type == io_component_type::dir) {
                     entry.aAttrib &= KEntryAttDir;
                 } else {
-                    entry.aAttrib &= KEntryAttNormal;
+                    entry.aAttrib &= KEntryAttArchive;
                 }
             }
 
