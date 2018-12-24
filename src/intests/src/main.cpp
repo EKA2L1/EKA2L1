@@ -36,7 +36,7 @@ void MainWrapperL()
         AddFileTestCasesL();
         
         TInt totalPass = instance->Run();    
-        RDebug::Printf("%d tests passed", totalPass);
+        RDebug::Printf("%d/%d tests passed", totalPass, instance->TotalTests());
         
         CleanupStack::PopAndDestroy();
     }

@@ -12,8 +12,14 @@
 
 ; FileIO
 "..\assets\FileIO\SeekPosTest.inp"		-"!:\private\e6f75ec0\Assets\FileIO\SeekPosTest.inp"
-"..\expected\FileIO\CommonSeeking.expected" 		  -"!:\private\e6f75ec0\Expected\FileIO\CommonSeeking.expected"
+"..\assets\FileIO\ReadDummy.txt"		-"!:\private\e6f75ec0\Assets\FileIO\ReadDummy.txt"
+
+"..\expected\FileIO\CommonSeekingRom.expected" 		  -"!:\private\e6f75ec0\Expected\FileIO\CommonSeekingRom.expected"
 "..\expected\FileIO\PositionAfterCustomRead.expected" -"!:\private\e6f75ec0\Expected\FileIO\PositionAfterCustomRead.expected"
+
+"..\expected\FileIO\FileWriteWithLengthAndOffset.expected"		  -"!:\private\e6f75ec0\Expected\FileIO\FileWriteWithLengthAndOffset.expected"
+"..\expected\FileIO\ReadTillEof.expected"		  -"!:\private\e6f75ec0\Expected\FileIO\ReadTillEof.expected"
+"..\expected\FileIO\ReadWithSpecifiedLenAndOffset.expected"		  -"!:\private\e6f75ec0\Expected\FileIO\ReadWithSpecifiedLenAndOffset.expected"
 
 ; CmdArgs
 "..\expected\CmdAndParams\CheckCommandLineLength.expected" 		  -"!:\private\e6f75ec0\Expected\CmdAndParams\CheckCommandLineLength.expected"

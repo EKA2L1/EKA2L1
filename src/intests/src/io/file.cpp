@@ -73,7 +73,7 @@ void PosAfterCustomReadL()
 		delete expectedLineDescriptionBuf;
     }
 
-void CommonSeekingL()
+void CommonSeekingRomL()
     {
         // Hey, let's try open a ROM file
         // Assuming the most common ROM file I known: EUser.DLL, will always be available
@@ -114,8 +114,104 @@ void CommonSeekingL()
         EXPECT_INPUT_EQUAL_L(expectedLine);        
     }
 
+void FileReadWithSpecifiedLenAndOffsetL()
+    {
+        SFsSessionGuard guard;
+        RFile f;
+        
+        TFileName fileName;
+        MAKE_ASSET_FILE_PATH(fileName, _L("ReadDummy.txt"), guard.iFs);
+        
+        User::LeaveIfError(f.Open(guard.iFs, fileName, EFileRead | EFileShareAny));
+        
+        // No length set
+        TBuf8<30> hitMiss;
+        TInt orgLen = hitMiss.Length();
+        
+        // length = 11 (Hit or Miss)
+        f.Read(hitMiss, 11);
+        
+        TBuf8<180> expectedLine;
+        expectedLine.Format(_L8("Read with len = 11, org len = %d, new_len = %d, str = %S"),
+                orgLen, expectedLine.Length(), &hitMiss);
+        
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+        
+        // Now read with offset and specified len
+        // We read a big chunk of data now
+        f.Read(11, hitMiss, 5);
+        
+        // But it should limit our data already!
+        expectedLine.Format(_L8("String from offset 11 with len 5: %S"),
+                &hitMiss);
+        
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+    }
+
+void FileReadEofLimitL()
+    {
+        SFsSessionGuard guard;
+        RFile f;
+        
+        TFileName fileName;
+        MAKE_ASSET_FILE_PATH(fileName, _L("ReadDummy.txt"), guard.iFs);
+        
+        User::LeaveIfError(f.Open(guard.iFs, fileName, EFileRead | EFileShareAny));
+     
+        // The behavior should be: when we are reading beyond eof, all data will be discard
+        TBuf8<58> buf;
+        f.Read(0, buf, 102);
+        
+        TInt filePointer = 0;
+        f.Seek(ESeekCurrent, filePointer);
+        
+        TBuf8<120> expectedLine;
+        expectedLine.Format(_L8("Read offset 0 with size 102 (beyond eof and buf size), data %S pointer %d"), &buf, filePointer);
+
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+
+        TBuf8<58> buf2;
+        f.Read(0, buf2, 25);
+        
+        f.Seek(ESeekCurrent, filePointer);
+                
+        expectedLine.Format(_L8("Read offset 0 with size 25, data %S pointer %d"), &buf2, filePointer);
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+        
+        f.Close();        
+    }
+
+void FileWriteWithSpecifiedLenAndOffsetL()
+    {
+        SFsSessionGuard guard;
+        RFile f;
+        
+        TFileName fileName;
+        MAKE_ASSET_FILE_PATH(fileName, _L("WriteDummy.txt"), guard.iFs);
+        
+        User::LeaveIfError(f.Replace(guard.iFs, fileName, EFileWrite | EFileShareAny));
+        
+        _LIT8(KStringToWrite, "Hey, I'm Dummy!");
+        f.Write(5, KStringToWrite, 3);
+        
+        f.Close();
+        
+        User::LeaveIfError(f.Open(guard.iFs, fileName, EFileRead | EFileShareAny));
+        
+        TBuf8<6> buf;
+        f.Read(buf, 3);
+        
+        TBuf8<40> expectedLine;
+        expectedLine.Format(_L8("Writing to file, results: %S"), &buf);
+        
+        EXPECT_INPUT_EQUAL_L(expectedLine);
+    }
+
 void AddFileTestCasesL()
     {
         ADD_TEST_CASE_L(PositionAfterCustomRead, FileIO, PosAfterCustomReadL);
-        ADD_TEST_CASE_L(CommonSeeking, FileIO, CommonSeekingL);
+        ADD_TEST_CASE_L(CommonSeekingRom, FileIO, CommonSeekingRomL);
+        ADD_TEST_CASE_L(ReadWithSpecifiedLenAndOffset, FileIO, FileReadWithSpecifiedLenAndOffsetL);
+        ADD_TEST_CASE_L(ReadTillEof, FileIO, FileReadEofLimitL);
+        ADD_TEST_CASE_L(FileWriteWithLengthAndOffset, FileIO, FileWriteWithSpecifiedLenAndOffsetL);
     }

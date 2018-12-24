@@ -16,7 +16,7 @@ void PosAfterCustomReadL();
 // - Seek ROM file
 // - Seek start, seek end, seek current
 // - Backward seek
-void CommonSeekingL();
+void CommonSeekingRomL();
 
 void AddFileTestCasesL();
 
