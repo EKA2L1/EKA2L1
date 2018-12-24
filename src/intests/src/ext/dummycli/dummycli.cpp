@@ -48,3 +48,8 @@ void RDummySession::GetSecertStruct(SSecert &aSecert)
         TPckg<SSecert> pack(aSecert);
         SendReceive(EDummyOpGetSecertPackage, TIpcArgs(&pack, 0, 0, 0));
     }
+
+TInt RDummySession::DivideString(const TDesC &aDes, TDes &str1, TDes &str2)
+    {
+        return SendReceive(EDummyOpDivideString, TIpcArgs(&aDes, &str1, &str2));
+    }

@@ -19,7 +19,9 @@ public:
         static CDummyServerSession *NewL(CDummyServer &aServer);
         static CDummyServerSession *NewLC(CDummyServer &aServer);
         
-        virtual ~CDummyServerSession() { }
+        virtual ~CDummyServerSession() 
+            {
+            }
         
         void ServiceL(const RMessage2 &aMessage);
       

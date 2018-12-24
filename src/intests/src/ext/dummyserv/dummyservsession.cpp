@@ -92,7 +92,39 @@ void CDummyServerSession::ServiceL(const RMessage2 &aMessage)
                     aMessage.Complete(KErrNone);
                     break;
                 }
-            
+
+            // Take slot 0, divide it to two string: one with 2 characters,
+            // one with length - 2, than put it in slot 1 and 2
+            // KErrNoMemory if string length <= 2
+            case EDummyOpDivideString:
+                {
+                    TInt len = aMessage.GetDesLength(0);
+                    
+                    if (len <= 2)
+                        {
+                            aMessage.Complete(KErrNoMemory);
+                            break;
+                        }
+                    
+                    TBuf<2> string1;
+                    
+                    HBufC *string2Buf = HBufC::NewL(len - 2);
+                    TPtr string2 = string2Buf->Des();
+                    
+                    string1.SetLength(2);
+                    string2.SetLength(len - 2);
+                    
+                    aMessage.Read(0, string1, 0);
+                    aMessage.Read(0, string2, 2);
+                    
+                    TInt err = KErrNone;
+                    
+                    err = aMessage.Write(1, string1);
+                    err = aMessage.Write(2, string2);
+                    
+                    aMessage.Complete(err);
+                    break;
+                }
             default: 
                 {
                     User::Panic(_L("DummyServForDummy"), KErrNotSupported);

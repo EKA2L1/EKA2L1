@@ -27,6 +27,8 @@ public:
         
         void GetSecertMessage(TDes &aDes);
         void GetSecertStruct(SSecert &aSecert);
+        
+        TInt DivideString(const TDesC &aDes, TDes &str1, TDes &str2);
     };
 
 #endif /* DUMMYCLI_H_ */

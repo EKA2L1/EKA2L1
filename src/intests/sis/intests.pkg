@@ -23,8 +23,9 @@
 "..\expected\CodeSeg\ExceptionDescriptorForRamCode.expected"	  -"!:\private\e6f75ec0\Expected\CodeSeg\ExceptionDescriptorForRamCode.expected"
 
 ; IPC
-"..\expected\IPC\ReadWriteDescriptorWithoutOffset.expected"		  -"!:\private\e6f75ec0\Expected\IPC\ReadWriteDescriptorWithoutOffset.expected"
-"..\expected\IPC\WriteDescriptorWithoutOffset.expected"		  	  -"!:\private\e6f75ec0\Expected\IPC\WriteDescriptorWithoutOffset.expected"
-"..\expected\IPC\WriteDescriptorWithOffset.expected"		  	  -"!:\private\e6f75ec0\Expected\IPC\WriteDescriptorWithOffset.expected"
+"..\expected\IPC\ReadWriteDescriptorWithoutOffset.expected"		  		-"!:\private\e6f75ec0\Expected\IPC\ReadWriteDescriptorWithoutOffset.expected"
+"..\expected\IPC\WriteDescriptorWithoutOffset.expected"		  	  		-"!:\private\e6f75ec0\Expected\IPC\WriteDescriptorWithoutOffset.expected"
+"..\expected\IPC\WriteDescriptorWithOffset.expected"		  	  		-"!:\private\e6f75ec0\Expected\IPC\WriteDescriptorWithOffset.expected"
+"..\expected\IPC\ReadWithOffsetWriteDescriptorWithoutOffset.expected"	-"!:\private\e6f75ec0\Expected\IPC\ReadWithOffsetWriteDescriptorWithoutOffset.expected"
 
 @"DummyServ.sisx", (0xe6075ec1)
