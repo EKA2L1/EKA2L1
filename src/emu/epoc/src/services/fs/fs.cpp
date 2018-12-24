@@ -675,7 +675,8 @@ namespace eka2l1 {
             write_pos = write_pos_provided;
         }
 
-        vfs_file->seek(write_pos, file_seek_mode::beg);
+        // If this write pos is beyond the current end of file, use last pos
+        vfs_file->seek(write_pos > last_pos ? last_pos : write_pos, file_seek_mode::beg);
         size_t wrote_size = vfs_file->write_file(&(*write_data)[0], 1, write_len);
 
         LOG_TRACE("File {} wroted with size: {}",
@@ -1122,28 +1123,26 @@ namespace eka2l1 {
                 LOG_TRACE("File open mode is exclusive, denide access");
                 return KErrAccessDenied;
             }
-
-            // If we have the same open mode as the cache node, don't create new, returns this :D
-            if (cache_node->open_mode == real_mode) {
-                return cache_node->id;
-            }
-
-            fs_node new_node;
-            new_node.vfs_node = io->open_file(name, access_mode);
-
-            if (!new_node.vfs_node) {
-                LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
-                return KErrNotFound;
-            }
-
-            new_node.mix_mode = real_mode;
-            new_node.open_mode = access_mode;
-            new_node.share_mode = share_mode;
-
-            return nodes_table.add_node(new_node);
         }
 
-        return KErrGeneral;
+        // If we have the same open mode as the cache node, don't create new, returns this :D
+        if (cache_node->open_mode == real_mode) {
+            return cache_node->id;
+        }
+
+        fs_node new_node;
+        new_node.vfs_node = io->open_file(name, access_mode);
+
+        if (!new_node.vfs_node) {
+            LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
+            return KErrNotFound;
+        }
+
+        new_node.mix_mode = real_mode;
+        new_node.open_mode = access_mode;
+        new_node.share_mode = share_mode;
+
+        return nodes_table.add_node(new_node);
     }
 
     bool is_e32img(symfile f) {
