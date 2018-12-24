@@ -41,6 +41,7 @@
 #include <manager/script_manager.h>
 #endif
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/random.h>
@@ -748,14 +749,11 @@ namespace eka2l1::epoc {
                     return KErrBadDescriptor;
                 }
 
-                // Target length is the descriptor length, either 8-bit or 16-bit, not total bytes that can be stored.
-                if (arg_request->length() - aStartOffset > info->iTargetLength) {
-                    return KErrNoMemory;
-                }
+                TInt lengthToRead = common::min(
+                    static_cast<TInt>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
-                memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, arg_request->size() - aStartOffset);
-
-                return arg_request->size() - aStartOffset;
+                memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, lengthToRead);
+                return lengthToRead;
             }
 
             const auto arg_request = context.get_arg<std::u16string>(aParam);
@@ -764,14 +762,13 @@ namespace eka2l1::epoc {
                 return KErrBadDescriptor;
             }
 
-            if (arg_request->length() - aStartOffset > info->iTargetLength) {
-                return KErrNoMemory;
-            }
+            TInt lengthToRead = common::min(
+                static_cast<TInt>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
             memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset * 2,
-                (arg_request->size() - aStartOffset) * 2);
+                lengthToRead * 2);
 
-            return arg_request->size() - aStartOffset;
+            return lengthToRead;
         }
 
         service::ipc_context context;
@@ -798,11 +795,19 @@ namespace eka2l1::epoc {
 
         memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
 
+        int error_code = 0;
+
         bool result = context.write_arg_pkg(aParam, 
-            reinterpret_cast<uint8_t *>(&content[0]), static_cast<std::uint32_t>(content.length()));
+            reinterpret_cast<uint8_t *>(&content[0]), static_cast<std::uint32_t>(content.length()),
+            &error_code);
 
         if (!result) {
-            return KErrBadDescriptor;
+            // -1 = bad descriptor, -2 = overflow
+            if (error_code == -1) {
+                return KErrBadDescriptor;
+            }
+
+            return KErrOverflow;
         }
 
         return KErrNone;
