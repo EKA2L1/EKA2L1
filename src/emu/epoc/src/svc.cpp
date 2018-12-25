@@ -682,8 +682,10 @@ namespace eka2l1::epoc {
         const ipc_arg_type type = context.msg->args.get_arg_type(aParam);
 
         if ((int)type & (int)ipc_arg_type::flag_des) {
-            return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(mem)
-                ->get_max_length(msg->own_thr->owning_process());
+            process_ptr own_pr = msg->own_thr->owning_process();
+
+            return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(own_pr)
+                ->get_max_length(own_pr);
         }
 
         return KErrBadDescriptor;
