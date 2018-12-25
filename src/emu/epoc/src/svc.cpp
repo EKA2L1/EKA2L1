@@ -651,24 +651,12 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        service::ipc_context context;
-        context.msg = msg;
-        context.sys = sys;
-
-        const auto try_des16 = context.get_arg<std::u16string>(aParam);
-
-        // Reverse the order for safety
-        if (!try_des16) {
-            const auto try_des8 = context.get_arg<std::string>(aParam);
-
-            if (!try_des8) {
-                return KErrBadDescriptor;
-            }
-
-            return static_cast<TInt>(try_des8->length());
+        if ((int)msg->args.get_arg_type(aParam) & (int)ipc_arg_type::flag_des) {
+            return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(kern->crr_process())
+                ->get_length();
         }
 
-        return static_cast<TInt>(try_des16->length());
+        return KErrBadDescriptor;
     }
 
     BRIDGE_FUNC(TInt, MessageGetDesMaxLength, TInt aHandle, TInt aParam) {
@@ -696,7 +684,7 @@ namespace eka2l1::epoc {
                 ->get_max_length(kern->crr_process());
         }
 
-        return KErrGeneral;
+        return KErrBadDescriptor;
     }
 
     struct TIpcCopyInfo {
