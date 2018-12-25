@@ -652,7 +652,9 @@ namespace eka2l1::epoc {
         }
 
         if ((int)msg->args.get_arg_type(aParam) & (int)ipc_arg_type::flag_des) {
-            epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[aParam]).get(kern->crr_process());
+            epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[aParam]).
+                get(msg->own_thr->owning_process());
+
             return base->get_length();
         }
 
@@ -681,7 +683,7 @@ namespace eka2l1::epoc {
 
         if ((int)type & (int)ipc_arg_type::flag_des) {
             return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(mem)
-                ->get_max_length(kern->crr_process());
+                ->get_max_length(msg->own_thr->owning_process());
         }
 
         return KErrBadDescriptor;
@@ -977,6 +979,12 @@ namespace eka2l1::epoc {
 
         if (!aStatus) {
             LOG_TRACE("Sending a blind sync message");
+        }
+
+        
+        if (ss->get_server()->name() == "!ecomserver" && aOrd == 2) {
+            // Temp buf
+            int a = 5;
         }
 
         LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
