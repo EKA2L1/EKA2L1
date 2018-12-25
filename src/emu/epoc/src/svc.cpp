@@ -652,8 +652,8 @@ namespace eka2l1::epoc {
         }
 
         if ((int)msg->args.get_arg_type(aParam) & (int)ipc_arg_type::flag_des) {
-            return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(kern->crr_process())
-                ->get_length();
+            epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[aParam]).get(kern->crr_process());
+            return base->get_length();
         }
 
         return KErrBadDescriptor;

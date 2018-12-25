@@ -25,6 +25,7 @@
 #include <e32err.h>
 #include <epoc/ptr.h>
 
+#include <cassert>
 #include <string>
 #include <memory>
 
@@ -66,7 +67,7 @@ namespace eka2l1::epoc {
         }
 
         inline des_type       get_descriptor_type() const {
-            return static_cast<des_type>(info >> 28);   
+            return static_cast<des_type>(info >> 28);
         }
 
         void *get_pointer_raw(eka2l1::process_ptr &pr);
@@ -87,6 +88,9 @@ namespace eka2l1::epoc {
         }
 
         std::basic_string<T> to_std_string(eka2l1::process_ptr &pr) {
+            const des_type dtype = get_descriptor_type();
+            assert((dtype >= buf_const) && (dtype <= ptr_to_buf));
+
             std::basic_string<T> data;
             data.resize(get_length());
 
@@ -109,7 +113,7 @@ namespace eka2l1::epoc {
                 }
             }
 
-            std::copy(data, data + size, des_buf);
+            std::memcpy(des_buf, data, size);
             set_length(pr, real_len);
 
             return 0;
@@ -156,4 +160,25 @@ namespace eka2l1::epoc {
     using desc16 = desc<char16_t>;
     using des8 = des<char>;
     using des16 = des<char16_t>;
+
+    using ptr_desc8 = ptr_desc<char>;
+    using ptr_desc16 = ptr_desc<char16_t>;
+
+    using buf_desc8 = buf_desc<char>;
+    using buf_desc16 = buf_desc<char16_t>;
+
+    using buf_des8 = buf_des<char>;
+    using buf_des16 = buf_des<char16_t>;
+
+    using ptr_des8 = ptr_des<char>;
+    using ptr_des16 = ptr_des<char16_t>;
+
+    static_assert(sizeof(desc8) == 4);
+    static_assert(sizeof(desc16) == 4);
+    static_assert(sizeof(des8) == 8);
+    static_assert(sizeof(des16) == 8);
+    static_assert(sizeof(ptr_desc8) == 8);
+    static_assert(sizeof(ptr_desc16) == 8);
+    static_assert(sizeof(ptr_des8) == 12);
+    static_assert(sizeof(ptr_des16) == 12);
 }

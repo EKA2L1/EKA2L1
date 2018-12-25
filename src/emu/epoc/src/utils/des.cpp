@@ -49,9 +49,20 @@ namespace eka2l1::epoc {
     }
     
     void desc_base::set_length(eka2l1::process_ptr &pr, const std::uint32_t new_len) {
+        des_type dtype = get_descriptor_type();
+
+        if ((dtype == buf) || (dtype == ptr) || (dtype == ptr_to_buf)) {
+            const std::uint32_t max_len = get_max_length(pr);
+
+            if (new_len > max_len) {
+                LOG_ERROR("Length being set greater than maximum (max {} vs set {})", 
+                    max_len, new_len);
+            }
+        }
+
         info = (info & ~(0xFFFFFF)) | new_len;
 
-        if (get_descriptor_type() == ptr_to_buf) {
+        if (dtype == ptr_to_buf) {
             // We need to set the length inside.
             ptr_des<std::uint8_t>     *pbuf = reinterpret_cast<decltype(pbuf)>(this);
             buf_desc<std::uint8_t>    *hbufc = pbuf->data.cast<buf_desc<std::uint8_t>>().get(pr);
