@@ -1806,8 +1806,7 @@ namespace eka2l1::epoc {
         }
 
         memcpy(data_ptr, data_vec.data(), aDataLength);
-
-        return KErrNone;
+        return aDataLength;
     }
 
     BRIDGE_FUNC(TInt, PropertyAttach, TInt aCagetory, TInt aValue, TOwnerType aOwnerType) {
@@ -1986,7 +1985,7 @@ namespace eka2l1::epoc {
 
         std::copy(dat.begin(), dat.begin() + aSize, aDataPtr.get(mem));
 
-        return KErrNone;
+        return aSize;
     }
 
     BRIDGE_FUNC(TInt, PropertyFindSetInt, TInt aCage, TInt aKey, TInt aValue) {
