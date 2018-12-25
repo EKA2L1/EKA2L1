@@ -70,24 +70,24 @@ namespace eka2l1::epoc {
             return static_cast<des_type>(info >> 28);
         }
 
-        void *get_pointer_raw(eka2l1::process_ptr &pr);
+        void *get_pointer_raw(eka2l1::process_ptr pr);
         
-        int assign_raw(eka2l1::process_ptr &pr, const std::uint8_t *data, 
+        int assign_raw(eka2l1::process_ptr pr, const std::uint8_t *data, 
             const std::uint32_t size);
 
-        std::uint32_t get_max_length(eka2l1::process_ptr &pr);
+        std::uint32_t get_max_length(eka2l1::process_ptr pr);
 
-        void set_length(eka2l1::process_ptr &pr, const std::uint32_t new_len);
+        void set_length(eka2l1::process_ptr pr, const std::uint32_t new_len);
     };
 
     template <typename T>
     struct desc: public desc_base {
     public:      
-        T *get_pointer(eka2l1::process_ptr &pr) {
+        T *get_pointer(eka2l1::process_ptr pr) {
             return reinterpret_cast<T*>(get_pointer_raw(pr));
         }
 
-        std::basic_string<T> to_std_string(eka2l1::process_ptr &pr) {
+        std::basic_string<T> to_std_string(eka2l1::process_ptr pr) {
             const des_type dtype = get_descriptor_type();
             assert((dtype >= buf_const) && (dtype <= ptr_to_buf));
 
@@ -100,7 +100,7 @@ namespace eka2l1::epoc {
             return data;
         }
 
-        int assign(eka2l1::process_ptr &pr, const std::uint8_t *data, 
+        int assign(eka2l1::process_ptr pr, const std::uint8_t *data, 
             const std::uint32_t size) {
             std::uint8_t *des_buf = reinterpret_cast<std::uint8_t*>(get_pointer_raw(pr));
             des_type dtype = get_descriptor_type();
@@ -119,7 +119,7 @@ namespace eka2l1::epoc {
             return 0;
         }
 
-        int assign(eka2l1::process_ptr &pr, const std::basic_string<T> &buf) {
+        int assign(eka2l1::process_ptr pr, const std::basic_string<T> &buf) {
             return assign(pr, reinterpret_cast<const std::uint8_t*>(&buf[0]), 
                 static_cast<std::uint32_t>(buf.size() * sizeof(T)));
         }
