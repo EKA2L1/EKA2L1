@@ -1801,11 +1801,11 @@ namespace eka2l1::epoc {
         TUint8 *data_ptr = aData.get(mem);
         auto data_vec = prop->get_bin();
 
-        if (data_vec.size() > aDataLength) {
-            return KErrNoMemory;
+        if (data_vec.size() < aDataLength) {
+            return KErrOverflow;
         }
 
-        memcpy(data_ptr, data_vec.data(), data_vec.size());
+        memcpy(data_ptr, data_vec.data(), aDataLength);
 
         return KErrNone;
     }
@@ -1981,10 +1981,10 @@ namespace eka2l1::epoc {
         }
 
         if (dat.size() < aSize) {
-            return KErrNoMemory;
+            return KErrOverflow;
         }
 
-        std::copy(dat.begin(), dat.end(), aDataPtr.get(mem));
+        std::copy(dat.begin(), dat.begin() + aSize, aDataPtr.get(mem));
 
         return KErrNone;
     }
