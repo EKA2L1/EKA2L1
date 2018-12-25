@@ -26,6 +26,7 @@
 #include <epoc/ptr.h>
 
 #include <cassert>
+#include <cstring>
 #include <string>
 #include <memory>
 
