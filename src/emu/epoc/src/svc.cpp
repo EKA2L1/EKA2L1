@@ -171,7 +171,7 @@ namespace eka2l1::epoc {
         sys->get_kernel_system()->crr_process()->rendezvous(aRendezvousCode);
     }
 
-    BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<TDes8> aDes) {
+    BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<des8> aDes) {
         eka2l1::memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -191,8 +191,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        TDes8 *des = aDes.get(mem);
-        des->Assign(sys, pr_real->name());
+        epoc::des8 *des = aDes.get(mem);
+        des->assign(kern->crr_process(), pr_real->name());
     }
 
     BRIDGE_FUNC(TInt, ProcessGetMemoryInfo, TInt aHandle, eka2l1::ptr<kernel::memory_info> aInfo) {
@@ -345,7 +345,7 @@ namespace eka2l1::epoc {
         return static_cast<TInt>(pr->get_cmd_args().length());
     }
 
-    BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<TDes8> aData) {
+    BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<epoc::des8> aData) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get_process(aHandle);
 
@@ -354,17 +354,19 @@ namespace eka2l1::epoc {
             return;
         }
 
-        TDes8 *data = aData.get(sys->get_memory_system());
+        epoc::des8 *data = aData.get(sys->get_memory_system());
 
         if (!data) {
             return;
         }
 
+        eka2l1::process_ptr crr_process = kern->crr_process();
+
         std::u16string cmdline = pr->get_cmd_args();
-        TUint8 *data_ptr = data->Ptr(sys);
+        char *data_ptr = data->get_pointer(crr_process);
 
         memcpy(data_ptr, cmdline.data(), cmdline.length() << 1);
-        data->SetLength(sys, static_cast<TUint32>(cmdline.length() << 1));
+        data->set_length(crr_process, static_cast<TUint32>(cmdline.length() << 1));
     }
 
     BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
@@ -392,7 +394,7 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
-    BRIDGE_FUNC(TInt, ProcessRename, TInt aHandle, eka2l1::ptr<TDes8> aNewName) {
+    BRIDGE_FUNC(TInt, ProcessRename, TInt aHandle, eka2l1::ptr<des8> aNewName) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get_process(aHandle);
 
@@ -400,7 +402,9 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        const std::string new_name = aNewName.get(sys->get_memory_system())->StdString(sys);
+        const std::string new_name = aNewName.get(sys->get_memory_system())->
+            to_std_string(kern->crr_process());
+
         pr->rename(new_name);
 
         return KErrNone;
@@ -488,7 +492,7 @@ namespace eka2l1::epoc {
         LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", static_cast<TUint>(iHandle), thr->name());
     }
 
-    BRIDGE_FUNC(void, DllFileName, TInt aEntryAddress, eka2l1::ptr<TDes8> aFullPathPtr) {
+    BRIDGE_FUNC(void, DllFileName, TInt aEntryAddress, eka2l1::ptr<epoc::des8> aFullPathPtr) {
         std::optional<std::u16string> dll_full_path = get_dll_full_path(sys, aEntryAddress);
 
         if (!dll_full_path) {
@@ -500,7 +504,8 @@ namespace eka2l1::epoc {
         LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<TUint>(aEntryAddress),
             path_utf8);
 
-        aFullPathPtr.get(sys->get_memory_system())->Assign(sys, path_utf8);
+        aFullPathPtr.get(sys->get_memory_system())->assign(sys->get_kernel_system()->crr_process(), 
+            path_utf8);
     }
 
     /***********************************/
@@ -582,11 +587,11 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
-    BRIDGE_FUNC(TInt, MessageKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aCage) {
+    BRIDGE_FUNC(TInt, MessageKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<desc8> aCage) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        std::string exit_cage = aCage.get(mem)->StdString(sys);
+        std::string exit_cage = aCage.get(mem)->to_std_string(kern->crr_process());
         std::optional<std::string> exit_description;
 
         ipc_msg_ptr msg = kern->get_msg(aHandle);
@@ -687,8 +692,8 @@ namespace eka2l1::epoc {
         const ipc_arg_type type = context.msg->args.get_arg_type(aParam);
 
         if ((int)type & (int)ipc_arg_type::flag_des) {
-            return ExtractDesMaxLength(reinterpret_cast<TDes8 *>(
-                mem->get_real_pointer(msg->args.args[aParam])));
+            return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(mem)
+                ->get_max_length(kern->crr_process());
         }
 
         return KErrGeneral;
@@ -793,9 +798,16 @@ namespace eka2l1::epoc {
             content.resize(minimum_size);
         }
 
-        memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem), des8 ? info->iTargetLength : info->iTargetLength * 2);
+        memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem), 
+            des8 ? info->iTargetLength : info->iTargetLength * 2);
 
         int error_code = 0;
+
+        if (msg->msg_session->get_server()->name() == "CdlServer" && (aParam == 0)
+            && msg->function == 8) {
+            // Temp buf
+            LOG_TRACE("Temp buf CDL 0x{:x}", content.length());
+        }
 
         bool result = context.write_arg_pkg(aParam, 
             reinterpret_cast<uint8_t *>(&content[0]), static_cast<std::uint32_t>(content.length()),
@@ -856,9 +868,10 @@ namespace eka2l1::epoc {
         query_security_info(msg->own_thr->owning_process(), sec_info);
     }
 
-    BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMode) {
+    BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<desc8> aServerName, TInt aMode) {
         kernel_system *kern = sys->get_kernel_system();
-        std::string server_name = aServerName.get(sys->get_memory_system())->StdString(sys);
+        std::string server_name = aServerName.get(sys->get_memory_system())
+            ->to_std_string(kern->crr_process());
 
         uint32_t handle = kern->create_server(server_name);
 
@@ -897,11 +910,11 @@ namespace eka2l1::epoc {
         server->cancel_async_lle();
     }
 
-    BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<TDesC8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode) {
+    BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<desc8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        std::string server_name = aServerName.get(mem)->StdString(sys);
+        std::string server_name = aServerName.get(mem)->to_std_string(kern->crr_process());
         server_ptr server = kern->get_server_by_name(server_name);
 
         if (!server) {
@@ -1064,15 +1077,15 @@ namespace eka2l1::epoc {
     /* CHUNK */
     /*********************************/
 
-    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<TDesC8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate) {
+    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<desc8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
         TChunkCreate createInfo = *aChunkCreate.get(mem);
-        TDesC8 *name = aName.get(mem);
+        desc8 *name = aName.get(mem);
 
         auto lol
-            = name->StdString(sys);
+            = name->to_std_string(kern->crr_process());
 
         kernel::chunk_type type;
         kernel::chunk_access access = kernel::chunk_access::local;
@@ -1094,11 +1107,11 @@ namespace eka2l1::epoc {
             access = kernel::chunk_access::global;
         }
 
-        if (access == decltype(access)::global && name->Length() == 0) {
+        if (access == decltype(access)::global && name->get_length() == 0) {
             att = kernel::chunk_attrib::anonymous;
         }
 
-        uint32_t handle = kern->create_chunk(name->StdString(sys), createInfo.iInitialBottom, createInfo.iInitialTop,
+        uint32_t handle = kern->create_chunk(name->to_std_string(kern->crr_process()), createInfo.iInitialBottom, createInfo.iInitialTop,
             createInfo.iMaxSize, prot::read_write, type, access, att,
             aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
 
@@ -1178,14 +1191,14 @@ namespace eka2l1::epoc {
     /* SYNC PRIMITIVES  */
     /********************/
 
-    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<TDesC8> aSemaName, TInt aInitCount, TOwnerType aOwnerType) {
+    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<desc8> aSemaName, TInt aInitCount, TOwnerType aOwnerType) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        TDesC8 *desname = aSemaName.get(mem);
+        desc8 *desname = aSemaName.get(mem);
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        uint32_t sema = kern->create_sema(!desname ? "" : desname->StdString(sys).c_str(),
+        uint32_t sema = kern->create_sema(!desname ? "" : desname->to_std_string(kern->crr_process()).c_str(),
             aInitCount, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
 
         if (sema == INVALID_HANDLE) {
@@ -1239,14 +1252,14 @@ namespace eka2l1::epoc {
         sema->signal(aSigCount);
     }
 
-    BRIDGE_FUNC(TInt, MutexCreate, eka2l1::ptr<TDesC8> aMutexName, TOwnerType aOwnerType) {
+    BRIDGE_FUNC(TInt, MutexCreate, eka2l1::ptr<desc8> aMutexName, TOwnerType aOwnerType) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        TDesC8 *desname = aMutexName.get(mem);
+        desc8 *desname = aMutexName.get(mem);
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        uint32_t mut = kern->create_mutex(!desname ? "" : desname->StdString(sys), false,
+        uint32_t mut = kern->create_mutex(!desname ? "" : desname->to_std_string(kern->crr_process()), false,
             owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
 
         if (mut == INVALID_HANDLE) {
@@ -1270,12 +1283,12 @@ namespace eka2l1::epoc {
     /* Thread independent */
     /**********************************************/
 
-    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<TDes8> aName, eka2l1::ptr<TFindHandle> aHandleFind) {
+    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<TFindHandle> aHandleFind) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
         TFindHandle *handle = aHandleFind.get(mem);
-        std::string name = aName.get(mem)->StdString(sys);
+        std::string name = aName.get(mem)->to_std_string(kern->crr_process());
 
         LOG_TRACE("Finding object name: {}", name);
 
@@ -1314,11 +1327,11 @@ namespace eka2l1::epoc {
         return res;
     }
 
-    BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<epoc::TDesC8> aName, TInt aOwnerType) {
+    BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<epoc::desc8> aName, TInt aOwnerType) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        std::string obj_name = aName.get(mem)->StdString(sys);
+        std::string obj_name = aName.get(mem)->to_std_string(kern->crr_process());
 
         auto obj_info = kern->find_object(obj_name, 0, static_cast<eka2l1::kernel::object_type>(aObjectType));
 
@@ -1338,7 +1351,7 @@ namespace eka2l1::epoc {
         return KErrGeneral;
     }
 
-    BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<TDes8> aName) {
+    BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<des8> aName) {
         kernel_system *kern = sys->get_kernel_system();
         kernel_obj_ptr obj = kern->get_kernel_obj(aHandle);
 
@@ -1350,8 +1363,8 @@ namespace eka2l1::epoc {
             }
         }
 
-        TDes8 *desname = aName.get(sys->get_memory_system());
-        desname->Assign(sys, obj->name());
+        des8 *desname = aName.get(sys->get_memory_system());
+        desname->assign(kern->crr_process(), obj->name());
     }
 
     /******************************/
@@ -1475,7 +1488,7 @@ namespace eka2l1::epoc {
         address user_stack;
         int user_stack_size;
         kernel::thread_priority init_thread_priority;
-        TPtrC8 name;
+        ptr_desc<std::uint8_t> name;
         int total_size;
 
         address allocator;
@@ -1487,12 +1500,12 @@ namespace eka2l1::epoc {
     static_assert(sizeof(thread_create_info_expand) == 64,
         "Thread create info struct size invalid");
 
-    BRIDGE_FUNC(TInt, ThreadCreate, eka2l1::ptr<TDesC8> aThreadName, TOwnerType aOwnerType, eka2l1::ptr<thread_create_info_expand> aInfo) {
+    BRIDGE_FUNC(TInt, ThreadCreate, eka2l1::ptr<desc8> aThreadName, TOwnerType aOwnerType, eka2l1::ptr<thread_create_info_expand> aInfo) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
         // Get rid of null terminator
-        std::string thr_name = aThreadName.get(mem)->StdString(sys).c_str();
+        std::string thr_name = aThreadName.get(mem)->to_std_string(kern->crr_process()).c_str();
         thread_create_info_expand *info = aInfo.get(mem);
 
         uint32_t thr_handle = kern->create_thread(static_cast<kernel::owner_type>(aOwnerType), kern->crr_process(),
@@ -1524,7 +1537,7 @@ namespace eka2l1::epoc {
         return static_cast<TInt>(thr->unique_id());
     }
 
-    BRIDGE_FUNC(TInt, ThreadKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<TDesC8> aReasonDes) {
+    BRIDGE_FUNC(TInt, ThreadKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<desc8> aReasonDes) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1538,7 +1551,7 @@ namespace eka2l1::epoc {
         std::string thread_name = thr->name();
 
         if (aReasonDes) {
-            exit_cage = aReasonDes.get(mem)->StdString(sys);
+            exit_cage = aReasonDes.get(mem)->to_std_string(kern->crr_process());
         }
 
         std::optional<std::string> exit_description;
@@ -1602,12 +1615,12 @@ namespace eka2l1::epoc {
         thr->signal_request();
     }
 
-    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<TDesC8> aName) {
+    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<desc8> aName) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
         thread_ptr thr;
-        TDesC8 *name = aName.get(mem);
+        desc8 *name = aName.get(mem);
 
         // Current thread handle
         if (aHandle == 0xFFFF8001) {
@@ -1620,7 +1633,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        std::string new_name = name->StdString(sys);
+        std::string new_name = name->to_std_string(kern->crr_process());
 
         LOG_TRACE("Thread with last name: {} renamed to {}", thr->name(), new_name);
 
@@ -1699,8 +1712,9 @@ namespace eka2l1::epoc {
         std::uint32_t dacr;
     };
 
-    BRIDGE_FUNC(void, ThreadContext, TInt aHandle, eka2l1::ptr<TDes8> aContext) {
-        thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
+    BRIDGE_FUNC(void, ThreadContext, TInt aHandle, eka2l1::ptr<des8> aContext) {
+        kernel_system *kern = sys->get_kernel_system();
+        thread_ptr thr = kern->get_thread_by_handle(aHandle);
 
         if (!thr) {
             return;
@@ -1713,7 +1727,7 @@ namespace eka2l1::epoc {
 
         memory_system *mem = sys->get_memory_system();
 
-        TDes8 *ctx_epoc_des = aContext.get(mem);
+        des8 *ctx_epoc_des = aContext.get(mem);
         std::string ctx_epoc_str;
         ctx_epoc_str.resize(sizeof(arm_context_epoc));
 
@@ -1723,7 +1737,7 @@ namespace eka2l1::epoc {
         context_epoc->cpsr = ctx.cpsr;
         context_epoc->dacr = 0;
 
-        ctx_epoc_des->Assign(sys, ctx_epoc_str);
+        ctx_epoc_des->assign(kern->crr_process(), ctx_epoc_str);
     }
 
     BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
@@ -2100,8 +2114,9 @@ namespace eka2l1::epoc {
 
     /* DEBUG AND SECURITY */
 
-    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<TDesC8> aDes, TInt aMode) {
-        LOG_TRACE("{}", aDes.get(sys->get_memory_system())->StdString(sys));
+    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, TInt aMode) {
+        LOG_TRACE("{}", 
+            aDes.get(sys->get_memory_system())->to_std_string(sys->get_kernel_system()->crr_process()));
     }
 
     // Let all pass for now

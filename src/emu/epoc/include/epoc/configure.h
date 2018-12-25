@@ -2,4 +2,4 @@
 
 /* #undef ENABLE_SCRIPTING */
 #define GIT_BRANCH "save"
-#define GIT_COMMIT_HASH "bb2a182"
+#define GIT_COMMIT_HASH "be65aeb"

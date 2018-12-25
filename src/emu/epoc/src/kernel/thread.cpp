@@ -241,9 +241,9 @@ namespace eka2l1 {
             thread_priority pri)
             : kernel_obj(kern, name, access)
             , own_process(owner)
-            , stack_size(stack_size)
-            , min_heap_size(min_heap_size)
-            , max_heap_size(max_heap_size)
+            , stack_size(static_cast<int>(stack_size))
+            , min_heap_size(static_cast<int>(min_heap_size))
+            , max_heap_size(static_cast<int>(max_heap_size))
             , usrdata(usrdata)
             , mem(mem)
             , priority(pri)
@@ -269,10 +269,10 @@ namespace eka2l1 {
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
-            stack_chunk = kern->create_chunk("", 0, common::align(stack_size, mem->get_page_size()), common::align(stack_size, mem->get_page_size()), prot::read_write,
+            stack_chunk = kern->create_chunk("", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
-            name_chunk = kern->create_chunk("", 0, common::align(name.length() * 2 + 4, mem->get_page_size()), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+            name_chunk = kern->create_chunk("", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
 
             request_sema = std::reinterpret_pointer_cast<kernel::semaphore>(
@@ -304,7 +304,7 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(start, end, 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), allocator, name.length(), 
+            create_stack_metadata(ptr<void>(stack_top), allocator, static_cast<std::uint32_t>(name.length()), 
                 name_chunk_ptr->base().ptr_address(), epa);
 
             reset_thread_ctx(epa, stack_top, inital);

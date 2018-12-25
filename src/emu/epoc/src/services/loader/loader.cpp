@@ -197,8 +197,8 @@ namespace eka2l1 {
 
     void loader_server::get_info(service::ipc_context ctx) {
         std::optional<utf16_str> lib_name = ctx.get_arg<utf16_str>(1);
-        epoc::TDes8 *buffer =
-            eka2l1::ptr<epoc::TDes8>(ctx.msg->args.args[2]).get(ctx.sys->get_memory_system());
+        epoc::des8 *buffer =
+            eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 
         if (!lib_name || !buffer) {
             ctx.set_request_status(KErrArgument);
@@ -206,7 +206,7 @@ namespace eka2l1 {
         }
 
         // Check the buffer size
-        if (buffer->iMaxLength < sizeof(epoc::lib_info)) {
+        if (buffer->max_length < sizeof(epoc::lib_info)) {
             ctx.set_request_status(KErrNoMemory);
             return;
         }
@@ -241,7 +241,7 @@ namespace eka2l1 {
             linfo.major = rimg->header.major;
             linfo.minor = rimg->header.minor;
 
-            if (buffer->iMaxLength >= sizeof(epoc::lib_info2)) {
+            if (buffer->max_length >= sizeof(epoc::lib_info2)) {
                 epoc::lib_info2 linfo2;
                 memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
 
@@ -274,7 +274,7 @@ namespace eka2l1 {
         linfo.major = eimg->header.major;
         linfo.minor = eimg->header.minor;
 
-        if (buffer->iMaxLength >= sizeof(epoc::lib_info2)) {
+        if (buffer->max_length >= sizeof(epoc::lib_info2)) {
             epoc::lib_info2 linfo2;
             memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
 

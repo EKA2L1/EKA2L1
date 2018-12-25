@@ -45,9 +45,11 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
-                eka2l1::epoc::TDesC16 *des = static_cast<eka2l1::epoc::TDesC16 *>(msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                process_ptr own_pr = msg->own_thr->owning_process();
+                eka2l1::epoc::desc16 *des = 
+                    ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
 
-                return des->StdString(msg->own_thr->owning_process());
+                return des->to_std_string(own_pr);
             }
 
             return std::optional<std::u16string>{};
@@ -63,10 +65,10 @@ namespace eka2l1 {
 
             // If it has descriptor flag and it doesn't have an 16-bit flag, it should be 8-bit one.
             if (((int)iatype & (int)ipc_arg_type::flag_des) && !((int)iatype & (int)ipc_arg_type::flag_16b)) {
-                eka2l1::epoc::TDesC8 *des = static_cast<eka2l1::epoc::TDesC8 *>(
-                    msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                eka2l1::epoc::desc8 *des = 
+                    ptr<epoc::desc8>(msg->args.args[idx]).get(msg->own_thr->owning_process());
 
-                return des->StdString(msg->own_thr->owning_process());
+                return des->to_std_string(msg->own_thr->owning_process());
             }
 
             return std::optional<std::string>{};
@@ -105,10 +107,10 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
-                eka2l1::epoc::TDesC16 *des = static_cast<eka2l1::epoc::TDesC16 *>(
-                    msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                eka2l1::epoc::desc16 *des = 
+                    ptr<epoc::desc16>(msg->args.args[idx]).get(msg->own_thr->owning_process());
                 
-                des->Assign(msg->own_thr->owning_process(), data);
+                des->assign(msg->own_thr->owning_process(), data);
 
                 return true;
             }
@@ -124,39 +126,31 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
+                process_ptr own_pr = msg->own_thr->owning_process();
+
                 // Please don't change the order
                 if ((int)arg_type & (int)ipc_arg_type::flag_16b) {
-                    eka2l1::epoc::TDes16 *des = static_cast<eka2l1::epoc::TDes16 *>(
-                        msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                    eka2l1::epoc::desc16 *des =
+                        ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
                 
                     // We can't handle odd length
                     assert(len % 2 == 0);
 
-                    if (eka2l1::epoc::ExtractDesMaxLength(reinterpret_cast<epoc::TDes8*>(des)) < len) {
+                    if (des->get_max_length(own_pr) < len) {
                         err_code ? (*err_code = -2) : 0;
                         return false;
                     }
 
-                    std::u16string bin;
-                    bin.resize(len / 2);
-
-                    memcpy(bin.data(), data, len);
-                    des->Assign(msg->own_thr->owning_process(), bin);
+                    des->assign(msg->own_thr->owning_process(), data, len);
                 } else { 
-                    eka2l1::epoc::TDes8 *des = static_cast<eka2l1::epoc::TDes8 *>(
-                        msg->own_thr->owning_process()->get_ptr_on_addr_space(msg->args.args[idx]));
+                    eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
-                    if (eka2l1::epoc::ExtractDesMaxLength(des) < len) {
+                    if (des->get_max_length(own_pr) < len) {
                         err_code ? (*err_code = -2) : 0;
                         return false;
                     }
 
-                    std::string bin;
-                    bin.resize(len);
-
-                    memcpy(bin.data(), data, len);
-
-                    des->Assign(msg->own_thr->owning_process(), bin);
+                    des->assign(msg->own_thr->owning_process(), data, len);
                 }
 
                 return true;

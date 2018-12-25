@@ -671,7 +671,7 @@ namespace eka2l1 {
         write_pos = last_pos;
 
         // Low MaxUint64
-        if (write_pos_provided != -0x80000000) {
+        if (write_pos_provided != static_cast<int>(0x80000000)) {
             write_pos = write_pos_provided;
         }
 
@@ -710,14 +710,14 @@ namespace eka2l1 {
         int read_len = *ctx.get_arg<int>(1);
         int read_pos_provided = *ctx.get_arg<int>(2);
 
-        int read_pos = 0;
-        uint64_t last_pos = vfs_file->tell();
+        std::uint64_t read_pos = 0;
+        std::uint64_t last_pos = vfs_file->tell();
         bool should_reseek = false;
 
         read_pos = last_pos;
 
         // Low MaxUint64
-        if (read_pos_provided != -0x80000000) {
+        if (read_pos_provided != static_cast<int>(0x80000000)) {
             read_pos = read_pos_provided;
         }
 
@@ -726,7 +726,7 @@ namespace eka2l1 {
         uint64_t size = vfs_file->size();
 
         if (size - read_pos < read_len) {
-            read_len = size - last_pos;
+            read_len = static_cast<int>(size - last_pos);
         }
 
         std::vector<char> read_data;
@@ -1144,7 +1144,7 @@ namespace eka2l1 {
         new_node.share_mode = share_mode;
 
         std::size_t h = nodes_table.add_node(new_node);
-        return (h == 0) ? KErrNoMemory : h;
+        return (h == 0) ? KErrNoMemory : static_cast<int>(h);
     }
 
     bool is_e32img(symfile f) {
@@ -1210,7 +1210,7 @@ namespace eka2l1 {
         }
 
         epoc::TEntry entry;
-        entry.aSize = entry_hle->size;
+        entry.aSize = static_cast<std::uint32_t>(entry_hle->size);
 
         if (entry_hle->has_raw_attribute) {
             entry.aAttrib = entry_hle->raw_attribute;
@@ -1230,7 +1230,7 @@ namespace eka2l1 {
             }
         }
 
-        entry.aNameLength = fname.length();
+        entry.aNameLength = static_cast<std::uint32_t>(fname.length());
         entry.aSizeHigh = 0; // This is never used, since the size is never >= 4GB as told by Nokia Doc
 
         memcpy(entry.aName, fname.data(), entry.aNameLength * 2);
@@ -1277,7 +1277,7 @@ namespace eka2l1 {
 
         LOG_TRACE("UID requested: 0x{}, 0x{}, 0x{}", type.uid[0], type.uid[1], type.uid[2]);
 
-        ctx.write_arg_pkg<int>(3, dir_handle);
+        ctx.write_arg_pkg<int>(3, static_cast<int>(dir_handle));
         ctx.set_request_status(KErrNone);
     }
 
@@ -1347,8 +1347,8 @@ namespace eka2l1 {
             }
         }
 
-        entry.aSize = info->size;
-        entry.aNameLength = info->full_path.length();
+        entry.aSize = static_cast<std::uint32_t>(info->size);
+        entry.aNameLength = static_cast<std::uint32_t>(info->full_path.length());
 
         // TODO: Convert this using a proper function
         std::u16string path_u16(info->full_path.begin(), info->full_path.end());
@@ -1377,11 +1377,13 @@ namespace eka2l1 {
 
         std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(dir_node->vfs_node);
 
-        epoc::TDes8 *entry_arr = reinterpret_cast<epoc::TDes8 *>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(*entry_arr_vir_ptr));
-        epoc::TBuf8 *entry_arr_buf = reinterpret_cast<epoc::TBuf8 *>(entry_arr);
+        process_ptr own_pr = ctx.msg->own_thr->owning_process();
 
-        TUint8 *entry_buf = reinterpret_cast<TUint8 *>(entry_arr->Ptr(ctx.msg->own_thr->owning_process()));
-        TUint8 *entry_buf_end = entry_buf + entry_arr_buf->iMaxLength;
+        epoc::des8 *entry_arr = ptr<epoc::des8>(*entry_arr_vir_ptr).get(own_pr);
+        epoc::buf_des<char> *entry_arr_buf = reinterpret_cast<epoc::buf_des<char>*>(entry_arr);
+
+        TUint8 *entry_buf = reinterpret_cast<TUint8 *>(entry_arr->get_pointer(own_pr));
+        TUint8 *entry_buf_end = entry_buf + entry_arr_buf->max_length;
         TUint8 *entry_buf_org = entry_buf;
 
         size_t queried_entries = 0;
@@ -1392,8 +1394,7 @@ namespace eka2l1 {
             std::optional<entry_info> info = dir->peek_next_entry();
 
             if (!info) {
-                entry_arr->SetLength(
-                    ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
+                entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
 
                 ctx.set_request_status(KErrEof);
 
@@ -1424,8 +1425,8 @@ namespace eka2l1 {
                 }
             }
 
-            entry.aSize = info->size;
-            entry.aNameLength = info->name.length();
+            entry.aSize = static_cast<std::uint32_t>(info->size);
+            entry.aNameLength = static_cast<std::uint32_t>(info->name.length());
 
             // TODO: Convert this using a proper function
             std::u16string path_u16(info->name.begin(), info->name.end());
@@ -1449,7 +1450,7 @@ namespace eka2l1 {
             dir->get_next_entry();
         }
 
-        entry_arr->SetLength(ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
+        entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
 
         LOG_TRACE("Queried entries: 0x{:x}", queried_entries);
 
@@ -1518,7 +1519,7 @@ namespace eka2l1 {
         }
 
         bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]),
-            dlist.size());
+            static_cast<std::uint32_t>(dlist.size()));
 
         if (!success) {
             ctx.set_request_status(KErrArgument);

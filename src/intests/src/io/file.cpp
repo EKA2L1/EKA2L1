@@ -37,6 +37,7 @@ void PosAfterCustomReadL()
 		SFsSessionGuard guard;
 		RFile f;
 		
+		
 		TFileName fileName;
 		MAKE_ASSET_FILE_PATH(fileName, _L("SeekPosTest.inp"), guard.iFs);
 		
@@ -47,7 +48,11 @@ void PosAfterCustomReadL()
 		HBufC8 *lineBuf = HBufC8::NewL(20);
 		TPtr8 line = lineBuf->Des();
 		
+		TInt bufLenBeforeRead = lineBuf->Length();
+		
 		f.Read(line, 15);
+		
+		TInt bufLenAfterRead = lineBuf->Length();
 		
 		// Save the position
 		TInt currentPos = 0;
@@ -56,6 +61,11 @@ void PosAfterCustomReadL()
 		HBufC8 *expectedLineDescriptionBuf = HBufC8::NewL(45);
 		TPtr8 expectedLineDescription = expectedLineDescriptionBuf->Des();
 		
+		expectedLineDescription.Format(_L8("Buf len before = %d after = %d"), bufLenBeforeRead,
+		        bufLenAfterRead);
+		
+		EXPECT_INPUT_EQUAL_L(expectedLineDescription);
+		        
 		expectedLineDescription.Format(_L8("RFile.Read(line, 15).Pos = %d"), currentPos);
 		
 		EXPECT_INPUT_EQUAL_L(expectedLineDescription);

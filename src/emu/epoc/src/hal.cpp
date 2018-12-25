@@ -19,6 +19,7 @@
  */
 
 #include <epoc/epoc.h>
+#include <epoc/kernel.h>
 #include <epoc/hal.h>
 #include <epoc/timing.h>
 
@@ -69,7 +70,7 @@ namespace eka2l1::epoc {
         }
 
         int memory_info(int *a1, int *a2) {
-            TDes8 *buf = reinterpret_cast<TDes8 *>(a1);
+            des8 *buf = reinterpret_cast<des8 *>(a1);
             TMemoryInfoV1 memInfo;
 
             memInfo.iTotalRamInBytes = static_cast<int>(common::MB(256));
@@ -84,7 +85,7 @@ namespace eka2l1::epoc {
 
             memcpy(dat.data(), &memInfo, sizeof(memInfo));
 
-            buf->Assign(sys, dat);
+            buf->assign(sys->get_kernel_system()->crr_process(), dat);
 
             return KErrNone;
         }
@@ -98,8 +99,9 @@ namespace eka2l1::epoc {
 
     struct variant_hal : public eka2l1::epoc::hal {
         int get_variant_info(int *a1, int *a2) {
-            epoc::TDes8 *package = reinterpret_cast<epoc::TDes8 *>(a1);
-            epoc::TVariantInfoV1 *info_ptr = reinterpret_cast<epoc::TVariantInfoV1 *>(package->Ptr(sys));
+            epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
+            epoc::TVariantInfoV1 *info_ptr = reinterpret_cast<epoc::TVariantInfoV1 *>(
+                package->get_pointer(sys->get_kernel_system()->crr_process()));
 
             loader::rom &rom_info = *(sys->get_rom_info());
             info_ptr->iMajor = rom_info.header.major;
@@ -120,8 +122,9 @@ namespace eka2l1::epoc {
 
     struct display_hal : public hal {
         int current_mode_info(int *a1, int *a2) {
-            epoc::TDes8 *package = reinterpret_cast<epoc::TDes8 *>(a1);
-            epoc::TVideoInfoV01 *info_ptr = reinterpret_cast<epoc::TVideoInfoV01 *>(package->Ptr(sys));
+            epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
+            epoc::TVideoInfoV01 *info_ptr = reinterpret_cast<epoc::TVideoInfoV01 *>(
+                package->get_pointer(sys->get_kernel_system()->crr_process()));
 
             info_ptr->iSizeInPixels = sys->get_graphic_driver_client()->screen_size();
             info_ptr->iSizeInTwips = info_ptr->iSizeInPixels * 15;
