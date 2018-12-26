@@ -64,6 +64,9 @@ namespace eka2l1::common {
     using ini_node_ptr = std::shared_ptr<ini_node>;
 
     class ini_pair: public ini_node {
+        friend class ini_section;
+        friend class ini_file;
+
         std::string key;
         std::vector<std::string> values;
 
@@ -113,14 +116,17 @@ namespace eka2l1::common {
             return sec_name.c_str();
         }
         
+        bool node_exists(const char *name);
+
         /* \brief Access a node with given name/key.
         */
         ini_node_ptr operator[](const char *name);
+        ini_node_ptr find(const char *name);
 
-        ini_section &create_section(const char *name);
+        ini_section *create_section(const char *name);
 
         // Note that an empty key will still be saved 
-        ini_pair &create_pair(const char *key);
+        ini_pair *create_pair(const char *key);
 
         std::size_t get(const char *key, 
             std::uint32_t *val, int count, std::uint32_t default_val = 0, int *error_code = nullptr);
@@ -136,6 +142,7 @@ namespace eka2l1::common {
     };
     
     class ini_file: public ini_section {
+    public:
         /*! \brief Load an INI file given a path
          * \returns 0 if success.
          *         -1 if file not found
@@ -145,6 +152,6 @@ namespace eka2l1::common {
 
         /*! \brief Save an ini file
         */
-        void save(const char *path);
+        // void save(const char *path);
     };
 }

@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <common/ini.h>
 #include <common/queue.h>
 
 #include <drivers/graphics/graphics.h>
@@ -252,10 +253,15 @@ namespace eka2l1 {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
 
+        common::ini_file    ws_config;
+        bool                loaded { false };
+
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
 
         void on_unhandled_opcode(service::ipc_context ctx) override;
+
+        void load_wsini();
 
     public:
         window_server(system *sys);

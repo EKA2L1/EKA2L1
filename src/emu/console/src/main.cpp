@@ -48,6 +48,8 @@
 #include <manager/manager.h>
 #include <gdbstub/gdbstub.h>
 
+#include <common/ini.h>
+
 using namespace eka2l1;
 
 std::unique_ptr<eka2l1::system> symsys = std::make_unique<eka2l1::system>(nullptr, nullptr);

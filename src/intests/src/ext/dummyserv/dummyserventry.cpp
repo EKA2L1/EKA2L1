@@ -9,7 +9,7 @@ void MainL()
         CleanupStack::PushL(scheduler);
         
         CActiveScheduler::Install(scheduler);
-        CDummyServer *server = CDummyServer::NewLC();
+        CDummyServer::NewLC();
                 
         RProcess::Rendezvous(KErrNone);
         CActiveScheduler::Start();

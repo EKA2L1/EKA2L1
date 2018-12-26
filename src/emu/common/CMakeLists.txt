@@ -10,9 +10,11 @@ add_library(common
     include/common/cpudetect.h
     include/common/cvt.h
     include/common/data_displayer.h
+    include/common/dynamicfile.h
     include/common/fileutils.h
     include/common/flate.h
     include/common/hash.h
+    include/common/ini.h
     include/common/log.h
     include/common/path.h
     include/common/platform.h
@@ -28,9 +30,11 @@ add_library(common
     src/chunkyseri.cpp
     src/cvt.cpp
     src/data_displayer.cpp
+    src/dynamicfile.cpp
     src/fileutils.cpp
     src/flate.cpp
     src/hash.cpp
+    src/ini.cpp
     src/log.cpp
     src/path.cpp
     src/random.cpp

@@ -88,6 +88,10 @@ namespace eka2l1 {
          *  After messages were received, they will be processed by the fake HLE server and signal request semaphore of the client thread.
         */
         class server : public kernel::kernel_obj {
+        protected:
+            system *sys;
+
+        private:
             /** All the sessions connected to this server */
             std::vector<session *> sessions;
 
@@ -95,8 +99,6 @@ namespace eka2l1 {
             std::vector<server_msg> delivered_msgs;
 
             std::unordered_map<int, ipc_func> ipc_funcs;
-
-            system *sys;
 
             /** The thread own this server */
             thread_ptr owning_thread;

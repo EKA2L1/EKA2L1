@@ -22,11 +22,15 @@
 #include <epoc/services/window/window.h>
 
 #include <common/e32inc.h>
+#include <common/ini.h>
 #include <common/log.h>
+#include <common/cvt.h>
 
 #include <e32err.h>
 
 #include <epoc/epoc.h>
+#include <epoc/vfs.h>
+
 #include <optional>
 #include <string>
 
@@ -411,6 +415,38 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
+    void window_server::load_wsini() {
+        io_system *io = sys->get_io_system();
+        std::optional<eka2l1::drive> drv;
+        drive_number dn = drive_z;
+
+        for (; dn >= drive_a; dn = (drive_number)((int)dn - 1)) {
+            drv = io->get_drive_entry(dn);
+
+            if (drv && drv->media_type == drive_media::rom) {
+                break;
+            }
+        }
+
+        std::u16string wsini_path;
+        wsini_path += static_cast<char16_t>((char)dn + 'A');
+        wsini_path += u":\\system\\data\\wsini.ini";
+
+        auto wsini_path_host = io->get_raw_path(wsini_path);
+
+        if (!wsini_path_host) {
+            LOG_ERROR("Can't find the window config file, app using window server will broken");
+            return;
+        }
+
+        std::string wsini_path_host_utf8 = common::ucs2_to_utf8(*wsini_path_host);
+        int err = ws_config.load(wsini_path_host_utf8.c_str());
+
+        if (err != 0) {
+            LOG_ERROR("Loading wsini file broke with code {}", err);
+        }
+    }
+    
     window_server::window_server(system *sys)
         : service::server(sys, "!Windowserver", true, true) {
         REGISTER_IPC(window_server, init, EWservMessInit,
@@ -422,6 +458,11 @@ namespace eka2l1 {
     }
 
     void window_server::init(service::ipc_context ctx) {
+        if (!loaded) {
+            load_wsini();
+            loaded = true;
+        }
+
         clients.emplace(ctx.msg->msg_session->unique_id(), 
             std::make_shared<epoc::window_server_client>(ctx.msg->msg_session));
 

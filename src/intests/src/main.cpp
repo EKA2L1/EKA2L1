@@ -14,10 +14,13 @@
 #include <intests/io/file.h>
 #include <intests/kern/codeseg.h>
 #include <intests/ipc/ipc.h>
+#include <intests/ws/ws.h>
 
 #include <intests/testmanager.h>
 
-#define GEN_TESTS 0
+#include <w32std.h>
+
+#define GEN_TESTS 1
 
 void MainWrapperL()
     {
@@ -30,6 +33,7 @@ void MainWrapperL()
         instance = CTestManager::NewLC(mode);
         
         // Add all tests back
+        AddWsTestCasesL();
         AddIpcTestCasesL();
         AddCodeSegTestCasesL();
         AddCmdTestCaseL();
