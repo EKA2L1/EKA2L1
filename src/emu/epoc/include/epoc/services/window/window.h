@@ -53,6 +53,21 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc {
+    namespace config {
+        struct screen_mode {
+            int screen_number;
+            int mode_number;
+
+            eka2l1::vec2 size;
+            int rotation;
+        };
+        
+        struct screen {
+            int screen_number;
+            std::vector<screen_mode> modes;
+        };
+    }
+
     struct window;
     using window_ptr = std::shared_ptr<epoc::window>;
 
@@ -249,6 +264,7 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
+    
     class window_server : public service::server {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
@@ -256,12 +272,15 @@ namespace eka2l1 {
         common::ini_file    ws_config;
         bool                loaded { false };
 
+        std::vector<epoc::config::screen>   screens;
+
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
 
         void on_unhandled_opcode(service::ipc_context ctx) override;
 
         void load_wsini();
+        void parse_wsini();
 
     public:
         window_server(system *sys);

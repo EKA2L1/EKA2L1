@@ -447,6 +447,70 @@ namespace eka2l1 {
         }
     }
     
+    void window_server::parse_wsini() {
+        common::ini_node_ptr screen_node = nullptr;
+        int total_screen = 0;
+
+        do {
+            std::string screen_key = "SCREEN";
+            screen_key += std::to_string(total_screen);
+            screen_node = ws_config.find(screen_key.c_str());
+
+            if (!screen_node || !common::ini_section::is_my_type(screen_node)) {
+                break;
+            }
+
+            total_screen++;
+            epoc::config::screen scr;
+
+            scr.screen_number = total_screen - 1;
+
+            int total_mode = 0;
+
+            do {
+                std::string screen_mode_width_key = "SCR_WIDTH";
+                screen_mode_width_key += std::to_string(total_mode + 1);
+
+                common::ini_node_ptr mode_width = screen_node->
+                    get_as<common::ini_section>().find(screen_mode_width_key.c_str());
+                
+                if (!mode_width) {
+                    break;
+                }
+
+                std::string screen_mode_height_key = "SCR_HEIGHT";
+                screen_mode_height_key += std::to_string(total_mode + 1);
+
+                common::ini_node_ptr mode_height = screen_node->
+                    get_as<common::ini_section>().find(screen_mode_height_key.c_str());
+
+                total_mode++;
+
+                epoc::config::screen_mode   scr_mode;
+                scr_mode.screen_number = total_screen - 1;
+                scr_mode.mode_number = total_mode;
+
+                mode_width->get_as<common::ini_pair>().get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.x),
+                    1, 0);
+                mode_height->get_as<common::ini_pair>().get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.y),
+                    1, 0);
+                
+                std::string screen_mode_rot_key = "SCR_ROTATION";
+                screen_mode_rot_key += std::to_string(total_mode);
+
+                common::ini_node_ptr mode_rot = screen_node->
+                    get_as<common::ini_section>().find(screen_mode_rot_key.c_str());
+
+                mode_rot->get_as<common::ini_pair>().get(reinterpret_cast<std::uint32_t*>(&scr_mode.rotation),
+                    1, 0);
+
+                scr.modes.push_back(scr_mode);
+            } while (true);
+
+            screens.push_back(scr);
+        } while (screen_node != nullptr);
+    }
+
     window_server::window_server(system *sys)
         : service::server(sys, "!Windowserver", true, true) {
         REGISTER_IPC(window_server, init, EWservMessInit,
@@ -460,6 +524,8 @@ namespace eka2l1 {
     void window_server::init(service::ipc_context ctx) {
         if (!loaded) {
             load_wsini();
+            parse_wsini();
+
             loaded = true;
         }
 
