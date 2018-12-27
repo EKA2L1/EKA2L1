@@ -20,7 +20,7 @@
 
 #include <w32std.h>
 
-#define GEN_TESTS 1
+#define GEN_TESTS 0
 
 void MainWrapperL()
     {

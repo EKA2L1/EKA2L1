@@ -138,6 +138,7 @@ TBool CAbsorber::AbsorbL(const TDesC8 &aData)
             case EAbsorbVerify:
                 {
                     TUint8 append;
+                    TUint8 lastC = 0;
                     TPtr8 appendWrap(&append, 1);
                     
                     TInt count = 0;
@@ -157,20 +158,23 @@ TBool CAbsorber::AbsorbL(const TDesC8 &aData)
                             
                             User::LeaveIfError(err);
                             
-                            if (append != '\n')
+                            if (append != '\n' && append != '\r')
                                 {
                             		count++;
                                 }
                         }
-                    while (append != '\n');
+                    while (append != '\n' && append != '\r');
 
                     HBufC8 *buf = HBufC8::NewL(count);
-                    
                     TPtr8 line = buf->Des();
                     
                     iFile.Read(crrPos, line, count);
     
-                    // Also read the \n
+                    if (append == '\r') 
+                        {
+                            iFile.Read(appendWrap, 1);
+                        }
+                    
                     iFile.Read(appendWrap, 1);
                     
                     TInt compareRes = aData.Compare(line);
