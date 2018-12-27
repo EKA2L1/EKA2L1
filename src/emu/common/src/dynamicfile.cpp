@@ -72,7 +72,7 @@ namespace eka2l1::common {
             char lo = 0;
             char hi = 0;
             
-            if (ucs2_ == 0) {
+            if (ucs2_ == 1) {
                 stream_.read(&hi, 1);
                 stream_.read(&lo, 1);
             } else {
@@ -122,7 +122,7 @@ namespace eka2l1::common {
             char lo = 0;
             char hi = 0;
             
-            if (ucs2_ == 0) {
+            if (ucs2_ == 1) {
                 stream_.read(&hi, 1);
                 stream_.read(&lo, 1);
             } else {
