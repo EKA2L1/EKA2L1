@@ -33,7 +33,7 @@
 
 namespace eka2l1::kernel {
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
-        uint32_t heap_max) {
+        uint32_t heap_max, uint32_t pri) {
         page_table *last = mem->get_current_page_table();
         mem->set_current_page_table(page_tab);
 
@@ -49,7 +49,7 @@ namespace eka2l1::kernel {
                 process_name + "::Main", ep_off,
                 stack_size, heap_min, heap_max,
                 true,
-                0, 0, kernel::priority_normal);
+                0, 0, static_cast<thread_priority>(pri));
 
         ++thread_count;
 
@@ -88,7 +88,7 @@ namespace eka2l1::kernel {
 
         // Preserve the page table
         create_prim_thread(img->rt_code_addr, img->rt_code_addr + img->header.entry_point, img->header.stack_size,
-            img->header.heap_size_min, img->header.heap_size_max);
+            img->header.heap_size_min, img->header.heap_size_max, img->header.priority);
 
         // TODO: Load all references DLL in the export list.
     }
@@ -113,7 +113,8 @@ namespace eka2l1::kernel {
 
         create_prim_thread(
             romimg->header.code_address, romimg->header.entry_point,
-            romimg->header.stack_size, romimg->header.heap_minimum_size, romimg->header.heap_maximum_size);
+            romimg->header.stack_size, romimg->header.heap_minimum_size, romimg->header.heap_maximum_size,
+            romimg->header.priority);
             
         // TODO: Load all references DLL in the export list.
     }

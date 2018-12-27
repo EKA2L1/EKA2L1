@@ -160,7 +160,7 @@ namespace eka2l1::kernel {
 
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
-            uint32_t heap_max);
+            uint32_t heap_max, uint32_t pri);
 
     public:
         uint32_t increase_thread_count() {

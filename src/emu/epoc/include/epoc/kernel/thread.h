@@ -86,7 +86,9 @@ namespace eka2l1 {
             priority_real_time = 30,
             priority_absolute_very_low = 100,
             priority_absolute_low = 200,
+            priority_absolute_background_normal = 250,
             priority_absolute_background = 300,
+            priority_absolute_foreground_normal = 350,
             priorty_absolute_foreground = 400,
             priority_absolute_high = 500
         };
