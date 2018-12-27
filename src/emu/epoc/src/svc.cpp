@@ -1082,9 +1082,6 @@ namespace eka2l1::epoc {
         TChunkCreate createInfo = *aChunkCreate.get(mem);
         desc8 *name = aName.get(mem);
 
-        auto lol
-            = name->to_std_string(kern->crr_process());
-
         kernel::chunk_type type;
         kernel::chunk_access access = kernel::chunk_access::local;
         kernel::chunk_attrib att = decltype(att)::none;
@@ -1105,11 +1102,11 @@ namespace eka2l1::epoc {
             access = kernel::chunk_access::global;
         }
 
-        if (access == decltype(access)::global && name->get_length() == 0) {
+        if ((access == decltype(access)::global) && ((!name) || (name->get_length() == 0))) {
             att = kernel::chunk_attrib::anonymous;
         }
 
-        uint32_t handle = kern->create_chunk(name->to_std_string(kern->crr_process()), createInfo.iInitialBottom, createInfo.iInitialTop,
+        uint32_t handle = kern->create_chunk(name ? name->to_std_string(kern->crr_process()) : "", createInfo.iInitialBottom, createInfo.iInitialTop,
             createInfo.iMaxSize, prot::read_write, type, access, att,
             aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
 
