@@ -129,6 +129,25 @@ namespace eka2l1::epoc {
 
             break;
         }
+        
+        case EWsSdOpSetScreenSizeAndRotation: {
+            pixel_twips_and_rot *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
+
+            for (int i = 0; i < scr_config.modes.size(); i++) {
+                if (scr_config.modes[i].size == info->pixel_size &&
+                    number_to_orientation(scr_config.modes[i].rotation) == info->orientation) {
+                    crr_mode = &scr_config.modes[i];
+
+                    ctx.set_request_status(KErrNone);
+                    break;
+                }
+            }
+
+            LOG_ERROR("Unable to set size: mode not found!");
+            ctx.set_request_status(KErrNotFound);
+        
+            break;
+        }
 
         case EWsSdOpGetScreenSizeModeList: {
             std::vector<int> modes;
