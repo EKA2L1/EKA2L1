@@ -47,12 +47,54 @@ namespace eka2l1::epoc {
         , id(static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1) {
     }
 
-    screen_device::screen_device(window_server_client_ptr client, eka2l1::graphics_driver_client_ptr driver)
+    screen_device::screen_device(window_server_client_ptr client, 
+        int number, eka2l1::graphics_driver_client_ptr driver)
         : window_client_obj(client)
-        , driver(driver) {
+        , driver(driver)
+        , screen(number)
+    {
+        scr_config = client->get_ws().get_screen_config(number);
+        crr_mode = &scr_config.modes[0];   
     }
 
     constexpr int twips_mul = 15;
+
+    static graphics_orientation number_to_orientation(int rot) {
+        switch (rot) {
+        case 0: {
+            return graphics_orientation::normal;
+        }
+
+        case 90: {
+            return graphics_orientation::rotated90;
+        }
+
+        case 180: {
+            return graphics_orientation::rotated180;
+        }
+
+        case 270: {
+            return graphics_orientation::rotated270;
+        }
+
+        default: {
+            break;
+        }
+        }
+
+        assert(false && "UNREACHABLE");
+        return graphics_orientation::normal;
+    }
+
+    static epoc::config::screen_mode *find_screen_mode(epoc::config::screen &scr, int mode_num) {
+        for (std::size_t i = 0 ; i < scr.modes.size(); i++) {
+            if (scr.modes[i].mode_number == mode_num) {
+                return &scr.modes[i];
+            }
+        }
+
+        return nullptr;
+    }
 
     void screen_device::execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
         TWsScreenDeviceOpcodes op = static_cast<decltype(op)>(cmd.header.op);
@@ -60,7 +102,7 @@ namespace eka2l1::epoc {
         switch (op) {
         case EWsSdOpPixelSize: {
             // This doesn't take any arguments
-            eka2l1::vec2 screen_size = driver->screen_size();
+            eka2l1::vec2 screen_size = crr_mode->size;
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
             ctx.set_request_status(0);
 
@@ -69,7 +111,7 @@ namespace eka2l1::epoc {
 
         case EWsSdOpTwipsSize: {
             // This doesn't take any arguments
-            eka2l1::vec2 screen_size = driver->screen_size();
+            eka2l1::vec2 screen_size = crr_mode->size;
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size * twips_mul);
             ctx.set_request_status(0);
 
@@ -77,9 +119,7 @@ namespace eka2l1::epoc {
         }
 
         case EWsSdOpGetNumScreenModes: {
-            LOG_TRACE("Get number screen modes stubbed with 1");
-            ctx.set_request_status(1);
-
+            ctx.set_request_status(static_cast<TInt>(scr_config.modes.size()));
             break;
         }
 
@@ -91,14 +131,16 @@ namespace eka2l1::epoc {
         }
 
         case EWsSdOpGetScreenSizeModeList: {
-            // TODO: Support more orientation
-            static TInt mode_stub[] = {0};
+            std::vector<int> modes;
+            
+            for (int i = 0; i < scr_config.modes.size(); i++) {
+                modes.push_back(scr_config.modes[i].mode_number);
+            }
 
-            LOG_TRACE("Screen size mode stubbed");
+            ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t*>(&modes[0]),
+                static_cast<std::uint32_t>(sizeof(int) * modes.size()));
 
-            ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t*>(&mode_stub[0]),
-                sizeof(mode_stub));
-            ctx.set_request_status(1);
+            ctx.set_request_status(static_cast<TInt>(scr_config.modes.size()));
 
             break;
         }
@@ -106,13 +148,18 @@ namespace eka2l1::epoc {
         // This get the screen size in pixels + twips and orientation for the given mode
         case EWsSdOpGetScreenModeSizeAndRotation: {
             int mode = *reinterpret_cast<int*>(cmd.data_ptr);
-            // Hey, mode, i don't really care right now
-            // TODO (pent0): support more orientation
             
+            epoc::config::screen_mode *scr_mode = find_screen_mode(scr_config, mode);
+
+            if (!scr_mode) {
+                ctx.set_request_status(KErrArgument);
+                break;
+            }
+
             pixel_twips_and_rot data;
-            data.pixel_size = driver->screen_size();
-            data.twips_size = data.pixel_size * twips_mul;
-            data.orientation = graphics_orientation::normal;
+            data.pixel_size = scr_mode->size;
+            data.twips_size = scr_mode->size * twips_mul;
+            data.orientation = number_to_orientation(scr_mode->rotation);
 
             ctx.write_arg_pkg(reply_slot, data);
             ctx.set_request_status(0);
@@ -123,12 +170,17 @@ namespace eka2l1::epoc {
         // This get the screen size in pixels and orientation for the given mode
         case EWsSdOpGetScreenModeSizeAndRotation2: {
             int mode = *reinterpret_cast<int*>(cmd.data_ptr);
-            // Hey, mode, i don't really care right now
-            // TODO (pent0): support more orientation
+            
+            epoc::config::screen_mode *scr_mode = find_screen_mode(scr_config, mode);
+
+            if (!scr_mode) {
+                ctx.set_request_status(KErrArgument);
+                break;
+            }
 
             pixel_and_rot data;
-            data.pixel_size = driver->screen_size();
-            data.orientation = graphics_orientation::normal;
+            data.pixel_size = scr_mode->size;
+            data.orientation = number_to_orientation(scr_mode->rotation);
 
             ctx.write_arg_pkg(reply_slot, data);
             ctx.set_request_status(0);
@@ -138,8 +190,6 @@ namespace eka2l1::epoc {
 
         case EWsSdOpGetScreenModeDisplayMode: {
             int mode = *reinterpret_cast<int*>(cmd.data_ptr);
-            // Hey, mode, i don't really care right now
-            // TODO (pent0): returns proper display mode.
 
             LOG_TRACE("GetScreenModeDisplayMode stubbed with true color + alpha (color16ma)");
             ctx.write_arg_pkg(reply_slot, display_mode::color16ma);
@@ -151,10 +201,16 @@ namespace eka2l1::epoc {
         // Get the current screen mode. AknCapServer uses this, compare with the saved screen mode
         // to trigger the layout change event for registered app.
         case EWsSdOpGetScreenMode: {
-            // Stub with the current screen mode
-            ctx.set_request_status(0);
-            LOG_TRACE("GetCurrentScreenMode stubbed with 0");
+            ctx.set_request_status(crr_mode->mode_number);
+            break;
+        }
 
+        case EWsSdOpFree: {
+            ctx.set_request_status(KErrNone);
+            
+            // The reference are still somewhere
+            // TODO: Clear all window that contains this object's reference (avoid leak)
+            client->delete_object(id);
             break;
         }
 
@@ -276,6 +332,16 @@ namespace eka2l1::epoc {
         return objects[handle - 1 - base_handle];
     }
 
+    bool window_server_client::delete_object(const std::uint32_t handle) {
+        if (handle <= base_handle || handle - base_handle > objects.size()) {
+            LOG_WARN("Object handle is invalid {}", handle);
+            return false;
+        }
+
+        objects[handle - 1 - base_handle].reset();
+        return true;
+    }
+    
     void window_server_client::create_screen_device(service::ipc_context ctx, ws_cmd cmd) {
         LOG_INFO("Create screen device.");
 
@@ -283,7 +349,7 @@ namespace eka2l1::epoc {
 
         epoc::screen_device_ptr device
             = std::make_shared<epoc::screen_device>(
-                this, ctx.sys->get_graphic_driver_client());
+                this, header->num_screen, ctx.sys->get_graphic_driver_client());
 
         if (!primary_device) {
             primary_device = device;
@@ -295,7 +361,8 @@ namespace eka2l1::epoc {
 
     void window_server_client::init_device(epoc::window_ptr &win) {
         if (win->type == epoc::window_type::group) {
-            epoc::window_group_ptr group_win = std::reinterpret_pointer_cast<epoc::window_group>(win);
+            epoc::window_group_ptr group_win = std::reinterpret_pointer_cast<epoc::window_group>(
+                win);
 
             if (!group_win->dvc) {
                 group_win->dvc = primary_device;

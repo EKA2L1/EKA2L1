@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -21,6 +22,8 @@ enum {
 };
 
 namespace eka2l1 {
+    class window_server;
+
     struct ws_cmd_header {
         uint16_t op;
         uint16_t cmd_len;
@@ -192,7 +195,12 @@ namespace eka2l1::epoc {
         eka2l1::graphics_driver_client_ptr driver;
         int screen;
 
-        screen_device(window_server_client_ptr client, eka2l1::graphics_driver_client_ptr driver);
+        epoc::config::screen scr_config;
+        epoc::config::screen_mode   *crr_mode;
+
+        screen_device(window_server_client_ptr client, int number, 
+            eka2l1::graphics_driver_client_ptr driver);
+
         void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) override;
     };
 
@@ -259,12 +267,17 @@ namespace eka2l1::epoc {
         std::uint32_t add_object(window_client_obj_ptr obj);
         window_client_obj_ptr get_object(const std::uint32_t handle);
 
+        bool delete_object(const std::uint32_t handle);
+
         explicit window_server_client(session_ptr guest_session);
+
+        eka2l1::window_server &get_ws() {
+            return *(std::reinterpret_pointer_cast<window_server>(guest_session->get_server()));
+        }
     };
 }
 
 namespace eka2l1 {
-    
     class window_server : public service::server {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
@@ -284,5 +297,10 @@ namespace eka2l1 {
 
     public:
         window_server(system *sys);
+
+        epoc::config::screen &get_screen_config(int num) {
+            assert(num < screens.size());
+            return screens[num];
+        }
     };
 }
