@@ -111,6 +111,8 @@ namespace eka2l1 {
 
             virtual void clear_instruction_cache() = 0;
 
+            virtual void imb_range(address addr, std::size_t size) = 0;
+            
             virtual bool should_clear_old_memory_map() const {
                 return true;
             }

@@ -605,6 +605,11 @@ namespace eka2l1 {
 
         void arm_unicorn::clear_instruction_cache() {
             // Empty
+            LOG_ERROR("Unicorn Engine: clear inst cache not supported");
+        }
+
+        void arm_unicorn::imb_range(address addr, std::size_t size) {
+            LOG_ERROR("Unicorn Engine: IMBRANGE not supported");
         }
     }
 }

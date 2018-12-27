@@ -564,5 +564,9 @@ namespace eka2l1 {
         void arm_dynarmic::clear_instruction_cache() {
             jit->ClearCache();
         }
+
+        void arm_dynarmic::imb_range(address addr, std::size_t size) {
+            jit->InvalidateCacheRange(addr, size);
+        }
     }
 }

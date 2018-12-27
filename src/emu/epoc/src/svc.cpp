@@ -1182,6 +1182,10 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(void, IMB_Range, eka2l1::ptr<void> aAddress, TUint32 aSize) {
+        sys->get_cpu()->imb_range(aAddress.ptr_address(), aSize);
+    }
+
     /********************/
     /* SYNC PRIMITIVES  */
     /********************/
@@ -2199,6 +2203,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00, ObjectNext),
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
+        BRIDGE_REGISTER(0x0C, IMB_Range),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
         BRIDGE_REGISTER(0x13, ProcessGetId),
         BRIDGE_REGISTER(0x14, DllFileName),
