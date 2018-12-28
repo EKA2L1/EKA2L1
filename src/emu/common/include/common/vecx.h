@@ -78,6 +78,10 @@ namespace eka2l1 {
         vec2 operator*(const int rhs) {
             return vec2(x * rhs, y * rhs);
         }
+
+        bool operator == (const vec2 &rhs) {
+            return (x == rhs.x) && (y == rhs.y);
+        }
     };
 
     struct vec3: public vec2 {
