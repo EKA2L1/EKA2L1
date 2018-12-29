@@ -162,7 +162,6 @@ namespace eka2l1::epoc {
 
         window_ptr parent;
         uint16_t priority;
-        uint32_t id;
 
         window_kind type;
 
@@ -238,11 +237,11 @@ namespace eka2l1::epoc {
         }
     };
 
-    struct window_client: public epoc::window {
+    struct window_user : public epoc::window {
         epoc::display_mode dmode;
         epoc::window_type win_type;
 
-        window_client(window_server_client_ptr client, screen_device_ptr dvc,
+        window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
             : window(client, dvc, window_kind::client), win_type(type_of_window),
               dmode(dmode)
