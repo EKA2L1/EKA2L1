@@ -365,7 +365,7 @@ namespace eka2l1::epoc {
 
         case EWsWinOpIdentifier: {
             ctx.set_request_status(static_cast<int>(id));
-            break;
+            return true;
         }
 
         default: {
