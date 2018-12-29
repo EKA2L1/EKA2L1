@@ -379,6 +379,15 @@ namespace eka2l1::epoc {
         void execute_command(service::ipc_context context, ws_cmd cmd) override;
     };
 
+    struct click_dll : public window_client_obj {
+        click_dll(window_server_client_ptr client)
+            : window_client_obj(client) {
+
+        }
+
+        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+    };
+
     class window_server_client {
         friend struct window_client_obj;
 
@@ -398,6 +407,7 @@ namespace eka2l1::epoc {
         void create_window_base(service::ipc_context ctx, ws_cmd cmd);
         void create_graphic_context(service::ipc_context ctx, ws_cmd cmd);
         void create_anim_dll(service::ipc_context ctx, ws_cmd cmd);
+        void create_click_dll(service::ipc_context ctx, ws_cmd cmd);
         void create_sprite(service::ipc_context ctx, ws_cmd cmd);
 
         void restore_hotkey(service::ipc_context ctx, ws_cmd cmd);

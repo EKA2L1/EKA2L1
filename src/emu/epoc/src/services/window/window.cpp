@@ -638,6 +638,13 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(animdll));
     }
 
+    void window_server_client::create_click_dll(service::ipc_context ctx, ws_cmd cmd) {
+        LOG_TRACE("Create CLICKDLL (button click sound plugin), stubbed object");
+        
+        std::shared_ptr<epoc::click_dll> clickdll = std::make_shared<epoc::click_dll>(this);
+        ctx.set_request_status(add_object(clickdll));
+    }
+    
     epoc::window_ptr window_server_client::find_window_obj(epoc::window_ptr &root, std::uint32_t id) {
         if (root->id == id) {
             return root;
@@ -701,6 +708,10 @@ namespace eka2l1::epoc {
             
         case EWsClOpCreateAnimDll:
             create_anim_dll(ctx, cmd);
+            break;
+
+        case EWsClOpCreateClick: 
+            create_click_dll(ctx, cmd);
             break;
 
         case EWsClOpEventReady:
