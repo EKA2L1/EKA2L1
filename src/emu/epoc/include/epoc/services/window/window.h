@@ -401,6 +401,8 @@ namespace eka2l1::epoc {
         epoc::screen_device_ptr primary_device;
         epoc::window_ptr root;
 
+        eka2l1::thread_ptr client_thread;
+
         std::vector<epoc::event_mod_notifier_user> mod_notifies;
         std::vector<epoc::event_screen_change_user> screen_changes;
 
@@ -430,10 +432,15 @@ namespace eka2l1::epoc {
 
         bool delete_object(const std::uint32_t handle);
 
-        explicit window_server_client(session_ptr guest_session);
+        explicit window_server_client(session_ptr guest_session,
+            thread_ptr own_thread);
 
         eka2l1::window_server &get_ws() {
             return *(std::reinterpret_pointer_cast<window_server>(guest_session->get_server()));
+        }
+
+        eka2l1::thread_ptr &get_client() {
+            return client_thread;
         }
     };
     

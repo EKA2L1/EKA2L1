@@ -512,8 +512,9 @@ namespace eka2l1::epoc {
         execute_commands(ctx, std::move(cmds));
     }
 
-    window_server_client::window_server_client(session_ptr guest_session)
-        : guest_session(guest_session) {
+    window_server_client::window_server_client(session_ptr guest_session, thread_ptr own_thread)
+        : guest_session(guest_session),
+          client_thread(own_thread) {
         add_object(std::make_shared<epoc::window>(this));
         root = std::reinterpret_pointer_cast<epoc::window>(objects.back());
     }
@@ -724,6 +725,23 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsClOpGetWindowGroupClientThreadId: {
+            std::uint32_t group_id = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+            epoc::window_ptr win = find_window_obj(root, group_id);
+
+            if (!win || win->type != window_kind::group) {
+                ctx.set_request_status(KErrArgument);
+                break;
+            }
+
+            std::uint32_t thr_id = win->client->get_client()->unique_id();
+
+            ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         case EWsClOpCreateScreenDevice:
             create_screen_device(ctx, cmd);
             break;
@@ -896,7 +914,7 @@ namespace eka2l1 {
         }
 
         clients.emplace(ctx.msg->msg_session->unique_id(), 
-            std::make_shared<epoc::window_server_client>(ctx.msg->msg_session));
+            std::make_shared<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr));
 
         ctx.set_request_status(ctx.msg->msg_session->unique_id());
     }
