@@ -363,6 +363,15 @@ namespace eka2l1::epoc {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
+        case EWsWinOpEnableScreenChangeEvents: {
+            epoc::event_screen_change_user evt;
+            evt.user = this;
+
+            client->add_event_screen_change_user(evt);
+
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             break;
@@ -412,9 +421,19 @@ namespace eka2l1::epoc {
     }
     
     void window_server_client::add_event_mod_notifier_user(epoc::event_mod_notifier_user nof) {
-        mod_notifies.push_back(nof);
+        if (!std::any_of(mod_notifies.begin(), mod_notifies.end(), 
+            [=](epoc::event_mod_notifier_user &denof) { return denof.user == nof.user; })) {
+            mod_notifies.push_back(nof);
+        }
     }
     
+    void window_server_client::add_event_screen_change_user(epoc::event_screen_change_user nof) {
+        if (!std::any_of(screen_changes.begin(), screen_changes.end(), 
+            [=](epoc::event_screen_change_user &denof) { return denof.user == nof.user; })) {
+            screen_changes.push_back(nof);
+        }
+    }
+
     void window_server_client::parse_command_buffer(service::ipc_context ctx) {
         std::optional<std::string> dat = ctx.get_arg<std::string>(cmd_slot);
 
