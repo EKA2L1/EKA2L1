@@ -779,7 +779,13 @@ namespace eka2l1::epoc {
 
         case EWsClOpGetFocusWindowGroup: {
             // TODO: Epoc < 9
+            if (cmd.header.cmd_len == 0) {
+                ctx.set_request_status(primary_device->focus->id);
+                break;
+            }
+
             int screen_num = *reinterpret_cast<int*>(cmd.data_ptr);
+
             auto dvc_ite = std::find_if(devices.begin(), devices.end(), 
                 [screen_num](const epoc::screen_device_ptr &dvc) { return dvc->screen == screen_num; });
 
