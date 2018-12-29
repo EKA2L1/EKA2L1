@@ -22,8 +22,55 @@
 #include <epoc/services/context.h>
 
 namespace eka2l1 {
+    enum oom_ui_app_op {
+        EAknSLaunchView = 50, // to avoid collision to notifier related commands
+        EAknSKillApp,
+        EAknSKillAllApps,
+        EAknSUnlockMedia,
+        EAknSEnableTaskList,
+        EAknsLaunchTaskList,
+        EAknSRefreshTaskList,
+        EAknSSuppressAppsKey,
+        EAknSHideApplicationFromFWS,
+        // sgc
+        EAknEikAppUiSetSgcParams,
+        EAknEikAppUiBlockServerStatusPaneRedraws,
+        EAknEikAppUiRedrawServerStatusPane,
+        EAknEikAppUiPrepareForAppExit,
+        EAknEikAppUiSetSystemFaded,
+        EAknEikAppUiIsSystemFaded,
+        EAknEikAppUiRelinquishPriorityToForegroundApp,
+        EAknEikAppUiLayoutConfigSize,
+        EAknEikAppUiGetLayoutConfig,
+        EAknEikAppUiMoveAppInZOrder,
+        // eiksrv support
+        EAknSSetStatusPaneFlags,
+        EAknSSetStatusPaneLayout,
+        EAknSBlankScreen,
+        EAknSUnblankScreen,
+        EAknSSetKeyboardRepeatRate,
+        EAknSUpdateKeyBlockMode,
+        EAknSShowLockedNote,
+        EAknSShutdownApps,
+        EAknSStatusPaneResourceId,
+        EAknSStatusPaneAppResourceId,
+        EAknSSetStatusPaneAppResourceId,
+        EAknSRotateScreen,
+        EAknSAppsKeyBlocked,
+        EAknSShowLongTapAnimation,
+        EAknSHideLongTapAnimation,
+        EAknGetAliasKeyCode,
+        EAknSetFgSpDataSubscriberId,
+        EAknSCancelShutdownApps,
+        EAknSGetPhoneIdleViewId,
+        EAknSPreAllocateDynamicSoftNoteEvent,
+        EAknSNotifyDynamicSoftNoteEvent,
+        EAknSCancelDynamicSoftNoteEventNotification,
+        EAknSDiscreetPopupAction
+    };
+
     /*! \brief OOM App Server Memebers can receive notification when memory ran out and can't be
-       freed. 
+       freed. This is basiclly AknCapServer but loaded with this plugin.
       
       - Server type: critical.
 
