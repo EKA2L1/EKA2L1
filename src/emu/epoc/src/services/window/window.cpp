@@ -480,6 +480,19 @@ namespace eka2l1::epoc {
         std::shared_ptr<epoc::sprite> spr = std::make_shared<epoc::sprite>(this, std::move(win), sprite_header->base_pos);
         ctx.set_request_status(add_object(spr));
     }
+    
+    void window_server_client::create_anim_dll(service::ipc_context ctx, ws_cmd cmd) {
+        int dll_name_length = *reinterpret_cast<int*>(cmd.data_ptr);
+        char16_t *dll_name_ptr = reinterpret_cast<char16_t*>(
+            reinterpret_cast<std::uint8_t*>(cmd.data_ptr) + sizeof(int));
+
+        std::u16string dll_name(dll_name_ptr, dll_name_length);
+
+        LOG_TRACE("Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
+        
+        std::shared_ptr<epoc::anim_dll> animdll = std::make_shared<epoc::anim_dll>(this);
+        ctx.set_request_status(add_object(animdll));
+    }
 
     epoc::window_ptr window_server_client::find_window_obj(epoc::window_ptr &root, std::uint32_t id) {
         if (root->id == id) {
@@ -540,6 +553,10 @@ namespace eka2l1::epoc {
 
         case EWsClOpCreateSprite:
             create_sprite(ctx, cmd);
+            break;
+            
+        case EWsClOpCreateAnimDll:
+            create_anim_dll(ctx, cmd);
             break;
 
         case EWsClOpEventReady:
@@ -702,6 +719,9 @@ namespace eka2l1 {
             }
 
             default: {
+                LOG_TRACE("UNHANDLE ASYNC OPCODE: {}",
+                    ctx.msg->function & ~EWservMessAsynchronousService);
+    
                 break;
             }
             }

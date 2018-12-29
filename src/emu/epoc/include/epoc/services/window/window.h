@@ -272,6 +272,14 @@ namespace eka2l1::epoc {
             eka2l1::vec2 pos = eka2l1::vec2(0, 0));
     };
 
+    struct anim_dll: public window_client_obj {
+        // Nothing yet
+        anim_dll(window_server_client_ptr client)
+            : window_client_obj(client) {
+
+        }
+    };
+
     class window_server_client {
         friend struct window_client_obj;
 
@@ -287,6 +295,7 @@ namespace eka2l1::epoc {
         void create_window_group(service::ipc_context ctx, ws_cmd cmd);
         void create_window_base(service::ipc_context ctx, ws_cmd cmd);
         void create_graphic_context(service::ipc_context ctx, ws_cmd cmd);
+        void create_anim_dll(service::ipc_context ctx, ws_cmd cmd);
         void create_sprite(service::ipc_context ctx, ws_cmd cmd);
 
         void restore_hotkey(service::ipc_context ctx, ws_cmd cmd);
