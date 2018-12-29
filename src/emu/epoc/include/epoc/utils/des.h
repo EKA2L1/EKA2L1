@@ -108,13 +108,16 @@ namespace eka2l1::epoc {
 
             std::uint32_t real_len = size / sizeof(T);
 
-            if ((dtype == buf) || (dtype == ptr) || (dtype == ptr_to_buf)) {
-                if (real_len > get_max_length(pr)) {
-                    return des_err_not_large_enough_to_hold;
+            if (size > 0) {
+                if ((dtype == buf) || (dtype == ptr) || (dtype == ptr_to_buf)) {
+                    if (real_len > get_max_length(pr)) {
+                        return des_err_not_large_enough_to_hold;
+                    }
                 }
+
+                std::memcpy(des_buf, data, size);
             }
 
-            std::memcpy(des_buf, data, size);
             set_length(pr, real_len);
 
             return 0;
