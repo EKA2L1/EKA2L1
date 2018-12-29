@@ -57,9 +57,7 @@ namespace eka2l1::epoc {
         crr_mode = &scr_config.modes[0];   
     }
 
-    constexpr int twips_mul = 15;
-
-    static graphics_orientation number_to_orientation(int rot) {
+    graphics_orientation number_to_orientation(int rot) {
         switch (rot) {
         case 0: {
             return graphics_orientation::normal;

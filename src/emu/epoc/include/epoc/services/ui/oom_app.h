@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/window/window.h>
 #include <epoc/services/server.h>
 #include <epoc/services/context.h>
 
@@ -69,6 +70,35 @@ namespace eka2l1 {
         EAknSDiscreetPopupAction
     };
 
+    // Guess the softkey is the key that displays all shortcuts app?
+    enum class akn_softkey_loc {
+        right,
+        left,
+        bottom
+    };
+
+    struct akn_screen_mode_info {
+        int mode_num;
+        epoc::pixel_twips_and_rot info;
+        akn_softkey_loc loc;
+        int screen_style_hash;
+        epoc::display_mode dmode;
+    };
+
+    struct akn_hardware_info {
+        int state_num;
+        int key_mode;
+        int screen_mode;
+        int alt_screen_mode;
+    };
+
+    struct akn_layout_config {
+        int num_screen_mode;
+        eka2l1::ptr<akn_screen_mode_info> screen_modes;
+        int num_hardware_mode;
+        eka2l1::ptr<akn_hardware_info> hardware_infos;
+    };
+
     /*! \brief OOM App Server Memebers can receive notification when memory ran out and can't be
        freed. This is basiclly AknCapServer but loaded with this plugin.
       
@@ -80,6 +110,16 @@ namespace eka2l1 {
         void get_layout_config_size(service::ipc_context ctx);
         void get_layout_config(service::ipc_context ctx);
     
+        bool layout_config_loaded = false;
+        epoc::config::screen scr_config;
+
+        std::string layout_buf;
+
+    protected:
+        // This but except it loads the screen0 only
+        void load_screen_mode();
+        std::string get_layout_buf();
+
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);
     };

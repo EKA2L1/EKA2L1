@@ -41,6 +41,8 @@ enum {
     reply_slot = 1
 };
 
+constexpr int twips_mul = 15;
+
 namespace eka2l1 {
     class window_server;
 
@@ -308,6 +310,8 @@ namespace eka2l1::epoc {
             return *(std::reinterpret_pointer_cast<window_server>(guest_session->get_server()));
         }
     };
+    
+    epoc::graphics_orientation number_to_orientation(int rot);
 }
 
 namespace eka2l1 {
@@ -375,4 +379,5 @@ namespace eka2l1 {
             return screens[num];
         }
     };
+    
 }
