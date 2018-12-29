@@ -97,7 +97,7 @@ namespace eka2l1 {
 
             LOG_ERROR("Can't found or load process executable: {}", name_process);
 
-            ctx.set_request_status(KErrUnknown);
+            ctx.set_request_status(KErrNotFound);
             return;
         }
 
@@ -156,7 +156,7 @@ namespace eka2l1 {
 
             if (!img_ptr) {
                 LOG_TRACE("Invalid library provided {}", lib_name);
-                ctx.set_request_status(KErrArgument);
+                ctx.set_request_status(KErrNotFound);
 
                 return;
             }
