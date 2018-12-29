@@ -324,6 +324,20 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsClickOpLoad: {
+            int dll_click_name_length = *reinterpret_cast<int*>(cmd.data_ptr);
+            char16_t *dll_click_name_ptr = reinterpret_cast<char16_t*>(
+                reinterpret_cast<std::uint8_t*>(cmd.data_ptr) + 4
+            );
+
+            std::u16string dll_click_name(dll_click_name_ptr, dll_click_name_length);
+            LOG_TRACE("Stubbed EWsClickOpLoad (loading click DLL {})", common::ucs2_to_utf8(dll_click_name));
+
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplement ClickDll Opcode: 0x{:x}", cmd.header.op);
             break;
