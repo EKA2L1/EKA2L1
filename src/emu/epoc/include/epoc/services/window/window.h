@@ -151,8 +151,7 @@ namespace eka2l1::epoc {
         explicit window_client_obj(window_server_client_ptr client);
         virtual ~window_client_obj() {}
 
-        virtual void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
-        }
+        virtual void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd);
     };
 
     using window_client_obj_ptr = std::shared_ptr<window_client_obj>;
@@ -278,6 +277,10 @@ namespace eka2l1::epoc {
             : window_client_obj(client) {
 
         }
+
+        std::uint32_t user_count {0};
+
+        void execute_command(service::ipc_context context, ws_cmd cmd) override;
     };
 
     class window_server_client {

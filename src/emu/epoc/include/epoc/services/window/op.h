@@ -335,6 +335,15 @@ enum TWsGcOpcodes {
     EWsGcOpFlagDrawOp = 0x8000
 };
 
+enum TWsAnimDllOpcode {
+    EWsAnimDllOpCreateInstance=0x0000,
+    EWsAnimDllOpCommand,
+    EWsAnimDllOpCommandReply,
+    EWsAnimDllOpDestroyInstance,
+    EWsAnimDllOpFree,
+    EWsAnimDllOpCreateInstanceSprite,
+};
+
 enum THotKey {
     /** Enables logging of all messages to and from the window server.
 	Note that the required type of logging must have been specified in the wsini.ini

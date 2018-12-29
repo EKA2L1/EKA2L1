@@ -46,6 +46,10 @@ namespace eka2l1::epoc {
         : client(client)
         , id(static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1) {
     }
+    
+    void window_client_obj::execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
+        LOG_ERROR("Unimplemented command handler for object with handle: 0x{:x}", cmd.obj_handle);
+    }
 
     screen_device::screen_device(window_server_client_ptr client, 
         int number, eka2l1::graphics_driver_client_ptr driver)
@@ -289,6 +293,24 @@ namespace eka2l1::epoc {
         : window_client_obj(client)
         , position(pos)
         , attached_window(attached_window) {
+    }
+
+    void anim_dll::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+        TWsAnimDllOpcode op = static_cast<decltype(op)>(cmd.header.op);
+
+        switch (op) {
+        case EWsAnimDllOpCreateInstance: {
+            LOG_TRACE("AnimDll::CreateInstance stubbed with a anim handle (>= 0)");
+            ctx.set_request_status(user_count++);
+
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unimplement AnimDll Opcode: 0x{:x}", cmd.header.op);
+            break;
+        }
+        }
     }
 
     void window_server_client::parse_command_buffer(service::ipc_context ctx) {
