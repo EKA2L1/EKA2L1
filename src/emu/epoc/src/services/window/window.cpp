@@ -368,6 +368,7 @@ namespace eka2l1::epoc {
             evt.user = this;
 
             client->add_event_screen_change_user(evt);
+            ctx.set_request_status(KErrNone);
 
             break;
         }
