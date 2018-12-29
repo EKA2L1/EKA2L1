@@ -312,7 +312,45 @@ namespace eka2l1::epoc {
         }
         }
     }
+    
+    bool window::execute_command_for_general_node(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
+        TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
+        switch (op) {
+        case EWsWinOpEnableModifierChangedEvents: {
+            epoc::event_mod_notifier_user nof;
+            nof.notifier = *reinterpret_cast<event_mod_notifier*>(cmd.data_ptr);
+            nof.user = this;
+
+            client->add_event_mod_notifier_user(nof);
+            ctx.set_request_status(KErrNone);
+
+            return true;
+        }
+
+        default: {
+            LOG_ERROR("Unimplemented base window opcode 0x{:X}", cmd.header.op);
+            break;
+        }
+        }
+
+        return false;
+    }
+
+    void window_group::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+        bool result = execute_command_for_general_node(ctx, cmd);
+
+        if (result) {
+            return;
+        }
+
+        LOG_ERROR("Unimplemented window group opcode!");
+    }
+    
+    void window_server_client::add_event_mod_notifier_user(epoc::event_mod_notifier_user nof) {
+        mod_notifies.push_back(nof);
+    }
+    
     void window_server_client::parse_command_buffer(service::ipc_context ctx) {
         std::optional<std::string> dat = ctx.get_arg<std::string>(cmd_slot);
 

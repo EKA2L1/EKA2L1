@@ -26,6 +26,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <queue>
 
 #include <common/ini.h>
 #include <common/queue.h>
@@ -133,6 +134,89 @@ namespace eka2l1::epoc {
         blank
     };
 
+    enum class event_modifier {
+        repeatable = 0x001,
+        keypad = 0x002,
+        left_alt = 0x004,
+        right_alt = 0x008,
+        alt = 0x010,
+        left_ctrl = 0x020,
+        right_ctrl = 0x040,
+        ctrl = 0x080,
+        left_shift = 0x100,
+        right_shift = 0x200,
+        shift = 0x400,
+        left_func = 0x800,
+        right_func = 0x1000,
+        func = 0x2000,
+        caps_lock = 0x4000,
+        num_lock = 0x8000,
+        scroll_lock = 0x10000,
+        key_up = 0x20000,
+        special = 0x40000,
+        double_click = 0x80000,
+        modifier_pure_key_code = 0x100000,
+        cancel_rot = 0x200000,
+        no_rot = 0x0,
+        rotate90 = 0x400000,
+        rotate180 = 0x800000,
+        rotate270 = 0x1000000,
+        all_mods = 0x1FFFFFFF                   
+    };
+
+    enum class event_control {
+        always,
+        only_with_keyboard_focus,
+        only_when_visible
+    };
+
+    struct event_mod_notifier {
+        event_modifier what;
+        event_control when;
+    };
+
+    struct event_mod_notifier_user {
+        event_mod_notifier notifier;
+        epoc::window *user;
+    };
+
+    enum class event_type {
+        button1down,
+        button1up,
+        button2down,
+        button2up,
+        drag,
+        move,
+        button_repeat,
+        repeat,
+        switch_on,
+        out_of_range
+    };
+
+    struct pointer_event {
+        event_type evtype;
+        event_modifier modifier;
+        eka2l1::vec2 pos;
+        eka2l1::vec2 parent_pos;
+    };
+
+    struct adv_pointer_event: public pointer_event {
+        int spare1;
+        int spare2;
+        int pos_z;
+        std::uint8_t ptr_num; // multi touch
+    };
+
+    struct event {
+        int type;
+        std::uint32_t handle;
+        std::uint64_t time;
+
+        // TODO: Should be only pointer event with epoc < 9.
+        // For epoc9 there shouldnt be a pointer number, since there is no multi touch
+        adv_pointer_event evt;
+    };
+
     struct pixel_twips_and_rot {
         eka2l1::vec2 pixel_size;
         eka2l1::vec2 twips_size;
@@ -190,6 +274,8 @@ namespace eka2l1::epoc {
             return priority <= rhs.priority;
         }
 
+        bool execute_command_for_general_node(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd);
+
         window(window_server_client_ptr client)
             : window_client_obj(client)
             , type(window_kind::normal)
@@ -230,12 +316,7 @@ namespace eka2l1::epoc {
             : window(client, dvc, window_kind::group) {
         }
 
-        eka2l1::vec2 get_screen_size() const {
-            return dvc->driver->screen_size();
-        }
-
-        void adjust_screen_size(const eka2l1::object_size scr_size) const {
-        }
+        void execute_command(service::ipc_context context, ws_cmd cmd) override;
     };
 
     struct window_user : public epoc::window {
@@ -294,6 +375,8 @@ namespace eka2l1::epoc {
         epoc::screen_device_ptr primary_device;
         epoc::window_ptr root;
 
+        std::vector<epoc::event_mod_notifier_user> mod_notifies;
+
         void create_screen_device(service::ipc_context ctx, ws_cmd cmd);
         void create_window_group(service::ipc_context ctx, ws_cmd cmd);
         void create_window_base(service::ipc_context ctx, ws_cmd cmd);
@@ -307,6 +390,8 @@ namespace eka2l1::epoc {
         epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
 
     public:
+        void add_event_mod_notifier_user(epoc::event_mod_notifier_user nof);
+
         void execute_command(service::ipc_context ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds);
         void parse_command_buffer(service::ipc_context ctx);
@@ -367,6 +452,9 @@ namespace eka2l1 {
         epoc::window_group_ptr focus_;
         epoc::pointer_cursor_mode   cursor_mode_;
 
+        std::queue<epoc::event> pending_events;
+        std::vector<ptr<epoc::request_status>> statuses;
+
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
 
@@ -377,6 +465,9 @@ namespace eka2l1 {
 
     public:
         window_server(system *sys);
+
+        void queue_event(epoc::event evt);
+        void add_to_notify(eka2l1::ptr<epoc::request_status> req_sts);
 
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;
