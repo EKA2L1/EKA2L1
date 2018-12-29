@@ -246,7 +246,11 @@ namespace eka2l1::epoc {
         screen_device_ptr dvc;
 
         window_ptr parent;
-        uint16_t priority;
+
+        // It's just z value. The second one will be used when there is 
+        // multiple window with same first z.
+        std::uint16_t priority { 0 };
+        std::uint16_t secondary_priority { 0 };
 
         window_kind type;
 
@@ -330,6 +334,8 @@ namespace eka2l1::epoc {
         {
 
         }
+        
+        void execute_command(service::ipc_context context, ws_cmd cmd) override;
     };
 
     struct graphic_context : public window_client_obj {

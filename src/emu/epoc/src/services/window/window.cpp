@@ -328,6 +328,13 @@ namespace eka2l1::epoc {
             return true;
         }
 
+        case EWsWinOpSetOrdinalPosition: {
+            secondary_priority = *reinterpret_cast<int*>(cmd.data_ptr);
+            ctx.set_request_status(KErrNone);
+
+            return true;
+        }
+
         default: {
             LOG_ERROR("Unimplemented base window opcode 0x{:X}", cmd.header.op);
             break;
@@ -345,6 +352,16 @@ namespace eka2l1::epoc {
         }
 
         LOG_ERROR("Unimplemented window group opcode!");
+    }
+    
+    void window_user::execute_command(service::ipc_context context, ws_cmd cmd) {
+        bool result = execute_command_for_general_node(ctx, cmd);
+
+        if (result) {
+            return;
+        }
+
+        LOG_ERROR("Unimplemented window user opcode!");
     }
     
     void window_server_client::add_event_mod_notifier_user(epoc::event_mod_notifier_user nof) {
