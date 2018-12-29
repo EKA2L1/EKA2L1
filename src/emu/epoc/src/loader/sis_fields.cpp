@@ -60,7 +60,7 @@ namespace eka2l1 {
 
             stream->read(reinterpret_cast<char *>(&arr.element_type), 4);
 
-            uint32_t crr_pos = stream->tellg();
+            uint64_t crr_pos = stream->tellg();
 
             switch (arr.element_type) {
             case sis_field_type::SISString:
@@ -390,10 +390,10 @@ namespace eka2l1 {
 
                     compressed.uncompressed_data.resize(compressed.uncompressed_size);
 
-                    stream.avail_in = us;
+                    stream.avail_in = static_cast<std::uint32_t>(us);
                     stream.next_in = compressed.compressed_data.data();
 
-                    stream.avail_out = compressed.uncompressed_size;
+                    stream.avail_out = static_cast<std::uint32_t>(compressed.uncompressed_size);
                     stream.next_out = compressed.uncompressed_data.data();
 
                     inflate(&stream, Z_NO_FLUSH);
