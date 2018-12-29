@@ -318,9 +318,7 @@ namespace eka2l1::epoc {
 
         switch (op) {
         case EWsClickOpIsLoaded: {
-            LOG_TRACE("Click::IsLoaded stubbed with EClickLoaded 0x1");
-            ctx.set_request_status(0x1);
-
+            ctx.set_request_status(loaded ? 0 : 0x1);
             break;
         }
 
@@ -333,6 +331,13 @@ namespace eka2l1::epoc {
             std::u16string dll_click_name(dll_click_name_ptr, dll_click_name_length);
             LOG_TRACE("Stubbed EWsClickOpLoad (loading click DLL {})", common::ucs2_to_utf8(dll_click_name));
 
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
+        case EWsClickOpCommandReply: {
+            LOG_TRACE("ClickOpCommandReply stubbed with KErrNone");
             ctx.set_request_status(KErrNone);
 
             break;
