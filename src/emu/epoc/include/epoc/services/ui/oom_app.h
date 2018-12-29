@@ -77,8 +77,8 @@ namespace eka2l1 {
       - Launching: HLE when not doing a full startup. A full startup should launch this server automaticlly.
     */
     class oom_ui_app_server : public service::server {
-        void add_to_menu_list(service::ipc_context ctx);
-        void add_to_menu_list2(service::ipc_context ctx);
+        void get_layout_config_size(service::ipc_context ctx);
+        void get_layout_config(service::ipc_context ctx);
     
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);

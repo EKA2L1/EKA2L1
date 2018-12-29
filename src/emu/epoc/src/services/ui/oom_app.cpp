@@ -21,20 +21,29 @@
 #include <epoc/services/ui/oom_app.h>
 #include <common/log.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 namespace eka2l1 {
     oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys) 
         : service::server(sys, "101fdfae_10207218_AppServer", true) {
-        REGISTER_IPC(oom_ui_app_server, add_to_menu_list, 0x42, "OOM::AddToMenuList42");
-        REGISTER_IPC(oom_ui_app_server, add_to_menu_list2, 0x43, "OOM::AddToMenuList43");
+        REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
+        REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
     }
 
-    void oom_ui_app_server::add_to_menu_list(service::ipc_context ctx) {
-        LOG_TRACE("OOM 0x42 stubbed");
-        ctx.set_request_status(0);
+    void oom_ui_app_server::get_layout_config_size(service::ipc_context ctx) {
+        LOG_TRACE("OOM: GETLAYOUTCONFIGSIZE: Null descriptor on hardware");
+
+        int size = 0;
+
+        ctx.write_arg_pkg<int>(0, size);
+        ctx.set_request_status(KErrNone);
     }
 
-    void oom_ui_app_server::add_to_menu_list2(service::ipc_context ctx) {
-        LOG_TRACE("OOM 0x43 stubbed");
-        ctx.set_request_status(0);
+    void oom_ui_app_server::get_layout_config(service::ipc_context ctx) {
+        LOG_TRACE("OOM: GETLAYOUTCONFIG: Null descriptor on hardware");
+        
+        ctx.write_arg_pkg(0, nullptr, 0);
+        ctx.set_request_status(KErrNone);
     }
 }
