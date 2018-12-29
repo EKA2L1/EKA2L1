@@ -346,7 +346,6 @@ namespace eka2l1::epoc {
         }
 
         default: {
-            LOG_ERROR("Unimplemented base window opcode 0x{:X}", cmd.header.op);
             break;
         }
         }
@@ -360,8 +359,15 @@ namespace eka2l1::epoc {
         if (result) {
             return;
         }
+        
+        TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
-        LOG_ERROR("Unimplemented window group opcode!");
+        switch (op) {
+        default: {
+            LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
+            break;
+        }
+        }
     }
     
     void window_user::execute_command(service::ipc_context ctx, ws_cmd cmd) {
@@ -371,7 +377,21 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_ERROR("Unimplemented window user opcode!");
+        TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+
+        switch (op) {
+        case EWsWinOpSetShadowHeight: {
+            shadow_height = *reinterpret_cast<int*>(cmd.data_ptr);
+            ctx.set_request_status(KErrNone);
+            
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
+            break;
+        }
+        }
     }
     
     void window_server_client::add_event_mod_notifier_user(epoc::event_mod_notifier_user nof) {
