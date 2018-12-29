@@ -443,6 +443,11 @@ namespace eka2l1 {
         eka2l1::vec2 base_pos;
         int flags;
     };
+
+    struct ws_cmd_ordinal_pos_pri {
+        int pri2;
+        int pri1;
+    };
 }
 
 namespace eka2l1 {
