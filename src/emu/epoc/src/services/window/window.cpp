@@ -443,6 +443,25 @@ namespace eka2l1::epoc {
 
         ctx.set_request_status(add_object(group));
     }
+    
+    void window_server_client::create_window_base(service::ipc_context ctx, ws_cmd cmd) {
+        ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
+        
+        epoc::window_ptr parent = find_window_obj(root, header->parent);
+
+        if (!parent) {
+            LOG_WARN("Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
+            parent = root;
+        }
+
+        epoc::window_ptr win = std::make_shared<epoc::window_user>(this, parent->dvc,
+            header->win_type, header->dmode);
+
+        win->parent = parent;
+        parent->childs.push(win);
+
+        ctx.set_request_status(add_object(win));
+    }
 
     void window_server_client::create_graphic_context(service::ipc_context ctx, ws_cmd cmd) {
         std::shared_ptr<epoc::graphic_context> gcontext = std::make_shared<epoc::graphic_context>(this);
@@ -509,6 +528,10 @@ namespace eka2l1::epoc {
             create_window_group(ctx, cmd);
             break;
 
+        case EWsClOpCreateWindow:
+            create_window_base(ctx, cmd);
+            break;
+        
         case EWsClOpRestoreDefaultHotKey:
             restore_hotkey(ctx, cmd);
             break;
@@ -537,10 +560,6 @@ namespace eka2l1::epoc {
 
             ctx.set_request_status((*dvc_ite)->focus->id);
             break;
-        }
-
-        case EWsClOpCreateWindow: {
-
         }
 
         default:
