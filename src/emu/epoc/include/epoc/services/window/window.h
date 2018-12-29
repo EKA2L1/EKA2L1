@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2018 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project
+ * (see bentokun.github.com/EKA2L1).
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <atomic>
@@ -35,24 +55,6 @@ namespace eka2l1 {
 
         void *data_ptr;
     };
-
-    struct ws_cmd_screen_device_header {
-        int num_screen;
-        uint32_t screen_dvc_ptr;
-    };
-
-    struct ws_cmd_window_group_header {
-        uint32_t client_handle;
-        bool focus;
-        uint32_t parent_id;
-        uint32_t screen_device_handle;
-    };
-
-    struct ws_cmd_create_sprite_header {
-        int window_handle;
-        eka2l1::vec2 base_pos;
-        int flags;
-    };
 }
 
 namespace eka2l1::epoc {
@@ -74,7 +76,7 @@ namespace eka2l1::epoc {
     struct window;
     using window_ptr = std::shared_ptr<epoc::window>;
 
-    enum class window_type {
+    enum class window_kind {
         normal,
         group,
         top_client,
@@ -116,6 +118,19 @@ namespace eka2l1::epoc {
         color_last
     };
 
+    enum class pointer_cursor_mode {
+        none,           ///< The device don't have a pointer (touch)
+        fixed,          ///< Use the default system cursor
+        normal,         ///< Can't understand yet
+        window,         ///< Can't understand yet
+    };
+
+    enum class window_type {
+        redraw,
+        backed_up,
+        blank
+    };
+
     struct pixel_twips_and_rot {
         eka2l1::vec2 pixel_size;
         eka2l1::vec2 twips_size;
@@ -149,7 +164,7 @@ namespace eka2l1::epoc {
         uint16_t priority;
         uint32_t id;
 
-        window_type type;
+        window_kind type;
 
         bool operator==(const window &rhs) {
             return priority == rhs.priority;
@@ -177,19 +192,22 @@ namespace eka2l1::epoc {
 
         window(window_server_client_ptr client)
             : window_client_obj(client)
-            , type(window_type::normal)
+            , type(window_kind::normal)
             , dvc(nullptr) {}
 
-        window(window_server_client_ptr client, window_type type)
+        window(window_server_client_ptr client, window_kind type)
             : window_client_obj(client)
             , type(type)
             , dvc(nullptr) {}
 
-        window(window_server_client_ptr client, screen_device_ptr dvc, window_type type)
+        window(window_server_client_ptr client, screen_device_ptr dvc, window_kind type)
             : window_client_obj(client)
             , type(type)
             , dvc(dvc) {}
     };
+
+    struct window_group;
+    using window_group_ptr = std::shared_ptr<epoc::window_group>;
 
     struct screen_device : public window_client_obj {
         eka2l1::graphics_driver_client_ptr driver;
@@ -197,6 +215,9 @@ namespace eka2l1::epoc {
 
         epoc::config::screen scr_config;
         epoc::config::screen_mode   *crr_mode;
+
+        std::vector<epoc::window_ptr> windows;
+        epoc::window_group_ptr  focus;
 
         screen_device(window_server_client_ptr client, int number, 
             eka2l1::graphics_driver_client_ptr driver);
@@ -206,7 +227,7 @@ namespace eka2l1::epoc {
 
     struct window_group : public epoc::window {
         window_group(window_server_client_ptr client, screen_device_ptr dvc)
-            : window(client, dvc, window_type::group) {
+            : window(client, dvc, window_kind::group) {
         }
 
         eka2l1::vec2 get_screen_size() const {
@@ -214,6 +235,19 @@ namespace eka2l1::epoc {
         }
 
         void adjust_screen_size(const eka2l1::object_size scr_size) const {
+        }
+    };
+
+    struct window_client: public epoc::window {
+        epoc::display_mode dmode;
+        epoc::window_type win_type;
+
+        window_client(window_server_client_ptr client, screen_device_ptr dvc,
+            epoc::window_type type_of_window, epoc::display_mode dmode)
+            : window(client, dvc, window_kind::client), win_type(type_of_window),
+              dmode(dmode)
+        {
+
         }
     };
 
@@ -237,20 +271,20 @@ namespace eka2l1::epoc {
             eka2l1::vec2 pos = eka2l1::vec2(0, 0));
     };
 
-    using window_group_ptr = std::shared_ptr<epoc::window_group>;
-
     class window_server_client {
         friend struct window_client_obj;
 
         session_ptr guest_session;
 
         std::vector<window_client_obj_ptr> objects;
+        std::vector<epoc::screen_device_ptr> devices;
 
         epoc::screen_device_ptr primary_device;
         epoc::window_ptr root;
 
         void create_screen_device(service::ipc_context ctx, ws_cmd cmd);
         void create_window_group(service::ipc_context ctx, ws_cmd cmd);
+        void create_window_base(service::ipc_context ctx, ws_cmd cmd);
         void create_graphic_context(service::ipc_context ctx, ws_cmd cmd);
         void create_sprite(service::ipc_context ctx, ws_cmd cmd);
 
@@ -278,6 +312,34 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
+    struct ws_cmd_screen_device_header {
+        int num_screen;
+        uint32_t screen_dvc_ptr;
+    };
+
+    struct ws_cmd_window_header {
+        int parent;
+        uint32_t client_handle;
+
+        epoc::window_type win_type;
+        epoc::display_mode dmode;
+    };
+
+    struct ws_cmd_window_group_header {
+        uint32_t client_handle;
+        bool focus;
+        uint32_t parent_id;
+        uint32_t screen_device_handle;
+    };
+
+    struct ws_cmd_create_sprite_header {
+        int window_handle;
+        eka2l1::vec2 base_pos;
+        int flags;
+    };
+}
+
+namespace eka2l1 {
     class window_server : public service::server {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
@@ -286,6 +348,9 @@ namespace eka2l1 {
         bool                loaded { false };
 
         std::vector<epoc::config::screen>   screens;
+
+        epoc::window_group_ptr focus_;
+        epoc::pointer_cursor_mode   cursor_mode_;
 
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
@@ -297,6 +362,14 @@ namespace eka2l1 {
 
     public:
         window_server(system *sys);
+
+        epoc::pointer_cursor_mode &cursor_mode() {
+            return cursor_mode_;
+        }
+
+        epoc::window_group_ptr &focus() {
+            return focus_;
+        }
 
         epoc::config::screen &get_screen_config(int num) {
             assert(num < screens.size());

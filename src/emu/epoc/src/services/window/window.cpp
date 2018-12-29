@@ -132,6 +132,7 @@ namespace eka2l1::epoc {
         
         case EWsSdOpSetScreenSizeAndRotation: {
             pixel_twips_and_rot *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
+            bool found = true;
 
             for (int i = 0; i < scr_config.modes.size(); i++) {
                 if (scr_config.modes[i].size == info->pixel_size &&
@@ -139,13 +140,17 @@ namespace eka2l1::epoc {
                     crr_mode = &scr_config.modes[i];
 
                     ctx.set_request_status(KErrNone);
+                    found = true;
+
                     break;
                 }
             }
 
-            LOG_ERROR("Unable to set size: mode not found!");
-            ctx.set_request_status(KErrNotFound);
-        
+            if (!found) {
+                LOG_ERROR("Unable to set size: mode not found!");
+                ctx.set_request_status(KErrNotSupported);
+            }
+            
             break;
         }
 
@@ -227,8 +232,15 @@ namespace eka2l1::epoc {
         case EWsSdOpFree: {
             ctx.set_request_status(KErrNone);
             
-            // The reference are still somewhere
-            // TODO: Clear all window that contains this object's reference (avoid leak)
+            // Detach the screen device
+            for (epoc::window_ptr &win: windows) {
+                win->dvc.reset();
+            }
+
+            windows.clear();
+
+            // TODO: Remove reference in the client
+
             client->delete_object(id);
             break;
         }
@@ -375,11 +387,13 @@ namespace eka2l1::epoc {
         }
 
         init_device(root);
+        devices.push_back(device);
+
         ctx.set_request_status(add_object(device));
     }
 
     void window_server_client::init_device(epoc::window_ptr &win) {
-        if (win->type == epoc::window_type::group) {
+        if (win->type == epoc::window_kind::group) {
             epoc::window_group_ptr group_win = std::reinterpret_pointer_cast<epoc::window_group>(
                 win);
 
@@ -421,6 +435,11 @@ namespace eka2l1::epoc {
 
         group->parent = parent_group;
         parent_group->childs.push(group);
+
+        if (header->focus) {
+            device_ptr->focus = std::reinterpret_pointer_cast<epoc::window_group>(group);
+            get_ws().focus() = device_ptr->focus;
+        }
 
         ctx.set_request_status(add_object(group));
     }
@@ -468,6 +487,20 @@ namespace eka2l1::epoc {
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context ctx, ws_cmd cmd) {
         switch (cmd.header.op) {
+        case EWsClOpSetPointerCursorMode: {
+            // TODO: Check errors
+            if (get_ws().focus() && get_ws().focus()->client == this) {
+                get_ws().cursor_mode() = *reinterpret_cast<epoc::pointer_cursor_mode*>(cmd.data_ptr);
+                ctx.set_request_status(KErrNone);
+
+                break;
+            }
+
+            ctx.set_request_status(KErrPermissionDenied);
+
+            break;
+        }
+
         case EWsClOpCreateScreenDevice:
             create_screen_device(ctx, cmd);
             break;
@@ -491,8 +524,24 @@ namespace eka2l1::epoc {
         case EWsClOpEventReady:
             break;
 
-        case EWsClOpGetFocusWindowGroup:
+        case EWsClOpGetFocusWindowGroup: {
+            // TODO: Epoc < 9
+            int screen_num = *reinterpret_cast<int*>(cmd.data_ptr);
+            auto dvc_ite = std::find_if(devices.begin(), devices.end(), 
+                [screen_num](const epoc::screen_device_ptr &dvc) { return dvc->screen == screen_num; });
+
+            if (dvc_ite == devices.end()) {
+                ctx.set_request_status(KErrArgument);
+                break;
+            }
+
+            ctx.set_request_status((*dvc_ite)->focus->id);
             break;
+        }
+
+        case EWsClOpCreateWindow: {
+
+        }
 
         default:
             LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
