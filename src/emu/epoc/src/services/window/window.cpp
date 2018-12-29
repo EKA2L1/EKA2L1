@@ -22,6 +22,7 @@
 #include <epoc/services/window/window.h>
 
 #include <common/e32inc.h>
+#include <common/algorithm.h>
 #include <common/ini.h>
 #include <common/log.h>
 #include <common/cvt.h>
@@ -619,6 +620,12 @@ namespace eka2l1::epoc {
         }
 
         group->parent = parent_group;
+        
+        if (last_group) {
+            last_group->next_sibling = 
+                std::reinterpret_pointer_cast<epoc::window_group>(group);
+        } 
+
         parent_group->childs.push(group);
 
         if (header->focus) {
@@ -626,6 +633,7 @@ namespace eka2l1::epoc {
             get_ws().focus() = device_ptr->focus;
         }
 
+        last_group = std::reinterpret_pointer_cast<epoc::window_group>(group);
         ctx.set_request_status(add_object(group));
     }
     
@@ -797,6 +805,48 @@ namespace eka2l1::epoc {
             ctx.set_request_status((*dvc_ite)->focus->id);
             break;
         }
+        
+        case EWsClOpFindWindowGroupIdentifier: {
+            ws_cmd_find_window_group_identifier *find_info = 
+                reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
+
+            epoc::window_group_ptr group = nullptr;
+
+            if (find_info->parent_identifier) {
+                group = std::reinterpret_pointer_cast<epoc::window_group>
+                    (find_window_obj(root, find_info->parent_identifier));
+            } else {
+                LOG_TRACE("Parent identifier not specified, use root window group");
+                group = std::reinterpret_pointer_cast<epoc::window_group>(
+                   *root->childs.begin());
+            }
+
+            if (!group || group->type != window_kind::group) {
+                ctx.set_request_status(KErrNotFound);
+                break;
+            }
+
+            char16_t *win_group_name_ptr = reinterpret_cast<char16_t*>(find_info + 1);
+            std::u16string win_group_name(win_group_name_ptr, find_info->length);
+
+            bool found = false;
+
+            for (; group; group = group->next_sibling) {
+                if (common::compare_ignore_case(group->name.substr(find_info->offset),
+                    win_group_name) == 0) {
+                    ctx.set_request_status(group->id);
+                    found = true;
+
+                    break;
+                }
+            }
+
+            if (!found) {
+                ctx.set_request_status(KErrNotFound);
+            }
+
+            break;
+        }
 
         default:
             LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
@@ -929,12 +979,30 @@ namespace eka2l1 {
         clients[ctx.msg->msg_session->unique_id()]->parse_command_buffer(ctx);
     }
 
+    void window_server::add_to_notify(event_notify_info info) {
+        statuses.push_back(info);
+    }
+
     void window_server::on_unhandled_opcode(service::ipc_context ctx) {
         if (ctx.msg->function & EWservMessAsynchronousService) {
             switch (ctx.msg->function & ~EWservMessAsynchronousService) {
             case EWsClOpRedrawReady: {
                 LOG_TRACE("Redraw ready");
                 ctx.set_request_status(KErrNone);
+
+                break;
+            }
+
+            // Notify when an event is ringing, means that whenever
+            // is occured within an object that belongs to a client that
+            // created by the same thread as the requester, that requester
+            // will be notify
+            case EWsClOpEventReady: {
+                event_notify_info info;
+                info.requester = ctx.msg->own_thr;
+                info.sts = ctx.msg->request_sts;
+
+                add_to_notify(info);
 
                 break;
             }

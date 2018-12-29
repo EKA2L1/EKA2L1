@@ -320,6 +320,9 @@ namespace eka2l1::epoc {
     };
 
     struct window_group : public epoc::window {
+        epoc::window_group_ptr next_sibling { nullptr };
+        std::u16string name;
+
         window_group(window_server_client_ptr client, screen_device_ptr dvc)
             : window(client, dvc, window_kind::group) {
         }
@@ -402,6 +405,7 @@ namespace eka2l1::epoc {
         epoc::window_ptr root;
 
         eka2l1::thread_ptr client_thread;
+        eka2l1::epoc::window_group_ptr last_group;
 
         std::vector<epoc::event_mod_notifier_user> mod_notifies;
         std::vector<epoc::event_screen_change_user> screen_changes;
@@ -478,9 +482,20 @@ namespace eka2l1 {
         int pri2;
         int pri1;
     };
+
+    struct ws_cmd_find_window_group_identifier {
+        std::uint32_t parent_identifier;
+        int offset;
+        int length;
+    };
 }
 
 namespace eka2l1 {
+    struct event_notify_info {
+        eka2l1::ptr<epoc::request_status> sts;
+        eka2l1::thread_ptr requester;
+    };
+
     class window_server : public service::server {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
@@ -494,7 +509,7 @@ namespace eka2l1 {
         epoc::pointer_cursor_mode   cursor_mode_;
 
         std::queue<epoc::event> pending_events;
-        std::vector<ptr<epoc::request_status>> statuses;
+        std::vector<event_notify_info> statuses;
 
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
@@ -508,7 +523,7 @@ namespace eka2l1 {
         window_server(system *sys);
 
         void queue_event(epoc::event evt);
-        void add_to_notify(eka2l1::ptr<epoc::request_status> req_sts);
+        void add_to_notify(event_notify_info info);
 
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;
