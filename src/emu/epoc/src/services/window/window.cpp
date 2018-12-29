@@ -394,6 +394,16 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpActivate: {
+            LOG_TRACE("Window activated but redraw not yet implemented");
+            activate = true;
+
+            // TODO: Redraw
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
             break;

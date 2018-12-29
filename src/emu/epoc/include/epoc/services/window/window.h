@@ -338,6 +338,8 @@ namespace eka2l1::epoc {
         int shadow_height { 0 };
         bool shadow_disable = false;
         
+        bool activate = false;
+
         void execute_command(service::ipc_context context, ws_cmd cmd) override;
     };
 
