@@ -33,6 +33,7 @@ namespace eka2l1 {
         : service::server(sys, "101fdfae_10207218_AppServer", true) {
         REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
         REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
+        REGISTER_IPC(oom_ui_app_server, set_sgc_params, EAknEikAppUiSetSgcParams, "OOM::SetSgcParams");
     }
 
     std::string oom_ui_app_server::get_layout_buf() {
@@ -173,6 +174,20 @@ namespace eka2l1 {
 
         ctx.write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&layout_buf[0]), 
             static_cast<std::uint32_t>(layout_buf.size()));
+
+        ctx.set_request_status(KErrNone);
+    }
+    
+    void oom_ui_app_server::set_sgc_params(service::ipc_context ctx) {
+        auto params_op = ctx.get_arg_packed<epoc::sgc_params>(0);
+
+        if (!params_op) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        params = std::move(*params_op);
+        LOG_TRACE("OOM UI app server: set sgc params stubbed, returns KErrNone");
 
         ctx.set_request_status(KErrNone);
     }
