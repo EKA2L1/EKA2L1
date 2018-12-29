@@ -508,6 +508,7 @@ enum TWsWindowOpcodes {
     EWsWinOpOverrideEffectIPC,
     EWsWinOpTestLowPriorityRedraw=0x2000,  //Specific opcode for testing redraw queue priorities
 };
+
 enum TWsClickOpcodes {
     EWsClickOpFree=0x0000,
     EWsClickOpIsLoaded,

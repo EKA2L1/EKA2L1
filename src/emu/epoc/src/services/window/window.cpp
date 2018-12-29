@@ -313,6 +313,24 @@ namespace eka2l1::epoc {
         }
     }
     
+    void click_dll::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+        TWsClickOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+
+        switch (op) {
+        case EWsClickOpIsLoaded: {
+            LOG_TRACE("Click::IsLoaded stubbed with EClickLoaded 0x1");
+            ctx.set_request_status(0x1);
+
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unimplement ClickDll Opcode: 0x{:x}", cmd.header.op);
+            break;
+        }
+        }
+    }
+
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
