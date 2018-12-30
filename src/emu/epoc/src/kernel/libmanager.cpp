@@ -521,7 +521,7 @@ namespace eka2l1 {
             symfile img;
 
             // It's a full path
-            if (eka2l1::has_root_path(img_name, true)) {
+            if (eka2l1::has_root_name(img_name, true)) {
                 bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
 
                 img = io->open_file(img_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
@@ -610,7 +610,7 @@ namespace eka2l1 {
         loader::romimg_ptr lib_manager::load_romimg(std::u16string rom_name, bool log_exports) {
             symfile romimgf = nullptr;
 
-            if (rom_name.find(u":") == 1) {
+            if (eka2l1::has_root_name(rom_name, true)) {
                 bool should_append_ext = (eka2l1::path_extension(rom_name) == u"");
 
                 // Normally by default, Symbian should append the extension itself if no extension provided.
@@ -623,7 +623,7 @@ namespace eka2l1 {
                 if (!romimgf) {
                     return nullptr;
                 }
-            } else if (eka2l1::has_root_dir(rom_name)) {
+            } else if (eka2l1::has_root_dir(rom_name, true)) {
                 rom_name = eka2l1::filename(rom_name, true);
             }
 
