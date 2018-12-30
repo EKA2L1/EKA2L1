@@ -416,6 +416,20 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpSetName: {
+            auto name_re = ctx.get_arg<std::u16string>(remote_slot);
+
+            if (!name_re) {
+                ctx.set_request_status(KErrArgument);
+                break;
+            }
+
+            name = std::move(*name_re);
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             break;

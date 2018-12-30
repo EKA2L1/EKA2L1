@@ -39,7 +39,8 @@
 
 enum {
     cmd_slot = 0,
-    reply_slot = 1
+    reply_slot = 1,
+    remote_slot = 2
 };
 
 constexpr int twips_mul = 15;
