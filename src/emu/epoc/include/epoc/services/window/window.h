@@ -329,6 +329,8 @@ namespace eka2l1::epoc {
         epoc::window_group_ptr next_sibling { nullptr };
         std::u16string name;
 
+        bool accept_keyfocus { false };
+
         window_group(window_server_client_ptr client, screen_device_ptr dvc)
             : window(client, dvc, window_kind::group) {
         }

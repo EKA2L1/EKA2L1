@@ -449,6 +449,21 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpReceiveFocus: {
+            accept_keyfocus = *reinterpret_cast<bool*>(cmd.data_ptr);
+
+            if (accept_keyfocus) {
+                LOG_TRACE("Request group {} to enable keyboard focus",
+                    common::ucs2_to_utf8(name));
+            } else {
+                LOG_TRACE("Request group {} to disable keyboard focus",
+                    common::ucs2_to_utf8(name));
+            }
+
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             break;
