@@ -6,36 +6,42 @@ set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost
 
 add_definitions(-DCURL_STATICLIB)
 
+# fmt
+#add_subdirectory(fmt)
+#add_library(fmt::fmt ALIAS fmt)
+#set (fmt_DIR fmt)
+
 # Pybind11
 if (ENABLE_SCRIPTING_ABILITY)
-	set (PYBIND11_TEST OFF)
+	set (PYBIND11_TEST OFF CACHE BOOL "" FORCE)
 	add_subdirectory(pybind11)
 endif()
 
 # SPDLOG - Build examples off
-set (SPDLOG_BUILD_EXAMPLES OFF) 
-set (SPDLOG_BUILD_BENCH OFF)
-set (SPDLOG_FMT_EXTERNAL OFF)
+set (SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
+set (SPDLOG_BUILD_BENCH OFF CACHE BOOL "" FORCE)
+set (SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(spdlog)
 
 # GLM
-set (GLM_TEST_ENABLE OFF)
+set (GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
 add_subdirectory(glm)
 
 # Dynarmic: disable tests
-set(DYNARMIC_TESTS OFF)
+set(DYNARMIC_TESTS OFF CACHE BOOL "")
+# set(DYNARMIC_NO_BUNDLED_FMT ON CACHE BOOL "")
 add_subdirectory(dynarmic)
 
 # GLFW - Disable docs, tests and examples
-set(GLFW_BUILD_DOCS OFF)
-set(GLFW_BUILD_TESTS OFF)
-set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(glfw)
 
 # Date TZ - Disable tests units
-set (ENABLE_DATE_TESTING OFF)
+set (ENABLE_DATE_TESTING OFF CACHE BOOL "" FORCE)
 add_subdirectory(date)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -43,10 +49,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("Add debug to prevent crash for PyBind11")
 endif()
 
-set(YAML_CPP_BUILD_TESTS OF)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
 add_subdirectory(yaml-cpp)
 
-set (gtest_force_shared_crt ON)
+set (gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(googletest)
 
 add_library(imgui imgui/imgui.h imgui/imgui.cpp

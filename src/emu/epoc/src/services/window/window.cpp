@@ -269,12 +269,97 @@ namespace eka2l1::epoc {
         context.set_request_status(attached_window->dvc->id);
     }
 
-    void graphic_context::execute_command(service::ipc_context context, ws_cmd cmd) {
+    void graphic_context::do_command_draw_text(service::ipc_context ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
+        LOG_TRACE("Attemp to draw text {}", common::ucs2_to_utf8(text));
+        
+        std::string buf;
+        auto pos_to_screen = attached_window->pos + top_left;
+
+        buf.append(reinterpret_cast<char*>(&pos_to_screen), sizeof(eka2l1::vec2));
+
+        if (bottom_right == vec2(-1, -1)) {
+            buf.append(reinterpret_cast<char*>(&bottom_right), sizeof(eka2l1::vec2));
+        } else {
+            pos_to_screen = bottom_right + attached_window->pos;
+            buf.append(reinterpret_cast<char*>(&pos_to_screen), sizeof(eka2l1::vec2));
+        }
+
+        std::uint32_t text_len = text.length();
+
+        LOG_TRACE("Drawing to window text {}", common::ucs2_to_utf8(text));
+
+        buf.append(reinterpret_cast<char*>(&text_len), sizeof(std::uint32_t));
+        buf.append(reinterpret_cast<char*>(&text[0]), text_len * sizeof(char16_t));
+
+        draw_command command { EWsGcOpDrawTextPtr, buf };
+        draw_queue.push(command);
+        
+        ctx.set_request_status(KErrNone);
+    }
+
+    void graphic_context::execute_command(service::ipc_context ctx, ws_cmd cmd) {
         TWsGcOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
         case EWsGcOpActivate: {
-            active(context, cmd);
+            active(ctx, cmd);
+            break;
+        }
+
+        // Brush is fill, pen is outline
+        case EWsGcOpSetBrushColor: {
+            std::string buf;
+            buf.resize(sizeof(int));
+
+            std::memcpy(&buf[0], cmd.data_ptr, sizeof(int));
+
+            draw_command command { EWsGcOpSetBrushColor, buf };
+            draw_queue.push(command);
+
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
+        case EWsGcOpSetBrushStyle: {
+            LOG_ERROR("SetBrushStyle not supported, stub");
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
+        case EWsGcOpSetPenStyle: {
+            LOG_ERROR("Pen operation not supported yet (wait for ImGui support outline color)");
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
+        case EWsGcOpSetPenColor: {
+            LOG_ERROR("Pen operation not supported yet (wait for ImGui support outline color)");
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
+        case EWsGcOpDrawTextPtr: {
+            ws_cmd_draw_text_ptr *draw_text_info = reinterpret_cast<decltype(draw_text_info)>(cmd.data_ptr);
+
+            epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
+            std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
+
+            do_command_draw_text(ctx, draw_text_info->pos, vec2(-1, -1), draw_text);
+
+            break;
+        }
+
+        case EWsGcOpDrawBoxTextPtr: {
+            ws_cmd_draw_box_text_ptr *draw_text_info = reinterpret_cast<decltype(draw_text_info)>(cmd.data_ptr);
+
+            epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
+            std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
+
+            // TODO: align
+            do_command_draw_text(ctx, draw_text_info->left_top_pos, draw_text_info->right_bottom_pos, draw_text);
+
             break;
         }
 

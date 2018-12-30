@@ -36,6 +36,7 @@
 
 #include <epoc/ptr.h>
 #include <epoc/services/server.h>
+#include <epoc/utils/des.h>
 
 enum {
     cmd_slot = 0,
@@ -163,6 +164,12 @@ namespace eka2l1::epoc {
         rotate180 = 0x800000,
         rotate270 = 0x1000000,
         all_mods = 0x1FFFFFFF                   
+    };
+
+    enum class text_aligment {
+        left,
+        center,
+        right
     };
 
     enum class event_control {
@@ -381,7 +388,7 @@ namespace eka2l1::epoc {
 
     struct draw_command {
         int gc_command;
-        std::string data_to_driver;
+        std::string buf;
     };
 
     struct graphic_context : public window_client_obj {
@@ -391,6 +398,8 @@ namespace eka2l1::epoc {
         bool recording { false };
 
         void flush_queue_to_driver();
+
+        void do_command_draw_text(service::ipc_context ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text);
 
         void active(service::ipc_context context, ws_cmd cmd);
         void execute_command(service::ipc_context context, ws_cmd cmd) override;
@@ -538,6 +547,21 @@ namespace eka2l1 {
     struct ws_cmd_pointer_filter {
         std::uint32_t mask;
         std::uint32_t flags;
+    };
+
+    struct ws_cmd_draw_text_ptr {
+        eka2l1::vec2 pos;
+        eka2l1::ptr<epoc::desc16> text;
+    };
+
+    struct ws_cmd_draw_box_text_ptr {
+        vec2 left_top_pos;
+        vec2 right_bottom_pos;
+        int baseline_offset;
+        epoc::text_aligment horiz;
+        int left_mgr;
+        int width;
+        eka2l1::ptr<epoc::desc16> text;
     };
 }
 
