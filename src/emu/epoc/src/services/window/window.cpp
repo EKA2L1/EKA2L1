@@ -552,6 +552,13 @@ namespace eka2l1::epoc {
             break;
         }
         
+        case EWsWinOpInvalidate: {
+            LOG_INFO("Invalidate stubbed, currently we redraws all the screen");
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         case EWsWinOpBeginRedraw: {
             for (auto &context: contexts) {
                 context->recording = true;
