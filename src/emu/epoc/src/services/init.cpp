@@ -30,6 +30,7 @@
 #include <epoc/services/install/install.h>
 #include <epoc/services/loader/loader.h>
 #include <epoc/services/sms/sa/sa.h>
+#include <epoc/services/ui/eikappui.h>
 #include <epoc/services/ui/oom_app.h>
 #include <epoc/services/window/window.h>
 
@@ -236,16 +237,17 @@ namespace eka2l1 {
     namespace service {
         // Mostly replace startup process of a normal EPOC startup
         void init_services(system *sys) {
-            CREATE_SERVER_D(sys, applist_server);
-            CREATE_SERVER(sys, oom_ui_app_server);
-            CREATE_SERVER(sys, featmgr_server);
-            CREATE_SERVER(sys, fs_server);
+            CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);
+            CREATE_SERVER(sys, featmgr_server);
             CREATE_SERVER(sys, install_server);
             CREATE_SERVER(sys, rights_server);
             CREATE_SERVER(sys, sa_server);
             CREATE_SERVER(sys, drm_helper_server);
+            CREATE_SERVER(sys, applist_server);
+            CREATE_SERVER(sys, oom_ui_app_server);
+            CREATE_SERVER(sys, eikappui_server);
 
             // Don't change order
             CREATE_SERVER(sys, domainmngr_server);
