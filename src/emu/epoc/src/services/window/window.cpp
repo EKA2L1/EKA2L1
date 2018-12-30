@@ -564,6 +564,8 @@ namespace eka2l1::epoc {
             LOG_TRACE("Begin redraw!");
             
             ctx.set_request_status(KErrNone);
+
+            break;
         }
 
         case EWsWinOpEndRedraw: {
@@ -575,6 +577,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("End redraw!");
             
             ctx.set_request_status(KErrNone);
+            break;
         }
 
         default: {
