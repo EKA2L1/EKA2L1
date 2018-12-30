@@ -346,6 +346,8 @@ namespace eka2l1::epoc {
         epoc::display_mode dmode;
         epoc::window_type win_type;
 
+        int clear_color;
+
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
             : window(client, dvc, window_kind::client), win_type(type_of_window),

@@ -506,6 +506,19 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpSetBackgroundColor: {
+            if (cmd.header.cmd_len == 0) {
+                clear_color = -1;
+                ctx.set_request_status(KErrNone);
+
+                break;
+            }
+
+            clear_color = *reinterpret_cast<int*>(cmd.data_ptr);
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         case EWsWinOpActivate: {
             LOG_TRACE("Window activated but redraw not yet implemented");
             activate = true;
