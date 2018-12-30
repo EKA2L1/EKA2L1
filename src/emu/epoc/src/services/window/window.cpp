@@ -383,6 +383,17 @@ namespace eka2l1::epoc {
             return true;
         }
 
+        case EWsWinOpSetExtent: {
+            ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
+            
+            pos = extent->pos;
+            size = extent->size;
+
+            ctx.set_request_status(KErrNone);
+
+            return true;
+        }
+
         case EWsWinOpIdentifier: {
             ctx.set_request_status(static_cast<int>(id));
             return true;

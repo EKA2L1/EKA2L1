@@ -262,6 +262,10 @@ namespace eka2l1::epoc {
         std::uint16_t priority { 0 };
         std::uint16_t secondary_priority { 0 };
 
+        // The position
+        eka2l1::vec2  pos { 0, 0 };
+        eka2l1::vec2  size { 0, 0 };
+
         window_kind type;
 
         bool operator==(const window &rhs) {
@@ -497,6 +501,11 @@ namespace eka2l1 {
         std::uint32_t parent_identifier;
         int offset;
         int length;
+    };
+
+    struct ws_cmd_set_extent {
+        eka2l1::vec2 pos;
+        eka2l1::vec2 size;
     };
 }
 
