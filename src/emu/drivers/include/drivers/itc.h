@@ -48,8 +48,8 @@ namespace eka2l1::drivers {
                 return std::optional<T>{};
             }
 
-            T ret = *(reinterpret_cast<T*>(data[data.size() - 1 - sizeof(T)]));
-            data.erase(data.begin() + data.size() - 1 - sizeof(T), data.end());
+            T ret = *(reinterpret_cast<T*>(&data[data.size() - sizeof(T)]));
+            data.erase(data.begin() + data.size() - sizeof(T), data.end());
 
             return ret;
         }

@@ -55,10 +55,10 @@ namespace eka2l1::drivers {
     }
 
     void graphics_driver_client::set_screen_size(eka2l1::vec2 &s) {
-        std::shared_ptr<graphics_driver> gdriver = 
-            std::reinterpret_pointer_cast<graphics_driver>(driver);
+        itc_context context;
+        context.push(s);
 
-        return gdriver->set_screen_size(s);
+        send_opcode(graphics_driver_resize_screen, context);
     }
     
     void graphics_driver_client::begin_invalidate(eka2l1::rect &rect) {
