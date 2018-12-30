@@ -217,6 +217,14 @@ namespace eka2l1::epoc {
         std::uint8_t ptr_num; // multi touch
     };
 
+    enum pointer_filter_type {
+        pointer_enter = 0x01,   ///< In/out
+        pointer_move = 0x02,
+        pointer_drag = 0x04,
+        pointer_simulated_event = 0x08,
+        all = pointer_move | pointer_simulated_event
+    };
+
     struct event {
         int type;
         std::uint32_t handle;
@@ -347,6 +355,7 @@ namespace eka2l1::epoc {
         epoc::window_type win_type;
 
         int clear_color;
+        std::uint32_t filter = pointer_filter_type::all;
 
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
@@ -508,6 +517,11 @@ namespace eka2l1 {
     struct ws_cmd_set_extent {
         eka2l1::vec2 pos;
         eka2l1::vec2 size;
+    };
+
+    struct ws_cmd_pointer_filter {
+        std::uint32_t mask;
+        std::uint32_t flags;
     };
 }
 

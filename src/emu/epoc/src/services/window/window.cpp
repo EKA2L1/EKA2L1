@@ -519,6 +519,17 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpPointerFilter: {
+            LOG_TRACE("Filtering pointer event type");
+
+            ws_cmd_pointer_filter *filter_info = reinterpret_cast<ws_cmd_pointer_filter*>(cmd.data_ptr);
+            filter &= ~filter_info->mask;
+            filter |= filter_info->flags;
+
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         case EWsWinOpActivate: {
             LOG_TRACE("Window activated but redraw not yet implemented");
             activate = true;
