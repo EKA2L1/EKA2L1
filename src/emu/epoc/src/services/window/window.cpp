@@ -388,6 +388,18 @@ namespace eka2l1::epoc {
             return true;
         }
 
+        case EWsWinOpEnableErrorMessages: {
+            epoc::event_control ctrl = *reinterpret_cast<epoc::event_control*>(cmd.data_ptr);
+            epoc::event_error_msg_user nof;
+            nof.when = ctrl;
+            nof.user = this;
+
+            client->add_event_error_msg_user(nof);
+            ctx.set_request_status(KErrNone);
+
+            return true;
+        }
+
         default: {
             break;
         }
@@ -492,6 +504,13 @@ namespace eka2l1::epoc {
         }
     }
 
+    void window_server_client::add_event_error_msg_user(epoc::event_error_msg_user nof) {
+        if (!std::any_of(error_notifies.begin(), error_notifies.end(), 
+            [=](epoc::event_error_msg_user &denof) { return denof.user == nof.user; })) {
+            error_notifies.push_back(nof);
+        }
+    }
+    
     void window_server_client::parse_command_buffer(service::ipc_context ctx) {
         std::optional<std::string> dat = ctx.get_arg<std::string>(cmd_slot);
 

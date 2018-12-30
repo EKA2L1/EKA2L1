@@ -185,6 +185,11 @@ namespace eka2l1::epoc {
         epoc::window *user;
     };
 
+    struct event_error_msg_user {
+        event_control when;
+        epoc::window *user;
+    };
+
     enum class event_type {
         button1down,
         button1up,
@@ -410,6 +415,7 @@ namespace eka2l1::epoc {
 
         std::vector<epoc::event_mod_notifier_user> mod_notifies;
         std::vector<epoc::event_screen_change_user> screen_changes;
+        std::vector<epoc::event_error_msg_user> error_notifies;
 
         void create_screen_device(service::ipc_context ctx, ws_cmd cmd);
         void create_window_group(service::ipc_context ctx, ws_cmd cmd);
@@ -427,6 +433,7 @@ namespace eka2l1::epoc {
     public:
         void add_event_mod_notifier_user(epoc::event_mod_notifier_user nof);
         void add_event_screen_change_user(epoc::event_screen_change_user nof);
+        void add_event_error_msg_user(epoc::event_error_msg_user nof);
 
         void execute_command(service::ipc_context ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds);
