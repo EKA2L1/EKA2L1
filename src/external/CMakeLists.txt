@@ -8,18 +8,19 @@ add_definitions(-DCURL_STATICLIB)
 
 # Pybind11
 if (ENABLE_SCRIPTING_ABILITY)
-	set (PYBIND11_TEST OFF CACHE BOOL "" FORCE)
+	set (PYBIND11_TEST OFF)
 	add_subdirectory(pybind11)
 endif()
 
 # SPDLOG - Build examples off
-set (SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
-set (SPDLOG_BUILD_BENCH OFF CACHE BOOL "" FORCE)
+set (SPDLOG_BUILD_EXAMPLES OFF) 
+set (SPDLOG_BUILD_BENCH OFF)
+set (SPDLOG_FMT_EXTERNAL OFF)
 
 add_subdirectory(spdlog)
 
 # GLM
-set (GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
+set (GLM_TEST_ENABLE OFF)
 add_subdirectory(glm)
 
 # Dynarmic: disable tests
@@ -27,14 +28,14 @@ set(DYNARMIC_TESTS OFF)
 add_subdirectory(dynarmic)
 
 # GLFW - Disable docs, tests and examples
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF)
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_EXAMPLES OFF)
 
 add_subdirectory(glfw)
 
 # Date TZ - Disable tests units
-set (ENABLE_DATE_TESTING OFF CACHE BOOL "" FORCE)
+set (ENABLE_DATE_TESTING OFF)
 add_subdirectory(date)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -42,10 +43,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("Add debug to prevent crash for PyBind11")
 endif()
 
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
+set(YAML_CPP_BUILD_TESTS OF)
 add_subdirectory(yaml-cpp)
 
-set (gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set (gtest_force_shared_crt ON)
 add_subdirectory(googletest)
 
 add_library(imgui imgui/imgui.h imgui/imgui.cpp
