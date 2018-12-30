@@ -350,9 +350,13 @@ namespace eka2l1::epoc {
         void execute_command(service::ipc_context context, ws_cmd cmd) override;
     };
 
+    struct graphic_context;
+
     struct window_user : public epoc::window {
         epoc::display_mode dmode;
         epoc::window_type win_type;
+
+        std::vector<epoc::graphic_context*> contexts;
 
         int clear_color;
         std::uint32_t filter = pointer_filter_type::all;
@@ -375,8 +379,18 @@ namespace eka2l1::epoc {
         void execute_command(service::ipc_context context, ws_cmd cmd) override;
     };
 
+    struct draw_command {
+        int gc_command;
+        std::string data_to_driver;
+    };
+
     struct graphic_context : public window_client_obj {
-        window_ptr attached_window;
+        std::shared_ptr<window_user> attached_window;
+        std::queue<draw_command> draw_queue;
+
+        bool recording { false };
+
+        void flush_queue_to_driver();
 
         void active(service::ipc_context context, ws_cmd cmd);
         void execute_command(service::ipc_context context, ws_cmd cmd) override;

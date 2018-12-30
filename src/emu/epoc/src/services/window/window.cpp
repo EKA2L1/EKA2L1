@@ -259,7 +259,10 @@ namespace eka2l1::epoc {
 
     void graphic_context::active(service::ipc_context context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        attached_window = std::reinterpret_pointer_cast<epoc::window>(client->get_object(window_to_attach_handle));
+        attached_window = std::reinterpret_pointer_cast<epoc::window_user>(client->get_object(window_to_attach_handle));
+
+        // Attach context with window
+        attached_window->contexts.push_back(this);        
 
         // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
         // this.
@@ -285,7 +288,7 @@ namespace eka2l1::epoc {
     graphic_context::graphic_context(window_server_client_ptr client, screen_device_ptr scr,
         window_ptr win)
         : window_client_obj(client)
-        , attached_window(win) {
+        , attached_window(std::reinterpret_pointer_cast<window_user>(win)) {
     }
 
     void sprite::execute_command(service::ipc_context context, ws_cmd cmd) {
@@ -548,6 +551,31 @@ namespace eka2l1::epoc {
 
             break;
         }
+        
+        case EWsWinOpBeginRedraw: {
+            for (auto &context: contexts) {
+                context->recording = true;
+
+                while (!context->draw_queue.empty()) {
+                    context->draw_queue.pop();
+                }
+            }
+
+            LOG_TRACE("Begin redraw!");
+            
+            ctx.set_request_status(KErrNone);
+        }
+
+        case EWsWinOpEndRedraw: {
+            for (auto &context: contexts) {
+                context->recording = false;
+                // context->flush_queue_to_driver();
+            }
+
+            LOG_TRACE("End redraw!");
+            
+            ctx.set_request_status(KErrNone);
+        }
 
         default: {
             LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
@@ -757,6 +785,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::create_graphic_context(service::ipc_context ctx, ws_cmd cmd) {
         std::shared_ptr<epoc::graphic_context> gcontext = std::make_shared<epoc::graphic_context>(this);
+
         ctx.set_request_status(add_object(gcontext));
     }
 

@@ -21,7 +21,7 @@ namespace eka2l1::drivers {
     void ogl_graphics_driver::set_screen_size(const vec2 &s) {
         framebuffer.resize(s);
         framebuffer.bind();
-        
+
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.3f, 0.4f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
