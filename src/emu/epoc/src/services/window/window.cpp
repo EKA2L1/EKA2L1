@@ -60,6 +60,8 @@ namespace eka2l1::epoc {
     {
         scr_config = client->get_ws().get_screen_config(number);
         crr_mode = &scr_config.modes[0];   
+
+        driver->set_screen_size(crr_mode->size);
     }
 
     graphics_orientation number_to_orientation(int rot) {

@@ -100,6 +100,20 @@ namespace eka2l1::drivers {
         */
         vec2 screen_size();
 
+        /*! \brief Set screen size in pixels
+        */
+        void set_screen_size(eka2l1::vec2 &s);
+
+        /*! \brief Starting a scissor test, allow redraw only in specified area.
+         *
+         *  Use in drawing window rect or invalidate a specific region of an window
+        */
+        void begin_invalidate(eka2l1::rect &rect);
+
+        /*! \brief Ending the invalidate process.
+        */
+        void end_invalidate();
+
         /*! \brief Clear the screen with color.
             \params color A RGBA vector 4 color
         */

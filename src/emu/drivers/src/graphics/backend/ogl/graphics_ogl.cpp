@@ -29,6 +29,7 @@ namespace eka2l1::drivers {
 
         glEnable(GL_CULL_FACE);
         glEnable(GL_BLEND);
+        glEnable(GL_SCISSOR_TEST);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         for (;;) {
@@ -43,6 +44,18 @@ namespace eka2l1::drivers {
                 auto c = *request->context.pop<vecx<float, 4>>();
                 glClearColor(c[0], c[1], c[2], c[3]);
 
+                break;
+            }
+
+            case graphics_driver_invalidate: {
+                auto r = *request->context.pop<rect>();
+                glScissor(r.top.x, r.top.y, r.size.x, r.size.y);
+                
+                break;
+            }
+
+            case graphics_driver_end_invalidate: {
+                glScissor(0, 0, framebuffer.get_size().x, framebuffer.get_size().y);
                 break;
             }
 

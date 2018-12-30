@@ -54,6 +54,25 @@ namespace eka2l1::drivers {
         return gdriver->get_screen_size();
     }
 
+    void graphics_driver_client::set_screen_size(eka2l1::vec2 &s) {
+        std::shared_ptr<graphics_driver> gdriver = 
+            std::reinterpret_pointer_cast<graphics_driver>(driver);
+
+        return gdriver->set_screen_size(s);
+    }
+    
+    void graphics_driver_client::begin_invalidate(eka2l1::rect &rect) {
+        itc_context context;
+        context.push(rect);
+
+        send_opcode(graphics_driver_invalidate, context);
+    }
+
+    void graphics_driver_client::end_invalidate() {
+        itc_context context;
+        send_opcode(graphics_driver_end_invalidate, context);
+    }
+
     /*! \brief Clear the screen with color.
         \params color A RGBA vector 4 color
     */
