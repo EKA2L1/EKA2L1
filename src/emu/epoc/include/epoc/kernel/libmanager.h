@@ -167,10 +167,10 @@ namespace eka2l1 {
             bool call_svc(sid svcnum);
 
             /*! \brief Load an E32Image. */
-            loader::e32img_ptr load_e32img(const std::u16string &img_name);
+            loader::e32img_ptr load_e32img(std::u16string img_name);
 
             /*! \brief Load an ROM image. */
-            loader::romimg_ptr load_romimg(const std::u16string &rom_name, bool log_export = false);
+            loader::romimg_ptr load_romimg(std::u16string rom_name, bool log_export = false);
 
             /*! \brief Open the image code segment */
             void open_e32img(loader::e32img_ptr &img);

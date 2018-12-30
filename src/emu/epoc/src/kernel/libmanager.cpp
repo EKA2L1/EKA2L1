@@ -517,11 +517,11 @@ namespace eka2l1 {
 
         // Images are searched in
         // C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
-        loader::e32img_ptr lib_manager::load_e32img(const std::u16string &img_name) {
+        loader::e32img_ptr lib_manager::load_e32img(std::u16string img_name) {
             symfile img;
 
             // It's a full path
-            if (img_name.find(u":") == 1) {
+            if (eka2l1::has_root_path(img_name, true)) {
                 bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
 
                 img = io->open_file(img_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
@@ -533,6 +533,9 @@ namespace eka2l1 {
                 if (!img) {
                     return nullptr;
                 }
+            } else if (eka2l1::has_root_dir(img_name)) {
+                // Please just use the filename for searching
+                img_name = eka2l1::filename(img_name, true);
             }
 
             bool xip = false;
@@ -604,7 +607,7 @@ namespace eka2l1 {
             return e32imgs_cache[check].img;
         }
 
-        loader::romimg_ptr lib_manager::load_romimg(const std::u16string &rom_name, bool log_exports) {
+        loader::romimg_ptr lib_manager::load_romimg(std::u16string rom_name, bool log_exports) {
             symfile romimgf = nullptr;
 
             if (rom_name.find(u":") == 1) {
@@ -620,6 +623,8 @@ namespace eka2l1 {
                 if (!romimgf) {
                     return nullptr;
                 }
+            } else if (eka2l1::has_root_dir(rom_name)) {
+                rom_name = eka2l1::filename(rom_name, true);
             }
 
             if (!romimgf) {
