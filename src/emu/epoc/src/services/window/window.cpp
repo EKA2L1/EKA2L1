@@ -442,6 +442,13 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpEnableOnEvents: {
+            LOG_TRACE("Currently not support lock/unlock event for window server");
+            ctx.set_request_status(KErrNone);
+            
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             break;
