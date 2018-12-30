@@ -530,6 +530,13 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpSetPointerGrab: {
+            allow_pointer_grab = *reinterpret_cast<bool*>(cmd.data_ptr);
+            
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         case EWsWinOpActivate: {
             LOG_TRACE("Window activated but redraw not yet implemented");
             activate = true;

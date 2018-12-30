@@ -357,6 +357,8 @@ namespace eka2l1::epoc {
         int clear_color;
         std::uint32_t filter = pointer_filter_type::all;
 
+        bool allow_pointer_grab;
+
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
             : window(client, dvc, window_kind::client), win_type(type_of_window),
