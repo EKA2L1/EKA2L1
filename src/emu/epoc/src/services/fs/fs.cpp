@@ -195,6 +195,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, replace, EFsReplace, "Fs::Replace");
         REGISTER_IPC(fs_server, volume, EFsVolume, "Fs::Volume");
         REGISTER_IPC(fs_server, query_drive_info_ext, EFsQueryVolumeInfoExt, "Fs::QueryVolumeInfoExt");
+        REGISTER_IPC(fs_server, set_should_notify_failure, EFsSetNotifyUser, "Fs::SetShouldNotifyFailure");
     }
 
     void fs_server::replace(service::ipc_context ctx) {
@@ -1731,4 +1732,9 @@ namespace eka2l1 {
 
         ctx.set_request_status(KErrNone);
     }
+
+    void fs_server::set_should_notify_failure(service::ipc_context ctx) {
+        should_notify_failures = static_cast<bool>(ctx.get_arg<int>(0));
+        ctx.set_request_status(KErrNone);
+    }       
 }
