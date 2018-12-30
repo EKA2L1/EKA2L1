@@ -983,13 +983,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind sync message");
         }
 
-        
-        if (ss->get_server()->name() == "!ecomserver" && aOrd == 2) {
-            // Temp buf
-            int a = 5;
-        }
-
-        LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
+        // LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
         
         return ss->send_receive_sync(aOrd, arg, aStatus);
     }
@@ -1021,7 +1015,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind async message");
         }
 
-        LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
+        // LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
         
         return ss->send_receive(aOrd, arg, aStatus);
     }

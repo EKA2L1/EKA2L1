@@ -25,9 +25,12 @@
 #include <drivers/graphics/backend/ogl/fb_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
 
+struct ImGuiContext;
+
 namespace eka2l1::drivers {
     class ogl_graphics_driver: public graphics_driver {
         ogl_framebuffer framebuffer;
+        ImGuiContext *context;
 
     public:
         explicit ogl_graphics_driver(const vec2 &scr);
