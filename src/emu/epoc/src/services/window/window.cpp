@@ -445,7 +445,7 @@ namespace eka2l1::epoc {
         case EWsWinOpEnableOnEvents: {
             LOG_TRACE("Currently not support lock/unlock event for window server");
             ctx.set_request_status(KErrNone);
-            
+
             break;
         }
 
@@ -759,6 +759,13 @@ namespace eka2l1::epoc {
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context ctx, ws_cmd cmd) {
         switch (cmd.header.op) {
+        case EWsClOpComputeMode: {
+            LOG_TRACE("Setting compute mode not supported, instead stubbed");
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         case EWsClOpSetPointerCursorMode: {
             // TODO: Check errors
             if (get_ws().focus() && get_ws().focus()->client == this) {
