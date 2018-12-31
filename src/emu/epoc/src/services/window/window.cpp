@@ -48,7 +48,7 @@ namespace eka2l1::epoc {
         , id(static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1) {
     }
     
-    void window_client_obj::execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
+    void window_client_obj::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
         LOG_ERROR("Unimplemented command handler for object with handle: 0x{:x}", cmd.obj_handle);
     }
 
@@ -101,7 +101,7 @@ namespace eka2l1::epoc {
         return nullptr;
     }
 
-    void screen_device::execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
+    void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
         TWsScreenDeviceOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
@@ -257,7 +257,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    void graphic_context::active(service::ipc_context context, ws_cmd cmd) {
+    void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         attached_window = std::reinterpret_pointer_cast<epoc::window_user>(client->get_object(window_to_attach_handle));
 
@@ -269,7 +269,7 @@ namespace eka2l1::epoc {
         context.set_request_status(attached_window->dvc->id);
     }
 
-    void graphic_context::do_command_draw_text(service::ipc_context ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
+    void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
         LOG_TRACE("Attemp to draw text {}", common::ucs2_to_utf8(text));
         
         std::string buf;
@@ -303,7 +303,7 @@ namespace eka2l1::epoc {
             attached_window->parent);
     }
 
-    void graphic_context::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         TWsGcOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
@@ -409,7 +409,7 @@ namespace eka2l1::epoc {
         , attached_window(std::reinterpret_pointer_cast<window_user>(win)) {
     }
 
-    void sprite::execute_command(service::ipc_context context, ws_cmd cmd) {
+    void sprite::execute_command(service::ipc_context &context, ws_cmd cmd) {
     }
 
     sprite::sprite(window_server_client_ptr client, window_ptr attached_window,
@@ -419,7 +419,7 @@ namespace eka2l1::epoc {
         , attached_window(attached_window) {
     }
 
-    void anim_dll::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+    void anim_dll::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         TWsAnimDllOpcode op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
@@ -444,7 +444,7 @@ namespace eka2l1::epoc {
         }
     }
     
-    void click_dll::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+    void click_dll::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         TWsClickOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
@@ -481,7 +481,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    bool window::execute_command_for_general_node(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) {
+    bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
@@ -549,7 +549,7 @@ namespace eka2l1::epoc {
         return false;
     }
 
-    void window_group::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+    void window_group::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
@@ -630,7 +630,7 @@ namespace eka2l1::epoc {
         }
     }
     
-    void window_user::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+    void window_user::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
@@ -766,7 +766,7 @@ namespace eka2l1::epoc {
         }
     }
     
-    void window_server_client::parse_command_buffer(service::ipc_context ctx) {
+    void window_server_client::parse_command_buffer(service::ipc_context &ctx) {
         std::optional<std::string> dat = ctx.get_arg<std::string>(cmd_slot);
 
         if (!dat) {
@@ -808,7 +808,7 @@ namespace eka2l1::epoc {
         root = std::reinterpret_pointer_cast<epoc::window>(objects.back());
     }
 
-    void window_server_client::execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds) {
+    void window_server_client::execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds) {
         for (const auto &cmd : cmds) {
             if (cmd.obj_handle == guest_session->unique_id()) {
                 execute_command(ctx, cmd);
@@ -847,7 +847,7 @@ namespace eka2l1::epoc {
         return true;
     }
     
-    void window_server_client::create_screen_device(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::create_screen_device(service::ipc_context &ctx, ws_cmd cmd) {
         LOG_INFO("Create screen device.");
 
         ws_cmd_screen_device_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
@@ -881,13 +881,13 @@ namespace eka2l1::epoc {
         }
     }
 
-    void window_server_client::restore_hotkey(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd cmd) {
         THotKey key = *reinterpret_cast<THotKey *>(cmd.data_ptr);
 
         LOG_WARN("Unknown restore key op.");
     }
 
-    void window_server_client::create_window_group(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::create_window_group(service::ipc_context &ctx, ws_cmd cmd) {
         ws_cmd_window_group_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         int device_handle = header->screen_device_handle;
 
@@ -925,7 +925,7 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(group));
     }
     
-    void window_server_client::create_window_base(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd cmd) {
         ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         
         epoc::window_ptr parent = find_window_obj(root, header->parent);
@@ -944,13 +944,13 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(win));
     }
 
-    void window_server_client::create_graphic_context(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd cmd) {
         std::shared_ptr<epoc::graphic_context> gcontext = std::make_shared<epoc::graphic_context>(this);
 
         ctx.set_request_status(add_object(gcontext));
     }
 
-    void window_server_client::create_sprite(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::create_sprite(service::ipc_context &ctx, ws_cmd cmd) {
         ws_cmd_create_sprite_header *sprite_header = reinterpret_cast<decltype(sprite_header)>(cmd.data_ptr);
         epoc::window_ptr win = nullptr;
 
@@ -965,7 +965,7 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(spr));
     }
     
-    void window_server_client::create_anim_dll(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::create_anim_dll(service::ipc_context &ctx, ws_cmd cmd) {
         int dll_name_length = *reinterpret_cast<int*>(cmd.data_ptr);
         char16_t *dll_name_ptr = reinterpret_cast<char16_t*>(
             reinterpret_cast<std::uint8_t*>(cmd.data_ptr) + sizeof(int));
@@ -978,7 +978,7 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(animdll));
     }
 
-    void window_server_client::create_click_dll(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd cmd) {
         LOG_TRACE("Create CLICKDLL (button click sound plugin), stubbed object");
         
         std::shared_ptr<epoc::click_dll> clickdll = std::make_shared<epoc::click_dll>(this);
@@ -1006,7 +1006,7 @@ namespace eka2l1::epoc {
     }
 
     // This handle both sync and async
-    void window_server_client::execute_command(service::ipc_context ctx, ws_cmd cmd) {
+    void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         switch (cmd.header.op) {
         case EWsClOpSendEventToWindowGroup: {
             ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);

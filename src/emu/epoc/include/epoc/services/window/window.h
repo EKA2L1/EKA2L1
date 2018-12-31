@@ -266,7 +266,7 @@ namespace eka2l1::epoc {
         explicit window_client_obj(window_server_client_ptr client);
         virtual ~window_client_obj() {}
 
-        virtual void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd);
+        virtual void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd);
     };
 
     using window_client_obj_ptr = std::shared_ptr<window_client_obj>;
@@ -313,7 +313,7 @@ namespace eka2l1::epoc {
             return priority <= rhs.priority;
         }
 
-        bool execute_command_for_general_node(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd);
+        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd);
 
         window(window_server_client_ptr client)
             : window_client_obj(client)
@@ -347,7 +347,7 @@ namespace eka2l1::epoc {
         screen_device(window_server_client_ptr client, int number, 
             eka2l1::graphics_driver_client_ptr driver);
 
-        void execute_command(eka2l1::service::ipc_context ctx, eka2l1::ws_cmd cmd) override;
+        void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) override;
     };
 
     struct window_group : public epoc::window {
@@ -360,7 +360,7 @@ namespace eka2l1::epoc {
             : window(client, dvc, window_kind::group) {
         }
 
-        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
 
     struct graphic_context;
@@ -396,7 +396,7 @@ namespace eka2l1::epoc {
         
         bool activate = false;
 
-        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
 
     struct draw_command {
@@ -412,10 +412,10 @@ namespace eka2l1::epoc {
 
         void flush_queue_to_driver();
 
-        void do_command_draw_text(service::ipc_context ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text);
+        void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text);
 
-        void active(service::ipc_context context, ws_cmd cmd);
-        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+        void active(service::ipc_context &context, ws_cmd cmd);
+        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
 
         explicit graphic_context(window_server_client_ptr client, screen_device_ptr scr = nullptr,
             window_ptr win = nullptr);
@@ -426,7 +426,7 @@ namespace eka2l1::epoc {
         window_ptr attached_window;
         eka2l1::vec2 position;
 
-        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
         explicit sprite(window_server_client_ptr client, window_ptr attached_window = nullptr,
             eka2l1::vec2 pos = eka2l1::vec2(0, 0));
     };
@@ -440,7 +440,7 @@ namespace eka2l1::epoc {
 
         std::uint32_t user_count {0};
 
-        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
 
     struct click_dll : public window_client_obj {
@@ -451,7 +451,7 @@ namespace eka2l1::epoc {
 
         bool loaded { false };
 
-        void execute_command(service::ipc_context context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
 
     class window_server_client {
@@ -472,15 +472,15 @@ namespace eka2l1::epoc {
         std::vector<epoc::event_screen_change_user> screen_changes;
         std::vector<epoc::event_error_msg_user> error_notifies;
 
-        void create_screen_device(service::ipc_context ctx, ws_cmd cmd);
-        void create_window_group(service::ipc_context ctx, ws_cmd cmd);
-        void create_window_base(service::ipc_context ctx, ws_cmd cmd);
-        void create_graphic_context(service::ipc_context ctx, ws_cmd cmd);
-        void create_anim_dll(service::ipc_context ctx, ws_cmd cmd);
-        void create_click_dll(service::ipc_context ctx, ws_cmd cmd);
-        void create_sprite(service::ipc_context ctx, ws_cmd cmd);
+        void create_screen_device(service::ipc_context &ctx, ws_cmd cmd);
+        void create_window_group(service::ipc_context &ctx, ws_cmd cmd);
+        void create_window_base(service::ipc_context &ctx, ws_cmd cmd);
+        void create_graphic_context(service::ipc_context &ctx, ws_cmd cmd);
+        void create_anim_dll(service::ipc_context &ctx, ws_cmd cmd);
+        void create_click_dll(service::ipc_context &ctx, ws_cmd cmd);
+        void create_sprite(service::ipc_context &ctx, ws_cmd cmd);
 
-        void restore_hotkey(service::ipc_context ctx, ws_cmd cmd);
+        void restore_hotkey(service::ipc_context &ctx, ws_cmd cmd);
 
         void init_device(epoc::window_ptr &win);
         epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
@@ -490,9 +490,9 @@ namespace eka2l1::epoc {
         void add_event_screen_change_user(epoc::event_screen_change_user nof);
         void add_event_error_msg_user(epoc::event_error_msg_user nof);
 
-        void execute_command(service::ipc_context ctx, ws_cmd cmd);
-        void execute_commands(service::ipc_context ctx, std::vector<ws_cmd> cmds);
-        void parse_command_buffer(service::ipc_context ctx);
+        void execute_command(service::ipc_context &ctx, ws_cmd cmd);
+        void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);
+        void parse_command_buffer(service::ipc_context &ctx);
 
         std::uint32_t add_object(window_client_obj_ptr obj);
         window_client_obj_ptr get_object(const std::uint32_t handle);
