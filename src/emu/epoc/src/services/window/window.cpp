@@ -284,7 +284,7 @@ namespace eka2l1::epoc {
             buf.append(reinterpret_cast<char*>(&pos_to_screen), sizeof(eka2l1::vec2));
         }
 
-        std::uint32_t text_len = text.length();
+        std::uint32_t text_len = static_cast<std::uint32_t>(text.length());
 
         LOG_TRACE("Drawing to window text {}", common::ucs2_to_utf8(text));
 
@@ -295,6 +295,12 @@ namespace eka2l1::epoc {
         draw_queue.push(command);
         
         ctx.set_request_status(KErrNone);
+    }
+
+    void graphic_context::flush_queue_to_driver() {
+        // Flushing
+        epoc::window_group_ptr group = std::reinterpret_pointer_cast<epoc::window_group>(
+            attached_window->parent);
     }
 
     void graphic_context::execute_command(service::ipc_context ctx, ws_cmd cmd) {
@@ -343,9 +349,15 @@ namespace eka2l1::epoc {
         case EWsGcOpDrawTextPtr: {
             ws_cmd_draw_text_ptr *draw_text_info = reinterpret_cast<decltype(draw_text_info)>(cmd.data_ptr);
 
-            epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
-            std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
+            std::u16string draw_text;
 
+            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc9) && (cmd.header.cmd_len <= 8)) {
+                draw_text = *ctx.get_arg<std::u16string>(remote_slot);
+            } else {
+                epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
+                std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
+            }
+            
             do_command_draw_text(ctx, draw_text_info->pos, vec2(-1, -1), draw_text);
 
             break;
@@ -354,11 +366,32 @@ namespace eka2l1::epoc {
         case EWsGcOpDrawBoxTextPtr: {
             ws_cmd_draw_box_text_ptr *draw_text_info = reinterpret_cast<decltype(draw_text_info)>(cmd.data_ptr);
 
-            epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
-            std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
+            std::u16string draw_text;
+
+            // on EPOC <= 9, the struct only contains the bound
+            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc9) && (cmd.header.cmd_len <= 16)) {
+                draw_text = *ctx.get_arg<std::u16string>(remote_slot);
+            } else {
+                epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
+                std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
+            }
 
             // TODO: align
             do_command_draw_text(ctx, draw_text_info->left_top_pos, draw_text_info->right_bottom_pos, draw_text);
+
+            break;
+        }
+
+        case EWsGcOpDeactivate: {
+            auto this_ctx = std::find(attached_window->contexts.begin(), attached_window->contexts.end(),
+                this);
+
+            if (this_ctx != attached_window->contexts.end()) {
+                attached_window->contexts.erase(this_ctx);
+            }
+
+            attached_window.reset();
+            ctx.set_request_status(KErrNone);
 
             break;
         }
@@ -393,6 +426,13 @@ namespace eka2l1::epoc {
         case EWsAnimDllOpCreateInstance: {
             LOG_TRACE("AnimDll::CreateInstance stubbed with a anim handle (>= 0)");
             ctx.set_request_status(user_count++);
+
+            break;
+        }
+
+        case EWsAnimDllOpCommandReply: {
+            LOG_TRACE("AnimDll command reply stubbed!");
+            ctx.set_request_status(KErrNone);
 
             break;
         }
@@ -565,6 +605,24 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpSetTextCursor: {
+            ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
+            auto window_user_to_set = std::find_if(childs.begin(), childs.end(), 
+                [&](const epoc::window_ptr &win) { return win->id == cmd_set->win; });
+
+            if (window_user_to_set == childs.end()) {
+                ctx.set_request_status(KErrNotFound);
+                break;
+            }
+
+            std::shared_ptr<epoc::window_user> win_user = std::reinterpret_pointer_cast<epoc::window_user>
+                (*window_user_to_set);
+
+            win_user->cursor_pos = cmd_set->pos;
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             break;
@@ -639,6 +697,8 @@ namespace eka2l1::epoc {
         
         case EWsWinOpInvalidate: {
             LOG_INFO("Invalidate stubbed, currently we redraws all the screen");
+            irect = *reinterpret_cast<invalidate_rect*>(cmd.data_ptr);
+
             ctx.set_request_status(KErrNone);
 
             break;
@@ -653,6 +713,12 @@ namespace eka2l1::epoc {
                 }
             }
 
+            epoc::redraw_event revt;
+            revt.top_left = irect.in_top_left;
+            revt.bottom_right = irect.in_bottom_right;
+
+            client->get_ws().queue_redraw_start(client, revt);
+
             LOG_TRACE("Begin redraw!");
             
             ctx.set_request_status(KErrNone);
@@ -663,7 +729,7 @@ namespace eka2l1::epoc {
         case EWsWinOpEndRedraw: {
             for (auto &context: contexts) {
                 context->recording = false;
-                // context->flush_queue_to_driver();
+                context->flush_queue_to_driver();
             }
 
             LOG_TRACE("End redraw!");
@@ -942,6 +1008,14 @@ namespace eka2l1::epoc {
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context ctx, ws_cmd cmd) {
         switch (cmd.header.op) {
+        case EWsClOpSendEventToWindowGroup: {
+            ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
+            get_ws().queue_event(this, evt->evt);
+
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         case EWsClOpComputeMode: {
             LOG_TRACE("Setting compute mode not supported, instead stubbed");
             ctx.set_request_status(KErrNone);
@@ -977,6 +1051,34 @@ namespace eka2l1::epoc {
             ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
             ctx.set_request_status(KErrNone);
 
+            break;
+        }
+
+        case EWsClOpGetRedraw: {
+            auto evt = get_ws().get_redraw(this);
+
+            if (!evt) {
+                ctx.set_request_status(KErrNotFound);
+                break;
+            }
+
+            ctx.write_arg_pkg<epoc::redraw_event>(reply_slot, *evt);
+            ctx.set_request_status(KErrNone);
+            
+            break;
+        }
+
+        case EWsClOpGetEvent: {
+            auto evt = get_ws().get_event(this);
+
+            if (!evt) {
+                ctx.set_request_status(KErrNotFound);
+                break;
+            }
+
+            ctx.write_arg_pkg<epoc::event>(reply_slot, *evt);
+            ctx.set_request_status(KErrNone);
+            
             break;
         }
 
@@ -1210,16 +1312,142 @@ namespace eka2l1 {
     }
 
     void window_server::add_to_notify(event_notify_info info) {
+        if (!pending_events.empty()) {
+            for (std::size_t i = 0; i < pending_events.size(); i++) {
+                if (info.client == pending_events[i].client) {
+                    epoc::request_status *sts = info.sts.get(info.requester->owning_process());
+                        *sts = KErrNone;
+
+                    info.requester->signal_request();
+
+                    return;
+                }
+            }
+        }
+
         statuses.push_back(info);
+    }
+    
+    void window_server::add_to_redraw_notify(event_notify_info info) {
+        if (!pending_redraws.empty()) {
+            for (std::size_t i = 0; i < pending_redraws.size(); i++) {
+                if (info.client == pending_redraws[i].client) {
+                    epoc::request_status *sts = info.sts.get(info.requester->owning_process());
+                        *sts = KErrNone;
+
+                    info.requester->signal_request();
+
+                    return;
+                }
+            }
+        }
+
+        redraw_statuses.push_back(info); 
+    }
+    
+    void window_server::queue_redraw_start(epoc::window_server_client *cli, epoc::redraw_event evt) {
+        if (!redraw_statuses.empty()) {
+            for (auto &status: redraw_statuses) {
+                if (status.client == cli) {
+                    epoc::request_status *sts = status.sts.get(status.requester->owning_process());
+                    *sts = KErrNone;
+
+                    status.requester->signal_request();
+                }
+            }
+
+            for (size_t i = 0; i < redraw_statuses.size(); i++) {
+                if (redraw_statuses[i].client == cli) {
+                    redraw_statuses.erase(redraw_statuses.begin() + i);
+                }
+            }
+
+            statuses.clear();
+        }
+
+        redraw_event_wrapper wrapper;
+
+        wrapper.evt = evt;
+        wrapper.evt.handle = static_cast<std::uint32_t>(pending_events.size());
+        wrapper.client = cli;
+
+        pending_redraws.push_back(wrapper);
+    }
+
+    void window_server::queue_event(epoc::window_server_client *cli, epoc::event evt) {
+        if (!statuses.empty()) {
+            for (auto &status: statuses) {
+                if (status.client == cli) {
+                    epoc::request_status *sts = status.sts.get(status.requester->owning_process());
+                    *sts = KErrNone;
+
+                    status.requester->signal_request();
+                }
+            }
+
+            for (size_t i = 0; i < statuses.size(); i++) {
+                if (statuses[i].client == cli) {
+                    statuses.erase(statuses.begin() + i);
+                }
+            }
+
+            statuses.clear();
+        }
+
+        event_wrapper wrapper;
+
+        wrapper.evt = evt;
+        wrapper.evt.handle = static_cast<std::uint32_t>(pending_events.size());
+        wrapper.client = cli;
+
+        pending_events.push_back(wrapper);
+    }
+
+    std::optional<epoc::redraw_event> window_server::get_redraw(epoc::window_server_client *cli) {
+        if (pending_redraws.empty()) {
+            return std::nullopt;
+        }
+
+        for (std::size_t i = 0; i < pending_redraws.size(); i++) {
+            if (pending_redraws[i].client == cli) {
+                redraw_event_wrapper evt = std::move(pending_redraws[i]);
+                pending_redraws.erase(pending_redraws.begin() + i);
+
+                return evt.evt;
+            }
+        }
+
+        return std::nullopt;
+    }
+    
+    std::optional<epoc::event> window_server::get_event(epoc::window_server_client *cli) {
+        if (pending_events.empty()) {
+            return std::nullopt;
+        }
+
+        for (std::size_t i = 0; i < pending_events.size(); i++) {
+            if (pending_events[i].client == cli) {
+                event_wrapper evt = std::move(pending_events[i]);
+                pending_events.erase(pending_events.begin() + i);
+
+                return evt.evt;
+            }
+        }
+
+        return std::nullopt;
     }
 
     void window_server::on_unhandled_opcode(service::ipc_context ctx) {
         if (ctx.msg->function & EWservMessAsynchronousService) {
             switch (ctx.msg->function & ~EWservMessAsynchronousService) {
             case EWsClOpRedrawReady: {
-                LOG_TRACE("Redraw ready");
-                ctx.set_request_status(KErrNone);
+                event_notify_info info;
+                info.requester = ctx.msg->own_thr;
+                info.sts = ctx.msg->request_sts;
+                info.client = 
+                    &(*clients[ctx.msg->msg_session->unique_id()]);
 
+                add_to_redraw_notify(info);
                 break;
             }
 
@@ -1231,9 +1459,10 @@ namespace eka2l1 {
                 event_notify_info info;
                 info.requester = ctx.msg->own_thr;
                 info.sts = ctx.msg->request_sts;
+                info.client = 
+                    &(*clients[ctx.msg->msg_session->unique_id()]);
 
                 add_to_notify(info);
-
                 break;
             }
 

@@ -242,6 +242,12 @@ namespace eka2l1::epoc {
         adv_pointer_event evt;
     };
 
+    struct redraw_event {
+        std::uint32_t handle;
+        vec2 top_left;
+        vec2 bottom_right;
+    };
+
     struct pixel_twips_and_rot {
         eka2l1::vec2 pixel_size;
         eka2l1::vec2 twips_size;
@@ -368,7 +374,14 @@ namespace eka2l1::epoc {
         int clear_color;
         std::uint32_t filter = pointer_filter_type::all;
 
+        eka2l1::vec2 cursor_pos { -1, -1 };
+
         bool allow_pointer_grab;
+
+        struct invalidate_rect {
+            vec2 in_top_left;
+            vec2 in_bottom_right;
+        } irect;
 
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
@@ -563,12 +576,35 @@ namespace eka2l1 {
         int width;
         eka2l1::ptr<epoc::desc16> text;
     };
+
+    struct ws_cmd_set_text_cursor {
+        uint32_t win;
+        vec2 pos;
+
+        // TODO: Add more
+    };
+
+    struct ws_cmd_send_event_to_window_group {
+        int id;
+        epoc::event evt;
+    };
 }
 
 namespace eka2l1 {
     struct event_notify_info {
         eka2l1::ptr<epoc::request_status> sts;
         eka2l1::thread_ptr requester;
+        eka2l1::epoc::window_server_client *client;
+    };
+
+    struct event_wrapper {
+        epoc::event evt;
+        epoc::window_server_client *client;
+    };
+
+    struct redraw_event_wrapper {
+        epoc::redraw_event evt;
+        epoc::window_server_client *client;
     };
 
     class window_server : public service::server {
@@ -583,8 +619,11 @@ namespace eka2l1 {
         epoc::window_group_ptr focus_;
         epoc::pointer_cursor_mode   cursor_mode_;
 
-        std::queue<epoc::event> pending_events;
+        std::vector<event_wrapper> pending_events;
+        std::vector<redraw_event_wrapper> pending_redraws;
+
         std::vector<event_notify_info> statuses;
+        std::vector<event_notify_info> redraw_statuses;
 
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
@@ -597,8 +636,14 @@ namespace eka2l1 {
     public:
         window_server(system *sys);
 
-        void queue_event(epoc::event evt);
+        std::optional<epoc::redraw_event> get_redraw(epoc::window_server_client *cli);
+        std::optional<epoc::event> get_event(epoc::window_server_client *cli);
+
+        void queue_event(epoc::window_server_client *cli, epoc::event evt);
+        void queue_redraw_start(epoc::window_server_client *cli, epoc::redraw_event evt);
+
         void add_to_notify(event_notify_info info);
+        void add_to_redraw_notify(event_notify_info info);
 
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;
