@@ -108,6 +108,7 @@ add_library(epocservs
     src/services/sms/sa/sa.cpp
     src/services/ui/eikappui.cpp
     src/services/ui/oom_app.cpp
+    src/services/window/bitmap.cpp
     src/services/window/window.cpp
     src/ipc.cpp
 )
