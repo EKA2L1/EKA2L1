@@ -1,0 +1,11 @@
+#{"BitmapTest"},(0xed8fa118),1,0,0
+
+
+;Localised Vendor name
+%{"Vendor-EN"}
+
+;Unique Vendor name
+:"Vendor"
+
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\BitmapTest.exe"		  -"!:\sys\bin\BitmapTest.exe"
+"$(EPOCROOT)epoc32\data\z\assets\SmileyFace.mbm"					-"!:\private\ED8FA118\assets\SmileyFace.mbm"
