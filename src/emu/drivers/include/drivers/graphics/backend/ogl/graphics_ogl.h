@@ -36,6 +36,7 @@ namespace eka2l1::drivers {
         explicit ogl_graphics_driver(const vec2 &scr);
         ~ogl_graphics_driver() override;
 
+        void do_second_pass();
         void process_requests() override;
 
         vec2 get_screen_size() override {

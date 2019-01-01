@@ -48,8 +48,8 @@ namespace eka2l1::drivers {
                 return std::optional<T>{};
             }
 
-            T ret = *(reinterpret_cast<T*>(&data[data.size() - sizeof(T)]));
-            data.erase(data.begin() + data.size() - sizeof(T), data.end());
+            T ret = *(reinterpret_cast<T*>(&data[0]));
+            data.erase(0, sizeof(T));
 
             return ret;
         }
@@ -60,6 +60,25 @@ namespace eka2l1::drivers {
         template <typename T>
         void push(const T val) {
             data.append(reinterpret_cast<const char*>(&val), sizeof(val));
+        }
+
+        void push_string(const std::string val) {
+            std::uint32_t len = static_cast<std::uint32_t>(val.length());
+            push(len);
+            data.append(val.begin(), val.end());
+        }
+
+        std::optional<std::string> pop_string() {
+            auto len = pop<std::uint32_t>();
+
+            if (!len || *len > data.size()) {
+                return std::nullopt;
+            }
+
+            std::string ret = data.substr(0, *len);
+            data.erase(0, *len);
+
+            return ret;
         }
     };
 
@@ -72,6 +91,8 @@ namespace eka2l1::drivers {
     protected:
         driver_instance driver;
         std::mutex lock;
+
+        bool already_locked = false;
 
         /*! \brief Send the opcode to the driver, provided also with the context.
             \returns True if the send is successfully. Results will be pushed to the context.
@@ -88,6 +109,9 @@ namespace eka2l1::drivers {
                    finished its job (work queue done), notfy all threads
         */
         void sync_with_driver();
+        
+        void lock_driver_from_process();
+        void unlock_driver_from_process();
     };
 
     class graphics_driver_client: public driver_client {
@@ -108,16 +132,18 @@ namespace eka2l1::drivers {
          *
          *  Use in drawing window rect or invalidate a specific region of an window
         */
-        void begin_invalidate(eka2l1::rect &rect);
+        void invalidate(eka2l1::rect &rect);
 
-        /*! \brief Ending the invalidate process.
-        */
         void end_invalidate();
 
         /*! \brief Clear the screen with color.
             \params color A RGBA vector 4 color
         */
-        void clear(vecx<float, 4> color);
+        void clear(vecx<int, 4> color);
+
+        /*! \brief Draw text with bound rect
+        */
+        void draw_text(eka2l1::rect rect, const std::string &str);
     };
 }
 

@@ -207,13 +207,11 @@ namespace eka2l1 {
         
         driver->process_requests();
 
-        ImGui::Begin("Emulating Window");
-        ImVec2 pos = ImGui::GetCursorScreenPos();
+        eka2l1::vec2 v = driver->get_screen_size();
+        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(v.x), static_cast<float>(v.y)));
 
-        if (driver->get_screen_size().x != ImGui::GetContentRegionAvail().x
-            || driver->get_screen_size().y != ImGui::GetContentRegionAvail().y) {
-            driver->set_screen_size(vec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y));
-        }
+        ImGui::Begin("Emulating Window", nullptr, ImGuiWindowFlags_NoResize);
+        ImVec2 pos = ImGui::GetCursorScreenPos();
 
         //pass the texture of the FBO
         //window.getRenderTexture() is the texture of the FBO

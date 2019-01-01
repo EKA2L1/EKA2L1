@@ -74,8 +74,13 @@ namespace eka2l1 {
     template <typename T, typename Container = std::deque<T>>
     class threadsafe_cn_queue {
         cn_queue<T, Container> queue;
-        std::mutex lock;
     public:
+        std::mutex lock;
+
+        void push_unsafe(const T &val) {
+            queue.push(val);
+        }
+
         void push(const T &val) {
             const std::lock_guard<std::mutex> guard(lock);
             queue.push(val);

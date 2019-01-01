@@ -25,6 +25,7 @@
 #include <common/algorithm.h>
 #include <common/ini.h>
 #include <common/log.h>
+#include <common/rgb.h>
 #include <common/cvt.h>
 
 #include <e32err.h>
@@ -270,28 +271,33 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
-        LOG_TRACE("Attemp to draw text {}", common::ucs2_to_utf8(text));
+        // LOG_TRACE("Attempt to draw text {}", common::ucs2_to_utf8(text));
         
-        std::string buf;
-        auto pos_to_screen = attached_window->pos + top_left;
+        if (attached_window->cursor_pos == vec2(-1, -1)) {
+            LOG_TRACE("Cursor position not set, not drawing the text");
+            return;
+        }
 
-        buf.append(reinterpret_cast<char*>(&pos_to_screen), sizeof(eka2l1::vec2));
+        draw_command command;
+        command.gc_command = EWsGcOpDrawTextPtr;
+
+        auto pos_to_screen = attached_window->cursor_pos + top_left;
+        command.externalize(pos_to_screen);
 
         if (bottom_right == vec2(-1, -1)) {
-            buf.append(reinterpret_cast<char*>(&bottom_right), sizeof(eka2l1::vec2));
+           command.externalize(bottom_right);
         } else {
-            pos_to_screen = bottom_right + attached_window->pos;
-            buf.append(reinterpret_cast<char*>(&pos_to_screen), sizeof(eka2l1::vec2));
+            pos_to_screen = bottom_right + attached_window->cursor_pos;
+            command.externalize(pos_to_screen);
         }
 
         std::uint32_t text_len = static_cast<std::uint32_t>(text.length());
 
-        LOG_TRACE("Drawing to window text {}", common::ucs2_to_utf8(text));
+        // LOG_TRACE("Drawing to window text {}", common::ucs2_to_utf8(text));
 
-        buf.append(reinterpret_cast<char*>(&text_len), sizeof(std::uint32_t));
-        buf.append(reinterpret_cast<char*>(&text[0]), text_len * sizeof(char16_t));
+        command.externalize(text_len);
+        command.buf.append(reinterpret_cast<char*>(&text[0]), text_len * sizeof(char16_t));
 
-        draw_command command { EWsGcOpDrawTextPtr, buf };
         draw_queue.push(command);
         
         ctx.set_request_status(KErrNone);
@@ -301,6 +307,59 @@ namespace eka2l1::epoc {
         // Flushing
         epoc::window_group_ptr group = std::reinterpret_pointer_cast<epoc::window_group>(
             attached_window->parent);
+
+        eka2l1::graphics_driver_client_ptr driver = group->dvc->driver;
+
+        // Since we are sending multiple opcodes, lock the driver first
+        // That way, all opcodes from this context should be processed in only one take
+        driver->lock_driver_from_process();
+
+        // There should be an invalidate window
+        driver->invalidate(rect { attached_window->irect.in_top_left,
+            attached_window->irect.in_bottom_right - attached_window->irect.in_top_left } );
+
+        driver->clear(common::rgb_to_vec(attached_window->clear_color));
+
+        attached_window->irect.in_top_left = vec2(0, 0);
+        attached_window->irect.in_bottom_right = vec2(0, 0);
+
+        while (!draw_queue.empty()) {
+            auto draw_command = std::move(draw_queue.front());
+
+            switch (draw_command.gc_command) {
+            case EWsGcOpDrawTextPtr: {
+                // Deopt and send
+                eka2l1::vec2 top_left = draw_command.internalize<vec2>();
+                eka2l1::vec2 bottom_right = draw_command.internalize<vec2>();
+
+                eka2l1::rect r;
+                r.top = top_left;
+
+                if (bottom_right == vec2(-1, -1)) {
+                    r.size = vec2(-1, -1);
+                } else {
+                    r.size = bottom_right - top_left;
+                }
+
+                std::uint32_t text_len = draw_command.internalize<std::uint32_t>();
+
+                std::u16string text(reinterpret_cast<char16_t*>(&draw_command.buf[0]), text_len);
+                driver->draw_text(r, common::ucs2_to_utf8(text));
+
+                break;
+            }
+
+            default: {
+                LOG_TRACE("Can't transform IR opcode to driver opcode: 0x{:x}", draw_command.gc_command);
+                break;
+            }
+            }
+
+            draw_queue.pop();
+        }
+
+        driver->end_invalidate();
+        driver->unlock_driver_from_process();
     }
 
     void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
@@ -359,6 +418,21 @@ namespace eka2l1::epoc {
             }
             
             do_command_draw_text(ctx, draw_text_info->pos, vec2(-1, -1), draw_text);
+
+            break;
+        }
+
+        case EWsGcOpDrawTextVertical: {
+            ws_cmd_draw_text_vertical_v94 *draw_text_info = reinterpret_cast<decltype(draw_text_info)>
+                (cmd.data_ptr);
+
+            std::u16string text;
+            std::uint32_t text_len = draw_text_info->length;
+            
+            char16_t *text_ptr = reinterpret_cast<char16_t*>(draw_text_info+1);
+            text.assign(text_ptr, text_len);
+
+            do_command_draw_text(ctx, draw_text_info->pos, draw_text_info->bottom_right, text);
 
             break;
         }
@@ -618,7 +692,7 @@ namespace eka2l1::epoc {
             std::shared_ptr<epoc::window_user> win_user = std::reinterpret_pointer_cast<epoc::window_user>
                 (*window_user_to_set);
 
-            win_user->cursor_pos = cmd_set->pos;
+            win_user->cursor_pos = cmd_set->pos + win_user->pos;
             ctx.set_request_status(KErrNone);
             break;
         }

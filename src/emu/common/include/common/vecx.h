@@ -82,6 +82,11 @@ namespace eka2l1 {
         bool operator == (const vec2 &rhs) {
             return (x == rhs.x) && (y == rhs.y);
         }
+
+        void operator = (const vec2 &rhs) {
+            x = rhs.x;
+            y = rhs.y;
+        }
     };
 
     struct vec3: public vec2 {
@@ -108,6 +113,11 @@ namespace eka2l1 {
     struct object_size : public vec2 {
         object_size() : vec2() {}
 
+        object_size(const vec2 &v)
+            : vec2(v) {
+
+        }
+
         object_size(const int x, const int y)
             : vec2(x, y) {}
 
@@ -117,6 +127,11 @@ namespace eka2l1 {
 
         int height() const {
             return y;
+        }
+        
+        void operator = (const vec2 &rhs) {
+            x = rhs.x;
+            y = rhs.y;
         }
     };
 

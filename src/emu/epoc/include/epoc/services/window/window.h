@@ -371,7 +371,7 @@ namespace eka2l1::epoc {
 
         std::vector<epoc::graphic_context*> contexts;
 
-        int clear_color;
+        std::uint32_t clear_color = 0xFFFFFFFF;
         std::uint32_t filter = pointer_filter_type::all;
 
         eka2l1::vec2 cursor_pos { -1, -1 };
@@ -402,6 +402,19 @@ namespace eka2l1::epoc {
     struct draw_command {
         int gc_command;
         std::string buf;
+
+        template <typename T>
+        T internalize() {
+            T d = *reinterpret_cast<T*>(&(buf[0]));
+            buf.erase(0, sizeof(T));
+
+            return d;
+        }
+
+        template <typename T>
+        void externalize(const T &v) {
+            buf.append(reinterpret_cast<const char*>(&v), sizeof(T));
+        }
     };
 
     struct graphic_context : public window_client_obj {
@@ -587,6 +600,13 @@ namespace eka2l1 {
     struct ws_cmd_send_event_to_window_group {
         int id;
         epoc::event evt;
+    };
+    
+    struct ws_cmd_draw_text_vertical_v94 {
+        vec2 pos;
+        vec2 bottom_right;
+        int unk1;
+        int length;
     };
 }
 
