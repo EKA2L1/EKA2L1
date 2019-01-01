@@ -314,10 +314,11 @@ namespace eka2l1::epoc {
         // That way, all opcodes from this context should be processed in only one take
         driver->lock_driver_from_process();
 
-        // There should be an invalidate window
-        driver->invalidate(rect { attached_window->irect.in_top_left,
-            attached_window->irect.in_bottom_right - attached_window->irect.in_top_left } );
+        rect inv_rect = rect { attached_window->irect.in_top_left,
+            attached_window->irect.in_bottom_right - attached_window->irect.in_top_left } ;
 
+        // There should be an invalidate window
+        driver->invalidate(inv_rect);
         driver->clear(common::rgb_to_vec(attached_window->clear_color));
 
         attached_window->irect.in_top_left = vec2(0, 0);
