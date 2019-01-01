@@ -550,7 +550,7 @@ namespace eka2l1 {
                 page_dyn[vaddr / mem->get_page_size() + i] = ptr + i * mem->get_page_size();
 			}
 
-            fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
+            // fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
         }
 
         void arm_dynarmic::unmap_memory(address addr, size_t size) {
@@ -558,7 +558,7 @@ namespace eka2l1 {
                 page_dyn[i] = nullptr;
             }
 
-            fallback_jit.unmap_memory(addr, size);
+            // fallback_jit.unmap_memory(addr, size);
         }
 
         void arm_dynarmic::clear_instruction_cache() {
