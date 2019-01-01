@@ -608,6 +608,11 @@ namespace eka2l1 {
         int unk1;
         int length;
     };
+
+    struct ws_cmd_get_window_group_name_from_id {
+        std::uint32_t id;
+        int max_len;
+    };
 }
 
 namespace eka2l1 {

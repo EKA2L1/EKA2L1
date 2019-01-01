@@ -1255,6 +1255,35 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsClOpGetWindowGroupNameFromIdentifier: {
+            ws_cmd_get_window_group_name_from_id *find_info = 
+                reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
+
+            epoc::window_group_ptr group = std::reinterpret_pointer_cast<epoc::window_group>(
+                find_window_obj(root, find_info->id)
+            );
+
+            if (!group || group->type != window_kind::group) {
+                ctx.set_request_status(KErrArgument);
+                break;
+            }
+
+            if (group->name.length() == 0) {
+                ctx.set_request_status(KErrNotReady);
+                break;
+            }
+
+            std::uint32_t len_to_write = std::min(static_cast<std::uint32_t>(find_info->max_len), 
+                static_cast<std::uint32_t>(group->name.length()));
+            
+            std::u16string to_write = group->name.substr(0, len_to_write);
+            
+            ctx.write_arg(reply_slot, to_write);
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         default:
             LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
         }
