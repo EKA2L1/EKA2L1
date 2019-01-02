@@ -59,7 +59,7 @@ namespace eka2l1::epoc {
         void cancel_event_queue(std::uint32_t id) {
             const std::lock_guard<std::mutex> guard(lock_);
             const auto elem_ite = std::find_if(q_.begin(), q_.end(),
-                [&](const T &e) { return e.handle == id });
+                [&](const T &e) { return e.handle == id; });
             
             if (elem_ite == q_.end()) {
                 return; 
