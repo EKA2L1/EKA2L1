@@ -32,6 +32,7 @@
 #include <common/queue.h>
 
 #include <epoc/services/window/common.h>
+#include <epoc/services/window/fifo.h>
 
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
@@ -146,6 +147,13 @@ namespace eka2l1::epoc {
         virtual ~window_client_obj() {}
 
         virtual void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd);
+    };
+
+    struct notify_info {
+        eka2l1::ptr<epoc::request_status> sts = 0;
+        eka2l1::thread_ptr requester;
+
+        void do_finish(int err_code);
     };
 
     using window_client_obj_ptr = std::shared_ptr<window_client_obj>;
@@ -360,6 +368,9 @@ namespace eka2l1::epoc {
         eka2l1::thread_ptr client_thread;
         eka2l1::epoc::window_group_ptr last_group;
 
+        epoc::redraw_fifo redraws;
+        epoc::event_fifo events;
+
         std::vector<epoc::event_mod_notifier_user> mod_notifies;
         std::vector<epoc::event_screen_change_user> screen_changes;
         std::vector<epoc::event_error_msg_user> error_notifies;
@@ -377,7 +388,10 @@ namespace eka2l1::epoc {
         void init_device(epoc::window_ptr &win);
         epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
 
-    public:
+    public:    
+        notify_info redraw_req_info;
+        notify_info event_req_info;
+
         void add_event_mod_notifier_user(epoc::event_mod_notifier_user nof);
         void add_event_screen_change_user(epoc::event_screen_change_user nof);
         void add_event_error_msg_user(epoc::event_error_msg_user nof);
@@ -400,6 +414,16 @@ namespace eka2l1::epoc {
 
         eka2l1::thread_ptr &get_client() {
             return client_thread;
+        }
+        
+        void queue_redraw(const redraw_event &evt) {
+            redraws.queue_event(evt);
+            redraw_req_info.do_finish(0);
+        }
+        
+        void queue_event(const event &evt) {
+            events.queue_event(evt);
+            event_req_info.do_finish(0);
         }
     };
     
@@ -495,22 +519,6 @@ namespace eka2l1 {
 }
 
 namespace eka2l1 {
-    struct event_notify_info {
-        eka2l1::ptr<epoc::request_status> sts;
-        eka2l1::thread_ptr requester;
-        eka2l1::epoc::window_server_client *client;
-    };
-
-    struct event_wrapper {
-        epoc::event evt;
-        epoc::window_server_client *client;
-    };
-
-    struct redraw_event_wrapper {
-        epoc::redraw_event evt;
-        epoc::window_server_client *client;
-    };
-
     class window_server : public service::server {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
@@ -523,12 +531,6 @@ namespace eka2l1 {
         epoc::window_group_ptr focus_;
         epoc::pointer_cursor_mode   cursor_mode_;
 
-        std::vector<event_wrapper> pending_events;
-        std::vector<redraw_event_wrapper> pending_redraws;
-
-        std::vector<event_notify_info> statuses;
-        std::vector<event_notify_info> redraw_statuses;
-
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
 
@@ -539,15 +541,6 @@ namespace eka2l1 {
 
     public:
         window_server(system *sys);
-
-        std::optional<epoc::redraw_event> get_redraw(epoc::window_server_client *cli);
-        std::optional<epoc::event> get_event(epoc::window_server_client *cli);
-
-        void queue_event(epoc::window_server_client *cli, epoc::event evt);
-        void queue_redraw_start(epoc::window_server_client *cli, epoc::redraw_event evt);
-
-        void add_to_notify(event_notify_info info);
-        void add_to_redraw_notify(event_notify_info info);
 
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;

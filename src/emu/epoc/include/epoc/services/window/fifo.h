@@ -44,14 +44,14 @@ namespace eka2l1::epoc {
         std::uint32_t queue_event(const T &evt) {
             const std::lock_guard<std::mutex> guard(lock_);
             const auto elem_ite = std::find_if(q_.begin(), q_.end(),
-                [&](const T &e) { return e.handle == evt.handle });
+                [&](const T &e) { return e.handle == evt.handle; });
             
             if (elem_ite != q_.end()) {
                 return 0; 
             }
 
             q_.push_back(evt);
-            q_.back().handle = q_.size();
+            q_.back().handle = static_cast<std::uint32_t>(q_.size());
 
             return static_cast<std::uint32_t>(q_.size());
         }
@@ -85,7 +85,11 @@ namespace eka2l1::epoc {
     class event_fifo: public base_fifo<event> {
     public:
         event_fifo() : base_fifo<event>() {}
-
         event get_event();
+    };
+
+    class redraw_fifo: public base_fifo<redraw_event> {
+    public:
+        redraw_fifo() : base_fifo<redraw_event>() {}
     };
 }
