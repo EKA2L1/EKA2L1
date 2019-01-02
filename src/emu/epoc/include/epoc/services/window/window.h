@@ -31,6 +31,8 @@
 #include <common/ini.h>
 #include <common/queue.h>
 
+#include <epoc/services/window/common.h>
+
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
 
@@ -94,78 +96,6 @@ namespace eka2l1::epoc {
     struct screen_device;
     using screen_device_ptr = std::shared_ptr<epoc::screen_device>;
 
-    enum class graphics_orientation { 
-        normal,
-        rotated90, 
-        rotated180,
-        rotated270 
-    };
-
-    /*! \brief Screen display mode.
-     *
-     * Depend on the display mode, the bitmap sends it will have the specified attribute.
-    */
-    enum class display_mode {
-        none,
-        gray2,          ///< Monochrome display mode (1 bpp)
-        gray4,          ///< Four grayscales display mode (2 bpp)
-        gray16,         ///< 16 grayscales display mode (4 bpp) 
-        gray256,        ///< 256 grayscales display mode (8 bpp) 
-        color16,        ///< Low colour EGA 16 colour display mode (4 bpp) 
-        color256,       ///< 256 colour display mode (8 bpp) 
-        color64k,       ///< 64,000 colour display mode (16 bpp) 
-        color16m,       ///< True colour display mode (24 bpp) 
-        rgb,            ///< (Not an actual display mode used for moving buffers containing bitmaps)
-        color4k,        ///< 4096 colour display (12 bpp). 
-        color16mu,      ///< True colour display mode (32 bpp, but top byte is unused and unspecified) 
-        color16ma,      ///< Display mode with alpha (24bpp colour plus 8bpp alpha) 
-        color16map,     ///< Pre-multiplied Alpha display mode (24bpp color multiplied with the alpha channel value, plus 8bpp alpha)
-        color_last
-    };
-
-    enum class pointer_cursor_mode {
-        none,           ///< The device don't have a pointer (touch)
-        fixed,          ///< Use the default system cursor
-        normal,         ///< Can't understand yet
-        window,         ///< Can't understand yet
-    };
-
-    enum class window_type {
-        redraw,
-        backed_up,
-        blank
-    };
-
-    enum class event_modifier {
-        repeatable = 0x001,
-        keypad = 0x002,
-        left_alt = 0x004,
-        right_alt = 0x008,
-        alt = 0x010,
-        left_ctrl = 0x020,
-        right_ctrl = 0x040,
-        ctrl = 0x080,
-        left_shift = 0x100,
-        right_shift = 0x200,
-        shift = 0x400,
-        left_func = 0x800,
-        right_func = 0x1000,
-        func = 0x2000,
-        caps_lock = 0x4000,
-        num_lock = 0x8000,
-        scroll_lock = 0x10000,
-        key_up = 0x20000,
-        special = 0x40000,
-        double_click = 0x80000,
-        modifier_pure_key_code = 0x100000,
-        cancel_rot = 0x200000,
-        no_rot = 0x0,
-        rotate90 = 0x400000,
-        rotate180 = 0x800000,
-        rotate270 = 0x1000000,
-        all_mods = 0x1FFFFFFF                   
-    };
-
     enum class text_aligment {
         left,
         center,
@@ -195,19 +125,6 @@ namespace eka2l1::epoc {
     struct event_error_msg_user {
         event_control when;
         epoc::window *user;
-    };
-
-    enum class event_type {
-        button1down,
-        button1up,
-        button2down,
-        button2up,
-        drag,
-        move,
-        button_repeat,
-        repeat,
-        switch_on,
-        out_of_range
     };
 
     struct pointer_event {
