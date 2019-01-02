@@ -270,6 +270,8 @@ namespace eka2l1::epoc {
             vec2 in_bottom_right;
         } irect;
 
+        std::uint32_t redraw_evt_handle;
+
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
             : window(client, dvc, window_kind::client), win_type(type_of_window),
@@ -388,6 +390,8 @@ namespace eka2l1::epoc {
         void init_device(epoc::window_ptr &win);
         epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
 
+        std::uint32_t total_group { 0 };
+
     public:    
         notify_info redraw_req_info;
         notify_info event_req_info;
@@ -416,14 +420,22 @@ namespace eka2l1::epoc {
             return client_thread;
         }
         
-        void queue_redraw(const redraw_event &evt) {
-            redraws.queue_event(evt);
+        std::uint32_t queue_redraw(const redraw_event &evt) {
+            std::uint32_t handle = redraws.queue_event(evt);
             redraw_req_info.do_finish(0);
+
+            return handle;
         }
         
-        void queue_event(const event &evt) {
-            events.queue_event(evt);
+        std::uint32_t queue_event(const event &evt) {
+            std::uint32_t handle = events.queue_event(evt);
             event_req_info.do_finish(0);
+
+            return handle;
+        }
+
+        void deque_redraw(const std::uint32_t handle) {
+            redraws.cancel_event_queue(handle);
         }
     };
     

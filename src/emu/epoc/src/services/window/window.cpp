@@ -1001,6 +1001,7 @@ namespace eka2l1::epoc {
         }
 
         last_group = std::reinterpret_pointer_cast<epoc::window_group>(group);
+        total_group++;
         ctx.set_request_status(add_object(group));
     }
     
@@ -1087,6 +1088,11 @@ namespace eka2l1::epoc {
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         switch (cmd.header.op) {
+        case EWsClOpNumWindowGroups: {
+            ctx.set_request_status(total_group);
+            break;
+        }
+
         case EWsClOpSendEventToWindowGroup: {
             ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
             queue_event(evt->evt);
