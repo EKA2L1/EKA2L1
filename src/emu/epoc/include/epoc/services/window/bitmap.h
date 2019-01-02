@@ -31,9 +31,17 @@ namespace eka2l1 {
 
     namespace kernel {
         class process;
+        class thread;
+    }
+
+    namespace loader {
+        class romimg;
+
+        using romimg_ptr = std::shared_ptr<romimg>;
     }
 
     using process_ptr = std::shared_ptr<kernel::process>;
+    using thread_ptr = std::shared_ptr<kernel::thread>;
 
     enum class compression_scheme {
         rle_compression,
@@ -81,11 +89,61 @@ namespace eka2l1 {
         int server_handle;
     };
     
-    /*! \brief Get the pointer to the FBS data
-        *
-        * This invalidate a pre-made code chunk that will returns the address
-        * to the bitmap chunk. R0 = this pointer
-    */
-    eka2l1::ptr<std::uint32_t> get_fbs_data(eka2l1::system *sys, eka2l1::process_ptr call_pr,
-        eka2l1::ptr<fbs_bitmap> bitmap);
+    struct jump_chunk {
+        eka2l1::ptr<std::uint32_t> code_ptr;
+        std::uint32_t chunk_size;
+
+        bool thumb;
+    };
+
+    /* A class manipulates ARM code to do LLE job getting bitmaps related stuff done*/
+    class bitmap_manipulator {
+        eka2l1::system *sys;
+
+        jump_chunk jump_arm_one_arg;
+        jump_chunk jump_thumb_one_arg;
+
+        jump_chunk jump_arm_two_arg;
+        jump_chunk jump_thumb_two_arg;
+
+        loader::romimg_ptr        fbscli;
+
+        address duplicate_func_addr;
+        address get_data_func_addr;
+        address reset_func_addr;
+
+        bool gened = false;
+
+    protected:
+        void supply_jump_arg(eka2l1::memory_system *mem, address jump_addr, address r0,
+            bool thumb);
+
+        void supply_jump_arg(eka2l1::memory_system *mem, address jump_addr, address r0,
+            address r1, bool thumb);
+            
+        void generate_jump_chunk(eka2l1::memory_system *mem);
+
+        address do_call(eka2l1::process_ptr &call_pr, address jump_addr, std::uint32_t r0);
+        address do_call(eka2l1::process_ptr &call_pr, address jump_addr, std::uint32_t r0, std::uint32_t r1);
+
+        // Alloc from the host process
+        eka2l1::ptr<fbs_bitmap> scratch;
+        fbs_bitmap *scratch_host;
+
+    public:
+        explicit bitmap_manipulator(eka2l1::system *sys);
+
+        /*! \brief Get the pointer to the FBS data
+            *
+            * This invalidate a pre-made code chunk that will returns the address
+            * to the bitmap chunk. R0 = this pointer
+        */
+        eka2l1::ptr<std::uint32_t> get_fbs_data(eka2l1::process_ptr &call_pr,
+            eka2l1::ptr<fbs_bitmap> bitmap);
+            
+        eka2l1::ptr<std::uint32_t> get_fbs_data_with_handle(eka2l1::thread_ptr &call_pr,
+            int handle);
+
+        void done_with_fbs_data_from_handle(eka2l1::process_ptr &call_pr);
+    };
 }
