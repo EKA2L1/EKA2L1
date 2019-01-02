@@ -133,8 +133,10 @@ namespace eka2l1 {
         // _ZN10CFbsBitmap5ResetEv @ 25 NONAME
         reset_func_addr = fbscli->exports[24];
 
-        scratch = sys->get_memory_system()->chunk_range(shared_data, ram_code_addr, 0, sizeof(fbs_bitmap), 0x1000, prot::read_write)
-                .cast<fbs_bitmap>();
+        bool is_eka1 = (sys->get_symbian_version_use() <= epocver::epoc9);
+
+        scratch = sys->get_memory_system()->chunk_range(is_eka1 ? shared_data_eka1 : shared_data, is_eka1 ? shared_data_end_eka1 : ram_code_addr, 0,
+            sizeof(fbs_bitmap), 0x1000, prot::read_write).cast<fbs_bitmap>();
 
         scratch_host = scratch.get(sys->get_memory_system());
     }
