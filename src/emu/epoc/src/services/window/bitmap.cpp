@@ -262,16 +262,17 @@ namespace eka2l1 {
         // Here I'm assumes that the caller of Window Server should have at least touch bitmap if it reached here
         // So the FBS session must be stored in that thread already
         scratch_host->fbs_session = call_thr->get_tls_slot(fbscli->header.entry_point, 0)->pointer;
+        process_ptr own_pr = call_thr->owning_process();
 
         // There is no call to set the handle, so I have to duplicate
-        int err = static_cast<int>(do_call(call_thr->owning_process(), duplicate_func_addr, scratch.ptr_address()));
+        int err = static_cast<int>(do_call(own_pr, duplicate_func_addr, scratch.ptr_address()));
 
         if (err != 0) {
             LOG_ERROR("Duplicate bitmap error with code {}", err);
             return 0;
         }
 
-        return get_fbs_data(call_thr->owning_process(), scratch);
+        return get_fbs_data(own_pr, scratch);
     }
 
     void bitmap_manipulator::done_with_fbs_data_from_handle(eka2l1::process_ptr &call_pr) {
