@@ -30,6 +30,7 @@
 #include <epoc/mem.h>
 
 #include <common/log.h>
+#include <common/chunkyseri.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -146,18 +147,9 @@ namespace eka2l1 {
             return true;
         }
 
-        void library::write_object_to_snapshot(common::wo_buf_stream &stream) {
-            kernel_obj::write_object_to_snapshot(stream);
-
-            stream.write(&state, sizeof(state));
-            stream.write(&lib_type, sizeof(lib_type));
-        }
-
-        void library::do_state(common::ro_buf_stream &stream) {
-            kernel_obj::do_state(stream);
-
-            stream.read(&state, sizeof(state));
-            stream.read(&lib_type, sizeof(lib_type));
+        void library::do_state(common::chunkyseri &seri) {
+            seri.absorb(state);
+            seri.absorb(lib_type);
 
             if (lib_type == e32_img_library) {
                 e32_img = kern->get_lib_manager()->load_e32img(

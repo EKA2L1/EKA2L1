@@ -112,6 +112,14 @@ namespace eka2l1::common {
         return true;
     }
     
+    bool is_memory_wx_exclusive() {
+#if EKA2L1_PLATFORM(UWP) || EKA2L1_PLATFORM(IOS)
+        return true;
+#else
+        return false;
+#endif
+    }
+    
     int get_host_page_size() {
 #if EKA2L1_PLATFORM(WIN32)
         SYSTEM_INFO system_info = {};

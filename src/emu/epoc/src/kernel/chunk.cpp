@@ -19,6 +19,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/random.h>
@@ -38,7 +39,6 @@ namespace eka2l1 {
             , attrib(attrib)
             , max_size(max_size)
             , protection(protection)
-            , kern(kern)
             , mem(mem)
             , own_process(own_process)
             , is_heap(is_heap) {
@@ -107,8 +107,8 @@ namespace eka2l1 {
             }
             }
 
-            chunk_base = mem->chunk_range(range_beg, range_end, new_bottom, new_top, max_size, protection)
-                .cast<std::uint8_t>();
+            chunk_base = mem->chunk_range(range_beg, range_end, new_bottom, new_top, static_cast<std::uint32_t>(max_size),
+                protection).cast<std::uint8_t>();
 
             this->top = new_top;
             this->bottom = new_bottom;
@@ -129,7 +129,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            mem->commit(chunk_base.cast<void>() + offset, size);
+            mem->commit(chunk_base.cast<void>() + offset, static_cast<std::uint32_t>(size));
 
             if (offset + size > top) {
                 top = offset;
@@ -149,7 +149,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            mem->decommit(ptr<void>(chunk_base.ptr_address() + offset), size);
+            mem->decommit(ptr<void>(chunk_base.ptr_address() + offset), static_cast<std::uint32_t>(size));
 
             top = common::max(top, (uint32_t)(offset + size));
             bottom = common::min(bottom, offset);
@@ -164,7 +164,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), adj_size);
+            mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), static_cast<std::uint32_t>(adj_size));
             top = static_cast<address>(bottom + adj_size);
 
             return true;
@@ -192,61 +192,48 @@ namespace eka2l1 {
             return static_cast<std::uint32_t>(top - size);
         }
 
-        void chunk::write_object_to_snapshot(common::wo_buf_stream &stream) {
-            // save_state_section sec = stream.section("Chunk", 1);
-            // if (!sec)
-            //    return;
+        void chunk::do_state(common::chunkyseri &seri) {
+            auto s = seri.section("Chunk", 1);
 
-            kernel_obj::write_object_to_snapshot(stream);
-
-            size_t ptr_addr = chunk_base.ptr_address();
-            uint64_t pr_uid = own_process->unique_id();
-
-            stream.write(&type, sizeof(type));
-            stream.write(&attrib, sizeof(attrib));
-            stream.write(&caccess, sizeof(caccess));
-            stream.write(&max_size, sizeof(max_size));
-            stream.write(&top, sizeof(top));
-            stream.write(&bottom, sizeof(bottom));
-            stream.write(&ptr_addr, sizeof(chunk_base.ptr_address()));
-            stream.write(&pr_uid, sizeof(pr_uid));
-
-            // Check the range
-            page_table &pt = own_process->get_page_table();
-
-            stream.write(&protection, sizeof(protection));
-
-            for (size_t i = (chunk_base.ptr_address() + bottom) / mem->get_page_size();
-                 i < (chunk_base.ptr_address() + top) / mem->get_page_size(); i++) {
-                stream.write(&(pt.pointers[i][0]), mem->get_page_size());
+            if (!s) {
+                return;
             }
-        }
 
-        void chunk::do_state(common::ro_buf_stream &stream) {
-            kernel_obj::do_state(stream);
+            std::uint32_t uid_pr = 0;
 
-            uint64_t uid_pr = 0;
+            if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+                uid_pr = own_process->unique_id();
+            }
 
-            stream.read(&type, sizeof(type));
-            stream.read(&attrib, sizeof(attrib));
-            stream.read(&caccess, sizeof(caccess));
-            stream.read(&max_size, sizeof(max_size));
-            stream.read(&top, sizeof(top));
-            stream.read(&bottom, sizeof(bottom));
-            stream.read(&chunk_base, sizeof(chunk_base));
-            stream.read(&uid_pr, sizeof(uid_pr));
+            seri.absorb(type);
+            seri.absorb(attrib);
+            seri.absorb(caccess);
+            seri.absorb(max_size);
+            seri.absorb(top);
+            seri.absorb(bottom);
+            seri.absorb(chunk_base.ptr_address());
+            seri.absorb(uid_pr);
+            seri.absorb(protection);
 
             commited_size = top - bottom;
 
-            stream.read(&protection, sizeof(protection));
-
-            own_process = std::dynamic_pointer_cast<kernel::process>(
+            own_process = std::reinterpret_pointer_cast<kernel::process>(
                 kern->get_kernel_obj_by_id(uid_pr));
-
+                
             page_table *old = mem->get_current_page_table();
             mem->set_current_page_table(own_process->get_page_table());
+            
+            // Start reading
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                mem->chunk(chunk_base.ptr_address(), bottom, top, static_cast<std::uint32_t>(max_size), protection);
+            }
 
-            mem->chunk(chunk_base.ptr_address(), bottom, top, static_cast<std::uint32_t>(max_size), protection);
+            const auto ps = mem->get_page_size();
+
+            for (std::size_t i = 0; i < commited_size / mem->get_page_size(); i++) {
+                seri.absorb_impl((chunk_base + static_cast<address>(i * ps)).get(mem), ps);
+            }
+
             mem->set_current_page_table(*old);
         }
     }

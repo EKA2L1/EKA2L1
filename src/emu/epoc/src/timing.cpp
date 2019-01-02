@@ -21,6 +21,8 @@
 #include <common/log.h>
 #include <epoc/timing.h>
 
+#include <common/chunkyseri.h>
+
 #include <algorithm>
 #include <mutex>
 #include <thread>
@@ -106,6 +108,16 @@ namespace eka2l1 {
         evtype.name = name;
 
         event_types[evt_type] = evtype;
+    }
+    
+    void timing_system::swap_userdata_event(int event_type, std::uint64_t old_userdata, std::uint64_t new_userdata) {
+        auto e = std::find_if(events.begin(), events.end(), [=](const event &ei) {
+            return (ei.event_user_data == old_userdata) && (ei.event_type == event_type);
+        }); 
+
+        if (e != events.end()) {
+            e->event_user_data = new_userdata;
+        }
     }
 
     void timing_system::unregister_all_events() {
@@ -258,5 +270,43 @@ namespace eka2l1 {
         global_timer += cycles_executed;
         downcount = -1;
         slice_len = -1;
+    }
+
+    static void anticrash_callback(std::uint64_t usdata, int cycles_late) {
+        LOG_ERROR("Snapshot broken: Unregister event called!");
+    }
+    
+    static void event_do_state(common::chunkyseri &seri, event &evt) {
+        seri.absorb(evt.event_type);
+        seri.absorb(evt.event_time);
+        seri.absorb(evt.event_user_data);
+    }
+
+    void timing_system::do_state(common::chunkyseri &seri) {
+        std::lock_guard<std::mutex> guard(mut);
+        auto s = seri.section("CoreTiming", 1);
+
+        if (!s) {
+            return;
+        }
+
+        seri.absorb(CPU_HZ);
+        seri.absorb(slice_len);
+        seri.absorb(global_timer);
+        seri.absorb(idle_ticks);
+
+        seri.absorb(last_global_time_ticks);
+        seri.absorb(last_global_time_us);
+
+        std::uint32_t total_event_type = static_cast<std::uint32_t>(event_types.size());
+        seri.absorb(total_event_type);
+
+        event_types.resize(total_event_type, event_type { anticrash_callback, "INVALID" });
+
+        // Since many events using a native pointer, storing the old userdata
+        // Than the object will restore with new userdata, using swap_event_userdata.
+        seri.absorb_container(events, event_do_state);
+
+        fire_mhz_changes();
     }
 }

@@ -230,6 +230,8 @@ namespace eka2l1 {
 
         void delete_entry(service::ipc_context ctx);
 
+        void set_should_notify_failure(service::ipc_context ctx);
+        
         void connect(service::ipc_context ctx) override;
 
         std::unordered_map<uint32_t, fs_node> file_nodes;
@@ -258,6 +260,8 @@ namespace eka2l1 {
 
         int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false, bool temporary = false);
         fs_node *get_file_node(int handle);
+
+        bool should_notify_failures;
 
     public:
         fs_server(system *sys);

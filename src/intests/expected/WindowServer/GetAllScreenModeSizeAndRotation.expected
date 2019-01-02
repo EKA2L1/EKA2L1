@@ -1,0 +1,4 @@
+Total screen mode (wsini.ini): 3
+Mode 0: size = (640, 360), rot = 270
+Mode 1: size = (360, 640), rot = 0
+Mode 2: size = (320, 240), rot = 270

@@ -59,10 +59,8 @@ namespace eka2l1 {
      * request_sts: KErrNotFound if app doesn't exist
     */
     void applist_server::default_screen_number(service::ipc_context ctx) {
-        eka2l1::ptr<int> number = *ctx.get_arg<int>(0);
-        system *tsys = ctx.sys;
-
-        *number.get(tsys->get_memory_system()) = 1;
+        // TODO: Detect if app exists. Sanity check
+        LOG_TRACE("DefaultScreenNumber stubbed with 0");
         ctx.set_request_status(0); // KErrNone
     }
 

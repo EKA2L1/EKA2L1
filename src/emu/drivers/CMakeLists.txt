@@ -18,8 +18,10 @@ add_library(drivers
     src/graphics/backend/emu_window_glfw.cpp
     src/graphics/backend/ogl/fb_ogl.cpp
     src/graphics/backend/ogl/graphics_ogl.cpp
+    src/graphics/backend/ogl/imgui_impl_opengl3.cpp
+    src/graphics/backend/ogl/imgui_impl_opengl3.h
     src/graphics/backend/ogl/texture_ogl.cpp
     src/graphics/backend/ogl/shader_ogl.cpp)
 
-target_link_libraries(drivers PRIVATE common glad glfw)
+target_link_libraries(drivers PRIVATE common imgui glad glfw)
 target_include_directories(drivers PUBLIC include)

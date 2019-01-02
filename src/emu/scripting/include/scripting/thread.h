@@ -1,7 +1,14 @@
 #pragma once
 
-#include <epoc/kernel/thread.h>
 #include <memory>
+
+namespace eka2l1 {
+    namespace kernel {
+        class thread;
+    }
+
+    using thread_ptr = std::shared_ptr<kernel::thread>;
+}
 
 namespace eka2l1::scripting {
     class process;
@@ -25,8 +32,8 @@ namespace eka2l1::scripting {
         int get_exit_reason();
         int get_leave_depth();
 
-        eka2l1::kernel::thread_state get_state();
-        eka2l1::kernel::thread_priority get_priority();
+        int get_state();
+        int get_priority();
 
         std::unique_ptr<scripting::process> get_owning_process();
     };

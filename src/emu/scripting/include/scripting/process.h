@@ -1,10 +1,15 @@
 #pragma once
 
-#include <epoc/kernel/process.h>
-#include <epoc/page_table.h>
-
 #include <memory>
 #include <vector>
+
+namespace eka2l1 {
+    namespace kernel {
+        class process;
+    }
+
+    using process_ptr = std::shared_ptr<kernel::process>;
+}
 
 namespace eka2l1::scripting {
     class thread;

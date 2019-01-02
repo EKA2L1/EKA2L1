@@ -83,14 +83,17 @@ namespace eka2l1 {
 
             eka2l1::ptr<uint8_t> chunk_base;
 
-            kernel_system* kern;
             memory_system* mem;
-
             process_ptr own_process;
 
             bool is_heap;
 
         public:
+            chunk(kernel_system *kern, memory_system *mem)
+                : kernel_obj(kern), mem(mem) {
+                obj_type = kernel::object_type::chunk;
+            }
+
             chunk(kernel_system* kern, memory_system* mem, process_ptr own_process, std::string name, address bottom,
                 const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
                 chunk_attrib attrib, const bool is_heap = false);
@@ -176,8 +179,7 @@ namespace eka2l1 {
                 return is_heap;
             }
 
-            void write_object_to_snapshot(common::wo_buf_stream &stream) override;
-            void do_state(common::ro_buf_stream &stream) override;
+            void do_state(common::chunkyseri &seri) override;
         };
     }
 }

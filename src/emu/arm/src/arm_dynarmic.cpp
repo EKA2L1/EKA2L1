@@ -318,7 +318,6 @@ namespace eka2l1 {
                         }
 
                         parent.save_context(parent.kern->crr_thread()->get_thread_context());
-
                         parent.debugger->wait_for_debugger();
 
                         if (bkpt) {
@@ -326,7 +325,9 @@ namespace eka2l1 {
                         }
 
                         parent.stop();
+
                         // Delete the cache so it will reread the instruction
+                        parent.set_pc(pc);
                         parent.clear_instruction_cache();
                     }
 
@@ -549,7 +550,7 @@ namespace eka2l1 {
                 page_dyn[vaddr / mem->get_page_size() + i] = ptr + i * mem->get_page_size();
 			}
 
-            fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
+            // fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
         }
 
         void arm_dynarmic::unmap_memory(address addr, size_t size) {
@@ -557,11 +558,15 @@ namespace eka2l1 {
                 page_dyn[i] = nullptr;
             }
 
-            fallback_jit.unmap_memory(addr, size);
+            // fallback_jit.unmap_memory(addr, size);
         }
 
         void arm_dynarmic::clear_instruction_cache() {
             jit->ClearCache();
+        }
+
+        void arm_dynarmic::imb_range(address addr, std::size_t size) {
+            jit->InvalidateCacheRange(addr, size);
         }
     }
 }

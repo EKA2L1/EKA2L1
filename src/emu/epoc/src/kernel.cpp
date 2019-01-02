@@ -26,6 +26,7 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/chunkyseri.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -175,7 +176,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::process>(*pr_find);
+        return std::reinterpret_pointer_cast<kernel::process>(*pr_find);
     }
 
     process_ptr kernel_system::get_process(uint32_t handle) {
@@ -185,7 +186,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::process>(obj);
+        return std::reinterpret_pointer_cast<kernel::process>(obj);
     }
 
     void kernel_system::prepare_reschedule() {
@@ -457,7 +458,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::thread>(obj);
+        return std::reinterpret_pointer_cast<kernel::thread>(obj);
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj(uint32_t handle) {
@@ -480,7 +481,7 @@ namespace eka2l1 {
         return crr_process()->process_handles.get_object(handle);
     }
 
-    kernel_obj_ptr kernel_system::get_kernel_obj_by_id(std::uint64_t id) {
+    kernel_obj_ptr kernel_system::get_kernel_obj_by_id(std::uint32_t id) {
         SYNCHRONIZE_ACCESS;
 
         auto res = std::find_if(objects.begin(), objects.end(),
@@ -509,7 +510,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::thread>(*thr_find);
+        return std::reinterpret_pointer_cast<kernel::thread>(*thr_find);
     }
 
     std::vector<thread_ptr> kernel_system::get_all_thread_own_process(process_ptr pr) {
@@ -519,7 +520,7 @@ namespace eka2l1 {
 
         for (kernel_obj_ptr &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::thread) {
-                thread_ptr thr = std::dynamic_pointer_cast<kernel::thread>(obj);
+                thread_ptr thr = std::reinterpret_pointer_cast<kernel::thread>(obj);
 
                 if (thr->own_process == pr) {
                     thr_list.push_back(thr);
@@ -536,7 +537,7 @@ namespace eka2l1 {
 
         for (kernel_obj_ptr &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
-                process_ptr pr = std::dynamic_pointer_cast<kernel::process>(obj);
+                process_ptr pr = std::reinterpret_pointer_cast<kernel::process>(obj);
                 process_list.push_back(pr);
             }
         }
@@ -560,7 +561,7 @@ namespace eka2l1 {
 
         for (const auto &obj: objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
-                processes.push_back(std::dynamic_pointer_cast<kernel::process>(obj));
+                processes.push_back(std::reinterpret_pointer_cast<kernel::process>(obj));
             }
         }
 
@@ -583,7 +584,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::server>(*svr_find);
+        return std::reinterpret_pointer_cast<service::server>(*svr_find);
     }
 
     server_ptr kernel_system::get_server(uint32_t handle) {
@@ -595,7 +596,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::server>(obj);
+        return std::reinterpret_pointer_cast<service::server>(obj);
     }
 
     session_ptr kernel_system::get_session(uint32_t handle) {
@@ -605,7 +606,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::session>(obj);
+        return std::reinterpret_pointer_cast<service::session>(obj);
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {
@@ -614,7 +615,7 @@ namespace eka2l1 {
         auto prop_res = std::find_if(objects.begin(), objects.end(),
             [=](const auto &prop) {
                 if (prop && prop->get_object_type() == kernel::object_type::prop) {
-                    property_ptr real_prop = std::dynamic_pointer_cast<service::property>(prop);
+                    property_ptr real_prop = std::reinterpret_pointer_cast<service::property>(prop);
 
                     if (real_prop->first == cagetory && real_prop->second == key) {
                         return true;
@@ -628,7 +629,7 @@ namespace eka2l1 {
             return property_ptr(nullptr);
         }
 
-        return std::dynamic_pointer_cast<service::property>(*prop_res);
+        return std::reinterpret_pointer_cast<service::property>(*prop_res);
     }
 
     property_ptr kernel_system::get_prop(uint32_t handle) {
@@ -640,7 +641,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<service::property>(obj);
+        return std::reinterpret_pointer_cast<service::property>(obj);
     }
 
     uint32_t kernel_system::mirror(thread_ptr own_thread, uint32_t handle, kernel::owner_type owner) {
@@ -720,7 +721,7 @@ namespace eka2l1 {
 
             for (auto &obj : objects) {
                 if (obj && obj->get_object_type() == kernel::object_type::server) {
-                    server_ptr svr = std::dynamic_pointer_cast<service::server>(obj);
+                    server_ptr svr = std::reinterpret_pointer_cast<service::server>(obj);
 
                     if (svr->is_hle()) {
                         svrs.push_back(svr);
@@ -734,7 +735,7 @@ namespace eka2l1 {
         }
     }
 
-    uint64_t kernel_system::next_uid() const {
+    uint32_t kernel_system::next_uid() const {
         ++uid_counter;
         return uid_counter.load();
     }
@@ -764,7 +765,153 @@ namespace eka2l1 {
         return thr_sch->should_terminate();
     }
 
-    bool kernel_system::save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids) {
-        return true;
+    void kernel_system::do_state_of(common::chunkyseri &seri, const kernel::object_type t) {
+        for (auto &o: objects) {
+            if (o->get_object_type() == t) {
+                o->do_state(seri);
+            }
+        }
+    }
+    
+    struct kernel_info {
+        std::uint32_t total_chunks;
+        std::uint32_t total_mutex;
+        std::uint32_t total_semaphore;
+        std::uint32_t total_thread;
+        std::uint32_t total_timer;
+        std::uint32_t total_prop;
+        std::uint32_t total_process;
+    };
+
+    void kernel_system::do_state(common::chunkyseri &seri) {
+        auto s = seri.section("Kernel", 1);
+
+        if (!s) {
+            return;
+        }
+
+        kernel_info info;
+
+        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+            for (const auto &obj: objects) {
+                switch (obj->get_object_type()) {
+                case kernel::object_type::process: {
+                    info.total_process++;
+                    break;
+                }
+
+                case kernel::object_type::chunk: {
+                    info.total_chunks++;
+                    break;
+                }
+
+                case kernel::object_type::mutex: {
+                    info.total_mutex++;
+                    break;
+                }
+
+                case kernel::object_type::sema: {
+                    info.total_semaphore++;
+                    break;
+                }
+
+                case kernel::object_type::thread: {
+                    info.total_thread++;
+                    break;
+                }
+
+                case kernel::object_type::timer: {
+                    info.total_timer++;
+                    break;
+                }
+
+                case kernel::object_type::prop: {
+                    info.total_prop++;
+                    break;
+                }
+
+                default: {
+                    LOG_ERROR("Unsupported save object");
+                    return;
+                }
+                }
+            }
+        }
+
+        seri.absorb(info.total_process);
+        seri.absorb(info.total_chunks);
+        seri.absorb(info.total_mutex);
+        seri.absorb(info.total_semaphore);
+        seri.absorb(info.total_thread);
+        seri.absorb(info.total_timer);
+        seri.absorb(info.total_prop);
+        
+        // First, loading all the neccessary info first
+        // Create placeholder object
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            for (std::uint32_t i = 0; i < info.total_process; i++) {
+                auto pr = std::make_shared<kernel::process>(this, mem);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(pr)));
+            }
+
+            for (std::uint32_t i = 0; i < info.total_chunks; i++) {
+                auto c = std::make_shared<kernel::chunk>(this, mem);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
+
+            for (std::uint32_t i = 0; i < info.total_mutex; i++) {
+                auto c = std::make_shared<kernel::mutex>(this);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
+            
+            for (std::uint32_t i = 0; i < info.total_semaphore; i++) {
+                auto c = std::make_shared<kernel::semaphore>(this);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
+            
+            for (std::uint32_t i = 0; i < info.total_thread; i++) {
+                auto c = std::make_shared<kernel::thread>(this, mem, timing);
+                objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
+            }
+        }
+
+        auto do_state_base_kernel_obj_for_type = [&](kernel::object_type obj, std::uint32_t max_count) {
+            std::uint32_t count = 0;
+
+            for (auto &o: objects) {
+                if (o->get_object_type() == kernel::object_type::process) {
+                    o->kernel_obj::do_state(seri);
+                    count++;
+                }
+
+                if (count == max_count) {
+                    count = 0;
+                    break;
+                }
+            }
+        };
+
+        do_state_base_kernel_obj_for_type(kernel::object_type::process, info.total_process);
+        do_state_base_kernel_obj_for_type(kernel::object_type::chunk, info.total_chunks);
+        do_state_base_kernel_obj_for_type(kernel::object_type::mutex, info.total_mutex);
+        do_state_base_kernel_obj_for_type(kernel::object_type::sema, info.total_semaphore);
+        do_state_base_kernel_obj_for_type(kernel::object_type::thread, info.total_thread);
+        do_state_base_kernel_obj_for_type(kernel::object_type::timer, info.total_timer);
+        do_state_base_kernel_obj_for_type(kernel::object_type::timer, info.total_prop);
+
+        do_state_of(seri, kernel::object_type::process);
+        do_state_of(seri, kernel::object_type::chunk);
+        do_state_of(seri, kernel::object_type::mutex);
+        do_state_of(seri, kernel::object_type::sema);
+        do_state_of(seri, kernel::object_type::thread);
+        do_state_of(seri, kernel::object_type::timer);
+        do_state_of(seri, kernel::object_type::prop);
+
+        std::uint32_t uidc = uid_counter.load();
+        seri.absorb(uidc);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+            uid_counter = uidc;
+        }
     }
 }

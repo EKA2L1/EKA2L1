@@ -3,7 +3,6 @@ add_library(epocloader
     include/epoc/loader/sis_fields.h
     include/epoc/loader/sis.h
     include/epoc/loader/sis_old.h
-    include/epoc/loader/sis_script_interpreter.h
     include/epoc/loader/e32img.h
     include/epoc/loader/romimage.h
     include/epoc/loader/rom.h
@@ -12,7 +11,6 @@ add_library(epocloader
     src/loader/sis.cpp
     src/loader/sis_fields.cpp
     src/loader/sis_old.cpp
-    src/loader/sis_script_interpreter.cpp
     src/loader/romimage.cpp
     src/loader/rpkg.cpp
     src/loader/rom.cpp
@@ -86,6 +84,8 @@ add_library(epocservs
     include/epoc/services/loader/op.h
     include/epoc/services/posix/posix.h
     include/epoc/services/posix/op.h
+    include/epoc/services/sms/sa/sa.h
+    include/epoc/services/ui/eikappui.h
     include/epoc/services/ui/oom_app.h
     include/epoc/services/window/window.h
     include/epoc/ipc.h
@@ -105,7 +105,10 @@ add_library(epocservs
     src/services/install/install.cpp
     src/services/loader/loader.cpp
     src/services/posix/posix.cpp
+    src/services/sms/sa/sa.cpp
+    src/services/ui/eikappui.cpp
     src/services/ui/oom_app.cpp
+    src/services/window/bitmap.cpp
     src/services/window/window.cpp
     src/ipc.cpp
 )
@@ -153,7 +156,6 @@ target_link_libraries(epocloader
     PRIVATE
     common
     epocio
-    manager
     miniz
     yaml-cpp
 )
@@ -189,6 +191,10 @@ target_link_libraries(epockern PRIVATE
     tz
 )
 
+if (ENABLE_SCRIPTING_ABILITY)
+    target_link_libraries(epockern PRIVATE manager)
+endif()
+
 add_library(epoc
     include/epoc/epoc.h
     src/epoc.cpp)
@@ -207,5 +213,20 @@ target_link_libraries(epoc PRIVATE
     gdbstub
     manager)
 
-configure_file(include/epoc/configure.h.in
-    include/epoc/configure.h)
+execute_process(
+    COMMAND git rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+    COMMAND git log -1 --format=%h
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+    
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/epoc/configure.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/epoc/configure.h)

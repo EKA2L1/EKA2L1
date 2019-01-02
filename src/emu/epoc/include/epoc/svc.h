@@ -132,7 +132,7 @@ namespace eka2l1::epoc {
      * \param aProcessHandle The process handle. 0xFFFF8000 is the current process.
      * \param aDes Pointer to the name descriptor.
      */
-    BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<eka2l1::epoc::TDes8> aDes);
+    BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<eka2l1::epoc::des8> aDes);
 
     /*! \brief Get the process triple uid. 
      *
@@ -208,7 +208,7 @@ namespace eka2l1::epoc {
      * \param aMode Session mode. Ignored here.
      * \returns The session handle.
     */
-    BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<eka2l1::epoc::TDesC8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode);
+    BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<eka2l1::epoc::desc8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode);
 
     /*! \brief Share the session to local process or all process. 
      *
@@ -258,7 +258,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code if problems. Else return the handle.
     */
-    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<eka2l1::epoc::TDesC8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate);
+    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<eka2l1::epoc::desc8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate);
 
     /*! \brief Get the max size of the chunk. 
      * 
@@ -295,7 +295,7 @@ namespace eka2l1::epoc {
      * \param aOwnerType Ownership of this handle.
      * \returns Error code or handle.
      */
-    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<eka2l1::epoc::TDesC8> aSemaName, TInt aInitCount, TOwnerType aOwnerType);
+    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<eka2l1::epoc::desc8> aSemaName, TInt aInitCount, TOwnerType aOwnerType);
 
     /*! \brief Wait for any request to finish. 
      *
@@ -312,7 +312,7 @@ namespace eka2l1::epoc {
      *
      * \returns KErrNone if success, else error code.
      */
-    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<TDes8> aName, eka2l1::ptr<TFindHandle> aHandleFind);
+    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<TFindHandle> aHandleFind);
 
     /*! \brief Close a handle. If there is no duplicate handle or another reference handle open, 
      *  call Destroy to destroy the kernel object 
@@ -337,10 +337,10 @@ namespace eka2l1::epoc {
      *
      * \returns Error code or handle.
      */
-    BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<eka2l1::epoc::TDesC8> aName, TInt aOwnerType);
+    BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<eka2l1::epoc::desc8> aName, TInt aOwnerType);
 
     /*! \brief Get the name of the object handle points to. */
-    BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<eka2l1::epoc::TDes8> aName);
+    BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<eka2l1::epoc::des8> aName);
 
     /*! \brief Get all the first entry points of DLL the app loaded. 
      *
@@ -367,7 +367,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
     */
-    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<eka2l1::epoc::TDesC8> aName);
+    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<eka2l1::epoc::desc8> aName);
 
     /*! \brief Get the integer data of the proeprty with the provided cagetory and key. 
      *

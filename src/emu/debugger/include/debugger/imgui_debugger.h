@@ -58,7 +58,7 @@ namespace eka2l1 {
         void show_memory();
         void show_breakpoint_list();
 
-        std::atomic<std::uint64_t> debug_thread_id;
+        std::atomic<std::uint32_t> debug_thread_id;
 
         std::shared_ptr<MemoryEditor> mem_editor;
         std::shared_ptr<imgui_logger> logger;

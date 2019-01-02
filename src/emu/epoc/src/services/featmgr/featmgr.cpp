@@ -73,6 +73,7 @@ namespace eka2l1 {
     }
 
     void featmgr_server::feature_supported(service::ipc_context ctx) {
+        /*
         if (!config_loaded) {
             bool succ = load_featmgr_configs(ctx.sys->get_io_system());
 
@@ -93,6 +94,10 @@ namespace eka2l1 {
         }
 
         ctx.write_arg_pkg(1, features[entry->uid]);
+        ctx.set_request_status(KErrNone);
+        */
+
+        ctx.write_arg_pkg(1, 1);
         ctx.set_request_status(KErrNone);
     }
 }

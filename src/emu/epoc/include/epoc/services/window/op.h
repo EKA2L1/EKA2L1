@@ -1,3 +1,20 @@
+// Copyright (c) 1999-2010 Nokia Corporation and/or its subsidiary(-ies).
+// All rights reserved.
+// This component and the accompanying materials are made available
+// under the terms of "Eclipse Public License v1.0"
+// which accompanies this distribution, and is available
+// at the URL "http://www.eclipse.org/legal/epl-v10.html".
+//
+// Initial Contributors:
+// Nokia Corporation - initial contribution.
+//
+// Contributors:
+//
+// Description:
+// Command numbers and structures for client to window server communications.
+// 
+//
+
 #pragma once
 
 enum TWservMessages{
@@ -333,6 +350,175 @@ enum TWsGcOpcodes {
     EWsStoreAllGcAttributes = 1000,
     EWsStoreClippingRegion,
     EWsGcOpFlagDrawOp = 0x8000
+};
+
+enum TWsAnimDllOpcode {
+    EWsAnimDllOpCreateInstance=0x0000,
+    EWsAnimDllOpCommand,
+    EWsAnimDllOpCommandReply,
+    EWsAnimDllOpDestroyInstance,
+    EWsAnimDllOpFree,
+    EWsAnimDllOpCreateInstanceSprite,
+};
+
+enum TWsWindowOpcodes {
+    EWsWinOpFree=0x0000,
+    EWsWinOpSetExtent,
+    EWsWinOpSetExtentErr,
+    EWsWinOpOrdinalPosition,
+    EWsWinOpFullOrdinalPosition,
+    EWsWinOpSetOrdinalPosition,
+    EWsWinOpSetOrdinalPositionPri,
+    EWsWinOpSetOrdinalPriorityAdjust,
+    EWsWinOpSetPos,
+    EWsWinOpSetSize,
+    EWsWinOpSetSizeErr,
+    EWsWinOpPosition,
+    EWsWinOpAbsPosition,
+    EWsWinOpSize,
+    EWsWinOpActivate,
+    EWsWinOpInvalidate,
+    EWsWinOpInvalidateFull,
+    EWsWinOpBeginRedraw,
+    EWsWinOpBeginRedrawFull,
+    EWsWinOpEndRedraw,
+    EWsWinOpTestInvariant,
+    EWsWinOpParent,
+    EWsWinOpPrevSibling,
+    EWsWinOpNextSibling,
+    EWsWinOpChild,
+    EWsWinOpInquireOffset,
+    EWsWinOpPointerFilter,
+    EWsWinOpSetPointerCapture,
+    EWsWinOpSetPointerGrab,
+    EWsWinOpClaimPointerGrab,
+    EWsWinOpSetBackgroundColor,
+    EWsWinOpSetOrdinalPositionErr,
+    EWsWinOpSetVisible,
+    EWsWinOpScroll,
+    EWsWinOpScrollClip,
+    EWsWinOpScrollRect,
+    EWsWinOpScrollClipRect,
+    EWsWinOpReceiveFocus,
+    EWsWinOpAutoForeground,
+    EWsWinOpSetNoBackgroundColor,
+    EWsWinOpCaptureKey,
+    EWsWinOpCancelCaptureKey,
+    EWsWinOpCaptureKeyUpsAndDowns,
+    EWsWinOpCancelCaptureKeyUpsAndDowns,
+    EWsWinOpAddPriorityKey,
+    EWsWinOpRemovePriorityKey,
+    EWsWinOpSetTextCursor,
+    EWsWinOpSetTextCursorClipped,
+    EWsWinOpCancelTextCursor,
+    EWsWinOpSetShadowHeight,
+    EWsWinOpShadowDisabled,
+    EWsWinOpGetInvalidRegion,
+    EWsWinOpGetInvalidRegionCount,
+    EWsWinOpSetColor,
+    EWsWinOpSetCornerType,
+    EWsWinOpSetShape,
+    EWsWinOpBitmapHandle,
+    EWsWinOpUpdateScreen,
+    EWsWinOpUpdateScreenRegion,
+    EWsWinOpUpdateBackupBitmap,
+    EWsWinOpMaintainBackup,
+    EWsWinOpName,
+    EWsWinOpSetName,
+    EWsWinOpSetOwningWindowGroup,
+    EWsWinOpDefaultOwningWindow,
+    EWsWinOpRequiredDisplayMode,
+    EWsWinOpEnableOnEvents,
+    EWsWinOpDisableOnEvents,
+    EWsWinOpEnableGroupChangeEvents,
+    EWsWinOpDisableGroupChangeEvents,
+    EWsWinOpSetPointerCursor,
+    EWsWinOpSetCustomPointerCursor,
+    EWsWinOpRequestPointerRepeatEvent,
+    EWsWinOpCancelPointerRepeatEventRequest,
+    EWsWinOpAllocPointerMoveBuffer,
+    EWsWinOpFreePointerMoveBuffer,
+    EWsWinOpEnablePointerMoveBuffer,
+    EWsWinOpDisablePointerMoveBuffer,
+    EWsWinOpRetrievePointerMoveBuffer,
+    EWsWinOpDiscardPointerMoveBuffer,		//Tested to here %%%
+    EWsWinOpEnableModifierChangedEvents,
+    EWsWinOpDisableModifierChangedEvents,
+    EWsWinOpEnableErrorMessages,
+    EWsWinOpDisableErrorMessages,
+    EWsWinOpAddKeyRect,
+    EWsWinOpRemoveAllKeyRects,
+    EWsWinOpPasswordWindow,
+    EWsWinOpEnableBackup,
+    EWsWinOpIdentifier,
+    EWsWinOpDisableKeyClick,
+    EWsWinOpSetFade=EWsWinOpDisableKeyClick+3,	//Two messages removed
+    EWsWinOpSetNonFading,
+    EWsWinOpFadeBehind,
+    EWsWinOpEnableScreenChangeEvents,
+    EWsWinOpDisableScreenChangeEvents,
+    EWsWinOpSendPointerEvent,
+    EWsWinOpSendAdvancedPointerEvent,
+    EWsWinOpGetDisplayMode,
+    EWsWinOpGetIsFaded,
+    EWsWinOpGetIsNonFading,
+    EWsWinOpOrdinalPriority,
+    EWsWinOpClearPointerCursor,
+    EWsWinOpMoveToGroup,
+    EWsWinOpEnableFocusChangeEvents,
+    EWsWinOpDisableFocusChangeEvents,
+    EWsWinOpEnableGroupListChangeEvents,
+    EWsWinOpDisableGroupListChangeEvents,
+    EWsWinOpCaptureLongKey,
+    EWsWinOpCancelCaptureLongKey,
+    EWsWinOpStoreDrawCommands,
+    EWsWinOpHandleTransparencyUpdate,
+    EWsWinOpSetTransparencyFactor,
+    EWsWinOpSetTransparencyBitmap,
+    EWsWinOpAllowChildWindowGroup,
+    EWsWinOpSetTransparencyBitmapCWs, 
+    EWsWinOpEnableVisibilityChangeEvents,
+    EWsWinOpDisableVisibilityChangeEvents,
+    EWsWinOpSetTransparencyAlphaChannel,
+    EWsWinOpWindowGroupId,
+    EWsWinOpSetPointerCapturePriority,
+    EWsWinOpGetPointerCapturePriority,
+    EWsWinOpSetTransparentRegion,
+    EWsWinOpSetTransparencyPolicy,
+    EWsWinOpIsRedrawStoreEnabled,
+    EWsWinOpEnableOSB,
+    EWsWinOpDisableOSB,
+    EWsWinOpClearChildGroup,
+    EWsWinOpSetChildGroup,
+    EWsWinOpClientHandle,
+    EWsWinOpSetBackgroundSurface,
+    EWsWinOpKeyColor=EWsWinOpSetBackgroundSurface+2, 	//One message removed
+    EWsWinOpSetBackgroundSurfaceConfig=EWsWinOpKeyColor+5,	//Four messages removed
+    EWsWinOpRemoveBackgroundSurface=EWsWinOpSetBackgroundSurfaceConfig+2,	//One message removed
+    EWsWinOpGetBackgroundSurfaceConfig=EWsWinOpRemoveBackgroundSurface+2,	//One message removed
+    EWsWinOpClearRedrawStore=EWsWinOpGetBackgroundSurfaceConfig+2,	//One message removed
+    EWsWinOpScreenNumber,
+    EWsWinOpEnableAdvancedPointers,
+    #ifdef SYMBIAN_GRAPHICS_WSERV_QT_EFFECTS	
+    EWsWinOpSetSurfaceTransparency,
+    #endif
+    EWsWinOpSetPurpose,
+    EWsWinOpSendEffectCommand,
+    EWsWinOpOverrideEffectBuf,
+    EWsWinOpOverrideEffectIPC,
+    EWsWinOpTestLowPriorityRedraw=0x2000,  //Specific opcode for testing redraw queue priorities
+};
+
+enum TWsClickOpcodes {
+    EWsClickOpFree=0x0000,
+    EWsClickOpIsLoaded,
+    EWsClickOpUnLoad,
+    EWsClickOpLoad,
+    EWsClickOpCommandReply,
+    EWsClickOpSetKeyClick,
+    EWsClickOpSetPenClick,
+    EWsClickOpKeyClickEnabled,
+    EWsClickOpPenClickEnabled,
 };
 
 enum THotKey {

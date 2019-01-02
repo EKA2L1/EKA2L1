@@ -1,0 +1,36 @@
+/*
+============================================================================
+ Name		: io.mmp
+ Author	  : pent0
+ Copyright   : 2018-2019 pent0
+ Description : This is the project specification file for io.
+============================================================================
+*/
+
+TARGET		  eintests.exe
+TARGETTYPE	  exe
+UID			 0 0xe6f75ec0
+
+SYSTEMINCLUDE   \epoc32\include
+
+DEBUGGABLE_UDEBONLY
+
+LIBRARY charconv.lib efile.lib efsrv.lib euser.lib ws32.lib
+
+SOURCEPATH ..\src
+SOURCE absorber.cpp main.cpp testmanager.cpp
+
+USERINCLUDE ..\include
+
+SOURCEPATH ..\src\io
+SOURCE file.cpp
+SOURCEPATH ..\src\cmd
+SOURCE cmd.cpp
+SOURCEPATH ..\src\kern
+SOURCE codeseg.cpp
+SOURCEPATH ..\src\ext\dummycli
+SOURCE dummycli.cpp
+SOURCEPATH ..\src\ipc
+SOURCE ipc.cpp
+SOURCEPATH ..\src
+SOURCE ws.cpp

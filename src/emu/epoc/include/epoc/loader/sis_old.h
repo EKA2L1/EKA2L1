@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/types.h>
-#include <manager/package_manager.h>
+#include <epoc/loader/sis_common.h>
 
 #include <cstdint>
 #include <optional>
@@ -11,11 +11,6 @@ namespace eka2l1 {
     class io_system;
 
     namespace loader {
-        enum class epoc_sis_type {
-            epocu6 = 0x1000006D,
-            epoc6 = 0x10003A12
-        };
-
         // Only the app type will be remembered by
         // the app manager
         enum class sis_old_type {
@@ -109,7 +104,5 @@ namespace eka2l1 {
         };
 
         std::optional<sis_old> parse_sis_old(const std::string path);
-        bool install_sis_old(std::u16string path, io_system *io, uint8_t drive, epocver ver, 
-            manager::app_info &info);
     }
 }

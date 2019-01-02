@@ -24,9 +24,11 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/chunkyseri.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/random.h>
+#include <common/fileutils.h>
 
 #include <disasm/disasm.h>
 
@@ -251,6 +253,8 @@ namespace eka2l1 {
         bool install_rpkg(const std::string &path);
         void load_scripts();
 
+        void do_state(common::chunkyseri &seri);
+
         /*! \brief Install a SIS/SISX. */
         bool install_package(std::u16string path, uint8_t drv);
         bool load_rom(const std::string &path);
@@ -272,12 +276,17 @@ namespace eka2l1 {
         common::dir_entry scripts_entry;
 
         while (scripts_dir.next_entry(scripts_entry) == 0) {
-            if ((scripts_entry.type == FILE_REGULAR) && path_extension(scripts_entry.full_path) == ".py") {
-                auto module_name = replace_extension(filename(scripts_entry.full_path), ".py");
+            if ((scripts_entry.type == common::FILE_REGULAR) && path_extension(scripts_entry.name) == ".py") {
+                auto module_name = replace_extension(filename(scripts_entry.name), "");
                 mngr.get_script_manager()->import_module("scripts/" + module_name);
             }
         }
 #endif
+    }
+    
+    void system_impl::do_state(common::chunkyseri &seri) {
+        // Save timing first
+        timing.do_state(seri);
     }
 
     void system_impl::init() {
@@ -544,22 +553,6 @@ namespace eka2l1 {
 
     bool system_impl::save_snapshot_processes(const std::string &path,
         const std::vector<uint32_t> &include_uids) {
-        page_table *pt = mem.get_current_page_table();
-
-        // Can't snapshot if no memory page table is present
-        if (!pt) {
-            return false;
-        }
-
-        FILE *f = fopen(path.data(), "wb");
-
-        // Start writing the magic header
-        const char *magic_header = "SNAE";
-        fwrite(magic_header, 1, 4, f);
-
-        // Kernel object saving
-        kern.save_snapshot_for_processes(f, include_uids);
-        
         return true;
     }
     
@@ -711,5 +704,9 @@ namespace eka2l1 {
 
     hal_ptr system::get_hal(uint32_t category) {
         return impl->get_hal(category);
+    }
+    
+    void system::do_state(common::chunkyseri &seri) {
+        return impl->do_state(seri);
     }
 }

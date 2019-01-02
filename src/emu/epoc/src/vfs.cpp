@@ -103,13 +103,28 @@ namespace eka2l1 {
             return -1;
         }
 
-        size_t seek(size_t seek_off, file_seek_mode where) override {
+        std::uint64_t seek(std::int64_t seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg || where == file_seek_mode::address) {
+                if (seek_off < 0) {
+                    LOG_ERROR("Attempting to seek set with negative offset ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
                 crr_pos = seek_off;
             } else if (where == file_seek_mode::crr) {
+                if (crr_pos + seek_off < 0) {
+                    LOG_ERROR("Attempting to seek current with offset that makes file pointer negative ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
                 crr_pos += seek_off;
             } else {
-                crr_pos += size() + seek_off;
+                if (crr_pos + size() + seek_off < 0) {
+                    LOG_ERROR("Attempting to seek end with offset that makes file pointer negative ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
+                crr_pos = size() + seek_off;
             }
 
             if (where == file_seek_mode::address) {
@@ -303,14 +318,19 @@ namespace eka2l1 {
             return ftell(file);
         }
 
-        size_t seek(size_t seek_off, file_seek_mode where) override {
+        std::uint64_t seek(std::int64_t seek_off, file_seek_mode where) override {
             WARN_CLOSE
 
             if (where == file_seek_mode::address) {
-                return 0xFFFFFFFF;
+                return 0xFFFFFFFFFFFFFFFF;
             }
 
             if (where == file_seek_mode::beg) {
+                if (seek_off < 0) {
+                    LOG_ERROR("Attempting to seek set with negative offset ({})", seek_off);
+                    return 0xFFFFFFFFFFFFFFFF;
+                }
+
                 fseek(file, static_cast<long>(seek_off), SEEK_SET);
             } else if (where == file_seek_mode::crr) {
                 fseek(file, static_cast<long>(seek_off), SEEK_CUR);
@@ -398,6 +418,7 @@ namespace eka2l1 {
             , attrib(attrib)
             , inst(inst)
             , peeking(false) {
+            iterator.detail = true;
         }
 
         std::optional<entry_info> get_next_entry() override {
@@ -437,6 +458,16 @@ namespace eka2l1 {
 
                 entry_info info = *(inst->get_entry_info(common::utf8_to_ucs2(
                     eka2l1::add_path(vir_path, name))));
+
+                // Symbian usually sensitive about null terminator.
+                // It's best not include them.
+                if (info.name.back() == '\0') {
+                    info.name.erase(info.name.length() - 1);
+                }
+
+                if (info.full_path.back() == '\0') {
+                    info.full_path.erase(info.full_path.length() - 1);
+                }
 
                 return info;
             }
@@ -548,15 +579,17 @@ namespace eka2l1 {
                 }
             }
 
-            size_t lib_pos = new_path.find(u"\\system\\lib");
+            std::u16string replace_hack_str = u"\\system\\libs";
+            size_t lib_pos = new_path.find(replace_hack_str);
 
             if (lib_pos == std::string::npos) {
-                lib_pos = new_path.find(u"\\system\\programs");
+                replace_hack_str = u"\\system\\programs";
+                lib_pos = new_path.find(replace_hack_str);
             }
 
             // TODO (bentokun): Remove this hack with a proper symlink system.
             if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-                new_path.replace(lib_pos, 12, u"\\sys\\bin");
+                new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
             }
     
             return new_path;
@@ -873,16 +906,17 @@ namespace eka2l1 {
                 }
             }
 
-            size_t lib_pos = new_path.find(u"\\system\\lib");
+            std::u16string replace_hack_str = u"\\system\\libs";
+            size_t lib_pos = new_path.find(replace_hack_str);
 
             if (lib_pos == std::string::npos) {
-                lib_pos = new_path.find(u"\\system\\programs");
+                replace_hack_str = u"\\system\\programs";
+                lib_pos = new_path.find(replace_hack_str);
             }
 
             // TODO (bentokun): Remove this hack with a proper symlink system.
-            if (lib_pos != std::string::npos && 
-                static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-                new_path.replace(lib_pos, 12, u"\\sys\\bin");
+            if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+                new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
             }
             
             auto entry = burn_tree_find_entry(common::ucs2_to_utf8(new_path));

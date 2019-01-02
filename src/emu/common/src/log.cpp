@@ -29,6 +29,10 @@
 #include <spdlog/sinks/msvc_sink.h>
 #endif
 
+#include <spdlog/sinks/base_sink.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
 namespace eka2l1 {
     bool already_setup = false;
 
@@ -48,15 +52,19 @@ namespace eka2l1 {
             bool force_clear = false;
 
         protected:
-            void _sink_it(const spdlog::details::log_msg &msg) override {
-                logger->log(msg.formatted.str().c_str());
+            void sink_it_(const spdlog::details::log_msg &msg) override {
+                fmt::memory_buffer formatted;
+                sink::formatter_->format(msg, formatted);
+                std::string real_msg = fmt::to_string(formatted);
+
+                logger->log(real_msg.c_str());
 
                 if (force_clear) {
-                    _flush();
+                    flush_();
                 }
             }
 
-            void _flush() override {
+            void flush_() override {
                 //logger->clear();
             }
         };
@@ -76,13 +84,9 @@ namespace eka2l1 {
             remove(log_file_name);
 #endif
 
-#if EKA2L1_PLATFORM(WIN32)
-            sinks.push_back(std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>());
-#else
-            sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>());
-#endif
+            sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
 
-            sinks.push_back(std::make_shared<spdlog::sinks::simple_file_sink_mt>(log_file_name));
+            sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file_name));
 
 #ifdef _MSC_VER
             sinks.push_back(std::make_shared<spdlog::sinks::msvc_sink_st>());

@@ -49,7 +49,7 @@ namespace eka2l1 {
         ptr(const uint32_t addr)
             : mem_address(addr) {}
 
-        address ptr_address() {
+        address &ptr_address() {
             return mem_address;
         }
 

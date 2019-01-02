@@ -64,7 +64,7 @@ namespace eka2l1 {
             bool write_arg(int idx, uint32_t data);
             bool write_arg(int idx, const std::u16string &data);
 
-            bool write_arg_pkg(int idx, uint8_t *data, uint32_t len);
+            bool write_arg_pkg(int idx, uint8_t *data, uint32_t len, int *err_code = nullptr);
 
             // Package an argument, write it to a destination
             template <typename T>

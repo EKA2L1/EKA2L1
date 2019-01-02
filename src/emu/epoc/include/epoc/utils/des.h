@@ -25,6 +25,8 @@
 #include <e32err.h>
 #include <epoc/ptr.h>
 
+#include <cassert>
+#include <cstring>
 #include <string>
 #include <memory>
 
@@ -44,278 +46,143 @@ namespace eka2l1 {
  * These can help services implementation or executive calls implementation.
  */
 namespace eka2l1::epoc {
-    const TInt KShiftDes8Type = 28;
-    const TInt KShiftDes16Type = 28;
-
-    /*! \brief Descriptor type */
-    enum TDesType {
-        //! Constant buffer.
-        /*! 
-            Contains length and a stack array of element. 
-        */
-        EBufC,
-
-        //! Constant Pointer Descriptor.
-        /* Contains length and pointer to the char array.
-        */
-        EPtrC,
-
-        //! Pointer Descriptor, can grow and expand.
-        /* Contains length, max length and pointer to expandable char array.
-        */
-        EPtr,
-
-        //! Buffer descriptor.
-        /* Contains length, max length and a stack array of element that size 
-         * of maximum length.
-        */
-        EBuf,
-
-        //! Buffer Constant Pointer.
-        /* Contains length, max length and pointer to a Constant Buffer Descriptor.
-        */
-        EBufCPtr
+    enum des_type: std::uint32_t {
+        buf_const,
+        ptr_const,
+        ptr,
+        buf,
+        ptr_to_buf
     };
 
-    /*! \brief A constant 8-bit descriptor. 
-     *
-     * Descriptor are Symbian's vector and string. 
-     * They can both contains binary data and also used for
-     * string storage.
-     */
-    struct TDesC8 {
-        //! Length of the descriptor mask with the type.
-        /*! The length and the type of descriptor are combined by 
-          this formula: iLength = DescriptorLength | ((int)(DescriptorType) << 28)
-        */
-        TUint iLength;
+    constexpr int des_err_not_large_enough_to_hold = -1;
 
-        /*! \brief Get the pointer to the data of descriptor.
-         * \param sys The system pointer.
-         * \returns Pointer to the data descriptor.
-        */
-        TUint8 *Ptr(eka2l1::system *sys);
+    // These are things that we can't do within header
+    struct desc_base {
+    protected:
+        std::uint32_t info;
 
-        TUint8 *Ptr(eka2l1::process_ptr pr);
+    public:
+        inline std::uint32_t  get_length() const {
+            // 28 low bit stores the length
+            return info & 0xFFFFFF;
+        }
 
-        /*! \brief Get the length of the descriptor.
-         * \returns The descriptor length.
-        */
-        TUint Length() const;
+        inline des_type       get_descriptor_type() const {
+            return static_cast<des_type>(info >> 28);
+        }
 
-        /*! \brief Get the descriptor type. 
-         *
-         * \returns Descriptor type.
-        */
-        TDesType Type() const;
+        void *get_pointer_raw(eka2l1::process_ptr pr);
+        
+        int assign_raw(eka2l1::process_ptr pr, const std::uint8_t *data, 
+            const std::uint32_t size);
 
-        /*! \brief Compare two descriptor. 
-         * \returns True if equal, false if not.
-         */
-        bool Compare(eka2l1::system *sys, TDesC8 &aRhs);
+        std::uint32_t get_max_length(eka2l1::process_ptr pr);
 
-        /*! \brief Turns the descriptor into an 8-bit string. 
-         * \returns The expected string.
-         */
-        std::string StdString(eka2l1::system *sys);
-
-        std::string StdString(eka2l1::process_ptr pr);
-
-        /*! \brief Set the length of the descriptor.
-         * \param iNewLength The new length to be set.
-         */
-        void SetLength(eka2l1::system *sys, TUint32 iNewLength);
-
-        void SetLength(eka2l1::process_ptr pr, TUint32 iNewLength);
-
-        /*! \brief Assign the descriptor with the provided string. 
-         * \param iNewString The string to assign.
-         */
-        void Assign(eka2l1::system *sys, std::string iNewString);
-
-        void Assign(eka2l1::process_ptr pr, std::string iNewString);
+        void set_length(eka2l1::process_ptr pr, const std::uint32_t new_len);
     };
 
-    /*! \brief A constant 16-bit descriptor. 
-     *
-     * Descriptor are Symbian's vector and string. 
-     * They can both contains binary data and also used for
-     * string storage.
-     */
-    struct TDesC16 {
-        //! Length of the descriptor mask with the type.
-        /*! The length and the type of descriptor are combined by 
-          this formula: iLength = DescriptorLength | ((int)(DescriptorType) << 28)
-        */
-        TUint iLength;
+    template <typename T>
+    struct desc: public desc_base {
+    public:      
+        T *get_pointer(eka2l1::process_ptr pr) {
+            return reinterpret_cast<T*>(get_pointer_raw(pr));
+        }
 
-        /*! \brief Get the pointer to the data of descriptor.
-         * \param sys The system pointer.
-         * \returns Pointer to the data descriptor.
-        */
-        TUint16 *Ptr(eka2l1::system *sys);
+        std::basic_string<T> to_std_string(eka2l1::process_ptr pr) {
+            const des_type dtype = get_descriptor_type();
+            assert((dtype >= buf_const) && (dtype <= ptr_to_buf));
 
-        TUint16 *Ptr(eka2l1::process_ptr pr);
+            std::basic_string<T> data;
+            data.resize(get_length());
 
-        /*! \brief Get the length of the descriptor.
-         * \returns The descriptor length.
-        */
-        TUint Length() const;
+            T *data_pointer_guest = get_pointer(pr);
+            std::copy(data_pointer_guest, data_pointer_guest + data.length(), &data[0]);
 
-        /*! \brief Get the descriptor type. 
-         *
-         * \returns Descriptor type.
-        */
-        TDesType Type() const;
+            return data;
+        }
 
-        /*! \brief Compare two descriptor. 
-         * \returns True if equal, false if not.
-         */
-        bool Compare(eka2l1::system *sys, TDesC16 &aRhs);
+        int assign(eka2l1::process_ptr pr, const std::uint8_t *data, 
+            const std::uint32_t size) {
+            std::uint8_t *des_buf = reinterpret_cast<std::uint8_t*>(get_pointer_raw(pr));
+            des_type dtype = get_descriptor_type();
 
-        /*! \brief Turns the descriptor into an 16-bit string. 
-         * \returns The expected string.
-         */
-        std::u16string StdString(eka2l1::system *sys);
+            std::uint32_t real_len = size / sizeof(T);
 
-        std::u16string StdString(eka2l1::process_ptr pr);
+            if (size > 0) {
+                if ((dtype == buf) || (dtype == ptr) || (dtype == ptr_to_buf)) {
+                    if (real_len > get_max_length(pr)) {
+                        return des_err_not_large_enough_to_hold;
+                    }
+                }
 
-        /*! \brief Set the length of the descriptor.
-         * \param iNewLength The new length to be set.
-         */
-        void SetLength(eka2l1::system *sys, TUint32 iNewLength);
+                std::memcpy(des_buf, data, size);
+            }
 
-        void SetLength(eka2l1::process_ptr pr, TUint32 iNewLength);
+            set_length(pr, real_len);
 
-        /*! \brief Assign the descriptor with the provided string. 
-         * \param iNewString The string to assign.
-         */
-        void Assign(eka2l1::system *sys, std::u16string iNewString);
+            return 0;
+        }
 
-        void Assign(eka2l1::process_ptr pr, std::u16string iNewString);
+        int assign(eka2l1::process_ptr pr, const std::basic_string<T> &buf) {
+            return assign(pr, reinterpret_cast<const std::uint8_t*>(&buf[0]), 
+                static_cast<std::uint32_t>(buf.size() * sizeof(T)));
+        }
     };
 
-    /*! \brief Modifiable 8-bit descriptor */
-    struct TDes8 : public TDesC8 {
-        TInt iMaxLength;
+    template <typename T>
+    struct des: public desc<T> {
+        std::uint32_t max_length;
     };
 
-    /*! \brief Modifiable 16-bit descriptor */
-    struct TDes16 : public TDesC16 {
-        TInt iMaxLength;
+    template <typename T>
+    struct ptr_desc: public desc<T> {
+        eka2l1::ptr<T>  data;
     };
 
-    /*! \brief 8-bit descriptor with data pointer */
-    struct TPtrC8 : public TDesC8 {
-        ptr<TUint8> iPtr;
+    template <typename T>
+    struct ptr_des: public des<T> {
+        eka2l1::ptr<T>  data;
     };
 
-    /*! \brief 8-bit modifiable and expandable descriptor with
-         data pointer */
-    struct TPtr8 : public TDes8 {
-        ptr<TUint8> iPtr;
+    template <typename T>
+    struct buf_desc: public desc<T> {
+        T   data[1];
     };
 
-    /*! \brief 16-bit descriptor with data pointer */
-    struct TPtrC16 : public TDesC16 {
-        ptr<TUint16> iPtr;
+    template <typename T>
+    struct buf_des: public des<T> {
+        T   data[1];
     };
 
-    /*! \brief 16-bit modifiable and expandable descriptor with
-         data pointer */
-    struct TPtr16 : public TDes16 {
-        ptr<TUint16> iPtr;
+    template <typename T>
+    struct literal {
+        std::uint32_t   length;
+        T               data[1];
     };
 
-    struct TBufCBase8 : public TDesC8 {};
-    struct TBufCBase16 : public TDesC16 {};
+    using desc8 = desc<char>;
+    using desc16 = desc<char16_t>;
+    using des8 = des<char>;
+    using des16 = des<char16_t>;
 
-    /*! \brief 8-bit descriptor which data array resides on stack. */
-    struct TBufC8 : public TBufCBase8 {
-        ptr<TUint8> iBuf;
-    };
+    using ptr_desc8 = ptr_desc<char>;
+    using ptr_desc16 = ptr_desc<char16_t>;
 
-    struct TBufCPtr8 {
-        TInt iLength;
-        TInt iMaxLength;
-        ptr<TBufC8> iPtr;
-    };
+    using buf_desc8 = buf_desc<char>;
+    using buf_desc16 = buf_desc<char16_t>;
 
-    struct TBufC16 {
-        TInt iLength;
-        ptr<TUint16> iBuf;
-    };
+    using buf_des8 = buf_des<char>;
+    using buf_des16 = buf_des<char16_t>;
 
-    struct TBufCPtr16 {
-        TInt iLength;
-        TInt iMaxLength;
-        ptr<TBufC16> iPtr;
-    };
+    using ptr_des8 = ptr_des<char>;
+    using ptr_des16 = ptr_des<char16_t>;
 
-    /*! \brief 16-bit expandable and modifiable descriptor which data array resides on stack. */
-    struct TBuf16 {
-        TInt iLength;
-        TInt iMaxLength;
-        ptr<TUint16> iBuf;
-    };
-
-    /*! \brief 8-bit expandable and modifiable descriptor which data array resides on stack. */
-    struct TBuf8 {
-        TInt iLength;
-        TInt iMaxLength;
-        ptr<TUint8> iBuf;
-    };
-
-    using TDesC = TDesC16;
-    using TDes = TDes16;
-    using TBufC = TBufC16;
-    using TPtrC = TPtrC16;
-    using TPtr = TPtr16;
-
-    /*! \brief Get the type of a 8-bit descriptor. */
-    TInt GetTDesC8Type(const TDesC8 *aDes8);
-    ptr<TUint8> GetTDes8HLEPtr(eka2l1::process_ptr sys, TDesC8 *aDes8);
-    ptr<TUint8> GetTDes8HLEPtr(eka2l1::process_ptr sys, ptr<TDesC8> aDes8);
-    TUint8 *GetTDes8Ptr(eka2l1::process_ptr sys, TDesC8 *aDes8);
-
-    /*! \brief Get the type of a 16-bit descriptor. */
-    TInt GetTDesC16Type(const TDesC16 *aDes16);
-    ptr<TUint16> GetTDes16HLEPtr(eka2l1::process_ptr sys, TDesC16 *aDes16);
-    ptr<TUint16> GetTDes16HLEPtr(eka2l1::process_ptr sys, ptr<TDesC16> aDes16);
-    TUint16 *GetTDes16Ptr(eka2l1::process_ptr sys, TDesC16 *aDes16);
-
-    /*! \brief A 8-bit literal 
-     *
-     * Symbian literal are written in binary with first 4 bytes contains 
-     * the descriptor length, and length or length * 2 bytes later (depend
-     * on the type), contains the literal data.
-     */
-    struct TLit8 {
-        TUint iTypeLength;
-    };
-
-    /*! \brief A 16-bit literal 
-     *
-     * Symbian literal are written in binary with first 4 bytes contains 
-     * the descriptor length, and length or length * 2 bytes later (depend
-     * on the type), contains the literal data.
-     */
-    struct TLit16 : public TLit8 {};
-
-    /*! \brief Get a pointer to the actual literal data. */
-    TUint8 *GetLit8Ptr(memory_system *mem, eka2l1::ptr<TLit8> aLit);
-    
-    /*! \brief Get a pointer to the actual literal data. */
-    TUint16 *GetLit16Ptr(memory_system *mem, eka2l1::ptr<TLit16> aLit);
-
-    void SetLengthDes(eka2l1::process_ptr sys, TDesC8 *des, uint32_t len);
-    void SetLengthDes(eka2l1::process_ptr sys, TDesC16 *des, uint32_t len);
-
-    uint32_t ExtractDesLength(uint32_t len);
-
-    // It doesn't really matter if it's Des8 or Des16, they have the same structure
-    // So the size and offset stay the same
-    uint32_t ExtractDesMaxLength(TDes8 *des);
-
-    using TLit = TLit16;
+    static_assert(sizeof(desc8) == 4);
+    static_assert(sizeof(desc16) == 4);
+    static_assert(sizeof(des8) == 8);
+    static_assert(sizeof(des16) == 8);
+    static_assert(sizeof(ptr_desc8) == 8);
+    static_assert(sizeof(ptr_desc16) == 8);
+    static_assert(sizeof(ptr_des8) == 12);
+    static_assert(sizeof(ptr_des16) == 12);
 }

@@ -34,20 +34,42 @@ namespace eka2l1::epoc {
         std::vector<uint32_t> entries;
 
         auto cache_maps = mngr.get_e32imgs_cache();
+        auto rom_cache_maps = mngr.get_romimgs_cache();
+
         address exe_addr = 0;
 
+        process_ptr pr = sys->get_kernel_system()->crr_process();
+        std::uint32_t uid = pr->get_uid();
+
+        for (auto &cache : rom_cache_maps) {
+            auto res = std::find(cache.second.loader.begin(), cache.second.loader.end(), pr);
+
+            // If this image is owned to the current process
+            if (res != cache.second.loader.end()) {
+                if (cache.second.img->header.uid3 != uid) {
+                    entries.push_back(cache.second.img->header.entry_point);
+                } else {
+                    exe_addr = cache.second.img->header.entry_point;
+                }
+            }
+        }
+
         for (auto &cache : cache_maps) {
-            auto res = std::find(cache.second.loader.begin(), cache.second.loader.end(), sys->get_kernel_system()->crr_process());
+            auto res = std::find(cache.second.loader.begin(), 
+                cache.second.loader.end(), pr);
 
             // If this image is owned to the current process
             if (res != cache.second.loader.end()) {
                 if (cache.second.img->header.uid1 != loader::e32_img_type::exe) {
                     entries.push_back(cache.second.img->header.entry_point + cache.second.img->rt_code_addr);
                 }
+                else {
+                    exe_addr = cache.second.img->header.entry_point + cache.second.img->rt_code_addr;
+                }
             }
         }
 
-        entries.push_back(0x2);
+        entries.push_back(exe_addr);
 
         return entries;
     }
@@ -78,10 +100,11 @@ namespace eka2l1::epoc {
             const loader::e32img_ptr &e32img = e32imginf.second.img;
 
             if (e32img->rt_code_addr <= runtime_addr && e32img->rt_code_addr + e32img->header.code_size >= runtime_addr) {
-                return e32img->has_extended_header ? 
-                    ((e32img->header_extended.exception_des & 1) ? (e32img->rt_code_addr + e32img->header_extended.exception_des & (~1)) :
-                     (e32img->rt_code_addr + e32img->header_extended.exception_des))
-                    : 0;
+                if (e32img->has_extended_header && (e32img->header_extended.exception_des & 1)) {
+                    return e32img->rt_code_addr + e32img->header_extended.exception_des - 1;
+                }
+                
+                return 0;
             }
         }
 

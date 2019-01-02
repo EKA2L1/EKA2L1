@@ -1,0 +1,40 @@
+#{"EKA2L1 Hardware Tests"},(0xe6f75ec0),1,0,0
+
+;Localised Vendor name
+%{"pent0"}
+
+;Unique Vendor name
+:"pent0"
+
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\eintests.exe"						-"!:\sys\bin\eintests.exe"
+
+; Adding input files
+
+; FileIO
+"..\assets\FileIO\SeekPosTest.inp"		-"!:\private\e6f75ec0\Assets\FileIO\SeekPosTest.inp"
+"..\assets\FileIO\ReadDummy.txt"		-"!:\private\e6f75ec0\Assets\FileIO\ReadDummy.txt"
+
+"..\expected\FileIO\CommonSeekingRom.expected" 		  -"!:\private\e6f75ec0\Expected\FileIO\CommonSeekingRom.expected"
+"..\expected\FileIO\PositionAfterCustomRead.expected" -"!:\private\e6f75ec0\Expected\FileIO\PositionAfterCustomRead.expected"
+
+"..\expected\FileIO\FileWriteWithLengthAndOffset.expected"		  -"!:\private\e6f75ec0\Expected\FileIO\FileWriteWithLengthAndOffset.expected"
+"..\expected\FileIO\ReadTillEof.expected"		  -"!:\private\e6f75ec0\Expected\FileIO\ReadTillEof.expected"
+"..\expected\FileIO\ReadWithSpecifiedLenAndOffset.expected"		  -"!:\private\e6f75ec0\Expected\FileIO\ReadWithSpecifiedLenAndOffset.expected"
+
+; CmdArgs
+"..\expected\CmdAndParams\CheckCommandLineLength.expected" 		  -"!:\private\e6f75ec0\Expected\CmdAndParams\CheckCommandLineLength.expected"
+"..\expected\CmdAndParams\CheckCommandLineString.expected" 		  -"!:\private\e6f75ec0\Expected\CmdAndParams\CheckCommandLineString.expected"
+
+; CodeSeg Kern
+"..\expected\CodeSeg\ExceptionDescriptorForRamCode.expected"	  -"!:\private\e6f75ec0\Expected\CodeSeg\ExceptionDescriptorForRamCode.expected"
+
+; IPC
+"..\expected\IPC\ReadWriteDescriptorWithoutOffset.expected"		  		-"!:\private\e6f75ec0\Expected\IPC\ReadWriteDescriptorWithoutOffset.expected"
+"..\expected\IPC\WriteDescriptorWithoutOffset.expected"		  	  		-"!:\private\e6f75ec0\Expected\IPC\WriteDescriptorWithoutOffset.expected"
+"..\expected\IPC\WriteDescriptorWithOffset.expected"		  	  		-"!:\private\e6f75ec0\Expected\IPC\WriteDescriptorWithOffset.expected"
+"..\expected\IPC\ReadWithOffsetWriteDescriptorWithoutOffset.expected"	-"!:\private\e6f75ec0\Expected\IPC\ReadWithOffsetWriteDescriptorWithoutOffset.expected"
+
+; WS
+"..\expected\WindowServer\GetAllScreenModeSizeAndRotation.expected"		-"!:\private\e6f75ec0\Expected\WindowServer\GetAllScreenModeSizeAndRotation.expected"
+
+@"DummyServ.sisx", (0xe6075ec1)

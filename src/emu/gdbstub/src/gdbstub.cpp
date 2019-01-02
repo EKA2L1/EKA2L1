@@ -86,7 +86,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return std::dynamic_pointer_cast<kernel::thread>(obj);
+        return std::reinterpret_pointer_cast<kernel::thread>(obj);
     }
 
     static std::uint32_t reg_read(std::size_t id, thread_ptr thread = nullptr) {

@@ -75,11 +75,15 @@ namespace eka2l1 {
 
     struct find_handle {
         int index;
-        uint64_t object_id;
+        uint32_t object_id;
     };
 
     namespace arm {
         class arm_interface;
+    }
+
+    namespace common {
+        class chunkyseri;
     }
 
     class kernel_system {
@@ -112,10 +116,12 @@ namespace eka2l1 {
 
         uint32_t create_handle_lastest(kernel::owner_type owner);
 
-        mutable std::atomic<uint64_t> uid_counter;
+        mutable std::atomic<uint32_t> uid_counter;
+
+        void do_state_of(common::chunkyseri &seri, const kernel::object_type t);
 
     public:
-        uint64_t next_uid() const;
+        uint32_t next_uid() const;
 
         explicit kernel_system()
             : uid_counter(0), libmngr(nullptr),
@@ -243,7 +249,7 @@ namespace eka2l1 {
         int close(uint32_t handle);
 
         kernel_obj_ptr get_kernel_obj(uint32_t handle);
-        kernel_obj_ptr get_kernel_obj_by_id(uint64_t id);
+        kernel_obj_ptr get_kernel_obj_by_id(uint32_t id);
 
         thread_ptr get_thread_by_name(const std::string &name);
         thread_ptr get_thread_by_handle(uint32_t handle);
@@ -281,6 +287,6 @@ namespace eka2l1 {
         void set_handle_owner_type(int handle);
         bool should_terminate();
 
-        bool save_snapshot_for_processes(FILE *f, const std::vector<std::uint32_t> &uids);
+        void do_state(common::chunkyseri &seri);
     };
 }

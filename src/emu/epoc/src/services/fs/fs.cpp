@@ -132,7 +132,7 @@ namespace eka2l1 {
 
     fs_node *fs_handle_table::get_node(const std::u16string &path) {
         for (auto &file_node : nodes) {
-            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) && (std::dynamic_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
+            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) && (std::reinterpret_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
                 return &file_node;
             }
         }
@@ -195,6 +195,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, replace, EFsReplace, "Fs::Replace");
         REGISTER_IPC(fs_server, volume, EFsVolume, "Fs::Volume");
         REGISTER_IPC(fs_server, query_drive_info_ext, EFsQueryVolumeInfoExt, "Fs::QueryVolumeInfoExt");
+        REGISTER_IPC(fs_server, set_should_notify_failure, EFsSetNotifyUser, "Fs::SetShouldNotifyFailure");
     }
 
     void fs_server::replace(service::ipc_context ctx) {
@@ -206,7 +207,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string ss_path = session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())];
+        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
 
         auto target = eka2l1::absolute_path(*given_path_target, ss_path);
         auto dest = eka2l1::absolute_path(*given_path_dest, ss_path);
@@ -238,7 +239,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string ss_path = session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())];
+        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
 
         std::u16string target = eka2l1::absolute_path(*given_path_target, ss_path);
         std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path);
@@ -269,7 +270,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string ss_path = session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())];
+        std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
 
         auto path = eka2l1::absolute_path(*given_path, ss_path);
         io_system *io = ctx.sys->get_io_system();
@@ -277,7 +278,7 @@ namespace eka2l1 {
         bool success = io->delete_entry(path);
 
         if (!success) {
-            ctx.set_request_status(KErrGeneral);
+            ctx.set_request_status(KErrNotFound);
             return;
         }
 
@@ -293,14 +294,15 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context ctx) {
-        session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())] = 
-            eka2l1::root_name(ctx.msg->own_thr->owning_process()->get_exe_path(), true);
+        // Please don't remove the seperator, absolute path needs this to determine root directory
+        session_paths[ctx.msg->msg_session->unique_id()] = 
+            eka2l1::root_name(ctx.msg->own_thr->owning_process()->get_exe_path(), true) + u'\\';
 
         server::connect(ctx);
     }
 
     void fs_server::session_path(service::ipc_context ctx) {
-        ctx.write_arg(0, session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())]);
+        ctx.write_arg(0, session_paths[ctx.msg->msg_session->unique_id()]);
         ctx.set_request_status(KErrNone);
     }
 
@@ -312,7 +314,7 @@ namespace eka2l1 {
             return;
         }
 
-        session_paths[static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id())] = *new_path;
+        session_paths[ctx.msg->msg_session->unique_id()] = *new_path;
         ctx.set_request_status(KErrNone);
     }
 
@@ -331,7 +333,9 @@ namespace eka2l1 {
         uint32_t uid = std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type());
         std::string hex_id = common::to_string(uid, std::hex);
 
-        session_paths[ctx.msg->msg_session->unique_id()] = drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+        session_paths[ctx.msg->msg_session->unique_id()] = 
+            drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+
         ctx.set_request_status(KErrNone);
     }
 
@@ -352,9 +356,10 @@ namespace eka2l1 {
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
         if (ctx.sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
-            ctx.write_arg_pkg<uint64_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
+            ctx.write_arg_pkg<uint64_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
         } else {
-            ctx.write_arg_pkg<uint32_t>(0, std::dynamic_pointer_cast<file>(node->vfs_node)->size());
+            ctx.write_arg_pkg<uint32_t>(0, 
+                static_cast<std::uint32_t>(std::reinterpret_pointer_cast<file>(node->vfs_node)->size()));
         }
 
         ctx.set_request_status(KErrNone);
@@ -382,7 +387,7 @@ namespace eka2l1 {
         }
 
         int size = *ctx.get_arg<int>(0);
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
         std::size_t fsize = f->size();
 
         if (size == fsize) {
@@ -438,7 +443,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         TDriveNumber drv = static_cast<TDriveNumber>(std::towlower(f->file_name()[0]) - 'a');
         TDriveInfo info;
@@ -473,7 +478,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         ctx.write_arg(0, eka2l1::filename(f->file_name(), true));
         ctx.set_request_status(KErrNone);
@@ -494,7 +499,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         ctx.write_arg(0, f->file_name());
         ctx.set_request_status(KErrNone);
@@ -515,7 +520,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         std::optional<int> seek_mode = ctx.get_arg<int>(1);
         std::optional<int> seek_off = ctx.get_arg<int>(0);
@@ -537,14 +542,21 @@ namespace eka2l1 {
             break;
         }
 
-        size_t seek_res = vfs_file->seek(*seek_off, vfs_seek_mode);
+        // This should also support negative
+        std::uint64_t seek_res = vfs_file->seek(*seek_off, vfs_seek_mode);
 
-        if (seek_res == 0xFFFFFFFF) {
-            ctx.set_request_status(KErrGeneral);
+        if (seek_res == 0xFFFFFFFFFFFFFFFF) {
+            ctx.set_request_status(KErrArgument);
             return;
         }
 
-        ctx.write_arg_pkg(3, seek_res);
+        // Slot order: (0) seek offset, (1) seek mode, (2) new pos
+        
+        if ((int)ctx.sys->get_symbian_version_use() >= (int)epocver::epoc10) {
+            ctx.write_arg_pkg(2, seek_res);
+        } else {
+            ctx.write_arg_pkg(2, static_cast<TInt>(seek_res));
+        }
 
         ctx.set_request_status(KErrNone);
     }
@@ -564,7 +576,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         if (!vfs_file->flush()) {
             ctx.set_request_status(KErrGeneral);
@@ -589,11 +601,12 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
         auto new_path = ctx.get_arg<std::u16string>(0);
 
         if (!new_path) {
             ctx.set_request_status(KErrArgument);
+            return;
         }
 
         std::u16string ss_path = session_paths[ctx.msg->msg_session->unique_id()];
@@ -642,7 +655,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         if (!(node->open_mode & WRITE_MODE)) {
             ctx.set_request_status(KErrAccessDenied);
@@ -652,18 +665,19 @@ namespace eka2l1 {
         int write_len = *ctx.get_arg<int>(1);
         int write_pos_provided = *ctx.get_arg<int>(2);
 
-        int write_pos = 0;
-        uint64_t last_pos = vfs_file->tell();
+        std::uint64_t write_pos = 0;
+        std::uint64_t last_pos = vfs_file->tell();
         bool should_reseek = false;
 
         write_pos = last_pos;
 
         // Low MaxUint64
-        if (write_pos_provided != -0x80000000) {
+        if (write_pos_provided != static_cast<int>(0x80000000)) {
             write_pos = write_pos_provided;
         }
 
-        vfs_file->seek(write_pos, file_seek_mode::beg);
+        // If this write pos is beyond the current end of file, use last pos
+        vfs_file->seek(write_pos > last_pos ? last_pos : write_pos, file_seek_mode::beg);
         size_t wrote_size = vfs_file->write_file(&(*write_data)[0], 1, write_len);
 
         LOG_TRACE("File {} wroted with size: {}",
@@ -687,7 +701,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
 
         if (!(node->open_mode & READ_MODE)) {
             ctx.set_request_status(KErrAccessDenied);
@@ -697,14 +711,14 @@ namespace eka2l1 {
         int read_len = *ctx.get_arg<int>(1);
         int read_pos_provided = *ctx.get_arg<int>(2);
 
-        int read_pos = 0;
-        uint64_t last_pos = vfs_file->tell();
+        std::uint64_t read_pos = 0;
+        std::uint64_t last_pos = vfs_file->tell();
         bool should_reseek = false;
 
         read_pos = last_pos;
 
         // Low MaxUint64
-        if (read_pos_provided != -0x80000000) {
+        if (read_pos_provided != static_cast<int>(0x80000000)) {
             read_pos = read_pos_provided;
         }
 
@@ -713,7 +727,7 @@ namespace eka2l1 {
         uint64_t size = vfs_file->size();
 
         if (size - read_pos < read_len) {
-            read_len = size - last_pos;
+            read_len = static_cast<int>(size - last_pos);
         }
 
         std::vector<char> read_data;
@@ -742,7 +756,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::dynamic_pointer_cast<file>(node->vfs_node);
+        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
         std::u16string path = vfs_file->file_name();
 
         vfs_file->close();
@@ -789,7 +803,24 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_INFO("Opening file: {}", common::ucs2_to_utf8(*name_res));
+        *name_res = eka2l1::absolute_path(*name_res, 
+            session_paths[ctx.msg->msg_session->unique_id()]);
+
+        std::string name_utf8 = common::ucs2_to_utf8(*name_res);
+
+        {
+            auto file_dir = eka2l1::file_directory(*name_res);
+
+            // Do a check to return KErrPathNotFound
+            if (!ctx.sys->get_io_system()->exist(file_dir)) {
+                LOG_TRACE("Base directory of file {} not found", name_utf8);
+
+                ctx.set_request_status(KErrPathNotFound);
+                return;
+            }
+        }
+
+        LOG_INFO("Opening file: {}", name_utf8);
 
         int handle = new_node(ctx.sys->get_io_system(), ctx.msg->own_thr, *name_res,
             *open_mode_res, overwrite, temporary);
@@ -814,8 +845,15 @@ namespace eka2l1 {
             return;
         }
 
+        // LOG_TRACE("Opening exist {}", common::ucs2_to_utf8(*name_res));
+
+        *name_res = eka2l1::absolute_path(*name_res, 
+            session_paths[ctx.msg->msg_session->unique_id()]);
+
         // Don't open file if it doesn't exist
         if (!ctx.sys->get_io_system()->exist(*name_res)) {
+            LOG_TRACE("IO component not exists: {}", common::ucs2_to_utf8(*name_res));
+            
             ctx.set_request_status(KErrNotFound);
             return;
         }
@@ -837,11 +875,13 @@ namespace eka2l1 {
 
         io_system *io = ctx.sys->get_io_system();
 
-        auto full_path = eka2l1::absolute_path(
-            session_paths[ctx.msg->msg_session->unique_id()], *dir_create);
+        auto full_path = eka2l1::absolute_path(*dir_create, 
+            session_paths[ctx.msg->msg_session->unique_id()]);
 
         if (!io->exist(full_path)) {
-            ctx.set_request_status(KErrNotFound);
+            LOG_TRACE("Directory for temp file not exists", common::ucs2_to_utf8(full_path));
+
+            ctx.set_request_status(KErrPathNotFound);
             return;
         }
 
@@ -1022,6 +1062,7 @@ namespace eka2l1 {
             new_node.temporary = temporary;
 
             if (!new_node.vfs_node) {
+                LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
                 return KErrNotFound;
             }
 
@@ -1034,7 +1075,8 @@ namespace eka2l1 {
             new_node.share_mode = share_mode;
             new_node.own_process = sender->owning_process();
 
-            return nodes_table.add_node(new_node);
+            std::size_t h = nodes_table.add_node(new_node);
+            return (h == 0) ? KErrNoMemory : static_cast<int>(h);
         }
 
         if ((int)share_mode != -1 && share_mode != cache_node->share_mode) {
@@ -1080,29 +1122,30 @@ namespace eka2l1 {
             // Check if process is the same
             // Deninded if mode is exclusive
             if (cache_node->own_process != sender->owning_process()) {
+                LOG_TRACE("File open mode is exclusive, denide access");
                 return KErrAccessDenied;
             }
-
-            // If we have the same open mode as the cache node, don't create new, returns this :D
-            if (cache_node->open_mode == real_mode) {
-                return cache_node->id;
-            }
-
-            fs_node new_node;
-            new_node.vfs_node = io->open_file(name, access_mode);
-
-            if (!new_node.vfs_node) {
-                return KErrNotFound;
-            }
-
-            new_node.mix_mode = real_mode;
-            new_node.open_mode = access_mode;
-            new_node.share_mode = share_mode;
-
-            return nodes_table.add_node(new_node);
         }
 
-        return KErrGeneral;
+        // If we have the same open mode as the cache node, don't create new, returns this :D
+        if (cache_node->open_mode == real_mode) {
+            return cache_node->id;
+        }
+
+        fs_node new_node;
+        new_node.vfs_node = io->open_file(name, access_mode);
+
+        if (!new_node.vfs_node) {
+            LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
+            return KErrNotFound;
+        }
+
+        new_node.mix_mode = real_mode;
+        new_node.open_mode = access_mode;
+        new_node.share_mode = share_mode;
+
+        std::size_t h = nodes_table.add_node(new_node);
+        return (h == 0) ? KErrNoMemory : static_cast<int>(h);
     }
 
     bool is_e32img(symfile f) {
@@ -1168,7 +1211,7 @@ namespace eka2l1 {
         }
 
         epoc::TEntry entry;
-        entry.aSize = entry_hle->size;
+        entry.aSize = static_cast<std::uint32_t>(entry_hle->size);
 
         if (entry_hle->has_raw_attribute) {
             entry.aAttrib = entry_hle->raw_attribute;
@@ -1184,11 +1227,11 @@ namespace eka2l1 {
             if (dir) {
                 entry.aAttrib |= KEntryAttDir;
             } else {
-                entry.aAttrib |= KEntryAttNormal;
+                entry.aAttrib |= KEntryAttArchive;
             }
         }
 
-        entry.aNameLength = fname.length();
+        entry.aNameLength = static_cast<std::uint32_t>(fname.length());
         entry.aSizeHigh = 0; // This is never used, since the size is never >= 4GB as told by Nokia Doc
 
         memcpy(entry.aName, fname.data(), entry.aNameLength * 2);
@@ -1220,7 +1263,7 @@ namespace eka2l1 {
         node.vfs_node = ctx.sys->get_io_system()->open_dir(*dir, attrib);
 
         if (!node.vfs_node) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(KErrPathNotFound);
             return;
         }
 
@@ -1235,7 +1278,7 @@ namespace eka2l1 {
 
         LOG_TRACE("UID requested: 0x{}, 0x{}, 0x{}", type.uid[0], type.uid[1], type.uid[2]);
 
-        ctx.write_arg_pkg<int>(3, dir_handle);
+        ctx.write_arg_pkg<int>(3, static_cast<int>(dir_handle));
         ctx.set_request_status(KErrNone);
     }
 
@@ -1274,7 +1317,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(
+        std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(
             dir_node->vfs_node);
 
         epoc::TEntry entry;
@@ -1301,12 +1344,12 @@ namespace eka2l1 {
             if (info->type == io_component_type::dir) {
                 entry.aAttrib &= KEntryAttDir;
             } else {
-                entry.aAttrib &= KEntryAttNormal;
+                entry.aAttrib &= KEntryAttArchive;
             }
         }
 
-        entry.aSize = info->size;
-        entry.aNameLength = info->full_path.length();
+        entry.aSize = static_cast<std::uint32_t>(info->size);
+        entry.aNameLength = static_cast<std::uint32_t>(info->full_path.length());
 
         // TODO: Convert this using a proper function
         std::u16string path_u16(info->full_path.begin(), info->full_path.end());
@@ -1333,13 +1376,15 @@ namespace eka2l1 {
             return;
         }
 
-        std::shared_ptr<directory> dir = std::dynamic_pointer_cast<directory>(dir_node->vfs_node);
+        std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(dir_node->vfs_node);
 
-        epoc::TDes8 *entry_arr = reinterpret_cast<epoc::TDes8 *>(ctx.msg->own_thr->owning_process()->get_ptr_on_addr_space(*entry_arr_vir_ptr));
-        epoc::TBuf8 *entry_arr_buf = reinterpret_cast<epoc::TBuf8 *>(entry_arr);
+        process_ptr own_pr = ctx.msg->own_thr->owning_process();
 
-        TUint8 *entry_buf = reinterpret_cast<TUint8 *>(entry_arr->Ptr(ctx.msg->own_thr->owning_process()));
-        TUint8 *entry_buf_end = entry_buf + entry_arr_buf->iMaxLength;
+        epoc::des8 *entry_arr = ptr<epoc::des8>(*entry_arr_vir_ptr).get(own_pr);
+        epoc::buf_des<char> *entry_arr_buf = reinterpret_cast<epoc::buf_des<char>*>(entry_arr);
+
+        TUint8 *entry_buf = reinterpret_cast<TUint8 *>(entry_arr->get_pointer(own_pr));
+        TUint8 *entry_buf_end = entry_buf + entry_arr_buf->max_length;
         TUint8 *entry_buf_org = entry_buf;
 
         size_t queried_entries = 0;
@@ -1350,8 +1395,7 @@ namespace eka2l1 {
             std::optional<entry_info> info = dir->peek_next_entry();
 
             if (!info) {
-                entry_arr->SetLength(
-                    ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
+                entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
 
                 ctx.set_request_status(KErrEof);
 
@@ -1378,12 +1422,12 @@ namespace eka2l1 {
                 if (info->type == io_component_type::dir) {
                     entry.aAttrib &= KEntryAttDir;
                 } else {
-                    entry.aAttrib &= KEntryAttNormal;
+                    entry.aAttrib &= KEntryAttArchive;
                 }
             }
 
-            entry.aSize = info->size;
-            entry.aNameLength = info->name.length();
+            entry.aSize = static_cast<std::uint32_t>(info->size);
+            entry.aNameLength = static_cast<std::uint32_t>(info->name.length());
 
             // TODO: Convert this using a proper function
             std::u16string path_u16(info->name.begin(), info->name.end());
@@ -1407,7 +1451,7 @@ namespace eka2l1 {
             dir->get_next_entry();
         }
 
-        entry_arr->SetLength(ctx.msg->own_thr->owning_process(), entry_buf - entry_buf_org);
+        entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
 
         LOG_TRACE("Queried entries: 0x{:x}", queried_entries);
 
@@ -1476,7 +1520,7 @@ namespace eka2l1 {
         }
 
         bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]),
-            dlist.size());
+            static_cast<std::uint32_t>(dlist.size()));
 
         if (!success) {
             ctx.set_request_status(KErrArgument);
@@ -1688,4 +1732,9 @@ namespace eka2l1 {
 
         ctx.set_request_status(KErrNone);
     }
+
+    void fs_server::set_should_notify_failure(service::ipc_context ctx) {
+        should_notify_failures = static_cast<bool>(ctx.get_arg<int>(0));
+        ctx.set_request_status(KErrNone);
+    }       
 }

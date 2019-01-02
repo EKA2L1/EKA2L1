@@ -308,6 +308,27 @@ namespace eka2l1 {
                     thread_context context;
 
                     save_context(context);
+
+                    if (mem->get_real_pointer(get_pc())) {
+                        const std::string disassemble_inst = asmdis->disassemble(
+                            reinterpret_cast<const uint8_t *>(mem->get_real_pointer(get_pc())),
+                            (get_cpsr() & 0x20) ? 2 : 4, get_pc(),
+                            (get_cpsr() & 0x20) ? true : false);
+
+                        LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (get_cpsr() & 0x20) ?
+                            mem->read<std::uint16_t>(get_pc()) : mem->read<std::uint32_t>(get_pc()));
+                    }
+
+                    if (mem->get_real_pointer(get_lr() - get_lr() % 2)) {
+                        const std::string disassemble_inst = asmdis->disassemble(
+                            reinterpret_cast<const uint8_t *>(mem->get_real_pointer(get_lr() - get_lr() % 2)),
+                            get_lr() % 2 != 0 ? 2 : 4, get_lr() - get_lr() % 2,
+                            get_lr() % 2 != 0 ? true : false);
+
+                        LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, 
+                            get_lr() % 2 != 0 ? mem->read<std::uint16_t>(get_lr() - get_lr() % 2) : mem->read<std::uint32_t>(get_lr() - get_lr() % 2));
+                    }
+
                     dump_context(context);
 
                     system *sys = get_lib_manager()->get_sys();
@@ -584,6 +605,11 @@ namespace eka2l1 {
 
         void arm_unicorn::clear_instruction_cache() {
             // Empty
+            LOG_ERROR("Unicorn Engine: clear inst cache not supported");
+        }
+
+        void arm_unicorn::imb_range(address addr, std::size_t size) {
+            LOG_ERROR("Unicorn Engine: IMBRANGE not supported");
         }
     }
 }

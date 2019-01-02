@@ -47,6 +47,10 @@ namespace eka2l1 {
 
     using thread_ptr = std::shared_ptr<kernel::thread>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
+
+    namespace common {
+        class chunkyseri;
+    }
 }
 
 namespace eka2l1::kernel {
@@ -60,6 +64,8 @@ namespace eka2l1::kernel {
     struct pass_arg {
         bool                      used = false;
         std::vector<std::uint8_t> data;
+
+        void do_state(common::chunkyseri &seri);
     };
 
     struct security_info {
@@ -88,11 +94,25 @@ namespace eka2l1::kernel {
         pending
     };
 
+    struct memory_info {
+        address rt_code_addr;
+        address rt_code_size;
+
+        address rt_const_data_addr;
+        address rt_const_data_size;
+
+        address rt_initialized_data_addr;
+        address rt_initialized_data_size;
+
+        address rt_bss_addr;
+        address rt_bss_size;
+    };
+
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
 
-        uint32_t uid, primary_thread;
+        uint32_t puid, primary_thread;
 
         std::string process_name;
 
@@ -120,9 +140,13 @@ namespace eka2l1::kernel {
             thread_ptr requester;
             eka2l1::ptr<epoc::request_status> request_status;
 
+            logon_request_form() = default;
+
             explicit logon_request_form(thread_ptr thr, eka2l1::ptr<epoc::request_status> rsts)
                 : requester(thr)
                 , request_status(rsts) {}
+
+            void do_state(kernel_system* kern, common::chunkyseri &seri);
         };
 
         process_exit_type exit_type;
@@ -136,7 +160,7 @@ namespace eka2l1::kernel {
 
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
-            uint32_t heap_max);
+            uint32_t heap_max, uint32_t pri);
 
     public:
         uint32_t increase_thread_count() {
@@ -154,7 +178,7 @@ namespace eka2l1::kernel {
 
         void finish_logons();
 
-        process() = default;
+        process(kernel_system *kern, memory_system *mem);
 
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
@@ -181,6 +205,8 @@ namespace eka2l1::kernel {
 
         void *get_ptr_on_addr_space(address addr);
 
+        void get_memory_info(memory_info &info);
+
         std::u16string get_cmd_args() const {
             return cmd_args;
         }
@@ -190,7 +216,7 @@ namespace eka2l1::kernel {
         }
 
         uint32_t get_uid() {
-            return uid;
+            return puid;
         }
 
         loader::e32img_ptr get_e32img() {
@@ -233,5 +259,7 @@ namespace eka2l1::kernel {
         void set_exit_type(const process_exit_type t) {
             exit_type = t;
         }
+
+        void do_state(common::chunkyseri &seri);
     };
 }

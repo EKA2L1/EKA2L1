@@ -20,13 +20,15 @@
 
 #pragma once
 
-#include <common/buffer.h>
-
 #include <cstdint>
 #include <string>
 
 namespace eka2l1 {
     class kernel_system;
+
+    namespace common {
+        class chunkyseri;
+    }
 
     namespace kernel {
         /*! \brief Ownership type for handle */
@@ -87,9 +89,14 @@ namespace eka2l1 {
 
             int access_count = 0;
 
-            uint64_t uid;
+            uint32_t uid;
 
+            kernel_obj(kernel_system *kern) 
+                : kern(kern) { 
+            }
+            
         public:
+
             virtual ~kernel_obj() {}
 
             /*! \brief Get the name of the object.
@@ -123,7 +130,7 @@ namespace eka2l1 {
 
             int get_access_count() { return access_count; }
 
-            std::uint64_t unique_id() const {
+            std::uint32_t unique_id() const {
                 return uid;
             }
 
@@ -134,8 +141,7 @@ namespace eka2l1 {
                 obj_name = new_name;
             }
 
-            virtual void write_object_to_snapshot(common::wo_buf_stream &stream);
-            virtual void do_state(common::ro_buf_stream &stream);
+            virtual void do_state(common::chunkyseri &seri);
         };
     }
 }

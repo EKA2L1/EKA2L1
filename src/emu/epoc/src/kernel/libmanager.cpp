@@ -29,6 +29,7 @@
 #include <epoc/configure.h>
 
 #ifdef ENABLE_SCRIPTING
+#include <manager/manager.h>
 #include <manager/script_manager.h>
 #endif
 
@@ -49,10 +50,9 @@ namespace eka2l1 {
             return true;
         }
 
-        bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, 
-            uint32_t data_delta) {
+        bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == loader::relocation_type::reserved) {
-                return true;
+               return true;
             }
 
             // What is in it ?? :))
@@ -62,18 +62,12 @@ namespace eka2l1 {
             case loader::relocation_type::text:
                 write(dest_ptr, reloc_offset + code_delta);
                 break;
-            case loader::relocation_type::data:
-                // TODO: Remove the hack
-                // This hack along with the chunk 0x400000 hack make a complete
-                // resolve about this situation. It's not from our side, it's from
-                // the broken post-linker tool.
-                if (*dest_ptr == 0x400000) {
-                    LOG_WARN("Destination relocation has value of 0x400000, ignored");
-                } else {
-                    write(dest_ptr, reloc_offset + data_delta);
-                }
 
+            case loader::relocation_type::data:
+                // This is relocation for dynamic data.                
+                write(dest_ptr, reloc_offset + data_delta);
                 break;
+
             case loader::relocation_type::inffered:
             default:
                 LOG_WARN("Relocation not properly handle: {}", (int)type);
@@ -97,6 +91,9 @@ namespace eka2l1 {
                     uint8_t *dest_ptr = virtual_addr + dest_addr;
 
                     loader::relocation_type rel_type = (loader::relocation_type)(rel_info & 0xF000);
+
+                    // Compare with petran in case there are problems
+                    // LOG_TRACE("{:x}", virtual_addr);
 
                     if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
                         LOG_WARN("Relocate fail at page: {}", i);
@@ -147,7 +144,7 @@ namespace eka2l1 {
                     mngr.open_e32img(img);
 
                     const std::uint32_t data_start = img->header.data_offset;
-                    const std::uint32_t data_end = data_start + img->header.data_size;
+                    const std::uint32_t data_end = data_start + img->header.data_size + img->header.bss_size;
 
                     const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
                     const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
@@ -208,7 +205,7 @@ namespace eka2l1 {
                     mngr.open_e32img(img);
 
                     const std::uint32_t data_start = img->header.data_offset;
-                    const std::uint32_t data_end = data_start + img->header.data_size;
+                    const std::uint32_t data_end = data_start + img->header.data_size + img->header.bss_size;
 
                     const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
                     const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
@@ -268,14 +265,16 @@ namespace eka2l1 {
         }
 
         bool import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+            std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
+            
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
                 prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            img->data_chunk = kern->create_chunk("", 0, common::align(img->header.data_size, mem->get_page_size()), common::align(img->header.data_size, mem->get_page_size()), 
-                prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+            img->data_chunk = kern->create_chunk("", 0, common::align(data_seg_size, mem->get_page_size()), common::align(data_seg_size, mem->get_page_size()), 
+                prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            chunk_ptr code_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
-            chunk_ptr data_chunk_ptr = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
+            chunk_ptr code_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
+            chunk_ptr data_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
 
             uint32_t rtcode_addr = code_chunk_ptr->base().ptr_address();
             uint32_t rtdata_addr = data_chunk_ptr ? data_chunk_ptr->base().ptr_address() : 0;
@@ -303,9 +302,18 @@ namespace eka2l1 {
             }
 
             memcpy(ptr<void>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
+            std::uint8_t *dt_ptr = ptr<std::uint8_t>(rtdata_addr).get(mem); 
 
-            if (img->header.data_size)
-                memcpy(ptr<uint32_t>(rtdata_addr).get(mem), img->data.data() + img->header.data_offset, img->header.data_size);
+            if (img->header.data_size) {
+                // If there is initialized data, copy that
+                memcpy(dt_ptr + img->header.bss_size, img->data.data() + img->header.data_offset, 
+                    img->header.data_size);
+            }
+
+            // Definitely, there maybe bss, fill that with zero
+            // I usually depends on this to get my integer zero
+            // Filling zero from beginning of code segment, with size of bss size - 1
+            std::fill(dt_ptr, dt_ptr + img->header.bss_size, 0);
 
             if (img->epoc_ver == epocver::epoc9) {
                 for (auto &ib : img->import_section.imports) {
@@ -338,9 +346,9 @@ namespace eka2l1 {
                 tids.clear();
 
             if (ver == epocver::epoc6) {
-            #include <hle/epoc6_n.def>
+           //  #include <hle/epoc6_n.def>
             } else {
-            #include <hle/epoc9_n.def>
+            // #include <hle/epoc9_n.def>
             }
 
             #undef LIB
@@ -359,8 +367,8 @@ namespace eka2l1 {
             custom_stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            chunk_ptr stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stub));
-            chunk_ptr custom_stub_chunk_obj = std::dynamic_pointer_cast<kernel::chunk>(kern->get_kernel_obj(custom_stub));
+            chunk_ptr stub_chunk_obj = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stub));
+            chunk_ptr custom_stub_chunk_obj = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(custom_stub));
 
             stub_ptr = stub_chunk_obj->base().cast<uint32_t>();
             custom_stub_ptr = custom_stub_chunk_obj->base().cast<uint32_t>();
@@ -509,11 +517,11 @@ namespace eka2l1 {
 
         // Images are searched in
         // C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
-        loader::e32img_ptr lib_manager::load_e32img(const std::u16string &img_name) {
+        loader::e32img_ptr lib_manager::load_e32img(std::u16string img_name) {
             symfile img;
 
             // It's a full path
-            if (img_name.find(u":") == 1) {
+            if (eka2l1::has_root_name(img_name, true)) {
                 bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
 
                 img = io->open_file(img_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
@@ -525,6 +533,9 @@ namespace eka2l1 {
                 if (!img) {
                     return nullptr;
                 }
+            } else if (eka2l1::has_root_dir(img_name)) {
+                // Please just use the filename for searching
+                img_name = eka2l1::filename(img_name, true);
             }
 
             bool xip = false;
@@ -596,10 +607,10 @@ namespace eka2l1 {
             return e32imgs_cache[check].img;
         }
 
-        loader::romimg_ptr lib_manager::load_romimg(const std::u16string &rom_name, bool log_exports) {
+        loader::romimg_ptr lib_manager::load_romimg(std::u16string rom_name, bool log_exports) {
             symfile romimgf = nullptr;
 
-            if (rom_name.find(u":") == 1) {
+            if (eka2l1::has_root_name(rom_name, true)) {
                 bool should_append_ext = (eka2l1::path_extension(rom_name) == u"");
 
                 // Normally by default, Symbian should append the extension itself if no extension provided.
@@ -612,6 +623,8 @@ namespace eka2l1 {
                 if (!romimgf) {
                     return nullptr;
                 }
+            } else if (eka2l1::has_root_dir(rom_name, true)) {
+                rom_name = eka2l1::filename(rom_name, true);
             }
 
             if (!romimgf) {

@@ -21,7 +21,7 @@
 #include <scripting/cpu.h>
 #include <scripting/instance.h>
 
-#include <epoc/arm/arm_interface.h>
+#include <arm/arm_interface.h>
 #include <epoc/epoc.h>
 
 namespace eka2l1::scripting {

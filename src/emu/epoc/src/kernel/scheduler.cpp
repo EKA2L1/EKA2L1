@@ -81,8 +81,6 @@ namespace eka2l1 {
                 if (!oldt || oldt->owning_process() != newt->owning_process()) {
                     crr_process = newt->owning_process();
 
-                    // jitter->clear_instruction_cache();
-
                     memory_system *mem = kern->get_memory_system();
                     mem->set_current_page_table(crr_process->get_page_table());
                 }
@@ -90,7 +88,7 @@ namespace eka2l1 {
                 ready_threads.remove(newt);
                 jitter->load_context(crr_thread->ctx);
 
-                // LOG_TRACE("Switched to {}", crr_thread->name());
+                LOG_TRACE("Switched to {}", crr_thread->name());
             } else {
                 crr_thread = nullptr;
             }

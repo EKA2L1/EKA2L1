@@ -42,7 +42,12 @@ namespace eka2l1 {
         protected:
             void wake_next_thread();
 
-        public :
+        public:
+            mutex(kernel_system *kern)
+                : kernel_obj(kern) {
+                obj_type = kernel::object_type::mutex;
+            }
+
             mutex(kernel_system *kern, std::string name, bool init_locked,
                         kernel::access_type access = kernel::access_type::local_access);
 
@@ -72,11 +77,9 @@ namespace eka2l1 {
              * thread can claim the mutex manually. 
             */
             bool suspend_thread(thread *thr);
-
             bool unsuspend_thread(thread *thr);
 
-            void write_object_to_snapshot(common::wo_buf_stream &stream) override;
-            void do_state(common::ro_buf_stream &stream) override;
+            void do_state(common::chunkyseri &seri) override;
         };
     }
 }

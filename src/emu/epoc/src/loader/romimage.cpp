@@ -42,7 +42,7 @@ namespace eka2l1 {
 
             ptr<uint32_t> export_off(img.header.export_dir_address);
 
-            for (uint32_t i = 0; i < img.header.export_dir_count; i++) {
+            for (int32_t i = 0; i < img.header.export_dir_count; i++) {
                 auto export_addr = *export_off.get(mem);
                 img.exports.push_back(export_addr);
 

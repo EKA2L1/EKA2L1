@@ -25,8 +25,23 @@
 
 namespace eka2l1::drivers {
     bool driver_client::send_opcode(const int opcode, itc_context &ctx) {
-        driver->request_queue.push({ opcode, ctx });
+        if (already_locked) {
+            driver->request_queue.push_unsafe({ opcode, ctx });
+        } else {
+            driver->request_queue.push({ opcode, ctx });
+        }
+
         return true;
+    }
+
+    void driver_client::lock_driver_from_process()  {
+        driver->request_queue.lock.lock();
+        already_locked = true;
+    }
+
+    void driver_client::unlock_driver_from_process() {
+        driver->request_queue.lock.unlock();
+        already_locked = false;
     }
 
     void driver_client::sync_with_driver() {
@@ -49,18 +64,48 @@ namespace eka2l1::drivers {
     vec2 graphics_driver_client::screen_size() {
         // Synchronize call should directly use the client
         std::shared_ptr<graphics_driver> gdriver = 
-            std::dynamic_pointer_cast<graphics_driver>(driver);
+            std::reinterpret_pointer_cast<graphics_driver>(driver);
 
         return gdriver->get_screen_size();
+    }
+
+    void graphics_driver_client::set_screen_size(eka2l1::vec2 &s) {
+        itc_context context;
+        context.push(s);
+
+        send_opcode(graphics_driver_resize_screen, context);
+    }
+    
+    void graphics_driver_client::invalidate(eka2l1::rect &rect) {
+        itc_context context;
+        context.push(rect);
+
+        send_opcode(graphics_driver_invalidate, context);
+    }
+
+    void graphics_driver_client::end_invalidate() {
+        itc_context context;
+        send_opcode(graphics_driver_end_invalidate, context);
     }
 
     /*! \brief Clear the screen with color.
         \params color A RGBA vector 4 color
     */
-    void graphics_driver_client::clear(vecx<float, 4> color) {
+    void graphics_driver_client::clear(vecx<int, 4> color) {
         itc_context context;
-        context.push(color);
+        context.push(color[0]);
+        context.push(color[1]);
+        context.push(color[2]);
+        context.push(color[3]);
 
         send_opcode(graphics_driver_clear, context);
+    }
+
+    void graphics_driver_client::draw_text(eka2l1::rect rect, const std::string &str) {
+        itc_context context;
+        context.push(rect);
+        context.push_string(str);
+
+        send_opcode(graphics_driver_draw_text_box, context);
     }
 }

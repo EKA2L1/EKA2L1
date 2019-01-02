@@ -1,0 +1,27 @@
+/*
+============================================================================
+ Name		: BitmapTest.mmp
+ Author	  : 
+ Copyright   : 2019 pent0
+ Description : This is the project specification file for BitmapTest.
+============================================================================
+*/
+
+TARGET		  BitmapTest.exe
+TARGETTYPE	  exe
+UID			 0 0xed8fa118
+
+SYSTEMINCLUDE   \epoc32\include
+
+DEBUGGABLE_UDEBONLY
+
+SOURCEPATH ..\src
+SOURCE main.cpp
+
+LIBRARY euser.lib fbscli.lib ws32.lib efsrv.lib efile.lib
+START BITMAP SmileyFace.mbm
+	TARGETPATH assets
+	HEADER
+	SOURCEPATH ..\assets
+	SOURCE c24 SmileyFace.bmp
+END

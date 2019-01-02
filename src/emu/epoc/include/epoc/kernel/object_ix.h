@@ -6,7 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <memory>
-#include <stack>
+#include <vector>
 
 namespace eka2l1 {
     using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
@@ -52,7 +52,7 @@ namespace eka2l1 {
             size_t next_instance;
 
             std::array<object_ix_record, 0x100> objects;
-            std::stack<std::uint32_t> handles;
+            std::vector<std::uint32_t> handles;
 
             handle_array_owner owner;
 
@@ -63,6 +63,8 @@ namespace eka2l1 {
         public:
             object_ix() {}
             object_ix(kernel_system *kern, handle_array_owner owner);
+
+            void do_state(common::chunkyseri &seri);
 
             /*! \brief Add new object to the ix. 
              * \returns Handle to the object

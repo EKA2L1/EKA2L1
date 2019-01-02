@@ -131,6 +131,8 @@ namespace eka2l1 {
             void unmap_memory(address addr, size_t size) override;
 
             void clear_instruction_cache() override;
+
+            void imb_range(address addr, std::size_t size) override;
         };
     }
 }

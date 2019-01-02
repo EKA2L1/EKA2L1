@@ -23,6 +23,8 @@
 #include <scripting/thread.h>
 #include <scripting/process.h>
 
+#include <epoc/kernel/thread.h>
+
 namespace scripting = eka2l1::scripting;
 
 namespace eka2l1::scripting {
@@ -66,12 +68,12 @@ namespace eka2l1::scripting {
         return thread_handle->get_leave_depth();
     }
 
-    kernel::thread_state thread::get_state() {
-        return thread_handle->current_state();
+    int thread::get_state() {
+        return static_cast<int>(thread_handle->current_state());
     }
 
-    kernel::thread_priority thread::get_priority() {
-        return thread_handle->get_priority();
+    int thread::get_priority() {
+        return static_cast<int>(thread_handle->get_priority());
     }
 
     std::unique_ptr<scripting::process> thread::get_owning_process() {

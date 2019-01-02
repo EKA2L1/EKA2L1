@@ -36,7 +36,10 @@
 
 #include <epoc/kernel/libmanager.h>
 
+#include <common/algorithm.h>
+
 #include <e32err.h>
+#include <cwctype>
 
 namespace eka2l1 {
     void loader_server::load_process(eka2l1::service::ipc_context ctx) {
@@ -58,6 +61,13 @@ namespace eka2l1 {
         std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
         
         LOG_TRACE("Trying to summon: {}", name_process);
+
+        std::u16string pext = path_extension(*process_name16);
+
+        if (pext.empty()) {
+            // Just append it
+            *process_name16 += u".exe";    
+        }
 
         auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
 
@@ -87,7 +97,7 @@ namespace eka2l1 {
 
             LOG_ERROR("Can't found or load process executable: {}", name_process);
 
-            ctx.set_request_status(KErrUnknown);
+            ctx.set_request_status(KErrNotFound);
             return;
         }
 
@@ -129,6 +139,15 @@ namespace eka2l1 {
         }
 
         std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
+        std::u16string pext = path_extension(*lib_path);
+
+        // This hack prevents the lib manager from loading wrong file.
+        // For example, if there is no extension, and the file is load must be DLL, and two files with same name
+        // Wrong file might be loaded.
+        if (pext.empty()) {
+            // Just append it
+            *lib_path += u".dll";
+        }
 
         loader::e32img_ptr e32img_ptr = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
 
@@ -137,7 +156,7 @@ namespace eka2l1 {
 
             if (!img_ptr) {
                 LOG_TRACE("Invalid library provided {}", lib_name);
-                ctx.set_request_status(KErrArgument);
+                ctx.set_request_status(KErrNotFound);
 
                 return;
             }
@@ -178,8 +197,8 @@ namespace eka2l1 {
 
     void loader_server::get_info(service::ipc_context ctx) {
         std::optional<utf16_str> lib_name = ctx.get_arg<utf16_str>(1);
-        epoc::TDes8 *buffer =
-            eka2l1::ptr<epoc::TDes8>(ctx.msg->args.args[2]).get(ctx.sys->get_memory_system());
+        epoc::des8 *buffer =
+            eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 
         if (!lib_name || !buffer) {
             ctx.set_request_status(KErrArgument);
@@ -187,7 +206,7 @@ namespace eka2l1 {
         }
 
         // Check the buffer size
-        if (buffer->iMaxLength < sizeof(epoc::lib_info)) {
+        if (buffer->max_length < sizeof(epoc::lib_info)) {
             ctx.set_request_status(KErrNoMemory);
             return;
         }
@@ -222,7 +241,7 @@ namespace eka2l1 {
             linfo.major = rimg->header.major;
             linfo.minor = rimg->header.minor;
 
-            if (buffer->iMaxLength >= sizeof(epoc::lib_info2)) {
+            if (buffer->max_length >= sizeof(epoc::lib_info2)) {
                 epoc::lib_info2 linfo2;
                 memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
 
@@ -255,7 +274,7 @@ namespace eka2l1 {
         linfo.major = eimg->header.major;
         linfo.minor = eimg->header.minor;
 
-        if (buffer->iMaxLength >= sizeof(epoc::lib_info2)) {
+        if (buffer->max_length >= sizeof(epoc::lib_info2)) {
             epoc::lib_info2 linfo2;
             memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
 

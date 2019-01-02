@@ -7,8 +7,12 @@ endif()
 add_library(manager
 	include/manager/manager.h
 	include/manager/package_manager.h
+	include/manager/sis_script_interpreter.h
+	include/manager/sis_v1_installer.h
 	src/manager.cpp
 	src/package_manager.cpp
+	src/sis_script_interpreter.cpp
+	src/sis_v1_installer.cpp
 	${SCRIPT_MANAGER_FILES})
 
 target_include_directories(manager PUBLIC include)
@@ -19,9 +23,9 @@ target_link_libraries(manager PUBLIC common)
 
 if (ENABLE_SCRIPTING_ABILITY)
 	target_link_libraries(manager PUBLIC pybind11::embed)
-	target_link_libraries(manager PRIVATE symemu)
+	target_link_libraries(manager PRIVATE symemu epockern)
 
-	if (not MSVC)
+	if (NOT MSVC)
 		target_link_libraries(manager PRIVATE stdc++fs)
 	endif()
 endif (ENABLE_SCRIPTING_ABILITY)

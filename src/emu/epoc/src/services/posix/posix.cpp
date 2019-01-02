@@ -72,10 +72,10 @@ namespace eka2l1 {
 
         if (free_slot == files.end()) {
             files.push_back(nullptr);
-            return files.size();
+            return static_cast<fid>(files.size());
         }
 
-        return std::distance(files.begin(), free_slot) + 1;
+        return static_cast<fid>(std::distance(files.begin(), free_slot)) + 1;
     }
 
     fid posix_file_manager::open(const std::u16string &path, const int mode, int &terrno) {
@@ -186,7 +186,7 @@ namespace eka2l1 {
 
         entry_info info = *io->get_entry_info(full_path);
 
-        filestat->st_size = static_cast<_off_t>(info.size);
+        filestat->st_size = static_cast<off_t>(info.size);
         filestat->st_mode = static_cast<decltype(filestat->st_mode)>(0777);
         filestat->st_mtime = info.last_write / 1000000000;
     }
@@ -334,7 +334,8 @@ namespace eka2l1 {
             mode = eka2l1::file_seek_mode::end;
         }
 
-        params->ret = file_manager.seek(params->fid, params->pint[0], mode, *errnoptr);
+        params->ret = 
+            static_cast<TInt>(file_manager.seek(params->fid, params->pint[0], mode, *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
@@ -357,7 +358,8 @@ namespace eka2l1 {
 
     void posix_server::read(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
-        params->ret = file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr);
+        params->ret = 
+            static_cast<TInt>(file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
@@ -368,7 +370,8 @@ namespace eka2l1 {
 
     void posix_server::write(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
-        params->ret = file_manager.write(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr);
+        params->ret = static_cast<TInt>(
+            file_manager.write(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;

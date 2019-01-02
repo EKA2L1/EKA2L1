@@ -42,8 +42,7 @@ namespace eka2l1 {
 
             bool attached();
 
-            void write_object_to_snapshot(common::wo_buf_stream &stream) override;
-            void do_state(common::ro_buf_stream &stream) override;
+            void do_state(common::chunkyseri &seri) override;
         };
     }
 }

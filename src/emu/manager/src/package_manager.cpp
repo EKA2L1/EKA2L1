@@ -22,8 +22,11 @@
 #include <common/path.h>
 
 #include <epoc/loader/sis.h>
-#include <epoc/loader/sis_script_interpreter.h>
+
+#include <manager/sis_script_interpreter.h>
+#include <manager/sis_v1_installer.h>
 #include <manager/package_manager.h>
+
 #include <epoc/vfs.h>
 
 #include <fstream>
