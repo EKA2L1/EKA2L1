@@ -779,7 +779,7 @@ namespace eka2l1::epoc {
             irect = *reinterpret_cast<invalidate_rect*>(cmd.data_ptr);
 
             // Invalidate needs redraw
-            client->queue_redraw(epoc::redraw_event { 0, irect.in_top_left, irect.in_bottom_right });
+            redraw_evt_handle = client->queue_redraw(epoc::redraw_event { 0, irect.in_top_left, irect.in_bottom_right });
             ctx.set_request_status(KErrNone);
 
             break;
@@ -794,7 +794,12 @@ namespace eka2l1::epoc {
                 }
             }
 
-            LOG_TRACE("Begin redraw!");            
+            LOG_TRACE("Begin redraw!");
+
+            // Cancel pending redraw event, since by using this,
+            // we already starts one
+            redraw_evt_handle ? client->deque_redraw(redraw_evt_handle) : 0;
+
             ctx.set_request_status(KErrNone);
 
             break;
