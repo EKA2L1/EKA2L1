@@ -109,6 +109,7 @@ add_library(epocservs
     src/services/ui/eikappui.cpp
     src/services/ui/oom_app.cpp
     src/services/window/bitmap.cpp
+    src/services/window/fifo.cpp
     src/services/window/window.cpp
     src/ipc.cpp
 )
