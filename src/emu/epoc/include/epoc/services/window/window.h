@@ -127,44 +127,6 @@ namespace eka2l1::epoc {
         epoc::window *user;
     };
 
-    struct pointer_event {
-        event_type evtype;
-        event_modifier modifier;
-        eka2l1::vec2 pos;
-        eka2l1::vec2 parent_pos;
-    };
-
-    struct adv_pointer_event: public pointer_event {
-        int spare1;
-        int spare2;
-        int pos_z;
-        std::uint8_t ptr_num; // multi touch
-    };
-
-    enum pointer_filter_type {
-        pointer_enter = 0x01,   ///< In/out
-        pointer_move = 0x02,
-        pointer_drag = 0x04,
-        pointer_simulated_event = 0x08,
-        all = pointer_move | pointer_simulated_event
-    };
-
-    struct event {
-        int type;
-        std::uint32_t handle;
-        std::uint64_t time;
-
-        // TODO: Should be only pointer event with epoc < 9.
-        // For epoc9 there shouldnt be a pointer number, since there is no multi touch
-        adv_pointer_event evt;
-    };
-
-    struct redraw_event {
-        std::uint32_t handle;
-        vec2 top_left;
-        vec2 bottom_right;
-    };
-
     struct pixel_twips_and_rot {
         eka2l1::vec2 pixel_size;
         eka2l1::vec2 twips_size;
