@@ -407,8 +407,13 @@ namespace eka2l1::epoc {
         std::uint32_t total_group { 0 };
 
     public:    
-        notify_info redraw_req_info;
-        notify_info event_req_info;
+        void add_redraw_listener(notify_info nof) {
+            redraws.set_listener(nof);
+        }
+
+        void add_event_listener(notify_info nof) {
+            events.set_listener(nof);
+        }
 
         void add_event_mod_notifier_user(epoc::event_mod_notifier_user nof);
         void add_event_screen_change_user(epoc::event_screen_change_user nof);

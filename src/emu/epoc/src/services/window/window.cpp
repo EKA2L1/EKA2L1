@@ -1496,8 +1496,10 @@ namespace eka2l1 {
             case EWsClOpRedrawReady: {
                 epoc::notify_info info;
                 info.requester = ctx.msg->own_thr;
-                info.sts = ctx.msg->request_sts; 
-                clients[ctx.msg->msg_session->unique_id()]->redraw_req_info = std::move(info);
+                info.sts = ctx.msg->request_sts;
+                
+                 
+                clients[ctx.msg->msg_session->unique_id()]->add_redraw_listener(info);
 
                 break;
             }
@@ -1511,7 +1513,7 @@ namespace eka2l1 {
                 info.requester = ctx.msg->own_thr;
                 info.sts = ctx.msg->request_sts;
                 
-                clients[ctx.msg->msg_session->unique_id()]->event_req_info = std::move(info);
+                clients[ctx.msg->msg_session->unique_id()]->add_event_listener(info);
 
                 break;
             }
