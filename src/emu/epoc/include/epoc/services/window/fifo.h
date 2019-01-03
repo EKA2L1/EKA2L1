@@ -88,7 +88,7 @@ namespace eka2l1::epoc {
          *                  Otherwise, it will be stored until another event is queued.
         */
         void set_listener(epoc::notify_info nof_info) {
-            const std::lock_guard<std::mutex> guard;
+            const std::lock_guard<std::mutex> guard(lock_);
 
             if (q_.size() > 0) {
                 // Complete with KErrNone
