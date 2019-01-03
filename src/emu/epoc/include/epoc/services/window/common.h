@@ -360,6 +360,8 @@ namespace eka2l1::epoc {
         // TODO: Should be only pointer event with epoc < 9.
         // For epoc9 there shouldnt be a pointer number, since there is no multi touch
         adv_pointer_event evt;
+
+        event(const std::uint32_t handle, event_code evt_code);
     };
 
     struct redraw_event {

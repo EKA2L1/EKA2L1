@@ -22,20 +22,106 @@
  */
 
 #include <epoc/services/window/fifo.h>
+#include <common/log.h>
+
+#include <cassert>
 
 namespace eka2l1::epoc {
+    bool event_fifo::is_my_priority_really_high(epoc::event_code evt) {
+        switch (evt) {
+        case event_code::switch_off:
+        case event_code::switch_on:
+        case event_code::event_password:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+    
+    std::uint32_t event_fifo::queue_event(const event &evt) {
+        const std::lock_guard<std::mutex> guard(lock_);
+        
+        if (q_.size() == maximum_element) {
+            do_purge();
+        }
+
+        return queue_event_dont_care(evt);
+    }
+
+    // Symbian purges:
+    // Pointer up/down pairs
+    // Key messages
+    // Key updown pairs
+    //
+    // Focus lost/gain pair
+    // Not purge
+    // Lone pointer ups
+    // Lone focus lost/gain
+    void event_fifo::do_purge() {
+        for (size_t i = 0; i < q_.size(); i++) {
+            switch (q_[i].evt.type) {
+            case epoc::event_code::event_password: 
+                break;
+
+            case epoc::event_code::null:
+            case epoc::event_code::key:
+            case epoc::event_code::touch_enter:
+            case epoc::event_code::touch_exit: {
+                q_.erase(q_.begin() + i);
+                break;
+            }
+
+            case epoc::event_code::focus_gained:
+            case epoc::event_code::focus_lost: {
+                if ((i + 1 < q_.size()) && 
+                    ((q_[i+1].evt.type == epoc::event_code::focus_gained) || (q_[i+1].evt.type == epoc::event_code::focus_lost))) {
+                    q_.erase(q_.begin() + i + 1);
+                    q_.erase(q_.begin() + i);
+                }
+
+                break;
+            }
+
+            case epoc::event_code::switch_on: {
+                if (i + 1 < q_.size() && (q_[i+1].evt.type == epoc::event_code::switch_on)) {
+                    q_.erase(q_.begin() + i);
+                    break;
+                }
+            }
+
+            default: {
+                LOG_ERROR("Unhandled purge of event type: {}", static_cast<int>(q_[i].evt.type));
+                assert(false);
+
+                break;
+            }
+            }
+        }
+    }
+
     event event_fifo::get_event() {
         std::optional<event> evt = get_evt_opt();
 
         if (!evt) {
             // Create a null event
-            event null_evt;
-            null_evt.type = event_code::null;
-            null_evt.handle = 0;
-
-            return null_evt;
+            return event(0, event_code::null);
         }
 
         return *evt;
+    }
+
+    std::uint32_t redraw_fifo::queue_event(const redraw_event &evt, const std::uint16_t pri) {
+        const std::lock_guard<std::mutex> guard(lock_);
+        std::uint32_t id = queue_event_dont_care(evt);
+
+        q_.back().pri = pri;
+
+        std::stable_sort(q_.begin(), q_.end(),
+            [&](const fifo_element &e1, const fifo_element &e2) {
+            return e1.pri <= e2.pri;
+        });
+        
+        return id;
     }
 }

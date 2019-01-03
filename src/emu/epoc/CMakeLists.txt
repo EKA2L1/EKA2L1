@@ -109,6 +109,7 @@ add_library(epocservs
     src/services/ui/eikappui.cpp
     src/services/ui/oom_app.cpp
     src/services/window/bitmap.cpp
+    src/services/window/common.cpp
     src/services/window/fifo.cpp
     src/services/window/window.cpp
     src/ipc.cpp
@@ -120,16 +121,17 @@ add_library(epocio
 
 add_library(epocutils
     include/epoc/utils/des.h
-    include/epoc/utils/tl.h
     include/epoc/utils/handle.h
     include/epoc/utils/panic.h
     include/epoc/utils/dll.h
     include/epoc/utils/reqsts.h
-    src/utils/tl.cpp
+    include/epoc/utils/tl.h
     src/utils/des.cpp
     src/utils/dll.cpp
     src/utils/handle.cpp
     src/utils/panic.cpp
+    src/utils/reqsts.cpp
+    src/utils/tl.cpp
 )
 
 target_include_directories(epocloader PUBLIC include)

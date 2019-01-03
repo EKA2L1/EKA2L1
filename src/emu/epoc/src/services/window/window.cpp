@@ -44,11 +44,6 @@ namespace eka2l1::epoc {
         base_handle = 0x40000000
     };
 
-    void notify_info::do_finish(int err_code) {
-        *sts.get(requester->owning_process()) = err_code;
-        sts = 0;
-    }
-
     window_client_obj::window_client_obj(window_server_client_ptr client)
         : client(client)
         , id(static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1) {
@@ -68,6 +63,36 @@ namespace eka2l1::epoc {
         crr_mode = &scr_config.modes[0];   
 
         driver->set_screen_size(crr_mode->size);
+    }
+    
+    epoc::window_group_ptr screen_device::find_window_group_to_focus() {
+        for (auto &win: windows) {
+            if (win->type == window_kind::group) {       
+                if (std::reinterpret_pointer_cast<epoc::window_group>(win)->can_receive_focus()) {
+                    return std::reinterpret_pointer_cast<epoc::window_group>(win);
+                } 
+            }
+        }
+
+        return nullptr;
+    }
+
+    void screen_device::update_focus(epoc::window_group_ptr closing_group) {
+        epoc::window_group_ptr next_to_focus = find_window_group_to_focus();
+
+        if (next_to_focus != focus) {
+            if (focus && focus != closing_group) {
+                focus->lost_focus();
+            }
+
+            if (next_to_focus) {
+                next_to_focus->gain_focus();
+                focus = std::move(next_to_focus);
+            }
+        }
+
+        // TODO: This changes the focus, so the window group list got updated
+        // An event of that should be sent
     }
 
     graphics_orientation number_to_orientation(int rot) {
@@ -275,9 +300,7 @@ namespace eka2l1::epoc {
         context.set_request_status(attached_window->dvc->id);
     }
 
-    void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
-        // LOG_TRACE("Attempt to draw text {}", common::ucs2_to_utf8(text));
-        
+    void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {        
         if (attached_window->cursor_pos == vec2(-1, -1)) {
             LOG_TRACE("Cursor position not set, not drawing the text");
             return;
@@ -560,6 +583,18 @@ namespace eka2l1::epoc {
         }
     }
 
+    // I make this up myself
+    std::uint16_t window::redraw_priority() {
+        std::uint16_t pri;
+
+        if (parent) {
+            pri = parent->redraw_priority();
+        }
+
+        pri += (priority << 4) + secondary_priority;
+        return pri; 
+    }
+
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -627,6 +662,14 @@ namespace eka2l1::epoc {
 
         return false;
     }
+    
+    void window_group::lost_focus() {
+        client->queue_event(epoc::event { id, epoc::event_code::focus_gained });
+    }
+
+    void window_group::gain_focus() {
+        client->queue_event(epoc::event { id, epoc::event_code::focus_lost });
+    }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
@@ -670,9 +713,11 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpReceiveFocus: {
-            accept_keyfocus = *reinterpret_cast<bool*>(cmd.data_ptr);
+            flags &= ~focus_receiveable;
 
-            if (accept_keyfocus) {
+            if (*reinterpret_cast<bool*>(cmd.data_ptr)) {
+                flags |= focus_receiveable;
+
                 LOG_TRACE("Request group {} to enable keyboard focus",
                     common::ucs2_to_utf8(name));
             } else {
@@ -680,6 +725,7 @@ namespace eka2l1::epoc {
                     common::ucs2_to_utf8(name));
             }
 
+            dvc->update_focus(nullptr);
             ctx.set_request_status(KErrNone);
             break;
         }
@@ -727,7 +773,12 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpShadowDisabled: {
-            shadow_disable = *reinterpret_cast<bool*>(cmd.data_ptr);
+            flags &= ~shadow_disable;
+
+            if (*reinterpret_cast<bool*>(cmd.data_ptr)) {
+                flags |= shadow_disable;
+            }
+
             ctx.set_request_status(KErrNone);
 
             break;
@@ -765,10 +816,11 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpActivate: {
-            LOG_TRACE("Window activated but redraw not yet implemented");
-            activate = true;
-
-            // TODO: Redraw
+            flags |= active;
+            
+            // When a window actives, a redraw is needed
+            // Redraw happens with all of the screen
+            client->queue_redraw(this);
             ctx.set_request_status(KErrNone);
 
             break;
@@ -779,7 +831,8 @@ namespace eka2l1::epoc {
             irect = *reinterpret_cast<invalidate_rect*>(cmd.data_ptr);
 
             // Invalidate needs redraw
-            redraw_evt_handle = client->queue_redraw(epoc::redraw_event { 0, irect.in_top_left, irect.in_bottom_right });
+            redraw_evt_id = client->queue_redraw(this);
+
             ctx.set_request_status(KErrNone);
 
             break;
@@ -798,7 +851,10 @@ namespace eka2l1::epoc {
 
             // Cancel pending redraw event, since by using this,
             // we already starts one
-            redraw_evt_handle ? client->deque_redraw(redraw_evt_handle) : 0;
+            if (redraw_evt_id) {
+                client->deque_redraw(redraw_evt_id);
+                redraw_evt_id = 0;
+            }
 
             ctx.set_request_status(KErrNone);
 
@@ -898,6 +954,12 @@ namespace eka2l1::epoc {
             }
         }
     }
+
+    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user) {
+        // Calculate the priority
+        return redraws.queue_event(epoc::redraw_event { user->id, user->pos, user->pos + user->size },
+            user->redraw_priority());
+    }    
 
     std::uint32_t window_server_client::add_object(window_client_obj_ptr obj) {
         objects.push_back(std::move(obj));
@@ -1002,7 +1064,14 @@ namespace eka2l1::epoc {
 
         last_group = std::reinterpret_pointer_cast<epoc::window_group>(group);
         total_group++;
-        ctx.set_request_status(add_object(group));
+        std::uint32_t id = add_object(group);
+
+        if (header->focus) {
+            // We got the focus. We should tells everyone that we have the focus now.
+            queue_event(epoc::event(id, epoc::event_code::focus_gained));
+        }
+
+        ctx.set_request_status(id);
     }
     
     void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd cmd) {
@@ -1094,7 +1163,8 @@ namespace eka2l1::epoc {
         }
 
         case EWsClOpSendEventToWindowGroup: {
-            ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
+            ws_cmd_send_event_to_window_group *evt = 
+                reinterpret_cast<decltype(evt)>(cmd.data_ptr);
             queue_event(evt->evt);
 
             ctx.set_request_status(KErrNone);

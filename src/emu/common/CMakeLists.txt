@@ -22,6 +22,7 @@ add_library(common
     include/common/random.h
     include/common/raw_bind.h
     include/common/resource.h
+    include/common/time.h
     include/common/types.h
     include/common/virtualmem.h
     src/algorithm.cpp
@@ -38,6 +39,7 @@ add_library(common
     src/log.cpp
     src/path.cpp
     src/random.cpp
+    src/time.cpp
     src/types.cpp
     src/virtualmem.cpp
 )

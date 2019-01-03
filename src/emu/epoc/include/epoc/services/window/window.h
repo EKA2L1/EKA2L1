@@ -149,13 +149,6 @@ namespace eka2l1::epoc {
         virtual void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd);
     };
 
-    struct notify_info {
-        eka2l1::ptr<epoc::request_status> sts = 0;
-        eka2l1::thread_ptr requester;
-
-        void do_finish(int err_code);
-    };
-
     using window_client_obj_ptr = std::shared_ptr<window_client_obj>;
 
     /*! \brief Base class for all window. */
@@ -169,6 +162,8 @@ namespace eka2l1::epoc {
         // multiple window with same first z.
         std::uint16_t priority { 0 };
         std::uint16_t secondary_priority { 0 };
+
+        std::uint16_t redraw_priority();
 
         // The position
         eka2l1::vec2  pos { 0, 0 };
@@ -231,6 +226,10 @@ namespace eka2l1::epoc {
         std::vector<epoc::window_ptr> windows;
         epoc::window_group_ptr  focus;
 
+        epoc::window_group_ptr find_window_group_to_focus();
+
+        void update_focus(epoc::window_group_ptr closing_group);
+
         screen_device(window_server_client_ptr client, int number, 
             eka2l1::graphics_driver_client_ptr driver);
 
@@ -241,13 +240,24 @@ namespace eka2l1::epoc {
         epoc::window_group_ptr next_sibling { nullptr };
         std::u16string name;
 
-        bool accept_keyfocus { false };
+        enum {
+            focus_receiveable = 0x1000
+        };
+
+        uint32_t flags;
+
+        bool can_receive_focus() {
+            return flags & focus_receiveable;
+        }
 
         window_group(window_server_client_ptr client, screen_device_ptr dvc)
             : window(client, dvc, window_kind::group) {
         }
 
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+
+        void lost_focus();
+        void gain_focus();
     };
 
     struct graphic_context;
@@ -270,7 +280,7 @@ namespace eka2l1::epoc {
             vec2 in_bottom_right;
         } irect;
 
-        std::uint32_t redraw_evt_handle;
+        std::uint32_t redraw_evt_id;
 
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
@@ -281,9 +291,13 @@ namespace eka2l1::epoc {
         }
         
         int shadow_height { 0 };
-        bool shadow_disable = false;
-        
-        bool activate = false;
+
+        enum {
+            shadow_disable = 0x1000,
+            active = 0x2000
+        };
+
+        std::uint32_t flags;
 
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
@@ -420,18 +434,10 @@ namespace eka2l1::epoc {
             return client_thread;
         }
         
-        std::uint32_t queue_redraw(const redraw_event &evt) {
-            std::uint32_t handle = redraws.queue_event(evt);
-            redraw_req_info.do_finish(0);
-
-            return handle;
-        }
+        std::uint32_t queue_redraw(epoc::window_user *user);
         
         std::uint32_t queue_event(const event &evt) {
-            std::uint32_t handle = events.queue_event(evt);
-            event_req_info.do_finish(0);
-
-            return handle;
+            return events.queue_event(evt);
         }
 
         void deque_redraw(const std::uint32_t handle) {
