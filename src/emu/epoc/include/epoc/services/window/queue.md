@@ -1,0 +1,2 @@
+Since the Symbian document not clear about these queue stuffs, I'm gonna note here to remind my self.
+- Redraw request: Notify when a redraw is waiting. For example, invalidates a region of screen makes it request the client a redraw. When that request is finished, the client will call BeginRedraw to begin a redraw

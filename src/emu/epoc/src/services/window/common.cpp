@@ -21,16 +21,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <epoc/services/window/common.h>
+#include <common/time.h>
 
-#include <cstdint>
-#include <common/vecx.h>
-
-namespace eka2l1::common {
-    inline vecx<int, 4> rgb_to_vec(const std::uint32_t rgb) {
-        return vecx<int, 4> { static_cast<int>(rgb >> 24),
-            static_cast<int>((rgb & 0x00FF0000) >> 16),
-            static_cast<int>((rgb & 0x0000FF00) >> 8),
-            static_cast<int>(rgb & 0x000000FF) };
+namespace eka2l1::epoc {
+    // TODO: Use emulated time
+    event::event(const std::uint32_t handle, event_code evt_code)
+        : handle(handle), type(evt_code), time(common::get_current_time_in_microseconds_since_1ad()) {
     }
 }

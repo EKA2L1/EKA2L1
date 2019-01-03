@@ -21,16 +21,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <epoc/utils/reqsts.h>
+#include <epoc/kernel/thread.h>
+#include <epoc/kernel/process.h>
 
-#include <cstdint>
-#include <common/vecx.h>
+namespace eka2l1::epoc {
+    void notify_info::complete(int err_code) {
+        if (sts.ptr_address() == 0) {
+            return;
+        }
 
-namespace eka2l1::common {
-    inline vecx<int, 4> rgb_to_vec(const std::uint32_t rgb) {
-        return vecx<int, 4> { static_cast<int>(rgb >> 24),
-            static_cast<int>((rgb & 0x00FF0000) >> 16),
-            static_cast<int>((rgb & 0x0000FF00) >> 8),
-            static_cast<int>(rgb & 0x000000FF) };
+        *sts.get(requester->owning_process()) = err_code;
+        sts = 0;
     }
 }

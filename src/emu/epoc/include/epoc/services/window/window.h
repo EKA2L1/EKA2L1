@@ -31,6 +31,9 @@
 #include <common/ini.h>
 #include <common/queue.h>
 
+#include <epoc/services/window/common.h>
+#include <epoc/services/window/fifo.h>
+
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
 
@@ -94,78 +97,6 @@ namespace eka2l1::epoc {
     struct screen_device;
     using screen_device_ptr = std::shared_ptr<epoc::screen_device>;
 
-    enum class graphics_orientation { 
-        normal,
-        rotated90, 
-        rotated180,
-        rotated270 
-    };
-
-    /*! \brief Screen display mode.
-     *
-     * Depend on the display mode, the bitmap sends it will have the specified attribute.
-    */
-    enum class display_mode {
-        none,
-        gray2,          ///< Monochrome display mode (1 bpp)
-        gray4,          ///< Four grayscales display mode (2 bpp)
-        gray16,         ///< 16 grayscales display mode (4 bpp) 
-        gray256,        ///< 256 grayscales display mode (8 bpp) 
-        color16,        ///< Low colour EGA 16 colour display mode (4 bpp) 
-        color256,       ///< 256 colour display mode (8 bpp) 
-        color64k,       ///< 64,000 colour display mode (16 bpp) 
-        color16m,       ///< True colour display mode (24 bpp) 
-        rgb,            ///< (Not an actual display mode used for moving buffers containing bitmaps)
-        color4k,        ///< 4096 colour display (12 bpp). 
-        color16mu,      ///< True colour display mode (32 bpp, but top byte is unused and unspecified) 
-        color16ma,      ///< Display mode with alpha (24bpp colour plus 8bpp alpha) 
-        color16map,     ///< Pre-multiplied Alpha display mode (24bpp color multiplied with the alpha channel value, plus 8bpp alpha)
-        color_last
-    };
-
-    enum class pointer_cursor_mode {
-        none,           ///< The device don't have a pointer (touch)
-        fixed,          ///< Use the default system cursor
-        normal,         ///< Can't understand yet
-        window,         ///< Can't understand yet
-    };
-
-    enum class window_type {
-        redraw,
-        backed_up,
-        blank
-    };
-
-    enum class event_modifier {
-        repeatable = 0x001,
-        keypad = 0x002,
-        left_alt = 0x004,
-        right_alt = 0x008,
-        alt = 0x010,
-        left_ctrl = 0x020,
-        right_ctrl = 0x040,
-        ctrl = 0x080,
-        left_shift = 0x100,
-        right_shift = 0x200,
-        shift = 0x400,
-        left_func = 0x800,
-        right_func = 0x1000,
-        func = 0x2000,
-        caps_lock = 0x4000,
-        num_lock = 0x8000,
-        scroll_lock = 0x10000,
-        key_up = 0x20000,
-        special = 0x40000,
-        double_click = 0x80000,
-        modifier_pure_key_code = 0x100000,
-        cancel_rot = 0x200000,
-        no_rot = 0x0,
-        rotate90 = 0x400000,
-        rotate180 = 0x800000,
-        rotate270 = 0x1000000,
-        all_mods = 0x1FFFFFFF                   
-    };
-
     enum class text_aligment {
         left,
         center,
@@ -195,57 +126,6 @@ namespace eka2l1::epoc {
     struct event_error_msg_user {
         event_control when;
         epoc::window *user;
-    };
-
-    enum class event_type {
-        button1down,
-        button1up,
-        button2down,
-        button2up,
-        drag,
-        move,
-        button_repeat,
-        repeat,
-        switch_on,
-        out_of_range
-    };
-
-    struct pointer_event {
-        event_type evtype;
-        event_modifier modifier;
-        eka2l1::vec2 pos;
-        eka2l1::vec2 parent_pos;
-    };
-
-    struct adv_pointer_event: public pointer_event {
-        int spare1;
-        int spare2;
-        int pos_z;
-        std::uint8_t ptr_num; // multi touch
-    };
-
-    enum pointer_filter_type {
-        pointer_enter = 0x01,   ///< In/out
-        pointer_move = 0x02,
-        pointer_drag = 0x04,
-        pointer_simulated_event = 0x08,
-        all = pointer_move | pointer_simulated_event
-    };
-
-    struct event {
-        int type;
-        std::uint32_t handle;
-        std::uint64_t time;
-
-        // TODO: Should be only pointer event with epoc < 9.
-        // For epoc9 there shouldnt be a pointer number, since there is no multi touch
-        adv_pointer_event evt;
-    };
-
-    struct redraw_event {
-        std::uint32_t handle;
-        vec2 top_left;
-        vec2 bottom_right;
     };
 
     struct pixel_twips_and_rot {
@@ -282,6 +162,8 @@ namespace eka2l1::epoc {
         // multiple window with same first z.
         std::uint16_t priority { 0 };
         std::uint16_t secondary_priority { 0 };
+
+        std::uint16_t redraw_priority();
 
         // The position
         eka2l1::vec2  pos { 0, 0 };
@@ -344,6 +226,10 @@ namespace eka2l1::epoc {
         std::vector<epoc::window_ptr> windows;
         epoc::window_group_ptr  focus;
 
+        epoc::window_group_ptr find_window_group_to_focus();
+
+        void update_focus(epoc::window_group_ptr closing_group);
+
         screen_device(window_server_client_ptr client, int number, 
             eka2l1::graphics_driver_client_ptr driver);
 
@@ -354,13 +240,24 @@ namespace eka2l1::epoc {
         epoc::window_group_ptr next_sibling { nullptr };
         std::u16string name;
 
-        bool accept_keyfocus { false };
+        enum {
+            focus_receiveable = 0x1000
+        };
+
+        uint32_t flags;
+
+        bool can_receive_focus() {
+            return flags & focus_receiveable;
+        }
 
         window_group(window_server_client_ptr client, screen_device_ptr dvc)
             : window(client, dvc, window_kind::group) {
         }
 
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+
+        void lost_focus();
+        void gain_focus();
     };
 
     struct graphic_context;
@@ -383,6 +280,8 @@ namespace eka2l1::epoc {
             vec2 in_bottom_right;
         } irect;
 
+        std::uint32_t redraw_evt_id;
+
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
             : window(client, dvc, window_kind::client), win_type(type_of_window),
@@ -392,9 +291,13 @@ namespace eka2l1::epoc {
         }
         
         int shadow_height { 0 };
-        bool shadow_disable = false;
-        
-        bool activate = false;
+
+        enum {
+            shadow_disable = 0x1000,
+            active = 0x2000
+        };
+
+        std::uint32_t flags;
 
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
@@ -481,6 +384,9 @@ namespace eka2l1::epoc {
         eka2l1::thread_ptr client_thread;
         eka2l1::epoc::window_group_ptr last_group;
 
+        epoc::redraw_fifo redraws;
+        epoc::event_fifo events;
+
         std::vector<epoc::event_mod_notifier_user> mod_notifies;
         std::vector<epoc::event_screen_change_user> screen_changes;
         std::vector<epoc::event_error_msg_user> error_notifies;
@@ -498,7 +404,17 @@ namespace eka2l1::epoc {
         void init_device(epoc::window_ptr &win);
         epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
 
-    public:
+        std::uint32_t total_group { 0 };
+
+    public:    
+        void add_redraw_listener(notify_info nof) {
+            redraws.set_listener(nof);
+        }
+
+        void add_event_listener(notify_info nof) {
+            events.set_listener(nof);
+        }
+
         void add_event_mod_notifier_user(epoc::event_mod_notifier_user nof);
         void add_event_screen_change_user(epoc::event_screen_change_user nof);
         void add_event_error_msg_user(epoc::event_error_msg_user nof);
@@ -521,6 +437,16 @@ namespace eka2l1::epoc {
 
         eka2l1::thread_ptr &get_client() {
             return client_thread;
+        }
+        
+        std::uint32_t queue_redraw(epoc::window_user *user);
+        
+        std::uint32_t queue_event(const event &evt) {
+            return events.queue_event(evt);
+        }
+
+        void deque_redraw(const std::uint32_t handle) {
+            redraws.cancel_event_queue(handle);
         }
     };
     
@@ -616,22 +542,6 @@ namespace eka2l1 {
 }
 
 namespace eka2l1 {
-    struct event_notify_info {
-        eka2l1::ptr<epoc::request_status> sts;
-        eka2l1::thread_ptr requester;
-        eka2l1::epoc::window_server_client *client;
-    };
-
-    struct event_wrapper {
-        epoc::event evt;
-        epoc::window_server_client *client;
-    };
-
-    struct redraw_event_wrapper {
-        epoc::redraw_event evt;
-        epoc::window_server_client *client;
-    };
-
     class window_server : public service::server {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
@@ -644,12 +554,6 @@ namespace eka2l1 {
         epoc::window_group_ptr focus_;
         epoc::pointer_cursor_mode   cursor_mode_;
 
-        std::vector<event_wrapper> pending_events;
-        std::vector<redraw_event_wrapper> pending_redraws;
-
-        std::vector<event_notify_info> statuses;
-        std::vector<event_notify_info> redraw_statuses;
-
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
 
@@ -660,15 +564,6 @@ namespace eka2l1 {
 
     public:
         window_server(system *sys);
-
-        std::optional<epoc::redraw_event> get_redraw(epoc::window_server_client *cli);
-        std::optional<epoc::event> get_event(epoc::window_server_client *cli);
-
-        void queue_event(epoc::window_server_client *cli, epoc::event evt);
-        void queue_redraw_start(epoc::window_server_client *cli, epoc::redraw_event evt);
-
-        void add_to_notify(event_notify_info info);
-        void add_to_redraw_notify(event_notify_info info);
 
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;
