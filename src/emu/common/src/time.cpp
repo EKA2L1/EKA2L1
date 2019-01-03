@@ -21,16 +21,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <cstdint>
-#include <common/vecx.h>
+#include <common/time.h>
+#include <chrono>
 
 namespace eka2l1::common {
-    inline vecx<int, 4> rgb_to_vec(const std::uint32_t rgb) {
-        return vecx<int, 4> { static_cast<int>(rgb >> 24),
-            static_cast<int>((rgb & 0x00FF0000) >> 16),
-            static_cast<int>((rgb & 0x0000FF00) >> 8),
-            static_cast<int>(rgb & 0x000000FF) };
+    std::uint64_t get_current_time_in_microseconds_since_1ad() {
+        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
+            + ad_epoc_dist_microsecs;
+    }
+
+    std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t micsecs) {
+        return micsecs + ad_epoc_dist_microsecs;
     }
 }

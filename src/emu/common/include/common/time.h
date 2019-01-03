@@ -24,13 +24,13 @@
 #pragma once
 
 #include <cstdint>
-#include <common/vecx.h>
 
 namespace eka2l1::common {
-    inline vecx<int, 4> rgb_to_vec(const std::uint32_t rgb) {
-        return vecx<int, 4> { static_cast<int>(rgb >> 24),
-            static_cast<int>((rgb & 0x00FF0000) >> 16),
-            static_cast<int>((rgb & 0x0000FF00) >> 8),
-            static_cast<int>(rgb & 0x000000FF) };
-    }
+    enum : uint64_t {
+        microsecs_per_sec = 1000000,
+        ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec
+    };
+
+    std::uint64_t get_current_time_in_microseconds_since_1ad();
+    std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t nsecs);
 }
