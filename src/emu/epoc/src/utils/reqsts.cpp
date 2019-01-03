@@ -27,6 +27,10 @@
 
 namespace eka2l1::epoc {
     void notify_info::complete(int err_code) {
+        if (sts.ptr_address() == 0) {
+            return;
+        }
+
         *sts.get(requester->owning_process()) = err_code;
         sts = 0;
     }
