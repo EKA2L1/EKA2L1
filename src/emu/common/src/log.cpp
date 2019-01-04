@@ -20,6 +20,7 @@
 #include <common/log.h>
 #include <common/platform.h>
 
+#define SPDLOG_FMT_EXTERNAL
 #include <spdlog/spdlog.h>
 
 #include <iostream>

@@ -7,9 +7,9 @@ set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost
 add_definitions(-DCURL_STATICLIB)
 
 # fmt
-#add_subdirectory(fmt)
-#add_library(fmt::fmt ALIAS fmt)
-#set (fmt_DIR fmt)
+add_subdirectory(fmt)
+add_library(fmt::fmt ALIAS fmt)
+set (fmt_DIR fmt)
 
 # Pybind11
 if (ENABLE_SCRIPTING_ABILITY)
@@ -20,7 +20,7 @@ endif()
 # SPDLOG - Build examples off
 set (SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
 set (SPDLOG_BUILD_BENCH OFF CACHE BOOL "" FORCE)
-set (SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+# set (SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(spdlog)
 
@@ -30,7 +30,7 @@ add_subdirectory(glm)
 
 # Dynarmic: disable tests
 set(DYNARMIC_TESTS OFF CACHE BOOL "")
-# set(DYNARMIC_NO_BUNDLED_FMT ON CACHE BOOL "")
+set(DYNARMIC_NO_BUNDLED_FMT ON CACHE BOOL "")
 add_subdirectory(dynarmic)
 
 # GLFW - Disable docs, tests and examples

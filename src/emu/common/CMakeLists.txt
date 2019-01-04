@@ -45,7 +45,7 @@ add_library(common
 )
 
 target_include_directories(common PUBLIC include)
-target_link_libraries(common PUBLIC spdlog miniz)
+target_link_libraries(common PUBLIC fmt miniz spdlog)
 
 if (UNIX OR APPLE)
     set_property(TARGET common PROPERTY POSITION_INDEPENDENT_CODE ON)
