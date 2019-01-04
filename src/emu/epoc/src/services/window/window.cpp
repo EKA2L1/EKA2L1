@@ -1359,6 +1359,25 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsClOpWindowGroupListAndChain: {
+            // All window groups should be child of root node
+            std::vector<std::uint32_t> ids;
+
+            // We can use linked node in the window group, but i'm not sure
+            // it will help me traverses all the code
+            for (auto &win: root->childs) {
+                if (win->type == window_kind::group) {
+                    ids.push_back(win->id);
+                }
+            }
+
+            ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t*>(&ids[0]), 
+                static_cast<std::uint32_t>(ids.size() * sizeof(std::uint32_t)));
+
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         default:
             LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
         }
