@@ -183,8 +183,8 @@ namespace eka2l1::epoc {
         T data[MAX_ELEM];
 
         buf_static() {
-            set_max_length(MAX_ELEM);
-            set_descriptor_type(buf); 
+            des<T>::set_max_length(MAX_ELEM);
+            desc_base::set_descriptor_type(buf); 
         }
 
         void operator = (const std::basic_string<T> &str) {
