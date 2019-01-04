@@ -71,6 +71,11 @@ namespace eka2l1::epoc {
             return static_cast<des_type>(info >> 28);
         }
 
+        inline void           set_descriptor_type(const des_type dtype) {
+            info &= 0x00FFFFFF;
+            info |= (dtype << 28);
+        }
+
         void *get_pointer_raw(eka2l1::process_ptr pr);
         
         int assign_raw(eka2l1::process_ptr pr, const std::uint8_t *data, 
@@ -132,6 +137,10 @@ namespace eka2l1::epoc {
     template <typename T>
     struct des: public desc<T> {
         std::uint32_t max_length;
+
+        inline void set_max_length(const std::uint32_t max_len) {
+            max_length = max_len;
+        }
     };
 
     template <typename T>
@@ -174,8 +183,8 @@ namespace eka2l1::epoc {
         T data[MAX_ELEM];
 
         buf_static() {
-            max_length = MAX_ELEM;
-            info = buf << 28; 
+            set_max_length(MAX_ELEM);
+            set_descriptor_type(buf); 
         }
 
         void operator = (const std::basic_string<T> &str) {

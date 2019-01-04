@@ -109,7 +109,7 @@ namespace eka2l1 {
          * 
          * \param arg0: App's uid3
         */
-		void is_accepted_to_run(service::ipc_context ctx);
+        void is_accepted_to_run(service::ipc_context ctx);
 
         /*! \brief Get the info of the specified application
          *
