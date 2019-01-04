@@ -774,13 +774,15 @@ namespace eka2l1 {
     }
     
     struct kernel_info {
-        std::uint32_t total_chunks;
-        std::uint32_t total_mutex;
-        std::uint32_t total_semaphore;
-        std::uint32_t total_thread;
-        std::uint32_t total_timer;
-        std::uint32_t total_prop;
-        std::uint32_t total_process;
+        std::uint32_t total_chunks {0};
+        std::uint32_t total_mutex {0};
+        std::uint32_t total_semaphore {0};
+        std::uint32_t total_thread {0};
+        std::uint32_t total_timer {0};
+        std::uint32_t total_prop {0};
+        std::uint32_t total_process {0};
+
+        kernel_info() {}
     };
 
     void kernel_system::do_state(common::chunkyseri &seri) {
