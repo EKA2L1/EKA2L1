@@ -225,7 +225,7 @@ namespace eka2l1 {
     uint32_t kernel_system::create_mutex(std::string name, bool init_locked,
         kernel::owner_type own,
         kernel::access_type access) {
-        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, access);
+        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, timing, name, init_locked, access);
 
         {
             SYNCHRONIZE_ACCESS;
@@ -862,7 +862,7 @@ namespace eka2l1 {
             }
 
             for (std::uint32_t i = 0; i < info.total_mutex; i++) {
-                auto c = std::make_shared<kernel::mutex>(this);
+                auto c = std::make_shared<kernel::mutex>(this, timing);
                 objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
             }
             
