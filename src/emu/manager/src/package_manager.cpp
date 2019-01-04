@@ -244,8 +244,9 @@ namespace eka2l1 {
             
             app_info inf = std::move(*info_res);
 
-            std::string res(static_cast<char>(drive_to_char16(inf.drive)), 1);
-            res += "/sys/bin/";
+            std::string res;
+            res += char(drive_to_char16(inf.drive));
+            res += ":\\sys\\bin\\";
             res += common::ucs2_to_utf8(inf.executable_name);
 
             return res;

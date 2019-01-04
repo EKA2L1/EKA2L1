@@ -21,8 +21,18 @@
 #pragma once
 
 #include <epoc/services/server.h>
+#include <epoc/utils/des.h>
 
 namespace eka2l1 {
+    struct apa_app_info {
+        std::uint32_t         uid;              ///< The UID of the application.
+        epoc::filename        app_path;         ///< The path to the application DLL (EKA1) / EXE (EKA2)
+        epoc::apa_app_caption short_caption;    ///< Short version of the caption
+        epoc::apa_app_caption long_caption;     ///< Long caption of the app
+
+        apa_app_info() {}
+    };
+
     /*! \brief Applist services
      *
      * Provide external information about application management,
@@ -48,7 +58,21 @@ namespace eka2l1 {
         */
         void app_language(service::ipc_context ctx);
 
+        /*! \brief Request the server to run app.
+         *
+         * Iter through every AppList plugins, set status to true
+         * if application is allowed to run
+         * 
+         * \param arg0: App's uid3
+        */
 		void is_accepted_to_run(service::ipc_context ctx);
+
+        /*! \brief Get the info of the specified application
+         *
+         * \param arg0: App's uid3
+         * \param arg1: Descriptor contains apa_app_info
+        */
+        void get_app_info(service::ipc_context ctx);
 
     public:
         applist_server(system *sys);
