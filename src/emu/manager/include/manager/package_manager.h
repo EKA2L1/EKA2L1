@@ -23,6 +23,7 @@
 
 #include <map>
 #include <string>
+#include <optional>
 #include <vector>
 
 namespace eka2l1 {
@@ -40,7 +41,7 @@ namespace eka2l1 {
             std::u16string name;
             std::u16string vendor_name;
             std::u16string executable_name;
-            std::uint8_t drive;
+            drive_number drive;
 
             uid id;
             epocver ver;
@@ -49,15 +50,14 @@ namespace eka2l1 {
         // A package manager, serves for managing apps
         // and implements part of HAL
         class package_manager {
-            std::map<uid, app_info> c_apps;
-            std::map<uid, app_info> e_apps;
+            std::map<uid, app_info> apps;
 
             bool load_sdb_yaml(const std::string &path);
             bool write_sdb_yaml(const std::string &path);
 
             io_system *io;
 
-            bool install_controller(loader::sis_controller *ctrl, uint8_t drv);
+            bool install_controller(loader::sis_controller *ctrl, drive_number drv);
 
         public:
             package_manager() = default;
@@ -66,28 +66,16 @@ namespace eka2l1 {
 
             bool installed(uid app_uid);
 
-            size_t app_count() {
-                return c_apps.size() + e_apps.size();
+            std::size_t app_count() {
+                return apps.size();
             }
 
-            std::vector<app_info> get_apps_info() {
-                std::vector<app_info> infos;
-
-                for (auto const & [ c_drive, c_info ] : c_apps) {
-                    infos.push_back(c_info);
-                }
-
-                for (auto const & [ e_drive, e_info ] : e_apps) {
-                    infos.push_back(e_info);
-                }
-
-                return infos;
-            }
+            std::vector<app_info> get_apps_info();
 
             std::u16string app_name(uid app_uid);
-            app_info info(uid app_uid);
+            std::optional<app_info> info(uid app_uid);
 
-            bool install_package(const std::u16string &path, uint8_t drive);
+            bool install_package(const std::u16string &path, drive_number drive);
             bool uninstall_package(uid app_uid);
 
             std::string get_app_executable_path(uint32_t uid);

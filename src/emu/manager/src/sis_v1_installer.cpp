@@ -11,19 +11,15 @@
 #include <cwctype>
 
 namespace eka2l1::loader {
-    bool install_sis_old(std::u16string path, io_system *io, uint8_t drive, epocver sis_ver, manager::app_info &info) {
+    bool install_sis_old(std::u16string path, io_system *io, drive_number drive, epocver sis_ver, manager::app_info &info) {
         loader::sis_old res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
         std::u16string main_path = res.app_path ? *res.app_path : (res.exe_path ? *res.exe_path : u"");
 
         std::transform(main_path.begin(), main_path.end(), main_path.begin(), std::towlower);
 
         if (main_path != u"") {
-            if (main_path.find(u"!") == std::u16string::npos) {
-                if (main_path.find(u"C:") != std::u16string::npos || main_path.find(u"c:") != std::u16string::npos) {
-                    info.drive = 0;
-                } else {
-                    info.drive = 1;
-                }
+            if (main_path[0] != u'!') {
+                info.drive = char16_to_drive(main_path[0]);
             } else {
                 info.drive = drive;
             }
