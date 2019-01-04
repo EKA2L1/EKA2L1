@@ -64,6 +64,27 @@ namespace eka2l1 {
             }
         }
 
+        void mutex::try_wait() {
+            if (!holding) {
+                holding = kern->crr_thread();
+
+                if (holding->state == thread_state::hold_mutex_pending) {
+                    holding->state = thread_state::ready;
+                    holding->wait_obj = nullptr;
+
+                    pendings.remove(holding);
+                }
+            }
+
+            if (holding == kern->crr_thread()) {
+                lock_count++;
+            }
+        }
+
+        void mutex::wait_for(int msecs) {
+            LOG_TRACE("Wait for microseconds not supported right now.");            
+        }
+
         bool mutex::signal() {
             if (!holding) {
                 LOG_ERROR("Signal a mutex that's not held by any thread");
