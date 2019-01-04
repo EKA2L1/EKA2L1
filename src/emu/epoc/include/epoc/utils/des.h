@@ -160,6 +160,32 @@ namespace eka2l1::epoc {
         T               data[1];
     };
 
+    template <typename T, unsigned int MAX_ELEM = 32>
+    struct bufc_static: public desc<T> {
+        T data[MAX_ELEM];
+        
+        void operator = (const std::basic_string<T> &str) {
+            assign(nullptr, str);
+        }
+    };
+
+    template <typename T, unsigned int MAX_ELEM = 32>
+    struct buf_static: public des<T> {
+        T data[MAX_ELEM];
+
+        buf_static() {
+            max_length = MAX_ELEM;
+            info = buf << 28; 
+        }
+
+        void operator = (const std::basic_string<T> &str) {
+            assign(nullptr, str);
+        }
+    };
+
+    using filename = buf_static<char16_t, 0x100>;
+    using apa_app_caption = buf_static<char16_t, 0x100>;
+
     using desc8 = desc<char>;
     using desc16 = desc<char16_t>;
     using des8 = des<char>;
