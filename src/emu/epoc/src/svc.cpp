@@ -1733,6 +1733,10 @@ namespace eka2l1::epoc {
         ctx_epoc_des->assign(kern->crr_process(), ctx_epoc_str);
     }
 
+    BRIDGE_FUNC(void, ThreadRendezvous, TInt aReason) {
+        sys->get_kernel_system()->crr_thread()->rendezvous(aReason);
+    }
+
     BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
 
@@ -2265,6 +2269,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xA3, LastThreadHandle),
+        BRIDGE_REGISTER(0xA4, ThreadRendezvous),
         BRIDGE_REGISTER(0xA5, ProcessRendezvous),
         BRIDGE_REGISTER(0xA6, MessageGetDesLength),
         BRIDGE_REGISTER(0xA7, MessageGetDesMaxLength),
