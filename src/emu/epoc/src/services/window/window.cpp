@@ -748,6 +748,16 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpOrdinalPosition: {
+            ctx.set_request_status(priority);
+            break;
+        }
+
+        case EWsWinOpOrdinalPriority: {
+            ctx.set_request_status(secondary_priority);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             break;
