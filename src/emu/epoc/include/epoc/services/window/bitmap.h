@@ -35,8 +35,7 @@ namespace eka2l1 {
     }
 
     namespace loader {
-        class romimg;
-
+        struct romimg;
         using romimg_ptr = std::shared_ptr<romimg>;
     }
 
