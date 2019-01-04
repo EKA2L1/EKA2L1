@@ -1285,6 +1285,18 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
+    BRIDGE_FUNC(void, MutexSignal, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(
+            kern->get_kernel_obj(aHandle));
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return;
+        }
+
+        mut->signal();
+    }
+
     BRIDGE_FUNC(void, WaitForAnyRequest) {
         sys->get_kernel_system()->crr_thread()->wait_for_any_request();
     }
@@ -2227,6 +2239,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0C, IMB_Range),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
         BRIDGE_REGISTER(0x11, MutexWait),
+        BRIDGE_REGISTER(0x12, MutexSignal),
         BRIDGE_REGISTER(0x13, ProcessGetId),
         BRIDGE_REGISTER(0x14, DllFileName),
         BRIDGE_REGISTER(0x15, ProcessResume),
