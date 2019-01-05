@@ -38,7 +38,7 @@ namespace eka2l1 {
         class ss_interpreter {
             sis_install_block install_block;
             sis_data install_data;
-            sis_drive install_drive;
+            drive_number install_drive;
 
             std::shared_ptr<std::istream> data_stream;
             std::function<bool(std::vector<uint8_t>)> show_text_func;
@@ -59,7 +59,7 @@ namespace eka2l1 {
                 manager::package_manager *pkgmngr,
                 sis_install_block inst_blck,
                 sis_data inst_data,
-                sis_drive install_drv);
+                drive_number install_drv);
 
             bool interpret(sis_install_block install_block, uint16_t crr_blck_idx = 0);
             bool interpret() { return interpret(install_block); }

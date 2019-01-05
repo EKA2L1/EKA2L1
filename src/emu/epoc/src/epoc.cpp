@@ -256,7 +256,7 @@ namespace eka2l1 {
         void do_state(common::chunkyseri &seri);
 
         /*! \brief Install a SIS/SISX. */
-        bool install_package(std::u16string path, uint8_t drv);
+        bool install_package(std::u16string path, drive_number drv);
         bool load_rom(const std::string &path);
 
         void request_exit();
@@ -415,7 +415,7 @@ namespace eka2l1 {
         return 1;
     }
 
-    bool system_impl::install_package(std::u16string path, uint8_t drv) {
+    bool system_impl::install_package(std::u16string path, drive_number drv) {
         return mngr.get_package_manager()->install_package(path, drv);
     }
 
@@ -682,7 +682,7 @@ namespace eka2l1 {
     }
 
     /*! \brief Install a SIS/SISX. */
-    bool system::install_package(std::u16string path, uint8_t drv) {
+    bool system::install_package(std::u16string path, drive_number drv) {
         return impl->install_package(path, drv);
     }
 

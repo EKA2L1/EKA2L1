@@ -27,6 +27,9 @@
 #include <Windows.h>
 #endif
 
+#include <cassert>
+#include <cwctype>
+
 int translate_protection(prot cprot) {
     int tprot = 0;
 
@@ -74,3 +77,16 @@ int translate_protection(prot cprot) {
     return tprot;
 }
 
+char16_t drive_to_char16(const drive_number drv) {
+    return static_cast<char16_t>(drv) + u'A'; 
+}
+
+drive_number char16_to_drive(const char16_t c) {
+    const char16_t cl = std::towlower(c);
+
+    if ((cl < u'a') || (cl > u'z')) {
+        assert(false && "Invalid drive character");
+    }
+
+    return static_cast<drive_number>(cl - 'a');
+}

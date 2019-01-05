@@ -1262,6 +1262,41 @@ namespace eka2l1::epoc {
         return mut;
     }
 
+    BRIDGE_FUNC(TInt, MutexWait, TInt aMutexHandle, TInt aTimeout) {
+        kernel_system *kern = sys->get_kernel_system();
+        mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(aMutexHandle));
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return KErrBadHandle;
+        }
+
+        if (aTimeout == 0) {
+            mut->wait();
+            return KErrNone;
+        }
+
+        if (aTimeout == -1) {
+            // Try lock
+            mut->try_wait();
+            return KErrNone;
+        }
+
+        mut->wait_for(aTimeout);
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(void, MutexSignal, TInt aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(
+            kern->get_kernel_obj(aHandle));
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return;
+        }
+
+        mut->signal();
+    }
+
     BRIDGE_FUNC(void, WaitForAnyRequest) {
         sys->get_kernel_system()->crr_thread()->wait_for_any_request();
     }
@@ -1733,6 +1768,10 @@ namespace eka2l1::epoc {
         ctx_epoc_des->assign(kern->crr_process(), ctx_epoc_str);
     }
 
+    BRIDGE_FUNC(void, ThreadRendezvous, TInt aReason) {
+        sys->get_kernel_system()->crr_thread()->rendezvous(aReason);
+    }
+
     BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
 
@@ -2199,6 +2238,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x0C, IMB_Range),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
+        BRIDGE_REGISTER(0x11, MutexWait),
+        BRIDGE_REGISTER(0x12, MutexSignal),
         BRIDGE_REGISTER(0x13, ProcessGetId),
         BRIDGE_REGISTER(0x14, DllFileName),
         BRIDGE_REGISTER(0x15, ProcessResume),
@@ -2265,6 +2306,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, LibraryAttached),
         BRIDGE_REGISTER(0xA0, StaticCallList),
         BRIDGE_REGISTER(0xA3, LastThreadHandle),
+        BRIDGE_REGISTER(0xA4, ThreadRendezvous),
         BRIDGE_REGISTER(0xA5, ProcessRendezvous),
         BRIDGE_REGISTER(0xA6, MessageGetDesLength),
         BRIDGE_REGISTER(0xA7, MessageGetDesMaxLength),

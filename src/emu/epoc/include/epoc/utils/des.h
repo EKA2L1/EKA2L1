@@ -71,6 +71,11 @@ namespace eka2l1::epoc {
             return static_cast<des_type>(info >> 28);
         }
 
+        inline void           set_descriptor_type(const des_type dtype) {
+            info &= 0x00FFFFFF;
+            info |= (dtype << 28);
+        }
+
         void *get_pointer_raw(eka2l1::process_ptr pr);
         
         int assign_raw(eka2l1::process_ptr pr, const std::uint8_t *data, 
@@ -132,6 +137,10 @@ namespace eka2l1::epoc {
     template <typename T>
     struct des: public desc<T> {
         std::uint32_t max_length;
+
+        inline void set_max_length(const std::uint32_t max_len) {
+            max_length = max_len;
+        }
     };
 
     template <typename T>
@@ -159,6 +168,32 @@ namespace eka2l1::epoc {
         std::uint32_t   length;
         T               data[1];
     };
+
+    template <typename T, unsigned int MAX_ELEM = 32>
+    struct bufc_static: public desc<T> {
+        T data[MAX_ELEM];
+        
+        void operator = (const std::basic_string<T> &str) {
+            assign(nullptr, str);
+        }
+    };
+
+    template <typename T, unsigned int MAX_ELEM = 32>
+    struct buf_static: public des<T> {
+        T data[MAX_ELEM];
+
+        buf_static() {
+            des<T>::set_max_length(MAX_ELEM);
+            desc_base::set_descriptor_type(buf); 
+        }
+
+        void operator = (const std::basic_string<T> &str) {
+            desc<T>::assign(nullptr, str);
+        }
+    };
+
+    using filename = buf_static<char16_t, 0x100>;
+    using apa_app_caption = buf_static<char16_t, 0x100>;
 
     using desc8 = desc<char>;
     using desc16 = desc<char16_t>;

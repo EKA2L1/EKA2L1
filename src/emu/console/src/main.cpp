@@ -243,7 +243,8 @@ void do_args() {
     }
 
     if (sis_install_path != "-1") {
-        auto res = symsys->install_package(common::utf8_to_ucs2(sis_install_path), adrive);
+        auto res = symsys->install_package(common::utf8_to_ucs2(sis_install_path), 
+            adrive == 0 ? drive_c : drive_e);
 
         if (res) {
             std::cout << "Install successfully!" << std::endl;

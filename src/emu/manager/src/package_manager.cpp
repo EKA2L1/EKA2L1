@@ -48,7 +48,7 @@ namespace eka2l1 {
 
                 app_info info;
 
-                info.drive = app["drive"].as<uint8_t>();
+                info.drive = static_cast<drive_number>(app["drive"].as<std::uint8_t>());
                 info.ver = static_cast<epocver>(app["epoc"].as<int>());
 
                 auto exec = app["exec"].as<std::string>();
@@ -62,11 +62,7 @@ namespace eka2l1 {
                 auto vendor = app["vendor"].as<std::string>();
                 info.vendor_name = common::utf8_to_ucs2(vendor);
 
-                if (info.drive == 0) {
-                    c_apps.emplace(info.id, info);
-                } else {
-                    e_apps.emplace(info.id, info);
-                }
+                apps.emplace(info.id, info);
             }
 
             return true;
@@ -83,16 +79,16 @@ namespace eka2l1 {
 
             emitter << YAML::BeginMap;
 
-            for (const auto &c_app : c_apps) {
-                emitter << YAML::Key << common::ucs2_to_utf8(c_app.second.name);
+            for (const auto &app : apps) {
+                emitter << YAML::Key << common::ucs2_to_utf8(app.second.name);
                 emitter << YAML::Value << YAML::BeginMap;
 
-                emitter << YAML::Key << "drive" << YAML::Value << c_app.second.drive;
-                emitter << YAML::Key << "epoc" << YAML::Value << static_cast<int>(c_app.second.ver);
-                emitter << YAML::Key << "exec" << YAML::Value << common::ucs2_to_utf8(c_app.second.executable_name);
-                emitter << YAML::Key << "uid" << YAML::Value << c_app.second.id;
-                emitter << YAML::Key << "name" << YAML::Value << common::ucs2_to_utf8(c_app.second.name);
-                emitter << YAML::Key << "vendor" << YAML::Value << common::ucs2_to_utf8(c_app.second.vendor_name);
+                emitter << YAML::Key << "drive" << YAML::Value << app.second.drive;
+                emitter << YAML::Key << "epoc" << YAML::Value << static_cast<int>(app.second.ver);
+                emitter << YAML::Key << "exec" << YAML::Value << common::ucs2_to_utf8(app.second.executable_name);
+                emitter << YAML::Key << "uid" << YAML::Value << app.second.id;
+                emitter << YAML::Key << "name" << YAML::Value << common::ucs2_to_utf8(app.second.name);
+                emitter << YAML::Key << "vendor" << YAML::Value << common::ucs2_to_utf8(app.second.vendor_name);
 
                 emitter << YAML::EndMap;
             }
@@ -105,29 +101,22 @@ namespace eka2l1 {
         }
 
         bool package_manager::installed(uid app_uid) {
-            auto res1 = c_apps.find(app_uid);
-            auto res2 = e_apps.find(app_uid);
-
-            return (res1 != c_apps.end()) || (res2 != e_apps.end());
+            auto res = apps.find(app_uid);
+            return (res != apps.end());
         }
 
         std::u16string package_manager::app_name(uid app_uid) {
-            auto res1 = c_apps.find(app_uid);
-            auto res2 = e_apps.find(app_uid);
+            auto res = apps.find(app_uid);
 
-            if ((res1 == c_apps.end()) && (res2 == e_apps.end())) {
+            if (res == apps.end()) {
                 LOG_WARN("App not installed on both drive, return null name.");
                 return u"";
             }
 
-            if (res1 != c_apps.end()) {
-                return res1->second.name;
-            }
-
-            return res2->second.name;
+            return res->second.name;
         }
 
-        bool package_manager::install_controller(loader::sis_controller *ctrl, uint8_t drv) {
+        bool package_manager::install_controller(loader::sis_controller *ctrl, drive_number drv) {
             app_info info{};
 
             info.vendor_name = ctrl->info.vendor_name.unicode_string;
@@ -153,16 +142,9 @@ namespace eka2l1 {
                     info.executable_name = file_des->target.unicode_string;
 
                     // Fixed drive
-                    if (info.executable_name.find(u"!") == std::u16string::npos) {
-                        std::u16string fixed_drive = info.executable_name.substr(0, 2);
-
-                        if (fixed_drive == u"C:" || fixed_drive == u"c:") {
-                            LOG_INFO("Fixed drive, unexpected change to C:");
-                            info.drive = 0;
-                        } else {
-                            LOG_INFO("Fixed drive, unexpected change to E:");
-                            info.drive = 1;
-                        }
+                    if (info.executable_name[0] == u'!') {
+                        LOG_INFO("Fixed drive, unexpected change to {}", char(info.executable_name[0]));
+                        info.drive = char16_to_drive(info.executable_name[0]); 
 
                         symfile f = io->open_file(file_des->target.unicode_string, READ_MODE | BIN_MODE);
                         f->seek(8, file_seek_mode::beg);
@@ -171,12 +153,6 @@ namespace eka2l1 {
                     }
 
                     LOG_INFO("Executable_name: {}", common::ucs2_to_utf8(info.executable_name));
-
-                    if (info.drive == 0) {
-                        info.executable_name[0] = u'C';
-                    } else {
-                        info.executable_name[0] = u'E';
-                    }
 
                     symfile f = io->open_file(info.executable_name, READ_MODE | BIN_MODE);
                     f->seek(8, file_seek_mode::beg);
@@ -193,13 +169,8 @@ namespace eka2l1 {
             }
 
             if (info.executable_name != u"") {
-                if (info.drive == 0) {
-                    c_apps.insert(std::make_pair(ruid, info));
-                    c_apps[ruid] = info;
-                } else {
-                    e_apps.insert(std::make_pair(ruid, info));
-                    e_apps[ruid] = info;
-                }
+                apps.insert(std::make_pair(ruid, info));
+                apps[ruid] = info;
             }
 
             for (auto &wrap_mini_ctrl : ctrl->install_block.controllers.fields) {
@@ -211,7 +182,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool package_manager::install_package(const std::u16string &path, uint8_t drive) {
+        bool package_manager::install_package(const std::u16string &path, drive_number drive) {
             std::optional<epocver> sis_ver = loader::get_epoc_ver(common::ucs2_to_utf8(path));
 
             if (!sis_ver) {
@@ -227,7 +198,7 @@ namespace eka2l1 {
                     this,
                     res.controller.install_block,
                     res.data,
-                    loader::sis_drive(drive));
+                    drive);
 
                 interpreter.interpret();
 
@@ -236,11 +207,7 @@ namespace eka2l1 {
                 app_info de_info;
                 loader::install_sis_old(path, io, drive, *sis_ver, de_info);
 
-                if (de_info.drive == 0) {
-                    c_apps.emplace(de_info.id, de_info);
-                } else {
-                    e_apps.emplace(de_info.id, de_info);
-                }
+                apps.emplace(de_info.id, de_info);
             }
 
             write_sdb_yaml("apps_registry.yml");
@@ -249,44 +216,61 @@ namespace eka2l1 {
         }
 
         bool package_manager::uninstall_package(uid app_uid) {
-            c_apps.erase(app_uid);
-            e_apps.erase(app_uid);
-
+            apps.erase(app_uid);
             write_sdb_yaml("apps_registry.yml");
 
             return false;
         }
 
         // Package manager
-        app_info package_manager::info(uid app_uid) {
-            auto res1 = c_apps.find(app_uid);
-            auto res2 = e_apps.find(app_uid);
+        std::optional<app_info> package_manager::info(uid app_uid) {
+            auto res = apps.find(app_uid);
 
-            if (res1 == c_apps.end() && res2 == e_apps.end()) {
+            if (res == apps.end()) {
                 LOG_WARN("Cant find info of app with UID of: {}", app_uid);
-                return app_info{};
+                return std::nullopt;
             }
 
-            if (res1 != c_apps.end()) {
-                return res1->second;
-            }
-
-            return res2->second;
+            return res->second;
         }
 
         std::string package_manager::get_app_executable_path(uint32_t uid) {
-            app_info inf = info(uid);
+            std::optional<app_info> info_res = info(uid);
 
-            std::string res = (inf.drive == 0) ? "C:" : "E:";
-            res += "/sys/bin/";
+            if (!info_res) {
+                LOG_TRACE("Can't find info for UID: 0x{:X}", uid);
+                return "";
+            }
+            
+            app_info inf = std::move(*info_res);
+
+            std::string res;
+            res += char(drive_to_char16(inf.drive));
+            res += ":\\sys\\bin\\";
             res += common::ucs2_to_utf8(inf.executable_name);
 
             return res;
         }
 
         std::string package_manager::get_app_name(uint32_t uid) {
-            app_info inf = info(uid);
-            return common::ucs2_to_utf8(inf.name);
+            std::optional<app_info> info_res = info(uid);
+
+            if (!info_res) {
+                LOG_TRACE("Can't find info for UID: 0x{:X}", uid);
+                return "";
+            }
+            
+            return common::ucs2_to_utf8(info_res->name);
+        }
+        
+        std::vector<app_info> package_manager::get_apps_info() {
+            std::vector<app_info> infos;
+
+            for (auto const & [ drive, info ] : apps) {
+                infos.push_back(info);
+            }
+
+            return infos;
         }
     }
 }

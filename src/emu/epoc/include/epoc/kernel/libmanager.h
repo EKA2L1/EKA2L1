@@ -121,7 +121,7 @@ namespace eka2l1 {
 
         public:
             std::map<address, epoc_import_func> import_funcs;
-            std::map<sid, epoc_import_func> svc_funcs;
+            std::unordered_map<sid, epoc_import_func> svc_funcs;
             std::map<address, epoc_import_func> custom_funcs;
 
             lib_manager(){};

@@ -34,22 +34,6 @@
 
 namespace eka2l1 {
     namespace loader {
-        const char drive_name(sis_drive drv) {
-            if (drv == sis_drive::drive_c) {
-                return 'c';
-            }
-
-            if (drv == sis_drive::drive_e) {
-                return 'e';
-            }
-
-            if (drv == sis_drive::drive_z) {
-                return 'z';
-            }
-
-            return 'd';
-        }
-
         bool exists(const utf16_str &str) {
             FILE *temp = fopen(common::ucs2_to_utf8(str).c_str(), "rb");
 
@@ -61,11 +45,11 @@ namespace eka2l1 {
             return false;
         }
 
-        std::string get_install_path(const std::u16string &pseudo_path, sis_drive drv) {
+        std::string get_install_path(const std::u16string &pseudo_path, drive_number drv) {
             std::u16string raw_path = pseudo_path;
 
             if (raw_path.substr(0, 2) == u"!:") {
-                raw_path[0] = (char16_t)drive_name(drv);
+                raw_path[0] = drive_to_char16(drv);
             }
 
             return common::ucs2_to_utf8(raw_path);
@@ -92,7 +76,7 @@ namespace eka2l1 {
             manager::package_manager *pkgmngr,
             sis_install_block inst_blck,
             sis_data inst_data,
-            sis_drive inst_drv)
+            drive_number inst_drv)
             : data_stream(std::move(stream))
             , mngr(pkgmngr)
             , io(io)
@@ -349,7 +333,7 @@ namespace eka2l1 {
 
                         if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
                             LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
-                            mngr->install_package(common::utf8_to_ucs2(raw_path), 0);
+                            mngr->install_package(common::utf8_to_ucs2(raw_path), drive_c);
                         }
                     } else {
                         LOG_INFO("EOpNull");

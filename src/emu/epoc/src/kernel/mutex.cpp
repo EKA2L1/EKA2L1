@@ -21,18 +21,23 @@
 #include <cassert>
 #include <common/log.h>
 #include <common/chunkyseri.h>
+#include <common/cvt.h>
 
 #include <epoc/kernel.h>
 #include <epoc/kernel/mutex.h>
 
 namespace eka2l1 {
     namespace kernel {
-        mutex::mutex(kernel_system *kern, std::string name, bool init_locked,
+        mutex::mutex(kernel_system *kern, timing_system *timing, std::string name, bool init_locked,
             kernel::access_type access)
             : kernel_obj(kern, std::move(name), access)
+            , timing(timing)
             , lock_count(0)
             , holding(nullptr) {
             obj_type = object_type::mutex;
+
+            mutex_event_type = timing->register_event("MutexWaking" + common::to_string(uid),
+                std::bind(&mutex::waking_up_from_suspension, this, std::placeholders::_1, std::placeholders::_2));
 
             if (init_locked) {
                 wait();
@@ -64,10 +69,89 @@ namespace eka2l1 {
             }
         }
 
+        void mutex::try_wait() {
+            if (!holding) {
+                holding = kern->crr_thread();
+
+                if (holding->state == thread_state::hold_mutex_pending) {
+                    holding->state = thread_state::ready;
+                    holding->wait_obj = nullptr;
+
+                    pendings.remove(holding);
+                }
+            }
+
+            if (holding == kern->crr_thread()) {
+                lock_count++;
+            }
+        }
+
+        void mutex::waking_up_from_suspension(std::uint64_t userdata, int cycles_late) {
+            std::uint32_t id = static_cast<std::uint32_t>(userdata);
+            thread_ptr thread_to_wake = std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(id));
+
+            if (!thread_to_wake || thread_to_wake->get_object_type() != kernel::object_type::thread) {
+                LOG_ERROR("Waking up invalid object!!!!!");
+                return;
+            }
+
+            switch (thread_to_wake->current_state()) {
+            case thread_state::hold_mutex_pending: {
+                auto thr_ite = std::find_if(pendings.begin(), pendings.end(), [=](const thread_ptr &thr) {
+                    return thr->unique_id() == id;
+                });
+
+                if (thr_ite == pendings.end()) {
+                    LOG_ERROR("Thread request to wake up with this mutex is not in hold pending queue");
+                    return;
+                }
+
+                pendings.remove(thread_to_wake);
+
+                break;
+            }
+
+            case thread_state::wait_mutex: {
+                auto thr_ite = std::find_if(waits.begin(), waits.end(), [=](const thread_ptr &thr) {
+                    return thr->unique_id() == id;
+                });
+
+                if (thr_ite == waits.end()) {
+                    LOG_ERROR("Thread request to wake up with this mutex is not in hold pending queue");
+                    return;
+                }
+
+                waits.remove(thread_to_wake);
+
+                break;
+            }
+
+            default: {
+                LOG_ERROR("Unknown thread stateto wake up");
+                return;
+            }
+            }
+
+            thread_to_wake->resume();
+        }
+        
+        void mutex::wait_for(int msecs) {
+            wait();
+
+            // Schedule event to wake up
+            timing->schedule_event(timing->ms_to_cycles(msecs), mutex_event_type,
+                kern->crr_thread()->unique_id());
+        }
+
         bool mutex::signal() {
             if (!holding) {
                 LOG_ERROR("Signal a mutex that's not held by any thread");
 
+                return false;
+            }
+
+            if (holding != kern->crr_thread()) {
+                LOG_ERROR("Calling signal with the caller not being the holder");
                 return false;
             }
 
@@ -82,6 +166,7 @@ namespace eka2l1 {
                 thread_ptr ready_thread = std::move(waits.top());
                 assert(ready_thread->wait_obj == this);
 
+                timing->unschedule_event(mutex_event_type, ready_thread->unique_id());
                 waits.pop();
 
                 ready_thread->get_scheduler()->resume(ready_thread);

@@ -132,7 +132,7 @@ namespace eka2l1 {
         void load_scripts();
 
         /*! \brief Install a SIS/SISX. */
-        bool install_package(std::u16string path, uint8_t drv);
+        bool install_package(std::u16string path, drive_number drv);
         bool load_rom(const std::string &path);
 
         void request_exit();

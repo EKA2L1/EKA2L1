@@ -748,6 +748,16 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpOrdinalPosition: {
+            ctx.set_request_status(priority);
+            break;
+        }
+
+        case EWsWinOpOrdinalPriority: {
+            ctx.set_request_status(secondary_priority);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             break;
@@ -1356,6 +1366,25 @@ namespace eka2l1::epoc {
             ctx.write_arg(reply_slot, to_write);
             ctx.set_request_status(KErrNone);
 
+            break;
+        }
+
+        case EWsClOpWindowGroupListAndChain: {
+            // All window groups should be child of root node
+            std::vector<std::uint32_t> ids;
+
+            // We can use linked node in the window group, but i'm not sure
+            // it will help me traverses all the code
+            for (auto &win: root->childs) {
+                if (win->type == window_kind::group) {
+                    ids.push_back(win->id);
+                }
+            }
+
+            ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t*>(&ids[0]), 
+                static_cast<std::uint32_t>(ids.size() * sizeof(std::uint32_t)));
+
+            ctx.set_request_status(KErrNone);
             break;
         }
 

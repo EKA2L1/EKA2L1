@@ -116,3 +116,5 @@ enum arm_emulator_type {
 typedef std::uint32_t vaddress;
 
 int translate_protection(prot cprot);
+char16_t drive_to_char16(const drive_number drv);
+drive_number char16_to_drive(const char16_t c);

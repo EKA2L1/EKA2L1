@@ -39,19 +39,31 @@ namespace eka2l1 {
 
             std::vector<thread_ptr> suspended;
 
+            timing_system *timing;
+
+            int mutex_event_type;
+
         protected:
             void wake_next_thread();
 
         public:
-            mutex(kernel_system *kern)
-                : kernel_obj(kern) {
+            mutex(kernel_system *kern, timing_system *timing)
+                : kernel_obj(kern), timing(timing) {
                 obj_type = kernel::object_type::mutex;
             }
 
-            mutex(kernel_system *kern, std::string name, bool init_locked,
+            mutex(kernel_system *kern, timing_system *timing, std::string name, bool init_locked,
                         kernel::access_type access = kernel::access_type::local_access);
 
+            /*! \brief Timeout reached, whether it's on the pendings
+            */
+            void waking_up_from_suspension(std::uint64_t userdata, int cycles_late);
+
             void wait();
+            void try_wait();
+
+            void wait_for(int msecs);
+
             bool signal();
 
             /*! \brief This update the mutex accordingly to the priority.

@@ -225,7 +225,7 @@ namespace eka2l1 {
     uint32_t kernel_system::create_mutex(std::string name, bool init_locked,
         kernel::owner_type own,
         kernel::access_type access) {
-        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, name, init_locked, access);
+        mutex_ptr new_mutex = std::make_shared<kernel::mutex>(this, timing, name, init_locked, access);
 
         {
             SYNCHRONIZE_ACCESS;
@@ -774,13 +774,15 @@ namespace eka2l1 {
     }
     
     struct kernel_info {
-        std::uint32_t total_chunks;
-        std::uint32_t total_mutex;
-        std::uint32_t total_semaphore;
-        std::uint32_t total_thread;
-        std::uint32_t total_timer;
-        std::uint32_t total_prop;
-        std::uint32_t total_process;
+        std::uint32_t total_chunks {0};
+        std::uint32_t total_mutex {0};
+        std::uint32_t total_semaphore {0};
+        std::uint32_t total_thread {0};
+        std::uint32_t total_timer {0};
+        std::uint32_t total_prop {0};
+        std::uint32_t total_process {0};
+
+        kernel_info() {}
     };
 
     void kernel_system::do_state(common::chunkyseri &seri) {
@@ -860,7 +862,7 @@ namespace eka2l1 {
             }
 
             for (std::uint32_t i = 0; i < info.total_mutex; i++) {
-                auto c = std::make_shared<kernel::mutex>(this);
+                auto c = std::make_shared<kernel::mutex>(this, timing);
                 objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
             }
             
