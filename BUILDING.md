@@ -13,11 +13,7 @@ To build the emulator, follow these steps:
    - Make all or make these critical targets:
       * eka2l1 *(Console interface of the emulator)*
 
-- Linux
+- Linux, MacOS
     - Install curl package through your prefer package manager.
     - Run CMake to generate make file.
     - Build with make -j 4
-
-- MacOS
-    - Don't support building through XCode yet (no std::filesystem).
-    - Can be build through Clang with experimental filesystem library.
