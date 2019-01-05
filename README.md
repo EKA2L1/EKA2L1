@@ -14,7 +14,7 @@
     * You can contact me through Discord channel [here](https://discord.gg/5Bm5SJ9)
     
 - Support
-    * You can contribute to the codebase by submitting the PR. Please visit the wiki to know about the coding convention first ;)
+    * To get started, I have put some *good first issues*. You can take one that's available, and if there is any questions, you can ask me on Discord.
     * You can also support me on [Patreon](https://www.patreon.com/fewdspuck)
 
 - Building and contribute:
