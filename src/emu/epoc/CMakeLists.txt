@@ -72,6 +72,8 @@ add_library(epocservs
     include/epoc/services/applist/applist.h
     include/epoc/services/backup/backup.h
     include/epoc/services/centralrepo/centralrepo.h
+    include/epoc/services/centralrepo/common.h
+    include/epoc/services/centralrepo/repo.h
     include/epoc/services/domain/database.h
     include/epoc/services/domain/defs.h
     include/epoc/services/domain/domain.h
@@ -97,6 +99,7 @@ add_library(epocservs
     src/services/applist/applist.cpp
     src/services/backup/backup.cpp
     src/services/centralrepo/centralrepo.cpp
+    src/services/centralrepo/cre.cpp
     src/services/domain/domain.cpp
     src/services/drm/helper.cpp
     src/services/drm/rights.cpp

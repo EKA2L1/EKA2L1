@@ -56,8 +56,8 @@ namespace eka2l1::common {
         }
 
         template <typename T>
-        T &get_as() {
-            return *(reinterpret_cast<T*>(this));
+        T *get_as() {
+            return (reinterpret_cast<T*>(this));
         }
     };
 

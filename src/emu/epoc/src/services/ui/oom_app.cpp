@@ -119,7 +119,7 @@ namespace eka2l1 {
             screen_mode_width_key += std::to_string(total_mode + 1);
 
             common::ini_node_ptr mode_width = screen_node->
-                get_as<common::ini_section>().find(screen_mode_width_key.c_str());
+                get_as<common::ini_section>()->find(screen_mode_width_key.c_str());
             
             if (!mode_width) {
                 break;
@@ -129,7 +129,7 @@ namespace eka2l1 {
             screen_mode_height_key += std::to_string(total_mode + 1);
 
             common::ini_node_ptr mode_height = screen_node->
-                get_as<common::ini_section>().find(screen_mode_height_key.c_str());
+                get_as<common::ini_section>()->find(screen_mode_height_key.c_str());
 
             total_mode++;
 
@@ -137,18 +137,18 @@ namespace eka2l1 {
             scr_mode.screen_number = 0;
             scr_mode.mode_number = total_mode;
 
-            mode_width->get_as<common::ini_pair>().get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.x),
+            mode_width->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.x),
                 1, 0);
-            mode_height->get_as<common::ini_pair>().get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.y),
+            mode_height->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.y),
                 1, 0);
             
             std::string screen_mode_rot_key = "SCR_ROTATION";
             screen_mode_rot_key += std::to_string(total_mode);
 
             common::ini_node_ptr mode_rot = screen_node->
-                get_as<common::ini_section>().find(screen_mode_rot_key.c_str());
+                get_as<common::ini_section>()->find(screen_mode_rot_key.c_str());
 
-            mode_rot->get_as<common::ini_pair>().get(reinterpret_cast<std::uint32_t*>(&scr_mode.rotation),
+            mode_rot->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t*>(&scr_mode.rotation),
                 1, 0);
 
             scr_config.modes.push_back(scr_mode);
