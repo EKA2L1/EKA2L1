@@ -197,6 +197,10 @@ namespace eka2l1::epoc {
 
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd);
 
+        /*! \brief Generic event queueing
+        */
+        virtual void queue_event(epoc::event &evt);
+
         window(window_server_client_ptr client)
             : window_client_obj(client)
             , type(window_kind::normal)
@@ -255,7 +259,6 @@ namespace eka2l1::epoc {
         }
 
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-
         void lost_focus();
         void gain_focus();
     };
@@ -294,11 +297,22 @@ namespace eka2l1::epoc {
 
         enum {
             shadow_disable = 0x1000,
-            active = 0x2000
+            active = 0x2000,
+            visible = 0x4000,
         };
 
         std::uint32_t flags;
 
+        bool is_visible() {
+            return flags & visible;
+        }
+
+        void set_visible(bool vis) {
+            flags &= ~visible;
+            vis ? (flags |= visible) : (void)0;
+        }
+
+        void queue_event(epoc::event &evt) override;
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
 

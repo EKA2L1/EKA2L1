@@ -583,6 +583,10 @@ namespace eka2l1::epoc {
         }
     }
 
+    void window::queue_event(epoc::event &evt) {
+        client->queue_event(evt);    
+    }
+
     // I make this up myself
     std::uint16_t window::redraw_priority() {
         std::uint16_t pri;
@@ -664,11 +668,11 @@ namespace eka2l1::epoc {
     }
     
     void window_group::lost_focus() {
-        client->queue_event(epoc::event { id, epoc::event_code::focus_gained });
+        queue_event(epoc::event { id, epoc::event_code::focus_gained });
     }
 
     void window_group::gain_focus() {
-        client->queue_event(epoc::event { id, epoc::event_code::focus_lost });
+        queue_event(epoc::event { id, epoc::event_code::focus_lost });
     }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
@@ -765,6 +769,16 @@ namespace eka2l1::epoc {
         }
     }
     
+    void window_user::queue_event(epoc::event &evt) {
+        if (!is_visible()) {
+            LOG_TRACE("The window 0x{:X} is not visible, and can't receive any events", 
+                id);
+            return;
+        }
+
+        window::queue_event(evt);
+    }
+    
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
@@ -775,6 +789,13 @@ namespace eka2l1::epoc {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
+        case EWsWinOpSetVisible: {
+            set_visible(*reinterpret_cast<bool*>(cmd.data_ptr));
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         case EWsWinOpSetShadowHeight: {
             shadow_height = *reinterpret_cast<int*>(cmd.data_ptr);
             ctx.set_request_status(KErrNone);
