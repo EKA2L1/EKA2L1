@@ -19,9 +19,17 @@
  */
 
 #include <epoc/services/backup/backup.h>
+#include <common/log.h>
 
 namespace eka2l1 {
     backup_server::backup_server(eka2l1::system *sys)
         : service::server(sys, "!BackupServer", true) {
+        REGISTER_IPC(backup_server, get_backup_operation_state, EBakOpCodeGetBackupOperationState, 
+            "Backup::GetOperationState");
+    }
+    
+    void backup_server::get_backup_operation_state(service::ipc_context ctx) {
+        LOG_TRACE("GetBackupOperationState stubbed with false");
+        ctx.write_arg_pkg<bool>(0, false);
     }
 }

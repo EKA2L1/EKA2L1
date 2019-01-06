@@ -26,7 +26,27 @@
 #include <epoc/services/server.h>
 
 namespace eka2l1 {
+    enum TBaBakOpCode {
+        EBakOpCodeEventReady=20, // EBakOpCodeStartNotifications,
+        EBakOpCodeGetEvent,
+        EBakOpCodeCloseAllFiles,
+        EBakOpCodeRestartAll,
+        EBakOpCodeCloseFile,
+        EBakOpCodeRestartFile,
+        EBakOpCodeNotifyLockChange,
+        EBakOpCodeNotifyLockChangeCancel,
+        EBakOpCodeCloseServer,		// no longer supported
+        EBakOpCodeNotifyBackupOperation,
+        EBakOpCodeCancelOutstandingBackupOperationEvent,
+        EBakOpCodeGetBackupOperationState,
+        EBakOpCodeBackupOperationEventReady,
+        EBakOpCodeGetBackupOperationEvent,
+        EBakOpCodeSetBackupOperationObserverIsPresent,
+        EBakOpCodeStopNotifications
+    };
+
     class backup_server: public service::server {
+        void get_backup_operation_state(service::ipc_context ctx);
     public:
         explicit backup_server(eka2l1::system *sys);
     };
