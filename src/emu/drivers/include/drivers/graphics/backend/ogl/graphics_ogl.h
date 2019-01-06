@@ -25,12 +25,42 @@
 #include <drivers/graphics/backend/ogl/fb_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
 
+#include <common/queue.h>
+
 struct ImGuiContext;
 
 namespace eka2l1::drivers {
+    struct ogl_window {
+        std::uint32_t id;
+        ogl_framebuffer fb;
+
+        eka2l1::vec2    pos;
+        std::uint32_t   pri;
+
+        bool visible { false };
+
+        explicit ogl_window(const eka2l1::vec2 &size, const std::uint32_t pri,
+            bool visible = false);
+
+        bool operator < (const ogl_window &rhs) {
+            return pri < rhs.pri;
+        }
+    };
+
+    using ogl_window_ptr = std::shared_ptr<ogl_window>;
+
     class ogl_graphics_driver: public graphics_driver {
         ogl_framebuffer framebuffer;
         ImGuiContext *context;
+
+        eka2l1::cp_queue<ogl_window_ptr> windows;
+
+        std::uint32_t id_counter = 0;
+        ogl_window_ptr binding;
+
+        bool should_rerender = false;
+
+        void redraw_window_list();
 
     public:
         explicit ogl_graphics_driver(const vec2 &scr);

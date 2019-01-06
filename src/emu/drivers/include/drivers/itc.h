@@ -144,6 +144,23 @@ namespace eka2l1::drivers {
         /*! \brief Draw text with bound rect
         */
         void draw_text(eka2l1::rect rect, const std::string &str);
+
+        /*! \brief Create a new window in the server size.
+         *
+         * \param initial_size       The initial size of the window
+         * \param pri                The priority of the window. This can be changed later
+         * \param visible_from_start Check if the window should be render or not
+         * 
+         * \returns ID of window.
+        */
+        std::uint32_t create_window(const eka2l1::vec2 &initial_size, const std::uint32_t pri,
+            const bool visible_from_start = true);
+
+        void set_window_visible(const std::uint32_t id, const bool visible);
+
+        void set_window_size(const std::uint32_t id, const eka2l1::vec2 &win_size);
+
+        void set_window_priority(const std::uint32_t id, const std::uint32_t pri);
     };
 }
 

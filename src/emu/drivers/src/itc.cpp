@@ -26,9 +26,9 @@
 namespace eka2l1::drivers {
     bool driver_client::send_opcode(const int opcode, itc_context &ctx) {
         if (already_locked) {
-            driver->request_queue.push_unsafe({ opcode, ctx });
+            driver->request_queue.push_unsafe({ opcode, &ctx });
         } else {
-            driver->request_queue.push({ opcode, ctx });
+            driver->request_queue.push({ opcode, &ctx });
         }
 
         return true;
@@ -88,6 +88,21 @@ namespace eka2l1::drivers {
         send_opcode(graphics_driver_end_invalidate, context);
     }
 
+    std::uint32_t graphics_driver_client::create_window(const eka2l1::vec2 &initial_size, const std::uint32_t pri,
+        const bool visible_from_start) {
+        itc_context context;
+        context.push(initial_size);
+        context.push(pri);
+        context.push(visible_from_start);
+
+        send_opcode(graphics_driver_create_window, context);
+
+        // Sync, waiting for result
+        sync_with_driver();
+
+        return *context.pop<std::uint32_t>();
+    }
+
     /*! \brief Clear the screen with color.
         \params color A RGBA vector 4 color
     */
@@ -107,5 +122,35 @@ namespace eka2l1::drivers {
         context.push_string(str);
 
         send_opcode(graphics_driver_draw_text_box, context);
+    }
+
+    void graphics_driver_client::set_window_visible(const std::uint32_t id, const bool visible) {
+        itc_context context;
+        context.push(id);
+        context.push(visible);
+
+        send_opcode(graphics_driver_set_visibility, context);
+
+        sync_with_driver();
+    }
+
+    void graphics_driver_client::set_window_size(const std::uint32_t id, const eka2l1::vec2 &win_size) {
+        itc_context context;
+        context.push(id);
+        context.push(win_size);
+
+        send_opcode(graphics_driver_set_window_size, context);
+
+        sync_with_driver();
+    }
+
+    void graphics_driver_client::set_window_priority(const std::uint32_t id, const std::uint32_t pri) {
+        itc_context context;
+        context.push(id);
+        context.push(pri);
+
+        send_opcode(graphics_driver_set_priority, context);
+
+        sync_with_driver();
     }
 }

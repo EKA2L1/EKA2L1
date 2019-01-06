@@ -29,9 +29,16 @@ namespace eka2l1::drivers {
     enum graphics_driver_opcode {
         graphics_driver_clear,
         graphics_driver_resize_screen,
+        graphics_driver_create_window,
+        graphics_driver_destroy_window,
+        graphics_driver_begin_window,
         graphics_driver_invalidate,
         graphics_driver_end_invalidate,
+        graphics_driver_end_window,
         graphics_driver_set_brush_color,
+        graphics_driver_set_window_size,
+        graphics_driver_set_priority,
+        graphics_driver_set_visibility,
         graphics_driver_draw_text_box
     };
 

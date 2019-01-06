@@ -30,7 +30,7 @@ namespace eka2l1::drivers {
 
     struct driver_request {
         int opcode;
-        itc_context context;
+        itc_context *context;
     };
 
     class driver {
