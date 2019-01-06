@@ -415,6 +415,9 @@ namespace eka2l1::epoc {
             events.set_listener(nof);
         }
 
+        std::uint32_t get_total_window_groups();
+        std::uint32_t get_total_window_groups_with_priority(const std::uint32_t pri);
+
         void add_event_mod_notifier_user(epoc::event_mod_notifier_user nof);
         void add_event_screen_change_user(epoc::event_screen_change_user nof);
         void add_event_error_msg_user(epoc::event_error_msg_user nof);
@@ -564,6 +567,18 @@ namespace eka2l1 {
 
     public:
         window_server(system *sys);
+
+        /*! \brief Get the number of window groups running in the server
+        *
+        */
+        std::uint32_t get_total_window_groups();
+
+        /*! \brief Get the number of window groups running in the server
+         *         with the specified priority.
+         * 
+         *  \param pri The priority we want to count.
+        */
+        std::uint32_t get_total_window_groups_with_priority(const std::uint32_t pri);
 
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;

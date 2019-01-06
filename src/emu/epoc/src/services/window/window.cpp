@@ -1167,8 +1167,19 @@ namespace eka2l1::epoc {
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         switch (cmd.header.op) {
+        // Gets the total number of window groups with specified priority currently running 
+        // in the window server. 
         case EWsClOpNumWindowGroups: {
-            ctx.set_request_status(total_group);
+            int pri = *reinterpret_cast<int*>(cmd.data_ptr);
+            std::uint32_t total = get_ws().get_total_window_groups_with_priority(pri);
+
+            ctx.set_request_status(static_cast<int>(total));
+            break;
+        }
+
+        // Gets the total number of window groups currently running in the window server. 
+        case EWsClOpNumWindowGroupsAllPriorities: {
+            ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups()));
             break;
         }
 
@@ -1392,6 +1403,35 @@ namespace eka2l1::epoc {
             LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
         }
     }
+
+    std::uint32_t window_server_client::get_total_window_groups() {
+        return total_group;
+    }
+
+    std::uint32_t window_server_client::get_total_window_groups_with_priority(const std::uint32_t pri) {
+        epoc::window_group_ptr gr = nullptr;
+        std::uint32_t total = 0;
+
+        for (auto &child: root->childs) {
+            if (child->type == window_kind::group) {
+                gr = std::reinterpret_pointer_cast<epoc::window_group>(child);
+                break;
+            }
+        }
+
+        if (!gr) {
+            LOG_TRACE("No window group detected");
+            return 0;
+        }
+
+        for (; gr != nullptr; gr = gr->next_sibling) {
+            if (gr->priority == pri) {
+                total++;
+            }
+        }
+
+        return total;
+    }
 }
 
 namespace eka2l1 {
@@ -1555,5 +1595,25 @@ namespace eka2l1 {
             }
             }
         }
+    }
+
+    std::uint32_t window_server::get_total_window_groups() {
+        std::uint32_t total = 0;
+
+        for (auto &cli: clients) {
+            total += cli.second->get_total_window_groups();
+        }
+
+        return total;
+    }
+
+    std::uint32_t window_server::get_total_window_groups_with_priority(const std::uint32_t pri) {
+        std::uint32_t total = 0;
+
+        for (auto &cli: clients) {
+            total += cli.second->get_total_window_groups_with_priority(pri);
+        }
+
+        return total;
     }
 }
