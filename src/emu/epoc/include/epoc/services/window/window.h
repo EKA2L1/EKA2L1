@@ -164,10 +164,7 @@ namespace eka2l1::epoc {
         std::uint16_t secondary_priority { 0 };
 
         std::uint16_t redraw_priority();
-
-        // The position
-        eka2l1::vec2  pos { 0, 0 };
-        eka2l1::vec2  size { 0, 0 };
+        virtual void priority_updated();
 
         window_kind type;
 
@@ -199,7 +196,7 @@ namespace eka2l1::epoc {
 
         /*! \brief Generic event queueing
         */
-        virtual void queue_event(epoc::event &evt);
+        virtual void queue_event(const epoc::event &evt);
 
         window(window_server_client_ptr client)
             : window_client_obj(client)
@@ -261,6 +258,10 @@ namespace eka2l1::epoc {
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
         void lost_focus();
         void gain_focus();
+
+        eka2l1::graphics_driver_client_ptr get_driver() {
+            return dvc->driver;
+        }
     };
 
     struct graphic_context;
@@ -268,6 +269,10 @@ namespace eka2l1::epoc {
     struct window_user : public epoc::window {
         epoc::display_mode dmode;
         epoc::window_type win_type;
+
+        // The position
+        eka2l1::vec2  pos { 0, 0 };
+        eka2l1::vec2  size { 0, 0 };
 
         std::vector<epoc::graphic_context*> contexts;
 
@@ -284,6 +289,9 @@ namespace eka2l1::epoc {
         } irect;
 
         std::uint32_t redraw_evt_id;
+        std::uint32_t driver_win_id { 0 };
+
+        void priority_updated() override;
 
         window_user (window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
@@ -315,8 +323,12 @@ namespace eka2l1::epoc {
             }
         }
 
-        void queue_event(epoc::event &evt) override;
+        void queue_event(const epoc::event &evt) override;
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+
+        epoc::window_group_ptr get_group() {
+            return std::reinterpret_pointer_cast<epoc::window_group>(parent);
+        }
     };
 
     struct draw_command {

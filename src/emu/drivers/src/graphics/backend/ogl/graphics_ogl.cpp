@@ -10,7 +10,7 @@
 #include "imgui_impl_opengl3.h"
 
 namespace eka2l1::drivers {
-    ogl_window::ogl_window(const eka2l1::vec2 &size, const std::uint32_t pri, bool visible)
+    ogl_window::ogl_window(const eka2l1::vec2 &size, const std::uint16_t pri, bool visible)
         : fb(size), pri(pri), visible(visible) {
 
     }
@@ -117,21 +117,23 @@ namespace eka2l1::drivers {
 
             switch (request->opcode) {
             case graphics_driver_create_window: {
-                eka2l1::vec2 size = *request->context->pop<vec2>();
-                std::uint32_t pri = *request->context->pop<std::uint32_t>();
-                bool visible = *request->context->pop<std::uint32_t>();
+                eka2l1::vec2 size = *request->context.pop<vec2>();
+                std::uint16_t pri = *request->context.pop<std::uint16_t>();
+                bool visible = *request->context.pop<bool>();
 
                 drivers::ogl_window_ptr win = std::make_unique<ogl_window>(size, pri, visible);
                 win->id = id_counter++;
 
-                request->context->push(win->id);
+                std::uint32_t *data_ret = *request->context.pop<std::uint32_t*>();
+                *data_ret = win->id;
+                
                 windows.push(std::move(win));
 
                 break;
             }
 
             case graphics_driver_begin_window: {
-                std::uint32_t id = *request->context->pop<std::uint32_t>();
+                std::uint32_t id = *request->context.pop<std::uint32_t>();
                 auto win_ite = std::find_if(windows.begin(), windows.end(),
                     [=](const ogl_window_ptr &win) { return win->id == id; });
 
@@ -179,10 +181,10 @@ namespace eka2l1::drivers {
             }
 
             case graphics_driver_resize_screen: {
-                assert(binding && "Sanity check, discovered that currently a window is binded. Unbind to resize.");  
+                assert(!binding && "Sanity check, discovered that currently a window is binded. Unbind to resize.");  
                 framebuffer.unbind();
                 
-                auto v = *request->context->pop<vec2>();
+                auto v = *request->context.pop<vec2>();
                 set_screen_size(v);
 
                 framebuffer.bind();
@@ -191,7 +193,7 @@ namespace eka2l1::drivers {
             }
 
             case graphics_driver_destroy_window: {
-                std::uint32_t id = *request->context->pop<std::uint32_t>();
+                std::uint32_t id = *request->context.pop<std::uint32_t>();
                 auto win_ite = std::find_if(windows.begin(), windows.end(),
                     [=](const ogl_window_ptr &win) { return win->id == id; });
 
@@ -205,7 +207,7 @@ namespace eka2l1::drivers {
             }
 
             case graphics_driver_set_window_size: {
-                std::uint32_t id = *request->context->pop<std::uint32_t>();
+                std::uint32_t id = *request->context.pop<std::uint32_t>();
                 auto win_ite = std::find_if(windows.begin(), windows.end(),
                     [=](const ogl_window_ptr &win) { return win->id == id; });
 
@@ -213,12 +215,12 @@ namespace eka2l1::drivers {
                     break;
                 }
 
-                (*win_ite)->fb.resize(*request->context->pop<vec2>());
+                (*win_ite)->fb.resize(*request->context.pop<vec2>());
                 break;
             }
             
             case graphics_driver_set_priority: {
-                std::uint32_t id = *request->context->pop<std::uint32_t>();
+                std::uint32_t id = *request->context.pop<std::uint32_t>();
                 auto win_ite = std::find_if(windows.begin(), windows.end(),
                     [=](const ogl_window_ptr &win) { return win->id == id; });
 
@@ -226,14 +228,14 @@ namespace eka2l1::drivers {
                     break;
                 }
 
-                (*win_ite)->pri = (*request->context->pop<std::uint32_t>());
+                (*win_ite)->pri = (*request->context.pop<std::uint16_t>());
                 windows.resort();
 
                 break;
             }
 
             case graphics_driver_set_visibility: {
-                std::uint32_t id = *request->context->pop<std::uint32_t>();
+                std::uint32_t id = *request->context.pop<std::uint32_t>();
                 auto win_ite = std::find_if(windows.begin(), windows.end(),
                     [=](const ogl_window_ptr &win) { return win->id == id; });
 
@@ -241,7 +243,20 @@ namespace eka2l1::drivers {
                     break;
                 }
 
-                (*win_ite)->visible = (*request->context->pop<bool>());
+                (*win_ite)->visible = (*request->context.pop<bool>());
+                break;
+            }
+
+            case graphics_driver_set_win_pos: {
+                std::uint32_t id = *request->context.pop<std::uint32_t>();
+                auto win_ite = std::find_if(windows.begin(), windows.end(),
+                    [=](const ogl_window_ptr &win) { return win->id == id; });
+
+                if (win_ite == windows.end()) {
+                    break;
+                }
+
+                (*win_ite)->pos = (*request->context.pop<vec2>());
                 break;
             }
 
@@ -249,7 +264,7 @@ namespace eka2l1::drivers {
                 int c[4];
 
                 for (std::size_t i = 0 ; i < 4; i ++) {
-                    c[i] = *request->context->pop<int>();
+                    c[i] = *request->context.pop<int>();
                 }
 
                 glClearColor(c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f);
@@ -259,7 +274,7 @@ namespace eka2l1::drivers {
             }
 
             case graphics_driver_invalidate: {
-                auto r = *request->context->pop<rect>();
+                auto r = *request->context.pop<rect>();
 
                 // Since it takes the lower left
                 glScissor(r.top.x, framebuffer.get_size().y - (r.top.y + r.size.y),
@@ -269,8 +284,8 @@ namespace eka2l1::drivers {
             }
 
             case graphics_driver_draw_text_box: {
-                eka2l1::rect bound = *request->context->pop<rect>();
-                std::string text = *request->context->pop_string();
+                eka2l1::rect bound = *request->context.pop<rect>();
+                std::string text = *request->context.pop_string();
 
                 // TODO: Use the actual clip. Must calculate text size
                 draw_list->AddText(nullptr, 6.0f, ImVec2(bound.top.x, bound.top.y), ImColor(0.0f, 0.0f, 0.0f, 1.0f), &text[0],

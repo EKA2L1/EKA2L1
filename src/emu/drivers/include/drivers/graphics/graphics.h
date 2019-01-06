@@ -39,6 +39,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_window_size,
         graphics_driver_set_priority,
         graphics_driver_set_visibility,
+        graphics_driver_set_win_pos,
         graphics_driver_draw_text_box
     };
 

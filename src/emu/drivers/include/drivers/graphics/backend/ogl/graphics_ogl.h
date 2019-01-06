@@ -35,11 +35,11 @@ namespace eka2l1::drivers {
         ogl_framebuffer fb;
 
         eka2l1::vec2    pos;
-        std::uint32_t   pri;
+        std::uint16_t   pri;
 
         bool visible { false };
 
-        explicit ogl_window(const eka2l1::vec2 &size, const std::uint32_t pri,
+        explicit ogl_window(const eka2l1::vec2 &size, const std::uint16_t pri,
             bool visible = false);
 
         bool operator < (const ogl_window &rhs) {

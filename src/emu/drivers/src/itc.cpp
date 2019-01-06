@@ -24,11 +24,23 @@
 #include <drivers/graphics/graphics.h>
 
 namespace eka2l1::drivers {
+    bool driver_client::send_opcode_sync(const int opcode, itc_context &ctx) {
+        if (already_locked) {
+            driver->request_queue.push_unsafe({ opcode, ctx });
+        } else {
+            driver->request_queue.push({ opcode, ctx });
+        }
+
+        sync_with_driver();
+
+        return true;
+    }
+    
     bool driver_client::send_opcode(const int opcode, itc_context &ctx) {
         if (already_locked) {
-            driver->request_queue.push_unsafe({ opcode, &ctx });
+            driver->request_queue.push_unsafe({ opcode, ctx });
         } else {
-            driver->request_queue.push({ opcode, &ctx });
+            driver->request_queue.push({ opcode, ctx });
         }
 
         return true;
@@ -88,19 +100,19 @@ namespace eka2l1::drivers {
         send_opcode(graphics_driver_end_invalidate, context);
     }
 
-    std::uint32_t graphics_driver_client::create_window(const eka2l1::vec2 &initial_size, const std::uint32_t pri,
+    std::uint32_t graphics_driver_client::create_window(const eka2l1::vec2 &initial_size, const std::uint16_t pri,
         const bool visible_from_start) {
+        std::uint32_t result = 0;
+
         itc_context context;
         context.push(initial_size);
         context.push(pri);
         context.push(visible_from_start);
+        context.push(&result);
 
-        send_opcode(graphics_driver_create_window, context);
+        send_opcode_sync(graphics_driver_create_window, context);
 
-        // Sync, waiting for result
-        sync_with_driver();
-
-        return *context.pop<std::uint32_t>();
+        return result;
     }
 
     /*! \brief Clear the screen with color.
@@ -129,9 +141,7 @@ namespace eka2l1::drivers {
         context.push(id);
         context.push(visible);
 
-        send_opcode(graphics_driver_set_visibility, context);
-
-        sync_with_driver();
+        send_opcode_sync(graphics_driver_set_visibility, context);
     }
 
     void graphics_driver_client::set_window_size(const std::uint32_t id, const eka2l1::vec2 &win_size) {
@@ -139,18 +149,22 @@ namespace eka2l1::drivers {
         context.push(id);
         context.push(win_size);
 
-        send_opcode(graphics_driver_set_window_size, context);
-
-        sync_with_driver();
+        send_opcode_sync(graphics_driver_set_window_size, context);
     }
 
-    void graphics_driver_client::set_window_priority(const std::uint32_t id, const std::uint32_t pri) {
+    void graphics_driver_client::set_window_priority(const std::uint32_t id, const std::uint16_t pri) {
         itc_context context;
         context.push(id);
         context.push(pri);
 
-        send_opcode(graphics_driver_set_priority, context);
+        send_opcode_sync(graphics_driver_set_priority, context);
+    }
+    
+    void graphics_driver_client::set_window_pos(const std::uint32_t id, const eka2l1::vec2 &pos) {
+        itc_context context;
+        context.push(id);
+        context.push(pos);
 
-        sync_with_driver();
+        send_opcode_sync(graphics_driver_set_win_pos, context);
     }
 }

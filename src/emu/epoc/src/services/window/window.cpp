@@ -583,7 +583,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    void window::queue_event(epoc::event &evt) {
+    void window::queue_event(const epoc::event &evt) {
         client->queue_event(evt);    
     }
 
@@ -597,6 +597,12 @@ namespace eka2l1::epoc {
 
         pri += (priority << 4) + secondary_priority;
         return pri; 
+    }
+
+    void window::priority_updated() {
+        for (auto &child: childs) {
+            child->priority_updated();
+        }
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
@@ -615,7 +621,9 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetOrdinalPosition: {
-            secondary_priority = *reinterpret_cast<int*>(cmd.data_ptr);
+            priority = *reinterpret_cast<int*>(cmd.data_ptr);
+            priority_updated();
+
             ctx.set_request_status(KErrNone);
 
             return true;
@@ -625,17 +633,8 @@ namespace eka2l1::epoc {
             ws_cmd_ordinal_pos_pri *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
             priority = info->pri1;
             secondary_priority = info->pri2;
-
-            ctx.set_request_status(KErrNone);
-
-            return true;
-        }
-
-        case EWsWinOpSetExtent: {
-            ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
             
-            pos = extent->pos;
-            size = extent->size;
+            priority_updated();
 
             ctx.set_request_status(KErrNone);
 
@@ -769,7 +768,7 @@ namespace eka2l1::epoc {
         }
     }
     
-    void window_user::queue_event(epoc::event &evt) {
+    void window_user::queue_event(const epoc::event &evt) {
         if (!is_visible()) {
             LOG_TRACE("The window 0x{:X} is not visible, and can't receive any events", 
                 id);
@@ -777,6 +776,10 @@ namespace eka2l1::epoc {
         }
 
         window::queue_event(evt);
+    }
+    
+    void window_user::priority_updated() {
+        get_group()->get_driver()->set_window_priority(driver_win_id, redraw_priority());
     }
     
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
@@ -789,8 +792,27 @@ namespace eka2l1::epoc {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
+        case EWsWinOpSetExtent: {
+            ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
+            
+            pos = extent->pos;
+            size = extent->size;
+
+            // Set position to the driver
+            get_group()->get_driver()->set_window_size(driver_win_id, size);
+            get_group()->get_driver()->set_window_pos(driver_win_id, pos);
+
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         case EWsWinOpSetVisible: {
-            set_visible(*reinterpret_cast<bool*>(cmd.data_ptr));
+            const bool op = *reinterpret_cast<bool*>(cmd.data_ptr);
+
+            set_visible(op);
+            get_group()->get_driver()->set_window_visible(driver_win_id, op);
+
             ctx.set_request_status(KErrNone);
 
             break;
@@ -1115,8 +1137,17 @@ namespace eka2l1::epoc {
             parent = root;
         }
 
-        epoc::window_ptr win = std::make_shared<epoc::window_user>(this, parent->dvc,
+        if (parent->type != window_kind::group) {
+            LOG_ERROR("The parent of window user must be a group!");
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        std::shared_ptr<epoc::window_user> win = std::make_shared<epoc::window_user>(this, parent->dvc,
             header->win_type, header->dmode);
+
+        win->driver_win_id = std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver()->create_window(eka2l1::vec2(200, 200),
+            0, true);
 
         win->parent = parent;
         parent->childs.push(win);

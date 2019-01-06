@@ -98,6 +98,7 @@ namespace eka2l1::drivers {
             \returns True if the send is successfully. Results will be pushed to the context.
         */
         bool send_opcode(const int opcode, itc_context &ctx);
+        bool send_opcode_sync(const int opcode, itc_context &ctx);
 
     public:
         driver_client() = default;
@@ -153,14 +154,16 @@ namespace eka2l1::drivers {
          * 
          * \returns ID of window.
         */
-        std::uint32_t create_window(const eka2l1::vec2 &initial_size, const std::uint32_t pri,
+        std::uint32_t create_window(const eka2l1::vec2 &initial_size, const std::uint16_t pri,
             const bool visible_from_start = true);
 
         void set_window_visible(const std::uint32_t id, const bool visible);
 
         void set_window_size(const std::uint32_t id, const eka2l1::vec2 &win_size);
 
-        void set_window_priority(const std::uint32_t id, const std::uint32_t pri);
+        void set_window_pos(const std::uint32_t id, const eka2l1::vec2 &pos);
+
+        void set_window_priority(const std::uint32_t id, const std::uint16_t pri);
     };
 }
 
