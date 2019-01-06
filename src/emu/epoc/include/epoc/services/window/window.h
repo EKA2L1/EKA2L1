@@ -309,7 +309,10 @@ namespace eka2l1::epoc {
 
         void set_visible(bool vis) {
             flags &= ~visible;
-            vis ? (flags |= visible) : (void)0;
+            
+            if (vis) {
+                flags |= visible;
+            }
         }
 
         void queue_event(epoc::event &evt) override;
