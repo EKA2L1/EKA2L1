@@ -10,12 +10,21 @@ namespace eka2l1 {
         int old_size = buf.size();
         va_list args;
         va_start(args, fmt);
-        buf.appendfv(fmt, args);
+        
+        {
+            const std::lock_guard<std::mutex> guard(log_lock); 
+            buf.appendfv(fmt, args);
+        }
+
         va_end(args);
 
-        for (int new_size = buf.size(); old_size < new_size; old_size++) {
-            if (buf[old_size] == '\n') {
-                line_offsets.push_back(old_size);
+        {
+            const std::lock_guard<std::mutex> guard(log_lock); 
+
+            for (int new_size = buf.size(); old_size < new_size; old_size++) {
+                if (buf[old_size] == '\n') {
+                    line_offsets.push_back(old_size);
+                }
             }
         }
 
@@ -43,21 +52,25 @@ namespace eka2l1 {
             ImGui::LogToClipboard();
         }
 
-        if (filter.IsActive()) {
-            const char* buf_begin = buf.begin();
-            const char* line = buf_begin;
+        {
+            const std::lock_guard<std::mutex> guard(log_lock); 
 
-            for (int line_no = 0; line != nullptr; line_no++) {
-                const char* line_end = (line_no < line_offsets.Size) ? buf_begin + line_offsets[line_no] : NULL;
-                
-                if (filter.PassFilter(line, line_end)) {
-                    ImGui::TextUnformatted(line, line_end);
+            if (filter.IsActive()) {
+                const char* buf_begin = buf.begin();
+                const char* line = buf_begin;
+
+                for (int line_no = 0; line != nullptr; line_no++) {
+                    const char* line_end = (line_no < line_offsets.Size) ? buf_begin + line_offsets[line_no] : NULL;
+                    
+                    if (filter.PassFilter(line, line_end)) {
+                        ImGui::TextUnformatted(line, line_end);
+                    }
+
+                    line = line_end && line_end[1] ? line_end + 1 : nullptr;
                 }
-
-                line = line_end && line_end[1] ? line_end + 1 : nullptr;
+            } else {
+                ImGui::TextUnformatted(buf.begin(), buf.end());
             }
-        } else {
-            ImGui::TextUnformatted(buf.begin(), buf.end());
         }
 
         if (scroll_to_bottom) {
