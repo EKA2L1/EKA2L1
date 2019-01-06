@@ -241,6 +241,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, window_server);
             CREATE_SERVER(sys, featmgr_server);
+            CREATE_SERVER(sys, backup_server);
             CREATE_SERVER(sys, install_server);
             CREATE_SERVER(sys, rights_server);
             CREATE_SERVER(sys, sa_server);
