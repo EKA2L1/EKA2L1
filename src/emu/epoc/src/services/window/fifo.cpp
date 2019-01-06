@@ -119,7 +119,7 @@ namespace eka2l1::epoc {
 
         std::stable_sort(q_.begin(), q_.end(),
             [&](const fifo_element &e1, const fifo_element &e2) {
-            return e1.pri <= e2.pri;
+            return e1.pri < e2.pri;
         });
         
         return id;
