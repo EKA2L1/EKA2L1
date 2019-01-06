@@ -1262,7 +1262,19 @@ namespace eka2l1::epoc {
         return mut;
     }
 
-    BRIDGE_FUNC(TInt, MutexWait, TInt aMutexHandle, TInt aTimeout) {
+    BRIDGE_FUNC(TInt, MutexWait, TInt aMutexHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(aMutexHandle));
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return KErrBadHandle;
+        }
+
+        mut->wait();
+        return KErrNone;
+    }
+
+    BRIDGE_FUNC(TInt, MutexWaitVer2, TInt aMutexHandle, TInt aTimeout) {
         kernel_system *kern = sys->get_kernel_system();
         mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(aMutexHandle));
 
