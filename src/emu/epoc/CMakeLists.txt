@@ -7,12 +7,14 @@ add_library(epocloader
     include/epoc/loader/romimage.h
     include/epoc/loader/rom.h
     include/epoc/loader/rpkg.h
+    include/epoc/loader/rsc.h
     src/loader/e32img.cpp
     src/loader/sis.cpp
     src/loader/sis_fields.cpp
     src/loader/sis_old.cpp
     src/loader/romimage.cpp
     src/loader/rpkg.cpp
+    src/loader/rsc.cpp
     src/loader/rom.cpp
 )
 
