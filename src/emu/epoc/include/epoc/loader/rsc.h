@@ -40,6 +40,13 @@ namespace eka2l1::loader {
         std::vector<std::uint8_t> buffer;
         common::ro_buf_stream stream;
 
+        std::uint8_t num_of_bits_use_for_dict_token = 0;
+        std::uint16_t num_res = 0;
+
+        int     num_dir_entry = 0;
+
+        std::uint16_t res_index_offset = 0;
+
         enum {
             potentially_have_compressed_unicode_data = 0x1000,
             dictionary_compressed = 0x2000,

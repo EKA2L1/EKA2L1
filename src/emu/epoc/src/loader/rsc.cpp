@@ -26,7 +26,7 @@
 
 namespace eka2l1::loader {
     /*
-       The header format takes like this:
+       The header format should be readed like this:
        - First 12 bytes should contain 3 UID type
        - The first UID will divide the RSC file into 3 kind:
           * 0x101f4a6b: This will potentially contains compressed unicode data, which is compressed using run-len
@@ -34,6 +34,16 @@ namespace eka2l1::loader {
        - If it doesn't fall into 2 of these types, discard all of these read result.
        - Read the first 2 bytes, if it's equals to 4 than it is fallen into a format called "Calypso" and dictionary compressed.
     */
+
+   /*
+        Calypso:
+            - Offset 0-> 2: Magic (4)
+            - Offset 2-> 4: Number of resources in this file
+            - Offset 4-> 5: ???
+            - Offset 5-> 6: unk1
+            - Offset 6-> 8: Offset of resource index
+            - Offset 8-> 10: Size of largest resource when decompress
+   */
     void rsc_file_read_stream::read_header_and_resource_index(symfile f) {
         std::uint32_t uid[3];
         f->read_file(&uid, 4, 3);
@@ -67,9 +77,31 @@ namespace eka2l1::loader {
         // Check for calypso
         std::uint16_t calypso_magic = uid[0] >> 16;
         if (calypso_magic == 4) {
+            flags |= (calypso | dictionary_compressed);
+
             f->seek(8, file_seek_mode::beg);
             f->read_file(&size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
                 1);
+        }
+
+        if (flags & dictionary_compressed) {
+            if (flags & calypso) {
+                // We read it before
+                num_res = uid[0] & 0xFFFF;
+
+                f->seek(10, file_seek_mode::beg);
+                f->read_file(&num_of_bits_use_for_dict_token, sizeof(num_of_bits_use_for_dict_token), 1);
+
+                char unk1 = 0;
+
+                f->seek(5, file_seek_mode::beg);
+                f->read_file(&unk1, 1, 1);
+
+                num_dir_entry = (1 << num_of_bits_use_for_dict_token) - unk1;
+
+                f->seek(6, file_seek_mode::beg);
+                f->read_file(&res_index_offset, sizeof(res_index_offset), 1);
+            }
         }
 
         // Done with the header
