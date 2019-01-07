@@ -55,7 +55,6 @@ namespace eka2l1 {
 
         int compare_ignore_case(const utf16_str &s1,
             const utf16_str &s2) {
-
 #if EKA2L1_PLATFORM(WIN32)
             // According to the MSDN documentation, the CompareStringEx function
             // is optimized for NORM_IGNORECASE and string lengths specified as -1.
@@ -91,10 +90,9 @@ namespace eka2l1 {
                     const wchar_t t1 = towlower(s1[i]);
                     const wchar_t t2 = towlower(s2[i]);
 
-                        if (t1 > t2) {
+                    if (t1 > t2) {
                         return 1;
-                    }
-                    else if (t1 < t2) {
+                    } else if (t1 < t2) {
                         return -1;
                     }
                 }

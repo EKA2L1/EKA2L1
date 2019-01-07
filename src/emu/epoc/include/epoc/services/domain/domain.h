@@ -118,7 +118,8 @@ namespace eka2l1 {
 
     public:
         hierarchy(memory_system *mem, timing_system *tsys)
-            : timing(tsys), mem(mem) {}
+            : timing(tsys)
+            , mem(mem) {}
 
         bool is_observe_nof_outstanding() {
             return (bool)observe_status;

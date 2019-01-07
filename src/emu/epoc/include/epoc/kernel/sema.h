@@ -38,7 +38,7 @@ namespace eka2l1 {
 
             bool signaling;
 
-        public:        
+        public:
             semaphore(kernel_system *kern)
                 : kernel_obj(kern) {
                 obj_type = kernel::object_type::sema;

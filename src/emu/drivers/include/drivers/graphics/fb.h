@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <common/vecx.h>
 #include <common/resource.h>
+#include <common/vecx.h>
 
 #include <memory>
 #include <vector>
@@ -35,17 +35,17 @@ namespace eka2l1::drivers {
         vec2 size;
 
     public:
-        explicit framebuffer(const vec2 &size) 
+        explicit framebuffer(const vec2 &size)
             : size(size) {}
 
         framebuffer() = default;
-        virtual ~framebuffer() {};
+        virtual ~framebuffer(){};
 
         virtual void bind() = 0;
         virtual void unbind() = 0;
 
         virtual void resize(const vec2 &size) = 0;
-        
+
         vec2 get_size() {
             return size;
         }

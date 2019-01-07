@@ -24,10 +24,10 @@
 #include <common/random.h>
 
 #include <epoc/kernel.h>
-#include <epoc/mem.h>
 #include <epoc/kernel/mutex.h>
 #include <epoc/kernel/sema.h>
 #include <epoc/kernel/thread.h>
+#include <epoc/mem.h>
 #include <epoc/ptr.h>
 
 #include <common/e32inc.h>
@@ -101,7 +101,7 @@ namespace eka2l1 {
             case thread_priority::priority_absolute_background:
                 return 10;
 
-            case thread_priority::priority_absolute_foreground_normal: 
+            case thread_priority::priority_absolute_foreground_normal:
                 return 12;
 
             case thread_priority::priorty_absolute_foreground:
@@ -192,8 +192,8 @@ namespace eka2l1 {
                - r4: Startup reason. Thread startup is 1, process startup is 0.
             */
 
-            ctx.pc = own_process ? (inital ? entry_point : own_process->get_entry_point_address()) 
-                : entry_point;
+            ctx.pc = own_process ? (inital ? entry_point : own_process->get_entry_point_address())
+                                 : entry_point;
 
             ctx.sp = stack_top;
             ctx.cpsr = ((ctx.pc & 1) << 5);
@@ -296,8 +296,7 @@ namespace eka2l1 {
             const size_t metadata_size = 0x40;
 
             // Left the space for the program to put thread create information
-            const address stack_top = stack_chunk_ptr->base().ptr_address() + 
-                static_cast<address>(stack_size - metadata_size);
+            const address stack_top = stack_chunk_ptr->base().ptr_address() + static_cast<address>(stack_size - metadata_size);
 
             ptr<uint8_t> stack_phys_beg(stack_chunk_ptr->base().ptr_address());
             ptr<uint8_t> stack_phys_end(stack_top);
@@ -307,7 +306,7 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(start, end, 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), allocator, static_cast<std::uint32_t>(name.length()), 
+            create_stack_metadata(ptr<void>(stack_top), allocator, static_cast<std::uint32_t>(name.length()),
                 name_chunk_ptr->base().ptr_address(), epa);
 
             reset_thread_ctx(epa, stack_top, inital);
@@ -345,13 +344,14 @@ namespace eka2l1 {
             assert(!timeout_sts && "After request outstanding");
             timeout_sts = sts;
 
-            timing->schedule_event(timing->us_to_cycles((uint64_t)mssecs), 
+            timing->schedule_event(timing->us_to_cycles((uint64_t)mssecs),
                 after_timout_evt, reinterpret_cast<uint64_t>(this));
         }
 
         bool thread::sleep(uint32_t mssecs) {
             return scheduler->sleep(std::reinterpret_pointer_cast<kernel::thread>(
-                kern->get_kernel_obj_by_id(uid)), mssecs);
+                                        kern->get_kernel_obj_by_id(uid)),
+                mssecs);
         }
 
         bool thread::sleep_nof(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
@@ -359,14 +359,15 @@ namespace eka2l1 {
             sleep_nof_sts = sts;
 
             return scheduler->sleep(std::reinterpret_pointer_cast<kernel::thread>(
-                kern->get_kernel_obj_by_id(uid)), mssecs);
+                                        kern->get_kernel_obj_by_id(uid)),
+                mssecs);
         }
 
         void thread::notify_sleep(const int errcode) {
             if (sleep_nof_sts) {
                 *(sleep_nof_sts.get(own_process)) = errcode;
                 sleep_nof_sts = 0;
-                
+
                 signal_request();
             }
 

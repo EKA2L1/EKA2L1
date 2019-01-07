@@ -35,7 +35,7 @@ namespace eka2l1::drivers {
 
         return true;
     }
-    
+
     bool driver_client::send_opcode(const int opcode, itc_context &ctx) {
         if (already_locked) {
             driver->request_queue.push_unsafe({ opcode, ctx });
@@ -46,7 +46,7 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    void driver_client::lock_driver_from_process()  {
+    void driver_client::lock_driver_from_process() {
         driver->request_queue.lock.lock();
         already_locked = true;
     }
@@ -61,22 +61,19 @@ namespace eka2l1::drivers {
         driver->cond.wait(ulock);
     }
 
-    driver_client::driver_client(driver_instance driver) 
+    driver_client::driver_client(driver_instance driver)
         : driver(driver) {
-
     }
 
     graphics_driver_client::graphics_driver_client(driver_instance driver)
         : driver_client(driver) {
-
     }
 
     /*! \brief Get the screen size in pixels
     */
     vec2 graphics_driver_client::screen_size() {
         // Synchronize call should directly use the client
-        std::shared_ptr<graphics_driver> gdriver = 
-            std::reinterpret_pointer_cast<graphics_driver>(driver);
+        std::shared_ptr<graphics_driver> gdriver = std::reinterpret_pointer_cast<graphics_driver>(driver);
 
         return gdriver->get_screen_size();
     }
@@ -87,7 +84,7 @@ namespace eka2l1::drivers {
 
         send_opcode(graphics_driver_resize_screen, context);
     }
-    
+
     void graphics_driver_client::invalidate(eka2l1::rect &rect) {
         itc_context context;
         context.push(rect);
@@ -159,7 +156,7 @@ namespace eka2l1::drivers {
 
         send_opcode_sync(graphics_driver_set_priority, context);
     }
-    
+
     void graphics_driver_client::set_window_pos(const std::uint32_t id, const eka2l1::vec2 &pos) {
         itc_context context;
         context.push(id);

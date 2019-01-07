@@ -17,6 +17,7 @@ namespace eka2l1::scripting {
         eka2l1::thread_ptr thread_handle;
 
         friend class eka2l1::kernel::thread;
+
     public:
         thread(uint64_t handle);
 

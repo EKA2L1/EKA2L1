@@ -26,7 +26,7 @@ namespace eka2l1 {
 
     struct featmgr_config_header {
         char magic[4];
-        uint32_t unk1; 
+        uint32_t unk1;
         uint32_t num_entry;
         uint32_t num_range;
     };

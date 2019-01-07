@@ -21,8 +21,8 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace eka2l1::common {
@@ -37,16 +37,12 @@ namespace eka2l1::common {
         ini_node_type node_type;
 
         ini_node(const ini_node_type node_type)
-            : node_type(node_type)
-        {
-            
+            : node_type(node_type) {
         }
 
     public:
         ini_node()
-            : node_type(INI_NODE_INVALID) 
-        {
-
+            : node_type(INI_NODE_INVALID) {
         }
 
         virtual const char *name() = 0;
@@ -57,13 +53,13 @@ namespace eka2l1::common {
 
         template <typename T>
         T *get_as() {
-            return (reinterpret_cast<T*>(this));
+            return (reinterpret_cast<T *>(this));
         }
     };
 
     using ini_node_ptr = std::shared_ptr<ini_node>;
 
-    class ini_pair: public ini_node {
+    class ini_pair : public ini_node {
         friend class ini_section;
         friend class ini_file;
 
@@ -72,9 +68,7 @@ namespace eka2l1::common {
 
     public:
         ini_pair()
-            : ini_node(INI_NODE_PAIR)
-        {
-            
+            : ini_node(INI_NODE_PAIR) {
         }
 
         std::size_t get_value_count() {
@@ -102,20 +96,18 @@ namespace eka2l1::common {
     protected:
         friend class ini_file;
 
-        std::string               sec_name;
+        std::string sec_name;
         std::vector<ini_node_ptr> nodes;
 
     public:
         ini_section()
-            : ini_node(INI_NODE_SECTION)
-        {
-
+            : ini_node(INI_NODE_SECTION) {
         }
 
         const char *name() override {
             return sec_name.c_str();
         }
-        
+
         bool node_exists(const char *name);
 
         /* \brief Access a node with given name/key.
@@ -125,13 +117,13 @@ namespace eka2l1::common {
 
         ini_section *create_section(const char *name);
 
-        // Note that an empty key will still be saved 
+        // Note that an empty key will still be saved
         ini_pair *create_pair(const char *key);
 
-        std::size_t get(const char *key, 
+        std::size_t get(const char *key,
             std::uint32_t *val, int count, std::uint32_t default_val = 0, int *error_code = nullptr);
 
-        std::size_t get(const char *key, 
+        std::size_t get(const char *key,
             bool *val, int count, bool default_val = 0, int *error_code = nullptr);
 
         std::size_t get(const char *key, std::vector<std::string> &val, int *error_code = nullptr);
@@ -140,8 +132,8 @@ namespace eka2l1::common {
             return (node->get_node_type() == INI_NODE_SECTION);
         }
     };
-    
-    class ini_file: public ini_section {
+
+    class ini_file : public ini_section {
     public:
         /*! \brief Load an INI file given a path
          * \returns 0 if success.

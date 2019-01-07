@@ -35,4 +35,3 @@ namespace eka2l1 {
     void dump_data(const std::string &name, std::vector<uint8_t> &data, size_t start_off = 0);
     void dump_data_map(const std::string &name, uint8_t *start, size_t size, size_t start_off = 0);
 }
-

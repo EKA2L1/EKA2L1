@@ -55,7 +55,7 @@ namespace eka2l1 {
         }
     }
 
-     std::optional<debug_breakpoint> debugger_base::get_nearest_breakpoint(const std::uint32_t bkpt) {
+    std::optional<debug_breakpoint> debugger_base::get_nearest_breakpoint(const std::uint32_t bkpt) {
         if (breakpoints.size() == 0) {
             return std::optional<debug_breakpoint>{};
         }

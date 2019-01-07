@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/utils/handle.h>
-#include <epoc/kernel.h>
 #include <epoc/epoc.h>
+#include <epoc/kernel.h>
+#include <epoc/utils/handle.h>
 
 namespace eka2l1::epoc {
     eka2l1::kernel_obj_ptr RHandleBase::GetKObject(eka2l1::system *sys) {

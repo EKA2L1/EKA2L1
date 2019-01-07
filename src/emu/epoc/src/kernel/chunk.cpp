@@ -25,8 +25,8 @@
 #include <common/random.h>
 
 #include <epoc/kernel.h>
-#include <epoc/mem.h>
 #include <epoc/kernel/chunk.h>
+#include <epoc/mem.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -108,7 +108,8 @@ namespace eka2l1 {
             }
 
             chunk_base = mem->chunk_range(range_beg, range_end, new_bottom, new_top, static_cast<std::uint32_t>(max_size),
-                protection).cast<std::uint8_t>();
+                                protection)
+                             .cast<std::uint8_t>();
 
             this->top = new_top;
             this->bottom = new_bottom;
@@ -219,10 +220,10 @@ namespace eka2l1 {
 
             own_process = std::reinterpret_pointer_cast<kernel::process>(
                 kern->get_kernel_obj_by_id(uid_pr));
-                
+
             page_table *old = mem->get_current_page_table();
             mem->set_current_page_table(own_process->get_page_table());
-            
+
             // Start reading
             if (seri.get_seri_mode() == common::SERI_MODE_READ) {
                 mem->chunk(chunk_base.ptr_address(), bottom, top, static_cast<std::uint32_t>(max_size), protection);

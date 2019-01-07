@@ -17,22 +17,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #pragma once
 
 #include <common/types.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <cmath>
 #include <string>
 #include <vector>
 
 namespace eka2l1 {
     /*! \brief Contains functions that use frequently in the emulator */
     namespace common {
-		/*! \brief Choose the greater variable 
+        /*! \brief Choose the greater variable 
 		 *
 		 * Compare two objects and choose the greater object to return.
 		*/
@@ -41,7 +41,7 @@ namespace eka2l1 {
             return a > b ? a : b;
         }
 
-		/*! \brief Choose the less variable
+        /*! \brief Choose the less variable
 		 *
 		 * Compare two objects, choose the less object to return.
 		*/
@@ -50,29 +50,29 @@ namespace eka2l1 {
             return a > b ? b : a;
         }
 
-		/*! Convert KB to bytes */
+        /*! Convert KB to bytes */
         constexpr size_t KB(size_t kb) {
             return kb * 1024;
         }
 
-		/*! Convert MB to bytes */
+        /*! Convert MB to bytes */
         constexpr size_t MB(size_t mb) {
             return mb * KB(1024);
         }
 
-		/* Convert GB to bytes */
+        /* Convert GB to bytes */
         constexpr size_t GB(size_t gb) {
             return gb * MB(1024);
         }
 
-		/*! \brief Find the position of the Nth apperance of a string in another string
+        /*! \brief Find the position of the Nth apperance of a string in another string
          *  \param idx The Nth apperance
 		 *  \param pos The position to start looking for
 		*/
         size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos = 0);
-        
-		/*! Remove a string from another string if possible */
-		void remove(std::string &inp, std::string to_remove);
+
+        /*! Remove a string from another string if possible */
+        void remove(std::string &inp, std::string to_remove);
 
         // https://stackoverflow.com/questions/12200486/how-to-remove-duplicates-from-unsorted-stdvector-while-keeping-the-original-or
         struct target_less {
@@ -85,7 +85,7 @@ namespace eka2l1 {
             bool operator()(It const &a, It const &b) const { return *a == *b; }
         };
 
-		/*! Erase all repeated object, but kept things in order. */
+        /*! Erase all repeated object, but kept things in order. */
         template <class It>
         It uniquify(It begin, It const end) {
             std::vector<It> v;
@@ -108,14 +108,14 @@ namespace eka2l1 {
             return begin;
         }
 
-		/*! Get the next power of two of some number. */
+        /*! Get the next power of two of some number. */
         template <typename T>
         T next_power_of_two(const T target) {
             T power = static_cast<T>(std::log2l(static_cast<long double>(target)));
             return static_cast<T>(1 << power);
         }
 
-		/*! Check if the number is power of two. */
+        /*! Check if the number is power of two. */
         template <typename T>
         bool is_power_of_two(const T target) {
             T mask = 0;
@@ -128,15 +128,14 @@ namespace eka2l1 {
             return !(target & mask);
         }
 
-		/*! Do alignment */
+        /*! Do alignment */
         template <typename T>
         T align(T target, uint32_t alignment, int mode = 1) {
             if (alignment == 0) {
                 return target;
             }
 
-            uint32_t new_alignment = is_power_of_two(alignment) ? alignment : 
-                next_power_of_two(alignment);
+            uint32_t new_alignment = is_power_of_two(alignment) ? alignment : next_power_of_two(alignment);
 
             // No more align if it's already aligned
             if (target % new_alignment == 0) {
@@ -156,4 +155,3 @@ namespace eka2l1 {
         std::string trim_spaces(std::string str);
     }
 }
-

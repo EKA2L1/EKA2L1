@@ -21,27 +21,27 @@
 #pragma once
 
 #include <common/vecx.h>
-#include <functional>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 
 namespace eka2l1 {
-	/*! \brief Contains implementation for driver */
+    /*! \brief Contains implementation for driver */
     namespace drivers {
-		/*! \brief An abstract class to implement the emulator window.
+        /*! \brief An abstract class to implement the emulator window.
 		 *
 		 * Class can override methods to implement the emulator window.
 		*/
         class emu_window {
         public:
-		    /*! \brief Intialize the emulator window.
+            /*! \brief Intialize the emulator window.
 			 * \param title The initial window title.
 			 * \param size The initial window size.
 			*/
             virtual void init(std::string title, vec2 size) = 0;
-            
-			virtual void make_current() = 0;
+
+            virtual void make_current() = 0;
             virtual void done_current() = 0;
             virtual void swap_buffer() = 0;
             virtual void poll_events() = 0;
@@ -49,7 +49,7 @@ namespace eka2l1 {
 
             virtual bool should_quit() = 0;
 
-			/*! \brief Change the window title.
+            /*! \brief Change the window title.
 			*/
             virtual void change_title(std::string) = 0;
 
@@ -84,7 +84,7 @@ namespace eka2l1 {
             /*! Call when a button is held */
             std::function<void(uint16_t)> button_hold;
 
-			/*! Call when the window is closed */
+            /*! Call when the window is closed */
             std::function<void()> close_hook;
 
             std::function<void(char)> char_hook;
@@ -94,9 +94,9 @@ namespace eka2l1 {
             glfw
         };
 
-		/*! \brief Create a new window emulator. */
+        /*! \brief Create a new window emulator. */
         std::shared_ptr<emu_window> new_emu_window(window_type win_type);
-        
+
         bool init_window_library(window_type win_type);
         bool destroy_window_library(window_type win_type);
     }

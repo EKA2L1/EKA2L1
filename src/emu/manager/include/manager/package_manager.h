@@ -22,8 +22,8 @@
 #include <common/types.h>
 
 #include <map>
-#include <string>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace eka2l1 {
@@ -33,7 +33,7 @@ namespace eka2l1 {
         struct sis_controller;
     }
 
-	/*! \brief Managing apps. */
+    /*! \brief Managing apps. */
     namespace manager {
         using uid = uint32_t;
 

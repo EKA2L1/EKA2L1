@@ -31,8 +31,8 @@
 #include <common/log.h>
 #include <common/types.h>
 
-#include <epoc/epoc.h>
 #include <epoc/configure.h>
+#include <epoc/epoc.h>
 #include <epoc/loader/rom.h>
 
 #include <debugger/imgui_debugger.h>
@@ -45,8 +45,8 @@
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
 
-#include <manager/manager.h>
 #include <gdbstub/gdbstub.h>
+#include <manager/manager.h>
 
 #include <common/ini.h>
 
@@ -243,7 +243,7 @@ void do_args() {
     }
 
     if (sis_install_path != "-1") {
-        auto res = symsys->install_package(common::utf8_to_ucs2(sis_install_path), 
+        auto res = symsys->install_package(common::utf8_to_ucs2(sis_install_path),
             adrive == 0 ? drive_c : drive_e);
 
         if (res) {
@@ -277,7 +277,7 @@ void init() {
     symsys->init();
     symsys->mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
     symsys->mount(drive_e, drive_media::physical, mount_e, io_attrib::removeable);
-    
+
     if (enable_gdbstub) {
         symsys->get_gdb_stub()->set_server_port(gdb_port);
         symsys->get_gdb_stub()->init(symsys.get());
@@ -389,8 +389,7 @@ int ui_debugger_thread() {
     debugger_window->button_released = on_ui_window_key_release;
     debugger_window->char_hook = on_ui_window_char_type;
 
-    std::string window_title = std::string("Debugging Window (") + GIT_BRANCH + " " + 
-        GIT_COMMIT_HASH + ")";
+    std::string window_title = std::string("Debugging Window (") + GIT_BRANCH + " " + GIT_COMMIT_HASH + ")";
 
     debugger_window->init(window_title, eka2l1::vec2(500, 500));
     debugger_window->make_current();
@@ -537,7 +536,7 @@ int main(int argc, char **argv) {
 
     // Kill the system
     symsys.reset();
-    
+
     debugger_window->done_current();
     debugger_window->shutdown();
 

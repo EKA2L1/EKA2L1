@@ -19,9 +19,9 @@
  */
 #pragma once
 
-#include <cstdint>
-#include <cmath>
 #include <array>
+#include <cmath>
+#include <cstdint>
 #include <initializer_list>
 #include <numeric>
 #include <vector>
@@ -48,7 +48,7 @@ namespace eka2l1 {
         }
 
         T normalize() {
-            return static_cast<T>(std::sqrt(std::accumulate(elements.begin(), elements.end(), 0, 
+            return static_cast<T>(std::sqrt(std::accumulate(elements.begin(), elements.end(), 0,
                 [](const T &lhs, const T &rhs) {
                     return lhs + rhs * rhs;
                 })));
@@ -57,7 +57,7 @@ namespace eka2l1 {
 
     using vec2d = vecx<double, 2>;
 
-	/*! \brief A 2D Vector */
+    /*! \brief A 2D Vector */
     struct vec2 {
         int x, y;
 
@@ -79,30 +79,31 @@ namespace eka2l1 {
             return vec2(x * rhs, y * rhs);
         }
 
-        bool operator == (const vec2 &rhs) {
+        bool operator==(const vec2 &rhs) {
             return (x == rhs.x) && (y == rhs.y);
         }
 
-        void operator = (const vec2 &rhs) {
+        void operator=(const vec2 &rhs) {
             x = rhs.x;
             y = rhs.y;
         }
     };
 
-    struct vec3: public vec2 {
+    struct vec3 : public vec2 {
         int z;
 
         vec3() {}
 
         vec3(const int x, const int y, const int z)
-            : vec2(x, y), z(z) {}
+            : vec2(x, y)
+            , z(z) {}
 
         vec3 operator+(const vec3 &rhs) {
             return vec3(x + rhs.x, y + rhs.y, z + rhs.z);
         }
 
         vec3 operator-(const vec3 &rhs) {
-            return vec3(x - rhs.x, y - rhs.y, z -rhs.z);
+            return vec3(x - rhs.x, y - rhs.y, z - rhs.z);
         }
 
         vec3 operator*(const int rhs) {
@@ -111,11 +112,11 @@ namespace eka2l1 {
     };
 
     struct object_size : public vec2 {
-        object_size() : vec2() {}
+        object_size()
+            : vec2() {}
 
         object_size(const vec2 &v)
             : vec2(v) {
-
         }
 
         object_size(const int x, const int y)
@@ -128,8 +129,8 @@ namespace eka2l1 {
         int height() const {
             return y;
         }
-        
-        void operator = (const vec2 &rhs) {
+
+        void operator=(const vec2 &rhs) {
             x = rhs.x;
             y = rhs.y;
         }

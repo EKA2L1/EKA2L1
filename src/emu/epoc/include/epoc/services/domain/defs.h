@@ -91,29 +91,29 @@ namespace eka2l1 {
     };
 
     enum TMemberRequests {
-        EDmDomainJoin,                                  // x
-        EDmStateAcknowledge,                            // x
-        EDmStateRequestTransitionNotification,          // x
-        EDmStateCancelTransitionNotification,           // x
-        EDmStateDeferAcknowledgement,                   // x
-        EDmStateCancelDeferral                          // x
+        EDmDomainJoin, // x
+        EDmStateAcknowledge, // x
+        EDmStateRequestTransitionNotification, // x
+        EDmStateCancelTransitionNotification, // x
+        EDmStateDeferAcknowledgement, // x
+        EDmStateCancelDeferral // x
     };
 
     enum TControllerRequests {
-        EDmRequestSystemTransition,        // x
-        EDmRequestDomainTransition,        // x 
-        EDmCancelTransition,               // x 
-        EDmHierarchyJoin,                  // x
-        EDmHierarchyAdd,                   // x
-        EDmGetTransitionFailureCount,      // x
+        EDmRequestSystemTransition, // x
+        EDmRequestDomainTransition, // x
+        EDmCancelTransition, // x
+        EDmHierarchyJoin, // x
+        EDmHierarchyAdd, // x
+        EDmGetTransitionFailureCount, // x
         EDmGetTransitionFailures,
-        EDmObserverJoin,                   // x
-        EDmObserverStart,                  // x
-        EDmObserverStop,                   // This was equals to cancel, weird
-        EDmObserverNotify,                 // x
-        EDmObserverEventCount,             // x
+        EDmObserverJoin, // x
+        EDmObserverStart, // x
+        EDmObserverStop, // This was equals to cancel, weird
+        EDmObserverNotify, // x
+        EDmObserverEventCount, // x
         EDmObserverGetEvent,
-        EDmObserverCancel,                 // x
-        EDmObserveredCount                 // x
+        EDmObserverCancel, // x
+        EDmObserveredCount // x
     };
 }

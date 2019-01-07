@@ -8,9 +8,9 @@
  */
 
 // INCLUDE FILES
+#include "ITriedApplication.h"
 #include "ITried.hrh"
 #include "ITriedDocument.h"
-#include "ITriedApplication.h"
 
 // ============================ MEMBER FUNCTIONS ===============================
 
@@ -19,21 +19,19 @@
 // Creates CApaDocument object
 // -----------------------------------------------------------------------------
 //
-CApaDocument* CITriedApplication::CreateDocumentL()
-	{
-	// Create an ITried document, and return a pointer to it
-	return CITriedDocument::NewL(*this);
-	}
+CApaDocument *CITriedApplication::CreateDocumentL() {
+    // Create an ITried document, and return a pointer to it
+    return CITriedDocument::NewL(*this);
+}
 
 // -----------------------------------------------------------------------------
 // CITriedApplication::AppDllUid()
 // Returns application UID
 // -----------------------------------------------------------------------------
 //
-TUid CITriedApplication::AppDllUid() const
-	{
-	// Return the UID for the ITried application
-	return KUidITriedApp;
-	}
+TUid CITriedApplication::AppDllUid() const {
+    // Return the UID for the ITried application
+    return KUidITriedApp;
+}
 
 // End of File

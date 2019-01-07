@@ -11,15 +11,14 @@
 #define __ITRIEDAPPLICATION_H__
 
 // INCLUDES
-#include <aknapp.h>
 #include "ITried.hrh"
+#include <aknapp.h>
 
 // UID for the application;
 // this should correspond to the uid defined in the mmp file
-const TUid KUidITriedApp =
-	{
-	_UID3
-	};
+const TUid KUidITriedApp = {
+    _UID3
+};
 
 // CLASS DECLARATION
 
@@ -29,28 +28,27 @@ const TUid KUidITriedApp =
  * An instance of CITriedApplication is the application part of the
  * AVKON application framework for the ITried example application.
  */
-class CITriedApplication : public CAknApplication
-	{
+class CITriedApplication : public CAknApplication {
 public:
-	// Functions from base classes
+    // Functions from base classes
 
-	/**
+    /**
 	 * From CApaApplication, AppDllUid.
 	 * @return Application's UID (KUidITriedApp).
 	 */
-	TUid AppDllUid() const;
+    TUid AppDllUid() const;
 
 protected:
-	// Functions from base classes
+    // Functions from base classes
 
-	/**
+    /**
 	 * From CApaApplication, CreateDocumentL.
 	 * Creates CITriedDocument document object. The returned
 	 * pointer in not owned by the CITriedApplication object.
 	 * @return A pointer to the created document object.
 	 */
-	CApaDocument* CreateDocumentL();
-	};
+    CApaDocument *CreateDocumentL();
+};
 
 #endif // __ITRIEDAPPLICATION_H__
 // End of File

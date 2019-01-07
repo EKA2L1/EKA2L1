@@ -94,7 +94,7 @@ namespace eka2l1 {
             // If the timer hasn't finished yet, please unschedule it.
             if (outstanding) {
                 // Cancel
-                timing->unschedule_event(callback_type, 
+                timing->unschedule_event(callback_type,
                     reinterpret_cast<std::uint64_t>(&info));
             }
 

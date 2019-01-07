@@ -69,7 +69,7 @@ namespace eka2l1::drivers {
         case 2:
             return GL_TEXTURE_2D;
 
-        case 3: 
+        case 3:
             return GL_TEXTURE_3D;
 
         default:
@@ -87,7 +87,7 @@ namespace eka2l1::drivers {
 
             break;
 
-        case 2: 
+        case 2:
             glTexImage2D(GL_TEXTURE_2D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, 0, to_gl_format(format),
                 to_gl_data_type(tex_data_type), tex_data);
 
@@ -179,7 +179,7 @@ namespace eka2l1::drivers {
             return GL_LINEAR;
 
         default:
-            break;        
+            break;
         }
 
         return 0;

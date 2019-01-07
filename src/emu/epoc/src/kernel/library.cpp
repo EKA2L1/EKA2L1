@@ -29,8 +29,8 @@
 #include <epoc/kernel.h>
 #include <epoc/mem.h>
 
-#include <common/log.h>
 #include <common/chunkyseri.h>
+#include <common/log.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -60,8 +60,7 @@ namespace eka2l1 {
                     return std::optional<uint32_t>{};
                 }
 
-                LOG_TRACE("{}-{} (0x{:x}) 0x{:x}", obj_name, idx, e32_img->rt_code_addr, e32_img->rt_code_addr + 
-                    e32_img->ed.syms[idx - 1] - e32_img->header.code_base);
+                LOG_TRACE("{}-{} (0x{:x}) 0x{:x}", obj_name, idx, e32_img->rt_code_addr, e32_img->rt_code_addr + e32_img->ed.syms[idx - 1] - e32_img->header.code_base);
 
                 return e32_img->rt_code_addr + e32_img->ed.syms[idx - 1] - e32_img->header.code_base;
             }

@@ -38,7 +38,7 @@ namespace eka2l1::common {
      * \returns False on failure, true on success.
      *          Failure may happens because the pointer are not mapped yet.
     */
-    bool  unmap_memory(void *ptr, const std::size_t size);
+    bool unmap_memory(void *ptr, const std::size_t size);
 
     /*!\brief Commit reserved memory region.
      *

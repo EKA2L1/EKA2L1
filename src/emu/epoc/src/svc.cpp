@@ -44,9 +44,9 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/path.h>
+#include <common/platform.h>
 #include <common/random.h>
 #include <common/types.h>
-#include <common/platform.h>
 
 #define CURL_STATICLIB
 #if EKA2L1_PLATFORM(WIN32)
@@ -200,7 +200,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
 
         process_ptr pr_real = kern->get_process(aHandle);
-        
+
         if (!pr_real) {
             return KErrBadHandle;
         }
@@ -402,8 +402,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        const std::string new_name = aNewName.get(sys->get_memory_system())->
-            to_std_string(kern->crr_process());
+        const std::string new_name = aNewName.get(sys->get_memory_system())->to_std_string(kern->crr_process());
 
         pr->rename(new_name);
 
@@ -504,8 +503,7 @@ namespace eka2l1::epoc {
         LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<TUint>(aEntryAddress),
             path_utf8);
 
-        aFullPathPtr.get(sys->get_memory_system())->assign(sys->get_kernel_system()->crr_process(), 
-            path_utf8);
+        aFullPathPtr.get(sys->get_memory_system())->assign(sys->get_kernel_system()->crr_process(), path_utf8);
     }
 
     /***********************************/
@@ -524,8 +522,7 @@ namespace eka2l1::epoc {
      * \returns The UTC offset, in seconds.
      */
     BRIDGE_FUNC(TInt, UTCOffset) {
-        return static_cast<TInt>
-            (date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
+        return static_cast<TInt>(date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
     }
 
     enum : uint64_t {
@@ -544,8 +541,7 @@ namespace eka2l1::epoc {
         *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;
 
-        *offset = 
-            static_cast<TInt>(date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
+        *offset = static_cast<TInt>(date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
 
         return KErrNone;
     }
@@ -581,7 +577,7 @@ namespace eka2l1::epoc {
             *(msg->request_sts.get(msg->own_thr->owning_process())) = aVal;
             msg->own_thr->signal_request();
         }
-        
+
         LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
 
         return KErrNone;
@@ -652,8 +648,7 @@ namespace eka2l1::epoc {
         }
 
         if ((int)msg->args.get_arg_type(aParam) & (int)ipc_arg_type::flag_des) {
-            epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[aParam]).
-                get(msg->own_thr->owning_process());
+            epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[aParam]).get(msg->own_thr->owning_process());
 
             return base->get_length();
         }
@@ -684,8 +679,7 @@ namespace eka2l1::epoc {
         if ((int)type & (int)ipc_arg_type::flag_des) {
             process_ptr own_pr = msg->own_thr->owning_process();
 
-            return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(own_pr)
-                ->get_max_length(own_pr);
+            return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(own_pr)->get_max_length(own_pr);
         }
 
         return KErrBadDescriptor;
@@ -790,7 +784,7 @@ namespace eka2l1::epoc {
             content.resize(minimum_size);
         }
 
-        memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem), 
+        memcpy(&content[des8 ? aStartOffset : aStartOffset * 2], info->iTargetPtr.get(mem),
             des8 ? info->iTargetLength : info->iTargetLength * 2);
 
         int error_code = 0;
@@ -801,7 +795,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Temp buf CDL 0x{:x}", content.length());
         }
 
-        bool result = context.write_arg_pkg(aParam, 
+        bool result = context.write_arg_pkg(aParam,
             reinterpret_cast<uint8_t *>(&content[0]), static_cast<std::uint32_t>(content.length()),
             &error_code);
 
@@ -863,7 +857,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<desc8> aServerName, TInt aMode) {
         kernel_system *kern = sys->get_kernel_system();
         std::string server_name = aServerName.get(sys->get_memory_system())
-            ->to_std_string(kern->crr_process());
+                                      ->to_std_string(kern->crr_process());
 
         uint32_t handle = kern->create_server(server_name);
 
@@ -984,7 +978,7 @@ namespace eka2l1::epoc {
         }
 
         // LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
-        
+
         return ss->send_receive_sync(aOrd, arg, aStatus);
     }
 
@@ -1016,7 +1010,7 @@ namespace eka2l1::epoc {
         }
 
         // LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
-        
+
         return ss->send_receive(aOrd, arg, aStatus);
     }
 
@@ -1771,7 +1765,7 @@ namespace eka2l1::epoc {
         std::string ctx_epoc_str;
         ctx_epoc_str.resize(sizeof(arm_context_epoc));
 
-        arm_context_epoc *context_epoc = reinterpret_cast<arm_context_epoc*>(&ctx_epoc_str[0]);
+        arm_context_epoc *context_epoc = reinterpret_cast<arm_context_epoc *>(&ctx_epoc_str[0]);
 
         std::copy(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), context_epoc->regs);
         context_epoc->cpsr = ctx.cpsr;
@@ -2158,7 +2152,7 @@ namespace eka2l1::epoc {
     /* DEBUG AND SECURITY */
 
     BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, TInt aMode) {
-        LOG_TRACE("{}", 
+        LOG_TRACE("{}",
             aDes.get(sys->get_memory_system())->to_std_string(sys->get_kernel_system()->crr_process()));
     }
 
@@ -2179,25 +2173,22 @@ namespace eka2l1::epoc {
     }
 
     /* ATOMIC OPERATION */
-    /* TODO: Use host atomic function when multi-core available */    
-    struct SAtomicOpInfo32
-    {
-        TAny*		iA;
-        union
-        {
-            TAny*	iQ;
-            TUint32	i0;
+    /* TODO: Use host atomic function when multi-core available */
+    struct SAtomicOpInfo32 {
+        TAny *iA;
+        union {
+            TAny *iQ;
+            TUint32 i0;
         };
 
-        TUint32		i1;
-        TUint32		i2;
+        TUint32 i1;
+        TUint32 i2;
     };
 
     /*! \brief Increase value by 1 if it's positive (> 0)
         \returns Original value
     */
-    BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal)
-    {
+    BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal) {
         TInt32 *val = aVal.get(sys->get_memory_system());
         TInt32 org_val = *val;
         *val > 0 ? val++ : 0;
@@ -2205,8 +2196,7 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
-    BRIDGE_FUNC(TInt32, SafeDec32, eka2l1::ptr<TInt32> aVal)
-    {
+    BRIDGE_FUNC(TInt32, SafeDec32, eka2l1::ptr<TInt32> aVal) {
         TInt32 *val = aVal.get(sys->get_memory_system());
         TInt32 org_val = *val;
         *val > 0 ? val-- : 0;
@@ -2226,7 +2216,7 @@ namespace eka2l1::epoc {
         return old;
     }
     */
-   
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, WaitForAnyRequest),

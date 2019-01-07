@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/dynamicfile.h>
 #include <common/cvt.h>
+#include <common/dynamicfile.h>
 
 namespace eka2l1::common {
     dynamic_ifile::dynamic_ifile(const std::string &name)
@@ -27,8 +27,8 @@ namespace eka2l1::common {
         // Read the POM
         std::uint16_t pom = 0;
 
-        stream_.read(reinterpret_cast<char*>(&pom), sizeof(pom));
-        
+        stream_.read(reinterpret_cast<char *>(&pom), sizeof(pom));
+
         if (pom == 0xFEFF) {
             // Little-endian
             ucs2_ = 0;
@@ -40,7 +40,7 @@ namespace eka2l1::common {
             stream_.seekg(0, std::ios::beg);
         }
     }
-    
+
     bool dynamic_ifile::getline(std::string &line) {
         if (is_ucs2()) {
             // We need to get line from other method than do a convert
@@ -55,7 +55,7 @@ namespace eka2l1::common {
         // Read it until we get a newline
         return bool(std::getline(stream_, line));
     }
-    
+
     bool dynamic_ifile::getline(std::u16string &line) {
         if (ucs2_ == -1) {
             std::string line_utf8;
@@ -67,11 +67,11 @@ namespace eka2l1::common {
         }
 
         line.clear();
-        
-        while (true) {    
+
+        while (true) {
             char lo = 0;
             char hi = 0;
-            
+
             if (ucs2_ == 1) {
                 stream_.read(&hi, 1);
                 stream_.read(&lo, 1);
@@ -118,10 +118,10 @@ namespace eka2l1::common {
 
         std::size_t iter = 0;
 
-        while (iter < len) {    
+        while (iter < len) {
             char lo = 0;
             char hi = 0;
-            
+
             if (ucs2_ == 1) {
                 stream_.read(&hi, 1);
                 stream_.read(&lo, 1);
@@ -133,7 +133,7 @@ namespace eka2l1::common {
             if (static_cast<char16_t>((hi << 8) | lo) == u'\n') {
                 break;
             }
-            
+
             if (stream_.fail() || stream_.eof()) {
                 return;
             }

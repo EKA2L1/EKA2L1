@@ -27,8 +27,8 @@
 
 #include <cassert>
 #include <cstring>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace eka2l1 {
     class system;
@@ -46,7 +46,7 @@ namespace eka2l1 {
  * These can help services implementation or executive calls implementation.
  */
 namespace eka2l1::epoc {
-    enum des_type: std::uint32_t {
+    enum des_type : std::uint32_t {
         buf_const,
         ptr_const,
         ptr,
@@ -62,23 +62,23 @@ namespace eka2l1::epoc {
         std::uint32_t info;
 
     public:
-        inline std::uint32_t  get_length() const {
+        inline std::uint32_t get_length() const {
             // 28 low bit stores the length
             return info & 0xFFFFFF;
         }
 
-        inline des_type       get_descriptor_type() const {
+        inline des_type get_descriptor_type() const {
             return static_cast<des_type>(info >> 28);
         }
 
-        inline void           set_descriptor_type(const des_type dtype) {
+        inline void set_descriptor_type(const des_type dtype) {
             info &= 0x00FFFFFF;
             info |= (dtype << 28);
         }
 
         void *get_pointer_raw(eka2l1::process_ptr pr);
-        
-        int assign_raw(eka2l1::process_ptr pr, const std::uint8_t *data, 
+
+        int assign_raw(eka2l1::process_ptr pr, const std::uint8_t *data,
             const std::uint32_t size);
 
         std::uint32_t get_max_length(eka2l1::process_ptr pr);
@@ -87,10 +87,10 @@ namespace eka2l1::epoc {
     };
 
     template <typename T>
-    struct desc: public desc_base {
-    public:      
+    struct desc : public desc_base {
+    public:
         T *get_pointer(eka2l1::process_ptr pr) {
-            return reinterpret_cast<T*>(get_pointer_raw(pr));
+            return reinterpret_cast<T *>(get_pointer_raw(pr));
         }
 
         std::basic_string<T> to_std_string(eka2l1::process_ptr pr) {
@@ -106,9 +106,9 @@ namespace eka2l1::epoc {
             return data;
         }
 
-        int assign(eka2l1::process_ptr pr, const std::uint8_t *data, 
+        int assign(eka2l1::process_ptr pr, const std::uint8_t *data,
             const std::uint32_t size) {
-            std::uint8_t *des_buf = reinterpret_cast<std::uint8_t*>(get_pointer_raw(pr));
+            std::uint8_t *des_buf = reinterpret_cast<std::uint8_t *>(get_pointer_raw(pr));
             des_type dtype = get_descriptor_type();
 
             std::uint32_t real_len = size / sizeof(T);
@@ -129,13 +129,13 @@ namespace eka2l1::epoc {
         }
 
         int assign(eka2l1::process_ptr pr, const std::basic_string<T> &buf) {
-            return assign(pr, reinterpret_cast<const std::uint8_t*>(&buf[0]), 
+            return assign(pr, reinterpret_cast<const std::uint8_t *>(&buf[0]),
                 static_cast<std::uint32_t>(buf.size() * sizeof(T)));
         }
     };
 
     template <typename T>
-    struct des: public desc<T> {
+    struct des : public desc<T> {
         std::uint32_t max_length;
 
         inline void set_max_length(const std::uint32_t max_len) {
@@ -144,50 +144,50 @@ namespace eka2l1::epoc {
     };
 
     template <typename T>
-    struct ptr_desc: public desc<T> {
-        eka2l1::ptr<T>  data;
+    struct ptr_desc : public desc<T> {
+        eka2l1::ptr<T> data;
     };
 
     template <typename T>
-    struct ptr_des: public des<T> {
-        eka2l1::ptr<T>  data;
+    struct ptr_des : public des<T> {
+        eka2l1::ptr<T> data;
     };
 
     template <typename T>
-    struct buf_desc: public desc<T> {
-        T   data[1];
+    struct buf_desc : public desc<T> {
+        T data[1];
     };
 
     template <typename T>
-    struct buf_des: public des<T> {
-        T   data[1];
+    struct buf_des : public des<T> {
+        T data[1];
     };
 
     template <typename T>
     struct literal {
-        std::uint32_t   length;
-        T               data[1];
+        std::uint32_t length;
+        T data[1];
     };
 
     template <typename T, unsigned int MAX_ELEM = 32>
-    struct bufc_static: public desc<T> {
+    struct bufc_static : public desc<T> {
         T data[MAX_ELEM];
-        
-        void operator = (const std::basic_string<T> &str) {
+
+        void operator=(const std::basic_string<T> &str) {
             assign(nullptr, str);
         }
     };
 
     template <typename T, unsigned int MAX_ELEM = 32>
-    struct buf_static: public des<T> {
+    struct buf_static : public des<T> {
         T data[MAX_ELEM];
 
         buf_static() {
             des<T>::set_max_length(MAX_ELEM);
-            desc_base::set_descriptor_type(buf); 
+            desc_base::set_descriptor_type(buf);
         }
 
-        void operator = (const std::basic_string<T> &str) {
+        void operator=(const std::basic_string<T> &str) {
             desc<T>::assign(nullptr, str);
         }
     };

@@ -11,11 +11,12 @@
 
 namespace eka2l1::drivers {
     ogl_window::ogl_window(const eka2l1::vec2 &size, const std::uint16_t pri, bool visible)
-        : fb(size), pri(pri), visible(visible) {
-
+        : fb(size)
+        , pri(pri)
+        , visible(visible) {
     }
-    
-    ogl_graphics_driver::ogl_graphics_driver(const vec2 &scr) 
+
+    ogl_graphics_driver::ogl_graphics_driver(const vec2 &scr)
         : framebuffer(scr) {
         ImGui_ImplOpenGL3_Init(nullptr);
         context = ImGui::CreateContext();
@@ -24,7 +25,7 @@ namespace eka2l1::drivers {
     ogl_graphics_driver::~ogl_graphics_driver() {
         ImGui::DestroyContext(context);
     }
-    
+
     void ogl_graphics_driver::set_screen_size(const vec2 &s) {
         framebuffer.resize(s);
         framebuffer.bind();
@@ -32,7 +33,7 @@ namespace eka2l1::drivers {
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         glEnable(GL_CULL_FACE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -43,32 +44,32 @@ namespace eka2l1::drivers {
     void ogl_graphics_driver::redraw_window_list() {
         assert(!binding && "A window is currently being binded, not able to redraw window list!");
 
-        ImGui::NewFrame();              
+        ImGui::NewFrame();
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-        ImGui::Begin("BCKGND", NULL, ImGui::GetIO().DisplaySize, 0.0f, 
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus );
+        ImGui::Begin("BCKGND", NULL, ImGui::GetIO().DisplaySize, 0.0f,
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
         ImVec2 base_pos = ImGui::GetCursorScreenPos();
 
-        for (auto &window: windows) {
+        for (auto &window : windows) {
             if (window->visible) {
                 const eka2l1::vec2 win_size = window->fb.get_size();
                 ImVec2 win_pos = ImVec2(static_cast<float>(window->pos.x), static_cast<float>(window->pos.y));
 
                 ImGui::GetWindowDrawList()->AddImage((ImTextureID)window->fb.texture_handle(),
                     ImVec2(base_pos.x + win_pos.x,
-                    base_pos.y + win_pos.y),
+                        base_pos.y + win_pos.y),
 
-                    ImVec2(base_pos.x + win_pos.x + win_size.x, 
-                    base_pos.y + win_pos.y + win_size.y), 
+                    ImVec2(base_pos.x + win_pos.x + win_size.x,
+                        base_pos.y + win_pos.y + win_size.y),
                     ImVec2(0, 1), ImVec2(1, 0));
             }
         }
 
         ImGui::End();
         ImGui::EndFrame();
-        
+
         ImDrawData *data = ImGui::GetDrawData();
 
         if (data) {
@@ -82,7 +83,7 @@ namespace eka2l1::drivers {
         auto last_context = ImGui::GetCurrentContext();
         ImGui::SetCurrentContext(context);
 
-        ImGuiStyle& style = ImGui::GetStyle();
+        ImGuiStyle &style = ImGui::GetStyle();
         style.WindowBorderSize = 0.0f;
 
         /* Start new ImGui frame */
@@ -107,7 +108,7 @@ namespace eka2l1::drivers {
         glEnable(GL_DEPTH_TEST);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         for (;;) {
             auto request = request_queue.pop();
 
@@ -124,9 +125,9 @@ namespace eka2l1::drivers {
                 drivers::ogl_window_ptr win = std::make_unique<ogl_window>(size, pri, visible);
                 win->id = id_counter++;
 
-                std::uint32_t *data_ret = *request->context.pop<std::uint32_t*>();
+                std::uint32_t *data_ret = *request->context.pop<std::uint32_t *>();
                 *data_ret = win->id;
-                
+
                 windows.push(std::move(win));
 
                 break;
@@ -152,8 +153,8 @@ namespace eka2l1::drivers {
 
                 ImGui::SetNextWindowPos(ImVec2(0, 0));
                 ImGui::SetNextWindowSize(overlay_size);
-                ImGui::Begin("BCKGND", NULL, overlay_size, 0.0f, 
-                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus );
+                ImGui::Begin("BCKGND", NULL, overlay_size, 0.0f,
+                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
                 draw_list = ImGui::GetWindowDrawList();
 
@@ -181,9 +182,9 @@ namespace eka2l1::drivers {
             }
 
             case graphics_driver_resize_screen: {
-                assert(!binding && "Sanity check, discovered that currently a window is binded. Unbind to resize.");  
+                assert(!binding && "Sanity check, discovered that currently a window is binded. Unbind to resize.");
                 framebuffer.unbind();
-                
+
                 auto v = *request->context.pop<vec2>();
                 set_screen_size(v);
 
@@ -218,7 +219,7 @@ namespace eka2l1::drivers {
                 (*win_ite)->fb.resize(*request->context.pop<vec2>());
                 break;
             }
-            
+
             case graphics_driver_set_priority: {
                 std::uint32_t id = *request->context.pop<std::uint32_t>();
                 auto win_ite = std::find_if(windows.begin(), windows.end(),
@@ -263,7 +264,7 @@ namespace eka2l1::drivers {
             case graphics_driver_clear: {
                 int c[4];
 
-                for (std::size_t i = 0 ; i < 4; i ++) {
+                for (std::size_t i = 0; i < 4; i++) {
                     c[i] = *request->context.pop<int>();
                 }
 
@@ -279,7 +280,7 @@ namespace eka2l1::drivers {
                 // Since it takes the lower left
                 glScissor(r.top.x, framebuffer.get_size().y - (r.top.y + r.size.y),
                     r.size.x, r.size.y);
-                
+
                 break;
             }
 

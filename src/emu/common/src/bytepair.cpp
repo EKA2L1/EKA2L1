@@ -157,7 +157,7 @@ namespace eka2l1 {
         done_data8:
             *dest++ = p1;
             return static_cast<int>(dest - static_cast<uint8_t *>(destination));
-            
+
         done_dest:
             return static_cast<int>(dest - static_cast<uint8_t *>(destination));
 

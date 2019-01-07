@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <drivers/driver.h>
 #include <common/vecx.h>
+#include <drivers/driver.h>
 
 #include <memory>
 
@@ -43,8 +43,8 @@ namespace eka2l1::drivers {
         graphics_driver_draw_text_box
     };
 
-    class graphics_driver: public driver {
-    public:    
+    class graphics_driver : public driver {
+    public:
         graphics_driver() {}
 
         virtual vec2 get_screen_size() = 0;
@@ -61,6 +61,6 @@ namespace eka2l1::drivers {
     };
 
     bool init_graphics_library(graphic_api api);
-    
+
     graphics_driver_ptr create_graphics_driver(const graphic_api api, const vec2 &screen_size);
 };

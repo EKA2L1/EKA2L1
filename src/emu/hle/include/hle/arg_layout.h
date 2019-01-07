@@ -20,21 +20,21 @@
 
 #pragma once
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 
 namespace eka2l1 {
-	/*! \brief Contains function and class that help connecting between the host and guest (Symbian).
+    /*! \brief Contains function and class that help connecting between the host and guest (Symbian).
 	*/
     namespace hle {
-		/*! \brief The location of the argument in EABI */
+        /*! \brief The location of the argument in EABI */
         enum class arg_where {
             gpr,
             fpr,
             stack
         };
 
-		/*! \brief The layout of the argument in EABI */
+        /*! \brief The layout of the argument in EABI */
         struct arg_layout {
             arg_where loc;
             size_t offset;

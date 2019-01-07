@@ -48,9 +48,10 @@ namespace eka2l1::drivers {
         texture() {}
 
         virtual bool create(const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data) = 0;
-        
-        virtual ~texture() {};
+            const texture_format format, const texture_data_type data_type, void *data)
+            = 0;
+
+        virtual ~texture(){};
 
         virtual void change_size(const vec3 &new_size) = 0;
         virtual void change_data(const texture_data_type data_type, void *data) = 0;

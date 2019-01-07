@@ -18,5 +18,4 @@
 
 GLDEF_C TInt E32Main();
 
-#endif  // __CMDREVERSING_H__
-
+#endif // __CMDREVERSING_H__

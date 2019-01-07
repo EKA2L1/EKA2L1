@@ -11,14 +11,14 @@
 #include <epoc/utils/des.h>
 #include <epoc/utils/dll.h>
 #include <epoc/utils/handle.h>
+#include <epoc/utils/reqsts.h>
 #include <epoc/utils/tl.h>
 #include <epoc/utils/uid.h>
-#include <epoc/utils/reqsts.h>
 
 #include <hle/bridge.h>
 
-#include <epoc/kernel/libmanager.h>
 #include <epoc/hal.h>
+#include <epoc/kernel/libmanager.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>

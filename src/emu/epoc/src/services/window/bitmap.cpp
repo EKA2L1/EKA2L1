@@ -18,11 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/bitmap.h> 
-#include <epoc/epoc.h>
-#include <epoc/page_table.h>
-#include <epoc/kernel/libmanager.h>
 #include <arm/arm_interface.h>
+#include <epoc/epoc.h>
+#include <epoc/kernel/libmanager.h>
+#include <epoc/page_table.h>
+#include <epoc/services/window/bitmap.h>
 
 #include <common/log.h>
 #include <epoc/kernel.h>
@@ -33,11 +33,9 @@ namespace eka2l1 {
         std::uint32_t *jump_arg_ptr = nullptr;
 
         if (thumb) {
-            jump_arg_ptr = ptr<std::uint32_t>(jump_arm_one_arg.code_ptr.ptr_address() + 
-                jump_arm_one_arg.chunk_size).get(mem);
+            jump_arg_ptr = ptr<std::uint32_t>(jump_arm_one_arg.code_ptr.ptr_address() + jump_arm_one_arg.chunk_size).get(mem);
         } else {
-            jump_arg_ptr = ptr<std::uint32_t>(jump_thumb_one_arg.code_ptr.ptr_address() + 
-                jump_thumb_one_arg.chunk_size).get(mem);
+            jump_arg_ptr = ptr<std::uint32_t>(jump_thumb_one_arg.code_ptr.ptr_address() + jump_thumb_one_arg.chunk_size).get(mem);
         }
 
         *jump_arg_ptr = r0;
@@ -49,11 +47,9 @@ namespace eka2l1 {
         std::uint32_t *jump_arg_ptr = nullptr;
 
         if (thumb) {
-            jump_arg_ptr = ptr<std::uint32_t>(jump_arm_two_arg.code_ptr.ptr_address() + 
-                jump_arm_two_arg.chunk_size).get(mem);
+            jump_arg_ptr = ptr<std::uint32_t>(jump_arm_two_arg.code_ptr.ptr_address() + jump_arm_two_arg.chunk_size).get(mem);
         } else {
-            jump_arg_ptr = ptr<std::uint32_t>(jump_thumb_one_arg.code_ptr.ptr_address() + 
-                jump_thumb_two_arg.chunk_size).get(mem);
+            jump_arg_ptr = ptr<std::uint32_t>(jump_thumb_one_arg.code_ptr.ptr_address() + jump_thumb_two_arg.chunk_size).get(mem);
         }
 
         *jump_arg_ptr = r0;
@@ -62,21 +58,20 @@ namespace eka2l1 {
     }
 
     void bitmap_manipulator::generate_jump_chunk(eka2l1::memory_system *mem) {
-        jump_arm_one_arg.code_ptr = mem->chunk_range
-            (ram_code_addr, rom, 0, 0x1000, 0x1000, prot::read_write_exec).cast<std::uint32_t>();
+        jump_arm_one_arg.code_ptr = mem->chunk_range(ram_code_addr, rom, 0, 0x1000, 0x1000, prot::read_write_exec).cast<std::uint32_t>();
 
         std::uint32_t *jump_chunk = jump_arm_one_arg.code_ptr.get(mem);
-        
+
         // MOV R0, fbs
         // MOV R14, jump addr
         // BLX fbs_get_data_addr
-        
+
         // After that, data will be stored in R0
         // Everything should be restored back to original context
 
-        *jump_chunk = 0xE59FF004;           // LDR R0, [PC, #4]
-        *(jump_chunk + 1) = 0xE59FE008;     // LDR R14, [PC, #8]
-        *(jump_chunk + 2) = 0xE12FFF3E;     // BLX R14
+        *jump_chunk = 0xE59FF004; // LDR R0, [PC, #4]
+        *(jump_chunk + 1) = 0xE59FE008; // LDR R14, [PC, #8]
+        *(jump_chunk + 2) = 0xE12FFF3E; // BLX R14
 
         jump_arm_one_arg.chunk_size = 12;
 
@@ -87,39 +82,39 @@ namespace eka2l1 {
 
         jump_thumb_one_arg.code_ptr = jump_arm_one_arg.code_ptr + jump_arm_one_arg.chunk_size + 8;
 
-        std::uint16_t *jump_chunk_thumb = reinterpret_cast<std::uint16_t*>(jump_chunk);
+        std::uint16_t *jump_chunk_thumb = reinterpret_cast<std::uint16_t *>(jump_chunk);
 
-        *jump_chunk_thumb = 0x4801;           // LDR R0, [PC, #4]
-        *(jump_chunk_thumb + 1) = 0x4A02;     // LDR R1, [PC, #8]
-        *(jump_chunk_thumb + 2) = 0x4788;     // BLX R1
+        *jump_chunk_thumb = 0x4801; // LDR R0, [PC, #4]
+        *(jump_chunk_thumb + 1) = 0x4A02; // LDR R1, [PC, #8]
+        *(jump_chunk_thumb + 2) = 0x4788; // BLX R1
 
         // Leave alone again
         jump_thumb_two_arg.chunk_size = 6;
 
-        jump_chunk = reinterpret_cast<std::uint32_t*>(jump_chunk_thumb + 4);
+        jump_chunk = reinterpret_cast<std::uint32_t *>(jump_chunk_thumb + 4);
         jump_arm_two_arg.code_ptr = jump_thumb_one_arg.code_ptr.ptr_address() + jump_thumb_one_arg.chunk_size
             + 8;
 
-        *jump_chunk = 0xE59FF004;               // LDR R0, [PC, #4]
-        *(jump_chunk + 1) = 0xE59F1008;         // LDR R1, [PC, #8]
-        *(jump_chunk + 2) = 0xE59FE00C;         // LDR R14, [PC, 0xC]
-        *(jump_chunk + 3) = 0xE12FFF3E;         // BLX R14
+        *jump_chunk = 0xE59FF004; // LDR R0, [PC, #4]
+        *(jump_chunk + 1) = 0xE59F1008; // LDR R1, [PC, #8]
+        *(jump_chunk + 2) = 0xE59FE00C; // LDR R14, [PC, 0xC]
+        *(jump_chunk + 3) = 0xE12FFF3E; // BLX R14
 
         jump_arm_two_arg.chunk_size = 16;
 
-        jump_chunk_thumb = reinterpret_cast<std::uint16_t*>(jump_chunk + 3);
+        jump_chunk_thumb = reinterpret_cast<std::uint16_t *>(jump_chunk + 3);
         jump_thumb_two_arg.code_ptr = jump_arm_two_arg.code_ptr.ptr_address() + jump_arm_two_arg.chunk_size
             + 12;
 
-        *jump_chunk_thumb = 0x4801;           // LDR R0, [PC, #4]
-        *(jump_chunk_thumb + 1) = 0x4A02;     // LDR R1, [PC, #8]
-        *(jump_chunk_thumb + 2) = 0x4A03;     // LDR R2, [PC, #12]
-        *(jump_chunk_thumb + 2) = 0x4790;     // BLX R2
+        *jump_chunk_thumb = 0x4801; // LDR R0, [PC, #4]
+        *(jump_chunk_thumb + 1) = 0x4A02; // LDR R1, [PC, #8]
+        *(jump_chunk_thumb + 2) = 0x4A03; // LDR R2, [PC, #12]
+        *(jump_chunk_thumb + 2) = 0x4790; // BLX R2
 
         jump_thumb_two_arg.chunk_size = 12;
     }
-    
-    bitmap_manipulator::bitmap_manipulator(eka2l1::system *sys) 
+
+    bitmap_manipulator::bitmap_manipulator(eka2l1::system *sys)
         : sys(sys) {
         fbscli = sys->get_lib_manager()->load_romimg(u"fbscli.dll", false);
 
@@ -136,11 +131,12 @@ namespace eka2l1 {
         bool is_eka1 = (sys->get_symbian_version_use() <= epocver::epoc9);
 
         scratch = sys->get_memory_system()->chunk_range(is_eka1 ? shared_data_eka1 : shared_data, is_eka1 ? shared_data_end_eka1 : ram_code_addr, 0,
-            sizeof(fbs_bitmap), 0x1000, prot::read_write).cast<fbs_bitmap>();
+                                              sizeof(fbs_bitmap), 0x1000, prot::read_write)
+                      .cast<fbs_bitmap>();
 
         scratch_host = scratch.get(sys->get_memory_system());
     }
-    
+
     address bitmap_manipulator::do_call(eka2l1::process_ptr &call_pr, address jump_addr, std::uint32_t r0) {
         memory_system *mem = sys->get_memory_system();
 
@@ -165,14 +161,14 @@ namespace eka2l1 {
         }
 
         supply_jump_arg(mem, jump_addr, r0, thumb);
-        
+
         // Save the context. Later we will only restore R0, R1, R2, R3 and R14 (if ARM mode)
         std::uint32_t lr0 = cpu->get_reg(0);
         std::uint32_t lr1 = cpu->get_reg(1);
         std::uint32_t lr2 = cpu->get_reg(2);
         std::uint32_t lr3 = cpu->get_reg(3);
         std::uint32_t lr14 = cpu->get_reg(14);
-        
+
         if (thumb) {
             cpu->imb_range(jump_arm_one_arg.code_ptr.ptr_address(), jump_arm_one_arg.chunk_size);
         } else {
@@ -222,14 +218,14 @@ namespace eka2l1 {
         }
 
         supply_jump_arg(mem, jump_addr, r0, r1, thumb);
-        
+
         // Save the context. Later we will only restore R0, R1, R2, R3 and R14 (if ARM mode)
         std::uint32_t lr0 = cpu->get_reg(0);
         std::uint32_t lr1 = cpu->get_reg(1);
         std::uint32_t lr2 = cpu->get_reg(2);
         std::uint32_t lr3 = cpu->get_reg(3);
         std::uint32_t lr14 = cpu->get_reg(14);
-        
+
         if (thumb) {
             cpu->imb_range(jump_arm_two_arg.code_ptr.ptr_address(), jump_arm_two_arg.chunk_size);
         } else {

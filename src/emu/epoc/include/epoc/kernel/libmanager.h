@@ -27,8 +27,8 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include <epoc/ptr.h>
 
@@ -70,7 +70,7 @@ namespace eka2l1 {
             std::function<void(system *)> func;
             std::string name;
         };
-        
+
         using func_map = std::unordered_map<uint32_t, eka2l1::hle::epoc_import_func>;
 
         struct e32img_inf {

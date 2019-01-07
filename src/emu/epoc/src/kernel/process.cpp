@@ -25,9 +25,9 @@
 #include <epoc/kernel.h>
 #include <epoc/mem.h>
 
+#include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/process.h>
 #include <epoc/kernel/scheduler.h>
-#include <epoc/kernel/libmanager.h>
 
 #include <epoc/loader/romimage.h>
 
@@ -62,9 +62,11 @@ namespace eka2l1::kernel {
 
         dll_lock = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(dll_lock_handle));
     }
-    
+
     process::process(kernel_system *kern, memory_system *mem)
-        : kernel_obj(kern), mem(mem), page_tab(mem->get_page_size()) {
+        : kernel_obj(kern)
+        , mem(mem)
+        , page_tab(mem->get_page_size()) {
         obj_type = kernel::object_type::process;
     }
 
@@ -115,7 +117,7 @@ namespace eka2l1::kernel {
             romimg->header.code_address, romimg->header.entry_point,
             romimg->header.stack_size, romimg->header.heap_minimum_size, romimg->header.heap_maximum_size,
             romimg->header.priority);
-            
+
         // TODO: Load all references DLL in the export list.
     }
 
@@ -292,7 +294,7 @@ namespace eka2l1::kernel {
             info.rt_bss_size = img->header.bss_size;
 
             info.rt_initialized_data_addr = img->rt_data_addr + img->header.bss_size;
-            info.rt_initialized_data_size = img->header.data_size; 
+            info.rt_initialized_data_size = img->header.data_size;
         } else {
             info.rt_code_addr = romimg->header.code_address;
             info.rt_code_size = romimg->header.code_size;
@@ -320,7 +322,7 @@ namespace eka2l1::kernel {
                 kern->get_kernel_obj_by_id(requester_id));
         }
     }
-    
+
     void pass_arg::do_state(common::chunkyseri &seri) {
         auto s = seri.section("PassArg", 1);
 
@@ -346,13 +348,13 @@ namespace eka2l1::kernel {
         seri.absorb(priority);
         seri.absorb(exit_reason);
         seri.absorb(exit_type);
-        
+
         seri.absorb(process_name);
         seri.absorb(exe_path);
         seri.absorb(cmd_args);
 
         bool xip = (img ? false : true);
-        seri.absorb(xip); 
+        seri.absorb(xip);
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             hle::lib_manager *libmngr = kern->get_lib_manager();
@@ -383,7 +385,7 @@ namespace eka2l1::kernel {
             logon_requests.resize(cs);
         }
 
-        for (auto &lr: logon_requests) {
+        for (auto &lr : logon_requests) {
             lr.do_state(kern, seri);
         }
 
@@ -394,7 +396,7 @@ namespace eka2l1::kernel {
             rendezvous_requests.resize(s);
         }
 
-        for (auto &rr: rendezvous_requests) {
+        for (auto &rr : rendezvous_requests) {
             rr.do_state(kern, seri);
         }
 
@@ -403,8 +405,7 @@ namespace eka2l1::kernel {
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             dll_lock = std::reinterpret_pointer_cast<kernel::mutex>(
-                kern->get_kernel_obj_by_id(dll_lock_uid)
-            );
+                kern->get_kernel_obj_by_id(dll_lock_uid));
         }
 
         // We don't need to do state for page table, eventaully it will be filled in by chunk

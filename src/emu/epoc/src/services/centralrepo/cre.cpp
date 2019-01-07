@@ -24,8 +24,8 @@
 #include <epoc/services/centralrepo/cre.h>
 #include <epoc/vfs.h>
 
-#include <common/log.h>
 #include <common/chunkyseri.h>
+#include <common/log.h>
 
 namespace eka2l1 {
     /* 
@@ -71,14 +71,14 @@ namespace eka2l1 {
                     std::uint16_t b2 = 0;
                     seri.absorb(b2);
                     len = b1 + (b2 << 8);
-                    len >>= 4;  
+                    len >>= 4;
                 }
             }
-            
+
             str.resize(len);
         }
 
-        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&str[0]), len);
+        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len);
     }
 
     template <typename T>
@@ -87,20 +87,20 @@ namespace eka2l1 {
         dat.resize(sizeof(T));
 
         if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-            dat.copy(reinterpret_cast<char*>(data), sizeof(T));
+            dat.copy(reinterpret_cast<char *>(data), sizeof(T));
         }
 
         absorb_des_string(dat, seri);
 
         if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
-            *data = *reinterpret_cast<T*>(&dat[0]);
+            *data = *reinterpret_cast<T *>(&dat[0]);
         }
     }
 
     int do_state_for_cre(common::chunkyseri &seri, eka2l1::central_repo &repo) {
         seri.absorb(repo.ver);
         seri.absorb(repo.uid);
-        
+
         if (repo.ver >= cenrep_pma_ver) {
             seri.absorb(repo.keyspace_type);
         }
@@ -123,7 +123,7 @@ namespace eka2l1 {
             absorb_des(&policy.write_access, seri);
         };
 
-        for (auto &pol: repo.single_policies) {
+        for (auto &pol : repo.single_policies) {
             state_for_a_policy(pol);
         }
 
@@ -134,13 +134,13 @@ namespace eka2l1 {
             repo.policies_range.resize(range_policies_count);
         }
 
-        for (auto &pol: repo.policies_range) {
+        for (auto &pol : repo.policies_range) {
             state_for_a_policy(pol);
         }
 
         absorb_des(&repo.default_policy.read_access, seri);
         absorb_des(&repo.default_policy.write_access, seri);
-        
+
         if (repo.ver >= 2) {
             seri.absorb(repo.default_policy.high_key);
             seri.absorb(repo.default_policy.key_mask);
@@ -154,7 +154,7 @@ namespace eka2l1 {
             seri.absorb(meta.key_mask);
             seri.absorb(meta.default_meta_data);
         };
-        
+
         std::uint32_t default_meta_range_count = static_cast<std::uint32_t>(repo.meta_range.size());
         seri.absorb(default_meta_range_count);
 
@@ -162,7 +162,7 @@ namespace eka2l1 {
             repo.policies_range.resize(default_meta_range_count);
         }
 
-        for (auto &meta: repo.meta_range) {
+        for (auto &meta : repo.meta_range) {
             do_state_for_a_metadata_entry(meta);
         }
 
@@ -170,12 +170,12 @@ namespace eka2l1 {
 
         // Start to read entries
         std::uint32_t num_entries = static_cast<std::uint32_t>(repo.entries.size());
-        
+
         if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
             repo.entries.resize(num_entries);
         }
 
-        for (auto &entry: repo.entries) {
+        for (auto &entry : repo.entries) {
             seri.absorb(entry.key);
             seri.absorb(entry.metadata_val);
 
@@ -183,7 +183,7 @@ namespace eka2l1 {
 
             if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
                 switch (entry.data.etype) {
-                case  central_repo_entry_type::integer: {
+                case central_repo_entry_type::integer: {
                     entry_type = 0;
                     break;
                 }
@@ -193,12 +193,14 @@ namespace eka2l1 {
                     break;
                 }
 
-                case central_repo_entry_type::string8: case central_repo_entry_type::string16: {
+                case central_repo_entry_type::string8:
+                case central_repo_entry_type::string16: {
                     entry_type = 3;
                     break;
                 }
 
-                default: break;
+                default:
+                    break;
                 }
             }
 
@@ -217,14 +219,14 @@ namespace eka2l1 {
 
             case central_repo_entry_type::real: {
                 float dat = static_cast<float>(entry.data.reald);
-                seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(float));
+                seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&dat), sizeof(float));
 
                 entry.data.reald = dat;
 
                 break;
             }
 
-            case central_repo_entry_type::string8: 
+            case central_repo_entry_type::string8:
             case central_repo_entry_type::string16: {
                 absorb_des_string(entry.data.strd, seri);
                 break;
@@ -232,7 +234,7 @@ namespace eka2l1 {
 
             default:
                 break;
-            } 
+            }
         }
 
         if (repo.ver >= 1) {
@@ -243,7 +245,7 @@ namespace eka2l1 {
                 repo.deleted_settings.resize(deleted_settings_count);
             }
 
-            for (auto &deleted_setting: repo.deleted_settings) {
+            for (auto &deleted_setting : repo.deleted_settings) {
                 seri.absorb(deleted_setting);
             }
         }

@@ -26,8 +26,8 @@
 #include <epoc/services/window/common.h>
 #include <epoc/utils/reqsts.h>
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <mutex>
 #include <optional>
@@ -42,23 +42,24 @@ namespace eka2l1::epoc {
         };
 
         enum class queue_priority {
-            high,       ///< When the queue is max, all events that can be purged will be purge
-            low         ///< When the queue is max, the event will not be schedule, until some elements are freed
+            high, ///< When the queue is max, all events that can be purged will be purge
+            low ///< When the queue is max, the event will not be schedule, until some elements are freed
         };
 
         struct fifo_element {
             std::uint32_t id;
             std::uint16_t pri;
-            T   evt;
+            T evt;
 
-            fifo_element(const std::uint32_t id, const T &evt) 
-                : id(id), evt(std::move(evt)) {
+            fifo_element(const std::uint32_t id, const T &evt)
+                : id(id)
+                , evt(std::move(evt)) {
             }
         };
 
     protected:
-        std::vector<fifo_element>           q_;
-        std::mutex                         lock_;
+        std::vector<fifo_element> q_;
+        std::mutex lock_;
 
         epoc::notify_info nof;
 
@@ -106,7 +107,7 @@ namespace eka2l1::epoc {
         void cancel_event_queue(std::uint32_t id) {
             const std::lock_guard<std::mutex> guard(lock_);
 
-            auto elem_ite = std::find_if(q_.begin(), q_.end(), 
+            auto elem_ite = std::find_if(q_.begin(), q_.end(),
                 [=](const fifo_element &elem) { return elem.id == id; });
 
             if (elem_ite != q_.end()) {
@@ -125,14 +126,14 @@ namespace eka2l1::epoc {
             }
 
             fifo_element elem = std::move(q_.front());
-            
+
             // Keep the order. Not too efficient though
             q_.erase(q_.begin());
             return elem.evt;
         }
     };
 
-    class event_fifo: public base_fifo<event, 32> {
+    class event_fifo : public base_fifo<event, 32> {
     protected:
         /*! \brief Check if the event is high-priority
          *
@@ -153,7 +154,8 @@ namespace eka2l1::epoc {
         void do_purge();
 
     public:
-        event_fifo() : base_fifo<event>() {}
+        event_fifo()
+            : base_fifo<event>() {}
 
         /*! \brief Get an on-queue event
          *
@@ -164,9 +166,10 @@ namespace eka2l1::epoc {
         std::uint32_t queue_event(const event &evt);
     };
 
-    class redraw_fifo: public base_fifo<redraw_event, 32> {
+    class redraw_fifo : public base_fifo<redraw_event, 32> {
     public:
-        redraw_fifo() : base_fifo<redraw_event>() {}
+        redraw_fifo()
+            : base_fifo<redraw_event>() {}
         std::uint32_t queue_event(const redraw_event &evt, const std::uint16_t pri);
     };
 }

@@ -21,14 +21,15 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 #include <optional>
+#include <string>
 
 namespace eka2l1::drivers {
     class shader {
     public:
         virtual bool create(const char *vert_data, const std::size_t vert_size,
-            const char *frag_data, const std::size_t frag_size) = 0;
+            const char *frag_data, const std::size_t frag_size)
+            = 0;
 
         virtual bool use() = 0;
         virtual std::optional<int> get_uniform_location(const std::string &name) = 0;

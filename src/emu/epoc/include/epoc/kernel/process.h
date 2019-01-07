@@ -57,12 +57,12 @@ namespace eka2l1::kernel {
     class thread_scheduler;
 
     struct process_info {
-        ptr<void>     code_where;
+        ptr<void> code_where;
         std::uint64_t size;
     };
 
     struct pass_arg {
-        bool                      used = false;
+        bool used = false;
         std::vector<std::uint8_t> data;
 
         void do_state(common::chunkyseri &seri);
@@ -146,7 +146,7 @@ namespace eka2l1::kernel {
                 : requester(thr)
                 , request_status(rsts) {}
 
-            void do_state(kernel_system* kern, common::chunkyseri &seri);
+            void do_state(kernel_system *kern, common::chunkyseri &seri);
         };
 
         process_exit_type exit_type;

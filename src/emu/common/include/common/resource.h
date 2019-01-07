@@ -23,7 +23,7 @@
 
 namespace eka2l1 {
     namespace common {
-	    /*! \brief Represents a resource.
+        /*! \brief Represents a resource.
 		 *
 		 * A resource can have custom destructor. 
 		*/
@@ -45,7 +45,7 @@ namespace eka2l1 {
                 }
             }
 
-			/*! \brief Get the actual object.
+            /*! \brief Get the actual object.
 			 *
 			 * \returns A copy of the actual object
 			*/
@@ -55,4 +55,3 @@ namespace eka2l1 {
         };
     }
 }
-

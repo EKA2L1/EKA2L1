@@ -9,9 +9,9 @@
 // If you are new to dear imgui, read examples/README.txt and read the documentation at the top of imgui.cpp.
 // https://github.com/ocornut/imgui
 
-// About OpenGL function loaders: 
-// About OpenGL function loaders: modern OpenGL doesn't have a standard header file and requires individual function pointers to be loaded manually. 
-// Helper libraries are often used for this purpose! Here we are supporting a few common ones: gl3w, glew, glad. 
+// About OpenGL function loaders:
+// About OpenGL function loaders: modern OpenGL doesn't have a standard header file and requires individual function pointers to be loaded manually.
+// Helper libraries are often used for this purpose! Here we are supporting a few common ones: gl3w, glew, glad.
 // You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
 
 // About GLSL version:
@@ -21,16 +21,18 @@
 
 #pragma once
 
+#include <cstdint>
+
 // Set default OpenGL loader to be gl3w
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
-bool     ImGui_ImplOpenGL3_Init(const char* glsl_version = NULL);
-void     ImGui_ImplOpenGL3_Shutdown();
-void     ImGui_ImplOpenGL3_NewFrame();
-void     ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data);
+bool ImGui_ImplOpenGL3_Init(const char *glsl_version = NULL);
+void ImGui_ImplOpenGL3_Shutdown();
+void ImGui_ImplOpenGL3_NewFrame();
+void ImGui_ImplOpenGL3_RenderDrawData(ImDrawData *draw_data);
 
 // Called by Init/NewFrame/Shutdown
-bool     ImGui_ImplOpenGL3_CreateFontsTexture();
-void     ImGui_ImplOpenGL3_DestroyFontsTexture();
-bool     ImGui_ImplOpenGL3_CreateDeviceObjects();
-void     ImGui_ImplOpenGL3_DestroyDeviceObjects();
+bool ImGui_ImplOpenGL3_CreateFontsTexture();
+void ImGui_ImplOpenGL3_DestroyFontsTexture();
+bool ImGui_ImplOpenGL3_CreateDeviceObjects();
+void ImGui_ImplOpenGL3_DestroyDeviceObjects();

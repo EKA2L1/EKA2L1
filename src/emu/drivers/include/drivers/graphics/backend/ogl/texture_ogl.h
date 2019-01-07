@@ -1,10 +1,10 @@
 #pragma once
 
-#include <drivers/graphics/texture.h>
 #include <common/vecx.h>
+#include <drivers/graphics/texture.h>
 
 namespace eka2l1::drivers {
-    class ogl_texture: public texture {
+    class ogl_texture : public texture {
         int dimensions;
         vec3 tex_size;
         texture_format internal_format;

@@ -44,8 +44,8 @@ namespace eka2l1::scripting {
                 const std::string replacement_std = replacement.cast<std::string>();
                 format_res.replace(format_res.begin() + ppos, format_res.begin() + ppos + 2, replacement_std.data());
                 ppos = format_res.find("{}");
-            } 
-              
+            }
+
             arg_counter++;
         }
 

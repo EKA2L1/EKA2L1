@@ -30,16 +30,16 @@ namespace eka2l1 {
 }
 
 namespace eka2l1 {
-    #ifdef ENABLE_SCRIPTING
+#ifdef ENABLE_SCRIPTING
     namespace manager {
         class script_manager;
     }
-    #endif
+#endif
 
     class manager_system {
-        #ifdef ENABLE_SCRIPTING
+#ifdef ENABLE_SCRIPTING
         std::shared_ptr<manager::script_manager> scrmngr;
-        #endif
+#endif
 
         manager::package_manager pkgmngr;
 
@@ -50,8 +50,8 @@ namespace eka2l1 {
 
         manager::package_manager *get_package_manager();
 
-        #ifdef ENABLE_SCRIPTING
+#ifdef ENABLE_SCRIPTING
         manager::script_manager *get_script_manager();
-        #endif
+#endif
     };
 }

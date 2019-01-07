@@ -27,8 +27,8 @@
 #include <stack>
 #include <string>
 
-#include <common/resource.h>
 #include <arm/arm_factory.h>
+#include <common/resource.h>
 
 #include <epoc/kernel/chunk.h>
 #include <epoc/kernel/object_ix.h>
@@ -117,7 +117,7 @@ namespace eka2l1 {
 
         class thread : public kernel_obj {
             friend class eka2l1::kernel_system;
-            
+
             friend class thread_scheduler;
             friend class mutex;
             friend class semaphore;
@@ -132,7 +132,7 @@ namespace eka2l1 {
             arm::arm_interface::thread_context ctx;
 
             thread_priority priority;
-            
+
             int last_priority;
             int real_priority;
 
@@ -223,7 +223,9 @@ namespace eka2l1 {
             thread();
 
             thread(kernel_system *kern, memory_system *mem, timing_system *timing)
-                : kernel_obj(kern), mem(mem), timing(timing) {
+                : kernel_obj(kern)
+                , mem(mem)
+                , timing(timing) {
                 obj_type = kernel::object_type::thread;
             }
 

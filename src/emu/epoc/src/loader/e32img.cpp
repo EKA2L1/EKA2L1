@@ -246,7 +246,7 @@ namespace eka2l1 {
                 }
 
                 if (ctype == compress_type::deflate_c) {
-                    flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()), 
+                    flate::bit_input input(reinterpret_cast<uint8_t *>(temp_buf.data()),
                         static_cast<int>(temp_buf.size() * 8));
 
                     flate::inflater inflate_machine(input);

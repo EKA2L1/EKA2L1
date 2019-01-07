@@ -29,11 +29,11 @@
 #include <cstdint>
 
 namespace eka2l1::epoc {
-    enum class graphics_orientation { 
+    enum class graphics_orientation {
         normal,
-        rotated90, 
+        rotated90,
         rotated180,
-        rotated270 
+        rotated270
     };
 
     /*! \brief Screen display mode.
@@ -42,27 +42,27 @@ namespace eka2l1::epoc {
     */
     enum class display_mode {
         none,
-        gray2,          ///< Monochrome display mode (1 bpp)
-        gray4,          ///< Four grayscales display mode (2 bpp)
-        gray16,         ///< 16 grayscales display mode (4 bpp) 
-        gray256,        ///< 256 grayscales display mode (8 bpp) 
-        color16,        ///< Low colour EGA 16 colour display mode (4 bpp) 
-        color256,       ///< 256 colour display mode (8 bpp) 
-        color64k,       ///< 64,000 colour display mode (16 bpp) 
-        color16m,       ///< True colour display mode (24 bpp) 
-        rgb,            ///< (Not an actual display mode used for moving buffers containing bitmaps)
-        color4k,        ///< 4096 colour display (12 bpp). 
-        color16mu,      ///< True colour display mode (32 bpp, but top byte is unused and unspecified) 
-        color16ma,      ///< Display mode with alpha (24bpp colour plus 8bpp alpha) 
-        color16map,     ///< Pre-multiplied Alpha display mode (24bpp color multiplied with the alpha channel value, plus 8bpp alpha)
+        gray2, ///< Monochrome display mode (1 bpp)
+        gray4, ///< Four grayscales display mode (2 bpp)
+        gray16, ///< 16 grayscales display mode (4 bpp)
+        gray256, ///< 256 grayscales display mode (8 bpp)
+        color16, ///< Low colour EGA 16 colour display mode (4 bpp)
+        color256, ///< 256 colour display mode (8 bpp)
+        color64k, ///< 64,000 colour display mode (16 bpp)
+        color16m, ///< True colour display mode (24 bpp)
+        rgb, ///< (Not an actual display mode used for moving buffers containing bitmaps)
+        color4k, ///< 4096 colour display (12 bpp).
+        color16mu, ///< True colour display mode (32 bpp, but top byte is unused and unspecified)
+        color16ma, ///< Display mode with alpha (24bpp colour plus 8bpp alpha)
+        color16map, ///< Pre-multiplied Alpha display mode (24bpp color multiplied with the alpha channel value, plus 8bpp alpha)
         color_last
     };
 
     enum class pointer_cursor_mode {
-        none,           ///< The device don't have a pointer (touch)
-        fixed,          ///< Use the default system cursor
-        normal,         ///< Can't understand yet
-        window,         ///< Can't understand yet
+        none, ///< The device don't have a pointer (touch)
+        fixed, ///< Use the default system cursor
+        normal, ///< Can't understand yet
+        window, ///< Can't understand yet
     };
 
     enum class window_type {
@@ -98,9 +98,9 @@ namespace eka2l1::epoc {
         rotate90 = 0x400000,
         rotate180 = 0x800000,
         rotate270 = 0x1000000,
-        all_mods = 0x1FFFFFFF                   
+        all_mods = 0x1FFFFFFF
     };
-    
+
     enum class event_type {
         button1down,
         button1up,
@@ -136,7 +136,7 @@ namespace eka2l1::epoc {
         If an EEventKey event is associated with an EEventKeyUp event (which is
         rarely the case), the EEventKey event occurs after the EEventKeyUp event. */
         key_up,
-        
+
         /** Key down event.
         
         If an EEventKey event is associated with an EEventKeyDown event (which
@@ -157,13 +157,13 @@ namespace eka2l1::epoc {
         the equivalent action, depending on the type of pointing device), drags the
         pointer, moves it or uses the pointer to switch on the device. */
         touch,
-        
+
         /** Pointer enter event.
 	    This occurs when the user moves the pointer into a window with a pointer button
         pressed (or equivalent action depending on the type of pointing device). If
         move events are being generated, this event also occurs when the user moves
         the pointer into the window. */
-	    touch_enter,
+        touch_enter,
 
         /** Pointer exit event.
         Occurs when the user moves the pointer out of a window with a pointer button
@@ -175,13 +175,13 @@ namespace eka2l1::epoc {
         /** Pointer move buffer ready event.
         Occurs when the pointer move buffer is ready to be retrieved by the client. */
         event_pointer_buffer_ready,
-        
+
         /** Drag and drop */
         drag_and_drop,
-        
+
         /** Focus lost event.
         Occurs when a window group loses keyboard focus. */
-        focus_lost,		//10
+        focus_lost, //10
 
         /** Focus gained event.
         Occurs when a window group gains keyboard focus. */
@@ -211,13 +211,13 @@ namespace eka2l1::epoc {
         of errors.
         This event type is not reported unless explicitly requested by a window.
         @see RWindowTreeNode::EnableErrorMessages(). */
-        event_error_msg,		//15
+        event_error_msg, //15
 
         /** Message ready event.
         Occurs when a session sends a message to this window group using RWsSession::SendMessageToWindowGroup(). */
         event_messages_ready,
 
-        invalid,	// For internal use only
+        invalid, // For internal use only
 
         /** Off event.
         This is issued when an off event is received by the window server from the
@@ -266,7 +266,7 @@ namespace eka2l1::epoc {
         Notification of this event is requested by calling RWindowTreeNode::EnableVisibilityChangeEvents(). */
         window_visibility_change,
 
-        #ifdef SYMBIAN_PROCESS_MONITORING_AND_STARTUP
+#ifdef SYMBIAN_PROCESS_MONITORING_AND_STARTUP
         /** Restart event.
 
         This is issued when an restart event is received by the window server from the 
@@ -277,7 +277,7 @@ namespace eka2l1::epoc {
 
         This event is only delivered if explicitly requested using RWsSession:RequestOffEvent(). */
         restart_system,
-        #endif
+#endif
 
         /** The display state or configuration has changed
 
@@ -293,18 +293,18 @@ namespace eka2l1::epoc {
         This is only sent to a key click plug-in DLL (if one is present) to indicate
         a repeating key event.
         @see CClickMaker */
-        key_repeat=100,
+        key_repeat = 100,
 
         group_win_open,
         group_win_close,
-        
+
         win_close,
 
         //Codes for events only passed into anim dlls
         /** Direct screen access begin
         This is only sent to anim dlls (if they register to be notified). It indicates that
         the number of direct screen access sessions has increased from zero to one.*/
-        direct_access_begin=200,
+        direct_access_begin = 200,
 
         /** Direct screen access end
         This is only sent to anim dlls (if they register to be notified). It indicates that
@@ -327,9 +327,9 @@ namespace eka2l1::epoc {
         events. These events can be sent between windows of the same client or windows
         of different clients.
         @see RWs::SendEventToWindowGroup(). */
-        user=1000,
+        user = 1000,
     };
-    
+
     struct pointer_event {
         event_type evtype;
         event_modifier modifier;
@@ -337,7 +337,7 @@ namespace eka2l1::epoc {
         eka2l1::vec2 parent_pos;
     };
 
-    struct adv_pointer_event: public pointer_event {
+    struct adv_pointer_event : public pointer_event {
         int spare1;
         int spare2;
         int pos_z;
@@ -345,7 +345,7 @@ namespace eka2l1::epoc {
     };
 
     enum pointer_filter_type {
-        pointer_enter = 0x01,   ///< In/out
+        pointer_enter = 0x01, ///< In/out
         pointer_move = 0x02,
         pointer_drag = 0x04,
         pointer_simulated_event = 0x08,

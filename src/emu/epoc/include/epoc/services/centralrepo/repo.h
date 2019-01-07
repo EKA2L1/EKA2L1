@@ -32,60 +32,60 @@ namespace eka2l1 {
     struct central_repo_entry_variant {
         central_repo_entry_type etype;
 
-		std::uint64_t intd;
-		double reald;
-		std::string strd;
-		std::u16string str16d;
-	};
+        std::uint64_t intd;
+        double reald;
+        std::string strd;
+        std::u16string str16d;
+    };
 
-	struct central_repo_entry {
+    struct central_repo_entry {
         std::uint32_t key;
         central_repo_entry_variant data;
         std::uint32_t metadata_val;
-	};
+    };
 
-	class central_repo_client;
+    class central_repo_client;
 
-	enum class central_repo_transaction_mode {
-		read_only,
-		write_only,
-		read_write
-	};
+    enum class central_repo_transaction_mode {
+        read_only,
+        write_only,
+        read_write
+    };
 
-	struct central_repo_entry_access_policy {
-		std::uint32_t low_key;
-		std::uint32_t high_key;
-		std::uint32_t key_mask;
+    struct central_repo_entry_access_policy {
+        std::uint32_t low_key;
+        std::uint32_t high_key;
+        std::uint32_t key_mask;
 
-		epoc::security_policy	read_access;
-		epoc::security_policy   write_access;
-	};
+        epoc::security_policy read_access;
+        epoc::security_policy write_access;
+    };
 
-	struct central_repo_default_meta {
-		std::uint32_t low_key;
-		std::uint32_t high_key;
-		std::uint32_t key_mask;
-		std::uint32_t default_meta_data;
-	};
+    struct central_repo_default_meta {
+        std::uint32_t low_key;
+        std::uint32_t high_key;
+        std::uint32_t key_mask;
+        std::uint32_t default_meta_data;
+    };
 
-	struct central_repo {
-		// TODO (pent0): Add read/write cap
-		std::uint8_t ver;
-		std::uint8_t keyspace_type;
-		std::uint32_t uid;
+    struct central_repo {
+        // TODO (pent0): Add read/write cap
+        std::uint8_t ver;
+        std::uint8_t keyspace_type;
+        std::uint32_t uid;
 
         std::uint32_t owner_uid;
-		std::vector<central_repo_entry> entries;
+        std::vector<central_repo_entry> entries;
 
-		central_repo_entry_access_policy default_policy;
-		std::vector<central_repo_entry_access_policy> single_policies;
-		std::vector<central_repo_entry_access_policy> policies_range;
+        central_repo_entry_access_policy default_policy;
+        std::vector<central_repo_entry_access_policy> single_policies;
+        std::vector<central_repo_entry_access_policy> policies_range;
 
-		std::uint32_t default_meta;
-		std::vector<central_repo_default_meta>	meta_range;
+        std::uint32_t default_meta;
+        std::vector<central_repo_default_meta> meta_range;
 
-		std::uint64_t time_stamp;
+        std::uint64_t time_stamp;
 
-		std::vector<std::uint32_t> deleted_settings;
-	};
+        std::vector<std::uint32_t> deleted_settings;
+    };
 }

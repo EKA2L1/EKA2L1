@@ -22,8 +22,8 @@
 #include <cstdint>
 
 // Classic UI turned into an HLE disaster
-#include <epoc/services/server.h>
 #include <epoc/services/context.h>
+#include <epoc/services/server.h>
 
 namespace eka2l1 {
     enum TEikAppUiRanges {
@@ -32,7 +32,7 @@ namespace eka2l1 {
 
     enum TEikUiOpCode {
         // No Capability requirement
-        EEikAppUiFirst=EFirstUnrestrictedOpcodeInEikAppUi,
+        EEikAppUiFirst = EFirstUnrestrictedOpcodeInEikAppUi,
         EEikAppUiLaunchTaskList,
         EEikAppUiCycleTasks,
         EEikAppUiSetStatusPaneFlags,
@@ -42,24 +42,25 @@ namespace eka2l1 {
         EEikAppUiResolveError,
         EEikAppUiExtension,
         EEikAppUiEnableTaskList,
-        EEikAppUiGetDebugPreferences,	
+        EEikAppUiGetDebugPreferences,
         EEikAppUiResolveErrorWithTitleText,
         // End Marker no Capability
         EEikAppUiFirstUnusedOpcode,
     };
 
     struct debug_preferences {
-        int flags { 0 };
-        int spare { 0 };
+        int flags{ 0 };
+        int spare{ 0 };
 
         std::string to_buf();
     };
 
     // Unless app do weird stuff like checking if the eik app ui semaphore exists,
     // this server will does thing just fine
-    class eikappui_server: public service::server {
+    class eikappui_server : public service::server {
     protected:
         void get_debug_preferences(service::ipc_context ctx);
+
     public:
         eikappui_server(eka2l1::system *sys);
     };

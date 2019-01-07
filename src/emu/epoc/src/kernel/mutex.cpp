@@ -19,9 +19,9 @@
  */
 
 #include <cassert>
-#include <common/log.h>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 #include <epoc/kernel.h>
 #include <epoc/kernel/mutex.h>
@@ -134,7 +134,7 @@ namespace eka2l1 {
 
             thread_to_wake->resume();
         }
-        
+
         void mutex::wait_for(int msecs) {
             wait();
 
@@ -319,7 +319,7 @@ namespace eka2l1 {
 
                 if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
                     waits.push(std::reinterpret_pointer_cast<kernel::thread>(
-                            kern->get_kernel_obj_by_id(wait_thr_id)));
+                        kern->get_kernel_obj_by_id(wait_thr_id)));
                 }
             }
 

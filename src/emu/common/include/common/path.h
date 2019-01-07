@@ -22,74 +22,74 @@
 #include <string>
 
 namespace eka2l1 {
-	/*! \brief Absolute a path.
+    /*! \brief Absolute a path.
 	    \param current_dir The current directory.
 		\param str The path
 	*/
     std::string absolute_path(std::string str, std::string current_dir, bool symbian_use = false);
 
-	/*! \brief Absolute a path.
+    /*! \brief Absolute a path.
 	    \param current_dir The current directory.
 		\param str The path
 	*/
     std::u16string absolute_path(std::u16string str, std::u16string current_dir, bool symbian_use = false);
 
-	/*! \brief Get the relative path.
+    /*! \brief Get the relative path.
 		\param str The path
 	*/
-	std::string relative_path(std::string str, bool symbian_use = false);
-    
-	/*! \brief Get the relative path.
+    std::string relative_path(std::string str, bool symbian_use = false);
+
+    /*! \brief Get the relative path.
 		\param str The path
 	*/
-	std::u16string relative_path(std::u16string str, bool symbian_use = false);
-    
-	/*! \brief Merge two paths together.
+    std::u16string relative_path(std::u16string str, bool symbian_use = false);
+
+    /*! \brief Merge two paths together.
 	 * \returns The new path.
 	*/
     std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use = false);
 
-	/*! \brief Merge two paths together.
+    /*! \brief Merge two paths together.
 	 * \returns The new path.
 	*/
     std::u16string add_path(const std::u16string &path1, const std::u16string &path2, bool symbian_use = false);
-    
-	/*! \brief Get the root name.
+
+    /*! \brief Get the root name.
 		\param str The path
 	*/
-	std::string root_name(std::string path, bool symbian_use = false);
+    std::string root_name(std::string path, bool symbian_use = false);
 
-	/*! \brief Get the root name.
+    /*! \brief Get the root name.
 		\param str The path
 	*/
-	std::u16string root_name(std::u16string path, bool symbian_use = false);
+    std::u16string root_name(std::u16string path, bool symbian_use = false);
 
-	/*! \brief Get the root directory.
+    /*! \brief Get the root directory.
 		\param str The path
 	*/
     std::string root_dir(std::string path, bool symbian_use = false);
-	
-	/*! \brief Get the root directory.
+
+    /*! \brief Get the root directory.
 		\param str The path
 	*/
     std::u16string root_dir(std::u16string path, bool symbian_use = false);
-	
-	/*! \brief Get the root path.
+
+    /*! \brief Get the root path.
 		\param str The path
 	*/
     std::string root_path(std::string path, bool symbian_use = false);
 
-	/*! \brief Get the root path.
+    /*! \brief Get the root path.
 		\param str The path
 	*/
     std::u16string root_path(std::u16string path, bool symbian_use = false);
 
-	/*! \brief Get the file name.
+    /*! \brief Get the file name.
 		\param str The path
 	*/
     std::string filename(std::string path, bool symbian_use = false);
 
-	/*! \brief Get the file name.
+    /*! \brief Get the file name.
 		\param str The path
 	*/
     std::u16string filename(std::u16string path, bool symbian_use = false);
@@ -110,16 +110,16 @@ namespace eka2l1 {
 
     std::u16string replace_extension(const std::u16string &path, const std::u16string &new_ext);
 
-	/*! \brief Create a directory. */
+    /*! \brief Create a directory. */
     void create_directory(std::string path);
-	
-	/*! \brief Check if a file or directory exists. */
+
+    /*! \brief Check if a file or directory exists. */
     bool exists(std::string path);
-	
-	/*! \brief Check if the path points to a directory. */
+
+    /*! \brief Check if the path points to a directory. */
     bool is_dir(std::string path);
-	
-	/*! \brief Create directories. */
+
+    /*! \brief Create directories. */
     void create_directories(std::string path);
 
     bool is_separator(const char sep);
@@ -128,7 +128,7 @@ namespace eka2l1 {
     char get_separator(bool symbian_use = false);
     char16_t get_separator_16(bool symbian_use = false);
 
-	/*! \brief Iterate through components of a path */
+    /*! \brief Iterate through components of a path */
     struct path_iterator {
         std::string path;
         std::string comp;
@@ -179,7 +179,7 @@ namespace eka2l1 {
             return crr_pos <= path.length();
         }
     };
-    
+
     /*! \brief Check if the path is absoluted or not 
 	    \param current_dir The current directory.
 		\param str The path.
@@ -222,4 +222,3 @@ namespace eka2l1 {
         return filename(path, symbian_use) != "";
     }
 }
-

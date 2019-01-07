@@ -22,12 +22,12 @@
 
 namespace eka2l1 {
     enum TPosixMessage {
-        PMread, 
+        PMread,
         PMwrite,
         PMfSync,
         PMsendto,
         PMrecvfrom,
-        PMconnect, 
+        PMconnect,
         PMshutdown,
         PMaccept,
         PMioctl,

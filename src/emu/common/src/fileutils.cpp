@@ -90,7 +90,7 @@ namespace eka2l1::common {
         return FILE_UNKN;
 #endif
     }
-    
+
     file_type get_file_type(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
         DWORD h = GetFileAttributesA(path.c_str());
@@ -123,14 +123,17 @@ namespace eka2l1::common {
     }
 
     dir_iterator::dir_iterator(const std::string &name)
-        : handle(nullptr), eof(false), detail(false), dir_name(name) {
+        : handle(nullptr)
+        , eof(false)
+        , detail(false)
+        , dir_name(name) {
 #if EKA2L1_PLATFORM(POSIX)
-        handle = reinterpret_cast<void*>(opendir(name.c_str()));
+        handle = reinterpret_cast<void *>(opendir(name.c_str()));
 
         if (handle) {
-            find_data = reinterpret_cast<void*>(readdir(reinterpret_cast<DIR*>(handle)));
+            find_data = reinterpret_cast<void *>(readdir(reinterpret_cast<DIR *>(handle)));
         }
-        
+
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
         while ((strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0) && is_valid()) {
@@ -140,7 +143,7 @@ namespace eka2l1::common {
         find_data = new WIN32_FIND_DATA;
 
         std::string name_wildcard = name + "\\*.*";
-        handle = reinterpret_cast<void*>(FindFirstFileA(name_wildcard.c_str(), 
+        handle = reinterpret_cast<void *>(FindFirstFileA(name_wildcard.c_str(),
             reinterpret_cast<LPWIN32_FIND_DATA>(find_data)));
 
         if (handle == INVALID_HANDLE_VALUE) {
@@ -152,7 +155,7 @@ namespace eka2l1::common {
 
         while ((strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0)
             && is_valid()) {
-           cycles_to_next_entry();
+            cycles_to_next_entry();
         }
 #endif
     }
@@ -166,14 +169,14 @@ namespace eka2l1::common {
                 delete find_data;
             }
 #elif EKA2L1_PLATFORM(POSIX)
-            closedir(reinterpret_cast<DIR*>(handle));
+            closedir(reinterpret_cast<DIR *>(handle));
 #endif
         }
     }
 
     void dir_iterator::cycles_to_next_entry() {
 #if EKA2L1_PLATFORM(WIN32)
-        DWORD result = FindNextFile(reinterpret_cast<HANDLE>(handle), 
+        DWORD result = FindNextFile(reinterpret_cast<HANDLE>(handle),
             reinterpret_cast<LPWIN32_FIND_DATA>(find_data));
 
         if (result == 0) {
@@ -184,14 +187,14 @@ namespace eka2l1::common {
             }
         }
 #else
-        find_data = reinterpret_cast<void*>(readdir(reinterpret_cast<DIR*>(handle)));
+        find_data = reinterpret_cast<void *>(readdir(reinterpret_cast<DIR *>(handle)));
 
         if (!find_data) {
             eof = true;
         }
 #endif
     }
-    
+
     bool dir_iterator::is_valid() const {
         return (handle != nullptr) && (!eof);
     }
@@ -210,11 +213,11 @@ namespace eka2l1::common {
 
         entry.name = fdata_win32->cFileName;
 
-        if (detail) {   
-            entry.size = (fdata_win32->nFileSizeLow | (__int64)fdata_win32->nFileSizeHigh << 32);   
+        if (detail) {
+            entry.size = (fdata_win32->nFileSizeLow | (__int64)fdata_win32->nFileSizeHigh << 32);
             entry.type = get_file_type_from_attrib_platform_specific(fdata_win32->dwFileAttributes);
         }
-        
+
         do {
             cycles_to_next_entry();
         } while (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0);
@@ -226,7 +229,7 @@ namespace eka2l1::common {
             entry.size = file_size(dir_name + "/" + entry.name);
             entry.type = get_file_type(dir_name + "/" + entry.name);
         }
-        
+
         do {
             cycles_to_next_entry();
         } while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0);
@@ -234,16 +237,16 @@ namespace eka2l1::common {
 
         return 0;
     }
-    
+
     int resize(const std::string &path, const std::uint64_t size) {
 #if EKA2L1_PLATFORM(WIN32)
-    #if EKA2L1_PLATFORM(UWP)
+#if EKA2L1_PLATFORM(UWP)
         std::u16string path_ucs2 = common::utf8_to_ucs2(path);
         HANDLE h = CreateFile2(path_ucs2.c_str(), GENERIC_WRITE, 0, OPEN_EXISTING, nullptr);
-    #else
+#else
         HANDLE h = CreateFileA(path.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
             nullptr);
-    #endif
+#endif
 
         if (!h) {
             DWORD err = GetLastError();
@@ -257,8 +260,7 @@ namespace eka2l1::common {
         DWORD set_pointer_result = SetFilePointer(h, static_cast<LONG>(size), &sizeHigh,
             FILE_BEGIN);
 
-        if (set_pointer_result != static_cast<DWORD>(size) ||
-            (size >> 32) != sizeHigh) {
+        if (set_pointer_result != static_cast<DWORD>(size) || (size >> 32) != sizeHigh) {
             CloseHandle(h);
             return -2;
         }
@@ -282,7 +284,7 @@ namespace eka2l1::common {
         return 0;
 #endif
     }
-    
+
     bool remove(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
         return DeleteFileA(path.c_str());
@@ -290,7 +292,7 @@ namespace eka2l1::common {
         return (remove(path.c_str()) == 0);
 #endif
     }
-    
+
     bool move_file(const std::string &path, const std::string &new_path) {
 #if EKA2L1_PLATFORM(WIN32)
         return MoveFileA(path.c_str(), new_path.c_str());

@@ -6,7 +6,7 @@
 #include <queue>
 
 namespace eka2l1 {
-	/*! \brief A modified queue from std::priority_queue.
+    /*! \brief A modified queue from std::priority_queue.
 	 *
 	 * This queue can be modified, resort and remove manually.
 	*/
@@ -16,24 +16,23 @@ namespace eka2l1 {
         using iterator = typename std::vector<T>::iterator;
         using const_iterator = typename std::vector<T>::const_iterator;
 
-		/*! \brief Remove a value from the queue.
+        /*! \brief Remove a value from the queue.
 		 *
 		 * \param val The value to remove.
 		 * \returns true if remove successes.
 		*/
-        bool remove(const T& val) {
+        bool remove(const T &val) {
             auto it = std::find(this->c.begin(), this->c.end(), val);
             if (it != this->c.end()) {
                 this->c.erase(it);
                 std::make_heap(this->c.begin(), this->c.end(), this->comp);
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         }
 
-        iterator begin()  {
+        iterator begin() {
             return this->c.begin();
         }
 
@@ -41,7 +40,7 @@ namespace eka2l1 {
             return this->c.end();
         }
 
-		/*! \brief Resort the queue.
+        /*! \brief Resort the queue.
 		*/
         void resort() {
             std::make_heap(this->c.begin(), this->c.end(), this->comp);
@@ -54,26 +53,27 @@ namespace eka2l1 {
         typedef typename Container::iterator iterator;
         typedef typename Container::const_iterator const_iterator;
 
-        iterator begin() { 
+        iterator begin() {
             return this->c.begin();
         }
 
-        iterator end() { 
+        iterator end() {
             return this->c.end();
         }
 
-        const_iterator begin() const { 
-            return this->c.begin(); 
+        const_iterator begin() const {
+            return this->c.begin();
         }
 
-        const_iterator end() const { 
-            return this->c.end(); 
+        const_iterator end() const {
+            return this->c.end();
         }
     };
 
     template <typename T, typename Container = std::deque<T>>
     class threadsafe_cn_queue {
         cn_queue<T, Container> queue;
+
     public:
         std::mutex lock;
 
@@ -102,19 +102,19 @@ namespace eka2l1 {
         typedef typename Container::iterator iterator;
         typedef typename Container::const_iterator const_iterator;
 
-        iterator begin() { 
-            return queue.begin(); 
-        }
-
-        iterator end() { 
-            return queue.end();
-        }
-
-        const_iterator begin() const { 
+        iterator begin() {
             return queue.begin();
         }
 
-        const_iterator end() const { 
+        iterator end() {
+            return queue.end();
+        }
+
+        const_iterator begin() const {
+            return queue.begin();
+        }
+
+        const_iterator end() const {
             return queue.end();
         }
 

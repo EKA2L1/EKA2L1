@@ -48,12 +48,13 @@ namespace eka2l1 {
 
         public:
             mutex(kernel_system *kern, timing_system *timing)
-                : kernel_obj(kern), timing(timing) {
+                : kernel_obj(kern)
+                , timing(timing) {
                 obj_type = kernel::object_type::mutex;
             }
 
             mutex(kernel_system *kern, timing_system *timing, std::string name, bool init_locked,
-                        kernel::access_type access = kernel::access_type::local_access);
+                kernel::access_type access = kernel::access_type::local_access);
 
             /*! \brief Timeout reached, whether it's on the pendings
             */

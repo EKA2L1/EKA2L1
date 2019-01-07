@@ -34,7 +34,7 @@ namespace eka2l1 {
         return pages;
     }
 
-    std::array<std::uint8_t*, page_table_number_entries> &page_table::get_pointers() {
+    std::array<std::uint8_t *, page_table_number_entries> &page_table::get_pointers() {
         const std::lock_guard<std::mutex> guard(mut);
         return pointers;
     }
@@ -42,7 +42,7 @@ namespace eka2l1 {
     void page_table::read(vaddress addr, void *dest, int size) {
         int page = addr / page_size;
 
-        std::fill(reinterpret_cast<std::uint8_t*>(dest), reinterpret_cast<std::uint8_t*>(dest) + size,
+        std::fill(reinterpret_cast<std::uint8_t *>(dest), reinterpret_cast<std::uint8_t *>(dest) + size,
             0);
 
         switch (get_pages()[page].sts) {
@@ -113,6 +113,6 @@ namespace eka2l1 {
             return &((get_pointers()[page])[addr % page_size]);
         }
 
-        return nullptr;        
+        return nullptr;
     }
 }

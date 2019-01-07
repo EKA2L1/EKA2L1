@@ -27,7 +27,7 @@
 #include <sstream>
 
 namespace eka2l1::drivers {
-    ogl_shader::ogl_shader(const std::string &vert_path, 
+    ogl_shader::ogl_shader(const std::string &vert_path,
         const std::string &frag_path) {
         std::ifstream vert_file(vert_path, std::ios_base::binary);
         std::ifstream frag_file(frag_path, std::ios_base::binary);
@@ -35,15 +35,15 @@ namespace eka2l1::drivers {
         std::stringstream vertex_stream, fragment_stream;
 
         vertex_stream << vert_file.rdbuf();
-        fragment_stream << frag_file.rdbuf();		
-        
+        fragment_stream << frag_file.rdbuf();
+
         vert_file.close();
         frag_file.close();
 
-        std::string vertex_code   = vertex_stream.str();
-        std::string fragment_code = fragment_stream.str();	 
+        std::string vertex_code = vertex_stream.str();
+        std::string fragment_code = fragment_stream.str();
 
-        create(vertex_code.data(), vertex_code.size(), fragment_code.data(), 
+        create(vertex_code.data(), vertex_code.size(), fragment_code.data(),
             fragment_code.size());
     }
 
@@ -62,22 +62,22 @@ namespace eka2l1::drivers {
         char error[512];
 
         glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
-        
-        if(!success) {
+
+        if (!success) {
             glGetShaderInfoLog(vert, 512, nullptr, error);
             LOG_ERROR("Error while compiling vertex shader: {}, abort", error);
 
             glDeleteShader(vert);
             return false;
         }
-        
+
         std::uint32_t frag = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(frag, 1, &frag_data, nullptr);
         glCompileShader(frag);
 
         glGetShaderiv(frag, GL_COMPILE_STATUS, &success);
-        
-        if(!success) {
+
+        if (!success) {
             glGetShaderInfoLog(frag, 512, nullptr, error);
             LOG_ERROR("Error while compiling fragment shader: {}, abort", error);
 
@@ -90,11 +90,11 @@ namespace eka2l1::drivers {
         program = glCreateProgram();
         glAttachShader(program, vert);
         glAttachShader(program, frag);
-        
+
         glLinkProgram(program);
         glGetProgramiv(program, GL_COMPILE_STATUS, &success);
-        
-        if(!success) {
+
+        if (!success) {
             glGetProgramInfoLog(program, 512, nullptr, error);
             LOG_ERROR("Error while linking shader program: {}", error);
         }
@@ -113,7 +113,7 @@ namespace eka2l1::drivers {
         glUseProgram(program);
         return true;
     }
-    
+
     std::optional<int> ogl_shader::get_uniform_location(const std::string &name) {
         const auto res = glGetUniformLocation(program, name.c_str());
 

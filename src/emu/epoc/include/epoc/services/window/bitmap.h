@@ -87,7 +87,7 @@ namespace eka2l1 {
         int handle;
         int server_handle;
     };
-    
+
     struct jump_chunk {
         eka2l1::ptr<std::uint32_t> code_ptr;
         std::uint32_t chunk_size;
@@ -105,7 +105,7 @@ namespace eka2l1 {
         jump_chunk jump_arm_two_arg;
         jump_chunk jump_thumb_two_arg;
 
-        loader::romimg_ptr        fbscli;
+        loader::romimg_ptr fbscli;
 
         address duplicate_func_addr;
         address get_data_func_addr;
@@ -119,7 +119,7 @@ namespace eka2l1 {
 
         void supply_jump_arg(eka2l1::memory_system *mem, address jump_addr, address r0,
             address r1, bool thumb);
-            
+
         void generate_jump_chunk(eka2l1::memory_system *mem);
 
         address do_call(eka2l1::process_ptr &call_pr, address jump_addr, std::uint32_t r0);
@@ -139,7 +139,7 @@ namespace eka2l1 {
         */
         eka2l1::ptr<std::uint32_t> get_fbs_data(eka2l1::process_ptr &call_pr,
             eka2l1::ptr<fbs_bitmap> bitmap);
-            
+
         eka2l1::ptr<std::uint32_t> get_fbs_data_with_handle(eka2l1::thread_ptr &call_pr,
             int handle);
 

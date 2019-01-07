@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <drivers/itc.h>
 #include <common/queue.h>
+#include <drivers/itc.h>
 
 #include <condition_variable>
 

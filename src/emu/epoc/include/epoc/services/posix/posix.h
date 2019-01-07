@@ -29,8 +29,8 @@
 #include <vector>
 
 #ifndef WIN32
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #endif
 
 namespace eka2l1 {

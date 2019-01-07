@@ -51,7 +51,7 @@ namespace eka2l1 {
             hierarchy->timing->schedule_event(trans_timeout, trans_timeout_event, data);
 
             // complete all deferrals
-            for (auto[id, sts] : hierarchy->deferral_statuses) {
+            for (auto [id, sts] : hierarchy->deferral_statuses) {
                 *(sts.first.get(sts.second->owning_process())) = KErrNone;
             }
 
@@ -72,7 +72,7 @@ namespace eka2l1 {
 
         if (transition_count) {
             // Fail to transition, acknowledge should not be needed anymore
-            for (auto & [ id, pending ] : hierarchy->acknowledge_pending) {
+            for (auto &[id, pending] : hierarchy->acknowledge_pending) {
                 pending = false;
             }
 
@@ -124,7 +124,7 @@ namespace eka2l1 {
 
         // Now cancel all pending deferrals. Acknowledge should not be
         // needed anymore so why dont we lol
-        for (auto & [ id, deferral_sts ] : hierarchy->deferral_statuses) {
+        for (auto &[id, deferral_sts] : hierarchy->deferral_statuses) {
             *(deferral_sts.first.get(deferral_sts.second->owning_process())) = KErrCancel;
         }
 
@@ -149,7 +149,7 @@ namespace eka2l1 {
         dm->child_count = 0;
         dm->transition_count = 0;
         dm->hierarchy = hier;
-        
+
         domain_ptr parent = hier->lookup(domain_db.own_id);
 
         if (parent) {
@@ -340,7 +340,8 @@ namespace eka2l1 {
         if (dm->hierarchy->acknowledge_pending[ssid] && dm->state_prop->get_int() == prop_val) {
             if (dm->hierarchy->deferral_statuses[ssid].first) {
                 *(dm->hierarchy->deferral_statuses[ssid].first.get(
-                    dm->hierarchy->deferral_statuses[ssid].second->owning_process())) = KErrNone;
+                    dm->hierarchy->deferral_statuses[ssid].second->owning_process()))
+                    = KErrNone;
                 dm->hierarchy->deferral_statuses[ssid].first = 0;
                 dm->hierarchy->deferral_statuses[ssid].second = nullptr;
             }
@@ -370,7 +371,7 @@ namespace eka2l1 {
         }
 
         if (dm->hierarchy->acknowledge_pending[ssid]) {
-            dm->hierarchy->deferral_statuses.emplace(ssid, 
+            dm->hierarchy->deferral_statuses.emplace(ssid,
                 std::make_pair(ctx.msg->request_sts, ctx.msg->own_thr));
 
             return;
@@ -390,7 +391,8 @@ namespace eka2l1 {
 
         if (dm->hierarchy->deferral_statuses[ssid].second) {
             *(dm->hierarchy->deferral_statuses[ssid].first.get(
-                dm->hierarchy->deferral_statuses[ssid].second->owning_process())) = KErrInUse;
+                dm->hierarchy->deferral_statuses[ssid].second->owning_process()))
+                = KErrInUse;
             dm->hierarchy->deferral_statuses[ssid].first = 0;
             dm->hierarchy->deferral_statuses[ssid].second = nullptr;
         }
@@ -603,7 +605,7 @@ namespace eka2l1 {
                 }
             }
 
-            if (hierarchy->fail_policy == ETransitionFailureStop) {    
+            if (hierarchy->fail_policy == ETransitionFailureStop) {
                 hierarchy->finish_trans_request(err);
                 return;
             }
@@ -793,7 +795,7 @@ namespace eka2l1 {
             return;
         }
 
-        target_hier->deferral_statuses.emplace(ctx.msg->msg_session->unique_id(), 
+        target_hier->deferral_statuses.emplace(ctx.msg->msg_session->unique_id(),
             std::make_pair(ctx.msg->request_sts, ctx.msg->own_thr));
     }
 

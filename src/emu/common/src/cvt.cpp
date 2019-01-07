@@ -24,7 +24,7 @@
 
 namespace eka2l1 {
     namespace common {
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
         using char_ucs2 = uint16_t;
 #else
         using char_ucs2 = char16_t;

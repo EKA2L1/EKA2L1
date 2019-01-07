@@ -20,8 +20,8 @@
 
 #include <pybind11/embed.h>
 
-#include <scripting/thread.h>
 #include <scripting/process.h>
+#include <scripting/thread.h>
 
 #include <epoc/kernel/thread.h>
 

@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/ui/eikappui.h>
 #include <common/log.h>
+#include <epoc/services/ui/eikappui.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>
@@ -42,20 +42,19 @@ namespace eka2l1 {
     }
 
     eikappui_server::eikappui_server(eka2l1::system *sys)
-        : service::server(sys, "!EikAppUiServer", true)
-    {
+        : service::server(sys, "!EikAppUiServer", true) {
         REGISTER_IPC(eikappui_server, get_debug_preferences, EEikAppUiGetDebugPreferences, "EikAppUi::GetDebugPreferences");
     }
-    
+
     // TODO: Make a resource reader and read from the config resource file
     void eikappui_server::get_debug_preferences(service::ipc_context ctx) {
         debug_preferences preferences;
         LOG_TRACE("GetDebugPreferences stubbed");
 
         std::string buf = preferences.to_buf();
-        ctx.write_arg_pkg(1, reinterpret_cast<std::uint8_t*>(&buf[0]), 
+        ctx.write_arg_pkg(1, reinterpret_cast<std::uint8_t *>(&buf[0]),
             static_cast<std::uint32_t>(buf.size()));
-        
+
         ctx.set_request_status(KErrNone);
     }
 }

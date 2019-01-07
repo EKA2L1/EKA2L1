@@ -24,9 +24,9 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <queue>
 #include <unordered_map>
 #include <vector>
-#include <queue>
 
 #include <common/ini.h>
 #include <common/queue.h>
@@ -74,7 +74,7 @@ namespace eka2l1::epoc {
             eka2l1::vec2 size;
             int rotation;
         };
-        
+
         struct screen {
             int screen_number;
             std::vector<screen_mode> modes;
@@ -158,10 +158,10 @@ namespace eka2l1::epoc {
 
         window_ptr parent;
 
-        // It's just z value. The second one will be used when there is 
+        // It's just z value. The second one will be used when there is
         // multiple window with same first z.
-        std::uint16_t priority { 0 };
-        std::uint16_t secondary_priority { 0 };
+        std::uint16_t priority{ 0 };
+        std::uint16_t secondary_priority{ 0 };
 
         std::uint16_t redraw_priority();
         virtual void priority_updated();
@@ -222,23 +222,23 @@ namespace eka2l1::epoc {
         int screen;
 
         epoc::config::screen scr_config;
-        epoc::config::screen_mode   *crr_mode;
+        epoc::config::screen_mode *crr_mode;
 
         std::vector<epoc::window_ptr> windows;
-        epoc::window_group_ptr  focus;
+        epoc::window_group_ptr focus;
 
         epoc::window_group_ptr find_window_group_to_focus();
 
         void update_focus(epoc::window_group_ptr closing_group);
 
-        screen_device(window_server_client_ptr client, int number, 
+        screen_device(window_server_client_ptr client, int number,
             eka2l1::graphics_driver_client_ptr driver);
 
         void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) override;
     };
 
     struct window_group : public epoc::window {
-        epoc::window_group_ptr next_sibling { nullptr };
+        epoc::window_group_ptr next_sibling{ nullptr };
         std::u16string name;
 
         enum {
@@ -271,15 +271,15 @@ namespace eka2l1::epoc {
         epoc::window_type win_type;
 
         // The position
-        eka2l1::vec2  pos { 0, 0 };
-        eka2l1::vec2  size { 0, 0 };
+        eka2l1::vec2 pos{ 0, 0 };
+        eka2l1::vec2 size{ 0, 0 };
 
-        std::vector<epoc::graphic_context*> contexts;
+        std::vector<epoc::graphic_context *> contexts;
 
         std::uint32_t clear_color = 0xFFFFFFFF;
         std::uint32_t filter = pointer_filter_type::all;
 
-        eka2l1::vec2 cursor_pos { -1, -1 };
+        eka2l1::vec2 cursor_pos{ -1, -1 };
 
         bool allow_pointer_grab;
 
@@ -289,19 +289,18 @@ namespace eka2l1::epoc {
         } irect;
 
         std::uint32_t redraw_evt_id;
-        std::uint32_t driver_win_id { 0 };
+        std::uint32_t driver_win_id{ 0 };
 
         void priority_updated() override;
 
-        window_user (window_server_client_ptr client, screen_device_ptr dvc,
+        window_user(window_server_client_ptr client, screen_device_ptr dvc,
             epoc::window_type type_of_window, epoc::display_mode dmode)
-            : window(client, dvc, window_kind::client), win_type(type_of_window),
-              dmode(dmode)
-        {
-
+            : window(client, dvc, window_kind::client)
+            , win_type(type_of_window)
+            , dmode(dmode) {
         }
-        
-        int shadow_height { 0 };
+
+        int shadow_height{ 0 };
 
         enum {
             shadow_disable = 0x1000,
@@ -317,7 +316,7 @@ namespace eka2l1::epoc {
 
         void set_visible(bool vis) {
             flags &= ~visible;
-            
+
             if (vis) {
                 flags |= visible;
             }
@@ -337,7 +336,7 @@ namespace eka2l1::epoc {
 
         template <typename T>
         T internalize() {
-            T d = *reinterpret_cast<T*>(&(buf[0]));
+            T d = *reinterpret_cast<T *>(&(buf[0]));
             buf.erase(0, sizeof(T));
 
             return d;
@@ -345,7 +344,7 @@ namespace eka2l1::epoc {
 
         template <typename T>
         void externalize(const T &v) {
-            buf.append(reinterpret_cast<const char*>(&v), sizeof(T));
+            buf.append(reinterpret_cast<const char *>(&v), sizeof(T));
         }
     };
 
@@ -353,7 +352,7 @@ namespace eka2l1::epoc {
         std::shared_ptr<window_user> attached_window;
         std::queue<draw_command> draw_queue;
 
-        bool recording { false };
+        bool recording{ false };
 
         void flush_queue_to_driver();
 
@@ -376,14 +375,13 @@ namespace eka2l1::epoc {
             eka2l1::vec2 pos = eka2l1::vec2(0, 0));
     };
 
-    struct anim_dll: public window_client_obj {
+    struct anim_dll : public window_client_obj {
         // Nothing yet
         anim_dll(window_server_client_ptr client)
             : window_client_obj(client) {
-
         }
 
-        std::uint32_t user_count {0};
+        std::uint32_t user_count{ 0 };
 
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
@@ -391,10 +389,9 @@ namespace eka2l1::epoc {
     struct click_dll : public window_client_obj {
         click_dll(window_server_client_ptr client)
             : window_client_obj(client) {
-
         }
 
-        bool loaded { false };
+        bool loaded{ false };
 
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
     };
@@ -433,9 +430,9 @@ namespace eka2l1::epoc {
         void init_device(epoc::window_ptr &win);
         epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
 
-        std::uint32_t total_group { 0 };
+        std::uint32_t total_group{ 0 };
 
-    public:    
+    public:
         void add_redraw_listener(notify_info nof) {
             redraws.set_listener(nof);
         }
@@ -470,9 +467,9 @@ namespace eka2l1::epoc {
         eka2l1::thread_ptr &get_client() {
             return client_thread;
         }
-        
+
         std::uint32_t queue_redraw(epoc::window_user *user);
-        
+
         std::uint32_t queue_event(const event &evt) {
             return events.queue_event(evt);
         }
@@ -481,7 +478,7 @@ namespace eka2l1::epoc {
             redraws.cancel_event_queue(handle);
         }
     };
-    
+
     epoc::graphics_orientation number_to_orientation(int rot);
 }
 
@@ -559,7 +556,7 @@ namespace eka2l1 {
         int id;
         epoc::event evt;
     };
-    
+
     struct ws_cmd_draw_text_vertical_v94 {
         vec2 pos;
         vec2 bottom_right;
@@ -578,13 +575,13 @@ namespace eka2l1 {
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
 
-        common::ini_file    ws_config;
-        bool                loaded { false };
+        common::ini_file ws_config;
+        bool loaded{ false };
 
-        std::vector<epoc::config::screen>   screens;
+        std::vector<epoc::config::screen> screens;
 
         epoc::window_group_ptr focus_;
-        epoc::pointer_cursor_mode   cursor_mode_;
+        epoc::pointer_cursor_mode cursor_mode_;
 
         void init(service::ipc_context ctx);
         void send_to_command_buffer(service::ipc_context ctx);
@@ -622,5 +619,5 @@ namespace eka2l1 {
             return screens[num];
         }
     };
-    
+
 }

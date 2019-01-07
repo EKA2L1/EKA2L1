@@ -160,7 +160,7 @@ namespace eka2l1 {
         */
         virtual address rom_address() const = 0;
 
-		virtual bool resize(const std::size_t new_size) = 0;
+        virtual bool resize(const std::size_t new_size) = 0;
 
         virtual bool flush();
     };
@@ -248,7 +248,7 @@ namespace eka2l1 {
         }
 
         virtual bool delete_entry(const std::u16string &path) = 0;
-        
+
         virtual bool create_directory(const std::u16string &path) = 0;
         virtual bool create_directories(const std::u16string &path) = 0;
 
@@ -280,7 +280,7 @@ namespace eka2l1 {
         void set_epoc_version(const epocver ver);
 
         std::optional<std::u16string> get_raw_path(const std::u16string &path);
-        
+
         /*! \brief Add a new file system to the IO system
         *
         * Each filesystem will be assigned an ID for management.
@@ -348,7 +348,7 @@ namespace eka2l1 {
 
         /*! \brief Open the directory in guest.
         */
-        std::shared_ptr<directory> open_dir(std::u16string vir_path, 
+        std::shared_ptr<directory> open_dir(std::u16string vir_path,
             const io_attrib attrib = io_attrib::none);
 
         /*! \brief Get a drive info.

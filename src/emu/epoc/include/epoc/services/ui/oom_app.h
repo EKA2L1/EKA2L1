@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/window.h>
-#include <epoc/services/server.h>
 #include <epoc/services/context.h>
+#include <epoc/services/server.h>
+#include <epoc/services/window/window.h>
 
 namespace eka2l1 {
     namespace epoc {
@@ -123,7 +123,7 @@ namespace eka2l1 {
     class oom_ui_app_server : public service::server {
         void get_layout_config_size(service::ipc_context ctx);
         void get_layout_config(service::ipc_context ctx);
-    
+
         bool layout_config_loaded = false;
         epoc::config::screen scr_config;
 

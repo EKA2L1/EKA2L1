@@ -150,8 +150,7 @@ namespace eka2l1 {
         void set_clock_frequency_mhz(int cpu_mhz);
         uint32_t get_clock_frequency_mhz();
         int get_downcount();
-        
+
         void do_state(common::chunkyseri &seri);
     };
 }
-

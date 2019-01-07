@@ -91,12 +91,11 @@ namespace eka2l1 {
 
             uint32_t uid;
 
-            kernel_obj(kernel_system *kern) 
-                : kern(kern) { 
+            kernel_obj(kernel_system *kern)
+                : kern(kern) {
             }
-            
-        public:
 
+        public:
             virtual ~kernel_obj() {}
 
             /*! \brief Get the name of the object.

@@ -24,12 +24,11 @@ class CEikApplication;
  * An instance of class CITriedDocument is the Document part of the
  * AVKON application framework for the ITried example application.
  */
-class CITriedDocument : public CAknDocument
-	{
+class CITriedDocument : public CAknDocument {
 public:
-	// Constructors and destructor
+    // Constructors and destructor
 
-	/**
+    /**
 	 * NewL.
 	 * Two-phased constructor.
 	 * Construct a CITriedDocument for the AVKON application aApp
@@ -38,9 +37,9 @@ public:
 	 * @param aApp Application creating this document.
 	 * @return A pointer to the created instance of CITriedDocument.
 	 */
-	static CITriedDocument* NewL(CEikApplication& aApp);
+    static CITriedDocument *NewL(CEikApplication &aApp);
 
-	/**
+    /**
 	 * NewLC.
 	 * Two-phased constructor.
 	 * Construct a CITriedDocument for the AVKON application aApp
@@ -49,43 +48,42 @@ public:
 	 * @param aApp Application creating this document.
 	 * @return A pointer to the created instance of CITriedDocument.
 	 */
-	static CITriedDocument* NewLC(CEikApplication& aApp);
+    static CITriedDocument *NewLC(CEikApplication &aApp);
 
-	/**
+    /**
 	 * ~CITriedDocument
 	 * Virtual Destructor.
 	 */
-	virtual ~CITriedDocument();
+    virtual ~CITriedDocument();
 
 public:
-	// Functions from base classes
+    // Functions from base classes
 
-	/**
+    /**
 	 * CreateAppUiL
 	 * From CEikDocument, CreateAppUiL.
 	 * Create a CITriedAppUi object and return a pointer to it.
 	 * The object returned is owned by the Uikon framework.
 	 * @return Pointer to created instance of AppUi.
 	 */
-	CEikAppUi* CreateAppUiL();
+    CEikAppUi *CreateAppUiL();
 
 private:
-	// Constructors
+    // Constructors
 
-	/**
+    /**
 	 * ConstructL
 	 * 2nd phase constructor.
 	 */
-	void ConstructL();
+    void ConstructL();
 
-	/**
+    /**
 	 * CITriedDocument.
 	 * C++ default constructor.
 	 * @param aApp Application creating this document.
 	 */
-	CITriedDocument(CEikApplication& aApp);
-
-	};
+    CITriedDocument(CEikApplication &aApp);
+};
 
 #endif // __ITRIEDDOCUMENT_h__
 // End of File

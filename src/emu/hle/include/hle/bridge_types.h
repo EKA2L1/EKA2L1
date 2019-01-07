@@ -40,10 +40,10 @@ namespace eka2l1 {
         };
 
         template <typename pointee>
-        struct bridge_type<pointee*> {
+        struct bridge_type<pointee *> {
             typedef ptr<pointee> arm_type;
 
-            static pointee* arm_to_host(const arm_type &t, const memory_system *mem) {
+            static pointee *arm_to_host(const arm_type &t, const memory_system *mem) {
                 return t.get(mem);
             }
         };

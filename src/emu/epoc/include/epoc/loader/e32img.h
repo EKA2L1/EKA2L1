@@ -43,7 +43,7 @@ namespace eka2l1 {
 
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
 
-	/*! \brief Contains the loader for E32Image, ROMImage, SIS. */
+    /*! \brief Contains the loader for E32Image, ROMImage, SIS. */
     namespace loader {
         enum class e32_cpu : uint16_t {
             x86 = 0x1000,
@@ -110,9 +110,9 @@ namespace eka2l1 {
             std::vector<uint16_t> rels_info;
         };
 
-        #define ELF32_R_SYM(i) ((i) >> 8)
-        #define ELF32_R_TYPE(i) ((unsigned char)(i))
-        #define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
+#define ELF32_R_SYM(i) ((i) >> 8)
+#define ELF32_R_TYPE(i) ((unsigned char)(i))
+#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
 
         struct e32_reloc_section {
             uint32_t size;
@@ -207,9 +207,8 @@ namespace eka2l1 {
             inffered = 0x3000
         };
 
-		/*! \brief Parse an E32 Image. 
+        /*! \brief Parse an E32 Image. 
 		 * \param ef The file opened from io_system. */
         std::optional<e32img> parse_e32img(symfile ef, bool read_reloc = true);
     }
 }
-

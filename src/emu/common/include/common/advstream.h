@@ -30,7 +30,7 @@
 
 namespace eka2l1 {
     namespace common {
-		/* \brief A simple but yet advance stream 
+        /* \brief A simple but yet advance stream 
 		 * 
 		 * Given the stream a buffer pointer, and its size, you can peek, and read from this stream like normal.
 		*/
@@ -81,7 +81,7 @@ namespace eka2l1 {
             }
         };
 
-		/* \brief An advance stream using char type */
+        /* \brief An advance stream using char type */
         class advstringstream : public advstream<char> {
         public:
             advstringstream(std::string &str)
@@ -95,24 +95,24 @@ namespace eka2l1 {
                 return *_peek(1);
             }
 
-			/*! Get the string of the unreaded buffer */
+            /*! Get the string of the unreaded buffer */
             std::string getstr(uint64_t nm) {
                 std::string res;
                 auto rescpy = _get(nm);
 
                 res.resize(nm);
-                memcpy(reinterpret_cast<void*>(&res[0]), rescpy, std::min(nm, length()));
+                memcpy(reinterpret_cast<void *>(&res[0]), rescpy, std::min(nm, length()));
 
                 return res;
             }
 
-			/*! Peek a specific number of characters of unreaded buffer */
+            /*! Peek a specific number of characters of unreaded buffer */
             std::string peekstr(uint64_t nm) {
                 std::string res;
                 auto rescpy = _peek(nm);
 
                 res.resize(nm);
-                memcpy(reinterpret_cast<void*>(&res[0]), rescpy, std::min(nm, length()));
+                memcpy(reinterpret_cast<void *>(&res[0]), rescpy, std::min(nm, length()));
 
                 return res;
             }

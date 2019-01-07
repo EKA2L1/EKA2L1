@@ -109,11 +109,11 @@ namespace eka2l1 {
 
         event_types[evt_type] = evtype;
     }
-    
+
     void timing_system::swap_userdata_event(int event_type, std::uint64_t old_userdata, std::uint64_t new_userdata) {
         auto e = std::find_if(events.begin(), events.end(), [=](const event &ei) {
             return (ei.event_user_data == old_userdata) && (ei.event_type == event_type);
-        }); 
+        });
 
         if (e != events.end()) {
             e->event_user_data = new_userdata;
@@ -211,17 +211,17 @@ namespace eka2l1 {
             event evt = std::move(events.back());
             events.pop_back();
 
-            std::stable_sort(events.begin(), events.end(), 
+            std::stable_sort(events.begin(), events.end(),
                 [](const event &lhs, const event &rhs) {
                     return lhs.event_time > rhs.event_time;
-            });
+                });
 
             event_types[evt.event_type]
                 .callback(evt.event_user_data, global_timer - evt.event_time);
         }
 
         if (!events.empty()) {
-            slice_len = std::min(static_cast<size_t>(events.front().event_time - global_timer), 
+            slice_len = std::min(static_cast<size_t>(events.front().event_time - global_timer),
                 static_cast<std::size_t>(MAX_SLICE_LENGTH));
         }
 
@@ -275,7 +275,7 @@ namespace eka2l1 {
     static void anticrash_callback(std::uint64_t usdata, int cycles_late) {
         LOG_ERROR("Snapshot broken: Unregister event called!");
     }
-    
+
     static void event_do_state(common::chunkyseri &seri, event &evt) {
         seri.absorb(evt.event_type);
         seri.absorb(evt.event_time);
@@ -301,7 +301,7 @@ namespace eka2l1 {
         std::uint32_t total_event_type = static_cast<std::uint32_t>(event_types.size());
         seri.absorb(total_event_type);
 
-        event_types.resize(total_event_type, event_type { anticrash_callback, "INVALID" });
+        event_types.resize(total_event_type, event_type{ anticrash_callback, "INVALID" });
 
         // Since many events using a native pointer, storing the old userdata
         // Than the object will restore with new userdata, using swap_event_userdata.

@@ -226,8 +226,8 @@ namespace eka2l1 {
     void posix_server::chdir(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        std::u16string current_dir(reinterpret_cast<char16_t*>(
-                params->cwptr[0].get(ctx.sys->get_memory_system())));
+        std::u16string current_dir(reinterpret_cast<char16_t *>(
+            params->cwptr[0].get(ctx.sys->get_memory_system())));
 
         working_dir = eka2l1::absolute_path(current_dir, working_dir);
 
@@ -239,13 +239,12 @@ namespace eka2l1 {
     void posix_server::mkdir(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        std::u16string current_dir(reinterpret_cast<char16_t*>(
-                params->cwptr[0].get(ctx.sys->get_memory_system())));
+        std::u16string current_dir(reinterpret_cast<char16_t *>(
+            params->cwptr[0].get(ctx.sys->get_memory_system())));
 
-        const std::u16string full_new_path = 
-            common::utf8_to_ucs2(eka2l1::absolute_path(
-                common::ucs2_to_utf8(current_dir), 
-                common::ucs2_to_utf8(working_dir)));
+        const std::u16string full_new_path = common::utf8_to_ucs2(eka2l1::absolute_path(
+            common::ucs2_to_utf8(current_dir),
+            common::ucs2_to_utf8(working_dir)));
 
         bool res = ctx.sys->get_io_system()->create_directories(full_new_path);
         params->ret = res ? -1 : 0;
@@ -269,13 +268,11 @@ namespace eka2l1 {
         if (posix_open_mode & O_TMPFILE) {
 #endif
             // Put the temporary file in tmp folder of the correspond private space of process in C drive
-            base_dir = std::u16string(u"C:\\private\\") +
-                common::utf8_to_ucs2(common::to_string(associated_process->get_uid(), std::hex)) +
-                u"\\tmp\\";
+            base_dir = std::u16string(u"C:\\private\\") + common::utf8_to_ucs2(common::to_string(associated_process->get_uid(), std::hex)) + u"\\tmp\\";
         }
 
-        std::u16string current_dir(reinterpret_cast<char16_t*>(
-                params->cwptr[0].get(ctx.sys->get_memory_system())));
+        std::u16string current_dir(reinterpret_cast<char16_t *>(
+            params->cwptr[0].get(ctx.sys->get_memory_system())));
 
         const std::u16string path_u16 = eka2l1::absolute_path(current_dir, base_dir);
 
@@ -286,11 +283,11 @@ namespace eka2l1 {
         if ((!io->exist(path_u16) && (posix_open_mode & O_CREAT))
             || (posix_open_mode &
 #if EKA2L1_PLATFORM(WIN32)
-                   O_TEMPORARY
+                O_TEMPORARY
 #else
-                   O_TMPFILE
+                O_TMPFILE
 #endif
-                   )) {
+                )) {
             write_flag_emu = WRITE_MODE;
         }
 
@@ -334,8 +331,7 @@ namespace eka2l1 {
             mode = eka2l1::file_seek_mode::end;
         }
 
-        params->ret = 
-            static_cast<TInt>(file_manager.seek(params->fid, params->pint[0], mode, *errnoptr));
+        params->ret = static_cast<TInt>(file_manager.seek(params->fid, params->pint[0], mode, *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
@@ -347,8 +343,7 @@ namespace eka2l1 {
     void posix_server::fstat(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        struct stat *file_stat = 
-            reinterpret_cast<struct stat*>(params->ptr[0].get(ctx.sys->get_memory_system()));
+        struct stat *file_stat = reinterpret_cast<struct stat *>(params->ptr[0].get(ctx.sys->get_memory_system()));
 
         file_manager.stat(params->fid, file_stat, *errnoptr);
         params->ret = *errnoptr ? -1 : 0;
@@ -358,8 +353,7 @@ namespace eka2l1 {
 
     void posix_server::read(service::ipc_context ctx) {
         POSIX_REQUEST_INIT(ctx);
-        params->ret = 
-            static_cast<TInt>(file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
+        params->ret = static_cast<TInt>(file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
@@ -413,7 +407,8 @@ namespace eka2l1 {
         , associated_process(associated_process)
         , file_manager(sys->get_io_system()) {
         working_dir = common::utf8_to_ucs2(eka2l1::root_name(
-            common::ucs2_to_utf8(associated_process->get_exe_path()), true)) + u'\\';
+                          common::ucs2_to_utf8(associated_process->get_exe_path()), true))
+            + u'\\';
 
         REGISTER_IPC(posix_server, chdir, PMchdir, "Posix::Chdir");
         REGISTER_IPC(posix_server, mkdir, PMmkdir, "Posix::Mkdir");

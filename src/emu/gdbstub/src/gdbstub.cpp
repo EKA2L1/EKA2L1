@@ -20,19 +20,19 @@
 
 #include <arm/arm_interface.h>
 #include <epoc/epoc.h>
-#include <gdbstub/gdbstub.h>
 #include <epoc/kernel/process.h>
+#include <gdbstub/gdbstub.h>
 //#include "epoc/loader/loader.h"
-#include <epoc/mem.h>
 #include <epoc/kernel.h>
+#include <epoc/mem.h>
 
 namespace eka2l1 {
-        // For sample XML files see the GDB source /gdb/features
-        // GDB also wants the l character at the start
-        // This XML defines what the registers are for this specific ARM device
+    // For sample XML files see the GDB source /gdb/features
+    // GDB also wants the l character at the start
+    // This XML defines what the registers are for this specific ARM device
 
-        constexpr char target_xml[] =
-            R"(l<?xml version="1.0"?>
+    constexpr char target_xml[] =
+        R"(l<?xml version="1.0"?>
         <!DOCTYPE target SYSTEM "gdb-target.dtd">
         <target version="1.0">
           <feature name="org.gnu.gdb.arm.core">
@@ -325,8 +325,8 @@ namespace eka2l1 {
 
         LOG_DEBUG("gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
             bp->second.len, bp->second.addr, static_cast<int>(type));
-        
-        sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), 
+
+        sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]),
             static_cast<std::uint32_t>(bp->second.inst.size()));
         // TODO: Clear instruction cache
 
@@ -826,12 +826,12 @@ namespace eka2l1 {
         br.active = true;
         br.addr = addr;
         br.len = static_cast<std::uint32_t>(len);
-        
+
         sys->get_memory_system()->read(addr, &br.inst[0],
             static_cast<std::uint32_t>(br.inst.size()));
 
         std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xe1 };
-        sys->get_memory_system()->write(addr, &(btrap[0]), 
+        sys->get_memory_system()->write(addr, &(btrap[0]),
             static_cast<std::uint32_t>(btrap.size()));
 
         // TODO: Clear instructions cache

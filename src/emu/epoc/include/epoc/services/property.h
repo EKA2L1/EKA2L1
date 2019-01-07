@@ -21,8 +21,8 @@
 #pragma once
 
 #include <epoc/kernel/kernel_obj.h>
-#include <epoc/utils/reqsts.h>
 #include <epoc/ptr.h>
+#include <epoc/utils/reqsts.h>
 
 #include <array>
 #include <memory>

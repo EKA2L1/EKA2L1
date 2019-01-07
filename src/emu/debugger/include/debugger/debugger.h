@@ -21,7 +21,7 @@ namespace eka2l1 {
         debugger_base() {}
 
         std::function<void(bool)> on_pause_toogle;
-        
+
         virtual bool should_emulate_stop() = 0;
 
         virtual void set_breakpoint(const std::uint32_t bkpt, const bool hit = false,

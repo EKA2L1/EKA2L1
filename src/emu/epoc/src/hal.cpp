@@ -19,8 +19,8 @@
  */
 
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
 #include <epoc/hal.h>
+#include <epoc/kernel.h>
 #include <epoc/timing.h>
 
 #include <epoc/loader/rom.h>
@@ -31,8 +31,8 @@
 #include <common/e32inc.h>
 #include <e32err.h>
 
-#include <epoc/utils/des.h>
 #include <drivers/graphics/graphics.h>
+#include <epoc/utils/des.h>
 
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
     funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2))

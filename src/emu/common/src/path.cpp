@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/platform.h>
 #include <common/path.h>
+#include <common/platform.h>
 
 #include <cstring>
 #include <iostream>
@@ -71,7 +71,7 @@ namespace eka2l1 {
     bool is_separator(const char16_t sep) {
         return (sep == '/' || sep == '\\');
     }
-    
+
     template <typename T>
     std::basic_string<T> path_extension_impl(const std::basic_string<T> &path) {
         std::size_t last_dot_pos = path.find_last_of(static_cast<T>('.'));
@@ -95,7 +95,7 @@ namespace eka2l1 {
     }
 
     template <typename T>
-    std::basic_string<T> add_path_impl(const std::basic_string<T> &path1, const std::basic_string<T> &path2, 
+    std::basic_string<T> add_path_impl(const std::basic_string<T> &path1, const std::basic_string<T> &path2,
         bool symbian_use, std::function<T(bool)> separator_func) {
         using generic_string = std::basic_string<T>;
 
@@ -103,7 +103,7 @@ namespace eka2l1 {
         generic_string merge;
 
         if (path1.length() == 0 && path2.length() == 0) {
-            return generic_string {};
+            return generic_string{};
         } else if (path1.length() == 0) {
             merge = path2;
         } else if (path2.length() == 0) {
@@ -144,15 +144,15 @@ namespace eka2l1 {
 
         return merge;
     }
-    
+
     template <typename T>
     std::basic_string<T> relative_path_impl(std::basic_string<T> str, bool symbian_use) {
         std::basic_string<T> root = root_path(str, symbian_use);
         return str.substr(root.size());
     }
-    
+
     template <typename T>
-    std::basic_string<T> absolute_path_impl(std::basic_string<T> str, std::basic_string<T> current_dir, 
+    std::basic_string<T> absolute_path_impl(std::basic_string<T> str, std::basic_string<T> current_dir,
         bool symbian_use, std::function<T(bool)> separator_func) {
         using generic_string = std::basic_string<T>;
 
@@ -194,7 +194,7 @@ namespace eka2l1 {
 
         return generic_string{};
     }
-    
+
     template <typename T>
     std::basic_string<T> root_name_impl(std::basic_string<T> path, bool symbian_use,
         std::function<T(bool)> separator_func) {
@@ -217,9 +217,9 @@ namespace eka2l1 {
 
         return generic_string{};
     }
-    
+
     template <typename T>
-    std::basic_string<T> root_dir_impl(std::basic_string<T> path, bool symbian_use, 
+    std::basic_string<T> root_dir_impl(std::basic_string<T> path, bool symbian_use,
         std::function<T(bool)> separator_func) {
         using generic_string = decltype(path);
 
@@ -277,9 +277,9 @@ namespace eka2l1 {
 
         return generic_string{};
     }
-    
+
     template <typename T>
-    std::basic_string<T> filename_impl(std::basic_string<T> path, bool symbian_use, 
+    std::basic_string<T> filename_impl(std::basic_string<T> path, bool symbian_use,
         std::function<T(bool)> separator_func) {
         using generic_string = decltype(path);
         generic_string fn;
@@ -303,7 +303,7 @@ namespace eka2l1 {
 
         return fn;
     }
-    
+
     template <typename T>
     std::basic_string<T> file_directory_impl(std::basic_string<T> path, bool symbian_use) {
         using generic_string = decltype(path);
@@ -331,7 +331,7 @@ namespace eka2l1 {
     std::u16string relative_path(const std::u16string &str, bool symbian_use) {
         return relative_path_impl<char16_t>(str, symbian_use);
     }
-    
+
     std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use) {
         return add_path_impl<char>(path1, path2, symbian_use, get_separator);
     }
@@ -355,23 +355,23 @@ namespace eka2l1 {
     std::u16string file_directory(std::u16string path, bool symbian_use) {
         return file_directory_impl<char16_t>(path, symbian_use);
     }
-    
-	std::string root_name(std::string path, bool symbian_use) {
+
+    std::string root_name(std::string path, bool symbian_use) {
         return root_name_impl<char>(path, symbian_use, get_separator);
     }
 
-	std::u16string root_name(std::u16string path, bool symbian_use) {
+    std::u16string root_name(std::u16string path, bool symbian_use) {
         return root_name_impl<char16_t>(path, symbian_use, get_separator_16);
     }
-    
+
     std::string root_dir(std::string path, bool symbian_use) {
         return root_dir_impl<char>(path, symbian_use, get_separator);
     }
-	
+
     std::u16string root_dir(std::u16string path, bool symbian_use) {
         return root_dir_impl<char16_t>(path, symbian_use, get_separator_16);
     }
-    
+
     std::string root_path(std::string path, bool symbian_use) {
         return root_path_impl<char>(path, symbian_use, get_separator);
     }
@@ -379,7 +379,7 @@ namespace eka2l1 {
     std::u16string root_path(std::u16string path, bool symbian_use) {
         return root_path_impl<char16_t>(path, symbian_use, get_separator_16);
     }
-    
+
     std::string path_extension(const std::string &path) {
         return path_extension_impl<char>(path);
     }

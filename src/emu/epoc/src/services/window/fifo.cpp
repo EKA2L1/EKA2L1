@@ -21,8 +21,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/fifo.h>
 #include <common/log.h>
+#include <epoc/services/window/fifo.h>
 
 #include <cassert>
 
@@ -38,10 +38,10 @@ namespace eka2l1::epoc {
             return false;
         }
     }
-    
+
     std::uint32_t event_fifo::queue_event(const event &evt) {
         const std::lock_guard<std::mutex> guard(lock_);
-        
+
         if (q_.size() == maximum_element) {
             do_purge();
         }
@@ -61,7 +61,7 @@ namespace eka2l1::epoc {
     void event_fifo::do_purge() {
         for (size_t i = 0; i < q_.size(); i++) {
             switch (q_[i].evt.type) {
-            case epoc::event_code::event_password: 
+            case epoc::event_code::event_password:
                 break;
 
             case epoc::event_code::null:
@@ -74,8 +74,7 @@ namespace eka2l1::epoc {
 
             case epoc::event_code::focus_gained:
             case epoc::event_code::focus_lost: {
-                if ((i + 1 < q_.size()) && 
-                    ((q_[i+1].evt.type == epoc::event_code::focus_gained) || (q_[i+1].evt.type == epoc::event_code::focus_lost))) {
+                if ((i + 1 < q_.size()) && ((q_[i + 1].evt.type == epoc::event_code::focus_gained) || (q_[i + 1].evt.type == epoc::event_code::focus_lost))) {
                     q_.erase(q_.begin() + i + 1);
                     q_.erase(q_.begin() + i);
                 }
@@ -84,7 +83,7 @@ namespace eka2l1::epoc {
             }
 
             case epoc::event_code::switch_on: {
-                if (i + 1 < q_.size() && (q_[i+1].evt.type == epoc::event_code::switch_on)) {
+                if (i + 1 < q_.size() && (q_[i + 1].evt.type == epoc::event_code::switch_on)) {
                     q_.erase(q_.begin() + i);
                     break;
                 }
@@ -119,9 +118,9 @@ namespace eka2l1::epoc {
 
         std::stable_sort(q_.begin(), q_.end(),
             [&](const fifo_element &e1, const fifo_element &e2) {
-            return e1.pri < e2.pri;
-        });
-        
+                return e1.pri < e2.pri;
+            });
+
         return id;
     }
 }

@@ -27,12 +27,12 @@
 #include <common/types.h>
 
 #include <cstdint>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace eka2l1 {
     using address = uint32_t;
-    
+
     class memory_system;
     class kernel_system;
 
@@ -42,9 +42,9 @@ namespace eka2l1 {
 
     using process_ptr = std::shared_ptr<kernel::process>;
 
-	/*! \brief Contains kernel objects implementation. */
+    /*! \brief Contains kernel objects implementation. */
     namespace kernel {
-		/*! \brief The chunk type.
+        /*! \brief The chunk type.
 		*/
         enum class chunk_type {
             disconnected,
@@ -63,16 +63,16 @@ namespace eka2l1 {
             anonymous
         };
 
-		/*! \brief A chunk.
+        /*! \brief A chunk.
 		 *
 		 * Chunk is a big space of reserved memory. In that reserved memory, you can commit and decommit thing.
 		*/
-        class chunk: public kernel_obj {
+        class chunk : public kernel_obj {
             // The reversed region that the chunk can commit to
             address top;
             address bottom;
 
-            prot   protection;
+            prot protection;
             size_t max_size;
 
             size_t commited_size;
@@ -83,18 +83,19 @@ namespace eka2l1 {
 
             eka2l1::ptr<uint8_t> chunk_base;
 
-            memory_system* mem;
+            memory_system *mem;
             process_ptr own_process;
 
             bool is_heap;
 
         public:
             chunk(kernel_system *kern, memory_system *mem)
-                : kernel_obj(kern), mem(mem) {
+                : kernel_obj(kern)
+                , mem(mem) {
                 obj_type = kernel::object_type::chunk;
             }
 
-            chunk(kernel_system* kern, memory_system* mem, process_ptr own_process, std::string name, address bottom,
+            chunk(kernel_system *kern, memory_system *mem, process_ptr own_process, std::string name, address bottom,
                 const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
                 chunk_attrib attrib, const bool is_heap = false);
 
@@ -124,14 +125,14 @@ namespace eka2l1 {
 			*/
             bool decommit(uint32_t offset, size_t size);
 
-			/*! \brief Destroy the chunk */
+            /*! \brief Destroy the chunk */
             void destroy();
 
             chunk_type get_chunk_type() const {
                 return type;
             }
 
-			/*! \brief Get the base of the chunk. */
+            /*! \brief Get the base of the chunk. */
             ptr<uint8_t> base() {
                 return chunk_base;
             }
@@ -148,7 +149,7 @@ namespace eka2l1 {
                 return max_size;
             }
 
-			/*! \brief Adjust the chunk size.
+            /*! \brief Adjust the chunk size.
 			 * \param adj_size The size of the new adjusted chunk.
 			 * \returns false if adjust failed.
 			*/

@@ -23,9 +23,9 @@
 
 #include <epoc/loader/sis.h>
 
+#include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 #include <manager/sis_v1_installer.h>
-#include <manager/package_manager.h>
 
 #include <epoc/vfs.h>
 
@@ -144,7 +144,7 @@ namespace eka2l1 {
                     // Fixed drive
                     if (info.executable_name[0] == u'!') {
                         LOG_INFO("Fixed drive, unexpected change to {}", char(info.executable_name[0]));
-                        info.drive = char16_to_drive(info.executable_name[0]); 
+                        info.drive = char16_to_drive(info.executable_name[0]);
 
                         symfile f = io->open_file(file_des->target.unicode_string, READ_MODE | BIN_MODE);
                         f->seek(8, file_seek_mode::beg);
@@ -158,7 +158,7 @@ namespace eka2l1 {
                     f->seek(8, file_seek_mode::beg);
                     f->read_file(&info.id, 1, 4);
                     f->close();
-                
+
                     // Get file name
                     size_t slash_pos = info.executable_name.find_last_of(u"\\");
 
@@ -241,7 +241,7 @@ namespace eka2l1 {
                 LOG_TRACE("Can't find info for UID: 0x{:X}", uid);
                 return "";
             }
-            
+
             app_info inf = std::move(*info_res);
 
             std::string res;
@@ -259,14 +259,14 @@ namespace eka2l1 {
                 LOG_TRACE("Can't find info for UID: 0x{:X}", uid);
                 return "";
             }
-            
+
             return common::ucs2_to_utf8(info_res->name);
         }
-        
+
         std::vector<app_info> package_manager::get_apps_info() {
             std::vector<app_info> infos;
 
-            for (auto const & [ drive, info ] : apps) {
+            for (auto const &[drive, info] : apps) {
                 infos.push_back(info);
             }
 

@@ -22,64 +22,62 @@ class CITriedAppView;
  * Interacts with the user through the UI and request message processing
  * from the handler class
  */
-class CITriedAppUi : public CAknAppUi
-	{
+class CITriedAppUi : public CAknAppUi {
 public:
-	// Constructors and destructor
+    // Constructors and destructor
 
-	/**
+    /**
 	 * ConstructL.
 	 * 2nd phase constructor.
 	 */
-	void ConstructL();
+    void ConstructL();
 
-	/**
+    /**
 	 * CITriedAppUi.
 	 * C++ default constructor. This needs to be public due to
 	 * the way the framework constructs the AppUi
 	 */
-	CITriedAppUi();
+    CITriedAppUi();
 
-	/**
+    /**
 	 * ~CITriedAppUi.
 	 * Virtual Destructor.
 	 */
-	virtual ~CITriedAppUi();
+    virtual ~CITriedAppUi();
 
 private:
-	// Functions from base classes
+    // Functions from base classes
 
-	/**
+    /**
 	 * From CEikAppUi, HandleCommandL.
 	 * Takes care of command handling.
 	 * @param aCommand Command to be handled.
 	 */
-	void HandleCommandL(TInt aCommand);
+    void HandleCommandL(TInt aCommand);
 
-	/**
+    /**
 	 *  HandleStatusPaneSizeChange.
 	 *  Called by the framework when the application status pane
 	 *  size is changed.
 	 */
-	void HandleStatusPaneSizeChange();
+    void HandleStatusPaneSizeChange();
 
-	/**
+    /**
 	 *  From CCoeAppUi, HelpContextL.
 	 *  Provides help context for the application.
 	 *  size is changed.
 	 */
-	CArrayFix<TCoeHelpContext>* HelpContextL() const;
+    CArrayFix<TCoeHelpContext> *HelpContextL() const;
 
 private:
-	// Data
+    // Data
 
-	/**
+    /**
 	 * The application view
 	 * Owned by CITriedAppUi
 	 */
-	CITriedAppView* iAppView;
-
-	};
+    CITriedAppView *iAppView;
+};
 
 #endif // __ITRIEDAPPUI_h__
 // End of File

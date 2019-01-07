@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <common/types.h>
 #include <common/platform.h>
+#include <common/types.h>
 
 #if EKA2L1_PLATFORM(UNIX)
 #include <sys/mman.h>
@@ -78,7 +78,7 @@ int translate_protection(prot cprot) {
 }
 
 char16_t drive_to_char16(const drive_number drv) {
-    return static_cast<char16_t>(drv) + u'A'; 
+    return static_cast<char16_t>(drv) + u'A';
 }
 
 drive_number char16_to_drive(const char16_t c) {

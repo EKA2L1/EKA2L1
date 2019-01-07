@@ -63,8 +63,8 @@ namespace eka2l1 {
             gdbstub *stub;
             debugger_ptr debugger;
 
-			std::array<std::uint8_t*, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
-				page_dyn;
+            std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
+                page_dyn;
 
         public:
             timing_system *get_timing_sys() {
@@ -83,9 +83,9 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            arm_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem, 
+            arm_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
                 disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger);
-                
+
             ~arm_dynarmic();
 
             void run() override;

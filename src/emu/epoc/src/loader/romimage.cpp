@@ -22,8 +22,8 @@
 #include <common/log.h>
 
 #include <epoc/loader/romimage.h>
-#include <epoc/vfs.h>
 #include <epoc/ptr.h>
+#include <epoc/vfs.h>
 
 #include <algorithm>
 #include <cstdio>

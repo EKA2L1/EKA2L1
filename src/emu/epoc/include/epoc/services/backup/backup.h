@@ -27,7 +27,7 @@
 
 namespace eka2l1 {
     enum TBaBakOpCode {
-        EBakOpCodeEventReady=20, // EBakOpCodeStartNotifications,
+        EBakOpCodeEventReady = 20, // EBakOpCodeStartNotifications,
         EBakOpCodeGetEvent,
         EBakOpCodeCloseAllFiles,
         EBakOpCodeRestartAll,
@@ -35,7 +35,7 @@ namespace eka2l1 {
         EBakOpCodeRestartFile,
         EBakOpCodeNotifyLockChange,
         EBakOpCodeNotifyLockChangeCancel,
-        EBakOpCodeCloseServer,		// no longer supported
+        EBakOpCodeCloseServer, // no longer supported
         EBakOpCodeNotifyBackupOperation,
         EBakOpCodeCancelOutstandingBackupOperationEvent,
         EBakOpCodeGetBackupOperationState,
@@ -45,8 +45,9 @@ namespace eka2l1 {
         EBakOpCodeStopNotifications
     };
 
-    class backup_server: public service::server {
+    class backup_server : public service::server {
         void get_backup_operation_state(service::ipc_context ctx);
+
     public:
         explicit backup_server(eka2l1::system *sys);
     };

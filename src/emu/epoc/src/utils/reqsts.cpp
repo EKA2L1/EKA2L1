@@ -21,9 +21,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/utils/reqsts.h>
-#include <epoc/kernel/thread.h>
 #include <epoc/kernel/process.h>
+#include <epoc/kernel/thread.h>
+#include <epoc/utils/reqsts.h>
 
 namespace eka2l1::epoc {
     void notify_info::complete(int err_code) {

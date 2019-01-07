@@ -36,6 +36,7 @@ namespace eka2l1 {
 
         csh cp_handle;
         insn_ptr cp_insn;
+
     public:
         void init();
 

@@ -12,7 +12,7 @@ namespace eka2l1::epoc {
      * \returns Reference to the local data.
      */
     eka2l1::kernel::thread_local_data &current_local_data(eka2l1::system *sys);
-    
+
     /*! \brief Get the tls slot based on the handle (address). 
      * \param sys The system.
      * \param addr The DLL address (handle).

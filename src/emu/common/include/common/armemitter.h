@@ -20,53 +20,136 @@
 #include <cstdint>
 #include <vector>
 
-#include <common/log.h>
 #include <common/armcommon.h>
 #include <common/codeblock.h>
+#include <common/log.h>
 
 // VCVT flags
-#define TO_FLOAT      0
-#define TO_INT        1 << 0
-#define IS_SIGNED     1 << 1
+#define TO_FLOAT 0
+#define TO_INT 1 << 0
+#define IS_SIGNED 1 << 1
 #define ROUND_TO_ZERO 1 << 2
 
 namespace eka2l1::common::armgen {
     enum arm_reg {
         // GPRs
-        R0 = 0, R1, R2, R3, R4, R5,
-        R6, R7, R8, R9, R10, R11,
+        R0 = 0,
+        R1,
+        R2,
+        R3,
+        R4,
+        R5,
+        R6,
+        R7,
+        R8,
+        R9,
+        R10,
+        R11,
 
         // SPRs
         // R13 - R15 are SP, LR, and PC.
         // Almost always referred to by name instead of register number
-        R12 = 12, R13 = 13, R14 = 14, R15 = 15,
-        R_IP = 12, R_SP = 13, R_LR = 14, R_PC = 15,
-
+        R12 = 12,
+        R13 = 13,
+        R14 = 14,
+        R15 = 15,
+        R_IP = 12,
+        R_SP = 13,
+        R_LR = 14,
+        R_PC = 15,
 
         // VFP single precision registers
-        S0, S1, S2, S3, S4, S5, S6,
-        S7, S8, S9, S10, S11, S12, S13,
-        S14, S15, S16, S17, S18, S19, S20,
-        S21, S22, S23, S24, S25, S26, S27,
-        S28, S29, S30, S31,
+        S0,
+        S1,
+        S2,
+        S3,
+        S4,
+        S5,
+        S6,
+        S7,
+        S8,
+        S9,
+        S10,
+        S11,
+        S12,
+        S13,
+        S14,
+        S15,
+        S16,
+        S17,
+        S18,
+        S19,
+        S20,
+        S21,
+        S22,
+        S23,
+        S24,
+        S25,
+        S26,
+        S27,
+        S28,
+        S29,
+        S30,
+        S31,
 
         // VFP Double Precision registers
-        D0, D1, D2, D3, D4, D5, D6, D7,
-        D8, D9, D10, D11, D12, D13, D14, D15,
-        D16, D17, D18, D19, D20, D21, D22, D23,
-        D24, D25, D26, D27, D28, D29, D30, D31,
-        
+        D0,
+        D1,
+        D2,
+        D3,
+        D4,
+        D5,
+        D6,
+        D7,
+        D8,
+        D9,
+        D10,
+        D11,
+        D12,
+        D13,
+        D14,
+        D15,
+        D16,
+        D17,
+        D18,
+        D19,
+        D20,
+        D21,
+        D22,
+        D23,
+        D24,
+        D25,
+        D26,
+        D27,
+        D28,
+        D29,
+        D30,
+        D31,
+
         // ASIMD Quad-Word registers
-        Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7,
-        Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15,
+        Q0,
+        Q1,
+        Q2,
+        Q3,
+        Q4,
+        Q5,
+        Q6,
+        Q7,
+        Q8,
+        Q9,
+        Q10,
+        Q11,
+        Q12,
+        Q13,
+        Q14,
+        Q15,
 
         // for NEON VLD/VST instructions
         REG_UPDATE = R13,
         INVALID_REG = 0xFFFFFFFF
     };
 
-    enum shift_type
-    {
+    enum shift_type {
         ST_LSL = 0,
         ST_ASL = 0,
         ST_LSR = 1,
@@ -74,23 +157,20 @@ namespace eka2l1::common::armgen {
         ST_ROR = 3,
         ST_RRX = 4
     };
-    enum integer_size
-    {
-        I_I8 = 0, 
+    enum integer_size {
+        I_I8 = 0,
         I_I16,
         I_I32,
         I_I64
     };
 
-    enum
-    {
+    enum {
         NUMGPRs = 13,
     };
 
     class armx_emitter;
 
-    enum op_type
-    {
+    enum op_type {
         TYPE_IMM = 0,
         TYPE_REG,
         TYPE_IMMSREG,
@@ -99,9 +179,9 @@ namespace eka2l1::common::armgen {
     };
 
     // This is no longer a proper operand2 class. Need to split up.
-    class operand2
-    {
+    class operand2 {
         friend class armx_emitter;
+
     protected:
         std::uint32_t value;
 
@@ -109,45 +189,39 @@ namespace eka2l1::common::armgen {
         op_type type;
 
         // IMM types
-        std::uint8_t	rotation; // Only for std::uint8_t values
+        std::uint8_t rotation; // Only for std::uint8_t values
 
         // Register types
         std::uint8_t index_or_shift;
         shift_type shift;
 
     public:
-        op_type get_type() const
-        {
+        op_type get_type() const {
             return type;
         }
 
-        shift_type get_shift_type() const
-        {
+        shift_type get_shift_type() const {
             return shift;
         }
 
-        std::uint8_t get_shift_value() const
-        {
+        std::uint8_t get_shift_value() const {
             return index_or_shift;
         }
 
-        operand2() {} 
-        operand2(std::uint32_t imm, op_type otype = TYPE_IMM)
-        { 
-            type = otype; 
-            value = imm; 
+        operand2() {}
+        operand2(std::uint32_t imm, op_type otype = TYPE_IMM) {
+            type = otype;
+            value = imm;
             rotation = 0;
         }
 
-        operand2(arm_reg Reg)
-        {
+        operand2(arm_reg Reg) {
             type = TYPE_REG;
             value = Reg;
             rotation = 0;
         }
 
-        operand2(std::uint8_t imm, std::uint8_t rotation)
-        {
+        operand2(std::uint8_t imm, std::uint8_t rotation) {
             type = TYPE_IMM;
             value = imm;
             rotation = rotation;
@@ -164,9 +238,9 @@ namespace eka2l1::common::armgen {
 
         operand2(arm_reg base, shift_type stype, std::uint8_t shift) // For IMM shifted register
         {
-            if(shift == 32) shift = 0;
-            switch (stype)
-            {
+            if (shift == 32)
+                shift = 0;
+            switch (stype) {
             case ST_LSL:
                 LOG_ERROR_IF(shift < 32, "Invalid operand2: LSL %u", shift);
                 break;
@@ -201,8 +275,7 @@ namespace eka2l1::common::armgen {
         }
 
         std::uint32_t get_data() {
-            switch (type)
-            {
+            switch (type) {
             case TYPE_IMM:
                 return Imm12Mod(); // This'll need to be changed later
             case TYPE_REG:
@@ -221,8 +294,7 @@ namespace eka2l1::common::armgen {
             return value;
         }
 
-        std::uint8_t get_rotation() const
-        {
+        std::uint8_t get_rotation() const {
             return rotation;
         }
 
@@ -238,20 +310,17 @@ namespace eka2l1::common::armgen {
             return (index_or_shift << 8) | (shift << 5) | 0x10 | value;
         }
 
-        std::uint32_t Rm() const
-        {
+        std::uint32_t Rm() const {
             LOG_ERROR_IF(type == TYPE_REG, "Rm must be with Reg");
             return value;
         }
 
-        std::uint32_t Imm5() const
-        {
+        std::uint32_t Imm5() const {
             LOG_ERROR_IF((type == TYPE_IMM), "Imm5 not IMM value");
             return ((value & 0x0000001F) << 7);
         }
 
-        std::uint32_t Imm8() const
-        {
+        std::uint32_t Imm8() const {
             LOG_ERROR_IF((type == TYPE_IMM), "Imm8Rot not IMM value");
             return value & 0xFF;
         }
@@ -263,14 +332,12 @@ namespace eka2l1::common::armgen {
             return (1 << 25) | (rotation << 7) | (value & 0x000000FF);
         }
 
-        std::uint32_t Imm12() const
-        {
+        std::uint32_t Imm12() const {
             LOG_ERROR_IF((type == TYPE_IMM), "Imm12 not IMM");
             return (value & 0x00000FFF);
         }
 
-        std::uint32_t Imm12Mod() const
-        {
+        std::uint32_t Imm12Mod() const {
             // This is an IMM12 with the top four bits being rotation and the
             // bottom eight being an IMM. This is for instructions that need to
             // expand a 8bit IMM to a 32bit value and gives you some rotation as
@@ -280,14 +347,12 @@ namespace eka2l1::common::armgen {
             return ((rotation & 0xF) << 8) | (value & 0xFF);
         }
 
-        std::uint32_t Imm16() const
-        {
+        std::uint32_t Imm16() const {
             LOG_ERROR_IF((type == TYPE_IMM), "Imm16 not IMM");
             return ((value & 0xF000) << 4) | (value & 0x0FFF);
         }
 
-        std::uint32_t Imm16Low() const
-        {
+        std::uint32_t Imm16Low() const {
             return Imm16();
         }
 
@@ -297,21 +362,18 @@ namespace eka2l1::common::armgen {
             return (((value >> 16) & 0xF000) << 4) | ((value >> 16) & 0x0FFF);
         }
 
-        std::uint32_t Imm24() const
-        {
+        std::uint32_t Imm24() const {
             LOG_ERROR_IF((type == TYPE_IMM), "Imm16 not IMM");
             return (value & 0x0FFFFFFF);
         }
 
         // NEON and ASIMD specific
-        std::uint32_t Imm8ASIMD() const
-        {
+        std::uint32_t Imm8ASIMD() const {
             LOG_ERROR_IF((type == TYPE_IMM), "Imm8ASIMD not IMM");
-            return  ((value & 0x80) << 17) | ((value & 0x70) << 12) | (value & 0xF);
+            return ((value & 0x80) << 17) | ((value & 0x70) << 12) | (value & 0xF);
         }
 
-        std::uint32_t Imm8VFP() const
-        {
+        std::uint32_t Imm8VFP() const {
             LOG_ERROR_IF((type == TYPE_IMM), "Imm8VFP not IMM");
             return ((value & 0xF0) << 12) | (value & 0xF);
         }
@@ -328,27 +390,25 @@ namespace eka2l1::common::armgen {
     // Use this only when you know imm can be made into an operand2.
     operand2 assume_make_operand2(std::uint32_t imm);
 
-    inline operand2 R(arm_reg Reg)	{ return operand2(Reg, TYPE_REG); }
-    inline operand2 IMM(std::uint32_t Imm)	{ return operand2(Imm, TYPE_IMM); }
-    inline operand2 Mem(void *ptr)	{ return operand2((std::uint32_t)(uintptr_t)ptr, TYPE_IMM); }
-    //usage: struct {int e;} s; STRUCT_OFFSET(s,e)
-    #define STRUCT_OFF(str,elem) ((std::uint32_t)((std::uint32_t)&(str).elem-(std::uint32_t)&(str)))
+    inline operand2 R(arm_reg Reg) { return operand2(Reg, TYPE_REG); }
+    inline operand2 IMM(std::uint32_t Imm) { return operand2(Imm, TYPE_IMM); }
+    inline operand2 Mem(void *ptr) { return operand2((std::uint32_t)(uintptr_t)ptr, TYPE_IMM); }
+//usage: struct {int e;} s; STRUCT_OFFSET(s,e)
+#define STRUCT_OFF(str, elem) ((std::uint32_t)((std::uint32_t) & (str).elem - (std::uint32_t) & (str)))
 
-    struct fixup_branch
-    {
+    struct fixup_branch {
         std::uint8_t *ptr;
         std::uint32_t condition; // Remembers our codition at the time
         int type; //0 = B 1 = BL
     };
 
-    struct literal_pool
-    {
+    struct literal_pool {
         intptr_t loc;
-        std::uint8_t* ldr_address;
+        std::uint8_t *ldr_address;
         std::uint32_t val;
     };
 
-    typedef const std::uint8_t* jump_target;
+    typedef const std::uint8_t *jump_target;
 
     // XXX: Stop polluting the global namespace
     const std::uint32_t I_8 = (1 << 0);
@@ -371,7 +431,7 @@ namespace eka2l1::common::armgen {
         VIMM_x11_x11 = 0xD, // 1101
         VIMMxxxxxxxx = 0xE, // 1110  // op == 0
         VIMMf000f000 = 0xF, // 1111  // op == 0     ( really   aBbbbbbc defgh 00000000 00000000 ) where B = NOT b
-        VIMMbits2bytes = 0x1E,   // Bit replication into bytes! Easily created 111111111 00000000 masks!
+        VIMMbits2bytes = 0x1E, // Bit replication into bytes! Easily created 111111111 00000000 masks!
     };
 
     std::uint32_t encode_vd(arm_reg Vd);
@@ -429,10 +489,10 @@ namespace eka2l1::common::armgen {
 
     class NEONXEmitter;
 
-    class armx_emitter
-    {
-        friend struct OpArg;  // for Write8 etc
+    class armx_emitter {
+        friend struct OpArg; // for Write8 etc
         friend class NEONXEmitter;
+
     private:
         std::uint8_t *code, *startcode;
         std::uint8_t *lastCacheFlushEnd;
@@ -461,10 +521,16 @@ namespace eka2l1::common::armgen {
         void encode_shift_by_imm(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount, std::uint8_t opcode, bool quad, bool inverse, bool halve);
 
     protected:
-        inline void write32(std::uint32_t value) {*(std::uint32_t*)code = value; code+=4;}
+        inline void write32(std::uint32_t value) {
+            *(std::uint32_t *)code = value;
+            code += 4;
+        }
 
     public:
-        armx_emitter() : code(0), startcode(0), lastCacheFlushEnd(0) {
+        armx_emitter()
+            : code(0)
+            , startcode(0)
+            , lastCacheFlushEnd(0) {
             condition = CC_AL << 28;
         }
 
@@ -507,9 +573,9 @@ namespace eka2l1::common::armgen {
         // Do nothing
         void NOP(int count = 1); //nop padding - TODO: fast nop slides, for amd and intel (check their manuals)
 
-    #ifdef CALL
-    #undef CALL
-    #endif
+#ifdef CALL
+#undef CALL
+#endif
 
         // Branching
         fixup_branch B();
@@ -519,8 +585,8 @@ namespace eka2l1::common::armgen {
         fixup_branch BL_CC(cc_flags Cond);
         void Setjump_target(fixup_branch const &branch);
 
-        void B (const void *fnptr);
-        void B (arm_reg src);
+        void B(const void *fnptr);
+        void B(arm_reg src);
         void BL(const void *fnptr);
         void BL(arm_reg src);
         bool BLInRange(const void *fnptr) const;
@@ -529,60 +595,60 @@ namespace eka2l1::common::armgen {
         void POP(const int num, ...);
 
         // New Data Ops
-        void AND (arm_reg Rd, arm_reg Rn, operand2 Rm);
+        void AND(arm_reg Rd, arm_reg Rn, operand2 Rm);
         void ANDS(arm_reg Rd, arm_reg Rn, operand2 Rm);
-        void EOR (arm_reg dest, arm_reg src, operand2 op2);
+        void EOR(arm_reg dest, arm_reg src, operand2 op2);
         void EORS(arm_reg dest, arm_reg src, operand2 op2);
-        void SUB (arm_reg dest, arm_reg src, operand2 op2);
+        void SUB(arm_reg dest, arm_reg src, operand2 op2);
         void SUBS(arm_reg dest, arm_reg src, operand2 op2);
-        void RSB (arm_reg dest, arm_reg src, operand2 op2);
+        void RSB(arm_reg dest, arm_reg src, operand2 op2);
         void RSBS(arm_reg dest, arm_reg src, operand2 op2);
-        void ADD (arm_reg dest, arm_reg src, operand2 op2);
+        void ADD(arm_reg dest, arm_reg src, operand2 op2);
         void ADDS(arm_reg dest, arm_reg src, operand2 op2);
-        void ADC (arm_reg dest, arm_reg src, operand2 op2);
+        void ADC(arm_reg dest, arm_reg src, operand2 op2);
         void ADCS(arm_reg dest, arm_reg src, operand2 op2);
-        void LSL (arm_reg dest, arm_reg src, operand2 op2);
-        void LSL (arm_reg dest, arm_reg src, arm_reg op2);
+        void LSL(arm_reg dest, arm_reg src, operand2 op2);
+        void LSL(arm_reg dest, arm_reg src, arm_reg op2);
         void LSLS(arm_reg dest, arm_reg src, operand2 op2);
         void LSLS(arm_reg dest, arm_reg src, arm_reg op2);
-        void LSR (arm_reg dest, arm_reg src, operand2 op2);
+        void LSR(arm_reg dest, arm_reg src, operand2 op2);
         void LSRS(arm_reg dest, arm_reg src, operand2 op2);
-        void LSR (arm_reg dest, arm_reg src, arm_reg op2);
+        void LSR(arm_reg dest, arm_reg src, arm_reg op2);
         void LSRS(arm_reg dest, arm_reg src, arm_reg op2);
-        void ASR (arm_reg dest, arm_reg src, operand2 op2);
+        void ASR(arm_reg dest, arm_reg src, operand2 op2);
         void ASRS(arm_reg dest, arm_reg src, operand2 op2);
-        void ASR (arm_reg dest, arm_reg src, arm_reg op2);
+        void ASR(arm_reg dest, arm_reg src, arm_reg op2);
         void ASRS(arm_reg dest, arm_reg src, arm_reg op2);
 
-        void SBC (arm_reg dest, arm_reg src, operand2 op2);
+        void SBC(arm_reg dest, arm_reg src, operand2 op2);
         void SBCS(arm_reg dest, arm_reg src, operand2 op2);
         void RBIT(arm_reg dest, arm_reg src);
-        void REV (arm_reg dest, arm_reg src);
-        void REV16 (arm_reg dest, arm_reg src);
-        void RSC (arm_reg dest, arm_reg src, operand2 op2);
+        void REV(arm_reg dest, arm_reg src);
+        void REV16(arm_reg dest, arm_reg src);
+        void RSC(arm_reg dest, arm_reg src, operand2 op2);
         void RSCS(arm_reg dest, arm_reg src, operand2 op2);
-        void TST (             arm_reg src, operand2 op2);
-        void TEQ (             arm_reg src, operand2 op2);
-        void CMP (             arm_reg src, operand2 op2);
-        void CMN (             arm_reg src, operand2 op2);
-        void ORR (arm_reg dest, arm_reg src, operand2 op2);
+        void TST(arm_reg src, operand2 op2);
+        void TEQ(arm_reg src, operand2 op2);
+        void CMP(arm_reg src, operand2 op2);
+        void CMN(arm_reg src, operand2 op2);
+        void ORR(arm_reg dest, arm_reg src, operand2 op2);
         void ORRS(arm_reg dest, arm_reg src, operand2 op2);
-        void MOV (arm_reg dest,             operand2 op2);
-        void MOVS(arm_reg dest,             operand2 op2);
-        void BIC (arm_reg dest, arm_reg src, operand2 op2);   // BIC = ANDN
+        void MOV(arm_reg dest, operand2 op2);
+        void MOVS(arm_reg dest, operand2 op2);
+        void BIC(arm_reg dest, arm_reg src, operand2 op2); // BIC = ANDN
         void BICS(arm_reg dest, arm_reg src, operand2 op2);
-        void MVN (arm_reg dest,             operand2 op2);
-        void MVNS(arm_reg dest,             operand2 op2);
-        void MOVW(arm_reg dest,             operand2 op2);
+        void MVN(arm_reg dest, operand2 op2);
+        void MVNS(arm_reg dest, operand2 op2);
+        void MOVW(arm_reg dest, operand2 op2);
         void MOVT(arm_reg dest, operand2 op2, bool TopBits = false);
 
-        // UDIV and SDIV are only available on CPUs that have 
+        // UDIV and SDIV are only available on CPUs that have
         // the idiva hardare capacity
         void UDIV(arm_reg dest, arm_reg dividend, arm_reg divisor);
         void SDIV(arm_reg dest, arm_reg dividend, arm_reg divisor);
 
-        void MUL (arm_reg dest,	arm_reg src, arm_reg op2);
-        void MULS(arm_reg dest,	arm_reg src, arm_reg op2);
+        void MUL(arm_reg dest, arm_reg src, arm_reg op2);
+        void MULS(arm_reg dest, arm_reg src, arm_reg op2);
 
         void UMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
@@ -602,19 +668,19 @@ namespace eka2l1::common::armgen {
 
         // Using just MSR here messes with our defines on the PPC side of stuff (when this code was in dolphin...)
         // Just need to put an underscore here, bit annoying.
-        void _MSR (bool nzcvq, bool g, operand2 op2);
-        void _MSR (bool nzcvq, bool g, arm_reg src);
-        void MRS  (arm_reg dest);
+        void _MSR(bool nzcvq, bool g, operand2 op2);
+        void _MSR(bool nzcvq, bool g, arm_reg src);
+        void MRS(arm_reg dest);
 
         // Memory load/store operations
-        void LDR  (arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRB (arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRH (arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void LDR(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void LDRB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void LDRH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
         void LDRSB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
         void LDRSH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void STR  (arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void STRB (arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void STRH (arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void STR(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void STRB(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void STRH(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
 
         void STMFD(arm_reg dest, bool WriteBack, const int Regnum, ...);
         void LDMFD(arm_reg dest, bool WriteBack, const int Regnum, ...);
@@ -629,7 +695,7 @@ namespace eka2l1::common::armgen {
         void LDREX(arm_reg dest, arm_reg base);
         // result contains the result if the instruction managed to store the value
         void STREX(arm_reg result, arm_reg base, arm_reg op);
-        void DMB ();
+        void DMB();
         void SVC(operand2 op);
 
         // NEON and ASIMD instructions
@@ -654,7 +720,7 @@ namespace eka2l1::common::armgen {
             VLDMIA(R_SP, true, firstvreg, numvregs);
         }
         void VLDR(arm_reg Dest, arm_reg Base, std::int16_t offset);
-        void VSTR(arm_reg Src,  arm_reg Base, std::int16_t offset);
+        void VSTR(arm_reg Src, arm_reg Base, std::int16_t offset);
         void VCMP(arm_reg Vd, arm_reg Vm);
         void VCMPE(arm_reg Vd, arm_reg Vm);
         // Compares against zero
@@ -742,7 +808,7 @@ namespace eka2l1::common::armgen {
         // These two are super useful for matrix multiplication
         void VMUL_scalar(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
         void VMLA_scalar(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
-        
+
         // TODO:
         /*
         void VMLS_scalar(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
@@ -756,7 +822,7 @@ namespace eka2l1::common::armgen {
         void VQRDMULH_scalar(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
         */
 
-    // Vector bitwise. These don't have an element size for obvious reasons.
+        // Vector bitwise. These don't have an element size for obvious reasons.
         void VAND(arm_reg Vd, arm_reg Vn, arm_reg Vm);
         void VBIC(arm_reg Vd, arm_reg Vn, arm_reg Vm);
         void VEOR(arm_reg Vd, arm_reg Vn, arm_reg Vm);
@@ -798,7 +864,7 @@ namespace eka2l1::common::armgen {
         void VRSQRTE(std::uint32_t Size, arm_reg Vd, arm_reg Vm);
         void VRSQRTS(arm_reg Vd, arm_reg Vn, arm_reg Vm);
         void VRSUBHN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
-        void VSHL(std::uint32_t Size, arm_reg Vd, arm_reg Vm, arm_reg Vn);  // Register shift
+        void VSHL(std::uint32_t Size, arm_reg Vd, arm_reg Vm, arm_reg Vn); // Register shift
         void VSUB(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
         void VSUBHN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
         void VSUBL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm);
@@ -813,12 +879,10 @@ namespace eka2l1::common::armgen {
         void VREV32(std::uint32_t Size, arm_reg Vd, arm_reg Vm);
         void VREV16(std::uint32_t Size, arm_reg Vd, arm_reg Vm);
 
-
         // NEON immediate instructions
 
-
         void VMOV_imm(std::uint32_t Size, arm_reg Vd, VIMMMode type, int imm);
-        void VMOV_immf(arm_reg Vd, float value);  // This only works with a select few values (1.0f and -1.0f).
+        void VMOV_immf(arm_reg Vd, float value); // This only works with a select few values (1.0f and -1.0f).
 
         void VORR_imm(std::uint32_t Size, arm_reg Vd, VIMMMode type, int imm);
         void VMVN_imm(std::uint32_t Size, arm_reg Vd, VIMMMode type, int imm);
@@ -832,13 +896,12 @@ namespace eka2l1::common::armgen {
 
         // Shifts by immediate
         void VSHL(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount);
-        void VSHLL(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount);  // widening
+        void VSHLL(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount); // widening
         void VSHR(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount);
-        void VSHRN(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount);  // narrowing
+        void VSHRN(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount); // narrowing
 
         // Vector VCVT
         void VCVT(std::uint32_t DestSize, arm_reg Dest, arm_reg Src);
-
 
         // Notes:
         // Rm == R_PC  is interpreted as no offset, otherwise, effective address is sum of Rn and Rm
@@ -854,7 +917,7 @@ namespace eka2l1::common::armgen {
         void VLD1_lane(std::uint32_t Size, arm_reg Vd, arm_reg Rn, int lane, bool aligned, arm_reg Rm = R_PC);
         void VST1_lane(std::uint32_t Size, arm_reg Vd, arm_reg Rn, int lane, bool aligned, arm_reg Rm = R_PC);
 
-        // Load one value into all lanes of a D or a Q register (either supported, all formats should work). 
+        // Load one value into all lanes of a D or a Q register (either supported, all formats should work).
         void VLD1_all_lanes(std::uint32_t Size, arm_reg Vd, arm_reg Rn, bool aligned, arm_reg Rm = R_PC);
 
         /*
@@ -878,7 +941,8 @@ namespace eka2l1::common::armgen {
         void VMSR(arm_reg Rt);
 
         void QuickCallFunction(arm_reg scratchreg, const void *func);
-        template <typename T> void QuickCallFunction(arm_reg scratchreg, T func) {
+        template <typename T>
+        void QuickCallFunction(arm_reg scratchreg, T func) {
             QuickCallFunction(scratchreg, (const void *)func);
         }
 
@@ -889,7 +953,8 @@ namespace eka2l1::common::armgen {
         void MOVI2F_neon(arm_reg dest, float val, arm_reg tempReg, bool negate = false);
 
         // Load pointers without casting
-        template <class T> void MOVP2R(arm_reg reg, T *val) {
+        template <class T>
+        void MOVP2R(arm_reg reg, T *val) {
             MOVI2R(reg, (std::uint32_t)(uintptr_t)(void *)val);
         }
 
@@ -897,7 +962,7 @@ namespace eka2l1::common::armgen {
             union {
                 std::uint32_t u;
                 float f;
-            } v = {val};
+            } v = { val };
             MOVI2F(dest, v.f, tempReg, negate);
         }
 
@@ -915,8 +980,7 @@ namespace eka2l1::common::armgen {
         bool TryORI2R(arm_reg rd, arm_reg rs, std::uint32_t val);
         void EORI2R(arm_reg rd, arm_reg rs, std::uint32_t val, arm_reg scratch);
         bool TryEORI2R(arm_reg rd, arm_reg rs, std::uint32_t val);
-    };  // class armx_emitter
-
+    }; // class armx_emitter
 
     // Everything that needs to generate machine code should inherit from this.
     // You get memory management for free, plus, you can use all the MOV etc functions without
@@ -935,4 +999,4 @@ namespace eka2l1::common::armgen {
     extern const VFPEnc VFPOps[16][2];
     extern const char *VFPOpNames[16];
 
-}  // namespace
+} // namespace

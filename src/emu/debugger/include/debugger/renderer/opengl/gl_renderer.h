@@ -7,8 +7,8 @@
 
 namespace eka2l1 {
     using GLuint = unsigned int;
-    
-    class debugger_gl_renderer: public debugger_renderer {
+
+    class debugger_gl_renderer : public debugger_renderer {
         GLuint vbo_handle;
         GLuint vao_handle;
         GLuint elements_handle;
@@ -23,8 +23,7 @@ namespace eka2l1 {
 
     public:
         void init(drivers::graphics_driver_ptr driver, debugger_ptr debugger) override;
-        void draw(std::uint32_t width, std::uint32_t height
-            , std::uint32_t fb_width, std::uint32_t fb_height) override;
+        void draw(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
         void deinit() override;
     };
 }

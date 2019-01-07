@@ -46,9 +46,9 @@ enum class prot {
 // This can be changed manually
 enum class epocver {
     epocu6,
-    epoc6,    // Epoc 6.0
-    epoc93,   // Epoc 9.3
-    epoc9,    // Epoc 9.4
+    epoc6, // Epoc 6.0
+    epoc93, // Epoc 9.3
+    epoc9, // Epoc 9.4
     epoc10
 };
 

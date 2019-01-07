@@ -23,8 +23,8 @@
 #include <common/path.h>
 #include <common/random.h>
 
-#include <epoc/reg.h>
 #include <epoc/kernel/libmanager.h>
+#include <epoc/reg.h>
 
 #include <epoc/configure.h>
 
@@ -37,8 +37,8 @@
 #include <epoc/loader/romimage.h>
 #include <epoc/vfs.h>
 
-#include <epoc/epoc.h>
 #include <epoc/configure.h>
+#include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
 namespace eka2l1 {
@@ -52,7 +52,7 @@ namespace eka2l1 {
 
         bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == loader::relocation_type::reserved) {
-               return true;
+                return true;
             }
 
             // What is in it ?? :))
@@ -64,7 +64,7 @@ namespace eka2l1 {
                 break;
 
             case loader::relocation_type::data:
-                // This is relocation for dynamic data.                
+                // This is relocation for dynamic data.
                 write(dest_ptr, reloc_offset + data_delta);
                 break;
 
@@ -120,7 +120,7 @@ namespace eka2l1 {
             return dll_name;
         }
 
-        bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, loader::e32img &me, 
+        bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, loader::e32img &me,
             loader::e32img_import_block &import_block, loader::e32img_iat &iat, uint32_t &crr_idx) {
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
@@ -131,7 +131,7 @@ namespace eka2l1 {
             if (!img) {
                 rimg = mngr.load_romimg(dll_name);
             }
-            
+
             uint32_t *imdir = &(import_block.ordinals[0]);
             uint32_t *expdir;
 
@@ -166,9 +166,9 @@ namespace eka2l1 {
                 }
             }
 
-            for (uint32_t i = crr_idx, j = 0; 
-                i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
-                i++, j++) {
+            for (uint32_t i = crr_idx, j = 0;
+                 i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
+                 i++, j++) {
                 uint32_t iat_off = img->header.code_offset + img->header.code_size;
                 img->data[iat_off + i * 4] = expdir[import_block.ordinals[j] - 1];
             }
@@ -266,11 +266,11 @@ namespace eka2l1 {
 
         bool import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
-            
+
             img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
                 prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
-            img->data_chunk = kern->create_chunk("", 0, common::align(data_seg_size, mem->get_page_size()), common::align(data_seg_size, mem->get_page_size()), 
+            img->data_chunk = kern->create_chunk("", 0, common::align(data_seg_size, mem->get_page_size()), common::align(data_seg_size, mem->get_page_size()),
                 prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
 
             chunk_ptr code_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
@@ -302,11 +302,11 @@ namespace eka2l1 {
             }
 
             memcpy(ptr<void>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
-            std::uint8_t *dt_ptr = ptr<std::uint8_t>(rtdata_addr).get(mem); 
+            std::uint8_t *dt_ptr = ptr<std::uint8_t>(rtdata_addr).get(mem);
 
             if (img->header.data_size) {
                 // If there is initialized data, copy that
-                memcpy(dt_ptr + img->header.bss_size, img->data.data() + img->header.data_offset, 
+                memcpy(dt_ptr + img->header.bss_size, img->data.data() + img->header.data_offset,
                     img->header.data_size);
             }
 
@@ -333,27 +333,27 @@ namespace eka2l1 {
             kern = kerns;
 
             // TODO (pent0): Implement external id loading
-            
+
             std::vector<sid> tids;
             std::string lib_name;
 
-            #define LIB(x) lib_name = #x;
-            #define EXPORT(x, y)   \
-                tids.push_back(y); \
-                func_names.insert(std::make_pair(y, x));
-            #define ENDLIB()                                                                        \
-                ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); \
-                tids.clear();
+#define LIB(x) lib_name = #x;
+#define EXPORT(x, y)   \
+    tids.push_back(y); \
+    func_names.insert(std::make_pair(y, x));
+#define ENDLIB()                                                                        \
+    ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); \
+    tids.clear();
 
             if (ver == epocver::epoc6) {
-           //  #include <hle/epoc6_n.def>
+                //  #include <hle/epoc6_n.def>
             } else {
-            // #include <hle/epoc9_n.def>
+                // #include <hle/epoc9_n.def>
             }
 
-            #undef LIB
-            #undef EXPORT
-            #undef ENLIB
+#undef LIB
+#undef EXPORT
+#undef ENLIB
 
             if (ver == epocver::epoc9) {
                 epoc::register_epocv94(*this);
@@ -597,7 +597,7 @@ namespace eka2l1 {
             info.is_xip = xip;
             info.is_rom = is_rom;
             info.full_path = std::move(img->file_name());
-            
+
             img->close();
 
             uint32_t check = info.img->header.check;
@@ -619,7 +619,7 @@ namespace eka2l1 {
                 if (!romimgf && should_append_ext) {
                     romimgf = io->open_file(rom_name + (should_append_ext ? u".exe" : u""), READ_MODE | BIN_MODE);
                 }
-                
+
                 if (!romimgf) {
                     return nullptr;
                 }
@@ -748,7 +748,7 @@ namespace eka2l1 {
         }
 
         address lib_manager::get_export_addr(sid id) {
-            for (const auto & [ addr, sidk ] : addr_map) {
+            for (const auto &[addr, sidk] : addr_map) {
                 if (sidk == id) {
                     return addr;
                 }

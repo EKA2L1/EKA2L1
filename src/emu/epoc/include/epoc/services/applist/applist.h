@@ -25,10 +25,10 @@
 
 namespace eka2l1 {
     struct apa_app_info {
-        std::uint32_t         uid;              ///< The UID of the application.
-        epoc::filename        app_path;         ///< The path to the application DLL (EKA1) / EXE (EKA2)
-        epoc::apa_app_caption short_caption;    ///< Short version of the caption
-        epoc::apa_app_caption long_caption;     ///< Long caption of the app
+        std::uint32_t uid; ///< The UID of the application.
+        epoc::filename app_path; ///< The path to the application DLL (EKA1) / EXE (EKA2)
+        epoc::apa_app_caption short_caption; ///< Short version of the caption
+        epoc::apa_app_caption long_caption; ///< Long caption of the app
 
         apa_app_info() {}
     };
@@ -70,7 +70,7 @@ namespace eka2l1 {
         // If you have use Symbian 9.x before, you can put apps and games into folders
         // The name of the folder is the group name.
         epoc::buf_static<char16_t, 0x10> group_name;
-        std::uint32_t flags {0};
+        std::uint32_t flags{ 0 };
 
         int reserved;
 

@@ -34,19 +34,19 @@
 #include <epoc/services/ui/oom_app.h>
 #include <epoc/services/window/window.h>
 
-#include <epoc/services/init.h>
-#include <epoc/epoc.h>
 #include <e32lang.h>
+#include <epoc/epoc.h>
+#include <epoc/services/init.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
-#define CREATE_SERVER_D(sys, svr)                   \
-    server_ptr temp = std::make_shared<svr>(sys);   \
+#define CREATE_SERVER_D(sys, svr)                 \
+    server_ptr temp = std::make_shared<svr>(sys); \
     sys->get_kernel_system()->add_custom_server(temp)
 
-#define CREATE_SERVER(sys, svr)          \
+#define CREATE_SERVER(sys, svr)        \
     temp = std::make_shared<svr>(sys); \
     sys->get_kernel_system()->add_custom_server(temp)
 
@@ -252,7 +252,7 @@ namespace eka2l1 {
 
             // Don't change order
             CREATE_SERVER(sys, domainmngr_server);
-            
+
             auto &dmmngr = std::reinterpret_pointer_cast<domainmngr_server>(temp)->get_domain_manager();
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);

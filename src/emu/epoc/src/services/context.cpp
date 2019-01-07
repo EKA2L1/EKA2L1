@@ -19,11 +19,11 @@
  */
 
 #include <epoc/epoc.h>
-#include <epoc/ptr.h>
 #include <epoc/kernel.h>
+#include <epoc/ptr.h>
 
-#include <epoc/utils/des.h>
 #include <epoc/services/context.h>
+#include <epoc/utils/des.h>
 
 namespace eka2l1 {
     namespace service {
@@ -46,8 +46,7 @@ namespace eka2l1 {
 
             if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
                 process_ptr own_pr = msg->own_thr->owning_process();
-                eka2l1::epoc::desc16 *des = 
-                    ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
+                eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
 
                 return des->to_std_string(own_pr);
             }
@@ -65,8 +64,7 @@ namespace eka2l1 {
 
             // If it has descriptor flag and it doesn't have an 16-bit flag, it should be 8-bit one.
             if (((int)iatype & (int)ipc_arg_type::flag_des) && !((int)iatype & (int)ipc_arg_type::flag_16b)) {
-                eka2l1::epoc::desc8 *des = 
-                    ptr<epoc::desc8>(msg->args.args[idx]).get(msg->own_thr->owning_process());
+                eka2l1::epoc::desc8 *des = ptr<epoc::desc8>(msg->args.args[idx]).get(msg->own_thr->owning_process());
 
                 return des->to_std_string(msg->own_thr->owning_process());
             }
@@ -107,9 +105,8 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
-                eka2l1::epoc::desc16 *des = 
-                    ptr<epoc::desc16>(msg->args.args[idx]).get(msg->own_thr->owning_process());
-                
+                eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(msg->own_thr->owning_process());
+
                 des->assign(msg->own_thr->owning_process(), data);
 
                 return true;
@@ -130,9 +127,8 @@ namespace eka2l1 {
 
                 // Please don't change the order
                 if ((int)arg_type & (int)ipc_arg_type::flag_16b) {
-                    eka2l1::epoc::desc16 *des =
-                        ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
-                
+                    eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
+
                     // We can't handle odd length
                     assert(len % 2 == 0);
 
@@ -142,7 +138,7 @@ namespace eka2l1 {
                     }
 
                     des->assign(msg->own_thr->owning_process(), data, len);
-                } else { 
+                } else {
                     eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
                     if (des->get_max_length(own_pr) < len) {

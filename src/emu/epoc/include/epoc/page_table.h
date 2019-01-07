@@ -1,7 +1,7 @@
 #pragma once
 
-#include <common/types.h>
 #include <common/resource.h>
+#include <common/types.h>
 
 #include <array>
 #include <cstdint>
@@ -57,11 +57,11 @@ namespace eka2l1 {
     };
 
     struct page_table {
-        std::array<std::uint8_t*, page_table_number_entries> pointers;
+        std::array<std::uint8_t *, page_table_number_entries> pointers;
         std::array<page, page_table_number_entries> pages;
 
         std::array<page, page_table_number_entries> &get_pages();
-        std::array<std::uint8_t*, page_table_number_entries> &get_pointers();
+        std::array<std::uint8_t *, page_table_number_entries> &get_pointers();
 
         std::mutex mut;
 

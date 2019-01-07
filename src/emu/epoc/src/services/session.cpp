@@ -79,7 +79,7 @@ namespace eka2l1 {
         }
 
         // This behaves a little different then other
-        int session::send_receive_sync(int function, ipc_arg args, 
+        int session::send_receive_sync(int function, ipc_arg args,
             eka2l1::ptr<epoc::request_status> request_sts) {
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
@@ -104,7 +104,7 @@ namespace eka2l1 {
                 version sreq_ver = *reinterpret_cast<version *>(&args.args[0]);
                 LOG_TRACE("Requested server version: {}.{}.{}", sreq_ver.major, sreq_ver.minor, sreq_ver.build);
             }
-            
+
             return 0;
         }
 

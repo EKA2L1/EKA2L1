@@ -3,8 +3,8 @@
 #include <common/types.h>
 
 #include <cstdint>
-#include <vector>
 #include <optional>
+#include <vector>
 
 namespace eka2l1 {
     class system;

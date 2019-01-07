@@ -21,25 +21,27 @@
 #pragma once
 
 #include <cstdint>
-#include <type_traits>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace eka2l1::common {
     enum chunkyseri_mode {
         SERI_MODE_READ,
         SERI_MODE_WRITE,
-        SERI_MODE_MESAURE  
+        SERI_MODE_MESAURE
     };
 
     struct chunkyseri_section {
-        std::uint8_t    *buf;
-        std::int16_t   ver;
-        std::string     name;
+        std::uint8_t *buf;
+        std::int16_t ver;
+        std::string name;
 
-        explicit chunkyseri_section(const std::string &name, std::uint8_t *buf, 
+        explicit chunkyseri_section(const std::string &name, std::uint8_t *buf,
             const std::int16_t v)
-            : buf(buf), name(name), ver(v) {
+            : buf(buf)
+            , name(name)
+            , ver(v) {
         }
 
         operator bool() const {
@@ -70,12 +72,12 @@ namespace eka2l1::common {
 
         template <typename T>
         std::enable_if_t<std::is_integral_v<T>> absorb(T &dat) {
-            absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(T));
+            absorb_impl(reinterpret_cast<std::uint8_t *>(&dat), sizeof(T));
         }
-        
+
         template <typename T>
         std::enable_if_t<std::is_enum_v<T>> absorb(T &dat) {
-            absorb_impl(reinterpret_cast<std::uint8_t*>(&dat), sizeof(T));
+            absorb_impl(reinterpret_cast<std::uint8_t *>(&dat), sizeof(T));
         }
 
         void absorb(std::string &dat);
@@ -104,7 +106,7 @@ namespace eka2l1::common {
                 c.resize(s);
             }
 
-            for (auto &member: c) {
+            for (auto &member : c) {
                 func(*this, member);
             }
         }
@@ -118,7 +120,7 @@ namespace eka2l1::common {
                 c.resize(s);
             }
 
-            for (auto &m: c) {
+            for (auto &m : c) {
                 m.do_state(*this);
             }
         }

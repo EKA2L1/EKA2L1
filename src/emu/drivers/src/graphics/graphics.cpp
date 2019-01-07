@@ -1,5 +1,5 @@
-#include <drivers/graphics/graphics.h>
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
+#include <drivers/graphics/graphics.h>
 
 #include <glad/glad.h>
 
@@ -11,13 +11,13 @@ namespace eka2l1::drivers {
             return true;
         }
 
-        default: 
+        default:
             break;
         }
 
         return false;
     }
-    
+
     graphics_driver_ptr create_graphics_driver(const graphic_api api, const vec2 &screen_size) {
         switch (api) {
         case graphic_api::opengl: {

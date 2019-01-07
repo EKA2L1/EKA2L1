@@ -24,8 +24,8 @@
 
 #include <imgui.h>
 
-#include <epoc/epoc.h>
 #include <disasm/disasm.h>
+#include <epoc/epoc.h>
 
 #include <epoc/kernel/libmanager.h>
 
@@ -43,7 +43,7 @@ namespace eka2l1 {
     imgui_debugger::imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger)
         : sys(sys)
         , logger(logger)
-        , should_stop(false) 
+        , should_stop(false)
         , should_pause(false) {
         mem_editor = std::make_shared<MemoryEditor>(sys->get_kernel_system());
     }
@@ -182,7 +182,7 @@ namespace eka2l1 {
             if (ImGui::BeginCombo("Thread", debug_thread ? thr_name.c_str() : "Thread")) {
                 for (std::size_t i = 0; i < threads.size(); i++) {
                     std::string cr_thrname = threads[i]->name() + " (ID " + common::to_string(threads[i]->unique_id()) + ")";
-          
+
                     if (ImGui::Selectable(cr_thrname.c_str(), threads[i]->unique_id() == debug_thread_id)) {
                         debug_thread_id = threads[i]->unique_id();
                         debug_thread = threads[i];
@@ -207,15 +207,14 @@ namespace eka2l1 {
                         break;
                     }
 
-                    const std::string dis = sys->get_disasm()->disassemble(reinterpret_cast<const std::uint8_t *>(codeptr), ctx.cpsr & 0x20 ? 2 : 4, 
+                    const std::string dis = sys->get_disasm()->disassemble(reinterpret_cast<const std::uint8_t *>(codeptr), ctx.cpsr & 0x20 ? 2 : 4,
                         pc, ctx.cpsr & 0x20);
 
                     if (dis.find("svc") == std::string::npos) {
                         ImGui::Text("0x%08x: %-10u    %s", pc, *reinterpret_cast<std::uint32_t *>(codeptr), dis.c_str());
                     } else {
                         const std::uint32_t svc_num = std::stoul(dis.substr(5), nullptr, 16);
-                        const std::string svc_call_name = sys->get_lib_manager()->svc_funcs.find(svc_num) != sys->get_lib_manager()->svc_funcs.end() ? 
-                            sys->get_lib_manager()->svc_funcs[svc_num].name : "Unknown";
+                        const std::string svc_call_name = sys->get_lib_manager()->svc_funcs.find(svc_num) != sys->get_lib_manager()->svc_funcs.end() ? sys->get_lib_manager()->svc_funcs[svc_num].name : "Unknown";
 
                         ImGui::Text("0x%08x: %-10u    %s            ; %s", pc, *reinterpret_cast<std::uint32_t *>(codeptr), dis.c_str(), svc_call_name.c_str());
                     }
@@ -246,8 +245,8 @@ namespace eka2l1 {
     void imgui_debugger::show_breakpoint_list() {
         ImGui::Begin("Breakpoints", &should_show_breakpoint_list);
 
-        ImGuiStyle& style = ImGui::GetStyle();
-        
+        ImGuiStyle &style = ImGui::GetStyle();
+
         const float height_separator = style.ItemSpacing.y;
         float footer_height = height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
 
@@ -260,7 +259,7 @@ namespace eka2l1 {
         for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
             std::string bkpt_info;
             bkpt_info.resize(22);
-            
+
             sprintf(&bkpt_info[0], "0x%08X    0x%08X", i, breakpoints[i].addr);
 
             bool pushed = false;
@@ -283,7 +282,7 @@ namespace eka2l1 {
         ImGui::EndChild();
 
         ImGui::Separator();
-        
+
         std::string buf;
         buf.resize(18);
 

@@ -18,17 +18,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/epoc.h>
 #include <epoc/configure.h>
+#include <epoc/epoc.h>
 #include <epoc/kernel/process.h>
 
 #include <common/algorithm.h>
-#include <common/cvt.h>
 #include <common/chunkyseri.h>
+#include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/random.h>
-#include <common/fileutils.h>
 
 #include <disasm/disasm.h>
 
@@ -48,21 +48,21 @@
 #include <fstream>
 #include <string>
 
+#include <disasm/disasm.h>
 #include <drivers/itc.h>
 #include <gdbstub/gdbstub.h>
-#include <disasm/disasm.h>
 
 #include <epoc/kernel.h>
 #include <epoc/mem.h>
 #include <epoc/ptr.h>
 
-#include <epoc/timing.h>
 #include <epoc/kernel/libmanager.h>
 #include <epoc/loader/rom.h>
+#include <epoc/timing.h>
 #include <epoc/vfs.h>
 
-#include <manager/manager.h>
 #include <arm/arm_factory.h>
+#include <manager/manager.h>
 
 namespace eka2l1 {
     /*! A system instance, where all the magic happens. 
@@ -81,7 +81,7 @@ namespace eka2l1 {
         arm_emulator_type jit_type;
 
         graphics_driver_client_ptr gdriver_client;
-        
+
         memory_system mem;
         kernel_system kern;
         timing_system timing;
@@ -283,7 +283,7 @@ namespace eka2l1 {
         }
 #endif
     }
-    
+
     void system_impl::do_state(common::chunkyseri &seri) {
         // Save timing first
         timing.do_state(seri);
@@ -303,7 +303,7 @@ namespace eka2l1 {
         file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use());
         io.add_filesystem(physical_fs);
 
-        file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem, 
+        file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem,
             get_symbian_version_use());
 
         rom_fs_id = io.add_filesystem(rom_fs);
@@ -326,7 +326,8 @@ namespace eka2l1 {
 
     system_impl::system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
         arm_emulator_type jit_type)
-        : jit_type(jit_type), parent(parent) {
+        : jit_type(jit_type)
+        , parent(parent) {
         gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
     }
 
@@ -349,7 +350,7 @@ namespace eka2l1 {
         if (!startup_inited) {
             for (auto &startup_app : startup_apps) {
                 uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app));
-                
+
                 kern.run_process(process);
             }
 
@@ -401,7 +402,7 @@ namespace eka2l1 {
 #ifdef ENABLE_SCRIPTING
             mngr.get_script_manager()->call_reschedules();
 #endif
-            
+
             kern.reschedule();
 
             reschedule_pending = false;
@@ -432,7 +433,7 @@ namespace eka2l1 {
             io.remove_filesystem(*rom_fs_id);
         }
 
-        file_system_inst rom_fs = create_rom_filesystem(&romf, &mem, 
+        file_system_inst rom_fs = create_rom_filesystem(&romf, &mem,
             get_symbian_version_use());
 
         rom_fs_id = io.add_filesystem(rom_fs);
@@ -456,7 +457,7 @@ namespace eka2l1 {
         exit = false;
     }
 
-    void system_impl::mount(drive_number drv, const drive_media media, std::string path, 
+    void system_impl::mount(drive_number drv, const drive_media media, std::string path,
         const io_attrib attrib) {
         io.mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
     }
@@ -486,7 +487,7 @@ namespace eka2l1 {
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
 
-        for (auto & [ name, op ] : bool_configs) {
+        for (auto &[name, op] : bool_configs) {
             emitter << YAML::Key << name << YAML::Value << op;
         }
 
@@ -555,12 +556,10 @@ namespace eka2l1 {
         const std::vector<uint32_t> &include_uids) {
         return true;
     }
-    
+
     system::system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
         arm_emulator_type jit_type)
-        : impl(std::make_shared<system_impl>(this, debugger, graphics_driver, jit_type))
-    {
-        
+        : impl(std::make_shared<system_impl>(this, debugger, graphics_driver, jit_type)) {
     }
 
     bool system::get_bool_config(const std::string name) {
@@ -602,7 +601,7 @@ namespace eka2l1 {
     uint32_t system::load(uint32_t id) {
         return impl->load(id);
     }
-    
+
     int system::loop() {
         return impl->loop();
     }
@@ -668,7 +667,7 @@ namespace eka2l1 {
         const io_attrib attrib) {
         return impl->mount(drv, media, path, attrib);
     }
-    
+
     void system::reset() {
         return impl->reset();
     }
@@ -705,7 +704,7 @@ namespace eka2l1 {
     hal_ptr system::get_hal(uint32_t category) {
         return impl->get_hal(category);
     }
-    
+
     void system::do_state(common::chunkyseri &seri) {
         return impl->do_state(seri);
     }

@@ -86,7 +86,7 @@ namespace eka2l1 {
     };
 
     using breakpoint_map = std::map<std::uint32_t, breakpoint>;
-        
+
     class gdbstub {
         int gdbserver_socket = -1;
 
@@ -136,7 +136,7 @@ namespace eka2l1 {
         breakpoint_map &get_breakpoint_map(breakpoint_type type);
 
         void remove_breakpoint(breakpoint_type type, std::uint32_t addr);
-        
+
         void send_packet(const char packet);
         void send_reply(const char *reply);
         void send_signal(thread_ptr thread, std::uint32_t signal, bool full = true);
@@ -156,11 +156,9 @@ namespace eka2l1 {
 
     public:
         explicit gdbstub()
-            : server_enabled(false)
-        {
-            
+            : server_enabled(false) {
         }
-        
+
         /**
          * Set the port the gdbstub should use to listen for connections.
          *
@@ -200,7 +198,7 @@ namespace eka2l1 {
         /// Read and handle packet from gdb client.
         void handle_packet();
 
-        breakpoint_address get_next_breakpoint_from_addr(std::uint32_t addr, 
+        breakpoint_address get_next_breakpoint_from_addr(std::uint32_t addr,
             breakpoint_type type);
 
         /**

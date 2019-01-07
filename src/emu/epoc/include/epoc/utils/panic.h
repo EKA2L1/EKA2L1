@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <optional>
+#include <string>
 
 namespace eka2l1::epoc {
     /*! \brief Intialize the panic descriptions. 

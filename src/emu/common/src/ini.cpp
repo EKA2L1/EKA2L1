@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/ini.h>
-#include <common/dynamicfile.h>
 #include <common/cvt.h>
+#include <common/dynamicfile.h>
+#include <common/ini.h>
 
 #include <cstring>
 #include <fstream>
@@ -30,7 +30,7 @@ namespace eka2l1::common {
     ini_node_ptr ini_section::find(const char *name) {
         const std::size_t len = strlen(name);
 
-        for (auto node: nodes) {
+        for (auto node : nodes) {
             if (strncmp(name, node->name(), len) == 0) {
                 return node;
             }
@@ -46,7 +46,7 @@ namespace eka2l1::common {
     bool ini_section::node_exists(const char *name) {
         const std::size_t len = strlen(name);
 
-        for (auto node: nodes) {
+        for (auto node : nodes) {
             if (strncmp(name, node->name(), len) == 0) {
                 return true;
             }
@@ -54,7 +54,7 @@ namespace eka2l1::common {
 
         return false;
     }
-    
+
     ini_section *ini_section::create_section(const char *name) {
         if (node_exists(name)) {
             return nullptr;
@@ -65,11 +65,11 @@ namespace eka2l1::common {
 
         ini_section *new_sec = &(*section);
         nodes.push_back(std::move(section));
-        
+
         return new_sec;
     }
 
-    // Note that an empty key will still be saved 
+    // Note that an empty key will still be saved
     ini_pair *ini_section::create_pair(const char *key) {
         if (node_exists(key)) {
             return nullptr;
@@ -80,12 +80,12 @@ namespace eka2l1::common {
 
         ini_pair *new_pair = &(*pair);
         nodes.push_back(std::move(pair));
-        
+
         return new_pair;
     }
 
-    std::size_t ini_section::get(const char *key, 
-        std::uint32_t *val, int count, std::uint32_t default_val, int *error_code) {        
+    std::size_t ini_section::get(const char *key,
+        std::uint32_t *val, int count, std::uint32_t default_val, int *error_code) {
         ini_node_ptr node = find(key);
 
         if (!node) {
@@ -95,13 +95,13 @@ namespace eka2l1::common {
 
         std::shared_ptr<ini_pair> pair = std::reinterpret_pointer_cast<ini_pair>(node);
 
-        error_code ? (*error_code= 0) : 0;
+        error_code ? (*error_code = 0) : 0;
         return pair->get(val, count, default_val);
     }
 
-    std::size_t ini_section::get(const char *key, 
+    std::size_t ini_section::get(const char *key,
         bool *val, int count, bool default_val, int *error_code) {
-            ini_node_ptr node = find(key);
+        ini_node_ptr node = find(key);
 
         if (!node) {
             error_code ? (*error_code = -1) : 0;
@@ -110,7 +110,7 @@ namespace eka2l1::common {
 
         std::shared_ptr<ini_pair> pair = std::reinterpret_pointer_cast<ini_pair>(node);
 
-        error_code ? (*error_code= 0) : 0;
+        error_code ? (*error_code = 0) : 0;
         return pair->get(val, count, default_val);
     }
 
@@ -124,7 +124,7 @@ namespace eka2l1::common {
 
         std::shared_ptr<ini_pair> pair = std::reinterpret_pointer_cast<ini_pair>(node);
 
-        error_code ? (*error_code= 0) : 0;
+        error_code ? (*error_code = 0) : 0;
         return pair->get(val);
     }
 
@@ -160,7 +160,7 @@ namespace eka2l1::common {
         values.assign(vals.begin(), vals.end());
         return true;
     }
-    
+
     std::size_t ini_pair::get(std::uint32_t *val, int count, std::uint32_t default_val) {
         std::size_t success_translation = 0;
         values.resize(count);
@@ -203,7 +203,8 @@ namespace eka2l1::common {
         int counter;
 
         explicit ini_linestream(const std::string &l)
-            : line(l), counter(0) {
+            : line(l)
+            , counter(0) {
             if (line.back() == '\r') {
                 line.erase(line.length() - 1, 1);
             }
@@ -240,14 +241,14 @@ namespace eka2l1::common {
         }
     };
 
-    int ini_file::load(const char *path){
+    int ini_file::load(const char *path) {
         common::dynamic_ifile ifile(path);
 
         if (ifile.fail()) {
             return -1;
         }
 
-        ini_section *sec = reinterpret_cast<ini_section*>(this);
+        ini_section *sec = reinterpret_cast<ini_section *>(this);
         std::string line;
 
         while (ifile.getline(line)) {
@@ -265,7 +266,7 @@ namespace eka2l1::common {
                     sec = create_section(first_token.c_str());
                 } else {
                     ini_pair *pair = sec->create_pair(first_token.c_str());
-                    
+
                     while (!stream.eof()) {
                         pair->values.push_back(stream.next_string());
                     }

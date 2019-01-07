@@ -21,8 +21,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/time.h>
 #include <chrono>
+#include <common/time.h>
 
 namespace eka2l1::common {
     std::uint64_t get_current_time_in_microseconds_since_1ad() {

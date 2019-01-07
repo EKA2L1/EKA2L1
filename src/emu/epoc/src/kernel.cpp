@@ -24,17 +24,17 @@
 
 #include <arm/arm_interface.h>
 
+#include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <common/chunkyseri.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
-#include <epoc/mem.h>
 #include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/scheduler.h>
 #include <epoc/kernel/thread.h>
 #include <epoc/loader/romimage.h>
+#include <epoc/mem.h>
 #include <epoc/ptr.h>
 #include <epoc/services/posix/posix.h>
 #include <epoc/vfs.h>
@@ -95,7 +95,7 @@ namespace eka2l1 {
     }
 
     uint32_t kernel_system::spawn_new_process(const std::string &path, const std::string &name,
-		kernel::owner_type owner) {
+        kernel::owner_type owner) {
         std::u16string path16 = common::utf8_to_ucs2(path);
         symfile f = io->open_file(path16, READ_MODE | BIN_MODE);
 
@@ -422,7 +422,7 @@ namespace eka2l1 {
         SYNCHRONIZE_ACCESS;
 
         auto obj_ite = std::find_if(objects.begin(), objects.end(), [=](kernel_obj_ptr &obj2) {
-            return obj && obj2 && (obj2->unique_id() == obj->unique_id());   
+            return obj && obj2 && (obj2->unique_id() == obj->unique_id());
         });
 
         if (obj_ite != objects.end()) {
@@ -496,7 +496,7 @@ namespace eka2l1 {
 
     thread_ptr kernel_system::get_thread_by_name(const std::string &name) {
         SYNCHRONIZE_ACCESS;
-        
+
         auto thr_find = std::find_if(objects.begin(), objects.end(),
             [&](auto &obj) {
                 if (obj && obj->get_object_type() == kernel::object_type::thread && obj->name() == name) {
@@ -556,10 +556,10 @@ namespace eka2l1 {
 
     std::vector<process_ptr> kernel_system::get_process_list() {
         std::vector<process_ptr> processes;
-        
+
         SYNCHRONIZE_ACCESS;
 
-        for (const auto &obj: objects) {
+        for (const auto &obj : objects) {
             if (obj && obj->get_object_type() == kernel::object_type::process) {
                 processes.push_back(std::reinterpret_pointer_cast<kernel::process>(obj));
             }
@@ -766,21 +766,21 @@ namespace eka2l1 {
     }
 
     void kernel_system::do_state_of(common::chunkyseri &seri, const kernel::object_type t) {
-        for (auto &o: objects) {
+        for (auto &o : objects) {
             if (o->get_object_type() == t) {
                 o->do_state(seri);
             }
         }
     }
-    
+
     struct kernel_info {
-        std::uint32_t total_chunks {0};
-        std::uint32_t total_mutex {0};
-        std::uint32_t total_semaphore {0};
-        std::uint32_t total_thread {0};
-        std::uint32_t total_timer {0};
-        std::uint32_t total_prop {0};
-        std::uint32_t total_process {0};
+        std::uint32_t total_chunks{ 0 };
+        std::uint32_t total_mutex{ 0 };
+        std::uint32_t total_semaphore{ 0 };
+        std::uint32_t total_thread{ 0 };
+        std::uint32_t total_timer{ 0 };
+        std::uint32_t total_prop{ 0 };
+        std::uint32_t total_process{ 0 };
 
         kernel_info() {}
     };
@@ -795,7 +795,7 @@ namespace eka2l1 {
         kernel_info info;
 
         if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-            for (const auto &obj: objects) {
+            for (const auto &obj : objects) {
                 switch (obj->get_object_type()) {
                 case kernel::object_type::process: {
                     info.total_process++;
@@ -847,7 +847,7 @@ namespace eka2l1 {
         seri.absorb(info.total_thread);
         seri.absorb(info.total_timer);
         seri.absorb(info.total_prop);
-        
+
         // First, loading all the neccessary info first
         // Create placeholder object
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
@@ -865,12 +865,12 @@ namespace eka2l1 {
                 auto c = std::make_shared<kernel::mutex>(this, timing);
                 objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
             }
-            
+
             for (std::uint32_t i = 0; i < info.total_semaphore; i++) {
                 auto c = std::make_shared<kernel::semaphore>(this);
                 objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
             }
-            
+
             for (std::uint32_t i = 0; i < info.total_thread; i++) {
                 auto c = std::make_shared<kernel::thread>(this, mem, timing);
                 objects.push_back(std::reinterpret_pointer_cast<kernel::kernel_obj>(std::move(c)));
@@ -880,7 +880,7 @@ namespace eka2l1 {
         auto do_state_base_kernel_obj_for_type = [&](kernel::object_type obj, std::uint32_t max_count) {
             std::uint32_t count = 0;
 
-            for (auto &o: objects) {
+            for (auto &o : objects) {
                 if (o->get_object_type() == kernel::object_type::process) {
                     o->kernel_obj::do_state(seri);
                     count++;

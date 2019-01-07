@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <common/queue.h>
 #include <arm/arm_factory.h>
+#include <common/queue.h>
 
 #include <algorithm>
 #include <functional>

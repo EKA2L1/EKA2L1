@@ -26,7 +26,7 @@
 
 namespace eka2l1 {
     class memory_system;
-    
+
     namespace kernel {
         class process;
     }
@@ -54,13 +54,12 @@ namespace eka2l1 {
         }
 
         T *get(process_ptr pr) {
-            return reinterpret_cast<T*>(
+            return reinterpret_cast<T *>(
                 get_raw_pointer(pr, mem_address));
         }
 
         T *get(memory_system *mem) const {
-            return reinterpret_cast<T*>(mem->
-                get_real_pointer(mem_address));
+            return reinterpret_cast<T *>(mem->get_real_pointer(mem_address));
         }
 
         void reset() {
@@ -89,4 +88,3 @@ namespace eka2l1 {
         }
     };
 }
-

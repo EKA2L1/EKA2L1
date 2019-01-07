@@ -46,7 +46,7 @@
 #include <mutex>
 
 namespace eka2l1 {
-    #define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
+#define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
 
     class timing_system;
     class memory_system;
@@ -124,11 +124,13 @@ namespace eka2l1 {
         uint32_t next_uid() const;
 
         explicit kernel_system()
-            : uid_counter(0), libmngr(nullptr),
-              io(nullptr), sys(nullptr), mem(nullptr),
-              mngr(nullptr), timing(nullptr)
-        {
-            
+            : uid_counter(0)
+            , libmngr(nullptr)
+            , io(nullptr)
+            , sys(nullptr)
+            , mem(nullptr)
+            , mngr(nullptr)
+            , timing(nullptr) {
         }
 
         memory_system *get_memory_system() {
@@ -266,7 +268,7 @@ namespace eka2l1 {
         bool run_process(uint32_t handle);
 
         uint32_t spawn_new_process(const std::string &path, const std::string &name,
-			kernel::owner_type owner = kernel::owner_type::kernel);
+            kernel::owner_type owner = kernel::owner_type::kernel);
 
         uint32_t spawn_new_process(uint32_t uid, kernel::owner_type owner = kernel::owner_type::kernel);
 

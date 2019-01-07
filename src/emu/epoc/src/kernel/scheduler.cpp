@@ -20,10 +20,10 @@
 #include <algorithm>
 #include <common/log.h>
 #include <epoc/kernel.h>
-#include <epoc/mem.h>
-#include <epoc/timing.h>
 #include <epoc/kernel/scheduler.h>
 #include <epoc/kernel/thread.h>
+#include <epoc/mem.h>
+#include <epoc/timing.h>
 #include <functional>
 
 static void wake_thread(uint64_t ud, int cycles_late);
@@ -102,8 +102,7 @@ namespace eka2l1 {
             }
 
             if (crr && crr->current_state() == thread_state::run) {
-                if (ready_threads.top()->current_real_priority() <= 
-                    crr->current_real_priority()) {
+                if (ready_threads.top()->current_real_priority() <= crr->current_real_priority()) {
                     return crr;
                 }
 
@@ -125,8 +124,7 @@ namespace eka2l1 {
 
         // Put the thread into the ready queue to run in the next core timing yeid
         bool thread_scheduler::schedule(thread_ptr thr) {
-            if (thr->state == thread_state::run || thr->state == thread_state::ready || 
-                thr->state == thread_state::hold_mutex_pending) {
+            if (thr->state == thread_state::run || thr->state == thread_state::ready || thr->state == thread_state::hold_mutex_pending) {
                 return false;
             }
 
@@ -151,14 +149,14 @@ namespace eka2l1 {
             waiting_threads.push_back(thr);
 
             // Schedule the thread to be waken up
-            timing->schedule_event(sl_time, wakeup_evt, 
+            timing->schedule_event(sl_time, wakeup_evt,
                 timing->us_to_cycles(reinterpret_cast<uint64_t>(thr.get())));
 
             return true;
         }
 
         void thread_scheduler::unschedule_wakeup() {
-            timing->unschedule_event(wakeup_evt, 
+            timing->unschedule_event(wakeup_evt,
                 reinterpret_cast<std::uint64_t>(crr_thread.get()));
         }
 

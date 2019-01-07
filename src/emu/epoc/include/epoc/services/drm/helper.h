@@ -26,7 +26,7 @@
 #include <epoc/services/server.h>
 
 namespace eka2l1 {
-    class drm_helper_server: public service::server {
+    class drm_helper_server : public service::server {
     public:
         explicit drm_helper_server(eka2l1::system *sys);
     };

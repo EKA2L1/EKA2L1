@@ -25,19 +25,19 @@
 
 #include <string.h>
 
-namespace eka2l1::common {    
+namespace eka2l1::common {
     void chunkyseri::absorb_impl(std::uint8_t *dat, const std::size_t s) {
         switch (mode) {
-        case SERI_MODE_MESAURE: 
+        case SERI_MODE_MESAURE:
             break;
-        
+
         case SERI_MODE_WRITE: {
-            memcpy(reinterpret_cast<void*>(buf), reinterpret_cast<const void*>(dat), s);
+            memcpy(reinterpret_cast<void *>(buf), reinterpret_cast<const void *>(dat), s);
             break;
         }
 
         case SERI_MODE_READ: {
-            memcpy(reinterpret_cast<void*>(dat), reinterpret_cast<const void *>(buf), s);
+            memcpy(reinterpret_cast<void *>(dat), reinterpret_cast<const void *>(buf), s);
             break;
         }
 
@@ -50,16 +50,16 @@ namespace eka2l1::common {
 
     bool chunkyseri::expect(const std::uint8_t *dat, const std::size_t s) {
         switch (mode) {
-        case SERI_MODE_MESAURE: 
+        case SERI_MODE_MESAURE:
             break;
-        
+
         case SERI_MODE_WRITE: {
-            memcpy(reinterpret_cast<void*>(buf), reinterpret_cast<const void*>(dat), s);
+            memcpy(reinterpret_cast<void *>(buf), reinterpret_cast<const void *>(dat), s);
             break;
         }
 
         case SERI_MODE_READ: {
-            if (memcmp(reinterpret_cast<const void*>(dat), reinterpret_cast<const void *>(buf), s) != 0) {
+            if (memcmp(reinterpret_cast<const void *>(dat), reinterpret_cast<const void *>(buf), s) != 0) {
                 return false;
             }
 
@@ -76,24 +76,24 @@ namespace eka2l1::common {
 
     void chunkyseri::absorb(std::string &dat) {
         std::uint32_t s = static_cast<std::uint32_t>(dat.size());
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&s), sizeof(std::uint32_t));
+        absorb_impl(reinterpret_cast<std::uint8_t *>(&s), sizeof(std::uint32_t));
 
         if (mode == SERI_MODE_READ) {
             dat.resize(s);
         }
 
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat[0]), s);
+        absorb_impl(reinterpret_cast<std::uint8_t *>(&dat[0]), s);
     }
 
     void chunkyseri::absorb(std::u16string &dat) {
         std::uint32_t s = static_cast<std::uint32_t>(dat.size());
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&s), sizeof(std::uint32_t));
+        absorb_impl(reinterpret_cast<std::uint8_t *>(&s), sizeof(std::uint32_t));
 
         if (mode == SERI_MODE_READ) {
             dat.resize(s);
         }
 
-        absorb_impl(reinterpret_cast<std::uint8_t*>(&dat[0]), s * 2);
+        absorb_impl(reinterpret_cast<std::uint8_t *>(&dat[0]), s * 2);
     }
 
     bool chunkyseri::do_marker(const std::string &name, std::uint16_t cookie) {
@@ -112,7 +112,7 @@ namespace eka2l1::common {
         const std::int16_t ver) {
         std::int16_t found_ver = ver;
 
-        if (expect(reinterpret_cast<const std::uint8_t*>(&name[0]), name.length())) {
+        if (expect(reinterpret_cast<const std::uint8_t *>(&name[0]), name.length())) {
             absorb(found_ver);
 
             if (found_ver < ver_min || found_ver > ver) {

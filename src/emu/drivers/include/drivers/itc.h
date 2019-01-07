@@ -23,12 +23,12 @@
 #include <common/vecx.h>
 
 #include <atomic>
-#include <cstdint>
 #include <condition_variable>
+#include <cstdint>
 #include <memory>
 #include <mutex>
-#include <string>
 #include <optional>
+#include <string>
 
 namespace eka2l1::drivers {
     /*! \brief A context to communicate between client and EKA2L1's driver
@@ -48,7 +48,7 @@ namespace eka2l1::drivers {
                 return std::optional<T>{};
             }
 
-            T ret = *(reinterpret_cast<T*>(&data[0]));
+            T ret = *(reinterpret_cast<T *>(&data[0]));
             data.erase(0, sizeof(T));
 
             return ret;
@@ -59,7 +59,7 @@ namespace eka2l1::drivers {
         */
         template <typename T>
         void push(const T val) {
-            data.append(reinterpret_cast<const char*>(&val), sizeof(val));
+            data.append(reinterpret_cast<const char *>(&val), sizeof(val));
         }
 
         void push_string(const std::string val) {
@@ -110,12 +110,12 @@ namespace eka2l1::drivers {
                    finished its job (work queue done), notfy all threads
         */
         void sync_with_driver();
-        
+
         void lock_driver_from_process();
         void unlock_driver_from_process();
     };
 
-    class graphics_driver_client: public driver_client {
+    class graphics_driver_client : public driver_client {
     public:
         graphics_driver_client() {}
 

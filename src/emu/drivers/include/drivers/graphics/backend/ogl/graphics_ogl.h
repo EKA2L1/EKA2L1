@@ -34,22 +34,22 @@ namespace eka2l1::drivers {
         std::uint32_t id;
         ogl_framebuffer fb;
 
-        eka2l1::vec2    pos;
-        std::uint16_t   pri;
+        eka2l1::vec2 pos;
+        std::uint16_t pri;
 
-        bool visible { false };
+        bool visible{ false };
 
         explicit ogl_window(const eka2l1::vec2 &size, const std::uint16_t pri,
             bool visible = false);
 
-        bool operator < (const ogl_window &rhs) {
+        bool operator<(const ogl_window &rhs) {
             return pri < rhs.pri;
         }
     };
 
     using ogl_window_ptr = std::shared_ptr<ogl_window>;
 
-    class ogl_graphics_driver: public graphics_driver {
+    class ogl_graphics_driver : public graphics_driver {
         ogl_framebuffer framebuffer;
         ImGuiContext *context;
 

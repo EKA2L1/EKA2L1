@@ -32,7 +32,7 @@ namespace eka2l1 {
     namespace kernel {
         change_notifier::change_notifier(kernel_system *kern)
             : eka2l1::kernel::kernel_obj(kern, "changenotifier" + common::to_string(eka2l1::random()),
-                  kernel::access_type::local_access) {
+                kernel::access_type::local_access) {
             obj_type = object_type::change_notifier;
         }
 
@@ -76,8 +76,7 @@ namespace eka2l1 {
             seri.absorb(request_status.ptr_address());
 
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                requester = std::reinterpret_pointer_cast<kernel::thread>
-                    (kern->get_kernel_obj_by_id(requester_id));
+                requester = std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(requester_id));
             }
         }
     }

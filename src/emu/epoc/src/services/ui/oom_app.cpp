@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/ui/oom_app.h>
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
+#include <epoc/services/ui/oom_app.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>
@@ -29,7 +29,7 @@
 #include <epoc/vfs.h>
 
 namespace eka2l1 {
-    oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys) 
+    oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys)
         : service::server(sys, "101fdfae_10207218_AppServer", true) {
         REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
         REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
@@ -38,20 +38,19 @@ namespace eka2l1 {
 
     std::string oom_ui_app_server::get_layout_buf() {
         akn_layout_config akn_config;
-        
+
         akn_config.num_screen_mode = static_cast<int>(scr_config.modes.size());
         // TODO: Find out what this really does
         akn_config.num_hardware_mode = 0;
 
         // Static check on those pointer
         akn_config.screen_modes = sizeof(akn_layout_config);
-        akn_config.hardware_infos = sizeof(akn_layout_config) + 
-            sizeof(akn_screen_mode_info) * akn_config.num_screen_mode;
+        akn_config.hardware_infos = sizeof(akn_layout_config) + sizeof(akn_screen_mode_info) * akn_config.num_screen_mode;
 
         std::string result;
-        result.append(reinterpret_cast<char*>(&akn_config), sizeof(akn_layout_config));
+        result.append(reinterpret_cast<char *>(&akn_config), sizeof(akn_layout_config));
 
-        for (std::size_t i = 0 ; i < scr_config.modes.size(); i++) {
+        for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
             akn_screen_mode_info mode_info;
 
             // TODO: Change this based on user settings
@@ -62,14 +61,14 @@ namespace eka2l1 {
             mode_info.info.pixel_size = scr_config.modes[i].size;
             mode_info.info.twips_size = mode_info.info.pixel_size * twips_mul;
 
-            result.append(reinterpret_cast<char*>(&mode_info), sizeof(akn_screen_mode_info));
+            result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));
         }
 
         // TODO: Hardware mode
 
         return result;
     }
-    
+
     void oom_ui_app_server::load_screen_mode() {
         io_system *io = sys->get_io_system();
         std::optional<eka2l1::drive> drv;
@@ -102,7 +101,7 @@ namespace eka2l1 {
         if (err != 0) {
             LOG_ERROR("Loading wsini file broke with code {}", err);
         }
-        
+
         std::string screen_key = "SCREEN0";
         auto screen_node = ws_config.find(screen_key.c_str());
 
@@ -118,9 +117,8 @@ namespace eka2l1 {
             std::string screen_mode_width_key = "SCR_WIDTH";
             screen_mode_width_key += std::to_string(total_mode + 1);
 
-            common::ini_node_ptr mode_width = screen_node->
-                get_as<common::ini_section>()->find(screen_mode_width_key.c_str());
-            
+            common::ini_node_ptr mode_width = screen_node->get_as<common::ini_section>()->find(screen_mode_width_key.c_str());
+
             if (!mode_width) {
                 break;
             }
@@ -128,27 +126,25 @@ namespace eka2l1 {
             std::string screen_mode_height_key = "SCR_HEIGHT";
             screen_mode_height_key += std::to_string(total_mode + 1);
 
-            common::ini_node_ptr mode_height = screen_node->
-                get_as<common::ini_section>()->find(screen_mode_height_key.c_str());
+            common::ini_node_ptr mode_height = screen_node->get_as<common::ini_section>()->find(screen_mode_height_key.c_str());
 
             total_mode++;
 
-            epoc::config::screen_mode   scr_mode;
+            epoc::config::screen_mode scr_mode;
             scr_mode.screen_number = 0;
             scr_mode.mode_number = total_mode;
 
-            mode_width->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.x),
+            mode_width->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.x),
                 1, 0);
-            mode_height->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t*>(&scr_mode.size.y),
+            mode_height->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.y),
                 1, 0);
-            
+
             std::string screen_mode_rot_key = "SCR_ROTATION";
             screen_mode_rot_key += std::to_string(total_mode);
 
-            common::ini_node_ptr mode_rot = screen_node->
-                get_as<common::ini_section>()->find(screen_mode_rot_key.c_str());
+            common::ini_node_ptr mode_rot = screen_node->get_as<common::ini_section>()->find(screen_mode_rot_key.c_str());
 
-            mode_rot->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t*>(&scr_mode.rotation),
+            mode_rot->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.rotation),
                 1, 0);
 
             scr_config.modes.push_back(scr_mode);
@@ -172,12 +168,12 @@ namespace eka2l1 {
             load_screen_mode();
         }
 
-        ctx.write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&layout_buf[0]), 
+        ctx.write_arg_pkg(0, reinterpret_cast<std::uint8_t *>(&layout_buf[0]),
             static_cast<std::uint32_t>(layout_buf.size()));
 
         ctx.set_request_status(KErrNone);
     }
-    
+
     void oom_ui_app_server::set_sgc_params(service::ipc_context ctx) {
         auto params_op = ctx.get_arg_packed<epoc::sgc_params>(0);
 

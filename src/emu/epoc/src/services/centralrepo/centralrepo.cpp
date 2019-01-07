@@ -1,6 +1,6 @@
 #include <common/algorithm.h>
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 #include <epoc/services/centralrepo/centralrepo.h>
 
@@ -10,7 +10,7 @@
 
 namespace eka2l1 {
     // TODO: Security check. This include reading keyspace file (.cre) to get policies
-    // information and reading capabilities section    
+    // information and reading capabilities section
     bool indentify_central_repo_entry_var_type(const std::string &tok, central_repo_entry_type &t) {
         if (tok == "int") {
             t = central_repo_entry_type::integer;

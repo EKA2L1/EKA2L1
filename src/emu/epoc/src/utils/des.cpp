@@ -21,8 +21,8 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
-#include <epoc/utils/des.h>
 #include <epoc/kernel/process.h>
+#include <epoc/utils/des.h>
 
 #include <common/log.h>
 
@@ -31,12 +31,15 @@ namespace eka2l1::epoc {
         des_type dtype = get_descriptor_type();
 
         switch (dtype) {
-        case buf_const: case ptr_const: {
+        case buf_const:
+        case ptr_const: {
             return get_length();
         }
 
-        case buf: case ptr: case ptr_to_buf: {
-            auto *base = reinterpret_cast<des<std::uint8_t>*>(this);
+        case buf:
+        case ptr:
+        case ptr_to_buf: {
+            auto *base = reinterpret_cast<des<std::uint8_t> *>(this);
             return base->max_length;
         }
 
@@ -47,7 +50,7 @@ namespace eka2l1::epoc {
 
         return 0;
     }
-    
+
     void desc_base::set_length(eka2l1::process_ptr pr, const std::uint32_t new_len) {
         des_type dtype = get_descriptor_type();
 
@@ -55,7 +58,7 @@ namespace eka2l1::epoc {
             const std::uint32_t max_len = get_max_length(pr);
 
             if (new_len > max_len) {
-                LOG_ERROR("Length being set greater than maximum (max {} vs set {})", 
+                LOG_ERROR("Length being set greater than maximum (max {} vs set {})",
                     max_len, new_len);
             }
         }
@@ -64,13 +67,13 @@ namespace eka2l1::epoc {
 
         if (dtype == ptr_to_buf) {
             // We need to set the length inside.
-            ptr_des<std::uint8_t>     *pbuf = reinterpret_cast<decltype(pbuf)>(this);
-            buf_desc<std::uint8_t>    *hbufc = pbuf->data.cast<buf_desc<std::uint8_t>>().get(pr);
+            ptr_des<std::uint8_t> *pbuf = reinterpret_cast<decltype(pbuf)>(this);
+            buf_desc<std::uint8_t> *hbufc = pbuf->data.cast<buf_desc<std::uint8_t>>().get(pr);
 
             hbufc->set_length(pr, new_len);
         }
     }
-    
+
     void *desc_base::get_pointer_raw(eka2l1::process_ptr pr) {
         des_type dtype = get_descriptor_type();
 
@@ -96,13 +99,13 @@ namespace eka2l1::epoc {
         }
 
         case ptr_to_buf: {
-            ptr_des<std::uint8_t>     *pbuf = reinterpret_cast<decltype(pbuf)>(this);
-            buf_desc<std::uint8_t>    *hbufc = pbuf->data.cast<buf_desc<std::uint8_t>>().get(pr);
+            ptr_des<std::uint8_t> *pbuf = reinterpret_cast<decltype(pbuf)>(this);
+            buf_desc<std::uint8_t> *hbufc = pbuf->data.cast<buf_desc<std::uint8_t>>().get(pr);
 
             return &(hbufc->data[0]);
         }
 
-        default: 
+        default:
             break;
         }
 

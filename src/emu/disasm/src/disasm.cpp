@@ -21,8 +21,8 @@
 #include <common/log.h>
 #include <common/types.h>
 
-#include <disasm/disasm.h>
 #include <capstone/capstone.h>
+#include <disasm/disasm.h>
 
 #include <functional>
 #include <memory>
@@ -78,4 +78,3 @@ namespace eka2l1 {
         return out.str();
     }
 }
-

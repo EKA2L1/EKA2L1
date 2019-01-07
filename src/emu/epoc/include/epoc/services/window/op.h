@@ -12,12 +12,12 @@
 //
 // Description:
 // Command numbers and structures for client to window server communications.
-// 
+//
 //
 
 #pragma once
 
-enum TWservMessages{
+enum TWservMessages {
     EWservMessCommandBuffer,
     EWservMessShutdown,
     EWservMessInit,
@@ -353,7 +353,7 @@ enum TWsGcOpcodes {
 };
 
 enum TWsAnimDllOpcode {
-    EWsAnimDllOpCreateInstance=0x0000,
+    EWsAnimDllOpCreateInstance = 0x0000,
     EWsAnimDllOpCommand,
     EWsAnimDllOpCommandReply,
     EWsAnimDllOpDestroyInstance,
@@ -362,7 +362,7 @@ enum TWsAnimDllOpcode {
 };
 
 enum TWsWindowOpcodes {
-    EWsWinOpFree=0x0000,
+    EWsWinOpFree = 0x0000,
     EWsWinOpSetExtent,
     EWsWinOpSetExtentErr,
     EWsWinOpOrdinalPosition,
@@ -441,7 +441,7 @@ enum TWsWindowOpcodes {
     EWsWinOpEnablePointerMoveBuffer,
     EWsWinOpDisablePointerMoveBuffer,
     EWsWinOpRetrievePointerMoveBuffer,
-    EWsWinOpDiscardPointerMoveBuffer,		//Tested to here %%%
+    EWsWinOpDiscardPointerMoveBuffer, //Tested to here %%%
     EWsWinOpEnableModifierChangedEvents,
     EWsWinOpDisableModifierChangedEvents,
     EWsWinOpEnableErrorMessages,
@@ -452,7 +452,7 @@ enum TWsWindowOpcodes {
     EWsWinOpEnableBackup,
     EWsWinOpIdentifier,
     EWsWinOpDisableKeyClick,
-    EWsWinOpSetFade=EWsWinOpDisableKeyClick+3,	//Two messages removed
+    EWsWinOpSetFade = EWsWinOpDisableKeyClick + 3, //Two messages removed
     EWsWinOpSetNonFading,
     EWsWinOpFadeBehind,
     EWsWinOpEnableScreenChangeEvents,
@@ -476,7 +476,7 @@ enum TWsWindowOpcodes {
     EWsWinOpSetTransparencyFactor,
     EWsWinOpSetTransparencyBitmap,
     EWsWinOpAllowChildWindowGroup,
-    EWsWinOpSetTransparencyBitmapCWs, 
+    EWsWinOpSetTransparencyBitmapCWs,
     EWsWinOpEnableVisibilityChangeEvents,
     EWsWinOpDisableVisibilityChangeEvents,
     EWsWinOpSetTransparencyAlphaChannel,
@@ -492,25 +492,25 @@ enum TWsWindowOpcodes {
     EWsWinOpSetChildGroup,
     EWsWinOpClientHandle,
     EWsWinOpSetBackgroundSurface,
-    EWsWinOpKeyColor=EWsWinOpSetBackgroundSurface+2, 	//One message removed
-    EWsWinOpSetBackgroundSurfaceConfig=EWsWinOpKeyColor+5,	//Four messages removed
-    EWsWinOpRemoveBackgroundSurface=EWsWinOpSetBackgroundSurfaceConfig+2,	//One message removed
-    EWsWinOpGetBackgroundSurfaceConfig=EWsWinOpRemoveBackgroundSurface+2,	//One message removed
-    EWsWinOpClearRedrawStore=EWsWinOpGetBackgroundSurfaceConfig+2,	//One message removed
+    EWsWinOpKeyColor = EWsWinOpSetBackgroundSurface + 2, //One message removed
+    EWsWinOpSetBackgroundSurfaceConfig = EWsWinOpKeyColor + 5, //Four messages removed
+    EWsWinOpRemoveBackgroundSurface = EWsWinOpSetBackgroundSurfaceConfig + 2, //One message removed
+    EWsWinOpGetBackgroundSurfaceConfig = EWsWinOpRemoveBackgroundSurface + 2, //One message removed
+    EWsWinOpClearRedrawStore = EWsWinOpGetBackgroundSurfaceConfig + 2, //One message removed
     EWsWinOpScreenNumber,
     EWsWinOpEnableAdvancedPointers,
-    #ifdef SYMBIAN_GRAPHICS_WSERV_QT_EFFECTS	
+#ifdef SYMBIAN_GRAPHICS_WSERV_QT_EFFECTS
     EWsWinOpSetSurfaceTransparency,
-    #endif
+#endif
     EWsWinOpSetPurpose,
     EWsWinOpSendEffectCommand,
     EWsWinOpOverrideEffectBuf,
     EWsWinOpOverrideEffectIPC,
-    EWsWinOpTestLowPriorityRedraw=0x2000,  //Specific opcode for testing redraw queue priorities
+    EWsWinOpTestLowPriorityRedraw = 0x2000, //Specific opcode for testing redraw queue priorities
 };
 
 enum TWsClickOpcodes {
-    EWsClickOpFree=0x0000,
+    EWsClickOpFree = 0x0000,
     EWsClickOpIsLoaded,
     EWsClickOpUnLoad,
     EWsClickOpLoad,

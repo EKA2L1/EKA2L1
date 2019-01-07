@@ -44,7 +44,7 @@ namespace eka2l1::common {
          * String will be set to empty if the line is empty or file failed 
         */
         bool getline(std::string &line);
-        
+
         /* ! \brief Read a line to u16string
          *
          * String will be set to empty if the line is empty or file failed 

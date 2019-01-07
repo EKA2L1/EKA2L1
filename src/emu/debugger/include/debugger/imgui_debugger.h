@@ -19,8 +19,8 @@
  */
 
 #include <atomic>
-#include <cstdint>
 #include <condition_variable>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 
@@ -32,13 +32,13 @@ namespace eka2l1 {
     class system;
     struct imgui_logger;
 
-    class imgui_debugger: public debugger_base {
+    class imgui_debugger : public debugger_base {
         system *sys;
 
         bool should_show_threads;
         bool should_show_mutexs;
         bool should_show_chunks;
-        
+
         bool should_pause;
         bool should_stop;
         bool should_load_state;
@@ -76,8 +76,7 @@ namespace eka2l1 {
             return should_stop;
         }
 
-        void show_debugger(std::uint32_t width, std::uint32_t height
-            , std::uint32_t fb_width, std::uint32_t fb_height) override;
+        void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
 
         void wait_for_debugger() override;
         void notify_clients() override;

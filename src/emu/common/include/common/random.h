@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <random>
 #include <limits>
+#include <random>
 
 /*! \brief Namespace contains all emulator code. */
 namespace eka2l1 {
@@ -29,12 +29,12 @@ namespace eka2l1 {
 	 *
 	 * \returns The random number generated.
 	*/
-	uint32_t random();
-	
-	/*! \brief Generate a random unsigned 32 bit number, in a range.
+    uint32_t random();
+
+    /*! \brief Generate a random unsigned 32 bit number, in a range.
      *
      * \param beg, end The range to generate number in.
      * \returns The random number generated.
-    */	 
+    */
     uint32_t random_range(uint32_t beg, uint32_t end);
 }

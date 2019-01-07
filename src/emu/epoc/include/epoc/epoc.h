@@ -39,7 +39,7 @@ namespace eka2l1 {
     class memory_system;
     class manager_system;
     class kernel_system;
-    
+
     namespace hle {
         class lib_manager;
     }
@@ -81,12 +81,12 @@ namespace eka2l1 {
         // TODO: Make unique
         std::shared_ptr<system_impl> impl;
 
-    public:    
-        system(const system&) = delete;
-        system& operator=(const system&) = delete;
+    public:
+        system(const system &) = delete;
+        system &operator=(const system &) = delete;
 
-        system(system&&) = delete;
-        system& operator=(system&&) = delete;
+        system(system &&) = delete;
+        system &operator=(system &&) = delete;
 
         system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
             arm_emulator_type jit_type = arm_emulator_type::unicorn);
@@ -106,12 +106,12 @@ namespace eka2l1 {
 
         void init();
         uint32_t load(uint32_t id);
-        
+
         int loop();
         void shutdown();
- 
+
         void do_state(common::chunkyseri &seri);
-       
+
         manager_system *get_manager_system();
         memory_system *get_memory_system();
         kernel_system *get_kernel_system();

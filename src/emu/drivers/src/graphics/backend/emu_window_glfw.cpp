@@ -1,15 +1,18 @@
-#include <drivers/graphics/backend/emu_window_glfw.h>
 #include <common/log.h>
 #include <common/raw_bind.h>
+#include <drivers/graphics/backend/emu_window_glfw.h>
 
-#define CALL_IF_VALID(_a, ...) if (_a) {_a( __VA_ARGS__ );}
+#define CALL_IF_VALID(_a, ...) \
+    if (_a) {                  \
+        _a(__VA_ARGS__);       \
+    }
 
-void char_callback(GLFWwindow* window, unsigned int c) {
+void char_callback(GLFWwindow *window, unsigned int c) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
     CALL_IF_VALID(win->char_hook, c);
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
     if (action == GLFW_PRESS) {
@@ -21,18 +24,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
+void mouse_callback(GLFWwindow *window, int button, int action, int mods) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
     if (button != GLFW_MOUSE_BUTTON_LEFT) {
         return;
     }
 
-    double x; double y;
+    double x;
+    double y;
     glfwGetCursorPos(window, &x, &y);
 
-    int but_map = (button == GLFW_MOUSE_BUTTON_LEFT) ? 0 : 
-        ((button == GLFW_MOUSE_BUTTON_RIGHT) ? 1 : 2);
+    int but_map = (button == GLFW_MOUSE_BUTTON_LEFT) ? 0 : ((button == GLFW_MOUSE_BUTTON_RIGHT) ? 1 : 2);
 
     int but_action = (action == GLFW_PRESS) ? 0 : ((action == GLFW_REPEAT) ? 1 : 2);
 
@@ -40,11 +43,9 @@ void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
 
     if (action == GLFW_PRESS) {
         CALL_IF_VALID(win->touch_pressed, eka2l1::point(x, y));
-    }
-    else if (action == GLFW_REPEAT) {
+    } else if (action == GLFW_REPEAT) {
         CALL_IF_VALID(win->touch_move, eka2l1::point(x, y));
-    }
-    else {
+    } else {
         CALL_IF_VALID(win->touch_released);
     }
 }
@@ -54,7 +55,7 @@ void mouse_wheel_callback(GLFWwindow *window, double xoff, double yoff) {
     CALL_IF_VALID(win->mouse_wheeling, eka2l1::vec2(xoff, yoff));
 }
 
-void fb_resize_callback(GLFWwindow* window, int width, int height) {
+void fb_resize_callback(GLFWwindow *window, int width, int height) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
     CALL_IF_VALID(win->resize_hook, eka2l1::vec2(width, height));

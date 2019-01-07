@@ -129,8 +129,9 @@ namespace eka2l1 {
             virtual void disconnect(service::ipc_context ctx);
 
             virtual void on_unhandled_opcode(service::ipc_context ctx) {}
+
         public:
-            server(system *sys, const std::string name, bool hle = false, 
+            server(system *sys, const std::string name, bool hle = false,
                 bool unhandle_callback_enable = false);
 
             void attach(session *svse) {
@@ -151,7 +152,7 @@ namespace eka2l1 {
             /*! Cancel a message in the delivered queue */
             int cancel();
 
-            void receive_async_lle(eka2l1::ptr<epoc::request_status> request_status, 
+            void receive_async_lle(eka2l1::ptr<epoc::request_status> request_status,
                 eka2l1::ptr<message2> data);
 
             void cancel_async_lle();

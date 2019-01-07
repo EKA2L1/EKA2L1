@@ -19,11 +19,11 @@
  */
 
 #include <epoc/kernel.h>
-#include <epoc/kernel/object_ix.h>
 #include <epoc/kernel/chunk.h>
+#include <epoc/kernel/object_ix.h>
 
-#include <common/log.h>
 #include <common/chunkyseri.h>
+#include <common/log.h>
 
 #include <algorithm>
 
@@ -60,7 +60,7 @@ namespace eka2l1 {
             return info;
         }
 
-       std::uint32_t object_ix::make_handle(size_t index) {
+        std::uint32_t object_ix::make_handle(size_t index) {
             std::uint32_t handle = 0;
 
             handle |= next_instance << 16;
@@ -145,15 +145,14 @@ namespace eka2l1 {
 
             if (info.object_ix_index < objects.size()) {
                 kernel_obj_ptr obj = objects[info.object_ix_index].object;
-                
+
                 if (!obj) {
                     return -1;
                 }
 
                 obj->decrease_access_count();
 
-                if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process &&
-                    obj->get_object_type() != object_type::thread) {
+                if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process && obj->get_object_type() != object_type::thread) {
                     if (obj->get_object_type() == object_type::chunk) {
                         chunk_ptr c = std::reinterpret_pointer_cast<kernel::chunk>(obj);
 
@@ -179,7 +178,6 @@ namespace eka2l1 {
             , next_instance(0)
             , uid(kern->next_uid()) {}
 
-    
         void object_ix::do_state(common::chunkyseri &seri) {
             auto s = seri.section("ObjectIx", 1);
 

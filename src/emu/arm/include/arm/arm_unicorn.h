@@ -88,7 +88,7 @@ namespace eka2l1 {
 
             arm_unicorn(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
                 disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
-                
+
             ~arm_unicorn();
 
             void run() override;

@@ -55,15 +55,14 @@ namespace eka2l1::epoc {
         }
 
         for (auto &cache : cache_maps) {
-            auto res = std::find(cache.second.loader.begin(), 
+            auto res = std::find(cache.second.loader.begin(),
                 cache.second.loader.end(), pr);
 
             // If this image is owned to the current process
             if (res != cache.second.loader.end()) {
                 if (cache.second.img->header.uid1 != loader::e32_img_type::exe) {
                     entries.push_back(cache.second.img->header.entry_point + cache.second.img->rt_code_addr);
-                }
-                else {
+                } else {
                     exe_addr = cache.second.img->header.entry_point + cache.second.img->rt_code_addr;
                 }
             }
@@ -77,13 +76,13 @@ namespace eka2l1::epoc {
     std::optional<std::u16string> get_dll_full_path(eka2l1::system *sys, const std::uint32_t addr) {
         hle::lib_manager &mngr = *sys->get_lib_manager();
 
-        for (const auto & [ id, imgwr ] : mngr.get_romimgs_cache()) {
+        for (const auto &[id, imgwr] : mngr.get_romimgs_cache()) {
             if (imgwr.img->header.entry_point == addr) {
                 return imgwr.full_path;
             }
         }
-        
-        for (const auto & [ id, imgwr ] : mngr.get_e32imgs_cache()) {
+
+        for (const auto &[id, imgwr] : mngr.get_e32imgs_cache()) {
             if (imgwr.img->header.entry_point + imgwr.img->rt_code_addr == addr) {
                 return imgwr.full_path;
             }
@@ -91,26 +90,26 @@ namespace eka2l1::epoc {
 
         return std::optional<std::u16string>{};
     }
-    
+
     address get_exception_descriptor_addr(eka2l1::system *sys, address runtime_addr) {
         hle::lib_manager *manager = sys->get_lib_manager();
         auto &e32map = manager->get_e32imgs_cache();
 
-        for (const auto &e32imginf: e32map) {
+        for (const auto &e32imginf : e32map) {
             const loader::e32img_ptr &e32img = e32imginf.second.img;
 
             if (e32img->rt_code_addr <= runtime_addr && e32img->rt_code_addr + e32img->header.code_size >= runtime_addr) {
                 if (e32img->has_extended_header && (e32img->header_extended.exception_des & 1)) {
                     return e32img->rt_code_addr + e32img->header_extended.exception_des - 1;
                 }
-                
+
                 return 0;
             }
         }
 
         // Look for ROM exception descriptor
         auto &rommap = manager->get_romimgs_cache();
-        for (const auto &romimginf: rommap) {
+        for (const auto &romimginf : rommap) {
             const loader::romimg_ptr &romimg = romimginf.second.img;
 
             if (romimg->header.code_address <= runtime_addr && romimg->header.code_address + romimg->header.code_size >= runtime_addr) {

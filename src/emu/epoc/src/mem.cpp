@@ -98,8 +98,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return static_cast<void *>(current_page_table->get_pointers()[addr / page_size] +
-            addr % page_size);
+        return static_cast<void *>(current_page_table->get_pointers()[addr / page_size] + addr % page_size);
     }
 
     // Create a new chunk with specified address. Return base of chunk
@@ -221,12 +220,12 @@ namespace eka2l1 {
 
         page holder;
 
-        auto ite = std::search_n(std::reverse_iterator<page*>(page_end),
-            std::reverse_iterator<page*>(page_begin), page_count, holder, [](const page &lhs, const page &rhs) {
-            return (lhs.sts == page_status::free);
-        });
+        auto ite = std::search_n(std::reverse_iterator<page *>(page_end),
+            std::reverse_iterator<page *>(page_begin), page_count, holder, [](const page &lhs, const page &rhs) {
+                return (lhs.sts == page_status::free);
+            });
 
-        if (ite == std::reverse_iterator<page*>(page_begin)) {
+        if (ite == std::reverse_iterator<page *>(page_begin)) {
             return ptr<void>(0);
         }
 
@@ -245,8 +244,7 @@ namespace eka2l1 {
     // Change the prot of pages
     int memory_system::change_prot(ptr<void> addr, uint32_t size, prot nprot) {
         uint32_t beg = addr.ptr_address() / page_size;
-        uint32_t end = (addr.ptr_address() + 
-            static_cast<uint32_t>(size) - 1 + page_size) / page_size;
+        uint32_t end = (addr.ptr_address() + static_cast<uint32_t>(size) - 1 + page_size) / page_size;
 
         uint32_t count = end - beg;
 
@@ -414,7 +412,7 @@ namespace eka2l1 {
             }
 
             if (page_begin->sts == page_status::committed) {
-                cpu->unmap_memory(static_cast<address>(addr.ptr_address() + std::distance(page_begin_org, page_begin) * page_size), 
+                cpu->unmap_memory(static_cast<address>(addr.ptr_address() + std::distance(page_begin_org, page_begin) * page_size),
                     page_size);
             }
 
@@ -591,8 +589,7 @@ namespace eka2l1 {
             current_page_table->pages[rom_addr / page_size] = rom_page;
 
             for (size_t i = 1; i < common::align(rom_size, page_size) / page_size; i++) {
-                current_page_table->get_pointers()[(rom_addr / page_size) + i] = 
-                    current_page_table->get_pointers()[(rom_addr / page_size) + i - 1] + page_size;
+                current_page_table->get_pointers()[(rom_addr / page_size) + i] = current_page_table->get_pointers()[(rom_addr / page_size) + i - 1] + page_size;
 
                 current_page_table->pages[(rom_addr / page_size) + i] = rom_page;
             }
@@ -603,7 +600,7 @@ namespace eka2l1 {
                 if (previous_page_table->get_pointers()[i] && previous_page_table->pages[i].sts == page_status::committed) {
                     cpu->unmap_memory(i * page_size, page_size);
                 }
-                
+
                 if (current_page_table->get_pointers()[i] && current_page_table->pages[i].sts == page_status::committed) {
                     cpu->map_backing_mem(i * page_size, page_size, current_page_table->get_pointers()[i],
                         current_page_table->pages[i].page_protection);

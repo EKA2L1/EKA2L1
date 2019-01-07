@@ -21,8 +21,8 @@
 #include <epoc/services/loader/loader.h>
 #include <epoc/services/loader/op.h>
 
-#include <epoc/utils/des.h>
 #include <epoc/kernel.h>
+#include <epoc/utils/des.h>
 
 #include <epoc/epoc.h>
 #include <epoc/vfs.h>
@@ -38,8 +38,8 @@
 
 #include <common/algorithm.h>
 
-#include <e32err.h>
 #include <cwctype>
+#include <e32err.h>
 
 namespace eka2l1 {
     void loader_server::load_process(eka2l1::service::ipc_context ctx) {
@@ -59,14 +59,14 @@ namespace eka2l1 {
         }
 
         std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
-        
+
         LOG_TRACE("Trying to summon: {}", name_process);
 
         std::u16string pext = path_extension(*process_name16);
 
         if (pext.empty()) {
             // Just append it
-            *process_name16 += u".exe";    
+            *process_name16 += u".exe";
         }
 
         auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
@@ -93,7 +93,7 @@ namespace eka2l1 {
 
                 ctx.set_request_status(KErrNone);
                 return;
-            } 
+            }
 
             LOG_ERROR("Can't found or load process executable: {}", name_process);
 
@@ -197,8 +197,7 @@ namespace eka2l1 {
 
     void loader_server::get_info(service::ipc_context ctx) {
         std::optional<utf16_str> lib_name = ctx.get_arg<utf16_str>(1);
-        epoc::des8 *buffer =
-            eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
+        epoc::des8 *buffer = eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 
         if (!lib_name || !buffer) {
             ctx.set_request_status(KErrArgument);
@@ -284,7 +283,7 @@ namespace eka2l1 {
             ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
         } else {
             ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info2));
-        } 
+        }
 
         ctx.write_arg_pkg<epoc::ldr_info>(0, load_info);
         ctx.set_request_status(KErrNone);

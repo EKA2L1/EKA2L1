@@ -30,7 +30,7 @@ namespace eka2l1 {
         // arm_xemitter emitter;
         // hle::lib_manager *libmngr = ctx.sys->get_lib_manager();
         // address append_func = libmngr->get_func_addr("ID_OF_EUSER_RARRAYBASE_APPEND");
-        // 
+        //
         // alloc global memory feature
         // emitter.PUSH() -- Preserve all registers
         //
@@ -45,7 +45,7 @@ namespace eka2l1 {
 
         ctx.set_request_status(KErrNone);
     }
-    
+
     sa_server::sa_server(eka2l1::system *sys)
         : service::server(sys, "SAServer", true) {
         REGISTER_IPC(sa_server, unk_op1, 1001, "SaServer::UnkOp1");

@@ -38,4 +38,3 @@ namespace eka2l1 {
         data_dumper->set_start_off(start_off);
     }
 }
-

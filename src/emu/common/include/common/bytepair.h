@@ -43,7 +43,7 @@ namespace eka2l1 {
             BYTEPAIR_PAGE_SIZE = 4096
         };
 
-		/*! \brief A read-only bytepair stream. */
+        /*! \brief A read-only bytepair stream. */
         class ibytepair_stream {
             std::shared_ptr<std::istream> compress_stream;
 
@@ -66,36 +66,35 @@ namespace eka2l1 {
             ibytepair_stream(std::shared_ptr<std::istream> stream);
             ibytepair_stream(std::string path, uint32_t start);
 
-			/*! \brief Get the index table */
+            /*! \brief Get the index table */
             index_table table() const;
 
-			/*! \brief Seek forward the stream */
+            /*! \brief Seek forward the stream */
             void seek_fwd(size_t size);
 
-			/*! \brief Read the index table
+            /*! \brief Read the index table
 			 *
 			 * Bytepair compressed data always has a header (index table), that tells us the uncompressed size
 			 * and each bytepair page's size.
 			*/
             void read_table();
-			
-			/*! \brief Read a page.
+
+            /*! \brief Read a page.
 			 *
 			 *  \param page The page index
 			 *  \param size The page size
 			*/
             uint32_t read_page(char *dest, uint32_t page, size_t size);
-            
-			/*! \brief Read all available pages.
+
+            /*! \brief Read all available pages.
 			 *
 			 *  \param dest The destination to write decompressed data to 
 			 *  \param size The destination size 
 			*/
-			uint32_t read_pages(char *dest, size_t size);
+            uint32_t read_pages(char *dest, size_t size);
 
-			/*! \brief Get all the pages's offsets */
+            /*! \brief Get all the pages's offsets */
             std::vector<uint32_t> page_offsets(uint32_t initial_off);
         };
     }
 }
-

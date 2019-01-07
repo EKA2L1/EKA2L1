@@ -49,7 +49,7 @@ namespace eka2l1::loader {
         std::uint32_t flags;
         std::uint16_t size_of_largest_resource_when_uncompressed;
 
-	protected:
+    protected:
         bool do_decompress(symfile f);
         void read_header_and_resource_index(symfile f);
 

@@ -6,12 +6,14 @@
 #include <string>
 
 namespace eka2l1::drivers {
-    class ogl_shader: public shader {
+    class ogl_shader : public shader {
         std::uint32_t program;
-    public:
-        ogl_shader() : program(0) {}
 
-        explicit ogl_shader(const std::string &vert_path, 
+    public:
+        ogl_shader()
+            : program(0) {}
+
+        explicit ogl_shader(const std::string &vert_path,
             const std::string &frag_path);
 
         explicit ogl_shader(const char *vert_data, const std::size_t vert_size,

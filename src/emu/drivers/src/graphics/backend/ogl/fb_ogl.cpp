@@ -66,7 +66,7 @@ namespace eka2l1::drivers {
     void ogl_framebuffer::resize(const vec2 &s) {
         size = s;
         bind();
-        
+
         texture.change_size(vec3(size.x, size.y, 0));
 
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
@@ -76,8 +76,8 @@ namespace eka2l1::drivers {
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             LOG_INFO("Framebuffer not complete!");
         }
-        
-        unbind(); 
+
+        unbind();
     }
 
     std::vector<std::uint8_t> ogl_framebuffer::data(std::size_t stride_pixels) {

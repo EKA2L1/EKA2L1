@@ -1,5 +1,5 @@
-#include <manager/sis_v1_installer.h>
 #include <epoc/loader/sis_old.h>
+#include <manager/sis_v1_installer.h>
 
 #include <common/cvt.h>
 #include <common/flate.h>

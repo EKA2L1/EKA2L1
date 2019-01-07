@@ -27,7 +27,7 @@ namespace eka2l1 {
      *
      *  Allows you to send SMS securely using protection.
     */
-    class sa_server: public service::server {
+    class sa_server : public service::server {
     private:
         void unk_op1(service::ipc_context context);
 

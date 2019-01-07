@@ -44,4 +44,3 @@ namespace eka2l1 {
             disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger, arm_emulator_type arm_type);
     }
 }
-

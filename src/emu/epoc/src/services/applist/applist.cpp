@@ -117,13 +117,13 @@ namespace eka2l1 {
         cap.is_hidden = false;
         cap.launch_in_background = false;
         cap.group_name = u"gamers";
-        
+
         if (ctx.sys->get_symbian_version_use() < epocver::epoc93) {
             // EKA1, we should check if app is DLL
             // TODO: more proper way to check
             manager::package_manager *pkg_mngr = ctx.sys->get_manager_system()->get_package_manager();
             std::string app_path = pkg_mngr->get_app_executable_path(app_uid);
-        
+
             if (eka2l1::path_extension(app_path) == ".app") {
                 cap.flags |= apa_capability::built_as_dll;
                 cap.flags |= apa_capability::non_native;

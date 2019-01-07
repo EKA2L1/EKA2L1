@@ -25,20 +25,20 @@
 #include <arm/arm_unicorn.h>
 #include <arm/arm_utils.h>
 
-#include <epoc/epoc.h>
 #include <epoc/configure.h>
+#include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
 #endif
 
-#include <epoc/timing.h>
 #include <disasm/disasm.h>
-#include <gdbstub/gdbstub.h>
 #include <epoc/kernel/libmanager.h>
-#include <manager/manager.h>
 #include <epoc/ptr.h>
+#include <epoc/timing.h>
+#include <gdbstub/gdbstub.h>
+#include <manager/manager.h>
 
 #include <unicorn/unicorn.h>
 
@@ -103,8 +103,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
     jit->save_context(context_debug);
 
-    bool enable_breakpoint_script = 
-        jit->get_lib_manager()->get_sys()->get_bool_config("enable_breakpoint_script");
+    bool enable_breakpoint_script = jit->get_lib_manager()->get_sys()->get_bool_config("enable_breakpoint_script");
 
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
@@ -130,7 +129,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         }
     }
 
-    if (log_code) {        
+    if (log_code) {
         const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
         size_t buffer_size = eka2l1::common::GB(4) - address;
         bool thumb = thumb_mode(uc);
@@ -253,7 +252,7 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        arm_unicorn::arm_unicorn(kernel_system *kern, timing_system *sys, manager_system *mngr, 
+        arm_unicorn::arm_unicorn(kernel_system *kern, timing_system *sys, manager_system *mngr,
             memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
             : timing(sys)
             , mem(mem)
@@ -315,8 +314,7 @@ namespace eka2l1 {
                             (get_cpsr() & 0x20) ? 2 : 4, get_pc(),
                             (get_cpsr() & 0x20) ? true : false);
 
-                        LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (get_cpsr() & 0x20) ?
-                            mem->read<std::uint16_t>(get_pc()) : mem->read<std::uint32_t>(get_pc()));
+                        LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (get_cpsr() & 0x20) ? mem->read<std::uint16_t>(get_pc()) : mem->read<std::uint32_t>(get_pc()));
                     }
 
                     if (mem->get_real_pointer(get_lr() - get_lr() % 2)) {
@@ -325,7 +323,7 @@ namespace eka2l1 {
                             get_lr() % 2 != 0 ? 2 : 4, get_lr() - get_lr() % 2,
                             get_lr() % 2 != 0 ? true : false);
 
-                        LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, 
+                        LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst,
                             get_lr() % 2 != 0 ? mem->read<std::uint16_t>(get_lr() - get_lr() % 2) : mem->read<std::uint32_t>(get_lr() - get_lr() % 2));
                     }
 
@@ -355,7 +353,7 @@ namespace eka2l1 {
 
                     if (last_breakpoint_hit && stub->get_cpu_step_flag()) {
                         last_breakpoint_hit = false;
-                        
+
                         stub->break_exec();
                         stub->send_trap_gdb(crr_thread, 5);
                     }

@@ -20,15 +20,15 @@
 
 #pragma once
 
-#include <drivers/graphics/fb.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
+#include <drivers/graphics/fb.h>
 
 #include <common/vecx.h>
 
 #include <cstdint>
 
 namespace eka2l1::drivers {
-    class ogl_framebuffer: public framebuffer {
+    class ogl_framebuffer : public framebuffer {
         std::uint32_t fbo;
         std::uint32_t rbo;
 

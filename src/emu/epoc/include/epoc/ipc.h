@@ -94,7 +94,7 @@ namespace eka2l1 {
         int function;
         ipc_arg args;
         session_ptr msg_session;
-        int session_ptr_lle = 0;    // This should be null because the server check for it
+        int session_ptr_lle = 0; // This should be null because the server check for it
 
         eka2l1::ptr<epoc::request_status> request_sts;
 

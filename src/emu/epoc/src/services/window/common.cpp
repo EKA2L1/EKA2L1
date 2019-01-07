@@ -21,12 +21,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/common.h>
 #include <common/time.h>
+#include <epoc/services/window/common.h>
 
 namespace eka2l1::epoc {
     // TODO: Use emulated time
     event::event(const std::uint32_t handle, event_code evt_code)
-        : handle(handle), type(evt_code), time(common::get_current_time_in_microseconds_since_1ad()) {
+        : handle(handle)
+        , type(evt_code)
+        , time(common::get_current_time_in_microseconds_since_1ad()) {
     }
 }

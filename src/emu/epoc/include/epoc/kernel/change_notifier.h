@@ -10,7 +10,7 @@
 
 namespace eka2l1 {
     class kernel_system;
-    
+
     namespace kernel {
         class thread;
     }

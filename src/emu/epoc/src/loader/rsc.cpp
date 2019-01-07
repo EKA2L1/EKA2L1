@@ -51,7 +51,7 @@ namespace eka2l1::loader {
 
         case 0x101F5010: {
             flags |= (potentially_have_compressed_unicode_data | dictionary_compressed);
-            
+
             f->seek(17, eka2l1::file_seek_mode::beg);
             f->read_file(&size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
                 1);

@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/virtualmem.h>
 #include <common/platform.h>
+#include <common/virtualmem.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -42,7 +42,7 @@ namespace eka2l1::common {
 #endif
     }
 
-    bool  unmap_memory(void *ptr, const std::size_t size) {
+    bool unmap_memory(void *ptr, const std::size_t size) {
 #if EKA2L1_PLATFORM(WIN32)
         const auto result = VirtualFree(ptr, 0, MEM_RELEASE);
 
@@ -62,7 +62,7 @@ namespace eka2l1::common {
 #if EKA2L1_PLATFORM(WIN32)
         DWORD oldprot = 0;
 
-        const auto res = VirtualAlloc(ptr, size, MEM_COMMIT, 
+        const auto res = VirtualAlloc(ptr, size, MEM_COMMIT,
             translate_protection(commit_prot));
 
         if (!res) {
@@ -111,7 +111,7 @@ namespace eka2l1::common {
 
         return true;
     }
-    
+
     bool is_memory_wx_exclusive() {
 #if EKA2L1_PLATFORM(UWP) || EKA2L1_PLATFORM(IOS)
         return true;
@@ -119,7 +119,7 @@ namespace eka2l1::common {
         return false;
 #endif
     }
-    
+
     int get_host_page_size() {
 #if EKA2L1_PLATFORM(WIN32)
         SYSTEM_INFO system_info = {};

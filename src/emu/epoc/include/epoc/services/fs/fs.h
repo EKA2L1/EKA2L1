@@ -123,8 +123,7 @@ namespace eka2l1 {
         EDriveZ
     };
 
-    enum class extended_fs_query_command
-    {
+    enum class extended_fs_query_command {
         file_system_sub_type,
         io_param_info,
         is_drive_sync,
@@ -231,7 +230,7 @@ namespace eka2l1 {
         void delete_entry(service::ipc_context ctx);
 
         void set_should_notify_failure(service::ipc_context ctx);
-        
+
         void connect(service::ipc_context ctx) override;
 
         std::unordered_map<uint32_t, fs_node> file_nodes;

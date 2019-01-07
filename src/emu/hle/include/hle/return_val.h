@@ -25,13 +25,13 @@
 
 namespace eka2l1 {
     namespace hle {
-		/*! \brief Writing the return value to r0. 
+        /*! \brief Writing the return value to r0. 
 		 * \param cpu The CPU.
 		*/
         template <typename ret>
         void write_return_value(arm::jitter &cpu, ret r);
 
-		/*! \brief Writing the return value to r0. 
+        /*! \brief Writing the return value to r0. 
 		 * \param cpu The CPU.
 		*/
         template <typename pointee>
@@ -39,7 +39,7 @@ namespace eka2l1 {
             write_return_value(cpu, ret.ptr_address());
         }
 
-		/*! \brief Reading the return value in r0. 
+        /*! \brief Reading the return value in r0. 
 		 * \param cpu The CPU.
 		*/
         template <typename ret>

@@ -24,54 +24,54 @@
 #pragma once
 
 namespace eka2l1 {
-	enum class central_repo_srv_request {
-		init,
-		create_int,
-		create_real,
-		create_string,
-		delet,
-		get_int,
-		set_int,
-		get_string,
-		set_string,
-		find,
-		find_eq_int,
-		find_rq_real,
-		find_eq_string,
-		find_neq_int,
-		find_neq_real,
-		find_neq_string,
-		get_find_res,
-		notify_req_check,
-		notify_req,
-		notify_cancel,
-		notify_cancel_all,
-		group_nof_req,
-		group_nof_cancel,
-		reset,
-		reset_all,
-		transaction_start,
-		transaction_commit,
-		transaction_cancel,
-		move,
-		transaction_state,
-		transaction_fail,
-		delete_range,
-		get_meta,
-		close
-	};
+    enum class central_repo_srv_request {
+        init,
+        create_int,
+        create_real,
+        create_string,
+        delet,
+        get_int,
+        set_int,
+        get_string,
+        set_string,
+        find,
+        find_eq_int,
+        find_rq_real,
+        find_eq_string,
+        find_neq_int,
+        find_neq_real,
+        find_neq_string,
+        get_find_res,
+        notify_req_check,
+        notify_req,
+        notify_cancel,
+        notify_cancel_all,
+        group_nof_req,
+        group_nof_cancel,
+        reset,
+        reset_all,
+        transaction_start,
+        transaction_commit,
+        transaction_cancel,
+        move,
+        transaction_state,
+        transaction_fail,
+        delete_range,
+        get_meta,
+        close
+    };
 
     enum {
-		CENTRAL_REPO_UID = 0x10202be9
-	};
+        CENTRAL_REPO_UID = 0x10202be9
+    };
 
-	enum class central_repo_entry_type {
-		none,
-		integer,
-		real,
-		string8,
-		string16
-	};
+    enum class central_repo_entry_type {
+        none,
+        integer,
+        real,
+        string8,
+        string16
+    };
 
     constexpr int cenrep_pma_ver = 3;
 }

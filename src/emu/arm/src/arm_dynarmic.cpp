@@ -25,9 +25,9 @@
 #include <arm/arm_utils.h>
 #include <disasm/disasm.h>
 #include <epoc/kernel.h>
+#include <epoc/kernel/libmanager.h>
 #include <epoc/mem.h>
 #include <epoc/timing.h>
-#include <epoc/kernel/libmanager.h>
 
 #include <gdbstub/gdbstub.h>
 
@@ -42,11 +42,9 @@ namespace eka2l1 {
             using coproc_reg = Dynarmic::A32::CoprocReg;
 
             explicit arm_dynarmic_cp15() {
-
             }
 
             ~arm_dynarmic_cp15() override {
-
             }
 
             std::optional<Callback> CompileInternalOperation(bool two, unsigned opc1, coproc_reg CRd,
@@ -83,7 +81,6 @@ namespace eka2l1 {
                 return std::nullopt;
             }
         };
-
 
         class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
             arm_dynarmic &parent;
@@ -548,7 +545,7 @@ namespace eka2l1 {
         void arm_dynarmic::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
             for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
                 page_dyn[vaddr / mem->get_page_size() + i] = ptr + i * mem->get_page_size();
-			}
+            }
 
             // fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
         }

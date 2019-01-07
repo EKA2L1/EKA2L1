@@ -18,7 +18,9 @@ namespace eka2l1::common {
 
     class codeblock_common {
     public:
-        codeblock_common() : region(nullptr), region_size(0) {}
+        codeblock_common()
+            : region(nullptr)
+            , region_size(0) {}
         virtual ~codeblock_common() {}
 
         bool is_in_space(const std::uint8_t *ptr) {
@@ -41,7 +43,7 @@ namespace eka2l1::common {
         size_t region_size;
     };
 
-    template<class T> 
+    template <class T>
     class codeblock : public codeblock_common, public T {
     private:
         codeblock(const codeblock &) = delete;
@@ -52,8 +54,9 @@ namespace eka2l1::common {
         virtual void poision_memory(int offset) = 0;
 
     public:
-        codeblock() : writeStart_(nullptr) {}
-        virtual ~codeblock() { 
+        codeblock()
+            : writeStart_(nullptr) {}
+        virtual ~codeblock() {
             if (region) {
                 free_codespace();
             }
@@ -63,7 +66,7 @@ namespace eka2l1::common {
         void alloc_codespace(int size) {
             region_size = size;
             // The protection will be set to RW if PlatformIsWXExclusive.
-            region = (std::uint8_t*)map_memory(region_size);
+            region = (std::uint8_t *)map_memory(region_size);
             T::set_code_pointer(region);
         }
 
