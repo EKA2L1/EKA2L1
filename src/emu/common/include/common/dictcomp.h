@@ -40,15 +40,15 @@ namespace eka2l1::common {
         int num_bits_used_for_dict_tokens;
         int off_beg;    ///< Begin offset in bit
         int off_cur;    ///< End offset in bit
-        int size;       ///< Size in bit
+        int off_end;
         bool owns_bit_buffer;
 
         std::uint8_t *buffer;
 
-        // ???
+        // Check if the current bit the stream pointing to is 1
         bool is_cur_bit_on();
 
-        explicit dictcomp(std::uint8_t *buf, const int off_beg, const int size,
+        explicit dictcomp(std::uint8_t *buf, const int off_beg, const int off_end,
             const int num_bits_used_for_dict_tokens);
 
         /*! \brief Calculate the size of the buffer, when finish decompressing
@@ -61,6 +61,8 @@ namespace eka2l1::common {
         */
         int read_int(int num_bit);
 
-        bool read(std::uint8_t *dest, const int dest_size, const bool calypso);
+        int index_of_current_directory_entry();
+
+        bool read(std::uint8_t *dest, int &dest_size, const bool calypso);
     };
 }

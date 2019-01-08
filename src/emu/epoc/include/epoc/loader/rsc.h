@@ -31,7 +31,7 @@
 #include <common/buffer.h>
 
 namespace eka2l1 {
-    class file;
+    struct file;
     using symfile = std::shared_ptr<file>;
 }
 
@@ -45,20 +45,35 @@ namespace eka2l1::loader {
 
         int     num_dir_entry = 0;
 
-        std::uint16_t res_index_offset = 0;
+        std::uint16_t dict_offset;
+        std::uint16_t dict_index_offset;
+        std::uint16_t res_offset;
+        std::uint16_t res_index_offset;
 
         enum {
             potentially_have_compressed_unicode_data = 0x1000,
             dictionary_compressed = 0x2000,
-            calypso = 0x4000
+            calypso = 0x40000,
+            third_uid_offset = 0x8000,
+            generate_rss_sig_for_first_user_res = 0x10000,
+            first_res_generated_bit_array_of_res_contains_compressed_unicode = 0x20000
         };
 
         std::uint32_t flags;
         std::uint16_t size_of_largest_resource_when_uncompressed;
 
+        std::vector<std::uint8_t> unicode_flag_array;
+        std::vector<std::uint8_t> res_data;
+
+        std::vector<std::uint16_t> resource_offsets;
+        std::vector<std::uint16_t> dict_offsets;
+
     protected:
         bool do_decompress(symfile f);
         void read_header_and_resource_index(symfile f);
+
+        bool is_resource_contains_unicode(int res_id, bool first_rsc_is_gen);
+        int decompress(symfile f, std::uint8_t *buffer, int max, int res_index);
 
     public:
         explicit rsc_file_read_stream(symfile f, bool *success = nullptr);

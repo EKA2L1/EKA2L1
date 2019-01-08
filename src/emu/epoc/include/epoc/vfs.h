@@ -163,6 +163,9 @@ namespace eka2l1 {
         virtual bool resize(const std::size_t new_size) = 0;
 
         virtual bool flush();
+
+        std::uint32_t read_file(const std::uint64_t offset, void *buf, std::uint32_t size, 
+            std::uint32_t count);
     };
 
     using symfile = std::shared_ptr<file>;

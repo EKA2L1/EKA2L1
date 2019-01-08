@@ -29,7 +29,16 @@ namespace eka2l1::common {
     bool dictcomp::is_cur_bit_on() {
         return buffer[off_cur / 8] & (1 << (off_cur) % 8);
     }
-    
+
+    int dictcomp::index_of_current_directory_entry() {
+        if (is_cur_bit_on()) {
+            ++off_cur;
+            return read_int(num_bits_used_for_dict_tokens);
+        }
+
+        return -1;
+    }
+
     int dictcomp::read_int(int num_bit) {
         int result = 0;
 
@@ -111,7 +120,7 @@ namespace eka2l1::common {
         return num_bytes_to_read;
     }
 
-    bool dictcomp::read(std::uint8_t *dest, const int dest_size, const bool calypso) {
+    bool dictcomp::read(std::uint8_t *dest, int &dest_size, const bool calypso) {
         // These size in bytes
         int size = calculate_decompress_size(calypso, false);
         int *dest_i = reinterpret_cast<int*>(dest);

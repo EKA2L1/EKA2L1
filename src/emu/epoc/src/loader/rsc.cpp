@@ -24,6 +24,9 @@
 #include <epoc/loader/rsc.h>
 #include <epoc/vfs.h>
 
+#include <common/dictcomp.h>
+#include <stack>
+
 namespace eka2l1::loader {
     /*
        The header format should be readed like this:
@@ -33,17 +36,139 @@ namespace eka2l1::loader {
           * 0x101f5010: This will potentially contains compressed unicode data + will be compressed using dictionary algroithm
        - If it doesn't fall into 2 of these types, discard all of these read result.
        - Read the first 2 bytes, if it's equals to 4 than it is fallen into a format called "Calypso" and dictionary compressed.
+
+        Calypso:
+            - 0 size = 2: Magic (4)
+            - 2 size = 2: Number of resources in this file
+            - 4 size = 1: unk1
+            - 5 size = 1: unk2
+            - 6 size = 2: Offset of resource index
+            - 8 size = 2: Size of largest resource when decompress
+
+        Normal:
+            - 0 size = 12: 3 UID
+            - 12 size = 4: UID?
+            - 16 Size = 1: Flags 
+              + 0x80: third uid = offset
+              + 0x40: RSS signature is generated for first resource.
+              + 0x20: First resource is a bit array containings information telling us if a specific resource
+                      has Unicode compressed in its data or not.
+            - 17 Size = 2: size of largest resource when decompress
+            - 19: 
+               * Compressed: size = 2: resource data offset
+               * Potientially contains Unicode compressed: Unicode bit array
+            
+            - 21:
+              If the first resource not containing the bits array that indicates the appearance of Unicode compressed data in other resource,
+                the next *number_of_resource* butes will contain a bit array.
+              + Last two bytes of the file will tell us the total bit in resource data section (they resides in index table)
+              + Use that to calculate the beginning of index section. Each entry of index section will be 2 bytes, so
+                calculate the number of resources in the file should be easy, by (subtracting EOF offset and the resource index begin offset) div 2
+              + 8 unicode bit for 8 resource will be packed into one byte. Bit 1 = Contains unicode, Bit 0 = Not contains unicode.
+              + To see if the resource section actually contains Unicode, with the resource index given (0, 1 for e.g), get the byte that the 
+                Unicode bit for this resource index is belonged in. Getting this should be easy by dividing the resource index by 8
+
+                (Note that we are counting from the lowest bytes)
+                11101010         10110001        (Base resource is 0, base byte is 0)
+                     ^              ^
+                Resource 2      Resource 12
+                Byte 0          Byte 1
+
+              + After getting the byte, get the bit by creating a simple mask: shift 1 left by (resource index % 8) bits
+              + 1 shl 2 = 0b00000100
+                11101010 & 00000100 = 0 => Not contaning unicode
+              + Sure these engineers who design this format are genius well ;)
+
+      - Section layout: 
+        Normal RSC file (Not calypso):
+            * Dictionary data
+            * Dictionary index. Last 2 bytes of it seems to be the whole size of dict section
+            * Resource data
+            * Resource index. Last 2 bytes of it seems to be the whole size of resource data section
+        
+        Each entry of both index sections is 2 bytes, so it should give you something. They give information
+        about 
+            * If dictionary compressed: the offset of the dict/resource entry from the dictionary/resource data
+            * If the RSC not compressed, each index will points to offset of resource entry based on offset 0
+
+        Calypso file:
+            * Dictionary index
+            * Dictionary data
+            * Resource index
+            * Resource data
     */
 
-   /*
-        Calypso:
-            - Offset 0-> 2: Magic (4)
-            - Offset 2-> 4: Number of resources in this file
-            - Offset 4-> 5: ???
-            - Offset 5-> 6: unk1
-            - Offset 6-> 8: Offset of resource index
-            - Offset 8-> 10: Size of largest resource when decompress
-   */
+    bool rsc_file_read_stream::is_resource_contains_unicode(int res_id, bool first_rsc_is_gen) {
+        if (first_rsc_is_gen) {
+            // First resource is that generated bit array
+            --res_id;
+
+            if (res_id < 0) {
+                return false;
+            }
+        }
+
+        if (unicode_flag_array.empty()) {
+            return false;
+        }
+
+        // See up above for information about this
+        return unicode_flag_array[res_id / 8] & (1 << (res_id % 8));
+    }
+
+    int rsc_file_read_stream::decompress(symfile f, std::uint8_t *buffer, int max, int res_index) {
+        if (!(flags & dictionary_compressed)) {
+            // We just read as normal
+            int read_size_bytes = resource_offsets[res_index] - resource_offsets[res_index - 1];
+
+            if (read_size_bytes <= 0 || read_size_bytes > max) {
+                return -1;
+            }
+
+            f->read_file(resource_offsets[res_index - 1], buffer, 1, read_size_bytes);
+            return 0;
+        }
+
+        std::stack<common::dictcomp> streams;
+
+        auto append_dictcomp_stream = [&](int resource_index) {
+            std::uint16_t begin_bits = resource_offsets[resource_index - 1];
+            std::uint16_t end_bits = resource_offsets[resource_index];
+
+            // I don't use any cache though
+            common::dictcomp comp_stream(&res_data[0], begin_bits, end_bits, num_of_bits_use_for_dict_token);
+            streams.push(std::move(comp_stream));
+        };
+
+        append_dictcomp_stream(res_index);
+
+        bool is_calypso = (flags & calypso);
+
+        for (;;) {
+            if (streams.empty()) {
+                break;
+            }
+
+            common::dictcomp comp_stream = std::move(streams.top());
+            streams.pop();
+
+            for (;;) {
+                const int index_of_dict_entry = comp_stream.index_of_current_directory_entry();
+                if (index_of_dict_entry < 0) {
+                    if (!comp_stream.read(buffer, max, is_calypso)) {
+                        return -1;
+                    } else {
+                        append_dictcomp_stream(index_of_dict_entry);
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+
     void rsc_file_read_stream::read_header_and_resource_index(symfile f) {
         std::uint32_t uid[3];
         f->read_file(&uid, 4, 3);
@@ -52,8 +177,7 @@ namespace eka2l1::loader {
         case 0x101F4A6B: {
             flags |= potentially_have_compressed_unicode_data;
 
-            f->seek(17, eka2l1::file_seek_mode::beg);
-            f->read_file(&size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
+            f->read_file(17, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
                 1);
 
             break;
@@ -62,8 +186,7 @@ namespace eka2l1::loader {
         case 0x101F5010: {
             flags |= (potentially_have_compressed_unicode_data | dictionary_compressed);
 
-            f->seek(17, eka2l1::file_seek_mode::beg);
-            f->read_file(&size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
+            f->read_file(17, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
                 1);
 
             break;
@@ -79,8 +202,7 @@ namespace eka2l1::loader {
         if (calypso_magic == 4) {
             flags |= (calypso | dictionary_compressed);
 
-            f->seek(8, file_seek_mode::beg);
-            f->read_file(&size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
+            f->read_file(8, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
                 1);
         }
 
@@ -88,19 +210,116 @@ namespace eka2l1::loader {
             if (flags & calypso) {
                 // We read it before
                 num_res = uid[0] & 0xFFFF;
-
-                f->seek(10, file_seek_mode::beg);
-                f->read_file(&num_of_bits_use_for_dict_token, sizeof(num_of_bits_use_for_dict_token), 1);
+                f->read_file(10, &num_of_bits_use_for_dict_token, sizeof(num_of_bits_use_for_dict_token), 1);
 
                 char unk1 = 0;
 
-                f->seek(5, file_seek_mode::beg);
-                f->read_file(&unk1, 1, 1);
+                f->read_file(5, &unk1, 1, 1);
 
                 num_dir_entry = (1 << num_of_bits_use_for_dict_token) - unk1;
 
                 f->seek(6, file_seek_mode::beg);
                 f->read_file(&res_index_offset, sizeof(res_index_offset), 1);
+
+                res_offset = res_index_offset + (num_res * 2);
+                
+                resource_offsets.resize(num_res);
+                f->read_file(res_index_offset, &resource_offsets[0], 2, num_res);
+                
+                // "+2" because the first entry in the dictionary-index in this file format 
+                //is the number of bits from the start of the dictionary data to the start 
+                //of the first dictionary entry which is always zero, and thus unnecessary
+                dict_index_offset = 4+7+2; 
+
+                // Duplicate by 2 because each index has size of 2
+                dict_offset = dict_index_offset + (num_dir_entry * 2);
+                
+                dict_offsets.resize(num_dir_entry);
+                f->read_file(dict_index_offset, &dict_offsets[0], 2, num_dir_entry);
+            } else {
+                std::uint8_t file_flag = 0;
+                f->read_file(16, &file_flag, sizeof(file_flag), 1);
+
+                // Check the flag
+                // 0x80: Third uid is an offset
+                if (file_flag & 0x80) {
+                    flags |= third_uid_offset;
+                }
+
+                if (file_flag & 0x40) {
+                    flags |= generate_rss_sig_for_first_user_res;
+                }
+
+                if (file_flag & 0x20) {
+                    flags |= first_res_generated_bit_array_of_res_contains_compressed_unicode;
+                }
+
+                // After the flag and some two byte
+                res_offset = 19;
+                std::uint16_t num_bits_of_res_data = 0;
+
+                f->read_file(f->size() - 2, &num_bits_of_res_data, 2, 1);
+                res_index_offset = res_offset + (num_bits_of_res_data + 7) / 8;
+
+                res_data.resize((num_bits_of_res_data + 7) / 8);
+                f->read_file(res_offset, &res_data[0], 1, static_cast<std::uint32_t>(res_data.size()));
+
+                // Each resource entry is two bytes.
+                num_res = static_cast<std::uint16_t>((f->size() - res_index_offset) / 2);
+                
+                resource_offsets.resize(num_res);
+                f->read_file(res_index_offset, &resource_offsets[0], 2, num_res);
+                
+                dict_offset = 21;
+
+                if ((num_res > 0) && !(flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
+                    int length_of_bit_array_in_bytes = (num_res + 7) / 8;
+                    unicode_flag_array.resize(length_of_bit_array_in_bytes);
+
+                    f->read_file(21, &unicode_flag_array[0], 1, length_of_bit_array_in_bytes);
+
+                    dict_offset += length_of_bit_array_in_bytes;
+                }
+
+                std::uint16_t num_bits_of_dict_data = 0;
+                f->read_file(res_offset - 2, &num_bits_of_dict_data, 2, 1);
+
+                dict_index_offset = dict_offset + (num_bits_of_dict_data + 7) / 8;
+
+                // Each dictionary index entry is 2 bytes
+                int num_entries = (res_offset - dict_index_offset) / 2;
+
+                dict_offsets.resize(num_entries);
+                f->read_file(dict_index_offset, &dict_offsets[0], 2, num_entries);
+                
+                // the bottom 3 bits of firstByteAfterUids stores the number of bits used for 
+                // dictionary tokens as an offset from 3, e.g. if 2 is stored in these three bits 
+                // then the number of bits per dictionary token would be 3+2=5 - this allows a 
+                // range of 3-11 bits per dictionary token (the maximum number of dictionary 
+                // tokens therefore ranging from 8-2048) - the spec currently only supports 5-9
+                num_of_bits_use_for_dict_token = 3 + (file_flag & 0x7);
+                
+                if ((num_res > 0) && (flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
+                    // Just in case
+                    // Decompress resource 0 to get the unicode array
+                    unicode_flag_array.resize(size_of_largest_resource_when_uncompressed);
+                    decompress(f, &unicode_flag_array[0], size_of_largest_resource_when_uncompressed, 0);
+                }
+            }
+        } else {
+            // We read a barebone format, nothing compressed
+            // Symbian said that this format is likely to be used with non-ROM, since ROM has to be small
+            f->read_file(f->size() - 2, &res_index_offset, 2, 1);
+
+            // The last index on the resource index table was pointing to start of index
+            // It's not a valid one
+            num_res = static_cast<std::uint16_t>((f->size() - res_index_offset) / 2 - 1);
+
+            if ((num_res > 0) && (flags & potentially_have_compressed_unicode_data)) {
+                int length_of_bit_array_in_bytes = (num_res + 7) / 8;
+                unicode_flag_array.resize(length_of_bit_array_in_bytes);
+
+                f->read_file(19, &unicode_flag_array[0], 1, length_of_bit_array_in_bytes);
             }
         }
 
