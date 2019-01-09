@@ -25,6 +25,7 @@ add_library(common
     include/common/resource.h
     include/common/time.h
     include/common/types.h
+    include/common/unicode.h
     include/common/virtualmem.h
     src/algorithm.cpp
     src/arm_cpudetect.cpp
@@ -43,6 +44,7 @@ add_library(common
     src/random.cpp
     src/time.cpp
     src/types.cpp
+    src/unicode.cpp
     src/virtualmem.cpp
 )
 

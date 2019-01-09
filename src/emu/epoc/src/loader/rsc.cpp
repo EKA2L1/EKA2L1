@@ -21,10 +21,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
+#include <common/dictcomp.h>
+#include <common/log.h>
+#include <common/unicode.h>
+
 #include <epoc/loader/rsc.h>
 #include <epoc/vfs.h>
 
-#include <common/dictcomp.h>
 #include <stack>
 
 namespace eka2l1::loader {
@@ -98,7 +102,7 @@ namespace eka2l1::loader {
             * Resource data
     */
 
-    bool rsc_file_read_stream::is_resource_contains_unicode(int res_id, bool first_rsc_is_gen) {
+    bool rsc_file::is_resource_contains_unicode(int res_id, bool first_rsc_is_gen) {
         if (first_rsc_is_gen) {
             // First resource is that generated bit array
             --res_id;
@@ -116,7 +120,7 @@ namespace eka2l1::loader {
         return unicode_flag_array[res_id / 8] & (1 << (res_id % 8));
     }
 
-    int rsc_file_read_stream::decompress(symfile f, std::uint8_t *buffer, int max, int res_index) {
+    int rsc_file::decompress(std::uint8_t *buffer, int max, int res_index) {
         if (!(flags & dictionary_compressed)) {
             // We just read as normal
             int read_size_bytes = resource_offsets[res_index] - resource_offsets[res_index - 1];
@@ -125,7 +129,7 @@ namespace eka2l1::loader {
                 return -1;
             }
 
-            f->read_file(resource_offsets[res_index - 1], buffer, 1, read_size_bytes);
+            std::memcpy(buffer, &res_data[resource_offsets[res_index - 1] - res_offset], read_size_bytes);
             return 0;
         }
 
@@ -169,9 +173,11 @@ namespace eka2l1::loader {
         return 0;
     }
 
-    void rsc_file_read_stream::read_header_and_resource_index(symfile f) {
+    void rsc_file::read_header_and_resource_index(symfile f) {
         std::uint32_t uid[3];
         f->read_file(&uid, 4, 3);
+
+        std::memcpy(&uids, &uid[0], 12);
 
         switch (uid[0]) {
         case 0x101F4A6B: {
@@ -303,7 +309,7 @@ namespace eka2l1::loader {
                     // Just in case
                     // Decompress resource 0 to get the unicode array
                     unicode_flag_array.resize(size_of_largest_resource_when_uncompressed);
-                    decompress(f, &unicode_flag_array[0], size_of_largest_resource_when_uncompressed, 0);
+                    decompress(&unicode_flag_array[0], size_of_largest_resource_when_uncompressed, 0);
                 }
             }
         } else {
@@ -321,8 +327,148 @@ namespace eka2l1::loader {
 
                 f->read_file(19, &unicode_flag_array[0], 1, length_of_bit_array_in_bytes);
             }
+
+            f->read_file(res_index_offset, &res_offset, 2, 1);
+            res_data.resize(res_index_offset - res_offset);
+
+            f->read_file(res_offset, &res_data[0], 1, static_cast<std::uint32_t>(res_data.size()));
         }
 
         // Done with the header
+    }
+
+    bool rsc_file::own_res_id(const int res_id) {
+        // Abadon the offset right now
+        // int offset = res_id & 0xfffff000;
+
+        int res_index = res_id & 0x00000fff - 1;
+        int number_of_res = num_res;
+
+        if (flags & generate_rss_sig_for_first_user_res) {
+            ++number_of_res;
+        }
+
+        if (flags & first_res_generated_bit_array_of_res_contains_compressed_unicode) {
+            --number_of_res;
+        }
+
+        return (res_index >= 0) && (res_index < number_of_res);
+    }
+    
+    std::vector<std::uint8_t> rsc_file::read(const int res_id) {
+        if (!own_res_id(res_id)) {
+            LOG_ERROR("RSC file doesn't own the resource id: 0x{:X}", res_id);
+            return std::vector<std::uint8_t>{};
+        }
+
+        // First resource has UID 0x001, not 000
+        int res_index = (res_id & 0xFFF) - 1;
+
+        if (flags & generate_rss_sig_for_first_user_res) {
+            if (res_index > 0) {
+                --res_index;
+            } else {
+                std::vector<std::uint8_t> signatures_raw;
+                signatures_raw.resize(8);
+
+                std::uint32_t *sig = reinterpret_cast<std::uint32_t*>(&signatures_raw[0]);
+                sig[0] = 4;
+                sig[1] = ((uids.uid2 << 12) | 1);
+
+                return signatures_raw;
+            }
+        }
+
+        if (flags & first_res_generated_bit_array_of_res_contains_compressed_unicode) {
+            res_index++;
+        }
+
+        std::vector<std::uint8_t> data;
+        data.resize(size_of_largest_resource_when_uncompressed);
+
+        int err_code = decompress(&data[0], size_of_largest_resource_when_uncompressed, res_index);
+
+        if (err_code < 0) {
+            LOG_ERROR("RSC file decompress encounters error: 0x{:X}", err_code);
+            return std::vector<std::uint8_t>{};
+        }
+
+        if (!is_resource_contains_unicode(res_index, flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
+            return data;
+        }
+
+        // Need to decompress unicode
+        std::vector<std::uint8_t> stage2_data;
+        stage2_data.resize(size_of_largest_resource_when_uncompressed);
+
+        int index = 0;
+        int written = 0;
+
+        for (bool decompress_run = true; ; ) {
+            int runlen = data[index];
+            if (runlen & 0x80) {
+                ++index;
+
+                if (index >= size_of_largest_resource_when_uncompressed) {
+                    return std::vector<std::uint8_t>{};
+                }
+
+                runlen &= ~0x80;
+                runlen <<= 8;
+                runlen |= data[index];
+            }
+
+            ++index;
+
+            if (runlen > 0) {
+                int start_off = common::min(0, written - 1);
+                std::uint8_t *append_data = &stage2_data[start_off];
+
+                if (decompress_run) {
+                    // If it's odd, we should append a padding byte but valid
+                    if (reinterpret_cast<std::uint64_t>(append_data) & 0x01) {
+                        *(++append_data) = 0xAB;
+                        written += 1;
+                    }
+
+                    common::unicode_expander expander;
+
+                    // Bytes should not multiply, since read_char16 already adds number of bytes by 2
+                    written += expander.expand(&data[index], runlen, append_data, size_of_largest_resource_when_uncompressed - written);
+                } else {
+                    written += runlen;
+                    std::memcpy(append_data, &data[index], runlen);
+                }
+            }
+        }
+
+        return stage2_data;
+    }
+
+    std::uint32_t rsc_file::get_uid(const int idx) {
+        switch (idx) {
+        case 1: {
+            return uids.uid1;
+        }
+
+        case 2: {
+            return uids.uid2;
+        }
+
+        case 3: {
+            return uids.uid3;
+        }
+
+        default: {
+            break;
+        }
+        }
+
+        assert(false);
+        return 0;
+    }
+
+    rsc_file::rsc_file(symfile f) {
+        read_header_and_resource_index(f);
     }
 }

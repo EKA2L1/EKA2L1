@@ -36,9 +36,12 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::loader {
-    class rsc_file_read_stream {
-        std::vector<std::uint8_t> buffer;
-        common::ro_buf_stream stream;
+    class rsc_file {
+        struct uid_type {
+            std::uint32_t uid1;
+            std::uint32_t uid2;
+            std::uint32_t uid3;
+        } uids;
 
         std::uint8_t num_of_bits_use_for_dict_token = 0;
         std::uint16_t num_res = 0;
@@ -69,26 +72,21 @@ namespace eka2l1::loader {
         std::vector<std::uint16_t> dict_offsets;
 
     protected:
-        bool do_decompress(symfile f);
         void read_header_and_resource_index(symfile f);
 
-        bool is_resource_contains_unicode(int res_id, bool first_rsc_is_gen);
-        int decompress(symfile f, std::uint8_t *buffer, int max, int res_index);
+        int decompress(std::uint8_t *buffer, int max, int res_index);
+
+        bool own_res_id(const int res_id);
 
     public:
-        explicit rsc_file_read_stream(symfile f, bool *success = nullptr);
+        explicit rsc_file(symfile f);
+        bool is_resource_contains_unicode(int res_id, bool first_rsc_is_gen);
 
-        template <typename T>
-        std::optional<T> read();
+        std::vector<std::uint8_t> read(const int res_id);
+        std::uint32_t get_uid(const int idx);
 
-        /*! \brief Read to the specified buffer with given length. 
-		 *
-		 *  \returns False if stream is end, fail.
-		 */
-        bool read_unsafe(std::uint8_t *buffer, const std::size_t len);
-
-        void rewind(const std::size_t len);
-
-        void advance(const std::size_t len);
+        std::uint16_t get_total_resources() const {
+            return num_res;
+        }
     };
 }
