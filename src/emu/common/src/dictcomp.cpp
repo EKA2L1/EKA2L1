@@ -26,6 +26,14 @@
 #include <common/log.h>
 
 namespace eka2l1::common {
+    dictcomp::dictcomp(std::uint8_t *buf, const int off_beg, const int off_end,
+        const int num_bits_used_for_dict_tokens)
+        : num_bits_used_for_dict_tokens(num_bits_used_for_dict_tokens)
+         , off_beg(off_beg), off_end(off_end)
+         , buffer(buf) {
+
+    }
+        
     bool dictcomp::is_cur_bit_on() {
         return buffer[off_cur / 8] & (1 << (off_cur) % 8);
     }
