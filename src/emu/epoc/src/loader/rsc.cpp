@@ -123,14 +123,21 @@ namespace eka2l1::loader {
     int rsc_file::decompress(std::uint8_t *buffer, int max, int res_index) {
         if (!(flags & dictionary_compressed)) {
             // We just read as normal
-            int read_size_bytes = resource_offsets[res_index] - resource_offsets[res_index - 1];
+            int read_size_bytes = 0;
+            
+            if (res_index == resource_offsets.size() - 1) {
+                read_size_bytes = 
+                    static_cast<int>(res_data.size() + resource_offsets[0] - resource_offsets.back());
+            } else {
+                read_size_bytes = resource_offsets[res_index + 1] - resource_offsets[res_index];
+            }
 
             if (read_size_bytes <= 0 || read_size_bytes > max) {
                 return -1;
             }
 
-            std::memcpy(buffer, &res_data[resource_offsets[res_index - 1] - res_offset], read_size_bytes);
-            return 0;
+            std::memcpy(buffer, &res_data[resource_offsets[res_index] - res_offset], read_size_bytes);
+            return read_size_bytes;
         }
 
         std::stack<common::dictcomp> streams;
@@ -273,9 +280,9 @@ namespace eka2l1::loader {
                 // Each resource entry is two bytes.
                 num_res = static_cast<std::uint16_t>((f->size() - res_index_offset) / 2);
                 
-                resource_offsets.resize(num_res);
+                resource_offsets.resize(num_res + 1);
                 f->read_file(res_index_offset, &resource_offsets[0], 2, num_res);
-                
+
                 dict_offset = 21;
 
                 if ((num_res > 0) && !(flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
@@ -327,6 +334,9 @@ namespace eka2l1::loader {
 
                 f->read_file(19, &unicode_flag_array[0], 1, length_of_bit_array_in_bytes);
             }
+
+            resource_offsets.resize(num_res);
+            f->read_file(res_index_offset, &resource_offsets[0], 2, num_res);
 
             f->read_file(res_index_offset, &res_offset, 2, 1);
             res_data.resize(res_index_offset - res_offset);
@@ -393,6 +403,9 @@ namespace eka2l1::loader {
             return std::vector<std::uint8_t>{};
         }
 
+        // Returns value is the number of bytes readed
+        data.resize(err_code);
+
         if (!is_resource_contains_unicode(res_index, flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
             return data;
         }
@@ -404,7 +417,7 @@ namespace eka2l1::loader {
         int index = 0;
         int written = 0;
 
-        for (bool decompress_run = true; ; ) {
+        for (bool decompress_run = true; ; decompress_run = !decompress_run) {
             int runlen = data[index];
             if (runlen & 0x80) {
                 ++index;
@@ -421,13 +434,13 @@ namespace eka2l1::loader {
             ++index;
 
             if (runlen > 0) {
-                int start_off = common::min(0, written - 1);
+                int start_off = common::max(0, written);
                 std::uint8_t *append_data = &stage2_data[start_off];
 
                 if (decompress_run) {
                     // If it's odd, we should append a padding byte but valid
                     if (reinterpret_cast<std::uint64_t>(append_data) & 0x01) {
-                        *(++append_data) = 0xAB;
+                        *(append_data++) = 0xAB;
                         written += 1;
                     }
 
@@ -435,13 +448,20 @@ namespace eka2l1::loader {
 
                     // Bytes should not multiply, since read_char16 already adds number of bytes by 2
                     written += expander.expand(&data[index], runlen, append_data, size_of_largest_resource_when_uncompressed - written);
+                    index += runlen;
                 } else {
-                    written += runlen;
                     std::memcpy(append_data, &data[index], runlen);
+                    written += runlen;
+                    index += runlen;
                 }
+            }
+
+            if (index >= static_cast<int>(data.size())) {
+                break;
             }
         }
 
+        stage2_data.resize(written);
         return stage2_data;
     }
 
@@ -468,7 +488,8 @@ namespace eka2l1::loader {
         return 0;
     }
 
-    rsc_file::rsc_file(symfile f) {
+    rsc_file::rsc_file(symfile f)
+        : flags(0) {
         read_header_and_resource_index(f);
     }
 }
