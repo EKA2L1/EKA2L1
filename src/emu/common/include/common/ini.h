@@ -28,6 +28,8 @@
 namespace eka2l1::common {
     enum ini_node_type {
         INI_NODE_INVALID,
+        INI_NODE_VALUE,
+        INI_NODE_KEY,
         INI_NODE_PAIR,
         INI_NODE_SECTION
     };
@@ -59,12 +61,66 @@ namespace eka2l1::common {
 
     using ini_node_ptr = std::shared_ptr<ini_node>;
 
+    class ini_value: public ini_node {
+        friend class ini_file;
+        friend class ini_section;
+
+    protected:
+        std::string value;
+
+        ini_value(const ini_node_type t)
+            : ini_node(t) {
+
+        }
+
+    public:
+        ini_value()
+            : ini_node(INI_NODE_VALUE) {
+        }
+
+        ini_value(const std::string &val)
+            : ini_node(INI_NODE_VALUE), value(val) {
+        }
+
+        virtual const char *name() override {
+            return value.c_str();
+        }
+        
+        std::string get_value() {
+            return value;
+        }
+    };
+
+    class ini_prop : public ini_value {
+        friend class ini_file;
+        friend class ini_section;
+
+        std::string key;
+
+    public:
+        ini_prop()
+            : ini_value(INI_NODE_KEY) {
+        }
+
+        ini_prop(const char *key, const char *value) 
+            : ini_value(INI_NODE_KEY) {
+            this->key = key;
+            this->value = value;
+        }
+
+        virtual const char *name() override {
+            return key.c_str();
+        }
+    };
+
+    using ini_value_node_ptr = std::shared_ptr<ini_value>;
+
     class ini_pair : public ini_node {
         friend class ini_section;
         friend class ini_file;
 
         std::string key;
-        std::vector<std::string> values;
+        std::vector<ini_value_node_ptr> values;
 
     public:
         ini_pair()
@@ -119,6 +175,8 @@ namespace eka2l1::common {
 
         // Note that an empty key will still be saved
         ini_pair *create_pair(const char *key);
+
+        ini_value *create_value(const char *val);
 
         std::size_t get(const char *key,
             std::uint32_t *val, int count, std::uint32_t default_val = 0, int *error_code = nullptr);

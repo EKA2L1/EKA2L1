@@ -23,8 +23,10 @@
 #include <common/ini.h>
 
 #include <cstring>
+#include <deque>
 #include <fstream>
 #include <sstream>
+#include <optional>
 
 namespace eka2l1::common {
     ini_node_ptr ini_section::find(const char *name) {
@@ -84,6 +86,20 @@ namespace eka2l1::common {
         return new_pair;
     }
 
+    ini_value *ini_section::create_value(const char *val) {
+        if (node_exists(val)) {
+            return nullptr;
+        }
+
+        std::shared_ptr<ini_value> val_node = std::make_shared<ini_value>();
+        val_node->value = val;
+
+        ini_value *new_val = &(*val_node);
+        nodes.push_back(std::move(val_node));
+
+        return new_val;
+    }
+
     std::size_t ini_section::get(const char *key,
         std::uint32_t *val, int count, std::uint32_t default_val, int *error_code) {
         ini_node_ptr node = find(key);
@@ -136,7 +152,7 @@ namespace eka2l1::common {
         values.resize(count);
 
         for (int i = 0; i < count; i++) {
-            values[i] = std::to_string(vals[i]);
+            values[i] = std::make_shared<ini_value>(std::to_string(vals[i]));
         }
 
         return true;
@@ -150,14 +166,19 @@ namespace eka2l1::common {
         values.resize(count);
 
         for (int i = 0; i < count; i++) {
-            values[i] = (vals[i]) ? "1" : "0";
+            values[i] = std::make_shared<ini_value>((vals[i]) ? "1" : "0");
         }
 
         return true;
     }
 
     bool ini_pair::set(std::vector<std::string> &vals) {
-        values.assign(vals.begin(), vals.end());
+        values.resize(vals.size());
+
+        for (std::size_t i = 0; i < values.size(); i++) {
+            values[i] = std::make_shared<ini_value>(vals[i]);
+        }
+
         return true;
     }
 
@@ -167,7 +188,7 @@ namespace eka2l1::common {
 
         for (std::size_t i = 0; i < values.size(); i++) {
             try {
-                *(val + i) = std::atol(values[i].c_str());
+                *(val + i) = std::atol(values[i]->get_value().c_str());
                 success_translation++;
             } catch (...) {
                 *(val + i) = default_val;
@@ -183,7 +204,7 @@ namespace eka2l1::common {
 
         for (std::size_t i = 0; i < values.size(); i++) {
             try {
-                *(val + i) = static_cast<bool>(std::atoi(values[i].c_str()));
+                *(val + i) = static_cast<bool>(std::atoi(values[i]->get_value().c_str()));
                 success_translation++;
             } catch (...) {
                 *(val + i) = default_val;
@@ -194,13 +215,18 @@ namespace eka2l1::common {
     }
 
     std::size_t ini_pair::get(std::vector<std::string> &val) {
-        val.assign(values.begin(), values.end());
+        for (std::size_t i = 0 ; i < val.size(); i++) {
+            val[i] = values[i]->get_value();
+        }
+
         return values.size();
     }
 
     struct ini_linestream {
         std::string line;
         int counter;
+
+        std::deque<std::string> waits;
 
         explicit ini_linestream(const std::string &l)
             : line(l)
@@ -211,6 +237,13 @@ namespace eka2l1::common {
         }
 
         std::string next_string() {
+            if (!waits.empty()) {
+                std::string tok = std::move(waits.front());
+                waits.pop_front();
+
+                return tok;
+            }
+
             while (counter < line.length() && line[counter] == ' ') {
                 counter++;
             }
@@ -233,9 +266,32 @@ namespace eka2l1::common {
             }
 
             std::size_t len = counter - begin - (cto_stop == '"' ? 1 : 0);
-            return line.substr(begin, len);
+
+            // Stage 1 of tokenizing
+            std::string trim1 = line.substr(begin, len);
+            std::size_t equal_pos = trim1.find('=');
+
+            if (equal_pos != std::string::npos) {
+                waits.push_back("=");
+                waits.push_back(trim1.substr(equal_pos + 1, trim1.length() - equal_pos));
+
+                return trim1.substr(0, equal_pos);
+            }
+
+            return trim1;
         }
 
+        std::optional<std::string> peek_string() {
+            if (eof()) {
+                return std::nullopt;
+            }
+
+            std::string ns = next_string();
+            waits.push_back(ns);
+
+            return ns;
+        }
+        
         bool eof() {
             return counter >= line.length();
         }
@@ -265,10 +321,40 @@ namespace eka2l1::common {
 
                     sec = create_section(first_token.c_str());
                 } else {
-                    ini_pair *pair = sec->create_pair(first_token.c_str());
+                    std::string next_tok = first_token.c_str();
 
-                    while (!stream.eof()) {
-                        pair->values.push_back(stream.next_string());
+                    if (stream.eof()) {
+                        sec->create_value(next_tok.c_str());
+                    } else {
+                        std::string pair_name = first_token.c_str();
+
+                        // If the next couple of tokens is indicates a prop, we should create an empty pair
+                        auto next_next_tok = stream.peek_string();
+                        if (next_next_tok && *next_next_tok == "=") {
+                            pair_name = "<UNDEFINED>";
+                            stream.waits.push_front(next_tok);
+                        }
+
+                        ini_pair *pair = sec->create_pair(pair_name.c_str());
+
+                        while (!stream.eof()) {
+                            next_tok = stream.next_string();
+                            next_next_tok = stream.peek_string();
+
+                            if (!next_next_tok || *next_next_tok != "=") {
+                                pair->values.push_back(std::make_shared<ini_value>(stream.next_string()));
+                            } else {
+                                // Eat the equals
+                                stream.next_string();
+
+                                if (stream.eof()) {
+                                    return -3;
+                                }
+
+                                std::string val_of_prop = stream.next_string();
+                                pair->values.push_back(std::make_shared<ini_prop>(next_tok.c_str(), val_of_prop.c_str()));
+                            }
+                        }
                     }
                 }
             }
