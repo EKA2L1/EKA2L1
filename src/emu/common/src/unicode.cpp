@@ -64,28 +64,28 @@ namespace eka2l1::common {
     }
 
     bool unicode_expander::write_byte(std::uint16_t b) {
-        if (!write_byte8(b >> 8)) {
+        if (!write_byte8(static_cast<std::uint8_t>(b))) {
             return false;
         }
 
-        bool result = write_byte8(static_cast<std::uint8_t>(b));
+        bool result = write_byte8(b >> 8);
         return result;
     }
 
     bool unicode_expander::write_byte32(std::uint32_t b) {
-        if (!write_byte8(b >> 24)) {
+        if (!write_byte8(static_cast<std::uint8_t>(b))) {
+            return false;
+        }
+        
+        if (!write_byte8(b >> 8)) {
             return false;
         }
         
         if (!write_byte8(b >> 16)) {
             return false;
         }
-        
-        if (!write_byte8(b >> 8)) {
-            return false;
-        }
 
-        bool result = write_byte8(static_cast<std::uint8_t>(b));
+        bool result = write_byte8(b >> 24);
         return result;
     }
 
@@ -255,8 +255,13 @@ namespace eka2l1::common {
         source_buf = source;
         dest_buf = dest;
 
+        source_pointer = 0;
+        dest_pointer = 0;
+
         this->source_size = source_size;
         this->dest_size = dest_size;
+
+        unicode_mode = false;
         
         for (; source_size >= 0, dest_size >= 0; ) {
             std::uint8_t b;
@@ -267,6 +272,8 @@ namespace eka2l1::common {
                 if (!result) {
                     break;
                 }
+            } else {
+                break;
             }
         }
 
