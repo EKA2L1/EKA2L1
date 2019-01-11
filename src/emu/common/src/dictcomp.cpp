@@ -128,14 +128,14 @@ namespace eka2l1::common {
         return num_bytes_to_read;
     }
 
-    bool dictcomp::read(std::uint8_t *dest, int &dest_size, const bool calypso) {
+    int dictcomp::read(std::uint8_t *dest, int &dest_size, const bool calypso) {
         // These size in bytes
         int size = calculate_decompress_size(calypso, false);
         int *dest_i = reinterpret_cast<int*>(dest);
 
         if (size > dest_size) {
             LOG_ERROR("Can't decompress: unsufficent memory (needed: 0x{:X} vs provided 0x{:X})", size, dest_size);
-            return false;
+            return -1;
         }
 
         const int num_bits_off_byte_bound = off_cur % 8;
@@ -154,6 +154,6 @@ namespace eka2l1::common {
         }
 
         off_cur += size * 8;
-        return true;
+        return size;
     }
 }

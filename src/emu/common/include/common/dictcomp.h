@@ -63,6 +63,6 @@ namespace eka2l1::common {
 
         int index_of_current_directory_entry();
 
-        bool read(std::uint8_t *dest, int &dest_size, const bool calypso);
+        int read(std::uint8_t *dest, int &dest_size, const bool calypso);
     };
 }
