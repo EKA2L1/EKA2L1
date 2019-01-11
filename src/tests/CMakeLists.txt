@@ -1,3 +1,19 @@
+macro(add_test_assets PATH DESTPATH)
+    file(GLOB assets RELATIVE ${PATH} ${PATH}/*)
+
+    add_custom_command(
+                TARGET ekatests
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/${DESTPATH}/")
+
+    foreach (asset ${assets})
+        add_custom_command(
+                TARGET ekatests
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PATH}/${asset}" "${CMAKE_CURRENT_BINARY_DIR}/${DESTPATH}/")
+    endforeach()
+endmacro()
+
 include_directories(${GTEST_INCLUDE_DIR})
 
 add_subdirectory(epoc)
@@ -22,14 +38,10 @@ add_test(
 )
 
 set(EPOC_LOADER_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/loader/assets/")
-file(GLOB assets RELATIVE ${EPOC_LOADER_ASSETS_PATH} ${EPOC_LOADER_ASSETS_PATH}/*)
+add_test_assets(${EPOC_LOADER_ASSETS_PATH} "loaderassets")
 
-foreach (asset ${assets})
-    add_custom_command(
-            TARGET ekatests
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${EPOC_LOADER_ASSETS_PATH}/${asset}" "${CMAKE_CURRENT_BINARY_DIR}")
-endforeach()
+set(COMMON_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/common/assets/")
+add_test_assets(${COMMON_ASSETS_PATH} "commonassets")
 
 # Copy the sample RSC file
 add_custom_command(

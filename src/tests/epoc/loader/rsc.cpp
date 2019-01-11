@@ -21,7 +21,7 @@ TEST(rsc_file, no_compress_but_may_contain_unicode) {
     // Iterate through each resources
     for (int i = 1; i <= total_res; i++) {
         std::stringstream ss;
-        ss << "SAMPLE_RESOURCE_DATA_IDX_";
+        ss << "loaderassets//SAMPLE_RESOURCE_DATA_IDX_";
         ss << i;
         ss << ".bin";
 
@@ -35,10 +35,6 @@ TEST(rsc_file, no_compress_but_may_contain_unicode) {
         expected_res.resize(res_size);
 
         fi.read(reinterpret_cast<char*>(&expected_res[0]), res_size); 
-
-        if (i == 5) {
-            int a = 6;
-        }
 
         ASSERT_EQ(res_from_eka2l1.size(), res_size) << "Fail at resource " << i;
         ASSERT_EQ(expected_res, res_from_eka2l1) << "Fail at resource " << i;
