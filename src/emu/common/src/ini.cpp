@@ -257,6 +257,8 @@ namespace eka2l1::common {
             if (line[counter] == '"') {
                 cto_stop = '"';
                 counter += 1;
+            } else if (line[counter] == '[') {
+                cto_stop = ']';
             }
 
             std::size_t begin = counter;
@@ -265,17 +267,24 @@ namespace eka2l1::common {
                 counter++;
             }
 
-            std::size_t len = counter - begin - (cto_stop == '"' ? 1 : 0);
+            std::size_t len = counter - begin - (cto_stop == '"' ? 1 : 0)
+                + (cto_stop == ']' ? 1 : 0);
 
             // Stage 1 of tokenizing
             std::string trim1 = line.substr(begin, len);
             std::size_t equal_pos = trim1.find('=');
 
-            if (equal_pos != std::string::npos) {
-                waits.push_back("=");
-                waits.push_back(trim1.substr(equal_pos + 1, trim1.length() - equal_pos));
+            if ((trim1 != "=") && (equal_pos != std::string::npos)) {
+                if (equal_pos != 0) {
+                    waits.push_back("=");
+                }
 
-                return trim1.substr(0, equal_pos);
+                // Not empty
+                if (trim1.length() - 1 > equal_pos) {
+                    waits.push_back(trim1.substr(equal_pos + 1, trim1.length() - equal_pos));
+                }
+
+                return equal_pos != 0 ? trim1.substr(0, equal_pos) : "=";
             }
 
             return trim1;
@@ -287,13 +296,13 @@ namespace eka2l1::common {
             }
 
             std::string ns = next_string();
-            waits.push_back(ns);
+            waits.push_front(ns);
 
             return ns;
         }
         
         bool eof() {
-            return counter >= line.length();
+            return (counter >= line.length()) && (waits.empty());
         }
     };
 
@@ -330,19 +339,21 @@ namespace eka2l1::common {
 
                         // If the next couple of tokens is indicates a prop, we should create an empty pair
                         auto next_next_tok = stream.peek_string();
-                        if (next_next_tok && *next_next_tok == "=") {
-                            pair_name = "<UNDEFINED>";
-                            stream.waits.push_front(next_tok);
-                        }
+                        ini_pair *pair = nullptr;
 
-                        ini_pair *pair = sec->create_pair(pair_name.c_str());
+                        if (next_next_tok && *next_next_tok == "=") {
+                            stream.waits.push_front(next_tok);
+                        } else {
+                            pair = sec->create_pair(pair_name.c_str());
+                        }
 
                         while (!stream.eof()) {
                             next_tok = stream.next_string();
                             next_next_tok = stream.peek_string();
 
                             if (!next_next_tok || *next_next_tok != "=") {
-                                pair->values.push_back(std::make_shared<ini_value>(stream.next_string()));
+                                pair ? pair->values.push_back(std::make_shared<ini_value>(next_tok))
+                                    : sec->nodes.push_back(std::make_shared<ini_value>(next_tok));
                             } else {
                                 // Eat the equals
                                 stream.next_string();
@@ -352,7 +363,8 @@ namespace eka2l1::common {
                                 }
 
                                 std::string val_of_prop = stream.next_string();
-                                pair->values.push_back(std::make_shared<ini_prop>(next_tok.c_str(), val_of_prop.c_str()));
+                                pair ? pair->values.push_back(std::make_shared<ini_prop>(next_tok.c_str(), val_of_prop.c_str()))
+                                    : sec->nodes.push_back(std::make_shared<ini_prop>(next_tok.c_str(), val_of_prop.c_str()));
                             }
                         }
                     }
