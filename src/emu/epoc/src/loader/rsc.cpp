@@ -154,6 +154,7 @@ namespace eka2l1::loader {
         append_dictcomp_stream(res_index);
 
         bool is_calypso = (flags & calypso);
+        int total_bytes = 0;
 
         for (;;) {
             if (streams.empty()) {
@@ -166,18 +167,22 @@ namespace eka2l1::loader {
             for (;;) {
                 const int index_of_dict_entry = comp_stream.index_of_current_directory_entry();
                 if (index_of_dict_entry < 0) {
-                    if (!comp_stream.read(buffer, max, is_calypso)) {
-                        return -1;
-                    } else {
-                        append_dictcomp_stream(index_of_dict_entry);
+                    int result = comp_stream.read(buffer, max, is_calypso);
 
-                        break;
+                    if (result == -1) {
+                        return result;
                     }
+
+                    total_bytes += result;
+                    max -= result;
+                } else {
+                    append_dictcomp_stream(index_of_dict_entry);
+                    break;
                 }
             }
         }
 
-        return 0;
+        return total_bytes;
     }
 
     void rsc_file::read_header_and_resource_index(symfile f) {
