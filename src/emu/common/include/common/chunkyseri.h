@@ -51,15 +51,21 @@ namespace eka2l1::common {
 
     class chunkyseri {
         std::uint8_t *buf;
+        std::uint8_t *org;
+
         chunkyseri_mode mode;
 
         bool do_marker(const std::string &name, std::uint16_t cookie = 0x18);
 
     public:
         explicit chunkyseri(std::uint8_t *buf, const chunkyseri_mode mode)
-            : buf(buf), mode(mode) {
+            : buf(buf), org(buf), mode(mode) {
         }
-
+        
+        std::size_t size() {
+                    return buf - org;
+        }
+                
         chunkyseri_mode get_seri_mode() const {
             return mode;
         }
