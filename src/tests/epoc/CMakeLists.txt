@@ -1,8 +1,9 @@
-add_subdirectory(loader)
-
 set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/mem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/timing.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/vfs.cpp
-    ${CORE_LOADER_TEST_FILES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/loader/e32img.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/loader/rsc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/crebinloader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/creiniloader.cpp
     PARENT_SCOPE)

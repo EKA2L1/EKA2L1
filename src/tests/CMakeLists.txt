@@ -43,6 +43,9 @@ add_test_assets(${EPOC_LOADER_ASSETS_PATH} "loaderassets")
 set(COMMON_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/common/assets/")
 add_test_assets(${COMMON_ASSETS_PATH} "commonassets")
 
+set(SERVICES_CENTRALREPO_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/centralrepo/assets/")
+add_test_assets(${SERVICES_CENTRALREPO_ASSETS_PATH} "centralrepoassets")
+
 # Copy the sample RSC file
 add_custom_command(
         TARGET ekatests
