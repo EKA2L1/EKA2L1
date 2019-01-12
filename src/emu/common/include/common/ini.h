@@ -81,6 +81,23 @@ namespace eka2l1::common {
         ini_value(const std::string &val)
             : ini_node(INI_NODE_VALUE), value(val) {
         }
+        
+        template <typename T>
+        std::enable_if_t<std::is_integral_v<T>, T> get_as_native() {
+            std::string vc = value;
+
+            if (vc.length() > 2 && vc[0] == '0' && (vc[1] == 'x' || vc[1] == 'X')) {
+                vc = vc.substr(2, vc.length() - 2);
+                return static_cast<T>(std::strtoll(vc.c_str(), nullptr, 16));
+            }
+
+            return static_cast<T>(std::atoll(vc.c_str()));
+        }
+
+        template <typename T>
+        std::enable_if_t<std::is_floating_point_v<T>, T> get_as_native() {
+            return static_cast<T>(std::stod(value));
+        }
 
         virtual const char *name() override {
             return value.c_str();
@@ -134,6 +151,32 @@ namespace eka2l1::common {
         const char *name() override {
             return key.c_str();
         }
+        
+        struct iterator {
+            ini_pair *parent;
+            std::size_t my_index;
+
+            iterator operator++() {
+                ++my_index;
+                return *this;
+            }
+
+            bool operator!=(const iterator & other) const {
+                return my_index != other.my_index; 
+            }
+
+            common::ini_value_node_ptr &operator *() {
+                return parent->values[my_index];
+            }
+        };
+
+        iterator begin() {
+            return iterator { this, 0 };
+        }
+
+        iterator end() {
+            return iterator { this, values.size() };
+        }
 
         bool set(std::uint32_t *vals, int count);
         bool set(bool *vals, int count);
@@ -142,6 +185,15 @@ namespace eka2l1::common {
         std::size_t get(std::uint32_t *val, int count, std::uint32_t default_val = 0);
         std::size_t get(bool *val, int count, bool default_val = true);
         std::size_t get(std::vector<std::string> &val);
+
+        template <typename T>
+        T *get(const std::size_t idx) {
+            if (idx < values.size()) {
+                return values[idx]->get_as<T>();
+            }
+
+            return nullptr;
+        }
 
         static bool is_my_type(const ini_node_ptr node) {
             return (node->get_node_type() == INI_NODE_PAIR);
@@ -166,6 +218,32 @@ namespace eka2l1::common {
 
         bool node_exists(const char *name);
 
+        struct iterator {
+            ini_section *parent;
+            std::size_t my_index;
+
+            iterator operator++() {
+                ++my_index;
+                return *this;
+            }
+
+            bool operator!=(const iterator & other) const {
+                return my_index != other.my_index; 
+            }
+
+            common::ini_node_ptr &operator *() {
+                return parent->nodes[my_index];
+            }
+        };
+
+        iterator begin() {
+            return iterator { this, 0 };
+        }
+
+        iterator end() {
+            return iterator { this, nodes.size() };
+        }
+
         /* \brief Access a node with given name/key.
         */
         ini_node_ptr operator[](const char *name);
@@ -188,6 +266,15 @@ namespace eka2l1::common {
 
         static bool is_my_type(const ini_node_ptr node) {
             return (node->get_node_type() == INI_NODE_SECTION);
+        }
+
+        template <typename T>
+        T *get(const std::size_t idx) {
+            if (idx < nodes.size()) {
+                return nodes[idx]->get_as<T>();
+            }
+
+            return nullptr;
         }
     };
 

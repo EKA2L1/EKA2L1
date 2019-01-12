@@ -267,7 +267,7 @@ namespace eka2l1::common {
                 counter++;
             }
 
-            std::size_t len = counter - begin - (cto_stop == '"' ? 1 : 0)
+            std::size_t len = counter - begin
                 + (cto_stop == ']' ? 1 : 0);
 
             // Stage 1 of tokenizing
