@@ -49,28 +49,43 @@ namespace eka2l1 {
     }
 }
 
-#define LOG_TRACE(fmt, ...) eka2l1::log::spd_logger->trace("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_DEBUG(fmt, ...) eka2l1::log::spd_logger->debug("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...) eka2l1::log::spd_logger->info("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_WARN(fmt, ...) eka2l1::log::spd_logger->warn("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...) eka2l1::log::spd_logger->error("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_CRITICAL(fmt, ...) eka2l1::log::spd_logger->critical("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#ifdef DISABLE_LOGGING
+    #define LOG_TRACE(fmt, ...)
+    #define LOG_DEBUG(fmt, ...)
+    #define LOG_INFO(fmt, ...)
+    #define LOG_WARN(fmt, ...)
+    #define LOG_ERROR(fmt, ...)
+    #define LOG_CRITICAL(fmt, ...)
+    #define LOG_TRACE_IF(flag, fmt, ...)
+    #define LOG_DEBUG_IF(flag, fmt, ...)
+    #define LOG_INFO_IF(flag, fmt, ...)
+    #define LOG_WARN_IF(flag, fmt, ...)
+    #define LOG_ERROR_IF(flag, fmt, ...)
+    #define LOG_CRITICAL_IF(flag, fmt, ...)  
+#else
+    #define LOG_TRACE(fmt, ...) eka2l1::log::spd_logger->trace("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_DEBUG(fmt, ...) eka2l1::log::spd_logger->debug("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_INFO(fmt, ...) eka2l1::log::spd_logger->info("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_WARN(fmt, ...) eka2l1::log::spd_logger->warn("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_ERROR(fmt, ...) eka2l1::log::spd_logger->error("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_CRITICAL(fmt, ...) eka2l1::log::spd_logger->critical("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
 
-#define LOG_TRACE_IF(flag, fmt, ...) \
-    if (flag)                        \
-    eka2l1::log::spd_logger->trace("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_DEBUG_IF(flag, fmt, ...) \
-    if (flag)                        \
-    eka2l1::log::spd_logger->debug("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_INFO_IF(flag, fmt, ...) \
-    if (flag)                       \
-    eka2l1::log::spd_logger->info("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_WARN_IF(flag, fmt, ...) \
-    if (flag)                       \
-    eka2l1::log::spd_logger->warn("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_ERROR_IF(flag, fmt, ...) \
-    if (flag)                        \
-    eka2l1::log::spd_logger->error("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_CRITICAL_IF(flag, fmt, ...) \
-    if (flag)                           \
-    eka2l1::log::spd_logger->critical("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_TRACE_IF(flag, fmt, ...) \
+        if (flag)                        \
+        eka2l1::log::spd_logger->trace("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_DEBUG_IF(flag, fmt, ...) \
+        if (flag)                        \
+        eka2l1::log::spd_logger->debug("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_INFO_IF(flag, fmt, ...) \
+        if (flag)                       \
+        eka2l1::log::spd_logger->info("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_WARN_IF(flag, fmt, ...) \
+        if (flag)                       \
+        eka2l1::log::spd_logger->warn("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_ERROR_IF(flag, fmt, ...) \
+        if (flag)                        \
+        eka2l1::log::spd_logger->error("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
+    #define LOG_CRITICAL_IF(flag, fmt, ...) \
+        if (flag)                           \
+        eka2l1::log::spd_logger->critical("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
+#endif
