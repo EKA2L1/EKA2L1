@@ -15,6 +15,7 @@ namespace eka2l1 {
 	 * \returns False if IO error or invalid centrep configs.
 	*/
     bool parse_new_centrep_ini(const std::string &path, central_repo &repo);
+    
     struct central_repo_client_session {
         central_repo *attach_repo;
         central_repo_transaction_mode lock_mode;

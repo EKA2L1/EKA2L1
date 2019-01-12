@@ -81,11 +81,19 @@ namespace eka2l1 {
         std::vector<central_repo_entry_access_policy> single_policies;
         std::vector<central_repo_entry_access_policy> policies_range;
 
-        std::uint32_t default_meta;
+        std::uint32_t default_meta = 0;
         std::vector<central_repo_default_meta> meta_range;
 
         std::uint64_t time_stamp;
 
         std::vector<std::uint32_t> deleted_settings;
+
+        central_repo_entry *find_entry(const std::uint32_t key);
+
+        std::uint32_t get_default_meta_for_new_key(const std::uint32_t key);
+
+        bool add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var);
+        bool add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var,
+            const std::uint32_t meta);
     };
 }

@@ -102,6 +102,7 @@ add_library(epocservs
     src/services/backup/backup.cpp
     src/services/centralrepo/centralrepo.cpp
     src/services/centralrepo/cre.cpp
+    src/services/centralrepo/repo.cpp
     src/services/domain/domain.cpp
     src/services/drm/helper.cpp
     src/services/drm/rights.cpp
