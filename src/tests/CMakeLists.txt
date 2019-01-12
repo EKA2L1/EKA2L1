@@ -16,6 +16,9 @@ endmacro()
 
 include_directories(${GTEST_INCLUDE_DIR})
 
+# Disable logging for test
+add_definitions(-DDISABLE_LOGGING)
+
 add_subdirectory(epoc)
 add_subdirectory(common)
 

@@ -1,4 +1,5 @@
 set(COMMON_TEST_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/chunkyseri.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ini.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/path.cpp
     PARENT_SCOPE)
