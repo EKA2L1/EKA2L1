@@ -75,6 +75,7 @@ namespace eka2l1 {
                 }
             }
 
+            len >>= 1;
             str.resize(len);
         }
 
@@ -92,7 +93,7 @@ namespace eka2l1 {
 
         absorb_des_string(dat, seri);
 
-        if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
+        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
             *data = *reinterpret_cast<T *>(&dat[0]);
         }
     }
@@ -109,6 +110,13 @@ namespace eka2l1 {
         if (uid1 != 0x10000037 || uid3 != 0x10202BE9) {
             return -1;
         }
+        
+        // TODO: Figure out usage
+        std::uint32_t unk1 = 0xCC776985;
+        std::uint32_t unk2 = 0x14;
+
+        seri.absorb(unk1);
+        seri.absorb(unk2);
 
         seri.absorb(repo.ver);
         seri.absorb(repo.uid);
@@ -122,7 +130,7 @@ namespace eka2l1 {
         std::uint32_t single_policies_count = static_cast<std::uint32_t>(repo.single_policies.size());
         seri.absorb(single_policies_count);
 
-        if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             repo.single_policies.resize(single_policies_count);
         }
 
@@ -142,7 +150,7 @@ namespace eka2l1 {
         std::uint32_t range_policies_count = static_cast<std::uint32_t>(repo.policies_range.size());
         seri.absorb(range_policies_count);
 
-        if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             repo.policies_range.resize(range_policies_count);
         }
 
@@ -170,7 +178,7 @@ namespace eka2l1 {
         std::uint32_t default_meta_range_count = static_cast<std::uint32_t>(repo.meta_range.size());
         seri.absorb(default_meta_range_count);
 
-        if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             repo.policies_range.resize(default_meta_range_count);
         }
 
@@ -183,7 +191,7 @@ namespace eka2l1 {
         // Start to read entries
         std::uint32_t num_entries = static_cast<std::uint32_t>(repo.entries.size());
 
-        if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             repo.entries.resize(num_entries);
         }
 
@@ -253,7 +261,7 @@ namespace eka2l1 {
             std::uint32_t deleted_settings_count = static_cast<std::uint32_t>(repo.deleted_settings.size());
             seri.absorb(deleted_settings_count);
 
-            if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
                 repo.deleted_settings.resize(deleted_settings_count);
             }
 
