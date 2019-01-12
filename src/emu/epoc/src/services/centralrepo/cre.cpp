@@ -98,6 +98,18 @@ namespace eka2l1 {
     }
 
     int do_state_for_cre(common::chunkyseri &seri, eka2l1::central_repo &repo) {
+        std::uint32_t uid1 = 0x10000037;        // Direct file store UID
+        std::uint32_t uid2 = 0;
+        std::uint32_t uid3 = 0x10202BE9;        // Cenrep Server UID
+
+        seri.absorb(uid1);
+        seri.absorb(uid2);
+        seri.absorb(uid3);
+
+        if (uid1 != 0x10000037 || uid3 != 0x10202BE9) {
+            return -1;
+        }
+
         seri.absorb(repo.ver);
         seri.absorb(repo.uid);
 
