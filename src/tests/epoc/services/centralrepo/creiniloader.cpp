@@ -25,3 +25,19 @@ TEST(centralrepo, ini_loader_no_default_meta_range) {
     ASSERT_EQ(e2->data.intd, 15);
     ASSERT_EQ(e3->metadata_val, 12);
 }
+
+TEST(centralrepo, ini_loader_meta_default_and_range) {
+    central_repo repo;
+
+    ASSERT_TRUE(parse_new_centrep_ini("centralrepoassets/EFFF0001.ini", repo));
+    ASSERT_EQ(repo.entries.size(), 2);
+
+    central_repo_entry *e1 = repo.find_entry(5);
+    central_repo_entry *e2 = repo.find_entry(0x42);
+
+    ASSERT_TRUE(e1);
+    ASSERT_TRUE(e2);
+
+    ASSERT_EQ(e1->metadata_val, 10);
+    ASSERT_EQ(e2->metadata_val, 12);
+}
