@@ -296,6 +296,11 @@ namespace eka2l1::common {
             }
 
             std::string ns = next_string();
+
+            if (ns.empty()) {
+                return std::nullopt;
+            }
+
             waits.push_front(ns);
 
             return ns;

@@ -195,6 +195,23 @@ namespace eka2l1::common {
             return nullptr;
         }
 
+        template <typename T>
+        std::enable_if_t<std::is_integral_v<T>, T> key_as() {
+            std::string vc = key;
+
+            if (vc.length() > 2 && vc[0] == '0' && (vc[1] == 'x' || vc[1] == 'X')) {
+                vc = vc.substr(2, vc.length() - 2);
+                return static_cast<T>(std::strtoll(vc.c_str(), nullptr, 16));
+            }
+
+            return static_cast<T>(std::atoll(vc.c_str()));
+        }
+
+        template <typename T>
+        std::enable_if_t<std::is_floating_point_v<T>, T> key_as() {
+            return static_cast<T>(std::stod(key));
+        }
+
         static bool is_my_type(const ini_node_ptr node) {
             return (node->get_node_type() == INI_NODE_PAIR);
         }
