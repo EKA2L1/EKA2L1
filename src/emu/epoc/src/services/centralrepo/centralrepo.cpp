@@ -71,24 +71,23 @@ namespace eka2l1 {
 
                 case common::INI_NODE_PAIR: {
                     common::ini_pair *p = node->get_as<common::ini_pair>();
-                    
                     central_repo_default_meta def_meta;
 
                     // Iterate through each elements to determine
-                    std::uint32_t potientially_meta = p->get<common::ini_value>(0)->get_as_native<std::uint32_t>();
-                    common::ini_node *n = p->get<common::ini_node>(1);
+                    std::uint32_t potientially_meta = p->key_as<std::uint32_t>();
+                    common::ini_node *n = p->get<common::ini_node>(0);
 
                     if (n && n->get_node_type() == common::INI_NODE_KEY && 
                         strncmp(n->name(), "mask", 4) == 0) {
                         // That's a mask, we should add new
                         def_meta.default_meta_data = potientially_meta;
                         def_meta.key_mask = n->get_as<common::ini_prop>()->get_as_native<std::uint32_t>();
-                        def_meta.low_key = p->get<common::ini_value>(2)->get_as_native<std::uint32_t>();
+                        def_meta.low_key = p->get<common::ini_value>(1)->get_as_native<std::uint32_t>();
                     } else {
                         // Nope
                         def_meta.low_key = potientially_meta;
                         def_meta.high_key = n->get_as<common::ini_value>()->get_as_native<std::uint32_t>();
-                        def_meta.default_meta_data = p->get<common::ini_value>(2)->get_as_native<std::uint32_t>();
+                        def_meta.default_meta_data = p->get<common::ini_value>(1)->get_as_native<std::uint32_t>();
                     }
 
                     repo.meta_range.push_back(def_meta);

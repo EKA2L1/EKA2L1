@@ -6,7 +6,7 @@
 namespace eka2l1 {
     std::uint32_t central_repo::get_default_meta_for_new_key(const std::uint32_t key) {
         for (std::size_t i = 0; i < meta_range.size(); i++) {
-            if (!meta_range[i].high_key) {
+            if (meta_range[i].high_key) {
                 // Normal range
                 if (meta_range[i].low_key <= key
                     && key <= meta_range[i].high_key) {
