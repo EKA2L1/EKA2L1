@@ -190,6 +190,7 @@ namespace eka2l1 {
 
         // Start to read entries
         std::uint32_t num_entries = static_cast<std::uint32_t>(repo.entries.size());
+        seri.absorb(num_entries);
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             repo.entries.resize(num_entries);
@@ -213,9 +214,8 @@ namespace eka2l1 {
                     break;
                 }
 
-                case central_repo_entry_type::string8:
-                case central_repo_entry_type::string16: {
-                    entry_type = 3;
+                case central_repo_entry_type::string: {
+                    entry_type = 2;
                     break;
                 }
 
@@ -225,7 +225,28 @@ namespace eka2l1 {
             }
 
             seri.absorb(entry_type);
-            entry.data.etype = static_cast<central_repo_entry_type>(entry_type);
+
+            switch (entry_type) {
+            case 0: {
+                entry.data.etype = central_repo_entry_type::integer;
+                break;
+            }
+
+            case 1: {
+                entry.data.etype = central_repo_entry_type::real;
+                break;
+            }
+
+            case 2: case 3: {
+                entry.data.etype = central_repo_entry_type::string;
+                break;
+            }
+
+            default: {
+                entry.data.etype = central_repo_entry_type::none;
+                break;
+            }
+            }
 
             switch (entry.data.etype) {
             case central_repo_entry_type::integer: {
@@ -246,8 +267,7 @@ namespace eka2l1 {
                 break;
             }
 
-            case central_repo_entry_type::string8:
-            case central_repo_entry_type::string16: {
+            case central_repo_entry_type::string: {
                 absorb_des_string(entry.data.strd, seri);
                 break;
             }

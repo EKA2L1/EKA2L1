@@ -19,12 +19,12 @@ namespace eka2l1 {
         }
 
         if (tok == "string8") {
-            t = central_repo_entry_type::string8;
+            t = central_repo_entry_type::string;
             return true;
         }
 
         if (tok == "string") {
-            t = central_repo_entry_type::string16;
+            t = central_repo_entry_type::string;
             return true;
         }
 
@@ -138,12 +138,8 @@ namespace eka2l1 {
                 break;
             }
 
-            case central_repo_entry_type::string8:
-            case central_repo_entry_type::string16: {
+            case central_repo_entry_type::string: {
                 entry.data.strd = p->get<common::ini_value>(1)->get_value();
-                if (entry.data.strd[0] == '"') {
-                    entry.data.strd = entry.data.strd.substr(1, entry.data.strd.length() - 2);
-                }
                 break;
             }
 
