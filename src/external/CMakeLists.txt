@@ -80,6 +80,12 @@ add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
 add_library(unicorn INTERFACE)
 
+# Microprofile
+add_library(microprofile STATIC microprofile/microprofile.cpp microprofile/microprofile.h)
+target_include_directories(microprofile PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/microprofile")
+set_property(TARGET microprofile PROPERTY CXX_STANDARD 11)
+target_compile_definitions(microprofile PUBLIC MICROPROFILE_ENABLED=0 MICROPROFILE_GPU_TIMERS=0)
+
 if(APPLE)
 	target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/include")
 	target_link_libraries(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/lib/libunicorn.a")
