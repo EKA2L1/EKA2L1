@@ -166,4 +166,8 @@ namespace eka2l1 {
 
         return true;
     }
+
+    central_repo_server::central_repo_server(eka2l1::system *sys)
+        : service::server(sys, "!CentralRepository", true) {
+    }
 }

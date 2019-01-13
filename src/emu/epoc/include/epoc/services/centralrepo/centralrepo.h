@@ -27,6 +27,8 @@ namespace eka2l1 {
         std::map<std::uint32_t, central_repo_client_session> client_sessions;
 
     public:
+        explicit central_repo_server(eka2l1::system *sys);
+
         void init(service::ipc_context ctx);
 
         void create_int(service::ipc_context ctx);
