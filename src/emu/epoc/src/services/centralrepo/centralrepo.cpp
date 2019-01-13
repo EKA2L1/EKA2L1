@@ -4,6 +4,7 @@
 #include <common/ini.h>
 
 #include <epoc/services/centralrepo/centralrepo.h>
+#include <epoc/vfs.h>
 
 #include <fstream>
 #include <sstream>
@@ -169,5 +170,54 @@ namespace eka2l1 {
 
     central_repo_server::central_repo_server(eka2l1::system *sys)
         : service::server(sys, "!CentralRepository", true) {
+    }
+
+    void central_repo_server::init(service::ipc_context ctx) {
+        // The UID repo to load
+        const std::uint32_t repo_uid = static_cast<std::uint32_t>(*ctx.get_arg<int>(0));
+
+        if (repos.find(repo_uid) != repos.end()) {
+            // Load
+        }
+    }
+
+    void central_repo_server::rescan_drives(eka2l1::io_system *io) {
+        for (drive_number d = drive_z; d >= drive_a; d = static_cast<drive_number>(static_cast<int>(d) - 1)) {
+            eka2l1::drive drv = std::move(*io->get_drive_entry(d));
+            if (drv.media_type == drive_media::rom) {
+                rom_drv = d;
+            }
+
+            if (static_cast<bool>(drv.attribute & io_attrib::internal) && !static_cast<bool>(drv.attribute & io_attrib::write_protected)) {
+                avail_drives.push_back(d);
+            }
+        }
+    }
+
+    void central_repo_server::callback_on_drive_change(eka2l1::io_system *io, const drive_number drv, int act) {
+        // Eject
+        if (act == 0) {
+            if (rom_drv == drv) {
+                // Invalid
+                rom_drv = drive_number::drive_count;
+            } else {
+                auto res = std::find(avail_drives.begin(), avail_drives.end(), drv);
+                if (res != avail_drives.end()) {
+                    avail_drives.erase(res);
+                }
+            }
+        }
+
+        // Mount
+        if (act == 1) {
+            eka2l1::drive drvi = std::move(*io->get_drive_entry(drv));
+            if (drvi.media_type == drive_media::rom) {
+                rom_drv = drv;
+            }
+
+            if (static_cast<bool>(drvi.attribute & io_attrib::internal) && !static_cast<bool>(drvi.attribute & io_attrib::write_protected)) {
+                avail_drives.push_back(drv);
+            }
+        }
     }
 }
