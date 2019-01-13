@@ -43,3 +43,6 @@
 [submodule "src/external/fmt"]
 	path = src/external/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "src/external/microprofile"]
+	path = src/external/microprofile
+	url = https://github.com/jonasmr/microprofile/
