@@ -308,7 +308,7 @@ namespace eka2l1 {
 
                         if (!repofile) {
                             LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
-                            return false;
+                            return nullptr;
                         }
 
                         std::vector<std::uint8_t> buf;
