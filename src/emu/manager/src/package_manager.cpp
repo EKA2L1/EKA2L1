@@ -142,7 +142,7 @@ namespace eka2l1 {
                     info.executable_name = file_des->target.unicode_string;
 
                     // Fixed drive
-                    if (info.executable_name[0] == u'!') {
+                    if (info.executable_name[0] != u'!') {
                         LOG_INFO("Fixed drive, unexpected change to {}", char(info.executable_name[0]));
                         info.drive = char16_to_drive(info.executable_name[0]);
 
@@ -152,6 +152,7 @@ namespace eka2l1 {
                         f->close();
                     }
 
+                    info.executable_name[0] = drive_to_char16(drv);
                     LOG_INFO("Executable_name: {}", common::ucs2_to_utf8(info.executable_name));
 
                     symfile f = io->open_file(info.executable_name, READ_MODE | BIN_MODE);
