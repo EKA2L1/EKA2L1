@@ -67,4 +67,37 @@ namespace eka2l1 {
 
         return &(*ite);
     }
+
+    central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
+        if (!is_active()) {
+            return nullptr;
+        }
+
+        // Resolve
+        // If get entry for write but the transaction mode is read only, we can't allow that
+        if (mode == 1 && get_transaction_mode() == central_repo_transaction_mode::read_only) {
+            return nullptr;
+        }
+
+        // Check transactor
+        auto entry_ite = transactor.changes.find(key);
+        if (entry_ite != transactor.changes.end()) {
+            return &(entry_ite->second);
+        }
+
+        if (mode == 0) {
+            auto result = std::find_if(attach_repo->entries.begin(), attach_repo->entries.end(),
+                [&](const central_repo_entry &entry) { return entry.key == key; });
+
+            if (result == attach_repo->entries.end()) {
+                return nullptr;
+            }
+
+            return &(*result);
+        }
+
+        // Mode write, create new one in transactor
+        transactor.changes.emplace(key, central_repo_entry {});
+        return &(transactor.changes[key]);
+    }
 }

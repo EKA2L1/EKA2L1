@@ -21,12 +21,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <epoc/services/centralrepo/common.h>
 #include <epoc/utils/sec.h>
 
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 namespace eka2l1 {
     struct central_repo_entry_variant {
@@ -46,10 +49,10 @@ namespace eka2l1 {
 
     class central_repo_client;
 
-    enum class central_repo_transaction_mode {
+    enum class central_repo_transaction_mode : std::uint16_t {
         read_only,
-        write_only,
-        read_write
+        read_write,
+        read_write_async
     };
 
     struct central_repo_entry_access_policy {
@@ -68,6 +71,8 @@ namespace eka2l1 {
         std::uint32_t default_meta_data;
     };
 
+    struct central_repo_client_session;
+
     struct central_repo {
         // TODO (pent0): Add read/write cap
         std::uint8_t ver;
@@ -75,7 +80,9 @@ namespace eka2l1 {
         std::uint32_t uid;
 
         std::uint32_t owner_uid;
+        
         std::vector<central_repo_entry> entries;
+        std::vector<central_repo_client_session*> attached;
 
         central_repo_entry_access_policy default_policy;
         std::vector<central_repo_entry_access_policy> single_policies;
@@ -95,5 +102,65 @@ namespace eka2l1 {
         bool add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var);
         bool add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var,
             const std::uint32_t meta);
+    };
+    
+    struct central_repo_client_session;
+
+    struct central_repo_transactor {
+        std::unordered_map<std::uint32_t, central_repo_entry> changes;
+        central_repo_client_session *session;
+    };
+
+    struct central_repo_client_session {
+        central_repo *attach_repo;
+        central_repo_transactor transactor;
+
+        enum session_flags {
+            active = 0x1
+        };
+
+        std::uint32_t flags;
+
+        bool is_active() const {
+            return (flags >> 16) & active;
+        }
+
+        void set_active(const bool b) {
+            std::uint16_t aflags = flags >> 16;
+            flags &= 0x0000FFFF;
+
+            aflags &= ~active;
+
+            if (b) {
+                aflags |= active;
+            }
+
+            flags |= (aflags << 16);
+        }
+
+        void set_transaction_mode(const central_repo_transaction_mode mode) {
+            flags &= 0xFFFF0000;
+            flags |= static_cast<int>(mode);
+        }
+
+        central_repo_transaction_mode get_transaction_mode() {
+            return static_cast<central_repo_transaction_mode>(flags);
+        }
+
+        /*! \brief Get a pointer to an entry
+         *
+         * Do the following: 
+         * - Check if a transaction is active, otherwise return nullptr
+         * - Check if the key is in the transactor entry, and returns
+         * - Else, fallback to default
+         * 
+         * Mode are matters:
+         * 0: Read mode: if no entry in transactor, fallback to repo entries
+         * 1: Write mode: if no entry, create new
+         * 
+         * Of course, transaction mode are checked.
+         * If we get the entry for write purpose but the transaction mode is read-only, we won't allow that
+        */
+        central_repo_entry *get_entry(const std::uint32_t key, int mode);
     };
 }
