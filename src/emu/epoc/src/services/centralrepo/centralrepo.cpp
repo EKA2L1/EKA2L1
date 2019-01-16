@@ -203,7 +203,10 @@ namespace eka2l1 {
         central_repo_client_session clisession;
         clisession.attach_repo = repo;
         
-        client_sessions.emplace(ctx.msg->msg_session->unique_id(), std::move(clisession));
+        std::uint32_t id = id_counter++;
+        client_sessions.emplace(id, std::move(clisession));
+        bool result = ctx.write_arg_pkg<std::uint32_t>(3, id);
+
         ctx.set_request_status(KErrNone);
     }
 
@@ -241,12 +244,20 @@ namespace eka2l1 {
                 rom_drv = drv;
             }
 
-            if (static_cast<bool>(drvi.attribute & io_attrib::internal) && !static_cast<bool>(drvi.attribute & io_attrib::write_protected)) {
+            if (!static_cast<bool>(drvi.attribute & io_attrib::write_protected)) {
                 avail_drives.push_back(drv);
             }
         }
     }
 
+    /* It should be like follow:
+     *
+     * - The ROM INI are for rollback
+     * - And repo initialsation file resides outside private/1020be9/*
+     * 
+     * That's for rollback when calling reset. Any changes in repo will be saved in persists folder
+     * of preferable drive (usually internal).
+    */
     eka2l1::central_repo *central_repo_server::load_repo(eka2l1::io_system *io, const std::uint32_t key) {
         bool is_first_repo = first_repo;
         first_repo ? (first_repo = false) : 0;
@@ -268,60 +279,59 @@ namespace eka2l1 {
         std::u16string rom_persists_dir { drive_to_char16(rom_drv) };
         rom_persists_dir += private_dir + repoini;
 
-        bool reside_on_persists_folder = false;
+        bool one_on_rom = false;
 
         if (io->exist(rom_persists_dir)) {
-            reside_on_persists_folder = true;
+            one_on_rom = true;
         }
 
         std::u16string private_dir_persists = u":\\Private\\10202be9\\persists\\";
     
         // Internal should only contains CRE
         for (auto &drv: avail_drives) {
-            std::u16string repo_folder { drive_to_char16(drv) };
+            std::u16string repo_dir { drive_to_char16(drv) };
+            std::u16string privates[2] = { private_dir_persists, private_dir };
 
-            if (reside_on_persists_folder) {
-                repo_folder += private_dir_persists;
-            } else {
-                repo_folder += private_dir;
-            }
+            for (int i = 0 ; i < ((one_on_rom) ? 1 : 2); i++) {
+                std::u16string repo_folder = repo_dir + privates[i];
 
-            if (is_first_repo && !io->exist(repo_folder)) {
-                // Create one if it doesn't exist, for the future
-                io->create_directories(repo_folder);
-            } else {
-                // We can continue already
-                std::u16string repo_path = repo_folder + repocre;
-                
-                if (io->exist(repo_path)) {
-                    // Load and check for success
-                    symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
+                if (is_first_repo && !io->exist(repo_folder)) {
+                    // Create one if it doesn't exist, for the future
+                    io->create_directories(repo_folder);
+                } else {
+                    // We can continue already
+                    std::u16string repo_path = repo_folder + repocre;
+                    
+                    if (io->exist(repo_path)) {
+                        // Load and check for success
+                        symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
 
-                    if (!repofile) {
-                        LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
-                        return false;
+                        if (!repofile) {
+                            LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
+                            return false;
+                        }
+
+                        std::vector<std::uint8_t> buf;
+                        buf.resize(repofile->size());
+
+                        repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+
+                        common::chunkyseri seri(&buf[0], common::SERI_MODE_READ);
+                        eka2l1::central_repo repo;
+
+                        if (int err = do_state_for_cre(seri, repo)) {
+                            LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
+                            return nullptr;
+                        }
+
+                        repos.emplace(key, std::move(repo));
+                        return &repos[key];
                     }
-
-                    std::vector<std::uint8_t> buf;
-                    buf.resize(repofile->size());
-
-                    repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
-
-                    common::chunkyseri seri(&buf[0], common::SERI_MODE_READ);
-                    eka2l1::central_repo repo;
-
-                    if (int err = do_state_for_cre(seri, repo)) {
-                        LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
-                        return nullptr;
-                    }
-
-                    repos.emplace(key, std::move(repo));
-                    return &repos[key];
                 }
             }
         }
 
-        if (reside_on_persists_folder) {
+        if (one_on_rom) {
             // TODO: Make this kind of stuff rely in-memory
             auto path = io->get_raw_path(rom_persists_dir);
 

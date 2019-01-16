@@ -3,6 +3,7 @@
 #include <epoc/services/centralrepo/repo.h>
 #include <epoc/services/server.h>
 
+#include <atomic>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -24,6 +25,8 @@ namespace eka2l1 {
         std::map<std::uint32_t, central_repo_client_session> client_sessions;
 
         drive_number rom_drv;
+
+        std::atomic<std::uint32_t> id_counter;
 
         // These drives must be internal, aka not removeable
         std::vector<drive_number> avail_drives;
