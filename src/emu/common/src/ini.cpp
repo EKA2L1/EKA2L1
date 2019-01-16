@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/dynamicfile.h>
 #include <common/ini.h>
@@ -186,12 +187,14 @@ namespace eka2l1::common {
         std::size_t success_translation = 0;
         values.resize(count);
 
-        for (std::size_t i = 0; i < values.size(); i++) {
-            try {
-                *(val + i) = std::atol(values[i]->get_value().c_str());
-                success_translation++;
-            } catch (...) {
-                *(val + i) = default_val;
+        for (std::size_t i = 0; i < common::min(static_cast<std::size_t>(count), values.size()); i++) {
+            if (values[i]->get_node_type() == INI_NODE_VALUE) {
+                try {
+                    *(val + i) = values[i]->get_as<ini_value>()->get_as_native<std::uint32_t>();
+                    success_translation++;
+                } catch (...) {
+                    *(val + i) = default_val;
+                }
             }
         }
 
@@ -203,11 +206,16 @@ namespace eka2l1::common {
         values.resize(count);
 
         for (std::size_t i = 0; i < values.size(); i++) {
-            try {
-                *(val + i) = static_cast<bool>(std::atoi(values[i]->get_value().c_str()));
-                success_translation++;
-            } catch (...) {
-                *(val + i) = default_val;
+            if (values[i]->get_node_type() == INI_NODE_VALUE) {
+                const auto v = values[i]->get_as<ini_value>()->get_value();
+
+                if (v == "true") {
+                    *(val + i) = true;
+                    success_translation++;
+                } else if (v == "false") {
+                    *(val + i) = false;
+                    success_translation++;
+                }
             }
         }
 
@@ -216,7 +224,7 @@ namespace eka2l1::common {
 
     std::size_t ini_pair::get(std::vector<std::string> &val) {
         for (std::size_t i = 0 ; i < val.size(); i++) {
-            val[i] = values[i]->get_value();
+            val[i] = values[i]->get_as<ini_value>()->get_value();
         }
 
         return values.size();
@@ -248,6 +256,11 @@ namespace eka2l1::common {
                 counter++;
             }
 
+            if (line[counter] == ',') {
+                counter++;
+                return ",";
+            }
+
             if (counter >= line.length()) {
                 return "";
             }
@@ -263,12 +276,11 @@ namespace eka2l1::common {
 
             std::size_t begin = counter;
 
-            while (counter < line.length() && line[counter] != cto_stop) {
+            while (counter < line.length() && line[counter] != cto_stop && line[counter] != ',') {
                 counter++;
             }
 
-            std::size_t len = counter - begin
-                + (cto_stop == ']' ? 1 : 0);
+            std::size_t len = counter - begin + (cto_stop == ']' ? 1 : 0);
 
             // Stage 1 of tokenizing
             std::string trim1 = line.substr(begin, len);
@@ -340,39 +352,79 @@ namespace eka2l1::common {
                     if (stream.eof()) {
                         sec->create_value(next_tok.c_str());
                     } else {
-                        std::string pair_name = first_token.c_str();
-
-                        // If the next couple of tokens is indicates a prop, we should create an empty pair
-                        auto next_next_tok = stream.peek_string();
+                        ini_pair *parent_pair = nullptr;
                         ini_pair *pair = nullptr;
-
-                        if (next_next_tok && *next_next_tok == "=") {
-                            stream.waits.push_front(next_tok);
-                        } else {
-                            pair = sec->create_pair(pair_name.c_str());
-                        }
-
+            
                         while (!stream.eof()) {
-                            next_tok = stream.next_string();
-                            next_next_tok = stream.peek_string();
-
-                            if (!next_next_tok || *next_next_tok != "=") {
-                                pair ? pair->values.push_back(std::make_shared<ini_value>(next_tok))
-                                    : sec->nodes.push_back(std::make_shared<ini_value>(next_tok));
-                            } else {
-                                // Eat the equals
-                                stream.next_string();
-
-                                if (stream.eof()) {
-                                    return -3;
+                            // If only there is not a pair available, try create one
+                            if (!pair) {
+                                if (!parent_pair) {
+                                    pair = sec->create_pair(first_token.c_str());
+                                } else {
+                                    parent_pair->values.push_back(std::make_shared<ini_pair>());
+                                    pair = reinterpret_cast<ini_pair*>(&(*parent_pair->values.back()));
+                                    pair->key = first_token;
                                 }
-
-                                std::string val_of_prop = stream.next_string();
-                                pair ? pair->values.push_back(std::make_shared<ini_prop>(next_tok.c_str(), val_of_prop.c_str()))
-                                    : sec->nodes.push_back(std::make_shared<ini_prop>(next_tok.c_str(), val_of_prop.c_str()));
                             }
+
+                            auto next_next_tok = stream.peek_string();
+                            bool should_cont_on_comma = false;
+                            bool first = false;
+                            bool cont = false;
+
+                            // This kind of pair is special, elements are seperate by ,
+                            if (next_next_tok == "=") {
+                                stream.next_string();
+                                should_cont_on_comma = true;
+                                first = true;
+                            }
+
+                            if (should_cont_on_comma) {
+                                do {
+                                    !first ? (void)stream.next_string() : (first = false);
+                                    auto tok = stream.next_string();
+
+                                    pair->values.push_back(std::make_shared<ini_value>(tok));
+                                } while (stream.peek_string() && *stream.peek_string() == ",");
+
+                                pair = parent_pair;
+                                parent_pair = nullptr;
+
+                                // We should jump right ahead and not eating any more token
+                                if (stream.eof()) {
+                                    break;
+                                } else {
+                                    continue;
+                                }
+                            } else {
+                                do {
+                                    auto tok = stream.next_string();
+                                    auto next_next_tok = stream.peek_string();
+
+                                    if (next_next_tok && *next_next_tok == "=") {
+                                        first_token = tok;
+                                        parent_pair = pair;
+                                        pair = nullptr;
+
+                                        cont = true;
+                                        break;
+                                    } else {
+                                        pair->values.push_back(std::make_shared<ini_value>(tok.c_str()));
+                                    }
+                                } while (!stream.eof());
+                            }
+
+                            if (stream.eof()) {
+                                break;
+                            }
+
+                            if (cont) {
+                                continue;
+                            }
+
+                            first_token = stream.next_string();
                         }
-                    }
+                    }    
                 }
             }
         }
