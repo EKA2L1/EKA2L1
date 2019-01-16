@@ -1,13 +1,20 @@
 #include <common/algorithm.h>
+#include <common/chunkyseri.h>
 #include <common/cvt.h>
+#include <common/e32inc.h>
 #include <common/log.h>
 #include <common/ini.h>
 
 #include <epoc/services/centralrepo/centralrepo.h>
+#include <epoc/services/centralrepo/cre.h>
+#include <epoc/epoc.h>
 #include <epoc/vfs.h>
+
+#include <e32err.h>
 
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace eka2l1 {
@@ -50,8 +57,8 @@ namespace eka2l1 {
             return false;
         }
 
-        common::ini_prop *crerep_ver_info = creini.find("cenrep")->get_as<common::ini_prop>();
-        repo.ver = std::atoi(crerep_ver_info->get_value().c_str());
+        common::ini_pair *crerep_ver_info = creini.find("version")->get_as<common::ini_pair>();
+        repo.ver = crerep_ver_info->get<common::ini_value>(0)->get_as_native<std::uint8_t>();
 
         // Get owner section
         common::ini_section *crerep_owner = creini.find("owner")->get_as<common::ini_section>();
@@ -82,7 +89,7 @@ namespace eka2l1 {
                         strncmp(n->name(), "mask", 4) == 0) {
                         // That's a mask, we should add new
                         def_meta.default_meta_data = potientially_meta;
-                        def_meta.key_mask = n->get_as<common::ini_prop>()->get_as_native<std::uint32_t>();
+                        def_meta.key_mask = n->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_as_native<std::uint32_t>();
                         def_meta.low_key = p->get<common::ini_value>(1)->get_as_native<std::uint32_t>();
                     } else {
                         // Nope
@@ -170,15 +177,34 @@ namespace eka2l1 {
 
     central_repo_server::central_repo_server(eka2l1::system *sys)
         : service::server(sys, "!CentralRepository", true) {
+        REGISTER_IPC(central_repo_server, init, cen_rep_init, "CenRep::Init");
     }
 
     void central_repo_server::init(service::ipc_context ctx) {
         // The UID repo to load
         const std::uint32_t repo_uid = static_cast<std::uint32_t>(*ctx.get_arg<int>(0));
+        eka2l1::central_repo *repo = nullptr;
 
-        if (repos.find(repo_uid) != repos.end()) {
+        auto ite = repos.find(repo_uid);
+
+        if (ite != repos.end()) {
             // Load
+            repo = &(ite->second);
+        } else {
+            repo = load_repo(ctx.sys->get_io_system(), repo_uid);
+
+            if (!repo) {
+                ctx.set_request_status(KErrNotFound);
+                return;
+            }
         }
+
+        // New client session
+        central_repo_client_session clisession;
+        clisession.attach_repo = repo;
+        
+        client_sessions.emplace(ctx.msg->msg_session->unique_id(), std::move(clisession));
+        ctx.set_request_status(KErrNone);
     }
 
     void central_repo_server::rescan_drives(eka2l1::io_system *io) {
@@ -219,5 +245,99 @@ namespace eka2l1 {
                 avail_drives.push_back(drv);
             }
         }
+    }
+
+    eka2l1::central_repo *central_repo_server::load_repo(eka2l1::io_system *io, const std::uint32_t key) {
+        bool is_first_repo = first_repo;
+        first_repo ? (first_repo = false) : 0;
+
+        if (is_first_repo) {
+            rescan_drives(io);
+        }
+
+        std::u16string keystr = common::utf8_to_ucs2(common::to_string(key, std::hex));
+
+        // We prefer cre if it's available
+        std::u16string repocre = keystr + u".CRE";
+        std::u16string repoini = keystr + u".TXT";
+
+        std::u16string private_dir = u":\\Private\\10202be9\\";
+
+        // Check for internal first, than fallback to ROM
+        // Check if file exists on ROM first. If it's than it should resides in persists folder of internal drive
+        std::u16string rom_persists_dir { drive_to_char16(rom_drv) };
+        rom_persists_dir += private_dir + repoini;
+
+        bool reside_on_persists_folder = false;
+
+        if (io->exist(rom_persists_dir)) {
+            reside_on_persists_folder = true;
+        }
+
+        std::u16string private_dir_persists = u":\\Private\\10202be9\\persists\\";
+    
+        // Internal should only contains CRE
+        for (auto &drv: avail_drives) {
+            std::u16string repo_folder { drive_to_char16(drv) };
+
+            if (reside_on_persists_folder) {
+                repo_folder += private_dir_persists;
+            } else {
+                repo_folder += private_dir;
+            }
+
+            if (is_first_repo && !io->exist(repo_folder)) {
+                // Create one if it doesn't exist, for the future
+                io->create_directories(repo_folder);
+            } else {
+                // We can continue already
+                std::u16string repo_path = repo_folder + repocre;
+                
+                if (io->exist(repo_path)) {
+                    // Load and check for success
+                    symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
+
+                    if (!repofile) {
+                        LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
+                        return false;
+                    }
+
+                    std::vector<std::uint8_t> buf;
+                    buf.resize(repofile->size());
+
+                    repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+
+                    common::chunkyseri seri(&buf[0], common::SERI_MODE_READ);
+                    eka2l1::central_repo repo;
+
+                    if (int err = do_state_for_cre(seri, repo)) {
+                        LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
+                        return nullptr;
+                    }
+
+                    repos.emplace(key, std::move(repo));
+                    return &repos[key];
+                }
+            }
+        }
+
+        if (reside_on_persists_folder) {
+            // TODO: Make this kind of stuff rely in-memory
+            auto path = io->get_raw_path(rom_persists_dir);
+
+            if (!path) {
+                LOG_ERROR("Can't get real path of {}!", common::ucs2_to_utf8(rom_persists_dir));
+                return nullptr;
+            }
+
+            eka2l1::central_repo repo;
+
+            if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), repo)) {
+                repos.emplace(key, std::move(repo));
+                return &repos[key];
+            }
+        }
+
+        return nullptr;
     }
 }
