@@ -381,7 +381,12 @@ namespace eka2l1::common {
 
                             if (should_cont_on_comma) {
                                 do {
-                                    !first ? (void)stream.next_string() : (first = false);
+                                    if (!first) {
+                                        stream.next_string();
+                                    } else {
+                                        first = false;
+                                    }
+
                                     auto tok = stream.next_string();
 
                                     pair->values.push_back(std::make_shared<ini_value>(tok));
