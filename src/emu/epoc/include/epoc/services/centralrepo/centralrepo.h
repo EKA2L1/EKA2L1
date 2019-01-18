@@ -24,6 +24,8 @@ namespace eka2l1 {
         std::unordered_map<std::uint32_t, central_repo> repos;
         std::map<std::uint32_t, central_repo_client_session> client_sessions;
 
+        central_repos_cacher    backup_cacher;
+
         drive_number rom_drv;
 
         std::atomic<std::uint32_t> id_counter;
@@ -37,20 +39,18 @@ namespace eka2l1 {
     protected:
         void rescan_drives(eka2l1::io_system *io);
 
+        int load_repo_adv(eka2l1::io_system *io, central_repo *repo, const std::uint32_t key,
+            bool scan_org_only = false);
+
         eka2l1::central_repo *load_repo(eka2l1::io_system *io, const std::uint32_t key);
         void callback_on_drive_change(eka2l1::io_system *io, const drive_number drv, int act);
 
     public:
+        void redirect_msg_to_session(service::ipc_context ctx);
+
         explicit central_repo_server(eka2l1::system *sys);
+        eka2l1::central_repo *get_initial_repo(eka2l1::io_system *io, const std::uint32_t key);
 
         void init(service::ipc_context ctx);
-
-        void create_int(service::ipc_context ctx);
-        void create_real(service::ipc_context ctx);
-        void create_string8(service::ipc_context ctx);
-        void create_string16(service::ipc_context ctx);
-
-        void transaction_start(service::ipc_context ctx);
-        void transaction_commit(service::ipc_context ctx);
     };
 }

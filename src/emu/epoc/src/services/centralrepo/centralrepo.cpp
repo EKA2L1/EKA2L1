@@ -176,8 +176,10 @@ namespace eka2l1 {
     }
 
     central_repo_server::central_repo_server(eka2l1::system *sys)
-        : service::server(sys, "!CentralRepository", true) {
+        : service::server(sys, "!CentralRepository", true) 
+         , id_counter(0) {
         REGISTER_IPC(central_repo_server, init, cen_rep_init, "CenRep::Init");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
     }
 
     void central_repo_server::init(service::ipc_context ctx) {
@@ -202,11 +204,19 @@ namespace eka2l1 {
         // New client session
         central_repo_client_session clisession;
         clisession.attach_repo = repo;
-        
-        std::uint32_t id = id_counter++;
-        client_sessions.emplace(id, std::move(clisession));
-        bool result = ctx.write_arg_pkg<std::uint32_t>(3, id);
+        clisession.server = this;
 
+        std::uint32_t id = id_counter++;
+        auto res = client_sessions.emplace(id, std::move(clisession));
+
+        if (!res.second) {
+            ctx.set_request_status(KErrNoMemory);
+            return;
+        }
+
+        repo->attached.push_back(&res.first->second);
+
+        bool result = ctx.write_arg_pkg<std::uint32_t>(3, id);
         ctx.set_request_status(KErrNone);
     }
 
@@ -250,15 +260,22 @@ namespace eka2l1 {
         }
     }
 
-    /* It should be like follow:
-     *
-     * - The ROM INI are for rollback
-     * - And repo initialsation file resides outside private/1020be9/*
-     * 
-     * That's for rollback when calling reset. Any changes in repo will be saved in persists folder
-     * of preferable drive (usually internal).
-    */
-    eka2l1::central_repo *central_repo_server::load_repo(eka2l1::io_system *io, const std::uint32_t key) {
+    void central_repo_server::redirect_msg_to_session(service::ipc_context ctx) {
+        std::uint32_t session_uid = static_cast<std::uint32_t>(*ctx.get_arg<int>(3));
+        auto session_ite = client_sessions.find(session_uid);
+
+        if (session_ite == client_sessions.end()) {
+            LOG_ERROR("Session ID passed not found 0x{:X}", session_uid);
+            ctx.set_request_status(KErrArgument);
+
+            return;
+        }
+
+        session_ite->second.handle_message(&ctx);
+    }
+    
+    int central_repo_server::load_repo_adv(eka2l1::io_system *io, central_repo *repo, const std::uint32_t key,
+        bool scan_org_only) {
         bool is_first_repo = first_repo;
         first_repo ? (first_repo = false) : 0;
 
@@ -290,7 +307,14 @@ namespace eka2l1 {
         // Internal should only contains CRE
         for (auto &drv: avail_drives) {
             std::u16string repo_dir { drive_to_char16(drv) };
-            std::u16string privates[2] = { private_dir_persists, private_dir };
+            std::u16string privates[2];
+            
+            if (scan_org_only) {
+                privates[0] = private_dir;
+            } else {
+                privates[0] = private_dir_persists;
+                privates[1] = private_dir;
+            }
 
             for (int i = 0 ; i < ((one_on_rom) ? 1 : 2); i++) {
                 std::u16string repo_folder = repo_dir + privates[i];
@@ -308,24 +332,24 @@ namespace eka2l1 {
 
                         if (!repofile) {
                             LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
-                            return nullptr;
+                            return -1;
                         }
 
                         std::vector<std::uint8_t> buf;
                         buf.resize(repofile->size());
 
                         repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+                        repofile->close();
 
                         common::chunkyseri seri(&buf[0], common::SERI_MODE_READ);
-                        eka2l1::central_repo repo;
-
-                        if (int err = do_state_for_cre(seri, repo)) {
+                        if (int err = do_state_for_cre(seri, *repo)) {
                             LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
-                            return nullptr;
+                            return -1;
                         }
 
-                        repos.emplace(key, std::move(repo));
-                        return &repos[key];
+                        repo->reside_place = drv;
+
+                        return 0;
                     }
                 }
             }
@@ -337,17 +361,110 @@ namespace eka2l1 {
 
             if (!path) {
                 LOG_ERROR("Can't get real path of {}!", common::ucs2_to_utf8(rom_persists_dir));
-                return nullptr;
+                return -1;
             }
 
-            eka2l1::central_repo repo;
-
-            if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), repo)) {
-                repos.emplace(key, std::move(repo));
-                return &repos[key];
+            repo->uid = key;
+            if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), *repo)) {
+                repo->reside_place = avail_drives[0];
+                return 0;
             }
         }
 
-        return nullptr;
+        return -1;
+    }
+        
+    /* It should be like follow:
+     *
+     * - The ROM INI are for rollback
+     * - And repo initialsation file resides outside private/1020be9/*
+     * 
+     * That's for rollback when calling reset. Any changes in repo will be saved in persists folder
+     * of preferable drive (usually internal).
+    */
+    eka2l1::central_repo *central_repo_server::load_repo(eka2l1::io_system *io, const std::uint32_t key) {
+        eka2l1::central_repo repo;
+        if (load_repo_adv(io, &repo, key, false) != 0) {
+            return nullptr;
+        }
+
+        repos.emplace(key, std::move(repo));
+        return &repos[key];
+    }
+
+    eka2l1::central_repo *central_repo_server::get_initial_repo(eka2l1::io_system *io, 
+        const std::uint32_t key) {
+        // Load from cache first
+        eka2l1::central_repo *repo = backup_cacher.get_cached_repo(key);
+
+        if (!repo) {
+            // Load
+            eka2l1::central_repo trepo;
+            if (load_repo_adv(io, &trepo, key, true) != 0) {
+                return nullptr;
+            }
+
+            return backup_cacher.add_repo(key, trepo);
+        }
+
+        return repo;
+    }
+
+    int central_repo_client_session::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
+        // In transacton, fail
+        if (is_active()) {
+            return -1;
+        }
+
+        central_repo_entry *e = attach_repo->find_entry(key);
+
+        if (!e) {
+            return -2;
+        }
+
+        central_repo_entry *source_e = init_repo->find_entry(key);
+
+        if (!source_e) {
+            return -2;
+        }
+
+        e->data = source_e->data;
+        e->metadata_val = source_e->metadata_val;
+
+        return 0;
+    }
+        
+    void central_repo_client_session::handle_message(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
+        case cen_rep_reset: { 
+            io_system *io = ctx->sys->get_io_system();
+
+            eka2l1::central_repo *init_repo = server->get_initial_repo(io, attach_repo->uid);
+
+            // Reset the keys
+            int err = reset_key(init_repo, static_cast<std::uint32_t>(*ctx->get_arg<int>(0)));
+            
+            // In transaction
+            if (err == -1) {
+                ctx->set_request_status(KErrNotSupported);
+                break;
+            }
+
+            if (err == -2) {
+                ctx->set_request_status(KErrNotFound);
+                break;
+            }
+
+            // Write committed changes to disk
+            write_changes(io);
+
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unhandled message opcode for cenrep 0x{:X]", ctx->msg->function);
+            break;
+        }
+        }
     }
 }

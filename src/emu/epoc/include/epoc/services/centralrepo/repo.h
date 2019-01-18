@@ -26,12 +26,21 @@
 #include <epoc/services/centralrepo/common.h>
 #include <epoc/utils/sec.h>
 
+#include <common/types.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <unordered_map>
 
 namespace eka2l1 {
+    namespace service {
+        struct ipc_context;
+    }
+
+    class central_repo_server;
+    class io_system;
+
     struct central_repo_entry_variant {
         central_repo_entry_type etype;
 
@@ -74,6 +83,8 @@ namespace eka2l1 {
     struct central_repo_client_session;
 
     struct central_repo {
+        drive_number reside_place;
+
         // TODO (pent0): Add read/write cap
         std::uint8_t ver;
         std::uint8_t keyspace_type;
@@ -111,9 +122,43 @@ namespace eka2l1 {
         central_repo_client_session *session;
     };
 
+    /*! \brief A repos cacher
+     *
+     * This cacher are likely to be used to store original backup repo.
+     * Once the map reach its limit, the oldest one got removed.
+    */
+    struct central_repos_cacher {
+        struct cache_entry {
+            std::uint64_t last_access;
+            eka2l1::central_repo repo;
+        };
+
+        // TODO: Modifable value
+        enum {
+            MAX_REPO_CACHE_ENTRIES = 35
+        };
+
+        std::unordered_map<std::uint32_t, cache_entry> entries;
+
+        void free_oldest();
+
+        eka2l1::central_repo *add_repo(const std::uint32_t key, eka2l1::central_repo &repo);
+        bool remove_repo(const std::uint32_t key);
+
+        // USE ONE TIME ONLY!
+        eka2l1::central_repo *get_cached_repo(const std::uint32_t key);
+    };
+
     struct central_repo_client_session {
+        central_repo_server *server;
+
         central_repo *attach_repo;
         central_repo_transactor transactor;
+
+        int reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key);
+        void write_changes(eka2l1::io_system *io);
+
+        void handle_message(service::ipc_context *ctx);
 
         enum session_flags {
             active = 0x1
