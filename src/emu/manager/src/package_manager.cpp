@@ -48,7 +48,7 @@ namespace eka2l1 {
 
                 app_info info;
 
-                info.drive = static_cast<drive_number>(app["drive"].as<std::uint8_t>());
+                info.drive = static_cast<drive_number>(app["drive"].as<int>());
                 info.ver = static_cast<epocver>(app["epoc"].as<int>());
 
                 auto exec = app["exec"].as<std::string>();
