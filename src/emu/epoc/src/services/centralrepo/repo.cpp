@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <chrono>
 
 namespace eka2l1 {
     std::uint32_t central_repo::get_default_meta_for_new_key(const std::uint32_t key) {
@@ -66,5 +67,93 @@ namespace eka2l1 {
         }
 
         return &(*ite);
+    }
+
+    central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
+        if (!is_active()) {
+            return nullptr;
+        }
+
+        // Resolve
+        // If get entry for write but the transaction mode is read only, we can't allow that
+        if (mode == 1 && get_transaction_mode() == central_repo_transaction_mode::read_only) {
+            return nullptr;
+        }
+
+        // Check transactor
+        auto entry_ite = transactor.changes.find(key);
+        if (entry_ite != transactor.changes.end()) {
+            return &(entry_ite->second);
+        }
+
+        if (mode == 0) {
+            auto result = std::find_if(attach_repo->entries.begin(), attach_repo->entries.end(),
+                [&](const central_repo_entry &entry) { return entry.key == key; });
+
+            if (result == attach_repo->entries.end()) {
+                return nullptr;
+            }
+
+            return &(*result);
+        }
+
+        // Mode write, create new one in transactor
+        transactor.changes.emplace(key, central_repo_entry {});
+        return &(transactor.changes[key]);
+    }
+
+    void central_repos_cacher::free_oldest() {
+        std::uint32_t repo_key = 0;
+        std::uint64_t oldest_access = 0xFFFFFFFFFFFFFFFF;
+
+        for (auto &[key, entry]: entries) {
+            if (entry.last_access < oldest_access) {
+                oldest_access = entry.last_access;
+                repo_key = key; 
+            }
+        }
+
+        entries.erase(repo_key);
+    }
+
+    eka2l1::central_repo *central_repos_cacher::add_repo(const std::uint32_t key, eka2l1::central_repo &repo) {
+        if (entries.size() == MAX_REPO_CACHE_ENTRIES) {
+            // Free the oldest
+            free_oldest();
+        }
+
+        cache_entry entry;
+        entry.last_access = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+            .count();
+
+        entry.repo = std::move(repo);
+        auto res = entries.emplace(key, std::move(entry));
+
+        if (res.second) {
+            return &res.first->second.repo;
+        }
+
+        return nullptr;
+    }
+
+    bool central_repos_cacher::remove_repo(const std::uint32_t key) {
+        if (entries.erase(key)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    eka2l1::central_repo *central_repos_cacher::get_cached_repo(const std::uint32_t key) {
+        auto ite = entries.find(key);
+
+        if (ite == entries.end()) {
+            return nullptr;
+        }
+
+        ite->second.last_access = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+            .count();
+
+        return &(ite->second.repo);
     }
 }

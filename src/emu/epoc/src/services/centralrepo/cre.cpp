@@ -26,6 +26,7 @@
 
 #include <common/chunkyseri.h>
 #include <common/log.h>
+#include <common/cvt.h>
 
 namespace eka2l1 {
     /* 
@@ -293,5 +294,32 @@ namespace eka2l1 {
         // TODO: Supply policy for entry
 
         return 0;
+    }
+    
+    void central_repo_client_session::write_changes(eka2l1::io_system *io) {
+        std::vector<std::uint8_t> bufs;
+
+        {
+            common::chunkyseri seri(nullptr, common::SERI_MODE_MESAURE);
+            do_state_for_cre(seri, *attach_repo);
+
+            bufs.resize(seri.get_seri_mode());
+        }
+    
+        common::chunkyseri seri(&bufs[0], common::SERI_MODE_WRITE);
+        do_state_for_cre(seri, *attach_repo);
+
+        std::u16string p { drive_to_char16(attach_repo->reside_place) };
+        p += u"\\Private\\10202BE9\\persists";
+
+        symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
+
+        if (!f) {
+            LOG_ERROR("Can't write CRE changes, opening {} failed", common::ucs2_to_utf8(p));
+            return;
+        }
+
+        f->write_file(&bufs[0], 1, static_cast<std::uint32_t>(bufs.size()));
+        f->close();
     }
 }

@@ -22,6 +22,7 @@
 
 #include <epoc/services/applist/applist.h>
 #include <epoc/services/backup/backup.h>
+#include <epoc/services/centralrepo/centralrepo.h>
 #include <epoc/services/domain/domain.h>
 #include <epoc/services/fbs/fbs.h>
 #include <epoc/services/drm/helper.h>
@@ -242,6 +243,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, fbs_server);
             CREATE_SERVER(sys, window_server);
+            CREATE_SERVER(sys, central_repo_server);
             CREATE_SERVER(sys, featmgr_server);
             CREATE_SERVER(sys, backup_server);
             CREATE_SERVER(sys, install_server);

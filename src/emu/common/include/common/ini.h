@@ -18,6 +18,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* This ini parser is made to deal with many INI types across Symbian OS
+ *
+ * There includes wsini, cenrep ini, etc.. These INI are advances from the original INI 
+ * format and each server has it own parser.
+ * 
+ * Here i group them all, and keep struct as lightweight as possible.
+ * 
+ * Parsing support
+ * Two types of prop (pair):
+ * 
+ * INT A B (Prop seperate with space)
+ * A=5, 7, 9 (Prop equals + seperate with comma)
+ * 
+ * These can be recursive, but don't test it to its limit:
+ * 
+ * INT A = 5, 7, 9 B
+ * 
+ * Will be as:
+ * PROP KEY = INT, VALUES = { {KEY = A, VALUE = {5, 7, 9} } , B }
+*/
+
 #pragma once
 
 #include <cstdint>
@@ -108,28 +129,6 @@ namespace eka2l1::common {
         }
     };
 
-    class ini_prop : public ini_value {
-        friend class ini_file;
-        friend class ini_section;
-
-        std::string key;
-
-    public:
-        ini_prop()
-            : ini_value(INI_NODE_KEY) {
-        }
-
-        ini_prop(const char *key, const char *value) 
-            : ini_value(INI_NODE_KEY) {
-            this->key = key;
-            this->value = value;
-        }
-
-        virtual const char *name() override {
-            return key.c_str();
-        }
-    };
-
     using ini_value_node_ptr = std::shared_ptr<ini_value>;
 
     class ini_pair : public ini_node {
@@ -137,7 +136,7 @@ namespace eka2l1::common {
         friend class ini_file;
 
         std::string key;
-        std::vector<ini_value_node_ptr> values;
+        std::vector<ini_node_ptr> values;
 
     public:
         ini_pair()
@@ -165,7 +164,7 @@ namespace eka2l1::common {
                 return my_index != other.my_index; 
             }
 
-            common::ini_value_node_ptr &operator *() {
+            common::ini_node_ptr &operator *() {
                 return parent->values[my_index];
             }
         };
@@ -176,6 +175,11 @@ namespace eka2l1::common {
 
         iterator end() {
             return iterator { this, values.size() };
+        }
+
+        ini_node_ptr operator [](const std::size_t idx) {
+            // No check, expect to throw
+            return values[idx];
         }
 
         bool set(std::uint32_t *vals, int count);
