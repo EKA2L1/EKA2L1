@@ -81,6 +81,7 @@ add_library(epocservs
     include/epoc/services/domain/domain.h
     include/epoc/services/drm/helper.h
     include/epoc/services/drm/rights.h
+    include/epoc/services/fbs/fbs.h
     include/epoc/services/featmgr/featmgr.h
     include/epoc/services/fs/fs.h
     include/epoc/services/loader/loader.h
@@ -106,6 +107,7 @@ add_library(epocservs
     src/services/domain/domain.cpp
     src/services/drm/helper.cpp
     src/services/drm/rights.cpp
+    src/services/fbs/fbs.cpp
     src/services/featmgr/featmgr.cpp
     src/services/fs/fs.cpp
     src/services/install/install.cpp
