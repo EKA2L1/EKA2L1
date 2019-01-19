@@ -82,6 +82,7 @@ add_library(epocservs
     include/epoc/services/drm/helper.h
     include/epoc/services/drm/rights.h
     include/epoc/services/fbs/fbs.h
+    include/epoc/services/fbs/font.h
     include/epoc/services/featmgr/featmgr.h
     include/epoc/services/fs/fs.h
     include/epoc/services/loader/loader.h
