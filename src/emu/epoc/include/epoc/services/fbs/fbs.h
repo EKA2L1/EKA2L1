@@ -22,10 +22,26 @@
  */
 
 #include <epoc/services/server.h>
+#include <unordered_map>
 
 namespace eka2l1 {
+    enum fbs_opcode {
+        fbs_init
+    };
+
+    struct fbscli {
+
+    };
+
     class fbs_server: public service::server {
+        chunk_ptr   shared_chunk;
+        chunk_ptr   large_chunk;
+
+        std::unordered_map<std::uint32_t, fbscli> clients;
+
     public:
         explicit fbs_server(eka2l1::system *sys);
+
+        void init(service::ipc_context context);
     };
 }

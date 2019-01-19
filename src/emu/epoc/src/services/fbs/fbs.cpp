@@ -22,10 +22,64 @@
  */
 
 #include <epoc/services/fbs/fbs.h>
+#include <epoc/epoc.h>
+#include <epoc/kernel.h>
+
+#include <common/log.h>
+#include <common/e32inc.h>
+
+#include <e32err.h>
 
 namespace eka2l1 {
     fbs_server::fbs_server(eka2l1::system *sys) 
         : service::server(sys, "!Fontbitmapserver", true) {
+        REGISTER_IPC(fbs_server, init, fbs_init, "Fbs::Init");
+    }
 
+    void fbs_server::init(service::ipc_context context) {
+        if (!shared_chunk && !large_chunk) {
+            // Initialize those chunks
+            kernel_system *kern = context.sys->get_kernel_system();
+            std::uint32_t shared_chunk_handle = kern->create_chunk(
+                "FbsSharedChunk",
+                0,
+                0x10000,
+                0x200000,
+                prot::read_write,
+                kernel::chunk_type::disconnected,
+                kernel::chunk_access::global,
+                kernel::chunk_attrib::none,
+                kernel::owner_type::kernel
+            );
+
+            std::uint32_t large_chunk_handle = kern->create_chunk(
+                "FbsLargeChunk",
+                0,
+                0,
+                0x2000000,
+                prot::read_write,
+                kernel::chunk_type::disconnected,
+                kernel::chunk_access::global,
+                kernel::chunk_attrib::none,
+                kernel::owner_type::kernel
+            );
+
+            if (shared_chunk_handle == INVALID_HANDLE || large_chunk_handle == INVALID_HANDLE) {
+                LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
+                context.set_request_status(KErrNoMemory);
+
+                return;
+            }
+
+            shared_chunk = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(shared_chunk_handle));
+            large_chunk = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(large_chunk_handle));
+        }
+
+        // Create new server client
+        fbscli cli;
+        const std::uint32_t ss_id = context.msg->msg_session->unique_id();
+
+        clients.emplace(ss_id, std::move(cli));
+        context.set_request_status(ss_id);
     }
 }
