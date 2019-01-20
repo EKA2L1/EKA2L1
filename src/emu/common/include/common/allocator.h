@@ -72,5 +72,9 @@ namespace eka2l1::common {
 
         void *allocate(std::size_t bytes) override;
         bool  free(const void *ptr) override;
+
+        virtual bool expand(std::size_t target) {
+            return false;
+        }
     };
 }

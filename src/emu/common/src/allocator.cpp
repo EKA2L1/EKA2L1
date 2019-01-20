@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <stdexcept>
 
 namespace eka2l1::common {
     block_allocator::block_allocator(std::uint8_t *sptr, const std::size_t initial_max_size)
@@ -11,7 +12,7 @@ namespace eka2l1::common {
         
         if (alignment_needed > initial_max_size) {
             if (!expand(alignment_needed)) {
-                throw std::exception("Pointer is not align, expand to align failed!");
+                throw std::runtime_error("Pointer is not align, expand to align failed!");
             }
         }
 
