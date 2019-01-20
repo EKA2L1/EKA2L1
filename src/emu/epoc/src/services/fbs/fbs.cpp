@@ -27,13 +27,58 @@
 
 #include <common/log.h>
 #include <common/e32inc.h>
+#include <common/cvt.h>
+#include <epoc/vfs.h>
 
 #include <e32err.h>
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#include <stb_truetype.h>
 
 namespace eka2l1 {
     fbs_server::fbs_server(eka2l1::system *sys) 
         : service::server(sys, "!Fontbitmapserver", true) {
         REGISTER_IPC(fbs_server, init, fbs_init, "Fbs::Init");
+    }
+
+    void fbs_server::load_fonts(eka2l1::io_system *io) {
+        // Put it out here, so to if the file is smaller than last file, no reallocation is needed.
+        std::vector<std::uint8_t> buf;
+
+        // Search all drives
+        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+            if (io->get_drive_entry(drv)) {
+                const std::u16string fonts_folder_path = std::u16string { drive_to_char16(drv) } + u":\\Resource\\Fonts\\";
+                auto folder = io->open_dir(fonts_folder_path, io_attrib::none);
+                
+                if (folder) {
+                    while (auto entry = folder->get_next_entry()) {
+                        symfile f = io->open_file(common::utf8_to_ucs2(entry->full_path), READ_MODE | BIN_MODE);
+                        const std::uint64_t fsize = f->size();
+
+                        buf.resize(fsize);
+                        f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+
+                        f->close();
+
+                        fbsfont server_font;
+                        server_font.guest_font_handle = 0;
+                        server_font.stb_handle = std::make_unique<stbtt_fontinfo>();
+
+                        if (stbtt_InitFont(server_font.stb_handle.get(), buf.data(), 0) != 0) {
+                            // We success, let's continue! We can't give up...
+                            // 決定! それは私のものです
+                            
+                            // Movingg....
+                            // We are not going to extract the font name now, since it's complicated.
+                            font_avails.push_back(std::move(server_font));
+                        }
+                    }
+                }
+
+                // TODO: Implement FS callback
+            }
+        }
     }
 
     void fbs_server::init(service::ipc_context context) {
@@ -73,6 +118,9 @@ namespace eka2l1 {
 
             shared_chunk = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(shared_chunk_handle));
             large_chunk = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(large_chunk_handle));
+
+            // Probably also indicates that font aren't loaded yet
+            load_fonts(context.sys->get_io_system());
         }
 
         // Create new server client

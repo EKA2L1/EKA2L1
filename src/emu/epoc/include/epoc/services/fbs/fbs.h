@@ -22,7 +22,12 @@
  */
 
 #include <epoc/services/server.h>
+#include <epoc/services/fbs/font.h>
+
+#include <memory>
 #include <unordered_map>
+
+struct stbtt_fontinfo;
 
 namespace eka2l1 {
     enum fbs_opcode {
@@ -79,11 +84,24 @@ namespace eka2l1 {
 
     };
 
+    struct fbsfont {
+        std::unique_ptr<stbtt_fontinfo> stb_handle;
+        eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
+    };
+
+    class io_system;
+
     class fbs_server: public service::server {
         chunk_ptr   shared_chunk;
         chunk_ptr   large_chunk;
 
         std::unordered_map<std::uint32_t, fbscli> clients;
+        std::vector<fbsfont> font_avails;
+
+        void load_fonts(eka2l1::io_system *io);
+
+    protected:
+        void folder_change_callback(eka2l1::io_system *sys, const std::u16string &path, int action);
 
     public:
         explicit fbs_server(eka2l1::system *sys);

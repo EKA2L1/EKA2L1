@@ -188,7 +188,8 @@ target_link_libraries(epocservs PRIVATE
     epockern
     epocutils
     drivers
-    manager)
+    manager
+    stb)
     
 # TODO: Make arm dependency private.
 target_link_libraries(epockern PUBLIC 

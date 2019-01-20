@@ -78,6 +78,11 @@ target_include_directories(imgui PUBLIC imgui)
 
 add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
+
+#stb
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE stb)
+
 add_library(unicorn INTERFACE)
 
 # Microprofile
