@@ -164,7 +164,7 @@ namespace eka2l1 {
 
         virtual bool flush();
 
-        std::uint32_t read_file(const std::uint64_t offset, void *buf, std::uint32_t size, 
+        std::size_t read_file(const std::uint64_t offset, void *buf, std::uint32_t size, 
             std::uint32_t count);
     };
 

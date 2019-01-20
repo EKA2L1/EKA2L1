@@ -57,12 +57,12 @@ namespace eka2l1 {
         return true;
     }
     
-    std::uint32_t file::read_file(const std::uint64_t offset, void *buf, std::uint32_t size, 
+    std::size_t file::read_file(const std::uint64_t offset, void *buf, std::uint32_t size, 
         std::uint32_t count) {
         const std::uint64_t last_offset = tell();
 
         seek(offset, file_seek_mode::beg);
-        const std::uint32_t byte_readed = read_file(buf, size, count);
+        const std::size_t byte_readed = read_file(buf, size, count);
 
         seek(last_offset, file_seek_mode::beg);
 
