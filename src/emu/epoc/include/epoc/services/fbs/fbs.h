@@ -27,7 +27,7 @@
 #include <memory>
 #include <unordered_map>
 
-struct stbtt_fontinfo;
+#include <stb_truetype.h>
 
 namespace eka2l1 {
     enum fbs_opcode {
