@@ -46,3 +46,6 @@
 [submodule "src/external/microprofile"]
 	path = src/external/microprofile
 	url = https://github.com/jonasmr/microprofile/
+[submodule "src/external/stb"]
+	path = src/external/stb
+	url = https://github.com/nothings/stb
