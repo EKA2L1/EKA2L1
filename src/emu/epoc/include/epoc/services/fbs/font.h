@@ -28,7 +28,7 @@
 
 namespace eka2l1::epoc {
     struct typeface_info {
-        epoc::buf_static<char16_t, 0x18> name;
+        epoc::bufc_static<char16_t, 0x18> name;
         std::uint32_t flags;
 
         enum {
