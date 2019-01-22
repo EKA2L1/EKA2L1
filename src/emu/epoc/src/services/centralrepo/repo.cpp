@@ -70,9 +70,8 @@ namespace eka2l1 {
     }
 
     central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
-        if (!is_active()) {
-            return nullptr;
-        }
+        // Repo is in transaction
+        bool active = is_active();
 
         // Resolve
         // If get entry for write but the transaction mode is read only, we can't allow that
@@ -80,13 +79,17 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        // Check transactor
-        auto entry_ite = transactor.changes.find(key);
-        if (entry_ite != transactor.changes.end()) {
-            return &(entry_ite->second);
+        // Check transactor, only if its in transaction
+        if (active) {
+            auto entry_ite = transactor.changes.find(key);
+            if (entry_ite != transactor.changes.end()) {
+                return &(entry_ite->second);
+            }
         }
 
-        if (mode == 0) {
+        // If not in transaction, or if we are in transaction but read-mode
+        // Directly get the repo data
+        if (!active || mode == 0) {
             auto result = std::find_if(attach_repo->entries.begin(), attach_repo->entries.end(),
                 [&](const central_repo_entry &entry) { return entry.key == key; });
 
@@ -97,7 +100,6 @@ namespace eka2l1 {
             return &(*result);
         }
 
-        // Mode write, create new one in transactor
         transactor.changes.emplace(key, central_repo_entry {});
         return &(transactor.changes[key]);
     }
