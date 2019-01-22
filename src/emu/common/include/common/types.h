@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2018 EKA2L1 Team / RPCS3 Project.
  * 
- * This file is part of EKA2L1 project 
+ * This file is part of EKA2L1 project / RPCS3 Project 
  * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,8 @@
 
 typedef std::u16string utf16_str;
 typedef uint32_t address;
+
+typedef unsigned int uint;
 
 struct uint128_t {
     uint64_t low;
@@ -118,3 +120,89 @@ typedef std::uint32_t vaddress;
 int translate_protection(prot cprot);
 char16_t drive_to_char16(const drive_number drv);
 drive_number char16_to_drive(const char16_t c);
+
+// Formatting helper, type-specific preprocessing for improving safety and functionality
+template <typename T, typename = void>
+struct fmt_unveil;
+
+template <typename Arg>
+using fmt_unveil_t = typename fmt_unveil<Arg>::type;
+
+struct fmt_type_info;
+
+namespace fmt
+{
+	template <typename... Args>
+	const fmt_type_info* get_type_info();
+}
+
+namespace fmt
+{
+	[[noreturn]] void raw_error(const char* msg);
+	[[noreturn]] void raw_verify_error(const char* msg, const fmt_type_info* sup, std::uint64_t arg);
+	[[noreturn]] void raw_narrow_error(const char* msg, const fmt_type_info* sup, std::uint64_t arg);
+}
+
+struct verify_func
+{
+	template <typename T>
+	bool operator()(T&& value) const
+	{
+		if (std::forward<T>(value))
+		{
+			return true;
+		}
+
+		return false;
+	}
+};
+
+template <uint N>
+struct verify_impl
+{
+	const char* cause;
+
+	template <typename T>
+	auto operator,(T&& value) const
+	{
+		// Verification (can be safely disabled)
+		if (!verify_func()(std::forward<T>(value)))
+		{
+			fmt::raw_verify_error(cause, nullptr, N);
+		}
+
+		return verify_impl<N + 1>{cause};
+	}
+};
+
+// Verification helper, checks several conditions delimited with comma operator
+inline auto verify(const char* cause)
+{
+	return verify_impl<0>{cause};
+}
+
+// Verification helper (returns value or lvalue reference, may require to use verify_move instead)
+template <typename F = verify_func, typename T>
+inline T verify(const char* cause, T&& value, F&& pred = F())
+{
+	if (!pred(std::forward<T>(value)))
+	{
+		using unref = std::remove_const_t<std::remove_reference_t<T>>;
+		fmt::raw_verify_error(cause, fmt::get_type_info<fmt_unveil_t<unref>>(), fmt_unveil<unref>::get(value));
+	}
+
+	return std::forward<T>(value);
+}
+
+// Verification helper (must be used in return expression or in place of std::move)
+template <typename F = verify_func, typename T>
+inline std::remove_reference_t<T>&& verify_move(const char* cause, T&& value, F&& pred = F())
+{
+	if (!pred(std::forward<T>(value)))
+	{
+		using unref = std::remove_const_t<std::remove_reference_t<T>>;
+		fmt::raw_verify_error(cause, fmt::get_type_info<fmt_unveil_t<unref>>(), fmt_unveil<unref>::get(value));
+	}
+
+	return std::move(value);
+}
