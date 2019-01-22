@@ -84,7 +84,7 @@ namespace eka2l1 {
         const std::uint16_t index = static_cast<std::uint16_t>(handle);
 
         if (objects.size() >= index) {
-            return false;
+            return nullptr;
         }
 
         return objects[index];
@@ -308,7 +308,7 @@ namespace eka2l1 {
     bool fbs_server::free_general_data_impl(const void *ptr) {
         if (!shared_chunk || !shared_chunk_allocator) {
             LOG_CRITICAL("FBS server hasn't initialized yet");
-            return nullptr;
+            return false;
         }
 
         return shared_chunk_allocator->free(ptr);
