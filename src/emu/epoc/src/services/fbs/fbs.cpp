@@ -36,9 +36,77 @@
 #include <stb_truetype.h>
 
 namespace eka2l1 {
+    std::uint32_t fbshandles::make_handle(std::size_t index) {
+        return (owner->session_id << 16) | static_cast<std::uint16_t>(index);
+    }
+
+    std::uint32_t fbshandles::add_object(fbsobj *obj) {
+        for (std::size_t i = 0 ; i < objects.size() ; i++) {
+            if (objects[i] == nullptr) {
+                objects[i] = obj;
+                return make_handle(i);
+            }
+        }
+
+        objects.push_back(obj);
+        return make_handle(objects.size() - 1);
+    }
+
+    bool fbshandles::remove_object(std::size_t index) {
+        if (objects.size() >= index) {
+            return false;
+        }
+
+        objects[index] = nullptr;
+        return true;
+    }
+
+    fbsobj *fbshandles::get_object(const std::uint32_t handle) {
+        const std::uint16_t ss_id = handle >> 16;
+
+        if (ss_id != owner->session_id) {
+            LOG_CRITICAL("Fail safe check: FBS handle informs a session id that does not match with current session id");
+            return nullptr;
+        }
+
+        const std::uint16_t index = static_cast<std::uint16_t>(handle);
+
+        if (objects.size() >= index) {
+            return false;
+        }
+
+        return objects[index];
+    }
+    
+    fbscli::fbscli(fbs_server *serv, const std::uint32_t ss_id) 
+        : server(serv), session_id(ss_id) {
+        
+    }
+
     fbs_server::fbs_server(eka2l1::system *sys) 
         : service::server(sys, "!Fontbitmapserver", true) {
         REGISTER_IPC(fbs_server, init, fbs_init, "Fbs::Init");
+    }
+
+    fbscli *fbs_server::get_session_associated_with_handle(const std::uint32_t handle) {
+        const std::uint32_t ss_id = handle >> 16;
+        auto result = clients.find(ss_id);
+
+        if (result == clients.end()) {
+            return nullptr;
+        }
+
+        return &result->second;
+    }
+
+    fbsobj *fbs_server::get_object(const std::uint32_t handle) {
+        fbscli *cli = get_session_associated_with_handle(handle);
+
+        if (cli == nullptr) {
+            return nullptr;
+        }
+
+        return cli->handles.get_object(handle);
     }
 
     void fbs_server::load_fonts(eka2l1::io_system *io) {
@@ -61,7 +129,7 @@ namespace eka2l1 {
 
                         f->close();
 
-                        fbsfont server_font;
+                        fbsfont server_font(id_counter++);
                         server_font.guest_font_handle = 0;
                         server_font.stb_handle = std::make_unique<stbtt_fontinfo>();
 
@@ -124,8 +192,8 @@ namespace eka2l1 {
         }
 
         // Create new server client
-        fbscli cli;
         const std::uint32_t ss_id = context.msg->msg_session->unique_id();
+        fbscli cli(this, ss_id); 
 
         clients.emplace(ss_id, std::move(cli));
         context.set_request_status(ss_id);
