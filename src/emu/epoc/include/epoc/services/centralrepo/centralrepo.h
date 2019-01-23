@@ -48,6 +48,8 @@ namespace eka2l1 {
         eka2l1::central_repo *load_repo(eka2l1::io_system *io, const std::uint32_t key);
         void callback_on_drive_change(eka2l1::io_system *io, const drive_number drv, int act);
 
+        int closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t ss_id);
+
     public:
         void redirect_msg_to_session(service::ipc_context ctx);
 
@@ -55,6 +57,7 @@ namespace eka2l1 {
         eka2l1::central_repo *get_initial_repo(eka2l1::io_system *io, const std::uint32_t key);
 
         void init(service::ipc_context ctx);
+        void close(service::ipc_context ctx);
         void disconnect(service::ipc_context ctx) override;
     };
 }

@@ -179,6 +179,7 @@ namespace eka2l1 {
         : service::server(sys, "!CentralRepository", true) 
          , id_counter(0) {
         REGISTER_IPC(central_repo_server, init, cen_rep_init, "CenRep::Init");
+        REGISTER_IPC(central_repo_server, close, cen_rep_close, "CenRep::Close");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
     }
@@ -496,24 +497,63 @@ namespace eka2l1 {
         }
     }
 
-    // If a session disconnect, we should at least save all changes it did
-    void central_repo_server::disconnect(service::ipc_context ctx) {
-        // If a session disconnect, we should save cre file
-        const std::uint32_t ss_id = ctx.msg->msg_session->unique_id();
+    int central_repo_server::closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t ss_id) {
         auto &repo_session_ite = client_sessions.find(ss_id);
 
         if (repo_session_ite == client_sessions.end()) {
-            return;
+            return -1;
         }
 
         auto &repo_session = repo_session_ite->second;
 
+        if (repo_id != 0 && repo_session.attach_repo->uid != repo_id) {
+            LOG_CRITICAL("Fail safe check: REPO id != provided id");
+            return -2;
+        }
+
         // Sensei, did i do it correct
         // Save it and than wipe it out
-        repo_session.write_changes(ctx.sys->get_io_system());
+        repo_session.write_changes(io);
         LOG_TRACE("Repo 0x{:X}: changes saved before disconnect", repo_session.attach_repo->uid);
 
         // Bie...
         client_sessions.erase(repo_session_ite);
+        return 0;
+    }
+
+    void central_repo_server::close(service::ipc_context ctx) {
+        const int err = closerep(ctx.sys->get_io_system(),
+            static_cast<std::uint32_t>(*ctx.get_arg<int>(3)), ctx.msg->msg_session->unique_id());
+
+        switch (err) {
+        case 0: {
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
+        case -1: {
+            ctx.set_request_status(KErrNotFound);
+            break;
+        }
+
+        case -2: {
+            ctx.set_request_status(KErrArgument);
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unknown return error from closerep {}", err);
+            break;
+        }
+        } 
+    }
+
+    // If a session disconnect, we should at least save all changes it did
+    // At least, if the session connected still exist
+    void central_repo_server::disconnect(service::ipc_context ctx) {
+        closerep(ctx.sys->get_io_system(), 0, ctx.msg->msg_session->unique_id());
+
+        // Ignore all errors
+        ctx.set_request_status(KErrNone);
     }
 }
