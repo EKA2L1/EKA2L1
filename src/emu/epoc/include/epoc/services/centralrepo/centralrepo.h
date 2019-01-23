@@ -19,6 +19,9 @@ namespace eka2l1 {
 	*/
     bool parse_new_centrep_ini(const std::string &path, central_repo &repo);
 
+    // TODO for this server:
+    // - Policy checks. Always fail, always success.
+    // - Write UID, read UID exclusive check.
     class central_repo_server : public service::server {
         // Cached repos. The key is the owner of the repo.
         std::unordered_map<std::uint32_t, central_repo> repos;
@@ -52,5 +55,6 @@ namespace eka2l1 {
         eka2l1::central_repo *get_initial_repo(eka2l1::io_system *io, const std::uint32_t key);
 
         void init(service::ipc_context ctx);
+        void disconnect(service::ipc_context ctx) override;
     };
 }

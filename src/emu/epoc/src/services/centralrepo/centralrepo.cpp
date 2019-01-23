@@ -180,6 +180,7 @@ namespace eka2l1 {
          , id_counter(0) {
         REGISTER_IPC(central_repo_server, init, cen_rep_init, "CenRep::Init");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
     }
 
     void central_repo_server::init(service::ipc_context ctx) {
@@ -206,7 +207,8 @@ namespace eka2l1 {
         clisession.attach_repo = repo;
         clisession.server = this;
 
-        std::uint32_t id = id_counter++;
+        const std::uint32_t id = ctx.msg->msg_session->unique_id();
+
         auto res = client_sessions.emplace(id, std::move(clisession));
 
         if (!res.second) {
@@ -436,6 +438,32 @@ namespace eka2l1 {
         
     void central_repo_client_session::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case cen_rep_set_int: {
+            // We get the entry.
+            // Use mode 1 (write) to get the entry, since we are modifying data.
+            central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 1);
+
+            // If it does not exist, or it is in different type, discard.
+            // Depends on the invalid type, we set error code
+            if (!entry) {
+                ctx->set_request_status(KErrNotFound);
+                break;
+            }
+            
+            if (entry->data.etype != central_repo_entry_type::integer) {
+                ctx->set_request_status(KErrArgument);
+                break;
+            }
+
+            // TODO: Capability supply (+Policy)
+            // This is really bad... We are not really care about accuracy right now
+            // Assuming programs did right things, and accept the rules
+            entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<int>(1));
+            ctx->set_request_status(KErrNone);
+
+            break;
+        }
+
         case cen_rep_reset: { 
             io_system *io = ctx->sys->get_io_system();
 
@@ -466,5 +494,26 @@ namespace eka2l1 {
             break;
         }
         }
+    }
+
+    // If a session disconnect, we should at least save all changes it did
+    void central_repo_server::disconnect(service::ipc_context ctx) {
+        // If a session disconnect, we should save cre file
+        const std::uint32_t ss_id = ctx.msg->msg_session->unique_id();
+        auto &repo_session_ite = client_sessions.find(ss_id);
+
+        if (repo_session_ite == client_sessions.end()) {
+            return;
+        }
+
+        auto &repo_session = repo_session_ite->second;
+
+        // Sensei, did i do it correct
+        // Save it and than wipe it out
+        repo_session.write_changes(ctx.sys->get_io_system());
+        LOG_TRACE("Repo 0x{:X}: changes saved before disconnect", repo_session.attach_repo->uid);
+
+        // Bie...
+        client_sessions.erase(repo_session_ite);
     }
 }
