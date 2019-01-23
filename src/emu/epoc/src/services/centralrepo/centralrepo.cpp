@@ -498,7 +498,7 @@ namespace eka2l1 {
     }
 
     int central_repo_server::closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t ss_id) {
-        auto &repo_session_ite = client_sessions.find(ss_id);
+        auto repo_session_ite = client_sessions.find(ss_id);
 
         if (repo_session_ite == client_sessions.end()) {
             return -1;
