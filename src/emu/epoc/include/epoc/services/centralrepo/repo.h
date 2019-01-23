@@ -195,8 +195,8 @@ namespace eka2l1 {
         /*! \brief Get a pointer to an entry
          *
          * Do the following: 
-         * - Check if a transaction is active, otherwise return nullptr
-         * - Check if the key is in the transactor entry, and returns
+         * - Check if a transaction is active.
+         * - If transaction actives, check if the key is in the transactor entry, and returns
          * - Else, fallback to default
          * 
          * Mode are matters:
