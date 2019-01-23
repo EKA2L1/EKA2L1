@@ -80,6 +80,12 @@ target_include_directories(glad PUBLIC glad/include)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE stb)
 
+#catch2
+set (CATCH_BUILD_TESTING OFF CACHE BOOL "Turn off building testing" FORCE)
+set (CATCH_ENABLE_WERROR OFF CACHE BOOL "Disable werror" FORCE)
+
+add_subdirectory(catch2)
+
 add_library(unicorn INTERFACE)
 
 # Microprofile

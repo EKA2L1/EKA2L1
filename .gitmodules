@@ -43,3 +43,6 @@
 [submodule "src/external/stb"]
 	path = src/external/stb
 	url = https://github.com/nothings/stb
+[submodule "src/external/Catch2"]
+	path = src/external/Catch2
+	url = https://github.com/catchorg/Catch2/
