@@ -44,7 +44,13 @@ namespace eka2l1 {
         : sys(sys)
         , logger(logger)
         , should_stop(false)
-        , should_pause(false) {
+        , should_pause(false)
+        , should_show_threads(false)
+        , should_show_mutexs(false)
+        , should_show_chunks(false)
+        , should_show_disassembler(false)
+        , should_show_logger(true)
+        , should_show_breakpoint_list(false) {
         mem_editor = std::make_shared<MemoryEditor>(sys->get_kernel_system());
     }
 

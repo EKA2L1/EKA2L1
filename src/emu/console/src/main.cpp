@@ -104,7 +104,7 @@ void print_help() {
     std::cout << "\t -ver: Specified Symbian version to emulate (either 6 or 9)." << std::endl;
     std::cout << "\t -app: Specified the app to run. Next to this option is the index number." << std::endl;
     std::cout << "\t -listapp: List all of the apps." << std::endl;
-    std::cout << "\t -install: Install a SIS/SISX package" << std::endl;
+    std::cout << "\t -install: Install a SIS/SISX package. Example: -install me.sis!" << std::endl;
     std::cout << "\t -irpkg ver path: Install RPKG." << std::endl;
     std::cout << "\t\t ver:  Epoc version. Available version are: v94, v93, belle, v60" << std::endl;
     std::cout << "\t\t path: Path to RPKG file." << std::endl;
@@ -166,15 +166,7 @@ void parse_args(int argc, char **argv) {
         } else if (strncmp(argv[i], "-listapp", 8) == 0) {
             list_app = true;
         } else if (strncmp(argv[i], "-install", 8) == 0) {
-            try {
-                adrive = std::atoi(argv[++i]);
-            } catch (...) {
-                std::cout << "Invalid request." << std::endl;
-
-                should_quit = true;
-                break;
-            }
-
+            adrive = drive_c;
             sis_install_path = argv[++i];
         } else if (strncmp(argv[i], "-mount", 6) == 0) {
             drive_mount = std::atoi(argv[++i]);
@@ -391,7 +383,7 @@ int ui_debugger_thread() {
 
     std::string window_title = std::string("Debugging Window (") + GIT_BRANCH + " " + GIT_COMMIT_HASH + ")";
 
-    debugger_window->init(window_title, eka2l1::vec2(500, 500));
+    debugger_window->init(window_title, eka2l1::vec2(1080, 720));
     debugger_window->make_current();
 
     eka2l1::drivers::init_graphics_library(eka2l1::drivers::graphic_api::opengl);
@@ -498,13 +490,17 @@ void run() {
 }
 
 int main(int argc, char **argv) {
+    // Episode 1: I think of a funny joke about Symbian and I will told my virtual wife
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
-
-    /* Setup the UI logger. */
+   
+    // We are going to setup to GUI logger (in debugger)
     logger = std::make_shared<eka2l1::imgui_logger>();
     log::setup_log(logger);
 
+    // Start to read the configs
     read_config();
+
+    // We also need to fetch command-line arguments to see what it actually want us to do.
     parse_args(argc, argv);
 
     if (should_quit) {

@@ -120,7 +120,7 @@ struct MemoryEditor {
         Kern = SystemKernel;
 
         // Settings
-        Open = true;
+        Open = false;
         ReadOnly = false;
         Cols = 16;
         OptShowOptions = true;
