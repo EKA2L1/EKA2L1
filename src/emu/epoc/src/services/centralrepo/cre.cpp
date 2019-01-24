@@ -44,6 +44,8 @@ namespace eka2l1 {
         std::uint32_t len = static_cast<std::uint32_t>(str.length());
 
         if (seri.get_seri_mode() != common::SERI_MODE_READ) {
+            len = (len << 1) + 1;
+
             if (len <= (0xFF >> 1)) {
                 std::uint8_t b = static_cast<std::uint8_t>(len << 1);
                 seri.absorb(b);
@@ -56,6 +58,8 @@ namespace eka2l1 {
                     seri.absorb(b);
                 }
             }
+
+            len = static_cast<std::uint32_t>(str.length());;
         } else {
             std::uint8_t b1 = 0;
             seri.absorb(b1);
