@@ -1,5 +1,6 @@
 #include <common/path.h>
 #include <catch2/catch.hpp>
+#include <cstring>
 
 TEST_CASE("root_name", "path_resolving_test") {
     const std::string example_path_sym = "C:\\symemu\\";
