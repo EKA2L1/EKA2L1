@@ -460,6 +460,9 @@ namespace eka2l1 {
             // This is really bad... We are not really care about accuracy right now
             // Assuming programs did right things, and accept the rules
             entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<int>(1));
+            // Success in modifying
+            modification_success(entry->key);
+
             ctx->set_request_status(KErrNone);
 
             break;
@@ -471,7 +474,8 @@ namespace eka2l1 {
             eka2l1::central_repo *init_repo = server->get_initial_repo(io, attach_repo->uid);
 
             // Reset the keys
-            int err = reset_key(init_repo, static_cast<std::uint32_t>(*ctx->get_arg<int>(0)));
+            const std::uint32_t key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+            int err = reset_key(init_repo, key);
             
             // In transaction
             if (err == -1) {
@@ -486,6 +490,9 @@ namespace eka2l1 {
 
             // Write committed changes to disk
             write_changes(io);
+            modification_success(key);
+
+            ctx->set_request_status(KErrNone);
 
             break;
         }

@@ -28,7 +28,6 @@ namespace eka2l1 {
         std::map<std::uint32_t, central_repo_client_session> client_sessions;
 
         central_repos_cacher    backup_cacher;
-
         drive_number rom_drv;
 
         std::atomic<std::uint32_t> id_counter;

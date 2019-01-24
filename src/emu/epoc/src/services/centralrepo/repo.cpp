@@ -69,6 +69,21 @@ namespace eka2l1 {
         return &(*ite);
     }
 
+    void central_repo_client_session::modification_success(const std::uint32_t key) {
+        // Iters through all
+        for (std::size_t i = 0; i < notifies.size(); i++) {
+            cenrep_notify_info &notify = notifies[i];
+
+            if ((key & notify.mask) == (notify.match & notify.mask)) {
+                // Notify and delete this request from the list
+                notify.sts.complete(0);
+                notifies.erase(notifies.begin() + i);
+            }
+        }
+
+        // Done all requests
+    }
+
     central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
         // Repo is in transaction
         bool active = is_active();

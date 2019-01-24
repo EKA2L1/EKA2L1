@@ -25,6 +25,7 @@
 
 #include <epoc/services/centralrepo/common.h>
 #include <epoc/utils/sec.h>
+#include <epoc/utils/reqsts.h>
 
 #include <common/types.h>
 
@@ -160,6 +161,15 @@ namespace eka2l1 {
 
         void handle_message(service::ipc_context *ctx);
 
+        struct cenrep_notify_info {
+            epoc::notify_info sts;
+
+            std::uint32_t mask;
+            std::uint32_t match;
+        };
+
+        std::vector<cenrep_notify_info> notifies;
+
         enum session_flags {
             active = 0x1
         };
@@ -207,5 +217,11 @@ namespace eka2l1 {
          * If we get the entry for write purpose but the transaction mode is read-only, we won't allow that
         */
         central_repo_entry *get_entry(const std::uint32_t key, int mode);
+
+        /*! \brief Notify that a modification has success.
+         *
+         * This iters through all notify requests, if it matchs than notify request client.
+        */
+        void modification_success(const std::uint32_t key);
     };
 }
