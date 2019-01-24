@@ -43,7 +43,7 @@ namespace eka2l1 {
     void absorb_des_string(std::string &str, common::chunkyseri &seri) {
         std::uint32_t len = static_cast<std::uint32_t>(str.length());
 
-        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
             if (len <= (0xFF >> 1)) {
                 std::uint8_t b = static_cast<std::uint8_t>(len << 1);
                 seri.absorb(b);
@@ -88,7 +88,7 @@ namespace eka2l1 {
         std::string dat;
         dat.resize(sizeof(T));
 
-        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
             dat.copy(reinterpret_cast<char *>(data), sizeof(T));
         }
 
@@ -203,7 +203,7 @@ namespace eka2l1 {
 
             std::uint8_t entry_type = 0;
 
-            if (seri.get_seri_mode() != common::SERI_MODE_WRITE) {
+            if (seri.get_seri_mode() != common::SERI_MODE_READ) {
                 switch (entry.data.etype) {
                 case central_repo_entry_type::integer: {
                     entry_type = 0;
@@ -303,14 +303,15 @@ namespace eka2l1 {
             common::chunkyseri seri(nullptr, common::SERI_MODE_MESAURE);
             do_state_for_cre(seri, *attach_repo);
 
-            bufs.resize(seri.get_seri_mode());
+            bufs.resize(seri.size());
         }
     
         common::chunkyseri seri(&bufs[0], common::SERI_MODE_WRITE);
         do_state_for_cre(seri, *attach_repo);
 
         std::u16string p { drive_to_char16(attach_repo->reside_place) };
-        p += u":\\Private\\10202BE9\\persists";
+        p += u":\\Private\\10202BE9\\persists\\" + 
+            common::utf8_to_ucs2(common::to_string(attach_repo->uid, std::hex)) + u".cre";
 
         symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
 
