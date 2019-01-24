@@ -179,7 +179,11 @@ namespace eka2l1 {
         : service::server(sys, "!CentralRepository", true) 
          , id_counter(0) {
         REGISTER_IPC(central_repo_server, init, cen_rep_init, "CenRep::Init");
+        REGISTER_IPC(central_repo_server, close, cen_rep_close, "CenRep::Close");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req, "CenRep::NofReq");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_group_nof_req, "CenRep::GroupNofReq");
     }
 
     void central_repo_server::init(service::ipc_context ctx) {
@@ -206,7 +210,8 @@ namespace eka2l1 {
         clisession.attach_repo = repo;
         clisession.server = this;
 
-        std::uint32_t id = id_counter++;
+        const std::uint32_t id = ctx.msg->msg_session->unique_id();
+
         auto res = client_sessions.emplace(id, std::move(clisession));
 
         if (!res.second) {
@@ -436,13 +441,74 @@ namespace eka2l1 {
         
     void central_repo_client_session::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case cen_rep_group_nof_req: case cen_rep_notify_req: {
+            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : 
+                static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
+
+            const std::uint32_t partial_key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+
+            epoc::notify_info info { ctx->msg->request_sts, ctx->msg->own_thr };
+            const int err = add_notify_request(info, mask, partial_key);
+
+            switch (err) {
+            case 0: {
+                ctx->set_request_status(KErrNone);
+                break;
+            }
+
+            case -1: {
+                ctx->set_request_status(KErrAlreadyExists);
+                break;
+            }
+
+            default: {
+                LOG_TRACE("Unknown returns code {} from add_notify_request, set status to KErrNone", err);
+                ctx->set_request_status(KErrNone);
+
+                break;
+            }
+            }
+
+            break;
+        }
+
+        case cen_rep_set_int: {
+            // We get the entry.
+            // Use mode 1 (write) to get the entry, since we are modifying data.
+            central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 1);
+
+            // If it does not exist, or it is in different type, discard.
+            // Depends on the invalid type, we set error code
+            if (!entry) {
+                ctx->set_request_status(KErrNotFound);
+                break;
+            }
+            
+            if (entry->data.etype != central_repo_entry_type::integer) {
+                ctx->set_request_status(KErrArgument);
+                break;
+            }
+
+            // TODO: Capability supply (+Policy)
+            // This is really bad... We are not really care about accuracy right now
+            // Assuming programs did right things, and accept the rules
+            entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<int>(1));
+            // Success in modifying
+            modification_success(entry->key);
+
+            ctx->set_request_status(KErrNone);
+
+            break;
+        }
+
         case cen_rep_reset: { 
             io_system *io = ctx->sys->get_io_system();
 
             eka2l1::central_repo *init_repo = server->get_initial_repo(io, attach_repo->uid);
 
             // Reset the keys
-            int err = reset_key(init_repo, static_cast<std::uint32_t>(*ctx->get_arg<int>(0)));
+            const std::uint32_t key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+            int err = reset_key(init_repo, key);
             
             // In transaction
             if (err == -1) {
@@ -457,6 +523,9 @@ namespace eka2l1 {
 
             // Write committed changes to disk
             write_changes(io);
+            modification_success(key);
+
+            ctx->set_request_status(KErrNone);
 
             break;
         }
@@ -466,5 +535,64 @@ namespace eka2l1 {
             break;
         }
         }
+    }
+
+    int central_repo_server::closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t ss_id) {
+        auto repo_session_ite = client_sessions.find(ss_id);
+
+        if (repo_session_ite == client_sessions.end()) {
+            return -1;
+        }
+
+        auto &repo_session = repo_session_ite->second;
+
+        if (repo_id != 0 && repo_session.attach_repo->uid != repo_id) {
+            LOG_CRITICAL("Fail safe check: REPO id != provided id");
+            return -2;
+        }
+
+        // Sensei, did i do it correct
+        // Save it and than wipe it out
+        repo_session.write_changes(io);
+        LOG_TRACE("Repo 0x{:X}: changes saved", repo_session.attach_repo->uid);
+
+        // Bie...
+        client_sessions.erase(repo_session_ite);
+        return 0;
+    }
+
+    void central_repo_server::close(service::ipc_context ctx) {
+        const int err = closerep(ctx.sys->get_io_system(), 0, ctx.msg->msg_session->unique_id());
+
+        switch (err) {
+        case 0: {
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
+        case -1: {
+            ctx.set_request_status(KErrNotFound);
+            break;
+        }
+
+        case -2: {
+            ctx.set_request_status(KErrArgument);
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unknown return error from closerep {}", err);
+            break;
+        }
+        } 
+    }
+
+    // If a session disconnect, we should at least save all changes it did
+    // At least, if the session connected still exist
+    void central_repo_server::disconnect(service::ipc_context ctx) {
+        closerep(ctx.sys->get_io_system(), 0, ctx.msg->msg_session->unique_id());
+
+        // Ignore all errors
+        ctx.set_request_status(KErrNone);
     }
 }

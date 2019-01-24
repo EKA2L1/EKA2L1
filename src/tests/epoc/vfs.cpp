@@ -1,7 +1,7 @@
 #include <epoc/vfs.h>
 #include <common/path.h>
 #include <common/types.h>
-#include <gtest/gtest.h>
+#include <catch2/catch.hpp>
 
 struct io_scope_guard {
     eka2l1::io_system *io;
@@ -19,7 +19,7 @@ struct io_scope_guard {
     }
 };
 
-TEST(vfs, get_physical) {
+TEST_CASE("get_physical", "vfs") {
     eka2l1::io_system io;
     io_scope_guard guard(io);
 
@@ -32,12 +32,12 @@ TEST(vfs, get_physical) {
     const auto actual_path_a = io.get_raw_path(u"A:\\Despacito2Leak");
     const auto actual_path_b = io.get_raw_path(u"B:\\Despacito3Leak");
 
-    ASSERT_TRUE(actual_path_a);
-    ASSERT_TRUE(actual_path_b);
+    REQUIRE(actual_path_a);
+    REQUIRE(actual_path_b);
 
-    ASSERT_EQ(*actual_path_a, std::u16string(u"drive_a") + static_cast<char16_t>(eka2l1::get_separator())
+    REQUIRE(*actual_path_a == std::u16string(u"drive_a") + static_cast<char16_t>(eka2l1::get_separator())
         + u"despacito2leak");
 
-    ASSERT_EQ(*actual_path_b, std::u16string(u"drive_b") + static_cast<char16_t>(eka2l1::get_separator())
+    REQUIRE(*actual_path_b == std::u16string(u"drive_b") + static_cast<char16_t>(eka2l1::get_separator())
         + u"despacito3leak");
 }

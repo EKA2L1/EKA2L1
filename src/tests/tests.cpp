@@ -1,11 +1,10 @@
-#include <gtest/gtest.h>
 #include <common/log.h>
+#define CATCH_CONFIG_RUNNER
+#include <catch2/catch.hpp>
 
 int main(int argc, char **argv) {
     eka2l1::log::setup_log(nullptr);
-    
-    testing::InitGoogleTest(&argc, argv);
-    int ret = RUN_ALL_TESTS();
+    int ret = Catch::Session().run(argc, argv);;
 
     return ret;
 }

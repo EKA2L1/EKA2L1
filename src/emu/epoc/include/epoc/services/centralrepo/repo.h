@@ -25,6 +25,7 @@
 
 #include <epoc/services/centralrepo/common.h>
 #include <epoc/utils/sec.h>
+#include <epoc/utils/reqsts.h>
 
 #include <common/types.h>
 
@@ -160,6 +161,15 @@ namespace eka2l1 {
 
         void handle_message(service::ipc_context *ctx);
 
+        struct cenrep_notify_info {
+            epoc::notify_info sts;
+
+            std::uint32_t mask;
+            std::uint32_t match;
+        };
+
+        std::vector<cenrep_notify_info> notifies;
+
         enum session_flags {
             active = 0x1
         };
@@ -195,8 +205,8 @@ namespace eka2l1 {
         /*! \brief Get a pointer to an entry
          *
          * Do the following: 
-         * - Check if a transaction is active, otherwise return nullptr
-         * - Check if the key is in the transactor entry, and returns
+         * - Check if a transaction is active.
+         * - If transaction actives, check if the key is in the transactor entry, and returns
          * - Else, fallback to default
          * 
          * Mode are matters:
@@ -207,5 +217,22 @@ namespace eka2l1 {
          * If we get the entry for write purpose but the transaction mode is read-only, we won't allow that
         */
         central_repo_entry *get_entry(const std::uint32_t key, int mode);
+
+        /*! \brief Notify that a modification has success.
+         *
+         * This iters through all notify requests, if it matchs than notify request client.
+        */
+        void modification_success(const std::uint32_t key);
+
+        /*! \brief Request to notify when a group of key have changed.
+         *
+         * \param info  Info of the notify request
+         * \param mask  The mask to extract bit pattern
+         * \param match The bit pattern to be match.
+         * 
+         * \returns     0 if success.
+         *              -1 if request already exists
+        */
+        int add_notify_request(epoc::notify_info &info, const std::uint32_t mask, const std::uint32_t match);
     };
 }

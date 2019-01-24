@@ -22,5 +22,3 @@
 #include <epoc/kernel/libmanager.h>
 
 #include <epoc/vfs.h>
-
-#include <gtest/gtest.h>

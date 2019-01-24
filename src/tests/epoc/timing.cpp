@@ -1,6 +1,6 @@
 #include <epoc/timing.h>
-#include <gtest/gtest.h>
 
+#include <catch2/catch.hpp>
 #include <cstdint>
 
 using namespace eka2l1;
@@ -21,7 +21,7 @@ void advance_and_check(eka2l1::timing_system &timing, uint32_t ticks) {
     timing.add_ticks(timing.get_downcount());
     timing.advance();
 
-    ASSERT_EQ(timing.get_downcount(), ticks);
+    REQUIRE(timing.get_downcount() == ticks);
 }
 
 struct scope_guard {
@@ -37,7 +37,7 @@ struct scope_guard {
     }
 };
 
-TEST(timing_test, basic_scheduling) {
+TEST_CASE("basic_scheduling", "timing_test") {
     eka2l1::timing_system timing;
     scope_guard guard(timing);
 

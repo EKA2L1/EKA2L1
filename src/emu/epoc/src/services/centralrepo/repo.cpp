@@ -69,10 +69,38 @@ namespace eka2l1 {
         return &(*ite);
     }
 
-    central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
-        if (!is_active()) {
-            return nullptr;
+    void central_repo_client_session::modification_success(const std::uint32_t key) {
+        // Iters through all
+        for (std::size_t i = 0; i < notifies.size(); i++) {
+            cenrep_notify_info &notify = notifies[i];
+
+            if ((key & notify.mask) == (notify.match & notify.mask)) {
+                // Notify and delete this request from the list
+                notify.sts.complete(0);
+                notifies.erase(notifies.begin() + i);
+            }
         }
+
+        // Done all requests
+    }
+
+    int central_repo_client_session::add_notify_request(epoc::notify_info &info, 
+        const std::uint32_t mask, const std::uint32_t match) {
+        auto find_result = std::find_if(notifies.begin(), notifies.end(), [&](const cenrep_notify_info &notify) { 
+            return (notify.mask == mask) && (notify.match == match); 
+        });
+
+        if (find_result != notifies.end()) {
+            return -1;
+        }
+
+        notifies.push_back({ std::move(info), mask, match });
+        return 0;
+    }
+
+    central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
+        // Repo is in transaction
+        bool active = is_active();
 
         // Resolve
         // If get entry for write but the transaction mode is read only, we can't allow that
@@ -80,13 +108,17 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        // Check transactor
-        auto entry_ite = transactor.changes.find(key);
-        if (entry_ite != transactor.changes.end()) {
-            return &(entry_ite->second);
+        // Check transactor, only if its in transaction
+        if (active) {
+            auto entry_ite = transactor.changes.find(key);
+            if (entry_ite != transactor.changes.end()) {
+                return &(entry_ite->second);
+            }
         }
 
-        if (mode == 0) {
+        // If not in transaction, or if we are in transaction but read-mode
+        // Directly get the repo data
+        if (!active || mode == 0) {
             auto result = std::find_if(attach_repo->entries.begin(), attach_repo->entries.end(),
                 [&](const central_repo_entry &entry) { return entry.key == key; });
 
@@ -97,7 +129,6 @@ namespace eka2l1 {
             return &(*result);
         }
 
-        // Mode write, create new one in transactor
         transactor.changes.emplace(key, central_repo_entry {});
         return &(transactor.changes[key]);
     }

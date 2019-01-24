@@ -1,11 +1,11 @@
-#include <gtest/gtest.h>
+#include <catch2/catch.hpp>
 #include <common/chunkyseri.h>
 
 #include <vector>
 
 using namespace eka2l1;
 
-TEST(chunkyseri, do_read_generic) {
+TEST_CASE("do_read_generic", "chunkyseri") {
     char *test_data = 
         "\1\0\0\0\5\5\5\5 \0\0\0PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE";
 
@@ -21,12 +21,12 @@ TEST(chunkyseri, do_read_generic) {
 
     // Little endian
     // TODO (Big endian)
-    ASSERT_EQ(simple_num1, 1);
-    ASSERT_EQ(simple_num2, 0x05050505);
-    ASSERT_EQ(str, "PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+    REQUIRE(simple_num1 == 1);
+    REQUIRE(simple_num2 == 0x05050505);
+    REQUIRE(str == "PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 }
 
-TEST(chunkyseri, do_measure_generic)  {
+TEST_CASE("do_measure_generic", "chunkyseri")  {
     common::chunkyseri seri(nullptr, common::SERI_MODE_MESAURE);
     std::uint32_t dummy1;
     std::uint32_t dummy2;
@@ -45,10 +45,10 @@ TEST(chunkyseri, do_measure_generic)  {
     std::size_t expected = sizeof(dummy1) + sizeof(dummy2) + sizeof(dummy3) + 4 + dummy4.length()
         + 4 + dummy5.length() * 2;
 
-    ASSERT_EQ(seri.size(), expected);
+    REQUIRE(seri.size() == expected);
 }
 
-TEST(chunkyseri, do_write_generic) {
+TEST_CASE("do_write_generic", "chunkyseri") {
     std::vector<std::uint8_t> buf;
     buf.resize(32);
 
@@ -63,24 +63,24 @@ TEST(chunkyseri, do_write_generic) {
     seri.absorb(d3);
 
     std::uint8_t *bufptr = &buf[0];
-    ASSERT_EQ(d1, *reinterpret_cast<decltype(d1)*>(bufptr));
+    REQUIRE(d1 == *reinterpret_cast<decltype(d1)*>(bufptr));
     bufptr += sizeof(d1);
     
-    ASSERT_EQ(d2, *reinterpret_cast<decltype(d2)*>(bufptr));
+    REQUIRE(d2 == *reinterpret_cast<decltype(d2)*>(bufptr));
     bufptr += sizeof(d2);
 
-    ASSERT_EQ(d3.length(), *reinterpret_cast<std::uint32_t*>(bufptr));
+    REQUIRE(d3.length() == *reinterpret_cast<std::uint32_t*>(bufptr));
     bufptr += 4;
 
-    ASSERT_STREQ(d3.c_str(), reinterpret_cast<char*>(bufptr));
+    REQUIRE(d3 == reinterpret_cast<char*>(bufptr));
 }
 
-TEST(chunkyseri, do_read_with_section) {
+TEST_CASE("do_read_with_section", "chunkyseri") {
     char *buf = 
         "TestSection\1\0\5\0\7\0\7\0\0\0HIPEOPL";
 
     common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(buf), common::SERI_MODE_READ);
-    ASSERT_TRUE(seri.section("TestSection", 1));
+    REQUIRE(seri.section("TestSection", 1));
 
     std::uint16_t t1 = 0;
     std::uint16_t t2 = 0;
@@ -91,7 +91,7 @@ TEST(chunkyseri, do_read_with_section) {
     seri.absorb(t2);
     seri.absorb(t3);
 
-    ASSERT_EQ(t1, 5);
-    ASSERT_EQ(t2, 7);
-    ASSERT_EQ(t3, "HIPEOPL");
+    REQUIRE(t1 == 5);
+    REQUIRE(t2 == 7);
+    REQUIRE(t3 == "HIPEOPL");
 }

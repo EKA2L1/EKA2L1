@@ -32,6 +32,8 @@ namespace eka2l1 {
         cen_rep_delete,
         cen_rep_get_int,
         cen_rep_set_int,
+        cen_rep_get_real,
+        cen_rep_set_real,
         cen_rep_get_string,
         cen_rep_set_string,
         cen_rep_find,

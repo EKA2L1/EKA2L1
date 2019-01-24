@@ -24,6 +24,9 @@
 #include <epoc/services/server.h>
 #include <epoc/services/fbs/font.h>
 
+#include <common/allocator.h>
+
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 
@@ -52,6 +55,7 @@ namespace eka2l1 {
         fbs_bitmap_default_alloc_fail,
         fbs_bitmap_default_mark,
         fbs_bitmap_default_mark_end,
+        fbs_user_alloc_fail,
         fbs_user_mark,
         fbs_user_mark_end,
         fbs_heap_check,
@@ -80,32 +84,135 @@ namespace eka2l1 {
         fbs_mess_unused1
     };
 
-    struct fbscli {
-
+    enum class fbsobj_kind {
+        font,
+        bitmap
     };
 
-    struct fbsfont {
+    struct fbsobj {
+        fbsobj_kind kind;
+        std::uint32_t id;
+
+        explicit fbsobj(const std::uint32_t id, const fbsobj_kind kind)
+            : id(id), kind(kind) {
+        }
+    };
+
+    struct fbscli;
+
+    struct fbshandles {
+        fbscli *owner;
+        std::vector<fbsobj*> objects;
+
+        std::uint32_t make_handle(std::size_t index);
+        std::uint32_t add_object(fbsobj *obj);
+        bool remove_object(std::size_t index);
+
+        fbsobj *get_object(const std::uint32_t handle);
+    };
+
+    class fbs_server;
+
+    struct fbscli {
+        std::uint32_t session_id;
+        fbshandles handles;
+        fbs_server *server;
+
+        explicit fbscli(fbs_server *serv, const std::uint32_t ss_id);
+
+        void get_nearest_font(service::ipc_context *ctx);
+        void fetch(service::ipc_context *ctx);
+    };
+
+    struct fbsfont: fbsobj {
+        // Reuse and recycle
+        std::vector<std::uint8_t> data;
+
         std::unique_ptr<stbtt_fontinfo> stb_handle;
         eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
+
+        explicit fbsfont(const std::uint32_t id)
+            : fbsobj(id, fbsobj_kind::font) {
+        }
     };
 
     class io_system;
 
+    class fbs_chunk_allocator: public common::block_allocator {
+        chunk_ptr target_chunk;
+    public: 
+        explicit fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *ptr);
+        bool expand(std::size_t target) override;
+    };
+
     class fbs_server: public service::server {
+        friend struct fbscli;
+
         chunk_ptr   shared_chunk;
         chunk_ptr   large_chunk;
 
+        std::uint8_t *base_shared_chunk;
+        std::uint8_t *base_large_chunk;
+
         std::unordered_map<std::uint32_t, fbscli> clients;
         std::vector<fbsfont> font_avails;
+        std::vector<fbsfont*> matched;
+
+        std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
+        std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
+
+        std::atomic<std::uint32_t> id_counter;
 
         void load_fonts(eka2l1::io_system *io);
 
     protected:
         void folder_change_callback(eka2l1::io_system *sys, const std::u16string &path, int action);
 
+        fbscli *get_client_associated_with_handle(const std::uint32_t handle);
+        fbsobj *get_object(const std::uint32_t handle);
+
     public:
         explicit fbs_server(eka2l1::system *sys);
-
         void init(service::ipc_context context);
+
+        void redirect(service::ipc_context context);
+
+        std::uint8_t *get_shared_chunk_base() {
+            return base_shared_chunk;
+        }
+
+        ptr<std::uint8_t> host_ptr_to_guest_general_data(void *ptr) {
+            return shared_chunk->base() + 
+                static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t*>(ptr) - base_shared_chunk);
+        }
+
+        /*! \brief Use to Allocate structure from server side.
+         *
+         * Symbian usually avoids sendings struct that usually changes its structure
+         * to preserve compability. Especially, struct with vtable should be avoided.
+         * 
+         * Using a shared global chunk, this could be solved someway.
+        */
+        void *allocate_general_data_impl(const std::size_t s);
+        
+        // General...
+        bool free_general_data_impl(const void *ptr);
+
+        /*! \brief Use to Allocate structure from server side.
+         *
+         * Symbian usually avoids sendings struct that usually changes its structure
+         * to preserve compability. Especially, struct with vtable should be avoided.
+         * 
+         * Using a shared global chunk, this could be solved someway.
+        */
+        template <typename T>
+        T *allocate_general_data() {
+            return reinterpret_cast<T*>(allocate_general_data_impl(sizeof(T)));
+        }
+
+        template <typename T>
+        bool free_general_data(const T *dat) {
+            return free_general_data_impl(dat);
+        }
     };
 }
