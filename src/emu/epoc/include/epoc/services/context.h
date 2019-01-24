@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include <common/algorithm.h>
+#include <common/log.h>
+
 #include <epoc/ipc.h>
 #include <epoc/ptr.h>
 
@@ -52,7 +55,12 @@ namespace eka2l1 {
                     return std::optional<T>{};
                 }
 
-                memcpy(&ret, dat->data(), dat->length());
+                if (dat->length() > sizeof(T)) {
+                    LOG_WARN("Size of data provided in descriptor index is larger than size of data to get ({} vs {})",
+                        dat->length(), sizeof(T));
+                }
+
+                memcpy(&ret, dat->data(), common::min(sizeof(T), dat->length()));
 
                 return std::make_optional<T>(std::move(ret));
             }
