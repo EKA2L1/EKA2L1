@@ -63,7 +63,7 @@ namespace eka2l1::common {
         }
         
         std::size_t size() {
-                    return buf - org;
+            return buf - org;
         }
                 
         chunkyseri_mode get_seri_mode() const {
