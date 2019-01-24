@@ -5,7 +5,6 @@ add_library(epocloader
     include/epoc/loader/sis_old.h
     include/epoc/loader/e32img.h
     include/epoc/loader/romimage.h
-    include/epoc/loader/rom.h
     include/epoc/loader/rpkg.h
     include/epoc/loader/rsc.h
     src/loader/e32img.cpp
@@ -15,7 +14,6 @@ add_library(epocloader
     src/loader/romimage.cpp
     src/loader/rpkg.cpp
     src/loader/rsc.cpp
-    src/loader/rom.cpp
 )
 
 # The kernel
@@ -126,7 +124,9 @@ add_library(epocservs
 
 add_library(epocio
     include/epoc/vfs.h
-    src/vfs.cpp)
+    include/epoc/loader/rom.h
+    src/vfs.cpp
+    src/loader/rom.cpp)
 
 add_library(epocutils
     include/epoc/utils/des.h
@@ -152,7 +152,6 @@ target_include_directories(epocio PUBLIC include)
 
 target_link_libraries(epocio PUBLIC common)
 target_link_libraries(epocio PRIVATE
-    epocloader
     epocmem
 )
 
