@@ -223,5 +223,16 @@ namespace eka2l1 {
          * This iters through all notify requests, if it matchs than notify request client.
         */
         void modification_success(const std::uint32_t key);
+
+        /*! \brief Request to notify when a group of key have changed.
+         *
+         * \param info  Info of the notify request
+         * \param mask  The mask to extract bit pattern
+         * \param match The bit pattern to be match.
+         * 
+         * \returns     0 if success.
+         *              -1 if request already exists
+        */
+        int add_notify_request(const epoc::notify_info &info, const std::uint32_t mask, const std::uint32_t match);
     };
 }

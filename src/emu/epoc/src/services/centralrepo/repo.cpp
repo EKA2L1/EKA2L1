@@ -84,6 +84,20 @@ namespace eka2l1 {
         // Done all requests
     }
 
+    int central_repo_client_session::add_notify_request(const epoc::notify_info &info, 
+        const std::uint32_t mask, const std::uint32_t match) {
+        auto find_result = std::find_if(notifies.begin(), notifies.end(), [&](const cenrep_notify_info &notify) { 
+            return (notify.mask == mask) && (notify.match == match); 
+        });
+
+        if (find_result != notifies.end()) {
+            return -1;
+        }
+
+        notifies.push_back({ info, mask, match });
+        return 0;
+    }
+
     central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
         // Repo is in transaction
         bool active = is_active();
