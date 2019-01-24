@@ -310,7 +310,7 @@ namespace eka2l1 {
         do_state_for_cre(seri, *attach_repo);
 
         std::u16string p { drive_to_char16(attach_repo->reside_place) };
-        p += u"\\Private\\10202BE9\\persists";
+        p += u":\\Private\\10202BE9\\persists";
 
         symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
 

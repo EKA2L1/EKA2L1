@@ -84,7 +84,7 @@ namespace eka2l1 {
         // Done all requests
     }
 
-    int central_repo_client_session::add_notify_request(const epoc::notify_info &info, 
+    int central_repo_client_session::add_notify_request(epoc::notify_info &info, 
         const std::uint32_t mask, const std::uint32_t match) {
         auto find_result = std::find_if(notifies.begin(), notifies.end(), [&](const cenrep_notify_info &notify) { 
             return (notify.mask == mask) && (notify.match == match); 
@@ -94,7 +94,7 @@ namespace eka2l1 {
             return -1;
         }
 
-        notifies.push_back({ info, mask, match });
+        notifies.push_back({ std::move(info), mask, match });
         return 0;
     }
 

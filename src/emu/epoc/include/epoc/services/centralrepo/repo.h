@@ -233,6 +233,6 @@ namespace eka2l1 {
          * \returns     0 if success.
          *              -1 if request already exists
         */
-        int add_notify_request(const epoc::notify_info &info, const std::uint32_t mask, const std::uint32_t match);
+        int add_notify_request(epoc::notify_info &info, const std::uint32_t mask, const std::uint32_t match);
     };
 }

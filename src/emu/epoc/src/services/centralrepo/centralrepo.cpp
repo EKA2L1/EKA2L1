@@ -182,6 +182,8 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, close, cen_rep_close, "CenRep::Close");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req, "CenRep::NofReq");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_group_nof_req, "CenRep::GroupNofReq");
     }
 
     void central_repo_server::init(service::ipc_context ctx) {
@@ -439,6 +441,37 @@ namespace eka2l1 {
         
     void central_repo_client_session::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case cen_rep_group_nof_req: case cen_rep_notify_req: {
+            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : 
+                static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
+
+            const std::uint32_t partial_key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+
+            epoc::notify_info info { ctx->msg->request_sts, ctx->msg->own_thr };
+            const int err = add_notify_request(info, mask, partial_key);
+
+            switch (err) {
+            case 0: {
+                ctx->set_request_status(KErrNone);
+                break;
+            }
+
+            case -1: {
+                ctx->set_request_status(KErrAlreadyExists);
+                break;
+            }
+
+            default: {
+                LOG_TRACE("Unknown returns code {} from add_notify_request, set status to KErrNone", err);
+                ctx->set_request_status(KErrNone);
+
+                break;
+            }
+            }
+
+            break;
+        }
+
         case cen_rep_set_int: {
             // We get the entry.
             // Use mode 1 (write) to get the entry, since we are modifying data.
@@ -521,7 +554,7 @@ namespace eka2l1 {
         // Sensei, did i do it correct
         // Save it and than wipe it out
         repo_session.write_changes(io);
-        LOG_TRACE("Repo 0x{:X}: changes saved before disconnect", repo_session.attach_repo->uid);
+        LOG_TRACE("Repo 0x{:X}: changes saved", repo_session.attach_repo->uid);
 
         // Bie...
         client_sessions.erase(repo_session_ite);
@@ -529,8 +562,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::close(service::ipc_context ctx) {
-        const int err = closerep(ctx.sys->get_io_system(),
-            static_cast<std::uint32_t>(*ctx.get_arg<int>(3)), ctx.msg->msg_session->unique_id());
+        const int err = closerep(ctx.sys->get_io_system(), 0, ctx.msg->msg_session->unique_id());
 
         switch (err) {
         case 0: {
