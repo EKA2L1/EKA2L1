@@ -14,8 +14,6 @@ macro(add_test_assets PATH DESTPATH)
     endforeach()
 endmacro()
 
-include_directories(${GTEST_INCLUDE_DIR})
-
 # Disable logging for test
 add_definitions(-DDISABLE_LOGGING)
 
@@ -28,9 +26,8 @@ add_executable(ekatests
     ${CORE_TEST_FILES})
 
 target_link_libraries(ekatests PRIVATE 
-    gmock 
-    gtest
     common
+    Catch2
     epocio
     epockern
     epocloader)

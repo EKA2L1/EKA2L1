@@ -1,5 +1,5 @@
 #include <epoc/loader/rsc.h>
-#include <gtest/gtest.h>
+#include <catch2/catch.hpp>
 
 #include <epoc/vfs.h>
 
@@ -9,14 +9,14 @@
 using namespace eka2l1;
 
 // Syncing result with Symbian's CResourceFile class
-TEST(rsc_file, no_compress_but_may_contain_unicode) {
+TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
     const char *rsc_name = "sample_0xed3e09d5.rsc";
     symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
 
     loader::rsc_file test_rsc(f);
 
     const std::uint16_t total_res = 11;
-    ASSERT_EQ(test_rsc.get_total_resources(), total_res);
+    REQUIRE(test_rsc.get_total_resources() == total_res);
 
     // Iterate through each resources
     for (int i = 1; i <= total_res; i++) {
@@ -36,7 +36,7 @@ TEST(rsc_file, no_compress_but_may_contain_unicode) {
 
         fi.read(reinterpret_cast<char*>(&expected_res[0]), res_size); 
 
-        ASSERT_EQ(res_from_eka2l1.size(), res_size) << "Fail at resource " << i;
-        ASSERT_EQ(expected_res, res_from_eka2l1) << "Fail at resource " << i;
+        REQUIRE(res_from_eka2l1.size() == res_size);
+        REQUIRE(expected_res == res_from_eka2l1);
     }
 }
