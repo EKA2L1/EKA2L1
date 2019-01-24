@@ -24,8 +24,8 @@
 #include <memory>
 #include <vector>
 
-namespace eka2l1 {
-    enum arm_reg {
+namespace eka2l1::arm {
+    enum reg {
         R0,
         R1,
         R2,
@@ -65,7 +65,8 @@ namespace eka2l1 {
             std::uint32_t opcode;
             std::uint16_t opcode16;
         };
-        
+
+        arm_instruction_type inst_type;
         std::uint8_t  size;
 
         virtual ~arm_instruction_base() {}
@@ -78,13 +79,13 @@ namespace eka2l1 {
          *
          * \returns A vector contains all registers suited.
         */
-        virtual std::vector<arm_reg> get_regs_read() = 0;
+        virtual std::vector<arm::reg> get_regs_read() = 0;
         
         /*! \brief Get all the registers which are being written by this instruction.
          *
          * \returns A vector contains all registers suited.
         */
-        virtual std::vector<arm_reg> get_regs_write() = 0;
+        virtual std::vector<arm::reg> get_regs_write() = 0;
     };
 
     class arm_analyser {
