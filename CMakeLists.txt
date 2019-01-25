@@ -5,7 +5,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 option(BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(BUILD_TESTS "Build EKA2L1's tests" ON)
-option(BUILD_JIT_LLVM "Build EKA2L1's LLVM JIT" ON)
+option(BUILD_JIT_LLVM "Build EKA2L1's LLVM JIT (Experimental)" OFF)
 option(ENABLE_SCRIPTING_ABILITY "Enable to script with Python" OFF)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
