@@ -136,7 +136,7 @@ if (BUILD_JIT_LLVM)
         message(FATAL_ERROR "Couldn't build LLVM from the submodule. You might need to run `git submodule update --init`")
     endif()
 
-    set(LLVM_LIBS LLVMMCJIT LLVMX86CodeGen)
+    set(LLVM_LIBS LLVMOrcJIT LLVMX86CodeGen)
 
     add_library(shortllvm INTERFACE)
     target_link_libraries(shortllvm INTERFACE ${LLVM_LIBS})
