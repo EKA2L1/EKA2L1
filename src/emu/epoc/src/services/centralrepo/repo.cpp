@@ -69,7 +69,7 @@ namespace eka2l1 {
         return &(*ite);
     }
 
-    void central_repo_client_session::modification_success(const std::uint32_t key) {
+    void central_repo_client_subsession::modification_success(const std::uint32_t key) {
         // Iters through all
         for (std::size_t i = 0; i < notifies.size(); i++) {
             cenrep_notify_info &notify = notifies[i];
@@ -84,7 +84,7 @@ namespace eka2l1 {
         // Done all requests
     }
 
-    int central_repo_client_session::add_notify_request(epoc::notify_info &info, 
+    int central_repo_client_subsession::add_notify_request(epoc::notify_info &info, 
         const std::uint32_t mask, const std::uint32_t match) {
         auto find_result = std::find_if(notifies.begin(), notifies.end(), [&](const cenrep_notify_info &notify) { 
             return (notify.mask == mask) && (notify.match == match); 
@@ -98,7 +98,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    central_repo_entry *central_repo_client_session::get_entry(const std::uint32_t key, int mode) {
+    central_repo_entry *central_repo_client_subsession::get_entry(const std::uint32_t key, int mode) {
         // Repo is in transaction
         bool active = is_active();
 

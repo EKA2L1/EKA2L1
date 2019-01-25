@@ -81,7 +81,7 @@ namespace eka2l1 {
         std::uint32_t default_meta_data;
     };
 
-    struct central_repo_client_session;
+    struct central_repo_client_subsession;
 
     struct central_repo {
         drive_number reside_place;
@@ -94,7 +94,7 @@ namespace eka2l1 {
         std::uint32_t owner_uid;
         
         std::vector<central_repo_entry> entries;
-        std::vector<central_repo_client_session*> attached;
+        std::vector<central_repo_client_subsession*> attached;
 
         central_repo_entry_access_policy default_policy;
         std::vector<central_repo_entry_access_policy> single_policies;
@@ -116,11 +116,11 @@ namespace eka2l1 {
             const std::uint32_t meta);
     };
     
-    struct central_repo_client_session;
+    struct central_repo_client_subsession;
 
     struct central_repo_transactor {
         std::unordered_map<std::uint32_t, central_repo_entry> changes;
-        central_repo_client_session *session;
+        central_repo_client_subsession *session;
     };
 
     /*! \brief A repos cacher
@@ -150,7 +150,7 @@ namespace eka2l1 {
         eka2l1::central_repo *get_cached_repo(const std::uint32_t key);
     };
 
-    struct central_repo_client_session {
+    struct central_repo_client_subsession {
         central_repo_server *server;
 
         central_repo *attach_repo;

@@ -300,7 +300,7 @@ namespace eka2l1 {
         return 0;
     }
     
-    void central_repo_client_session::write_changes(eka2l1::io_system *io) {
+    void central_repo_client_subsession::write_changes(eka2l1::io_system *io) {
         std::vector<std::uint8_t> bufs;
 
         {

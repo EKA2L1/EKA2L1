@@ -178,51 +178,49 @@ namespace eka2l1 {
     central_repo_server::central_repo_server(eka2l1::system *sys)
         : service::server(sys, "!CentralRepository", true) 
          , id_counter(0) {
-        REGISTER_IPC(central_repo_server, init, cen_rep_init, "CenRep::Init");
-        REGISTER_IPC(central_repo_server, close, cen_rep_close, "CenRep::Close");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_init, "CenRep::Init");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_close, "CenRep::Close");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req, "CenRep::NofReq");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_group_nof_req, "CenRep::GroupNofReq");
     }
 
-    void central_repo_server::init(service::ipc_context ctx) {
+    void central_repo_client_session::init(service::ipc_context *ctx) {
         // The UID repo to load
-        const std::uint32_t repo_uid = static_cast<std::uint32_t>(*ctx.get_arg<int>(0));
+        const std::uint32_t repo_uid = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
         eka2l1::central_repo *repo = nullptr;
 
-        auto ite = repos.find(repo_uid);
+        auto ite = server->repos.find(repo_uid);
 
-        if (ite != repos.end()) {
+        if (ite != server->repos.end()) {
             // Load
             repo = &(ite->second);
         } else {
-            repo = load_repo(ctx.sys->get_io_system(), repo_uid);
+            repo = server->load_repo(ctx->sys->get_io_system(), repo_uid);
 
             if (!repo) {
-                ctx.set_request_status(KErrNotFound);
+                ctx->set_request_status(KErrNotFound);
                 return;
             }
         }
 
         // New client session
-        central_repo_client_session clisession;
-        clisession.attach_repo = repo;
-        clisession.server = this;
+        central_repo_client_subsession clisubsession;
+        clisubsession.attach_repo = repo;
+        clisubsession.server = server;
 
-        const std::uint32_t id = ctx.msg->msg_session->unique_id();
-
-        auto res = client_sessions.emplace(id, std::move(clisession));
+        auto res = client_subsessions.emplace(++idcounter, std::move(clisubsession));
 
         if (!res.second) {
-            ctx.set_request_status(KErrNoMemory);
+            ctx->set_request_status(KErrNoMemory);
             return;
         }
 
         repo->attached.push_back(&res.first->second);
 
-        bool result = ctx.write_arg_pkg<std::uint32_t>(3, id);
-        ctx.set_request_status(KErrNone);
+        bool result = ctx->write_arg_pkg<std::uint32_t>(3, idcounter);
+        ctx->set_request_status(KErrNone);
     }
 
     void central_repo_server::rescan_drives(eka2l1::io_system *io) {
@@ -266,7 +264,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::redirect_msg_to_session(service::ipc_context ctx) {
-        std::uint32_t session_uid = static_cast<std::uint32_t>(*ctx.get_arg<int>(3));
+        const std::uint32_t session_uid = ctx.msg->msg_session->unique_id();
         auto session_ite = client_sessions.find(session_uid);
 
         if (session_ite == client_sessions.end()) {
@@ -415,7 +413,7 @@ namespace eka2l1 {
         return repo;
     }
 
-    int central_repo_client_session::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
+    int central_repo_client_subsession::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
         // In transacton, fail
         if (is_active()) {
             return -1;
@@ -440,6 +438,36 @@ namespace eka2l1 {
     }
         
     void central_repo_client_session::handle_message(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
+        case cen_rep_init: {
+            init(ctx);
+            break;
+        }
+
+        case cen_rep_close: {
+            close(ctx);
+            break;
+        }
+
+        default: {
+            // We find the repo subsession and redirect message to subsession
+            const std::uint32_t subsession_uid = static_cast<std::uint32_t>(*ctx->get_arg<int>(3));
+            auto subsession_ite = client_subsessions.find(subsession_uid);
+
+            if (subsession_ite == client_subsessions.end()) {
+                LOG_ERROR("Subsession ID passed not found 0x{:X}", subsession_uid);
+                ctx->set_request_status(KErrArgument);
+
+                return;
+            }
+
+            subsession_ite->second.handle_message(ctx);
+            break;
+        }
+        }
+    }
+
+    void central_repo_client_subsession::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case cen_rep_group_nof_req: case cen_rep_notify_req: {
             const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : 
@@ -537,46 +565,59 @@ namespace eka2l1 {
         }
     }
 
-    int central_repo_server::closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t ss_id) {
-        auto repo_session_ite = client_sessions.find(ss_id);
+    int central_repo_client_session::closerep(io_system *io, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
+        auto &repo_subsession = repo_subsession_ite->second;
 
-        if (repo_session_ite == client_sessions.end()) {
-            return -1;
-        }
-
-        auto &repo_session = repo_session_ite->second;
-
-        if (repo_id != 0 && repo_session.attach_repo->uid != repo_id) {
+        if (repo_id != 0 && repo_subsession.attach_repo->uid != repo_id) {
             LOG_CRITICAL("Fail safe check: REPO id != provided id");
             return -2;
         }
 
         // Sensei, did i do it correct
         // Save it and than wipe it out
-        repo_session.write_changes(io);
-        LOG_TRACE("Repo 0x{:X}: changes saved", repo_session.attach_repo->uid);
+        repo_subsession.write_changes(io);
+        LOG_TRACE("Repo 0x{:X}: changes saved", repo_subsession.attach_repo->uid);
+
+        // Remove from attach
+        auto &all_attached = repo_subsession.attach_repo->attached;
+        auto attach_this_ite = std::find(all_attached.begin(), all_attached.end(),
+            &repo_subsession);
+
+        if (attach_this_ite != all_attached.end()) {
+            all_attached.erase(attach_this_ite);
+        }
 
         // Bie...
-        client_sessions.erase(repo_session_ite);
+        client_subsessions.erase(repo_subsession_ite);
         return 0;
     }
+    
+    int central_repo_client_session::closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t id) {
+        auto repo_subsession_ite = client_subsessions.find(id);
 
-    void central_repo_server::close(service::ipc_context ctx) {
-        const int err = closerep(ctx.sys->get_io_system(), 0, ctx.msg->msg_session->unique_id());
+        if (repo_subsession_ite == client_subsessions.end()) {
+            return -1;
+        }
+
+        return closerep(io, repo_id, repo_subsession_ite);
+    }
+
+    void central_repo_client_session::close(service::ipc_context *ctx) {
+        const int err = closerep(ctx->sys->get_io_system(), 0, ctx->msg->msg_session->unique_id());
 
         switch (err) {
         case 0: {
-            ctx.set_request_status(KErrNone);
+            ctx->set_request_status(KErrNone);
             break;
         }
 
         case -1: {
-            ctx.set_request_status(KErrNotFound);
+            ctx->set_request_status(KErrNotFound);
             break;
         }
 
         case -2: {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             break;
         }
 
@@ -590,9 +631,36 @@ namespace eka2l1 {
     // If a session disconnect, we should at least save all changes it did
     // At least, if the session connected still exist
     void central_repo_server::disconnect(service::ipc_context ctx) {
-        closerep(ctx.sys->get_io_system(), 0, ctx.msg->msg_session->unique_id());
+        // Close all repos that are currently being opened.
+        const std::uint32_t ss_id = ctx.msg->msg_session->unique_id();
+        auto ss_ite = client_sessions.find(ss_id);
+
+        io_system *io = ctx.sys->get_io_system();
+
+        if (ss_ite != client_sessions.end()) {
+            central_repo_client_session &ss = ss_ite->second;
+            
+            for (auto ite = ss.client_subsessions.begin(); ite != ss.client_subsessions.end(); ite++) {
+                ss.closerep(io, 0, ite);
+            }
+            
+            ss.client_subsessions.clear();
+            client_sessions.erase(ss_ite);
+        }
 
         // Ignore all errors
+        ctx.set_request_status(KErrNone);
+    }
+
+    void central_repo_server::connect(service::ipc_context ctx) {
+        central_repo_client_session session;
+        session.server = this;
+        
+        const std::uint32_t id = ctx.msg->msg_session->unique_id();
+
+        // Put all process code here
+        client_sessions.insert(std::make_pair(static_cast<const std::uint32_t>(id), std::move(session)));
+
         ctx.set_request_status(KErrNone);
     }
 }
