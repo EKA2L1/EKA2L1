@@ -48,6 +48,12 @@ namespace eka2l1::arm {
         PC = R15
     };
 
+    enum class instruction {
+    #define INST(x) x,
+        #include <arm/arm_opcodes.def>
+    #undef INST
+    };
+
     enum class arm_disassembler_backend {
         capstone = 0,       ///< Using capstone to analyse and disassemble instruction.
         homemade = 2        ///< Using homemade decoder. Not really smart
