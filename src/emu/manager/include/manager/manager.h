@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <epoc/configure.h>
+#include <common/configure.h>
 #include <manager/package_manager.h>
 
 #include <memory>

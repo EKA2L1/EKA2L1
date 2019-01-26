@@ -18,8 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/loader/sis_old.h>
-#include <epoc/vfs.h>
+#include <manager/sis_old.h>
 
 #include <common/cvt.h>
 #include <common/log.h>

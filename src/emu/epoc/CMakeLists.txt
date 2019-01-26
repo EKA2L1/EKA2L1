@@ -1,16 +1,10 @@
 # Loader for EPOC image, etc...
 add_library(epocloader
-    include/epoc/loader/sis_fields.h
-    include/epoc/loader/sis.h
-    include/epoc/loader/sis_old.h
     include/epoc/loader/e32img.h
     include/epoc/loader/romimage.h
     include/epoc/loader/rpkg.h
     include/epoc/loader/rsc.h
     src/loader/e32img.cpp
-    src/loader/sis.cpp
-    src/loader/sis_fields.cpp
-    src/loader/sis_old.cpp
     src/loader/romimage.cpp
     src/loader/rpkg.cpp
     src/loader/rsc.cpp
@@ -168,7 +162,6 @@ target_link_libraries(epocloader
     common
     epocio
     miniz
-    yaml-cpp
 )
 
 target_link_libraries(epocutils PUBLIC common)
@@ -176,7 +169,7 @@ target_link_libraries(epocutils PRIVATE
     epockern
     epocservs
     drivers
-    hle    
+    hle
     manager)
 
 target_include_directories(epocservs PUBLIC
@@ -225,21 +218,3 @@ target_link_libraries(epoc PRIVATE
     hle
     gdbstub
     manager)
-
-execute_process(
-    COMMAND git rev-parse --abbrev-ref HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_BRANCH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-# Get the latest abbreviated commit hash of the working branch
-execute_process(
-    COMMAND git log -1 --format=%h
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_COMMIT_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-    
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/epoc/configure.h.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/epoc/configure.h)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/types.h>
-#include <epoc/loader/sis_common.h>
+#include <manager/sis_common.h>
 
 #include <cstdint>
 #include <optional>

@@ -25,7 +25,7 @@
 #include <arm/arm_unicorn.h>
 #include <arm/arm_utils.h>
 
-#include <epoc/configure.h>
+#include <common/configure.h>
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 

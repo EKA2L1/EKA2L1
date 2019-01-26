@@ -27,7 +27,7 @@
 #include <epoc/utils/tl.h>
 #include <epoc/utils/uid.h>
 
-#include <epoc/configure.h>
+#include <common/configure.h>
 #include <epoc/hal.h>
 #include <epoc/svc.h>
 

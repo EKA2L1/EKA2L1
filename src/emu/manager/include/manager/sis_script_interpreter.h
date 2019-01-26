@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include <epoc/loader/sis_fields.h>
+#include <manager/sis_fields.h>
 
 namespace eka2l1 {
     class io_system;

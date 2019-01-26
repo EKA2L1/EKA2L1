@@ -21,7 +21,7 @@
 #include <common/log.h>
 #include <common/path.h>
 
-#include <epoc/loader/sis.h>
+#include <manager/sis.h>
 
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>

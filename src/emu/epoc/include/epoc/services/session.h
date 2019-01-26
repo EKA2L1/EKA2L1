@@ -59,6 +59,7 @@ namespace eka2l1 {
 
         public:
             session(kernel_system *kern, server_ptr svr, int async_slot_count);
+            ~session() override;
 
             server_ptr get_server() {
                 return svr;

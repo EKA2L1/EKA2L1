@@ -26,7 +26,7 @@
 #include <epoc/kernel/libmanager.h>
 #include <epoc/reg.h>
 
-#include <epoc/configure.h>
+#include <common/configure.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/manager.h>
@@ -37,7 +37,7 @@
 #include <epoc/loader/romimage.h>
 #include <epoc/vfs.h>
 
-#include <epoc/configure.h>
+#include <common/configure.h>
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 

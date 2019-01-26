@@ -44,6 +44,10 @@ namespace eka2l1 {
             }
         }
 
+        // Disconnect
+        session::~session() {
+        }
+
         ipc_msg_ptr session::get_free_msg() {
             if (msgs_pool.empty()) {
                 return kern->create_msg(kernel::owner_type::process);
