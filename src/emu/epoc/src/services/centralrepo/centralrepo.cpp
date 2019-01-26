@@ -184,6 +184,9 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req, "CenRep::NofReq");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_group_nof_req, "CenRep::GroupNofReq");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_int, "CenRep::GetInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_real, "CenRep::GetReal");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_string, "CenRep::GetString");
     }
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
@@ -497,6 +500,53 @@ namespace eka2l1 {
             }
             }
 
+            break;
+        }
+
+        case cen_rep_get_int: case cen_rep_get_real: case cen_rep_get_string: {
+            // We get the entry.
+            // Use mode 0 (write) to get the entry, since we are modifying data.
+            central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 0);
+
+            if (!entry) {
+                ctx->set_request_status(KErrNotFound);
+                break;
+            }
+
+            switch(ctx->msg->function) {
+            case cen_rep_get_int: {
+                if (entry->data.etype != central_repo_entry_type::integer) {
+                    ctx->set_request_status(KErrArgument);
+                    return;
+                }
+
+                ctx->write_arg_pkg<int>(1, static_cast<int>(entry->data.intd));
+                break;
+            }
+
+            case cen_rep_get_real: {
+                if (entry->data.etype != central_repo_entry_type::real) {
+                    ctx->set_request_status(KErrArgument);
+                    return;
+                }
+
+                ctx->write_arg_pkg<int>(1, static_cast<int>(entry->data.reald));
+                break;
+            }
+
+            case cen_rep_get_string: {
+                if (entry->data.etype != central_repo_entry_type::string) {
+                    ctx->set_request_status(KErrArgument);
+                    return;
+                }
+
+                ctx->write_arg_pkg(1, reinterpret_cast<std::uint8_t*>(&entry->data.strd[0]), 
+                    static_cast<std::uint32_t>(entry->data.strd.length()));
+                break;
+            }
+            }
+
+            ctx->set_request_status(KErrNone);
             break;
         }
 
