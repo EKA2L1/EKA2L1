@@ -47,36 +47,27 @@
 
 #include <gdbstub/gdbstub.h>
 #include <manager/manager.h>
+#include <manager/device_manager.h>
 
 #include <common/ini.h>
+#include <common/arghandler.h>
 
 using namespace eka2l1;
 
-std::unique_ptr<eka2l1::system> symsys = std::make_unique<eka2l1::system>(nullptr, nullptr);
+#pragma region GLOBAL_DATA
 
+std::unique_ptr<eka2l1::system> symsys = std::make_unique<eka2l1::system>(nullptr, nullptr);
 arm_emulator_type jit_type = decltype(jit_type)::unicorn;
-epocver ever = epocver::epoc9;
 
 std::string rom_path = "SYM.ROM";
 std::string mount_c = "drives/c/";
 std::string mount_e = "drives/e/";
 std::string mount_z = "drives/z/";
-std::string sis_install_path = "-1";
 
-std::string rpkg_path;
 std::uint16_t gdb_port = 24689;
-std::uint8_t adrive;
-
 bool enable_gdbstub = false;
 
 YAML::Node config;
-
-int drive_mount;
-int app_idx = -1;
-
-bool help_printed = false;
-bool list_app = false;
-bool install_rpkg = false;
 
 std::atomic<bool> should_quit(false);
 std::atomic<bool> should_pause(false);
@@ -84,124 +75,175 @@ std::atomic<bool> should_pause(false);
 bool debugger_quit = false;
 
 std::mutex ui_debugger_mutex;
-
 ImGuiContext *ui_debugger_context;
 
 bool ui_window_mouse_down[5] = { false, false, false, false, false };
 
 std::shared_ptr<eka2l1::imgui_logger> logger;
-std::shared_ptr<eka2l1::drivers::graphics_driver> gdriver;
 std::shared_ptr<eka2l1::imgui_debugger> debugger;
 std::shared_ptr<eka2l1::drivers::emu_window> debugger_window;
 
 std::mutex lock;
 std::condition_variable cond;
 
-void print_help() {
-    std::cout << "Usage: Drag and drop Symbian file here, ignore missing dependencies" << std::endl;
-    std::cout << "Options: " << std::endl;
-    std::cout << "\t -rom: Specified where the ROM is located. If none is specified, the emu will look for a file named SYM.ROM." << std::endl;
-    std::cout << "\t -ver: Specified Symbian version to emulate (either 6 or 9)." << std::endl;
-    std::cout << "\t -app: Specified the app to run. Next to this option is the index number." << std::endl;
-    std::cout << "\t -listapp: List all of the apps." << std::endl;
-    std::cout << "\t -install: Install a SIS/SISX package. Example: -install me.sis!" << std::endl;
-    std::cout << "\t -irpkg ver path: Install RPKG." << std::endl;
-    std::cout << "\t\t ver:  Epoc version. Available version are: v94, v93, belle, v60" << std::endl;
-    std::cout << "\t\t path: Path to RPKG file." << std::endl;
-    std::cout << "\t -h/-help: Print help" << std::endl;
-}
+std::uint8_t device_to_use = 0;         ///< Device that will be used
 
-void fetch_rpkg(const char *ver, const char *path) {
-    install_rpkg = true;
+#pragma endregion
 
-    rpkg_path = path;
-    std::string ver_str = ver;
+#pragma region ARGS_HANDLER_CALLBACK
+static bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    const char *path = parser->next_token();
 
-    if (ver_str == "v93") {
-        ever = epocver::epoc93;
-    } else if (ver_str == "v94") {
-        ever = epocver::epoc9;
-    } else if (ver_str == "belle") {
-        ever = epocver::epoc10;
-    } else if (ver_str == "v60") {
-        ever = epocver::epoc6;
+    if (!path) {
+        *err = "Request to install a SIS, but path not given";
+        return false;
     }
-}
+    
+    // Since it's inconvinient for user to specify the drive (they are all the same on computer),
+    // and it's better to install in C since there is many apps required
+    // to be in it and hardcoded the drive, just hardcode drive C here.
+    bool result = symsys->install_package(common::utf8_to_ucs2(path), drive_c);
 
-void parse_args(int argc, char **argv) {
-    if (argc <= 1) {
-        print_help();
-        should_quit = true;
-        return;
+    if (!result) {
+        *err = "Installation of SIS failed";
+        return false;
     }
 
-    for (int i = 1; i <= argc - 1; i++) {
-        if (strncmp(argv[i], "-rom", 4) == 0) {
-            rom_path = argv[++i];
-            config["rom_path"] = rom_path;
-        } else if (((strncmp(argv[i], "-h", 2)) == 0 || (strncmp(argv[i], "-help", 5) == 0))
-            && (!help_printed)) {
-            print_help();
-            help_printed = true;
-            should_quit = true;
-        } else if ((strncmp(argv[i], "-ver", 4) == 0 || (strncmp(argv[i], "-v", 2) == 0))) {
-            int ver = std::atoi(argv[++i]);
+    return true;
+}
 
-            if (ver == 6) {
-                ever = epocver::epoc6;
-                config["epoc_ver"] = (int)ever;
-            } else {
-                ever = epocver::epoc9;
-                config["epoc_ver"] = (int)ever;
-            }
-        } else if (strncmp(argv[i], "-app", 4) == 0) {
-            try {
-                app_idx = std::atoi(argv[++i]);
-            } catch (...) {
-                std::cout << "Invalid request." << std::endl;
+static bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    const char *tok = parser->next_token();
 
-                should_quit = true;
-                break;
-            }
-        } else if (strncmp(argv[i], "-listapp", 8) == 0) {
-            list_app = true;
-        } else if (strncmp(argv[i], "-install", 8) == 0) {
-            adrive = drive_c;
-            sis_install_path = argv[++i];
-        } else if (strncmp(argv[i], "-mount", 6) == 0) {
-            drive_mount = std::atoi(argv[++i]);
+    if (!tok) {
+        *err = "No application specified";
+        return false;
+    }
+    
+    auto infos = symsys->get_manager_system()->get_package_manager()->get_apps_info();
+    std::uint8_t app_idx = 0;
 
-            if (drive_mount == 0) {
-                mount_c = argv[++i];
-            } else {
-                mount_e = argv[++i];
-            }
-        } else if (strncmp(argv[i], "-irpkg", 6) == 0) {
-            i += 2;
+    try {
+        app_idx = static_cast<decltype(app_idx)>(std::atoi(tok));
+    } catch (...) {
+        *err = "Expect an app index after --app, got ";
+        *err += tok;
 
-            fetch_rpkg(argv[i - 1], argv[i]);
-        } else {
-            std::cout << "Invalid request." << std::endl;
+        return false;
+    }
 
-            should_quit = true;
+    bool result = symsys->load(infos[app_idx].id);
+
+    if (!result) {
+        *err = "Application load failed";
+        return false;
+    }
+
+    return true;
+}
+
+static bool help_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    std::cout << parser->get_help_string();
+    return false;
+}
+
+static bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    // Base Z drive is mount_z
+    // The RPKG path is the next token
+    const char *path = parser->next_token();
+
+    if (!path) {
+        *err = "RPKG installation failed. No path provided";
+        return false;
+    }
+
+    bool install_result = symsys->install_rpkg(mount_z, path);
+    if (!install_result) {
+        *err = "RPKG installation failed. Something is wrong, see log";
+        return false;
+    }
+
+    return false;
+}
+
+static bool list_app_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    auto infos = symsys->get_manager_system()->get_package_manager()->get_apps_info();
+
+    for (auto &info : infos) {
+        std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: "
+                    << common::ucs2_to_utf8(info.name) << " (drive: " << static_cast<char>('A' + info.drive)
+                    << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
+    }
+
+    return false;
+}
+
+static bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    auto &devices_list = symsys->get_manager_system()->get_device_manager()->get_devices();
+
+    for (std::size_t i = 0; i < devices_list.size(); i++) {
+        std::cout << i << " : " << devices_list[i].model << " (" << devices_list[i].firmware_code << ", "
+            << devices_list[i].model << ", epocver:";
+
+        switch (devices_list[i].ver) {
+        case epocver::epocu6: {
+            std::cout << " under 6.0";
             break;
         }
+
+        case epocver::epoc6: {
+            std::cout << " 6.0";
+            break;
+        }
+        
+        case epocver::epoc93: {
+            std::cout << " 9.3";
+            break;
+        }
+        
+        case epocver::epoc94: {
+            std::cout << " 9.4";
+            break;
+        }
+
+        case epocver::epoc10: {
+            std::cout << " 10.0";
+            break;
+        }
+
+        default: {
+            std::cout << " Unknown";
+            break;
+        }
+        }
+
+        std::cout << ")" << std::endl;
     }
+
+    return false;
 }
 
+#pragma endregion
+
+#pragma region CONFIGS
 void read_config() {
     try {
         config = YAML::LoadFile("config.yml");
 
         rom_path = config["rom_path"].as<std::string>();
-        ever = (epocver)(config["epoc_ver"].as<int>());
+        
+        // TODO: Expand more drives
+        mount_c = config["c_mount"].as<std::string>();
+        mount_e = config["e_mount"].as<std::string>();
+
+        device_to_use = config["device"].as<int>();
 
         const std::string jit_type_raw = config["jitter"].as<std::string>();
 
         if (jit_type_raw == "dynarmic") {
             jit_type = decltype(jit_type)::dynarmic;
         }
-
+        
         enable_gdbstub = config["enable_gdbstub"].as<bool>();
         gdb_port = config["gdb_port"].as<int>();
     } catch (...) {
@@ -209,64 +251,28 @@ void read_config() {
     }
 }
 
-void do_args() {
-    auto infos = symsys->get_manager_system()->get_package_manager()->get_apps_info();
+void save_config() {
+    config["rom_path"] = rom_path;
+    config["c_mount"] = mount_c;
+    config["e_mount"] = mount_e;
+    config["device"] = static_cast<int>(device_to_use);
+    config["enable_gdbstub"] = enable_gdbstub;
 
-    if (list_app) {
-        for (auto &info : infos) {
-            std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: "
-                      << common::ucs2_to_utf8(info.name) << " (drive: " << ((info.drive == 0) ? 'C' : 'E')
-                      << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
-        }
-
-        should_quit = true;
-        return;
-    }
-
-    if (app_idx > -1) {
-        if (app_idx >= infos.size()) {
-            LOG_ERROR("Invalid app index.");
-            should_quit = true;
-            return;
-        }
-
-        symsys->load(infos[app_idx].id);
-        return;
-    }
-
-    if (sis_install_path != "-1") {
-        auto res = symsys->install_package(common::utf8_to_ucs2(sis_install_path),
-            adrive == 0 ? drive_c : drive_e);
-
-        if (res) {
-            std::cout << "Install successfully!" << std::endl;
-        } else {
-            std::cout << "Install failed" << std::endl;
-        }
-
-        should_quit = true;
-    }
-
-    if (install_rpkg) {
-        symsys->set_symbian_version_use(ever);
-        bool res = symsys->install_rpkg(rpkg_path);
-
-        if (!res) {
-            std::cout << "RPKG install failed." << std::endl;
-        } else {
-            std::cout << "RPKG install successfully." << std::endl;
-        }
-
-        should_quit = true;
-    }
+    std::ofstream config_file("config.yml");
+    config_file << config;
 }
 
+#pragma endregion
+
+#pragma region CORE_FINALIZE_INITIALIZE
+
 void init() {
-    symsys->set_symbian_version_use(ever);
     symsys->set_jit_type(jit_type);
     symsys->set_debugger(debugger);
 
     symsys->init();
+
+    symsys->set_device(device_to_use);
     symsys->mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
     symsys->mount(drive_e, drive_media::physical, mount_e, io_attrib::removeable);
 
@@ -288,21 +294,14 @@ void shutdown() {
     symsys->shutdown();
 }
 
-void save_config() {
-    config["rom_path"] = rom_path;
-    config["epoc_ver"] = (int)ever;
-    config["c_mount"] = mount_c;
-    config["e_mount"] = mount_e;
-    config["enable_gdbstub"] = enable_gdbstub;
-
-    std::ofstream config_file("config.yml");
-    config_file << config;
-}
-
 void do_quit() {
     save_config();
     symsys->shutdown();
 }
+
+#pragma endregion
+
+#pragma region DEBUGGER
 
 void set_mouse_down(const int button, const bool op) {
     const std::lock_guard<std::mutex> guard(ui_debugger_mutex);
@@ -404,7 +403,7 @@ int ui_debugger_thread() {
         should_pause = spause;
     };
 
-    gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
+    auto gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
         eka2l1::vec2(500, 500));
 
     debugger_renderer->init(gdriver, debugger);
@@ -472,12 +471,15 @@ int ui_debugger_thread() {
     debugger_renderer->deinit();
     debugger_renderer.reset();
 
-    // Kill the driver before killing the window.
-    // We need to destroy all graphics object, if we destroy the window, graphic context is not available
-    gdriver.reset();
+    // There are still a reference of graphics driver on graphics client
+    // Assure that the graphics driver are decrement is reference count on UI thread
+    // So FB is destroyed on the right thread.
+    symsys->set_graphics_driver(nullptr);
 
     return 0;
 }
+
+#pragma endregion
 
 void run() {
     while (!should_quit && !symsys->should_exit()) {
@@ -491,7 +493,8 @@ void run() {
 
 int main(int argc, char **argv) {
     // Episode 1: I think of a funny joke about Symbian and I will told my virtual wife
-    std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" << std::endl;
+    std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" 
+        << std::endl;
    
     // We are going to setup to GUI logger (in debugger)
     logger = std::make_shared<eka2l1::imgui_logger>();
@@ -499,9 +502,6 @@ int main(int argc, char **argv) {
 
     // Start to read the configs
     read_config();
-
-    // We also need to fetch command-line arguments to see what it actually want us to do.
-    parse_args(argc, argv);
 
     if (should_quit) {
         do_quit();
@@ -512,7 +512,27 @@ int main(int argc, char **argv) {
     debugger = std::make_shared<eka2l1::imgui_debugger>(symsys.get(), logger);
 
     init();
-    do_args();
+    
+    // Let's set up this
+    eka2l1::common::arg_parser parser(argc, argv);
+    
+    parser.add("--irpkg", "Install a repackage file. The installer will auto recognizes "
+        "the product and system info", rpkg_unpack_option_handler);
+    parser.add("--help, --h", "Display helps menu", help_option_handler);
+    parser.add("--listapp", "List all installed applications", list_app_option_handler);
+    parser.add("--listdevices", "List all installed devices", list_devices_option_handler);
+    parser.add("--app, --a, --run", "Run an app with specified index. See index of an app in --listapp",
+        app_specifier_option_handler);
+    parser.add("--install, --i", "Install a SIS", app_install_option_handler);
+
+    if (argc > 1) {
+        std::string err;
+        should_quit = !parser.parse(&err);
+
+        if (should_quit) {
+            std::cout << err << std::endl;
+        }
+    }
 
     if (should_quit) {
         do_quit();
