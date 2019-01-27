@@ -10,7 +10,7 @@ struct io_scope_guard {
         : io(&io_sys) {
         io->init();
 
-        auto physical_fs = eka2l1::create_physical_filesystem(epocver::epoc9);
+        auto physical_fs = eka2l1::create_physical_filesystem(epocver::epoc94, "");
         io->add_filesystem(physical_fs);
     }
 
