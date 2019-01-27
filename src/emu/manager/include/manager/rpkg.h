@@ -9,6 +9,10 @@
 namespace eka2l1 {
     class io_system;
 
+    namespace manager {
+        class device_manager;
+    }
+
     namespace loader {
         struct rpkg_header {
             uint32_t magic[4];
@@ -28,6 +32,7 @@ namespace eka2l1 {
             uint64_t data_size;
         };
 
-        bool install_rpkg(io_system *io, const std::string &path, std::atomic<int> &res);
+        bool install_rpkg(manager::device_manager *dvc, const std::string &path,
+            const std::string &devices_rom_path, std::atomic<int> &res);
     }
 }

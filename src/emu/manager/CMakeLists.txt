@@ -5,7 +5,9 @@ if (ENABLE_SCRIPTING_ABILITY)
 endif()
 
 add_library(manager
+    include/manager/device_manager.h
 	include/manager/manager.h
+	include/manager/rpkg.h
 	include/manager/package_manager.h
 	include/manager/sis_common.h
 	include/manager/sis_fields.h
@@ -13,8 +15,10 @@ add_library(manager
 	include/manager/sis_script_interpreter.h
 	include/manager/sis_v1_installer.h
 	include/manager/sis.h
+	src/device_manager.cpp
 	src/manager.cpp
 	src/package_manager.cpp
+	src/rpkg.cpp
 	src/sis_fields.cpp
 	src/sis_old.cpp
 	src/sis_script_interpreter.cpp

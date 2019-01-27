@@ -2,11 +2,9 @@
 add_library(epocloader
     include/epoc/loader/e32img.h
     include/epoc/loader/romimage.h
-    include/epoc/loader/rpkg.h
     include/epoc/loader/rsc.h
     src/loader/e32img.cpp
     src/loader/romimage.cpp
-    src/loader/rpkg.cpp
     src/loader/rsc.cpp
 )
 
