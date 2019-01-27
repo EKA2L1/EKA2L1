@@ -33,7 +33,7 @@ namespace eka2l1::manager {
             return;
         }
 
-        for (auto &device_node: devices_node) {
+        for (auto device_node: devices_node) {
             const std::string firmcode = device_node.first.as<std::string>();
             const std::string manufacturer = device_node.second["manufacturer"].as<std::string>();
             const std::string model = device_node.second["model"].as<std::string>();

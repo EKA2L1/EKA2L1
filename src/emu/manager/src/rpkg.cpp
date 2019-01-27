@@ -39,7 +39,7 @@ namespace eka2l1 {
         bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent) {            
             std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
             std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
-                std::tolower);
+                ::tolower);
 
             std::string real_path = devices_rom_path + "\\temp\\" + file_full_relative; 
                 
@@ -215,7 +215,7 @@ namespace eka2l1 {
             // Assumes all are ASCII code
             // Lower case the path
             std::transform(firmcode.begin(), firmcode.end(), firmcode.begin(),
-                std::tolower);
+                ::tolower);
 
             // Rename temp folder to its product code
             eka2l1::common::move_file(devices_rom_path + "temp\\", devices_rom_path + firmcode + "\\");
