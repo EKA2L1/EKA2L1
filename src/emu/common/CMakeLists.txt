@@ -1,4 +1,5 @@
 add_library(common
+    include/common/arghandler.h
     include/common/advstream.h
     include/common/allocator.h
     include/common/algorithm.h
@@ -29,6 +30,7 @@ add_library(common
     include/common/types.h
     include/common/unicode.h
     include/common/virtualmem.h
+    src/arghandler.cpp
     src/allocator.cpp
     src/algorithm.cpp
     src/arm_cpudetect.cpp
