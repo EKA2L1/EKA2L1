@@ -107,14 +107,23 @@ namespace eka2l1 {
             return -1;
 #endif
         }
-    }
 
-    std::string trim_spaces(std::string str) {
-        std::string::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
-            return (lhs == rhs) && (lhs == ' ');
-        });
+        std::string trim_spaces(std::string str) {
+            std::string::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
+                return (lhs == rhs) && (lhs == ' ');
+            });
 
-        str.erase(new_end, str.end());
-        return str;
+            str.erase(new_end, str.end());
+            
+            while (str.length() > 0 && str[0] == ' ') {
+                str.erase(str.begin());
+            }
+
+            while (str.length() > 0 && str.back() == ' ') {
+                str.erase(str.length() - 1);
+            }
+
+            return str;
+        }
     }
 }
