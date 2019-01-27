@@ -187,6 +187,7 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_int, "CenRep::GetInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_real, "CenRep::GetReal");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_string, "CenRep::GetString");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req_check, "CenRep::NofReqCheck");
     }
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
@@ -472,6 +473,19 @@ namespace eka2l1 {
 
     void central_repo_client_subsession::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        // TODO: Faster way
+        case cen_rep_notify_req_check: {
+            epoc::notify_info holder;
+
+            if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_arg<int>(0)) == 0) {
+                ctx->set_request_status(KErrNone);
+                break;
+            }
+        
+            ctx->set_request_status(KErrAlreadyExists);
+            break;
+        }
+
         case cen_rep_group_nof_req: case cen_rep_notify_req: {
             const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : 
                 static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
