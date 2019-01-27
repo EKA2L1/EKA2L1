@@ -62,7 +62,12 @@ namespace eka2l1 {
 
         // Get owner section
         common::ini_section *crerep_owner = creini.find("owner")->get_as<common::ini_section>();
-        repo.owner_uid = crerep_owner->get<common::ini_value>(0)->get_as_native<std::uint32_t>();
+
+        if (crerep_owner == nullptr) {
+            repo.owner_uid = repo.uid;
+        } else {
+            repo.owner_uid = crerep_owner->get<common::ini_value>(0)->get_as_native<std::uint32_t>();
+        }
 
         // Handle default metadata
         common::ini_section *crerep_default_meta = creini.find("defaultmeta")->get_as<common::ini_section>();
