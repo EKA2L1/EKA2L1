@@ -109,7 +109,7 @@ namespace eka2l1 {
         system *sys;
 
         /* Contains the EPOC version */
-        epocver kern_ver = epocver::epoc9;
+        epocver kern_ver = epocver::epoc94;
 
         //! Handles for some globally shared processes
         kernel::object_ix kernel_handles;

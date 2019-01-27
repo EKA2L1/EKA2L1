@@ -237,7 +237,7 @@ struct MemoryEditor {
                 break;
 
             case 1:
-                if (Kern->get_epoc_version() >= epocver::epoc9) {
+                if (Kern->get_epoc_version() >= epocver::epoc94) {
                     DrawContents(shared_data, ram_code_addr - local_data);
                 } else {
                     DrawContents(shared_data_eka1, shared_data_end_eka1 - shared_data_eka1);
@@ -246,7 +246,7 @@ struct MemoryEditor {
                 break;
 
             case 2:
-                if (Kern->get_epoc_version() >= epocver::epoc9) {
+                if (Kern->get_epoc_version() >= epocver::epoc94) {
                     DrawContents(ram_code_addr, rom - ram_code_addr);
                 } else {
                     DrawContents(ram_code_addr_eka1, ram_code_addr_eka1_end - ram_code_addr_eka1);
@@ -255,7 +255,7 @@ struct MemoryEditor {
                 break;
 
             case 3:
-                if (Kern->get_epoc_version() >= epocver::epoc9) {
+                if (Kern->get_epoc_version() >= epocver::epoc94) {
                     DrawContents(rom, 0x10000000);
                 } else {
                     DrawContents(rom_eka1, 0x10000000);

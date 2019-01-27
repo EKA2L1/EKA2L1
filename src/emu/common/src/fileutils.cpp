@@ -287,6 +287,10 @@ namespace eka2l1::common {
 
     bool remove(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
+        if (path.back() == '\\' || path.back() == '/') {
+            return RemoveDirectoryA(path.c_str());
+        }
+
         return DeleteFileA(path.c_str());
 #else
         return (remove(path.c_str()) == 0);

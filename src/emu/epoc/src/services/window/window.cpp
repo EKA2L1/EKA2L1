@@ -436,7 +436,7 @@ namespace eka2l1::epoc {
 
             std::u16string draw_text;
 
-            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc9) && (cmd.header.cmd_len <= 8)) {
+            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc93) && (cmd.header.cmd_len <= 8)) {
                 draw_text = *ctx.get_arg<std::u16string>(remote_slot);
             } else {
                 epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
@@ -468,7 +468,7 @@ namespace eka2l1::epoc {
             std::u16string draw_text;
 
             // on EPOC <= 9, the struct only contains the bound
-            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc9) && (cmd.header.cmd_len <= 16)) {
+            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc93) && (cmd.header.cmd_len <= 16)) {
                 draw_text = *ctx.get_arg<std::u16string>(remote_slot);
             } else {
                 epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());

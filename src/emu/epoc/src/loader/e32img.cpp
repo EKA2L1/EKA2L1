@@ -206,7 +206,7 @@ namespace eka2l1 {
 
                 img.header.compression_type = 1;
             } else {
-                img.epoc_ver = epocver::epoc9;
+                img.epoc_ver = epocver::epoc94;
 
                 ef->seek(0, file_seek_mode::beg);
                 ef->read_file(&img.header, 1, sizeof(e32img_header));

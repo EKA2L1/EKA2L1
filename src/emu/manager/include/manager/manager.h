@@ -30,22 +30,28 @@ namespace eka2l1 {
 }
 
 namespace eka2l1 {
-#ifdef ENABLE_SCRIPTING
     namespace manager {
+        class device_manager;
+
+#ifdef ENABLE_SCRIPTING
         class script_manager;
-    }
 #endif
+    }
 
     class manager_system {
 #ifdef ENABLE_SCRIPTING
         std::shared_ptr<manager::script_manager> scrmngr;
 #endif
-
+        std::shared_ptr<manager::device_manager> dvmngr;
+        
         manager::package_manager pkgmngr;
 
         io_system *io;
 
     public:
+        manager_system()  = default;
+        ~manager_system() = default;
+
         void init(system *sys, io_system *ios);
 
         manager::package_manager *get_package_manager();
@@ -53,5 +59,7 @@ namespace eka2l1 {
 #ifdef ENABLE_SCRIPTING
         manager::script_manager *get_script_manager();
 #endif
+
+        manager::device_manager *get_device_manager();
     };
 }

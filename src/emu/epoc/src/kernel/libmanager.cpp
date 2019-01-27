@@ -315,7 +315,7 @@ namespace eka2l1 {
             // Filling zero from beginning of code segment, with size of bss size - 1
             std::fill(dt_ptr, dt_ptr + img->header.bss_size, 0);
 
-            if (img->epoc_ver == epocver::epoc9) {
+            if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
                 for (auto &ib : img->import_section.imports) {
                     elf_fix_up_import_dir(mem, mngr, *img, ib);
                 }
@@ -355,7 +355,7 @@ namespace eka2l1 {
 #undef EXPORT
 #undef ENLIB
 
-            if (ver == epocver::epoc9) {
+            if (ver == epocver::epoc94) {
                 epoc::register_epocv94(*this);
             } else if (ver == epocver::epoc93) {
                 epoc::register_epocv93(*this);

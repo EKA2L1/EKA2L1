@@ -257,16 +257,20 @@ namespace eka2l1 {
 
         virtual std::optional<drive> get_drive_entry(const drive_number drv) = 0;
 
-        virtual void set_epoc_version(const epocver ver) {
+        virtual void set_product_code(const std::string &code) {
+            return;
+        }
+        
+        virtual void set_epoc_ver(const epocver ver) {
             return;
         }
 
         virtual std::optional<std::u16string> get_raw_path(const std::u16string &path) = 0;
     };
 
-    std::shared_ptr<abstract_file_system> create_physical_filesystem(epocver ver);
+    std::shared_ptr<abstract_file_system> create_physical_filesystem(const epocver ver, const std::string &product_code);
     std::shared_ptr<abstract_file_system> create_rom_filesystem(loader::rom *rom_cache, memory_system *mem,
-        epocver ver);
+        const epocver ver, const std::string &product_code);
 
     using file_system_inst = std::shared_ptr<abstract_file_system>;
     using filesystem_id = std::size_t;
@@ -280,7 +284,8 @@ namespace eka2l1 {
     public:
         void init();
 
-        void set_epoc_version(const epocver ver);
+        void set_product_code(const std::string &pc);
+        void set_epoc_ver(const epocver ver);
 
         std::optional<std::u16string> get_raw_path(const std::u16string &path);
 

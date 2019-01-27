@@ -500,6 +500,7 @@ namespace eka2l1 {
         std::mutex fs_mutex;
 
     protected:
+        std::string firmcode;
         epocver ver;
 
         // Use a flat array for drive mapping
@@ -551,30 +552,12 @@ namespace eka2l1 {
             }
 
             if (drv.media_type == drive_media::rom) {
-                switch (ver) {
-                case epocver::epoc93: {
-                    map_path += u"v93\\";
-                    break;
+                if (firmcode.empty()) {
+                    LOG_ERROR("IO error: No device has been set for the emulator.");
+                    return u"";
                 }
 
-                case epocver::epoc9: {
-                    map_path += u"v94\\";
-                    break;
-                }
-
-                case epocver::epoc10: {
-                    map_path += u"belle\\";
-                    break;
-                }
-
-                case epocver::epoc6: {
-                    map_path += u"v60\\";
-                    break;
-                }
-
-                default:
-                    break;
-                }
+                map_path += common::utf8_to_ucs2(firmcode);
             }
 
             std::u16string new_path = eka2l1::add_path(map_path, vert_path.substr(root.size()));
@@ -606,11 +589,17 @@ namespace eka2l1 {
         }
 
     public:
-        explicit physical_file_system(const epocver ver)
-            : ver(ver) {
+        explicit physical_file_system(epocver ver, const std::string &product_code)
+            : ver(ver)
+            , firmcode(product_code)
+        {
             for (auto &[drv, mapped] : mappings) {
                 mapped = false;
             }
+        }
+
+        void set_epoc_ver(const epocver ever) override {
+            ver = ever;
         }
 
         std::optional<std::u16string> get_raw_path(const std::u16string &path) override {
@@ -627,8 +616,8 @@ namespace eka2l1 {
             return common::remove(common::ucs2_to_utf8(*path_real));
         }
 
-        void set_epoc_version(const epocver nver) override {
-            ver = nver;
+        void set_product_code(const std::string &pc) override {
+            firmcode = pc;
         }
 
         bool exists(const std::u16string &path) override {
@@ -846,10 +835,10 @@ namespace eka2l1 {
         }
 
     public:
-        explicit rom_file_system(loader::rom *cache, memory_system *mem, epocver ver)
-            : rom_cache(cache)
-            , mem(mem)
-            , physical_file_system(ver) {
+        explicit rom_file_system(loader::rom *cache, memory_system *mem, epocver ver, const std::string &product_code)
+            : physical_file_system(ver, product_code)
+            , rom_cache(cache)
+            , mem(mem) {
         }
 
         bool delete_entry(const std::u16string &path) override {
@@ -922,7 +911,8 @@ namespace eka2l1 {
             }
 
             // TODO (bentokun): Remove this hack with a proper symlink system.
-            if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+            if (lib_pos != std::string::npos && 
+                static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
                 new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
             }
 
@@ -959,13 +949,13 @@ namespace eka2l1 {
         }
     };
 
-    std::shared_ptr<abstract_file_system> create_physical_filesystem(epocver ver) {
-        return std::make_shared<physical_file_system>(ver);
+    std::shared_ptr<abstract_file_system> create_physical_filesystem(const epocver ver, const std::string &product_code) {
+        return std::make_shared<physical_file_system>(ver, product_code);
     }
 
     std::shared_ptr<abstract_file_system> create_rom_filesystem(loader::rom *rom_cache, memory_system *mem,
-        epocver ver) {
-        return std::make_shared<rom_file_system>(rom_cache, mem, ver);
+        const epocver ver, const std::string &product_code) {
+        return std::make_shared<rom_file_system>(rom_cache, mem, ver, product_code);
     }
 
     io_component::io_component(io_component_type type, io_attrib attrib)
@@ -1169,11 +1159,19 @@ namespace eka2l1 {
         return ent->type == io_component_type::dir;
     }
 
-    void io_system::set_epoc_version(const epocver ver) {
+    void io_system::set_product_code(const std::string &pc) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
-            fs->set_epoc_version(ver);
+            fs->set_product_code(pc);
+        }
+    }
+
+    void io_system::set_epoc_ver(const epocver ver) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs] : filesystems) {
+            fs->set_epoc_ver(ver);
         }
     }
 

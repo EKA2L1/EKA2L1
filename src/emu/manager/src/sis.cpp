@@ -50,7 +50,7 @@ namespace eka2l1 {
             fread(&uid2, 1, 4, f);
 
             if (uid1 == uid1_cst) {
-                return epocver::epoc9;
+                return epocver::epoc94;
             }
 
             if (uid2 == static_cast<std::uint32_t>(epoc_sis_type::epocu6)) {

@@ -33,7 +33,7 @@
 #include <disasm/disasm.h>
 
 #include <epoc/loader/e32img.h>
-#include <epoc/loader/rpkg.h>
+#include <manager/rpkg.h>
 
 #include <epoc/hal.h>
 #include <epoc/utils/panic.h>
@@ -63,6 +63,7 @@
 
 #include <arm/arm_factory.h>
 #include <manager/manager.h>
+#include <manager/device_manager.h>
 
 namespace eka2l1 {
     /*! A system instance, where all the magic happens. 
@@ -105,7 +106,7 @@ namespace eka2l1 {
 
         bool reschedule_pending;
 
-        epocver ver = epocver::epoc9;
+        epocver ver = epocver::epoc94;
         bool exit = false;
 
         std::unordered_map<std::string, bool> bool_configs;
@@ -148,7 +149,22 @@ namespace eka2l1 {
 
         void set_symbian_version_use(const epocver ever) {
             kern.set_epoc_version(ever);
-            io.set_epoc_version(ever);
+            io.set_epoc_ver(ever);
+        }
+
+        bool set_device(const std::uint8_t idx) {
+            manager::device_manager *dmngr = mngr.get_device_manager();
+            bool result = dmngr->set_current(idx);
+
+            if (!result) {
+                return false;
+            }
+
+            manager::device *dvc = dmngr->get_current();
+            io.set_product_code(dvc->firmware_code);
+            
+            set_symbian_version_use(dvc->ver);
+            return true;
         }
 
         void set_jit_type(const arm_emulator_type type) {
@@ -250,7 +266,7 @@ namespace eka2l1 {
          *
          * \returns True on success.
          */
-        bool install_rpkg(const std::string &path);
+        bool install_rpkg(const std::string &devices_rom_path, const std::string &path);
         void load_scripts();
 
         void do_state(common::chunkyseri &seri);
@@ -300,11 +316,11 @@ namespace eka2l1 {
         mngr.init(parent, &io);
         asmdis.init();
 
-        file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use());
+        file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use(), "");
         io.add_filesystem(physical_fs);
 
         file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem,
-            get_symbian_version_use());
+            get_symbian_version_use(), "");
 
         rom_fs_id = io.add_filesystem(rom_fs);
 
@@ -434,10 +450,9 @@ namespace eka2l1 {
         }
 
         file_system_inst rom_fs = create_rom_filesystem(&romf, &mem,
-            get_symbian_version_use());
+            get_symbian_version_use(), mngr.get_device_manager()->get_current()->firmware_code);
 
         rom_fs_id = io.add_filesystem(rom_fs);
-
         bool res1 = mem.map_rom(romf.header.rom_base, path);
 
         if (!res1) {
@@ -472,9 +487,11 @@ namespace eka2l1 {
         hlelibmngr.reset();
     }
 
-    bool system_impl::install_rpkg(const std::string &path) {
+    bool system_impl::install_rpkg(const std::string &devices_rom_path, const std::string &path) {
+        // TODO: Progress bar
         std::atomic_int holder;
-        bool res = eka2l1::loader::install_rpkg(&io, path, holder);
+        bool res = eka2l1::loader::install_rpkg(mngr.get_device_manager(), path, devices_rom_path,
+            holder);
 
         if (!res) {
             return false;
@@ -574,6 +591,10 @@ namespace eka2l1 {
         return impl->set_debugger(new_debugger);
     }
 
+    bool system::set_device(const std::uint8_t idx) {
+        return impl->set_device(idx);
+    }
+    
     void system::set_symbian_version_use(const epocver ever) {
         return impl->set_symbian_version_use(ever);
     }
@@ -672,8 +693,8 @@ namespace eka2l1 {
         return impl->reset();
     }
 
-    bool system::install_rpkg(const std::string &path) {
-        return impl->install_rpkg(path);
+    bool system::install_rpkg(const std::string &devices_rom_path, const std::string &path) {
+        return impl->install_rpkg(devices_rom_path, path);
     }
 
     void system::load_scripts() {

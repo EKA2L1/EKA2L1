@@ -128,8 +128,12 @@ namespace eka2l1 {
 
         void reset();
 
-        bool install_rpkg(const std::string &path);
+        bool install_rpkg(const std::string &devices_rom_path, const std::string &path);
         void load_scripts();
+
+        /*! \brief Set the current device that the system will emulate.
+        */
+        bool set_device(const std::uint8_t idx);
 
         /*! \brief Install a SIS/SISX. */
         bool install_package(std::u16string path, drive_number drv);
