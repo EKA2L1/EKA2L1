@@ -19,6 +19,7 @@
  */
 
 #include <manager/manager.h>
+#include <manager/device_manager.h>
 #include <manager/package_manager.h>
 
 #ifdef ENABLE_SCRIPTING
@@ -36,6 +37,10 @@ namespace eka2l1 {
     }
 #endif
 
+    manager::device_manager *manager_system::get_device_manager() {
+        return &(*dvmngr);
+    }
+
     void manager_system::init(system *sys, io_system *ios) {
         io = ios;
 
@@ -44,5 +49,6 @@ namespace eka2l1 {
 #ifdef ENABLE_SCRIPTING
         scrmngr = std::make_shared<manager::script_manager>(sys);
 #endif
+        dvmngr = std::make_shared<manager::device_manager>();
     }
 }

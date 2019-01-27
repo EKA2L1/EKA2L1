@@ -124,7 +124,7 @@ namespace eka2l1 {
             info.drive = drv;
             info.executable_name = u"";
             info.id = ctrl->info.uid.uid;
-            info.ver = epocver::epoc9;
+            info.ver = epocver::epoc94;
 
             uid ruid = ctrl->info.uid.uid;
 
@@ -190,7 +190,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            if (*sis_ver == epocver::epoc9) {
+            if (*sis_ver == epocver::epoc94) {
                 loader::sis_contents res = loader::parse_sis(common::ucs2_to_utf8(path));
 
                 // Interpret the file
@@ -267,7 +267,7 @@ namespace eka2l1 {
         std::vector<app_info> package_manager::get_apps_info() {
             std::vector<app_info> infos;
 
-            for (auto const &[drive, info] : apps) {
+            for (auto const &[uid, info] : apps) {
                 infos.push_back(info);
             }
 
