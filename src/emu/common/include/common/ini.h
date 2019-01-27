@@ -306,7 +306,7 @@ namespace eka2l1::common {
          *         -1 if file not found
          *         -2 if file is invalid (syntax invalid).
         */
-        int load(const char *path);
+        int load(const char *path, bool ignore_spaces = true);
 
         /*! \brief Save an ini file
         */

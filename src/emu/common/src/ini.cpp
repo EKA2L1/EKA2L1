@@ -234,6 +234,8 @@ namespace eka2l1::common {
         std::string line;
         int counter;
 
+        bool ignore_spaces { true };
+
         std::deque<std::string> waits;
 
         explicit ini_linestream(const std::string &l)
@@ -252,8 +254,10 @@ namespace eka2l1::common {
                 return tok;
             }
 
-            while (counter < line.length() && line[counter] == ' ') {
-                counter++;
+            if (ignore_spaces) {
+                while (counter < line.length() && line[counter] == ' ') {
+                    counter++;
+                }
             }
 
             if (line[counter] == ',') {
@@ -266,6 +270,10 @@ namespace eka2l1::common {
             }
 
             char cto_stop = ' ';
+
+            if (!ignore_spaces) {
+                cto_stop = '\0';
+            }
 
             if (line[counter] == '"') {
                 cto_stop = '"';
@@ -323,7 +331,7 @@ namespace eka2l1::common {
         }
     };
 
-    int ini_file::load(const char *path) {
+    int ini_file::load(const char *path, bool ignore_spaces) {
         common::dynamic_ifile ifile(path);
 
         if (ifile.fail()) {
@@ -335,6 +343,8 @@ namespace eka2l1::common {
 
         while (ifile.getline(line)) {
             ini_linestream stream(line);
+            stream.ignore_spaces = ignore_spaces;
+
             std::string first_token = stream.next_string();
 
             if ((!first_token.empty()) && (first_token[0] != ';') && (first_token.substr(0, 2) != "//")) {
