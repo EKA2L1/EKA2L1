@@ -466,6 +466,7 @@ namespace eka2l1 {
         }
 
         bool lib_manager::register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_exports) {
+            /*
             if (exports.find(lib_name) != exports.end()) {
                 LOG_WARN("Exports already register, not really dangerous");
                 return true;
@@ -503,6 +504,9 @@ namespace eka2l1 {
             }
 
             return true;
+            */
+
+            return true;
         }
 
         std::optional<sid> lib_manager::get_sid(exportaddr addr) {
@@ -518,19 +522,19 @@ namespace eka2l1 {
         // Images are searched in
         // C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
         loader::e32img_ptr lib_manager::load_e32img(std::u16string img_name) {
-            symfile img;
+            symfile imgf;
 
             // It's a full path
             if (eka2l1::has_root_name(img_name, true)) {
                 bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
 
-                img = io->open_file(img_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
+                imgf = io->open_file(img_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
 
-                if (!img && should_append_ext) {
-                    img = io->open_file(img_name + (should_append_ext ? u".exe" : u""), READ_MODE | BIN_MODE);
+                if (!imgf && should_append_ext) {
+                    imgf = io->open_file(img_name + (should_append_ext ? u".exe" : u""), READ_MODE | BIN_MODE);
                 }
 
-                if (!img) {
+                if (!imgf) {
                     return nullptr;
                 }
             } else if (eka2l1::has_root_dir(img_name)) {
@@ -551,54 +555,61 @@ namespace eka2l1 {
                 { u"E:\\sys\\bin\\", u".exe" }
             };
 
-            std::optional<loader::e32img> res;
+            std::uint32_t crc = 0;
 
-            if (img) {
-                res = loader::parse_e32img(img);
+            auto is_valid = [](symfile f) -> bool {
+                std::uint32_t sig;
+                f->read_file(16, &sig, 4, 1);
+                return sig == 0x434F5045;
+            };
 
-                if (!res) {
-                    img->close();
-                    return nullptr;
-                }
-            } else {
+            if (!imgf || !is_valid(imgf)) {
                 bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
 
                 for (const auto &pattern : patterns) {
                     std::u16string full = pattern.first + img_name + (should_append_ext ? pattern.second : u"");
 
                     if (io->exist(full)) {
-                        img = io->open_file(full, READ_MODE | BIN_MODE);
-                        res = loader::parse_e32img(img);
-
-                        if (res) {
+                        imgf = io->open_file(full, READ_MODE | BIN_MODE);
+                        
+                        if (is_valid(imgf)) {
                             break;
                         }
+
+                        imgf->close();
                     }
                 }
             }
 
-            if (!res) {
+            if (!imgf) {
                 return loader::e32img_ptr(nullptr);
             }
 
+            /*
             if (res->ed.syms.size() > 0) {
                 register_exports(img_name, res->ed.syms, sys->get_bool_config("log_exports"));
+            }*/
+
+            imgf->read_file(12, &crc, 4, 1);
+            if (e32imgs_cache.find(crc) != e32imgs_cache.end()) {
+                return e32imgs_cache[crc].img;
             }
 
-            loader::e32img_ptr pimg = std::make_shared<loader::e32img>(res.value());
-
-            if (e32imgs_cache.find(pimg->header.check) != e32imgs_cache.end()) {
-                return e32imgs_cache[pimg->header.check].img;
+            auto img = loader::parse_e32img(imgf);
+            if (!img) {
+                return loader::e32img_ptr(nullptr);
             }
+
+            loader::e32img_ptr pimg = std::make_shared<loader::e32img>(img.value());
 
             e32img_inf info;
 
             info.img = pimg;
             info.is_xip = xip;
             info.is_rom = is_rom;
-            info.full_path = std::move(img->file_name());
+            info.full_path = std::move(imgf->file_name());
 
-            img->close();
+            imgf->close();
 
             uint32_t check = info.img->header.check;
 
@@ -649,7 +660,7 @@ namespace eka2l1 {
                 return loader::romimg_ptr(nullptr);
             }
 
-            register_exports(rom_name, res->exports, log_exports);
+            // register_exports(rom_name, res->exports, log_exports);
 
             if (romimgs_cache.find(res->header.entry_point) != romimgs_cache.end()) {
                 romimgf->close();
