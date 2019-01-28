@@ -672,7 +672,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_session::close(service::ipc_context *ctx) {
-        const int err = closerep(ctx->sys->get_io_system(), 0, ctx->msg->msg_session->unique_id());
+        const int err = closerep(ctx->sys->get_io_system(), 0, static_cast<std::uint32_t>(*ctx->get_arg<int>(3)));
 
         switch (err) {
         case 0: {
