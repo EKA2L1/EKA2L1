@@ -20,9 +20,12 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 namespace eka2l1::arm {
     enum reg {
@@ -54,6 +57,25 @@ namespace eka2l1::arm {
     #undef INST
     };
 
+    enum class cc {
+        INVALID,
+        EQ,
+        NE,
+        HS,
+        LO,
+        MI,
+        PL,
+        VS,
+        VC,
+        HI,
+        LS,
+        GE,
+        LT,
+        GT,
+        LE,
+        AL
+    };
+
     enum class arm_disassembler_backend {
         capstone = 0,       ///< Using capstone to analyse and disassemble instruction.
         homemade = 2        ///< Using homemade decoder. Not really smart
@@ -65,6 +87,20 @@ namespace eka2l1::arm {
         thumb32
     };
 
+    enum arm_instruction_group {
+        group_branch = 0x100,
+        group_interrupt = 0x200,
+        group_branch_relative = 0x400
+    };
+
+    struct arm_function {
+        vaddress addr;
+        std::size_t size;
+
+        // Offset in this function - size of the block
+        std::unordered_map<vaddress, std::size_t> blocks;
+    };
+
     struct arm_instruction_base {
         union {
             // For thumb32 and arm
@@ -73,7 +109,12 @@ namespace eka2l1::arm {
         };
 
         arm_instruction_type inst_type;
+        instruction iname;
+
+        std::uint32_t group;
         std::uint8_t  size;
+
+        cc cond;
 
         virtual ~arm_instruction_base() {}
         
@@ -106,21 +147,17 @@ namespace eka2l1::arm {
             : code(nullptr), size(0), mode(false) {
         }
 
-        /*! \brief Set the code to analyse.
-         *
-         * \param asize Size of the code block to analyse. 0 means infinite analyse.
-         * \param acode Pointer to the code.
-         * \param thumb Set mode to analyse
-         * 
-         * \returns True if set succeed.
+        virtual std::uint32_t read(vaddress addr) = 0;
+
+        /* Do analyse, starting from an address
         */
-        bool set_analyse_start(std::uint8_t *acode, const std::size_t asize, const bool thumb);
-        
+        void analyse(vaddress addr, std::vector<arm_function> funcs);
+
         /*! \brief Get the next instruction disassembled.
          *
          * If the analyser reaches the limit, it will return a nullptr.
         */
-        virtual std::shared_ptr<arm_instruction_base> next_instruction() {
+        virtual std::shared_ptr<arm_instruction_base> next_instruction(vaddress addr) {
             return nullptr;
         }
     };

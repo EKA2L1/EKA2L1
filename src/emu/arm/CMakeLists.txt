@@ -13,6 +13,7 @@ add_library(arm
     include/arm/arm_unicorn.h
     include/arm/arm_utils.h
     src/arm_analyser_capstone.cpp
+    src/arm_analyser.cpp
     src/arm_dynarmic.cpp
     src/arm_factory.cpp
     src/arm_unicorn.cpp
