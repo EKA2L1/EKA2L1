@@ -27,29 +27,49 @@
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/LLVMContext.h>
 
+#include <cstdint>
 #include <exception>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
 namespace eka2l1::arm {
     class arm_memory_manager: public llvm::RTDyldMemoryManager {
         std::unordered_map<std::string, std::uint64_t> links;
+        std::uint8_t **next;
+
+        std::uint8_t *org;
+        std::size_t   size;
+
+        std::mutex lock;
 
         // A method for unkown symbol. Throws exception
         [[noreturn]] static void null() {
             throw std::runtime_error("NULL function called");
         }
 
+        explicit arm_memory_manager(std::uint8_t *org, std::size_t size, std::uint8_t **next) 
+            : org(org), size(size), next(next) {
+        }
+
         // This will responsible for finding symbol
         // There are some symbol that is external, which will be linked in another module
         // For those that is at runtime, we have a link table
         llvm::JITSymbol findSymbol(const std::string &name) override;
+
+        std::uint8_t *allocateCodeSection(std::uintptr_t size, std::uint32_t align, std::uint32_t sec_id,
+            llvm::StringRef sec_name);
+
+        std::uint8_t *allocateDataSection(std::uintptr_t size, std::uint32_t align, std::uint32_t sec_id,
+            llvm::StringRef sec_name, bool is_read_only);
     };
 
     class arm_llvm_recompiler_base {
+    protected:
         llvm::orc::ExecutionSession execution_session;
         llvm::orc::RTDyldObjectLinkingLayer object_layer;
         llvm::orc::IRCompileLayer compile_layer;
@@ -57,5 +77,14 @@ namespace eka2l1::arm {
         llvm::orc::ThreadSafeContext ctx;
         
         llvm::DataLayout data_layout;
+
+    public: 
+        explicit arm_llvm_recompiler_base(
+            decltype(object_layer)::GetMemoryManagerFunction get_mem_mngr_func,
+            llvm::orc::JITTargetMachineBuilder jit_tmb, 
+            llvm::DataLayout dl);
+
+        llvm::LLVMContext &get_context();
+        virtual bool add(std::unique_ptr<llvm::Module> module);
     };
 }
