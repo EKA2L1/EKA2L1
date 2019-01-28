@@ -23,6 +23,7 @@
 #include <common/types.h>
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -49,6 +50,20 @@ namespace eka2l1::arm {
         SP = R13,
         LR = R14,
         PC = R15
+    };
+
+    enum shifter {
+        shift_invalid = 0,
+        shift_asr,
+        shift_lsl,
+        shift_lsr,
+        shift_ror,
+        shift_rrx,
+        shift_asr_reg,
+        shift_lsl_reg,
+        shift_lsr_reg,
+        shift_ror_reg,
+        shift_rrx_reg
     };
 
     enum class instruction {
@@ -93,12 +108,47 @@ namespace eka2l1::arm {
         group_branch_relative = 0x400
     };
 
+    enum arm_op_type {
+        op_invalid,
+        op_reg,
+        op_imm,
+        op_mem,
+        op_fp
+    };
+
     struct arm_function {
         vaddress addr;
         std::size_t size;
 
         // Offset in this function - size of the block
-        std::unordered_map<vaddress, std::size_t> blocks;
+        std::unordered_map<std::size_t, std::size_t> blocks;
+    };
+
+    struct arm_op_mem {
+        arm::reg base;
+        arm::reg index;
+        int scale;
+        int disp;
+
+        int lshift;
+    };
+
+    struct arm_op {
+        arm_op_type type;
+
+        union {
+            int reg;
+            int32_t imm;
+            double fp;
+            arm_op_mem mem;
+        };
+
+        struct {
+            shifter type;
+            std::uint32_t value;
+        } shift;
+
+        bool subtracted;
     };
 
     struct arm_instruction_base {
@@ -110,6 +160,8 @@ namespace eka2l1::arm {
 
         arm_instruction_type inst_type;
         instruction iname;
+
+        std::vector<arm_op> ops;
 
         std::uint32_t group;
         std::uint8_t  size;
@@ -147,7 +199,9 @@ namespace eka2l1::arm {
             : code(nullptr), size(0), mode(false) {
         }
 
-        virtual std::uint32_t read(vaddress addr) = 0;
+        [[noreturn]] virtual std::uint32_t read(vaddress addr) {
+            throw std::runtime_error("Read for analyser not implemented");
+        }
 
         /* Do analyse, starting from an address
         */
