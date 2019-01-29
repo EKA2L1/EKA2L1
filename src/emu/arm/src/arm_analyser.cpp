@@ -19,123 +19,83 @@
  */
 
 #include <arm/arm_analyser.h>
+#include <queue>
 
 namespace eka2l1::arm {
-    void arm_analyser::analyse(vaddress addr, std::vector<arm_function> funcs) {
+     std::vector<arm_function> arm_analyser::analyse(vaddress addr, vaddress limit) {
         bool should_stop = false;
         bool thumb = addr & 1;
 
-        arm_function func;
+        std::vector<arm_function> funcs;
+        // use BFS since DFS is hard to see what's wrong
+        std::queue<arm_function*> funcs_queue;
 
-        const vaddress org_addr = addr;
-        std::size_t boffset = 0;
-        std::size_t bsize = 0;
-
-        std::function<void(vaddress, std::size_t, std::size_t)> do_block;
-        do_block = [&](vaddress start_addr, std::size_t crr_block_offset, std::size_t crr_block_size) -> void {
-            while (true) {
-                // Identify block and function
-                auto inst = next_instruction(start_addr);
-
-                if (!inst) {
-                    return;
-                }
-
-                // Check if the PC is directly written
-                std::vector<arm::reg> written_regs = inst->get_regs_write();
-                if (std::find(written_regs.begin(), written_regs.end(), arm::reg::R15) == written_regs.end()) {
-                    // Conclude our function
-                    // Great show, aahhahaha
-                    should_stop = true;
-                    start_addr += inst->size;
-
-                    func.size = start_addr - org_addr;
-
-                    return;
-                }
-
-                // No ? We should find out if it's branching.
-                // Relatively ? A new block
-                // Directly ? A new function owo
-                if (inst->group & arm_instruction_group::group_branch) {
-                    // BX LR. This is usually a pattern that ends a function.
-                    if (inst->opcode == 0x1EFF2FE1 || inst->opcode16 == 0x7047) {
-                        should_stop = true;
-                        start_addr += inst->size;
-
-                        func.size = start_addr - org_addr;
-
-                        return;
-                    }
-                    
-                    // Do the next block first
-                    do_block(addr + inst->size, crr_block_offset + inst->size, 0);
-                    
-                    if (inst->group & arm_instruction_group::group_branch_relative) {
-                        func.blocks.emplace(crr_block_offset, crr_block_size);
-                        crr_block_size = 0;
-
-                        // TODO
-                        const int32_t imm = inst->ops[0].imm;
-
-                        if (imm < 0) {
-                            const std::size_t to_branch_addr = crr_block_offset + imm;
-
-                            // Pass 1: Find this block address right away
-                            // If it exists, we can ignore this branch, else
-                            if (func.blocks.find(to_branch_addr) == func.blocks.end()) {
-                                // Pass 2: Find this branch address maybe in a block.
-                                //
-                                // It is traversing somewhere, maybe back in some block.
-                                // We need to find the correspond block, divide to small parts
-                                // it's not like... Im cutting meatss bk
-                                bool found = false;
-                                std::size_t new_block_size = 0;
-
-                                for (auto &[offset, size]: func.blocks) {
-                                    if (offset < to_branch_addr && to_branch_addr < offset + size) {
-                                        found = true;
-
-                                        // Shorten the size of this block
-                                        new_block_size = offset + size - to_branch_addr;
-                                        size = to_branch_addr - offset;
-
-                                        break;
-                                    }
-                                }
-
-                                if (found) {
-                                    func.blocks.emplace(to_branch_addr, new_block_size);
-                                }
-                            }
-                        } else {
-                            // Lift!
-                            start_addr += imm + (thumb ? 4 : 8);
-                            crr_block_offset += (thumb ? 4 : 8);
-
-                            addr = start_addr;
-                            boffset = crr_block_offset;
-                            bsize = 0;
-
-                            break;
-                        }
-                    } else {
-                        if (inst->ops[0].type == op_imm) {
-                            analyse(inst->ops[0].imm, funcs);
-                        }
-                    }
-                }
-
-                // At least we should do something
-                start_addr += inst->size;
-                crr_block_size += inst->size;
-            }
+        auto add_func = [&](vaddress faddr) {
+            funcs.push_back(arm_function(faddr, 0));
+            funcs_queue.push(&funcs.back());
         };
 
-        while (!should_stop) {
-            do_block(addr, boffset, bsize);
+        // Add intial function
+        add_func(addr);
+
+        for (auto func = funcs_queue.front(); !funcs_queue.empty(); ) {
+            std::queue<std::pair<const vaddress, std::size_t>*> blocks_queue;
+
+            auto add_block = [&](vaddress block_addr) {
+                auto pair = func->blocks.emplace(block_addr, 0);
+                if (pair.second) {
+                    blocks_queue.push(&(*pair.first));
+                }
+            };
+
+            // Initial block
+            add_block(addr);
+
+            for (auto block = blocks_queue.front(); !blocks_queue.empty(); ) {
+                bool should_stop = false;
+                for (auto baddr = block->first; baddr <= limit, should_stop; ) {
+                    auto inst = next_instruction(baddr);
+
+                    switch (inst->iname) {
+                    // End a block
+                    case instruction::B: case instruction::BL: case instruction::BX:
+                    case instruction::BLX: {
+                        add_block(inst->ops[0].imm);
+                        block->second = baddr - block->first;
+                        should_stop = true;
+
+                        break;
+                    }
+
+                    case instruction::POP: case instruction::LDM: {
+                        // Check for last op
+                        if (inst->ops.back().type == op_reg && inst->ops.back().reg == arm::reg::R15) {
+                            block->second = baddr - block->first;
+                            should_stop = true;
+                        }
+
+                        break;
+                    }
+
+                    case instruction::LDR: {
+                        if (inst->ops.front().type == op_reg && inst->ops.front().reg == arm::reg::R15) {
+                            block->second = baddr - block->first;
+                            should_stop = true;
+                        }
+
+                        break;
+                    }
+
+                    default: {
+                        break;
+                    }
+                    }
+
+                    baddr += inst->size;
+                }
+            }
         }
 
-        funcs.push_back(func);
+        return funcs;
     }
 }
