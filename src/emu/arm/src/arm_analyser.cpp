@@ -19,9 +19,12 @@
  */
 
 #include <arm/arm_analyser.h>
+#include <arm/arm_analyser_capstone.h>
+
+#include <common/log.h>
 
 namespace eka2l1::arm {
-    void arm_analyser::analyse(vaddress addr, std::vector<arm_function> funcs) {
+    void arm_analyser::analyse(vaddress addr, std::vector<arm_function> &funcs) {
         bool should_stop = false;
         bool thumb = addr & 1;
 
@@ -31,35 +34,26 @@ namespace eka2l1::arm {
         std::size_t boffset = 0;
         std::size_t bsize = 0;
 
+        func.addr = addr;
+
         std::function<void(vaddress, std::size_t, std::size_t)> do_block;
         do_block = [&](vaddress start_addr, std::size_t crr_block_offset, std::size_t crr_block_size) -> void {
             while (true) {
                 // Identify block and function
                 auto inst = next_instruction(start_addr);
 
+                LOG_TRACE("0x{:X} {}", start_addr, inst->mnemonic());
+
                 if (!inst) {
                     return;
                 }
 
-                // Check if the PC is directly written
-                std::vector<arm::reg> written_regs = inst->get_regs_write();
-                if (std::find(written_regs.begin(), written_regs.end(), arm::reg::R15) == written_regs.end()) {
-                    // Conclude our function
-                    // Great show, aahhahaha
-                    should_stop = true;
-                    start_addr += inst->size;
-
-                    func.size = start_addr - org_addr;
-
-                    return;
-                }
-
-                // No ? We should find out if it's branching.
+                // We should find out if it's branching.
                 // Relatively ? A new block
                 // Directly ? A new function owo
                 if (inst->group & arm_instruction_group::group_branch) {
-                    // BX LR. This is usually a pattern that ends a function.
-                    if (inst->opcode == 0x1EFF2FE1 || inst->opcode16 == 0x7047) {
+                    // Branch unconditionaly exchange
+                    if (inst->iname == instruction::BX) {
                         should_stop = true;
                         start_addr += inst->size;
 
@@ -68,61 +62,63 @@ namespace eka2l1::arm {
                         return;
                     }
                     
-                    // Do the next block first
-                    do_block(addr + inst->size, crr_block_offset + inst->size, 0);
-                    
-                    if (inst->group & arm_instruction_group::group_branch_relative) {
+                    // BL and BLX are generally used for calling other subroutines
+                    // B on normal hand (no AL), generally used for calling other blocks.
+                    if (inst->iname != instruction::BL && inst->iname != instruction::BLX) {
                         func.blocks.emplace(crr_block_offset, crr_block_size);
                         crr_block_size = 0;
 
-                        // TODO
-                        const int32_t imm = inst->ops[0].imm;
+                        // Simply right now, don't iterate in, just emplace block
+                    } else {
+                        vaddress baddr = inst->ops[0].imm;
 
-                        if (imm < 0) {
-                            const std::size_t to_branch_addr = crr_block_offset + imm;
-
-                            // Pass 1: Find this block address right away
-                            // If it exists, we can ignore this branch, else
-                            if (func.blocks.find(to_branch_addr) == func.blocks.end()) {
-                                // Pass 2: Find this branch address maybe in a block.
-                                //
-                                // It is traversing somewhere, maybe back in some block.
-                                // We need to find the correspond block, divide to small parts
-                                // it's not like... Im cutting meatss bk
-                                bool found = false;
-                                std::size_t new_block_size = 0;
-
-                                for (auto &[offset, size]: func.blocks) {
-                                    if (offset < to_branch_addr && to_branch_addr < offset + size) {
-                                        found = true;
-
-                                        // Shorten the size of this block
-                                        new_block_size = offset + size - to_branch_addr;
-                                        size = to_branch_addr - offset;
-
-                                        break;
-                                    }
-                                }
-
-                                if (found) {
-                                    func.blocks.emplace(to_branch_addr, new_block_size);
-                                }
+                        if (inst->iname == instruction::BLX) {
+                            baddr &= ~0x1;
+                            
+                            // Toogle the mode
+                            if (!thumb) {
+                                baddr |= 0x1;
                             }
-                        } else {
-                            // Lift!
-                            start_addr += imm + (thumb ? 4 : 8);
-                            crr_block_offset += (thumb ? 4 : 8);
+                        }
 
-                            addr = start_addr;
-                            boffset = crr_block_offset;
-                            bsize = 0;
-
+                        if (inst->ops[0].type == op_imm) {
+                            analyse(baddr, funcs);
+                        }
+                    }
+                } else {
+                    bool do_end = false;
+                    switch (inst->iname) {
+                    // Pattern 1: LDM and POP (arm)
+                    case instruction::LDM: case instruction::POP: {
+                        // Symbian binary subroutine usually ends with a load including a PC
+                        // Usually sits on the end of operand list iirc
+                        if (inst->ops[inst->ops.size() - 1].type == op_reg && inst->ops[inst->ops.size() - 1].reg == arm::reg::R15) {
+                            do_end = true;
                             break;
                         }
-                    } else {
-                        if (inst->ops[0].type == op_imm) {
-                            analyse(inst->ops[0].imm, funcs);
+
+                        break;
+                    }
+
+                    case instruction::LDR: {
+                        // Sometimes use for calling imports (most of the time)
+                        if (inst->ops[0].type == op_reg && inst->ops[0].reg == arm::reg::R15) {
+                            do_end = true;
                         }
+
+                        break;
+                    }
+
+                    default:
+                        break;
+                    }
+
+                    if (do_end) {
+                        should_stop = true;
+                        func.size = start_addr - org_addr + inst->size;
+                        func.blocks.emplace(crr_block_offset, crr_block_size + inst->size);
+
+                        return;
                     }
                 }
 
@@ -130,6 +126,9 @@ namespace eka2l1::arm {
                 start_addr += inst->size;
                 crr_block_size += inst->size;
             }
+
+            // Unreachable
+            // func.blocks.emplace(crr_block_offset, crr_block_size);
         };
 
         while (!should_stop) {
@@ -137,5 +136,20 @@ namespace eka2l1::arm {
         }
 
         funcs.push_back(func);
+    }
+    
+    std::unique_ptr<arm_analyser> make_analyser(const arm_disassembler_backend backend,
+        read_code_func readf) {
+        switch (backend) {
+        case arm_disassembler_backend::capstone: {
+            return std::make_unique<arm_analyser_capstone>(readf);
+        }
+
+        default: {
+            break;
+        }
+        }
+
+        return nullptr;
     }
 }

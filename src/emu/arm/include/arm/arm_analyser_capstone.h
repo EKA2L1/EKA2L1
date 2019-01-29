@@ -31,6 +31,11 @@ namespace eka2l1::arm {
         cs_insn *insn;
 
     public:
+        explicit arm_instruction_capstone(cs_insn *insn)
+            : insn(insn) {
+
+        }
+        
         ~arm_instruction_capstone() override {
         }
 
@@ -46,7 +51,7 @@ namespace eka2l1::arm {
         cs_insn *insns;
 
     public:
-        explicit arm_analyser_capstone();
+        explicit arm_analyser_capstone(std::function<std::uint32_t(vaddress)> read_func);
         ~arm_analyser_capstone();
 
         std::shared_ptr<arm_instruction_base> next_instruction(vaddress addr) override;
