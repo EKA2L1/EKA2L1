@@ -122,7 +122,11 @@ namespace eka2l1::arm {
         std::size_t size;
 
         // Offset in this function - size of the block
-        std::unordered_map<std::size_t, std::size_t> blocks;
+        std::unordered_map<vaddress, std::size_t> blocks;
+
+        explicit arm_function(vaddress addr, std::size_t size)
+            : addr(addr), size(size) {
+        }
     };
 
     struct arm_op_mem {
@@ -199,7 +203,7 @@ namespace eka2l1::arm {
 
         /* Do analyse, starting from an address
         */
-        void analyse(vaddress addr, std::vector<arm_function> &funcs);
+        std::vector<arm_function> analyse(vaddress addr, vaddress limit);
 
         /*! \brief Get the next instruction disassembled.
          *

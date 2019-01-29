@@ -30,6 +30,9 @@
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/IRBuilder.h>
+
+#include <arm/arm_analyser.h>
 
 #include <cstdint>
 #include <exception>
@@ -86,5 +89,26 @@ namespace eka2l1::arm {
 
         llvm::LLVMContext &get_context();
         virtual bool add(std::unique_ptr<llvm::Module> module);
+    };
+
+    using arm_inst_ptr = std::shared_ptr<arm::arm_instruction_base>;
+
+    class arm_llvm_inst_recompiler: public arm_llvm_recompiler_base {
+        llvm::IRBuilder<> *builder;
+        llvm::Module      *module;
+
+        llvm::Function    *function;
+        llvm::StructType  *cpu_context_type;
+
+        std::unique_ptr<llvm::GlobalVariable> page_table;
+
+    public:
+        explicit arm_llvm_inst_recompiler(llvm::Module *module,
+            decltype(object_layer)::GetMemoryManagerFunction get_mem_mngr_func,
+            llvm::orc::JITTargetMachineBuilder jit_tmb, 
+            llvm::DataLayout dl);
+
+        void translate();
+        void ADD(arm_inst_ptr inst);
     };
 }

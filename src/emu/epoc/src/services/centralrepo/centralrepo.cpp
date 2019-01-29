@@ -187,6 +187,8 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_close, "CenRep::Close");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_string, "CenRep::SetStr");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_real, "CenRep::SetStr");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req, "CenRep::NofReq");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_group_nof_req, "CenRep::GroupNofReq");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_int, "CenRep::GetInt");
@@ -569,7 +571,7 @@ namespace eka2l1 {
             break;
         }
 
-        case cen_rep_set_int: {
+        case cen_rep_set_int: case cen_rep_set_string: case cen_rep_set_real: {
             // We get the entry.
             // Use mode 1 (write) to get the entry, since we are modifying data.
             central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 1);
@@ -581,15 +583,46 @@ namespace eka2l1 {
                 break;
             }
             
-            if (entry->data.etype != central_repo_entry_type::integer) {
-                ctx->set_request_status(KErrArgument);
-                break;
-            }
-
             // TODO: Capability supply (+Policy)
             // This is really bad... We are not really care about accuracy right now
             // Assuming programs did right things, and accept the rules
-            entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<int>(1));
+            switch (ctx->msg->function) {
+            case cen_rep_set_int: {
+                if (entry->data.etype != central_repo_entry_type::integer) {
+                    ctx->set_request_status(KErrArgument);
+                    break;
+                }
+
+                entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<int>(1));
+                break;
+            }
+
+            case cen_rep_set_real: {
+                if (entry->data.etype != central_repo_entry_type::real) {
+                    ctx->set_request_status(KErrArgument);
+                    break;
+                }
+
+                entry->data.reald = static_cast<float>(*ctx->get_arg<int>(1));
+                break;
+            }
+
+            case cen_rep_set_string: {
+                if (entry->data.etype != central_repo_entry_type::string) {
+                    ctx->set_request_status(KErrArgument);
+                    break;
+                }
+
+                entry->data.strd = *ctx->get_arg<std::string>(1);
+                break;
+            }
+
+            default: {
+                // Unreachable
+                break;
+            }
+            }
+
             // Success in modifying
             modification_success(entry->key);
 
