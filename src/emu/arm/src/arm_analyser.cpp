@@ -22,18 +22,22 @@
 #include <arm/arm_analyser_capstone.h>
 #include <queue>
 
+#include <common/log.h>
+
 namespace eka2l1::arm {
      std::vector<arm_function> arm_analyser::analyse(vaddress addr, vaddress limit) {
         bool should_stop = false;
-        bool thumb = addr & 1;
 
-        std::vector<arm_function> funcs;
+        std::unordered_map<vaddress, arm_function> funcs;
         // use BFS since DFS is hard to see what's wrong
         std::queue<arm_function*> funcs_queue;
 
         auto add_func = [&](vaddress faddr) {
-            funcs.push_back(arm_function(faddr, 0));
-            funcs_queue.push(&funcs.back());
+            auto res = funcs.emplace(faddr, arm_function(faddr, 0));
+
+            if (res.second) {
+                funcs_queue.push(&(res.first->second));
+            }
         };
 
         // Add intial function
@@ -49,21 +53,67 @@ namespace eka2l1::arm {
                 }
             };
 
-            // Initial block
-            add_block(addr);
+            bool thumb = func->addr & 1;
 
-            for (auto block = blocks_queue.front(); !blocks_queue.empty(); ) {
+            // Initial block
+            add_block(func->addr);
+
+            for (auto block = blocks_queue.front(); !blocks_queue.empty();) {
                 bool should_stop = false;
-                for (auto baddr = block->first; baddr <= limit, should_stop; ) {
+                for (auto baddr = block->first; baddr <= limit && !should_stop; ) {
                     auto inst = next_instruction(baddr);
+
+                    if (!inst) {
+                        block->second = baddr - block->first;
+                        should_stop = true;
+
+                        break;
+                    }
 
                     switch (inst->iname) {
                     // End a block
-                    case instruction::B: case instruction::BL: case instruction::BX:
-                    case instruction::BLX: {
-                        add_block(inst->ops[0].imm);
-                        block->second = baddr - block->first;
+                    case instruction::B:  {
+                        vaddress br = inst->ops[0].imm;
+                        if (thumb) {
+                            br |= 1;
+                        }
+
+                        add_block(br);
+
+                        if (inst->cond == arm::cc::AL) {
+                            block->second = baddr - block->first + inst->size;
+                            should_stop = true;
+                        }
+
+                        break;
+                    }
+
+                    case instruction::BX: {
+                        if (inst->ops[0].type == op_reg && inst->ops[0].reg == arm::reg::R12 && ip != 0) {     
+                            add_func(ip);
+                            ip = 0;
+                        }
+
+                        block->second = baddr - block->first + inst->size;
                         should_stop = true;
+
+                        break;
+                    }
+
+                    case instruction::BL: case instruction::BLX: {
+                        if (inst->ops[0].type == op_imm) {
+                            vaddress boff = inst->ops[0].imm;
+                            
+                            if (instruction::BLX == inst->iname) {
+                                boff &= ~0x1;
+
+                                if (!thumb) {
+                                    boff |= 1;
+                                }
+                            }
+
+                            add_func(boff);
+                        }
 
                         break;
                     }
@@ -71,19 +121,40 @@ namespace eka2l1::arm {
                     case instruction::POP: case instruction::LDM: {
                         // Check for last op
                         if (inst->ops.back().type == op_reg && inst->ops.back().reg == arm::reg::R15) {
-                            block->second = baddr - block->first;
+                            block->second = baddr - block->first + inst->size;
                             should_stop = true;
                         }
 
                         break;
                     }
 
+                    // Fallthrough intentional
                     case instruction::LDR: {
                         if (inst->ops.front().type == op_reg && inst->ops.front().reg == arm::reg::R15) {
-                            block->second = baddr - block->first;
+                            block->second = baddr - block->first + inst->size;
                             should_stop = true;
                         }
+                        
+                        // Detect trampoline
+                        if (inst->ops.front().type == op_reg && inst->ops.front().reg == arm::reg::R12) {
+                            // Using IP to jump
+                            if (inst->ops[1].type == op_mem && inst->ops[1].mem.base == arm::reg::R15) {
+                                ip = read(baddr + (thumb ? 4 : 8) + inst->ops[1].mem.disp);
+                            }
+                        }
 
+                        break;
+                    }
+
+                    case instruction::ADD: {
+                        if (inst->ops.front().type == op_reg && inst->ops.front().reg == arm::reg::R12) {
+                            // Using IP to jump
+                            if (inst->ops[1].type == op_reg && inst->ops[1].reg == arm::reg::R15) {
+                                // Can assure op2 is imm
+                                ip = baddr + (thumb ? 4 : 8) + inst->ops[2].imm;
+                            }
+                        }
+                        
                         break;
                     }
 
@@ -94,10 +165,32 @@ namespace eka2l1::arm {
 
                     baddr += inst->size;
                 }
+
+                blocks_queue.pop();
+
+                if (!blocks_queue.empty()) {
+                    block = blocks_queue.front();
+                }
+            }
+
+            // Calculate function size
+            func->size = func->blocks.crbegin()->first - func->addr + func->blocks.crbegin()->second;
+
+            // Next function in queue
+            funcs_queue.pop();            
+
+            if (!funcs_queue.empty()) {
+                func = funcs_queue.front();
             }
         }
 
-        return funcs;
+        // Convert to vector
+        std::vector<arm_function> funcs_v;
+        for (auto &[addr, func]: funcs) {
+            funcs_v.push_back(std::move(func));
+        }
+
+        return funcs_v;
     }
     
     std::unique_ptr<arm_analyser> make_analyser(const arm_disassembler_backend backend,

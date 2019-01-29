@@ -24,6 +24,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <map>
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -122,7 +123,7 @@ namespace eka2l1::arm {
         std::size_t size;
 
         // Offset in this function - size of the block
-        std::unordered_map<vaddress, std::size_t> blocks;
+        std::map<vaddress, std::size_t> blocks;
 
         explicit arm_function(vaddress addr, std::size_t size)
             : addr(addr), size(size) {
@@ -195,10 +196,11 @@ namespace eka2l1::arm {
     class arm_analyser {
     protected:
         std::function<std::uint32_t(vaddress)> read;
+        std::uint32_t ip;
 
     public:
         explicit arm_analyser(std::function<std::uint32_t(vaddress)> read_func)
-            : read(read_func) {
+            : read(read_func), ip(0) {
         }
 
         /* Do analyse, starting from an address
