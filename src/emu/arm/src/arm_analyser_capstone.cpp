@@ -24,6 +24,36 @@
 #include <common/log.h>
 
 namespace eka2l1::arm {
+
+    /*! \brief Convert a capstone reg to our register presentation.
+    */
+    static arm::reg capstone_reg_to_my_reg(int reg) {
+        if (reg >= ARM_REG_R0 && reg <= ARM_REG_R0 + 15) {
+            return static_cast<arm::reg>(reg - ARM_REG_R0 + arm::R0);
+        }
+
+        switch (reg) {
+        case ARM_REG_PC: {
+            return arm::R15;
+        }
+
+        case ARM_REG_LR: {
+            return arm::R14;
+        }
+
+        case ARM_REG_SP: {
+            return arm::R13;
+        }
+
+        default: {
+            // TODO
+            break;
+        }
+        }
+
+        return arm::INVALID;
+    }
+
     std::string arm_instruction_capstone::mnemonic() {
         return insn->mnemonic;
     }
@@ -33,7 +63,7 @@ namespace eka2l1::arm {
         regs.resize(insn->detail->regs_read_count);
 
         for (std::size_t i = 0; i < regs.size(); i++) {
-            regs[i] = static_cast<arm::reg>(insn->detail->regs_read[i]);
+            regs[i] = capstone_reg_to_my_reg(insn->detail->regs_read[i]);
         }
 
         return regs;
@@ -44,13 +74,14 @@ namespace eka2l1::arm {
         regs.resize(insn->detail->regs_write_count);
 
         for (std::size_t i = 0; i < regs.size(); i++) {
-            regs[i] = static_cast<arm::reg>(insn->detail->regs_write[i]);
+            regs[i] = capstone_reg_to_my_reg(insn->detail->regs_write[i]);
         }
 
         return regs;
     }
 
-    arm_analyser_capstone::arm_analyser_capstone() {
+    arm_analyser_capstone::arm_analyser_capstone(std::function<std::uint32_t(vaddress)> read_func)
+        : arm_analyser(read_func) {
         cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_ARM, &cp_handle_arm);
 
         if (err != CS_ERR_OK) {
@@ -75,7 +106,7 @@ namespace eka2l1::arm {
         cs_close(&cp_handle_arm);
         cs_close(&cp_handle_thumb);
     }
-
+    
     std::shared_ptr<arm_instruction_base> arm_analyser_capstone::next_instruction(vaddress addr) {
         const bool thumb = addr & 1;
         addr &= ~0x1;
@@ -84,7 +115,7 @@ namespace eka2l1::arm {
         std::size_t total_pass  = 0;
         
         if (thumb) {
-            total_pass = cs_disasm(cp_handle_thumb, reinterpret_cast<const std::uint8_t*>(&code), 2, addr, 1,
+            total_pass = cs_disasm(cp_handle_thumb, reinterpret_cast<const std::uint8_t*>(&code), 4, addr, 1,
                 &insns);
         } else {
             total_pass = cs_disasm(cp_handle_arm, reinterpret_cast<const std::uint8_t*>(&code), 4, addr, 1,
@@ -97,7 +128,7 @@ namespace eka2l1::arm {
         }
 
         // Convert stuffs!
-        std::shared_ptr<arm_instruction_capstone> il = std::make_shared<arm_instruction_capstone>();
+        std::shared_ptr<arm_instruction_capstone> il = std::make_shared<arm_instruction_capstone>(insns);
         
         if (thumb) {
             il->opcode16 = (code & 0xFF00);
@@ -121,8 +152,13 @@ namespace eka2l1::arm {
             
             switch (op.type) {
             case op_imm: { op.imm = cs_op->imm; break; }
-            case op_reg: { op.reg = cs_op->reg; break; }
-            case op_mem: { std::memcpy(&op.mem, &cs_op->mem, sizeof(cs_op->mem)); break; }
+            case op_reg: { op.reg = capstone_reg_to_my_reg(cs_op->reg); break; }
+            case op_mem: { 
+                std::memcpy(&op.mem, &cs_op->mem, sizeof(cs_op->mem));
+                op.mem.base = capstone_reg_to_my_reg(op.mem.base);
+                op.mem.index = capstone_reg_to_my_reg(op.mem.index);
+                break; 
+            }
             default: break;
             }
 
@@ -131,6 +167,8 @@ namespace eka2l1::arm {
             
             il->ops.push_back(op);
         }
+
+        il->group = 0;
 
         // Build group
         for (i = 0 ; i < insns->detail->groups_count; i++) {

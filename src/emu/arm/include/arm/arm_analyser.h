@@ -46,6 +46,7 @@ namespace eka2l1::arm {
         R13,
         R14,
         R15,
+        INVALID,
         // TODO: VFP NEON registers
         SP = R13,
         LR = R14,
@@ -137,7 +138,7 @@ namespace eka2l1::arm {
         arm_op_type type;
 
         union {
-            int reg;
+            arm::reg reg;
             int32_t imm;
             double fp;
             arm_op_mem mem;
@@ -188,24 +189,17 @@ namespace eka2l1::arm {
     };
 
     class arm_analyser {
-        std::uint8_t *code;
-        std::size_t   size;
+    protected:
+        std::function<std::uint32_t(vaddress)> read;
 
-        /* False = Thumb, True = ARM
-        */
-        bool          mode;
     public:
-        explicit arm_analyser()
-            : code(nullptr), size(0), mode(false) {
-        }
-
-        [[noreturn]] virtual std::uint32_t read(vaddress addr) {
-            throw std::runtime_error("Read for analyser not implemented");
+        explicit arm_analyser(std::function<std::uint32_t(vaddress)> read_func)
+            : read(read_func) {
         }
 
         /* Do analyse, starting from an address
         */
-        void analyse(vaddress addr, std::vector<arm_function> funcs);
+        void analyse(vaddress addr, std::vector<arm_function> &funcs);
 
         /*! \brief Get the next instruction disassembled.
          *
@@ -215,4 +209,9 @@ namespace eka2l1::arm {
             return nullptr;
         }
     };
+
+    using read_code_func = std::function<std::uint32_t(vaddress)>;
+
+    std::unique_ptr<arm_analyser> make_analyser(const arm_disassembler_backend backend,
+        read_code_func readf);
 }
