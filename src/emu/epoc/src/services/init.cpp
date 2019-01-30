@@ -24,6 +24,7 @@
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/centralrepo/centralrepo.h>
 #include <epoc/services/domain/domain.h>
+#include <epoc/services/ecom/ecom.h>
 #include <epoc/services/fbs/fbs.h>
 #include <epoc/services/drm/helper.h>
 #include <epoc/services/drm/rights.h>
@@ -241,6 +242,7 @@ namespace eka2l1 {
         void init_services(system *sys) {
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
+            CREATE_SERVER(sys, ecom_server);
             CREATE_SERVER(sys, fbs_server);
             CREATE_SERVER(sys, window_server);
             CREATE_SERVER(sys, central_repo_server);
