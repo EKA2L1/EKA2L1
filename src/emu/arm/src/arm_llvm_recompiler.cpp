@@ -121,14 +121,11 @@ namespace eka2l1::arm {
         llvm::LLVMContext &ctx = get_context();
         llvm::Module &md = *module;
 
-        // Page table for fast memory access
-        // TODO: unique id
-        page_table = std::make_unique<llvm::GlobalVariable>(md,
-            reinterpret_cast<llvm::Type*>(llvm::ArrayType::get(llvm::Type::getInt8PtrTy(ctx), 0xFFFFFFFF / 0x1000)->getPointerTo()), true, 
-            llvm::GlobalValue::ExternalLinkage, nullptr, "pagetab_0");
-        page_table->setInitializer(llvm::ConstantPointerNull::get(llvm::cast<llvm::PointerType>(page_table->getType()->getPointerElementType())));
-	    page_table->setExternallyInitialized(true);
+        page_table_type = 
+            llvm::ArrayType::get(llvm::Type::getInt8PtrTy(ctx), 0xFFFFFFFF / 0x1000);
 
+        // First is page table pointer for this session
+        context_struct_types.emplace_back(page_table_type->getPointerTo());
         context_struct_types.emplace_back(llvm::Type::getInt32Ty(ctx));                                 // Ticks remaining (for EKA2L1)
         context_struct_types.insert(context_struct_types.end(), 16, llvm::Type::getInt32Ty(ctx));       // R0 - R15
         context_struct_types.emplace_back(llvm::Type::getInt32Ty(ctx));                                 // CPSR
@@ -136,15 +133,30 @@ namespace eka2l1::arm {
         context_struct_types.emplace_back(llvm::Type::getInt32Ty(ctx));                                 // FPSR
 
         cpu_context_type = llvm::StructType::create(ctx, context_struct_types, "arm_cpu_jit_context");
+
+        page_table = nullptr;
+    }
+
+    llvm::Value *arm_llvm_inst_recompiler::get_mem(llvm::Value *addr, llvm::Type *type) {
+        if (!page_table) {
+            // Cache from struct context
+            page_table = builder->CreateStructGEP(nullptr, &(*function->arg_begin()), 0);
+        }
+
+        llvm::Value *page = builder->CreateGEP(page_table, { 0, builder->CreateLShr(addr, 0x1000) });
+        llvm::Value *value = 
+            builder->CreateBitCast(builder->CreateGEP(page, { 0, builder->CreateAnd(addr, 0xFFF) }), type->getPointerTo());
+
+        return value;
     }
 
     void arm_llvm_inst_recompiler::translate() {
         function = module->getFunction("__ftest");
-        llvm::IRBuilder<> ibuilder(llvm::BasicBlock::Create(get_context(), "_condcheck"));
+        llvm::IRBuilder<> ibuilder(llvm::BasicBlock::Create(get_context(), "__condcheck"));
         builder = &ibuilder;
 
         // Create a CPSR condition check
-        // TODO:
+        
     }
 
     void arm_llvm_inst_recompiler::ADD(arm_inst_ptr inst) {

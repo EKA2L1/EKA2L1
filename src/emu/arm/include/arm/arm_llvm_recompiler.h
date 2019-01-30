@@ -100,9 +100,13 @@ namespace eka2l1::arm {
         llvm::Function    *function;
         llvm::StructType  *cpu_context_type;
 
-        std::unique_ptr<llvm::GlobalVariable> page_table;
+        llvm::Value       *page_table;
+        llvm::Type        *page_table_type;
 
     public:
+        // Get memory as uint8_t*/uint16_t*/... Type is an integer
+        llvm::Value *get_mem(llvm::Value *addr, llvm::Type *type);
+
         explicit arm_llvm_inst_recompiler(llvm::Module *module,
             decltype(object_layer)::GetMemoryManagerFunction get_mem_mngr_func,
             llvm::orc::JITTargetMachineBuilder jit_tmb, 
