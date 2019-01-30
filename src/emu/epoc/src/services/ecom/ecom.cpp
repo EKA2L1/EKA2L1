@@ -22,6 +22,6 @@
 
 namespace eka2l1 {
     ecom_server::ecom_server(eka2l1::system *sys)
-        : service::server(sys, "!EComServer", true) {
+        : service::server(sys, "!ecomserver", true) {
     }
 }

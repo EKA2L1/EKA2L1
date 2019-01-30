@@ -23,6 +23,21 @@
 #include <epoc/services/server.h>
 
 namespace eka2l1 {
+    enum ecom_opcodes {
+        ecom_notify_on_change,
+        ecom_cancel_notify_on_change,
+        ecom_list_implementations,
+        ecom_list_resolved_implementations,
+        ecom_collect_implementations_list,
+        ecom_get_implementaton_creation_method,
+        ecom_get_resolved_creation_method,
+        ecom_get_custom_resolved_creation_method,
+        ecom_destroyed_implementation,
+        ecom_enable_implementation,
+        ecom_list_extended_interfaces,
+        ecom_set_get_params
+    };
+    
     class ecom_server: public service::server {
     public:
         explicit ecom_server(eka2l1::system *sys);
