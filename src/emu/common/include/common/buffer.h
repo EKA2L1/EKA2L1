@@ -42,7 +42,12 @@ namespace eka2l1 {
 
             buffer_stream_base(uint8_t *data, uint64_t size)
                 : beg(data)
-                , end(beg + size) {}
+                , end(beg + size)
+                , crr_pos(0) {}
+
+            std::uint64_t size() {
+                return end - beg;
+            }
         };
 
         enum seek_where {
@@ -57,7 +62,7 @@ namespace eka2l1 {
             ro_buf_stream(uint8_t *beg, uint64_t size)
                 : buffer_stream_base(beg, size) {}
 
-            void seek(uint32_t amount, seek_where wh) {
+            void seek(const std::uint64_t amount, seek_where wh) {
                 if (wh == seek_where::beg) {
                     crr_pos = amount;
                     return;
@@ -71,9 +76,14 @@ namespace eka2l1 {
                 crr_pos = (end - beg) + amount;
             }
 
-            void read(void *buf, uint32_t size) {
+            void read(void *buf, const std::uint64_t size) {
                 memcpy(buf, beg + crr_pos, size);
                 crr_pos += size;
+            }
+
+            void read(const std::uint64_t pos, void *buf, const std::uint64_t size) {
+                seek(pos, seek_where::beg);
+                read(buf, size);
             }
 
             std::string read_string() {
