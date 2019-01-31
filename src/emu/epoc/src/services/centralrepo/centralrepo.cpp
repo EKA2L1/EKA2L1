@@ -355,7 +355,7 @@ namespace eka2l1 {
                         repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
                         repofile->close();
 
-                        common::chunkyseri seri(&buf[0], common::SERI_MODE_READ);
+                        common::chunkyseri seri(&buf[0], buf.size(), common::SERI_MODE_READ);
                         if (int err = do_state_for_cre(seri, *repo)) {
                             LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
                             return -1;

@@ -304,13 +304,13 @@ namespace eka2l1 {
         std::vector<std::uint8_t> bufs;
 
         {
-            common::chunkyseri seri(nullptr, common::SERI_MODE_MESAURE);
+            common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
             do_state_for_cre(seri, *attach_repo);
 
             bufs.resize(seri.size());
         }
     
-        common::chunkyseri seri(&bufs[0], common::SERI_MODE_WRITE);
+        common::chunkyseri seri(&bufs[0], bufs.size(), common::SERI_MODE_WRITE);
         do_state_for_cre(seri, *attach_repo);
 
         std::u16string p { drive_to_char16(attach_repo->reside_place) };
