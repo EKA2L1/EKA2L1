@@ -22,6 +22,8 @@
  */
 
 #include <common/algorithm.h>
+#include <common/buffer.h>
+#include <common/chunkyseri.h>
 #include <common/dictcomp.h>
 #include <common/log.h>
 #include <common/unicode.h>
@@ -185,9 +187,9 @@ namespace eka2l1::loader {
         return total_bytes;
     }
 
-    void rsc_file::read_header_and_resource_index(symfile f) {
+    void rsc_file::read_header_and_resource_index(common::ro_buf_stream &buf) {
         std::uint32_t uid[3];
-        f->read_file(&uid, 4, 3);
+        buf.read(&uid, 12);
 
         std::memcpy(&uids, &uid[0], 12);
 
@@ -195,17 +197,15 @@ namespace eka2l1::loader {
         case 0x101F4A6B: {
             flags |= potentially_have_compressed_unicode_data;
 
-            f->read_file(17, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
-                1);
+            buf.read(17, &size_of_largest_resource_when_uncompressed, 
+                sizeof(size_of_largest_resource_when_uncompressed));
 
             break;
         }
 
         case 0x101F5010: {
             flags |= (potentially_have_compressed_unicode_data | dictionary_compressed);
-
-            f->read_file(17, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
-                1);
+            buf.read(17, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed));
 
             break;
         }
@@ -220,29 +220,27 @@ namespace eka2l1::loader {
         if (calypso_magic == 4) {
             flags |= (calypso | dictionary_compressed);
 
-            f->read_file(8, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed),
-                1);
+            buf.read(8, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed));
         }
 
         if (flags & dictionary_compressed) {
             if (flags & calypso) {
                 // We read it before
                 num_res = uid[0] & 0xFFFF;
-                f->read_file(10, &num_of_bits_use_for_dict_token, sizeof(num_of_bits_use_for_dict_token), 1);
+                buf.read(10, &num_of_bits_use_for_dict_token, sizeof(num_of_bits_use_for_dict_token));
 
                 char unk1 = 0;
 
-                f->read_file(5, &unk1, 1, 1);
+                buf.read(5, &unk1, 1);
 
                 num_dir_entry = (1 << num_of_bits_use_for_dict_token) - unk1;
 
-                f->seek(6, file_seek_mode::beg);
-                f->read_file(&res_index_offset, sizeof(res_index_offset), 1);
+                buf.read(6, &res_index_offset, sizeof(res_index_offset));
 
                 res_offset = res_index_offset + (num_res * 2);
                 
                 resource_offsets.resize(num_res);
-                f->read_file(res_index_offset, &resource_offsets[0], 2, num_res);
+                buf.read(res_index_offset, &resource_offsets[0], 2 * num_res);
                 
                 // "+2" because the first entry in the dictionary-index in this file format 
                 //is the number of bits from the start of the dictionary data to the start 
@@ -253,10 +251,10 @@ namespace eka2l1::loader {
                 dict_offset = dict_index_offset + (num_dir_entry * 2);
                 
                 dict_offsets.resize(num_dir_entry);
-                f->read_file(dict_index_offset, &dict_offsets[0], 2, num_dir_entry);
+                buf.read(dict_index_offset, &dict_offsets[0], 2 * num_dir_entry);
             } else {
                 std::uint8_t file_flag = 0;
-                f->read_file(16, &file_flag, sizeof(file_flag), 1);
+                buf.read(16, &file_flag, sizeof(file_flag));
 
                 // Check the flag
                 // 0x80: Third uid is an offset
@@ -276,17 +274,17 @@ namespace eka2l1::loader {
                 res_offset = 19;
                 std::uint16_t num_bits_of_res_data = 0;
 
-                f->read_file(f->size() - 2, &num_bits_of_res_data, 2, 1);
+                buf.read(buf.size() - 2, &num_bits_of_res_data, 2);
                 res_index_offset = res_offset + (num_bits_of_res_data + 7) / 8;
 
                 res_data.resize((num_bits_of_res_data + 7) / 8);
-                f->read_file(res_offset, &res_data[0], 1, static_cast<std::uint32_t>(res_data.size()));
+                buf.read(res_offset, &res_data[0], static_cast<std::uint32_t>(res_data.size()));
 
                 // Each resource entry is two bytes.
-                num_res = static_cast<std::uint16_t>((f->size() - res_index_offset) / 2);
+                num_res = static_cast<std::uint16_t>((buf.size() - res_index_offset) / 2);
                 
                 resource_offsets.resize(num_res + 1);
-                f->read_file(res_index_offset, &resource_offsets[0], 2, num_res);
+                buf.read(res_index_offset, &resource_offsets[0], 2 * num_res);
 
                 dict_offset = 21;
 
@@ -294,13 +292,13 @@ namespace eka2l1::loader {
                     int length_of_bit_array_in_bytes = (num_res + 7) / 8;
                     unicode_flag_array.resize(length_of_bit_array_in_bytes);
 
-                    f->read_file(21, &unicode_flag_array[0], 1, length_of_bit_array_in_bytes);
+                    buf.read(21, &unicode_flag_array[0], length_of_bit_array_in_bytes);
 
                     dict_offset += length_of_bit_array_in_bytes;
                 }
 
                 std::uint16_t num_bits_of_dict_data = 0;
-                f->read_file(res_offset - 2, &num_bits_of_dict_data, 2, 1);
+                buf.read(res_offset - 2, &num_bits_of_dict_data, 2);
 
                 dict_index_offset = dict_offset + (num_bits_of_dict_data + 7) / 8;
 
@@ -308,7 +306,7 @@ namespace eka2l1::loader {
                 int num_entries = (res_offset - dict_index_offset) / 2;
 
                 dict_offsets.resize(num_entries);
-                f->read_file(dict_index_offset, &dict_offsets[0], 2, num_entries);
+                buf.read(dict_index_offset, &dict_offsets[0], 2 * num_entries);
                 
                 // the bottom 3 bits of firstByteAfterUids stores the number of bits used for 
                 // dictionary tokens as an offset from 3, e.g. if 2 is stored in these three bits 
@@ -327,26 +325,26 @@ namespace eka2l1::loader {
         } else {
             // We read a barebone format, nothing compressed
             // Symbian said that this format is likely to be used with non-ROM, since ROM has to be small
-            f->read_file(f->size() - 2, &res_index_offset, 2, 1);
+            buf.read(buf.size() - 2, &res_index_offset, 2);
 
             // The last index on the resource index table was pointing to start of index
             // It's not a valid one
-            num_res = static_cast<std::uint16_t>((f->size() - res_index_offset) / 2 - 1);
+            num_res = static_cast<std::uint16_t>((buf.size() - res_index_offset) / 2 - 1);
 
             if ((num_res > 0) && (flags & potentially_have_compressed_unicode_data)) {
                 int length_of_bit_array_in_bytes = (num_res + 7) / 8;
                 unicode_flag_array.resize(length_of_bit_array_in_bytes);
 
-                f->read_file(19, &unicode_flag_array[0], 1, length_of_bit_array_in_bytes);
+                buf.read(19, &unicode_flag_array[0], length_of_bit_array_in_bytes);
             }
 
             resource_offsets.resize(num_res);
-            f->read_file(res_index_offset, &resource_offsets[0], 2, num_res);
+            buf.read(res_index_offset, &resource_offsets[0], 2 * num_res);
+            buf.read(res_index_offset, &res_offset, 2);
 
-            f->read_file(res_index_offset, &res_offset, 2, 1);
             res_data.resize(res_index_offset - res_offset);
 
-            f->read_file(res_offset, &res_data[0], 1, static_cast<std::uint32_t>(res_data.size()));
+            buf.read(res_offset, &res_data[0], static_cast<std::uint32_t>(res_data.size()));
         }
 
         // Done with the header
@@ -493,8 +491,8 @@ namespace eka2l1::loader {
         return 0;
     }
 
-    rsc_file::rsc_file(symfile f)
+    rsc_file::rsc_file(common::ro_buf_stream &buf)
         : flags(0) {
-        read_header_and_resource_index(f);
+        read_header_and_resource_index(buf);
     }
 }
