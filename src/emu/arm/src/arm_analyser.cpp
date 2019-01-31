@@ -25,14 +25,14 @@
 #include <common/log.h>
 
 namespace eka2l1::arm {
-     std::vector<arm_function> arm_analyser::analyse(vaddress addr, vaddress limit) {
+    void arm_analyser::analyse(std::unordered_map<vaddress, arm_function> &funcs, vaddress addr, vaddress limit) {
         bool should_stop = false;
 
-        std::unordered_map<vaddress, arm_function> funcs;
         // use BFS since DFS is hard to see what's wrong
         std::queue<arm_function*> funcs_queue;
 
         auto add_func = [&](vaddress faddr) {
+            const std::lock_guard<std::mutex> guard(lock);
             auto res = funcs.emplace(faddr, arm_function(faddr, 0));
 
             if (res.second) {
@@ -43,10 +43,17 @@ namespace eka2l1::arm {
         // Add intial function
         add_func(addr);
 
+        if (funcs_queue.size() == 0) {
+            return;
+        }
+
+        // Should
         for (auto func = funcs_queue.front(); !funcs_queue.empty(); ) {
             std::queue<std::pair<const vaddress, std::size_t>*> blocks_queue;
 
             auto add_block = [&](vaddress block_addr) {
+                const std::lock_guard<std::mutex> guard(lock);
+
                 auto pair = func->blocks.emplace(block_addr, 0);
                 if (pair.second) {
                     blocks_queue.push(&(*pair.first));
@@ -89,7 +96,9 @@ namespace eka2l1::arm {
                     }
 
                     case instruction::BX: {
-                        if (inst->ops[0].type == op_reg && inst->ops[0].reg == arm::reg::R12 && ip != 0) {     
+                        if (inst->ops[0].type == op_reg && inst->ops[0].reg == arm::reg::R12 && ip != 0) {                                 
+                            // LOG_TRACE("Branching 0x{:X}, addr 0x{:X}", ip, baddr);
+
                             add_func(ip);
                             ip = 0;
                         }
@@ -103,15 +112,21 @@ namespace eka2l1::arm {
                     case instruction::BL: case instruction::BLX: {
                         if (inst->ops[0].type == op_imm) {
                             vaddress boff = inst->ops[0].imm;
-                            
+
                             if (instruction::BLX == inst->iname) {
                                 boff &= ~0x1;
 
                                 if (!thumb) {
                                     boff |= 1;
                                 }
+                            } else {
+                                if (thumb) {
+                                    boff |= 1;
+                                }
                             }
 
+
+                            // LOG_TRACE("Branching 0x{:X}, addr 0x{:X}", boff, baddr);
                             add_func(boff);
                         }
 
@@ -174,23 +189,47 @@ namespace eka2l1::arm {
             }
 
             // Calculate function size
-            func->size = func->blocks.crbegin()->first - func->addr + func->blocks.crbegin()->second;
+            if (func->blocks.size() == 1) {
+                // Only one block, don't waste time for those loop
+                func->size = func->blocks.begin()->second;
+            } else {
+                // This is not the fastest way, but it works everytime                
+                func->size = 0;
+                vaddress cur_addr =  func->blocks.begin()->first;
+                std::size_t cur_size = func->blocks.begin()->second;
+
+                do {
+                    if (cur_size == 0) {
+                        break;
+                    }
+                    
+                    func->size += cur_size;
+                    auto res = func->blocks.find(static_cast<vaddress>(cur_addr + cur_size));
+
+                    // TODO: Optimize
+                    // Align bytes may pop up for aligment of branching
+                    if (res == func->blocks.end()) {
+                        res = func->blocks.find(static_cast<vaddress>(cur_addr + cur_size + (thumb ? 2 : 4)));
+                    }
+
+                    if (res != func->blocks.end()) {
+                        cur_addr += static_cast<vaddress>(cur_size);
+                        cur_size = res->second; 
+                    } else {
+                        break;
+                    }
+                } while (true);
+            }
 
             // Next function in queue
             funcs_queue.pop();            
 
             if (!funcs_queue.empty()) {
                 func = funcs_queue.front();
+            } else {
+                return;
             }
         }
-
-        // Convert to vector
-        std::vector<arm_function> funcs_v;
-        for (auto &[addr, func]: funcs) {
-            funcs_v.push_back(std::move(func));
-        }
-
-        return funcs_v;
     }
     
     std::unique_ptr<arm_analyser> make_analyser(const arm_disassembler_backend backend,

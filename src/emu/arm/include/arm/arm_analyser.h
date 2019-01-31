@@ -27,6 +27,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <mutex>
 #include <unordered_map>
 
 namespace eka2l1::arm {
@@ -199,13 +200,15 @@ namespace eka2l1::arm {
         std::uint32_t ip;
 
     public:
+        std::mutex lock;
+        
         explicit arm_analyser(std::function<std::uint32_t(vaddress)> read_func)
             : read(read_func), ip(0) {
         }
 
         /* Do analyse, starting from an address
         */
-        std::vector<arm_function> analyse(vaddress addr, vaddress limit);
+        void analyse(std::unordered_map<vaddress, arm_function> &funcs, vaddress addr, vaddress limit);
 
         /*! \brief Get the next instruction disassembled.
          *
