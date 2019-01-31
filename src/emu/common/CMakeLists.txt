@@ -10,6 +10,7 @@ add_library(common
     include/common/bytepair.h
     include/common/chunkyseri.h
     include/common/codeblock.h
+    include/common/crypt.h
     include/common/cpudetect.h
     include/common/cvt.h
     include/common/data_displayer.h
@@ -37,6 +38,7 @@ add_library(common
     src/bytepair.cpp
     src/chunkyseri.cpp
     src/cvt.cpp
+    src/crypt.cpp
     src/data_displayer.cpp
     src/dictcomp.cpp
     src/dynamicfile.cpp
