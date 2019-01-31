@@ -1,10 +1,12 @@
 #include <epoc/loader/rsc.h>
 #include <catch2/catch.hpp>
 
+#include <common/buffer.h>
 #include <epoc/vfs.h>
 
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 using namespace eka2l1;
 
@@ -13,7 +15,14 @@ TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
     const char *rsc_name = "sample_0xed3e09d5.rsc";
     symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
 
-    loader::rsc_file test_rsc(f);
+    REQUIRE(f);
+
+    std::vector<std::uint8_t> buf;
+    buf.resize(f->size());
+    f->read_file(reinterpret_cast<std::uint8_t*>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
+
+    common::ro_buf_stream stream(&buf[0], buf.size());
+    loader::rsc_file test_rsc(stream);
 
     const std::uint16_t total_res = 11;
     REQUIRE(test_rsc.get_total_resources() == total_res);
