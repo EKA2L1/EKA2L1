@@ -1,5 +1,3 @@
-enable_testing()
-
 macro(add_test_assets PATH DESTPATH)
     file(GLOB assets RELATIVE ${PATH} ${PATH}/*)
 

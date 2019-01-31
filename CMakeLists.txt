@@ -39,5 +39,6 @@ if (BUILD_TOOLS)
 endif()
 
 if (BUILD_TESTS)
+    enable_testing()
     add_subdirectory(src/tests)
 endif()
