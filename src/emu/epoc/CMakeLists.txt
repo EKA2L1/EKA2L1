@@ -3,9 +3,11 @@ add_library(epocloader
     include/epoc/loader/e32img.h
     include/epoc/loader/romimage.h
     include/epoc/loader/rsc.h
+    include/epoc/loader/spi.h
     src/loader/e32img.cpp
     src/loader/romimage.cpp
     src/loader/rsc.cpp
+    src/loader/spi.cpp
 )
 
 # The kernel
