@@ -9,7 +9,7 @@ TEST_CASE("do_read_generic", "chunkyseri") {
     char *test_data = 
         "\1\0\0\0\5\5\5\5 \0\0\0PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE";
 
-    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(test_data), common::SERI_MODE_READ);
+    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(test_data), 45, common::SERI_MODE_READ);
     int simple_num1 = 0;
     std::uint32_t simple_num2 = 0;
 
@@ -27,7 +27,7 @@ TEST_CASE("do_read_generic", "chunkyseri") {
 }
 
 TEST_CASE("do_measure_generic", "chunkyseri")  {
-    common::chunkyseri seri(nullptr, common::SERI_MODE_MESAURE);
+    common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
     std::uint32_t dummy1;
     std::uint32_t dummy2;
 
@@ -57,7 +57,7 @@ TEST_CASE("do_write_generic", "chunkyseri") {
 
     std::string d3 = "HELLO!";
 
-    common::chunkyseri seri(&buf[0], common::SERI_MODE_WRITE);
+    common::chunkyseri seri(&buf[0], 32, common::SERI_MODE_WRITE);
     seri.absorb(d1);
     seri.absorb(d2);
     seri.absorb(d3);
@@ -79,7 +79,7 @@ TEST_CASE("do_read_with_section", "chunkyseri") {
     char *buf = 
         "TestSection\1\0\5\0\7\0\7\0\0\0HIPEOPL";
 
-    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(buf), common::SERI_MODE_READ);
+    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(buf), 29, common::SERI_MODE_READ);
     REQUIRE(seri.section("TestSection", 1));
 
     std::uint16_t t1 = 0;

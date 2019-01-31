@@ -27,6 +27,10 @@
 
 namespace eka2l1::common {
     void chunkyseri::absorb_impl(std::uint8_t *dat, const std::size_t s) {
+        if (buf + s > end && mode != SERI_MODE_MESAURE) {
+            return;
+        }
+
         switch (mode) {
         case SERI_MODE_MESAURE:
             break;

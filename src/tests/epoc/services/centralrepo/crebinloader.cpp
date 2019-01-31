@@ -26,7 +26,7 @@ TEST_CASE("generic_cre_loading", "centralrepo") {
     fi.seekg(0, std::ios::beg);
     fi.read(&buf[0], buf.size());
 
-    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(&buf[0]), common::SERI_MODE_READ);
+    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(&buf[0]), buf.size(), common::SERI_MODE_READ);
     do_state_for_cre(seri, repo);
 
     REQUIRE(repo.uid == 0x101F876F);

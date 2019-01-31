@@ -1,3 +1,5 @@
+enable_testing()
+
 macro(add_test_assets PATH DESTPATH)
     file(GLOB assets RELATIVE ${PATH} ${PATH}/*)
 
@@ -45,9 +47,3 @@ add_test_assets(${COMMON_ASSETS_PATH} "commonassets")
 
 set(SERVICES_CENTRALREPO_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/centralrepo/assets/")
 add_test_assets(${SERVICES_CENTRALREPO_ASSETS_PATH} "centralrepoassets")
-
-# Copy the sample RSC file
-add_custom_command(
-        TARGET ekatests
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/epoc/loader/assets/sample_0xed3e09d5.rsc" "${CMAKE_CURRENT_BINARY_DIR}")
