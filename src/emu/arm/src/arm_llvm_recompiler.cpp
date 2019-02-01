@@ -19,6 +19,7 @@
  */
 
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
+#include <llvm/IR/Instruction.h>
 
 #include <arm/arm_llvm_recompiler.h>
 
@@ -137,6 +138,25 @@ namespace eka2l1::arm {
         page_table = nullptr;
     }
 
+    llvm::Value *arm_llvm_inst_recompiler::reg_load(llvm::Value *&target) {
+        auto idx = static_cast<int>(&target - locals);
+        target = builder->CreateLoad(builder->CreateStructGEP(nullptr, &(*function->arg_begin()), idx));
+
+        return target; 
+    }
+
+    void arm_llvm_inst_recompiler::reg_store(llvm::Value *val, llvm::Value *&target) {
+        auto idx = static_cast<int>(&target - locals);
+        
+        // Erase the old store if there is one
+        if (auto old = llvm::cast_or_null<llvm::Instruction>(globals[idx])) {
+            old->eraseFromParent();
+        }
+
+        globals[idx] = builder->CreateStructGEP(nullptr, &(*function->arg_begin()), idx);
+        target = val;
+    }
+    
     llvm::Value *arm_llvm_inst_recompiler::get_mem(llvm::Value *addr, llvm::Type *type) {
         if (!page_table) {
             // Cache from struct context

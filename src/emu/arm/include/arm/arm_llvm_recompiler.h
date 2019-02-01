@@ -103,6 +103,15 @@ namespace eka2l1::arm {
         llvm::Value       *page_table;
         llvm::Type        *page_table_type;
 
+        llvm::Value       *locals[50];      ///< Local context variable's value.
+        llvm::Value      **gpr = locals + 2;
+
+        llvm::Value       *globals[50];     ///< Reference to context's variables.
+
+    protected:
+        llvm::Value *reg_load(llvm::Value *&target);
+        void reg_store(llvm::Value *val, llvm::Value *&target);
+
     public:
         // Get memory as uint8_t*/uint16_t*/... Type is an integer
         llvm::Value *get_mem(llvm::Value *addr, llvm::Type *type);
