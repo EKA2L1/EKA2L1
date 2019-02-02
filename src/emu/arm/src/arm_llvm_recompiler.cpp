@@ -156,6 +156,43 @@ namespace eka2l1::arm {
         globals[idx] = builder->CreateStructGEP(nullptr, &(*function->arg_begin()), idx);
         target = val;
     }
+
+    llvm::Value *arm_llvm_inst_recompiler::gpr_load(const std::uint8_t index) {
+        if (index == 15) {
+            // TODO: Relocation
+            return llvm::ConstantInt::get(llvm::Type::getInt32Ty(get_context()), addr, true);
+        }
+    
+        return reg_load(gpr[index]);
+    }
+
+    void arm_llvm_inst_recompiler::gpr_store(const std::uint8_t index, llvm::Value *val) {
+        return reg_store(val, gpr[index]);
+    }
+    
+    llvm::Value *arm_llvm_inst_recompiler::op_load(const arm::arm_op &op) {
+        switch (op.type) {
+        case op_imm: {
+            return llvm::ConstantInt::get(llvm::Type::getInt32Ty(get_context()), op.imm, false);
+        }
+
+        case op_reg: {
+            if (op.reg >= arm::R0 && op.reg <= arm::R15) {
+                return gpr_load(op.reg);
+            }
+
+            assert(false && "Unsupport register");
+            return nullptr;
+        }
+
+        default: {
+            assert(false && "Unsupport op");
+            break;
+        }
+        }
+
+        return nullptr;
+    }
     
     llvm::Value *arm_llvm_inst_recompiler::get_mem(llvm::Value *addr, llvm::Type *type) {
         if (!page_table) {
@@ -175,11 +212,37 @@ namespace eka2l1::arm {
         llvm::IRBuilder<> ibuilder(llvm::BasicBlock::Create(get_context(), "__condcheck"));
         builder = &ibuilder;
 
-        // Create a CPSR condition check
+        // Create a CPSR check
         
     }
 
     void arm_llvm_inst_recompiler::ADD(arm_inst_ptr inst) {
-        // TODO
+        // Even in thumb, at least two registers must be present
+        // In ARM, two must be registers
+        assert(inst->ops[0].type == op_reg);
+        assert(inst->ops[1].type == op_reg);
+
+        llvm::Value *lhs = op_load(inst->ops[1]);
+        llvm::Value *rhs = (inst->ops.size() == 2) ? gpr_load(inst->ops[0].reg) : 
+            op_load(inst->ops[2]);
+
+        gpr_store(inst->ops[0].reg, builder->CreateAdd(lhs, rhs, ""));
+    }
+
+    void arm_llvm_inst_recompiler::SUB(arm_inst_ptr inst) {
+        // Even in thumb, at least two registers must be present
+        // In ARM, two must be registers
+
+        // SUB R0, R1 <=> R0 = R0 - R1
+        // SUB R0, R1, R2 <=> R0 = R1 - R2
+
+        assert(inst->ops[0].type == op_reg);
+        assert(inst->ops[1].type == op_reg);
+
+        llvm::Value *lhs = (inst->ops.size() == 2) ? gpr_load(inst->ops[0].reg) : 
+            op_load(inst->ops[1]);
+        llvm::Value *rhs = op_load(inst->ops[2]);
+
+        gpr_store(inst->ops[0].reg, builder->CreateSub(lhs, rhs, ""));
     }
 }

@@ -108,7 +108,14 @@ namespace eka2l1::arm {
 
         llvm::Value       *globals[50];     ///< Reference to context's variables.
 
+        std::uint32_t      addr;
+
     protected:
+        llvm::Value *gpr_load(const std::uint8_t index);
+        void gpr_store(const std::uint8_t index, llvm::Value *val);
+
+        llvm::Value *op_load(const arm::arm_op &op);
+
         llvm::Value *reg_load(llvm::Value *&target);
         void reg_store(llvm::Value *val, llvm::Value *&target);
 
@@ -122,6 +129,8 @@ namespace eka2l1::arm {
             llvm::DataLayout dl);
 
         void translate();
+
         void ADD(arm_inst_ptr inst);
+        void SUB(arm_inst_ptr inst);
     };
 }
