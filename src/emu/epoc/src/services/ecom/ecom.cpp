@@ -18,10 +18,48 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/buffer.h>
+#include <common/log.h>
+
 #include <epoc/services/ecom/ecom.h>
+#include <epoc/vfs.h>
 
 namespace eka2l1 {
     ecom_server::ecom_server(eka2l1::system *sys)
         : service::server(sys, "!ecomserver", true) {
     }
+
+    std::vector<std::string> ecom_server::get_ecom_plugin_archives(eka2l1::io_system *io) {
+        std::u16string pattern = u"";
+
+        // Get ROM drive first
+        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+            auto res = io->get_drive_entry(drv);
+            if (res && res->media_type == drive_media::rom) {
+                pattern += drive_to_char16(drv);
+            }
+        }
+
+        if (pattern.empty()) {
+            // For some reason, ROM hasn't been mounted yet, break!
+            return {};
+        }
+
+        pattern += u":\\Private\\10009d8f\\ecom-*-*.s*";
+        auto ecom_private_dir = io->open_dir(pattern, io_attrib::none);
+
+        if (!ecom_private_dir) {
+            // Again folder not found or error from our side
+            LOG_ERROR("Private directory of ecom can't be accessed");
+            return {};
+        }
+
+        std::vector<std::string> results;
+
+        while (auto entry = ecom_private_dir->get_next_entry()) {
+            results.push_back(entry->full_path);
+        }
+
+        return results;
+    } 
 }

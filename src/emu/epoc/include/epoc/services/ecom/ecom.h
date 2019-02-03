@@ -22,7 +22,12 @@
 
 #include <epoc/services/server.h>
 
+#include <string>
+#include <vector>
+
 namespace eka2l1 {
+    class io_system;
+
     enum ecom_opcodes {
         ecom_notify_on_change,
         ecom_cancel_notify_on_change,
@@ -37,8 +42,24 @@ namespace eka2l1 {
         ecom_list_extended_interfaces,
         ecom_set_get_params
     };
-    
+
     class ecom_server: public service::server {
+    protected:
+        /*! \brief Search the ROM and ROFS for an archive of plugins.
+         *
+         * Archive are SPI file. They usually has pattern of ecom-*-*.spi or
+         * ecom-*-*.sXX where XX is language code.
+         * 
+         * This searchs these files on Z:\Private\10009d8f
+         * 
+         * \returns A vector contains all canidates.
+        */
+        std::vector<std::string> get_ecom_plugin_archives(eka2l1::io_system *io);
+
+        /*! \brief Load archives
+        */
+        void load_archives();
+        
     public:
         explicit ecom_server(eka2l1::system *sys);
     };
