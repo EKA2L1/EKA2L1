@@ -71,3 +71,46 @@ TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
         REQUIRE(expected_res == res_from_eka2l1);
     }
 }
+
+TEST_CASE("no_compress_but_may_contain_unicode_2", "rsc_file") {
+    const char *rsc_name = "loaderassets//javadrmmanager.rsc";
+    symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
+
+    REQUIRE(f);
+
+    std::vector<std::uint8_t> buf;
+    buf.resize(f->size());
+    f->read_file(reinterpret_cast<std::uint8_t*>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
+
+    f->close();
+
+    common::ro_buf_stream stream(&buf[0], buf.size());
+    loader::rsc_file test_rsc(stream);
+
+    const std::uint16_t total_res = 3;
+    REQUIRE(test_rsc.get_total_resources() == total_res);
+
+    // Iterate through each resources
+    for (int i = 1; i <= total_res; i++) {
+        std::stringstream ss;
+        ss << "loaderassets//SAMPLE_ROM_RESOURCE_DATA_IDX_";
+        ss << i;
+        ss << ".bin";
+
+        std::ifstream fi(ss.str(), std::ios::ate | std::ios::binary);
+        const std::size_t res_size = fi.tellg();
+
+        std::vector<std::uint8_t> res_from_eka2l1 = test_rsc.read(i);
+        fi.seekg(0, std::ios::beg);
+
+        std::vector<std::uint8_t> expected_res;
+        expected_res.resize(res_size);
+
+        if (res_size > 0) {
+            fi.read(reinterpret_cast<char*>(&expected_res[0]), res_size); 
+        }
+        
+        REQUIRE(res_from_eka2l1.size() == res_size);
+        REQUIRE(expected_res == res_from_eka2l1);
+    }
+}
