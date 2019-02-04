@@ -21,6 +21,7 @@
 #pragma once
 
 #include <epoc/services/server.h>
+#include <epoc/services/ecom/plugin.h>
 
 #include <string>
 #include <vector>
@@ -44,7 +45,18 @@ namespace eka2l1 {
     };
 
     class ecom_server: public service::server {
+        std::unordered_map<std::uint32_t, ecom_interface_info> interfaces;
+        bool init { false };
+
     protected:
+        bool register_implementation(const std::uint32_t interface_uid,
+            ecom_implementation_info &impl);
+
+        bool load_plugins(eka2l1::io_system *io);
+        bool load_and_install_plugins_from_buffer(std::uint8_t *buf, const std::size_t size);
+
+        bool load_plugin_on_drive(eka2l1::io_system *io, const drive_number drv);
+
         /*! \brief Search the ROM and ROFS for an archive of plugins.
          *
          * Archive are SPI file. They usually has pattern of ecom-*-*.spi or
@@ -58,9 +70,13 @@ namespace eka2l1 {
 
         /*! \brief Load archives
         */
-        void load_archives();
-        
+        bool load_archives(eka2l1::io_system *io);
+
+        void connect(service::ipc_context ctx) override;
+
     public:
         explicit ecom_server(eka2l1::system *sys);
+
+        void list_impls(service::ipc_context ctx);
     };
 }
