@@ -110,7 +110,7 @@ namespace eka2l1::loader {
         std::uint8_t padding_bytes_size = 4 - ((name_len + rsc_size) % 4);
         char padding_byte = '\0';
 
-        if (padding_bytes_size) {
+        if (padding_bytes_size < 4) {
             for (std::uint8_t i = 0; i < padding_bytes_size; i++) {
                 seri.absorb(padding_byte);
             }
