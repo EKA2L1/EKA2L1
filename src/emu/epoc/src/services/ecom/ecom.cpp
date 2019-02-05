@@ -36,7 +36,7 @@ namespace eka2l1 {
         ecom_implementation_info &impl) {
         auto &interface = interfaces[interface_uid];
         auto impl_ite = std::find_if(interface.implementations.begin(), interface.implementations.end(),
-            [&](const ecom_implementation_info &impl2) { return impl.uid == impl.uid; });
+            [&](const ecom_implementation_info &impl2) { return impl.uid == impl2.uid; });
 
         if (impl_ite == interface.implementations.end()) {
             interface.implementations.push_back(std::move(impl));
