@@ -39,6 +39,8 @@ namespace eka2l1::common {
         std::uint32_t static_windows[static_windows_size];
         std::uint32_t dynamic_windows[dynamic_windows_size];
         std::uint16_t special_bases[special_base_size];
+        
+        void reset();
 
         std::uint32_t dynamic_window_base(int offset_index);
     }; 
@@ -51,8 +53,13 @@ namespace eka2l1::common {
 
         int dest_pointer;
         std::uint8_t *dest_buf;
-
+        
         int dest_size;
+
+        unicode_expander()
+            : source_pointer(0), source_size(0), dest_pointer(0), dest_size(0) {
+            reset();
+        }
 
         bool read_byte(std::uint8_t *dat);
         bool write_byte8(std::uint8_t b);

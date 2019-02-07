@@ -25,6 +25,33 @@
 #include <vector>
 
 namespace eka2l1::common {
+    static std::uint32_t dyn_window_default[8] = {
+        0x0080,	    // Latin-1 supplement
+        0x00C0,	    // parts of Latin-1 supplement and Latin Extended-A
+        0x0400,	    // Cyrillic
+        0x0600,	    // Arabic
+        0x0900,	    // Devanagari
+        0x3040,	    // Hiragana
+        0x30A0,	    // Katakana
+        0xFF00	    // Fullwidth ASCII
+    };
+
+    void unicode_comp_state::reset() {
+        active_window_base = 0x0080;
+        unicode_mode = false;
+
+        std::copy(dyn_window_default, dyn_window_default + 8, dynamic_windows);
+
+        static_windows[0] = 0x0000;     // tags
+	    static_windows[1] = 0x0080;     // Latin-1 supplement
+        static_windows[2] = 0x0100;	    // Latin Extended-A
+        static_windows[3] = 0x0300;	    // Combining Diacritics
+        static_windows[4] = 0x2000;	    // General Punctuation
+        static_windows[5] = 0x2080;	    // Currency Symbols
+        static_windows[6] = 0x2100;	    // Letterlike Symbols and Number Forms
+        static_windows[7] = 0x3000;     // CJK Symbols and Punctuation
+    }
+
     std::uint32_t unicode_comp_state::dynamic_window_base(int offset_index) {
         if (offset_index >= 0xF9 && offset_index <= 0xFF) {
             return special_bases[offset_index - 0xF9];
@@ -56,7 +83,7 @@ namespace eka2l1::common {
         if (dest_size <= 0) {
             return false;
         }
-
+        
         *(dest_buf + (dest_pointer++)) = b;
         dest_size--;
 
@@ -73,20 +100,20 @@ namespace eka2l1::common {
     }
 
     bool unicode_expander::write_byte32(std::uint32_t b) {
-        if (!write_byte8(static_cast<std::uint8_t>(b))) {
-            return false;
-        }
-        
-        if (!write_byte8(b >> 8)) {
-            return false;
-        }
-        
-        if (!write_byte8(b >> 16)) {
-            return false;
+        if (b <= 0xFFFF) {
+            return write_byte(static_cast<std::uint16_t>(b));
+        } else if (b <= 0x10FFFF) {
+            b -= 0x10000;
+
+            if (!write_byte(static_cast<std::uint16_t>(0xD800 + (b >> 10))) ||
+                !write_byte(static_cast<std::uint16_t>(0xDC00 + (b & 0x03FF)))) {
+                return false;
+            }
+
+            return true;
         }
 
-        bool result = write_byte8(b >> 24);
-        return result;
+        return false;
     }
 
     bool unicode_expander::define_window(const int index) {
@@ -211,8 +238,8 @@ namespace eka2l1::common {
         }
         
         // Quote from a window resides from SQ0 to SQ7
-        if (sbyte == UQU) {
-            int window = sbyte - 1;
+        if (sbyte >= SQ0 && sbyte <= SQ0 + 7) {
+            int window = sbyte - SQ0;
             std::uint8_t byte;
 
             if (!read_byte(&byte)) {
