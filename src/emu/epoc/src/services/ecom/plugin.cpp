@@ -18,10 +18,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cassert>
+
 #include <epoc/services/ecom/plugin.h>
 #include <common/buffer.h>
 
 namespace eka2l1 {
+    static bool read_ecom_str_16(common::ro_buf_stream &stream, std::u16string &buf) {
+        std::uint8_t length = 0;
+        stream.read(&length, 1);
+
+        if (length != 0 && (stream.tell() & 0x1)) {
+            // Misalign, there should be a padding byte
+            std::uint8_t padding = 0;
+            stream.read(&padding, 1);
+
+            assert(padding == 0xAB);
+        }
+
+        buf.resize(length);
+        stream.read(&buf[0], buf.length() * 2);
+
+        return true;
+    }
+
     static bool read_ecom_str(common::ro_buf_stream &stream, std::string &buf, 
         const bool is_len_16_bit = false) {
         std::uint32_t length = 0;
@@ -33,7 +53,7 @@ namespace eka2l1 {
             length = len16;
         } else {
             std::uint8_t len8 = 0;
-            stream.read(&len8, 2);
+            stream.read(&len8, 1);
 
             length = len8;
         }
@@ -43,15 +63,16 @@ namespace eka2l1 {
         }
 
         buf.resize(length);
-        stream.read(&buf[0], length);
+        stream.read(&buf[0], buf.size());
 
         return true;
     }
+
     static bool read_impl_ver1(ecom_implementation_info &info, common::ro_buf_stream &stream) {
         stream.read(&info.uid, 4);
         stream.read(&info.version, 1);
 
-        read_ecom_str(stream, info.display_name);
+        read_ecom_str_16(stream, info.display_name);
         read_ecom_str(stream, info.default_data);
         read_ecom_str(stream, info.opaque_data);
 
@@ -78,7 +99,7 @@ namespace eka2l1 {
 
         for (std::uint16_t i = 0 ; i < total_strings; i++) {
             std::string temp_string;
-            read_ecom_str(stream, temp_string);
+            read_ecom_str(stream, temp_string, false);
 
             // Prevent if deletes all of our \0 data
             dest_buf.insert(dest_buf.begin(), temp_string.begin(), temp_string.end());
@@ -92,7 +113,7 @@ namespace eka2l1 {
         stream.read(&info.uid, 4);
         stream.read(&info.version, 1);
 
-        read_ecom_str(stream, info.display_name);
+        read_ecom_str_16(stream, info.display_name);
 
         // Ver 3 was intended to support more large name and opaque data
         // For string storage option, now:
@@ -158,6 +179,12 @@ namespace eka2l1 {
         // Next 2 bytes is total interface
         std::uint16_t total_interfaces = 0;
         stream.read(&total_interfaces, 2);
+
+        // This is certainly a hack to prevent file which is not valid popping in our database
+        // Many resources file don't even exceed 5 interfaces
+        if (total_interfaces > 10) {
+            return false;
+        }
 
         if (plugin.type == ecom_plugin_type_3 && total_interfaces > 3) {
             return false;

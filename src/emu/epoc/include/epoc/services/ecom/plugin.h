@@ -30,7 +30,7 @@ namespace eka2l1 {
         std::uint8_t version;
         std::uint8_t format;
 
-        std::string display_name;
+        std::u16string display_name;
         std::string default_data;
         std::string opaque_data;
 
