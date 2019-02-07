@@ -114,3 +114,35 @@ TEST_CASE("no_compress_but_may_contain_unicode_2", "rsc_file") {
         REQUIRE(expected_res == res_from_eka2l1);
     }
 }
+
+TEST_CASE("no_compress_but_may_contain_unicode_3", "rsc_file") {
+    const char *rsc_name = "loaderassets//obscurersc.rsc";
+    symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
+
+    REQUIRE(f);
+
+    std::vector<std::uint8_t> buf;
+    buf.resize(f->size());
+    f->read_file(reinterpret_cast<std::uint8_t*>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
+
+    f->close();
+
+    common::ro_buf_stream stream(&buf[0], buf.size());
+    loader::rsc_file test_rsc(stream);
+
+    std::ifstream fi("loaderassets//obscurersc.seg1", std::ios::ate | std::ios::binary);
+    const std::size_t res_size = fi.tellg();
+
+    std::vector<std::uint8_t> res_from_eka2l1 = test_rsc.read(1);
+    fi.seekg(0, std::ios::beg);
+
+    std::vector<std::uint8_t> expected_res;
+    expected_res.resize(res_size);
+
+    if (res_size > 0) {
+        fi.read(reinterpret_cast<char*>(&expected_res[0]), res_size); 
+    }
+    
+    REQUIRE(res_from_eka2l1.size() == res_size);
+    REQUIRE(expected_res == res_from_eka2l1);
+}
