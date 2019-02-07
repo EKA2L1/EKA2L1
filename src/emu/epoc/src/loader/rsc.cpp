@@ -135,10 +135,13 @@ namespace eka2l1::loader {
             }
 
             if (read_size_bytes <= 0 || read_size_bytes > max) {
-                return -1;
+                LOG_WARN("Size of resource is larger than maximum size decompress buffer container can hold, truncing down ({} vs {})",
+                    max, read_size_bytes);
             }
 
-            std::memcpy(buffer, &res_data[resource_offsets[res_index] - res_offset], read_size_bytes);
+            std::memcpy(buffer, &res_data[resource_offsets[res_index] - res_offset], 
+                std::min(max, read_size_bytes));
+
             return read_size_bytes;
         }
 
@@ -222,6 +225,10 @@ namespace eka2l1::loader {
 
             buf.read(8, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed));
         }
+        
+        // A hack, since Nokia tools generate RSC that report wrong largest resource
+        // when uncompress size (off 1 byte)
+        size_of_largest_resource_when_uncompressed += 1;
 
         if (flags & dictionary_compressed) {
             if (flags & calypso) {
