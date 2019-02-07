@@ -31,6 +31,9 @@
 #include <epoc/loader/spi.h>
 #include <epoc/epoc.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 namespace eka2l1 {
     bool ecom_server::register_implementation(const std::uint32_t interface_uid,
         ecom_implementation_info &impl) {
@@ -204,6 +207,7 @@ namespace eka2l1 {
         }
 
         init = true;
+        ctx.set_request_status(KErrNone);
     }
     
     ecom_server::ecom_server(eka2l1::system *sys)
