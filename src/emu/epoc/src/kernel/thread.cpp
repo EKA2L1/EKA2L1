@@ -98,6 +98,9 @@ namespace eka2l1 {
             case thread_priority::priority_absolute_low:
                 return 5;
 
+            case thread_priority::priority_absolute_background_normal:
+                return 7;
+
             case thread_priority::priority_absolute_background:
                 return 10;
 
