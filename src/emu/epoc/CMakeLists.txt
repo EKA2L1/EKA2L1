@@ -14,6 +14,7 @@ add_library(epocloader
 add_library(epockern
     include/epoc/kernel/change_notifier.h
     include/epoc/kernel/chunk.h
+    include/epoc/kernel/codeseg.h
     include/epoc/kernel/libmanager.h
     include/epoc/kernel/library.h
     include/epoc/kernel/kernel_obj.h
@@ -32,6 +33,7 @@ add_library(epockern
     include/epoc/ptr.h
     src/kernel/change_notifier.cpp
     src/kernel/chunk.cpp
+    src/kernel/codeseg.cpp
     src/kernel/libmanager.cpp
     src/kernel/library.cpp
     src/kernel/kernel_obj.cpp

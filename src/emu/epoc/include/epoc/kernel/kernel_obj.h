@@ -30,6 +30,8 @@ namespace eka2l1 {
         class chunkyseri;
     }
 
+    using handle = std::uint32_t;
+
     namespace kernel {
         /*! \brief Ownership type for handle */
         enum class owner_type {
