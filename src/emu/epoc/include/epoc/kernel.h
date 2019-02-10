@@ -41,6 +41,7 @@
 #include <epoc/ptr.h>
 
 #include <atomic>
+#include <exception>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -105,7 +106,7 @@ namespace eka2l1 {
         } else if constexpr(std::is_same_v<T, kernel::change_notifier>) {
             return kernel::object_type::change_notifier;
         } else {
-            static_assert(false, "Unknown kernel object type. Make sure to add new type here");
+            throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
             return kernel::object_type::unk;
         }
     }
