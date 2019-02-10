@@ -557,7 +557,7 @@ namespace eka2l1 {
             std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), 
                    [](unsigned char c) -> unsigned char { return std::tolower(c); });
 
-            auto &lib_ite = lib_symbols.find(lib_name_lower);
+            auto lib_ite = lib_symbols.find(lib_name_lower);
             if (lib_ite != lib_symbols.end()) {    
                 for (std::size_t i = 0; i < table.size(); i++) {
                     addr_symbols.emplace(table[i] & ~0x1, lib_ite->second[i]);
