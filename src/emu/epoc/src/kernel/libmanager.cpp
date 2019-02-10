@@ -534,7 +534,7 @@ namespace eka2l1 {
 
             drive_number drv = char16_to_drive(lib_path[0]);
             if (!io->exist(lib_path)) {
-                return false;
+                return nullptr;
             }
 
             if (auto cs = load_depend_on_drive(drv, lib_path)) {
