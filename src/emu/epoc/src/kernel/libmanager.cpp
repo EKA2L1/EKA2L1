@@ -577,7 +577,8 @@ namespace eka2l1 {
     
         bool lib_manager::register_exports(const std::string &lib_name, export_table &table) {
             std::string lib_name_lower = lib_name;
-            std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), std::tolower);
+            std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), 
+                   [](unsigned char c) -> unsigned char { return std::tolower(c); });
 
             auto &lib_ite = lib_symbols.find(lib_name_lower);
             if (lib_ite == lib_symbols.end()) {
