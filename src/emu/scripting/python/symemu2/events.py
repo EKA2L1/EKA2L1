@@ -48,12 +48,12 @@ def emulatorSystemCallInvoke(svcNum):
 
     return invokeDecorator
     
-def emulatorEpocFunctionInvoke(sid):
+def emulatorEpocFunctionInvoke(libname, ord):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
             return funcToInvoke
 
-        symemu.registerSidInvokement(sid, funcToInvoke)
+        symemu.registerLibraryInvokement(libname, ord, funcToInvoke)
 
         return funcWrapper
 

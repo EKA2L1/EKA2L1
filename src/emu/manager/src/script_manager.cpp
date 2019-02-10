@@ -139,21 +139,29 @@ namespace eka2l1::manager {
         reschedule_functions.push_back(func);
     }
 
-    void script_manager::register_sid(const uint32_t sid, pybind11::function &func) {
-        breakpoints_patch[sid].push_back(func);
+    void script_manager::register_library_hook(const std::string &name, const uint32_t ord, pybind11::function &func) {
+        std::string lib_name_lower = name;
+        std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), 
+                [](unsigned char c) -> unsigned char { return std::tolower(c); });
+
+        breakpoints_patch[lib_name_lower][ord].push_back(func);
     }
 
     void script_manager::register_breakpoint(const uint32_t addr, pybind11::function &func) {
-        breakpoints[addr - addr % 2].push_back(func);
+        breakpoints[addr & ~0x1].push_back(func);
     }
 
-    void script_manager::patch_sid_breakpoints(const uint32_t sid, const uint32_t addr) {
-        if (breakpoints_patch.find(sid) == breakpoints_patch.end()) {
-            return;
+    void script_manager::patch_library_hook(const std::string &name, const std::vector<vaddress> exports) {
+        std::string lib_name_lower = name;
+        std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), 
+                [](unsigned char c) -> unsigned char { return std::tolower(c); });
+
+        for (auto &[ord, func_list]: breakpoints_patch[lib_name_lower]) {
+            auto &funcs = breakpoints[exports[ord - 1]];
+            funcs.insert(funcs.end(), func_list.begin(), func_list.end());
         }
 
-        breakpoints[addr].insert(breakpoints[addr].end(), breakpoints_patch[sid].begin(), breakpoints_patch[sid].end());
-        breakpoints_patch.erase(sid);
+        breakpoints_patch.erase(lib_name_lower);
     }
 
     void script_manager::call_reschedules() {

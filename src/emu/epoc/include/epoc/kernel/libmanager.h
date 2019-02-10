@@ -97,8 +97,7 @@ namespace eka2l1 {
             std::unordered_map<std::string, symbols> lib_symbols;
 
         public:
-            std::unordered_map<sid, epoc_import_func> svc_funcs;            
-            std::unordered_map<std::u16string, codeseg_ptr> cached_segs;
+            std::unordered_map<sid, epoc_import_func> svc_funcs;
 
             lib_manager(){};
 
@@ -129,16 +128,12 @@ namespace eka2l1 {
             */
             codeseg_ptr load(const std::u16string &name);
 
-            codeseg_ptr pull_from_cache(const std::u16string &name);
-
-            bool add_to_cache(const std::u16string &name, codeseg_ptr cs);
-
             // Search through all drives, which will parse all existing file
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
                 try_search_and_parse(const std::u16string &path);
             
-            codeseg_ptr load_as_e32img(loader::e32img &img);
-            codeseg_ptr load_as_romimg(loader::romimg &img);
+            codeseg_ptr load_as_e32img(loader::e32img &img, const std::u16string &path = u"");
+            codeseg_ptr load_as_romimg(loader::romimg &img, const std::u16string &path = u"");
 
             std::optional<std::string> get_symbol(const address addr) {
                 auto res = addr_symbols.find(addr);

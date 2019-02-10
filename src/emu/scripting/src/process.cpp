@@ -71,12 +71,14 @@ namespace eka2l1::scripting {
 
     std::vector<std::unique_ptr<eka2l1::scripting::thread>> process::get_thread_list() {
         system *sys = get_current_instance();
-        std::vector<thread_ptr> threads = sys->get_kernel_system()->get_all_thread_own_process(process_handle);
+        std::vector<thread_ptr> &threads = sys->get_kernel_system()->get_thread_list();
 
         std::vector<std::unique_ptr<scripting::thread>> script_threads;
 
         for (const auto &thr : threads) {
-            script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(&thr)));
+            if (thr->owning_process() == process_handle) {
+                script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(&thr)));
+            }
         }
 
         return script_threads;
@@ -84,7 +86,7 @@ namespace eka2l1::scripting {
 
     std::vector<std::unique_ptr<scripting::process>> get_process_list() {
         system *sys = get_current_instance();
-        std::vector<process_ptr> processes = sys->get_kernel_system()->get_all_processes();
+        std::vector<process_ptr> processes = sys->get_kernel_system()->get_process_list();
 
         std::vector<std::unique_ptr<scripting::process>> script_processes;
 

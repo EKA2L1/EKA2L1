@@ -157,7 +157,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        auto cs = libmngr->pull_from_cache(path);
+        codeseg_ptr cs = nullptr;
         
         std::string path8 = common::ucs2_to_utf8(path);
         std::string process_name = eka2l1::filename(path8);
@@ -171,7 +171,7 @@ namespace eka2l1 {
 
             // Load and add to cache
             if (!cs) {
-                cs = libmngr->load_as_e32img(*eimg);
+                cs = libmngr->load_as_e32img(*eimg, path);
             }
 
             /* Create process through kernel system. */
@@ -194,7 +194,7 @@ namespace eka2l1 {
 
         // Rom image
         if (!cs) {
-            cs = libmngr->load_as_romimg(*imgs.second);
+            cs = libmngr->load_as_romimg(*imgs.second, path);
         }
 
         auto &rimg = imgs.second;

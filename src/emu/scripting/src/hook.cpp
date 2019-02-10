@@ -39,8 +39,8 @@ namespace eka2l1::scripting {
         get_current_instance()->get_manager_system()->get_script_manager()->register_reschedule(ifunc);
     }
 
-    void register_sid_invokement(const uint32_t sid, pybind11::function func) {
-        get_current_instance()->get_manager_system()->get_script_manager()->register_sid(sid, func);
+    void register_lib_invokement(const std::string &lib_name, const std::uint32_t ord, pybind11::function func) {
+        get_current_instance()->get_manager_system()->get_script_manager()->register_library_hook(lib_name, ord, func);
     }
 
     void register_breakpoint_invokement(const uint32_t addr, pybind11::function func) {

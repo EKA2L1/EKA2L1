@@ -136,9 +136,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         Register a function to be called when a specific SVC is called
         )pbdoc");
 
-    m.def("registerSidInvokement", &scripting::register_sid_invokement,
+    m.def("registerLibraryInvokement", &scripting::register_lib_invokement,
         R"pbdoc(
-        Register a function to be called when a EPOC API is called
+        Register a function to be called when a library function is called
         )pbdoc");
 
     m.def("registerBreakpointInvokement", &scripting::register_breakpoint_invokement,

@@ -270,6 +270,19 @@ namespace eka2l1 {
             
         codeseg_ptr pull_codeseg_by_ep(const address ep);
 
+        // Expose for scripting, indeed very dirty
+        std::vector<process_ptr> &get_process_list() {
+            return processes;
+        }
+
+        std::vector<thread_ptr> &get_thread_list() {
+            return threads;
+        }
+
+        std::vector<codeseg_ptr> &get_codeseg_list() {
+            return codesegs;
+        }
+
         /*! \brief Get kernel object by handle
         */
         template <typename T>

@@ -199,10 +199,11 @@ namespace eka2l1 {
             return true;
         }
 
-        codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+        codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr, const std::u16string &path = u"") {
             std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
             kernel::codeseg_create_info info;
 
+            info.full_path = path;
             info.uids[0] = static_cast<std::uint32_t>(img->header.uid1);
             info.uids[1] = img->header.uid2;
             info.uids[2] = img->header.uid3;
@@ -228,7 +229,9 @@ namespace eka2l1 {
             }
             
             codeseg_ptr cs = kern->create<kernel::codeseg>("codeseg", info);
-            mngr.add_to_cache(u"", cs);
+            mngr.register_exports(
+                common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
+                cs->get_export_table());
 
             uint32_t rtcode_addr = cs->get_code_run_addr();
             uint32_t rtdata_addr = cs->get_data_run_addr();
@@ -323,45 +326,23 @@ namespace eka2l1 {
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
         }
 
-        codeseg_ptr lib_manager::pull_from_cache(const std::u16string &name) {
-            if (cached_segs.find(eka2l1::filename(name)) != cached_segs.end()) {
-                return cached_segs[name];
-            }
-
-            return nullptr;
-        }
-    
-        // Cache by name is not the best idea, but it works and really fast
-        bool lib_manager::add_to_cache(const std::u16string &name, codeseg_ptr cs) {
-            const std::u16string lib_name = eka2l1::filename(name);
-            bool result = cached_segs.emplace(lib_name, cs).second;
-
-            if (result) {
-                // Register all exports for symbol dumping    
-                register_exports(
-                    common::ucs2_to_utf8(eka2l1::replace_extension(lib_name, u"")),
-                    cs->get_export_table());
-            }
-
-            return result;
-        }
-        
-        codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img) {
+        codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, const std::u16string &path) {
             if (auto seg = kern->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1), 
                 img.header.uid2, img.header.uid3)) {
                 return seg;
             }
 
-            return import_e32img(&img, mem, kern, *this);
+            return import_e32img(&img, mem, kern, *this, path);
         }
         
-        codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg) {
+        codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path) {
             if (auto seg = kern->pull_codeseg_by_ep(romimg.header.entry_point)) {
                 return seg;
             }
 
             kernel::codeseg_create_info info;
 
+            info.full_path = path;
             info.uids[0] = romimg.header.uid1;
             info.uids[1] = romimg.header.uid2;
             info.uids[2] = romimg.header.uid3;
@@ -381,7 +362,10 @@ namespace eka2l1 {
             info.exception_descriptor = romimg.header.exception_des;
 
             auto cs = kern->create<kernel::codeseg>("codeseg", info);
-            add_to_cache(u"", cs);
+
+            register_exports(
+                common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
+                cs->get_export_table());
 
             struct dll_ref_table {
                 uint16_t flags;
@@ -473,13 +457,6 @@ namespace eka2l1 {
         }
 
         codeseg_ptr lib_manager::load(const std::u16string &name) {
-            {
-                codeseg_ptr cache = pull_from_cache(name);
-                if (cache) {
-                    return cache;
-                }
-            }
-
             auto load_depend_on_drive = [&](drive_number drv, const std::u16string &lib_path) -> codeseg_ptr {
                 auto entry = io->get_drive_entry(drv);
 
@@ -495,14 +472,14 @@ namespace eka2l1 {
                             return nullptr;
                         }
 
-                        return load_as_romimg(*romimg);
+                        return load_as_romimg(*romimg, lib_path);
                     } else {
                         auto e32img = loader::parse_e32img(f, mem);
                         if (!e32img) {
                             return nullptr;
                         }
 
-                        return load_as_e32img(*e32img);
+                        return load_as_e32img(*e32img, lib_path);
                     }
                 }
 
@@ -581,15 +558,22 @@ namespace eka2l1 {
                    [](unsigned char c) -> unsigned char { return std::tolower(c); });
 
             auto &lib_ite = lib_symbols.find(lib_name_lower);
-            if (lib_ite == lib_symbols.end()) {
-                return false;
+            if (lib_ite != lib_symbols.end()) {    
+                for (std::size_t i = 0; i < table.size(); i++) {
+                    addr_symbols.emplace(table[i] & ~0x1, lib_ite->second[i]);
+                }
+
+#ifndef ENABLE_SCRIPTING
+                return true;
+#endif
             }
 
-            for (std::size_t i = 0; i < table.size(); i++) {
-                addr_symbols.emplace(table[i] & ~0x1, lib_ite->second[i]);
-            }
-
+#ifdef ENABLE_SCRIPTING
+            sys->get_manager_system()->get_script_manager()->patch_library_hook(lib_name_lower, table);
             return true;
+#else
+            return false;
+#endif
         }
     }
 }
