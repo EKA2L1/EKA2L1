@@ -94,11 +94,11 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        if (!current_page_table->get_pointers()[addr / page_size]) {
+        if (!current_page_table->pointers[addr / page_size]) {
             return nullptr;
         }
 
-        return static_cast<void *>(current_page_table->get_pointers()[addr / page_size] + addr % page_size);
+        return static_cast<void *>(current_page_table->pointers[addr / page_size] + addr % page_size);
     }
 
     // Create a new chunk with specified address. Return base of chunk
@@ -166,7 +166,7 @@ namespace eka2l1 {
                     global_pages.begin() + (page_end_off - (shared_addr / page_size)), current_page_table->pages.begin() + page_begin_off);
 
                 std::copy(global_pointers.begin() + (page_begin_off - (shared_addr / page_size)),
-                    global_pointers.begin() + (page_end_off - (shared_addr / page_size)), current_page_table->get_pointers().begin() + page_begin_off);
+                    global_pointers.begin() + (page_end_off - (shared_addr / page_size)), current_page_table->pointers.begin() + page_begin_off);
             }
         } else if (addr >= ram_code_addr && addr < codeseg_addr + 0x10000000) {
             codeseg_pointers[page_begin_off - (ram_code_addr / page_size)]
@@ -181,14 +181,14 @@ namespace eka2l1 {
                     codeseg_pages.begin() + (page_end_off - (codeseg_addr / page_size)), current_page_table->pages.begin() + page_begin_off);
 
                 std::copy(codeseg_pointers.begin() + (page_begin_off - (codeseg_addr / page_size)),
-                    codeseg_pointers.begin() + (page_end_off - (codeseg_addr / page_size)), current_page_table->get_pointers().begin() + page_begin_off);
+                    codeseg_pointers.begin() + (page_end_off - (codeseg_addr / page_size)), current_page_table->pointers.begin() + page_begin_off);
             }
         } else {
-            current_page_table->get_pointers()[page_begin_off]
+            current_page_table->pointers[page_begin_off]
                 = static_cast<uint8_t *>(common::map_memory(count * page_size));
 
             for (size_t i = page_begin_off + 1; i < page_end_off; i++) {
-                current_page_table->get_pointers()[i] = current_page_table->get_pointers()[i - 1] + page_size;
+                current_page_table->pointers[i] = current_page_table->pointers[i - 1] + page_size;
             }
         }
 
@@ -286,7 +286,7 @@ namespace eka2l1 {
                     global_pages.begin() + (end - (shared_addr / page_size)), current_page_table->pages.begin() + beg);
 
                 std::copy(global_pointers.begin() + (beg - (shared_addr / page_size)),
-                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->get_pointers().begin() + beg);
+                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->pointers.begin() + beg);
             }
 
             cpu->map_backing_mem(addr.ptr_address(), size, global_pointers[beg - (shared_addr / page_size)], nprot);
@@ -299,15 +299,15 @@ namespace eka2l1 {
                     codeseg_pages.begin() + (end - (codeseg_addr / page_size)), current_page_table->pages.begin() + beg);
 
                 std::copy(codeseg_pointers.begin() + (beg - (codeseg_addr / page_size)),
-                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->get_pointers().begin() + beg);
+                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->pointers.begin() + beg);
             }
 
             cpu->map_backing_mem(addr.ptr_address(), size, codeseg_pointers[beg - (codeseg_addr / page_size)], nprot);
         } else {
-            common::change_protection(current_page_table->get_pointers()[beg],
+            common::change_protection(current_page_table->pointers[beg],
                 count * page_size, nprot);
 
-            cpu->map_backing_mem(addr.ptr_address(), size, current_page_table->get_pointers()[beg], nprot);
+            cpu->map_backing_mem(addr.ptr_address(), size, current_page_table->pointers[beg], nprot);
         }
 
         return 0;
@@ -351,7 +351,7 @@ namespace eka2l1 {
                     global_pages.begin() + (end - (shared_addr / page_size)), current_page_table->pages.begin() + beg);
 
                 std::copy(global_pointers.begin() + (beg - (shared_addr / page_size)),
-                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->get_pointers().begin() + beg);
+                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->pointers.begin() + beg);
             }
         } else if (addr.ptr_address() >= ram_code_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
             eka2l1::common::unmap_memory(codeseg_pointers[(beg - (ram_code_addr / page_size))], eka2l1::common::get_host_page_size());
@@ -362,11 +362,11 @@ namespace eka2l1 {
                     codeseg_pages.begin() + (end - (codeseg_addr / page_size)), current_page_table->pages.begin() + beg);
 
                 std::copy(codeseg_pointers.begin() + (beg - (codeseg_addr / page_size)),
-                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->get_pointers().begin() + beg);
+                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->pointers.begin() + beg);
             }
         } else {
-            eka2l1::common::unmap_memory(current_page_table->get_pointers()[beg], eka2l1::common::get_host_page_size());
-            current_page_table->get_pointers()[beg] = nullptr;
+            eka2l1::common::unmap_memory(current_page_table->pointers[beg], eka2l1::common::get_host_page_size());
+            current_page_table->pointers[beg] = nullptr;
         }
 
         // cpu->unmap_memory(addr.ptr_address(), count * page_size);
@@ -432,7 +432,7 @@ namespace eka2l1 {
                     global_pages.begin() + (end - (shared_addr / page_size)), current_page_table->pages.begin() + beg);
 
                 std::copy(global_pointers.begin() + (beg - (shared_addr / page_size)),
-                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->get_pointers().begin() + beg);
+                    global_pointers.begin() + (end - (shared_addr / page_size)), current_page_table->pointers.begin() + beg);
             }
 
             cpu->map_backing_mem(addr.ptr_address(), size, global_pointers[beg - (shared_addr / page_size)],
@@ -446,17 +446,17 @@ namespace eka2l1 {
                     codeseg_pages.begin() + (end - (codeseg_addr / page_size)), current_page_table->pages.begin() + beg);
 
                 std::copy(codeseg_pointers.begin() + (beg - (codeseg_addr / page_size)),
-                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->get_pointers().begin() + beg);
+                    codeseg_pointers.begin() + (end - (codeseg_addr / page_size)), current_page_table->pointers.begin() + beg);
             }
 
             cpu->map_backing_mem(addr.ptr_address(), size, codeseg_pointers[beg - (codeseg_addr / page_size)],
                 codeseg_pages[beg - (codeseg_addr / page_size)].page_protection);
         } else {
-            common::commit(current_page_table->get_pointers()[beg],
+            common::commit(current_page_table->pointers[beg],
                 count * page_size, nprot);
 
             cpu->map_backing_mem(addr.ptr_address(), size,
-                current_page_table->get_pointers()[beg], current_page_table->pages[beg].page_protection);
+                current_page_table->pointers[beg], current_page_table->pages[beg].page_protection);
         }
 
         return 0;
@@ -506,7 +506,7 @@ namespace eka2l1 {
                     global_pages.begin() + end - (shared_addr / page_size), current_page_table->pages.begin() + beg);
 
                 std::copy(global_pointers.begin() + beg - (shared_addr / page_size),
-                    global_pointers.begin() + end - (shared_addr / page_size), current_page_table->get_pointers().begin() + beg);
+                    global_pointers.begin() + end - (shared_addr / page_size), current_page_table->pointers.begin() + beg);
             }
         } else if (addr.ptr_address() >= ram_code_addr && addr.ptr_address() < codeseg_addr + 0x10000000) {
             common::decommit(codeseg_pointers[(beg - (ram_code_addr / page_size))],
@@ -517,10 +517,10 @@ namespace eka2l1 {
                     codeseg_pages.begin() + end - (codeseg_addr / page_size), current_page_table->pages.begin() + beg);
 
                 std::copy(codeseg_pointers.begin() + beg - (codeseg_addr / page_size),
-                    codeseg_pointers.begin() + end - (codeseg_addr / page_size), current_page_table->get_pointers().begin() + beg);
+                    codeseg_pointers.begin() + end - (codeseg_addr / page_size), current_page_table->pointers.begin() + beg);
             }
         } else {
-            common::decommit(current_page_table->get_pointers()[beg],
+            common::decommit(current_page_table->pointers[beg],
                 count * page_size);
         }
 
@@ -573,13 +573,13 @@ namespace eka2l1 {
         current_page_table = &table;
 
         std::copy(codeseg_pages.begin(), codeseg_pages.end(), current_page_table->pages.begin() + (codeseg_addr / page_size));
-        std::copy(codeseg_pointers.begin(), codeseg_pointers.end(), current_page_table->get_pointers().begin() + (codeseg_addr / page_size));
+        std::copy(codeseg_pointers.begin(), codeseg_pointers.end(), current_page_table->pointers.begin() + (codeseg_addr / page_size));
 
         std::copy(global_pages.begin(), global_pages.begin() + (shared_size / page_size), current_page_table->pages.begin() + (shared_addr / page_size));
-        std::copy(global_pointers.begin(), global_pointers.begin() + (shared_size / page_size), current_page_table->get_pointers().begin() + (shared_addr / page_size));
+        std::copy(global_pointers.begin(), global_pointers.begin() + (shared_size / page_size), current_page_table->pointers.begin() + (shared_addr / page_size));
 
-        if (!current_page_table->get_pointers()[rom_addr / page_size]) {
-            current_page_table->get_pointers()[rom_addr / page_size] = reinterpret_cast<uint8_t *>(rom_map);
+        if (!current_page_table->pointers[rom_addr / page_size]) {
+            current_page_table->pointers[rom_addr / page_size] = reinterpret_cast<uint8_t *>(rom_map);
 
             page rom_page;
             rom_page.sts = page_status::committed;
@@ -589,20 +589,19 @@ namespace eka2l1 {
             current_page_table->pages[rom_addr / page_size] = rom_page;
 
             for (size_t i = 1; i < common::align(rom_size, page_size) / page_size; i++) {
-                current_page_table->get_pointers()[(rom_addr / page_size) + i] = current_page_table->get_pointers()[(rom_addr / page_size) + i - 1] + page_size;
-
+                current_page_table->pointers[(rom_addr / page_size) + i] = current_page_table->pointers[(rom_addr / page_size) + i - 1] + page_size;
                 current_page_table->pages[(rom_addr / page_size) + i] = rom_page;
             }
         }
 
         if (previous_page_table) {
             for (uint32_t i = shared_data / page_size; i >= local_data / page_size; i--) {
-                if (previous_page_table->get_pointers()[i] && previous_page_table->pages[i].sts == page_status::committed) {
+                if (previous_page_table->pointers[i] && previous_page_table->pages[i].sts == page_status::committed) {
                     cpu->unmap_memory(i * page_size, page_size);
                 }
-
-                if (current_page_table->get_pointers()[i] && current_page_table->pages[i].sts == page_status::committed) {
-                    cpu->map_backing_mem(i * page_size, page_size, current_page_table->get_pointers()[i],
+                
+                if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed) {
+                    cpu->map_backing_mem(i * page_size, page_size, current_page_table->pointers[i],
                         current_page_table->pages[i].page_protection);
                 }
             }
