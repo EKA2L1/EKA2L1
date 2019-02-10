@@ -30,9 +30,9 @@ namespace eka2l1 {
         class chunkyseri;
     }
 
-    using handle = std::uint32_t;
-
     namespace kernel {
+        using handle = std::uint32_t;
+
         /*! \brief Ownership type for handle */
         enum class owner_type {
             process,
@@ -68,7 +68,9 @@ namespace eka2l1 {
             change_notifier,
             undertaker,
             msg_queue,
-            prop
+            prop,
+            codeseg,
+            unk
         };
 
         /*! \brief Base class for all kernel object. */
@@ -99,6 +101,7 @@ namespace eka2l1 {
 
         public:
             virtual ~kernel_obj() {}
+            virtual void close() {}
 
             /*! \brief Get the name of the object.
              * \returns Object name.

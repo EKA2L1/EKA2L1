@@ -80,13 +80,7 @@ namespace eka2l1 {
         )";
 
     static thread_ptr find_thread_by_id(kernel_system *kern, const std::uint32_t id) {
-        kernel_obj_ptr obj = kern->get_kernel_obj_by_id(id);
-
-        if (!obj || obj->get_object_type() != kernel::object_type::thread) {
-            return nullptr;
-        }
-
-        return std::reinterpret_pointer_cast<kernel::thread>(obj);
+        return kern->get_by_id<kernel::thread>(id);
     }
 
     static std::uint32_t reg_read(std::size_t id, thread_ptr thread = nullptr) {

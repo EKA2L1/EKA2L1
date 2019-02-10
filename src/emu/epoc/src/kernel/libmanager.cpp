@@ -37,9 +37,12 @@
 #include <epoc/loader/romimage.h>
 #include <epoc/vfs.h>
 
+#include <epoc/kernel/codeseg.h>
 #include <common/configure.h>
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
+
+#include <arm/arm_analyser.h>
 
 namespace eka2l1 {
     namespace hle {
@@ -117,115 +120,56 @@ namespace eka2l1 {
                 }
             }
 
-            return dll_name;
+            return dll_name + ".dll";
         }
 
         bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, loader::e32img &me,
-            loader::e32img_import_block &import_block, loader::e32img_iat &iat, uint32_t &crr_idx) {
+            loader::e32img_import_block &import_block, loader::e32img_iat &iat, uint32_t &crr_idx,
+            codeseg_ptr &parent_codeseg) {
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
-            loader::e32img_ptr img = mngr.load_e32img(dll_name);
-            loader::romimg_ptr rimg;
-
-            if (!img) {
-                rimg = mngr.load_romimg(dll_name);
+            codeseg_ptr cs = mngr.load(dll_name);
+            
+            if (!cs) {
+                LOG_TRACE("Can't found {}", dll_name8);
+                return false;
             }
+
+            // Add dependency for the codeseg
+            assert(parent_codeseg->add_dependency(cs));
 
             uint32_t *imdir = &(import_block.ordinals[0]);
-            uint32_t *expdir;
-
-            std::vector<std::uint32_t> relocated_export_addresses;
-
-            if (!img && !rimg) {
-                return false;
-            } else {
-                if (img) {
-                    mngr.open_e32img(img);
-
-                    const std::uint32_t data_start = img->header.data_offset;
-                    const std::uint32_t data_end = data_start + img->header.data_size + img->header.bss_size;
-
-                    const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
-                    const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
-
-                    relocated_export_addresses.assign(img->ed.syms.begin(), img->ed.syms.end());
-                    expdir = relocated_export_addresses.data();
-
-                    for (auto &exp : img->ed.syms) {
-                        // Add with the relative section delta.
-                        if (exp > data_start && exp < data_end) {
-                            exp += data_delta;
-                        } else {
-                            exp += code_delta;
-                        }
-                    }
-                } else {
-                    mngr.open_romimg(rimg);
-                    expdir = rimg->exports.data();
-                }
-            }
-
+            
             for (uint32_t i = crr_idx, j = 0;
                  i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
                  i++, j++) {
-                uint32_t iat_off = img->header.code_offset + img->header.code_size;
-                img->data[iat_off + i * 4] = expdir[import_block.ordinals[j] - 1];
+                uint32_t iat_off = me.header.code_offset + me.header.code_size;
+                *reinterpret_cast<std::uint32_t*>(me.data[iat_off + i * 4]) = cs->lookup(import_block.ordinals[j]);
             }
 
             crr_idx += static_cast<uint32_t>(import_block.ordinals.size());
-
             return true;
         }
 
         bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, loader::e32img &me,
-            loader::e32img_import_block &import_block) {
+            loader::e32img_import_block &import_block, codeseg_ptr &parent_cs) {
             LOG_INFO("Fixup for: {}", import_block.dll_name);
 
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
-            loader::e32img_ptr img = mngr.load_e32img(dll_name);
-            loader::romimg_ptr rimg;
+            codeseg_ptr cs = mngr.load(dll_name);
 
-            if (!img) {
-                rimg = mngr.load_romimg(dll_name);
+            if (!cs) {
+                LOG_TRACE("Can't found {}", dll_name8);
+                return false;
             }
+
+            // Add that codeseg as our dependency
+            assert(parent_cs->add_dependency(cs));
 
             std::uint32_t *imdir = &(import_block.ordinals[0]);
-            std::uint32_t *expdir;
-
-            std::vector<std::uint32_t> relocated_export_addresses;
-
-            if (!img && !rimg) {
-                LOG_WARN("Can't find image or rom image for: {}", dll_name8);
-                return false;
-            } else {
-                if (img) {
-                    mngr.open_e32img(img);
-
-                    const std::uint32_t data_start = img->header.data_offset;
-                    const std::uint32_t data_end = data_start + img->header.data_size + img->header.bss_size;
-
-                    const std::uint32_t code_delta = img->rt_code_addr - img->header.code_base;
-                    const std::uint32_t data_delta = img->rt_data_addr - img->header.data_base;
-
-                    relocated_export_addresses.assign(img->ed.syms.begin(), img->ed.syms.end());
-                    expdir = relocated_export_addresses.data();
-
-                    for (auto &exp : relocated_export_addresses) {
-                        // Add with the relative section delta.
-                        if (exp > data_start && exp < data_end) {
-                            exp += data_delta;
-                        } else {
-                            exp += code_delta;
-                        }
-                    }
-                } else {
-                    mngr.open_romimg(rimg);
-                    expdir = rimg->exports.data();
-                }
-            }
 
             for (uint32_t i = 0; i < import_block.ordinals.size(); i++) {
                 uint32_t off = imdir[i];
@@ -239,18 +183,8 @@ namespace eka2l1 {
                 uint32_t val = 0;
 
                 if (ord > 0) {
-                    export_addr = expdir[ord - 1];
-
-                    auto sid = mngr.get_sid(export_addr);
-
-                    if (sid) {
-                        if (mngr.get_hle(*sid)) {
-                            uint32_t impaddr = mngr.get_stub(*sid).ptr_address();
-                            write(code_ptr, impaddr);
-
-                            continue;
-                        }
-                    }
+                    export_addr = cs->lookup(ord);
+                    assert(export_addr != 0);
 
                     // The export address provided is already added with relative code/data
                     // delta, so add this directly to the adjustment address
@@ -264,20 +198,39 @@ namespace eka2l1 {
             return true;
         }
 
-        bool import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
+        codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr) {
             std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
+            kernel::codeseg_create_info info;
 
-            img->code_chunk = kern->create_chunk("", 0, common::align(img->header.code_size, mem->get_page_size()), common::align(img->header.code_size, mem->get_page_size()),
-                prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+            info.uids[0] = static_cast<std::uint32_t>(img->header.uid1);
+            info.uids[1] = img->header.uid2;
+            info.uids[2] = img->header.uid3;
+            info.code_base = img->header.code_base;
+            info.data_base = img->header.data_base;
+            info.code_size = img->header.code_size;
+            info.data_size = img->header.data_size;
+            info.bss_size = img->header.bss_size;
+            info.entry_point = img->header.entry_point;
+            info.export_table = img->ed.syms;
 
-            img->data_chunk = kern->create_chunk("", 0, common::align(data_seg_size, mem->get_page_size()), common::align(data_seg_size, mem->get_page_size()),
-                prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+            if (img->has_extended_header) {
+                info.sinfo.caps[0] = img->header_extended.info.cap1;
+                info.sinfo.caps[1] = img->header_extended.info.cap2;
+                info.sinfo.vendor_id = img->header_extended.info.vendor_id;
+                info.sinfo.secure_id = img->header_extended.info.secure_id;
 
-            chunk_ptr code_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->code_chunk));
-            chunk_ptr data_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(img->data_chunk));
+                if (img->has_extended_header && (img->header_extended.exception_des & 1)) {
+                    info.exception_descriptor = img->header_extended.exception_des - 1;
+                } else {
+                    info.exception_descriptor = 0;
+                }
+            }
+            
+            codeseg_ptr cs = kern->create<kernel::codeseg>("codeseg", info);
+            mngr.add_to_cache(u"", cs);
 
-            uint32_t rtcode_addr = code_chunk_ptr->base().ptr_address();
-            uint32_t rtdata_addr = data_chunk_ptr ? data_chunk_ptr->base().ptr_address() : 0;
+            uint32_t rtcode_addr = cs->get_code_run_addr();
+            uint32_t rtdata_addr = cs->get_data_run_addr();
 
             LOG_INFO("Runtime code: 0x{:x}", rtcode_addr);
 
@@ -297,7 +250,7 @@ namespace eka2l1 {
                 uint32_t track = 0;
 
                 for (auto &ib : img->import_section.imports) {
-                    pe_fix_up_iat(mem, mngr, *img, ib, img->iat, track);
+                    pe_fix_up_iat(mem, mngr, *img, ib, img->iat, track, cs);
                 }
             }
 
@@ -317,13 +270,12 @@ namespace eka2l1 {
 
             if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
                 for (auto &ib : img->import_section.imports) {
-                    elf_fix_up_import_dir(mem, mngr, *img, ib);
+                    elf_fix_up_import_dir(mem, mngr, *img, ib, cs);
                 }
             }
 
             LOG_INFO("Load e32img success");
-
-            return true;
+            return cs;
         }
 
         void lib_manager::init(system *syss, kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
@@ -361,438 +313,233 @@ namespace eka2l1 {
                 epoc::register_epocv93(*this);
             }
 
-            stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
-                kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+            stub = kern->create<kernel::chunk>(kern->get_memory_system(),
+                kern->crr_process(), "", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
+                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
 
-            custom_stub = kern->create_chunk("", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
-                kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
-
-            chunk_ptr stub_chunk_obj = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stub));
-            chunk_ptr custom_stub_chunk_obj = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(custom_stub));
-
-            stub_ptr = stub_chunk_obj->base().cast<uint32_t>();
-            custom_stub_ptr = custom_stub_chunk_obj->base().cast<uint32_t>();
-
-            LOG_INFO("Lib manager initialized, total implemented HLE functions: {}", import_funcs.size());
+            custom_stub = kern->create<kernel::chunk>(kern->get_memory_system(), kern->crr_process(),
+                "", 0, 0x5000, 0x5000, prot::read_write, kernel::chunk_type::disconnected,
+                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
         }
 
-        ptr<uint32_t> lib_manager::get_stub(uint32_t id) {
-            auto res = stubbed.find(id);
-
-            if (res == stubbed.end()) {
-                uint32_t *stub_ptr_real = stub_ptr.get(mem);
-                stub_ptr_real[0] = 0xef900000; // svc #0, never used
-                stub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
-                stub_ptr_real[2] = id;
-
-                stub_ptr += 12;
-
-                return ptr<uint32_t>(stub_ptr.ptr_address() - 12);
+        codeseg_ptr lib_manager::pull_from_cache(const std::u16string &name) {
+            if (cached_segs.find(eka2l1::filename(name)) != cached_segs.end()) {
+                return cached_segs[name];
             }
 
-            return res->second;
+            return nullptr;
         }
-
-        ptr<uint32_t> lib_manager::do_custom_stub(uint32_t addr) {
-            auto res = custom_stubbed.find(addr);
-
-            if (res == custom_stubbed.end()) {
-                uint32_t *cstub_ptr_real = custom_stub_ptr.get(mem);
-                cstub_ptr_real[0] = 0xef900001; // svc #1, never used
-                cstub_ptr_real[1] = 0xe1a0f00e; // mov pc, lr
-                cstub_ptr_real[2] = addr;
-
-                *ptr<uint32_t>(addr).get(mem) = custom_stub_ptr.ptr_address();
-
-                custom_stub_ptr += 12;
-
-                return ptr<uint32_t>(custom_stub_ptr.ptr_address() - 12);
+    
+        // Cache by name is not the best idea, but it works and really fast
+        bool lib_manager::add_to_cache(const std::u16string &name, codeseg_ptr cs) {
+            return cached_segs.emplace(eka2l1::filename(name), cs).second;
+        }
+        
+        codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img) {
+            if (auto seg = kern->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1), 
+                img.header.uid2, img.header.uid3)) {
+                return seg;
             }
 
-            ptr<uint32_t> pt = res->second;
-            *ptr<uint32_t>(addr).get(mem) = pt.ptr_address();
+            return import_e32img(&img, mem, kern, *this);
+        }
+        
+        codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg) {
+            if (auto seg = kern->pull_codeseg_by_ep(romimg.header.entry_point)) {
+                return seg;
+            }
 
-            return pt;
+            kernel::codeseg_create_info info;
+
+            info.uids[0] = romimg.header.uid1;
+            info.uids[1] = romimg.header.uid2;
+            info.uids[2] = romimg.header.uid3;
+            info.code_base = romimg.header.code_address;
+            info.data_base = romimg.header.data_address;
+            info.code_load_addr = romimg.header.code_address;
+            info.data_load_addr = romimg.header.data_address;
+            info.code_size = romimg.header.code_size;
+            info.data_size = romimg.header.data_size;
+            info.entry_point = romimg.header.entry_point;
+            info.bss_size = romimg.header.bss_size;;
+            info.export_table = romimg.exports;
+            info.sinfo.caps[0] = romimg.header.sec_info.cap1;
+            info.sinfo.caps[1] = romimg.header.sec_info.cap2;
+            info.sinfo.vendor_id = romimg.header.sec_info.vendor_id;
+            info.sinfo.secure_id = romimg.header.sec_info.secure_id;
+            info.exception_descriptor = romimg.header.exception_des;
+
+            auto cs = kern->create<kernel::codeseg>("codeseg", info);
+            add_to_cache(u"", cs);
+
+            struct dll_ref_table {
+                uint16_t flags;
+                uint16_t num_entries;
+                uint32_t rom_img_headers_ref[25];
+            };
+            
+            // Find dependencies
+            std::function<void(loader::rom_image_header *, codeseg_ptr)> dig_dependencies;
+            dig_dependencies = [&](loader::rom_image_header *header, codeseg_ptr acs) {
+                if (header->dll_ref_table_address != 0) {
+                    dll_ref_table *ref_table = eka2l1::ptr<dll_ref_table>(header->dll_ref_table_address).get(mem);
+
+                    for (uint16_t i = 0; i < ref_table->num_entries; i++) {
+                        // Dig UID
+                        loader::rom_image_header *ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
+                            .get(mem);
+
+                        if (auto ref_seg = kern->pull_codeseg_by_ep(ref_header->entry_point)) {
+                            // Add ref
+                            acs->add_dependency(ref_seg);
+                        } else {
+                            // Load new romimage and add dependency
+                            loader::romimg rimg = *loader::parse_romimg_from_ptr(ref_table->rom_img_headers_ref[i], mem);
+                            acs->add_dependency(load_as_romimg(rimg));
+                        }
+                    }
+                }
+            };
+
+            dig_dependencies(&romimg.header, cs);
+
+            return cs;
         }
 
-        void lib_manager::register_custom_func(std::pair<address, epoc_import_func> func) {
-            custom_funcs.insert(func);
-            do_custom_stub(func.first);
+        std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> lib_manager::try_search_and_parse(const std::u16string &path) {
+            std::u16string lib_path = path;
+
+            // Try opening e32img, if fail, try open as romimg
+            auto open_and_get = [&](const std::u16string &path) -> std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {
+                std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> 
+                    result { std::nullopt, std::nullopt };
+
+                if (io->exist(lib_path)) {
+                    symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+                    if (!f) {
+                        return result;
+                    }
+
+                    auto parse_result = loader::parse_e32img(f);
+                    if (parse_result != std::nullopt) {
+                        f->close();
+                        result.first = std::move(parse_result);
+
+                        return result;
+                    }
+                    
+                    auto parse_result_2 = loader::parse_romimg(f, mem);
+                    if (parse_result_2 != std::nullopt) {
+                        f->close();
+                        result.second = std::move(parse_result_2);
+
+                        return result;
+                    }
+
+                    f->close();
+                }
+
+                return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {};
+            };
+
+            if (!eka2l1::has_root_dir(lib_path)) {
+                // Nope ? We need to cycle through all possibilities
+                for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+                    lib_path = drive_to_char16(drv);
+                    lib_path += u":\\Sys\\Bin\\";
+                    lib_path += path;
+
+                    auto result = open_and_get(lib_path);
+                    if (result.first != std::nullopt || result.second != std::nullopt) {
+                        return result;
+                    }
+                }
+
+                return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {};
+            }
+
+            return open_and_get(lib_path);
+        }
+
+        codeseg_ptr lib_manager::load(const std::u16string &name) {
+            {
+                codeseg_ptr cache = pull_from_cache(name);
+                if (cache) {
+                    return cache;
+                }
+            }
+
+            auto load_depend_on_drive = [&](drive_number drv, const std::u16string &lib_path) -> codeseg_ptr {
+                auto entry = io->get_drive_entry(drv);
+
+                if (entry) {
+                    symfile f = io->open_file(lib_path, READ_MODE | BIN_MODE);
+                    if (!f) {
+                        return nullptr;
+                    }
+
+                    if (entry->media_type == drive_media::rom && io->is_entry_in_rom(lib_path)) {                                
+                        auto romimg = loader::parse_romimg(f, mem);
+                        if (!romimg) {
+                            return nullptr;
+                        }
+
+                        return load_as_romimg(*romimg);
+                    } else {
+                        auto e32img = loader::parse_e32img(f, mem);
+                        if (!e32img) {
+                            return nullptr;
+                        }
+
+                        return load_as_e32img(*e32img);
+                    }
+                }
+
+                return nullptr;
+            };
+
+            std::u16string lib_path = name;
+
+            // Create a new codeseg, we should try search these files
+            // Absolute yet ?
+            if (!eka2l1::has_root_dir(lib_path)) {
+                // Nope ? We need to cycle through all possibilities
+                for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+                    lib_path = drive_to_char16(drv);
+                    lib_path += u":\\Sys\\Bin\\";
+                    lib_path += name;
+
+                    if (io->exist(lib_path)) {
+                        auto result = load_depend_on_drive(drv, lib_path);
+                        if (result != nullptr) {
+                            result->set_full_path(lib_path);
+                            return result;
+                        }
+                    }
+                }
+
+                return nullptr;
+            }
+
+            drive_number drv = char16_to_drive(lib_path[0]);
+            if (!io->exist(lib_path)) {
+                return false;
+            }
+
+            if (auto cs = load_depend_on_drive(drv, lib_path)) {
+                cs->set_full_path(lib_path);
+                return cs;
+            }
+
+            return nullptr;
         }
 
         void lib_manager::shutdown() {
-            for (auto &img : e32imgs_cache) {
-                kern->close(img.second.img->code_chunk);
-                kern->close(img.second.img->data_chunk);
-            }
+            reset();
         }
 
         void lib_manager::reset() {
-            func_names.clear();
-            ids.clear();
             svc_funcs.clear();
-            custom_funcs.clear();
-            import_funcs.clear();
-        }
-
-        std::optional<sids> lib_manager::get_sids(const std::u16string &lib_name) {
-            auto res = ids.find(lib_name);
-
-            if (res == ids.end()) {
-                return std::optional<sids>{};
-            }
-
-            return res->second;
-        }
-
-        std::optional<exportaddrs> lib_manager::get_export_addrs(const std::u16string &lib_name) {
-            auto res = exports.find(lib_name);
-
-            if (res == exports.end()) {
-                return std::optional<exportaddrs>{};
-            }
-
-            return res->second;
-        }
-
-        address lib_manager::get_vtable_address(const std::string class_name) {
-            auto res = vtable_addrs.find(class_name);
-
-            if (res == vtable_addrs.end()) {
-                return 0;
-            }
-
-            return res->second + 8;
-        }
-
-        bool lib_manager::register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_exports) {
-            /*
-            if (exports.find(lib_name) != exports.end()) {
-                LOG_WARN("Exports already register, not really dangerous");
-                return true;
-            }
-
-            exports.insert(std::make_pair(lib_name, addrs));
-
-            auto libidsop = get_sids(lib_name);
-
-            if (libidsop) {
-                sids libids = libidsop.value();
-
-                for (uint32_t i = 0; i < common::min(addrs.size(), libids.size()); i++) {
-                    addr_map.insert(std::make_pair(addrs[i], libids[i]));
-
-#ifdef ENABLE_SCRIPTING
-                    sys->get_manager_system()->get_script_manager()->patch_sid_breakpoints(libids[i], addrs[i]);
-#endif
-
-                    std::string name_imp = get_func_name(libids[i]).value();
-                    size_t vtab_start = name_imp.find("vtable for ");
-
-                    if (FOUND_STR(vtab_start)) {
-                        vtable_addrs.emplace(name_imp.substr(11), addrs[i]);
-                    }
-
-                    if (log_exports) {
-                        LOG_INFO("{} [address: 0x{:x}, sid: 0x{:x}, ord = {}]", func_names[libids[i]], addrs[i], libids[i], i);
-                    }
-                }
-            } else {
-                if (log_exports) {
-                    LOG_WARN("Can't find SID database for: {}", common::ucs2_to_utf8(lib_name));
-                }
-            }
-
-            return true;
-            */
-
-            return true;
-        }
-
-        std::optional<sid> lib_manager::get_sid(exportaddr addr) {
-            auto res = addr_map.find(addr);
-
-            if (res == addr_map.end()) {
-                return std::optional<sid>{};
-            }
-
-            return res->second;
-        }
-
-        // Images are searched in
-        // C:\\sys\bin, E:\\sys\\bin and Z:\\sys\\bin
-        loader::e32img_ptr lib_manager::load_e32img(std::u16string img_name) {
-            symfile imgf;
-
-            // It's a full path
-            if (eka2l1::has_root_name(img_name, true)) {
-                bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
-
-                imgf = io->open_file(img_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
-
-                if (!imgf && should_append_ext) {
-                    imgf = io->open_file(img_name + (should_append_ext ? u".exe" : u""), READ_MODE | BIN_MODE);
-                }
-
-                if (!imgf) {
-                    return nullptr;
-                }
-            } else if (eka2l1::has_root_dir(img_name)) {
-                // Please just use the filename for searching
-                img_name = eka2l1::filename(img_name, true);
-            }
-
-            bool xip = false;
-            bool is_rom = false;
-            std::u16string path;
-
-            const std::map<std::u16string, std::u16string> patterns = {
-                { u"Z:\\sys\\bin\\", u".dll" },
-                { u"Z:\\sys\\bin\\", u".exe" },
-                { u"C:\\sys\\bin\\", u".dll" },
-                { u"C:\\sys\\bin\\", u".exe" },
-                { u"E:\\sys\\bin\\", u".dll" },
-                { u"E:\\sys\\bin\\", u".exe" }
-            };
-
-            std::uint32_t crc = 0;
-
-            auto is_valid = [](symfile f) -> bool {
-                std::uint32_t sig;
-                f->read_file(16, &sig, 4, 1);
-                return sig == 0x434F5045;
-            };
-
-            if (!imgf || !is_valid(imgf)) {
-                bool should_append_ext = (eka2l1::path_extension(img_name) == u"");
-
-                for (const auto &pattern : patterns) {
-                    std::u16string full = pattern.first + img_name + (should_append_ext ? pattern.second : u"");
-
-                    if (io->exist(full)) {
-                        imgf = io->open_file(full, READ_MODE | BIN_MODE);
-                        
-                        if (is_valid(imgf)) {
-                            break;
-                        }
-
-                        imgf->close();
-                    }
-                }
-            }
-
-            if (!imgf) {
-                return loader::e32img_ptr(nullptr);
-            }
-
-            /*
-            if (res->ed.syms.size() > 0) {
-                register_exports(img_name, res->ed.syms, sys->get_bool_config("log_exports"));
-            }*/
-
-            imgf->read_file(12, &crc, 4, 1);
-            if (e32imgs_cache.find(crc) != e32imgs_cache.end()) {
-                return e32imgs_cache[crc].img;
-            }
-
-            auto img = loader::parse_e32img(imgf);
-            if (!img) {
-                return loader::e32img_ptr(nullptr);
-            }
-
-            loader::e32img_ptr pimg = std::make_shared<loader::e32img>(img.value());
-
-            e32img_inf info;
-
-            info.img = pimg;
-            info.is_xip = xip;
-            info.is_rom = is_rom;
-            info.full_path = std::move(imgf->file_name());
-
-            imgf->close();
-
-            uint32_t check = info.img->header.check;
-
-            e32imgs_cache.insert(std::make_pair(info.img->header.check, std::move(info)));
-
-            return e32imgs_cache[check].img;
-        }
-
-        loader::romimg_ptr lib_manager::load_romimg(std::u16string rom_name, bool log_exports) {
-            symfile romimgf = nullptr;
-
-            if (eka2l1::has_root_name(rom_name, true)) {
-                bool should_append_ext = (eka2l1::path_extension(rom_name) == u"");
-
-                // Normally by default, Symbian should append the extension itself if no extension provided.
-                romimgf = io->open_file(rom_name + (should_append_ext ? u".dll" : u""), READ_MODE | BIN_MODE);
-
-                if (!romimgf && should_append_ext) {
-                    romimgf = io->open_file(rom_name + (should_append_ext ? u".exe" : u""), READ_MODE | BIN_MODE);
-                }
-
-                if (!romimgf) {
-                    return nullptr;
-                }
-            } else if (eka2l1::has_root_dir(rom_name, true)) {
-                rom_name = eka2l1::filename(rom_name, true);
-            }
-
-            if (!romimgf) {
-                bool should_append_ext = (eka2l1::path_extension(rom_name) == u"");
-
-                romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + (should_append_ext ? u".dll" : u""),
-                    READ_MODE | BIN_MODE);
-
-                if (!romimgf) {
-                    romimgf = io->open_file(u"Z:\\sys\\bin\\" + rom_name + (should_append_ext ? u".exe" : u""),
-                        READ_MODE | BIN_MODE);
-
-                    if (!romimgf) {
-                        return loader::romimg_ptr(nullptr);
-                    }
-                }
-            }
-
-            auto res = loader::parse_romimg(romimgf, mem);
-
-            if (!res) {
-                return loader::romimg_ptr(nullptr);
-            }
-
-            // register_exports(rom_name, res->exports, log_exports);
-
-            if (romimgs_cache.find(res->header.entry_point) != romimgs_cache.end()) {
-                romimgf->close();
-                return romimgs_cache[res->header.entry_point].img;
-            }
-
-            //loader::stub_romimg()
-            romimg_inf info;
-            info.img = std::make_shared<loader::romimg>(res.value());
-            info.full_path = std::move(romimgf->file_name());
-
-            romimgf->close();
-
-            romimgs_cache.emplace(res->header.entry_point, std::move(info));
-            return romimgs_cache[res->header.entry_point].img;
-        }
-
-        // Open the image code segment
-        void lib_manager::open_e32img(loader::e32img_ptr &img) {
-            auto res = e32imgs_cache.find(img->header.check);
-
-            if (res == e32imgs_cache.end()) {
-                LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
-                return;
-            }
-
-            // If the image is not XIP, means that it's unloaded or not loaded
-            if (!res->second.is_xip) {
-                res->second.is_xip = true;
-                import_e32img(img.get(), mem, kern, *this);
-            }
-
-            res->second.loader.push_back(kern->crr_process());
-        }
-
-        // Close the image code segment. Means that the image will be unloaded, XIP turns to false
-        void lib_manager::close_e32img(loader::e32img_ptr &img) {
-            auto res = e32imgs_cache.find(img->header.check);
-
-            if (res == e32imgs_cache.end()) {
-                LOG_ERROR("Image not loaded, checksum: {}", img->header.check);
-                return;
-            }
-
-            auto res2 = std::find(res->second.loader.begin(), res->second.loader.end(), kern->crr_process());
-
-            if (res2 == res->second.loader.end()) {
-                LOG_ERROR("Image never opened by this process");
-                return;
-            }
-
-            res->second.loader.erase(res2);
-        }
-
-        std::optional<std::string> lib_manager::get_func_name(const sid id) {
-            auto res = func_names.find(id);
-
-            if (res == func_names.end()) {
-                return std::optional<std::string>{};
-            }
-
-            return res->second;
-        }
-
-        void lib_manager::register_hle(sid id, epoc_import_func func) {
-            import_funcs.emplace(id, func);
-        }
-
-        std::optional<epoc_import_func> lib_manager::get_hle(sid id) {
-            auto res = import_funcs.find(id);
-
-            if (res != import_funcs.end()) {
-                return res->second;
-            }
-
-            return std::optional<epoc_import_func>{};
-        }
-
-        bool lib_manager::call_hle(sid id) {
-            auto eimp = get_hle(id);
-
-            if (!eimp) {
-                return false;
-            }
-
-            //LOG_INFO("Calling {}", *get_func_name(id));
-
-            auto imp = eimp.value();
-            imp.func(sys);
-
-            if (sys->get_kernel_system()->crr_thread() == nullptr) {
-                return false;
-            }
-
-            return true;
-        }
-
-        address lib_manager::get_export_addr(sid id) {
-            for (const auto &[addr, sidk] : addr_map) {
-                if (sidk == id) {
-                    return addr;
-                }
-            }
-
-            return 0;
-        }
-
-        void lib_manager::open_romimg(loader::romimg_ptr &img) {
-            auto res = romimgs_cache.find(img->header.entry_point);
-
-            if (res == romimgs_cache.end()) {
-                return;
-            }
-
-            res->second.loader.push_back(kern->crr_process());
-        }
-
-        void lib_manager::close_romimg(loader::romimg_ptr &img) {
-            auto res = romimgs_cache.find(img->header.entry_point);
-
-            if (res == romimgs_cache.end()) {
-                return;
-            }
-
-            auto res2 = std::find(res->second.loader.begin(), res->second.loader.end(), kern->crr_process());
-
-            if (res2 == res->second.loader.end()) {
-                LOG_ERROR("Image never opened by this process");
-                return;
-            }
-
-            res->second.loader.erase(res2);
         }
 
         bool lib_manager::call_svc(sid svcnum) {
@@ -817,37 +564,5 @@ namespace eka2l1 {
             return true;
         }
 
-        bool lib_manager::call_custom_hle(address addr) {
-            auto res = custom_funcs.find(addr);
-
-            if (res == custom_funcs.end()) {
-                return false;
-            }
-
-            epoc_import_func func = res->second;
-            func.func(sys);
-
-            if (sys->get_kernel_system()->crr_thread() == nullptr) {
-                return false;
-            }
-
-            return true;
-        }
-
-        void lib_manager::patch_hle() {
-            // This is mostly based on assumption that: even a function: thumb or ARM, should be large
-            // enough to contains an svc call (This hold true).
-            for (const auto &func : import_funcs) {
-                uint32_t addr = get_export_addr(func.first);
-
-                if (addr) {
-                    bool thumb = (addr % 2 != 0); //?
-
-                    //LOG_INFO("Write interrupt of {} at: 0x{:x} {}", *get_func_name(func.first), addr - addr % 2, thumb ? "(thumb)" : "");
-
-                    *eka2l1::ptr<uint32_t>(addr - addr % 2).get(mem) = thumb ? 0xDF02 : 0xEF000002;
-                }
-            }
-        }
     }
 }

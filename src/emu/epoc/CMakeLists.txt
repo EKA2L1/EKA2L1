@@ -137,7 +137,6 @@ add_library(epocutils
     include/epoc/utils/tl.h
     src/utils/des.cpp
     src/utils/dll.cpp
-    src/utils/handle.cpp
     src/utils/panic.cpp
     src/utils/reqsts.cpp
     src/utils/tl.cpp

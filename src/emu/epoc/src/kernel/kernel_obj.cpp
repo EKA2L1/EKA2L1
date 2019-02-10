@@ -31,6 +31,7 @@ namespace eka2l1 {
             , kern(kern)
             , access(access)
             , uid(kern->next_uid()) {
+            
         }
 
         void kernel_obj::do_state(common::chunkyseri &seri) {

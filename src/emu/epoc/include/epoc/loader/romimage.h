@@ -84,5 +84,6 @@ namespace eka2l1 {
         };
 
         std::optional<romimg> parse_romimg(symfile &file, memory_system *mem);
+        std::optional<romimg> parse_romimg_from_ptr(const address rom_file, memory_system *mem);
     }
 }

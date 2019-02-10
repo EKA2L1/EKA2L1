@@ -35,7 +35,21 @@ namespace eka2l1 {
             return off - romstart;
         }
 
-        // Unstable
+        std::optional<romimg> parse_romimg_from_ptr(const address rom_file, memory_system *mem) {
+            romimg img;
+            img.header = *ptr<decltype(img.header)>(rom_file).get(mem);
+            ptr<uint32_t> export_off(img.header.export_dir_address);
+
+            for (int32_t i = 0; i < img.header.export_dir_count; i++) {
+                auto export_addr = *export_off.get(mem);
+                img.exports.push_back(export_addr);
+
+                export_off += 4;
+            }
+
+            return img;
+        }
+
         std::optional<romimg> parse_romimg(symfile &file, memory_system *mem) {
             romimg img;
             file->read_file(&img, 1, sizeof(rom_image_header));

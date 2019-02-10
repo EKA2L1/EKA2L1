@@ -160,8 +160,7 @@ namespace eka2l1 {
             parent->child = std::move(dm);
         }
 
-        int prop_handle = kern->create_prop();
-        property_ptr prop = kern->get_prop(prop_handle);
+        property_ptr prop = kern->create<service::property>();
 
         prop->first = dm_category;
         prop->second = make_state_domain_key(hier->id, domain_db.id);
@@ -833,8 +832,7 @@ namespace eka2l1 {
         mngr->timing = sys->get_timing_system();
         mngr->kern = sys->get_kernel_system();
 
-        uint32_t init_prop_handle = kern->create_prop();
-        property_ptr init_prop = kern->get_prop(init_prop_handle);
+        property_ptr init_prop = kern->create<service::property>();
 
         init_prop->first = dm_category;
         init_prop->second = dm_init_key;

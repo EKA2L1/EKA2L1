@@ -563,6 +563,7 @@ namespace eka2l1 {
             std::u16string new_path = eka2l1::add_path(map_path, vert_path.substr(root.size()));
             auto sep_char = eka2l1::get_separator();
 
+            // TODO: Throw away the lower need in case-insensitive system
             // Make it case-insensitive
             for (auto &c : new_path) {
                 c = std::towlower(c);

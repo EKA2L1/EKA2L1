@@ -146,9 +146,9 @@ namespace eka2l1 {
 
             std::uint64_t lrt;
 
-            std::uint32_t stack_chunk;
-            std::uint32_t name_chunk;
-            std::uint32_t tls_chunk;
+            chunk_ptr stack_chunk;
+            chunk_ptr name_chunk;
+            chunk_ptr tls_chunk;
 
             thread_local_data ldata;
 

@@ -29,7 +29,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 #include <epoc/ptr.h>
 
 namespace YAML {
@@ -52,10 +51,15 @@ namespace eka2l1 {
     namespace kernel {
         class chunk;
         class process;
+        class codeseg;
     }
 
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
     using process_ptr = std::shared_ptr<kernel::process>;
+    using process_ptr = std::shared_ptr<kernel::process>;
+    using codeseg_ptr = std::shared_ptr<kernel::codeseg>;
+
+    // Technically, loader is an user application, but here we treat it as kernel
 
     namespace loader {
         struct e32img;
@@ -72,20 +76,7 @@ namespace eka2l1 {
         };
 
         using func_map = std::unordered_map<uint32_t, eka2l1::hle::epoc_import_func>;
-
-        struct e32img_inf {
-            loader::e32img_ptr img;
-            bool is_xip;
-            bool is_rom;
-            std::u16string full_path;
-            std::vector<process_ptr> loader;
-        };
-
-        struct romimg_inf {
-            loader::romimg_ptr img;
-            std::vector<process_ptr> loader;
-            std::u16string full_path;
-        };
+        using export_table = std::vector<std::uint32_t>;
 
         /*! \brief Manage libraries and HLE functions.
 		 * 
@@ -93,45 +84,19 @@ namespace eka2l1 {
 		 * and load when needed.
 		*/
         class lib_manager {
-            std::map<std::u16string, sids> ids;
-            std::map<sid, std::string> func_names;
-
-            std::map<std::u16string, exportaddrs> exports;
-            std::map<address, sid> addr_map;
-
-            std::map<std::string, address> vtable_addrs;
-
-            // Caches the image
-            std::map<uint32_t, e32img_inf> e32imgs_cache;
-            std::map<uint32_t, romimg_inf> romimgs_cache;
-
             io_system *io;
             memory_system *mem;
             kernel_system *kern;
             system *sys;
 
-            uint32_t custom_stub;
-            uint32_t stub;
-
-            ptr<uint32_t> stub_ptr;
-            ptr<uint32_t> custom_stub_ptr;
-
-            std::map<uint32_t, ptr<uint32_t>> stubbed;
-            std::map<uint32_t, ptr<uint32_t>> custom_stubbed;
+            chunk_ptr custom_stub;
+            chunk_ptr stub;
 
         public:
-            std::map<address, epoc_import_func> import_funcs;
-            std::unordered_map<sid, epoc_import_func> svc_funcs;
-            std::map<address, epoc_import_func> custom_funcs;
+            std::unordered_map<sid, epoc_import_func> svc_funcs;            
+            std::unordered_map<std::u16string, codeseg_ptr> cached_segs;
 
             lib_manager(){};
-
-            ptr<uint32_t> get_stub(uint32_t id);
-            ptr<uint32_t> do_custom_stub(uint32_t addr);
-
-            void patch_hle();
-
-            void register_custom_func(std::pair<address, epoc_import_func> func);
 
             /*! \brief Intialize the library manager. 
 			 * \param ver The EPOC version to import HLE functions.
@@ -144,73 +109,30 @@ namespace eka2l1 {
             /*! \brief Reset the library manager. */
             void reset();
 
-            /*! \brief Get the SIDS of a library. */
-            std::optional<sids> get_sids(const std::u16string &lib_name);
-
-            /*! \brief Get the export addresses of a library. */
-            std::optional<exportaddrs> get_export_addrs(const std::u16string &lib_name);
-
-            void register_hle(sid id, epoc_import_func func);
-
-            /*! \brief Get the HLE function from an SID */
-            std::optional<epoc_import_func> get_hle(sid id);
-
-            /*! \brief Call HLE function with an ID */
-            bool call_hle(sid id);
-
-            /*! \brief Call a HLE function registered at a specific address */
-            bool call_custom_hle(address addr);
-
             /*! \brief Call a HLE system call.
 			 * \param svcnum The system call ordinal.
 			*/
             bool call_svc(sid svcnum);
 
-            /*! \brief Load an E32Image. */
-            loader::e32img_ptr load_e32img(std::u16string img_name);
-
-            /*! \brief Load an ROM image. */
-            loader::romimg_ptr load_romimg(std::u16string rom_name, bool log_export = false);
-
-            /*! \brief Open the image code segment */
-            void open_e32img(loader::e32img_ptr &img);
-
-            /*! \brief Close the image code segment. Means that the image will be unloaded, XIP turns to false. */
-            void close_e32img(loader::e32img_ptr &img);
-
-            void open_romimg(loader::romimg_ptr &img);
-            void close_romimg(loader::romimg_ptr &img);
-
-            /*! \brief Register export addresses for desired HLE library
+            /*! \brief Load a codeseg/library/exe from name
              *
-			 * This will also map the export address with the correspond SID.
-             * Note that these export addresses are unique, since they are the address in
-             * the memory.
-			*/
-            bool register_exports(const std::u16string &lib_name, exportaddrs &addrs, bool log_export = false);
-            std::optional<sid> get_sid(exportaddr addr);
+             * If the manager detects we are loading a library and a HLE module is available,
+             * it will returns a HLE codeseg contains HLE export
+             * 
+             * Else it will just load E32 Image or a ROM image and returns a codeseg
+            */
+            codeseg_ptr load(const std::u16string &name);
 
-            /*! \brief Given an SID, get the function name. */
-            std::optional<std::string> get_func_name(const sid id);
+            codeseg_ptr pull_from_cache(const std::u16string &name);
 
-            std::map<uint32_t, e32img_inf> &get_e32imgs_cache() {
-                return e32imgs_cache;
-            }
+            bool add_to_cache(const std::u16string &name, codeseg_ptr cs);
 
-            std::map<uint32_t, romimg_inf> &get_romimgs_cache() {
-                return romimgs_cache;
-            }
-
-            /*! \brief Given a class name, return the vtable address.
-			 * \returns 0 if the class doesn't exists in the cache, else returns the vtable address of that class.
-			*/
-            address get_vtable_address(const std::string class_name);
-
-            address get_vtable_entry_addr(const std::string class_name, uint32_t idx) {
-                return get_vtable_address(class_name) + idx * 4;
-            }
-
-            address get_export_addr(sid id);
+            // Search through all drives, which will parse all existing file
+            std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
+                try_search_and_parse(const std::u16string &path);
+            
+            codeseg_ptr load_as_e32img(loader::e32img &img);
+            codeseg_ptr load_as_romimg(loader::romimg &img);
 
             system *get_sys() {
                 return sys;

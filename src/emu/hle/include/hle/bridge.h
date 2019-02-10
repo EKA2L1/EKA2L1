@@ -36,7 +36,7 @@ namespace eka2l1 {
     class system;
 
     namespace kernel {
-        using uid = uint64_t;
+        using uid = uint32_t;
     }
 
     namespace hle {

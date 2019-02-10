@@ -275,14 +275,13 @@ namespace eka2l1 {
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
-            stack_chunk = kern->create_chunk("", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
+            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), kern->crr_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
-            name_chunk = kern->create_chunk("", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, owner_type::kernel);
+            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), kern->crr_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
-            request_sema = std::reinterpret_pointer_cast<kernel::semaphore>(
-                kern->get_kernel_obj(kern->create_sema("requestSema" + common::to_string(eka2l1::random()), 0, owner_type::kernel)));
+            request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
 
             sync_msg = kern->create_msg(owner_type::kernel);
 
@@ -290,18 +289,15 @@ namespace eka2l1 {
 
             std::u16string name_16(name.begin(), name.end());
 
-            chunk_ptr name_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
-            chunk_ptr stack_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
-
-            memcpy(name_chunk_ptr->base().get(mem), name_16.data(), name.length() * 2);
+            memcpy(name_chunk->base().get(mem), name_16.data(), name.length() * 2);
 
             // TODO: Not hardcode this
             const size_t metadata_size = 0x40;
 
             // Left the space for the program to put thread create information
-            const address stack_top = stack_chunk_ptr->base().ptr_address() + static_cast<address>(stack_size - metadata_size);
+            const address stack_top = stack_chunk->base().ptr_address() + static_cast<address>(stack_size - metadata_size);
 
-            ptr<uint8_t> stack_phys_beg(stack_chunk_ptr->base().ptr_address());
+            ptr<uint8_t> stack_phys_beg(stack_chunk->base().ptr_address());
             ptr<uint8_t> stack_phys_end(stack_top);
 
             uint8_t *start = stack_phys_beg.get(mem);
@@ -310,7 +306,7 @@ namespace eka2l1 {
             // Fill the stack with garbage
             std::fill(start, end, 0xcc);
             create_stack_metadata(ptr<void>(stack_top), allocator, static_cast<std::uint32_t>(name.length()),
-                name_chunk_ptr->base().ptr_address(), epa);
+                name_chunk->base().ptr_address(), epa);
 
             reset_thread_ctx(epa, stack_top, inital);
             scheduler = kern->get_thread_scheduler();
@@ -352,18 +348,14 @@ namespace eka2l1 {
         }
 
         bool thread::sleep(uint32_t mssecs) {
-            return scheduler->sleep(std::reinterpret_pointer_cast<kernel::thread>(
-                                        kern->get_kernel_obj_by_id(uid)),
-                mssecs);
+            return scheduler->sleep(kern->get_by_id<kernel::thread>(uid), mssecs);
         }
 
         bool thread::sleep_nof(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
             assert(!sleep_nof_sts && "Thread supposed to sleep already");
             sleep_nof_sts = sts;
 
-            return scheduler->sleep(std::reinterpret_pointer_cast<kernel::thread>(
-                                        kern->get_kernel_obj_by_id(uid)),
-                mssecs);
+            return scheduler->sleep(kern->get_by_id<kernel::thread>(uid), mssecs);
         }
 
         void thread::notify_sleep(const int errcode) {
@@ -389,7 +381,7 @@ namespace eka2l1 {
         }
 
         bool thread::stop() {
-            return scheduler->stop(std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(uid)));
+            return scheduler->stop(kern->get<kernel::thread>(uid));
         }
 
         void thread::update_priority() {
@@ -441,8 +433,7 @@ namespace eka2l1 {
         }
 
         bool thread::suspend() {
-            bool res = scheduler->wait(std::reinterpret_pointer_cast<kernel::thread>(
-                kern->get_kernel_obj_by_id(uid)));
+            bool res = scheduler->wait(kern->get<kernel::thread>(uid));
 
             if (!res) {
                 return false;
@@ -473,8 +464,7 @@ namespace eka2l1 {
         }
 
         bool thread::resume() {
-            bool res = scheduler->resume(std::reinterpret_pointer_cast<kernel::thread>(
-                kern->get_kernel_obj_by_id(uid)));
+            bool res = scheduler->resume(kern->get<kernel::thread>(uid));
 
             if (!res) {
                 return false;
@@ -508,11 +498,8 @@ namespace eka2l1 {
             own_process = pr;
             own_process->increase_thread_count();
 
-            chunk_ptr name_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(name_chunk));
-            chunk_ptr stack_chunk_ptr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(stack_chunk));
-
-            name_chunk_ptr->set_own_process(own_process);
-            stack_chunk_ptr->set_own_process(own_process);
+            name_chunk->set_own_process(own_process);
+            stack_chunk->set_own_process(own_process);
 
             update_priority();
             last_priority = real_priority;
@@ -642,8 +629,7 @@ namespace eka2l1 {
         }
 
         chunk_ptr thread::get_stack_chunk() {
-            return std::reinterpret_pointer_cast<kernel::chunk>(
-                kern->get_kernel_obj(stack_chunk));
+            return stack_chunk;
         }
     }
 }

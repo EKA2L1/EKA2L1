@@ -346,41 +346,6 @@ namespace eka2l1 {
 
             void CallSVC(uint32_t svc) override {
                 hle::lib_manager *mngr = parent.get_lib_manager();
-
-                if (svc == 0x900000) {
-                    uint32_t val = *reinterpret_cast<uint32_t *>(parent.get_memory_sys()->get_real_pointer(parent.get_pc() + 4));
-                    bool res = mngr->call_hle(val);
-
-                    if (!res) {
-                        LOG_WARN("Unimplemented method!");
-                    }
-
-                    return;
-                } else if (svc == 0x900001) {
-                    // Custom call
-                    uint32_t val = *reinterpret_cast<uint32_t *>(parent.get_memory_sys()->get_real_pointer(parent.get_pc() + 4));
-                    bool res = mngr->call_custom_hle(val);
-
-                    return;
-                } else if (svc == 0x900002) {
-                    uint32_t call_addr = parent.get_pc();
-
-                    if (call_addr && parent.is_thumb_mode()) {
-                        call_addr -= 1;
-                    } else {
-                        call_addr -= 4;
-                    }
-
-                    bool res = parent.get_lib_manager()->call_hle(*parent.get_lib_manager()->get_sid(call_addr));
-
-                    if (res) {
-                        uint32_t lr = parent.get_reg(14);
-                        parent.set_pc(lr);
-                    }
-
-                    return;
-                }
-
                 bool res = mngr->call_svc(svc);
 
                 if (!res) {

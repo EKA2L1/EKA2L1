@@ -117,8 +117,9 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     }
 #endif
 
+    /*
     if (log_passed && mngr) {
-        auto res = mngr->get_sid(address);
+        auto res = mngr->get_symbol_name(address);
 
         if (!res && thumb_mode(uc)) {
             res = mngr->get_sid(address + 1);
@@ -127,7 +128,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         if (res) {
             LOG_INFO("Passing through: {} addr = 0x{:x}", *mngr->get_func_name(*res), address);
         }
-    }
+    }*/
 
     if (log_code) {
         const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
@@ -177,41 +178,6 @@ void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
         address svca = jit->get_pc() - 4;
         uc_mem_read(uc, svca, &svc_inst, 4);
         imm = svc_inst & 0xffffff;
-    }
-
-    if (imm == 0x00900000) {
-        uint32_t sid = *eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys());
-        auto func_name = jit->get_lib_manager()->get_func_name(sid);
-
-        if (func_name) {
-            LOG_INFO("Calling {} [0x{:x}]", *func_name, jit->get_pc() + 4);
-        }
-
-        jit->get_lib_manager()->call_hle(sid);
-        return;
-    } else if (imm == 0x00900001) {
-        jit->get_lib_manager()->call_custom_hle(*eka2l1::ptr<uint32_t>(jit->get_pc() + 4).get(jit->get_memory_sys()));
-        return;
-    } else if (imm == 0x00900002) {
-        uint32_t call_addr = jit->get_pc();
-
-        if (call_addr && thumb) {
-            call_addr -= 1;
-        } else {
-            call_addr -= 4;
-        }
-
-        bool res = jit->get_lib_manager()->call_hle(
-            *jit->get_lib_manager()->get_sid(call_addr));
-
-        if (res) {
-            uint32_t lr = 0;
-            uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-
-            jit->set_pc(lr);
-        }
-
-        return;
     }
 
     if (!jit->get_lib_manager()->call_svc(imm)) {

@@ -185,7 +185,7 @@ namespace eka2l1 {
         }
 
         void init();
-        uint32_t load(uint32_t id);
+        bool load(uint32_t id);
         int loop();
         void shutdown();
 
@@ -351,36 +351,32 @@ namespace eka2l1 {
         gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
     }
 
-    uint32_t system_impl::load(uint32_t id) {
+    bool system_impl::load(uint32_t id) {
         hlelibmngr.reset();
         hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
 
-        for (const auto &force_load_lib : force_load_libs) {
-            loader::romimg_ptr img = hlelibmngr.load_romimg(common::utf8_to_ucs2(force_load_lib), false);
-
-            if (img) {
-                hlelibmngr.open_romimg(img);
-            }
-        }
-
         if (!startup_inited) {
             for (auto &startup_app : startup_apps) {
-                uint32_t process = kern.spawn_new_process(startup_app, eka2l1::filename(startup_app));
+                process_ptr st_up = kern.spawn_new_process(
+                    common::utf8_to_ucs2(startup_app));
 
-                kern.run_process(process);
+                if (!st_up) {
+                    return false;
+                }
+
+                st_up->run();
             }
 
             startup_inited = true;
         }
 
-        uint32_t process_handle = kern.spawn_new_process(id);
-
-        if (process_handle == INVALID_HANDLE) {
-            return INVALID_HANDLE;
+        process_ptr pr = kern.spawn_new_process(id);
+        if (!pr) {
+            return false;
         }
 
-        kern.run_process(process_handle);
-        return process_handle;
+        pr->run();
+        return true;
     }
 
     int system_impl::loop() {
@@ -619,7 +615,7 @@ namespace eka2l1 {
         return impl->init();
     }
 
-    uint32_t system::load(uint32_t id) {
+    bool system::load(uint32_t id) {
         return impl->load(id);
     }
 

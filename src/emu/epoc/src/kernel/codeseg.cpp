@@ -26,8 +26,8 @@ namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name,
             codeseg_create_info &info)
         : kernel_obj(kern, name, kernel::access_type::global_access)
-        , code_chunk(INVALID_HANDLE)
-        , data_chunk(INVALID_HANDLE) {
+        , code_chunk(nullptr)
+        , data_chunk(nullptr) {
         std::copy(info.uids, info.uids + 3, uids);
         code_base = info.code_base;
         data_base = info.data_base;
@@ -36,26 +36,47 @@ namespace eka2l1::kernel {
         data_size = info.data_size;
         bss_size = info.bss_size;
 
+        exception_descriptor = info.exception_descriptor;
+
+        sinfo = std::move(info.sinfo);
+
         ep = info.entry_point;
 
         export_table = std::move(info.export_table);
+        full_path = std::move(info.full_path);
 
         // Only allows write when it's not open yet
-        code_chunk = kern->create_chunk(name, 0, code_size, code_size, prot::read_write, kernel::chunk_type::normal,
-            kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+        memory_system *mem = kern->get_memory_system();
+        const auto code_size_align = common::align(code_size, mem->get_page_size());
+        const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
 
-        if (data_size) {
-            data_chunk = kern->create_chunk(name, 0, data_size, code_size, prot::read_write, kernel::chunk_type::normal,
-                kernel::chunk_access::code, kernel::chunk_attrib::none, kernel::owner_type::kernel);
+        code_addr = info.code_load_addr;
+        data_addr = info.data_load_addr;
+
+        if (code_addr == 0) {
+            code_chunk = kern->create<kernel::chunk>(mem, kern->crr_process(), name, 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
+                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
+
+            code_addr = code_chunk->base().ptr_address();
+            info.code_load_addr = code_addr;
+            
+            for (auto &export_entry: export_table) {
+                export_entry += code_addr;
+            }
+
+            ep += code_addr;
+
+            if (exception_descriptor != 0) {
+                exception_descriptor += code_addr;
+            }
         }
 
-        code_addr = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(code_chunk))->base().ptr_address();
-        info.code_load_addr = code_addr;
-
-        if (data_size) {
-            auto data_chunk_obj = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(data_chunk));
-            data_addr = data_chunk_obj->base().ptr_address();
-            std::uint8_t *bss = data_chunk_obj->base().get(kern->get_memory_system());
+        if (data_size && data_addr == 0) {    
+            data_chunk = kern->create<kernel::chunk>(mem, kern->crr_process(), name, 0, data_size_align, data_size_align, prot::read_write, kernel::chunk_type::normal,
+                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
+        
+            data_addr = data_chunk->base().ptr_address();
+            std::uint8_t *bss = data_chunk->base().get(kern->get_memory_system());
 
             // Initialize bss
             std::fill(bss, bss + bss_size, 0);
@@ -63,22 +84,44 @@ namespace eka2l1::kernel {
             info.data_load_addr = data_addr;
         }
     }
-
-    bool codeseg::open(const std::uint32_t id) {
-        int err = kern->get_memory_system()->change_prot(code_addr, code_size, prot::read_exec);
-        return !err;
-    }
     
-    bool codeseg::close() {
-        int err = kern->get_memory_system()->change_prot(code_addr, code_size, prot::read_exec);
-        return !err;
-    }
-    
-    address codeseg::lookup(const std::uint8_t ord) {
+    address codeseg::lookup(const std::uint32_t ord) {
         if (ord > export_table.size()) {
             return 0;
         }
 
-        return export_table[ord] + code_addr;
+        return export_table[ord - 1];
+    }
+
+    void codeseg::queries_call_list(std::vector<std::uint32_t> &call_list) {
+        if (mark) {
+            return;
+        }
+
+        // Iterate through dependency first
+        for (auto &dependency: dependencies) {
+            if (!dependency->mark) {
+                dependency->mark = true;
+                dependency->queries_call_list(call_list);
+                dependency->mark = false;
+            }
+        }
+
+        // Add our last. Don't change order, this is how it supposed to be
+        call_list.push_back(ep);
+    }
+    
+    bool codeseg::add_dependency(codeseg_ptr &codeseg) {
+        // Check if this codeseg is unique first (no duplicate)
+        // We don't check the UID though (TODO)
+        auto result = std::find_if(dependencies.begin(), dependencies.end(),
+            [&](const codeseg_ptr &codeseg_ite) { return codeseg_ite->unique_id() == codeseg->unique_id(); });
+
+        if (result == dependencies.end()) {
+            dependencies.push_back(codeseg);
+            return true;
+        }
+
+        return false;
     }
 }

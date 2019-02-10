@@ -105,7 +105,7 @@ namespace eka2l1 {
         void prepare_reschedule();
 
         void init();
-        uint32_t load(uint32_t id);
+        bool load(uint32_t id);
 
         int loop();
         void shutdown();

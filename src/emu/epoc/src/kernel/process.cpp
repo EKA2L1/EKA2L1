@@ -28,28 +28,24 @@
 #include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/process.h>
 #include <epoc/kernel/scheduler.h>
-
-#include <epoc/loader/romimage.h>
+#include <epoc/kernel/codeseg.h>
 
 namespace eka2l1::kernel {
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
-        uint32_t heap_max, uint32_t pri) {
+        uint32_t heap_max, kernel::thread_priority pri) {
         page_table *last = mem->get_current_page_table();
         mem->set_current_page_table(page_tab);
-
-        // Reason (bentokun): EKA2 thread trying to access 0x400008, which is hardcoded and invalid. Until we can
-        // find out why, just leave it here
-        // TODO (bentokun): Find out why and remove this hack
-        mem->chunk(0x400000, 0, 0x1000, 0x1000, prot::read_write);
-
+        
         primary_thread
-            = kern->create_thread(kernel::owner_type::kernel,
+            = kern->create<kernel::thread>(
+                mem,
+                kern->get_timing_system(),
                 nullptr,
                 kernel::access_type::local_access,
                 process_name + "::Main", ep_off,
                 stack_size, heap_min, heap_max,
                 true,
-                0, 0, static_cast<thread_priority>(pri));
+                0, 0, pri);
 
         ++thread_count;
 
@@ -57,10 +53,9 @@ namespace eka2l1::kernel {
             mem->set_current_page_table(*last);
         }
 
-        uint32_t dll_lock_handle = kern->create_mutex("dllLockMutexProcess" + common::to_string(puid),
-            false, kernel::owner_type::kernel, kernel::access_type::local_access);
-
-        dll_lock = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(dll_lock_handle));
+        dll_lock = kern->create<kernel::mutex>(kern->get_timing_system(),
+            "dllLockMutexProcess" + common::to_string(puid),
+            false, kernel::access_type::local_access);
     }
 
     process::process(kernel_system *kern, memory_system *mem)
@@ -72,51 +67,27 @@ namespace eka2l1::kernel {
 
     process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
         const std::string &process_name, const std::u16string &exe_path,
-        const std::u16string &cmd_args, loader::e32img_ptr &img,
+        const std::u16string &cmd_args, codeseg_ptr arg_codeseg,
+        uint32_t stack_size, uint32_t heap_min, uint32_t heap_max,
         const process_priority pri)
         : kernel_obj(kern, process_name, access_type::local_access)
         , puid(uid)
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
-        , romimg(nullptr)
-        , img(img)
-        , exe_path(exe_path)
-        , cmd_args(cmd_args)
-        , priority(pri)
-        , page_tab(mem->get_page_size())
-        , process_handles(kern, handle_array_owner::process) {
-        obj_type = kernel::object_type::process;
-
-        // Preserve the page table
-        create_prim_thread(img->rt_code_addr, img->rt_code_addr + img->header.entry_point, img->header.stack_size,
-            img->header.heap_size_min, img->header.heap_size_max, img->header.priority);
-
-        // TODO: Load all references DLL in the export list.
-    }
-
-    process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
-        const std::string &process_name, const std::u16string &exe_path,
-        const std::u16string &cmd_args, loader::romimg_ptr &img,
-        const process_priority pri)
-        : kernel_obj(kern, process_name, access_type::local_access)
-        , puid(uid)
-        , process_name(process_name)
-        , kern(kern)
-        , mem(mem)
-        , img(nullptr)
-        , romimg(img)
         , exe_path(exe_path)
         , cmd_args(cmd_args)
         , page_tab(mem->get_page_size())
         , priority(pri)
+        , codeseg(std::move(arg_codeseg))
         , process_handles(kern, handle_array_owner::process) {
         obj_type = kernel::object_type::process;
+        sec_info = codeseg->get_sec_info();
 
         create_prim_thread(
-            romimg->header.code_address, romimg->header.entry_point,
-            romimg->header.stack_size, romimg->header.heap_minimum_size, romimg->header.heap_maximum_size,
-            romimg->header.priority);
+            codeseg->get_code_run_addr(), codeseg->get_entry_point(),
+            stack_size, heap_min, heap_max, 
+            kernel::thread_priority::priority_absolute_foreground_normal);
 
         // TODO: Load all references DLL in the export list.
     }
@@ -149,27 +120,21 @@ namespace eka2l1::kernel {
     }
 
     bool process::run() {
-        thread_ptr thr = kern->get_thread_by_handle(primary_thread);
-
-        if (!thr) {
-            return false;
-        }
-
-        kern->run_thread(primary_thread);
-
-        return true;
+        return kern->get_thread_scheduler()->schedule(primary_thread);
     }
 
     std::uint32_t process::get_entry_point_address() {
-        return romimg ? romimg->header.entry_point : (img->rt_code_addr + img->header.entry_point);
+        return codeseg->get_entry_point();
     }
 
     void process::set_priority(const process_priority new_pri) {
-        std::vector<thread_ptr> all_own_threads = kern->get_all_thread_own_process(kern->get_process(obj_name));
         priority = new_pri;
 
-        for (const auto &thr : all_own_threads) {
-            thr->update_priority();
+        for (const auto &thr : kern->threads) {
+            // I think this will be invoked not much, but this sure hurts performance
+            if (thr->owning_process()->unique_id() == uid) {
+                thr->update_priority();
+            }
         }
     }
 
@@ -264,45 +229,16 @@ namespace eka2l1::kernel {
         dll_lock->signal();
     }
 
-    security_info process::get_sec_info() {
-        security_info info;
-
-        if (img) {
-            info.secure_id = img->header_extended.info.secure_id;
-            info.vendor_id = img->header_extended.info.vendor_id;
-
-            info.caps[0] = img->header_extended.info.cap1;
-            info.caps[1] = img->header_extended.info.cap2;
-        } else {
-            info.secure_id = romimg->header.sec_info.secure_id;
-            info.vendor_id = romimg->header.sec_info.vendor_id;
-
-            info.caps[0] = romimg->header.sec_info.cap1;
-            info.caps[1] = romimg->header.sec_info.cap2;
-        }
-
-        return info;
+    epoc::security_info process::get_sec_info() {
+        return sec_info;
     }
 
     void process::get_memory_info(memory_info &info) {
-        if (img) {
-            info.rt_code_addr = img->rt_code_addr;
-            info.rt_code_size = img->header.code_size;
-            info.rt_const_data_addr = img->header.data_offset;
-            info.rt_const_data_size = img->header.text_size - img->header.data_size;
-            info.rt_bss_addr = img->rt_data_addr;
-            info.rt_bss_size = img->header.bss_size;
-
-            info.rt_initialized_data_addr = img->rt_data_addr + img->header.bss_size;
-            info.rt_initialized_data_size = img->header.data_size;
-        } else {
-            info.rt_code_addr = romimg->header.code_address;
-            info.rt_code_size = romimg->header.code_size;
-            info.rt_bss_addr = romimg->header.data_bss_linear_base_address;
-            info.rt_bss_size = romimg->header.bss_size;
-            info.rt_const_data_addr = romimg->header.data_address;
-            info.rt_const_data_size = romimg->header.data_size;
-        }
+        info.rt_code_addr = codeseg->get_code_run_addr();
+        info.rt_const_data_addr = codeseg->get_data_run_addr();
+        info.rt_bss_addr = info.rt_const_data_addr;
+        info.rt_bss_size = codeseg->get_bss_size();
+        // TODO: More
     }
 
     void process::logon_request_form::do_state(kernel_system *kern, common::chunkyseri &seri) {
@@ -318,8 +254,7 @@ namespace eka2l1::kernel {
         seri.absorb(request_status.ptr_address());
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            requester = std::reinterpret_pointer_cast<kernel::thread>(
-                kern->get_kernel_obj_by_id(requester_id));
+            requester = kern->get<kernel::thread>(requester_id);
         }
     }
 
@@ -342,7 +277,14 @@ namespace eka2l1::kernel {
         }
 
         seri.absorb(puid);
-        seri.absorb(primary_thread);
+
+        kernel::uid prim_thread_id = primary_thread->unique_id();
+        seri.absorb(prim_thread_id);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            primary_thread = kern->get<kernel::thread>(prim_thread_id);
+        }
+
         seri.absorb(thread_count);
         seri.absorb(flags);
         seri.absorb(priority);
@@ -352,61 +294,6 @@ namespace eka2l1::kernel {
         seri.absorb(process_name);
         seri.absorb(exe_path);
         seri.absorb(cmd_args);
-
-        bool xip = (img ? false : true);
-        seri.absorb(xip);
-
-        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            hle::lib_manager *libmngr = kern->get_lib_manager();
-
-            if (xip) {
-                img = libmngr->load_e32img(common::utf8_to_ucs2(process_name));
-                romimg = nullptr;
-
-                // Lib manager only saves a brief information of the cache list but not the loader list.
-                // Must open image again, however, it's XIP since the code memory region is preserved.
-                libmngr->open_e32img(img);
-            } else {
-                img = nullptr;
-                romimg = libmngr->load_romimg(common::utf8_to_ucs2(process_name));
-
-                libmngr->open_romimg(romimg);
-            }
-        }
-
-        for (std::uint8_t i = 0; i < 15; i++) {
-            args[i].do_state(seri);
-        }
-
-        std::uint32_t cs = static_cast<std::uint32_t>(logon_requests.size());
-        seri.absorb(cs);
-
-        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            logon_requests.resize(cs);
-        }
-
-        for (auto &lr : logon_requests) {
-            lr.do_state(kern, seri);
-        }
-
-        cs = static_cast<std::uint32_t>(rendezvous_requests.size());
-        seri.absorb(cs);
-
-        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            rendezvous_requests.resize(s);
-        }
-
-        for (auto &rr : rendezvous_requests) {
-            rr.do_state(kern, seri);
-        }
-
-        std::uint32_t dll_lock_uid = (dll_lock ? dll_lock->unique_id() : 0);
-        seri.absorb(dll_lock_uid);
-
-        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            dll_lock = std::reinterpret_pointer_cast<kernel::mutex>(
-                kern->get_kernel_obj_by_id(dll_lock_uid));
-        }
 
         // We don't need to do state for page table, eventaully it will be filled in by chunk
         // Do state for object table

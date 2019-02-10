@@ -24,6 +24,7 @@
 #include <common/queue.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <mutex>
@@ -50,7 +51,7 @@ namespace eka2l1 {
     namespace kernel {
         enum class thread_state;
 
-        using uid = uint64_t;
+        using uid = std::uint32_t;
 
         class thread_scheduler {
             std::vector<thread_ptr> waiting_threads;

@@ -151,11 +151,14 @@ namespace eka2l1 {
                 }
 
                 obj->decrease_access_count();
+                obj->close();
 
                 if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process && obj->get_object_type() != object_type::thread) {
                     if (obj->get_object_type() == object_type::chunk) {
                         chunk_ptr c = std::reinterpret_pointer_cast<kernel::chunk>(obj);
 
+                        // This is a force hack signaling the closing one is chunk heap, which means the
+                        // thread is in destruction, and detach needed
                         if (c->is_chunk_heap()) {
                             ret_value = 1;
                         }
@@ -220,7 +223,8 @@ namespace eka2l1 {
                 seri.absorb(objects[next_slot_use].associated_handle);
 
                 if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-                    objects[next_slot_use].object = kern->get_kernel_obj_by_id(obj_id);
+                    // TODO
+                    //objects[next_slot_use].object = kern->get_kernel_obj_raw(obj_id);
                     objects[next_slot_use].free = false;
                 }
             }

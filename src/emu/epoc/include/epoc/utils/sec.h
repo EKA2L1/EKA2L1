@@ -36,4 +36,10 @@ namespace eka2l1::epoc {
             std::uint8_t extra_caps[4];
         };
     };
+    
+    struct security_info {
+        uint32_t secure_id;
+        uint32_t vendor_id;
+        uint32_t caps[2];
+    };
 }

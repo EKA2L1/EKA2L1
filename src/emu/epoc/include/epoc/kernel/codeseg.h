@@ -18,28 +18,48 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/ptr.h>
+#include <epoc/utils/sec.h>
 
+#include <tuple>
 #include <vector>
+
+namespace eka2l1 {
+    namespace kernel {
+        class chunk;
+        class codeseg;
+    }
+    
+    using codeseg_ptr = std::shared_ptr<kernel::codeseg>;
+    using chunk_ptr = std::shared_ptr<kernel::chunk>;
+}
 
 namespace eka2l1::kernel {
     struct codeseg_create_info {
+        std::u16string full_path;
+
         std::uint32_t uids[3];
-        std::uint32_t code_base;
-        std::uint32_t data_base;
+        std::uint32_t code_base = 0;
+        std::uint32_t data_base = 0;
         
-        std::uint32_t code_size;
-        std::uint32_t data_size;
-        std::uint32_t bss_size;
+        std::uint32_t code_size = 0;
+        std::uint32_t data_size = 0;
+        std::uint32_t bss_size = 0;
+
+        // Offset to exception descriptor
+        std::uint32_t exception_descriptor = 0;
         
-        address &code_load_addr;
-        address &data_load_addr;
+        address code_load_addr = 0;
+        address data_load_addr = 0;
 
         // Offset from code address
-        std::uint32_t entry_point;
+        std::uint32_t entry_point = 0;
 
         std::vector<std::uint32_t> export_table;
+        epoc::security_info sinfo;
     };
 
     class codeseg: public kernel::kernel_obj {
@@ -56,12 +76,21 @@ namespace eka2l1::kernel {
         std::uint32_t bss_size;
 
         std::uint32_t ep;
+        std::uint32_t exception_descriptor;
+
+        // Full path (if there is)
+        std::u16string full_path;
 
         // Invalid handle if those are not available
-        handle code_chunk;
-        handle data_chunk;
+        chunk_ptr code_chunk;
+        chunk_ptr data_chunk;
 
         std::vector<std::uint32_t> export_table;
+        std::vector<codeseg_ptr>   dependencies;
+
+        epoc::security_info sinfo;
+
+        bool mark { false };
 
     public:
         /*! \brief Create a new codeseg
@@ -76,19 +105,60 @@ namespace eka2l1::kernel {
         explicit codeseg(kernel_system *kern, const std::string &name,
             codeseg_create_info &info);
 
-        /*! \brief Open the codeseg
-         *
-         * This changes the code chunk perm to read_write_exec.
-         * TODO: Check if it should be read_exec. Some app modifies ROM shadow ?
-         * 
-         * \param pr_id ID of the process that opens this codeseg
-        */
-        bool open(const std::uint32_t pr_id);
+        virtual ~codeseg() {}
 
-        /*! \brief Close codeseg
-        */
-        bool close();
+        void queries_call_list(std::vector<std::uint32_t> &call_list);
 
-        address lookup(const std::uint8_t ord);
+        /*! \brief Add new dependency.
+        */
+        bool add_dependency(codeseg_ptr &codeseg);
+
+        /*! \brief Lookup for export.
+        */
+        address lookup(const std::uint32_t ord);
+
+        void set_full_path(const std::u16string &seg_full_path) {
+            full_path = seg_full_path;
+        }
+
+        std::u16string get_full_path() {
+            return full_path;
+        }
+
+        address get_code_run_addr() const {
+            return code_addr;
+        }
+
+        address get_data_run_addr() const {
+            return data_addr;
+        }
+
+        std::uint32_t get_bss_size() const {
+            return bss_size;
+        }
+
+        std::uint32_t get_code_size() const {
+            return code_size;
+        }
+        
+        std::uint32_t get_data_size() const {
+            return data_size;
+        }
+
+        std::uint32_t get_exception_descriptor() const {
+            return exception_descriptor;
+        }
+
+        address get_entry_point() {
+            return ep;
+        }
+
+        epoc::security_info &get_sec_info() {
+            return sinfo;
+        }
+
+        std::tuple<std::uint32_t, std::uint32_t, std::uint32_t> get_uids() {
+            return std::make_tuple(uids[0], uids[1], uids[2]);
+        }
     };
 }

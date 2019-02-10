@@ -20,7 +20,6 @@
 
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
-#include <debugger/mem_editor.h>
 
 #include <imgui.h>
 
@@ -28,8 +27,12 @@
 #include <epoc/epoc.h>
 
 #include <epoc/kernel/libmanager.h>
+#include <epoc/kernel/thread.h>
+#include <epoc/kernel.h>
 
 #include <common/cvt.h>
+
+#include <mutex>
 
 #define RGBA_TO_FLOAT(r, g, b, a) ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f)
 
@@ -51,7 +54,6 @@ namespace eka2l1 {
         , should_show_disassembler(false)
         , should_show_logger(true)
         , should_show_breakpoint_list(false) {
-        mem_editor = std::make_shared<MemoryEditor>(sys->get_kernel_system());
     }
 
     const char *thread_state_to_string(eka2l1::kernel::thread_state state) {
@@ -91,16 +93,12 @@ namespace eka2l1 {
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-            for (const auto &obj : sys->get_kernel_system()->objects) {
-                if (obj && obj->get_object_type() == kernel::object_type::thread) {
-                    std::string obj_name = obj->name();
-                    thread_ptr thr = std::reinterpret_pointer_cast<kernel::thread>(obj);
+            for (const auto &thr : sys->get_kernel_system()->threads) {
+                chunk_ptr chnk = thr->get_stack_chunk();
 
-                    chunk_ptr chnk = thr->get_stack_chunk();
-
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", obj->unique_id(),
-                        obj_name.c_str(), thread_state_to_string(thr->current_state()), chnk->base().ptr_address());
-                }
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", thr->unique_id(),
+                    thr->name().c_str(), thread_state_to_string(thr->current_state()), chnk->base().ptr_address());
+            
             }
         }
 
@@ -114,13 +112,9 @@ namespace eka2l1 {
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-            for (const auto &obj : sys->get_kernel_system()->objects) {
-                if (obj && obj->get_object_type() == kernel::object_type::mutex) {
-                    std::string obj_name = obj->name();
-
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s", obj->unique_id(),
-                        obj_name.c_str());
-                }
+            for (const auto &mutex : sys->get_kernel_system()->mutexes) {
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s", mutex->unique_id(),
+                    mutex->name().c_str());
             }
         }
 
@@ -134,16 +128,12 @@ namespace eka2l1 {
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-            for (const auto &obj : sys->get_kernel_system()->objects) {
-                if (obj && obj->get_object_type() == kernel::object_type::chunk) {
-                    std::string obj_name = obj->name();
-                    chunk_ptr chnk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
-                    std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
+            for (const auto &chnk : sys->get_kernel_system()->chunks) {
+                std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
-                    ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    0x%08X    0x%08X    0x%08X    0x%08lX      %-32s",
-                        obj->unique_id(), obj_name.c_str(), chnk->base().ptr_address(), chnk->get_bottom(), chnk->get_top(),
-                        chnk->get_max_size(), process_name.c_str());
-                }
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    0x%08X    0x%08X    0x%08X    0x%08lX      %-32s",
+                    chnk->unique_id(), chnk->name().c_str(), chnk->base().ptr_address(), chnk->get_bottom(), chnk->get_top(),
+                    chnk->get_max_size(), process_name.c_str());
             }
         }
 
@@ -157,30 +147,20 @@ namespace eka2l1 {
         if (ImGui::Begin("Disassembler", &should_show_disassembler)) {
             std::vector<thread_ptr> threads;
             thread_ptr debug_thread = nullptr;
+            kernel_system *kern = sys->get_kernel_system();
 
-            // Thread can't be deleted, but there can be data race when a new thread is added
             {
                 const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-                for (const auto &obj : sys->get_kernel_system()->objects) {
-                    if (obj && obj->get_object_type() == kernel::object_type::thread) {
-                        threads.push_back(std::reinterpret_pointer_cast<kernel::thread>(obj));
-
-                        if (debug_thread_id == obj->unique_id()) {
-                            debug_thread = threads.back();
-                        }
+                if (!debug_thread) {
+                    if (kern->threads.size() == 0) {
+                        ImGui::End();
+                        return;
                     }
-                }
-            }
 
-            if (!debug_thread) {
-                if (threads.size() == 0) {
-                    ImGui::End();
-                    return;
+                    debug_thread = *kern->threads.begin();
+                    debug_thread_id = debug_thread->unique_id();
                 }
-
-                debug_thread = threads[0];
-                debug_thread_id = threads[0]->unique_id();
             }
 
             std::string thr_name = debug_thread->name();
@@ -242,10 +222,6 @@ namespace eka2l1 {
         }
 
         ImGui::End();
-    }
-
-    void imgui_debugger::show_memory() {
-        mem_editor->DrawWindow("Memory Editor");
     }
 
     void imgui_debugger::show_breakpoint_list() {
@@ -353,7 +329,6 @@ namespace eka2l1 {
 
                 ImGui::Separator();
 
-                ImGui::MenuItem("Memory Viewer", "CTRL+M", &(mem_editor->Open));
                 ImGui::MenuItem("Disassembler", nullptr, &should_show_disassembler);
                 ImGui::MenuItem("Breakpoints", nullptr, &should_show_breakpoint_list);
 
@@ -384,10 +359,6 @@ namespace eka2l1 {
 
         if (should_show_chunks) {
             show_chunks();
-        }
-
-        if (mem_editor->Open) {
-            show_memory();
         }
 
         if (should_show_disassembler) {

@@ -23,6 +23,7 @@
 #include <epoc/kernel/mutex.h>
 #include <epoc/kernel/object_ix.h>
 #include <epoc/kernel/thread.h>
+#include <epoc/utils/sec.h>
 
 #include <epoc/utils/reqsts.h>
 
@@ -68,12 +69,6 @@ namespace eka2l1::kernel {
         void do_state(common::chunkyseri &seri);
     };
 
-    struct security_info {
-        uint32_t secure_id;
-        uint32_t vendor_id;
-        uint32_t caps[2];
-    };
-
     using process_uid_type = std::tuple<uint32_t, uint32_t, uint32_t>;
 
     enum class process_priority {
@@ -108,16 +103,19 @@ namespace eka2l1::kernel {
         address rt_bss_size;
     };
 
+    class codeseg;
+    using codeseg_ptr = std::shared_ptr<codeseg>;
+
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
 
-        uint32_t puid, primary_thread;
+        uint32_t puid;
+        thread_ptr primary_thread;
 
         std::string process_name;
 
-        loader::e32img_ptr img;
-        loader::romimg_ptr romimg;
+        codeseg_ptr codeseg;
 
         kernel_system *kern;
         memory_system *mem;
@@ -157,10 +155,11 @@ namespace eka2l1::kernel {
         uint32_t thread_count = 0;
 
         mutex_ptr dll_lock;
+        epoc::security_info sec_info;
 
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
-            uint32_t heap_max, uint32_t pri);
+            uint32_t heap_max, kernel::thread_priority pri);
 
     public:
         uint32_t increase_thread_count() {
@@ -179,16 +178,11 @@ namespace eka2l1::kernel {
         void finish_logons();
 
         process(kernel_system *kern, memory_system *mem);
-
         process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
-            const std::u16string &cmd_args, loader::e32img_ptr &img,
-            const process_priority pri = process_priority::foreground);
-
-        process(kernel_system *kern, memory_system *mem, uint32_t uid,
-            const std::string &process_name, const std::u16string &exe_path,
-            const std::u16string &cmd_args, loader::romimg_ptr &img,
-            const process_priority pri = process_priority::foreground);
+            const std::u16string &cmd_args, codeseg_ptr codeseg,
+            uint32_t stack_size, uint32_t heap_min,
+            uint32_t heap_max, const process_priority pri = process_priority::foreground);
 
         bool run();
 
@@ -215,12 +209,12 @@ namespace eka2l1::kernel {
             return exe_path;
         }
 
-        uint32_t get_uid() {
-            return puid;
+        codeseg_ptr get_codeseg() {
+            return codeseg;
         }
 
-        loader::e32img_ptr get_e32img() {
-            return img;
+        std::uint32_t get_uid() {
+            return puid;
         }
 
         page_table &get_page_table() {
@@ -241,7 +235,7 @@ namespace eka2l1::kernel {
             return priority;
         }
 
-        security_info get_sec_info();
+        epoc::security_info get_sec_info();
 
         void set_priority(const process_priority new_pri);
 

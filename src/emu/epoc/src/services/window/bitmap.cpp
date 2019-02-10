@@ -116,7 +116,7 @@ namespace eka2l1 {
 
     bitmap_manipulator::bitmap_manipulator(eka2l1::system *sys)
         : sys(sys) {
-        fbscli = sys->get_lib_manager()->load_romimg(u"fbscli.dll", false);
+        //fbscli = sys->get_lib_manager()->load_romimg(u"fbscli.dll", false);
 
         // https://github.com/SymbianSource/oss.FCL.sf.os.graphics/blob/ff133bc50e6158bfb08cc093b0f0055321dcde99/fbs/fontandbitmapserver/eabi/FBSCLI2U.DEF
         // _ZN10CFbsBitmap9DuplicateEi @ 30 NONAME

@@ -69,57 +69,19 @@ namespace eka2l1 {
             *process_name16 += u".exe";
         }
 
-        auto eimg = ctx.sys->get_lib_manager()->load_e32img(*process_name16);
+        kernel_system *kern = ctx.sys->get_kernel_system();
 
-        if (!eimg) {
-            loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*process_name16, false);
+        process_ptr pr = kern->spawn_new_process(*process_name16,
+            *process_args, info->uid3, info->min_stack_size);
 
-            if (img_ptr && ((info->uid3 == 0) || (info->uid3 != 0 && img_ptr->header.uid3 == info->uid3))) {
-                ctx.sys->get_lib_manager()->open_romimg(img_ptr);
-
-                int32_t stack_size_img = img_ptr->header.stack_size;
-                img_ptr->header.stack_size = std::min(img_ptr->header.stack_size, info->min_stack_size);
-
-                /* Create process through kernel system. */
-                uint32_t handle = ctx.sys->get_kernel_system()->create_process(info->uid3, name_process,
-                    *process_name16, *process_args, img_ptr, static_cast<kernel::process_priority>(img_ptr->header.priority),
-                    static_cast<kernel::owner_type>(info->owner_type));
-
-                img_ptr->header.stack_size = stack_size_img;
-                LOG_TRACE("Spawned process: {}, entry point: 0x{:x}", name_process, img_ptr->header.entry_point);
-
-                info->handle = handle;
-                ctx.write_arg_pkg(0, *info);
-
-                ctx.set_request_status(KErrNone);
-                return;
-            }
-
-            LOG_ERROR("Can't found or load process executable: {}", name_process);
-
+        if (!pr) {
             ctx.set_request_status(KErrNotFound);
             return;
         }
 
-        ctx.sys->get_lib_manager()->open_e32img(eimg);
-        ctx.sys->get_lib_manager()->patch_hle();
+        info->handle = kern->open_handle(pr, static_cast<kernel::owner_type>(info->owner_type));
 
-        /* Create process through kernel system */
-        int32_t stack_size_img = eimg->header.stack_size;
-        eimg->header.stack_size = std::min(eimg->header.stack_size, (uint32_t)info->min_stack_size);
-
-        /* Create process through kernel system. */
-        uint32_t handle = ctx.sys->get_kernel_system()->create_process(info->uid3, name_process,
-            *process_name16, *process_args, eimg, static_cast<kernel::process_priority>(eimg->header.priority),
-            static_cast<kernel::owner_type>(info->owner_type));
-
-        eimg->header.stack_size = stack_size_img;
-
-        LOG_TRACE("Spawned process: {}", name_process);
-
-        info->handle = handle;
         ctx.write_arg_pkg(0, *info);
-
         ctx.set_request_status(KErrNone);
     }
 
@@ -149,50 +111,25 @@ namespace eka2l1 {
             *lib_path += u".dll";
         }
 
-        loader::e32img_ptr e32img_ptr = ctx.sys->get_lib_manager()->load_e32img(*lib_path);
+        codeseg_ptr cs = ctx.sys->get_lib_manager()->load(*lib_path);
 
-        if (!e32img_ptr) {
-            loader::romimg_ptr img_ptr = ctx.sys->get_lib_manager()->load_romimg(*lib_path);
-
-            if (!img_ptr) {
-                LOG_TRACE("Invalid library provided {}", lib_name);
-                ctx.set_request_status(KErrNotFound);
-
-                return;
-            }
-
-            ctx.sys->get_lib_manager()->open_romimg(img_ptr);
-
-            /* Create process through kernel system. */
-            uint32_t handle = ctx.sys->get_kernel_system()->create_library(lib_name,
-                img_ptr, static_cast<kernel::owner_type>(info->owner_type));
-
-            LOG_TRACE("Loaded library: {}", lib_name);
-
-            info->handle = handle;
-
-            ctx.sys->get_kernel_system()->crr_process()->signal_dll_lock();
-
-            ctx.write_arg_pkg(0, *info);
-            ctx.set_request_status(KErrNone);
-        } else {
-            ctx.sys->get_lib_manager()->open_e32img(e32img_ptr);
-
-            /* Create process through kernel system. */
-            uint32_t handle = ctx.sys->get_kernel_system()->create_library(
-                lib_name, e32img_ptr, static_cast<kernel::owner_type>(info->owner_type));
-
-            LOG_TRACE("Loaded library: {}", lib_name);
-
-            info->handle = handle;
-
-            ctx.write_arg_pkg(0, *info);
-            ctx.set_request_status(KErrNone);
-
-            ctx.sys->get_kernel_system()->crr_process()->signal_dll_lock();
-
+        if (!cs) {
+            ctx.set_request_status(KErrNotFound);
             return;
         }
+
+        /* Create process through kernel system. */
+        kernel::handle lib_handle = ctx.sys->get_kernel_system()->create_and_add<kernel::library>(
+            static_cast<kernel::owner_type>(info->owner_type), cs).first;
+
+        LOG_TRACE("Loaded library: {}", lib_name);
+
+        info->handle = lib_handle;
+
+        ctx.sys->get_kernel_system()->crr_process()->signal_dll_lock();
+
+        ctx.write_arg_pkg(0, *info);
+        ctx.set_request_status(KErrNone);
     }
 
     void loader_server::get_info(service::ipc_context ctx) {
@@ -211,17 +148,17 @@ namespace eka2l1 {
         }
 
         epoc::ldr_info load_info;
-        loader::e32img_ptr eimg = ctx.sys->get_lib_manager()->load_e32img(*lib_name);
+        auto imgs = ctx.sys->get_lib_manager()->try_search_and_parse(*lib_name);
 
         LOG_TRACE("Get Info of {}", common::ucs2_to_utf8(*lib_name));
 
-        if (!eimg) {
-            loader::romimg_ptr rimg = ctx.sys->get_lib_manager()->load_romimg(*lib_name);
+        if (!imgs.first && !imgs.second) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
 
-            if (!rimg) {
-                ctx.set_request_status(KErrNotFound);
-                return;
-            }
+        if (!imgs.first && imgs.second) {
+            auto &rimg = imgs.second;
 
             load_info.uid1 = rimg->header.uid1;
             load_info.uid2 = rimg->header.uid2;
@@ -258,6 +195,7 @@ namespace eka2l1 {
             return;
         }
 
+        auto &eimg = imgs.first;
         memcpy(&load_info.uid1, &eimg->header.uid1, 12);
 
         load_info.min_stack_size = eimg->header.heap_size_min;

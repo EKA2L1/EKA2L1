@@ -148,17 +148,8 @@ namespace eka2l1::epoc {
         eka2l1::memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr_real;
-
-        // 0xffff8000 is a kernel mapping for current process
-        if (aHandle != 0xffff8000) {
-            // Unlike Symbian, process is not a kernel object here
-            // Its handle contains the process's uid
-            pr_real = kern->get_process(aHandle);
-        } else {
-            pr_real = kern->crr_process();
-        }
-
+        process_ptr pr_real = kern->get<kernel::process>(aHandle);
+        
         if (!pr_real) {
             LOG_ERROR("ProcessExitType: Invalid process");
             return 0;
@@ -175,16 +166,7 @@ namespace eka2l1::epoc {
         eka2l1::memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr_real;
-
-        // 0xffff8000 is a kernel mapping for current process
-        if (aProcessHandle != 0xffff8000) {
-            // Unlike Symbian, process is not a kernel object here
-            // Its handle contains the process's uid
-            pr_real = kern->get_process(aProcessHandle);
-        } else {
-            pr_real = kern->crr_process();
-        }
+        process_ptr pr_real = kern->get<kernel::process>(aProcessHandle);
 
         if (!pr_real) {
             LOG_ERROR("SvcProcessFileName: Invalid process");
@@ -199,7 +181,7 @@ namespace eka2l1::epoc {
         kernel::memory_info *info = aInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr_real = kern->get_process(aHandle);
+        process_ptr pr_real = kern->get<kernel::process>(aHandle);
 
         if (!pr_real) {
             return KErrBadHandle;
@@ -213,16 +195,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr_real;
-
-        // 0xffff8000 is a kernel mapping for current process
-        if (aHandle != 0xffff8000) {
-            // Unlike Symbian, process is not a kernel object here
-            // Its handle contains the process's uid
-            pr_real = kern->get_process(aHandle);
-        } else {
-            pr_real = kern->crr_process();
-        }
+        process_ptr pr_real = kern->get<kernel::process>(aHandle);
 
         if (!pr_real) {
             LOG_ERROR("ProcessGetId: Invalid process");
@@ -236,16 +209,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr_real;
-
-        // 0xffff8000 is a kernel mapping for current process
-        if (pr != 0xffff8000) {
-            // Unlike Symbian, process is not a kernel object here
-            // Its handle contains the process's uid
-            pr_real = kern->get_process(pr);
-        } else {
-            pr_real = kern->crr_process();
-        }
+        process_ptr pr_real = kern->get<kernel::process>(pr);
 
         if (!pr_real) {
             LOG_ERROR("SvcProcessType: Invalid process");
@@ -312,7 +276,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessSetDataParameter, TInt aHandle, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aDataSize) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->get_process(aHandle);
+        process_ptr pr = kern->get<kernel::process>(aHandle);
 
         if (!pr) {
             return KErrBadHandle;
@@ -336,7 +300,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->get_process(aHandle);
+        process_ptr pr = kern->get<kernel::process>(aHandle);
 
         if (!pr) {
             return KErrBadHandle;
@@ -347,7 +311,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<epoc::des8> aData) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->get_process(aHandle);
+        process_ptr pr = kern->get<kernel::process>(aHandle);
 
         if (!pr) {
             LOG_WARN("Process not found with handle: 0x{:x}", aHandle);
@@ -372,7 +336,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr = kern->get_process(aHandle);
+        process_ptr pr = kern->get<kernel::process>(aHandle);
 
         uint32_t org_flags = pr->get_flags();
         uint32_t new_flags = ((org_flags & ~aClearMask) | aSetMask);
@@ -383,7 +347,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessSetPriority, TInt aHandle, TInt aProcessPriority) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->get_process(aHandle);
+        process_ptr pr = kern->get<kernel::process>(aHandle);
 
         if (!pr) {
             return KErrBadHandle;
@@ -396,7 +360,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessRename, TInt aHandle, eka2l1::ptr<des8> aNewName) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->get_process(aHandle);
+        process_ptr pr = kern->get<kernel::process>(aHandle);
 
         if (!pr) {
             return KErrBadHandle;
@@ -410,7 +374,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, ProcessResume, TInt aHandle) {
-        process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
+        process_ptr pr = sys->get_kernel_system()->get<kernel::process>(aHandle);
 
         if (!pr) {
             return;
@@ -422,7 +386,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(void, ProcessLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
         LOG_TRACE("Logon requested from thread {}", sys->get_kernel_system()->crr_thread()->name());
 
-        process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
+        process_ptr pr = sys->get_kernel_system()->get<kernel::process>(aHandle);
 
         if (!pr) {
             return;
@@ -432,7 +396,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, ProcessLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
-        process_ptr pr = sys->get_kernel_system()->get_process(aHandle);
+        process_ptr pr = sys->get_kernel_system()->get<kernel::process>(aHandle);
 
         if (!pr) {
             return KErrBadHandle;
@@ -814,7 +778,7 @@ namespace eka2l1::epoc {
     void query_security_info(eka2l1::process_ptr process, epoc::TSecurityInfo *info) {
         assert(process);
 
-        kernel::security_info sec_info = process->get_sec_info();
+        epoc::security_info sec_info = process->get_sec_info();
         memcpy(info, &sec_info, sizeof(sec_info));
     }
 
@@ -822,7 +786,7 @@ namespace eka2l1::epoc {
         epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
-        process_ptr pr = std::reinterpret_pointer_cast<kernel::process>(kern->get_kernel_obj(aProcessHandle));
+        process_ptr pr = kern->get<kernel::process>(aProcessHandle);
         query_security_info(pr, sec_info);
     }
 
@@ -830,7 +794,7 @@ namespace eka2l1::epoc {
         epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
-        thread_ptr thr = std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj(aThreadHandle));
+        thread_ptr thr = kern->get<kernel::thread>(aThreadHandle);
 
         if (!thr) {
             LOG_ERROR("Thread handle invalid 0x{:x}", aThreadHandle);
@@ -859,7 +823,8 @@ namespace eka2l1::epoc {
         std::string server_name = aServerName.get(sys->get_memory_system())
                                       ->to_std_string(kern->crr_process());
 
-        uint32_t handle = kern->create_server(server_name);
+        auto handle = kern->create_and_add<service::server>(kernel::owner_type::process,
+            server_name).first;
 
         if (handle != INVALID_HANDLE) {
             LOG_TRACE("Server {} created", server_name);
@@ -872,7 +837,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        server_ptr server = kern->get_server(aHandle);
+        server_ptr server = kern->get<service::server>(aHandle);
 
         if (!server) {
             return;
@@ -887,7 +852,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        server_ptr server = kern->get_server(aHandle);
+        server_ptr server = kern->get<service::server>(aHandle);
 
         if (!server) {
             return;
@@ -901,14 +866,15 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
 
         std::string server_name = aServerName.get(mem)->to_std_string(kern->crr_process());
-        server_ptr server = kern->get_server_by_name(server_name);
+        server_ptr server = kern->get_by_name<service::server>(server_name);
 
         if (!server) {
             LOG_TRACE("Create session to unexist server: {}", server_name);
             return KErrNotFound;
         }
 
-        uint32_t handle = kern->create_session(server, aMsgSlot);
+        const kernel::handle handle = kern->create_and_add<service::session>(
+            kernel::owner_type::process, server, aMsgSlot).first;
 
         if (handle == INVALID_HANDLE) {
             return KErrGeneral;
@@ -925,7 +891,7 @@ namespace eka2l1::epoc {
 
         TInt *handle = aHandle.get(mem);
 
-        session_ptr ss = kern->get_session(*handle);
+        session_ptr ss = kern->get<service::session>(*handle);
 
         if (!ss) {
             return KErrBadHandle;
@@ -967,7 +933,7 @@ namespace eka2l1::epoc {
             arg.flag = *arg_header & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
         }
 
-        session_ptr ss = kern->get_session(aHandle);
+        session_ptr ss = kern->get<service::session>(aHandle);
 
         if (!ss) {
             return KErrBadHandle;
@@ -999,7 +965,7 @@ namespace eka2l1::epoc {
             arg.flag = *arg_header & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
         }
 
-        session_ptr ss = kern->get_session(aHandle);
+        session_ptr ss = kern->get<service::session>(aHandle);
 
         if (!ss) {
             return KErrBadHandle;
@@ -1094,9 +1060,10 @@ namespace eka2l1::epoc {
             att = kernel::chunk_attrib::anonymous;
         }
 
-        uint32_t handle = kern->create_chunk(name ? name->to_std_string(kern->crr_process()) : "", createInfo.iInitialBottom, createInfo.iInitialTop,
-            createInfo.iMaxSize, prot::read_write, type, access, att,
-            aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread);
+        const kernel::handle handle = kern->create_and_add<kernel::chunk>(
+            aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread,
+            sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", createInfo.iInitialBottom, 
+            createInfo.iInitialTop, createInfo.iMaxSize, prot::read_write, type, access, att).first;
 
         if (handle == INVALID_HANDLE) {
             return KErrNoMemory;
@@ -1106,35 +1073,29 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, ChunkMaxSize, TInt aChunkHandle) {
-        kernel_obj_ptr obj = RHandleBase(aChunkHandle).GetKObject(sys);
-
-        if (!obj) {
+        chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
+        if (!chunk) {
             return KErrBadHandle;
         }
-
-        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
+        
         return static_cast<TInt>(chunk->get_max_size());
     }
 
     BRIDGE_FUNC(eka2l1::ptr<TUint8>, ChunkBase, TInt aChunkHandle) {
-        kernel_obj_ptr obj = RHandleBase(aChunkHandle).GetKObject(sys);
-
-        if (!obj) {
+        chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
+        if (!chunk) {
             return 0;
         }
 
-        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
         return chunk->base();
     }
 
     BRIDGE_FUNC(TInt, ChunkAdjust, TInt aChunkHandle, TInt aType, TInt a1, TInt a2) {
-        kernel_obj_ptr obj = RHandleBase(aChunkHandle).GetKObject(sys);
-
-        if (!obj) {
+        chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
+        
+        if (!chunk) {
             return KErrBadHandle;
         }
-
-        chunk_ptr chunk = std::reinterpret_pointer_cast<kernel::chunk>(obj);
 
         auto fetch = [aType](chunk_ptr chunk, int a1, int a2) -> bool {
             switch (aType) {
@@ -1185,8 +1146,8 @@ namespace eka2l1::epoc {
         desc8 *desname = aSemaName.get(mem);
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        uint32_t sema = kern->create_sema(!desname ? "" : desname->to_std_string(kern->crr_process()).c_str(),
-            aInitCount, owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
+        const kernel::handle sema = kern->create_and_add<kernel::semaphore>(owner, !desname ? "" : desname->to_std_string(kern->crr_process()).c_str(),
+            aInitCount, !desname ? kernel::access_type::local_access : kernel::access_type::global_access).first;
 
         if (sema == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1199,7 +1160,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        sema_ptr sema = std::reinterpret_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+        sema_ptr sema = kern->get<kernel::semaphore>(aSemaHandle);
 
         if (!sema) {
             return KErrBadHandle;
@@ -1217,7 +1178,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        sema_ptr sema = std::reinterpret_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+        sema_ptr sema = kern->get<kernel::semaphore>(aSemaHandle);
 
         if (!sema) {
             return;
@@ -1230,7 +1191,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        sema_ptr sema = std::reinterpret_pointer_cast<kernel::semaphore>(kern->get_kernel_obj(aSemaHandle));
+        sema_ptr sema = kern->get<kernel::semaphore>(aSemaHandle);
 
         if (!sema) {
             return;
@@ -1246,8 +1207,9 @@ namespace eka2l1::epoc {
         desc8 *desname = aMutexName.get(mem);
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        uint32_t mut = kern->create_mutex(!desname ? "" : desname->to_std_string(kern->crr_process()), false,
-            owner, !desname ? kernel::access_type::local_access : kernel::access_type::global_access);
+        const kernel::handle mut = kern->create_and_add<kernel::mutex>(owner, sys->get_timing_system(),
+            !desname ? "" : desname->to_std_string(kern->crr_process()), false,
+            !desname ? kernel::access_type::local_access : kernel::access_type::global_access).first;
 
         if (mut == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1258,7 +1220,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, MutexWait, TInt aMutexHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(aMutexHandle));
+        mutex_ptr mut = kern->get<kernel::mutex>(aMutexHandle);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
             return KErrBadHandle;
@@ -1270,7 +1232,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, MutexWaitVer2, TInt aMutexHandle, TInt aTimeout) {
         kernel_system *kern = sys->get_kernel_system();
-        mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(kern->get_kernel_obj(aMutexHandle));
+        mutex_ptr mut = kern->get<kernel::mutex>(aMutexHandle);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
             return KErrBadHandle;
@@ -1293,8 +1255,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, MutexSignal, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        mutex_ptr mut = std::reinterpret_pointer_cast<kernel::mutex>(
-            kern->get_kernel_obj(aHandle));
+        mutex_ptr mut = kern->get<kernel::mutex>(aHandle);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
             return;
@@ -1326,7 +1287,8 @@ namespace eka2l1::epoc {
 
         LOG_TRACE("Finding object name: {}", name);
 
-        std::optional<find_handle> info = kern->find_object(name, handle->iHandle, static_cast<kernel::object_type>(aObjectType));
+        std::optional<find_handle> info = kern->find_object(name, handle->iHandle, 
+            static_cast<kernel::object_type>(aObjectType));
 
         if (!info) {
             return KErrNotFound;
@@ -1355,7 +1317,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        uint32_t res = kern->mirror(kern->get_thread_by_handle(aThreadHandle), aDupHandle,
+        uint32_t res = kern->mirror(kern->get<kernel::thread>(aThreadHandle), aDupHandle,
             (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread);
 
         return res;
@@ -1367,18 +1329,18 @@ namespace eka2l1::epoc {
 
         std::string obj_name = aName.get(mem)->to_std_string(kern->crr_process());
 
-        auto obj_info = kern->find_object(obj_name, 0, static_cast<eka2l1::kernel::object_type>(aObjectType));
+        // What a waste if we find the ID already but not mirror it
+        kernel_obj_ptr obj = kern->get_by_name_and_type<kernel::kernel_obj>(obj_name, 
+            static_cast<kernel::object_type>(aObjectType));
 
-        if (!obj_info) {
+        if (!obj) {
             return KErrNotFound;
         }
 
-        uint32_t id = obj_info->object_id;
-        kernel_obj_ptr obj = kern->get_kernel_obj_by_id(id);
+        uint32_t ret_handle = kern->mirror(obj,
+            static_cast<eka2l1::kernel::owner_type>(aOwnerType));
 
-        uint32_t ret_handle = kern->mirror(obj, static_cast<eka2l1::kernel::owner_type>(aOwnerType));
-
-        if (ret_handle != 0xFFFFFFFF) {
+        if (ret_handle != INVALID_HANDLE) {
             return ret_handle;
         }
 
@@ -1387,7 +1349,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<des8> aName) {
         kernel_system *kern = sys->get_kernel_system();
-        kernel_obj_ptr obj = kern->get_kernel_obj(aHandle);
+        kernel_obj_ptr obj = kern->get_kernel_obj_raw(aHandle);
 
         if (!obj) {
             if (aHandle == 0xFFFF8001) {
@@ -1411,7 +1373,8 @@ namespace eka2l1::epoc {
         TUint32 *list_ptr = aList.get(mem);
         TInt *total = aTotal.get(mem);
 
-        std::vector<uint32_t> list = epoc::query_entries(sys);
+        std::vector<uint32_t> list;
+        sys->get_kernel_system()->crr_process()->get_codeseg()->queries_call_list(list);
 
         *total = static_cast<TInt>(list.size());
         memcpy(list_ptr, list.data(), sizeof(TUint32) * *total);
@@ -1435,7 +1398,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        library_ptr lib = std::reinterpret_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+        library_ptr lib = kern->get<kernel::library>(aHandle);
 
         if (!lib) {
             return KErrBadHandle;
@@ -1456,7 +1419,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        library_ptr lib = std::reinterpret_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+        library_ptr lib = kern->get<kernel::library>(aHandle);
 
         if (!lib) {
             return 0;
@@ -1475,7 +1438,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        library_ptr lib = std::reinterpret_pointer_cast<kernel::library>(kern->get_kernel_obj(aHandle));
+        library_ptr lib = kern->get<kernel::library>(aHandle);
 
         if (!lib) {
             return KErrBadHandle;
@@ -1542,9 +1505,10 @@ namespace eka2l1::epoc {
         std::string thr_name = aThreadName.get(mem)->to_std_string(kern->crr_process()).c_str();
         thread_create_info_expand *info = aInfo.get(mem);
 
-        uint32_t thr_handle = kern->create_thread(static_cast<kernel::owner_type>(aOwnerType), kern->crr_process(),
+        const kernel::handle thr_handle = kern->create_and_add<kernel::thread>(static_cast<kernel::owner_type>(aOwnerType), 
+            mem, kern->get_timing_system(), kern->crr_process(),
             kernel::access_type::local_access, thr_name, info->func_ptr, info->user_stack_size,
-            info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal);
+            info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal).first;
 
         if (thr_handle == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1562,7 +1526,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ThreadID, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
             return KErrBadHandle;
@@ -1575,7 +1539,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
             return KErrBadHandle;
@@ -1633,14 +1597,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        thread_ptr thr;
-
-        // Current thread handle
-        if (aHandle == 0xFFFF8001) {
-            thr = kern->crr_thread();
-        } else {
-            thr = kern->get_thread_by_handle(aHandle);
-        }
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
             return;
@@ -1653,15 +1610,8 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        thread_ptr thr;
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
         desc8 *name = aName.get(mem);
-
-        // Current thread handle
-        if (aHandle == 0xFFFF8001) {
-            thr = kern->crr_thread();
-        } else {
-            thr = kern->get_thread_by_handle(aHandle);
-        }
 
         if (!thr) {
             return KErrBadHandle;
@@ -1679,13 +1629,13 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(TInt, ThreadProcess, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
 
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
         return kern->mirror(thr->owning_process(), kernel::owner_type::thread);
     }
 
     BRIDGE_FUNC(void, ThreadSetPriority, TInt aHandle, TInt aThreadPriority) {
         kernel_system *kern = sys->get_kernel_system();
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
             return;
@@ -1696,7 +1646,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, ThreadResume, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
             LOG_ERROR("invalid thread handle 0x{:x}", aHandle);
@@ -1718,7 +1668,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, ThreadSuspend, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
             LOG_ERROR("invalid thread handle 0x{:x}", aHandle);
@@ -1748,7 +1698,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, ThreadContext, TInt aHandle, eka2l1::ptr<des8> aContext) {
         kernel_system *kern = sys->get_kernel_system();
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
             return;
@@ -1779,7 +1729,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
-        thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
+        thread_ptr thr = sys->get_kernel_system()->get<kernel::thread>(aHandle);
 
         if (!thr) {
             return;
@@ -1789,7 +1739,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, ThreadLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
-        thread_ptr thr = sys->get_kernel_system()->get_thread_by_handle(aHandle);
+        thread_ptr thr = sys->get_kernel_system()->get<kernel::thread>(aHandle);
 
         if (!thr) {
             return KErrBadHandle;
@@ -1807,7 +1757,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(void, ThreadSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
         kernel_system *kern = sys->get_kernel_system();
 
-        thread_ptr thr = kern->get_thread_by_handle(aHandle);
+        thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         uint32_t org_flags = thr->get_flags();
         uint32_t new_flags = ((org_flags & ~aClearMask) | aSetMask);
@@ -1866,18 +1816,17 @@ namespace eka2l1::epoc {
         LOG_TRACE("Attach to property with cagetory: 0x{:x}, key: 0x{:x}", aCagetory, aValue);
 
         if (!prop) {
-            uint32_t property_handle = kern->create_prop(static_cast<kernel::owner_type>(aOwnerType));
+            auto prop_handle_and_obj = kern->create_and_add<service::property>
+                (static_cast<kernel::owner_type>(aOwnerType));
 
-            if (property_handle == INVALID_HANDLE) {
+            if (prop_handle_and_obj.first == INVALID_HANDLE) {
                 return KErrGeneral;
             }
 
-            prop = kern->get_prop(property_handle);
+            prop_handle_and_obj.second->first = aCagetory;
+            prop_handle_and_obj.second->second = aValue;
 
-            prop->first = aCagetory;
-            prop->second = aValue;
-
-            return property_handle;
+            return prop_handle_and_obj.first;
         }
 
         return kern->mirror(prop, static_cast<kernel::owner_type>(aOwnerType));
@@ -1913,13 +1862,11 @@ namespace eka2l1::epoc {
         property_ptr prop = kern->get_prop(aCagetory, aKey);
 
         if (!prop) {
-            uint32_t property_handle = kern->create_prop();
+            prop = kern->create<service::property>();
 
-            if (property_handle == INVALID_HANDLE) {
+            if (!prop) {
                 return KErrGeneral;
             }
-
-            prop = kern->get_prop(property_handle);
 
             prop->first = aCagetory;
             prop->second = aKey;
@@ -1932,7 +1879,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, PropertySubscribe, TInt aPropertyHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
         kernel_system *kern = sys->get_kernel_system();
-        property_ptr prop = kern->get_prop(aPropertyHandle);
+        property_ptr prop = kern->get<service::property>(aPropertyHandle);
 
         if (!prop) {
             return;
@@ -1945,7 +1892,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, PropertyCancel, TInt aPropertyHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        property_ptr prop = kern->get_prop(aPropertyHandle);
+        property_ptr prop = kern->get<service::property>(aPropertyHandle);
 
         if (!prop) {
             return;
@@ -1960,7 +1907,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get_prop(aHandle);
+        property_ptr prop = kern->get<service::property>(aHandle);
 
         if (!prop) {
             return KErrBadHandle;
@@ -1979,7 +1926,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get_prop(aHandle);
+        property_ptr prop = kern->get<service::property>(aHandle);
 
         if (!prop) {
             return KErrBadHandle;
@@ -1998,7 +1945,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get_prop(aHandle);
+        property_ptr prop = kern->get<service::property>(aHandle);
 
         if (!prop) {
             return KErrBadHandle;
@@ -2017,7 +1964,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get_prop(aHandle);
+        property_ptr prop = kern->get<service::property>(aHandle);
 
         if (!prop) {
             return KErrBadHandle;
@@ -2080,8 +2027,9 @@ namespace eka2l1::epoc {
     /* TIMER */
     /*********************/
     BRIDGE_FUNC(TInt, TimerCreate) {
-        return sys->get_kernel_system()->create_timer("timer" + common::to_string(eka2l1::random()),
-            kernel::owner_type::process);
+        return sys->get_kernel_system()->create_and_add<kernel::timer>(
+            kernel::owner_type::process, sys->get_timing_system(),
+            "timer" + common::to_string(eka2l1::random())).first;
     }
 
     /* 
@@ -2092,7 +2040,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds) {
         kernel_system *kern = sys->get_kernel_system();
-        timer_ptr timer = std::reinterpret_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+        timer_ptr timer = kern->get<kernel::timer>(aHandle);
 
         if (!timer) {
             return;
@@ -2103,7 +2051,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, TimerAtUtc, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TUint64 aMicroSecondsAt) {
         kernel_system *kern = sys->get_kernel_system();
-        timer_ptr timer = std::reinterpret_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+        timer_ptr timer = kern->get<kernel::timer>(aHandle);
 
         if (!timer) {
             return;
@@ -2114,7 +2062,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, TimerCancel, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        timer_ptr timer = std::reinterpret_pointer_cast<kernel::timer>(kern->get_kernel_obj(aHandle));
+        timer_ptr timer = kern->get<kernel::timer>(aHandle);
 
         if (!timer) {
             return;
@@ -2127,14 +2075,15 @@ namespace eka2l1::epoc {
     /* CHANGE NOTIFIER */
     /**********************/
     BRIDGE_FUNC(TInt, ChangeNotifierCreate, TOwnerType aOwner) {
-        return sys->get_kernel_system()->create_change_notifier(static_cast<kernel::owner_type>(aOwner));
+        return sys->get_kernel_system()->create_and_add<kernel::change_notifier>
+            (static_cast<kernel::owner_type>(aOwner)).first;
     }
 
     BRIDGE_FUNC(TInt, ChangeNotifierLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        change_notifier_ptr cnot = std::reinterpret_pointer_cast<kernel::change_notifier>(kern->get_kernel_obj(aHandle));
+        change_notifier_ptr cnot = kern->get<kernel::change_notifier>(aHandle);
 
         if (!cnot) {
             return KErrBadHandle;

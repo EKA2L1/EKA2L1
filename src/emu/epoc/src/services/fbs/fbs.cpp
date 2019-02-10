@@ -238,7 +238,9 @@ namespace eka2l1 {
         if (!shared_chunk && !large_chunk) {
             // Initialize those chunks
             kernel_system *kern = context.sys->get_kernel_system();
-            std::uint32_t shared_chunk_handle = kern->create_chunk(
+            shared_chunk = kern->create<kernel::chunk>(
+                kern->get_memory_system(),
+                kern->crr_process(),
                 "FbsSharedChunk",
                 0,
                 0x10000,
@@ -246,11 +248,12 @@ namespace eka2l1 {
                 prot::read_write,
                 kernel::chunk_type::normal,
                 kernel::chunk_access::global,
-                kernel::chunk_attrib::none,
-                kernel::owner_type::kernel
+                kernel::chunk_attrib::none
             );
 
-            std::uint32_t large_chunk_handle = kern->create_chunk(
+            large_chunk = kern->create<kernel::chunk>(
+                kern->get_memory_system(),
+                kern->crr_process(),
                 "FbsLargeChunk",
                 0,
                 0,
@@ -258,19 +261,15 @@ namespace eka2l1 {
                 prot::read_write,
                 kernel::chunk_type::normal,
                 kernel::chunk_access::global,
-                kernel::chunk_attrib::none,
-                kernel::owner_type::kernel
+                kernel::chunk_attrib::none
             );
 
-            if (shared_chunk_handle == INVALID_HANDLE || large_chunk_handle == INVALID_HANDLE) {
+            if (!shared_chunk || !large_chunk) {
                 LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
                 context.set_request_status(KErrNoMemory);
 
                 return;
             }
-
-            shared_chunk = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(shared_chunk_handle));
-            large_chunk = std::reinterpret_pointer_cast<kernel::chunk>(kern->get_kernel_obj(large_chunk_handle));
 
             eka2l1::process_ptr pr = context.msg->own_thr->owning_process();
 
@@ -282,7 +281,6 @@ namespace eka2l1 {
                 
             large_chunk_allocator = std::make_unique<fbs_chunk_allocator>(large_chunk, 
                 base_large_chunk);
-
 
             // Probably also indicates that font aren't loaded yet
             load_fonts(context.sys->get_io_system());

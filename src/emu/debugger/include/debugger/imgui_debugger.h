@@ -44,7 +44,6 @@ namespace eka2l1 {
         bool should_load_state;
         bool should_save_state;
         bool should_install_package;
-        bool should_show_memory;
         bool should_show_disassembler;
         bool should_show_logger;
         bool should_show_breakpoint_list;
@@ -55,7 +54,6 @@ namespace eka2l1 {
         void show_timers();
         void show_disassembler();
         void show_menu();
-        void show_memory();
         void show_breakpoint_list();
 
         std::atomic<std::uint32_t> debug_thread_id;

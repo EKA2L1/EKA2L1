@@ -218,8 +218,7 @@ namespace eka2l1 {
 
             commited_size = top - bottom;
 
-            own_process = std::reinterpret_pointer_cast<kernel::process>(
-                kern->get_kernel_obj_by_id(uid_pr));
+            own_process = kern->get_by_id<kernel::process>(uid_pr);
 
             page_table *old = mem->get_current_page_table();
             mem->set_current_page_table(own_process->get_page_table());

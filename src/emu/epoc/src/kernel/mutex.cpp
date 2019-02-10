@@ -88,7 +88,7 @@ namespace eka2l1 {
 
         void mutex::waking_up_from_suspension(std::uint64_t userdata, int cycles_late) {
             std::uint32_t id = static_cast<std::uint32_t>(userdata);
-            thread_ptr thread_to_wake = std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(id));
+            thread_ptr thread_to_wake = kern->get<kernel::thread>(id);
 
             if (!thread_to_wake || thread_to_wake->get_object_type() != kernel::object_type::thread) {
                 LOG_ERROR("Waking up invalid object!!!!!");
@@ -306,8 +306,7 @@ namespace eka2l1 {
             seri.absorb(holding_id);
 
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                holding = std::reinterpret_pointer_cast<kernel::thread>(
-                    kern->get_kernel_obj_by_id(holding_id));
+                holding = kern->get<kernel::thread>(holding_id);
             }
 
             std::uint32_t total_waits = static_cast<std::uint32_t>(waits.size());
@@ -318,8 +317,7 @@ namespace eka2l1 {
                 seri.absorb(wait_thr_id);
 
                 if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                    waits.push(std::reinterpret_pointer_cast<kernel::thread>(
-                        kern->get_kernel_obj_by_id(wait_thr_id)));
+                    waits.push(kern->get<kernel::thread>(wait_thr_id));
                 }
             }
 
@@ -331,8 +329,7 @@ namespace eka2l1 {
                 seri.absorb(sus_thr_id);
 
                 if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                    suspended.push_back(std::reinterpret_pointer_cast<kernel::thread>(
-                        kern->get_kernel_obj_by_id(sus_thr_id)));
+                    suspended.push_back(kern->get<kernel::thread>(sus_thr_id));
                 }
             }
         }
