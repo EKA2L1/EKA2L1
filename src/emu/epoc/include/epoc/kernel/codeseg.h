@@ -111,7 +111,7 @@ namespace eka2l1::kernel {
 
         /*! \brief Add new dependency.
         */
-        bool add_dependency(codeseg_ptr &codeseg);
+        bool add_dependency(codeseg_ptr codeseg);
 
         /*! \brief Lookup for export.
         */

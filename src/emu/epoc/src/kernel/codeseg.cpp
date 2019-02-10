@@ -111,14 +111,14 @@ namespace eka2l1::kernel {
         call_list.push_back(ep);
     }
     
-    bool codeseg::add_dependency(codeseg_ptr &codeseg) {
+    bool codeseg::add_dependency(codeseg_ptr codeseg) {
         // Check if this codeseg is unique first (no duplicate)
         // We don't check the UID though (TODO)
         auto result = std::find_if(dependencies.begin(), dependencies.end(),
             [&](const codeseg_ptr &codeseg_ite) { return codeseg_ite->unique_id() == codeseg->unique_id(); });
 
         if (result == dependencies.end()) {
-            dependencies.push_back(codeseg);
+            dependencies.push_back(std::move(codeseg));
             return true;
         }
 
