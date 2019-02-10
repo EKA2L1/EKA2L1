@@ -43,6 +43,7 @@
 #include <epoc/kernel.h>
 
 #include <arm/arm_analyser.h>
+#include <cctype>
 
 namespace eka2l1 {
     namespace hle {
@@ -332,7 +333,17 @@ namespace eka2l1 {
     
         // Cache by name is not the best idea, but it works and really fast
         bool lib_manager::add_to_cache(const std::u16string &name, codeseg_ptr cs) {
-            return cached_segs.emplace(eka2l1::filename(name), cs).second;
+            const std::u16string lib_name = eka2l1::filename(name);
+            bool result = cached_segs.emplace(lib_name, cs).second;
+
+            if (result) {
+                // Register all exports for symbol dumping    
+                register_exports(
+                    common::ucs2_to_utf8(eka2l1::replace_extension(lib_name, u"")),
+                    cs->get_export_table());
+            }
+
+            return result;
         }
         
         codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img) {
@@ -563,6 +574,21 @@ namespace eka2l1 {
 
             return true;
         }
+    
+        bool lib_manager::register_exports(const std::string &lib_name, export_table &table) {
+            std::string lib_name_lower = lib_name;
+            std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), std::tolower);
 
+            auto &lib_ite = lib_symbols.find(lib_name_lower);
+            if (lib_ite == lib_symbols.end()) {
+                return false;
+            }
+
+            for (std::size_t i = 0; i < table.size(); i++) {
+                addr_symbols.emplace(table[i] & ~0x1, lib_ite->second[i]);
+            }
+
+            return true;
+        }
     }
 }

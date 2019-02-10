@@ -77,6 +77,7 @@ namespace eka2l1 {
 
         using func_map = std::unordered_map<uint32_t, eka2l1::hle::epoc_import_func>;
         using export_table = std::vector<std::uint32_t>;
+        using symbols = std::vector<std::string>;
 
         /*! \brief Manage libraries and HLE functions.
 		 * 
@@ -92,11 +93,16 @@ namespace eka2l1 {
             chunk_ptr custom_stub;
             chunk_ptr stub;
 
+            std::unordered_map<address, std::string> addr_symbols;
+            std::unordered_map<std::string, symbols> lib_symbols;
+
         public:
             std::unordered_map<sid, epoc_import_func> svc_funcs;            
             std::unordered_map<std::u16string, codeseg_ptr> cached_segs;
 
             lib_manager(){};
+
+            bool register_exports(const std::string &lib_name, export_table &table);
 
             /*! \brief Intialize the library manager. 
 			 * \param ver The EPOC version to import HLE functions.
@@ -133,6 +139,14 @@ namespace eka2l1 {
             
             codeseg_ptr load_as_e32img(loader::e32img &img);
             codeseg_ptr load_as_romimg(loader::romimg &img);
+
+            std::optional<std::string> get_symbol(const address addr) {
+                auto res = addr_symbols.find(addr);
+                if (res != addr_symbols.end()) {
+                    return res->second;
+                }
+                return std::nullopt;
+            }
 
             system *get_sys() {
                 return sys;

@@ -117,18 +117,14 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     }
 #endif
 
-    /*
     if (log_passed && mngr) {
-        auto res = mngr->get_symbol_name(address);
-
-        if (!res && thumb_mode(uc)) {
-            res = mngr->get_sid(address + 1);
-        }
+        // Get the name of function at this address
+        auto res = mngr->get_symbol(address & ~0x1);
 
         if (res) {
-            LOG_INFO("Passing through: {} addr = 0x{:x}", *mngr->get_func_name(*res), address);
+            LOG_INFO("Passing through: {} addr = 0x{:x}", *res, address);
         }
-    }*/
+    }
 
     if (log_code) {
         const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());

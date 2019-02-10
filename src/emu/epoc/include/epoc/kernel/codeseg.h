@@ -160,5 +160,9 @@ namespace eka2l1::kernel {
         std::tuple<std::uint32_t, std::uint32_t, std::uint32_t> get_uids() {
             return std::make_tuple(uids[0], uids[1], uids[2]);
         }
+
+        std::vector<std::uint32_t> &get_export_table() {
+            return export_table;
+        }
     };
 }
