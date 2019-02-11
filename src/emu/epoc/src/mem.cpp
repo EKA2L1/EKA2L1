@@ -595,14 +595,46 @@ namespace eka2l1 {
         }
 
         if (previous_page_table) {
-            for (uint32_t i = shared_data / page_size; i >= local_data / page_size; i--) {
-                if (previous_page_table->pointers[i] && previous_page_table->pages[i].sts == page_status::committed) {
-                    cpu->unmap_memory(i * page_size, page_size);
+            const std::uint32_t offset_page_local = local_data / page_size;
+            const std::uint32_t offset_page_local_end = shared_data / page_size;
+
+            for (std::uint32_t i = offset_page_local_end; i >= offset_page_local; i--) {
+                address beg_addr = (i + 1) * page_size;
+                address total_page = 0;
+
+                while (previous_page_table->pointers[i] && previous_page_table->pages[i].sts == page_status::committed
+                    && i >= offset_page_local) {
+                    total_page++;
+                    i--;
+                    beg_addr -= page_size;
                 }
+
+                if (total_page) {
+                    cpu->unmap_memory(beg_addr, total_page * page_size);
+                }
+            }
                 
+            for (std::uint32_t i = offset_page_local_end; i >= offset_page_local; i--) {
+                address beg_addr = (i + 1) * page_size;
+                address total_page = 0;
+
                 if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed) {
-                    cpu->map_backing_mem(i * page_size, page_size, current_page_table->pointers[i],
-                        current_page_table->pages[i].page_protection);
+                    total_page++;
+                    beg_addr -= page_size;
+
+                    while (current_page_table->pointers[i - 1] + page_size == current_page_table->pointers[i--]) {
+                        total_page++;
+                        beg_addr -= page_size;
+                    }
+
+                    if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed) {
+                        i++;
+                    }
+                }
+
+                if (total_page) {
+                    cpu->map_backing_mem(beg_addr, total_page * page_size, current_page_table->pointers[beg_addr / page_size],
+                        current_page_table->pages[beg_addr / page_size].page_protection);
                 }
             }
         }
