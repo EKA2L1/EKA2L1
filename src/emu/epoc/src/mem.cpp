@@ -622,13 +622,10 @@ namespace eka2l1 {
                     total_page++;
                     beg_addr -= page_size;
 
-                    while (current_page_table->pointers[i - 1] + page_size == current_page_table->pointers[i--]) {
+                    while (current_page_table->pointers[i - 1] + page_size == current_page_table->pointers[i]) {
                         total_page++;
                         beg_addr -= page_size;
-                    }
-
-                    if (current_page_table->pointers[i] && current_page_table->pages[i].sts == page_status::committed) {
-                        i++;
+                        i--;
                     }
                 }
 
