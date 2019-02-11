@@ -71,7 +71,7 @@ namespace eka2l1::kernel {
             }
         }
 
-        if (data_size && data_addr == 0) {    
+        if (data_size_align && data_addr == 0) {    
             data_chunk = kern->create<kernel::chunk>(mem, kern->crr_process(), name, 0, data_size_align, data_size_align, prot::read_write, kernel::chunk_type::normal,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
         
