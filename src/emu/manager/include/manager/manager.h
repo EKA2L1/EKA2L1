@@ -21,6 +21,8 @@
 #pragma once
 
 #include <common/configure.h>
+
+#include <manager/config_manager.h>
 #include <manager/package_manager.h>
 
 #include <memory>
@@ -32,6 +34,7 @@ namespace eka2l1 {
 namespace eka2l1 {
     namespace manager {
         class device_manager;
+        class config_manager;
 
 #ifdef ENABLE_SCRIPTING
         class script_manager;
@@ -40,11 +43,11 @@ namespace eka2l1 {
 
     class manager_system {
 #ifdef ENABLE_SCRIPTING
-        std::shared_ptr<manager::script_manager> scrmngr;
+        std::unique_ptr<manager::script_manager> scrmngr;
 #endif
-        std::shared_ptr<manager::device_manager> dvmngr;
-        
-        manager::package_manager pkgmngr;
+        std::unique_ptr<manager::device_manager> dvmngr;        
+        std::unique_ptr<manager::package_manager> pkgmngr;
+        std::unique_ptr<manager::config_manager> cfgmngr;
 
         io_system *io;
 
@@ -61,5 +64,7 @@ namespace eka2l1 {
 #endif
 
         manager::device_manager *get_device_manager();
+
+        manager::config_manager *get_config_manager();
     };
 }

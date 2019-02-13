@@ -18,9 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <manager/manager.h>
+#include <manager/config_manager.h>
 #include <manager/device_manager.h>
 #include <manager/package_manager.h>
+#include <manager/manager.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
@@ -28,27 +29,32 @@
 
 namespace eka2l1 {
     manager::package_manager *manager_system::get_package_manager() {
-        return &pkgmngr;
+        return pkgmngr.get();
     }
 
 #ifdef ENABLE_SCRIPTING
     manager::script_manager *manager_system::get_script_manager() {
-        return &(*scrmngr);
+        return scrmngr.get();
     }
 #endif
 
     manager::device_manager *manager_system::get_device_manager() {
-        return &(*dvmngr);
+        return dvmngr.get();
+    }
+
+    manager::config_manager *manager_system::get_config_manager() {
+        return cfgmngr.get();
     }
 
     void manager_system::init(system *sys, io_system *ios) {
         io = ios;
 
-        pkgmngr = manager::package_manager(ios);
+        pkgmngr = std::make_unique<manager::package_manager>(ios);
 
 #ifdef ENABLE_SCRIPTING
-        scrmngr = std::make_shared<manager::script_manager>(sys);
+        scrmngr = std::make_unique<manager::script_manager>(sys);
 #endif
-        dvmngr = std::make_shared<manager::device_manager>();
+        dvmngr = std::make_unique<manager::device_manager>();
+        cfgmngr = std::make_unique<manager::config_manager>();
     }
 }
