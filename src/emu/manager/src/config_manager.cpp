@@ -39,7 +39,7 @@ namespace eka2l1::manager {
             return false;
         }
 
-        for (auto &node: root) {
+        for (auto node: root) {
             if (!node.IsMap()) {
                 continue;
             }
@@ -50,7 +50,7 @@ namespace eka2l1::manager {
             if (node.second.IsScalar()) {
                 cfg_node.values.push_back(node.second.as<std::string>());
             } else {
-                for (auto &subnode: node.second) {
+                for (auto subnode: node.second) {
                     if (subnode.IsScalar()) {
                         cfg_node.values.push_back(subnode.as<std::string>());
                     }
