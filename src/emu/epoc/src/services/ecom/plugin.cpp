@@ -21,7 +21,9 @@
 #include <cassert>
 
 #include <epoc/services/ecom/plugin.h>
+
 #include <common/buffer.h>
+#include <common/chunkyseri.h>
 
 namespace eka2l1 {
     static bool read_ecom_str_16(common::ro_buf_stream &stream, std::u16string &buf) {
@@ -151,6 +153,8 @@ namespace eka2l1 {
             stream.read(&info.extended_interfaces[i], 4);
         }
 
+        std::sort(info.extended_interfaces.begin(), info.extended_interfaces.end());
+
         // Read flags
         std::uint8_t flags = 0;
         stream.read(&flags, 1);
@@ -251,5 +255,47 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    void ecom_implementation_info::do_state(common::chunkyseri &seri) {
+        seri.absorb(uid);
+
+        std::uint32_t ver32 = version;
+        seri.absorb(ver32);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            version = static_cast<std::uint8_t>(ver32);
+        }
+
+        seri.absorb(display_name);
+        seri.absorb(default_data);
+        seri.absorb(opaque_data);
+
+        // Absorb drive and VID (?)
+        std::uint32_t drv32 = static_cast<decltype(drv32)>(drv);
+        seri.absorb(drv32);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            drv = static_cast<drive_number>(drv32);
+        }
+
+        // TODO: What is this ?? Version ID?
+        std::uint32_t vid = 0;
+        seri.absorb(vid);
+
+        // Bit 0: Rom only, bit 1: Rom based, bit 2: Disabled ?
+        std::uint8_t flags = 0;
+        if (rom) {
+            // TODO: What does ROM only and ROM based means ? Are they different
+            flags |= 0b11;
+        }
+
+        seri.absorb(flags);
+        if (seri.get_seri_mode() == common::SERI_MODE_READ || (flags & 0b10 || flags & 0b01)) {
+            rom = true;
+        }
+
+        // Absorb extended interfaces
+        seri.absorb_container(extended_interfaces);
     }
 }

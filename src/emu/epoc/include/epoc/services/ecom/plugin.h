@@ -20,11 +20,17 @@
 
 #pragma once
 
+#include <common/types.h>
 #include <epoc/loader/rsc.h>
+
 #include <cstdint>
 #include <vector>
 
 namespace eka2l1 {
+    namespace common {
+        class chunkyseri;
+    }
+
     struct ecom_implementation_info {
         std::uint32_t uid;
         std::uint8_t version;
@@ -36,8 +42,12 @@ namespace eka2l1 {
 
         bool rom {false};
 
+        drive_number drv;   ///< Drive which the implementation plugin resides on
+
         // A implementation may covers other interface ?
         std::vector<std::uint32_t> extended_interfaces;
+
+        void do_state(common::chunkyseri &seri);
     };
 
     struct ecom_interface_info {
@@ -57,9 +67,10 @@ namespace eka2l1 {
         ecom_plugin_type_3 = 0x10009E47
     };
     
-    /*! \brief Load a plugin from described resource file
+    /*
+     * \brief Load a plugin from described resource file
      *
      * \returns True if success.
-    */
+     */
     bool load_plugin(loader::rsc_file &rsc, ecom_plugin &plugin);    
 };
