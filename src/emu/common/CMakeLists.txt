@@ -31,6 +31,7 @@ add_library(common
     include/common/types.h
     include/common/unicode.h
     include/common/virtualmem.h
+    include/common/wildcard.h
     src/arghandler.cpp
     src/allocator.cpp
     src/algorithm.cpp
@@ -53,6 +54,7 @@ add_library(common
     src/types.cpp
     src/unicode.cpp
     src/virtualmem.cpp
+    src/wildcard.cpp
 )
 
 target_include_directories(common PUBLIC include)
