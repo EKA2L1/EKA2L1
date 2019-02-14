@@ -44,20 +44,34 @@ namespace eka2l1 {
         ecom_set_get_params
     };
 
+    struct ecom_list_impl_param {
+        int match_type;
+        int buffer_size;
+        bool cap_check;
+    };
+
     class ecom_server: public service::server {
         std::unordered_map<std::uint32_t, ecom_interface_info> interfaces;
+        
+        std::vector<ecom_implementation_info*> collected_impls;
+
         bool init { false };
 
     protected:
+        void list_implementations(service::ipc_context ctx);
+        bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size);
+
         bool register_implementation(const std::uint32_t interface_uid,
             ecom_implementation_info &impl);
 
         bool load_plugins(eka2l1::io_system *io);
-        bool load_and_install_plugins_from_buffer(std::uint8_t *buf, const std::size_t size);
+        bool load_and_install_plugin_from_buffer(std::uint8_t *buf, const std::size_t size,
+            const drive_number drv);
 
         bool load_plugin_on_drive(eka2l1::io_system *io, const drive_number drv);
 
-        /*! \brief Search the ROM and ROFS for an archive of plugins.
+        /*
+         * \brief Search the ROM and ROFS for an archive of plugins.
          *
          * Archive are SPI file. They usually has pattern of ecom-*-*.spi or
          * ecom-*-*.sXX where XX is language code.
@@ -65,7 +79,7 @@ namespace eka2l1 {
          * This searchs these files on Z:\Private\10009d8f
          * 
          * \returns A vector contains all canidates.
-        */
+         */
         std::vector<std::string> get_ecom_plugin_archives(eka2l1::io_system *io);
 
         /*! \brief Load archives
@@ -76,7 +90,5 @@ namespace eka2l1 {
 
     public:
         explicit ecom_server(eka2l1::system *sys);
-
-        void list_impls(service::ipc_context ctx);
     };
 }

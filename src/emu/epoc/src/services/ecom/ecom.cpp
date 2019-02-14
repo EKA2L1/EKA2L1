@@ -19,6 +19,7 @@
  */
 
 #include <cassert>
+#include <regex>
 
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
@@ -30,8 +31,10 @@
 
 #include <epoc/loader/spi.h>
 #include <epoc/epoc.h>
+#include <epoc/utils/uid.h>
 
 #include <common/e32inc.h>
+#include <common/wildcard.h>
 #include <e32err.h>
 
 namespace eka2l1 {
@@ -83,7 +86,8 @@ namespace eka2l1 {
         return results;
     }
 
-    bool ecom_server::load_and_install_plugins_from_buffer(std::uint8_t *buf, const std::size_t size) {
+    bool ecom_server::load_and_install_plugin_from_buffer(std::uint8_t *buf, const std::size_t size,
+        const drive_number drv) {
         common::ro_buf_stream stream(buf, size);
         loader::rsc_file rsc(stream);
 
@@ -100,6 +104,8 @@ namespace eka2l1 {
             interface_on_server.uid = pinterface.uid;
             
             for (auto &impl: pinterface.implementations) {
+                impl.drv = drv;
+
                 if (!register_implementation(pinterface.uid, impl)) {
                     return false;
                 }
@@ -115,6 +121,8 @@ namespace eka2l1 {
         std::vector<std::string> archives = get_ecom_plugin_archives(io);
 
         for (const std::string &archive: archives) {
+            const drive_number drv = char16_to_drive(archive[0]);
+
             symfile f = io->open_file(common::utf8_to_ucs2(archive), READ_MODE | BIN_MODE);
             std::vector<std::uint8_t> buf;
             buf.resize(f->size());
@@ -133,7 +141,7 @@ namespace eka2l1 {
             }
 
             for (auto &entry: spi.entries) {
-                result = load_and_install_plugins_from_buffer(&entry.file[0], entry.file.size());
+                result = load_and_install_plugin_from_buffer(&entry.file[0], entry.file.size(), drv);
                 
                 if (!result) {
                     LOG_WARN("Can't load and install plugin \"{}\"", entry.name);
@@ -184,7 +192,7 @@ namespace eka2l1 {
             f->read_file(&dat[0], static_cast<std::uint32_t>(dat.size()), 1);
             f->close();
 
-            if (!load_and_install_plugins_from_buffer(&dat[0], dat.size())) {
+            if (!load_and_install_plugin_from_buffer(&dat[0], dat.size(), drv)) {
                 LOG_ERROR("Can't load and install plugins description {}", entry->name);
                 return false;
             }
@@ -193,10 +201,6 @@ namespace eka2l1 {
         // TODO: Register a notification to the server side
 
         return true;
-    }
-
-    void ecom_server::list_impls(service::ipc_context ctx) {
-        // TODO
     }
 
     void ecom_server::connect(service::ipc_context ctx) {
@@ -209,11 +213,220 @@ namespace eka2l1 {
         init = true;
         ctx.set_request_status(KErrNone);
     }
+
+    bool ecom_server::get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size) {
+        if (buf == nullptr) {
+            return false;
+        }
+
+        common::chunkyseri seri(buf, buf_size, common::SERI_MODE_WRITE);
+
+        std::uint32_t total_impls = static_cast<std::uint32_t>(collected_impls.size());
+        seri.absorb(total_impls);
+
+        for (auto &impl: collected_impls) {
+            if (seri.eos()) {
+                return false;
+            }
+
+            impl->do_state(seri);
+        }
+
+        return true;
+    }
+
+    void ecom_server::list_implementations(service::ipc_context ctx) {
+        // Clear last cache
+        collected_impls.clear();
+
+        // The UID type is the first parameter
+        // First UID contains the interface UID, while the third one contains resolver UID
+        // The middle UID is reserved
+        epoc::uid_type uids;
+        
+        // Use chunkyseri
+
+        if (auto uids_result = ctx.get_arg_packed<epoc::uid_type>(0)) {
+            uids = std::move(uids_result.value());
+        } else {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        std::string match_str;
+        std::vector<std::uint32_t> given_extended_interfaces;
+
+        // I only want to do reading in a scope since these will be useless really soon
+        {   
+            // The second IPC argument contains the name match string and extend interface list
+            // Let's do some reading
+            std::string arg2_data;
+
+            if (auto arg2_data_op = ctx.get_arg<std::string>(1)) {
+                arg2_data = std::move(arg2_data_op.value());
+            } else {
+                ctx.set_request_status(KErrArgument);
+                return;
+            }
+
+            if (arg2_data.length() != 0) {
+                common::ro_buf_stream arg2_stream(reinterpret_cast<std::uint8_t*>(&arg2_data[0]),
+                    arg2_data.length());
+                
+                int len = 0;
+
+                if (arg2_stream.read(&len, 4) < 4) {
+                    ctx.set_request_status(KErrArgument);
+                    return;
+                }
+
+                match_str.resize(len);
+
+                if (arg2_stream.read(&match_str[0], len) < len) {
+                    ctx.set_request_status(KErrArgument);
+                    return;
+                }
+
+                // Now read all extended interfaces
+                if (arg2_stream.read(&len, 4) < 4) {
+                    ctx.set_request_status(KErrArgument);
+                    return;
+                }
+
+                given_extended_interfaces.resize(len);
+
+                for (auto &extended_interface: given_extended_interfaces) {
+                    if (arg2_stream.read(&extended_interface, 4) < 4) {    
+                        ctx.set_request_status(KErrArgument);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Get list implementations extra parameters
+        ecom_list_impl_param list_impl_param;
+        if (auto list_impl_param_op = ctx.get_arg_packed<ecom_list_impl_param>(2)) {
+            list_impl_param = std::move(list_impl_param_op.value());
+        } else {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        // We still gonna list all of implementation into a global buffer
+        // So that when the guest buffer is not large enough, the server buffer will still store
+        // all the implementations collected, and ECollectImplementationLists will collect it later
+        // List it first, then write!
+
+        // An implementation is considered to be accepted through these conditions:
+        // - All extended interfaces given are available in the implementation
+        // - Match the wildcard (if wildcard not empty)
+
+        // May want to construct a regex for name comparing if we use generic match
+        std::regex wildcard_matcher;
+        
+        if (list_impl_param.match_type && !match_str.empty()) {
+            wildcard_matcher = std::move(std::regex(common::wildcard_to_regex_string(match_str)));
+        }
+
+        // First, lookup the interface
+        auto interface_ite = interfaces.find(uids.uid1);
+
+        // We can't find the interface!!
+        if (interface_ite == interfaces.end()) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        ecom_interface_info *interface = &interface_ite->second;
+
+        // Open a serializer for measure data size
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
+
+        {
+            std::uint32_t total_impls = 0;
+
+            // Absorb padding 
+            seri.absorb(total_impls);
+        }
+
+        // Iterate thorugh all implementations
+        for (ecom_implementation_info &implementation: interface->implementations) {
+            // Check the extended interfaces first
+            bool sastify = true;
+
+            for (std::uint32_t &given_extended_interface: given_extended_interfaces) {
+                if (std::lower_bound(implementation.extended_interfaces.begin(), implementation.extended_interfaces.end(), 
+                    given_extended_interface) == implementation.extended_interfaces.end()) {
+                    sastify = false;
+                    break;
+                }
+            }
+
+            // Not sastify ? Yeah, let's just turn back
+            if (!sastify) {
+                continue;
+            }
+
+            // Match string empty, so we should add into nice stuff now
+            if (match_str.empty()) {
+                collected_impls.push_back(&implementation);
+                implementation.do_state(seri);
+                continue;
+            }
+
+            sastify = false;
+
+            // We still need to see if the name is match
+            // Generic match ? Wildcard check
+            if (list_impl_param.match_type) {        
+                if (std::regex_match(common::ucs2_to_utf8(implementation.display_name), wildcard_matcher)) {
+                    sastify = true;
+                }
+            } else {
+                if (match_str == common::ucs2_to_utf8(implementation.display_name)) {
+                    sastify = true;
+                }
+            }
+
+            // TODO: Capability supply
+
+            if (sastify) {
+                collected_impls.push_back(&implementation);
+                implementation.do_state(seri);
+            }
+        }
+
+        // Compare the total buffer size we are going to write with the one guest provided
+        // If it's not sufficient enough, throw KErrOverflow
+        const std::size_t total_buffer_size_require = seri.size();
+        const std::size_t total_buffer_size_given = list_impl_param.buffer_size;
+
+        list_impl_param.buffer_size = static_cast<const int>(total_buffer_size_require);
+
+        if (total_buffer_size_require > total_buffer_size_given) {
+            // Write new list impl param, which contains the required new size
+            ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param);
+            ctx.set_request_status(KErrOverflow);
+
+            return;
+        }
+
+        // Write the buffer
+        // This must not fail
+        if (!get_implementation_buffer(ctx.get_arg_ptr(3), total_buffer_size_given)) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        // Write list implementation param to tell the client how much bytes we actually write
+        ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param);
+        ctx.set_request_status(KErrNone);
+    }
     
     ecom_server::ecom_server(eka2l1::system *sys)
         : service::server(sys, "!ecomserver", true) {
-        // REGISTER_IPC(ecom_server, list_impls, ecom_list_implementations, "ECom::ListImpls");
-        // REGISTER_IPC(ecom_server, list_impls, ecom_list_resolved_implementations, "ECom::ListResolvedImpls");
+        REGISTER_IPC(ecom_server, list_implementations, ecom_list_implementations, "ECom::ListImpls");
+        //REGISTER_IPC(ecom_server, list_implementations, ecom_list_resolved_implementations, "ECom::ListResolvedImpls");
     }
-
 }
