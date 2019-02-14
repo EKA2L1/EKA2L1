@@ -32,16 +32,18 @@
 namespace eka2l1 {
     /*! \brief Contains functions that use frequently in the emulator */
     namespace common {
-        /*! \brief Choose the greater variable 
+        /*
+         * \brief Choose the greater variable 
 		 *
 		 * Compare two objects and choose the greater object to return.
-		*/
+		 */
         template <typename T>
         constexpr T max(T a, T b) {
             return a > b ? a : b;
         }
 
-        /*! \brief Choose the less variable
+        /* 
+         * \brief Choose the less variable
 		 *
 		 * Compare two objects, choose the less object to return.
 		*/
@@ -149,9 +151,38 @@ namespace eka2l1 {
             return target + new_alignment - target % new_alignment;
         }
 
+        /**
+         * \brief Compare two UTF2 string, ignoring it case
+         * 
+         * On Windows, this utilizes Win32 API CompareStringEx, on other platform it uses
+         * std::towlower to lowercase two string and then compare.
+         * 
+         * \param s1 Left hand string.
+         * \param s2 Right hand string.
+         * 
+         * \returns -1 if s1 < s2
+         *           0 if s1 == s2
+         *           1 if s1 > s2
+         */
         int compare_ignore_case(const utf16_str &s1,
             const utf16_str &s2);
 
+        /**
+         * \brief Trim all space duplication to only one space between words
+         * 
+         * \returns A new string contains all space trimmed
+         */
         std::string trim_spaces(std::string str);
+
+        /**
+         * \brief Replace all occurences of a word in a string with other word/string
+         *
+         * \param str           The string to find and replace
+         * \param target        The word/string to find
+         * \param replacement   The word/string to replace target
+         * 
+         * \returns A new string with all ocurrences of target replaced.
+         */
+        std::string replace_all(std::string str, const std::string &target, const std::string &replacement);
     }
 }
