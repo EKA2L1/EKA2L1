@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <common/algorithm.h>
+
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -32,7 +34,7 @@ namespace eka2l1 {
             uint8_t *beg;
             uint8_t *end;
 
-            uint64_t crr_pos;
+            std::uint64_t crr_pos;
 
         public:
             buffer_stream_base()
@@ -76,14 +78,19 @@ namespace eka2l1 {
                 crr_pos = (end - beg) + amount;
             }
 
-            void read(void *buf, const std::uint64_t size) {
-                memcpy(buf, beg + crr_pos, size);
-                crr_pos += size;
+            std::uint64_t read(void *buf, const std::uint64_t read_size) {
+                std::uint64_t actual_read_size = common::min(read_size, 
+                    static_cast<std::uint64_t>(end - beg));
+                    
+                memcpy(buf, beg + crr_pos, actual_read_size);
+                crr_pos += actual_read_size;
+
+                return actual_read_size;
             }
 
-            void read(const std::uint64_t pos, void *buf, const std::uint64_t size) {
+            std::uint64_t read(const std::uint64_t pos, void *buf, const std::uint64_t size) {
                 seek(pos, seek_where::beg);
-                read(buf, size);
+                return read(buf, size);
             }
 
             std::string read_string() {
