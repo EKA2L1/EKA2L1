@@ -69,6 +69,11 @@ namespace eka2l1 {
 
             int flag() const;
 
+            /*
+             * \brief Get a pointer to the data of an IPC descriptor argument
+            */
+            std::uint8_t *get_arg_ptr(int idx);
+
             bool write_arg(int idx, uint32_t data);
             bool write_arg(int idx, const std::u16string &data);
 
