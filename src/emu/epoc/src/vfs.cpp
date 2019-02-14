@@ -24,6 +24,7 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/platform.h>
+#include <common/wildcard.h>
 
 #include <epoc/loader/rom.h>
 #include <epoc/mem.h>
@@ -402,29 +403,10 @@ namespace eka2l1 {
 
         abstract_file_system *inst;
 
-    protected:
-        std::string replace_all(std::string str, const std::string &from, const std::string &to) {
-            size_t start_pos = 0;
-            while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-                str.replace(start_pos, from.length(), to);
-                start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-            }
-            return str;
-        }
-
-        std::string construct_regex_string(std::string regexstr) {
-            regexstr = replace_all(regexstr, "\\", "\\\\");
-            regexstr = replace_all(regexstr, ".", std::string("\\") + ".");
-            regexstr = replace_all(regexstr, "?", ".");
-            regexstr = replace_all(regexstr, "*", ".*");
-
-            return regexstr;
-        }
-
     public:
         physical_directory(abstract_file_system *inst, const std::string &phys_path,
             const std::string &vir_path, const std::string &filter, const io_attrib attrib)
-            : filter(construct_regex_string(filter))
+            : filter(common::wildcard_to_regex_string(filter))
             , iterator(phys_path)
             , vir_path(vir_path)
             , attrib(attrib)
