@@ -96,6 +96,8 @@ namespace eka2l1 {
             std::unordered_map<address, std::string> addr_symbols;
             std::unordered_map<std::string, symbols> lib_symbols;
 
+            bool log_svc { false };
+
         public:
             std::unordered_map<sid, epoc_import_func> svc_funcs;
 

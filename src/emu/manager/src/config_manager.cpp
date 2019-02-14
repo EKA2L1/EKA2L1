@@ -21,12 +21,46 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cassert>
+#include <fstream>
 
 namespace eka2l1::manager {
     config_manager::~config_manager() {
     }
 
     bool config_manager::serialize(const char *name) {
+        YAML::Emitter emitter;
+        
+        emitter << YAML::BeginMap;
+
+        for (auto &[key, node]: nodes) {
+            if (node.values.size() == 0) {
+                continue;
+            }
+
+            emitter << YAML::Key << key;
+            emitter << YAML::Value;
+
+            if (node.values.size() == 1) {
+                emitter << node.values[0].first;
+            } else {
+                emitter << YAML::BeginSeq;
+
+                for (auto &value: node.values) {
+                    emitter << value.first;
+                }
+
+                emitter << YAML::EndSeq;
+            }
+        }
+
+        emitter << YAML::EndMap;
+        std::ofstream out_file(name);
+
+        if (!out_file) {
+            return false;
+        }
+
+        out_file << emitter.c_str();
         return true;
     }
 
@@ -40,20 +74,16 @@ namespace eka2l1::manager {
         }
 
         for (auto node: root) {
-            if (!node.IsMap()) {
-                continue;
-            }
-
+            // Each node should have a key and value
+            // Else we just gonna catch and fail
             const std::string key = node.first.as<std::string>();
             config_node cfg_node;
 
             if (node.second.IsScalar()) {
-                cfg_node.values.push_back(node.second.as<std::string>());
+                cfg_node.values.push_back(std::make_pair(node.second.as<std::string>(), config_node::config_convert_cache{}));
             } else {
                 for (auto subnode: node.second) {
-                    if (subnode.IsScalar()) {
-                        cfg_node.values.push_back(subnode.as<std::string>());
-                    }
+                    cfg_node.values.push_back(std::make_pair(subnode.as<std::string>(), config_node::config_convert_cache{}));
                 }
             }
 

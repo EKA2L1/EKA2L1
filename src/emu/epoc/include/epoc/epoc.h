@@ -93,7 +93,6 @@ namespace eka2l1 {
 
         ~system() = default;
 
-        bool get_bool_config(const std::string name);
         void set_graphics_driver(drivers::driver_instance graphics_driver);
         void set_debugger(debugger_ptr new_debugger);
         void set_symbian_version_use(const epocver ever);

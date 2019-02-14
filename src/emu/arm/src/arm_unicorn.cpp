@@ -69,11 +69,7 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
     eka2l1::memory_system *mem = jit->get_memory_sys();
     mem->read(address, &value, size);
 
-    // It's hacky, and im not ok with this
-    bool read_log = jit->get_lib_manager()->get_sys()->get_bool_config("log_read");
-
-    if (read_log)
-        LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
+    LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
@@ -84,12 +80,8 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
         return;
     }
 
-    bool write_log = jit->get_lib_manager()->get_sys()->get_bool_config("log_write");
-
     eka2l1::memory_system *mem = jit->get_memory_sys();
-
-    if (write_log)
-        LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
+    LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
@@ -103,21 +95,16 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
 
     jit->save_context(context_debug);
 
-    bool enable_breakpoint_script = jit->get_lib_manager()->get_sys()->get_bool_config("enable_breakpoint_script");
-
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
-    bool log_code = jit->get_lib_manager()->get_sys()->get_bool_config("log_code");
-    bool log_passed = jit->get_lib_manager()->get_sys()->get_bool_config("log_passed");
-
-#if ENABLE_SCRIPTING == 1
-    if (enable_breakpoint_script) {
+#ifdef ENABLE_SCRIPTING
+    if (jit->enable_breakpoint_script) {
         jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
         jit->get_manager_sys()->get_script_manager()->call_breakpoints(address + 1);
     }
 #endif
 
-    if (log_passed && mngr) {
+    if (jit->log_pass && mngr) {
         // Get the name of function at this address
         auto res = mngr->get_symbol(address & ~0x1);
 
@@ -126,7 +113,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         }
     }
 
-    if (log_code) {
+    if (jit->log_code) {
         const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
         size_t buffer_size = eka2l1::common::GB(4) - address;
         bool thumb = thumb_mode(uc);
@@ -227,13 +214,25 @@ namespace eka2l1 {
             assert(err == UC_ERR_OK);
 
             uc_hook hook{};
+            manager::config_manager *cfg_mngr = mngr->get_config_manager();
 
-            uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
-            uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);
+            if (cfg_mngr->get_or_fall<bool>("log_read", false)) {
+                uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);                
+            }
+
+            if (cfg_mngr->get_or_fall<bool>("log_write", false)) {
+                uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);                
+            }
+
+            log_pass = cfg_mngr->get_or_fall<bool>("log_passed", false);
+            log_code = cfg_mngr->get_or_fall<bool>("log_code", false);
+            
+            enable_breakpoint_script = cfg_mngr->get_or_fall<bool>("enable_breakpoint_script", false);
+
             uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), this, 1, 0);
+            
             assert(err == UC_ERR_OK);
-
             enable_vfp_fp(engine);
 
             if (stub && stub->is_server_enabled()) {

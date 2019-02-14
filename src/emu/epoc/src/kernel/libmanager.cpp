@@ -28,8 +28,8 @@
 
 #include <common/configure.h>
 
-#ifdef ENABLE_SCRIPTING
 #include <manager/manager.h>
+#ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
 #endif
 
@@ -288,6 +288,9 @@ namespace eka2l1 {
             mem = mems;
             kern = kerns;
 
+            log_svc = sys->get_manager_system()->get_config_manager()->
+                get_or_fall<bool>("log_svc", false);
+
             // TODO (pent0): Implement external id loading
 
             std::vector<sid> tids;
@@ -539,7 +542,7 @@ namespace eka2l1 {
 
             epoc_import_func func = res->second;
 
-            if (sys->get_bool_config("log_svc_passed")) {
+            if (log_svc) {
                 LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
             }
 

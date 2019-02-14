@@ -112,19 +112,9 @@ namespace eka2l1 {
         std::unordered_map<std::string, bool> bool_configs;
         std::unordered_map<uint32_t, hal_ptr> hals;
 
-        std::vector<std::string> startup_apps;
-        std::vector<std::string> force_load_libs;
-
         bool startup_inited = false;
 
         std::optional<filesystem_id> rom_fs_id = std::nullopt;
-
-        /*! \brief Load the core configs.
-        */
-        void load_configs();
-
-        /*! \brief Save the core configs. */
-        void write_configs();
 
         bool save_snapshot_processes(const std::string &path,
             const std::vector<uint32_t> &inclue_uids);
@@ -132,10 +122,6 @@ namespace eka2l1 {
         system *parent;
 
     public:
-        bool get_bool_config(const std::string name) {
-            return bool_configs[name];
-        }
-
         system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
             arm_emulator_type jit_type = arm_emulator_type::unicorn);
 
@@ -307,16 +293,19 @@ namespace eka2l1 {
 
     void system_impl::init() {
         exit = false;
-        load_configs();
+
+        // Initialize manager. It doesn't depend much on other
+        mngr.init(parent, &io);
+        mngr.get_config_manager()->deserialize("coreconfig.yml");
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
-
         io.init();
-        mngr.init(parent, &io);
         asmdis.init();
 
-        file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use(), "");
+        file_system_inst physical_fs = 
+            create_physical_filesystem(get_symbian_version_use(), "");
+        
         io.add_filesystem(physical_fs);
 
         file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem,
@@ -356,7 +345,7 @@ namespace eka2l1 {
         hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
 
         if (!startup_inited) {
-            for (auto &startup_app : startup_apps) {
+            for (auto &startup_app : mngr.get_config_manager()->get_values("startup")) {
                 process_ptr st_up = kern.spawn_new_process(
                     common::utf8_to_ucs2(startup_app));
 
@@ -465,6 +454,9 @@ namespace eka2l1 {
         mem.shutdown();
         asmdis.shutdown();
 
+        // Save configs
+        mngr.get_config_manager()->serialize("coreconfig.yml");
+
         exit = false;
     }
 
@@ -496,67 +488,6 @@ namespace eka2l1 {
         return true;
     }
 
-    void system_impl::write_configs() {
-        YAML::Emitter emitter;
-        emitter << YAML::BeginMap;
-
-        for (auto &[name, op] : bool_configs) {
-            emitter << YAML::Key << name << YAML::Value << op;
-        }
-
-        emitter << YAML::Key << "startup" << YAML::Value << YAML::BeginDoc;
-
-        for (const auto &app : startup_apps) {
-            emitter << app;
-        }
-
-        emitter << YAML::EndDoc;
-
-        emitter << YAML::EndMap;
-
-        std::ofstream out("coreconfig.yml");
-        out << emitter.c_str();
-    }
-
-    void system_impl::load_configs() {
-        try {
-            YAML::Node node = YAML::LoadFile("coreconfig.yml");
-
-            for (auto const &subnode : node) {
-                if (subnode.first.as<std::string>() == "startup") {
-                    for (const auto &startup_app : subnode.second) {
-                        startup_apps.push_back(startup_app.as<std::string>());
-                    }
-
-                    continue;
-                } else if (subnode.first.as<std::string>() == "force_load") {
-                    for (const auto &startup_app : subnode.second) {
-                        force_load_libs.push_back(startup_app.as<std::string>());
-                    }
-
-                    continue;
-                }
-
-                bool_configs.emplace(subnode.first.as<std::string>(), subnode.second.as<bool>());
-            }
-
-        } catch (...) {
-            LOG_WARN("Loading CORE config incompleted due to an exception. Use default");
-
-            bool_configs.emplace("log_code", false);
-            bool_configs.emplace("log_passed", false);
-            bool_configs.emplace("log_write", false);
-            bool_configs.emplace("log_read", false);
-            bool_configs.emplace("log_exports", false);
-            bool_configs.emplace("log_svc_passed", false);
-            bool_configs.emplace("enable_breakpoint_script", false);
-            bool_configs.emplace("log_exports", false);
-            bool_configs.emplace("log_ipc", false);
-
-            write_configs();
-        }
-    }
-
     void system_impl::add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com) {
         hals.emplace(hal_cagetory, std::move(hal_com));
     }
@@ -573,10 +504,6 @@ namespace eka2l1 {
     system::system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
         arm_emulator_type jit_type)
         : impl(std::make_shared<system_impl>(this, debugger, graphics_driver, jit_type)) {
-    }
-
-    bool system::get_bool_config(const std::string name) {
-        return impl->get_bool_config(name);
     }
 
     void system::set_graphics_driver(drivers::driver_instance graphics_driver) {

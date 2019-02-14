@@ -24,6 +24,9 @@
 #include <epoc/kernel.h>
 #include <epoc/services/server.h>
 
+#include <manager/manager.h>
+#include <manager/config_manager.h>
+
 namespace eka2l1 {
     namespace service {
         void server::connect(service::ipc_context ctx) {
@@ -158,7 +161,8 @@ namespace eka2l1 {
             ipc_func ipf = func_ite->second;
             ipc_context context{ sys, process_msg };
 
-            if (sys->get_bool_config("log_ipc")) {
+            if (sys->get_manager_system()->get_config_manager()->
+                get_or_fall<bool>("log_ipc", false)) {
                 LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
             }
 
