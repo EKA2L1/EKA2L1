@@ -205,7 +205,7 @@ namespace eka2l1::epoc {
         return static_cast<TInt>(pr_real->unique_id());
     }
 
-    BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type) {
+    BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<epoc::uid_type> uid_type) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -216,7 +216,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        TUidType *type = uid_type.get(mem);
+        epoc::uid_type *type = uid_type.get(mem);
         auto tup = pr_real->get_uid_type();
 
         type->uid1 = std::get<0>(tup);

@@ -142,7 +142,7 @@ namespace eka2l1::epoc {
      * \param pr The process handle. 0xFFFF8000 is the current process.
      * \param uid_type Pointer to the uid type (triple uid).
      */
-    BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<TUidType> uid_type);
+    BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<epoc::uid_type> uid_type);
 
     /*! \brief Get the size of the data in the process parameter slot. 
      * 

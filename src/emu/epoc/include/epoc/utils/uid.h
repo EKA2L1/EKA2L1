@@ -4,7 +4,7 @@
 
 namespace eka2l1::epoc {
     /*! \brief Triple unique ID. */
-    struct TUidType {
+    struct uid_type {
         //! The first UID.
         /*! This usually indicates of EXE/DLL 
             for E32Image.
