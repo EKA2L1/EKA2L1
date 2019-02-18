@@ -15,12 +15,13 @@
 #include <intests/kern/codeseg.h>
 #include <intests/ipc/ipc.h>
 #include <intests/ws/ws.h>
+#include <intests/ecom.h>
 
 #include <intests/testmanager.h>
 
 #include <w32std.h>
 
-#define GEN_TESTS 0
+#define GEN_TESTS 1
 
 void MainWrapperL()
     {
@@ -38,6 +39,7 @@ void MainWrapperL()
         AddCodeSegTestCasesL();
         AddCmdTestCaseL();
         AddFileTestCasesL();
+        AddEComTestCasesL();
         
         TInt totalPass = instance->Run();    
         RDebug::Printf("%d/%d tests passed", totalPass, instance->TotalTests());
