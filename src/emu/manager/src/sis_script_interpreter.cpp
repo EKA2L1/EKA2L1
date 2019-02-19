@@ -28,6 +28,7 @@
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 
+#include <cctype>
 #include <cwctype>
 
 #include <miniz.h>
@@ -89,7 +90,7 @@ namespace eka2l1 {
                 reinterpret_cast<sis_data_unit *>(install_data.data_units.fields[crr_blck_idx].get())->data_unit.fields[data_idx].get());
             sis_compressed compressed = data->raw_data;
 
-            uint64_t us = ((compressed.len_low) | ((uint64_t)compressed.len_high << 32)) - 4;
+            std::uint64_t us = ((compressed.len_low) | (static_cast<uint64_t>(compressed.len_high) << 32)) - 12;
 
             compressed.compressed_data.resize(us);
 
@@ -114,7 +115,9 @@ namespace eka2l1 {
                 LOG_ERROR("Can not intialize inflate stream");
             }
 
-            flate::inflate_data(&stream, compressed.compressed_data.data(), compressed.uncompressed_data.data(), us);
+            flate::inflate_data(&stream, compressed.compressed_data.data(), 
+                compressed.uncompressed_data.data(), static_cast<std::uint32_t>(us));
+
             inflateEnd(&stream);
 
             return compressed.uncompressed_data;
@@ -145,9 +148,7 @@ namespace eka2l1 {
 
             sis_compressed compressed = data->raw_data;
 
-            uint32_t us = ((compressed.len_low) | (compressed.len_high << 31)) - 4;
-            compressed.compressed_data.resize(us);
-
+            std::uint64_t left = ((compressed.len_low) | (static_cast<std::uint64_t>(compressed.len_high) << 32)) - 12;
             data_stream->seekg(compressed.offset, std::ios::beg);
 
             std::vector<unsigned char> temp_chunk;
@@ -156,7 +157,6 @@ namespace eka2l1 {
             std::vector<unsigned char> temp_inflated_chunk;
             temp_inflated_chunk.resize(CHUNK_MAX_INFLATED_SIZE);
 
-            long long left = us;
             mz_stream stream;
 
             stream.zalloc = nullptr;
@@ -168,9 +168,10 @@ namespace eka2l1 {
                 }
             }
 
+            std::uint32_t total_inflated_size = 0;
+
             while (left > 0) {
                 std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
-
                 int grab = static_cast<int>(left < CHUNK_SIZE ? left : CHUNK_SIZE);
 
                 data_stream->read(reinterpret_cast<char *>(temp_chunk.data()), grab);
@@ -193,6 +194,7 @@ namespace eka2l1 {
                     }
 
                     fwrite(temp_inflated_chunk.data(), 1, inflated_size, file);
+                    total_inflated_size += inflated_size;
                 } else {
                     fwrite(temp_chunk.data(), 1, grab, file);
                 }
@@ -200,7 +202,12 @@ namespace eka2l1 {
                 left -= grab;
             }
 
-            if (compressed.algorithm == sis_compressed_algorithm::deflated) {
+            if (compressed.algorithm == sis_compressed_algorithm::deflated) {                
+                if (total_inflated_size != compressed.uncompressed_size) {
+                    LOG_ERROR("Sanity check failed: Total inflated size not equal to specified uncompress size "
+                        "in SISCompressed ({} vs {})!", total_inflated_size, compressed.uncompressed_size);
+                }
+
                 inflateEnd(&stream);
             }
 
@@ -318,18 +325,18 @@ namespace eka2l1 {
                     if (file->op == ss_op::EOpText) {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);
                         //extract_file_with_buf(raw_path, buf);
-                        //show_text_func(buf);
+                        show_text_func(buf);
 
                         LOG_INFO("EOpText: {}", buf.data());
                     } else if (file->op == ss_op::EOpRun) {
                         // Doesn't do anything yet.
                         LOG_INFO("EOpRun {}", raw_path);
                     } else if (file->op == ss_op::EOpInstall) {
-                        extract_file(raw_path, file->idx, crr_blck_idx);
                         LOG_INFO("EOpInstall {}", raw_path);
+                        extract_file(raw_path, file->idx, crr_blck_idx);
 
                         std::transform(raw_path.begin(), raw_path.end(), raw_path.begin(),
-                            std::towlower);
+                            std::tolower);
 
                         if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
                             LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);

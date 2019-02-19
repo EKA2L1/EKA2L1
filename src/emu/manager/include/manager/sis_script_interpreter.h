@@ -50,7 +50,30 @@ namespace eka2l1 {
             bool package(sis_uid uid);
 
         public:
+            /**
+             * \brief Get the data in the index of a buffer block in the SIS.
+             * 
+             * The function assumes that data has small size, and will load it into a buffer.
+             * Of course, if the buffer has size of something like 200 MB, it will crash.
+             * 
+             * This function is usually used for extracting text file.
+             * 
+             * \param data_idx      The index of the source buffer in block buffer.
+             * \param crr_block_idx The block index.
+             * 
+             * \returns A vector contains binary data, uncompressed if neccessary.
+             */
             std::vector<uint8_t> get_small_file_buf(uint32_t data_idx, uint16_t crr_blck_idx);
+            
+            /**
+             * \brief Get the data in the index of a buffer block in the SIS, write it to a physical file.
+             * 
+             * Usually uses for extracting large app data.
+             * 
+             * \param path          UTF-8 path to the physical file.
+             * \param data_idx      The index of the source buffer in block buffer.
+             * \param crr_block_idx The block index..
+             */
             void extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx);
 
             explicit ss_interpreter();
