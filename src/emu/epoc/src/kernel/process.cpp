@@ -84,6 +84,10 @@ namespace eka2l1::kernel {
         obj_type = kernel::object_type::process;
         sec_info = codeseg->get_sec_info();
 
+        if (!process_name.empty() && process_name.back() == '\0') {
+            this->process_name.pop_back();
+        }
+
         create_prim_thread(
             codeseg->get_code_run_addr(), codeseg->get_entry_point(),
             stack_size, heap_min, heap_max, 

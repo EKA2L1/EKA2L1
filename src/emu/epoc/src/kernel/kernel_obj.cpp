@@ -31,7 +31,10 @@ namespace eka2l1 {
             , kern(kern)
             , access(access)
             , uid(kern->next_uid()) {
-            
+            if (!this->obj_name.empty() && this->obj_name.back() == '\0') {
+                // GET RID!
+                this->obj_name.pop_back();
+            }
         }
 
         void kernel_obj::do_state(common::chunkyseri &seri) {
