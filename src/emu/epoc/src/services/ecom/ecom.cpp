@@ -423,6 +423,11 @@ namespace eka2l1 {
 
         // Write list implementation param to tell the client how much bytes we actually write
         ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param);
+        
+        // Set the buffer length. It's not I like it or anything, baka
+        ctx.set_arg_des_len(3, static_cast<const std::uint32_t>(total_buffer_size_require));
+
+        // Finally, returns
         ctx.set_request_status(KErrNone);
     }
     
