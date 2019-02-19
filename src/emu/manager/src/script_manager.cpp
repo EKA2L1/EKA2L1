@@ -140,10 +140,7 @@ namespace eka2l1::manager {
     }
 
     void script_manager::register_library_hook(const std::string &name, const uint32_t ord, pybind11::function &func) {
-        std::string lib_name_lower = name;
-        std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), 
-                [](unsigned char c) -> unsigned char { return std::tolower(c); });
-
+        std::string lib_name_lower = common::lowercase_string(name);
         breakpoints_patch[lib_name_lower][ord].push_back(func);
     }
 
@@ -152,9 +149,7 @@ namespace eka2l1::manager {
     }
 
     void script_manager::patch_library_hook(const std::string &name, const std::vector<vaddress> exports) {
-        std::string lib_name_lower = name;
-        std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), 
-                [](unsigned char c) -> unsigned char { return std::tolower(c); });
+        std::string lib_name_lower = common::lowercase_string(name);
 
         for (auto &[ord, func_list]: breakpoints_patch[lib_name_lower]) {
             auto &funcs = breakpoints[exports[ord - 1]];

@@ -32,7 +32,7 @@
 namespace eka2l1 {
     /*! \brief Contains functions that use frequently in the emulator */
     namespace common {
-        /*
+        /**
          * \brief Choose the greater variable 
 		 *
 		 * Compare two objects and choose the greater object to return.
@@ -184,5 +184,24 @@ namespace eka2l1 {
          * \returns A new string with all ocurrences of target replaced.
          */
         std::string replace_all(std::string str, const std::string &target, const std::string &replacement);
+
+        /**
+         * \brief Lowercase the string.
+         * 
+         * \returns String lowercased.
+         */
+        std::string lowercase_string(std::string str);
+        
+        /**
+         * \brief Lowercase UCS2 string.
+         * 
+         * \returns String lowercased.
+         */
+        std::u16string lowercase_ucs2_string(std::u16string str);
+
+        /**
+         *  \brief Returns if the platform is case-senstive or not
+         */
+        bool is_platform_case_sensitive();
     }
 }

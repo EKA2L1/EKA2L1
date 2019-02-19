@@ -25,10 +25,19 @@
 #include <Windows.h>
 #endif
 
+#include <cctype>
 #include <cwctype>
 
 namespace eka2l1 {
     namespace common {
+        bool is_platform_case_sensitive() {
+        #if EKA2L1_PLATFORM(WIN32)
+            return false;
+        #else
+            return true;
+        #endif
+        }
+
         size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos) {
             size_t found_pos = targ.find(str, pos);
 
@@ -108,6 +117,22 @@ namespace eka2l1 {
 #endif
         }
 
+        std::string lowercase_string(std::string str) {
+            // TODO: Better try
+            std::transform(str.begin(), str.end(), str.begin(), 
+                   [](const char c) -> unsigned char { return std::tolower(c); });
+
+            return str;
+        }
+        
+        std::u16string lowercase_ucs2_string(std::u16string str) {
+            // TODO: Better try
+            std::transform(str.begin(), str.end(), str.begin(), 
+                   [](const char16_t c) -> char16_t { return std::towlower(c); });
+
+            return str;
+        }
+        
         std::string trim_spaces(std::string str) {
             std::string::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
                 return (lhs == rhs) && (lhs == ' ');

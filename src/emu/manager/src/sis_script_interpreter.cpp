@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/flate.h>
 #include <common/log.h>
@@ -27,9 +28,6 @@
 #include <epoc/vfs.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
-
-#include <cctype>
-#include <cwctype>
 
 #include <miniz.h>
 
@@ -335,8 +333,7 @@ namespace eka2l1 {
                         LOG_INFO("EOpInstall {}", raw_path);
                         extract_file(raw_path, file->idx, crr_blck_idx);
 
-                        std::transform(raw_path.begin(), raw_path.end(), raw_path.begin(),
-                            std::tolower);
+                        raw_path = common::lowercase_string(raw_path);
 
                         if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
                             LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
