@@ -33,6 +33,8 @@
 #include <epoc/epoc.h>
 #include <epoc/utils/uid.h>
 
+#include <epoc/services/ecom/common.h>
+
 #include <common/e32inc.h>
 #include <common/wildcard.h>
 #include <e32err.h>
@@ -334,7 +336,7 @@ namespace eka2l1 {
 
         // We can't find the interface!!
         if (interface_ite == interfaces.end()) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::ecom_no_interface_identified);
             return;
         }
 
