@@ -94,13 +94,13 @@ namespace eka2l1 {
 #endif
 
             spd_logger = std::make_shared<spdlog::logger>("EKA2L1 Logger", begin(sinks), end(sinks));
-            spdlog::register_logger(spd_logger);
+            spdlog::set_default_logger(spd_logger);
 
             spdlog::set_error_handler([](const std::string &msg) {
                 std::cerr << "spdlog error: " << msg << std::endl;
             });
 
-            spdlog::set_pattern("%L { %v }");
+            spdlog::set_pattern("%^%L { %v }%$");
             spdlog::set_level(spdlog::level::trace);
 
             spd_logger->flush_on(spdlog::level::debug);
