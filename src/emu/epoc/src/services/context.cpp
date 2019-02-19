@@ -168,5 +168,19 @@ namespace eka2l1 {
 
             return nullptr;
         }
+    
+        bool ipc_context::set_arg_des_len(const int idx, const std::uint32_t len) {
+            ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+
+            if ((int)arg_type & (int)ipc_arg_type::flag_des) {
+                process_ptr own_pr = msg->own_thr->owning_process();
+                eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
+
+                des->set_length(own_pr, len);
+                return true;
+            }
+
+            return false;
+        }
     }
 }

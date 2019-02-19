@@ -74,6 +74,13 @@ namespace eka2l1 {
             */
             std::uint8_t *get_arg_ptr(int idx);
 
+            /**
+             * \brief Set length of a descriptor passed as IPC argument in given index.
+             * 
+             * \returns True if success.
+             */
+            bool          set_arg_des_len(const int idx, const std::uint32_t len);
+
             bool write_arg(int idx, uint32_t data);
             bool write_arg(int idx, const std::u16string &data);
 
