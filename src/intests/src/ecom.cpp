@@ -27,7 +27,7 @@ void EComGetFontRasterizerPluginInfosL()
 		REComSession::ListImplementationsL(openFontUid, infos);
 		
 		TBuf8<256> expectLine;
-		expectLine.Format(_L8("Total Openfont Rasterizer plugins %d\n"), infos.Count());
+		expectLine.Format(_L8("Total Openfont Rasterizer plugins %d"), infos.Count());
 		
 		EXPECT_INPUT_EQUAL_L(expectLine);
 		
@@ -35,7 +35,7 @@ void EComGetFontRasterizerPluginInfosL()
 			{
 				const TDesC &name = infos[i]->DisplayName();
 				TDriveUnit unit = infos[i]->Drive();
-				expectLine.Format(_L8("Openfont Rasterizer Plugin %d: %S, drive %S, uid 0x%08x\n"), i, &name, &unit.Name(), infos[i]->ImplementationUid().iUid);
+				expectLine.Format(_L8("Openfont Rasterizer Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &unit.Name(), infos[i]->ImplementationUid().iUid);
 				
 				EXPECT_INPUT_EQUAL_L(expectLine);
 			}
@@ -53,7 +53,7 @@ void EComGetFontTrueTypePluginInfosL()
 		REComSession::ListImplementationsL(KUidOpenFontTrueTypeExtension, infos);
 		
 		TBuf8<256> expectLine;
-		expectLine.Format(_L8("Total Openfont TrueType plugins %d\n"), infos.Count());
+		expectLine.Format(_L8("Total Openfont TrueType plugins %d"), infos.Count());
 		
 		EXPECT_INPUT_EQUAL_L(expectLine);
 		
@@ -61,7 +61,7 @@ void EComGetFontTrueTypePluginInfosL()
 			{
 				const TDesC &name = infos[i]->DisplayName();
 				TDriveUnit unit = infos[i]->Drive();
-				expectLine.Format(_L8("Openfont TrueType Plugin %d: %S, drive %S, uid 0x%08x\n"), i, &name, &unit.Name(), infos[i]->ImplementationUid().iUid);
+				expectLine.Format(_L8("Openfont TrueType Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &unit.Name(), infos[i]->ImplementationUid().iUid);
 				
 				EXPECT_INPUT_EQUAL_L(expectLine);
 			}
