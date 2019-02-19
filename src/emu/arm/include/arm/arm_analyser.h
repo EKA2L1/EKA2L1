@@ -219,7 +219,7 @@ namespace eka2l1::arm {
         }
     };
 
-    using read_code_func = std::function<std::uint32_t(vaddress)>;
+    using read_code_func = std::function<std::uint32_t(const vaddress)>;
 
     std::unique_ptr<arm_analyser> make_analyser(const arm_disassembler_backend backend,
         read_code_func readf);
