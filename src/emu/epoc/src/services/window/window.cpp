@@ -690,6 +690,13 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpCaptureKey: {
+            LOG_TRACE("EWsWinOpCaptureKey stubbed (TODO really soon)");
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
         case EWsWinOpSetName: {
             auto name_re = ctx.get_arg<std::u16string>(remote_slot);
 
