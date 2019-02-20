@@ -20,7 +20,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
-
  */
 
 #pragma once
@@ -36,7 +35,8 @@ namespace eka2l1::epoc {
         rotated270
     };
 
-    /*! \brief Screen display mode.
+    /**
+     * \brief Screen display mode.
      *
      * Depend on the display mode, the bitmap sends it will have the specified attribute.
     */
@@ -350,6 +350,18 @@ namespace eka2l1::epoc {
         pointer_drag = 0x04,
         pointer_simulated_event = 0x08,
         all = pointer_move | pointer_simulated_event
+    };
+
+    enum class text_aligment {
+        left,
+        center,
+        right
+    };
+
+    enum class event_control {
+        always,
+        only_with_keyboard_focus,
+        only_when_visible
     };
 
     struct event {
