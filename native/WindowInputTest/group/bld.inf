@@ -1,0 +1,15 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : 
+ Copyright   : pent0 2019
+ Description : This file provides the information required for building the
+				whole of a WindowInputTest.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_MMPFILES
+WindowInputTest.mmp

@@ -1,0 +1,22 @@
+/*
+============================================================================
+ Name		: WindowInputTest.mmp
+ Author	  : 
+ Copyright   : pent0 2019
+ Description : This is the project specification file for WindowInputTest.
+============================================================================
+*/
+
+TARGET		  WindowInputTest.exe
+TARGETTYPE	  exe
+UID			 0 0xe0d0d777
+
+SYSTEMINCLUDE   \epoc32\include
+
+DEBUGGABLE_UDEBONLY
+
+SOURCEPATH ..\src
+
+LIBRARY euser.lib ws32.lib efsrv.lib
+
+SOURCE main.cpp
