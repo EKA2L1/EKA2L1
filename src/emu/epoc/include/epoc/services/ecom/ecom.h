@@ -34,6 +34,7 @@ namespace eka2l1 {
         ecom_cancel_notify_on_change,
         ecom_list_implementations,
         ecom_list_resolved_implementations,
+        ecom_list_custom_resolved_implementations,
         ecom_collect_implementations_list,
         ecom_get_implementaton_creation_method,
         ecom_get_resolved_creation_method,
