@@ -143,14 +143,14 @@ namespace eka2l1 {
                 kern->crr_thread()->unique_id());
         }
 
-        bool mutex::signal() {
+        bool mutex::signal(thread_ptr callee) {
             if (!holding) {
                 LOG_ERROR("Signal a mutex that's not held by any thread");
 
                 return false;
             }
 
-            if (holding != kern->crr_thread()) {
+            if (holding != callee) {
                 LOG_ERROR("Calling signal with the caller not being the holder");
                 return false;
             }

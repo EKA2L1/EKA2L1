@@ -240,7 +240,7 @@ namespace eka2l1::kernel {
         void set_priority(const process_priority new_pri);
 
         void wait_dll_lock();
-        void signal_dll_lock();
+        void signal_dll_lock(thread_ptr callee);
 
         int get_exit_reason() const {
             return exit_reason;

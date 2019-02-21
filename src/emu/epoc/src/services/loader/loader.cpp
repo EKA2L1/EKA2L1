@@ -127,7 +127,7 @@ namespace eka2l1 {
 
         info->handle = lib_handle;
 
-        ctx.sys->get_kernel_system()->crr_process()->signal_dll_lock();
+        ctx.msg->own_thr->owning_process()->signal_dll_lock(ctx.msg->own_thr);
 
         ctx.write_arg_pkg(0, *info);
         ctx.set_request_status(KErrNone);

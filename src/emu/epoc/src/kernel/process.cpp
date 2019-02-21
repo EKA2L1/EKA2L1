@@ -229,8 +229,8 @@ namespace eka2l1::kernel {
         dll_lock->wait();
     }
 
-    void process::signal_dll_lock() {
-        dll_lock->signal();
+    void process::signal_dll_lock(thread_ptr callee) {
+        dll_lock->signal(callee);
     }
 
     epoc::security_info process::get_sec_info() {

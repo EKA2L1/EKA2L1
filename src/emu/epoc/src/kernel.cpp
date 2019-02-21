@@ -334,7 +334,6 @@ namespace eka2l1 {
 
     kernel::handle kernel_system::open_handle(kernel_obj_ptr obj, kernel::owner_type owner) {
         return open_handle_with_thread(crr_thread(), obj, owner);
-        
     }
 
     kernel::handle kernel_system::open_handle_with_thread(thread_ptr thr, kernel_obj_ptr obj, kernel::owner_type owner) {

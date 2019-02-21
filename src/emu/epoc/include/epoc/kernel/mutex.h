@@ -65,7 +65,7 @@ namespace eka2l1 {
 
             void wait_for(int msecs);
 
-            bool signal();
+            bool signal(thread_ptr callee);
 
             /*! \brief This update the mutex accordingly to the priority.
              *

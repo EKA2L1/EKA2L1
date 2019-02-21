@@ -1261,7 +1261,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        mut->signal();
+        mut->signal(kern->crr_thread());
     }
 
     BRIDGE_FUNC(void, WaitForAnyRequest) {
@@ -1389,8 +1389,9 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(TInt, ReleaseDllLock) {
-        sys->get_kernel_system()->crr_process()->signal_dll_lock();
-
+        sys->get_kernel_system()->crr_process()->signal_dll_lock(
+            sys->get_kernel_system()->crr_thread());
+            
         return KErrNone;
     }
 
