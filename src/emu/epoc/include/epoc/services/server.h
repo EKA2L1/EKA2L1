@@ -164,6 +164,10 @@ namespace eka2l1 {
             /*! Process an message asynchrounously */
             void process_accepted_msg();
 
+            system *get_system() {
+                return sys;
+            }
+
             bool is_hle() const {
                 return hle;
             }

@@ -77,14 +77,16 @@ namespace eka2l1 {
 
                 // Schedule frequent processing
                 frequent_process_event = timing->register_event(name + "_freq_process",
-                    [this, timing](std::uint64_t userdata, int cycles_late) {
-                        this->process_accepted_msg();
+                    [](std::uint64_t userdata, int cycles_late) {
+                        service::server *svr = reinterpret_cast<service::server*>(userdata);
+                        svr->process_accepted_msg();
+
                         // Maybe more ? But 2 reschedules should be logical enough
-                        reinterpret_cast<timing_system*>(userdata)->schedule_event(40000,
-                            this->frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
+                        svr->get_system()->get_timing_system()->schedule_event(40000,
+                            svr->frequent_process_event, userdata);
                     });
 
-                timing->schedule_event(40000, frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
+                timing->schedule_event(40000, frequent_process_event, reinterpret_cast<std::uint64_t>(this));
             }
         }
 
@@ -175,10 +177,10 @@ namespace eka2l1 {
                     return;
                 }
 
-                LOG_INFO("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
+                LOG_WARN("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
 
                 // Signal request semaphore, to tell everyone that it has finished random request
-                process_msg->own_thr->signal_request();
+                // process_msg->own_thr->signal_request();
 
                 return;
             }
