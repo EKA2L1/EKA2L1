@@ -23,6 +23,7 @@
 #include <thread>
 
 #include <arm/arm_interface.h>
+#include <arm/arm_analyser.h>
 
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
@@ -348,15 +349,7 @@ namespace eka2l1 {
             return 0xFFFFFFFF;
         }
     }
-
-    void kernel_system::processing_requests() {
-        for (auto &svr : servers) {
-            if (svr->is_hle()) {
-                svr->process_accepted_msg();
-            }
-        }
-    }
-
+    
     uint32_t kernel_system::next_uid() const {
         ++uid_counter;
         return uid_counter.load();

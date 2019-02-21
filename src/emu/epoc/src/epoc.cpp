@@ -398,8 +398,6 @@ namespace eka2l1 {
         }
 
         if (!kern.should_terminate()) {
-            kern.processing_requests();
-
 #ifdef ENABLE_SCRIPTING
             mngr.get_script_manager()->call_reschedules();
 #endif

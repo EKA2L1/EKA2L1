@@ -23,6 +23,7 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 #include <epoc/services/server.h>
+#include <epoc/timing.h>
 
 #include <manager/manager.h>
 #include <manager/config_manager.h>
@@ -48,6 +49,15 @@ namespace eka2l1 {
             return false;
         }
 
+        server::~server() {
+            if (hle) {
+                timing_system *timing = sys->get_timing_system();
+
+                timing->unschedule_event(frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
+                timing->remove_event(frequent_process_event);                
+            }
+        }
+
         // Create a server with name
         server::server(system *sys, const std::string name, bool hle, bool unhandle_callback_enable)
             : sys(sys)
@@ -61,6 +71,21 @@ namespace eka2l1 {
 
             REGISTER_IPC(server, connect, -1, "Server::Connect");
             REGISTER_IPC(server, disconnect, -2, "Server::Disconnect");
+
+            if (hle) {
+                timing_system *timing = sys->get_timing_system();
+
+                // Schedule frequent processing
+                frequent_process_event = timing->register_event(name + "_freq_process",
+                    [this, timing](std::uint64_t userdata, int cycles_late) {
+                        this->process_accepted_msg();
+                        // Maybe more ? But 2 reschedules should be logical enough
+                        reinterpret_cast<timing_system*>(userdata)->schedule_event(40000,
+                            this->frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
+                    });
+
+                timing->schedule_event(40000, frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
+            }
         }
 
         int server::receive(ipc_msg_ptr &msg) {

@@ -129,10 +129,12 @@ namespace eka2l1 {
             virtual void disconnect(service::ipc_context ctx);
 
             virtual void on_unhandled_opcode(service::ipc_context ctx) {}
+        public:        
+            std::uint32_t frequent_process_event;
 
-        public:
             server(system *sys, const std::string name, bool hle = false,
                 bool unhandle_callback_enable = false);
+            ~server() override;
 
             void attach(session *svse) {
                 sessions.push_back(svse);
