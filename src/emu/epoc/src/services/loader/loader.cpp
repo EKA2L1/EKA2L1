@@ -79,7 +79,8 @@ namespace eka2l1 {
             return;
         }
 
-        info->handle = kern->open_handle(pr, static_cast<kernel::owner_type>(info->owner_type));
+        info->handle = kern->open_handle_with_thread(ctx.msg->own_thr, pr, 
+            static_cast<kernel::owner_type>(info->owner_type));
 
         ctx.write_arg_pkg(0, *info);
         ctx.set_request_status(KErrNone);
@@ -119,8 +120,8 @@ namespace eka2l1 {
         }
 
         /* Create process through kernel system. */
-        kernel::handle lib_handle = ctx.sys->get_kernel_system()->create_and_add<kernel::library>(
-            static_cast<kernel::owner_type>(info->owner_type), cs).first;
+        kernel::handle lib_handle = ctx.sys->get_kernel_system()->create_and_add_thread<kernel::library>(
+            static_cast<kernel::owner_type>(info->owner_type), ctx.msg->own_thr, cs).first;
 
         LOG_TRACE("Loaded library: {}", lib_name);
 

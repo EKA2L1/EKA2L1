@@ -192,6 +192,10 @@ namespace eka2l1 {
             return libmngr;
         }
 
+        system *get_system() {
+            return sys;
+        }
+
         void init(system *esys, timing_system *sys, manager_system *mngrsys,
             memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::arm_interface *cpu);
 
@@ -208,8 +212,6 @@ namespace eka2l1 {
         void unschedule_wakeup() {
             thr_sch->unschedule_wakeup();
         }
-
-        void processing_requests();
 
         epocver get_epoc_version() const {
             return kern_ver;
@@ -235,6 +237,7 @@ namespace eka2l1 {
         kernel::handle mirror(kernel_obj_ptr obj, kernel::owner_type owner);
 
         kernel::handle open_handle(kernel_obj_ptr obj, kernel::owner_type owner);
+        kernel::handle open_handle_with_thread(thread_ptr thr, kernel_obj_ptr obj, kernel::owner_type owner);
 
         std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type);
 
@@ -470,6 +473,13 @@ namespace eka2l1 {
             args... creation_args) {
             std::shared_ptr<T> obj = create<T>(creation_args...);
             return std::make_pair(open_handle(obj, owner), obj);
+        }
+
+        template <typename T, typename ...args>
+        std::pair<kernel::handle, std::shared_ptr<T>> create_and_add_thread(kernel::owner_type owner,
+            thread_ptr thr, args... creation_args) {
+            std::shared_ptr<T> obj = create<T>(creation_args...);
+            return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
         }
     };
 }
