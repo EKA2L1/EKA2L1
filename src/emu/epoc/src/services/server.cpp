@@ -82,7 +82,7 @@ namespace eka2l1 {
                         svr->process_accepted_msg();
 
                         // Maybe more ? But 2 reschedules should be logical enough
-                        svr->get_system()->get_timing_system()->schedule_event(40000,
+                        svr->get_system()->get_timing_system()->schedule_event(40000 - cycles_late,
                             svr->frequent_process_event, userdata);
                     });
 

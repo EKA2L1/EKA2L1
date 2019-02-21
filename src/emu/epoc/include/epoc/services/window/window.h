@@ -34,6 +34,7 @@
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/opheader.h>
 #include <epoc/services/window/fifo.h>
+#include <epoc/services/window/classes/config.h>
 
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
@@ -42,50 +43,13 @@
 #include <epoc/services/server.h>
 #include <epoc/utils/des.h>
 
-enum {
-    cmd_slot = 0,
-    reply_slot = 1,
-    remote_slot = 2
-};
-
-constexpr int twips_mul = 15;
-
 namespace eka2l1 {
     class window_server;
 }
 
 namespace eka2l1::epoc {
-    namespace config {
-        struct screen_mode {
-            int screen_number;
-            int mode_number;
-
-            eka2l1::vec2 size;
-            int rotation;
-        };
-
-        struct screen {
-            int screen_number;
-            std::vector<screen_mode> modes;
-        };
-    }
-
     struct window;
-    using window_ptr = std::shared_ptr<epoc::window>;
-
-    enum class window_kind {
-        normal,
-        group,
-        top_client,
-        client
-    };
-
-    class window_server_client;
-    using window_server_client_ptr = window_server_client *;
-
-    struct screen_device;
-    using screen_device_ptr = std::shared_ptr<epoc::screen_device>;
-
+    
     struct event_mod_notifier {
         event_modifier what;
         event_control when;
@@ -116,262 +80,19 @@ namespace eka2l1::epoc {
         graphics_orientation orientation;
     };
 
-    struct window_client_obj {
-        uint32_t id;
-        window_server_client *client;
-
-        explicit window_client_obj(window_server_client_ptr client);
-        virtual ~window_client_obj() {}
-
-        virtual void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd);
-    };
-
+    struct window_client_obj;
     using window_client_obj_ptr = std::shared_ptr<window_client_obj>;
 
-    /*! \brief Base class for all window. */
-    struct window : public window_client_obj {
-        eka2l1::cp_queue<window_ptr> childs;
-        screen_device_ptr dvc;
+    struct screen_device;
+    using screen_device_ptr = std::shared_ptr<screen_device>;
 
-        window_ptr parent;
-
-        // It's just z value. The second one will be used when there is
-        // multiple window with same first z.
-        std::uint16_t priority{ 0 };
-        std::uint16_t secondary_priority{ 0 };
-
-        std::uint16_t redraw_priority();
-        virtual void priority_updated();
-
-        window_kind type;
-
-        bool operator==(const window &rhs) {
-            return priority == rhs.priority;
-        }
-
-        bool operator!=(const window &rhs) {
-            return priority != rhs.priority;
-        }
-
-        bool operator>(const window &rhs) {
-            return priority > rhs.priority;
-        }
-
-        bool operator<(const window &rhs) {
-            return priority < rhs.priority;
-        }
-
-        bool operator>=(const window &rhs) {
-            return priority >= rhs.priority;
-        }
-
-        bool operator<=(const window &rhs) {
-            return priority <= rhs.priority;
-        }
-
-        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd);
-
-        /*! \brief Generic event queueing
-        */
-        virtual void queue_event(const epoc::event &evt);
-
-        window(window_server_client_ptr client)
-            : window_client_obj(client)
-            , type(window_kind::normal)
-            , dvc(nullptr) {}
-
-        window(window_server_client_ptr client, window_kind type)
-            : window_client_obj(client)
-            , type(type)
-            , dvc(nullptr) {}
-
-        window(window_server_client_ptr client, screen_device_ptr dvc, window_kind type)
-            : window_client_obj(client)
-            , type(type)
-            , dvc(dvc) {}
-    };
+    struct window;
+    using window_ptr = std::shared_ptr<window>;
 
     struct window_group;
-    using window_group_ptr = std::shared_ptr<epoc::window_group>;
+    using window_group_ptr = std::shared_ptr<window_group>;
 
-    struct screen_device : public window_client_obj {
-        eka2l1::graphics_driver_client_ptr driver;
-        int screen;
-
-        epoc::config::screen scr_config;
-        epoc::config::screen_mode *crr_mode;
-
-        std::vector<epoc::window_ptr> windows;
-        epoc::window_group_ptr focus;
-
-        epoc::window_group_ptr find_window_group_to_focus();
-
-        void update_focus(epoc::window_group_ptr closing_group);
-
-        screen_device(window_server_client_ptr client, int number,
-            eka2l1::graphics_driver_client_ptr driver);
-
-        void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) override;
-    };
-
-    struct window_group : public epoc::window {
-        epoc::window_group_ptr next_sibling{ nullptr };
-        std::u16string name;
-
-        enum {
-            focus_receiveable = 0x1000
-        };
-
-        uint32_t flags;
-
-        bool can_receive_focus() {
-            return flags & focus_receiveable;
-        }
-
-        window_group(window_server_client_ptr client, screen_device_ptr dvc)
-            : window(client, dvc, window_kind::group) {
-        }
-
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-        void lost_focus();
-        void gain_focus();
-
-        eka2l1::graphics_driver_client_ptr get_driver() {
-            return dvc->driver;
-        }
-    };
-
-    struct graphic_context;
-
-    struct window_user : public epoc::window {
-        epoc::display_mode dmode;
-        epoc::window_type win_type;
-
-        // The position
-        eka2l1::vec2 pos{ 0, 0 };
-        eka2l1::vec2 size{ 0, 0 };
-
-        std::vector<epoc::graphic_context *> contexts;
-
-        std::uint32_t clear_color = 0xFFFFFFFF;
-        std::uint32_t filter = pointer_filter_type::all;
-
-        eka2l1::vec2 cursor_pos{ -1, -1 };
-
-        bool allow_pointer_grab;
-
-        struct invalidate_rect {
-            vec2 in_top_left;
-            vec2 in_bottom_right;
-        } irect;
-
-        std::uint32_t redraw_evt_id;
-        std::uint32_t driver_win_id{ 0 };
-
-        void priority_updated() override;
-
-        window_user(window_server_client_ptr client, screen_device_ptr dvc,
-            epoc::window_type type_of_window, epoc::display_mode dmode)
-            : window(client, dvc, window_kind::client)
-            , win_type(type_of_window)
-            , dmode(dmode) {
-        }
-
-        int shadow_height{ 0 };
-
-        enum {
-            shadow_disable = 0x1000,
-            active = 0x2000,
-            visible = 0x4000,
-        };
-
-        std::uint32_t flags;
-
-        bool is_visible() {
-            return flags & visible;
-        }
-
-        void set_visible(bool vis) {
-            flags &= ~visible;
-
-            if (vis) {
-                flags |= visible;
-            }
-        }
-
-        void queue_event(const epoc::event &evt) override;
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-
-        epoc::window_group_ptr get_group() {
-            return std::reinterpret_pointer_cast<epoc::window_group>(parent);
-        }
-    };
-
-    struct draw_command {
-        int gc_command;
-        std::string buf;
-
-        template <typename T>
-        T internalize() {
-            T d = *reinterpret_cast<T *>(&(buf[0]));
-            buf.erase(0, sizeof(T));
-
-            return d;
-        }
-
-        template <typename T>
-        void externalize(const T &v) {
-            buf.append(reinterpret_cast<const char *>(&v), sizeof(T));
-        }
-    };
-
-    struct graphic_context : public window_client_obj {
-        std::shared_ptr<window_user> attached_window;
-        std::queue<draw_command> draw_queue;
-
-        bool recording{ false };
-
-        void flush_queue_to_driver();
-
-        void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text);
-
-        void active(service::ipc_context &context, ws_cmd cmd);
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-
-        explicit graphic_context(window_server_client_ptr client, screen_device_ptr scr = nullptr,
-            window_ptr win = nullptr);
-    };
-
-    // Is this a 2D game engine ?
-    struct sprite : public window_client_obj {
-        window_ptr attached_window;
-        eka2l1::vec2 position;
-
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-        explicit sprite(window_server_client_ptr client, window_ptr attached_window = nullptr,
-            eka2l1::vec2 pos = eka2l1::vec2(0, 0));
-    };
-
-    struct anim_dll : public window_client_obj {
-        // Nothing yet
-        anim_dll(window_server_client_ptr client)
-            : window_client_obj(client) {
-        }
-
-        std::uint32_t user_count{ 0 };
-
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-    };
-
-    struct click_dll : public window_client_obj {
-        click_dll(window_server_client_ptr client)
-            : window_client_obj(client) {
-        }
-
-        bool loaded{ false };
-
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-    };
+    struct window_user;
 
     class window_server_client {
         friend struct window_client_obj;
@@ -483,15 +204,16 @@ namespace eka2l1 {
     public:
         window_server(system *sys);
 
-        /*! \brief Get the number of window groups running in the server
-        *
-        */
+        /**
+         * \brief Get the number of window groups running in the server
+         */
         std::uint32_t get_total_window_groups();
 
-        /*! \brief Get the number of window groups running in the server
+        /**
+         * \brief Get the number of window groups running in the server
          *         with the specified priority.
          * 
-         *  \param pri The priority we want to count.
+         * \param pri The priority we want to count.
         */
         std::uint32_t get_total_window_groups_with_priority(const std::uint32_t pri);
 

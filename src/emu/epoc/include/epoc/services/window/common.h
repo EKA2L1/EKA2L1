@@ -27,7 +27,19 @@
 #include <common/vecx.h>
 #include <cstdint>
 
+enum {
+    cmd_slot = 0,
+    reply_slot = 1,
+    remote_slot = 2
+};
+
+constexpr int twips_mul = 15;
+
 namespace eka2l1::epoc {
+    enum {
+        base_handle = 0x40000000
+    };
+
     enum class graphics_orientation {
         normal,
         rotated90,

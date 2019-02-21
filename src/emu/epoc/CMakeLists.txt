@@ -115,6 +115,15 @@ add_library(epocservs
     src/services/sms/sa/sa.cpp
     src/services/ui/eikappui.cpp
     src/services/ui/oom_app.cpp
+    src/services/window/classes/plugins/animdll.cpp
+    src/services/window/classes/plugins/clickdll.cpp
+    src/services/window/classes/plugins/sprite.cpp
+    src/services/window/classes/gctx.cpp
+    src/services/window/classes/scrdvc.cpp
+    src/services/window/classes/winbase.cpp
+    src/services/window/classes/wingroup.cpp
+    src/services/window/classes/winuser.cpp
+    src/services/window/classes/wsobj.cpp
     src/services/window/bitmap.cpp
     src/services/window/common.cpp
     src/services/window/fifo.cpp
