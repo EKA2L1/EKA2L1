@@ -323,25 +323,6 @@ static void on_ui_window_mouse_scrolling(eka2l1::vec2 v) {
     io.MouseWheel += static_cast<float>(v.y);
 }
 
-#define KEY_TAB 258
-#define KEY_BACKSPACE 259
-#define KEY_LEFT_SHIFT 340
-#define KEY_LEFT_CONTROL 341
-#define KEY_LEFT_ALT 342
-#define KEY_LEFT_SUPER 343
-#define KEY_RIGHT_SHIFT 344
-#define KEY_RIGHT_CONTROL 345
-#define KEY_RIGHT_ALT 346
-#define KEY_RIGHT_SUPER 347
-
-#define KEY_RIGHT 262
-#define KEY_LEFT 263
-#define KEY_DOWN 264
-#define KEY_UP 265
-
-#define KEY_ENTER 257
-#define KEY_ESCAPE 256
-
 static void on_ui_window_key_release(const int key) {
     ImGuiIO &io = ImGui::GetIO();
     io.KeysDown[key] = false;

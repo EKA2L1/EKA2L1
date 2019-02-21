@@ -26,17 +26,56 @@
 #include <memory>
 #include <string>
 
+#define KEY_TAB 258
+#define KEY_BACKSPACE 259
+#define KEY_LEFT_SHIFT 340
+#define KEY_LEFT_CONTROL 341
+#define KEY_LEFT_ALT 342
+#define KEY_LEFT_SUPER 343
+#define KEY_RIGHT_SHIFT 344
+#define KEY_RIGHT_CONTROL 345
+#define KEY_RIGHT_ALT 346
+#define KEY_RIGHT_SUPER 347
+
+#define KEY_RIGHT 262
+#define KEY_LEFT 263
+#define KEY_DOWN 264
+#define KEY_UP 265
+
+#define KEY_ENTER 257
+#define KEY_ESCAPE 256
+
 namespace eka2l1 {
-    /*! \brief Contains implementation for driver */
+    /**
+     * \brief Contains implementation for driver.
+     * 
+     * Driver is a complete structure which takes and does request belongs to a specific
+     * category. For example:
+     * 
+     * Graphic driver has the job of taking draw requests and render it to the screen.
+     * Input driver has the job of tracking input from keyboard/pad and notify it to users.
+     * 
+     * The concept of driver here in the emulator are mostly the same as what you heard in mordern
+     * computer, think of this as another nano-driver.
+     * 
+     * Driver in EKA2L1 hides the API difference between multiple API backends. For example, graphic driver
+     * may use Vulkan API or OpenGL API, but here those API are hidden and wrapped, the client will not know
+     * the implementation of the graphic driver, what API it use, but rather just send the requests, and the
+     * driver will get it done.
+     */
     namespace drivers {
-        /*! \brief An abstract class to implement the emulator window.
-		 *
-		 * Class can override methods to implement the emulator window.
+        /**
+         * \brief An abstract class to implement the emulator window.
+         * 
+         * Window are used for display graphical output. Class can base on this interface to implement
+         * a new backend.
 		*/
         class emu_window {
         public:
-            /*! \brief Intialize the emulator window.
-			 * \param title The initial window title.
+            /**
+             * \brief Intialize the emulator window.
+			 *
+             * \param title The initial window title.
 			 * \param size The initial window size.
 			*/
             virtual void init(std::string title, vec2 size) = 0;
@@ -49,7 +88,8 @@ namespace eka2l1 {
 
             virtual bool should_quit() = 0;
 
-            /*! \brief Change the window title.
+            /**
+             * \brief Change the window title.
 			*/
             virtual void change_title(std::string) = 0;
 
@@ -94,7 +134,7 @@ namespace eka2l1 {
             glfw
         };
 
-        /*! \brief Create a new window emulator. */
+        /** \brief Create a new window emulator. */
         std::shared_ptr<emu_window> new_emu_window(window_type win_type);
 
         bool init_window_library(window_type win_type);
