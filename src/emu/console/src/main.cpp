@@ -54,8 +54,6 @@
 
 using namespace eka2l1;
 
-#pragma region GLOBAL_DATA
-
 std::unique_ptr<eka2l1::system> symsys = std::make_unique<eka2l1::system>(nullptr, nullptr);
 arm_emulator_type jit_type = decltype(jit_type)::unicorn;
 
@@ -81,16 +79,12 @@ bool ui_window_mouse_down[5] = { false, false, false, false, false };
 
 std::shared_ptr<eka2l1::imgui_logger> logger;
 std::shared_ptr<eka2l1::imgui_debugger> debugger;
-std::shared_ptr<eka2l1::drivers::emu_window> debugger_window;
 
 std::mutex lock;
 std::condition_variable cond;
 
 std::uint8_t device_to_use = 0;         ///< Device that will be used
 
-#pragma endregion
-
-#pragma region ARGS_HANDLER_CALLBACK
 static bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
     const char *path = parser->next_token();
 
@@ -223,9 +217,6 @@ static bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std:
     return false;
 }
 
-#pragma endregion
-
-#pragma region CONFIGS
 void read_config() {
     try {
         config = YAML::LoadFile("config.yml");
@@ -262,10 +253,6 @@ void save_config() {
     config_file << config;
 }
 
-#pragma endregion
-
-#pragma region CORE_FINALIZE_INITIALIZE
-
 void init() {
     symsys->set_jit_type(jit_type);
     symsys->set_debugger(debugger);
@@ -298,10 +285,6 @@ void do_quit() {
     save_config();
     symsys->shutdown();
 }
-
-#pragma endregion
-
-#pragma region DEBUGGER
 
 void set_mouse_down(const int button, const bool op) {
     const std::lock_guard<std::mutex> guard(ui_debugger_mutex);
@@ -353,7 +336,7 @@ static void on_ui_window_char_type(std::uint32_t c) {
 }
 
 int ui_debugger_thread() {
-    debugger_window = eka2l1::drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
+    auto debugger_window = eka2l1::drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
 
     debugger_window->raw_mouse_event = on_ui_window_mouse_evt;
     debugger_window->mouse_wheeling = on_ui_window_mouse_scrolling;
@@ -457,10 +440,11 @@ int ui_debugger_thread() {
     // So FB is destroyed on the right thread.
     symsys->set_graphics_driver(nullptr);
 
+    debugger_window->done_current();
+    debugger_window->shutdown();
+
     return 0;
 }
-
-#pragma endregion
 
 void run() {
     while (!should_quit && !symsys->should_exit()) {
@@ -533,9 +517,6 @@ int main(int argc, char **argv) {
 
     // Kill the system
     symsys.reset();
-
-    debugger_window->done_current();
-    debugger_window->shutdown();
 
     eka2l1::drivers::destroy_window_library(eka2l1::drivers::window_type::glfw);
 

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <drivers/input/common.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -164,6 +165,14 @@ namespace eka2l1::drivers {
         void set_window_pos(const std::uint32_t id, const eka2l1::vec2 &pos);
 
         void set_window_priority(const std::uint32_t id, const std::uint16_t pri);
+    };
+
+    class input_driver_client: public driver_client {
+    public:
+        input_driver_client() {}
+        explicit input_driver_client(driver_instance driver);
+
+        std::optional<input_event> get(); 
     };
 }
 

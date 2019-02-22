@@ -22,6 +22,7 @@
 #include <drivers/itc.h>
 
 #include <drivers/graphics/graphics.h>
+#include <drivers/input/input.h>
 
 namespace eka2l1::drivers {
     bool driver_client::send_opcode_sync(const int opcode, itc_context &ctx) {
@@ -163,5 +164,27 @@ namespace eka2l1::drivers {
         context.push(pos);
 
         send_opcode_sync(graphics_driver_set_win_pos, context);
+    }
+
+    input_driver_client::input_driver_client(driver_instance driver) 
+        : driver_client(driver) {
+
+    }
+
+    std::optional<input_event> input_driver_client::get() {
+        input_event evt;
+        bool result = 0;
+
+        itc_context context;
+        context.push(&evt);
+        context.push(&result);
+
+        send_opcode_sync(input_driver_get_event, context);
+
+        if (result) {
+            return evt;
+        }
+        
+        return std::nullopt;
     }
 }
