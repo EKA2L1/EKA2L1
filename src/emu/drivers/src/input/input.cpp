@@ -22,7 +22,7 @@
 #include <common/log.h>
 
 namespace eka2l1::drivers {
-    void input_driver::queue_key_event(const const int raw_mapped_keycode, const key_state action) {
+    void input_driver::queue_key_event(const int raw_mapped_keycode, const key_state action) {
         // The driver will not queue event because it's inactive in receiving inputs
         if (!is_active()) {
             return;
