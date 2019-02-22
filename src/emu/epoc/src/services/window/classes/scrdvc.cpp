@@ -65,6 +65,8 @@ namespace eka2l1::epoc {
             }
         }
 
+        client->get_ws().get_focus() = focus;
+        
         // TODO: This changes the focus, so the window group list got updated
         // An event of that should be sent
     }

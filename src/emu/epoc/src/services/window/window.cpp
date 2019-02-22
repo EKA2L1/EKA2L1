@@ -76,7 +76,6 @@ namespace eka2l1::epoc {
         assert(false && "UNREACHABLE");
         return graphics_orientation::normal;
     }
-
     void window_server_client::add_event_mod_notifier_user(epoc::event_mod_notifier_user nof) {
         if (!std::any_of(mod_notifies.begin(), mod_notifies.end(),
                 [=](epoc::event_mod_notifier_user &denof) { return denof.user == nof.user; })) {
@@ -252,20 +251,19 @@ namespace eka2l1::epoc {
         }
 
         parent_group->childs.push(group);
+        device_ptr->windows.push_back(group);
 
         if (header->focus) {
-            device_ptr->focus = std::reinterpret_pointer_cast<epoc::window_group>(group);
-            get_ws().focus() = device_ptr->focus;
+            std::reinterpret_pointer_cast<epoc::window_group>
+                (group)->flags |= window_group::focus_receiveable;
+
+            device_ptr->update_focus(nullptr);
         }
 
         last_group = std::reinterpret_pointer_cast<epoc::window_group>(group);
         total_group++;
-        std::uint32_t id = add_object(group);
 
-        if (header->focus) {
-            // We got the focus. We should tells everyone that we have the focus now.
-            queue_event(epoc::event(id, epoc::event_code::focus_gained));
-        }
+        std::uint32_t id = add_object(group);
 
         ctx.set_request_status(id);
     }
@@ -395,7 +393,7 @@ namespace eka2l1::epoc {
 
         case EWsClOpSetPointerCursorMode: {
             // TODO: Check errors
-            if (get_ws().focus() && get_ws().focus()->client == this) {
+            if (get_ws().get_focus() && get_ws().get_focus()->client == this) {
                 get_ws().cursor_mode() = *reinterpret_cast<epoc::pointer_cursor_mode *>(cmd.data_ptr);
                 ctx.set_request_status(KErrNone);
 
