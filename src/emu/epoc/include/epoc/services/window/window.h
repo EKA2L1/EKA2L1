@@ -221,7 +221,7 @@ namespace eka2l1 {
             return cursor_mode_;
         }
 
-        epoc::window_group_ptr &focus() {
+        epoc::window_group_ptr &get_focus() {
             return focus_;
         }
 
