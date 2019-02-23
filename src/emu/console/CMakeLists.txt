@@ -1,4 +1,10 @@
-add_executable(eka2l1 src/main.cpp)
+add_executable(eka2l1 
+	include/console/cmdhandler.h
+	include/console/global.h
+	include/console/guithread.h
+	src/cmdhandler.cpp
+	src/guithread.cpp
+	src/main.cpp)
 
 target_link_libraries(eka2l1 PRIVATE 
 	arm
@@ -11,7 +17,7 @@ target_link_libraries(eka2l1 PRIVATE
 	imgui
 	yaml-cpp)
 
-target_include_directories(eka2l1 PRIVATE ${YAML_CPP_INCLUDE_DIR})
+target_include_directories(eka2l1 PRIVATE include ${YAML_CPP_INCLUDE_DIR})
 
 set_target_properties(eka2l1 PROPERTIES OUTPUT_NAME eka2l1
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
