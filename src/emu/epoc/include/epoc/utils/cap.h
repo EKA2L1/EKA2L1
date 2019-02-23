@@ -22,6 +22,7 @@
 #pragma once
 
 #include <common/bitfield.h>
+#include <cstdint>
 
 namespace eka2l1::epoc {
     enum capability {
@@ -229,4 +230,37 @@ namespace eka2l1::epoc {
     };
 
     using capability_set = common::ba_t<cap_limit>;
+
+    struct security_info {
+        std::uint32_t secure_id;
+        std::uint32_t vendor_id;
+        capability_set caps;
+    };
+
+    struct security_policy {
+        enum sec_type {
+            always_fail = 0,
+            always_pass = 1,
+            c3 = 2,
+            c7 = 3,
+            s3 = 4,
+            v3 = 5
+        };
+
+        std::uint8_t type;
+        std::uint8_t caps[3];
+
+        union {
+            std::uint32_t sec_id;
+            std::uint32_t vendor_id;
+            std::uint8_t extra_caps[4];
+        };
+
+        /**
+         * Check to see if the security info can pass the policy test.
+         * 
+         * Any required info missing will be filled in missing struct.
+         */
+        bool check(const security_info &against, security_info &missing);
+    };
 }
