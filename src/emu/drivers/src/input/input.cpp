@@ -38,7 +38,11 @@ namespace eka2l1::drivers {
         // TODO: Really much. We can not just throw a raw keycode. We should also map it, read from a config file or something ?
         evt.key_.code_ = (raw_mapped_keycode == 'A') ? key_mid_button : static_cast<key_scancode>(raw_mapped_keycode);
 
-        events_.emplace(std::move(evt));
+        if (flags_ & locked) {
+            pending_locked_events_.emplace(std::move(evt));
+        } else {    
+            events_.emplace(std::move(evt));
+        }
     }
 
     bool input_driver::get_event(input_event *evt) {
@@ -60,5 +64,61 @@ namespace eka2l1::drivers {
         events_.pop();
 
         return true;
+    }
+
+    void input_driver::move_events() {
+        while (!pending_locked_events_.empty()) {
+            auto pending_event = std::move(pending_locked_events_.front());
+            pending_locked_events_.pop();
+
+            events_.push(std::move(pending_event));
+        }
+    }
+    
+    void input_driver::process_requests() {
+        for (;;) {
+            auto request = request_queue.pop();
+
+            if (!request) {
+                break;
+            }
+
+            switch (request->opcode) {
+            case input_driver_lock: {
+                flags_ |= locked;
+                break;
+            }
+
+            case input_driver_release: {
+                flags_ &= ~locked;
+                move_events();
+                break;
+            }
+
+            case input_driver_get_events: {
+                input_event *evt = *request->context.pop<input_event*>();
+                std::uint32_t num = *request->context.pop<std::uint32_t>();
+
+                std::uint32_t i = 0;
+
+                while ((i < num) && get_event(evt + i++));         
+                break;
+            }
+
+            case input_driver_get_total_events: {
+                std::uint32_t *num = *request->context.pop<std::uint32_t*>();
+                *num = static_cast<std::uint32_t>(events_.size());
+
+                break;
+            }
+
+            default: {
+                LOG_ERROR("Unsupported input driver opcode {}", request->opcode);
+                break;
+            }
+            }
+        }
+
+        cond.notify_all();
     }
 }

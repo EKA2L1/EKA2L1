@@ -30,21 +30,38 @@
 
 namespace eka2l1::drivers {
     enum input_driver_opcode {
-        input_driver_get_event
+        input_driver_get_events,
+        input_driver_lock,       ///< Lock access to the queue, prevent from pushing event until release
+        input_driver_release,    ///< Release lock from the queue
+        input_driver_get_total_events
     };
 
     class input_driver: public driver {
         std::uint32_t flags_;
 
         enum {
-            input_active = 0x1000
+            input_active = 0x1000,
+            locked = 0x2000
         };
 
         std::mutex lock_;
+
         std::queue<input_event> events_;
+        std::queue<input_event> pending_locked_events_;
+
+    protected:
+        void move_events();
 
     public:
+        /**
+         * \brief Set the driver to be active or inactive.
+         * 
+         * When being inactive, the driver will not receive and queue any input
+         * events.
+         */
         void set_active(const bool active) {
+            const std::lock_guard<std::mutex> guard_(lock_);
+            
             flags_ &= ~input_active;
             if (active) {
                 flags_ |= input_active;
@@ -62,6 +79,6 @@ namespace eka2l1::drivers {
          */
         bool get_event(input_event *evt);
 
-        void process_requests() override {}
+        void process_requests() override;
     };
 }

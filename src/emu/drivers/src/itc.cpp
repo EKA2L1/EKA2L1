@@ -171,20 +171,31 @@ namespace eka2l1::drivers {
 
     }
 
-    std::optional<input_event> input_driver_client::get() {
-        input_event evt;
-        bool result = 0;
+    void input_driver_client::get(input_event *evt, const std::uint32_t total_to_get) {
+        itc_context context;
+        context.push(evt);
+        context.push(total_to_get);
+
+        send_opcode_sync(input_driver_get_events, context);
+    }
+
+    void input_driver_client::lock() {
+        itc_context context;
+        send_opcode_sync(input_driver_lock, context);
+    }
+
+    void input_driver_client::release() {
+        itc_context context;
+        send_opcode_sync(input_driver_release, context);
+    }
+
+    std::uint32_t input_driver_client::total() {
+        std::uint32_t total = 0;
 
         itc_context context;
-        context.push(&evt);
-        context.push(&result);
+        context.push(&total);
 
-        send_opcode_sync(input_driver_get_event, context);
-
-        if (result) {
-            return evt;
-        }
-        
-        return std::nullopt;
+        send_opcode_sync(input_driver_get_total_events, context);
+        return total;
     }
 }

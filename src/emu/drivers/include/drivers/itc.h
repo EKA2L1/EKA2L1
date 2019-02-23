@@ -172,10 +172,15 @@ namespace eka2l1::drivers {
         input_driver_client() {}
         explicit input_driver_client(driver_instance driver);
 
-        std::optional<input_event> get(); 
+        void lock();
+        void release();
+
+        std::uint32_t total();
+        void get(input_event *evt, const std::uint32_t total_to_get); 
     };
 }
 
 namespace eka2l1 {
     using graphics_driver_client_ptr = std::shared_ptr<drivers::graphics_driver_client>;
+    using input_driver_client_ptr = std::shared_ptr<drivers::input_driver_client>;
 }
