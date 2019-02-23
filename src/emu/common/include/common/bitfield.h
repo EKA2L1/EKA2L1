@@ -191,7 +191,7 @@ namespace eka2l1::common {
 	 */
 	template <size_t N>
 	struct ba_t {
-		static constexpr std::uint8_t total_size = N >> 3;
+		static constexpr std::uint8_t total_size = (N >> 3) + 1;
 
 		std::uint8_t bytes_[total_size];
 
