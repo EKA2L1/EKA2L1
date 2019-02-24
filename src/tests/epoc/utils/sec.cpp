@@ -19,7 +19,7 @@
  */
 
 #include <catch2/catch.hpp>
-#include <epoc/utils/cap.h>
+#include <epoc/utils/sec.h>
 
 using namespace eka2l1;
 
