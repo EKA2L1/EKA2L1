@@ -34,7 +34,7 @@ namespace eka2l1::epoc {
         std::fill(caps, caps + 3, static_cast<std::uint8_t>(cap_none));
         std::fill(extra_caps, extra_caps + 4, static_cast<std::uint8_t>(cap_none));
 
-        for (std::size_t i = 0; i < common::min(c_caps.size(), 3ULL); i++) {
+        for (std::size_t i = 0; i < common::min(c_caps.size(), static_cast<std::size_t>(3)); i++) {
             caps[i] = static_cast<std::uint8_t>(c_caps[i]);
         }
         
@@ -43,7 +43,7 @@ namespace eka2l1::epoc {
         } else {
             type = c7;
 
-            for (std::size_t i = 0; i < common::min(c_caps.size() - 3, 4ULL); i++) {
+            for (std::size_t i = 0; i < common::min(c_caps.size() - 3, static_cast<std::size_t>(4)); i++) {
                 extra_caps[i] = static_cast<std::uint8_t>(c_caps[3 + i]);
             }
         }
@@ -77,6 +77,7 @@ namespace eka2l1::epoc {
             missing.caps.unset(against.caps);
 
             // Fallthrough so we can check if the caps is empty or not
+            [[fallthrough]];
         }
 
         case c3: {
