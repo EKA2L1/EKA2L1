@@ -33,8 +33,12 @@
 namespace eka2l1 {
     class system;
 
-    namespace service {
+    namespace epoc {
+        struct security_info;
+        struct security_policy;
+    }
 
+    namespace service {
         /*! \brief Context used to pass to IPC function */
         struct ipc_context {
             eka2l1::system *sys;
@@ -91,6 +95,8 @@ namespace eka2l1 {
             bool write_arg_pkg(int idx, T data) {
                 return write_arg_pkg(idx, reinterpret_cast<uint8_t *>(&data), sizeof(T));
             }
+
+            bool satisfy(epoc::security_policy &policy, epoc::security_info *missing = nullptr);
         };
     }
 }

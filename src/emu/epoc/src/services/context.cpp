@@ -24,6 +24,7 @@
 
 #include <epoc/services/context.h>
 #include <epoc/utils/des.h>
+#include <epoc/utils/sec.h>
 
 namespace eka2l1 {
     namespace service {
@@ -181,6 +182,10 @@ namespace eka2l1 {
             }
 
             return false;
+        }
+    
+        bool ipc_context::satisfy(epoc::security_policy &policy, epoc::security_info *missing) {
+            return msg->own_thr->owning_process()->satisfy(policy, missing);
         }
     }
 }
