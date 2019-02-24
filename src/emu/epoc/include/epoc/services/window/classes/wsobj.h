@@ -40,7 +40,7 @@ namespace eka2l1::epoc {
         explicit window_client_obj(window_server_client_ptr client);
         virtual ~window_client_obj() {}
 
-        virtual void execute_command(eka2l1::service::ipc_context &ctx, 
+        virtual void execute_command(eka2l1::service::ipc_context &ctx,
             eka2l1::ws_cmd cmd);
     };
 }

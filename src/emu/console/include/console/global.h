@@ -40,7 +40,7 @@ extern std::unique_ptr<eka2l1::system> symsys;
 extern arm_emulator_type jit_type;
 
 extern std::uint16_t gdb_port;
-extern std::uint8_t device_to_use;         ///< Device that will be used
+extern std::uint8_t device_to_use; ///< Device that will be used
 
 extern std::mutex ui_debugger_mutex;
 extern ImGuiContext *ui_debugger_context;

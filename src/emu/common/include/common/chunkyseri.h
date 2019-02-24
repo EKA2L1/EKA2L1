@@ -60,9 +60,12 @@ namespace eka2l1::common {
 
     public:
         explicit chunkyseri(std::uint8_t *buf, const std::size_t max, const chunkyseri_mode mode)
-            : buf(buf), org(buf), mode(mode), end(org + max) {
+            : buf(buf)
+            , org(buf)
+            , mode(mode)
+            , end(org + max) {
         }
-        
+
         std::size_t size() {
             return buf - org;
         }
@@ -70,7 +73,7 @@ namespace eka2l1::common {
         bool eos() {
             return buf >= end;
         }
-                
+
         chunkyseri_mode get_seri_mode() const {
             return mode;
         }

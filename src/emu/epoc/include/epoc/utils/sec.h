@@ -78,7 +78,7 @@ namespace eka2l1::epoc {
          * Grants write access to settings that control the behaviour of the device.
          *
          * For example, device lock settings, system time, time zone, alarms, etc.
-         */	
+         */
         cap_write_dvc_data = 5,
 
         /**
@@ -88,7 +88,7 @@ namespace eka2l1::epoc {
          * or not an application should have access to DRM content. 
          * Applications granted DRM are trusted to respect the rights associated
          * with the content.
-         */	
+         */
         cap_drm = 6,
 
         /**
@@ -100,7 +100,7 @@ namespace eka2l1::epoc {
          * 
          * Normal access to the user interface and the screen does not require
          * this capability.
-         */	
+         */
         cap_trusted_ui = 7,
 
         /**
@@ -109,7 +109,7 @@ namespace eka2l1::epoc {
          * Currently, protected names start with a "!" character. The kernel prevents
          * servers without this capability from using such a name, and therefore
          * prevents protected servers from being impersonated.
-         */	
+         */
         cap_prot_serv = 8,
 
         /**
@@ -117,7 +117,7 @@ namespace eka2l1::epoc {
          * file or one directory (or overall filesystem integrity/behaviour, etc).
          * 
          * For examples, reformatting a disk partition.
-         */	
+         */
         cap_disk_admin = 9,
 
         /**
@@ -128,7 +128,7 @@ namespace eka2l1::epoc {
          * 
          * For example, forcing all existing connections on a specific protocol
          * to be dropped, or changing the priority of a call.
-         */	
+         */
         cap_network_control = 10,
 
         /**
@@ -145,7 +145,7 @@ namespace eka2l1::epoc {
          * 
          * Note that after obtaining the focus, normal applications do not need this
          * capability to be dispatched key and pen events.
-         */	
+         */
         cap_sw_event = 12,
 
         /**
@@ -158,7 +158,7 @@ namespace eka2l1::epoc {
          * Voice calls, SMS, and internet services are good examples of
          * such network services. They are supported by GSM, CDMA and all IP transport
          * protocols including Bluetooth profiles over IP.
-         */	
+         */
         cap_network_srv = 13,
 
         /**
@@ -167,7 +167,7 @@ namespace eka2l1::epoc {
          *  
          * The location of the remote service is well-known to the phone user, and in
          * most cases, such services will not incur cost for the phone user.
-         */	
+         */
         cap_local_srv = 14,
 
         /**
@@ -211,7 +211,7 @@ namespace eka2l1::epoc {
          * output calls at its API level.
          */
         cap_surrounding_dd = 18,
-      
+
         /**
          * Grants access to live confidential information about the user and his/her
          * immediate environment. This capability protect the user's privacy.
@@ -237,18 +237,18 @@ namespace eka2l1::epoc {
 
     const char *capability_to_string(const capability &cap);
 
-    static constexpr auto   cap_set_max_size = (cap_hard_limit + 7) >> 3;
-    using                   capability_set   = common::ba_t<cap_set_max_size>;
+    static constexpr auto cap_set_max_size = (cap_hard_limit + 7) >> 3;
+    using capability_set = common::ba_t<cap_set_max_size>;
 
     struct security_info {
-        std::uint32_t                  secure_id;
-        std::uint32_t                  vendor_id;
+        std::uint32_t secure_id;
+        std::uint32_t vendor_id;
 
         static constexpr auto total_caps_u_size = cap_set_max_size / sizeof(std::uint32_t);
 
         union {
             common::ba_t<cap_set_max_size> caps;
-            std::uint32_t                  caps_u[total_caps_u_size];
+            std::uint32_t caps_u[total_caps_u_size];
         };
 
         security_info() {
@@ -285,7 +285,7 @@ namespace eka2l1::epoc {
 
         security_policy() = default;
         ~security_policy() = default;
-        
+
         explicit security_policy(std::vector<capability> c_caps);
 
         /**

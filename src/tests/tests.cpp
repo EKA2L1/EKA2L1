@@ -4,7 +4,8 @@
 
 int main(int argc, char **argv) {
     eka2l1::log::setup_log(nullptr);
-    int ret = Catch::Session().run(argc, argv);;
+    int ret = Catch::Session().run(argc, argv);
+    ;
 
     return ret;
 }

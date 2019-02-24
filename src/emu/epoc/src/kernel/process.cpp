@@ -25,17 +25,17 @@
 #include <epoc/kernel.h>
 #include <epoc/mem.h>
 
+#include <epoc/kernel/codeseg.h>
 #include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/process.h>
 #include <epoc/kernel/scheduler.h>
-#include <epoc/kernel/codeseg.h>
 
 namespace eka2l1::kernel {
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
         uint32_t heap_max, kernel::thread_priority pri) {
         page_table *last = mem->get_current_page_table();
         mem->set_current_page_table(page_tab);
-        
+
         primary_thread
             = kern->create<kernel::thread>(
                 mem,
@@ -101,10 +101,10 @@ namespace eka2l1::kernel {
 
             LOG_INFO("Process {} capabilities: {}", process_name, all_caps.empty() ? "None" : all_caps);
         }
-        
+
         create_prim_thread(
             codeseg->get_code_run_addr(), codeseg->get_entry_point(),
-            stack_size, heap_min, heap_max, 
+            stack_size, heap_min, heap_max,
             kernel::thread_priority::priority_absolute_foreground_normal);
 
         // TODO: Load all references DLL in the export list.
@@ -260,7 +260,7 @@ namespace eka2l1::kernel {
         [[maybe_unused]] epoc::security_info missing_holder;
         return policy.check(sec_info, missing ? *missing : missing_holder);
     }
-    
+
     void process::get_memory_info(memory_info &info) {
         info.rt_code_addr = codeseg->get_code_run_addr();
         info.rt_const_data_addr = codeseg->get_data_run_addr();

@@ -18,10 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/common.h>
-#include <epoc/services/window/classes/wsobj.h>
-#include <epoc/services/window/window.h>        ///< Unwanted include
 #include <common/log.h>
+#include <epoc/services/window/classes/wsobj.h>
+#include <epoc/services/window/common.h>
+#include <epoc/services/window/window.h> ///< Unwanted include
 
 namespace eka2l1::epoc {
     window_client_obj::window_client_obj(window_server_client_ptr client)

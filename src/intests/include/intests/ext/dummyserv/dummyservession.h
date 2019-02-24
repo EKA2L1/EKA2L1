@@ -13,23 +13,21 @@
 
 class CDummyServer;
 
-class CDummyServerSession: public CSession2
-    {
+class CDummyServerSession : public CSession2 {
 public:
-        static CDummyServerSession *NewL(CDummyServer &aServer);
-        static CDummyServerSession *NewLC(CDummyServer &aServer);
-        
-        virtual ~CDummyServerSession() 
-            {
-            }
-        
-        void ServiceL(const RMessage2 &aMessage);
-      
+    static CDummyServerSession *NewL(CDummyServer &aServer);
+    static CDummyServerSession *NewLC(CDummyServer &aServer);
+
+    virtual ~CDummyServerSession() {
+    }
+
+    void ServiceL(const RMessage2 &aMessage);
+
 private:
-        CDummyServerSession(CDummyServer &aServer);
-        void ConstructL();
-       
-        CDummyServer &iServer;
-    };
+    CDummyServerSession(CDummyServer &aServer);
+    void ConstructL();
+
+    CDummyServer &iServer;
+};
 
 #endif /* DUMMYSERVESSION_H_ */

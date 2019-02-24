@@ -32,18 +32,18 @@ namespace eka2l1::common {
     class allocator {
     public:
         virtual void *allocate(std::size_t s) = 0;
-        virtual bool  free(const void *ptr) = 0; 
+        virtual bool free(const void *ptr) = 0;
     };
 
     class space_based_allocator : public allocator {
     protected:
         std::uint8_t *ptr;
-        std::size_t   max_size;
+        std::size_t max_size;
 
-    public: 
+    public:
         explicit space_based_allocator(std::uint8_t *sptr, const std::size_t initial_max_size)
-            : ptr(sptr), max_size(initial_max_size) {
-
+            : ptr(sptr)
+            , max_size(initial_max_size) {
         }
 
         /*! \brief Expand the space to new limit.
@@ -56,13 +56,13 @@ namespace eka2l1::common {
             return max_size;
         }
     };
-    
+
     class block_allocator : public space_based_allocator {
         struct block_info {
             std::uint64_t offset;
-            std::size_t   size;
+            std::size_t size;
 
-            bool active { false };
+            bool active{ false };
         };
 
         std::vector<block_info> blocks;
@@ -71,7 +71,7 @@ namespace eka2l1::common {
         explicit block_allocator(std::uint8_t *sptr, const std::size_t initial_max_size);
 
         void *allocate(std::size_t bytes) override;
-        bool  free(const void *ptr) override;
+        bool free(const void *ptr) override;
 
         virtual bool expand(std::size_t target) {
             return false;

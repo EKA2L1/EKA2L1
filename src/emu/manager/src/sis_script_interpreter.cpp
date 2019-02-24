@@ -113,7 +113,7 @@ namespace eka2l1 {
                 LOG_ERROR("Can not intialize inflate stream");
             }
 
-            flate::inflate_data(&stream, compressed.compressed_data.data(), 
+            flate::inflate_data(&stream, compressed.compressed_data.data(),
                 compressed.uncompressed_data.data(), static_cast<std::uint32_t>(us));
 
             inflateEnd(&stream);
@@ -200,10 +200,11 @@ namespace eka2l1 {
                 left -= grab;
             }
 
-            if (compressed.algorithm == sis_compressed_algorithm::deflated) {                
+            if (compressed.algorithm == sis_compressed_algorithm::deflated) {
                 if (total_inflated_size != compressed.uncompressed_size) {
                     LOG_ERROR("Sanity check failed: Total inflated size not equal to specified uncompress size "
-                        "in SISCompressed ({} vs {})!", total_inflated_size, compressed.uncompressed_size);
+                              "in SISCompressed ({} vs {})!",
+                        total_inflated_size, compressed.uncompressed_size);
                 }
 
                 inflateEnd(&stream);

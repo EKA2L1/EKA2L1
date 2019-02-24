@@ -64,8 +64,7 @@ namespace eka2l1::manager {
         bool set_current(const std::string &firmcode);
         bool set_current(const std::uint8_t idx);
 
-        bool add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer
-            , const epocver ver);
+        bool add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver);
 
         bool delete_device(const std::string &firmcode);
 
@@ -79,7 +78,7 @@ namespace eka2l1::manager {
          * \returns nullptr if the device can't be found
         */
         device *get(const std::string &firmcode);
-        
+
         /*! \brief Get the device with the given index.
          *
          * Not thread-safe.

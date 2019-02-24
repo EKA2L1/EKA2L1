@@ -18,18 +18,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/classes/scrdvc.h>
 #include <epoc/services/window/classes/gctx.h>
-#include <epoc/services/window/classes/winuser.h>
+#include <epoc/services/window/classes/scrdvc.h>
 #include <epoc/services/window/classes/wingroup.h>
-#include <epoc/services/window/window.h>
+#include <epoc/services/window/classes/winuser.h>
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
+#include <epoc/services/window/window.h>
 
 #include <epoc/epoc.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 namespace eka2l1::epoc {
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {

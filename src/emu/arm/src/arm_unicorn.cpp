@@ -217,21 +217,21 @@ namespace eka2l1 {
             manager::config_manager *cfg_mngr = mngr->get_config_manager();
 
             if (cfg_mngr->get_or_fall<bool>("log_read", false)) {
-                uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);                
+                uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
             }
 
             if (cfg_mngr->get_or_fall<bool>("log_write", false)) {
-                uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);                
+                uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);
             }
 
             log_pass = cfg_mngr->get_or_fall<bool>("log_passed", false);
             log_code = cfg_mngr->get_or_fall<bool>("log_code", false);
-            
+
             enable_breakpoint_script = cfg_mngr->get_or_fall<bool>("enable_breakpoint_script", false);
 
             uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), this, 1, 0);
-            
+
             assert(err == UC_ERR_OK);
             enable_vfp_fp(engine);
 

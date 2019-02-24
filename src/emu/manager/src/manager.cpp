@@ -20,8 +20,8 @@
 
 #include <manager/config_manager.h>
 #include <manager/device_manager.h>
-#include <manager/package_manager.h>
 #include <manager/manager.h>
+#include <manager/package_manager.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>

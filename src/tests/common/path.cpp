@@ -1,5 +1,5 @@
-#include <common/path.h>
 #include <catch2/catch.hpp>
+#include <common/path.h>
 #include <cstring>
 
 TEST_CASE("root_name", "path_resolving_test") {
@@ -26,7 +26,7 @@ TEST_CASE("add_path_mess", "path_resolving_test") {
     const std::string example_path = "Z:\\sys/bin\\hi";
     const std::string example_path2 = "ha/ma";
     const std::string expected_result = "Z:\\sys\\bin\\hi\\ha\\ma";
-    
+
     REQUIRE(eka2l1::add_path(example_path, example_path2, true) == expected_result);
 }
 

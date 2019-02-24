@@ -28,7 +28,7 @@ struct scope_guard {
     eka2l1::timing_system *timing;
 
     scope_guard(eka2l1::timing_system &timing_sys)
-        : timing(&timing_sys){
+        : timing(&timing_sys) {
         timing->init();
     }
 

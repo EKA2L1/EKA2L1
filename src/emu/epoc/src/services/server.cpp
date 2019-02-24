@@ -25,8 +25,8 @@
 #include <epoc/services/server.h>
 #include <epoc/timing.h>
 
-#include <manager/manager.h>
 #include <manager/config_manager.h>
+#include <manager/manager.h>
 
 namespace eka2l1 {
     namespace service {
@@ -54,7 +54,7 @@ namespace eka2l1 {
                 timing_system *timing = sys->get_timing_system();
 
                 timing->unschedule_event(frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
-                timing->remove_event(frequent_process_event);                
+                timing->remove_event(frequent_process_event);
             }
         }
 
@@ -78,7 +78,7 @@ namespace eka2l1 {
                 // Schedule frequent processing
                 frequent_process_event = timing->register_event(name + "_freq_process",
                     [](std::uint64_t userdata, int cycles_late) {
-                        service::server *svr = reinterpret_cast<service::server*>(userdata);
+                        service::server *svr = reinterpret_cast<service::server *>(userdata);
                         svr->process_accepted_msg();
 
                         // Maybe more ? But 2 reschedules should be logical enough
@@ -188,8 +188,7 @@ namespace eka2l1 {
             ipc_func ipf = func_ite->second;
             ipc_context context{ sys, process_msg };
 
-            if (sys->get_manager_system()->get_config_manager()->
-                get_or_fall<bool>("log_ipc", false)) {
+            if (sys->get_manager_system()->get_config_manager()->get_or_fall<bool>("log_ipc", false)) {
                 LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
             }
 

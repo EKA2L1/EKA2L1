@@ -25,8 +25,8 @@
 #include <epoc/vfs.h>
 
 #include <common/chunkyseri.h>
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 namespace eka2l1 {
     /* 
@@ -59,7 +59,8 @@ namespace eka2l1 {
                 }
             }
 
-            len = static_cast<std::uint32_t>(str.length());;
+            len = static_cast<std::uint32_t>(str.length());
+            ;
         } else {
             std::uint8_t b1 = 0;
             seri.absorb(b1);
@@ -104,9 +105,9 @@ namespace eka2l1 {
     }
 
     int do_state_for_cre(common::chunkyseri &seri, eka2l1::central_repo &repo) {
-        std::uint32_t uid1 = 0x10000037;        // Direct file store UID
+        std::uint32_t uid1 = 0x10000037; // Direct file store UID
         std::uint32_t uid2 = 0;
-        std::uint32_t uid3 = 0x10202BE9;        // Cenrep Server UID
+        std::uint32_t uid3 = 0x10202BE9; // Cenrep Server UID
 
         seri.absorb(uid1);
         seri.absorb(uid2);
@@ -115,7 +116,7 @@ namespace eka2l1 {
         if (uid1 != 0x10000037 || uid3 != 0x10202BE9) {
             return -1;
         }
-        
+
         // TODO: Figure out usage
         std::uint32_t unk1 = 0xCC776985;
         std::uint32_t unk2 = 0x14;
@@ -242,7 +243,8 @@ namespace eka2l1 {
                 break;
             }
 
-            case 2: case 3: {
+            case 2:
+            case 3: {
                 entry.data.etype = central_repo_entry_type::string;
                 break;
             }
@@ -299,7 +301,7 @@ namespace eka2l1 {
 
         return 0;
     }
-    
+
     void central_repo_client_subsession::write_changes(eka2l1::io_system *io) {
         std::vector<std::uint8_t> bufs;
 
@@ -309,13 +311,12 @@ namespace eka2l1 {
 
             bufs.resize(seri.size());
         }
-    
+
         common::chunkyseri seri(&bufs[0], bufs.size(), common::SERI_MODE_WRITE);
         do_state_for_cre(seri, *attach_repo);
 
-        std::u16string p { drive_to_char16(attach_repo->reside_place) };
-        p += u":\\Private\\10202BE9\\persists\\" + 
-            common::utf8_to_ucs2(common::to_string(attach_repo->uid, std::hex)) + u".cre";
+        std::u16string p{ drive_to_char16(attach_repo->reside_place) };
+        p += u":\\Private\\10202BE9\\persists\\" + common::utf8_to_ucs2(common::to_string(attach_repo->uid, std::hex)) + u".cre";
 
         symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
 

@@ -45,14 +45,14 @@ namespace eka2l1 {
 #ifdef ENABLE_SCRIPTING
         std::unique_ptr<manager::script_manager> scrmngr;
 #endif
-        std::unique_ptr<manager::device_manager> dvmngr;        
+        std::unique_ptr<manager::device_manager> dvmngr;
         std::unique_ptr<manager::package_manager> pkgmngr;
         std::unique_ptr<manager::config_manager> cfgmngr;
 
         io_system *io;
 
     public:
-        manager_system()  = default;
+        manager_system() = default;
         ~manager_system() = default;
 
         void init(system *sys, io_system *ios);

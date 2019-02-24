@@ -167,7 +167,7 @@ namespace eka2l1::drivers {
         void set_window_priority(const std::uint32_t id, const std::uint16_t pri);
     };
 
-    class input_driver_client: public driver_client {
+    class input_driver_client : public driver_client {
     public:
         input_driver_client() {}
         explicit input_driver_client(driver_instance driver);
@@ -176,7 +176,7 @@ namespace eka2l1::drivers {
         void release();
 
         std::uint32_t total();
-        void get(input_event *evt, const std::uint32_t total_to_get); 
+        void get(input_event *evt, const std::uint32_t total_to_get);
     };
 }
 

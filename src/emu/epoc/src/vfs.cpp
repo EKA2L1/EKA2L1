@@ -57,8 +57,8 @@ namespace eka2l1 {
     bool file::flush() {
         return true;
     }
-    
-    std::size_t file::read_file(const std::uint64_t offset, void *buf, std::uint32_t size, 
+
+    std::size_t file::read_file(const std::uint64_t offset, void *buf, std::uint32_t size,
         std::uint32_t count) {
         const std::uint64_t last_offset = tell();
 
@@ -574,8 +574,7 @@ namespace eka2l1 {
     public:
         explicit physical_file_system(epocver ver, const std::string &product_code)
             : ver(ver)
-            , firmcode(product_code)
-        {
+            , firmcode(product_code) {
             for (auto &[drv, mapped] : mappings) {
                 mapped = false;
             }
@@ -894,8 +893,7 @@ namespace eka2l1 {
             }
 
             // TODO (bentokun): Remove this hack with a proper symlink system.
-            if (lib_pos != std::string::npos && 
-                static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+            if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
                 new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
             }
 

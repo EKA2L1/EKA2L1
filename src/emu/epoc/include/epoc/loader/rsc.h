@@ -45,7 +45,7 @@ namespace eka2l1::loader {
         std::uint8_t num_of_bits_use_for_dict_token = 0;
         std::uint16_t num_res = 0;
 
-        int     num_dir_entry = 0;
+        int num_dir_entry = 0;
 
         std::uint16_t dict_offset;
         std::uint16_t dict_index_offset;

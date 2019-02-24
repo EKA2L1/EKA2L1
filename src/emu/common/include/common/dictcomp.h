@@ -38,8 +38,8 @@ namespace eka2l1::common {
     */
     struct dictcomp {
         int num_bits_used_for_dict_tokens;
-        int off_beg;    ///< Begin offset in bit
-        int off_cur;    ///< End offset in bit
+        int off_beg; ///< Begin offset in bit
+        int off_cur; ///< End offset in bit
         int off_end;
         bool owns_bit_buffer;
 

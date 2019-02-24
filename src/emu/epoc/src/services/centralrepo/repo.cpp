@@ -1,8 +1,8 @@
 #include <epoc/services/centralrepo/repo.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
 
 namespace eka2l1 {
     std::uint32_t central_repo::get_default_meta_for_new_key(const std::uint32_t key) {
@@ -84,10 +84,10 @@ namespace eka2l1 {
         // Done all requests
     }
 
-    int central_repo_client_subsession::add_notify_request(epoc::notify_info &info, 
+    int central_repo_client_subsession::add_notify_request(epoc::notify_info &info,
         const std::uint32_t mask, const std::uint32_t match) {
-        auto find_result = std::find_if(notifies.begin(), notifies.end(), [&](const cenrep_notify_info &notify) { 
-            return (notify.mask == mask) && (notify.match == match); 
+        auto find_result = std::find_if(notifies.begin(), notifies.end(), [&](const cenrep_notify_info &notify) {
+            return (notify.mask == mask) && (notify.match == match);
         });
 
         if (find_result != notifies.end()) {
@@ -129,7 +129,7 @@ namespace eka2l1 {
             return &(*result);
         }
 
-        transactor.changes.emplace(key, central_repo_entry {});
+        transactor.changes.emplace(key, central_repo_entry{});
         return &(transactor.changes[key]);
     }
 
@@ -137,10 +137,10 @@ namespace eka2l1 {
         std::uint32_t repo_key = 0;
         std::uint64_t oldest_access = 0xFFFFFFFFFFFFFFFF;
 
-        for (auto &[key, entry]: entries) {
+        for (auto &[key, entry] : entries) {
             if (entry.last_access < oldest_access) {
                 oldest_access = entry.last_access;
-                repo_key = key; 
+                repo_key = key;
             }
         }
 
@@ -155,7 +155,7 @@ namespace eka2l1 {
 
         cache_entry entry;
         entry.last_access = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
-            .count();
+                                .count();
 
         entry.repo = std::move(repo);
         auto res = entries.emplace(key, std::move(entry));
@@ -183,7 +183,7 @@ namespace eka2l1 {
         }
 
         ite->second.last_access = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
-            .count();
+                                      .count();
 
         return &(ite->second.repo);
     }

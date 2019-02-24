@@ -25,8 +25,8 @@
 #include <epoc/services/window/opheader.h>
 #include <epoc/services/window/window.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 namespace eka2l1::epoc {
     void window_group::lost_focus() {

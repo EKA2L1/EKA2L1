@@ -22,14 +22,14 @@
 #include <epoc/services/window/window.h>
 
 #include <epoc/services/window/classes/gctx.h>
+#include <epoc/services/window/classes/plugins/animdll.h>
+#include <epoc/services/window/classes/plugins/clickdll.h>
+#include <epoc/services/window/classes/plugins/sprite.h>
 #include <epoc/services/window/classes/scrdvc.h>
 #include <epoc/services/window/classes/winbase.h>
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
 #include <epoc/services/window/classes/wsobj.h>
-#include <epoc/services/window/classes/plugins/animdll.h>
-#include <epoc/services/window/classes/plugins/clickdll.h>
-#include <epoc/services/window/classes/plugins/sprite.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -254,8 +254,7 @@ namespace eka2l1::epoc {
         device_ptr->windows.push_back(group);
 
         if (header->focus) {
-            std::reinterpret_pointer_cast<epoc::window_group>
-                (group)->flags |= window_group::focus_receiveable;
+            std::reinterpret_pointer_cast<epoc::window_group>(group)->flags |= window_group::focus_receiveable;
 
             device_ptr->update_focus(nullptr);
         }

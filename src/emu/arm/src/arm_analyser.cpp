@@ -29,7 +29,7 @@ namespace eka2l1::arm {
         bool should_stop = false;
 
         // use BFS since DFS is hard to see what's wrong
-        std::queue<arm_function*> funcs_queue;
+        std::queue<arm_function *> funcs_queue;
 
         auto add_func = [&](vaddress faddr) {
             const std::lock_guard<std::mutex> guard(lock);
@@ -48,8 +48,8 @@ namespace eka2l1::arm {
         }
 
         // Should
-        for (auto func = funcs_queue.front(); !funcs_queue.empty(); ) {
-            std::queue<std::pair<const vaddress, std::size_t>*> blocks_queue;
+        for (auto func = funcs_queue.front(); !funcs_queue.empty();) {
+            std::queue<std::pair<const vaddress, std::size_t> *> blocks_queue;
 
             auto add_block = [&](vaddress block_addr) {
                 const std::lock_guard<std::mutex> guard(lock);
@@ -67,7 +67,7 @@ namespace eka2l1::arm {
 
             for (auto block = blocks_queue.front(); !blocks_queue.empty();) {
                 bool should_stop = false;
-                for (auto baddr = block->first; baddr <= limit && !should_stop; ) {
+                for (auto baddr = block->first; baddr <= limit && !should_stop;) {
                     auto inst = next_instruction(baddr);
 
                     if (!inst) {
@@ -79,7 +79,7 @@ namespace eka2l1::arm {
 
                     switch (inst->iname) {
                     // End a block
-                    case instruction::B:  {
+                    case instruction::B: {
                         vaddress br = inst->ops[0].imm;
                         if (thumb) {
                             br |= 1;
@@ -96,7 +96,7 @@ namespace eka2l1::arm {
                     }
 
                     case instruction::BX: {
-                        if (inst->ops[0].type == op_reg && inst->ops[0].reg == arm::reg::R12 && ip != 0) {                                 
+                        if (inst->ops[0].type == op_reg && inst->ops[0].reg == arm::reg::R12 && ip != 0) {
                             // LOG_TRACE("Branching 0x{:X}, addr 0x{:X}", ip, baddr);
 
                             add_func(ip);
@@ -109,7 +109,8 @@ namespace eka2l1::arm {
                         break;
                     }
 
-                    case instruction::BL: case instruction::BLX: {
+                    case instruction::BL:
+                    case instruction::BLX: {
                         if (inst->ops[0].type == op_imm) {
                             vaddress boff = inst->ops[0].imm;
 
@@ -125,7 +126,6 @@ namespace eka2l1::arm {
                                 }
                             }
 
-
                             // LOG_TRACE("Branching 0x{:X}, addr 0x{:X}", boff, baddr);
                             add_func(boff);
                         }
@@ -133,7 +133,8 @@ namespace eka2l1::arm {
                         break;
                     }
 
-                    case instruction::POP: case instruction::LDM: {
+                    case instruction::POP:
+                    case instruction::LDM: {
                         // Check for last op
                         if (inst->ops.back().type == op_reg && inst->ops.back().reg == arm::reg::R15) {
                             block->second = baddr - block->first + inst->size;
@@ -149,7 +150,7 @@ namespace eka2l1::arm {
                             block->second = baddr - block->first + inst->size;
                             should_stop = true;
                         }
-                        
+
                         // Detect trampoline
                         if (inst->ops.front().type == op_reg && inst->ops.front().reg == arm::reg::R12) {
                             // Using IP to jump
@@ -169,7 +170,7 @@ namespace eka2l1::arm {
                                 ip = baddr + (thumb ? 4 : 8) + inst->ops[2].imm;
                             }
                         }
-                        
+
                         break;
                     }
 
@@ -193,16 +194,16 @@ namespace eka2l1::arm {
                 // Only one block, don't waste time for those loop
                 func->size = func->blocks.begin()->second;
             } else {
-                // This is not the fastest way, but it works everytime                
+                // This is not the fastest way, but it works everytime
                 func->size = 0;
-                vaddress cur_addr =  func->blocks.begin()->first;
+                vaddress cur_addr = func->blocks.begin()->first;
                 std::size_t cur_size = func->blocks.begin()->second;
 
                 do {
                     if (cur_size == 0) {
                         break;
                     }
-                    
+
                     func->size += cur_size;
                     auto res = func->blocks.find(static_cast<vaddress>(cur_addr + cur_size));
 
@@ -214,7 +215,7 @@ namespace eka2l1::arm {
 
                     if (res != func->blocks.end()) {
                         cur_addr += static_cast<vaddress>(cur_size);
-                        cur_size = res->second; 
+                        cur_size = res->second;
                     } else {
                         break;
                     }
@@ -222,7 +223,7 @@ namespace eka2l1::arm {
             }
 
             // Next function in queue
-            funcs_queue.pop();            
+            funcs_queue.pop();
 
             if (!funcs_queue.empty()) {
                 func = funcs_queue.front();
@@ -231,7 +232,7 @@ namespace eka2l1::arm {
             }
         }
     }
-    
+
     std::unique_ptr<arm_analyser> make_analyser(const arm_disassembler_backend backend,
         read_code_func readf) {
         switch (backend) {

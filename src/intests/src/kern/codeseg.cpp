@@ -9,30 +9,28 @@
 #include <intests/kern/codeseg.h>
 #include <intests/testmanager.h>
 
-#include <e32std.h>
 #include <e32rom.h>
+#include <e32std.h>
 
-void ExceptionDescriptorRamCodeL()
-    {
-        RProcess pr;
-        TModuleMemoryInfo info;
-        
-        User::LeaveIfError(pr.GetMemoryInfo(info));
-        TLinAddr exceptionDescriptor = UserSvr::ExceptionDescriptor(info.iCodeBase);
-        
-        TBuf8<40> expectedLine;
-        expectedLine.Format(_L8("%08X"), exceptionDescriptor - info.iCodeBase);
+void ExceptionDescriptorRamCodeL() {
+    RProcess pr;
+    TModuleMemoryInfo info;
 
-        EXPECT_INPUT_EQUAL_L(expectedLine);
-        
-        TExceptionDescriptor *descriptor = reinterpret_cast<TExceptionDescriptor*>(exceptionDescriptor);
-        expectedLine.Format(_L8("%08X %08X %08X %08X"), descriptor->iExIdxBase - info.iCodeBase, descriptor->iExIdxLimit - info.iCodeBase,
-                descriptor->iROSegmentBase - info.iCodeBase, descriptor->iROSegmentLimit - info.iCodeBase);
-        
-        EXPECT_INPUT_EQUAL_L(expectedLine);
-    }
+    User::LeaveIfError(pr.GetMemoryInfo(info));
+    TLinAddr exceptionDescriptor = UserSvr::ExceptionDescriptor(info.iCodeBase);
 
-void AddCodeSegTestCasesL()
-    {
-        ADD_TEST_CASE_L(ExceptionDescriptorForRamCode, CodeSeg, ExceptionDescriptorRamCodeL);
-    }
+    TBuf8<40> expectedLine;
+    expectedLine.Format(_L8("%08X"), exceptionDescriptor - info.iCodeBase);
+
+    EXPECT_INPUT_EQUAL_L(expectedLine);
+
+    TExceptionDescriptor *descriptor = reinterpret_cast<TExceptionDescriptor *>(exceptionDescriptor);
+    expectedLine.Format(_L8("%08X %08X %08X %08X"), descriptor->iExIdxBase - info.iCodeBase, descriptor->iExIdxLimit - info.iCodeBase,
+        descriptor->iROSegmentBase - info.iCodeBase, descriptor->iROSegmentLimit - info.iCodeBase);
+
+    EXPECT_INPUT_EQUAL_L(expectedLine);
+}
+
+void AddCodeSegTestCasesL() {
+    ADD_TEST_CASE_L(ExceptionDescriptorForRamCode, CodeSeg, ExceptionDescriptorRamCodeL);
+}

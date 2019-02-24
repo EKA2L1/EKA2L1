@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <epoc/services/server.h>
 #include <epoc/services/ecom/plugin.h>
+#include <epoc/services/server.h>
 
 #include <string>
 #include <vector>
@@ -51,12 +51,12 @@ namespace eka2l1 {
         bool cap_check;
     };
 
-    class ecom_server: public service::server {
+    class ecom_server : public service::server {
         std::unordered_map<std::uint32_t, ecom_interface_info> interfaces;
-        
-        std::vector<ecom_implementation_info*> collected_impls;
 
-        bool init { false };
+        std::vector<ecom_implementation_info *> collected_impls;
+
+        bool init{ false };
 
     protected:
         void list_implementations(service::ipc_context ctx);

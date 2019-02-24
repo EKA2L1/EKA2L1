@@ -79,9 +79,9 @@ namespace eka2l1 {
             }
 
             std::uint64_t read(void *buf, const std::uint64_t read_size) {
-                std::uint64_t actual_read_size = common::min(read_size, 
+                std::uint64_t actual_read_size = common::min(read_size,
                     static_cast<std::uint64_t>(end - beg));
-                    
+
                 memcpy(buf, beg + crr_pos, actual_read_size);
                 crr_pos += actual_read_size;
 

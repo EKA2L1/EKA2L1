@@ -26,14 +26,14 @@
 
 namespace eka2l1::common {
     static std::uint32_t dyn_window_default[8] = {
-        0x0080,	    // Latin-1 supplement
-        0x00C0,	    // parts of Latin-1 supplement and Latin Extended-A
-        0x0400,	    // Cyrillic
-        0x0600,	    // Arabic
-        0x0900,	    // Devanagari
-        0x3040,	    // Hiragana
-        0x30A0,	    // Katakana
-        0xFF00	    // Fullwidth ASCII
+        0x0080, // Latin-1 supplement
+        0x00C0, // parts of Latin-1 supplement and Latin Extended-A
+        0x0400, // Cyrillic
+        0x0600, // Arabic
+        0x0900, // Devanagari
+        0x3040, // Hiragana
+        0x30A0, // Katakana
+        0xFF00 // Fullwidth ASCII
     };
 
     void unicode_comp_state::reset() {
@@ -42,14 +42,14 @@ namespace eka2l1::common {
 
         std::copy(dyn_window_default, dyn_window_default + 8, dynamic_windows);
 
-        static_windows[0] = 0x0000;     // tags
-	    static_windows[1] = 0x0080;     // Latin-1 supplement
-        static_windows[2] = 0x0100;	    // Latin Extended-A
-        static_windows[3] = 0x0300;	    // Combining Diacritics
-        static_windows[4] = 0x2000;	    // General Punctuation
-        static_windows[5] = 0x2080;	    // Currency Symbols
-        static_windows[6] = 0x2100;	    // Letterlike Symbols and Number Forms
-        static_windows[7] = 0x3000;     // CJK Symbols and Punctuation
+        static_windows[0] = 0x0000; // tags
+        static_windows[1] = 0x0080; // Latin-1 supplement
+        static_windows[2] = 0x0100; // Latin Extended-A
+        static_windows[3] = 0x0300; // Combining Diacritics
+        static_windows[4] = 0x2000; // General Punctuation
+        static_windows[5] = 0x2080; // Currency Symbols
+        static_windows[6] = 0x2100; // Letterlike Symbols and Number Forms
+        static_windows[7] = 0x3000; // CJK Symbols and Punctuation
     }
 
     std::uint32_t unicode_comp_state::dynamic_window_base(int offset_index) {
@@ -83,7 +83,7 @@ namespace eka2l1::common {
         if (dest_size <= 0) {
             return false;
         }
-        
+
         *(dest_buf + (dest_pointer++)) = b;
         dest_size--;
 
@@ -105,8 +105,7 @@ namespace eka2l1::common {
         } else if (b <= 0x10FFFF) {
             b -= 0x10000;
 
-            if (!write_byte(static_cast<std::uint16_t>(0xD800 + (b >> 10))) ||
-                !write_byte(static_cast<std::uint16_t>(0xDC00 + (b & 0x03FF)))) {
+            if (!write_byte(static_cast<std::uint16_t>(0xD800 + (b >> 10))) || !write_byte(static_cast<std::uint16_t>(0xDC00 + (b & 0x03FF)))) {
                 return false;
             }
 
@@ -129,7 +128,6 @@ namespace eka2l1::common {
 
         return true;
     }
-
 
     bool unicode_expander::define_expansion_window() {
         std::uint8_t hi = 0;
@@ -175,9 +173,9 @@ namespace eka2l1::common {
         std::uint16_t c = static_cast<std::uint16_t>((high << 8) | low);
         write_byte(c);
 
-        return true; 
+        return true;
     }
-    
+
     bool unicode_expander::handle_ubyte(const std::uint8_t ubyte) {
         if (ubyte <= 0xDF || ubyte >= 0xF3) {
             std::uint8_t low;
@@ -221,7 +219,7 @@ namespace eka2l1::common {
 
     bool unicode_expander::handle_sbyte(const std::uint8_t sbyte) {
         if (can_i_passthrough(sbyte)) {
-            return write_byte(sbyte);   
+            return write_byte(sbyte);
         }
 
         if (sbyte >= 0x80) {
@@ -236,7 +234,7 @@ namespace eka2l1::common {
             unicode_mode = true;
             return true;
         }
-        
+
         // Quote from a window resides from SQ0 to SQ7
         if (sbyte >= SQ0 && sbyte <= SQ0 + 7) {
             int window = sbyte - SQ0;
@@ -289,8 +287,8 @@ namespace eka2l1::common {
         this->dest_size = dest_size;
 
         unicode_mode = false;
-        
-        for (; source_size >= 0, dest_size >= 0; ) {
+
+        for (; source_size >= 0, dest_size >= 0;) {
             std::uint8_t b;
 
             if (read_byte(&b)) {

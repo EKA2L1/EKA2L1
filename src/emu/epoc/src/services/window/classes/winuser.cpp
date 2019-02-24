@@ -19,9 +19,9 @@
  */
 
 #include <epoc/services/window/classes/gctx.h>
-#include <epoc/services/window/classes/winuser.h>
-#include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/scrdvc.h>
+#include <epoc/services/window/classes/wingroup.h>
+#include <epoc/services/window/classes/winuser.h>
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
 #include <epoc/services/window/window.h>

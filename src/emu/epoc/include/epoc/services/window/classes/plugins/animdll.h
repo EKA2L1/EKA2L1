@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <epoc/services/window/classes/wsobj.h>
 #include <cstdint>
+#include <epoc/services/window/classes/wsobj.h>
 
 namespace eka2l1::epoc {
     struct anim_dll : public window_client_obj {

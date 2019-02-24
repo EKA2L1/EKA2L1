@@ -21,11 +21,11 @@
 
 #include <epoc/kernel/change_notifier.h>
 #include <epoc/kernel/chunk.h>
+#include <epoc/kernel/codeseg.h>
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/kernel/library.h>
 #include <epoc/kernel/mutex.h>
 #include <epoc/kernel/object_ix.h>
-#include <epoc/kernel/codeseg.h>
 #include <epoc/kernel/process.h>
 #include <epoc/kernel/scheduler.h>
 #include <epoc/kernel/sema.h>
@@ -48,7 +48,7 @@
 #include <unordered_map>
 
 namespace eka2l1 {
-    #define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
+#define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
 
     class posix_server;
     class timing_system;
@@ -76,34 +76,34 @@ namespace eka2l1 {
     using codeseg_ptr = std::shared_ptr<kernel::codeseg>;
 
     using prop_ident_pair = std::pair<int, int>;
-    
+
     /*! \brief Check for template type and returns the right kernel::object_type value
     */
     template <typename T>
     constexpr kernel::object_type get_object_type() {
-        if constexpr(std::is_same_v<T, kernel::process>) {
+        if constexpr (std::is_same_v<T, kernel::process>) {
             return kernel::object_type::process;
-        } else if constexpr(std::is_same_v<T, kernel::thread>) {
+        } else if constexpr (std::is_same_v<T, kernel::thread>) {
             return kernel::object_type::thread;
-        } else if constexpr(std::is_same_v<T, kernel::chunk>) {
+        } else if constexpr (std::is_same_v<T, kernel::chunk>) {
             return kernel::object_type::chunk;
-        } else if constexpr(std::is_same_v<T, kernel::library>) {
+        } else if constexpr (std::is_same_v<T, kernel::library>) {
             return kernel::object_type::library;
-        } else if constexpr(std::is_same_v<T, kernel::mutex>) {
+        } else if constexpr (std::is_same_v<T, kernel::mutex>) {
             return kernel::object_type::mutex;
-        } else if constexpr(std::is_same_v<T, kernel::semaphore>) {
+        } else if constexpr (std::is_same_v<T, kernel::semaphore>) {
             return kernel::object_type::sema;
-        } else if constexpr(std::is_same_v<T, kernel::timer>) {
+        } else if constexpr (std::is_same_v<T, kernel::timer>) {
             return kernel::object_type::timer;
-        } else if constexpr(std::is_same_v<T, service::property>) {
+        } else if constexpr (std::is_same_v<T, service::property>) {
             return kernel::object_type::prop;
-        } else if constexpr(std::is_same_v<T, service::server>) {
+        } else if constexpr (std::is_same_v<T, service::server>) {
             return kernel::object_type::server;
-        } else if constexpr(std::is_same_v<T, service::session>) {
+        } else if constexpr (std::is_same_v<T, service::session>) {
             return kernel::object_type::session;
-        } else if constexpr(std::is_same_v<T, kernel::codeseg>) {
+        } else if constexpr (std::is_same_v<T, kernel::codeseg>) {
             return kernel::object_type::codeseg;
-        } else if constexpr(std::is_same_v<T, kernel::change_notifier>) {
+        } else if constexpr (std::is_same_v<T, kernel::change_notifier>) {
             return kernel::object_type::change_notifier;
         } else {
             throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
@@ -136,7 +136,7 @@ namespace eka2l1 {
         /* End kernel objects map */
         std::mutex kern_lock;
         std::shared_ptr<kernel::thread_scheduler> thr_sch;
-    
+
         std::vector<thread_ptr> threads;
         std::vector<process_ptr> processes;
         std::vector<server_ptr> servers;
@@ -262,15 +262,15 @@ namespace eka2l1 {
 
         process_ptr spawn_new_process(const kernel::uid uid);
         process_ptr spawn_new_process(const std::u16string &path,
-            const std::u16string &cmd_arg = u"", const kernel::uid promised_uid3 = 0, 
+            const std::u16string &cmd_arg = u"", const kernel::uid promised_uid3 = 0,
             const std::uint32_t stack_size = 0);
 
         bool should_terminate();
         void do_state(common::chunkyseri &seri);
-        
+
         codeseg_ptr pull_codeseg_by_uids(const kernel::uid uid0, const kernel::uid uid1,
             const kernel::uid uid2);
-            
+
         codeseg_ptr pull_codeseg_by_ep(const address ep);
 
         // Expose for scripting, indeed very dirty
@@ -294,33 +294,32 @@ namespace eka2l1 {
         }
 
         template <typename T>
-        constexpr std::shared_ptr<T> get_by_name_and_type(const std::string &name, const kernel::object_type
-            obj_type) {
+        constexpr std::shared_ptr<T> get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
             switch (obj_type) {
-            #define OBJECT_SEARCH(obj_type, obj_map)                                                   \
-                case kernel::object_type::obj_type: {                                                  \
-                    auto res = std::find_if(obj_map.begin(), obj_map.end(), [&](const auto &rhs) {     \
-                        return name == rhs->name();                                                    \
-                    });                                                                                \
-                    if (res == obj_map.end())                                                          \
-                        return nullptr;                                                                \
-                    return std::reinterpret_pointer_cast<T>(*res);                                     \
-                }
+#define OBJECT_SEARCH(obj_type, obj_map)                                               \
+    case kernel::object_type::obj_type: {                                              \
+        auto res = std::find_if(obj_map.begin(), obj_map.end(), [&](const auto &rhs) { \
+            return name == rhs->name();                                                \
+        });                                                                            \
+        if (res == obj_map.end())                                                      \
+            return nullptr;                                                            \
+        return std::reinterpret_pointer_cast<T>(*res);                                 \
+    }
 
-            OBJECT_SEARCH(mutex, mutexes)
-            OBJECT_SEARCH(sema, semas)
-            OBJECT_SEARCH(chunk, chunks)
-            OBJECT_SEARCH(thread, threads)
-            OBJECT_SEARCH(process, processes)
-            OBJECT_SEARCH(change_notifier, change_notifiers)
-            OBJECT_SEARCH(library, libraries)
-            OBJECT_SEARCH(codeseg, codesegs)
-            OBJECT_SEARCH(server, servers)
-            OBJECT_SEARCH(prop, props)
-            OBJECT_SEARCH(session, sessions)
-            OBJECT_SEARCH(timer, timers)
+                OBJECT_SEARCH(mutex, mutexes)
+                OBJECT_SEARCH(sema, semas)
+                OBJECT_SEARCH(chunk, chunks)
+                OBJECT_SEARCH(thread, threads)
+                OBJECT_SEARCH(process, processes)
+                OBJECT_SEARCH(change_notifier, change_notifiers)
+                OBJECT_SEARCH(library, libraries)
+                OBJECT_SEARCH(codeseg, codesegs)
+                OBJECT_SEARCH(server, servers)
+                OBJECT_SEARCH(prop, props)
+                OBJECT_SEARCH(session, sessions)
+                OBJECT_SEARCH(timer, timers)
 
-            #undef OBJECT_SEARCH
+#undef OBJECT_SEARCH
 
             default:
                 break;
@@ -346,35 +345,35 @@ namespace eka2l1 {
             SYNCHRONIZE_ACCESS;
 
             constexpr kernel::object_type obj_type = get_object_type<T>();
-            
+
             switch (obj_type) {
                 // It's gurantee that object are sorted by unique id, by just adding it
                 // Deletion will not affect that fact.
-            #define OBJECT_SEARCH(obj_type, obj_map)                                                                                \
-                case kernel::object_type::obj_type: {                                                                               \
-                    auto res = std::lower_bound(obj_map.begin(), obj_map.end(), nullptr, [&](const auto &lhs, const auto &rhs) {    \
-                        return lhs->unique_id() < uid;                                                                              \
-                    });                                                                                                             \
-                    if (res != obj_map.end()) {                                                                                     \
-                        return std::reinterpret_pointer_cast<T>(*res);                                                              \
-                    }                                                                                                               \
-                    return nullptr;                                                                                                 \
-                }
+#define OBJECT_SEARCH(obj_type, obj_map)                                                                             \
+    case kernel::object_type::obj_type: {                                                                            \
+        auto res = std::lower_bound(obj_map.begin(), obj_map.end(), nullptr, [&](const auto &lhs, const auto &rhs) { \
+            return lhs->unique_id() < uid;                                                                           \
+        });                                                                                                          \
+        if (res != obj_map.end()) {                                                                                  \
+            return std::reinterpret_pointer_cast<T>(*res);                                                           \
+        }                                                                                                            \
+        return nullptr;                                                                                              \
+    }
 
-            OBJECT_SEARCH(mutex, mutexes)
-            OBJECT_SEARCH(sema, semas)
-            OBJECT_SEARCH(chunk, chunks)
-            OBJECT_SEARCH(thread, threads)
-            OBJECT_SEARCH(process, processes)
-            OBJECT_SEARCH(change_notifier, change_notifiers)
-            OBJECT_SEARCH(library, libraries)
-            OBJECT_SEARCH(codeseg, codesegs)
-            OBJECT_SEARCH(server, servers)
-            OBJECT_SEARCH(prop, props)
-            OBJECT_SEARCH(session, sessions)
-            OBJECT_SEARCH(timer, timers)
+                OBJECT_SEARCH(mutex, mutexes)
+                OBJECT_SEARCH(sema, semas)
+                OBJECT_SEARCH(chunk, chunks)
+                OBJECT_SEARCH(thread, threads)
+                OBJECT_SEARCH(process, processes)
+                OBJECT_SEARCH(change_notifier, change_notifiers)
+                OBJECT_SEARCH(library, libraries)
+                OBJECT_SEARCH(codeseg, codesegs)
+                OBJECT_SEARCH(server, servers)
+                OBJECT_SEARCH(prop, props)
+                OBJECT_SEARCH(session, sessions)
+                OBJECT_SEARCH(timer, timers)
 
-            #undef OBJECT_SEARCH
+#undef OBJECT_SEARCH
 
             default:
                 break;
@@ -385,12 +384,12 @@ namespace eka2l1 {
 
         /*! \brief Create and add to object array.
         */
-        template <typename T, typename ...args>
+        template <typename T, typename... args>
         constexpr std::shared_ptr<T> create(args... creation_arg) {
             constexpr kernel::object_type obj_type = get_object_type<T>();
             std::shared_ptr<T> obj;
 
-            if constexpr(obj_type == kernel::object_type::server) {
+            if constexpr (obj_type == kernel::object_type::server) {
                 obj = std::make_shared<T>(sys, creation_arg...);
             } else {
                 obj = std::make_shared<T>(this, creation_arg...);
@@ -440,12 +439,12 @@ namespace eka2l1 {
                 timers.push_back(std::move(std::reinterpret_pointer_cast<kernel::timer>(obj)));
                 return std::reinterpret_pointer_cast<T>(timers.back());
             }
-            
+
             case kernel::object_type::mutex: {
                 mutexes.push_back(std::move(std::reinterpret_pointer_cast<kernel::mutex>(obj)));
                 return std::reinterpret_pointer_cast<T>(mutexes.back());
             }
-            
+
             case kernel::object_type::sema: {
                 semas.push_back(std::move(std::reinterpret_pointer_cast<kernel::semaphore>(obj)));
                 return std::reinterpret_pointer_cast<T>(semas.back());
@@ -455,7 +454,7 @@ namespace eka2l1 {
                 change_notifiers.push_back(std::move(std::reinterpret_pointer_cast<kernel::change_notifier>(obj)));
                 return std::reinterpret_pointer_cast<T>(change_notifiers.back());
             }
-            
+
             case kernel::object_type::codeseg: {
                 codesegs.push_back(std::move(std::reinterpret_pointer_cast<kernel::codeseg>(obj)));
                 return std::reinterpret_pointer_cast<T>(codesegs.back());
@@ -468,14 +467,14 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        template <typename T, typename ...args>
-        std::pair<kernel::handle, std::shared_ptr<T>> create_and_add(kernel::owner_type owner, 
+        template <typename T, typename... args>
+        std::pair<kernel::handle, std::shared_ptr<T>> create_and_add(kernel::owner_type owner,
             args... creation_args) {
             std::shared_ptr<T> obj = create<T>(creation_args...);
             return std::make_pair(open_handle(obj, owner), obj);
         }
 
-        template <typename T, typename ...args>
+        template <typename T, typename... args>
         std::pair<kernel::handle, std::shared_ptr<T>> create_and_add_thread(kernel::owner_type owner,
             thread_ptr thr, args... creation_args) {
             std::shared_ptr<T> obj = create<T>(creation_args...);

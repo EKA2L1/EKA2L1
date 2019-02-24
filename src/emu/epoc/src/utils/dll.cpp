@@ -21,9 +21,9 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
-#include <epoc/utils/dll.h>
-#include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/codeseg.h>
+#include <epoc/kernel/libmanager.h>
+#include <epoc/utils/dll.h>
 
 namespace eka2l1::epoc {
     std::optional<std::u16string> get_dll_full_path(eka2l1::system *sys, const std::uint32_t addr) {

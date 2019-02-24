@@ -64,7 +64,7 @@ namespace eka2l1 {
              * \returns A vector contains binary data, uncompressed if neccessary.
              */
             std::vector<uint8_t> get_small_file_buf(uint32_t data_idx, uint16_t crr_blck_idx);
-            
+
             /**
              * \brief Get the data in the index of a buffer block in the SIS, write it to a physical file.
              * 

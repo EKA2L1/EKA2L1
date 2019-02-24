@@ -613,7 +613,7 @@ namespace eka2l1 {
                     cpu->unmap_memory(beg_addr, total_page * page_size);
                 }
             }
-                
+
             for (std::uint32_t i = offset_page_local_end; i >= offset_page_local; i--) {
                 address beg_addr = (i + 1) * page_size;
                 address total_page = 0;

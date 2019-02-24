@@ -1,7 +1,7 @@
-#include <epoc/vfs.h>
+#include <catch2/catch.hpp>
 #include <common/path.h>
 #include <common/types.h>
-#include <catch2/catch.hpp>
+#include <epoc/vfs.h>
 
 struct io_scope_guard {
     eka2l1::io_system *io;
@@ -35,9 +35,7 @@ TEST_CASE("get_physical", "vfs") {
     REQUIRE(actual_path_a);
     REQUIRE(actual_path_b);
 
-    REQUIRE(*actual_path_a == std::u16string(u"drive_a") + static_cast<char16_t>(eka2l1::get_separator())
-        + u"despacito2leak");
+    REQUIRE(*actual_path_a == std::u16string(u"drive_a") + static_cast<char16_t>(eka2l1::get_separator()) + u"despacito2leak");
 
-    REQUIRE(*actual_path_b == std::u16string(u"drive_b") + static_cast<char16_t>(eka2l1::get_separator())
-        + u"despacito3leak");
+    REQUIRE(*actual_path_b == std::u16string(u"drive_b") + static_cast<char16_t>(eka2l1::get_separator()) + u"despacito3leak");
 }

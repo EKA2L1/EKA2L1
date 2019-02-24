@@ -25,12 +25,12 @@
 
 #include <functional>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace eka2l1::common {
     class arg_parser;
-    using arg_handler_function = std::function<bool(arg_parser*, std::string*)>;
+    using arg_handler_function = std::function<bool(arg_parser *, std::string *)>;
 
     /*! \brief A parser for command line arguments.
      *
@@ -43,7 +43,7 @@ namespace eka2l1::common {
         int argc;
         char **argv;
 
-        int counter { 0 };
+        int counter{ 0 };
 
         struct arg_info {
             std::vector<std::string> alternatives;

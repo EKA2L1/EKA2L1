@@ -44,7 +44,7 @@ namespace eka2l1 {
         return true;
     }
 
-    static bool read_ecom_str(common::ro_buf_stream &stream, std::string &buf, 
+    static bool read_ecom_str(common::ro_buf_stream &stream, std::string &buf,
         const bool is_len_16_bit = false) {
         std::uint32_t length = 0;
 
@@ -99,7 +99,7 @@ namespace eka2l1 {
             return false;
         }
 
-        for (std::uint16_t i = 0 ; i < total_strings; i++) {
+        for (std::uint16_t i = 0; i < total_strings; i++) {
             std::string temp_string;
             read_ecom_str(stream, temp_string, false);
 
@@ -209,7 +209,7 @@ namespace eka2l1 {
 
         // ECom resource files contains a list of interfaces info, each interface will come with some
         // implementation infos.
-        for (auto &interface: plugin.interfaces) {
+        for (auto &interface : plugin.interfaces) {
             stream.read(&interface.uid, 4);
 
             std::uint16_t total_impls = 0;
@@ -225,7 +225,7 @@ namespace eka2l1 {
 
             interface.implementations.resize(total_impls);
 
-            for (auto &implementation: interface.implementations) {
+            for (auto &implementation : interface.implementations) {
                 switch (plugin.type) {
                 case ecom_plugin_type_3: {
                     if (!read_impl_ver3(implementation, stream)) {

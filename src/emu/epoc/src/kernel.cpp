@@ -22,8 +22,8 @@
 #include <queue>
 #include <thread>
 
-#include <arm/arm_interface.h>
 #include <arm/arm_analyser.h>
+#include <arm/arm_interface.h>
 
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
@@ -109,17 +109,17 @@ namespace eka2l1 {
     bool kernel_system::destroy(kernel_obj_ptr obj) {
         SYNCHRONIZE_ACCESS;
 
-        switch (obj->get_object_type()) {         
-        #define OBJECT_SEARCH(obj_type, obj_map)                                                                                    \
-            case kernel::object_type::obj_type: {                                                                                   \
-                auto res = std::lower_bound(obj_map.begin(), obj_map.end(), obj, [&](const auto &lhs, const auto &rhs) {            \
-                    return lhs->unique_id() < rhs->unique_id();                                                                     \
-                });                                                                                                                 \
-                if (res == obj_map.end())                                                                                           \
-                    return false;                                                                                                   \
-                obj_map.erase(res);                                                                                                 \
-                return true;                                                                                                        \
-            }
+        switch (obj->get_object_type()) {
+#define OBJECT_SEARCH(obj_type, obj_map)                                                                         \
+    case kernel::object_type::obj_type: {                                                                        \
+        auto res = std::lower_bound(obj_map.begin(), obj_map.end(), obj, [&](const auto &lhs, const auto &rhs) { \
+            return lhs->unique_id() < rhs->unique_id();                                                          \
+        });                                                                                                      \
+        if (res == obj_map.end())                                                                                \
+            return false;                                                                                        \
+        obj_map.erase(res);                                                                                      \
+        return true;                                                                                             \
+    }
 
             OBJECT_SEARCH(mutex, mutexes)
             OBJECT_SEARCH(sema, semas)
@@ -134,15 +134,15 @@ namespace eka2l1 {
             OBJECT_SEARCH(session, sessions)
             OBJECT_SEARCH(timer, timers)
 
-            #undef OBJECT_SEARCH
+#undef OBJECT_SEARCH
 
-            default:
-                break;
+        default:
+            break;
         }
 
         return false;
     }
-    
+
     process_ptr kernel_system::spawn_new_process(const kernel::uid uid) {
         return spawn_new_process(
             common::utf8_to_ucs2(mngr->get_package_manager()->get_app_executable_path(uid)));
@@ -150,7 +150,7 @@ namespace eka2l1 {
 
     // We can support also ELF!
     process_ptr kernel_system::spawn_new_process(const std::u16string &path,
-        const std::u16string &cmd_arg, const kernel::uid promised_uid3, 
+        const std::u16string &cmd_arg, const kernel::uid promised_uid3,
         const std::uint32_t stack_size) {
         auto imgs = libmngr->try_search_and_parse(path);
 
@@ -159,7 +159,7 @@ namespace eka2l1 {
         }
 
         codeseg_ptr cs = nullptr;
-        
+
         std::string path8 = common::ucs2_to_utf8(path);
         std::string process_name = eka2l1::filename(path8);
 
@@ -177,9 +177,9 @@ namespace eka2l1 {
 
             /* Create process through kernel system. */
             process_ptr pr = create<kernel::process>(
-                mem, eimg->header.uid3, process_name, path, 
+                mem, eimg->header.uid3, process_name, path,
                 cmd_arg, cs, stack_size ? std::min(stack_size, eimg->header.stack_size) : eimg->header.stack_size,
-                eimg->header.heap_size_min, eimg->header.heap_size_max, 
+                eimg->header.heap_size_min, eimg->header.heap_size_max,
                 static_cast<kernel::process_priority>(eimg->header.priority));
 
             if (pr) {
@@ -202,11 +202,11 @@ namespace eka2l1 {
 
         /* Create process through kernel system. */
         process_ptr pr = create<kernel::process>(
-                mem, rimg->header.uid3, process_name, path, 
-                cmd_arg, cs, 
-                stack_size ? std::min(stack_size, static_cast<std::uint32_t>(rimg->header.stack_size)) : static_cast<std::uint32_t>(rimg->header.stack_size), 
-                rimg->header.heap_minimum_size, rimg->header.heap_maximum_size, 
-                static_cast<kernel::process_priority>(rimg->header.priority));
+            mem, rimg->header.uid3, process_name, path,
+            cmd_arg, cs,
+            stack_size ? std::min(stack_size, static_cast<std::uint32_t>(rimg->header.stack_size)) : static_cast<std::uint32_t>(rimg->header.stack_size),
+            rimg->header.heap_minimum_size, rimg->header.heap_maximum_size,
+            static_cast<kernel::process_priority>(rimg->header.priority));
 
         if (pr) {
             LOG_TRACE("Spawned process: {}, entry point: 0x{:x}", process_name, rimg->header.entry_point);
@@ -355,7 +355,7 @@ namespace eka2l1 {
 
         return INVALID_HANDLE;
     }
-    
+
     uint32_t kernel_system::next_uid() const {
         ++uid_counter;
         return uid_counter.load();
@@ -379,7 +379,7 @@ namespace eka2l1 {
 
         return *res;
     }
-    
+
     codeseg_ptr kernel_system::pull_codeseg_by_uids(const kernel::uid uid0, const kernel::uid uid1,
         const kernel::uid uid2) {
         auto res = std::find_if(codesegs.begin(), codesegs.end(), [=](const auto &cs) -> bool {
@@ -392,38 +392,38 @@ namespace eka2l1 {
 
         return *res;
     }
-        
+
     std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type) {
         find_handle handle_find_info;
         SYNCHRONIZE_ACCESS;
-        
+
         switch (type) {
-        #define OBJECT_SEARCH(obj_type, obj_map)                                                           \
-            case kernel::object_type::obj_type: {                                                          \
-                auto res = std::find_if(obj_map.begin() + start, obj_map.end(), [&](const auto &rhs) {     \
-                    return name == rhs->name();                                                            \
-                });                                                                                        \
-                if (res == obj_map.end())                                                                  \
-                    return std::nullopt;                                                                   \
-                handle_find_info.index = static_cast<int>(std::distance(obj_map.begin(), res));            \
-                handle_find_info.object_id = (*res)->unique_id();                                          \
-                return handle_find_info;                                                                   \
-            }
+#define OBJECT_SEARCH(obj_type, obj_map)                                                       \
+    case kernel::object_type::obj_type: {                                                      \
+        auto res = std::find_if(obj_map.begin() + start, obj_map.end(), [&](const auto &rhs) { \
+            return name == rhs->name();                                                        \
+        });                                                                                    \
+        if (res == obj_map.end())                                                              \
+            return std::nullopt;                                                               \
+        handle_find_info.index = static_cast<int>(std::distance(obj_map.begin(), res));        \
+        handle_find_info.object_id = (*res)->unique_id();                                      \
+        return handle_find_info;                                                               \
+    }
 
-        OBJECT_SEARCH(mutex, mutexes)
-        OBJECT_SEARCH(sema, semas)
-        OBJECT_SEARCH(chunk, chunks)
-        OBJECT_SEARCH(thread, threads)
-        OBJECT_SEARCH(process, processes)
-        OBJECT_SEARCH(change_notifier, change_notifiers)
-        OBJECT_SEARCH(library, libraries)
-        OBJECT_SEARCH(codeseg, codesegs)
-        OBJECT_SEARCH(server, servers)
-        OBJECT_SEARCH(prop, props)
-        OBJECT_SEARCH(session, sessions)
-        OBJECT_SEARCH(timer, timers)
+            OBJECT_SEARCH(mutex, mutexes)
+            OBJECT_SEARCH(sema, semas)
+            OBJECT_SEARCH(chunk, chunks)
+            OBJECT_SEARCH(thread, threads)
+            OBJECT_SEARCH(process, processes)
+            OBJECT_SEARCH(change_notifier, change_notifiers)
+            OBJECT_SEARCH(library, libraries)
+            OBJECT_SEARCH(codeseg, codesegs)
+            OBJECT_SEARCH(server, servers)
+            OBJECT_SEARCH(prop, props)
+            OBJECT_SEARCH(session, sessions)
+            OBJECT_SEARCH(timer, timers)
 
-        #undef OBJECT_SEARCH
+#undef OBJECT_SEARCH
 
         default:
             break;

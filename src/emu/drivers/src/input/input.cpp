@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/input/input.h>
 #include <common/log.h>
+#include <drivers/input/input.h>
 
 namespace eka2l1::drivers {
     void input_driver::queue_key_event(const int raw_mapped_keycode, const key_state action) {
@@ -40,7 +40,7 @@ namespace eka2l1::drivers {
 
         if (flags_ & locked) {
             pending_locked_events_.emplace(std::move(evt));
-        } else {    
+        } else {
             events_.emplace(std::move(evt));
         }
     }
@@ -74,7 +74,7 @@ namespace eka2l1::drivers {
             events_.push(std::move(pending_event));
         }
     }
-    
+
     void input_driver::process_requests() {
         for (;;) {
             auto request = request_queue.pop();
@@ -96,17 +96,18 @@ namespace eka2l1::drivers {
             }
 
             case input_driver_get_events: {
-                input_event *evt = *request->context.pop<input_event*>();
+                input_event *evt = *request->context.pop<input_event *>();
                 std::uint32_t num = *request->context.pop<std::uint32_t>();
 
                 std::uint32_t i = 0;
 
-                while ((i < num) && get_event(evt + i++));         
+                while ((i < num) && get_event(evt + i++))
+                    ;
                 break;
             }
 
             case input_driver_get_total_events: {
-                std::uint32_t *num = *request->context.pop<std::uint32_t*>();
+                std::uint32_t *num = *request->context.pop<std::uint32_t *>();
                 *num = static_cast<std::uint32_t>(events_.size());
 
                 break;

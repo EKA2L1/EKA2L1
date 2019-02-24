@@ -32,7 +32,7 @@ namespace eka2l1 {
         class chunk;
         class codeseg;
     }
-    
+
     using codeseg_ptr = std::shared_ptr<kernel::codeseg>;
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
 }
@@ -44,14 +44,14 @@ namespace eka2l1::kernel {
         std::uint32_t uids[3];
         std::uint32_t code_base = 0;
         std::uint32_t data_base = 0;
-        
+
         std::uint32_t code_size = 0;
         std::uint32_t data_size = 0;
         std::uint32_t bss_size = 0;
 
         // Offset to exception descriptor
         std::uint32_t exception_descriptor = 0;
-        
+
         address code_load_addr = 0;
         address data_load_addr = 0;
 
@@ -62,7 +62,7 @@ namespace eka2l1::kernel {
         epoc::security_info sinfo;
     };
 
-    class codeseg: public kernel::kernel_obj {
+    class codeseg : public kernel::kernel_obj {
         std::uint32_t uids[3];
 
         std::uint32_t code_addr;
@@ -86,11 +86,11 @@ namespace eka2l1::kernel {
         chunk_ptr data_chunk;
 
         std::vector<std::uint32_t> export_table;
-        std::vector<codeseg_ptr>   dependencies;
+        std::vector<codeseg_ptr> dependencies;
 
         epoc::security_info sinfo;
 
-        bool mark { false };
+        bool mark{ false };
 
     public:
         /*! \brief Create a new codeseg
@@ -140,7 +140,7 @@ namespace eka2l1::kernel {
         std::uint32_t get_code_size() const {
             return code_size;
         }
-        
+
         std::uint32_t get_data_size() const {
             return data_size;
         }

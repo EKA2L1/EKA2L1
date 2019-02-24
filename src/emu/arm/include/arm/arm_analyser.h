@@ -26,9 +26,9 @@
 #include <exception>
 #include <map>
 #include <memory>
-#include <vector>
 #include <mutex>
 #include <unordered_map>
+#include <vector>
 
 namespace eka2l1::arm {
     enum reg {
@@ -70,9 +70,9 @@ namespace eka2l1::arm {
     };
 
     enum class instruction {
-    #define INST(x) x,
-        #include <arm/arm_opcodes.def>
-    #undef INST
+#define INST(x) x,
+#include <arm/arm_opcodes.def>
+#undef INST
     };
 
     enum class cc {
@@ -95,8 +95,8 @@ namespace eka2l1::arm {
     };
 
     enum class arm_disassembler_backend {
-        capstone = 0,       ///< Using capstone to analyse and disassemble instruction.
-        homemade = 2        ///< Using homemade decoder. Not really smart
+        capstone = 0, ///< Using capstone to analyse and disassemble instruction.
+        homemade = 2 ///< Using homemade decoder. Not really smart
     };
 
     enum class arm_instruction_type {
@@ -127,7 +127,8 @@ namespace eka2l1::arm {
         std::map<vaddress, std::size_t> blocks;
 
         explicit arm_function(vaddress addr, std::size_t size)
-            : addr(addr), size(size) {
+            : addr(addr)
+            , size(size) {
         }
     };
 
@@ -171,12 +172,12 @@ namespace eka2l1::arm {
         std::vector<arm_op> ops;
 
         std::uint32_t group;
-        std::uint8_t  size;
+        std::uint8_t size;
 
         cc cond;
 
         virtual ~arm_instruction_base() {}
-        
+
         /*! \brief Get the disassembled result in text format.
         */
         virtual std::string mnemonic() = 0;
@@ -186,7 +187,7 @@ namespace eka2l1::arm {
          * \returns A vector contains all registers suited.
         */
         virtual std::vector<arm::reg> get_regs_read() = 0;
-        
+
         /*! \brief Get all the registers which are being written by this instruction.
          *
          * \returns A vector contains all registers suited.
@@ -201,9 +202,10 @@ namespace eka2l1::arm {
 
     public:
         std::mutex lock;
-        
+
         explicit arm_analyser(std::function<std::uint32_t(vaddress)> read_func)
-            : read(read_func), ip(0) {
+            : read(read_func)
+            , ip(0) {
         }
 
         /* Do analyse, starting from an address

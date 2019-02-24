@@ -1,5 +1,5 @@
 #pragma once
 
-/* #undef ENABLE_SCRIPTING */
+#define ENABLE_SCRIPTING 1
 #define GIT_BRANCH "master"
-#define GIT_COMMIT_HASH "f8ed97a"
+#define GIT_COMMIT_HASH "65b12d1"

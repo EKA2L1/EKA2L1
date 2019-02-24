@@ -18,13 +18,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/kernel/codeseg.h>
-#include <epoc/kernel.h>
 #include <algorithm>
+#include <epoc/kernel.h>
+#include <epoc/kernel/codeseg.h>
 
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name,
-            codeseg_create_info &info)
+        codeseg_create_info &info)
         : kernel_obj(kern, name, kernel::access_type::global_access)
         , code_chunk(nullptr)
         , data_chunk(nullptr) {
@@ -59,8 +59,8 @@ namespace eka2l1::kernel {
 
             code_addr = code_chunk->base().ptr_address();
             info.code_load_addr = code_addr;
-            
-            for (auto &export_entry: export_table) {
+
+            for (auto &export_entry : export_table) {
                 export_entry += code_addr;
             }
 
@@ -71,10 +71,10 @@ namespace eka2l1::kernel {
             }
         }
 
-        if (data_size_align && data_addr == 0) {    
+        if (data_size_align && data_addr == 0) {
             data_chunk = kern->create<kernel::chunk>(mem, kern->crr_process(), name, 0, data_size_align, data_size_align, prot::read_write, kernel::chunk_type::normal,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
-        
+
             data_addr = data_chunk->base().ptr_address();
             std::uint8_t *bss = data_chunk->base().get(kern->get_memory_system());
 
@@ -84,7 +84,7 @@ namespace eka2l1::kernel {
             info.data_load_addr = data_addr;
         }
     }
-    
+
     address codeseg::lookup(const std::uint32_t ord) {
         if (ord > export_table.size()) {
             return 0;
@@ -99,7 +99,7 @@ namespace eka2l1::kernel {
         }
 
         // Iterate through dependency first
-        for (auto &dependency: dependencies) {
+        for (auto &dependency : dependencies) {
             if (!dependency->mark) {
                 dependency->mark = true;
                 dependency->queries_call_list(call_list);
@@ -110,7 +110,7 @@ namespace eka2l1::kernel {
         // Add our last. Don't change order, this is how it supposed to be
         call_list.push_back(ep);
     }
-    
+
     bool codeseg::add_dependency(codeseg_ptr codeseg) {
         // Check if this codeseg is unique first (no duplicate)
         // We don't check the UID though (TODO)

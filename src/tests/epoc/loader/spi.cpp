@@ -33,7 +33,7 @@ TEST_CASE("normal_spi_file_read", "spi_file") {
 
     std::vector<std::uint8_t> buf;
     buf.resize(f->size());
-    f->read_file(reinterpret_cast<std::uint8_t*>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
+    f->read_file(reinterpret_cast<std::uint8_t *>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
 
     f->close();
 
@@ -42,7 +42,7 @@ TEST_CASE("normal_spi_file_read", "spi_file") {
     eka2l1::loader::spi_file spi(0);
 
     bool result = spi.do_state(seri);
-    
+
     REQUIRE(result);
 
     REQUIRE(spi.entries.size() == 1);

@@ -44,7 +44,7 @@ namespace eka2l1::drivers {
      */
     struct key_event {
         key_scancode code_;
-        key_state    state_;
+        key_state state_;
     };
 
     struct input_event {

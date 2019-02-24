@@ -129,7 +129,8 @@ namespace eka2l1 {
             virtual void disconnect(service::ipc_context ctx);
 
             virtual void on_unhandled_opcode(service::ipc_context ctx) {}
-        public:        
+
+        public:
             std::uint32_t frequent_process_event;
 
             server(system *sys, const std::string name, bool hle = false,

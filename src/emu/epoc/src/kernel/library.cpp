@@ -20,8 +20,8 @@
 
 #include <common/cvt.h>
 
-#include <epoc/kernel/library.h>
 #include <epoc/kernel/codeseg.h>
+#include <epoc/kernel/library.h>
 
 #include <epoc/kernel/libmanager.h>
 
@@ -47,7 +47,7 @@ namespace eka2l1 {
         std::vector<uint32_t> library::attach() {
             if (state == library_state::loaded) {
                 state = library_state::attaching;
-                
+
                 std::vector<std::uint32_t> call_list;
                 codeseg->queries_call_list(call_list);
 

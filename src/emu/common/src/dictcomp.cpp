@@ -29,11 +29,11 @@ namespace eka2l1::common {
     dictcomp::dictcomp(std::uint8_t *buf, const int off_beg, const int off_end,
         const int num_bits_used_for_dict_tokens)
         : num_bits_used_for_dict_tokens(num_bits_used_for_dict_tokens)
-         , off_beg(off_beg), off_end(off_end)
-         , buffer(buf) {
-
+        , off_beg(off_beg)
+        , off_end(off_end)
+        , buffer(buf) {
     }
-        
+
     bool dictcomp::is_cur_bit_on() {
         return buffer[off_cur / 8] & (1 << (off_cur) % 8);
     }
@@ -88,10 +88,10 @@ namespace eka2l1::common {
 
         // Try to read left-out bits, if we haven't read them all
         do_read_bits_seperately();
-        
+
         return result;
     }
-    
+
     int dictcomp::calculate_decompress_size(const bool calypso, bool reset_when_done) {
         int last_off_cur = off_cur;
         int num_consecutive_prefix_bits = 0;
@@ -108,7 +108,7 @@ namespace eka2l1::common {
         }
 
         int num_bytes_to_read = 0;
-        
+
         if (num_consecutive_prefix_bits == 3) {
             num_bytes_to_read = 3 + read_int(3);
         } else if (num_consecutive_prefix_bits == 4) {
@@ -131,7 +131,7 @@ namespace eka2l1::common {
     int dictcomp::read(std::uint8_t *dest, int &dest_size, const bool calypso) {
         // These size in bytes
         int size = calculate_decompress_size(calypso, false);
-        int *dest_i = reinterpret_cast<int*>(dest);
+        int *dest_i = reinterpret_cast<int *>(dest);
 
         if (size > dest_size) {
             LOG_ERROR("Can't decompress: unsufficent memory (needed: 0x{:X} vs provided 0x{:X})", size, dest_size);

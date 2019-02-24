@@ -24,10 +24,10 @@
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/centralrepo/centralrepo.h>
 #include <epoc/services/domain/domain.h>
-#include <epoc/services/ecom/ecom.h>
-#include <epoc/services/fbs/fbs.h>
 #include <epoc/services/drm/helper.h>
 #include <epoc/services/drm/rights.h>
+#include <epoc/services/ecom/ecom.h>
+#include <epoc/services/fbs/fbs.h>
 #include <epoc/services/featmgr/featmgr.h>
 #include <epoc/services/fs/fs.h>
 #include <epoc/services/install/install.h>
@@ -53,32 +53,32 @@
     temp = std::make_shared<svr>(sys); \
     sys->get_kernel_system()->add_custom_server(temp)
 
-#define DEFINE_INT_PROP_D(sys, category, key, data)                             \
-    property_ptr prop = sys->get_kernel_system()->create<service::property>();  \
-    prop->first = category;                                                     \
-    prop->second = key;                                                         \
-    prop->define(service::property_type::int_data, 0);                          \
+#define DEFINE_INT_PROP_D(sys, category, key, data)                            \
+    property_ptr prop = sys->get_kernel_system()->create<service::property>(); \
+    prop->first = category;                                                    \
+    prop->second = key;                                                        \
+    prop->define(service::property_type::int_data, 0);                         \
     prop->set_int(data);
 
-#define DEFINE_INT_PROP(sys, category, key, data)                            \
-    prop = sys->get_kernel_system()->create<service::property>();            \
-    prop->first = category;                                                  \
-    prop->second = key;                                                      \
-    prop->define(service::property_type::int_data, 0);                       \
+#define DEFINE_INT_PROP(sys, category, key, data)                 \
+    prop = sys->get_kernel_system()->create<service::property>(); \
+    prop->first = category;                                       \
+    prop->second = key;                                           \
+    prop->define(service::property_type::int_data, 0);            \
     prop->set_int(data);
 
-#define DEFINE_BIN_PROP_D(sys, category, key, size, data)                       \
-    property_ptr prop = sys->get_kernel_system()->create<service::property>();  \
-    prop->first = category;                                                     \
-    prop->second = key;                                                         \
-    prop->define(service::property_type::bin_data, size);                       \
+#define DEFINE_BIN_PROP_D(sys, category, key, size, data)                      \
+    property_ptr prop = sys->get_kernel_system()->create<service::property>(); \
+    prop->first = category;                                                    \
+    prop->second = key;                                                        \
+    prop->define(service::property_type::bin_data, size);                      \
     prop->set(data);
 
-#define DEFINE_BIN_PROP(sys, category, key, size, data)                      \
-    prop = sys->get_kernel_system()->create<service::property>();            \
-    prop->first = category;                                                  \
-    prop->second = key;                                                      \
-    prop->define(service::property_type::bin_data, size);                    \
+#define DEFINE_BIN_PROP(sys, category, key, size, data)           \
+    prop = sys->get_kernel_system()->create<service::property>(); \
+    prop->first = category;                                       \
+    prop->second = key;                                           \
+    prop->define(service::property_type::bin_data, size);         \
     prop->set(data);
 
 const uint32_t sys_category = 0x101f75b6;

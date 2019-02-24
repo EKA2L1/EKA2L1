@@ -164,12 +164,12 @@ namespace eka2l1 {
                 process_ptr own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
-                return reinterpret_cast<std::uint8_t*>(des->get_pointer_raw(own_pr));
+                return reinterpret_cast<std::uint8_t *>(des->get_pointer_raw(own_pr));
             }
 
             return nullptr;
         }
-    
+
         bool ipc_context::set_arg_des_len(const int idx, const std::uint32_t len) {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
@@ -183,7 +183,7 @@ namespace eka2l1 {
 
             return false;
         }
-    
+
         bool ipc_context::satisfy(epoc::security_policy &policy, epoc::security_info *missing) {
             return msg->own_thr->owning_process()->satisfy(policy, missing);
         }

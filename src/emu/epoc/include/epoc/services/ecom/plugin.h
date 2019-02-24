@@ -40,9 +40,9 @@ namespace eka2l1 {
         std::string default_data;
         std::string opaque_data;
 
-        bool rom {false};
+        bool rom{ false };
 
-        drive_number drv;   ///< Drive which the implementation plugin resides on
+        drive_number drv; ///< Drive which the implementation plugin resides on
 
         // A implementation may covers other interface ?
         std::vector<std::uint32_t> extended_interfaces;
@@ -66,11 +66,11 @@ namespace eka2l1 {
         ecom_plugin_type_2 = 0x101FB0B9,
         ecom_plugin_type_3 = 0x10009E47
     };
-    
+
     /*
      * \brief Load a plugin from described resource file
      *
      * \returns True if success.
      */
-    bool load_plugin(loader::rsc_file &rsc, ecom_plugin &plugin);    
+    bool load_plugin(loader::rsc_file &rsc, ecom_plugin &plugin);
 };

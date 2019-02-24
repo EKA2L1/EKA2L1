@@ -24,7 +24,7 @@ namespace eka2l1 {
     struct central_repo_client_session {
         central_repo_server *server;
 
-        std::uint32_t idcounter { 0 };
+        std::uint32_t idcounter{ 0 };
         std::unordered_map<std::uint32_t, central_repo_client_subsession> client_subsessions;
 
         central_repo_client_session() {}
@@ -48,7 +48,7 @@ namespace eka2l1 {
         std::unordered_map<std::uint32_t, central_repo> repos;
         std::unordered_map<std::uint32_t, central_repo_client_session> client_sessions;
 
-        central_repos_cacher    backup_cacher;
+        central_repos_cacher backup_cacher;
         drive_number rom_drv;
 
         std::atomic<std::uint32_t> id_counter;

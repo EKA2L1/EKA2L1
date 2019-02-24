@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/loader/rsc.h>
 #include <catch2/catch.hpp>
+#include <epoc/loader/rsc.h>
 
 #include <common/buffer.h>
 #include <epoc/vfs.h>
@@ -39,7 +39,7 @@ TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
 
     std::vector<std::uint8_t> buf;
     buf.resize(f->size());
-    f->read_file(reinterpret_cast<std::uint8_t*>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
+    f->read_file(reinterpret_cast<std::uint8_t *>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
 
     f->close();
 
@@ -65,7 +65,7 @@ TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
         std::vector<std::uint8_t> expected_res;
         expected_res.resize(res_size);
 
-        fi.read(reinterpret_cast<char*>(&expected_res[0]), res_size); 
+        fi.read(reinterpret_cast<char *>(&expected_res[0]), res_size);
 
         REQUIRE(res_from_eka2l1.size() == res_size);
         REQUIRE(expected_res == res_from_eka2l1);
@@ -80,7 +80,7 @@ TEST_CASE("no_compress_but_may_contain_unicode_2", "rsc_file") {
 
     std::vector<std::uint8_t> buf;
     buf.resize(f->size());
-    f->read_file(reinterpret_cast<std::uint8_t*>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
+    f->read_file(reinterpret_cast<std::uint8_t *>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
 
     f->close();
 
@@ -107,9 +107,9 @@ TEST_CASE("no_compress_but_may_contain_unicode_2", "rsc_file") {
         expected_res.resize(res_size);
 
         if (res_size > 0) {
-            fi.read(reinterpret_cast<char*>(&expected_res[0]), res_size); 
+            fi.read(reinterpret_cast<char *>(&expected_res[0]), res_size);
         }
-        
+
         REQUIRE(res_from_eka2l1.size() == res_size);
         REQUIRE(expected_res == res_from_eka2l1);
     }
@@ -123,7 +123,7 @@ TEST_CASE("no_compress_but_may_contain_unicode_3", "rsc_file") {
 
     std::vector<std::uint8_t> buf;
     buf.resize(f->size());
-    f->read_file(reinterpret_cast<std::uint8_t*>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
+    f->read_file(reinterpret_cast<std::uint8_t *>(&buf[0]), 1, static_cast<std::uint32_t>(buf.size()));
 
     f->close();
 
@@ -140,9 +140,9 @@ TEST_CASE("no_compress_but_may_contain_unicode_3", "rsc_file") {
     expected_res.resize(res_size);
 
     if (res_size > 0) {
-        fi.read(reinterpret_cast<char*>(&expected_res[0]), res_size); 
+        fi.read(reinterpret_cast<char *>(&expected_res[0]), res_size);
     }
-    
+
     REQUIRE(res_from_eka2l1.size() == res_size);
     REQUIRE(expected_res == res_from_eka2l1);
 }

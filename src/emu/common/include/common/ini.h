@@ -82,7 +82,7 @@ namespace eka2l1::common {
 
     using ini_node_ptr = std::shared_ptr<ini_node>;
 
-    class ini_value: public ini_node {
+    class ini_value : public ini_node {
         friend class ini_file;
         friend class ini_section;
 
@@ -91,7 +91,6 @@ namespace eka2l1::common {
 
         ini_value(const ini_node_type t)
             : ini_node(t) {
-
         }
 
     public:
@@ -100,9 +99,10 @@ namespace eka2l1::common {
         }
 
         ini_value(const std::string &val)
-            : ini_node(INI_NODE_VALUE), value(val) {
+            : ini_node(INI_NODE_VALUE)
+            , value(val) {
         }
-        
+
         template <typename T>
         std::enable_if_t<std::is_integral_v<T>, T> get_as_native() {
             std::string vc = value;
@@ -123,7 +123,7 @@ namespace eka2l1::common {
         virtual const char *name() override {
             return value.c_str();
         }
-        
+
         std::string get_value() {
             return value;
         }
@@ -150,7 +150,7 @@ namespace eka2l1::common {
         const char *name() override {
             return key.c_str();
         }
-        
+
         struct iterator {
             ini_pair *parent;
             std::size_t my_index;
@@ -160,24 +160,24 @@ namespace eka2l1::common {
                 return *this;
             }
 
-            bool operator!=(const iterator & other) const {
-                return my_index != other.my_index; 
+            bool operator!=(const iterator &other) const {
+                return my_index != other.my_index;
             }
 
-            common::ini_node_ptr &operator *() {
+            common::ini_node_ptr &operator*() {
                 return parent->values[my_index];
             }
         };
 
         iterator begin() {
-            return iterator { this, 0 };
+            return iterator{ this, 0 };
         }
 
         iterator end() {
-            return iterator { this, values.size() };
+            return iterator{ this, values.size() };
         }
 
-        ini_node_ptr operator [](const std::size_t idx) {
+        ini_node_ptr operator[](const std::size_t idx) {
             // No check, expect to throw
             return values[idx];
         }
@@ -248,21 +248,21 @@ namespace eka2l1::common {
                 return *this;
             }
 
-            bool operator!=(const iterator & other) const {
-                return my_index != other.my_index; 
+            bool operator!=(const iterator &other) const {
+                return my_index != other.my_index;
             }
 
-            common::ini_node_ptr &operator *() {
+            common::ini_node_ptr &operator*() {
                 return parent->nodes[my_index];
             }
         };
 
         iterator begin() {
-            return iterator { this, 0 };
+            return iterator{ this, 0 };
         }
 
         iterator end() {
-            return iterator { this, nodes.size() };
+            return iterator{ this, nodes.size() };
         }
 
         /* \brief Access a node with given name/key.

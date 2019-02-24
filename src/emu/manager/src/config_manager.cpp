@@ -29,10 +29,10 @@ namespace eka2l1::manager {
 
     bool config_manager::serialize(const char *name) {
         YAML::Emitter emitter;
-        
+
         emitter << YAML::BeginMap;
 
-        for (auto &[key, node]: nodes) {
+        for (auto &[key, node] : nodes) {
             if (node.values.size() == 0) {
                 continue;
             }
@@ -45,7 +45,7 @@ namespace eka2l1::manager {
             } else {
                 emitter << YAML::BeginSeq;
 
-                for (auto &value: node.values) {
+                for (auto &value : node.values) {
                     emitter << value.first;
                 }
 
@@ -73,7 +73,7 @@ namespace eka2l1::manager {
             return false;
         }
 
-        for (auto node: root) {
+        for (auto node : root) {
             // Each node should have a key and value
             // Else we just gonna catch and fail
             const std::string key = node.first.as<std::string>();
@@ -82,7 +82,7 @@ namespace eka2l1::manager {
             if (node.second.IsScalar()) {
                 cfg_node.values.push_back(std::make_pair(node.second.as<std::string>(), config_node::config_convert_cache{}));
             } else {
-                for (auto subnode: node.second) {
+                for (auto subnode : node.second) {
                     cfg_node.values.push_back(std::make_pair(subnode.as<std::string>(), config_node::config_convert_cache{}));
                 }
             }

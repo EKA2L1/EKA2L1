@@ -59,7 +59,7 @@ std::vector<function> read_idt(const fs::path &path) {
     std::vector<function> fts;
 
     uint32_t lc = 1;
-    
+
     while (idt) {
         std::string line;
         std::getline(idt, line);
@@ -132,8 +132,7 @@ std::vector<function> read_idt(const fs::path &path) {
             fts[num - 1] = function(cooked, common::hash(raw_sauce));
             LOG_INFO("{}", cooked);
         } else {
-            for (uint32_t i = 0; i < raw_sauce.length(); i++)
-            {
+            for (uint32_t i = 0; i < raw_sauce.length(); i++) {
                 if (raw_sauce[i] == '"') {
                     raw_sauce.erase(i, 1);
                 }

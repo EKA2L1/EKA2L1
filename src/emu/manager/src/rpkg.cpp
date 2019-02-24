@@ -18,15 +18,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <manager/rpkg.h>
 #include <manager/device_manager.h>
+#include <manager/rpkg.h>
 
 #include <epoc/vfs.h>
 
 #include <common/cvt.h>
 #include <common/fileutils.h>
-#include <common/log.h>
 #include <common/ini.h>
+#include <common/log.h>
 #include <common/path.h>
 
 #include <algorithm>
@@ -36,13 +36,13 @@
 
 namespace eka2l1 {
     namespace loader {
-        bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent) {            
+        bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent) {
             std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
             std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
                 ::tolower);
 
-            std::string real_path = devices_rom_path + "\\temp\\" + file_full_relative; 
-                
+            std::string real_path = devices_rom_path + "\\temp\\" + file_full_relative;
+
             std::string dir = eka2l1::file_directory(real_path);
             eka2l1::create_directories(dir);
 
@@ -72,7 +72,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool install_rpkg(manager::device_manager *dvcmngr, const std::string &path, 
+        bool install_rpkg(manager::device_manager *dvcmngr, const std::string &path,
             const std::string &devices_rom_path, std::atomic<int> &res) {
             FILE *f = fopen(path.data(), "rb");
 
@@ -117,13 +117,13 @@ namespace eka2l1 {
             }
 
             fclose(f);
-            
+
             epocver ver = epocver::epoc94;
-            
+
             {
                 // We are done extracting, but we need to get the rom info, also
                 std::string platform_ini_path = devices_rom_path + "temp\\resource\\versions\\platform.txt";
-                
+
                 common::ini_file platform_ini;
 
                 if (platform_ini.load(platform_ini_path.c_str()) != 0) {
@@ -163,7 +163,7 @@ namespace eka2l1 {
                                 break;
                             }
                             }
-                            
+
                             break;
                         }
 
@@ -187,7 +187,7 @@ namespace eka2l1 {
 
             std::string product_ini_path = devices_rom_path + "temp\\resource\\versions\\product.txt";
             common::ini_file product_ini;
-            
+
             if (product_ini.load(product_ini_path.c_str(), false) != 0) {
                 LOG_ERROR("Can't load product.txt in Z:\\Resource\\Versions, revert all changes");
                 eka2l1::common::remove(devices_rom_path + "temp\\");
@@ -195,14 +195,11 @@ namespace eka2l1 {
                 return false;
             }
 
-            std::string manufacturer = 
-                product_ini.find("Manufacturer")->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value();
+            std::string manufacturer = product_ini.find("Manufacturer")->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value();
 
-            std::string firmcode =  
-                product_ini.find("Product")->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value();
+            std::string firmcode = product_ini.find("Product")->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value();
 
-            std::string model = 
-                product_ini.find("Model")->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value();
+            std::string model = product_ini.find("Model")->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value();
 
             if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver)) {
                 LOG_ERROR("This device ({}) already installed, revert all changes", firmcode);

@@ -21,8 +21,8 @@
 #include <epoc/services/window/classes/plugins/clickdll.h>
 #include <epoc/services/window/op.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 namespace eka2l1::epoc {
     void click_dll::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
@@ -59,5 +59,5 @@ namespace eka2l1::epoc {
             break;
         }
         }
-    }    
+    }
 }

@@ -151,7 +151,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
 
         process_ptr pr_real = kern->get<kernel::process>(aHandle);
-        
+
         if (!pr_real) {
             LOG_ERROR("ProcessExitType: Invalid process");
             return 0;
@@ -830,16 +830,17 @@ namespace eka2l1::epoc {
         // Exclamination point at the beginning of server name requires ProtServ
         if (!server_name.empty() && server_name[0] == '!') {
             if (!crr_pr->satisfy(server_exclamination_point_name_policy)) {
-                LOG_ERROR("Process {} try to create a server with exclamination point"
-                    " at the beginning of name ({}), but doesn't have ProtServ", crr_pr->name(),
-                    server_name);
+                LOG_ERROR("Process {} try to create a server with exclamination point at the beginning of name ({}),"
+                          " but doesn't have ProtServ",
+                    crr_pr->name(), server_name);
 
                 return KErrPermissionDenied;
             }
         }
 
         auto handle = kern->create_and_add<service::server>(kernel::owner_type::process,
-            server_name).first;
+                              server_name)
+                          .first;
 
         if (handle != INVALID_HANDLE) {
             LOG_TRACE("Server {} created", server_name);
@@ -889,7 +890,8 @@ namespace eka2l1::epoc {
         }
 
         const kernel::handle handle = kern->create_and_add<service::session>(
-            kernel::owner_type::process, server, aMsgSlot).first;
+                                              kernel::owner_type::process, server, aMsgSlot)
+                                          .first;
 
         if (handle == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1076,9 +1078,10 @@ namespace eka2l1::epoc {
         }
 
         const kernel::handle handle = kern->create_and_add<kernel::chunk>(
-            aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread,
-            sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", createInfo.iInitialBottom, 
-            createInfo.iInitialTop, createInfo.iMaxSize, prot::read_write, type, access, att).first;
+                                              aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread,
+                                              sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", createInfo.iInitialBottom,
+                                              createInfo.iInitialTop, createInfo.iMaxSize, prot::read_write, type, access, att)
+                                          .first;
 
         if (handle == INVALID_HANDLE) {
             return KErrNoMemory;
@@ -1092,7 +1095,7 @@ namespace eka2l1::epoc {
         if (!chunk) {
             return KErrBadHandle;
         }
-        
+
         return static_cast<TInt>(chunk->get_max_size());
     }
 
@@ -1107,7 +1110,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ChunkAdjust, TInt aChunkHandle, TInt aType, TInt a1, TInt a2) {
         chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
-        
+
         if (!chunk) {
             return KErrBadHandle;
         }
@@ -1162,7 +1165,8 @@ namespace eka2l1::epoc {
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
         const kernel::handle sema = kern->create_and_add<kernel::semaphore>(owner, !desname ? "" : desname->to_std_string(kern->crr_process()).c_str(),
-            aInitCount, !desname ? kernel::access_type::local_access : kernel::access_type::global_access).first;
+                                            aInitCount, !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
+                                        .first;
 
         if (sema == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1223,8 +1227,9 @@ namespace eka2l1::epoc {
         kernel::owner_type owner = (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread;
 
         const kernel::handle mut = kern->create_and_add<kernel::mutex>(owner, sys->get_timing_system(),
-            !desname ? "" : desname->to_std_string(kern->crr_process()), false,
-            !desname ? kernel::access_type::local_access : kernel::access_type::global_access).first;
+                                           !desname ? "" : desname->to_std_string(kern->crr_process()), false,
+                                           !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
+                                       .first;
 
         if (mut == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1302,7 +1307,7 @@ namespace eka2l1::epoc {
 
         LOG_TRACE("Finding object name: {}", name);
 
-        std::optional<find_handle> info = kern->find_object(name, handle->iHandle, 
+        std::optional<find_handle> info = kern->find_object(name, handle->iHandle,
             static_cast<kernel::object_type>(aObjectType));
 
         if (!info) {
@@ -1345,7 +1350,7 @@ namespace eka2l1::epoc {
         std::string obj_name = aName.get(mem)->to_std_string(kern->crr_process());
 
         // What a waste if we find the ID already but not mirror it
-        kernel_obj_ptr obj = kern->get_by_name_and_type<kernel::kernel_obj>(obj_name, 
+        kernel_obj_ptr obj = kern->get_by_name_and_type<kernel::kernel_obj>(obj_name,
             static_cast<kernel::object_type>(aObjectType));
 
         if (!obj) {
@@ -1406,7 +1411,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(TInt, ReleaseDllLock) {
         sys->get_kernel_system()->crr_process()->signal_dll_lock(
             sys->get_kernel_system()->crr_thread());
-            
+
         return KErrNone;
     }
 
@@ -1521,10 +1526,11 @@ namespace eka2l1::epoc {
         std::string thr_name = aThreadName.get(mem)->to_std_string(kern->crr_process()).c_str();
         thread_create_info_expand *info = aInfo.get(mem);
 
-        const kernel::handle thr_handle = kern->create_and_add<kernel::thread>(static_cast<kernel::owner_type>(aOwnerType), 
-            mem, kern->get_timing_system(), kern->crr_process(),
-            kernel::access_type::local_access, thr_name, info->func_ptr, info->user_stack_size,
-            info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal).first;
+        const kernel::handle thr_handle = kern->create_and_add<kernel::thread>(static_cast<kernel::owner_type>(aOwnerType),
+                                                  mem, kern->get_timing_system(), kern->crr_process(),
+                                                  kernel::access_type::local_access, thr_name, info->func_ptr, info->user_stack_size,
+                                                  info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal)
+                                              .first;
 
         if (thr_handle == INVALID_HANDLE) {
             return KErrGeneral;
@@ -1832,8 +1838,7 @@ namespace eka2l1::epoc {
         LOG_TRACE("Attach to property with cagetory: 0x{:x}, key: 0x{:x}", aCagetory, aValue);
 
         if (!prop) {
-            auto prop_handle_and_obj = kern->create_and_add<service::property>
-                (static_cast<kernel::owner_type>(aOwnerType));
+            auto prop_handle_and_obj = kern->create_and_add<service::property>(static_cast<kernel::owner_type>(aOwnerType));
 
             if (prop_handle_and_obj.first == INVALID_HANDLE) {
                 return KErrGeneral;
@@ -2044,8 +2049,9 @@ namespace eka2l1::epoc {
     /*********************/
     BRIDGE_FUNC(TInt, TimerCreate) {
         return sys->get_kernel_system()->create_and_add<kernel::timer>(
-            kernel::owner_type::process, sys->get_timing_system(),
-            "timer" + common::to_string(eka2l1::random())).first;
+                                           kernel::owner_type::process, sys->get_timing_system(),
+                                           "timer" + common::to_string(eka2l1::random()))
+            .first;
     }
 
     /* 
@@ -2091,8 +2097,7 @@ namespace eka2l1::epoc {
     /* CHANGE NOTIFIER */
     /**********************/
     BRIDGE_FUNC(TInt, ChangeNotifierCreate, TOwnerType aOwner) {
-        return sys->get_kernel_system()->create_and_add<kernel::change_notifier>
-            (static_cast<kernel::owner_type>(aOwner)).first;
+        return sys->get_kernel_system()->create_and_add<kernel::change_notifier>(static_cast<kernel::owner_type>(aOwner)).first;
     }
 
     BRIDGE_FUNC(TInt, ChangeNotifierLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {

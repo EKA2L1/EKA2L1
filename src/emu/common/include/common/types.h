@@ -47,10 +47,10 @@ enum class prot {
 
 // This can be changed manually
 enum class epocver {
-    eka1,   ///< Mark for EKA1
+    eka1, ///< Mark for EKA1
     epocu6,
-    epoc6,  ///< Epoc 6.0
-    eka2,   ///< Mark for EKA2
+    epoc6, ///< Epoc 6.0
+    eka2, ///< Mark for EKA2
     epoc93, ///< Epoc 9.3
     epoc94, ///< Epoc 9.4
     epoc10
@@ -132,79 +132,66 @@ using fmt_unveil_t = typename fmt_unveil<Arg>::type;
 
 struct fmt_type_info;
 
-namespace fmt
-{
-	template <typename... Args>
-	const fmt_type_info* get_type_info();
+namespace fmt {
+    template <typename... Args>
+    const fmt_type_info *get_type_info();
 }
 
-namespace fmt
-{
-	[[noreturn]] void raw_error(const char* msg);
-	[[noreturn]] void raw_verify_error(const char* msg, const fmt_type_info* sup, std::uint64_t arg);
-	[[noreturn]] void raw_narrow_error(const char* msg, const fmt_type_info* sup, std::uint64_t arg);
+namespace fmt {
+    [[noreturn]] void raw_error(const char *msg);
+    [[noreturn]] void raw_verify_error(const char *msg, const fmt_type_info *sup, std::uint64_t arg);
+    [[noreturn]] void raw_narrow_error(const char *msg, const fmt_type_info *sup, std::uint64_t arg);
 }
 
-struct verify_func
-{
-	template <typename T>
-	bool operator()(T&& value) const
-	{
-		if (std::forward<T>(value))
-		{
-			return true;
-		}
+struct verify_func {
+    template <typename T>
+    bool operator()(T &&value) const {
+        if (std::forward<T>(value)) {
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 };
 
 template <uint N>
-struct verify_impl
-{
-	const char* cause;
+struct verify_impl {
+    const char *cause;
 
-	template <typename T>
-	auto operator,(T&& value) const
-	{
-		// Verification (can be safely disabled)
-		if (!verify_func()(std::forward<T>(value)))
-		{
-			fmt::raw_verify_error(cause, nullptr, N);
-		}
+    template <typename T>
+    auto operator,(T &&value) const {
+        // Verification (can be safely disabled)
+        if (!verify_func()(std::forward<T>(value))) {
+            fmt::raw_verify_error(cause, nullptr, N);
+        }
 
-		return verify_impl<N + 1>{cause};
-	}
+        return verify_impl<N + 1>{ cause };
+    }
 };
 
 // Verification helper, checks several conditions delimited with comma operator
-inline auto verify(const char* cause)
-{
-	return verify_impl<0>{cause};
+inline auto verify(const char *cause) {
+    return verify_impl<0>{ cause };
 }
 
 // Verification helper (returns value or lvalue reference, may require to use verify_move instead)
 template <typename F = verify_func, typename T>
-inline T verify(const char* cause, T&& value, F&& pred = F())
-{
-	if (!pred(std::forward<T>(value)))
-	{
-		using unref = std::remove_const_t<std::remove_reference_t<T>>;
-		fmt::raw_verify_error(cause, fmt::get_type_info<fmt_unveil_t<unref>>(), fmt_unveil<unref>::get(value));
-	}
+inline T verify(const char *cause, T &&value, F &&pred = F()) {
+    if (!pred(std::forward<T>(value))) {
+        using unref = std::remove_const_t<std::remove_reference_t<T>>;
+        fmt::raw_verify_error(cause, fmt::get_type_info<fmt_unveil_t<unref>>(), fmt_unveil<unref>::get(value));
+    }
 
-	return std::forward<T>(value);
+    return std::forward<T>(value);
 }
 
 // Verification helper (must be used in return expression or in place of std::move)
 template <typename F = verify_func, typename T>
-inline std::remove_reference_t<T>&& verify_move(const char* cause, T&& value, F&& pred = F())
-{
-	if (!pred(std::forward<T>(value)))
-	{
-		using unref = std::remove_const_t<std::remove_reference_t<T>>;
-		fmt::raw_verify_error(cause, fmt::get_type_info<fmt_unveil_t<unref>>(), fmt_unveil<unref>::get(value));
-	}
+inline std::remove_reference_t<T> &&verify_move(const char *cause, T &&value, F &&pred = F()) {
+    if (!pred(std::forward<T>(value))) {
+        using unref = std::remove_const_t<std::remove_reference_t<T>>;
+        fmt::raw_verify_error(cause, fmt::get_type_info<fmt_unveil_t<unref>>(), fmt_unveil<unref>::get(value));
+    }
 
-	return std::move(value);
+    return std::move(value);
 }

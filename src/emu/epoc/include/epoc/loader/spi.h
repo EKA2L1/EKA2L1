@@ -70,7 +70,7 @@ namespace eka2l1::loader {
         explicit spi_file(const std::uint32_t type)
             : header(type) {
         }
-        
+
         bool do_state(common::chunkyseri &seri);
     };
 }

@@ -24,15 +24,15 @@
 #pragma once
 
 #include <epoc/services/centralrepo/common.h>
-#include <epoc/utils/sec.h>
 #include <epoc/utils/reqsts.h>
+#include <epoc/utils/sec.h>
 
 #include <common/types.h>
 
 #include <cstdint>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace eka2l1 {
     namespace service {
@@ -92,9 +92,9 @@ namespace eka2l1 {
         std::uint32_t uid;
 
         std::uint32_t owner_uid;
-        
+
         std::vector<central_repo_entry> entries;
-        std::vector<central_repo_client_subsession*> attached;
+        std::vector<central_repo_client_subsession *> attached;
 
         central_repo_entry_access_policy default_policy;
         std::vector<central_repo_entry_access_policy> single_policies;
@@ -115,7 +115,7 @@ namespace eka2l1 {
         bool add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var,
             const std::uint32_t meta);
     };
-    
+
     struct central_repo_client_subsession;
 
     struct central_repo_transactor {

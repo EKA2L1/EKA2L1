@@ -17,12 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <console/cmdhandler.h>
-#include <console/global.h>
 #include <common/arghandler.h>
 #include <common/cvt.h>
-#include <manager/manager.h>
+#include <console/cmdhandler.h>
+#include <console/global.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 #include <manager/package_manager.h>
 
 using namespace eka2l1;
@@ -34,7 +34,7 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string 
         *err = "Request to install a SIS, but path not given";
         return false;
     }
-    
+
     // Since it's inconvinient for user to specify the drive (they are all the same on computer),
     // and it's better to install in C since there is many apps required
     // to be in it and hardcoded the drive, just hardcode drive C here.
@@ -55,7 +55,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
         *err = "No application specified";
         return false;
     }
-    
+
     auto infos = symsys->get_manager_system()->get_package_manager()->get_apps_info();
     std::uint8_t app_idx = 0;
 
@@ -107,8 +107,8 @@ bool list_app_option_handler(eka2l1::common::arg_parser *parser, std::string *er
 
     for (auto &info : infos) {
         std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: "
-                    << common::ucs2_to_utf8(info.name) << " (drive: " << static_cast<char>('A' + info.drive)
-                    << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
+                  << common::ucs2_to_utf8(info.name) << " (drive: " << static_cast<char>('A' + info.drive)
+                  << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
     }
 
     return false;
@@ -119,7 +119,7 @@ bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std::string
 
     for (std::size_t i = 0; i < devices_list.size(); i++) {
         std::cout << i << " : " << devices_list[i].model << " (" << devices_list[i].firmware_code << ", "
-            << devices_list[i].model << ", epocver:";
+                  << devices_list[i].model << ", epocver:";
 
         switch (devices_list[i].ver) {
         case epocver::epocu6: {
@@ -131,12 +131,12 @@ bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std::string
             std::cout << " 6.0";
             break;
         }
-        
+
         case epocver::epoc93: {
             std::cout << " 9.3";
             break;
         }
-        
+
         case epocver::epoc94: {
             std::cout << " 9.4";
             break;

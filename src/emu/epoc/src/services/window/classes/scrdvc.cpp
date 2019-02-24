@@ -66,7 +66,7 @@ namespace eka2l1::epoc {
         }
 
         client->get_ws().get_focus() = focus;
-        
+
         // TODO: This changes the focus, so the window group list got updated
         // An event of that should be sent
     }
@@ -80,7 +80,7 @@ namespace eka2l1::epoc {
 
         return nullptr;
     }
-    
+
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
         TWsScreenDeviceOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 

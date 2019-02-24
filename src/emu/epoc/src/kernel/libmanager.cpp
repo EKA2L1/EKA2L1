@@ -37,10 +37,10 @@
 #include <epoc/loader/romimage.h>
 #include <epoc/vfs.h>
 
-#include <epoc/kernel/codeseg.h>
 #include <common/configure.h>
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
+#include <epoc/kernel/codeseg.h>
 
 #include <arm/arm_analyser.h>
 #include <cctype>
@@ -131,7 +131,7 @@ namespace eka2l1 {
             const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
             codeseg_ptr cs = mngr.load(dll_name);
-            
+
             if (!cs) {
                 LOG_TRACE("Can't found {}", dll_name8);
                 return false;
@@ -141,12 +141,12 @@ namespace eka2l1 {
             assert(parent_codeseg->add_dependency(cs));
 
             uint32_t *imdir = &(import_block.ordinals[0]);
-            
+
             for (uint32_t i = crr_idx, j = 0;
                  i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
                  i++, j++) {
                 uint32_t iat_off = me.header.code_offset + me.header.code_size;
-                *reinterpret_cast<std::uint32_t*>(me.data[iat_off + i * 4]) = cs->lookup(import_block.ordinals[j]);
+                *reinterpret_cast<std::uint32_t *>(me.data[iat_off + i * 4]) = cs->lookup(import_block.ordinals[j]);
             }
 
             crr_idx += static_cast<uint32_t>(import_block.ordinals.size());
@@ -227,7 +227,7 @@ namespace eka2l1 {
                     info.exception_descriptor = 0;
                 }
             }
-            
+
             codeseg_ptr cs = kern->create<kernel::codeseg>("codeseg", info);
             mngr.register_exports(
                 common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
@@ -288,8 +288,7 @@ namespace eka2l1 {
             mem = mems;
             kern = kerns;
 
-            log_svc = sys->get_manager_system()->get_config_manager()->
-                get_or_fall<bool>("log_svc", false);
+            log_svc = sys->get_manager_system()->get_config_manager()->get_or_fall<bool>("log_svc", false);
 
             // TODO (pent0): Implement external id loading
 
@@ -330,15 +329,15 @@ namespace eka2l1 {
         }
 
         codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, const std::u16string &path) {
-            if (auto seg = kern->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1), 
-                img.header.uid2, img.header.uid3)) {
+            if (auto seg = kern->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
+                    img.header.uid2, img.header.uid3)) {
                 return seg;
             }
 
-            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone, 
+            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone,
                 [&](const vaddress offset) {
-                return *reinterpret_cast<std::uint32_t*>(&img.data[img.header.code_offset + offset - img.header.code_base]);
-            });
+                    return *reinterpret_cast<std::uint32_t *>(&img.data[img.header.code_offset + offset - img.header.code_base]);
+                });
 
             std::unordered_map<vaddress, arm::arm_function> funcs;
             analyser->analyse(funcs, img.header.entry_point + img.header.code_base, img.header.code_base + img.header.code_size);
@@ -347,16 +346,16 @@ namespace eka2l1 {
 
             return import_e32img(&img, mem, kern, *this, path);
         }
-        
+
         codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path) {
             if (auto seg = kern->pull_codeseg_by_ep(romimg.header.entry_point)) {
                 return seg;
             }
 
-            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone, 
+            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone,
                 [&](const vaddress offset) {
-                return *reinterpret_cast<std::uint32_t*>(mem->get_real_pointer(offset));
-            });
+                    return *reinterpret_cast<std::uint32_t *>(mem->get_real_pointer(offset));
+                });
 
             std::unordered_map<vaddress, arm::arm_function> funcs;
             analyser->analyse(funcs, romimg.header.entry_point, romimg.header.code_address + romimg.header.code_size);
@@ -376,7 +375,8 @@ namespace eka2l1 {
             info.code_size = romimg.header.code_size;
             info.data_size = romimg.header.data_size;
             info.entry_point = romimg.header.entry_point;
-            info.bss_size = romimg.header.bss_size;;
+            info.bss_size = romimg.header.bss_size;
+            ;
             info.export_table = romimg.exports;
             info.sinfo.caps_u[0] = romimg.header.sec_info.cap1;
             info.sinfo.caps_u[1] = romimg.header.sec_info.cap2;
@@ -395,7 +395,7 @@ namespace eka2l1 {
                 uint16_t num_entries;
                 uint32_t rom_img_headers_ref[25];
             };
-            
+
             // Find dependencies
             std::function<void(loader::rom_image_header *, codeseg_ptr)> dig_dependencies;
             dig_dependencies = [&](loader::rom_image_header *header, codeseg_ptr acs) {
@@ -405,7 +405,7 @@ namespace eka2l1 {
                     for (uint16_t i = 0; i < ref_table->num_entries; i++) {
                         // Dig UID
                         loader::rom_image_header *ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
-                            .get(mem);
+                                                                   .get(mem);
 
                         if (auto ref_seg = kern->pull_codeseg_by_ep(ref_header->entry_point)) {
                             // Add ref
@@ -429,8 +429,8 @@ namespace eka2l1 {
 
             // Try opening e32img, if fail, try open as romimg
             auto open_and_get = [&](const std::u16string &path) -> std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {
-                std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> 
-                    result { std::nullopt, std::nullopt };
+                std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
+                    result{ std::nullopt, std::nullopt };
 
                 if (io->exist(lib_path)) {
                     symfile f = io->open_file(path, READ_MODE | BIN_MODE);
@@ -445,7 +445,7 @@ namespace eka2l1 {
 
                         return result;
                     }
-                    
+
                     auto parse_result_2 = loader::parse_romimg(f, mem);
                     if (parse_result_2 != std::nullopt) {
                         f->close();
@@ -457,7 +457,7 @@ namespace eka2l1 {
                     f->close();
                 }
 
-                return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {};
+                return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>{};
             };
 
             if (!eka2l1::has_root_dir(lib_path)) {
@@ -473,7 +473,7 @@ namespace eka2l1 {
                     }
                 }
 
-                return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {};
+                return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>{};
             }
 
             return open_and_get(lib_path);
@@ -489,7 +489,7 @@ namespace eka2l1 {
                         return nullptr;
                     }
 
-                    if (entry->media_type == drive_media::rom && io->is_entry_in_rom(lib_path)) {                                
+                    if (entry->media_type == drive_media::rom && io->is_entry_in_rom(lib_path)) {
                         auto romimg = loader::parse_romimg(f, mem);
                         if (!romimg) {
                             return nullptr;
@@ -574,11 +574,11 @@ namespace eka2l1 {
 
             return true;
         }
-    
+
         bool lib_manager::register_exports(const std::string &lib_name, export_table &table) {
             std::string lib_name_lower = common::lowercase_string(lib_name);
             auto lib_ite = lib_symbols.find(lib_name_lower);
-            if (lib_ite != lib_symbols.end()) {    
+            if (lib_ite != lib_symbols.end()) {
                 for (std::size_t i = 0; i < table.size(); i++) {
                     addr_symbols.emplace(table[i] & ~0x1, lib_ite->second[i]);
                 }

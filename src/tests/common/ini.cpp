@@ -1,5 +1,5 @@
-#include <common/ini.h>
 #include <catch2/catch.hpp>
+#include <common/ini.h>
 
 using namespace eka2l1;
 

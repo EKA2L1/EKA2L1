@@ -57,7 +57,7 @@ namespace eka2l1::epoc {
         std::int32_t height;
         font_style style;
     };
-    
+
     enum {
         DEAD_VTABLE = 0xDEAD1AB
     };

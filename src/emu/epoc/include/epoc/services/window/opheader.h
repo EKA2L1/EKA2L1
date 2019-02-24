@@ -38,7 +38,7 @@ namespace eka2l1 {
 
         void *data_ptr;
     };
-    
+
     struct ws_cmd_screen_device_header {
         int num_screen;
         uint32_t screen_dvc_ptr;

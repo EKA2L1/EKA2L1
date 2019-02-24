@@ -20,17 +20,17 @@
 
 #pragma once
 
+#include <llvm/ExecutionEngine/JITEventListener.h>
+#include <llvm/ExecutionEngine/JITSymbol.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
-#include <llvm/ExecutionEngine/JITSymbol.h>
-#include <llvm/ExecutionEngine/JITEventListener.h>
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
+#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
-#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
-#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/DataLayout.h>
-#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
 
 #include <arm/arm_analyser.h>
 
@@ -41,12 +41,12 @@
 #include <unordered_map>
 
 namespace eka2l1::arm {
-    class arm_memory_manager: public llvm::RTDyldMemoryManager {
+    class arm_memory_manager : public llvm::RTDyldMemoryManager {
         std::unordered_map<std::string, std::uint64_t> links;
         std::uint8_t **next;
 
         std::uint8_t *org;
-        std::size_t   size;
+        std::size_t size;
 
         std::mutex lock;
 
@@ -55,8 +55,10 @@ namespace eka2l1::arm {
             throw std::runtime_error("NULL function called");
         }
 
-        explicit arm_memory_manager(std::uint8_t *org, std::size_t size, std::uint8_t **next) 
-            : org(org), size(size), next(next) {
+        explicit arm_memory_manager(std::uint8_t *org, std::size_t size, std::uint8_t **next)
+            : org(org)
+            , size(size)
+            , next(next) {
         }
 
         // This will responsible for finding symbol
@@ -78,13 +80,13 @@ namespace eka2l1::arm {
         llvm::orc::IRCompileLayer compile_layer;
         llvm::orc::MangleAndInterner mangle;
         llvm::orc::ThreadSafeContext ctx;
-        
+
         llvm::DataLayout data_layout;
 
-    public: 
+    public:
         explicit arm_llvm_recompiler_base(
             decltype(object_layer)::GetMemoryManagerFunction get_mem_mngr_func,
-            llvm::orc::JITTargetMachineBuilder jit_tmb, 
+            llvm::orc::JITTargetMachineBuilder jit_tmb,
             llvm::DataLayout dl);
 
         llvm::LLVMContext &get_context();
@@ -93,22 +95,22 @@ namespace eka2l1::arm {
 
     using arm_inst_ptr = std::shared_ptr<arm::arm_instruction_base>;
 
-    class arm_llvm_inst_recompiler: public arm_llvm_recompiler_base {
+    class arm_llvm_inst_recompiler : public arm_llvm_recompiler_base {
         llvm::IRBuilder<> *builder;
-        llvm::Module      *module;
+        llvm::Module *module;
 
-        llvm::Function    *function;
-        llvm::StructType  *cpu_context_type;
+        llvm::Function *function;
+        llvm::StructType *cpu_context_type;
 
-        llvm::Value       *page_table;
-        llvm::Type        *page_table_type;
+        llvm::Value *page_table;
+        llvm::Type *page_table_type;
 
-        llvm::Value       *locals[50];      ///< Local context variable's value.
-        llvm::Value      **gpr = locals + 2;
+        llvm::Value *locals[50]; ///< Local context variable's value.
+        llvm::Value **gpr = locals + 2;
 
-        llvm::Value       *globals[50];     ///< Reference to context's variables.
+        llvm::Value *globals[50]; ///< Reference to context's variables.
 
-        std::uint32_t      addr;
+        std::uint32_t addr;
 
     protected:
         llvm::Value *gpr_load(const std::uint8_t index);
@@ -125,7 +127,7 @@ namespace eka2l1::arm {
 
         explicit arm_llvm_inst_recompiler(llvm::Module *module,
             decltype(object_layer)::GetMemoryManagerFunction get_mem_mngr_func,
-            llvm::orc::JITTargetMachineBuilder jit_tmb, 
+            llvm::orc::JITTargetMachineBuilder jit_tmb,
             llvm::DataLayout dl);
 
         void translate();

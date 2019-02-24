@@ -27,15 +27,14 @@ struct cs_insn;
 typedef size_t csh;
 
 namespace eka2l1::arm {
-    struct arm_instruction_capstone: public arm::arm_instruction_base {
+    struct arm_instruction_capstone : public arm::arm_instruction_base {
         cs_insn *insn;
 
     public:
         explicit arm_instruction_capstone(cs_insn *insn)
             : insn(insn) {
-
         }
-        
+
         ~arm_instruction_capstone() override {
         }
 
@@ -44,7 +43,7 @@ namespace eka2l1::arm {
         std::vector<arm::reg> get_regs_write() override;
     };
 
-    class arm_analyser_capstone: public arm::arm_analyser {
+    class arm_analyser_capstone : public arm::arm_analyser {
         csh cp_handle_arm;
         csh cp_handle_thumb;
 

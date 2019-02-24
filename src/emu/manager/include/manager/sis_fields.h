@@ -141,9 +141,9 @@ namespace eka2l1 {
         };
 
         enum class sis_lang : uint16_t {
-            #define LANG_DECL(x, y) x,
-                #include <common/lang.def>
-            #undef LANG_DECL
+#define LANG_DECL(x, y) x,
+#include <common/lang.def>
+#undef LANG_DECL
             total_lang
         };
 

@@ -22,6 +22,7 @@
 
 #include <common/types.h>
 
+#include <epoc/ptr.h>
 #include <functional>
 #include <map>
 #include <memory>
@@ -29,7 +30,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <epoc/ptr.h>
 
 namespace YAML {
     class Node;
@@ -96,7 +96,7 @@ namespace eka2l1 {
             std::unordered_map<address, std::string> addr_symbols;
             std::unordered_map<std::string, symbols> lib_symbols;
 
-            bool log_svc { false };
+            bool log_svc{ false };
 
         public:
             std::unordered_map<sid, epoc_import_func> svc_funcs;
@@ -132,8 +132,8 @@ namespace eka2l1 {
 
             // Search through all drives, which will parse all existing file
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
-                try_search_and_parse(const std::u16string &path);
-            
+            try_search_and_parse(const std::u16string &path);
+
             codeseg_ptr load_as_e32img(loader::e32img &img, const std::u16string &path = u"");
             codeseg_ptr load_as_romimg(loader::romimg &img, const std::u16string &path = u"");
 

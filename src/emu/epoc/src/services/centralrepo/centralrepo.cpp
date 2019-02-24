@@ -2,12 +2,12 @@
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/e32inc.h>
-#include <common/log.h>
 #include <common/ini.h>
+#include <common/log.h>
 
+#include <epoc/epoc.h>
 #include <epoc/services/centralrepo/centralrepo.h>
 #include <epoc/services/centralrepo/cre.h>
-#include <epoc/epoc.h>
 #include <epoc/vfs.h>
 
 #include <e32err.h>
@@ -71,9 +71,9 @@ namespace eka2l1 {
 
         // Handle default metadata
         common::ini_section *crerep_default_meta = creini.find("defaultmeta")->get_as<common::ini_section>();
-        
+
         if (crerep_default_meta) {
-            for (auto &node: (*crerep_default_meta)) {
+            for (auto &node : (*crerep_default_meta)) {
                 switch (node->get_node_type()) {
                 case common::INI_NODE_VALUE: {
                     // There is only a single value
@@ -90,8 +90,7 @@ namespace eka2l1 {
                     std::uint32_t potientially_meta = p->key_as<std::uint32_t>();
                     common::ini_node *n = p->get<common::ini_node>(0);
 
-                    if (n && n->get_node_type() == common::INI_NODE_KEY && 
-                        strncmp(n->name(), "mask", 4) == 0) {
+                    if (n && n->get_node_type() == common::INI_NODE_KEY && strncmp(n->name(), "mask", 4) == 0) {
                         // That's a mask, we should add new
                         def_meta.default_meta_data = potientially_meta;
                         def_meta.key_mask = n->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_as_native<std::uint32_t>();
@@ -126,7 +125,7 @@ namespace eka2l1 {
             return false;
         }
 
-        for (auto &node: (*main)) {
+        for (auto &node : (*main)) {
             common::ini_pair *p = node->get_as<common::ini_pair>();
             central_repo_entry entry;
 
@@ -181,8 +180,8 @@ namespace eka2l1 {
     }
 
     central_repo_server::central_repo_server(eka2l1::system *sys)
-        : service::server(sys, "!CentralRepository", true) 
-         , id_counter(0) {
+        : service::server(sys, "!CentralRepository", true)
+        , id_counter(0) {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_init, "CenRep::Init");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_close, "CenRep::Close");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
@@ -287,7 +286,7 @@ namespace eka2l1 {
 
         session_ite->second.handle_message(&ctx);
     }
-    
+
     int central_repo_server::load_repo_adv(eka2l1::io_system *io, central_repo *repo, const std::uint32_t key,
         bool scan_org_only) {
         bool is_first_repo = first_repo;
@@ -307,7 +306,7 @@ namespace eka2l1 {
 
         // Check for internal first, than fallback to ROM
         // Check if file exists on ROM first. If it's than it should resides in persists folder of internal drive
-        std::u16string rom_persists_dir { drive_to_char16(rom_drv) };
+        std::u16string rom_persists_dir{ drive_to_char16(rom_drv) };
         rom_persists_dir += private_dir + repoini;
 
         bool one_on_rom = false;
@@ -317,12 +316,12 @@ namespace eka2l1 {
         }
 
         std::u16string private_dir_persists = u":\\Private\\10202be9\\persists\\";
-    
+
         // Internal should only contains CRE
-        for (auto &drv: avail_drives) {
-            std::u16string repo_dir { drive_to_char16(drv) };
+        for (auto &drv : avail_drives) {
+            std::u16string repo_dir{ drive_to_char16(drv) };
             std::u16string privates[2];
-            
+
             if (scan_org_only) {
                 privates[0] = private_dir;
             } else {
@@ -330,7 +329,7 @@ namespace eka2l1 {
                 privates[1] = private_dir;
             }
 
-            for (int i = 0 ; i < ((one_on_rom) ? 1 : 2); i++) {
+            for (int i = 0; i < ((one_on_rom) ? 1 : 2); i++) {
                 std::u16string repo_folder = repo_dir + privates[i];
 
                 if (is_first_repo && !io->exist(repo_folder)) {
@@ -339,7 +338,7 @@ namespace eka2l1 {
                 } else {
                     // We can continue already
                     std::u16string repo_path = repo_folder + repocre;
-                    
+
                     if (io->exist(repo_path)) {
                         // Load and check for success
                         symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
@@ -387,7 +386,7 @@ namespace eka2l1 {
 
         return -1;
     }
-        
+
     /* It should be like follow:
      *
      * - The ROM INI are for rollback
@@ -406,7 +405,7 @@ namespace eka2l1 {
         return &repos[key];
     }
 
-    eka2l1::central_repo *central_repo_server::get_initial_repo(eka2l1::io_system *io, 
+    eka2l1::central_repo *central_repo_server::get_initial_repo(eka2l1::io_system *io,
         const std::uint32_t key) {
         // Load from cache first
         eka2l1::central_repo *repo = backup_cacher.get_cached_repo(key);
@@ -447,7 +446,7 @@ namespace eka2l1 {
 
         return 0;
     }
-        
+
     void central_repo_client_session::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case cen_rep_init: {
@@ -488,18 +487,18 @@ namespace eka2l1 {
                 ctx->set_request_status(KErrNone);
                 break;
             }
-        
+
             ctx->set_request_status(KErrAlreadyExists);
             break;
         }
 
-        case cen_rep_group_nof_req: case cen_rep_notify_req: {
-            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : 
-                static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
+        case cen_rep_group_nof_req:
+        case cen_rep_notify_req: {
+            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
 
             const std::uint32_t partial_key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
 
-            epoc::notify_info info { ctx->msg->request_sts, ctx->msg->own_thr };
+            epoc::notify_info info{ ctx->msg->request_sts, ctx->msg->own_thr };
             const int err = add_notify_request(info, mask, partial_key);
 
             switch (err) {
@@ -524,7 +523,9 @@ namespace eka2l1 {
             break;
         }
 
-        case cen_rep_get_int: case cen_rep_get_real: case cen_rep_get_string: {
+        case cen_rep_get_int:
+        case cen_rep_get_real:
+        case cen_rep_get_string: {
             // We get the entry.
             // Use mode 0 (write) to get the entry, since we are modifying data.
             central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 0);
@@ -534,7 +535,7 @@ namespace eka2l1 {
                 break;
             }
 
-            switch(ctx->msg->function) {
+            switch (ctx->msg->function) {
             case cen_rep_get_int: {
                 if (entry->data.etype != central_repo_entry_type::integer) {
                     ctx->set_request_status(KErrArgument);
@@ -561,7 +562,7 @@ namespace eka2l1 {
                     return;
                 }
 
-                ctx->write_arg_pkg(1, reinterpret_cast<std::uint8_t*>(&entry->data.strd[0]), 
+                ctx->write_arg_pkg(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
                     static_cast<std::uint32_t>(entry->data.strd.length()));
                 break;
             }
@@ -571,7 +572,9 @@ namespace eka2l1 {
             break;
         }
 
-        case cen_rep_set_int: case cen_rep_set_string: case cen_rep_set_real: {
+        case cen_rep_set_int:
+        case cen_rep_set_string:
+        case cen_rep_set_real: {
             // We get the entry.
             // Use mode 1 (write) to get the entry, since we are modifying data.
             central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 1);
@@ -582,7 +585,7 @@ namespace eka2l1 {
                 ctx->set_request_status(KErrNotFound);
                 break;
             }
-            
+
             // TODO: Capability supply (+Policy)
             // This is really bad... We are not really care about accuracy right now
             // Assuming programs did right things, and accept the rules
@@ -631,7 +634,7 @@ namespace eka2l1 {
             break;
         }
 
-        case cen_rep_reset: { 
+        case cen_rep_reset: {
             io_system *io = ctx->sys->get_io_system();
 
             eka2l1::central_repo *init_repo = server->get_initial_repo(io, attach_repo->uid);
@@ -639,7 +642,7 @@ namespace eka2l1 {
             // Reset the keys
             const std::uint32_t key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
             int err = reset_key(init_repo, key);
-            
+
             // In transaction
             if (err == -1) {
                 ctx->set_request_status(KErrNotSupported);
@@ -693,7 +696,7 @@ namespace eka2l1 {
         client_subsessions.erase(repo_subsession_ite);
         return 0;
     }
-    
+
     int central_repo_client_session::closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t id) {
         auto repo_subsession_ite = client_subsessions.find(id);
 
@@ -727,7 +730,7 @@ namespace eka2l1 {
             LOG_ERROR("Unknown return error from closerep {}", err);
             break;
         }
-        } 
+        }
     }
 
     // If a session disconnect, we should at least save all changes it did
@@ -741,11 +744,11 @@ namespace eka2l1 {
 
         if (ss_ite != client_sessions.end()) {
             central_repo_client_session &ss = ss_ite->second;
-            
+
             for (auto ite = ss.client_subsessions.begin(); ite != ss.client_subsessions.end(); ite++) {
                 ss.closerep(io, 0, ite);
             }
-            
+
             ss.client_subsessions.clear();
             client_sessions.erase(ss_ite);
         }
@@ -757,7 +760,7 @@ namespace eka2l1 {
     void central_repo_server::connect(service::ipc_context ctx) {
         central_repo_client_session session;
         session.server = this;
-        
+
         const std::uint32_t id = ctx.msg->msg_session->unique_id();
 
         // Put all process code here

@@ -20,13 +20,13 @@
 
 #pragma once
 
-#include <epoc/services/window/classes/winbase.h>
 #include <drivers/graphics/graphics.h>
+#include <epoc/services/window/classes/winbase.h>
 
 namespace eka2l1::epoc {
     struct window_group;
     using window_group_ptr = std::shared_ptr<window_group>;
-    
+
     struct window_group : public epoc::window {
         epoc::window_group_ptr next_sibling{ nullptr };
         std::u16string name;

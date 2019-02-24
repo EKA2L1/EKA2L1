@@ -62,8 +62,8 @@
 #include <epoc/vfs.h>
 
 #include <arm/arm_factory.h>
-#include <manager/manager.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 
 namespace eka2l1 {
     /*! A system instance, where all the magic happens. 
@@ -148,7 +148,7 @@ namespace eka2l1 {
 
             manager::device *dvc = dmngr->get_current();
             io.set_product_code(dvc->firmware_code);
-            
+
             set_symbian_version_use(dvc->ver);
             return true;
         }
@@ -303,9 +303,8 @@ namespace eka2l1 {
         io.init();
         asmdis.init();
 
-        file_system_inst physical_fs = 
-            create_physical_filesystem(get_symbian_version_use(), "");
-        
+        file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use(), "");
+
         io.add_filesystem(physical_fs);
 
         file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem,
@@ -515,7 +514,7 @@ namespace eka2l1 {
     bool system::set_device(const std::uint8_t idx) {
         return impl->set_device(idx);
     }
-    
+
     void system::set_symbian_version_use(const epocver ever) {
         return impl->set_symbian_version_use(ever);
     }

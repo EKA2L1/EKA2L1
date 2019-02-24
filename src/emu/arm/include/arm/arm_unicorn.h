@@ -55,9 +55,9 @@ namespace eka2l1 {
             bool last_breakpoint_hit;
 
         public:
-            bool log_code { false };
-            bool log_pass { false };
-            bool enable_breakpoint_script { false };
+            bool log_code{ false };
+            bool log_pass{ false };
+            bool enable_breakpoint_script{ false };
 
             bool execute_instructions(uint32_t num_instructions);
 

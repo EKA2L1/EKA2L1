@@ -6,16 +6,15 @@
 using namespace eka2l1;
 
 TEST_CASE("do_read_generic", "chunkyseri") {
-    char *test_data = 
-        "\1\0\0\0\5\5\5\5 \0\0\0PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE";
+    char *test_data = "\1\0\0\0\5\5\5\5 \0\0\0PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE";
 
-    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(test_data), 45, common::SERI_MODE_READ);
+    common::chunkyseri seri(reinterpret_cast<std::uint8_t *>(test_data), 45, common::SERI_MODE_READ);
     int simple_num1 = 0;
     std::uint32_t simple_num2 = 0;
 
     seri.absorb(simple_num1);
     seri.absorb(simple_num2);
-    
+
     std::string str;
     seri.absorb(str);
 
@@ -26,7 +25,7 @@ TEST_CASE("do_read_generic", "chunkyseri") {
     REQUIRE(str == "PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 }
 
-TEST_CASE("do_measure_generic", "chunkyseri")  {
+TEST_CASE("do_measure_generic", "chunkyseri") {
     common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
     std::uint32_t dummy1;
     std::uint32_t dummy2;
@@ -63,29 +62,28 @@ TEST_CASE("do_write_generic", "chunkyseri") {
     seri.absorb(d3);
 
     std::uint8_t *bufptr = &buf[0];
-    REQUIRE(d1 == *reinterpret_cast<decltype(d1)*>(bufptr));
+    REQUIRE(d1 == *reinterpret_cast<decltype(d1) *>(bufptr));
     bufptr += sizeof(d1);
-    
-    REQUIRE(d2 == *reinterpret_cast<decltype(d2)*>(bufptr));
+
+    REQUIRE(d2 == *reinterpret_cast<decltype(d2) *>(bufptr));
     bufptr += sizeof(d2);
 
-    REQUIRE(d3.length() == *reinterpret_cast<std::uint32_t*>(bufptr));
+    REQUIRE(d3.length() == *reinterpret_cast<std::uint32_t *>(bufptr));
     bufptr += 4;
 
-    REQUIRE(d3 == reinterpret_cast<char*>(bufptr));
+    REQUIRE(d3 == reinterpret_cast<char *>(bufptr));
 }
 
 TEST_CASE("do_read_with_section", "chunkyseri") {
-    char *buf = 
-        "TestSection\1\0\5\0\7\0\7\0\0\0HIPEOPL";
+    char *buf = "TestSection\1\0\5\0\7\0\7\0\0\0HIPEOPL";
 
-    common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(buf), 29, common::SERI_MODE_READ);
+    common::chunkyseri seri(reinterpret_cast<std::uint8_t *>(buf), 29, common::SERI_MODE_READ);
     REQUIRE(seri.section("TestSection", 1));
 
     std::uint16_t t1 = 0;
     std::uint16_t t2 = 0;
 
-    std::string t3 {};
+    std::string t3{};
 
     seri.absorb(t1);
     seri.absorb(t2);

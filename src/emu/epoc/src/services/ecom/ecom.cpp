@@ -29,8 +29,8 @@
 #include <epoc/services/ecom/ecom.h>
 #include <epoc/vfs.h>
 
-#include <epoc/loader/spi.h>
 #include <epoc/epoc.h>
+#include <epoc/loader/spi.h>
 #include <epoc/utils/uid.h>
 
 #include <epoc/services/ecom/common.h>
@@ -100,19 +100,19 @@ namespace eka2l1 {
             return false;
         }
 
-        for (auto &pinterface: plugin.interfaces) {
+        for (auto &pinterface : plugin.interfaces) {
             // Get from the current interface on server
             auto &interface_on_server = interfaces[pinterface.uid];
             interface_on_server.uid = pinterface.uid;
-            
-            for (auto &impl: pinterface.implementations) {
+
+            for (auto &impl : pinterface.implementations) {
                 impl.drv = drv;
 
                 if (!register_implementation(pinterface.uid, impl)) {
                     return false;
                 }
             }
-    
+
             pinterface.implementations.clear();
         }
 
@@ -122,7 +122,7 @@ namespace eka2l1 {
     bool ecom_server::load_archives(eka2l1::io_system *io) {
         std::vector<std::string> archives = get_ecom_plugin_archives(io);
 
-        for (const std::string &archive: archives) {
+        for (const std::string &archive : archives) {
             const drive_number drv = char16_to_drive(archive[0]);
 
             symfile f = io->open_file(common::utf8_to_ucs2(archive), READ_MODE | BIN_MODE);
@@ -142,15 +142,15 @@ namespace eka2l1 {
                 return false;
             }
 
-            for (auto &entry: spi.entries) {
+            for (auto &entry : spi.entries) {
                 result = load_and_install_plugin_from_buffer(&entry.file[0], entry.file.size(), drv);
-                
+
                 if (!result) {
                     LOG_WARN("Can't load and install plugin \"{}\"", entry.name);
                 }
             }
         }
-        
+
         return true;
     }
 
@@ -178,7 +178,7 @@ namespace eka2l1 {
 
         auto plugin_dir = io->open_dir(plugin_dir_path, io_attrib::none);
         if (!plugin_dir) {
-            LOG_TRACE("Plugins directory for drive {} not found!", 
+            LOG_TRACE("Plugins directory for drive {} not found!",
                 static_cast<char>(plugin_dir_path[0]));
 
             return false;
@@ -186,7 +186,7 @@ namespace eka2l1 {
 
         while (auto entry = plugin_dir->get_next_entry()) {
             symfile f = io->open_file(common::utf8_to_ucs2(entry->full_path), READ_MODE | BIN_MODE);
-            
+
             assert(f);
 
             std::vector<std::uint8_t> dat;
@@ -226,7 +226,7 @@ namespace eka2l1 {
         std::uint32_t total_impls = static_cast<std::uint32_t>(collected_impls.size());
         seri.absorb(total_impls);
 
-        for (auto &impl: collected_impls) {
+        for (auto &impl : collected_impls) {
             if (seri.eos()) {
                 return false;
             }
@@ -245,7 +245,7 @@ namespace eka2l1 {
         // First UID contains the interface UID, while the third one contains resolver UID
         // The middle UID is reserved
         epoc::uid_type uids;
-        
+
         // Use chunkyseri
 
         if (auto uids_result = ctx.get_arg_packed<epoc::uid_type>(0)) {
@@ -259,7 +259,7 @@ namespace eka2l1 {
         std::vector<std::uint32_t> given_extended_interfaces;
 
         // I only want to do reading in a scope since these will be useless really soon
-        {   
+        {
             // The second IPC argument contains the name match string and extend interface list
             // Let's do some reading
             std::string arg2_data;
@@ -272,9 +272,9 @@ namespace eka2l1 {
             }
 
             if (arg2_data.length() != 0) {
-                common::ro_buf_stream arg2_stream(reinterpret_cast<std::uint8_t*>(&arg2_data[0]),
+                common::ro_buf_stream arg2_stream(reinterpret_cast<std::uint8_t *>(&arg2_data[0]),
                     arg2_data.length());
-                
+
                 int len = 0;
 
                 if (arg2_stream.read(&len, 4) < 4) {
@@ -297,8 +297,8 @@ namespace eka2l1 {
 
                 given_extended_interfaces.resize(len);
 
-                for (auto &extended_interface: given_extended_interfaces) {
-                    if (arg2_stream.read(&extended_interface, 4) < 4) {    
+                for (auto &extended_interface : given_extended_interfaces) {
+                    if (arg2_stream.read(&extended_interface, 4) < 4) {
                         ctx.set_request_status(KErrArgument);
                         return;
                     }
@@ -326,7 +326,7 @@ namespace eka2l1 {
 
         // May want to construct a regex for name comparing if we use generic match
         std::regex wildcard_matcher;
-        
+
         if (list_impl_param.match_type && !match_str.empty()) {
             wildcard_matcher = std::move(std::regex(common::wildcard_to_regex_string(match_str)));
         }
@@ -348,18 +348,19 @@ namespace eka2l1 {
         {
             std::uint32_t total_impls = 0;
 
-            // Absorb padding 
+            // Absorb padding
             seri.absorb(total_impls);
         }
 
         // Iterate thorugh all implementations
-        for (ecom_implementation_info &implementation: interface->implementations) {
+        for (ecom_implementation_info &implementation : interface->implementations) {
             // Check the extended interfaces first
             bool sastify = true;
 
-            for (std::uint32_t &given_extended_interface: given_extended_interfaces) {
-                if (std::lower_bound(implementation.extended_interfaces.begin(), implementation.extended_interfaces.end(), 
-                    given_extended_interface) == implementation.extended_interfaces.end()) {
+            for (std::uint32_t &given_extended_interface : given_extended_interfaces) {
+                if (std::lower_bound(implementation.extended_interfaces.begin(), implementation.extended_interfaces.end(),
+                        given_extended_interface)
+                    == implementation.extended_interfaces.end()) {
                     sastify = false;
                     break;
                 }
@@ -381,7 +382,7 @@ namespace eka2l1 {
 
             // We still need to see if the name is match
             // Generic match ? Wildcard check
-            if (list_impl_param.match_type) {        
+            if (list_impl_param.match_type) {
                 if (std::regex_match(common::ucs2_to_utf8(implementation.display_name), wildcard_matcher)) {
                     sastify = true;
                 }
@@ -423,14 +424,14 @@ namespace eka2l1 {
 
         // Write list implementation param to tell the client how much bytes we actually write
         ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param);
-        
+
         // Set the buffer length. It's not I like it or anything, baka
         ctx.set_arg_des_len(3, static_cast<const std::uint32_t>(total_buffer_size_require));
 
         // Finally, returns
         ctx.set_request_status(KErrNone);
     }
-    
+
     ecom_server::ecom_server(eka2l1::system *sys)
         : service::server(sys, "!ecomserver", true) {
         REGISTER_IPC(ecom_server, list_implementations, ecom_list_implementations, "ECom::ListImpls");

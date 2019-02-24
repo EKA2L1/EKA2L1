@@ -1,5 +1,5 @@
-#include <common/allocator.h>
 #include <common/algorithm.h>
+#include <common/allocator.h>
 
 #include <algorithm>
 #include <exception>
@@ -9,7 +9,7 @@ namespace eka2l1::common {
     block_allocator::block_allocator(std::uint8_t *sptr, const std::size_t initial_max_size)
         : space_based_allocator(sptr, initial_max_size) {
         const auto alignment_needed = 4 - reinterpret_cast<std::uint64_t>(ptr) % 4;
-        
+
         if (alignment_needed > initial_max_size) {
             if (!expand(alignment_needed)) {
                 throw std::runtime_error("Pointer is not align, expand to align failed!");
@@ -23,7 +23,7 @@ namespace eka2l1::common {
         std::size_t rounded_size = common::next_power_of_two(bytes);
         std::uint64_t farest_end_offset = 0;
 
-        for (auto &block: blocks) {
+        for (auto &block : blocks) {
             farest_end_offset = common::max(farest_end_offset, block.offset + block.size);
 
             if (!block.active && block.size >= rounded_size) {
@@ -69,11 +69,11 @@ namespace eka2l1::common {
         return farest_end_offset + ptr;
     }
 
-    bool  block_allocator::free(const void *tptr) {
-        const std::uint64_t to_free_offset = reinterpret_cast<const std::uint8_t*>(tptr) - ptr;
+    bool block_allocator::free(const void *tptr) {
+        const std::uint64_t to_free_offset = reinterpret_cast<const std::uint8_t *>(tptr) - ptr;
 
         auto ite = std::find_if(blocks.begin(), blocks.end(),
-            [to_free_offset](const block_info &info) { 
+            [to_free_offset](const block_info &info) {
                 return info.active && info.offset == to_free_offset;
             });
 

@@ -21,8 +21,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/server.h>
 #include <epoc/services/fbs/font.h>
+#include <epoc/services/server.h>
 
 #include <common/allocator.h>
 
@@ -94,7 +94,8 @@ namespace eka2l1 {
         std::uint32_t id;
 
         explicit fbsobj(const std::uint32_t id, const fbsobj_kind kind)
-            : id(id), kind(kind) {
+            : id(id)
+            , kind(kind) {
         }
     };
 
@@ -102,7 +103,7 @@ namespace eka2l1 {
 
     struct fbshandles {
         fbscli *owner;
-        std::vector<fbsobj*> objects;
+        std::vector<fbsobj *> objects;
 
         std::uint32_t make_handle(std::size_t index);
         std::uint32_t add_object(fbsobj *obj);
@@ -124,7 +125,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx);
     };
 
-    struct fbsfont: fbsobj {
+    struct fbsfont : fbsobj {
         // Reuse and recycle
         std::vector<std::uint8_t> data;
 
@@ -138,25 +139,26 @@ namespace eka2l1 {
 
     class io_system;
 
-    class fbs_chunk_allocator: public common::block_allocator {
+    class fbs_chunk_allocator : public common::block_allocator {
         chunk_ptr target_chunk;
-    public: 
+
+    public:
         explicit fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *ptr);
         bool expand(std::size_t target) override;
     };
 
-    class fbs_server: public service::server {
+    class fbs_server : public service::server {
         friend struct fbscli;
 
-        chunk_ptr   shared_chunk;
-        chunk_ptr   large_chunk;
+        chunk_ptr shared_chunk;
+        chunk_ptr large_chunk;
 
         std::uint8_t *base_shared_chunk;
         std::uint8_t *base_large_chunk;
 
         std::unordered_map<std::uint32_t, fbscli> clients;
         std::vector<fbsfont> font_avails;
-        std::vector<fbsfont*> matched;
+        std::vector<fbsfont *> matched;
 
         std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
@@ -182,8 +184,7 @@ namespace eka2l1 {
         }
 
         ptr<std::uint8_t> host_ptr_to_guest_general_data(void *ptr) {
-            return shared_chunk->base() + 
-                static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t*>(ptr) - base_shared_chunk);
+            return shared_chunk->base() + static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
 
         /*! \brief Use to Allocate structure from server side.
@@ -194,7 +195,7 @@ namespace eka2l1 {
          * Using a shared global chunk, this could be solved someway.
         */
         void *allocate_general_data_impl(const std::size_t s);
-        
+
         // General...
         bool free_general_data_impl(const void *ptr);
 
@@ -207,7 +208,7 @@ namespace eka2l1 {
         */
         template <typename T>
         T *allocate_general_data() {
-            return reinterpret_cast<T*>(allocate_general_data_impl(sizeof(T)));
+            return reinterpret_cast<T *>(allocate_general_data_impl(sizeof(T)));
         }
 
         template <typename T>

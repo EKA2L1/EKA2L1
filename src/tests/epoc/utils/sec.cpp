@@ -31,8 +31,8 @@ using namespace eka2l1;
  */
 TEST_CASE("policy_c1_vs_info_c2_pass", "capabilities") {
     epoc::security_policy sw_policy({ epoc::cap_sw_event });
-    epoc::security_info   process_sec_info({ epoc::cap_all_files, epoc::cap_sw_event });
-    epoc::security_info   missing;
+    epoc::security_info process_sec_info({ epoc::cap_all_files, epoc::cap_sw_event });
+    epoc::security_info missing;
 
     REQUIRE(sw_policy.check(process_sec_info, missing));
 }
@@ -45,11 +45,11 @@ TEST_CASE("policy_c1_vs_info_c2_pass", "capabilities") {
  * The missing struct must report back that CommDD and Drm is missing.
  */
 TEST_CASE("policy_c4_vs_info_c2_fail", "capabilities") {
-    epoc::security_policy policy({ epoc::cap_comm_dd, epoc::cap_disk_admin, epoc::cap_loc, 
+    epoc::security_policy policy({ epoc::cap_comm_dd, epoc::cap_disk_admin, epoc::cap_loc,
         epoc::cap_drm });
 
-    epoc::security_info   sec_info({ epoc::cap_disk_admin, epoc::cap_loc }); 
-    epoc::security_info   missing;
+    epoc::security_info sec_info({ epoc::cap_disk_admin, epoc::cap_loc });
+    epoc::security_info missing;
 
     REQUIRE(policy.check(sec_info, missing) == false);
     REQUIRE(missing.caps.get(static_cast<std::size_t>(epoc::cap_comm_dd)));

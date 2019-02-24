@@ -19,9 +19,9 @@
  */
 
 #include <epoc/services/window/classes/winbase.h>
-#include <epoc/services/window/window.h>
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
+#include <epoc/services/window/window.h>
 
 namespace eka2l1::epoc {
     void window::queue_event(const epoc::event &evt) {

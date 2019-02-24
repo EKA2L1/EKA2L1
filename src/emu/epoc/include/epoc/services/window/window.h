@@ -31,10 +31,10 @@
 #include <common/ini.h>
 #include <common/queue.h>
 
-#include <epoc/services/window/common.h>
-#include <epoc/services/window/opheader.h>
-#include <epoc/services/window/fifo.h>
 #include <epoc/services/window/classes/config.h>
+#include <epoc/services/window/common.h>
+#include <epoc/services/window/fifo.h>
+#include <epoc/services/window/opheader.h>
 
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
@@ -49,7 +49,7 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc {
     struct window;
-    
+
     struct event_mod_notifier {
         event_modifier what;
         event_control when;

@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <epoc/services/window/common.h>
 #include <epoc/services/window/classes/winbase.h>
+#include <epoc/services/window/common.h>
 
 namespace eka2l1::epoc {
     struct graphic_context;

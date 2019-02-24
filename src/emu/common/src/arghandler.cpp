@@ -23,17 +23,19 @@
 
 namespace eka2l1::common {
     arg_parser::arg_parser(const int argc, char **argv)
-        : argc(argc), argv(argv), counter(1) {
+        : argc(argc)
+        , argv(argv)
+        , counter(1) {
     }
 
     std::string arg_parser::get_help_string(const int tab_each_line) {
         std::ostringstream ss;
 
-        for (auto &info: infos) {
-            for (int i = 0 ; i < tab_each_line ; i++) {
+        for (auto &info : infos) {
+            for (int i = 0; i < tab_each_line; i++) {
                 ss << "\t";
             }
-            
+
             for (std::size_t i = 0; i < info.alternatives.size(); i++) {
                 ss << info.alternatives[i];
 
@@ -57,7 +59,7 @@ namespace eka2l1::common {
     }
 
     bool arg_parser::add(const std::string &option, const std::string &help,
-            arg_handler_function handler) {
+        arg_handler_function handler) {
         // SLAYY THEM OFF
         // Calm down
         // TIL that getline can slay them off for me, thank you Kanye, very cool
@@ -92,7 +94,7 @@ namespace eka2l1::common {
 
                 return false;
             }
-            
+
             if (!ite->second(this, err)) {
                 return false;
             }

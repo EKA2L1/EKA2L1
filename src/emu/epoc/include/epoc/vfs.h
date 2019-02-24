@@ -164,7 +164,7 @@ namespace eka2l1 {
 
         virtual bool flush();
 
-        std::size_t read_file(const std::uint64_t offset, void *buf, std::uint32_t size, 
+        std::size_t read_file(const std::uint64_t offset, void *buf, std::uint32_t size,
             std::uint32_t count);
     };
 
@@ -260,7 +260,7 @@ namespace eka2l1 {
         virtual void set_product_code(const std::string &code) {
             return;
         }
-        
+
         virtual void set_epoc_ver(const epocver ver) {
             return;
         }

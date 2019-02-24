@@ -40,9 +40,9 @@
 #include <epoc/epoc.h>
 #include <epoc/loader/rom.h>
 
+#include <gdbstub/gdbstub.h>
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
-#include <gdbstub/gdbstub.h>
 
 using namespace eka2l1;
 
@@ -75,14 +75,14 @@ std::shared_ptr<eka2l1::imgui_debugger> debugger;
 std::mutex lock;
 std::condition_variable cond;
 
-std::uint8_t device_to_use = 0;         ///< Device that will be used
+std::uint8_t device_to_use = 0; ///< Device that will be used
 
 void read_config() {
     try {
         config = YAML::LoadFile("config.yml");
 
         rom_path = config["rom_path"].as<std::string>();
-        
+
         // TODO: Expand more drives
         mount_c = config["c_mount"].as<std::string>();
         mount_e = config["e_mount"].as<std::string>();
@@ -94,7 +94,7 @@ void read_config() {
         if (jit_type_raw == "dynarmic") {
             jit_type = decltype(jit_type)::dynarmic;
         }
-        
+
         enable_gdbstub = config["enable_gdbstub"].as<bool>();
         gdb_port = config["gdb_port"].as<int>();
     } catch (...) {
@@ -158,9 +158,9 @@ void run() {
 
 int main(int argc, char **argv) {
     // Episode 1: I think of a funny joke about Symbian and I will told my virtual wife
-    std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------" 
-        << std::endl;
-   
+    std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------"
+              << std::endl;
+
     // We are going to setup to GUI logger (in debugger)
     logger = std::make_shared<eka2l1::imgui_logger>();
     log::setup_log(logger);
@@ -177,12 +177,13 @@ int main(int argc, char **argv) {
     debugger = std::make_shared<eka2l1::imgui_debugger>(symsys.get(), logger);
 
     init();
-    
+
     // Let's set up this
     eka2l1::common::arg_parser parser(argc, argv);
-    
+
     parser.add("--irpkg", "Install a repackage file. The installer will auto recognizes "
-        "the product and system info", rpkg_unpack_option_handler);
+                          "the product and system info",
+        rpkg_unpack_option_handler);
     parser.add("--help, --h", "Display helps menu", help_option_handler);
     parser.add("--listapp", "List all installed applications", list_app_option_handler);
     parser.add("--listdevices", "List all installed devices", list_devices_option_handler);

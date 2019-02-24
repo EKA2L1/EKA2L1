@@ -26,8 +26,8 @@
 #include <cstring>
 #include <deque>
 #include <fstream>
-#include <sstream>
 #include <optional>
+#include <sstream>
 
 namespace eka2l1::common {
     ini_node_ptr ini_section::find(const char *name) {
@@ -223,7 +223,7 @@ namespace eka2l1::common {
     }
 
     std::size_t ini_pair::get(std::vector<std::string> &val) {
-        for (std::size_t i = 0 ; i < val.size(); i++) {
+        for (std::size_t i = 0; i < val.size(); i++) {
             val[i] = values[i]->get_as<ini_value>()->get_value();
         }
 
@@ -234,7 +234,7 @@ namespace eka2l1::common {
         std::string line;
         int counter;
 
-        bool ignore_spaces { true };
+        bool ignore_spaces{ true };
 
         std::deque<std::string> waits;
 
@@ -325,7 +325,7 @@ namespace eka2l1::common {
 
             return ns;
         }
-        
+
         bool eof() {
             return (counter >= line.length()) && (waits.empty());
         }
@@ -364,7 +364,7 @@ namespace eka2l1::common {
                     } else {
                         ini_pair *parent_pair = nullptr;
                         ini_pair *pair = nullptr;
-            
+
                         while (!stream.eof()) {
                             // If only there is not a pair available, try create one
                             if (!pair) {
@@ -372,7 +372,7 @@ namespace eka2l1::common {
                                     pair = sec->create_pair(first_token.c_str());
                                 } else {
                                     parent_pair->values.push_back(std::make_shared<ini_pair>());
-                                    pair = reinterpret_cast<ini_pair*>(&(*parent_pair->values.back()));
+                                    pair = reinterpret_cast<ini_pair *>(&(*parent_pair->values.back()));
                                     pair->key = first_token;
                                 }
                             }
@@ -439,7 +439,7 @@ namespace eka2l1::common {
 
                             first_token = stream.next_string();
                         }
-                    }    
+                    }
                 }
             }
         }

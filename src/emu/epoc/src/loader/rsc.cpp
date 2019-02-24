@@ -126,10 +126,9 @@ namespace eka2l1::loader {
         if (!(flags & dictionary_compressed)) {
             // We just read as normal
             int read_size_bytes = 0;
-            
+
             if (res_index == resource_offsets.size() - 1) {
-                read_size_bytes = 
-                    static_cast<int>(res_data.size() + resource_offsets[0] - resource_offsets.back());
+                read_size_bytes = static_cast<int>(res_data.size() + resource_offsets[0] - resource_offsets.back());
             } else {
                 read_size_bytes = resource_offsets[res_index + 1] - resource_offsets[res_index];
             }
@@ -139,7 +138,7 @@ namespace eka2l1::loader {
                     max, read_size_bytes);
             }
 
-            std::memcpy(buffer, &res_data[resource_offsets[res_index] - res_offset], 
+            std::memcpy(buffer, &res_data[resource_offsets[res_index] - res_offset],
                 std::min(max, read_size_bytes));
 
             return read_size_bytes;
@@ -200,7 +199,7 @@ namespace eka2l1::loader {
         case 0x101F4A6B: {
             flags |= potentially_have_compressed_unicode_data;
 
-            buf.read(17, &size_of_largest_resource_when_uncompressed, 
+            buf.read(17, &size_of_largest_resource_when_uncompressed,
                 sizeof(size_of_largest_resource_when_uncompressed));
 
             break;
@@ -225,7 +224,7 @@ namespace eka2l1::loader {
 
             buf.read(8, &size_of_largest_resource_when_uncompressed, sizeof(size_of_largest_resource_when_uncompressed));
         }
-        
+
         // A hack, since Nokia tools generate RSC that report wrong largest resource
         // when uncompress size (off 1 byte)
         size_of_largest_resource_when_uncompressed += 1;
@@ -245,18 +244,18 @@ namespace eka2l1::loader {
                 buf.read(6, &res_index_offset, sizeof(res_index_offset));
 
                 res_offset = res_index_offset + (num_res * 2);
-                
+
                 resource_offsets.resize(num_res);
                 buf.read(res_index_offset, &resource_offsets[0], 2 * num_res);
-                
-                // "+2" because the first entry in the dictionary-index in this file format 
-                //is the number of bits from the start of the dictionary data to the start 
+
+                // "+2" because the first entry in the dictionary-index in this file format
+                //is the number of bits from the start of the dictionary data to the start
                 //of the first dictionary entry which is always zero, and thus unnecessary
-                dict_index_offset = 4+7+2; 
+                dict_index_offset = 4 + 7 + 2;
 
                 // Duplicate by 2 because each index has size of 2
                 dict_offset = dict_index_offset + (num_dir_entry * 2);
-                
+
                 dict_offsets.resize(num_dir_entry);
                 buf.read(dict_index_offset, &dict_offsets[0], 2 * num_dir_entry);
             } else {
@@ -289,7 +288,7 @@ namespace eka2l1::loader {
 
                 // Each resource entry is two bytes.
                 num_res = static_cast<std::uint16_t>((buf.size() - res_index_offset) / 2);
-                
+
                 resource_offsets.resize(num_res + 1);
                 buf.read(res_index_offset, &resource_offsets[0], 2 * num_res);
 
@@ -314,14 +313,14 @@ namespace eka2l1::loader {
 
                 dict_offsets.resize(num_entries);
                 buf.read(dict_index_offset, &dict_offsets[0], 2 * num_entries);
-                
-                // the bottom 3 bits of firstByteAfterUids stores the number of bits used for 
-                // dictionary tokens as an offset from 3, e.g. if 2 is stored in these three bits 
-                // then the number of bits per dictionary token would be 3+2=5 - this allows a 
-                // range of 3-11 bits per dictionary token (the maximum number of dictionary 
+
+                // the bottom 3 bits of firstByteAfterUids stores the number of bits used for
+                // dictionary tokens as an offset from 3, e.g. if 2 is stored in these three bits
+                // then the number of bits per dictionary token would be 3+2=5 - this allows a
+                // range of 3-11 bits per dictionary token (the maximum number of dictionary
                 // tokens therefore ranging from 8-2048) - the spec currently only supports 5-9
                 num_of_bits_use_for_dict_token = 3 + (file_flag & 0x7);
-                
+
                 if ((num_res > 0) && (flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
                     // Just in case
                     // Decompress resource 0 to get the unicode array
@@ -374,7 +373,7 @@ namespace eka2l1::loader {
 
         return (res_index >= 0) && (res_index < number_of_res);
     }
-    
+
     std::vector<std::uint8_t> rsc_file::read(const int res_id) {
         if (!own_res_id(res_id)) {
             LOG_ERROR("RSC file doesn't own the resource id: 0x{:X}", res_id);
@@ -391,7 +390,7 @@ namespace eka2l1::loader {
                 std::vector<std::uint8_t> signatures_raw;
                 signatures_raw.resize(8);
 
-                std::uint32_t *sig = reinterpret_cast<std::uint32_t*>(&signatures_raw[0]);
+                std::uint32_t *sig = reinterpret_cast<std::uint32_t *>(&signatures_raw[0]);
                 sig[0] = 4;
                 sig[1] = ((uids.uid2 << 12) | 1);
 
@@ -427,7 +426,7 @@ namespace eka2l1::loader {
         int index = 0;
         int written = 0;
 
-        for (bool decompress_run = true; ; decompress_run = !decompress_run) {
+        for (bool decompress_run = true;; decompress_run = !decompress_run) {
             int runlen = data[index];
             if (runlen & 0x80) {
                 ++index;

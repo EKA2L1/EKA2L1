@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <epoc/services/window/common.h>
 #include <epoc/services/window/classes/wsobj.h>
+#include <epoc/services/window/common.h>
 
 #include <common/queue.h>
 
@@ -84,7 +84,7 @@ namespace eka2l1::epoc {
             return priority <= rhs.priority;
         }
 
-        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, 
+        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx,
             eka2l1::ws_cmd cmd);
 
         /*! \brief Generic event queueing

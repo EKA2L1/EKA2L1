@@ -14,12 +14,11 @@
 
 _LIT(KDummyServName, "DeDummyServ");
 
-enum TDummyOpCode
-    {
-        EDummyOpGetSecertString = 0x1000,
-        EDummyOpGetSecertPackage = 0x2000,
-        EDummyOpHashFromNumber = 0x2500,
-        EDummyOpDivideString = 0x3000
-    };
+enum TDummyOpCode {
+    EDummyOpGetSecertString = 0x1000,
+    EDummyOpGetSecertPackage = 0x2000,
+    EDummyOpHashFromNumber = 0x2500,
+    EDummyOpDivideString = 0x3000
+};
 
 #endif /* DUMMYCMN_H_ */

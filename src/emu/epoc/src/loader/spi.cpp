@@ -45,8 +45,8 @@ namespace eka2l1::loader {
         return crc;
     }
 
-    static std::uint32_t calculate_checked_uid_checksum(const std::uint32_t *uids) { 
-        return (calculate_checksum(reinterpret_cast<const std::uint8_t*>(uids) + 1) << 16) | calculate_checksum(uids);
+    static std::uint32_t calculate_checked_uid_checksum(const std::uint32_t *uids) {
+        return (calculate_checksum(reinterpret_cast<const std::uint8_t *>(uids) + 1) << 16) | calculate_checksum(uids);
     }
 
     spi_header::spi_header(const std::uint32_t type) {
@@ -56,7 +56,7 @@ namespace eka2l1::loader {
 
         crc = calculate_checked_uid_checksum(uids);
     }
-    
+
     bool spi_header::do_state(common::chunkyseri &seri) {
         seri.absorb(uids[0]);
 
@@ -80,7 +80,7 @@ namespace eka2l1::loader {
 
         return true;
     }
-    
+
     bool spi_entry::do_state(common::chunkyseri &seri) {
         std::uint32_t name_len = static_cast<std::uint32_t>(name.length());
         seri.absorb(name_len);
@@ -102,8 +102,8 @@ namespace eka2l1::loader {
         }
 
         // Read the name
-        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&name[0]), name_len);
-        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&file[0]), rsc_size);
+        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&name[0]), name_len);
+        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&file[0]), rsc_size);
 
         // Pad to align of 4
         // We don't want extra ARM intructions, either do they, so it has to be aligned.
@@ -126,7 +126,7 @@ namespace eka2l1::loader {
 
         while (!seri.eos()) {
             spi_entry entry;
-            
+
             if (!entry.do_state(seri)) {
                 return false;
             }

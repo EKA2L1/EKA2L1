@@ -26,9 +26,9 @@
 #include <disasm/disasm.h>
 #include <epoc/epoc.h>
 
+#include <epoc/kernel.h>
 #include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/thread.h>
-#include <epoc/kernel.h>
 
 #include <common/cvt.h>
 
@@ -98,7 +98,6 @@ namespace eka2l1 {
 
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", thr->unique_id(),
                     thr->name().c_str(), thread_state_to_string(thr->current_state()), chnk->base().ptr_address());
-            
             }
         }
 

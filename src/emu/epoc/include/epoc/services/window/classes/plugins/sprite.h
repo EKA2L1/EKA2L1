@@ -22,7 +22,7 @@
 
 #include <epoc/services/window/classes/wsobj.h>
 
-namespace eka2l1::epoc {    
+namespace eka2l1::epoc {
     struct window;
     using window_ptr = std::shared_ptr<epoc::window>;
 

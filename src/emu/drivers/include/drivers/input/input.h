@@ -21,8 +21,8 @@
 #pragma once
 
 #include <common/vecx.h>
-#include <drivers/input/common.h>
 #include <drivers/driver.h>
+#include <drivers/input/common.h>
 
 #include <cstdint>
 #include <mutex>
@@ -31,12 +31,12 @@
 namespace eka2l1::drivers {
     enum input_driver_opcode {
         input_driver_get_events,
-        input_driver_lock,       ///< Lock access to the queue, prevent from pushing event until release
-        input_driver_release,    ///< Release lock from the queue
+        input_driver_lock, ///< Lock access to the queue, prevent from pushing event until release
+        input_driver_release, ///< Release lock from the queue
         input_driver_get_total_events
     };
 
-    class input_driver: public driver {
+    class input_driver : public driver {
         std::uint32_t flags_;
 
         enum {
@@ -61,7 +61,7 @@ namespace eka2l1::drivers {
          */
         void set_active(const bool active) {
             const std::lock_guard<std::mutex> guard_(lock_);
-            
+
             flags_ &= ~input_active;
             if (active) {
                 flags_ |= input_active;

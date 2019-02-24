@@ -166,9 +166,8 @@ namespace eka2l1::drivers {
         send_opcode_sync(graphics_driver_set_win_pos, context);
     }
 
-    input_driver_client::input_driver_client(driver_instance driver) 
+    input_driver_client::input_driver_client(driver_instance driver)
         : driver_client(driver) {
-
     }
 
     void input_driver_client::get(input_event *evt, const std::uint32_t total_to_get) {

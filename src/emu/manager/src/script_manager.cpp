@@ -152,7 +152,7 @@ namespace eka2l1::manager {
     void script_manager::patch_library_hook(const std::string &name, const std::vector<vaddress> exports) {
         std::string lib_name_lower = common::lowercase_string(name);
 
-        for (auto &[ord, func_list]: breakpoints_patch[lib_name_lower]) {
+        for (auto &[ord, func_list] : breakpoints_patch[lib_name_lower]) {
             auto &funcs = breakpoints[exports[ord - 1]];
             funcs.insert(funcs.end(), func_list.begin(), func_list.end());
         }

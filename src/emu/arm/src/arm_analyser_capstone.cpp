@@ -68,7 +68,7 @@ namespace eka2l1::arm {
 
         return regs;
     }
-    
+
     std::vector<arm::reg> arm_instruction_capstone::get_regs_write() {
         std::vector<arm::reg> regs;
         regs.resize(insn->detail->regs_write_count);
@@ -87,12 +87,12 @@ namespace eka2l1::arm {
         if (err != CS_ERR_OK) {
             LOG_ERROR("ARM analyser handle can't be initialized");
         }
-        
+
         err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle_thumb);
 
         cs_option(cp_handle_arm, CS_OPT_DETAIL, CS_OPT_ON);
         cs_option(cp_handle_thumb, CS_OPT_DETAIL, CS_OPT_ON);
-        
+
         if (err != CS_ERR_OK) {
             LOG_ERROR("THUMB analyser handle can't be initialized");
         }
@@ -106,22 +106,22 @@ namespace eka2l1::arm {
         cs_close(&cp_handle_arm);
         cs_close(&cp_handle_thumb);
     }
-    
+
     std::shared_ptr<arm_instruction_base> arm_analyser_capstone::next_instruction(vaddress addr) {
         const bool thumb = addr & 1;
         addr &= ~0x1;
 
         const std::uint32_t code = read(addr);
-        std::size_t total_pass  = 0;
-        
+        std::size_t total_pass = 0;
+
         if (thumb) {
-            total_pass = cs_disasm(cp_handle_thumb, reinterpret_cast<const std::uint8_t*>(&code), 4, addr, 1,
+            total_pass = cs_disasm(cp_handle_thumb, reinterpret_cast<const std::uint8_t *>(&code), 4, addr, 1,
                 &insns);
         } else {
-            total_pass = cs_disasm(cp_handle_arm, reinterpret_cast<const std::uint8_t*>(&code), 4, addr, 1,
+            total_pass = cs_disasm(cp_handle_arm, reinterpret_cast<const std::uint8_t *>(&code), 4, addr, 1,
                 &insns);
         }
-        
+
         if (total_pass == 0) {
             // Silent
             // LOG_ERROR("Can't diassemble {} inst with given addr: 0x{:X}", thumb ? "thumb" : "arm", addr);
@@ -130,7 +130,7 @@ namespace eka2l1::arm {
 
         // Convert stuffs!
         std::shared_ptr<arm_instruction_capstone> il = std::make_shared<arm_instruction_capstone>(insns);
-        
+
         if (thumb) {
             il->opcode16 = (code & 0xFF00);
         } else {
@@ -139,7 +139,7 @@ namespace eka2l1::arm {
 
         il->size = static_cast<std::uint8_t>(insns->size);
         il->iname = static_cast<arm::instruction>(insns->id);
-        
+
         il->cond = static_cast<arm::cc>(insns->detail->arm.cc);
 
         std::uint8_t i = 0;
@@ -150,29 +150,36 @@ namespace eka2l1::arm {
 
             arm_op op;
             op.type = static_cast<decltype(op.type)>(cs_op->type);
-            
+
             switch (op.type) {
-            case op_imm: { op.imm = cs_op->imm; break; }
-            case op_reg: { op.reg = capstone_reg_to_my_reg(cs_op->reg); break; }
-            case op_mem: { 
+            case op_imm: {
+                op.imm = cs_op->imm;
+                break;
+            }
+            case op_reg: {
+                op.reg = capstone_reg_to_my_reg(cs_op->reg);
+                break;
+            }
+            case op_mem: {
                 std::memcpy(&op.mem, &cs_op->mem, sizeof(cs_op->mem));
                 op.mem.base = capstone_reg_to_my_reg(op.mem.base);
                 op.mem.index = capstone_reg_to_my_reg(op.mem.index);
-                break; 
+                break;
             }
-            default: break;
+            default:
+                break;
             }
 
             op.shift.type = static_cast<arm::shifter>(cs_op->shift.type);
             op.shift.value = cs_op->shift.value;
-            
+
             il->ops.push_back(op);
         }
 
         il->group = 0;
 
         // Build group
-        for (i = 0 ; i < insns->detail->groups_count; i++) {
+        for (i = 0; i < insns->detail->groups_count; i++) {
             switch (insns->detail->groups[i]) {
             case ARM_GRP_JUMP: {
                 il->group |= group_branch;
@@ -190,11 +197,11 @@ namespace eka2l1::arm {
             }
 
             // We are not gonna use those flags yet
-            default: 
+            default:
                 break;
             }
         }
-        
+
         return il;
     }
 }

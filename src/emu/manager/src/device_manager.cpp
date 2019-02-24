@@ -25,7 +25,7 @@
 
 namespace eka2l1::manager {
     void device_manager::load_devices() {
-        YAML::Node devices_node {};
+        YAML::Node devices_node{};
 
         try {
             devices_node = std::move(YAML::LoadFile("devices.yml"));
@@ -33,7 +33,7 @@ namespace eka2l1::manager {
             return;
         }
 
-        for (auto device_node: devices_node) {
+        for (auto device_node : devices_node) {
             const std::string firmcode = device_node.first.as<std::string>();
             const std::string manufacturer = device_node.second["manufacturer"].as<std::string>();
             const std::string model = device_node.second["model"].as<std::string>();
@@ -47,7 +47,7 @@ namespace eka2l1::manager {
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
 
-        for (const auto &device: devices) {
+        for (const auto &device : devices) {
             emitter << YAML::Key << device.firmware_code;
             emitter << YAML::Value << YAML::BeginMap;
 
@@ -85,7 +85,7 @@ namespace eka2l1::manager {
 
         return nullptr;
     }
-    
+
     device *device_manager::get(const std::uint8_t index) {
         if (devices.size() <= index) {
             return nullptr;
@@ -93,23 +93,22 @@ namespace eka2l1::manager {
 
         return &(devices[index]);
     }
-    
+
     bool device_manager::set_current(const std::string &firmcode) {
         const std::lock_guard<std::mutex> guard(lock);
         current = get(firmcode);
 
         return current;
     }
-    
+
     bool device_manager::set_current(const std::uint8_t idx) {
         const std::lock_guard<std::mutex> guard(lock);
         current = get(idx);
 
         return current;
     }
-    
-    bool device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer
-        , const epocver ver) {
+
+    bool device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver) {
         const std::lock_guard<std::mutex> guard(lock);
 
         if (get(firmcode)) {

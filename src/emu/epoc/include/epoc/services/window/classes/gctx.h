@@ -22,8 +22,8 @@
 
 #include <epoc/services/window/classes/winuser.h>
 
-#include <string>
 #include <queue>
+#include <string>
 
 namespace eka2l1::epoc {
     struct draw_command {
@@ -52,7 +52,7 @@ namespace eka2l1::epoc {
 
         void flush_queue_to_driver();
 
-        void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, 
+        void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
             eka2l1::vec2 bottom_right, std::u16string text);
 
         void active(service::ipc_context &context, ws_cmd cmd);

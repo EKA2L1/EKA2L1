@@ -31,11 +31,11 @@
 namespace eka2l1 {
     namespace common {
         bool is_platform_case_sensitive() {
-        #if EKA2L1_PLATFORM(WIN32)
+#if EKA2L1_PLATFORM(WIN32)
             return false;
-        #else
+#else
             return true;
-        #endif
+#endif
         }
 
         size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos) {
@@ -119,27 +119,27 @@ namespace eka2l1 {
 
         std::string lowercase_string(std::string str) {
             // TODO: Better try
-            std::transform(str.begin(), str.end(), str.begin(), 
-                   [](const char c) -> unsigned char { return std::tolower(c); });
+            std::transform(str.begin(), str.end(), str.begin(),
+                [](const char c) -> unsigned char { return std::tolower(c); });
 
             return str;
         }
-        
+
         std::u16string lowercase_ucs2_string(std::u16string str) {
             // TODO: Better try
-            std::transform(str.begin(), str.end(), str.begin(), 
-                   [](const char16_t c) -> char16_t { return std::towlower(c); });
+            std::transform(str.begin(), str.end(), str.begin(),
+                [](const char16_t c) -> char16_t { return std::towlower(c); });
 
             return str;
         }
-        
+
         std::string trim_spaces(std::string str) {
             std::string::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
                 return (lhs == rhs) && (lhs == ' ');
             });
 
             str.erase(new_end, str.end());
-            
+
             while (str.length() > 0 && str[0] == ' ') {
                 str.erase(str.begin());
             }
@@ -150,7 +150,7 @@ namespace eka2l1 {
 
             return str;
         }
-        
+
         std::string replace_all(std::string str, const std::string &from, const std::string &to) {
             size_t start_pos = 0;
             while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
