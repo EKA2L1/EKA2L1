@@ -138,12 +138,14 @@ add_library(epocio
     src/loader/rom.cpp)
 
 add_library(epocutils
+    include/epoc/utils/cap.h
     include/epoc/utils/des.h
     include/epoc/utils/handle.h
     include/epoc/utils/panic.h
     include/epoc/utils/dll.h
     include/epoc/utils/reqsts.h
     include/epoc/utils/tl.h
+    src/utils/cap.cpp
     src/utils/des.cpp
     src/utils/dll.cpp
     src/utils/panic.cpp

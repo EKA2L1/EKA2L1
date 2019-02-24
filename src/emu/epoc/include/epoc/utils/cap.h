@@ -21,8 +21,12 @@
 
 #pragma once
 
+#include <common/algorithm.h>
 #include <common/bitfield.h>
+
+#include <cassert>
 #include <cstdint>
+#include <vector>
 
 namespace eka2l1::epoc {
     enum capability {
@@ -232,9 +236,22 @@ namespace eka2l1::epoc {
     using capability_set = common::ba_t<cap_limit>;
 
     struct security_info {
-        std::uint32_t secure_id;
-        std::uint32_t vendor_id;
-        capability_set caps;
+        std::uint32_t           secure_id;
+        std::uint32_t           vendor_id;
+        common::ba_t<cap_limit> caps;
+
+        security_info()
+            : secure_id(0)
+            , vendor_id(0) {
+        }
+
+        security_info(std::vector<capability> c_caps);
+
+        void reset() {
+            secure_id = 0;
+            vendor_id = 0;
+            caps.clear();
+        }
     };
 
     struct security_policy {
@@ -255,6 +272,8 @@ namespace eka2l1::epoc {
             std::uint32_t vendor_id;
             std::uint8_t extra_caps[4];
         };
+
+        explicit security_policy(std::vector<capability> c_caps);
 
         /**
          * Check to see if the security info can pass the policy test.

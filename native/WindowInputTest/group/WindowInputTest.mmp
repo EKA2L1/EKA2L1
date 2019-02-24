@@ -20,3 +20,5 @@ SOURCEPATH ..\src
 LIBRARY euser.lib ws32.lib efsrv.lib
 
 SOURCE main.cpp
+
+CAPABILITY SwEvent TrustedUI WriteDeviceData WriteUserData

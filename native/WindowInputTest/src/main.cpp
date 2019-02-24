@@ -49,15 +49,10 @@ public:
         // STOP IMMIDIATELY
         CActiveScheduler::Stop(); 
         return;
-      } else if (keyEvt->iScanCode == 180)
-      {
-        RDebug::Printf("Mid button pressed down/up"); 
       } else if (keyEvt->iScanCode == 196)
       {
         RDebug::Printf("Green key pressed down/up"); 
       }
-
-      group->CaptureKeyUpAndDowns(EKeyOK, 0, 0);
 
       break;
     }
@@ -73,9 +68,11 @@ public:
         // STOP IMMIDIATELY
         CActiveScheduler::Stop(); 
         return;
+      } else if (keyEvt->iScanCode == 180)
+      {
+        RDebug::Printf("Mid button pressed down/up"); 
       } 
 
-      group->CaptureKey(EKeyOK, 0, 0);
       break;
     }
     
@@ -133,8 +130,7 @@ void MainL()
   
   // Capture key handle. Don't need that now
   group->Construct(0, true);
-  group->CaptureKeyUpAndDowns(EKeyOK, 0, 0);
-  group->CaptureKey(EKeyOK, 0, 0);
+  RDebug::Printf("Key capture OK handle: %d", group->CaptureKey(EKeyOK, 0, 0));
   
   CActiveInputHandler *handler = new (ELeave) CActiveInputHandler(&winSession, group);
   CleanupStack::PushL(handler);
