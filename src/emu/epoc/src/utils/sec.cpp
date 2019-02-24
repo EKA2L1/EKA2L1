@@ -114,4 +114,33 @@ namespace eka2l1::epoc {
 
         return result;
     }
+    
+    const char *capability_to_string(const capability &cap) {
+        switch (cap) {
+        case cap_all_files: return "AllFiles";
+        case cap_comm_dd: return "CommDD";
+        case cap_denied: return "Denied";
+        case cap_disk_admin: return "DiskAdmin";
+        case cap_drm: return "DRM";
+        case cap_loc: return "Location";
+        case cap_local_srv: return "LocalService";
+        case cap_multimedia_dd: return "MultiMediaDD";
+        case cap_network_control: return "NetworkCtrl";
+        case cap_network_srv: return "NetworkSvr";
+        case cap_power_mgmt: return "PowerMgmt";
+        case cap_prot_serv: return "ProtServer";
+        case cap_read_dvc_data: return "ReadDeviceData";
+        case cap_read_user_data: return "ReadUserData";
+        case cap_surrounding_dd: return "SurroundingDD";
+        case cap_sw_event: return "SwEvent";
+        case cap_tcb: return "TCB";
+        case cap_trusted_ui: return "TrustedUI";
+        case cap_user_env: return "UserEnv";
+        case cap_write_dvc_data: return "WriteDeviceData";
+        case cap_write_user_data: return "WriteUserData";
+        default: break;
+        }
+
+        return "Unknown";
+    }
 }

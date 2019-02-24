@@ -230,10 +230,12 @@ namespace eka2l1::epoc {
         cap_limit,
 
         cap_none = -1,
-        cap_denined = -2,
+        cap_denied = -2,
 
         cap_hard_limit = 255
     };
+
+    const char *capability_to_string(const capability &cap);
 
     static constexpr auto   cap_set_max_size = (cap_hard_limit + 7) >> 3;
     using                   capability_set   = common::ba_t<cap_set_max_size>;
