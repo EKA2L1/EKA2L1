@@ -216,8 +216,8 @@ namespace eka2l1 {
             info.export_table = img->ed.syms;
 
             if (img->has_extended_header) {
-                info.sinfo.caps[0] = img->header_extended.info.cap1;
-                info.sinfo.caps[1] = img->header_extended.info.cap2;
+                info.sinfo.caps_u[0] = img->header_extended.info.cap1;
+                info.sinfo.caps_u[1] = img->header_extended.info.cap2;
                 info.sinfo.vendor_id = img->header_extended.info.vendor_id;
                 info.sinfo.secure_id = img->header_extended.info.secure_id;
 
@@ -335,6 +335,16 @@ namespace eka2l1 {
                 return seg;
             }
 
+            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone, 
+                [&](const vaddress offset) {
+                return *reinterpret_cast<std::uint32_t*>(&img.data[img.header.code_offset + offset - img.header.code_base]);
+            });
+
+            std::unordered_map<vaddress, arm::arm_function> funcs;
+            analyser->analyse(funcs, img.header.entry_point + img.header.code_base, img.header.code_base + img.header.code_size);
+
+            LOG_TRACE("Analyzing {}, found {} functions", common::ucs2_to_utf8(path), funcs.size());
+
             return import_e32img(&img, mem, kern, *this, path);
         }
         
@@ -342,6 +352,16 @@ namespace eka2l1 {
             if (auto seg = kern->pull_codeseg_by_ep(romimg.header.entry_point)) {
                 return seg;
             }
+
+            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone, 
+                [&](const vaddress offset) {
+                return *reinterpret_cast<std::uint32_t*>(mem->get_real_pointer(offset));
+            });
+
+            std::unordered_map<vaddress, arm::arm_function> funcs;
+            analyser->analyse(funcs, romimg.header.entry_point, romimg.header.code_address + romimg.header.code_size);
+
+            LOG_TRACE("Analyzing {}, found {} functions", common::ucs2_to_utf8(path), funcs.size());
 
             kernel::codeseg_create_info info;
 
@@ -358,8 +378,8 @@ namespace eka2l1 {
             info.entry_point = romimg.header.entry_point;
             info.bss_size = romimg.header.bss_size;;
             info.export_table = romimg.exports;
-            info.sinfo.caps[0] = romimg.header.sec_info.cap1;
-            info.sinfo.caps[1] = romimg.header.sec_info.cap2;
+            info.sinfo.caps_u[0] = romimg.header.sec_info.cap1;
+            info.sinfo.caps_u[1] = romimg.header.sec_info.cap2;
             info.sinfo.vendor_id = romimg.header.sec_info.vendor_id;
             info.sinfo.secure_id = romimg.header.sec_info.secure_id;
             info.exception_descriptor = romimg.header.exception_des;
@@ -556,10 +576,7 @@ namespace eka2l1 {
         }
     
         bool lib_manager::register_exports(const std::string &lib_name, export_table &table) {
-            std::string lib_name_lower = lib_name;
-            std::transform(lib_name_lower.begin(), lib_name_lower.end(), lib_name_lower.begin(), 
-                   [](unsigned char c) -> unsigned char { return std::tolower(c); });
-
+            std::string lib_name_lower = common::lowercase_string(lib_name);
             auto lib_ite = lib_symbols.find(lib_name_lower);
             if (lib_ite != lib_symbols.end()) {    
                 for (std::size_t i = 0; i < table.size(); i++) {
