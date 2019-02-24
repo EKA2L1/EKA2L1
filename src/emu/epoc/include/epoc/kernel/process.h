@@ -246,6 +246,17 @@ namespace eka2l1::kernel {
             return exit_reason;
         }
 
+        /**
+         * \brief Check if the process's security sastify the given security policy.
+         * 
+         * \param policy  Security policy to test against.
+         * \param missing Optional variable, used to fill missing info the process needed
+         *                in order to pass the policy.
+         * 
+         * \returns       True if pass.
+         */
+        bool satisfy(epoc::security_policy &policy, epoc::security_info *missing = nullptr);
+
         process_exit_type get_exit_type() const {
             return exit_type;
         }

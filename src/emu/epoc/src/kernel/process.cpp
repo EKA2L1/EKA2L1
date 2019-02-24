@@ -88,6 +88,20 @@ namespace eka2l1::kernel {
             this->process_name.pop_back();
         }
 
+        if (kern->get_epoc_version() >= epocver::eka2) {
+            std::string all_caps;
+
+            // Log all capabilities for debugging
+            for (int i = 0; i < epoc::cap_limit; i++) {
+                if (sec_info.caps.get(i)) {
+                    all_caps += epoc::capability_to_string(static_cast<epoc::capability>(i));
+                    all_caps += " ";
+                }
+            }
+
+            LOG_INFO("Process {} capabilities: {}", process_name, all_caps.empty() ? "None" : all_caps);
+        }
+        
         create_prim_thread(
             codeseg->get_code_run_addr(), codeseg->get_entry_point(),
             stack_size, heap_min, heap_max, 
@@ -237,6 +251,16 @@ namespace eka2l1::kernel {
         return sec_info;
     }
 
+    bool process::satisfy(epoc::security_policy &policy, epoc::security_info *missing) {
+        // Do not enforce security on EKA1. It's not even there
+        if (kern->get_epoc_version() >= epocver::eka2) {
+            return true;
+        }
+
+        [[maybe_unused]] epoc::security_info missing_holder;
+        return policy.check(sec_info, missing ? *missing : missing_holder);
+    }
+    
     void process::get_memory_info(memory_info &info) {
         info.rt_code_addr = codeseg->get_code_run_addr();
         info.rt_const_data_addr = codeseg->get_data_run_addr();
