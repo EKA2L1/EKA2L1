@@ -251,9 +251,8 @@ namespace eka2l1::epoc {
             std::uint32_t                  caps_u[total_caps_u_size];
         };
 
-        security_info()
-            : secure_id(0)
-            , vendor_id(0) {
+        security_info() {
+            reset();
         }
 
         security_info(std::vector<capability> c_caps);

@@ -23,6 +23,8 @@
 
 namespace eka2l1::epoc {
     security_info::security_info(std::vector<capability> c_caps) {
+        reset();
+        
         for (auto &cap: c_caps) {
             caps.set(static_cast<std::size_t>(cap));
         }
