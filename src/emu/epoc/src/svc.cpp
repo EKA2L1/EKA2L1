@@ -82,6 +82,8 @@ namespace eka2l1::epoc {
     static_assert(sizeof(TUint64) == 8, "TUint64 Symbian size is not 8 bytes!");
     static_assert(sizeof(TInt64) == 8, "TInt64 Symbian size is not 8 bytes!");
 
+    static security_policy server_exclamination_point_name_policy({ cap_prot_serv });
+
     /* TODO:                                       
      * 1. (bentokun) Implement global user data. Global user data should be allocated in global memory region.
     */
@@ -820,8 +822,21 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<desc8> aServerName, TInt aMode) {
         kernel_system *kern = sys->get_kernel_system();
+        process_ptr crr_pr = std::move(kern->crr_process());
+
         std::string server_name = aServerName.get(sys->get_memory_system())
-                                      ->to_std_string(kern->crr_process());
+                                      ->to_std_string(crr_pr);
+
+        // Exclamination point at the beginning of server name requires ProtServ
+        if (!server_name.empty() && server_name[0] == '!') {
+            if (!crr_pr->satisfy(server_exclamination_point_name_policy)) {
+                LOG_ERROR("Process {} try to create a server with exclamination point"
+                    " at the beginning of name ({}), but doesn't have ProtServ", crr_pr->name(),
+                    server_name);
+
+                return KErrPermissionDenied;
+            }
+        }
 
         auto handle = kern->create_and_add<service::server>(kernel::owner_type::process,
             server_name).first;
