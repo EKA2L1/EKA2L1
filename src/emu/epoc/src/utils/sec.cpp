@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/utils/cap.h>
+#include <epoc/utils/sec.h>
 #include <algorithm>
 
 namespace eka2l1::epoc {
