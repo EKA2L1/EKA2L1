@@ -296,6 +296,11 @@ namespace eka2l1 {
         }
 
         // Absorb extended interfaces
-        seri.absorb_container(extended_interfaces);
+        if (extended_interfaces.size() == 0) {
+            std::int32_t none_interface_count = -1;
+            seri.absorb(none_interface_count);
+        } else {
+            seri.absorb_container(extended_interfaces);
+        }
     }
 }
