@@ -47,10 +47,12 @@ enum class prot {
 
 // This can be changed manually
 enum class epocver {
+    eka1,   ///< Mark for EKA1
     epocu6,
-    epoc6, // Epoc 6.0
-    epoc93, // Epoc 9.3
-    epoc94, // Epoc 9.4
+    epoc6,  ///< Epoc 6.0
+    eka2,   ///< Mark for EKA2
+    epoc93, ///< Epoc 9.3
+    epoc94, ///< Epoc 9.4
     epoc10
 };
 
