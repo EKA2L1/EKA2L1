@@ -1,11 +1,7 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team
+ * Copyright (c) 2019 EKA2L1 Team / RPCS3 Team.
  * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * Initial contributor: pent0
- * Contributors:
+ * This file is part of EKA2L1 project / RPCS3 Project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +25,7 @@ namespace eka2l1::common {
 	template<typename T, uint N>
 	struct bf_base {
 		using type = T;
-		using vtype = simple_t<type>;
-		using utype = typename std::make_unsigned<vtype>::type;
+		using utype = typename std::make_unsigned<type>::type;
 
 		// Datatype bitsize
 		static constexpr uint bitmax = sizeof(T) * 8; static_assert(N - 1 < bitmax, "bf_base<> error: N out of bounds");
@@ -195,25 +190,57 @@ namespace eka2l1::common {
 
 		std::uint8_t bytes_[total_size];
 
-		constexpr void set(const std::size_t idx) {
-			constexpr std::size_t bytes_idx = idx >> 3;
-			constexpr std::uint8_t mask = 1 << (idx & 7);
+		ba_t() {
+			clear();
+		}
+
+		constexpr void clear() {
+			for (std::size_t i = 0; i < total_size; i++) {
+				bytes_[i] = 0;
+			}
+		}
+
+		void set(std::size_t idx) {
+			if (idx >= N) {
+				return;
+			}
+
+			const std::size_t bytes_idx = idx >> 3;
+			const std::uint8_t mask = 1 << (idx & 7);
 
 			bytes_[bytes_idx] |= mask;
 		}
 
-		constexpr void unset(const std::size_t idx) {
-			constexpr std::size_t bytes_idx = idx >> 3;
-			constexpr std::uint8_t mask = ~(1 << (idx & 7));
+		void unset(const std::size_t idx) {
+			if (idx >= N) {
+				return;
+			}
+			
+			const std::size_t bytes_idx = idx >> 3;
+			const std::uint8_t mask = ~(1 << (idx & 7));
 
 			bytes_[bytes_idx] &= mask;
 		}
 
-		constexpr bool get(const std::size_t idx) {
-			constexpr std::size_t bytes_idx = idx >> 3;
-			constexpr std::uint8_t mask = ~(1 << (idx & 7));
+		void unset(ba_t<N> aba) {
+			for (std::size_t i = 0; i < total_size; i++) {
+				bytes_[i] &= ~aba.bytes_[i];
+			}
+		}
 
-			return (bytes_[bytes_idx] & mask) >> (idx & 7);
+		bool not_empty() {
+			std::uint32_t result = 0;
+
+			for (std::size_t i = 0; i < total_size; i++) {
+				result |= bytes_[i];
+			}
+
+			return result;
+		}
+
+		bool get(const std::size_t idx) {
+			std::size_t bytes_idx = idx >> 3;
+			return (bytes_[bytes_idx] >> (idx & 7)) & 1;
 		}
 	};
 
@@ -296,36 +323,6 @@ namespace eka2l1::common {
 		operator vtype() const
 		{
 			return V;
-		}
-	};
-
-	template<typename T, uint I, uint N>
-	struct fmt_unveil<bf_t<T, I, N>, void> {
-		using type = typename fmt_unveil<simple_t<T>>::type;
-
-		static inline auto get(const bf_t<T, I, N>& bf)
-		{
-			return fmt_unveil<type>::get(bf);
-		}
-	};
-
-	template<typename F, typename... Fields>
-	struct fmt_unveil<cf_t<F, Fields...>, void> {
-		using type = typename fmt_unveil<simple_t<typename F::type>>::type;
-
-		static inline auto get(const cf_t<F, Fields...>& cf)
-		{
-			return fmt_unveil<type>::get(cf);
-		}
-	};
-
-	template<typename T, T V, uint N>
-	struct fmt_unveil<ff_t<T, V, N>, void> {
-		using type = typename fmt_unveil<simple_t<T>>::type;
-
-		static inline auto get(const ff_t<T, V, N>& ff)
-		{
-			return fmt_unveil<type>::get(ff);
 		}
 	};
 }
