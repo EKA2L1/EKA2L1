@@ -161,7 +161,7 @@ namespace eka2l1::epoc {
 
         if (idx > objects.size()) {
             LOG_WARN("Object handle is invalid {}", handle);
-            return nullptr;
+            return false;
         }
 
         objects[idx - 1].reset();
