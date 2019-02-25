@@ -508,16 +508,22 @@ namespace eka2l1 {
         }
 
         void arm_dynarmic::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
-            for (std::size_t i = 0; i < size / mem->get_page_size(); i++) {
-                page_dyn[vaddr / mem->get_page_size() + i] = ptr + i * mem->get_page_size();
+            const std::uint32_t psize = mem->get_page_size();
+            const std::uint32_t pstart = vaddr / psize;
+
+            for (std::size_t i = 0; i < size / psize; i++) {
+                page_dyn[pstart + i] = ptr + i * psize;
             }
 
             // fallback_jit.map_backing_mem(vaddr, size, ptr, protection);
         }
 
         void arm_dynarmic::unmap_memory(address addr, size_t size) {
-            for (std::size_t i = addr / mem->get_page_size(); i < (addr + size) / mem->get_page_size(); i++) {
-                page_dyn[i] = nullptr;
+            const std::uint32_t psize = mem->get_page_size();
+            const std::uint32_t pstart = addr / psize;
+
+            for (std::size_t i = 0; i < size / psize; i++) {
+                page_dyn[pstart + i] = nullptr;
             }
 
             // fallback_jit.unmap_memory(addr, size);
