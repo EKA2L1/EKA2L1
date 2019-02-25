@@ -21,7 +21,7 @@
 
 #include <w32std.h>
 
-#define GEN_TESTS 0
+#define GEN_TESTS 1
 
 void MainWrapperL() {
 #if GEN_TESTS

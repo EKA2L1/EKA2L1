@@ -40,14 +40,19 @@ namespace eka2l1 {
         std::string default_data;
         std::string opaque_data;
 
-        bool rom{ false };
+        enum {
+            FLAG_ROM = 1 << 0,
+            FLAG_HINT_NO_EXTENDED_INTERFACE = 1 << 1
+        };
+
+        std::uint32_t flags;
 
         drive_number drv; ///< Drive which the implementation plugin resides on
 
         // A implementation may covers other interface ?
         std::vector<std::uint32_t> extended_interfaces;
 
-        void do_state(common::chunkyseri &seri);
+        void do_state(common::chunkyseri &seri, const bool support_extended_interface);
     };
 
     struct ecom_interface_info {

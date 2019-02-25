@@ -755,12 +755,6 @@ namespace eka2l1::epoc {
 
         int error_code = 0;
 
-        if (msg->msg_session->get_server()->name() == "CdlServer" && (aParam == 0)
-            && msg->function == 8) {
-            // Temp buf
-            LOG_TRACE("Temp buf CDL 0x{:x}", content.length());
-        }
-
         bool result = context.write_arg_pkg(aParam,
             reinterpret_cast<uint8_t *>(&content[0]), static_cast<std::uint32_t>(content.length()),
             &error_code);
@@ -831,8 +825,7 @@ namespace eka2l1::epoc {
         if (!server_name.empty() && server_name[0] == '!') {
             if (!crr_pr->satisfy(server_exclamination_point_name_policy)) {
                 LOG_ERROR("Process {} try to create a server with exclamination point at the beginning of name ({}),"
-                          " but doesn't have ProtServ",
-                    crr_pr->name(), server_name);
+                          " but doesn't have ProtServ", crr_pr->name(), server_name);
 
                 return KErrPermissionDenied;
             }

@@ -60,7 +60,8 @@ namespace eka2l1 {
 
     protected:
         void list_implementations(service::ipc_context ctx);
-        bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size);
+        bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
+            const bool support_extended_interface);
 
         bool register_implementation(const std::uint32_t interface_uid,
             ecom_implementation_info &impl);

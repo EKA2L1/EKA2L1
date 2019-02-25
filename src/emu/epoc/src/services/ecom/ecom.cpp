@@ -216,7 +216,8 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    bool ecom_server::get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size) {
+    bool ecom_server::get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
+        const bool support_extended_interface) {
         if (buf == nullptr) {
             return false;
         }
@@ -231,7 +232,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            impl->do_state(seri);
+            impl->do_state(seri, support_extended_interface);
         }
 
         return true;
@@ -240,6 +241,10 @@ namespace eka2l1 {
     void ecom_server::list_implementations(service::ipc_context ctx) {
         // Clear last cache
         collected_impls.clear();
+
+        // TODO: See if there is any exception (eg N97 could support it, not sure).
+        const bool support_extended_interface = 
+            ctx.sys->get_symbian_version_use() > epocver::epoc94;
 
         // The UID type is the first parameter
         // First UID contains the interface UID, while the third one contains resolver UID
@@ -374,7 +379,7 @@ namespace eka2l1 {
             // Match string empty, so we should add into nice stuff now
             if (match_str.empty()) {
                 collected_impls.push_back(&implementation);
-                implementation.do_state(seri);
+                implementation.do_state(seri, support_extended_interface);
                 continue;
             }
 
@@ -396,7 +401,7 @@ namespace eka2l1 {
 
             if (sastify) {
                 collected_impls.push_back(&implementation);
-                implementation.do_state(seri);
+                implementation.do_state(seri, support_extended_interface);
             }
         }
 
@@ -417,7 +422,7 @@ namespace eka2l1 {
 
         // Write the buffer
         // This must not fail
-        if (!get_implementation_buffer(ctx.get_arg_ptr(3), total_buffer_size_given)) {
+        if (!get_implementation_buffer(ctx.get_arg_ptr(3), total_buffer_size_given, support_extended_interface)) {
             ctx.set_request_status(KErrArgument);
             return;
         }

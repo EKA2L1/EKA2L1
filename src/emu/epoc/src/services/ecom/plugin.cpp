@@ -86,7 +86,13 @@ namespace eka2l1 {
             return false;
         }
 
-        stream.read(&info.rom, 1);
+        std::uint8_t is_in_rom = 0;
+        stream.read(&is_in_rom, 1);
+
+        if (is_in_rom) {
+            info.flags |= ecom_implementation_info::FLAG_ROM;
+        }
+
         return true;
     }
 
@@ -156,10 +162,12 @@ namespace eka2l1 {
         std::sort(info.extended_interfaces.begin(), info.extended_interfaces.end());
 
         // Read flags
-        std::uint8_t flags = 0;
-        stream.read(&flags, 1);
+        std::uint8_t given_flags = 0;
+        stream.read(&given_flags, 1);
 
-        info.rom = (flags & 1);
+        if (given_flags & 1) {
+            info.flags |= ecom_implementation_info::FLAG_ROM;
+        }
 
         return true;
     }
@@ -236,6 +244,9 @@ namespace eka2l1 {
                 }
 
                 case ecom_plugin_type_2: {
+                    implementation.flags |= 
+                        ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
+
                     if (!read_impl_ver2(implementation, stream)) {
                         return false;
                     }
@@ -247,7 +258,10 @@ namespace eka2l1 {
                     if (!read_impl_ver1(implementation, stream)) {
                         return false;
                     }
-
+                    
+                    implementation.flags |= 
+                        ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
+                    
                     break;
                 }
                 }
@@ -257,7 +271,8 @@ namespace eka2l1 {
         return true;
     }
 
-    void ecom_implementation_info::do_state(common::chunkyseri &seri) {
+    void ecom_implementation_info::do_state(common::chunkyseri &seri,
+        const bool support_extended_interface) {
         seri.absorb(uid);
 
         std::uint32_t ver32 = version;
@@ -284,23 +299,29 @@ namespace eka2l1 {
         seri.absorb(vid);
 
         // Bit 0: Rom only, bit 1: Rom based, bit 2: Disabled ?
-        std::uint8_t flags = 0;
-        if (rom) {
+        std::uint8_t absorb_flags = 0;
+        if (flags & FLAG_ROM) {
             // TODO: What does ROM only and ROM based means ? Are they different
-            flags |= 0b11;
+            absorb_flags |= 0b11;
         }
 
-        seri.absorb(flags);
-        if (seri.get_seri_mode() == common::SERI_MODE_READ || (flags & 0b10 || flags & 0b01)) {
-            rom = true;
+        seri.absorb(absorb_flags);
+        if (seri.get_seri_mode() == common::SERI_MODE_READ || (absorb_flags & 0b10 || absorb_flags & 0b01)) {
+            flags |= FLAG_ROM;
         }
 
         // Absorb extended interfaces
-        if (extended_interfaces.size() == 0) {
-            std::int32_t none_interface_count = -1;
-            seri.absorb(none_interface_count);
-        } else {
-            seri.absorb_container(extended_interfaces);
+        // There is a difference in S^3 and S9.4 and down: GetExtendedInterfaceListL does not exist in 
+        // Symbian 9.4 document or any lower ECOM documents.
+
+        // Causious about this.
+        if (support_extended_interface) {
+            if (extended_interfaces.size() == 0) {
+                std::int32_t none_interface_count = -1;
+                seri.absorb(none_interface_count);
+            } else {
+                seri.absorb_container(extended_interfaces);
+            }
         }
     }
 }
