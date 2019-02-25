@@ -26,6 +26,8 @@
 #include <memory>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
+#include <type_traits>
 #include <vector>
 
 #include <common/ini.h>
@@ -55,18 +57,19 @@ namespace eka2l1::epoc {
         event_control when;
     };
 
-    struct event_mod_notifier_user {
+    struct event_notifier_base {
+        epoc::window *user;
+    };
+
+    struct event_mod_notifier_user : public event_notifier_base {
         event_mod_notifier notifier;
-        epoc::window *user;
     };
 
-    struct event_screen_change_user {
-        epoc::window *user;
+    struct event_screen_change_user : public event_notifier_base {
     };
 
-    struct event_error_msg_user {
+    struct event_error_msg_user : public event_notifier_base{
         event_control when;
-        epoc::window *user;
     };
 
     struct pixel_twips_and_rot {
@@ -95,7 +98,28 @@ namespace eka2l1::epoc {
     struct window_user;
 
     class window_server_client {
+    public:
+        template <typename T>
+        struct event_nof_hasher {
+            std::size_t operator() (const T &evt_nof) const {
+                return evt_nof.user->id;
+            }
+        };
+
+        template <typename T>
+        struct event_nof_comparer {
+            bool operator() (const T &lhs, const T &rhs) const {
+                return lhs.user == rhs.user;
+            }
+        };
+
+        template <typename T>
+        using nof_container = std::unordered_set<T, event_nof_hasher<T>, event_nof_comparer<T>>;
+
+    private:
         friend struct window_client_obj;
+        friend struct window;
+        friend struct window_group;
 
         session_ptr guest_session;
 
@@ -111,9 +135,11 @@ namespace eka2l1::epoc {
         epoc::redraw_fifo redraws;
         epoc::event_fifo events;
 
-        std::vector<epoc::event_mod_notifier_user> mod_notifies;
-        std::vector<epoc::event_screen_change_user> screen_changes;
-        std::vector<epoc::event_error_msg_user> error_notifies;
+        std::mutex ws_client_lock;
+
+        nof_container<epoc::event_mod_notifier_user> mod_notifies;
+        nof_container<epoc::event_screen_change_user> screen_changes;
+        nof_container<epoc::event_error_msg_user> error_notifies;
 
         void create_screen_device(service::ipc_context &ctx, ws_cmd cmd);
         void create_window_group(service::ipc_context &ctx, ws_cmd cmd);
@@ -131,6 +157,22 @@ namespace eka2l1::epoc {
         std::uint32_t total_group{ 0 };
 
     public:
+        // We have been blessed with so much reflection that it's actually seems evil now.
+        template <typename T>
+        constexpr void add_event_notifier(T &evt) {
+            const std::lock_guard guard_(ws_client_lock);
+
+            if constexpr (std::is_same_v<T, epoc::event_mod_notifier_user>) {
+                mod_notifies.emplace(std::move(evt));
+            } else if constexpr (std::is_same_v<T, epoc::event_screen_change_user>) {
+                screen_changes.emplace(std::move(evt));
+            } else if constexpr (std::is_same_v<T, epoc::event_error_msg_user>) {
+                error_notifies.emplace(std::move(evt));
+            } else {
+                throw std::runtime_error("Unsupported event notifier type!");
+            }
+        }
+
         void add_redraw_listener(notify_info nof) {
             redraws.set_listener(nof);
         }
@@ -141,10 +183,6 @@ namespace eka2l1::epoc {
 
         std::uint32_t get_total_window_groups();
         std::uint32_t get_total_window_groups_with_priority(const std::uint32_t pri);
-
-        void add_event_mod_notifier_user(epoc::event_mod_notifier_user nof);
-        void add_event_screen_change_user(epoc::event_screen_change_user nof);
-        void add_event_error_msg_user(epoc::event_error_msg_user nof);
 
         void execute_command(service::ipc_context &ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);

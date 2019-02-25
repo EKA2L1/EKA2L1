@@ -55,7 +55,7 @@ namespace eka2l1::epoc {
             epoc::event_screen_change_user evt;
             evt.user = this;
 
-            client->add_event_screen_change_user(evt);
+            client->add_event_notifier<epoc::event_screen_change_user>(evt);
             ctx.set_request_status(KErrNone);
 
             break;

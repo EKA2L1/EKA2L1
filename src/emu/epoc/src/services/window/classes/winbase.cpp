@@ -55,7 +55,7 @@ namespace eka2l1::epoc {
             nof.notifier = *reinterpret_cast<event_mod_notifier *>(cmd.data_ptr);
             nof.user = this;
 
-            client->add_event_mod_notifier_user(nof);
+            client->add_event_notifier<epoc::event_mod_notifier_user>(nof);
             ctx.set_request_status(KErrNone);
 
             return true;
@@ -93,7 +93,7 @@ namespace eka2l1::epoc {
             nof.when = ctrl;
             nof.user = this;
 
-            client->add_event_error_msg_user(nof);
+            client->add_event_notifier<epoc::event_error_msg_user>(nof);
             ctx.set_request_status(KErrNone);
 
             return true;

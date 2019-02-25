@@ -76,26 +76,6 @@ namespace eka2l1::epoc {
         assert(false && "UNREACHABLE");
         return graphics_orientation::normal;
     }
-    void window_server_client::add_event_mod_notifier_user(epoc::event_mod_notifier_user nof) {
-        if (!std::any_of(mod_notifies.begin(), mod_notifies.end(),
-                [=](epoc::event_mod_notifier_user &denof) { return denof.user == nof.user; })) {
-            mod_notifies.push_back(nof);
-        }
-    }
-
-    void window_server_client::add_event_screen_change_user(epoc::event_screen_change_user nof) {
-        if (!std::any_of(screen_changes.begin(), screen_changes.end(),
-                [=](epoc::event_screen_change_user &denof) { return denof.user == nof.user; })) {
-            screen_changes.push_back(nof);
-        }
-    }
-
-    void window_server_client::add_event_error_msg_user(epoc::event_error_msg_user nof) {
-        if (!std::any_of(error_notifies.begin(), error_notifies.end(),
-                [=](epoc::event_error_msg_user &denof) { return denof.user == nof.user; })) {
-            error_notifies.push_back(nof);
-        }
-    }
 
     void window_server_client::parse_command_buffer(service::ipc_context &ctx) {
         std::optional<std::string> dat = ctx.get_arg<std::string>(cmd_slot);
