@@ -40,5 +40,6 @@
 ; ECOM
 "..\expected\EComServer\GetAllFontRasterizerPluginInstall.expected"		-"!:\private\e6f75ec0\Expected\EComServer\GetAllFontRasterizerPluginInstall.expected"
 "..\expected\EComServer\GetAllFontTrueTypePluginInstall.expected"		-"!:\private\e6f75ec0\Expected\EComServer\GetAllFontTrueTypePluginInstall.expected"
+"..\expected\EComServer\GetCdlPluginInstall.expected"					-"!:\private\e6f75ec0\Expected\EComServer\GetCdlPluginInstall.expected"
 
 @"DummyServ.sisx", (0xe6075ec1)
