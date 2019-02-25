@@ -97,6 +97,10 @@ namespace eka2l1::epoc {
 
     struct window_user;
 
+    namespace ws {
+        using uid = std::uint32_t;
+    };
+
     class window_server_client {
     public:
         template <typename T>
@@ -122,6 +126,8 @@ namespace eka2l1::epoc {
         friend struct window_group;
 
         session_ptr guest_session;
+
+        std::atomic<ws::uid> uid_counter;
 
         std::vector<window_client_obj_ptr> objects;
         std::vector<epoc::screen_device_ptr> devices;

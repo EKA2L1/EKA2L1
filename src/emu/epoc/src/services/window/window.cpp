@@ -114,7 +114,8 @@ namespace eka2l1::epoc {
 
     window_server_client::window_server_client(session_ptr guest_session, thread_ptr own_thread)
         : guest_session(guest_session)
-        , client_thread(own_thread) {
+        , client_thread(own_thread)
+        , uid_counter(0) {
         add_object(std::make_shared<epoc::window>(this));
         root = std::reinterpret_pointer_cast<epoc::window>(objects.back());
     }
@@ -139,28 +140,31 @@ namespace eka2l1::epoc {
 
     std::uint32_t window_server_client::add_object(window_client_obj_ptr obj) {
         objects.push_back(std::move(obj));
-        std::uint32_t de_id = static_cast<std::uint32_t>(base_handle + objects.size());
-        objects.back()->id = de_id;
+        objects.back()->id = ++uid_counter;
 
-        return de_id;
+        return (objects.size() & 0xFFFF) | (uid_counter.load()) << 16;
     }
 
     window_client_obj_ptr window_server_client::get_object(const std::uint32_t handle) {
-        if (handle <= base_handle || handle - base_handle > objects.size()) {
+        const std::uint32_t idx = handle & 0xFFFF;
+
+        if (idx > objects.size()) {
             LOG_WARN("Object handle is invalid {}", handle);
             return nullptr;
         }
 
-        return objects[handle - 1 - base_handle];
+        return objects[idx - 1];
     }
 
     bool window_server_client::delete_object(const std::uint32_t handle) {
-        if (handle <= base_handle || handle - base_handle > objects.size()) {
+        const std::uint32_t idx = handle & 0xFFFF;
+
+        if (idx > objects.size()) {
             LOG_WARN("Object handle is invalid {}", handle);
-            return false;
+            return nullptr;
         }
 
-        objects[handle - 1 - base_handle].reset();
+        objects[idx - 1].reset();
         return true;
     }
 
