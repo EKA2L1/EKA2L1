@@ -128,8 +128,9 @@ namespace eka2l1 {
         }
 
         switch (ctx.msg->function) {
-        #define HANDLE_CLIENT_IPC(name, op, debug_func_str)         \
-            case (op): { client->second->name(ctx); break; }
+        // For debug purpose, uncomment the log
+        #define HANDLE_CLIENT_IPC(name, op, debug_func_str)                                         \
+            case (op): { client->second->name(ctx); /*LOG_TRACE("{}", debug_func_str);*/ break; }
 
         HANDLE_CLIENT_IPC(entry, EFsEntry, "Fs::Entry");
         HANDLE_CLIENT_IPC(file_open, EFsFileOpen, "Fs::FileOpen");

@@ -771,23 +771,22 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
-    void query_security_info(eka2l1::process_ptr process, epoc::TSecurityInfo *info) {
+    void query_security_info(eka2l1::process_ptr process, epoc::security_info *info) {
         assert(process);
 
-        epoc::security_info sec_info = process->get_sec_info();
-        memcpy(info, &sec_info, sizeof(sec_info));
+        *info = std::move(process->get_sec_info());
     }
 
-    BRIDGE_FUNC(void, ProcessSecurityInfo, TInt aProcessHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
-        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+    BRIDGE_FUNC(void, ProcessSecurityInfo, TInt aProcessHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
+        epoc::security_info *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
         process_ptr pr = kern->get<kernel::process>(aProcessHandle);
         query_security_info(pr, sec_info);
     }
 
-    BRIDGE_FUNC(void, ThreadSecurityInfo, TInt aThreadHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
-        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+    BRIDGE_FUNC(void, ThreadSecurityInfo, TInt aThreadHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
+        epoc::security_info *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
         thread_ptr thr = kern->get<kernel::thread>(aThreadHandle);
@@ -800,8 +799,8 @@ namespace eka2l1::epoc {
         query_security_info(thr->owning_process(), sec_info);
     }
 
-    BRIDGE_FUNC(void, MessageSecurityInfo, TInt aMessageHandle, eka2l1::ptr<epoc::TSecurityInfo> aSecInfo) {
-        epoc::TSecurityInfo *sec_info = aSecInfo.get(sys->get_memory_system());
+    BRIDGE_FUNC(void, MessageSecurityInfo, TInt aMessageHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
+        epoc::security_info *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
         eka2l1::ipc_msg_ptr msg = kern->get_msg(aMessageHandle);

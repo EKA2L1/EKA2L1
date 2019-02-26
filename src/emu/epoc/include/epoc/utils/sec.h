@@ -238,16 +238,16 @@ namespace eka2l1::epoc {
     const char *capability_to_string(const capability &cap);
 
     static constexpr auto cap_set_max_size = (cap_hard_limit + 7) >> 3;
-    using capability_set = common::ba_t<cap_set_max_size>;
+    using capability_set = common::ba_t<64>;
 
     struct security_info {
         std::uint32_t secure_id;
         std::uint32_t vendor_id;
 
-        static constexpr auto total_caps_u_size = cap_set_max_size / sizeof(std::uint32_t);
+        static constexpr auto total_caps_u_size = 2;
 
         union {
-            common::ba_t<cap_set_max_size> caps;
+            common::ba_t<64> caps;
             std::uint32_t caps_u[total_caps_u_size];
         };
 
@@ -263,6 +263,8 @@ namespace eka2l1::epoc {
             caps.clear();
         }
     };
+
+    static_assert(sizeof(security_info) == 16, "Security info size is not 16 bytes!");
 
     struct security_policy {
         enum sec_type {
