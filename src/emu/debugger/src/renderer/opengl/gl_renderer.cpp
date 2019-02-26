@@ -22,6 +22,7 @@
 #include <debugger/renderer/opengl/gl_renderer.h>
 
 #include <drivers/graphics/graphics.h>
+#include <drivers/input/input.h>
 
 #include <glad/glad.h>
 #include <imgui.h>
@@ -51,8 +52,8 @@ namespace eka2l1 {
                                                     "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
                                                     "}\n";
 
-    void debugger_gl_renderer::init(drivers::graphics_driver_ptr driver, debugger_ptr dbg) {
-        debugger_renderer::init(driver, dbg);
+    void debugger_gl_renderer::init(drivers::graphics_driver_ptr graphic_driver, drivers::input_driver_ptr input_driver, debugger_ptr dbg) {
+        debugger_renderer::init(graphic_driver, input_driver, dbg);
 
         shader.create(vertex_shader_debugger, 0, fragment_shader_renderer, 0);
 
@@ -198,13 +199,19 @@ namespace eka2l1 {
         // Draw the imgui ui
         debugger->show_debugger(width, height, fb_width, fb_height);
 
-        driver->process_requests();
+        gr_driver_->process_requests();
 
-        eka2l1::vec2 v = driver->get_screen_size();
+        eka2l1::vec2 v = gr_driver_->get_screen_size();
         ImGui::SetNextWindowSize(ImVec2(static_cast<float>(v.x), static_cast<float>(v.y)));
 
         ImGui::Begin("Emulating Window", nullptr, ImGuiWindowFlags_NoResize);
         ImVec2 pos = ImGui::GetCursorScreenPos();
+
+        if (ImGui::IsWindowFocused()) {
+            inp_driver_->set_active(true);
+        } else {
+            inp_driver_->set_active(false);
+        }
 
         //pass the texture of the FBO
         //window.getRenderTexture() is the texture of the FBO
@@ -213,10 +220,10 @@ namespace eka2l1 {
         //the last two parameters are the UVs
         //they have to be flipped (normally they would be (0,0);(1,1)
         ImGui::GetWindowDrawList()->AddImage(
-            reinterpret_cast<ImTextureID>(driver->get_render_texture_handle()),
+            reinterpret_cast<ImTextureID>(gr_driver_->get_render_texture_handle()),
             ImVec2(ImGui::GetCursorScreenPos()),
-            ImVec2(ImGui::GetCursorScreenPos().x + driver->get_screen_size().x,
-                ImGui::GetCursorScreenPos().y + driver->get_screen_size().y),
+            ImVec2(ImGui::GetCursorScreenPos().x + gr_driver_->get_screen_size().x,
+                ImGui::GetCursorScreenPos().y + gr_driver_->get_screen_size().y),
             ImVec2(0, 1), ImVec2(1, 0));
 
         //we are done working with this window

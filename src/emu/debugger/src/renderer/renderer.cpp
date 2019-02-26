@@ -22,9 +22,11 @@
 #include <debugger/renderer/renderer.h>
 
 namespace eka2l1 {
-    void debugger_renderer::init(drivers::graphics_driver_ptr drv, debugger_ptr dbg) {
+    void debugger_renderer::init(drivers::graphics_driver_ptr graphic_driver, drivers::input_driver_ptr input_driver, debugger_ptr dbg) {
         debugger = dbg;
-        driver = drv;
+
+        gr_driver_ = std::move(graphic_driver);
+        inp_driver_ = std::move(input_driver);
     }
 
     debugger_renderer_ptr new_debugger_renderer(const debugger_renderer_type rtype) {

@@ -34,7 +34,7 @@
 
 using namespace eka2l1;
 
-std::unique_ptr<drivers::input_driver> idriver;
+std::shared_ptr<drivers::input_driver> idriver;
 
 void set_mouse_down(const int button, const bool op) {
     const std::lock_guard<std::mutex> guard(ui_debugger_mutex);
@@ -124,9 +124,9 @@ int ui_debugger_thread() {
     auto gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
         eka2l1::vec2(500, 500));
 
-    idriver = std::make_unique<drivers::input_driver>();
+    idriver = std::make_shared<drivers::input_driver>();
 
-    debugger_renderer->init(gdriver, debugger);
+    debugger_renderer->init(gdriver, idriver, debugger);
 
     symsys->set_graphics_driver(gdriver);
     cond.notify_one();

@@ -10,16 +10,21 @@ namespace eka2l1 {
 
     namespace drivers {
         class graphics_driver;
+        class input_driver;
+
         using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
+        using input_driver_ptr = std::shared_ptr<drivers::input_driver>;
     }
 
     class debugger_renderer {
     protected:
         debugger_ptr debugger;
-        drivers::graphics_driver_ptr driver;
+
+        drivers::graphics_driver_ptr gr_driver_;
+        drivers::input_driver_ptr inp_driver_;
 
     public:
-        virtual void init(drivers::graphics_driver_ptr driver, debugger_ptr debugger);
+        virtual void init(drivers::graphics_driver_ptr graphic_driver, drivers::input_driver_ptr input_driver, debugger_ptr debugger);
         virtual void draw(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) = 0;
         virtual void deinit() = 0;
     };
