@@ -53,7 +53,8 @@ namespace eka2l1 {
         , should_show_chunks(false)
         , should_show_disassembler(false)
         , should_show_logger(true)
-        , should_show_breakpoint_list(false) {
+        , should_show_breakpoint_list(false)
+        , debug_thread_id(0) {
     }
 
     const char *thread_state_to_string(eka2l1::kernel::thread_state state) {
@@ -144,33 +145,32 @@ namespace eka2l1 {
 
     void imgui_debugger::show_disassembler() {
         if (ImGui::Begin("Disassembler", &should_show_disassembler)) {
-            std::vector<thread_ptr> threads;
             thread_ptr debug_thread = nullptr;
             kernel_system *kern = sys->get_kernel_system();
 
-            {
+            if (!debug_thread_id) {
                 const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-                if (!debug_thread) {
-                    if (kern->threads.size() == 0) {
-                        ImGui::End();
-                        return;
-                    }
-
-                    debug_thread = *kern->threads.begin();
-                    debug_thread_id = debug_thread->unique_id();
+                if (kern->threads.size() == 0) {
+                    ImGui::End();
+                    return;
                 }
+
+                debug_thread = *kern->threads.begin();
+                debug_thread_id = debug_thread->unique_id();
+            } else {
+                debug_thread = kern->get_by_id<kernel::thread>(debug_thread_id);
             }
 
             std::string thr_name = debug_thread->name();
 
             if (ImGui::BeginCombo("Thread", debug_thread ? thr_name.c_str() : "Thread")) {
-                for (std::size_t i = 0; i < threads.size(); i++) {
-                    std::string cr_thrname = threads[i]->name() + " (ID " + common::to_string(threads[i]->unique_id()) + ")";
+                for (std::size_t i = 0; i < kern->threads.size(); i++) {
+                    std::string cr_thrname = kern->threads[i]->name() + " (ID " + common::to_string(kern->threads[i]->unique_id()) + ")";
 
-                    if (ImGui::Selectable(cr_thrname.c_str(), threads[i]->unique_id() == debug_thread_id)) {
-                        debug_thread_id = threads[i]->unique_id();
-                        debug_thread = threads[i];
+                    if (ImGui::Selectable(cr_thrname.c_str(), kern->threads[i]->unique_id() == debug_thread_id)) {
+                        debug_thread_id = kern->threads[i]->unique_id();
+                        debug_thread = kern->threads[i];
                     }
                 }
 
