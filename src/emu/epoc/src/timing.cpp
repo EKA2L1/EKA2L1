@@ -44,15 +44,15 @@ namespace eka2l1 {
         fire_mhz_changes();
     }
 
-    uint32_t timing_system::get_clock_frequency_mhz() {
-        return CPU_HZ / 1000000;
+    std::uint32_t timing_system::get_clock_frequency_mhz() {
+        return static_cast<std::uint32_t>(CPU_HZ / 1000000);
     }
 
-    uint64_t timing_system::get_ticks() {
+    std::uint64_t timing_system::get_ticks() {
         return global_timer + slice_len - downcount;
     }
 
-    uint64_t timing_system::get_idle_ticks() {
+    std::uint64_t timing_system::get_idle_ticks() {
         return idle_ticks;
     }
 
@@ -71,7 +71,7 @@ namespace eka2l1 {
 
         event_types.push_back(evtype);
 
-        return event_types.size() - 1;
+        return static_cast<int>(event_types.size() - 1);
     }
 
     int timing_system::get_register_event(const std::string &name) {
@@ -180,11 +180,11 @@ namespace eka2l1 {
         if (events.size() > 0 && dc > 0) {
             event first_event = events[0];
 
-            size_t cexecuted = slice_len - downcount;
-            size_t cnextevt = first_event.event_time - global_timer;
+            std::size_t cexecuted = slice_len - downcount;
+            std::size_t cnextevt = first_event.event_time - global_timer;
 
             if (cnextevt < cexecuted + dc) {
-                dc = cnextevt - cexecuted;
+                dc = static_cast<int>(cnextevt - cexecuted);
 
                 if (dc < 0) {
                     dc = 0;
@@ -217,12 +217,12 @@ namespace eka2l1 {
                 });
 
             event_types[evt.event_type]
-                .callback(evt.event_user_data, global_timer - evt.event_time);
+                .callback(evt.event_user_data, static_cast<int>(global_timer - evt.event_time));
         }
 
         if (!events.empty()) {
-            slice_len = std::min(static_cast<size_t>(events.front().event_time - global_timer),
-                static_cast<std::size_t>(MAX_SLICE_LENGTH));
+            slice_len = std::min(static_cast<int>(events.front().event_time - global_timer),
+                static_cast<int>(MAX_SLICE_LENGTH));
         }
 
         downcount = slice_len;

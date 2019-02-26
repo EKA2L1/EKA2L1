@@ -40,14 +40,19 @@ namespace eka2l1 {
             FILE *f = fopen(path.c_str(), "rb");
 
             if (!f) {
-                return std::optional<epocver>{};
+                return std::nullopt;
             }
 
             std::uint32_t uid1 = 0;
             std::uint32_t uid2 = 0;
 
-            fread(&uid1, 1, 4, f);
-            fread(&uid2, 1, 4, f);
+            if (fread(&uid1, 1, 4, f) != 4) {
+                return std::nullopt;
+            }
+
+            if (fread(&uid2, 1, 4, f) != 4) {
+                return std::nullopt;
+            }
 
             if (uid1 == uid1_cst) {
                 return epocver::epoc94;

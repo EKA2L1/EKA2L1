@@ -213,7 +213,7 @@ namespace eka2l1 {
         //the last two parameters are the UVs
         //they have to be flipped (normally they would be (0,0);(1,1)
         ImGui::GetWindowDrawList()->AddImage(
-            (ImTextureID)driver->get_render_texture_handle(),
+            reinterpret_cast<ImTextureID>(driver->get_render_texture_handle()),
             ImVec2(ImGui::GetCursorScreenPos()),
             ImVec2(ImGui::GetCursorScreenPos().x + driver->get_screen_size().x,
                 ImGui::GetCursorScreenPos().y + driver->get_screen_size().y),

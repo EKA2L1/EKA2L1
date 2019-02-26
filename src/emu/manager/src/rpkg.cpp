@@ -23,6 +23,7 @@
 
 #include <epoc/vfs.h>
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/ini.h>
@@ -61,8 +62,14 @@ namespace eka2l1 {
 
             while (left) {
                 int64_t take = left < take_def ? left : take_def;
-                fread(temp.data(), 1, take, parent);
-                fwrite(temp.data(), 1, take, wf);
+                
+                if (fread(temp.data(), 1, take, parent) != take) {
+                    return false;
+                }
+
+                if (fwrite(temp.data(), 1, take, wf) != take) {
+                    return false;
+                }
 
                 left -= take;
             }
@@ -82,29 +89,52 @@ namespace eka2l1 {
 
             rpkg_header header;
 
-            fread(&header.magic, 4, 4, f);
+            if (fread(&header.magic, 4, 4, f) != 16) {
+                return false;
+            }
 
             if (header.magic[0] != 'R' || header.magic[1] != 'P' || header.magic[2] != 'K' || header.magic[3] != 'G') {
                 fclose(f);
                 return false;
             }
 
-            fread(&header.major_rom, 1, 1, f);
-            fread(&header.minor_rom, 1, 1, f);
-            fread(&header.build_rom, 1, 2, f);
-            fread(&header.count, 1, 4, f);
+            std::size_t total_read_size = 0;
+
+            total_read_size += fread(&header.major_rom, 1, 1, f);
+            total_read_size += fread(&header.minor_rom, 1, 1, f);
+            total_read_size += fread(&header.build_rom, 1, 2, f);
+            total_read_size += fread(&header.count, 1, 4, f);
+
+            if (total_read_size != 8) {
+                fclose(f);
+                return false;
+            }
+
+            total_read_size = 0;
 
             while (!feof(f)) {
                 rpkg_entry entry;
 
-                fread(&entry.attrib, 1, 8, f);
-                fread(&entry.time, 1, 8, f);
-                fread(&entry.path_len, 1, 8, f);
+                total_read_size += fread(&entry.attrib, 1, 8, f);
+                total_read_size += fread(&entry.time, 1, 8, f);
+                total_read_size += fread(&entry.path_len, 1, 8, f);
+
+                if (total_read_size != 24) {
+                    fclose(f);
+                    return false;
+                }
 
                 entry.path.resize(entry.path_len);
 
-                fread(entry.path.data(), 1, entry.path_len * 2, f);
-                fread(&entry.data_size, 1, 8, f);
+                total_read_size = 0;
+
+                total_read_size += fread(entry.path.data(), 1, entry.path_len * 2, f);
+                total_read_size += fread(&entry.data_size, 1, 8, f);
+
+                if (total_read_size != entry.path_len * 2 + 8) {
+                    fclose(f);
+                    return false;
+                }
 
                 LOG_INFO("Extracting: {}", common::ucs2_to_utf8(entry.path));
 
@@ -208,11 +238,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            // Bad pratice
-            // Assumes all are ASCII code
-            // Lower case the path
-            std::transform(firmcode.begin(), firmcode.end(), firmcode.begin(),
-                ::tolower);
+            firmcode = common::lowercase_string(firmcode);
 
             // Rename temp folder to its product code
             eka2l1::common::move_file(devices_rom_path + "temp\\", devices_rom_path + firmcode + "\\");

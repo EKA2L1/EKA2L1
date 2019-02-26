@@ -6,9 +6,13 @@
 using namespace eka2l1;
 
 TEST_CASE("do_read_generic", "chunkyseri") {
-    char *test_data = "\1\0\0\0\5\5\5\5 \0\0\0PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE";
+    const char *test_data = "\1\0\0\0\5\5\5\5 \0\0\0PEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE";
 
-    common::chunkyseri seri(reinterpret_cast<std::uint8_t *>(test_data), 45, common::SERI_MODE_READ);
+    std::vector<std::uint8_t> test_data_vec;
+    test_data_vec.resize(45);
+    std::copy(test_data, test_data + 45, &test_data_vec[0]);
+
+    common::chunkyseri seri(reinterpret_cast<std::uint8_t *>(&test_data_vec[0]), 45, common::SERI_MODE_READ);
     int simple_num1 = 0;
     std::uint32_t simple_num2 = 0;
 
@@ -77,7 +81,11 @@ TEST_CASE("do_write_generic", "chunkyseri") {
 TEST_CASE("do_read_with_section", "chunkyseri") {
     char *buf = "TestSection\1\0\5\0\7\0\7\0\0\0HIPEOPL";
 
-    common::chunkyseri seri(reinterpret_cast<std::uint8_t *>(buf), 29, common::SERI_MODE_READ);
+    std::vector<std::uint8_t> buf_vec;
+    buf_vec.resize(29);
+    std::copy(buf, buf + 29, &buf_vec[0]);
+
+    common::chunkyseri seri(reinterpret_cast<std::uint8_t *>(&buf_vec[0]), 29, common::SERI_MODE_READ);
     REQUIRE(seri.section("TestSection", 1));
 
     std::uint16_t t1 = 0;

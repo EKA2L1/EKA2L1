@@ -34,12 +34,14 @@ namespace eka2l1::loader {
         FILE *f = fopen(path.c_str(), "rb");
 
         if (!f) {
-            return std::optional<sis_old>{};
+            return std::nullopt;
         }
 
         sis_old sold; // Not like trading anything
 
-        fread(&sold.header, 1, sizeof(sis_old_header), f);
+        if (fread(&sold.header, 1, sizeof(sis_old_header), f) != sizeof(sis_old_header)) {
+            return std::nullopt;
+        }
 
         sold.epoc_ver = (sold.header.uid2 == static_cast<uint32_t>(epoc_sis_type::epocu6)) ? epocver::epocu6 : epocver::epoc6;
 
@@ -49,19 +51,24 @@ namespace eka2l1::loader {
             sis_old_file_record old_file_record;
             sis_old_file old_file;
 
-            fread(&old_file_record, 1, sizeof(sis_old_file_record), f);
+            if (fread(&old_file_record, 1, sizeof(sis_old_file_record), f) != sizeof(sis_old_file_record)) {
+                return std::nullopt;
+            }
 
             uint32_t crr = ftell(f);
 
             fseek(f, old_file_record.source_name_ptr, SEEK_SET);
             old_file.name.resize(old_file_record.source_name_len / 2);
 
-            fread(old_file.name.data(), 2, old_file_record.source_name_len / 2, f);
+            // Unused actually, we currently don't care
+            [[maybe_unused]] std::size_t total_size_read = 0;
+
+            total_size_read = fread(old_file.name.data(), 2, old_file_record.source_name_len / 2, f);
 
             fseek(f, old_file_record.des_name_ptr, SEEK_SET);
             old_file.dest.resize(old_file_record.des_name_len / 2);
 
-            fread(old_file.dest.data(), 2, old_file_record.des_name_len / 2, f);
+            total_size_read = fread(old_file.dest.data(), 2, old_file_record.des_name_len / 2, f);
 
             if (old_file.dest.find(u".app") != std::u16string::npos || old_file.dest.find(u".APP") != std::u16string::npos) {
                 sold.app_path = old_file.dest;

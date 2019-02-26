@@ -9,10 +9,9 @@ add_library(hle
     include/hle/write_arg.h
     src/return_val.cpp)
 
-target_link_libraries(hle PUBLIC yaml-cpp common disasm)
-target_link_libraries(hle PRIVATE arm epocloader manager epoc)
+target_link_libraries(hle PUBLIC arm common)
 
 target_include_directories(hle PUBLIC ${YAML_INCLUDE_DIR})
-target_include_directories(hle PUBLIC include)
 
-#add_subdirectory(epoc9)
+# The epoc inclusion is for getting the system header
+target_include_directories(hle PUBLIC include ../epoc/include)

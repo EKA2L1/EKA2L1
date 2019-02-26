@@ -29,16 +29,14 @@
 #include <hle/return_val.h>
 #include <hle/write_arg.h>
 
+// Normally we can just calls method blindly with forward declaring, considering how template is done
+// But it keeps warnings about what we are doing, so include this. Full definition of system.
+#include <epoc/epoc.h>
+
 #include <cstdint>
 #include <functional>
 
 namespace eka2l1 {
-    class system;
-
-    namespace kernel {
-        using uid = uint32_t;
-    }
-
     namespace hle {
         using import_func = std::function<void(system *)>;
 
