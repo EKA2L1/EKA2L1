@@ -177,7 +177,7 @@ namespace eka2l1 {
         size_t queried_entries = 0;
 
         // 4 is for info (length + descriptor type)
-        size_t entry_no_name_size = offsetof(epoc::fs::entry, name) + 4 + 8;
+        size_t entry_no_name_size = epoc::fs::entry::standard_size + 4 + 8;
 
         kernel_system *kern = ctx.sys->get_kernel_system();
         const bool should_support_64bit_size = kern->get_epoc_version() >= epocver::epoc10;
@@ -222,7 +222,7 @@ namespace eka2l1 {
             entry.name = common::utf8_to_ucs2(info->name);
             entry.modified = epoc::time { info->last_write };
 
-            const std::uint32_t entry_write_size = offsetof(epoc::fs::entry, name) + 4;
+            const std::uint32_t entry_write_size = epoc::fs::entry::standard_size + 4;
 
             memcpy(entry_buf, &entry, entry_write_size);
             entry_buf += entry_write_size;

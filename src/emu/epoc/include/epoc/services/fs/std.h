@@ -164,6 +164,8 @@ namespace eka2l1::epoc::fs {
         std::uint32_t uid2;
         std::uint32_t uid3;
 
+        static constexpr std::size_t standard_size = 28;
+
         epoc::bufc_static<char16_t, 0x100> name;
 
         // For 64-bit file support.
