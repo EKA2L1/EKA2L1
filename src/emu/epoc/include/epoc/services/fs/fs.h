@@ -23,6 +23,8 @@
 #include <epoc/services/context.h>
 #include <epoc/services/server.h>
 
+#include <epoc/utils/des.h>
+
 #include <epoc/ptr.h>
 
 #include <atomic>
@@ -31,26 +33,8 @@
 #include <regex>
 #include <unordered_map>
 
-namespace eka2l1::epoc {
-    struct TTime {
-        uint64_t aTimeEncoded;
-    };
-
-    struct TEntry {
-        uint32_t aAttrib;
-        uint32_t aSize;
-
-        TTime aModified;
-        uint32_t uid1;
-        uint32_t uid2;
-        uint32_t uid3;
-
-        uint32_t aNameLength;
-        uint16_t aName[0x100];
-
-        uint32_t aSizeHigh;
-        uint32_t aReversed;
-    };
+namespace eka2l1::kernel {
+    using uid = std::uint32_t;
 }
 
 namespace eka2l1 {
@@ -67,68 +51,6 @@ namespace eka2l1 {
         share_read,
         share_read_write,
         any
-    };
-
-    enum TMediaType {
-        EMediaNotPresent,
-        EMediaUnknown,
-        EMediaFloppy,
-        EMediaHardDisk,
-        EMediaCdRom,
-        EMediaRam,
-        EMediaFlash,
-        EMediaRom,
-        EMediaRemote,
-        EMediaNANDFlash,
-        EMediaRotatingMedia
-    };
-
-    enum TBatteryState {
-        EBatNotSupported,
-        EBatGood,
-        EBatLow
-    };
-
-    enum TConnectionBusType {
-        EConnectionBusInternal,
-        EConnectionBusUsb
-    };
-
-    enum TDriveNumber {
-        EDriveA,
-        EDriveB,
-        EDriveC,
-        EDriveD,
-        EDriveE,
-        EDriveF,
-        EDriveG,
-        EDriveH,
-        EDriveI,
-        EDriveJ,
-        EDriveK,
-        EDriveL,
-        EDriveM,
-        EDriveN,
-        EDriveO,
-        EDriveP,
-        EDriveQ,
-        EDriveR,
-        EDriveS,
-        EDriveT,
-        EDriveU,
-        EDriveV,
-        EDriveW,
-        EDriveX,
-        EDriveY,
-        EDriveZ
-    };
-
-    enum class extended_fs_query_command {
-        file_system_sub_type,
-        io_param_info,
-        is_drive_sync,
-        is_drive_finalised,
-        extensions_supported
     };
 
     struct fs_node {
@@ -173,8 +95,13 @@ namespace eka2l1 {
         bool operator()(const utf16_str &x, const utf16_str &y) const;
     };
 
-    class fs_server : public service::server {
+    struct fs_server_client {
         fs_handle_table nodes_table;
+        session_ptr user_session;
+
+        std::u16string ss_path;
+
+        explicit fs_server_client(service::ipc_context &ctx);
 
         void file_open(service::ipc_context ctx);
         void file_create(service::ipc_context ctx);
@@ -187,13 +114,10 @@ namespace eka2l1 {
         void file_drive(service::ipc_context ctx);
         void file_name(service::ipc_context ctx);
         void file_full_name(service::ipc_context ctx);
-
-        void query_drive_info_ext(service::ipc_context ctx);
-
-        void new_file_subsession(service::ipc_context ctx, bool overwrite = false, bool temporary = false);
-
-        void entry(service::ipc_context ctx);
-
+        
+        void new_file_subsession(service::ipc_context ctx, bool overwrite = false, 
+            bool temporary = false);
+        
         void file_size(service::ipc_context ctx);
         void file_set_size(service::ipc_context ctx);
 
@@ -207,34 +131,28 @@ namespace eka2l1 {
         void read_dir_packed(service::ipc_context ctx);
         void read_dir(service::ipc_context ctx);
         void close_dir(service::ipc_context ctx);
-
-        void drive_list(service::ipc_context ctx);
-        void drive(service::ipc_context ctx);
-        void volume(service::ipc_context ctx);
-
-        void is_file_in_rom(service::ipc_context ctx);
-
+        
         void session_path(service::ipc_context ctx);
         void set_session_path(service::ipc_context ctx);
         void set_session_to_private(service::ipc_context ctx);
+        
+        int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, 
+            bool overwrite = false, bool temporary = false);
 
-        void synchronize_driver(service::ipc_context ctx);
+        fs_node *get_file_node(int handle);
+                
+        void entry(service::ipc_context ctx);
+        void is_file_in_rom(service::ipc_context ctx);
+
         void notify_change_ex(service::ipc_context ctx);
         void notify_change(service::ipc_context ctx);
 
-        void private_path(service::ipc_context ctx);
         void mkdir(service::ipc_context ctx);
         void rename(service::ipc_context ctx);
         void replace(service::ipc_context ctx);
 
         void delete_entry(service::ipc_context ctx);
-
         void set_should_notify_failure(service::ipc_context ctx);
-
-        void connect(service::ipc_context ctx) override;
-
-        std::unordered_map<uint32_t, fs_node> file_nodes;
-        std::unordered_map<uint32_t, utf16_str> session_paths;
 
         enum class notify_type {
             entry = 1,
@@ -256,11 +174,28 @@ namespace eka2l1 {
         std::vector<notify_entry> notify_entries;
 
         void notify(const utf16_str &entry, const notify_type type);
-
-        int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, bool overwrite = false, bool temporary = false);
-        fs_node *get_file_node(int handle);
-
         bool should_notify_failures;
+        
+        std::unordered_map<std::uint32_t, fs_node> file_nodes;
+    };
+
+    using fs_server_client_ptr = std::unique_ptr<fs_server_client>;
+
+    class fs_server : public service::server {
+        std::unordered_map<kernel::uid, fs_server_client_ptr> clients;
+
+        void connect(service::ipc_context ctx) override;
+        void disconnect(service::ipc_context ctx) override;
+
+        void synchronize_driver(service::ipc_context ctx);
+        void private_path(service::ipc_context ctx);
+
+        void query_drive_info_ext(service::ipc_context ctx);
+        void drive_list(service::ipc_context ctx);
+        void drive(service::ipc_context ctx);
+        void volume(service::ipc_context ctx);
+
+        void on_unhandled_opcode(service::ipc_context ctx) override;
 
     public:
         fs_server(system *sys);

@@ -67,7 +67,7 @@ enum TFsMessage {
     EFsFileSetAtt, ///< Sets or clears file attributes
     EFsFileModified, ///< Gets local date and time the file was last modified
     EFsFileSetModified, ///< Sets the date and time the file was last modified
-    EFsFileSet, ///< Sets the file’s attributes, last modification date/time
+    EFsFileSet, ///< Sets the fileï¿½s attributes, last modification date/time
     EFsFileChangeMode, ///< Switches an open file's access mode
     EFsFileRename, ///< Renames a file
     EFsDirOpen, ///< Opens a directory

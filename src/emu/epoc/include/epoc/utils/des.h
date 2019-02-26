@@ -58,10 +58,13 @@ namespace eka2l1::epoc {
 
     // These are things that we can't do within header
     struct desc_base {
-    protected:
         std::uint32_t info;
 
     public:
+        desc_base()
+            : info(0) {
+        }
+
         inline std::uint32_t get_length() const {
             // 28 low bit stores the length
             return info & 0xFFFFFF;
@@ -172,6 +175,11 @@ namespace eka2l1::epoc {
     template <typename T, unsigned int MAX_ELEM = 32>
     struct bufc_static : public desc<T> {
         T data[MAX_ELEM];
+
+        bufc_static() {
+            desc_base::set_length(nullptr, MAX_ELEM);
+            desc_base::set_descriptor_type(buf_const);
+        }
 
         void operator=(const std::basic_string<T> &str) {
             assign(nullptr, str);

@@ -108,6 +108,9 @@ add_library(epocservs
     src/services/ecom/plugin.cpp
     src/services/fbs/fbs.cpp
     src/services/featmgr/featmgr.cpp
+    src/services/fs/dirs.cpp
+    src/services/fs/drives.cpp
+    src/services/fs/files.cpp
     src/services/fs/fs.cpp
     src/services/install/install.cpp
     src/services/loader/loader.cpp
