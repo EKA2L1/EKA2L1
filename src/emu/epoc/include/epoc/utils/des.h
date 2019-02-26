@@ -182,7 +182,7 @@ namespace eka2l1::epoc {
         }
 
         void operator=(const std::basic_string<T> &str) {
-            assign(nullptr, str);
+            desc<T>::assign(nullptr, str);
         }
     };
 
