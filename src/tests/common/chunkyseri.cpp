@@ -79,7 +79,7 @@ TEST_CASE("do_write_generic", "chunkyseri") {
 }
 
 TEST_CASE("do_read_with_section", "chunkyseri") {
-    char *buf = "TestSection\1\0\5\0\7\0\7\0\0\0HIPEOPL";
+    const char *buf = "TestSection\1\0\5\0\7\0\7\0\0\0HIPEOPL";
 
     std::vector<std::uint8_t> buf_vec;
     buf_vec.resize(29);

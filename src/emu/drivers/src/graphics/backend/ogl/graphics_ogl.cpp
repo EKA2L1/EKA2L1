@@ -57,7 +57,7 @@ namespace eka2l1::drivers {
                 const eka2l1::vec2 win_size = window->fb.get_size();
                 ImVec2 win_pos = ImVec2(static_cast<float>(window->pos.x), static_cast<float>(window->pos.y));
 
-                ImGui::GetWindowDrawList()->AddImage((ImTextureID)window->fb.texture_handle(),
+                ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(static_cast<std::uint64_t>(window->fb.texture_handle())),
                     ImVec2(base_pos.x + win_pos.x,
                         base_pos.y + win_pos.y),
 
@@ -289,8 +289,8 @@ namespace eka2l1::drivers {
                 std::string text = *request->context.pop_string();
 
                 // TODO: Use the actual clip. Must calculate text size
-                draw_list->AddText(nullptr, 6.0f, ImVec2(bound.top.x, bound.top.y), ImColor(0.0f, 0.0f, 0.0f, 1.0f), &text[0],
-                    text.length() == 1 ? nullptr : &text[text.length() - 1]);
+                draw_list->AddText(nullptr, 6.0f, ImVec2(static_cast<float>(bound.top.x), static_cast<float>(bound.top.y)),
+                    ImColor(0.0f, 0.0f, 0.0f, 1.0f), &text[0], text.length() == 1 ? nullptr : &text[text.length() - 1]);
 
                 break;
             }

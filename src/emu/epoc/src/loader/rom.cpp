@@ -36,63 +36,68 @@ namespace eka2l1 {
         rom_header read_rom_header(FILE *file) {
             rom_header header;
 
-            fread(header.jump, 1, sizeof(header.jump), file);
-            fread(&header.restart_vector, 1, 4, file);
-            fread(&header.time, 1, 8, file);
-            fread(&header.time_high, 1, 4, file);
-            fread(&header.rom_base, 1, 4, file);
-            fread(&header.rom_size, 1, 4, file);
-            fread(&header.rom_root_dir_list, 1, 4, file);
-            fread(&header.kern_data_address, 1, 4, file);
-            fread(&header.kern_limit, 1, 4, file);
-            fread(&header.primary_file, 1, 4, file);
-            fread(&header.secondary_file, 1, 4, file);
-            fread(&header.checksum, 1, 4, file);
+            [[maybe_unused]] std::size_t readed_size = 0;
+
+            readed_size += fread(header.jump, 1, sizeof(header.jump), file);
+            readed_size += fread(&header.restart_vector, 1, 4, file);
+            readed_size += fread(&header.time, 1, 8, file);
+            readed_size += fread(&header.time_high, 1, 4, file);
+            readed_size += fread(&header.rom_base, 1, 4, file);
+            readed_size += fread(&header.rom_size, 1, 4, file);
+            readed_size += fread(&header.rom_root_dir_list, 1, 4, file);
+            readed_size += fread(&header.kern_data_address, 1, 4, file);
+            readed_size += fread(&header.kern_limit, 1, 4, file);
+            readed_size += fread(&header.primary_file, 1, 4, file);
+            readed_size += fread(&header.secondary_file, 1, 4, file);
+            readed_size += fread(&header.checksum, 1, 4, file);
 
             // From this section, all read are invalid
 
             // Symbian says those are for testing though
-            fread(&header.hardware, 1, 4, file);
-            fread(&header.lang, 1, 8, file);
+            readed_size += fread(&header.hardware, 1, 4, file);
+            readed_size += fread(&header.lang, 1, 8, file);
 
-            fread(&header.kern_config_flags, 1, 4, file);
-            fread(&header.rom_exception_search_tab, 1, 4, file);
-            fread(&header.rom_header_size, 1, 4, file);
+            readed_size += fread(&header.kern_config_flags, 1, 4, file);
+            readed_size += fread(&header.rom_exception_search_tab, 1, 4, file);
+            readed_size += fread(&header.rom_header_size, 1, 4, file);
 
-            fread(&header.rom_section_header, 1, 4, file);
-            fread(&header.total_sv_data_size, 1, 4, file);
-            fread(&header.variant_file, 1, 4, file);
-            fread(&header.extension_file, 1, 4, file);
-            fread(&header.reloc_info, 1, 4, file);
+            readed_size += fread(&header.rom_section_header, 1, 4, file);
+            readed_size += fread(&header.total_sv_data_size, 1, 4, file);
+            readed_size += fread(&header.variant_file, 1, 4, file);
+            readed_size += fread(&header.extension_file, 1, 4, file);
+            readed_size += fread(&header.reloc_info, 1, 4, file);
 
-            fread(&header.old_trace_mask, 1, 4, file);
-            fread(&header.user_data_addr, 1, 4, file);
-            fread(&header.total_user_data_size, 1, 4, file);
+            readed_size += fread(&header.old_trace_mask, 1, 4, file);
+            readed_size += fread(&header.user_data_addr, 1, 4, file);
+            readed_size += fread(&header.total_user_data_size, 1, 4, file);
 
-            fread(&header.debug_port, 1, 4, file);
-            fread(&header.major, 1, 1, file);
-            fread(&header.minor, 1, 1, file);
-            fread(&header.build, 1, 2, file);
+            readed_size += fread(&header.debug_port, 1, 4, file);
+            readed_size += fread(&header.major, 1, 1, file);
+            readed_size += fread(&header.minor, 1, 1, file);
+            readed_size += fread(&header.build, 1, 2, file);
 
-            fread(&header.compress_type, 1, 4, file);
-            fread(&header.compress_size, 1, 4, file);
-            fread(&header.uncompress_size, 1, 4, file);
-            fread(&header.disabled_caps, 4, 2, file);
-            fread(&header.trace_mask, 4, 8, file);
-            fread(&header.initial_btrace_filter, 1, 4, file);
+            readed_size += fread(&header.compress_type, 1, 4, file);
+            readed_size += fread(&header.compress_size, 1, 4, file);
+            readed_size += fread(&header.uncompress_size, 1, 4, file);
+            readed_size += fread(&header.disabled_caps, 4, 2, file);
+            readed_size += fread(&header.trace_mask, 4, 8, file);
+            readed_size += fread(&header.initial_btrace_filter, 1, 4, file);
 
-            fread(&header.initial_btrace_buf, 1, 4, file);
-            fread(&header.initial_btrace_mode, 1, 4, file);
+            readed_size += fread(&header.initial_btrace_buf, 1, 4, file);
+            readed_size += fread(&header.initial_btrace_mode, 1, 4, file);
 
-            fread(&header.pageable_rom_start, 1, 4, file);
-            fread(&header.pageable_rom_size, 1, 4, file);
+            readed_size += fread(&header.pageable_rom_start, 1, 4, file);
+            readed_size += fread(&header.pageable_rom_size, 1, 4, file);
 
-            fread(&header.rom_page_idx, 1, 4, file);
-            fread(&header.compressed_unpaged_start, 1, 4, file);
+            readed_size += fread(&header.rom_page_idx, 1, 4, file);
+            readed_size += fread(&header.compressed_unpaged_start, 1, 4, file);
 
-            fread(&header.unpaged_compressed_size, 1, 4, file);
-            fread(&header.hcr_file_addr, 1, 4, file);
-            fread(header.spare, 4, 36, file);
+            readed_size += fread(&header.unpaged_compressed_size, 1, 4, file);
+            readed_size += fread(&header.hcr_file_addr, 1, 4, file);
+            readed_size += fread(header.spare, 4, 36, file);
+
+            // Gonna do something with readed size
+            // I suppose i can void all these fread, but I don't like to do so
 
             return header;
         }
