@@ -133,7 +133,7 @@ namespace eka2l1::epoc::fs {
     };
 
     struct volume_info {
-        drive_info drive_info;
+        drive_info drv_info;
         std::uint32_t uid;
         std::int64_t size;
         std::int64_t free;

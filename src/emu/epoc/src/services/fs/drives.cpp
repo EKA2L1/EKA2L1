@@ -229,9 +229,9 @@ namespace eka2l1 {
         std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
         if (!io_drive) {
-            info->drive_info.type = epoc::fs::media_unknown;
+            info->drv_info.type = epoc::fs::media_unknown;
         } else {
-            fill_drive_info(&info->drive_info, *io_drive);
+            fill_drive_info(&info->drv_info, *io_drive);
         }
 
         info->uid = drv;
