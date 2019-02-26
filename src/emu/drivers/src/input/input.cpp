@@ -22,6 +22,10 @@
 #include <drivers/input/input.h>
 
 namespace eka2l1::drivers {
+    constexpr std::size_t maximum_pending_events = 128;
+    constexpr std::size_t maximum_events = 128;
+    constexpr std::size_t events_purge_count = 32;
+
     void input_driver::queue_key_event(const int raw_mapped_keycode, const key_state action) {
         // The driver will not queue event because it's inactive in receiving inputs
         if (!is_active()) {
@@ -39,8 +43,26 @@ namespace eka2l1::drivers {
         evt.key_.code_ = (raw_mapped_keycode == 'A') ? key_mid_button : static_cast<key_scancode>(raw_mapped_keycode);
 
         if (flags_ & locked) {
+            if (pending_locked_events_.size() >= maximum_pending_events) {
+                // Purge some events at the beginning
+                int i = events_purge_count;
+
+                while (--i >= 0) {
+                    pending_locked_events_.pop();
+                }
+            }
+
             pending_locked_events_.emplace(std::move(evt));
         } else {
+            if (events_.size() >= maximum_events) {
+                // Purge some events at the beginning
+                int i = events_purge_count;
+
+                while (--i >= 0) {
+                    events_.pop();
+                }
+            }
+
             events_.emplace(std::move(evt));
         }
     }

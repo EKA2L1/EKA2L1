@@ -81,4 +81,6 @@ namespace eka2l1::drivers {
 
         void process_requests() override;
     };
+    
+    using input_driver_ptr = std::shared_ptr<drivers::input_driver>;
 }
