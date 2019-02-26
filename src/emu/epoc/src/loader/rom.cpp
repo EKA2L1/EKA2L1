@@ -108,14 +108,25 @@ namespace eka2l1 {
             rom_entry entry;
             FILE *file = romf.handler;
 
-            fread(&entry.size, 1, 4, file);
-            fread(&entry.address_lin, 1, 4, file);
-            fread(&entry.attrib, 1, 1, file);
-            fread(&entry.name_len, 1, 1, file);
+            std::size_t readed_size = 0;
+
+            readed_size += fread(&entry.size, 1, 4, file);
+            readed_size += fread(&entry.address_lin, 1, 4, file);
+            readed_size += fread(&entry.attrib, 1, 1, file);
+            readed_size += fread(&entry.name_len, 1, 1, file);
+
+            if (readed_size != 10) {
+                LOG_ERROR("Can't read entry header!");
+                return entry;
+            }
+
+            readed_size = 0;
 
             entry.name.resize(entry.name_len);
 
-            fread(entry.name.data(), 2, entry.name_len, file);
+            if (fread(entry.name.data(), 2, entry.name_len, file) != entry.name_len * 2) {
+                LOG_ERROR("Can't read entry name!");
+            }
 
             if (entry.attrib & (int)file_attrib::dir) {
                 auto crr_pos = ftell(file);
@@ -134,7 +145,10 @@ namespace eka2l1 {
 
             auto old_off = ftell(romf.handler);
 
-            fread(&dir.size, 1, 4, romf.handler);
+            if (fread(&dir.size, 1, 4, romf.handler) != 4) {
+                LOG_ERROR("Can't read directory size!");
+                return dir;
+            }
 
             while (ftell(romf.handler) - old_off < dir.size) {
                 dir.entries.push_back(read_rom_entry(romf, &dir));
@@ -161,8 +175,15 @@ namespace eka2l1 {
             root_dir rdir;
             FILE *file = romf.handler;
 
-            fread(&rdir.hardware_variant, 1, 4, file);
-            fread(&rdir.addr_lin, 1, 4, file);
+            if (fread(&rdir.hardware_variant, 1, 4, file) != 4) {
+                LOG_ERROR("Can't read hardware variant of root directory!");
+                return rdir;
+            }
+
+            if (fread(&rdir.addr_lin, 1, 4, file) != 4) {
+                LOG_ERROR("Can't read linear address of root directory!");
+                return rdir;
+            }
 
             fseek(file, rom_to_offset(romf.header.rom_base, rdir.addr_lin), SEEK_SET);
 
@@ -175,7 +196,10 @@ namespace eka2l1 {
             root_dir_list list;
             FILE *file = romf.handler;
 
-            fread(&list.num_root_dirs, 1, 4, file);
+            if (fread(&list.num_root_dirs, 1, 4, file) != 4) {
+                LOG_ERROR("Can't read number of directories in root directory!");
+                return list;
+            }
 
             for (int i = 0; i < list.num_root_dirs; i++) {
                 auto last_pos = ftell(file);
