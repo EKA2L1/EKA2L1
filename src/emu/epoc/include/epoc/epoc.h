@@ -94,6 +94,7 @@ namespace eka2l1 {
         ~system() = default;
 
         void set_graphics_driver(drivers::driver_instance graphics_driver);
+        void set_input_driver(drivers::driver_instance input_driver);
         void set_debugger(debugger_ptr new_debugger);
         void set_symbian_version_use(const epocver ever);
         void set_jit_type(const arm_emulator_type type);

@@ -82,6 +82,7 @@ namespace eka2l1 {
         arm_emulator_type jit_type;
 
         graphics_driver_client_ptr gdriver_client;
+        input_driver_client_ptr idriver_client;
 
         memory_system mem;
         kernel_system kern;
@@ -128,6 +129,7 @@ namespace eka2l1 {
         ~system_impl() = default;
 
         void set_graphics_driver(drivers::driver_instance graphics_driver);
+        void set_input_driver(drivers::driver_instance input_driver);
 
         void set_debugger(debugger_ptr new_debugger) {
             debugger = std::move(new_debugger);
@@ -336,7 +338,21 @@ namespace eka2l1 {
     }
 
     void system_impl::set_graphics_driver(drivers::driver_instance graphics_driver) {
+        if (graphics_driver == nullptr) {
+            gdriver_client.reset();
+            return;
+        }
+
         gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
+    }
+
+    void system_impl::set_input_driver(drivers::driver_instance input_driver) {
+        if (input_driver == nullptr) {
+            idriver_client.reset();
+            return;
+        }
+        
+        idriver_client = std::make_shared<drivers::input_driver_client>(input_driver);
     }
 
     bool system_impl::load(uint32_t id) {
@@ -505,6 +521,10 @@ namespace eka2l1 {
 
     void system::set_graphics_driver(drivers::driver_instance graphics_driver) {
         return impl->set_graphics_driver(graphics_driver);
+    }
+
+    void system::set_input_driver(drivers::driver_instance input_driver) {
+        return impl->set_input_driver(input_driver);
     }
 
     void system::set_debugger(debugger_ptr new_debugger) {

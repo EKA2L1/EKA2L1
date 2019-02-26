@@ -129,6 +129,8 @@ int ui_debugger_thread() {
     debugger_renderer->init(gdriver, idriver, debugger);
 
     symsys->set_graphics_driver(gdriver);
+    symsys->set_input_driver(idriver);
+
     cond.notify_one();
 
     ImGuiIO &io = ImGui::GetIO();
@@ -195,6 +197,7 @@ int ui_debugger_thread() {
     // Assure that the graphics driver are decrement is reference count on UI thread
     // So FB is destroyed on the right thread.
     symsys->set_graphics_driver(nullptr);
+    symsys->set_input_driver(nullptr);
 
     debugger_window->done_current();
     debugger_window->shutdown();
