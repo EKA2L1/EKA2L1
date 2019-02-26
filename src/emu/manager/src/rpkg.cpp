@@ -89,7 +89,7 @@ namespace eka2l1 {
 
             rpkg_header header;
 
-            if (fread(&header.magic, 4, 4, f) != 16) {
+            if (fread(&header.magic, 4, 4, f) != 4) {
                 return false;
             }
 
@@ -110,9 +110,9 @@ namespace eka2l1 {
                 return false;
             }
 
-            total_read_size = 0;
-
             while (!feof(f)) {
+                total_read_size = 0;
+
                 rpkg_entry entry;
 
                 total_read_size += fread(&entry.attrib, 1, 8, f);
@@ -120,8 +120,7 @@ namespace eka2l1 {
                 total_read_size += fread(&entry.path_len, 1, 8, f);
 
                 if (total_read_size != 24) {
-                    fclose(f);
-                    return false;
+                    break;
                 }
 
                 entry.path.resize(entry.path_len);
@@ -132,14 +131,12 @@ namespace eka2l1 {
                 total_read_size += fread(&entry.data_size, 1, 8, f);
 
                 if (total_read_size != entry.path_len * 2 + 8) {
-                    fclose(f);
-                    return false;
+                    break;
                 }
 
                 LOG_INFO("Extracting: {}", common::ucs2_to_utf8(entry.path));
 
                 if (!extract_file(devices_rom_path, f, entry)) {
-                    fclose(f);
                     break;
                 }
 
