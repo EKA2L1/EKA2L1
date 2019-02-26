@@ -124,7 +124,7 @@ namespace eka2l1 {
 
             entry.name.resize(entry.name_len);
 
-            if (fread(entry.name.data(), 2, entry.name_len, file) != entry.name_len * 2) {
+            if (fread(entry.name.data(), 2, entry.name_len, file) != entry.name_len) {
                 LOG_ERROR("Can't read entry name!");
             }
 
