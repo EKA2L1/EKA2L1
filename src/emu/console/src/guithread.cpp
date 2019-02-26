@@ -30,8 +30,11 @@
 
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
+#include <drivers/input/input.h>
 
 using namespace eka2l1;
+
+std::unique_ptr<drivers::input_driver> idriver;
 
 void set_mouse_down(const int button, const bool op) {
     const std::lock_guard<std::mutex> guard(ui_debugger_mutex);
@@ -61,6 +64,8 @@ static void on_ui_window_key_release(const int key) {
     io.KeyShift = io.KeysDown[KEY_LEFT_SHIFT] || io.KeysDown[KEY_RIGHT_SHIFT];
     io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
     io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
+    
+    idriver->queue_key_event(key, drivers::key_state::released);
 }
 
 static void on_ui_window_key_press(const int key) {
@@ -72,6 +77,8 @@ static void on_ui_window_key_press(const int key) {
     io.KeyShift = io.KeysDown[KEY_LEFT_SHIFT] || io.KeysDown[KEY_RIGHT_SHIFT];
     io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
     io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
+
+    idriver->queue_key_event(key, drivers::key_state::pressed);
 }
 
 static void on_ui_window_char_type(std::uint32_t c) {
@@ -116,6 +123,8 @@ int ui_debugger_thread() {
 
     auto gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
         eka2l1::vec2(500, 500));
+
+    idriver = std::make_unique<drivers::input_driver>();
 
     debugger_renderer->init(gdriver, debugger);
 
