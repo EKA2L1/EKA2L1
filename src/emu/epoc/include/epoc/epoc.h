@@ -51,6 +51,8 @@ namespace eka2l1 {
 
     namespace drivers {
         class graphics_driver_client;
+        class input_driver_client;
+
         class driver;
 
         using driver_instance = std::shared_ptr<driver>;
@@ -66,6 +68,7 @@ namespace eka2l1 {
 
     using hal_ptr = std::shared_ptr<epoc::hal>;
     using graphics_driver_client_ptr = std::shared_ptr<drivers::graphics_driver_client>;
+    using input_driver_client_ptr = std::shared_ptr<drivers::input_driver_client>;
 
     namespace loader {
         struct rom;
@@ -121,6 +124,7 @@ namespace eka2l1 {
         disasm *get_disasm();
         gdbstub *get_gdb_stub();
         graphics_driver_client_ptr get_graphic_driver_client();
+        input_driver_client_ptr get_input_driver_client();
         arm::jitter &get_cpu();
 
         void mount(drive_number drv, const drive_media media, std::string path,

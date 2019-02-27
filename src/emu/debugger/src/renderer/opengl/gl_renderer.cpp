@@ -200,6 +200,7 @@ namespace eka2l1 {
         debugger->show_debugger(width, height, fb_width, fb_height);
 
         gr_driver_->process_requests();
+        inp_driver_->process_requests();
 
         eka2l1::vec2 v = gr_driver_->get_screen_size();
         ImGui::SetNextWindowSize(ImVec2(static_cast<float>(v.x), static_cast<float>(v.y)));

@@ -241,6 +241,10 @@ namespace eka2l1 {
             return gdriver_client;
         }
 
+        input_driver_client_ptr get_input_driver_client() {
+            return idriver_client;
+        }
+
         arm::jitter &get_cpu() {
             return cpu;
         }
@@ -571,20 +575,6 @@ namespace eka2l1 {
         return impl->shutdown();
     }
 
-    /*
-    bool system::save_snapshot(const std::string &name) {
-        return impl->save_snapshot(name);
-    }
-
-    bool system::save_snapshot_exclude_current_process(const std::string &name) {
-        return impl->save_snapshot_exclude_current_process(name);
-    }
-
-    bool system::load_snapshot(const std::string &name) {
-        return impl->load_snapshot(name);
-    }
-    */
-
     manager_system *system::get_manager_system() {
         return impl->get_manager_system();
     }
@@ -618,6 +608,10 @@ namespace eka2l1 {
 
     graphics_driver_client_ptr system::get_graphic_driver_client() {
         return impl->get_graphic_driver_client();
+    }
+
+    input_driver_client_ptr system::get_input_driver_client() {
+        return impl->get_input_driver_client();
     }
 
     arm::jitter &system::get_cpu() {

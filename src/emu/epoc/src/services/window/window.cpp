@@ -41,6 +41,7 @@
 #include <e32err.h>
 
 #include <epoc/epoc.h>
+#include <epoc/timing.h>
 #include <epoc/vfs.h>
 
 #include <optional>
@@ -710,10 +711,81 @@ namespace eka2l1 {
             "Ws::MessSyncBuf");
     }
 
+    constexpr std::int64_t input_update_ticks = 10000;
+
+    static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+        guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
+        guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
+        guest_evt_.key_evt_.repeats = 0;            // TODO?
+    }
+
+    void window_server::handle_inputs_from_driver(std::uint64_t userdata, int cycles_late) {
+        // Lock it first
+        idriver_cli_->lock();
+        const std::uint32_t total_evt = idriver_cli_->total();
+
+        if (total_evt == 0) {
+            idriver_cli_->release();
+            sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
+
+            return;
+        }
+
+        std::vector<drivers::input_event> driver_input_events;
+        driver_input_events.resize(total_evt);
+
+        idriver_cli_->get(&driver_input_events[0], total_evt);
+        
+        // Release the lock
+        idriver_cli_->release();
+
+        std::vector<epoc::event> guest_events;
+        guest_events.resize(total_evt);
+
+        // Processing the events, translate them to cool things
+        for (std::size_t i = 0; i < driver_input_events.size(); i++) {
+            switch (driver_input_events[i].type_) {
+            case drivers::input_event_type::key: {
+                make_key_event(driver_input_events[i], guest_events[i]);
+                break;
+            }
+
+            default: 
+                break;
+            }
+
+            // Report to the focused window first
+            guest_events[i].handle = focus_->owner_handle;    // TODO: this should work
+            focus_->queue_event(guest_events[i]);
+
+            // Send a key event also
+            if (guest_events[i].type == epoc::event_code::key_down) {
+                guest_events[i].type = epoc::event_code::key;
+                focus_->queue_event(guest_events[i]);
+                guest_events[i].type = epoc::event_code::key_down;
+            }
+
+            // TODO
+        }
+
+        sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
+    }
+    
     void window_server::init(service::ipc_context ctx) {
         if (!loaded) {
             load_wsini();
             parse_wsini();
+
+            idriver_cli_ = ctx.sys->get_input_driver_client();
+
+            // Schedule an event which will frequently queries input from host
+            timing_system *timing = ctx.sys->get_timing_system();
+
+            input_handler_evt_ = timing->register_event("InputUpdateEvent", [this](std::uint64_t userdata, int cycles_late) {
+                handle_inputs_from_driver(userdata, cycles_late);
+            });
+
+            timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
 
             loaded = true;
         }

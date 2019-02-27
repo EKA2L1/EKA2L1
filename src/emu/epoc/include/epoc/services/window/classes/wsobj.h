@@ -28,6 +28,7 @@
 namespace eka2l1::epoc {
     namespace ws {
         using uid = std::uint32_t;
+        using handle = std::uint32_t;
     };
 
     class window_server_client;
@@ -35,6 +36,8 @@ namespace eka2l1::epoc {
 
     struct window_client_obj {
         ws::uid id;
+        ws::handle owner_handle;
+
         window_server_client *client;
 
         explicit window_client_obj(window_server_client_ptr client);

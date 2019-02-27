@@ -30,11 +30,11 @@
 
 namespace eka2l1::epoc {
     void window_group::lost_focus() {
-        queue_event(epoc::event{ id, epoc::event_code::focus_gained });
+        queue_event(epoc::event{ id, epoc::event_code::focus_lost });
     }
 
     void window_group::gain_focus() {
-        queue_event(epoc::event{ id, epoc::event_code::focus_lost });
+        queue_event(epoc::event{ id, epoc::event_code::focus_gained });
     }
 
     eka2l1::graphics_driver_client_ptr window_group::get_driver() {
@@ -61,8 +61,8 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpCaptureKey: {
-            LOG_TRACE("EWsWinOpCaptureKey stubbed (TODO really soon)");
+        case EWsWinOpCaptureKey: case EWsWinOpCaptureKeyUpsAndDowns: {
+            LOG_TRACE("EWsWinOpCaptureKeyUpAndDowns stubbed (TODO really soon)");
             ctx.set_request_status(KErrNone);
 
             break;

@@ -342,6 +342,13 @@ namespace eka2l1::epoc {
         user = 1000,
     };
 
+    struct key_event {
+        std::uint32_t code;
+        std::int32_t scancode;
+        std::uint32_t modifiers;
+        std::int32_t repeats;
+    };
+
     struct pointer_event {
         event_type evtype;
         event_modifier modifier;
@@ -383,9 +390,21 @@ namespace eka2l1::epoc {
 
         // TODO: Should be only pointer event with epoc < 9.
         // For epoc9 there shouldnt be a pointer number, since there is no multi touch
-        adv_pointer_event evt;
+        union {
+            adv_pointer_event adv_pointer_evt_;
+            key_event key_evt_;
+        };
 
+        event() {}
         event(const std::uint32_t handle, event_code evt_code);
+
+        void operator =(const event &rhs) {
+            type = rhs.type;
+            handle = rhs.handle;
+            time = rhs.time;
+
+            adv_pointer_evt_ = rhs.adv_pointer_evt_;
+        }
     };
 
     struct redraw_event {

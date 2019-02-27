@@ -47,6 +47,12 @@
 
 namespace eka2l1 {
     class window_server;
+
+    namespace drivers {
+        class input_driver_client;
+    }
+
+    using input_driver_client_ptr = std::shared_ptr<drivers::input_driver_client>;
 }
 
 namespace eka2l1::epoc {
@@ -244,6 +250,11 @@ namespace eka2l1 {
 
         void load_wsini();
         void parse_wsini();
+
+        input_driver_client_ptr idriver_cli_;
+        int input_handler_evt_;
+
+        void handle_inputs_from_driver(std::uint64_t userdata, int cycles_late);
 
     public:
         window_server(system *sys);
