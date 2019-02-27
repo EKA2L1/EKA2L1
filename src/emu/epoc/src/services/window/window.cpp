@@ -50,7 +50,11 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
 
-namespace eka2l1::epoc {
+namespace eka2l1::epoc {    
+    bool operator < (const event_capture_key_notifier &lhs, const event_capture_key_notifier &rhs) {
+        return lhs.pri_ < rhs.pri_;
+    }
+
     graphics_orientation number_to_orientation(int rot) {
         switch (rot) {
         case 0: {
@@ -586,7 +590,7 @@ namespace eka2l1::epoc {
         window_server::key_capture_request_queue &rqueue =  get_ws().key_capture_requests[notifier.keycode_];
 
         if (!rqueue.empty() && notifier.pri_ == 0) {
-            notifier.pri_ = rqueue.back().pri_ + 1;
+            notifier.pri_ = rqueue.top().pri_ + 1;
         }
 
         rqueue.push(std::move(notifier));

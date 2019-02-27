@@ -93,6 +93,8 @@ namespace eka2l1::epoc {
         std::uint32_t id;
     };
 
+    bool operator < (const event_capture_key_notifier &lhs, const event_capture_key_notifier &rhs);
+    
     struct pixel_twips_and_rot {
         eka2l1::vec2 pixel_size;
         eka2l1::vec2 twips_size;
@@ -255,7 +257,7 @@ namespace eka2l1::epoc {
 namespace eka2l1 {
     class window_server : public service::server {
     public:
-        using key_capture_request_queue = threadsafe_cn_queue<epoc::event_capture_key_notifier>;
+        using key_capture_request_queue = cp_queue<epoc::event_capture_key_notifier>;
 
     private:
         friend class epoc::window_server_client;
