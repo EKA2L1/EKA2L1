@@ -124,4 +124,11 @@ namespace eka2l1 {
         std::uint32_t id;
         int max_len;
     };
+
+    struct ws_cmd_capture_key {
+        std::uint32_t modifiers;
+        std::uint32_t modifier_mask;
+        std::uint32_t key;
+        int priority;
+    };
 }

@@ -74,8 +74,23 @@ namespace eka2l1::epoc {
     struct event_screen_change_user : public event_notifier_base {
     };
 
-    struct event_error_msg_user : public event_notifier_base{
+    struct event_error_msg_user : public event_notifier_base {
         event_control when;
+    };
+
+    enum class event_key_capture_type {
+        normal,
+        up_and_downs
+    };
+
+    struct event_capture_key_notifier: public event_notifier_base  {
+        event_key_capture_type type_;
+        std::uint32_t keycode_;
+        std::uint32_t modifiers_mask_;
+        std::uint32_t modifiers_;
+        std::uint32_t pri_;
+
+        std::uint32_t id;
     };
 
     struct pixel_twips_and_rot {
@@ -152,7 +167,7 @@ namespace eka2l1::epoc {
         nof_container<epoc::event_mod_notifier_user> mod_notifies;
         nof_container<epoc::event_screen_change_user> screen_changes;
         nof_container<epoc::event_error_msg_user> error_notifies;
-
+        
         void create_screen_device(service::ipc_context &ctx, ws_cmd cmd);
         void create_window_group(service::ipc_context &ctx, ws_cmd cmd);
         void create_window_base(service::ipc_context &ctx, ws_cmd cmd);
@@ -169,22 +184,6 @@ namespace eka2l1::epoc {
         std::uint32_t total_group{ 0 };
 
     public:
-        // We have been blessed with so much reflection that it's actually seems evil now.
-        template <typename T>
-        constexpr void add_event_notifier(T &evt) {
-            const std::lock_guard guard_(ws_client_lock);
-
-            if constexpr (std::is_same_v<T, epoc::event_mod_notifier_user>) {
-                mod_notifies.emplace(std::move(evt));
-            } else if constexpr (std::is_same_v<T, epoc::event_screen_change_user>) {
-                screen_changes.emplace(std::move(evt));
-            } else if constexpr (std::is_same_v<T, epoc::event_error_msg_user>) {
-                error_notifies.emplace(std::move(evt));
-            } else {
-                throw std::runtime_error("Unsupported event notifier type!");
-            }
-        }
-
         void add_redraw_listener(notify_info nof) {
             redraws.set_listener(nof);
         }
@@ -225,6 +224,29 @@ namespace eka2l1::epoc {
         void deque_redraw(const std::uint32_t handle) {
             redraws.cancel_event_queue(handle);
         }
+
+        ws::uid add_capture_key_notifier_to_server(epoc::event_capture_key_notifier &notifier);
+        
+        // We have been blessed with so much reflection that it's actually seems evil now.
+        template <typename T>
+        constexpr ws::uid add_event_notifier(T &evt) {
+            const std::lock_guard guard_(ws_client_lock);
+
+            if constexpr (std::is_same_v<T, epoc::event_mod_notifier_user>) {
+                mod_notifies.emplace(std::move(evt));
+                return static_cast<ws::uid>(mod_notifies.size());
+            } else if constexpr (std::is_same_v<T, epoc::event_screen_change_user>) {
+                screen_changes.emplace(std::move(evt));
+                return static_cast<ws::uid>(screen_changes.size());
+            } else if constexpr (std::is_same_v<T, epoc::event_error_msg_user>) {
+                error_notifies.emplace(std::move(evt));
+                return static_cast<ws::uid>(error_notifies.size());
+            } else if constexpr (std::is_same_v<T, epoc::event_capture_key_notifier>) {
+                return add_capture_key_notifier_to_server(evt);
+            } else {
+                throw std::runtime_error("Unsupported event notifier type!");
+            }
+        }
     };
 
     epoc::graphics_orientation number_to_orientation(int rot);
@@ -232,13 +254,22 @@ namespace eka2l1::epoc {
 
 namespace eka2l1 {
     class window_server : public service::server {
+    public:
+        using key_capture_request_queue = threadsafe_cn_queue<epoc::event_capture_key_notifier>;
+
+    private:
+        friend class epoc::window_server_client;
+
         std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
             clients;
 
         common::ini_file ws_config;
         bool loaded{ false };
 
+        std::atomic<epoc::ws::uid> key_capture_uid_counter {0};
+
         std::vector<epoc::config::screen> screens;
+        std::unordered_map<epoc::ws::uid, key_capture_request_queue> key_capture_requests;
 
         epoc::window_group_ptr focus_;
         epoc::pointer_cursor_mode cursor_mode_;

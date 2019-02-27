@@ -40,6 +40,10 @@ namespace eka2l1 {
             return this->c.end();
         }
 
+        bool empty() {
+            return this->c.empty();
+        }
+
         /*! \brief Resort the queue.
 		*/
         void resort() {

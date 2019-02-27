@@ -407,6 +407,8 @@ namespace eka2l1::epoc {
         }
     };
 
+    static_assert(sizeof(event) == 16 + sizeof(adv_pointer_event), "Size of event is wrong!");
+
     struct redraw_event {
         std::uint32_t handle;
         vec2 top_left;

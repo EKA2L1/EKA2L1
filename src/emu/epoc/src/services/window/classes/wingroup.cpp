@@ -62,8 +62,17 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpCaptureKey: case EWsWinOpCaptureKeyUpsAndDowns: {
-            LOG_TRACE("EWsWinOpCaptureKeyUpAndDowns stubbed (TODO really soon)");
-            ctx.set_request_status(KErrNone);
+            ws_cmd_capture_key *capture_key_cmd = reinterpret_cast<decltype(capture_key_cmd)>(cmd.data_ptr);
+
+            epoc::event_capture_key_notifier capture_key_notify;
+            capture_key_notify.keycode_ = capture_key_cmd->key;
+            capture_key_notify.modifiers_ = capture_key_cmd->modifiers;
+            capture_key_notify.modifiers_mask_ = capture_key_cmd->modifier_mask;
+            capture_key_notify.type_ = (op == EWsWinOpCaptureKeyUpsAndDowns) ? epoc::event_key_capture_type::up_and_downs : 
+                epoc::event_key_capture_type::normal;
+            capture_key_notify.pri_ = capture_key_cmd->priority;
+
+            ctx.set_request_status(client->add_event_notifier(capture_key_notify));
 
             break;
         }

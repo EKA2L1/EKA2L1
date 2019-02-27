@@ -423,7 +423,9 @@ namespace eka2l1::epoc {
         case EWsClOpGetEvent: {
             auto evt = events.get_event();
 
-            ctx.write_arg_pkg<epoc::event>(reply_slot, evt);
+            // Allow the context to shrink if needed, since the struct certainly got larger as Symbian
+            // grows. S^3 has advance pointer struct which along takes 56 bytes buffer.
+            ctx.write_arg_pkg<epoc::event>(reply_slot, evt, nullptr, true);
             ctx.set_request_status(KErrNone);
 
             break;
@@ -577,6 +579,21 @@ namespace eka2l1::epoc {
         }
     }
 
+    ws::uid window_server_client::add_capture_key_notifier_to_server(epoc::event_capture_key_notifier &notifier) {
+        const ws::uid id = ++get_ws().key_capture_uid_counter;
+        notifier.id = id;
+
+        window_server::key_capture_request_queue &rqueue =  get_ws().key_capture_requests[notifier.keycode_];
+
+        if (!rqueue.empty() && notifier.pri_ == 0) {
+            notifier.pri_ = rqueue.back().pri_ + 1;
+        }
+
+        rqueue.push(std::move(notifier));
+
+        return id;
+    }
+
     std::uint32_t window_server_client::get_total_window_groups() {
         return total_group;
     }
@@ -714,6 +731,8 @@ namespace eka2l1 {
     constexpr std::int64_t input_update_ticks = 10000;
 
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+        // TODO: We still need the code
+
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
         guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
         guest_evt_.key_evt_.repeats = 0;            // TODO?
@@ -765,7 +784,8 @@ namespace eka2l1 {
                 guest_events[i].type = epoc::event_code::key_down;
             }
 
-            // TODO
+            // Now we find all request from other windows and start doing horrible stuffs with it
+            // Not so horrible though ... :) Don't worry, they won't get hurt!
         }
 
         sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
