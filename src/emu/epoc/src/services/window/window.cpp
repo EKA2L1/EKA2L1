@@ -743,27 +743,40 @@ namespace eka2l1 {
     }
 
     void window_server::handle_inputs_from_driver(std::uint64_t userdata, int cycles_late) {
-        // Lock it first
-        idriver_cli_->lock();
-        const std::uint32_t total_evt = idriver_cli_->total();
-
-        if (total_evt == 0) {
-            idriver_cli_->release();
+        if (!focus_) {
             sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
-
             return;
         }
 
         std::vector<drivers::input_event> driver_input_events;
-        driver_input_events.resize(total_evt);
 
-        idriver_cli_->get(&driver_input_events[0], total_evt);
+        {
+            const std::lock_guard<std::mutex> guard(idriver_cli_->connect_lock);
+
+            if (idriver_cli_->is_disconnected()) {
+                return;
+            }
+
+            // Lock it first
+            idriver_cli_->lock();
+            const std::uint32_t total_evt = idriver_cli_->total();
+
+            if (total_evt == 0) {
+                idriver_cli_->release();
+                sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
+
+                return;
+            }
+
+            driver_input_events.resize(total_evt);
+            idriver_cli_->get(&driver_input_events[0], total_evt);
+            
+            // Release the lock
+            idriver_cli_->release();   
+        }
         
-        // Release the lock
-        idriver_cli_->release();
-
         std::vector<epoc::event> guest_events;
-        guest_events.resize(total_evt);
+        guest_events.resize(driver_input_events.size());
 
         // Processing the events, translate them to cool things
         for (std::size_t i = 0; i < driver_input_events.size(); i++) {

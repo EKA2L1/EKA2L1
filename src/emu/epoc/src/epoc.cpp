@@ -352,6 +352,7 @@ namespace eka2l1 {
 
     void system_impl::set_input_driver(drivers::driver_instance input_driver) {
         if (input_driver == nullptr) {
+            idriver_client->disconnect();
             idriver_client.reset();
             return;
         }
