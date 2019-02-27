@@ -91,8 +91,6 @@ namespace eka2l1::drivers {
     class driver_client {
     protected:
         driver_instance driver;
-        std::mutex lock;
-
         bool already_locked = false;
 
         /*! \brief Send the opcode to the driver, provided also with the context.
@@ -101,11 +99,30 @@ namespace eka2l1::drivers {
         bool send_opcode(const int opcode, itc_context &ctx);
         bool send_opcode_sync(const int opcode, itc_context &ctx);
 
+        std::uint32_t timeout { 500 };
+
     public:
+        std::mutex dri_cli_lock;
+        std::mutex connect_lock;
+
         driver_client() = default;
 
         explicit driver_client(driver_instance driver);
         virtual ~driver_client() {}
+
+        /**
+         * Set the time driver client cancels waiting for reply.
+         * 
+         * Driver might be dead or stopped, so if an amount of time passed with no respond,
+         * client cancels. Timeout is in ms.
+         */
+        void set_respond_timeout(const std::uint32_t timeout_) {
+            timeout = timeout_;
+        }
+
+        std::uint32_t get_respond_timeout() {
+            return timeout;
+        }
 
         /*! \brief Wait for driver. The client locked, waiting for the driver. When driver
                    finished its job (work queue done), notfy all threads
@@ -114,6 +131,16 @@ namespace eka2l1::drivers {
 
         void lock_driver_from_process();
         void unlock_driver_from_process();
+
+        // Disconnect
+        void disconnect() {
+            const std::lock_guard<std::mutex> guard(connect_lock);
+            driver = nullptr;
+        }
+
+        bool is_disconnected() {
+            return driver == nullptr;
+        }
     };
 
     class graphics_driver_client : public driver_client {

@@ -24,8 +24,16 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/input.h>
 
+#include <chrono>
+
+using namespace std::chrono_literals;
+
 namespace eka2l1::drivers {
     bool driver_client::send_opcode_sync(const int opcode, itc_context &ctx) {
+        if (!driver) {
+            return false;
+        }
+
         if (already_locked) {
             driver->request_queue.push_unsafe({ opcode, ctx });
         } else {
@@ -38,6 +46,10 @@ namespace eka2l1::drivers {
     }
 
     bool driver_client::send_opcode(const int opcode, itc_context &ctx) {
+        if (!driver) {
+            return false;
+        }
+        
         if (already_locked) {
             driver->request_queue.push_unsafe({ opcode, ctx });
         } else {
@@ -58,8 +70,8 @@ namespace eka2l1::drivers {
     }
 
     void driver_client::sync_with_driver() {
-        std::unique_lock<std::mutex> ulock(lock);
-        driver->cond.wait(ulock);
+        std::unique_lock<std::mutex> ulock(dri_cli_lock);
+        driver->cond.wait_for(ulock, timeout * 1ms);
     }
 
     driver_client::driver_client(driver_instance driver)
