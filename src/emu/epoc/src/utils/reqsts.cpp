@@ -33,5 +33,7 @@ namespace eka2l1::epoc {
 
         *sts.get(requester->owning_process()) = err_code;
         sts = 0;
+
+        requester->signal_request();
     }
 }
