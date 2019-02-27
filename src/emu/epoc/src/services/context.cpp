@@ -116,7 +116,7 @@ namespace eka2l1 {
             return false;
         }
 
-        bool ipc_context::write_arg_pkg(int idx, uint8_t *data, uint32_t len, int *err_code) {
+        bool ipc_context::write_arg_pkg(int idx, uint8_t *data, uint32_t len, int *err_code, const bool auto_shrink_to_fit) {
             if (idx >= 4) {
                 return false;
             }
@@ -133,21 +133,31 @@ namespace eka2l1 {
                     // We can't handle odd length
                     assert(len % 2 == 0);
 
-                    if (des->get_max_length(own_pr) < len) {
+                    std::uint32_t write_size = len / 2;
+                    const std::uint32_t des_to_write_size = des->get_max_length(own_pr);
+
+                    if (auto_shrink_to_fit) {
+                        write_size = common::min(write_size, des_to_write_size);
+                    } else if (des_to_write_size < write_size) {
                         err_code ? (*err_code = -2) : 0;
                         return false;
                     }
 
-                    des->assign(msg->own_thr->owning_process(), data, len);
+                    des->assign(own_pr, data, write_size);
                 } else {
                     eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
-                    if (des->get_max_length(own_pr) < len) {
+                    std::uint32_t write_size = len;
+                    const std::uint32_t des_to_write_size = des->get_max_length(own_pr);
+
+                    if (auto_shrink_to_fit) {
+                        write_size = common::min(write_size, des_to_write_size);
+                    } else if (des_to_write_size < write_size) {
                         err_code ? (*err_code = -2) : 0;
                         return false;
                     }
 
-                    des->assign(msg->own_thr->owning_process(), data, len);
+                    des->assign(own_pr, data, write_size);
                 }
 
                 return true;
