@@ -781,16 +781,17 @@ namespace eka2l1 {
 
         // Processing the events, translate them to cool things
         for (std::size_t i = 0; i < driver_input_events.size(); i++) {
-            epoc::event extra_key_evt = guest_events[i];
+            epoc::event extra_key_evt;
             
             switch (driver_input_events[i].type_) {
             case drivers::input_event_type::key: {
                 make_key_event(driver_input_events[i], guest_events[i]);
                     
+                extra_key_evt = guest_events[i];
                 extra_key_evt.type = epoc::event_code::key;
                 extra_key_evt.key_evt_.code = epoc::map_scancode_to_keycode(
                     static_cast<TStdScanCode>(guest_events[i].key_evt_.scancode));
-                    
+
                 break;
             }
 
