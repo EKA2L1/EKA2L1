@@ -27,6 +27,9 @@
 #include <common/vecx.h>
 #include <cstdint>
 
+#include <common/e32inc.h>
+#include <e32keys.h>
+
 enum {
     cmd_slot = 0,
     reply_slot = 1,
@@ -414,4 +417,6 @@ namespace eka2l1::epoc {
         vec2 top_left;
         vec2 bottom_right;
     };
+
+    TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
 }
