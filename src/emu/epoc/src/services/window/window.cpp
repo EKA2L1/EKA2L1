@@ -735,8 +735,9 @@ namespace eka2l1 {
     constexpr std::int64_t input_update_ticks = 10000;
 
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
-        // TODO: We still need the code
-
+        // For up and down events, the keycode will always be 0
+        // We still have to fill valid value for event_code::key
+        guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
         guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
         guest_evt_.key_evt_.repeats = 0;            // TODO?
@@ -780,9 +781,16 @@ namespace eka2l1 {
 
         // Processing the events, translate them to cool things
         for (std::size_t i = 0; i < driver_input_events.size(); i++) {
+            epoc::event extra_key_evt = guest_events[i];
+            
             switch (driver_input_events[i].type_) {
             case drivers::input_event_type::key: {
                 make_key_event(driver_input_events[i], guest_events[i]);
+                    
+                extra_key_evt.type = epoc::event_code::key;
+                extra_key_evt.key_evt_.code = epoc::map_scancode_to_keycode(
+                    static_cast<TStdScanCode>(guest_events[i].key_evt_.scancode));
+                    
                 break;
             }
 
@@ -792,17 +800,54 @@ namespace eka2l1 {
 
             // Report to the focused window first
             guest_events[i].handle = focus_->owner_handle;    // TODO: this should work
+            extra_key_evt.handle = focus_->owner_handle;    // TODO: this should work
             focus_->queue_event(guest_events[i]);
-
+    
             // Send a key event also
             if (guest_events[i].type == epoc::event_code::key_down) {
-                guest_events[i].type = epoc::event_code::key;
-                focus_->queue_event(guest_events[i]);
-                guest_events[i].type = epoc::event_code::key_down;
+                focus_->queue_event(extra_key_evt);
             }
 
             // Now we find all request from other windows and start doing horrible stuffs with it
             // Not so horrible though ... :) Don't worry, they won't get hurt!
+            if (driver_input_events[i].type_ == drivers::input_event_type::key) {
+                key_capture_request_queue &rqueue = key_capture_requests[extra_key_evt.key_evt_.code];
+
+                epoc::ws::uid top_id;
+
+                for (auto ite = rqueue.end(); ite != rqueue.begin(); ite--) {
+                    if (ite->user->id == focus_->id) {
+                        break;
+                    }
+
+                    if (ite == rqueue.end()) {
+                        top_id = ite->user->id;
+                    }
+
+                    if (ite->user->id != top_id) {
+                        break;
+                    }
+
+                    switch (ite->type_) {
+                    case epoc::event_key_capture_type::normal: {
+                        extra_key_evt.handle = ite->user->owner_handle;    // TODO: this should work
+                        ite->user->queue_event(extra_key_evt);
+
+                        break;
+                    }
+
+                    case epoc::event_key_capture_type::up_and_downs: {
+                        guest_events[i].handle = ite->user->owner_handle;    // TODO: this should work
+                        ite->user->queue_event(guest_events[i]);
+
+                        break;
+                    }
+
+                    default:
+                        break;
+                    }
+                }
+            }
         }
 
         sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
