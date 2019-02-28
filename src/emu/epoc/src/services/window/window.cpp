@@ -225,6 +225,11 @@ namespace eka2l1::epoc {
             device_ptr = std::reinterpret_pointer_cast<epoc::screen_device>(get_object(device_handle));
         }
 
+        // Don't worry, Symbian source code do the same.
+        if (!device_ptr) {
+            device_ptr = primary_device;
+        }
+
         epoc::window_ptr group = std::make_shared<epoc::window_group>(this, device_ptr);
         epoc::window_ptr parent_group = find_window_obj(root, header->parent_id);
 
