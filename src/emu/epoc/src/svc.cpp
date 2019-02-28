@@ -889,7 +889,7 @@ namespace eka2l1::epoc {
             return KErrGeneral;
         }
 
-        LOG_TRACE("New session connected to {} with id {}", server_name, handle);
+        LOG_TRACE("New session connected to {} with handle {}", server_name, handle);
 
         return handle;
     }

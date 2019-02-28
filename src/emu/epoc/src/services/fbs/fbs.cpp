@@ -45,7 +45,7 @@ namespace eka2l1 {
     }
 
     bool fbs_chunk_allocator::expand(std::size_t target) {
-        return (target_chunk->adjust(target));
+        return target_chunk->adjust(target);
     }
 
     std::uint32_t fbshandles::make_handle(std::size_t index) {
@@ -188,6 +188,8 @@ namespace eka2l1 {
                 auto folder = io->open_dir(fonts_folder_path, io_attrib::none);
 
                 if (folder) {
+                    LOG_TRACE("Found font folder: {}", common::ucs2_to_utf8(fonts_folder_path));
+
                     while (auto entry = folder->get_next_entry()) {
                         symfile f = io->open_file(common::utf8_to_ucs2(entry->full_path), READ_MODE | BIN_MODE);
                         const std::uint64_t fsize = f->size();
@@ -266,10 +268,10 @@ namespace eka2l1 {
                 return;
             }
 
-            eka2l1::process_ptr pr = context.msg->own_thr->owning_process();
+            memory_system *mem = sys->get_memory_system();
 
-            base_shared_chunk = shared_chunk->base().get(pr);
-            base_large_chunk = large_chunk->base().get(pr);
+            base_shared_chunk = shared_chunk->base().get(mem);
+            base_large_chunk = large_chunk->base().get(mem);
 
             shared_chunk_allocator = std::make_unique<fbs_chunk_allocator>(shared_chunk,
                 base_shared_chunk);

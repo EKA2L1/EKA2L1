@@ -41,7 +41,8 @@ namespace eka2l1 {
             , protection(protection)
             , mem(mem)
             , own_process(own_process)
-            , is_heap(is_heap) {
+            , is_heap(is_heap) 
+            , commited_size(0) {
             obj_type = object_type::chunk;
 
             if (caccess == chunk_access::global) {
@@ -113,6 +114,8 @@ namespace eka2l1 {
 
             this->top = new_top;
             this->bottom = new_bottom;
+
+            this->commited_size = this->top - this->bottom;
 
             LOG_INFO("Chunk created: {}, base: 0x{:x}, max size: 0x{:x}, bottom: {}, top: {}, type: {}, access: {}{}", obj_name, chunk_base.ptr_address(),
                 max_size, new_bottom, new_top,

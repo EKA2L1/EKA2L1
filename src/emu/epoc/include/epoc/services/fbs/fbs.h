@@ -144,7 +144,7 @@ namespace eka2l1 {
 
     public:
         explicit fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *ptr);
-        bool expand(std::size_t target) override;
+        virtual bool expand(std::size_t target) override;
     };
 
     class fbs_server : public service::server {
