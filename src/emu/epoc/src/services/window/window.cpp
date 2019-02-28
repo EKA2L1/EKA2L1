@@ -225,7 +225,6 @@ namespace eka2l1::epoc {
             device_ptr = std::reinterpret_pointer_cast<epoc::screen_device>(get_object(device_handle));
         }
 
-        // Don't worry, Symbian source code do the same.
         if (!device_ptr) {
             device_ptr = primary_device;
         }
