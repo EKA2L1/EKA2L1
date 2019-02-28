@@ -8,7 +8,7 @@
 namespace eka2l1::common {
     block_allocator::block_allocator(std::uint8_t *sptr, const std::size_t initial_max_size)
         : space_based_allocator(sptr, initial_max_size) {
-        const auto alignment_needed = 4 - reinterpret_cast<std::uint64_t>(ptr) % 4;
+        const auto alignment_needed = (4 - reinterpret_cast<std::uint64_t>(ptr) % 4) % 4;
 
         if (alignment_needed > initial_max_size) {
             if (!expand(alignment_needed)) {
