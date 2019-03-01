@@ -1,5 +1,6 @@
 #pragma once
 
 #cmakedefine ENABLE_SCRIPTING @ENABLE_SCRIPTING@
+#cmakedefine ENABLE_SEH_HANDLER @ENABLE_SEH_HANDLER@
 #cmakedefine GIT_BRANCH "@GIT_BRANCH@"
 #cmakedefine GIT_COMMIT_HASH "@GIT_COMMIT_HASH@"

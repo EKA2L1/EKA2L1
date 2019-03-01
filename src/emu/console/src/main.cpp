@@ -28,9 +28,11 @@
 #include <thread>
 
 #include <common/arghandler.h>
+#include <common/configure.h>
 #include <common/cvt.h>
 #include <common/ini.h>
 #include <common/log.h>
+#include <common/platform.h>
 #include <common/types.h>
 #include <console/cmdhandler.h>
 #include <console/guithread.h>
@@ -39,6 +41,11 @@
 #include <drivers/graphics/emu_window.h>
 #include <epoc/epoc.h>
 #include <epoc/loader/rom.h>
+
+#if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
+#include <console/seh_handler.h>
+#include <eh.h>
+#endif
 
 #include <gdbstub/gdbstub.h>
 #include <imgui.h>
@@ -148,7 +155,14 @@ void do_quit() {
 
 void run() {
     while (!should_quit && !symsys->should_exit()) {
-        symsys->loop();
+        try {
+            symsys->loop();
+        } catch (std::exception &exc) {
+            std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
+            should_quit = true;
+
+            break; 
+        }
 
         if (should_pause && !should_quit) {
             debugger->wait_for_debugger();
@@ -160,6 +174,11 @@ int main(int argc, char **argv) {
     // Episode 1: I think of a funny joke about Symbian and I will told my virtual wife
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------"
               << std::endl;
+
+    // Register SEH handler 
+    #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
+    _set_se_translator(seh_handler_translator_func);
+    #endif
 
     // We are going to setup to GUI logger (in debugger)
     logger = std::make_shared<eka2l1::imgui_logger>();

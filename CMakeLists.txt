@@ -7,6 +7,7 @@ option(BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(BUILD_TESTS "Build EKA2L1's tests" ON)
 option(BUILD_JIT_LLVM "Build EKA2L1's LLVM JIT (Experimental)" OFF)
 option(ENABLE_SCRIPTING_ABILITY "Enable to script with Python" OFF)
+option(ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpected exception" ON)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -30,6 +31,12 @@ if (ENABLE_SCRIPTING_ABILITY)
 else (ENABLE_SCRIPTING_ABILITY)
     set (ENABLE_SCRIPTING 0)
 endif(ENABLE_SCRIPTING_ABILITY)
+
+set (ENABLE_SEH_HANDLER 0)
+
+if (ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
+    set(ENABLE_SEH_HANDLER 1)
+endif (ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
 
 add_subdirectory(src/external)
 add_subdirectory(src/emu)

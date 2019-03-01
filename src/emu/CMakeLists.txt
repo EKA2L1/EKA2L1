@@ -1,6 +1,12 @@
 if (WIN32)
     add_definitions(-DNOMINMAX)
     message("NOMINMAX")
+        
+    if (MSVC AND ENABLE_SEH_HANDLER)
+        # Replace SEH flag if there is one
+        string (REGEX REPLACE "\/(EH).+" "\/EHa" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHa")
+    endif()
 endif()
 
 add_subdirectory(arm)

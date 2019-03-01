@@ -2,9 +2,11 @@ add_executable(eka2l1
 	include/console/cmdhandler.h
 	include/console/global.h
 	include/console/guithread.h
+	include/console/seh_handler.h
 	src/cmdhandler.cpp
 	src/guithread.cpp
-	src/main.cpp)
+	src/main.cpp
+	src/seh_handler.cpp)
 
 target_link_libraries(eka2l1 PRIVATE 
 	arm
