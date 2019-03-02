@@ -221,7 +221,7 @@ namespace eka2l1 {
         }
 
         if (!events.empty()) {
-            slice_len = std::min(static_cast<int>(events.front().event_time - global_timer),
+            slice_len = std::min(static_cast<int>(events.back().event_time - global_timer),
                 static_cast<int>(MAX_SLICE_LENGTH));
         }
 
