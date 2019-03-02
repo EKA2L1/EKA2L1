@@ -33,8 +33,9 @@ using namespace eka2l1;
  * Try to read headers from a MBM file. Test its results. 
  */
 TEST_CASE("mbm_header_trailer_and_single_headers", "mbm_file") {
-    std::ifstream fi("loaderassets\\face.mbm", std::ios::binary);
+    std::ifstream fi("loaderassets/face.mbm", std::ios::binary);
     REQUIRE(!fi.bad());
+    REQUIRE(!fi.fail());
 
     std::vector<std::uint8_t> data;
 
