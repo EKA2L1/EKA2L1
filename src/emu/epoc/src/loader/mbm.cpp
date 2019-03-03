@@ -84,7 +84,7 @@ namespace eka2l1::loader {
         bool success = true;
 
         const std::uint8_t *data_ptr = stream.get_current();
-        std::size_t compressed_size = common::min(stream.size(), static_cast<std::size_t>(single_bm_header.compressed_len));
+        std::size_t compressed_size = common::min(stream.left(), static_cast<std::size_t>(single_bm_header.compressed_len));
 
         switch (single_bm_header.compression) {
         case 0: {
