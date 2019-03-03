@@ -48,7 +48,11 @@ namespace eka2l1 {
                 , crr_pos(0) {}
 
             std::uint64_t size() {
-                return end - beg;
+                return end - beg - crr_pos;
+            }
+
+            std::uint8_t *get_current() {
+                return beg + crr_pos;
             }
         };
 
