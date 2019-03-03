@@ -222,7 +222,7 @@ namespace eka2l1::common {
             return nullptr;
         }
 
-        const std::size_t map_size = size;
+        std::size_t map_size = size;
 
         if (perm == prot::read || (perm == prot::read_write && size == 0)) {
             struct stat file_stat;
