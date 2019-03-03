@@ -40,19 +40,25 @@ namespace eka2l1 {
                 const std::uint8_t comp2 = *src++;
                 const std::uint8_t comp3 = *src++;
 
-                while (count >= 0) {
-                    *dest++ = comp1;
-                    *dest++ = comp2;
-                    *dest++ = comp3;
+                if (dest_org) {
+                    while (count >= 0) {
+                        *dest++ = comp1;
+                        *dest++ = comp2;
+                        *dest++ = comp3;
 
-                    count--;
+                        count--;
+                    }
+                } else {
+                    dest += count * 3;
                 }
             } else {
                 const std::uint32_t num_bytes_to_copy = common::min(
                     static_cast<const std::uint32_t>(count * -3), 
                     static_cast<const std::uint32_t>(dest_end - dest));
 
-                std::copy(src, src + num_bytes_to_copy, dest);
+                if (dest_org) {
+                    std::copy(src, src + num_bytes_to_copy, dest);
+                }
 
                 src += num_bytes_to_copy;
                 dest += num_bytes_to_copy;

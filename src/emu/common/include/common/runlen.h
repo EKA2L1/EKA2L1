@@ -28,6 +28,14 @@ namespace eka2l1 {
      *
      * Run length is simple and good, easy, used many in Windows and Symbian source
      * code the old day.
+     * 
+     * \param src        Pointer to the compressed data. Must not be null.
+     * \param src_size   Reference to the size of the compressed data. When decompression done,
+     *                   this value is assigned with the number of compressed bytes processed.
+     * \param dest       Pointer to the destination buffer. Can be null, if you want to
+     *                   count the total decompressed bytes.
+     * \param dest_size  Reference contains the maximum size the destination buffer can hold.
+     *                   On returns, this value is assigned with the number of decompressed bytes.
     */
     void decompress_rle_24bit(const std::uint8_t *src, std::size_t &src_size,
         std::uint8_t *dest, std::size_t &dest_size);
