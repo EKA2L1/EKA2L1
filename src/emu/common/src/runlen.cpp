@@ -30,11 +30,13 @@ namespace eka2l1 {
         const std::uint8_t *src_end = src + src_size;
         const std::uint8_t *dest_end = dest + dest_size;
 
-        while (src < src_end && dest < dest_end) {
-            std::uint8_t count = *src;
+        while (src < src_end && (dest_org ? dest < dest_end : true)) {
+            std::int32_t count = static_cast<std::int8_t>(*src++);
 
             if (count >= 0) {
-                count = common::min(count, static_cast<std::uint8_t>((dest_end - dest) / 3));
+                if (dest_org) {
+                    count = common::min(count, static_cast<std::int32_t>((dest_end - dest) / 3));
+                }
 
                 const std::uint8_t comp1 = *src++;
                 const std::uint8_t comp2 = *src++;
@@ -49,14 +51,13 @@ namespace eka2l1 {
                         count--;
                     }
                 } else {
-                    dest += count * 3;
+                    dest += (count + 1) * 3;
                 }
             } else {
-                const std::uint32_t num_bytes_to_copy = common::min(
-                    static_cast<const std::uint32_t>(count * -3), 
-                    static_cast<const std::uint32_t>(dest_end - dest));
+                std::uint32_t num_bytes_to_copy = count * -3;
 
                 if (dest_org) {
+                    num_bytes_to_copy = common::min(num_bytes_to_copy, static_cast<const std::uint32_t>(dest_end - dest));
                     std::copy(src, src + num_bytes_to_copy, dest);
                 }
 
