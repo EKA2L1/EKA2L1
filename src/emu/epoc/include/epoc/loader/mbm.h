@@ -78,5 +78,13 @@ namespace eka2l1::loader {
          */
         bool read_single_bitmap(const std::size_t index, std::uint8_t *dest, 
             std::size_t &dest_max);
+            
+        /**
+
+         * \brief Save bitmap at specified index to a file as a BMP file.
+         * 
+         * \returns True on success
+         */
+        bool save_bitmap_to_file(const std::size_t index, const char *name);
     };
 }
