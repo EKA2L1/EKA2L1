@@ -20,14 +20,15 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace eka2l1 {
-    /*! \brief Do a run-length decompress of the target source buffer.
+    /*! \brief Do a 24-bit run-length decompress of the target source buffer.
      *
      * Run length is simple and good, easy, used many in Windows and Symbian source
      * code the old day.
     */
-    bool decompress_rle(const std::uint8_t *src, const std::size_t src_size,
-        const std::uint8_t *dest, const std::size_t dest_size);
+    void decompress_rle_24bit(const std::uint8_t *src, std::size_t &src_size,
+        std::uint8_t *dest, std::size_t &dest_size);
 }
