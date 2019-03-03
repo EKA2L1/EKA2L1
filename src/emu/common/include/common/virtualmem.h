@@ -79,7 +79,8 @@ namespace eka2l1::common {
      *
      * \returns A valid pointer to the mapped region on success.
     */
-    void *map_file(const std::string &file_name);
+    void *map_file(const std::string &file_name, const prot perm = prot::read,
+        const std::size_t size = 0);
 
     /*!\brief Unmap a file mapped to memory
      *

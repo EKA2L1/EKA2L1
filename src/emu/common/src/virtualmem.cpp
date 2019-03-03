@@ -131,35 +131,107 @@ namespace eka2l1::common {
 #endif
     }
 
-    void *map_file(const std::string &file_name) {
+    void *map_file(const std::string &file_name, const prot perm, const std::size_t size) {
 #if EKA2L1_PLATFORM(WIN32)
-        HANDLE file_handle = CreateFileA(file_name.c_str(), GENERIC_READ, FILE_SHARE_READ,
-            NULL, OPEN_ALWAYS, NULL, NULL);
+        DWORD desired_access = 0;
+        DWORD share_mode = 0;
+        DWORD page_type = 0;
+        DWORD map_type = 0;
+        DWORD open_type = 0;
 
-        if (!file_handle) {
+        switch (perm) {
+        case prot::read: {
+            desired_access = GENERIC_READ;
+            share_mode = FILE_SHARE_READ;
+            page_type = PAGE_READONLY;
+            open_type = OPEN_ALWAYS;
+            map_type = FILE_MAP_READ;
+
+            break;
+        }
+
+        case prot::write: {
+            desired_access = GENERIC_WRITE;
+            share_mode = FILE_SHARE_WRITE;
+            page_type = PAGE_READWRITE;
+            open_type = CREATE_ALWAYS;
+            map_type = FILE_MAP_WRITE;
+
+            break;
+        }
+
+        case prot::read_write: {
+            desired_access = GENERIC_WRITE | GENERIC_READ;
+            share_mode = FILE_SHARE_WRITE | FILE_SHARE_READ;
+            page_type = PAGE_READWRITE;
+            open_type = CREATE_ALWAYS;
+            map_type = FILE_MAP_WRITE | FILE_MAP_READ;
+
+            break;
+        }
+
+        default: {
+            return nullptr;
+        }
+        }
+
+        HANDLE file_handle = CreateFileA(file_name.c_str(), desired_access, share_mode,
+            NULL, open_type, NULL, NULL);
+
+        if (file_handle == INVALID_HANDLE_VALUE) {
             return false;
         }
 
-        HANDLE map_file_handle = CreateFileMappingA(file_handle, NULL, PAGE_READONLY,
-            0, 0, file_name.c_str());
+        HANDLE map_file_handle = CreateFileMappingA(file_handle, NULL, page_type,
+            size >> 32, static_cast<DWORD>(size), file_name.c_str());
 
         if (!map_file_handle || map_file_handle == INVALID_HANDLE_VALUE) {
             return false;
         }
 
-        auto map_ptr = MapViewOfFile(map_file_handle, FILE_MAP_READ,
+        auto map_ptr = MapViewOfFile(map_file_handle, map_type,
             0, 0, 0);
 #else
-        int file_handle = open(file_name.c_str(), O_RDONLY);
+        DWORD open_mode = 0;
+        DWORD prot_mode = translate_protection(perm);
+        
+        switch (perm) {
+        case prot::read: {
+            open_mode = O_RDONLY;
+            break;
+        }
+
+        case prot::write: {
+            open_mode = O_WRONLY | O_CREAT;
+            break;
+        }
+
+        case prot::read_write: {
+            open_mode = O_RDWR | O_CREAT;
+            break;
+        }
+
+        default: {
+            return nullptr;
+        }
+        }
+
+        int file_handle = open(file_name.c_str(), open_mode);
 
         if (file_handle == -1) {
             return nullptr;
         }
 
-        struct stat file_stat;
-        stat(file_name.c_str(), &file_stat);
+        const std::size_t map_size = size;
 
-        auto map_ptr = mmap(nullptr, file_stat.st_size, PROT_READ, MAP_PRIVATE,
+        if (perm == prot::read || (perm == prot::read_write && size == 0)) {
+            struct stat file_stat;
+            stat(file_name.c_str(), &file_stat);
+
+            map_size = file_stat.st_size;
+        }
+
+        auto map_ptr = mmap(nullptr, map_size, prot_mode, MAP_PRIVATE,
             file_handle, 0);
 #endif
 
