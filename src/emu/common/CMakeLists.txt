@@ -6,6 +6,7 @@ add_library(common
     include/common/armcommon.h
     include/common/armemitter.h
     include/common/bitfield.h
+    include/common/bitmap.h
     include/common/buffer.h
     include/common/bytepair.h
     include/common/chunkyseri.h
