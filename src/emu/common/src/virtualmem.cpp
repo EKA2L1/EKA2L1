@@ -192,8 +192,8 @@ namespace eka2l1::common {
         auto map_ptr = MapViewOfFile(map_file_handle, map_type,
             0, 0, 0);
 #else
-        DWORD open_mode = 0;
-        DWORD prot_mode = translate_protection(perm);
+        int open_mode = 0;
+        const int prot_mode = translate_protection(perm);
         
         switch (perm) {
         case prot::read: {
