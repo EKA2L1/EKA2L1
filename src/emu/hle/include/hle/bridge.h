@@ -35,6 +35,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <type_traits>
 
 namespace eka2l1 {
     namespace hle {
@@ -42,7 +43,7 @@ namespace eka2l1 {
 
         /*! \brief Call a HLE function without return value. */
         template <typename ret, typename... args, size_t... indices>
-        void call(ret (*export_fn)(system *, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter &cpu, system *symsys) {
+        std::enable_if_t<!std::is_same_v<ret, void>, void> call(ret (*export_fn)(system *, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::jitter &cpu, system *symsys) {
             const ret result = (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, symsys->get_memory_system())...);
 
             write_return_value(cpu, result);
