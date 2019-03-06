@@ -24,11 +24,14 @@
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
 #include <epoc/services/window/window.h>
+#include <epoc/utils/sec.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
 
 namespace eka2l1::epoc {
+    static epoc::security_policy key_capture_policy({ epoc::cap_sw_event });
+
     void window_group::lost_focus() {
         queue_event(epoc::event{ id, epoc::event_code::focus_lost });
     }
@@ -62,6 +65,11 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpCaptureKey: case EWsWinOpCaptureKeyUpsAndDowns: {
+            if (!ctx.satisfy(key_capture_policy)) {
+                ctx.set_request_status(KErrPermissionDenied);
+                break;
+            }
+
             ws_cmd_capture_key *capture_key_cmd = reinterpret_cast<decltype(capture_key_cmd)>(cmd.data_ptr);
 
             epoc::event_capture_key_notifier capture_key_notify;
