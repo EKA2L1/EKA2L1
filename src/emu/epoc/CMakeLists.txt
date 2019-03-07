@@ -150,12 +150,14 @@ add_library(epocutils
     include/epoc/utils/reqsts.h
     include/epoc/utils/sec.h
     include/epoc/utils/tl.h
+    include/epoc/utils/obj.h
     src/utils/des.cpp
     src/utils/dll.cpp
     src/utils/panic.cpp
     src/utils/reqsts.cpp
     src/utils/sec.cpp
     src/utils/tl.cpp
+    src/utils/obj.cpp
 )
 
 target_include_directories(epocloader PUBLIC include)
