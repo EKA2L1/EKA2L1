@@ -21,6 +21,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/font.h>
 #include <epoc/services/server.h>
 
@@ -122,6 +123,8 @@ namespace eka2l1 {
         explicit fbscli(fbs_server *serv, const std::uint32_t ss_id);
 
         void get_nearest_font(service::ipc_context *ctx);
+        void load_bitmap(service::ipc_context *ctx);
+        
         void fetch(service::ipc_context *ctx);
     };
 
@@ -137,6 +140,14 @@ namespace eka2l1 {
         }
     };
 
+    struct fbsbitmap: public fbsobj {
+        epoc::bitwise_bitmap *bitmap_;
+
+        explicit fbsbitmap(const std::uint32_t id, epoc::bitwise_bitmap *bitmap)
+            : fbsobj(id, fbsobj_kind::bitmap), bitmap_(bitmap) {
+        }
+    };
+
     class io_system;
 
     class fbs_chunk_allocator : public common::block_allocator {
@@ -149,6 +160,8 @@ namespace eka2l1 {
 
     class fbs_server : public service::server {
         friend struct fbscli;
+
+        server_ptr fs_server;
 
         chunk_ptr shared_chunk;
         chunk_ptr large_chunk;

@@ -79,6 +79,7 @@ add_library(epocservs
     include/epoc/services/drm/rights.h
     include/epoc/services/ecom/ecom.h
     include/epoc/services/ecom/plugin.h
+    include/epoc/services/fbs/bitmap.h
     include/epoc/services/fbs/fbs.h
     include/epoc/services/fbs/font.h
     include/epoc/services/featmgr/featmgr.h
@@ -109,6 +110,8 @@ add_library(epocservs
     src/services/ecom/ecom.cpp
     src/services/ecom/plugin.cpp
     src/services/fbs/fbs.cpp
+    src/services/fbs/impls/bitmap.cpp
+    src/services/fbs/impls/font.cpp
     src/services/featmgr/featmgr.cpp
     src/services/fs/dirs.cpp
     src/services/fs/drives.cpp

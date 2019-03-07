@@ -153,7 +153,7 @@ namespace eka2l1::epoc {
     window_client_obj_ptr window_server_client::get_object(const std::uint32_t handle) {
         const std::uint32_t idx = handle & 0xFFFF;
 
-        if (idx > objects.size()) {
+        if (idx > objects.size() || idx == 0) {
             LOG_WARN("Object handle is invalid {}", handle);
             return nullptr;
         }
@@ -164,7 +164,7 @@ namespace eka2l1::epoc {
     bool window_server_client::delete_object(const std::uint32_t handle) {
         const std::uint32_t idx = handle & 0xFFFF;
 
-        if (idx > objects.size()) {
+        if (idx > objects.size() || idx == 0) {
             LOG_WARN("Object handle is invalid {}", handle);
             return false;
         }
@@ -330,23 +330,7 @@ namespace eka2l1::epoc {
     }
 
     epoc::window_ptr window_server_client::find_window_obj(epoc::window_ptr &root, std::uint32_t id) {
-        if (root->id == id) {
-            return root;
-        }
-
-        if (root->childs.size() == 0) {
-            return nullptr;
-        }
-
-        for (auto &child_win : root->childs) {
-            epoc::window_ptr obj = find_window_obj(child_win, id);
-
-            if (obj) {
-                return obj;
-            }
-        }
-
-        return nullptr;
+        return std::reinterpret_pointer_cast<epoc::window>(get_object(id));
     }
 
     // This handle both sync and async

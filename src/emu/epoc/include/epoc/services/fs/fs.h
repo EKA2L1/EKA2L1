@@ -199,5 +199,21 @@ namespace eka2l1 {
 
     public:
         fs_server(system *sys);
+
+        template <typename T>
+        std::shared_ptr<T> get_fs_node_as(const kernel::uid fs_session_handle, const std::uint32_t fs_file_handle) {
+            auto cli_ite = clients.find(fs_session_handle);
+
+            if (cli_ite == clients.end()) {
+                return nullptr;
+            }
+
+            auto node = (cli_ite->second)->get_file_node(fs_file_handle);
+            if (node == nullptr) {
+                return nullptr;
+            }
+
+            return std::reinterpret_pointer_cast<T>(node->vfs_node);
+        }
     };
 }

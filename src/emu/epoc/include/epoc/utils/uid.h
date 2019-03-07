@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace eka2l1::epoc {
-    using uid = std::unt32_t;
+    using uid = uint32_t;
     
     /*! \brief Triple unique ID. */
     struct uid_type {

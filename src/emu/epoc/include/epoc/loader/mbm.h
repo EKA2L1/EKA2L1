@@ -80,7 +80,6 @@ namespace eka2l1::loader {
             std::size_t &dest_max);
             
         /**
-
          * \brief Save bitmap at specified index to a file as a BMP file.
          * 
          * \returns True on success

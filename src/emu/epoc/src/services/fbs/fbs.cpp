@@ -35,9 +35,6 @@
 
 #include <e32err.h>
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#include <stb_truetype.h>
-
 namespace eka2l1 {
     fbs_chunk_allocator::fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *dat_ptr)
         : block_allocator(dat_ptr, de_chunk->get_size())
@@ -90,54 +87,15 @@ namespace eka2l1 {
         return objects[index];
     }
 
-    static bool is_opcode_ruler_twips(const int opcode) {
-        return (opcode == fbs_nearest_font_design_height_in_twips || opcode == fbs_nearest_font_max_height_in_twips);
-    }
-
-    void fbscli::get_nearest_font(service::ipc_context *ctx) {
-        epoc::font_spec spec = *ctx->get_arg_packed<epoc::font_spec>(0);
-        eka2l1::vec2 size_info = *ctx->get_arg_packed<eka2l1::vec2>(2);
-
-        const bool is_twips = is_opcode_ruler_twips(ctx->msg->function);
-
-        // Search for the name first
-        const std::string font_name = common::ucs2_to_utf8(spec.tf.name.to_std_string(ctx->msg->own_thr->owning_process()));
-
-        fbsfont *match = nullptr;
-
-        for (auto &font : server->font_avails) {
-            if (stbtt_FindMatchingFont(font.data.data(), font_name.data(), 0) != -1) {
-                // Hey, you are the choosen one
-                match = &font;
-                break;
-            }
-        }
-
-        if (!match) {
-            // TODO: We are going to see other fonts that should match the description
-        }
-
-        if (!match) {
-            ctx->set_request_status(KErrNotFound);
-            return;
-        }
-
-        if (!match->guest_font_handle) {
-            // Initialize them all while we don't need it is wasting emulator time and resources
-            // So, when it need one, we are gonna create font info
-            epoc::bitmapfont *bmpfont = server->allocate_general_data<epoc::bitmapfont>();
-            match->guest_font_handle = server->host_ptr_to_guest_general_data(bmpfont).cast<epoc::bitmapfont>();
-
-            // TODO: Find out how to get font name easily
-        }
-
-        ctx->set_request_status(KErrNone);
-    }
-
     void fbscli::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case fbs_nearest_font_design_height_in_pixels: {
             get_nearest_font(ctx);
+            break;
+        }
+
+        case fbs_bitmap_load: {
+            load_bitmap(ctx);
             break;
         }
 
@@ -157,6 +115,7 @@ namespace eka2l1 {
         : service::server(sys, "!Fontbitmapserver", true) {
         REGISTER_IPC(fbs_server, init, fbs_init, "Fbs::Init");
         REGISTER_IPC(fbs_server, redirect, fbs_nearest_font_design_height_in_pixels, "Fbs::NearestFontMaxHeightPixels");
+        REGISTER_IPC(fbs_server, redirect, fbs_bitmap_load, "Fbs::BitmapLoad");
     }
 
     fbscli *fbs_server::get_client_associated_with_handle(const std::uint32_t handle) {
@@ -178,49 +137,6 @@ namespace eka2l1 {
         }
 
         return cli->handles.get_object(handle);
-    }
-
-    void fbs_server::load_fonts(eka2l1::io_system *io) {
-        // Search all drives
-        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
-            if (io->get_drive_entry(drv)) {
-                const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + u":\\Resource\\Fonts\\";
-                auto folder = io->open_dir(fonts_folder_path, io_attrib::none);
-
-                if (folder) {
-                    LOG_TRACE("Found font folder: {}", common::ucs2_to_utf8(fonts_folder_path));
-
-                    while (auto entry = folder->get_next_entry()) {
-                        symfile f = io->open_file(common::utf8_to_ucs2(entry->full_path), READ_MODE | BIN_MODE);
-                        const std::uint64_t fsize = f->size();
-
-                        // Put it out here, so to if the file is smaller than last file, no reallocation is needed.
-                        std::vector<std::uint8_t> buf;
-
-                        buf.resize(fsize);
-                        f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
-
-                        f->close();
-
-                        fbsfont server_font(id_counter++);
-                        server_font.guest_font_handle = 0;
-                        server_font.stb_handle = std::make_unique<stbtt_fontinfo>();
-
-                        if (stbtt_InitFont(server_font.stb_handle.get(), buf.data(), 0) != 0) {
-                            // We success, let's continue! We can't give up...
-                            // 決定! それは私のものです
-                            server_font.data = std::move(buf);
-
-                            // Movingg....
-                            // We are not going to extract the font name now, since it's complicated.
-                            font_avails.push_back(std::move(server_font));
-                        }
-                    }
-                }
-
-                // TODO: Implement FS callback
-            }
-        }
     }
 
     void fbs_server::redirect(service::ipc_context context) {
@@ -281,6 +197,8 @@ namespace eka2l1 {
 
             // Probably also indicates that font aren't loaded yet
             load_fonts(context.sys->get_io_system());
+
+            fs_server = kern->get_by_name<service::server>("!FileServer");
         }
 
         // Create new server client
