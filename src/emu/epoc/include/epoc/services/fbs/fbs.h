@@ -34,6 +34,9 @@
 #include <stb_truetype.h>
 
 namespace eka2l1 {
+    struct file;
+    using symfile = std::shared_ptr<file>;
+    
     enum fbs_opcode {
         fbs_init,
         fbs_shutdown,
@@ -124,6 +127,8 @@ namespace eka2l1 {
 
         void get_nearest_font(service::ipc_context *ctx);
         void load_bitmap(service::ipc_context *ctx);
+
+        void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
         void fetch(service::ipc_context *ctx);
     };

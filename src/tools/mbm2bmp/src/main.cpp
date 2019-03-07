@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     }
 
     eka2l1::common::ro_buf_stream stream(mbm_ptr, eka2l1::common::file_size(target_mbm));
-    eka2l1::loader::mbm_file mbmf(stream);
+    eka2l1::loader::mbm_file mbmf(reinterpret_cast<eka2l1::common::ro_stream*>(&stream));
 
     if (!mbmf.do_read_headers()) {
         LOG_ERROR("Reading MBM header failed! At least one magic value doesn't match!");

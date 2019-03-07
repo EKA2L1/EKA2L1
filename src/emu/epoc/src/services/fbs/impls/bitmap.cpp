@@ -52,5 +52,11 @@ namespace eka2l1 {
         }
 
         LOG_TRACE("Loading bitmap from: {}", common::ucs2_to_utf8(source_file->file_name()));
+
+        load_bitmap_impl(ctx, source_file);
+    }
+
+    void fbscli::load_bitmap_impl(service::ipc_context *ctx, symfile source) {
+        // Check for the cache
     }
 }

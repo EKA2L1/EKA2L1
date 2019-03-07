@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace eka2l1::common {
-    class ro_buf_stream;
+    class ro_stream;
 }
 
 namespace eka2l1::loader {
@@ -60,12 +60,12 @@ namespace eka2l1::loader {
 
         std::vector<sbm_header> sbm_headers;
 
-        common::ro_buf_stream &stream;
+        common::ro_stream *stream;
 
         bool do_read_headers();
         bool valid();
 
-        mbm_file(common::ro_buf_stream &stream)
+        mbm_file(common::ro_stream *stream)
             : stream(stream) {
         }
 

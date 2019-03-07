@@ -23,6 +23,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <common/buffer.h>
+
 namespace eka2l1 {
     /*! \brief Do a 24-bit run-length decompress of the target source buffer.
      *
@@ -38,5 +40,8 @@ namespace eka2l1 {
      *                   On returns, this value is assigned with the number of decompressed bytes.
     */
     void decompress_rle_24bit(const std::uint8_t *src, std::size_t &src_size,
+        std::uint8_t *dest, std::size_t &dest_size);
+
+    void decompress_rle_24bit_stream(common::ro_stream *stream, std::size_t &src_size, 
         std::uint8_t *dest, std::size_t &dest_size);
 }

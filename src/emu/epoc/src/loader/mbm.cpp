@@ -32,14 +32,14 @@ namespace eka2l1::loader {
     }
 
     bool mbm_file::do_read_headers() {
-        if (stream.read(&header, sizeof(header)) != sizeof(header)) {
+        if (stream->read(&header, sizeof(header)) != sizeof(header)) {
             return false;
         }
 
-        stream.seek(header.trailer_off, common::seek_where::beg);
+        stream->seek(header.trailer_off, common::seek_where::beg);
 
         // Go to trailer, let's grab all those single bitmap header offsets
-        if (stream.read(&trailer.count, sizeof(trailer.count)) != sizeof(trailer.count)) {
+        if (stream->read(&trailer.count, sizeof(trailer.count)) != sizeof(trailer.count)) {
             return false;
         }
 
@@ -51,19 +51,19 @@ namespace eka2l1::loader {
         sbm_headers.resize(trailer.count);
 
         for (std::size_t i = 0; i < trailer.sbm_offsets.size(); i++) {
-            if (stream.read(&trailer.sbm_offsets[i], 4) != 4) {
+            if (stream->read(&trailer.sbm_offsets[i], 4) != 4) {
                 return false;
             }
 
             // Remember the current offseet first
-            const auto crr_offset = stream.tell();
-            stream.seek(trailer.sbm_offsets[i], common::seek_where::beg);
+            const auto crr_offset = stream->tell();
+            stream->seek(trailer.sbm_offsets[i], common::seek_where::beg);
 
-            if (stream.read(&sbm_headers[i], sizeof(sbm_header)) != sizeof(sbm_header)) {
+            if (stream->read(&sbm_headers[i], sizeof(sbm_header)) != sizeof(sbm_header)) {
                 return false;
             }
 
-            stream.seek(crr_offset, common::seek_where::beg);
+            stream->seek(crr_offset, common::seek_where::beg);
         }
 
         return valid();
@@ -78,20 +78,19 @@ namespace eka2l1::loader {
         sbm_header &single_bm_header = sbm_headers[index];
         const std::size_t data_offset = trailer.sbm_offsets[index] + single_bm_header.header_len;
 
-        const auto crr_pos = stream.tell();
-        stream.seek(data_offset, common::beg);
+        const auto crr_pos = stream->tell();
+        stream->seek(data_offset, common::beg);
 
         bool success = true;
 
-        const std::uint8_t *data_ptr = stream.get_current();
-        std::size_t compressed_size = common::min(stream.left(), static_cast<std::size_t>(single_bm_header.compressed_len));
+        std::size_t compressed_size = common::min(stream->left(), static_cast<std::size_t>(single_bm_header.compressed_len));
 
         switch (single_bm_header.compression) {
         case 0: {
             dest_max = compressed_size;
             
             if (dest) {
-                stream.read(dest, dest_max);
+                stream->read(dest, dest_max);
             }
 
             break;
@@ -103,12 +102,12 @@ namespace eka2l1::loader {
         }
 
         case 4: {
-            decompress_rle_24bit(data_ptr, compressed_size, dest, dest_max);
+            decompress_rle_24bit_stream(stream, compressed_size, dest, dest_max);
             break;
         }
         }
 
-        stream.seek(crr_pos, common::beg);
+        stream->seek(crr_pos, common::beg);
         
         return true;
     }
