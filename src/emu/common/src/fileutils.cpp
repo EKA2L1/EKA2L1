@@ -19,7 +19,9 @@
  */
 
 #include <common/fileutils.h>
+#include <common/cvt.h>
 #include <common/platform.h>
+#include <common/time.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -302,6 +304,32 @@ namespace eka2l1::common {
         return MoveFileA(path.c_str(), new_path.c_str());
 #else
         return (rename(path.c_str(), new_path.c_str()) == 0);
+#endif
+    }
+    
+    std::uint64_t get_last_modifiy_since_ad(const std::u16string &path) {
+#if EKA2L1_PLATFORM(WIN32)
+        WIN32_FILE_ATTRIBUTE_DATA attrib_data;
+        if (GetFileAttributesExW(reinterpret_cast<const LPCWSTR>(path.c_str()), GetFileExInfoStandard, &attrib_data) == false) {
+            return 0xFFFFFFFFFFFFFFFF;
+        }
+                
+        FILETIME last_modify_time = attrib_data.ftLastWriteTime;
+
+        // 100 nanoseconds = 0.1 microseconds
+        return convert_microsecs_win32_1601_epoch_to_1ad(
+            static_cast<std::uint64_t>(last_modify_time.dwLowDateTime) | 
+            (static_cast<std::uint64_t>(last_modify_time.dwHighDateTime) << 32));
+#else
+        const std::string name_utf8 = common::ucs2_to_utf8(path);
+        struct stat st;
+        auto res = stat(name_utf8.c_str(), &st);
+
+        if (res == -1) {
+            return 0xFFFFFFFFFFFFFFFF;
+        }
+
+        return convert_microsecs_epoch_to_1ad(static_cast<std::uint64_t>(st.st_mtime));
 #endif
     }
 }

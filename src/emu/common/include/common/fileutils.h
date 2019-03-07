@@ -35,6 +35,8 @@ namespace eka2l1::common {
     std::int64_t file_size(const std::string &path);
     file_type get_file_type(const std::string &path);
 
+    std::uint64_t get_last_modifiy_since_ad(const std::u16string &path);
+
     bool is_file(const std::string &path, const file_type expected,
         file_type *result = nullptr);
 
