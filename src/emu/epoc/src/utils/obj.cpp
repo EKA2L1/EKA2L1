@@ -38,7 +38,7 @@ namespace eka2l1::epoc {
     ref_count_object_ptr object_table::get_raw(handle obj_handle) {
         const std::size_t idx = obj_handle & 0xFFFF;
         if (idx > objects.size() || idx == 0) {
-            return false;
+            return nullptr;
         }
         
         return objects[idx - 1];
