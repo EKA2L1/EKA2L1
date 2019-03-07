@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <string>
 
 #include <tuple>
@@ -31,6 +32,12 @@ namespace eka2l1 {
         // https://stackoverflow.com/questions/7968674/unexpected-collision-with-stdhash
         uint32_t hash(std::string const &s);
         std::string normalize_for_hash(std::string org);
+
+        template <class T>
+        inline void hash_combine(std::size_t& seed, const T& v) {
+            std::hash<T> hasher;
+            seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+        }
     }
 }
 
