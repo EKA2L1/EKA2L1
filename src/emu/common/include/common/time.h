@@ -27,10 +27,12 @@
 
 namespace eka2l1::common {
     enum : uint64_t {
-        microsecs_per_sec = 1000000,
-        ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec
+        microsecs_per_sec = 100,
+        ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec,
+        ad_win32_epoch_dist_microsecs = (1601 * 365 * 24 * 60) * microsecs_per_sec
     };
 
     std::uint64_t get_current_time_in_microseconds_since_1ad();
     std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t nsecs);
+    std::uint64_t convert_microsecs_win32_1601_epoch_to_1ad(const std::uint64_t nsecs);
 }
