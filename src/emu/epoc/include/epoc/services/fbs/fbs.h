@@ -26,6 +26,7 @@
 #include <epoc/services/server.h>
 
 #include <common/allocator.h>
+#include <common/hash.h>
 
 #include <atomic>
 #include <memory>
@@ -153,6 +154,29 @@ namespace eka2l1 {
         }
     };
 
+    struct fbsbitmap_cache_info {
+        std::u16string path;
+        int bitmap_idx;
+
+        std::uint64_t last_access_time_since_ad;
+    };
+}
+
+namespace std {
+    template <> struct hash<eka2l1::fbsbitmap_cache_info> {
+        std::size_t operator()(eka2l1::fbsbitmap_cache_info const& info) const noexcept {
+            std::size_t seed = 0x151A5151;
+
+            eka2l1::common::hash_combine(seed, info.path);
+            eka2l1::common::hash_combine(seed, info.bitmap_idx);
+            eka2l1::common::hash_combine(seed, info.last_access_time_since_ad);
+            
+            return seed;
+        }
+    };
+}
+
+namespace eka2l1 {
     class io_system;
 
     class fbs_chunk_allocator : public common::block_allocator {
@@ -180,6 +204,8 @@ namespace eka2l1 {
 
         std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
+
+        std::unordered_map<fbsbitmap_cache_info, fbsbitmap> bitmaps; 
 
         std::atomic<std::uint32_t> id_counter;
 

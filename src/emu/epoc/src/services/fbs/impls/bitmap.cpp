@@ -51,12 +51,21 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Loading bitmap from: {}", common::ucs2_to_utf8(source_file->file_name()));
-
         load_bitmap_impl(ctx, source_file);
     }
 
     void fbscli::load_bitmap_impl(service::ipc_context *ctx, symfile source) {
-        // Check for the cache
+        std::optional<load_bitmap_arg> load_options = ctx->get_arg_packed<load_bitmap_arg>(0);
+        if (!load_options) {
+            ctx->set_request_status(KErrArgument);
+            return;
+        }
+
+        LOG_TRACE("Loading bitmap from: {}", common::ucs2_to_utf8(source->file_name()));
+
+        // Check if it's shared first
+
+        // Check for cache, now!
+        int a = 5;
     }
 }
