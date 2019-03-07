@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <common/buffer.h>
 
 #include <array>
 #include <atomic>
@@ -163,6 +164,8 @@ namespace eka2l1 {
         virtual bool resize(const std::size_t new_size) = 0;
 
         virtual bool flush();
+
+        virtual bool valid() = 0;
 
         std::size_t read_file(const std::uint64_t offset, void *buf, std::uint32_t size,
             std::uint32_t count);
@@ -388,4 +391,20 @@ namespace eka2l1 {
     };
 
     symfile physical_file_proxy(const std::string &path, int mode);
+
+    class ro_file_stream: public common::ro_stream {
+        symfile f_;
+
+    public:
+        explicit ro_file_stream(symfile f): f_(f) {
+        }
+
+        void seek(const std::uint64_t amount, common::seek_where wh) override;
+        bool valid() override;
+        std::uint64_t left() override;
+        uint64_t tell() const override;
+        uint64_t size() override;
+        
+        std::uint64_t read(void *buf, const std::uint64_t read_size) override;
+    };
 }

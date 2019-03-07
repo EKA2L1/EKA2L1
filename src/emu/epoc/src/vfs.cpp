@@ -80,7 +80,7 @@ namespace eka2l1 {
 
         memory_system *mem;
 
-        ptr<char> file_ptr;
+        std::uint8_t *file_ptr;
 
         rom_file(memory_system *mem, loader::rom *supereme_mother, loader::rom_entry entry)
             : parent(supereme_mother)
@@ -90,17 +90,21 @@ namespace eka2l1 {
         }
 
         void init() {
-            file_ptr = ptr<char>(file.address_lin);
+            file_ptr = ptr<std::uint8_t>(file.address_lin).get(mem);
             crr_pos = 0;
         }
 
         uint64_t size() const override {
             return file.size;
         }
+        
+        bool valid() override {
+            return crr_pos < file.size;
+        }
 
         size_t read_file(void *data, uint32_t size, uint32_t count) override {
             auto will_read = std::min((uint64_t)count * size, file.size - crr_pos);
-            memcpy(data, &(file_ptr.get(mem)[crr_pos]), will_read);
+            memcpy(data, &file_ptr[crr_pos], will_read);
 
             crr_pos += will_read;
 
@@ -258,6 +262,10 @@ namespace eka2l1 {
 
         ~physical_file() {
             shutdown();
+        }
+
+        bool valid() override {
+            return !feof(file);
         }
 
         int file_mode() const override {
@@ -1158,5 +1166,34 @@ namespace eka2l1 {
 
     symfile physical_file_proxy(const std::string &path, int mode) {
         return std::make_shared<physical_file>(common::utf8_to_ucs2(path), common::utf8_to_ucs2(path), mode);
+    }
+
+    void ro_file_stream::seek(const std::uint64_t amount, common::seek_where wh) {
+        f_->seek(amount, static_cast<file_seek_mode>(wh));
+    }
+    
+    bool ro_file_stream::valid() {
+        return f_->valid();
+    }
+
+    std::uint64_t ro_file_stream::left() {
+        return f_->size() - f_->tell();
+    }
+
+    std::uint64_t ro_file_stream::tell() const {
+        return f_->tell();
+    }
+
+    std::uint64_t ro_file_stream::size() {
+        return f_->size();
+    }
+    
+    std::uint64_t ro_file_stream::read(void *buf, const std::uint64_t read_size) {
+        std::size_t result = f_->read_file(buf, static_cast<std::uint32_t>(read_size), 1);
+        if (result == static_cast<std::size_t>(-1)) {
+            return 0;
+        }
+
+        return result;
     }
 }
