@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace eka2l1::epoc {
-    class object_table;
+    class object_container;
     
     struct ref_count_object {
         std::uint32_t id;
@@ -34,34 +34,41 @@ namespace eka2l1::epoc {
         int count;
         std::string name;
 
-        object_table *owner;
+        object_container *owner;
 
         ref_count_object()
-            : owner(nullptr) {
+            : owner(nullptr), count(1) {
         }
+
+        void ref();
+        void deref();
     };
 
-    using ref_count_object_ptr = std::shared_ptr<ref_count_object>;
+    class object_container {
+    public:
+        virtual bool remove(ref_count_object *obj) = 0;
+    };
+
     using handle = std::uint32_t;
 
     class object_table {
         std::atomic<std::uint32_t> next_instance;
-        std::vector<ref_count_object_ptr> objects;
+        std::vector<ref_count_object*> objects;
 
     public:
         explicit object_table();
 
-        handle add(ref_count_object_ptr obj);
+        handle add(ref_count_object *obj);
         bool   remove(handle obj_handle);
 
-        ref_count_object_ptr get_raw(handle obj_handle);
+        ref_count_object *get_raw(handle obj_handle);
 
         template <typename T>
-        std::shared_ptr<T> get(handle obj_handle) {
-            return std::reinterpret_pointer_cast<T>(get_raw(obj_handle));
+        T *get(handle obj_handle) {
+            return reinterpret_cast<T*>(get_raw(obj_handle));
         }
 
-        ref_count_object_ptr operator [](handle obj_handle) {
+        ref_count_object *operator [](handle obj_handle) {
             return get_raw(obj_handle);
         }
     };

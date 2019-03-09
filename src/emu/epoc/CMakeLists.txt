@@ -62,6 +62,7 @@ add_library(epocmem
 
 add_library(epocservs 
     include/epoc/services/context.h
+    include/epoc/services/framework.h
     include/epoc/services/init.h
     include/epoc/services/session.h
     include/epoc/services/server.h
@@ -95,6 +96,7 @@ add_library(epocservs
     include/epoc/services/window/window.h
     include/epoc/ipc.h
     src/services/context.cpp
+    src/services/framework.cpp
     src/services/init.cpp
     src/services/property.cpp
     src/services/server.cpp

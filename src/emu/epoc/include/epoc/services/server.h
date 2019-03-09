@@ -104,8 +104,10 @@ namespace eka2l1 {
             thread_ptr owning_thread;
 
             /** Placeholder message uses for processing */
+        protected:
             ipc_msg_ptr process_msg;
 
+        private:
             eka2l1::ptr<epoc::request_status> request_status = 0;
             eka2l1::ptr<message2> request_data;
 
@@ -163,7 +165,7 @@ namespace eka2l1 {
             void register_ipc_func(uint32_t ordinal, ipc_func func);
 
             /*! Process an message asynchrounously */
-            void process_accepted_msg();
+            virtual void process_accepted_msg();
 
             system *get_system() {
                 return sys;

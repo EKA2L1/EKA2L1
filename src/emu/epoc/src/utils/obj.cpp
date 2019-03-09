@@ -9,19 +9,19 @@ namespace eka2l1::epoc {
         return static_cast<handle>((inst << 16) | (idx));
     }
         
-    handle object_table::add(ref_count_object_ptr obj) {
+    handle object_table::add(ref_count_object *obj) {
         for (std::size_t i = 0; i < objects.size(); i++) {
             if (!objects[i]) {
-                objects[i] = std::move(obj);
-                objects[i]->id = next_instance;
+                objects[i] = obj;
+                obj->ref();
 
                 return make_handle(static_cast<std::uint32_t>(i + 1), next_instance++);
             }
         }
 
-        objects.push_back(std::move(obj));
-        objects.back()->id = next_instance;
-        
+        objects.push_back(obj);
+        obj->ref();
+
         return make_handle(static_cast<std::uint32_t>(objects.size()), next_instance++);
     }
 
@@ -31,16 +31,29 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        objects[idx - 1].reset();
+        objects[idx - 1]->deref();
+        objects[idx - 1] = nullptr;
         return true;
     }
 
-    ref_count_object_ptr object_table::get_raw(handle obj_handle) {
+    ref_count_object *object_table::get_raw(handle obj_handle) {
         const std::size_t idx = obj_handle & 0xFFFF;
         if (idx > objects.size() || idx == 0) {
             return nullptr;
         }
         
         return objects[idx - 1];
+    }
+
+    void ref_count_object::ref() {
+        count++;
+    }
+
+    void ref_count_object::deref() {
+        count--;
+
+        if (count == 0) {
+            owner->remove(this);
+        }
     }
 }
