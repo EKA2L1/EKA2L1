@@ -54,7 +54,7 @@ namespace eka2l1::service {
     public:
         template <typename T, typename ...Args>
         T *make_new(Args... arguments) {
-            return svr_->obj_con.make_new<T, Args...>(Args...);
+            return svr_->obj_con.make_new<T, Args...>(arguments...);
         }
 
         virtual void fetch(service::ipc_context &ctx) = 0;
