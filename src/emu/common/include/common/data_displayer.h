@@ -20,6 +20,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace eka2l1 {
