@@ -13,11 +13,15 @@ namespace eka2l1::epoc {
         for (std::size_t i = 0; i < objects.size(); i++) {
             if (!objects[i]) {
                 objects[i] = obj;
+                obj->ref();
+
                 return make_handle(static_cast<std::uint32_t>(i + 1), next_instance++);
             }
         }
 
         objects.push_back(obj);
+        obj->ref();
+
         return make_handle(static_cast<std::uint32_t>(objects.size()), next_instance++);
     }
 
@@ -27,6 +31,7 @@ namespace eka2l1::epoc {
             return false;
         }
 
+        objects[idx - 1]->deref();
         objects[idx - 1] = nullptr;
         return true;
     }
