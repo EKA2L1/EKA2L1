@@ -51,10 +51,10 @@ namespace eka2l1 {
 
         fbsfont *match = nullptr;
 
-        for (auto &font : server->font_avails) {
-            if (stbtt_FindMatchingFont(font.data.data(), font_name.data(), 0) != -1) {
+        for (auto &font : server<fbs_server>()->font_avails) {
+            if (stbtt_FindMatchingFont(font->data.data(), font_name.data(), 0) != -1) {
                 // Hey, you are the choosen one
-                match = &font;
+                match = font;
                 break;
             }
         }
@@ -71,8 +71,8 @@ namespace eka2l1 {
         if (!match->guest_font_handle) {
             // Initialize them all while we don't need it is wasting emulator time and resources
             // So, when it need one, we are gonna create font info
-            epoc::bitmapfont *bmpfont = server->allocate_general_data<epoc::bitmapfont>();
-            match->guest_font_handle = server->host_ptr_to_guest_general_data(bmpfont).cast<epoc::bitmapfont>();
+            epoc::bitmapfont *bmpfont = server<fbs_server>()->allocate_general_data<epoc::bitmapfont>();
+            match->guest_font_handle = server<fbs_server>()->host_ptr_to_guest_general_data(bmpfont).cast<epoc::bitmapfont>();
 
             // TODO: Find out how to get font name easily
         }
@@ -102,18 +102,18 @@ namespace eka2l1 {
 
                         f->close();
 
-                        fbsfont server_font(id_counter++);
-                        server_font.guest_font_handle = 0;
-                        server_font.stb_handle = std::make_unique<stbtt_fontinfo>();
+                        fbsfont *server_font = make_new<fbsfont>();
+                        server_font->guest_font_handle = 0;
+                        server_font->stb_handle = std::make_unique<stbtt_fontinfo>();
 
-                        if (stbtt_InitFont(server_font.stb_handle.get(), buf.data(), 0) != 0) {
+                        if (stbtt_InitFont(server_font->stb_handle.get(), buf.data(), 0) != 0) {
                             // We success, let's continue! We can't give up...
                             // 決定! それは私のものです
-                            server_font.data = std::move(buf);
+                            server_font->data = std::move(buf);
 
                             // Movingg....
                             // We are not going to extract the font name now, since it's complicated.
-                            font_avails.push_back(std::move(server_font));
+                            font_avails.push_back(server_font);
                         }
                     }
                 }

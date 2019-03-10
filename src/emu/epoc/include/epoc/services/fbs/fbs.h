@@ -23,7 +23,7 @@
 
 #include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/font.h>
-#include <epoc/services/server.h>
+#include <epoc/services/framework.h>
 
 #include <common/allocator.h>
 #include <common/hash.h>
@@ -94,44 +94,29 @@ namespace eka2l1 {
         bitmap
     };
 
-    struct fbsobj {
+    struct fbsobj : public epoc::ref_count_object {
         fbsobj_kind kind;
-        std::uint32_t id;
 
-        explicit fbsobj(const std::uint32_t id, const fbsobj_kind kind)
-            : id(id)
-            , kind(kind) {
+        explicit fbsobj(const fbsobj_kind kind)
+            : kind(kind) {
         }
-    };
-
-    struct fbscli;
-
-    struct fbshandles {
-        fbscli *owner;
-        std::vector<fbsobj *> objects;
-
-        std::uint32_t make_handle(std::size_t index);
-        std::uint32_t add_object(fbsobj *obj);
-        bool remove_object(std::size_t index);
-
-        fbsobj *get_object(const std::uint32_t handle);
     };
 
     class fbs_server;
 
-    struct fbscli {
-        std::uint32_t session_id;
-        fbshandles handles;
-        fbs_server *server;
+    struct fbscli : public service::typical_session {
+        service::uid connection_id_ {0};
 
-        explicit fbscli(fbs_server *serv, const std::uint32_t ss_id);
+        explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id)
+            : service::typical_session(serv, ss_id) {
+        }
 
         void get_nearest_font(service::ipc_context *ctx);
         void load_bitmap(service::ipc_context *ctx);
 
         void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
-        void fetch(service::ipc_context *ctx);
+        void fetch(service::ipc_context *ctx) override;
     };
 
     struct fbsfont : fbsobj {
@@ -141,16 +126,16 @@ namespace eka2l1 {
         std::unique_ptr<stbtt_fontinfo> stb_handle;
         eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
 
-        explicit fbsfont(const std::uint32_t id)
-            : fbsobj(id, fbsobj_kind::font) {
+        explicit fbsfont()
+            : fbsobj(fbsobj_kind::font) {
         }
     };
 
     struct fbsbitmap: public fbsobj {
         epoc::bitwise_bitmap *bitmap_;
 
-        explicit fbsbitmap(const std::uint32_t id, epoc::bitwise_bitmap *bitmap)
-            : fbsobj(id, fbsobj_kind::bitmap), bitmap_(bitmap) {
+        explicit fbsbitmap(epoc::bitwise_bitmap *bitmap)
+            : fbsobj(fbsobj_kind::bitmap), bitmap_(bitmap) {
         }
     };
 
@@ -187,7 +172,7 @@ namespace eka2l1 {
         virtual bool expand(std::size_t target) override;
     };
 
-    class fbs_server : public service::server {
+    class fbs_server : public service::typical_server {
         friend struct fbscli;
 
         server_ptr fs_server;
@@ -198,30 +183,24 @@ namespace eka2l1 {
         std::uint8_t *base_shared_chunk;
         std::uint8_t *base_large_chunk;
 
-        std::unordered_map<std::uint32_t, fbscli> clients;
-        std::vector<fbsfont> font_avails;
+        std::vector<fbsfont *> font_avails;
         std::vector<fbsfont *> matched;
 
         std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
 
-        std::unordered_map<fbsbitmap_cache_info, fbsbitmap> bitmaps; 
-
-        std::atomic<std::uint32_t> id_counter;
-
         void load_fonts(eka2l1::io_system *io);
+
+        std::atomic<service::uid> connection_id_counter {1};
 
     protected:
         void folder_change_callback(eka2l1::io_system *sys, const std::u16string &path, int action);
 
-        fbscli *get_client_associated_with_handle(const std::uint32_t handle);
-        fbsobj *get_object(const std::uint32_t handle);
-
     public:
         explicit fbs_server(eka2l1::system *sys);
-        void init(service::ipc_context context);
+        service::uid init();
 
-        void redirect(service::ipc_context context);
+        void connect(service::ipc_context context) override;        
 
         std::uint8_t *get_shared_chunk_base() {
             return base_shared_chunk;

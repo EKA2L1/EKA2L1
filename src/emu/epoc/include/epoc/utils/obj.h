@@ -31,7 +31,7 @@ namespace eka2l1::epoc {
     struct ref_count_object {
         std::uint32_t id;
         
-        int count;
+        int count {0};
         std::string name;
 
         object_container *owner;

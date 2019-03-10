@@ -43,7 +43,7 @@ namespace eka2l1 {
         session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_arg<int>(2)));
         const std::uint32_t fs_file_handle = static_cast<std::uint32_t>(*(ctx->get_arg<int>(3)));
 
-        auto fs_server = std::reinterpret_pointer_cast<eka2l1::fs_server>(server->fs_server);
+        auto fs_server = std::reinterpret_pointer_cast<eka2l1::fs_server>(server<fbs_server>()->fs_server);
         symfile source_file = fs_server->get_fs_node_as<eka2l1::file>(fs_target_session->unique_id(), fs_file_handle);
 
         if (!source_file) {
