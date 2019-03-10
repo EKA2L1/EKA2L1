@@ -151,6 +151,10 @@ namespace eka2l1 {
             return crr_pos;
         }
 
+        std::uint64_t last_modify_since_1ad() override {
+            return parent->header.time;    
+        }
+
         std::string get_error_descriptor() override {
             return "no";
         }
@@ -315,7 +319,7 @@ namespace eka2l1 {
         size_t read_file(void *data, uint32_t size, uint32_t count) override {
             WARN_CLOSE
 
-            return fread(data, size, count, file);
+            return fread(data, size, count, file) * size;
         }
 
         uint64_t size() const override {
@@ -381,6 +385,10 @@ namespace eka2l1 {
 
             int err_code = common::resize(common::ucs2_to_utf8(physical_path), new_size);
             return (err_code != 0) ? false : true;
+        }
+        
+        std::uint64_t last_modify_since_1ad() override {
+            return common::get_last_modifiy_since_ad(physical_path);
         }
 
         std::string get_error_descriptor() override {

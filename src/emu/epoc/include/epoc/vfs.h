@@ -167,6 +167,8 @@ namespace eka2l1 {
 
         virtual bool valid() = 0;
 
+        virtual std::uint64_t last_modify_since_1ad() = 0;
+
         std::size_t read_file(const std::uint64_t offset, void *buf, std::uint32_t size,
             std::uint32_t count);
     };
