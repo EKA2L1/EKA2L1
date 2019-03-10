@@ -62,7 +62,7 @@ namespace eka2l1::service {
     public:
         template <typename T, typename ...Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
-            const kernel::uid suid = ctx->msg->msg_session->unique_id();
+            const service::uid suid = ctx->msg->msg_session->unique_id();
             sessions.emplace(suid, std::make_unique<T>(
                 reinterpret_cast<typical_server*>(this), suid, arguments...));
 
