@@ -52,9 +52,11 @@ namespace eka2l1::common {
 
         if (farest_end_offset >= max_size) {
             // It's time to expand
-            if (!expand(max_size * 2)) {
+            if (!expand(common::max(max_size * 2, rounded_size))) {
                 return nullptr;
             }
+
+            max_size = common::max(max_size * 2, rounded_size);
         }
 
         // We try our best, but we can't
