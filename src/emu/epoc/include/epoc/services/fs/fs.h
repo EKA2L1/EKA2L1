@@ -55,7 +55,7 @@ namespace eka2l1 {
 
     struct fs_node {
         io_component_ptr vfs_node;
-        uint32_t access_count;
+        uint32_t access_count {0};
 
         int mix_mode;
         int open_mode;
@@ -80,7 +80,7 @@ namespace eka2l1 {
     public:
         fs_handle_table();
 
-        size_t add_node(fs_node &node);
+        size_t add_node(fs_node node);
         bool close_nodes(size_t handle);
 
         fs_node *get_node(size_t handle);

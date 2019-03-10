@@ -47,7 +47,7 @@ namespace eka2l1 {
         }
     }
 
-    size_t fs_handle_table::add_node(fs_node &node) {
+    size_t fs_handle_table::add_node(fs_node node) {
         for (size_t i = 0; i < nodes.size(); i++) {
             if (!nodes[i].is_active) {
                 nodes[i] = std::move(node);
