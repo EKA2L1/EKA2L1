@@ -30,6 +30,7 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 #include <stb_truetype.h>
@@ -171,6 +172,12 @@ namespace std {
 namespace eka2l1 {
     class io_system;
 
+    enum fbs_load_data_err {
+        fbs_load_data_err_none,
+        fbs_load_data_err_out_of_mem,
+        fbs_load_data_err_read_decomp_fail
+    };
+
     class fbs_chunk_allocator : public common::block_allocator {
         chunk_ptr target_chunk;
 
@@ -222,6 +229,18 @@ namespace eka2l1 {
         std::uint32_t host_ptr_to_guest_shared_offset(void *ptr) {
             return static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
+
+        /**
+         * \brief Load uncompressed image data to large chunk.
+         * 
+         * \param mbmf_ The MBM file stream
+         * \param idx_ Index of the bitmap in MBM. Index base is 0.
+         * \param err_code Pointer to integer whic will holds error code. Must not be null.
+         * 
+         * \return Starting offset from the large chunk.
+         */
+        std::optional<std::size_t> load_uncomp_data_to_rom(loader::mbm_file &mbmf_, 
+            const std::size_t idx_, int *err_code);
 
         /*! \brief Use to Allocate structure from server side.
          *

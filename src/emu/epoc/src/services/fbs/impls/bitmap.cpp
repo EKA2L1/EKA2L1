@@ -21,6 +21,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/log.h>
@@ -31,6 +32,8 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 #include <epoc/vfs.h>
+
+#include <cassert>
 
 namespace eka2l1 {
     struct load_bitmap_arg {
@@ -44,6 +47,92 @@ namespace eka2l1 {
         std::int32_t server_handle;
         std::int32_t address_offset;
     };
+
+    static int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
+        int word_width = 0;
+
+        switch (bits_per_pixel) {
+        case 1: 
+        {
+            word_width = (pixels_width + 31) / 32;
+            break;
+        }
+
+        case 2: 
+        {
+            word_width = (pixels_width + 15) / 16;
+            break;
+        }
+
+        case 4: 
+        {
+            word_width = (pixels_width + 7) / 8;
+            break;
+        }
+
+        case 8:
+        {
+            word_width = (pixels_width + 3) / 4;
+            break;
+        }
+
+        case 12:
+        case 16: 
+        {
+            word_width = (pixels_width + 1) / 2;
+            break;
+        }
+
+        case 24:
+        {
+            word_width = (((pixels_width * 3) + 11) / 12) * 3;
+            break;
+        }
+
+        case 32: 
+        {
+            word_width = pixels_width;
+            break;
+        }
+
+        default: {
+            assert(false);
+            break;
+        }
+        }
+
+        return word_width * 4;
+    }
+
+    std::optional<std::size_t> fbs_server::load_uncomp_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_
+        , int *err_code) {
+        // First, get the size of data when uncompressed
+        std::size_t size_when_uncompressed = 0;
+        if (!mbmf_.read_single_bitmap(idx_, nullptr, size_when_uncompressed)) {
+            *err_code = fbs_load_data_err_read_decomp_fail;
+            return std::nullopt;
+        }
+
+        // Allocates from the large chunk
+        // Align them with 4 bytes
+        std::size_t avail_dest_size = common::align(size_when_uncompressed, 4);
+        void *data = large_chunk_allocator->allocate(avail_dest_size);
+        if (data == nullptr) {
+            // We can't allocate at all
+            *err_code = fbs_load_data_err_out_of_mem;
+            return std::nullopt;
+        }
+
+        // Yay, we manage to alloc memory to load the data in
+        // So let's get to work
+        if (!mbmf_.read_single_bitmap(idx_, reinterpret_cast<std::uint8_t*>(data), avail_dest_size)) {
+            *err_code = fbs_load_data_err_read_decomp_fail;
+            return std::nullopt;
+        }
+
+        *err_code = fbs_load_data_err_none;
+        return reinterpret_cast<std::uint8_t*>(data) - base_large_chunk;
+    }
 
     void fbscli::load_bitmap(service::ipc_context *ctx) {
         // Get the FS session
@@ -108,7 +197,44 @@ namespace eka2l1 {
             // hesistate is bad.
             epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
             bws_bmp->header_ = mbmf_.sbm_headers[load_options->bitmap_id - 1];
-            
+
+            // Load the bitmap data to large chunk
+            int err_code = fbs_load_data_err_none;
+            auto bmp_data_offset = fbss->load_uncomp_data_to_rom(mbmf_, load_options->bitmap_id - 1, &err_code);
+
+            if (!bmp_data_offset) {
+                switch (err_code) {
+                case fbs_load_data_err_out_of_mem: {
+                    LOG_ERROR("Can't allocate data for storing bitmap!");
+                    ctx->set_request_status(KErrNoMemory);
+
+                    return;
+                }
+
+                case fbs_load_data_err_read_decomp_fail: {
+                    LOG_ERROR("Can't read or decompress bitmap data, possibly corrupted.");
+                    ctx->set_request_status(KErrCorrupt);
+
+                    return;
+                }
+
+                default: {
+                    LOG_ERROR("Unknown error code from loading uncompressed bitmap!");
+                    ctx->set_request_status(KErrGeneral);
+
+                    return;
+                }
+                }
+            }
+
+            // Place holder value indicates we allocate through the large chunk.
+            // If guest uses this, than we are doom. But gonna put it here anyway
+            bws_bmp->pile_ = 0x1EA5EB0;
+            bws_bmp->data_offset_ = static_cast<std::uint32_t>(bmp_data_offset.value());
+            bws_bmp->compressed_in_ram_ = false;
+            bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
+            bws_bmp->uid_ = epoc::bitwise_bitmap_uid;
+
             bmp = make_new<fbsbitmap>(bws_bmp, static_cast<bool>(load_options->share));
         }
 
@@ -125,6 +251,6 @@ namespace eka2l1 {
         handle_info.address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg<bmp_handles>(0, handle_info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone); 
     }
 }
