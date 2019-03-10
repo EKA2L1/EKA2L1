@@ -98,14 +98,13 @@ namespace eka2l1 {
             /** Messages that has been delivered but not accepted yet */
             std::vector<server_msg> delivered_msgs;
 
-            std::unordered_map<int, ipc_func> ipc_funcs;
-
             /** The thread own this server */
             thread_ptr owning_thread;
 
             /** Placeholder message uses for processing */
         protected:
             ipc_msg_ptr process_msg;
+            std::unordered_map<int, ipc_func> ipc_funcs;
 
         private:
             eka2l1::ptr<epoc::request_status> request_status = 0;

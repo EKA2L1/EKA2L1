@@ -1,6 +1,26 @@
+/*
+ * Copyright (c) 2019 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <epoc/services/fbs/fbs.h>
+#include <epoc/services/server.h>
+#include <epoc/services/context.h>
 #include <epoc/utils/obj.h>
 
 #include <cstdint>
@@ -25,7 +45,7 @@ namespace eka2l1::service {
 
             objs.push_back(std::move(obj));
 
-            return objs.back().get();
+            return reinterpret_cast<T*>(objs.back().get());
         }
 
         bool remove(epoc::ref_count_object *obj) override;
@@ -40,6 +60,20 @@ namespace eka2l1::service {
         normal_object_container obj_con;
 
     public:
+        template <typename T, typename ...Args>
+        T *create_session(service::ipc_context *ctx, Args... arguments) {
+            const kernel::uid suid = ctx->msg->msg_session->unique_id();
+            sessions.emplace(suid, std::make_unique<T>(
+                reinterpret_cast<typical_server*>(this), suid, arguments...));
+
+            return reinterpret_cast<T*>(sessions[suid].get());
+        }
+
+        template <typename T, typename ...Args>
+        T *make_new(Args... arguments) {
+            return obj_con.make_new<T, Args...>(arguments...);
+        }
+
         explicit typical_server(system *sys, const std::string name);
         void process_accepted_msg() override;
     };
@@ -48,15 +82,24 @@ namespace eka2l1::service {
         typical_server *svr_;
 
     protected:
-        service::uid client_ss_uid;
-        epoc::object_table obj_table;
+        service::uid client_ss_uid_;
+        epoc::object_table obj_table_;
 
     public:
-        template <typename T, typename ...Args>
-        T *make_new(Args... arguments) {
-            return svr_->obj_con.make_new<T, Args...>(arguments...);
+        explicit typical_session(typical_server *svr, service::uid client_ss_uid)
+            : svr_(svr), client_ss_uid_(client_ss_uid) {
         }
 
-        virtual void fetch(service::ipc_context &ctx) = 0;
+        template <typename T, typename ...Args>
+        T *make_new(Args... arguments) {
+            return svr_->make_new<T, Args...>(arguments...);
+        }
+
+        template <typename T>
+        T *server() {
+            return reinterpret_cast<T*>(svr_);
+        }
+
+        virtual void fetch(service::ipc_context *ctx) = 0;
     };
 }
