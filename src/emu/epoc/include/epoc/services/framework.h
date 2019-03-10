@@ -35,7 +35,7 @@ namespace eka2l1::service {
         using ref_count_object_heap_ptr = std::unique_ptr<epoc::ref_count_object>;
         std::vector<ref_count_object_heap_ptr> objs;
 
-        std::atomic<uid> uid_counter;
+        std::atomic<uid> uid_counter {1};
 
     public:
         template <typename T, typename ...Args>
