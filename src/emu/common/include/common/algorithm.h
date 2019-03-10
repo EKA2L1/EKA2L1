@@ -114,7 +114,7 @@ namespace eka2l1 {
         template <typename T>
         T next_power_of_two(const T target) {
             const std::uint8_t power = static_cast<std::uint8_t>(std::log2l(static_cast<long double>(target)));
-            return static_cast<T>(1ULL << power);
+            return static_cast<T>(1ULL << (power + 1));
         }
 
         /*! Check if the number is power of two. */
