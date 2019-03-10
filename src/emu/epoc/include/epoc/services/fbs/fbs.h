@@ -133,9 +133,11 @@ namespace eka2l1 {
 
     struct fbsbitmap: public fbsobj {
         epoc::bitwise_bitmap *bitmap_;
+        bool shared_ { false };
 
-        explicit fbsbitmap(epoc::bitwise_bitmap *bitmap)
-            : fbsobj(fbsobj_kind::bitmap), bitmap_(bitmap) {
+        explicit fbsbitmap(epoc::bitwise_bitmap *bitmap, const bool shared)
+            : fbsobj(fbsobj_kind::bitmap), bitmap_(bitmap)
+            , shared_(shared) {
         }
     };
 
@@ -145,6 +147,11 @@ namespace eka2l1 {
 
         std::uint64_t last_access_time_since_ad;
     };
+
+    inline bool operator == (const fbsbitmap_cache_info &lhs, const fbsbitmap_cache_info &rhs) {
+        return (lhs.path == rhs.path) && (lhs.bitmap_idx == rhs.bitmap_idx) &&
+            (lhs.last_access_time_since_ad == rhs.last_access_time_since_ad);
+    }
 }
 
 namespace std {
@@ -186,6 +193,8 @@ namespace eka2l1 {
         std::vector<fbsfont *> font_avails;
         std::vector<fbsfont *> matched;
 
+        std::unordered_map<fbsbitmap_cache_info, fbsbitmap*> shared_bitmaps;
+
         std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
 
@@ -208,6 +217,10 @@ namespace eka2l1 {
 
         ptr<std::uint8_t> host_ptr_to_guest_general_data(void *ptr) {
             return shared_chunk->base() + static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
+        }
+
+        std::uint32_t host_ptr_to_guest_shared_offset(void *ptr) {
+            return static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
 
         /*! \brief Use to Allocate structure from server side.

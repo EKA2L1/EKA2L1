@@ -22,6 +22,7 @@
  */
 
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 
 #include <epoc/services/fbs/fbs.h>
@@ -33,9 +34,15 @@
 
 namespace eka2l1 {
     struct load_bitmap_arg {
-        int bitmap_id;
-        int share;
-        int file_offset;
+        std::uint32_t bitmap_id;
+        std::int32_t share;
+        std::int32_t file_offset;
+    };
+
+    struct bmp_handles {
+        std::int32_t handle;
+        std::int32_t server_handle;
+        std::int32_t address_offset;
     };
 
     void fbscli::load_bitmap(service::ipc_context *ctx) {
@@ -63,9 +70,61 @@ namespace eka2l1 {
 
         LOG_TRACE("Loading bitmap from: {}", common::ucs2_to_utf8(source->file_name()));
 
-        // Check if it's shared first
+        fbsbitmap *bmp = nullptr;
+        fbs_server *fbss = server<fbs_server>();
 
-        // Check for cache, now!
-        int a = 5;
+        fbsbitmap_cache_info cache_info_;
+
+        // Check if it's shared first
+        if (load_options->share) {
+            // Shared bitmaps are stored on server's map, because it's means to be accessed by
+            // other fbs clients. Let's lookup our bitmap on there
+            cache_info_.bitmap_idx = load_options->bitmap_id;
+            cache_info_.last_access_time_since_ad = source->last_modify_since_1ad();
+            cache_info_.path = source->file_name();
+
+            auto shared_bitmap_ite = fbss->shared_bitmaps.find(cache_info_);
+
+            if (shared_bitmap_ite != fbss->shared_bitmaps.end()) {
+                bmp = shared_bitmap_ite->second;
+            }
+        }
+
+        if (!bmp) {
+            // Let's load the MBM from file first
+            eka2l1::ro_file_stream stream_(source);
+            loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream*>(&stream_));
+
+            mbmf_.do_read_headers();
+
+            // Let's do an insanity check. Is the bitmap index client given us is not valid ?
+            // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 6.
+            if (mbmf_.trailer.count < load_options->bitmap_id) {
+                ctx->set_request_status(KErrNotFound);
+                return;
+            }
+
+            // With doing that, we can now finally start loading to bitmap properly. So let's do it,
+            // hesistate is bad.
+            epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
+            bws_bmp->header_ = mbmf_.sbm_headers[load_options->bitmap_id - 1];
+            
+            bmp = make_new<fbsbitmap>(bws_bmp, static_cast<bool>(load_options->share));
+        }
+
+        if (load_options->share) {
+            fbss->shared_bitmaps.emplace(cache_info_, bmp);
+        }
+
+        // Now writes the bitmap info in
+        bmp_handles handle_info;
+
+        // Add this object to the object table!
+        handle_info.handle = obj_table_.add(bmp);
+        handle_info.server_handle = bmp->id;
+        handle_info.address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+
+        ctx->write_arg_pkg<bmp_handles>(0, handle_info);
+        ctx->set_request_status(KErrNone);
     }
 }
