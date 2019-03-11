@@ -83,6 +83,13 @@ namespace eka2l1::epoc {
             break;
         }
 
+        // Get window size.
+        case EWsWinOpSize: {
+            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, size);
+            ctx.set_request_status(KErrNone);
+            break;
+        }
+
         case EWsWinOpSetVisible: {
             const bool op = *reinterpret_cast<bool *>(cmd.data_ptr);
 
