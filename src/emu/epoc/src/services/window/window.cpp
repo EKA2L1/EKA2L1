@@ -137,9 +137,10 @@ namespace eka2l1::epoc {
         }
     }
 
-    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user) {
+    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &r) {
         // Calculate the priority
-        return redraws.queue_event(epoc::redraw_event{ user->id, user->pos, user->pos + user->size },
+        return redraws.queue_event(epoc::redraw_event{ user->id, r.top, 
+        vec2(r.top.x + r.size.x, r.top.y + r.size.y) },
             user->redraw_priority());
     }
 
@@ -279,8 +280,8 @@ namespace eka2l1::epoc {
         std::shared_ptr<epoc::window_user> win = std::make_shared<epoc::window_user>(this, parent->dvc,
             header->win_type, header->dmode);
 
-        win->driver_win_id = std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver()->create_window(eka2l1::vec2(200, 200),
-            0, true);
+        win->driver_win_id = std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver()->
+            create_window(eka2l1::vec2(200, 200), 0, true);
 
         win->parent = parent;
         parent->childs.push(win);
