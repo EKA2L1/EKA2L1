@@ -146,6 +146,13 @@ if (BUILD_JIT_LLVM)
     add_library(external::llvm ALIAS shortllvm)
 endif()
 
+## XXHash
+add_library(xxHash
+    xxHash/xxhash.h
+    xxHash/xxhash.c)
+
+target_include_directories(xxHash PUBLIC xxHash)
+
 if (BUILD_TOOLS)
     find_package(LibClang QUIET)
 
