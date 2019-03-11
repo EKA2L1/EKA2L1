@@ -176,7 +176,7 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpBeginRedraw: {
+        case EWsWinOpBeginRedraw: case EWsWinOpBeginRedrawFull: {
             for (auto &context : contexts) {
                 context->recording = true;
 
