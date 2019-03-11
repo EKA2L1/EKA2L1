@@ -46,6 +46,8 @@ namespace eka2l1::epoc {
         std::vector<epoc::window_ptr> windows;
         epoc::window_group_ptr focus;
 
+        epoc::display_mode disp_mode { display_mode::color16ma };
+
         epoc::window_group_ptr find_window_group_to_focus();
 
         void update_focus(epoc::window_group_ptr closing_group);

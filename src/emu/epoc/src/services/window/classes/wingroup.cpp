@@ -54,6 +54,21 @@ namespace eka2l1::epoc {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
+        case EWsWinOpRequiredDisplayMode: {
+            // On s60 and fowards, this method is ignored. So even with lower version, just ignore
+            // them. Like they don't mean anything.
+            LOG_TRACE("SetRequiredDisplayMode ignored.");
+            [[fallthrough]];
+        }
+
+        // Fall through to get system display mode
+        case EWsWinOpGetDisplayMode: {
+            ctx.write_arg_pkg<epoc::display_mode>(reply_slot, dvc->disp_mode);
+            ctx.set_request_status(KErrNone);
+
+            break;
+        }
+        
         case EWsWinOpEnableScreenChangeEvents: {
             epoc::event_screen_change_user evt;
             evt.user = this;

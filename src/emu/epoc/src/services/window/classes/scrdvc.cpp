@@ -199,8 +199,7 @@ namespace eka2l1::epoc {
         case EWsSdOpGetScreenModeDisplayMode: {
             int mode = *reinterpret_cast<int *>(cmd.data_ptr);
 
-            LOG_TRACE("GetScreenModeDisplayMode stubbed with true color + alpha (color16ma)");
-            ctx.write_arg_pkg(reply_slot, display_mode::color16ma);
+            ctx.write_arg_pkg(reply_slot, disp_mode);
             ctx.set_request_status(KErrNone);
 
             break;
