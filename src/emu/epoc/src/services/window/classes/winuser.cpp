@@ -153,18 +153,23 @@ namespace eka2l1::epoc {
 
             // When a window actives, a redraw is needed
             // Redraw happens with all of the screen
-            client->queue_redraw(this);
+            [[fallthrough]];
+        }
+
+        case EWsWinOpInvalidateFull: {
+            // Invalidate the whole window
+            client->queue_redraw(this, rect(pos, pos + size));
             ctx.set_request_status(KErrNone);
 
             break;
         }
 
         case EWsWinOpInvalidate: {
-            LOG_INFO("Invalidate stubbed, currently we redraws all the screen");
             irect = *reinterpret_cast<invalidate_rect *>(cmd.data_ptr);
 
             // Invalidate needs redraw
-            redraw_evt_id = client->queue_redraw(this);
+            redraw_evt_id = client->queue_redraw(this, rect(irect.in_top_left, 
+                irect.in_bottom_right - irect.in_top_left));
 
             ctx.set_request_status(KErrNone);
 
