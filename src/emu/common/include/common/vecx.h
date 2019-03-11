@@ -138,8 +138,22 @@ namespace eka2l1 {
 
     using point = vec2;
 
+    /**
+     * \brief A simple structure represents a rectangle.
+     * 
+     * This struct describes the rectangle by the position of the top left of the rectangle,
+     * and the size of the rectangle.
+     * 
+     * This rectangle is in 2D.
+     */
     struct rect {
-        vec2 top;
-        object_size size;
+        vec2 top;           ///< Top left of the rectangle.
+        object_size size;   ///< Size of the rectangle.
+
+        rect() = default;
+
+        explicit rect(const vec2 &top_, const vec2 &obj_size_)
+            : top(top_), size(obj_size_) { 
+        }
     };
 }
