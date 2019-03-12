@@ -222,6 +222,10 @@ namespace eka2l1 {
             return base_shared_chunk;
         }
 
+        std::uint8_t *get_large_chunk_pointer(const std::uint64_t start_offset) {
+            return base_large_chunk + start_offset;
+        }
+
         ptr<std::uint8_t> host_ptr_to_guest_general_data(void *ptr) {
             return shared_chunk->base() + static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }

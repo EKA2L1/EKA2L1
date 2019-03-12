@@ -29,6 +29,10 @@
 
 #include <array>
 
+namespace eka2l1 {
+    class fbs_server;
+}
+
 namespace eka2l1::epoc {
     constexpr std::uint32_t MAX_CACHE_SIZE = 1024;
 
@@ -37,16 +41,26 @@ namespace eka2l1::epoc {
         using driver_texture_handle_array = std::array<drivers::handle, MAX_CACHE_SIZE>;
         using bitmap_array = std::array<epoc::bitwise_bitmap*, MAX_CACHE_SIZE>;
         using timestamps_array = std::array<std::uint64_t, MAX_CACHE_SIZE>;
+        using hashes_array = timestamps_array;
 
     private:
         driver_texture_handle_array driver_textures;
         bitmap_array                bitmaps;
         timestamps_array            timestamps;
+        hashes_array                hashes;
 
+        fbs_server *serv;
         graphics_driver_client_ptr  cli;
 
+        std::int64_t last_free { 0 };
+
+    protected:
+        std::uint64_t hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp);
+
     public:
-        explicit bitmap_cache(graphics_driver_client_ptr cli_);
+        explicit bitmap_cache(fbs_server *serv_, graphics_driver_client_ptr cli_);
+
+        std::int64_t get_suitable_bitmap_index();
 
         /**
          * \brief   Add a bitmap to texture cache if not available in the cache, and get

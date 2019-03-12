@@ -211,7 +211,8 @@ target_link_libraries(epocservs PRIVATE
     epocutils
     drivers
     manager
-    stb)
+    stb
+    xxHash)
     
 # TODO: Make arm dependency private.
 target_link_libraries(epockern PUBLIC 
