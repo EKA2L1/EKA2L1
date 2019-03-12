@@ -21,12 +21,19 @@
 #pragma once
 
 #include <drivers/graphics/backend/graphics_driver_shared.h>
-#include <common/queue.h>
+#include <drivers/graphics/backend/ogl/shader_ogl.h>
 
-struct ImGuiContext;
+#include <common/queue.h>
+#include <glad/glad.h>
+
+#include <memory>
 
 namespace eka2l1::drivers {
     class ogl_graphics_driver : public shared_graphics_driver {
+        std::unique_ptr<ogl_shader> render_program;
+        
+        void init_resources();
+
     protected:
         virtual void start_new_backend_frame() override;
         virtual void render_frame(ImDrawData *draw_data) override;
