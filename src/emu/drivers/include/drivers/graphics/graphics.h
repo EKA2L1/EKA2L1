@@ -22,6 +22,7 @@
 
 #include <common/vecx.h>
 #include <drivers/driver.h>
+#include <drivers/graphics/common.h>
 
 #include <memory>
 
@@ -40,7 +41,8 @@ namespace eka2l1::drivers {
         graphics_driver_set_priority,
         graphics_driver_set_visibility,
         graphics_driver_set_win_pos,
-        graphics_driver_draw_text_box
+        graphics_driver_draw_text_box,
+        graphics_driver_upload_bitmap
     };
 
     class graphics_driver : public driver {
@@ -50,7 +52,9 @@ namespace eka2l1::drivers {
         virtual vec2 get_screen_size() = 0;
         virtual void set_screen_size(const vec2 &s) = 0;
         virtual std::vector<std::uint8_t> get_render_texture_data(std::size_t stride) = 0;
-        virtual std::uint32_t get_render_texture_handle() = 0;
+        virtual std::uint32_t get_render_texture_handle() = 0;        
+        virtual drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, 
+            const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) = 0;
     };
 
     using graphics_driver_ptr = std::shared_ptr<graphics_driver>;

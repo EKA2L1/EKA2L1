@@ -1,3 +1,5 @@
+#include <common/log.h>
+
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
 #include <glad/glad.h>
 
@@ -39,6 +41,80 @@ namespace eka2l1::drivers {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         framebuffer.unbind();
+    }
+
+    drivers::handle ogl_graphics_driver::upload_bitmap(drivers::handle h, const std::size_t size, 
+        const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) {
+        // Bitmap data has each row aligned by 4, so set unpack alignment to 4 first
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+        if (bpp != 24 || bpp != 32) {
+            LOG_TRACE("Unsupported bit per pixels: {}", bpp);
+            return 0;
+        }
+
+        drivers::texture_format tex_format;
+        drivers::texture_data_type tex_data_type;
+
+        // Get the upload format
+        switch (bpp) {
+        case 24: {
+            tex_format = drivers::texture_format::rgb;
+            tex_data_type = drivers::texture_data_type::ubyte;
+            break;
+        }
+
+        case 32: {
+            tex_format = drivers::texture_format::rgba; 
+            tex_data_type = drivers::texture_data_type::ubyte;
+            break;
+        }
+
+        default: 
+            break;
+        }
+
+        ogl_texture_ptr btex = nullptr;
+        
+        // Create a new texture if it doesn't exist
+        if (h != 0) {
+            // Iterate through all available textures
+            auto result = std::lower_bound(bmp_textures.begin(), bmp_textures.end(), h,
+                [=](const ogl_texture_ptr &tex, const drivers::handle &h) {
+                    return tex->texture_handle() < h;
+                });
+
+            // Can't find it.
+            if (result == bmp_textures.end()) {
+                return 0;
+            }
+
+            btex = *result;
+            btex->tex_data = data;
+            btex->tex_size.x = width;
+            btex->tex_size.y = height;
+            btex->format = tex_format;
+            btex->tex_data_type = tex_data_type;
+
+            btex->bind();
+            btex->tex();
+            btex->unbind();
+        }
+    
+        if (btex == nullptr) {
+            btex = std::make_shared<ogl_texture>();
+            btex->create(2, 1, vec3(width, height, 0), drivers::texture_format::rgba, tex_format,
+                tex_data_type, data);
+
+            h = btex->texture_handle();
+            bmp_textures.push_back(std::move(btex));
+
+            std::stable_sort(bmp_textures.begin(), bmp_textures.end(), [](const ogl_texture_ptr &lhs, const ogl_texture_ptr &rhs) {
+                return lhs->texture_handle() < rhs->texture_handle();
+            });
+        }
+
+        return h;
     }
 
     void ogl_graphics_driver::redraw_window_list() {

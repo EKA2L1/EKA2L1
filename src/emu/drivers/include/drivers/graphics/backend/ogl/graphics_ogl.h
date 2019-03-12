@@ -48,12 +48,14 @@ namespace eka2l1::drivers {
     };
 
     using ogl_window_ptr = std::shared_ptr<ogl_window>;
+    using ogl_texture_ptr = std::shared_ptr<ogl_texture>;
 
     class ogl_graphics_driver : public graphics_driver {
         ogl_framebuffer framebuffer;
         ImGuiContext *context;
 
         eka2l1::cp_queue<ogl_window_ptr> windows;
+        std::vector<ogl_texture_ptr> bmp_textures;
 
         std::uint32_t id_counter = 0;
         ogl_window_ptr binding;
@@ -68,6 +70,9 @@ namespace eka2l1::drivers {
 
         void do_second_pass();
         void process_requests() override;
+
+        drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, const std::uint32_t width,
+            const std::uint32_t height, const int bpp, void *data) override;
 
         vec2 get_screen_size() override {
             return framebuffer.get_size();

@@ -22,6 +22,7 @@
 
 #include <common/vecx.h>
 #include <drivers/input/common.h>
+#include <drivers/graphics/common.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -192,6 +193,21 @@ namespace eka2l1::drivers {
         void set_window_pos(const std::uint32_t id, const eka2l1::vec2 &pos);
 
         void set_window_priority(const std::uint32_t id, const std::uint16_t pri);
+
+        /**
+         * \brief Upload a bitmap to driver as texture.
+         * 
+         * \param h       The handle to existing texture. If this is 0, a new texture will be created.
+         * \param data    Pointer to bitmap data.
+         * \param size    Size of bitmap data.
+         * \param width   The width of the bitmap (pixels).
+         * \param height  The height of bitmap (pixels).
+         * \param bpp     Number of bits per pixel.
+         * 
+         * \returns Handle to the texture.
+         */
+        drivers::handle upload_bitmap(drivers::handle h, const char *data, const std::size_t size,
+            const std::uint32_t width, const std::uint32_t height, const int bpp);
     };
 
     class input_driver_client : public driver_client {
