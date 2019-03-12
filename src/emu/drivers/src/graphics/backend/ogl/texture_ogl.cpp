@@ -79,32 +79,60 @@ namespace eka2l1::drivers {
         return 0;
     }
 
-    bool ogl_texture::tex() {
-        switch (dimensions) {
-        case 1:
-            glTexImage1D(GL_TEXTURE_1D, mip_level, to_gl_format(internal_format), tex_size.x, 0, to_gl_format(format),
-                to_gl_data_type(tex_data_type), tex_data);
+    bool ogl_texture::tex(const bool is_first) {
+        if (is_first) {
+            switch (dimensions) {
+            case 1:
+                glTexImage1D(GL_TEXTURE_1D, mip_level, to_gl_format(internal_format), tex_size.x, 0, to_gl_format(format),
+                    to_gl_data_type(tex_data_type), tex_data);
 
-            break;
+                break;
 
-        case 2:
-            glTexImage2D(GL_TEXTURE_2D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, 0, to_gl_format(format),
-                to_gl_data_type(tex_data_type), tex_data);
+            case 2:
+                glTexImage2D(GL_TEXTURE_2D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, 0, to_gl_format(format),
+                    to_gl_data_type(tex_data_type), tex_data);
 
-            break;
+                break;
 
-        case 3:
-            glTexImage3D(GL_TEXTURE_3D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, to_gl_format(format),
-                to_gl_data_type(tex_data_type), tex_data);
+            case 3:
+                glTexImage3D(GL_TEXTURE_3D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, to_gl_format(format),
+                    to_gl_data_type(tex_data_type), tex_data);
 
-            break;
+                break;
 
-        default: {
-            unbind();
-            glDeleteTextures(1, &texture);
+            default: {
+                unbind();
+                glDeleteTextures(1, &texture);
 
-            return false;
-        }
+                return false;
+            }
+            }
+        } else {
+            switch (dimensions) {
+            case 1:
+                glTexSubImage1D(GL_TEXTURE_1D, 0, 0, tex_size.x, to_gl_format(format), to_gl_data_type(tex_data_type), 
+                    tex_data);
+                break;
+
+            case 2:
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_size.x, tex_size.y, to_gl_format(format), to_gl_data_type(tex_data_type), 
+                    tex_data);
+
+                break;
+
+            case 3:
+                glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, tex_size.x, tex_size.y, tex_size.z, to_gl_format(format),
+                    to_gl_data_type(tex_data_type), tex_data);
+
+                break;
+
+            default: {
+                unbind();
+                glDeleteTextures(1, &texture);
+
+                return false;
+            }
+            }
         }
 
         return true;
@@ -125,7 +153,7 @@ namespace eka2l1::drivers {
         this->internal_format = internal_format;
         this->format = format;
 
-        bool res = tex();
+        bool res = tex(true);
         unbind();
 
         if (!res) {

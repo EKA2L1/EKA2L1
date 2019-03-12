@@ -5,6 +5,8 @@
 
 namespace eka2l1::drivers {
     class ogl_texture : public texture {
+        friend class ogl_graphics_driver;
+        
         int dimensions;
         vec3 tex_size;
         texture_format internal_format;
@@ -15,7 +17,7 @@ namespace eka2l1::drivers {
 
         std::uint32_t texture;
 
-        bool tex();
+        bool tex(const bool is_first = false);
 
     public:
         ogl_texture() {}
