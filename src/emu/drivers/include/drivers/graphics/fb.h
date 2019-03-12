@@ -23,6 +23,8 @@
 #include <common/resource.h>
 #include <common/vecx.h>
 
+#include <drivers/graphics/common.h>
+
 #include <memory>
 #include <vector>
 
@@ -53,4 +55,8 @@ namespace eka2l1::drivers {
         virtual std::vector<std::uint8_t> data(std::size_t stride_pixels) = 0;
         virtual std::uint32_t texture_handle() = 0;
     };
+
+    using framebuffer_ptr = std::shared_ptr<framebuffer>;
+
+    framebuffer_ptr make_framebuffer(const graphic_api api, const vec2 &size);
 }

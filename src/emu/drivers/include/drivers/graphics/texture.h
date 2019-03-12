@@ -21,7 +21,10 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <drivers/graphics/common.h>
+
 #include <cstdint>
+#include <memory>
 
 namespace eka2l1::drivers {
     enum class texture_format {
@@ -52,10 +55,13 @@ namespace eka2l1::drivers {
             = 0;
 
         virtual ~texture(){};
+        virtual std::uint64_t texture_handle() = 0;
+
+        virtual bool tex(const bool is_first) = 0;
 
         virtual void change_size(const vec3 &new_size) = 0;
         virtual void change_data(const texture_data_type data_type, void *data) = 0;
-        virtual void change_texture_format(const texture_format internal_format, const texture_format format) = 0;
+        virtual void change_texture_format(const texture_format format) = 0;
 
         virtual void set_filter_minmag(const bool min, const filter_option op) = 0;
 
@@ -69,4 +75,8 @@ namespace eka2l1::drivers {
         virtual void *get_data_ptr() const = 0;
         virtual int get_mip_level() const = 0;
     };
+
+    using texture_ptr = std::shared_ptr<texture>;
+
+    texture_ptr make_texture(const graphic_api gr_api);
 }

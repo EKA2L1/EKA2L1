@@ -59,11 +59,6 @@ namespace eka2l1::drivers {
 
     using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
 
-    enum class graphic_api {
-        opengl,
-        vulkan
-    };
-
     bool init_graphics_library(graphic_api api);
 
     graphics_driver_ptr create_graphics_driver(const graphic_api api, const vec2 &screen_size);

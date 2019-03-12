@@ -170,35 +170,16 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::change_size(const vec3 &new_size) {
-        bind();
-
         tex_size = new_size;
-        tex();
-
-        unbind();
     }
 
     void ogl_texture::change_data(const texture_data_type data_type, void *data) {
-        bind();
-
         tex_data_type = data_type;
         tex_data = data;
-
-        tex();
-
-        unbind();
     }
 
-    void ogl_texture::change_texture_format(const texture_format internal_format,
-        const texture_format format) {
-        bind();
-
-        this->internal_format = internal_format;
+    void ogl_texture::change_texture_format(const texture_format format) {
         this->format = format;
-
-        tex();
-
-        unbind();
     }
 
     static GLint to_filter_option(const filter_option op) {

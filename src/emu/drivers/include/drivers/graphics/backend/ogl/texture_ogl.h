@@ -17,18 +17,18 @@ namespace eka2l1::drivers {
 
         std::uint32_t texture;
 
-        bool tex(const bool is_first = false);
-
     public:
         ogl_texture() {}
         ~ogl_texture() override;
+
+        bool tex(const bool is_first = false) override;
 
         bool create(const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
             const texture_format format, const texture_data_type data_type, void *data) override;
 
         void change_size(const vec3 &new_size) override;
         void change_data(const texture_data_type data_type, void *data) override;
-        void change_texture_format(const texture_format internal_format, const texture_format format) override;
+        void change_texture_format(const texture_format format) override;
 
         void set_filter_minmag(const bool min, const filter_option op) override;
 
@@ -59,7 +59,7 @@ namespace eka2l1::drivers {
             return tex_data;
         }
 
-        std::uint32_t texture_handle() {
+        std::uint64_t texture_handle() override {
             return texture;
         }
     };

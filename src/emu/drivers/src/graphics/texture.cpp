@@ -1,11 +1,7 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team
+ * Copyright (c) 2019 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * Initial contributor: pent0
- * Contributors:
+ * This file is part of EKA2L1 project 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +17,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <cstdint>
+#include <drivers/graphics/texture.h>
+#include <drivers/graphics/backend/ogl/texture_ogl.h>
 
 namespace eka2l1::drivers {
-    using handle = std::uint64_t;
-    
-    enum class graphic_api {
-        opengl,
-        vulkan
-    };
+    texture_ptr make_texture(const graphic_api gr_api) {
+        switch (gr_api) {
+        case graphic_api::opengl: {
+            return std::make_shared<ogl_texture>();
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
 }

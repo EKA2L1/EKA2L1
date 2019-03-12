@@ -20,72 +20,28 @@
 
 #pragma once
 
-#include <drivers/graphics/graphics.h>
-
-#include <drivers/graphics/backend/ogl/fb_ogl.h>
-#include <drivers/graphics/backend/ogl/texture_ogl.h>
-
+#include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <common/queue.h>
 
 struct ImGuiContext;
 
 namespace eka2l1::drivers {
-    struct ogl_window {
-        std::uint32_t id;
-        ogl_framebuffer fb;
-
-        eka2l1::vec2 pos;
-        std::uint16_t pri;
-
-        bool visible{ false };
-
-        explicit ogl_window(const eka2l1::vec2 &size, const std::uint16_t pri,
-            bool visible = false);
-
-        bool operator<(const ogl_window &rhs) {
-            return pri < rhs.pri;
-        }
-    };
-
-    using ogl_window_ptr = std::shared_ptr<ogl_window>;
-    using ogl_texture_ptr = std::shared_ptr<ogl_texture>;
-
-    class ogl_graphics_driver : public graphics_driver {
-        ogl_framebuffer framebuffer;
-        ImGuiContext *context;
-
-        eka2l1::cp_queue<ogl_window_ptr> windows;
-        std::vector<ogl_texture_ptr> bmp_textures;
-
-        std::uint32_t id_counter = 0;
-        ogl_window_ptr binding;
-
-        bool should_rerender = false;
-
-        void redraw_window_list();
+    class ogl_graphics_driver : public shared_graphics_driver {
+    protected:
+        virtual void start_new_backend_frame() override;
+        virtual void render_frame(ImDrawData *draw_data) override;
 
     public:
         explicit ogl_graphics_driver(const vec2 &scr);
-        ~ogl_graphics_driver() override;
 
-        void do_second_pass();
-        void process_requests() override;
+        bool do_request_queue_execute_one_request(drivers::driver_request *request) override;
+
+        void do_request_queue_execute_job() override;
+        void do_request_queue_clean_job() override;
 
         drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, const std::uint32_t width,
             const std::uint32_t height, const int bpp, void *data) override;
 
-        vec2 get_screen_size() override {
-            return framebuffer.get_size();
-        }
-
         void set_screen_size(const vec2 &s) override;
-
-        std::vector<std::uint8_t> get_render_texture_data(std::size_t stride) override {
-            return framebuffer.data(stride);
-        }
-
-        std::uint32_t get_render_texture_handle() override {
-            return framebuffer.texture_handle();
-        }
     };
 }

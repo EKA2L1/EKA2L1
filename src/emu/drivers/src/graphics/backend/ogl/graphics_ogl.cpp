@@ -12,25 +12,14 @@
 #include "imgui_impl_opengl3.h"
 
 namespace eka2l1::drivers {
-    ogl_window::ogl_window(const eka2l1::vec2 &size, const std::uint16_t pri, bool visible)
-        : fb(size)
-        , pri(pri)
-        , visible(visible) {
-    }
-
     ogl_graphics_driver::ogl_graphics_driver(const vec2 &scr)
-        : framebuffer(scr) {
+        : shared_graphics_driver(graphic_api::opengl, scr) {
         ImGui_ImplOpenGL3_Init(nullptr);
-        context = ImGui::CreateContext();
-    }
-
-    ogl_graphics_driver::~ogl_graphics_driver() {
-        ImGui::DestroyContext(context);
     }
 
     void ogl_graphics_driver::set_screen_size(const vec2 &s) {
-        framebuffer.resize(s);
-        framebuffer.bind();
+        framebuffer->resize(s);
+        framebuffer->bind();
 
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
@@ -40,140 +29,64 @@ namespace eka2l1::drivers {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        framebuffer.unbind();
+        framebuffer->unbind();
     }
 
     drivers::handle ogl_graphics_driver::upload_bitmap(drivers::handle h, const std::size_t size, 
         const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) {
         // Bitmap data has each row aligned by 4, so set unpack alignment to 4 first
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-        if (bpp != 24 || bpp != 32) {
-            LOG_TRACE("Unsupported bit per pixels: {}", bpp);
-            return 0;
-        }
-
-        drivers::texture_format tex_format;
-        drivers::texture_data_type tex_data_type;
-
-        // Get the upload format
-        switch (bpp) {
-        case 24: {
-            tex_format = drivers::texture_format::rgb;
-            tex_data_type = drivers::texture_data_type::ubyte;
-            break;
-        }
-
-        case 32: {
-            tex_format = drivers::texture_format::rgba; 
-            tex_data_type = drivers::texture_data_type::ubyte;
-            break;
-        }
-
-        default: 
-            break;
-        }
-
-        ogl_texture_ptr btex = nullptr;
-        
-        // Create a new texture if it doesn't exist
-        if (h != 0) {
-            // Iterate through all available textures
-            auto result = std::lower_bound(bmp_textures.begin(), bmp_textures.end(), h,
-                [=](const ogl_texture_ptr &tex, const drivers::handle &h) {
-                    return tex->texture_handle() < h;
-                });
-
-            // Can't find it.
-            if (result == bmp_textures.end()) {
-                return 0;
-            }
-
-            btex = *result;
-            btex->tex_data = data;
-            btex->tex_size.x = width;
-            btex->tex_size.y = height;
-            btex->format = tex_format;
-            btex->tex_data_type = tex_data_type;
-
-            btex->bind();
-            btex->tex();
-            btex->unbind();
-        }
-    
-        if (btex == nullptr) {
-            btex = std::make_shared<ogl_texture>();
-            btex->create(2, 1, vec3(width, height, 0), drivers::texture_format::rgba, tex_format,
-                tex_data_type, data);
-
-            h = btex->texture_handle();
-            bmp_textures.push_back(std::move(btex));
-
-            std::stable_sort(bmp_textures.begin(), bmp_textures.end(), [](const ogl_texture_ptr &lhs, const ogl_texture_ptr &rhs) {
-                return lhs->texture_handle() < rhs->texture_handle();
-            });
-        }
+        h = shared_graphics_driver::upload_bitmap(h, size, width, height, bpp, data);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 0);
 
         return h;
     }
+    
+    bool ogl_graphics_driver::do_request_queue_execute_one_request(drivers::driver_request *request) {
+        if (shared_graphics_driver::do_request_queue_execute_one_request(request)) {
+            return true;
+        }
 
-    void ogl_graphics_driver::redraw_window_list() {
-        assert(!binding && "A window is currently being binded, not able to redraw window list!");
+        switch (request->opcode) {
+        case graphics_driver_clear: {
+            int c[4];
 
-        ImGui::NewFrame();
-        ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-        ImGui::Begin("BCKGND", NULL, ImGui::GetIO().DisplaySize, 0.0f,
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-
-        ImVec2 base_pos = ImGui::GetCursorScreenPos();
-
-        for (auto &window : windows) {
-            if (window->visible) {
-                const eka2l1::vec2 win_size = window->fb.get_size();
-                ImVec2 win_pos = ImVec2(static_cast<float>(window->pos.x), static_cast<float>(window->pos.y));
-
-                ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(static_cast<std::uint64_t>(window->fb.texture_handle())),
-                    ImVec2(base_pos.x + win_pos.x,
-                        base_pos.y + win_pos.y),
-
-                    ImVec2(base_pos.x + win_pos.x + win_size.x,
-                        base_pos.y + win_pos.y + win_size.y),
-                    ImVec2(0, 1), ImVec2(1, 0));
+            for (std::size_t i = 0; i < 4; i++) {
+                c[i] = *request->context.pop<int>();
             }
+
+            glClearColor(c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            break;
         }
 
-        ImGui::End();
-        ImGui::EndFrame();
+        case graphics_driver_invalidate: {
+            auto r = *request->context.pop<rect>();
 
-        ImDrawData *data = ImGui::GetDrawData();
+            // Since it takes the lower left
+            glScissor(r.top.x, framebuffer->get_size().y - (r.top.y + r.size.y),
+                r.size.x, r.size.y);
 
-        if (data) {
-            ImGui_ImplOpenGL3_RenderDrawData(data);
+            break;
         }
+
+        default:
+            return false; 
+        }
+
+        return true;
     }
 
-    void ogl_graphics_driver::process_requests() {
-        framebuffer.bind();
-
-        auto last_context = ImGui::GetCurrentContext();
-        ImGui::SetCurrentContext(context);
-
-        ImGuiStyle &style = ImGui::GetStyle();
-        style.WindowBorderSize = 0.0f;
-
-        /* Start new ImGui frame */
+    void ogl_graphics_driver::start_new_backend_frame() {
         ImGui_ImplOpenGL3_NewFrame();
-        ImGuiIO &io = ImGui::GetIO();
+    }
 
-        auto fb_size = framebuffer.get_size();
-
-        io.DisplaySize = ImVec2(static_cast<float>(fb_size.x), static_cast<float>(fb_size.y));
-        io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-
-        /* When framebuffer change size, all elements must be redraw*/
-        ImDrawList *draw_list = nullptr;
-
+    void ogl_graphics_driver::render_frame(ImDrawData *draw_data) {
+        ImGui_ImplOpenGL3_RenderDrawData(draw_data);
+    }
+    
+    void ogl_graphics_driver::do_request_queue_execute_job() {
         glEnable(GL_CULL_FACE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -185,225 +98,10 @@ namespace eka2l1::drivers {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        for (;;) {
-            auto request = request_queue.pop();
+        shared_graphics_driver::do_request_queue_execute_job();
+    }
 
-            if (!request) {
-                break;
-            }
-
-            switch (request->opcode) {
-            case graphics_driver_create_window: {
-                eka2l1::vec2 size = *request->context.pop<vec2>();
-                std::uint16_t pri = *request->context.pop<std::uint16_t>();
-                bool visible = *request->context.pop<bool>();
-
-                drivers::ogl_window_ptr win = std::make_unique<ogl_window>(size, pri, visible);
-                win->id = id_counter++;
-
-                std::uint32_t *data_ret = *request->context.pop<std::uint32_t *>();
-                *data_ret = win->id;
-
-                windows.push(std::move(win));
-
-                break;
-            }
-
-            case graphics_driver_begin_window: {
-                std::uint32_t id = *request->context.pop<std::uint32_t>();
-                auto win_ite = std::find_if(windows.begin(), windows.end(),
-                    [=](const ogl_window_ptr &win) { return win->id == id; });
-
-                if (win_ite == windows.end()) {
-                    break;
-                }
-
-                // Unbind the current framebuffer
-                framebuffer.unbind();
-                (*win_ite)->fb.bind();
-
-                ImGui::NewFrame();
-
-                eka2l1::vec2 win_fb_size = (*win_ite)->fb.get_size();
-                ImVec2 overlay_size(static_cast<float>(win_fb_size.x), static_cast<float>(win_fb_size.y));
-
-                ImGui::SetNextWindowPos(ImVec2(0, 0));
-                ImGui::SetNextWindowSize(overlay_size);
-                ImGui::Begin("BCKGND", NULL, overlay_size, 0.0f,
-                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-
-                draw_list = ImGui::GetWindowDrawList();
-
-                binding = *win_ite;
-            }
-
-            case graphics_driver_end_window: {
-                assert(binding && "No window are currently binded");
-
-                ImGui::End();
-                ImGui::EndFrame();
-                ImGui::Render();
-
-                ImDrawData *data = ImGui::GetDrawData();
-
-                if (data) {
-                    ImGui_ImplOpenGL3_RenderDrawData(data);
-                }
-
-                binding->fb.unbind();
-                framebuffer.bind();
-
-                binding.reset();
-                draw_list = nullptr;
-            }
-
-            case graphics_driver_resize_screen: {
-                assert(!binding && "Sanity check, discovered that currently a window is binded. Unbind to resize.");
-                framebuffer.unbind();
-
-                auto v = *request->context.pop<vec2>();
-                set_screen_size(v);
-
-                framebuffer.bind();
-
-                break;
-            }
-
-            case graphics_driver_destroy_window: {
-                std::uint32_t id = *request->context.pop<std::uint32_t>();
-                auto win_ite = std::find_if(windows.begin(), windows.end(),
-                    [=](const ogl_window_ptr &win) { return win->id == id; });
-
-                if (win_ite == windows.end()) {
-                    break;
-                }
-
-                windows.remove(*win_ite);
-
-                break;
-            }
-
-            case graphics_driver_set_window_size: {
-                std::uint32_t id = *request->context.pop<std::uint32_t>();
-                auto win_ite = std::find_if(windows.begin(), windows.end(),
-                    [=](const ogl_window_ptr &win) { return win->id == id; });
-
-                if (win_ite == windows.end()) {
-                    break;
-                }
-
-                (*win_ite)->fb.resize(*request->context.pop<vec2>());
-                break;
-            }
-
-            case graphics_driver_set_priority: {
-                std::uint32_t id = *request->context.pop<std::uint32_t>();
-                auto win_ite = std::find_if(windows.begin(), windows.end(),
-                    [=](const ogl_window_ptr &win) { return win->id == id; });
-
-                if (win_ite == windows.end()) {
-                    break;
-                }
-
-                (*win_ite)->pri = (*request->context.pop<std::uint16_t>());
-                windows.resort();
-
-                break;
-            }
-
-            case graphics_driver_set_visibility: {
-                std::uint32_t id = *request->context.pop<std::uint32_t>();
-                auto win_ite = std::find_if(windows.begin(), windows.end(),
-                    [=](const ogl_window_ptr &win) { return win->id == id; });
-
-                if (win_ite == windows.end()) {
-                    break;
-                }
-
-                (*win_ite)->visible = (*request->context.pop<bool>());
-                break;
-            }
-
-            case graphics_driver_set_win_pos: {
-                std::uint32_t id = *request->context.pop<std::uint32_t>();
-                auto win_ite = std::find_if(windows.begin(), windows.end(),
-                    [=](const ogl_window_ptr &win) { return win->id == id; });
-
-                if (win_ite == windows.end()) {
-                    break;
-                }
-
-                (*win_ite)->pos = (*request->context.pop<vec2>());
-                break;
-            }
-
-            case graphics_driver_clear: {
-                int c[4];
-
-                for (std::size_t i = 0; i < 4; i++) {
-                    c[i] = *request->context.pop<int>();
-                }
-
-                glClearColor(c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                break;
-            }
-
-            case graphics_driver_invalidate: {
-                auto r = *request->context.pop<rect>();
-
-                // Since it takes the lower left
-                glScissor(r.top.x, framebuffer.get_size().y - (r.top.y + r.size.y),
-                    r.size.x, r.size.y);
-
-                break;
-            }
-
-            case graphics_driver_draw_text_box: {
-                eka2l1::rect bound = *request->context.pop<rect>();
-                std::string text = *request->context.pop_string();
-
-                // TODO: Use the actual clip. Must calculate text size
-                draw_list->AddText(nullptr, 6.0f, ImVec2(static_cast<float>(bound.top.x), static_cast<float>(bound.top.y)),
-                    ImColor(0.0f, 0.0f, 0.0f, 1.0f), &text[0], text.length() == 1 ? nullptr : &text[text.length() - 1]);
-
-                break;
-            }
-
-            case graphics_driver_end_invalidate: {
-                should_rerender = true;
-                break;
-            }
-
-            case graphics_driver_upload_bitmap: {
-                const std::size_t size = *request->context.pop<std::size_t>(); 
-                const std::uint32_t width = *request->context.pop<std::uint32_t>();
-                const std::uint32_t height = *request->context.pop<std::uint32_t>();
-                const int bpp = *request->context.pop<int>();
-                void *data = *request->context.pop<void*>();
-
-                drivers::handle *handle_ptr = *request->context.pop<drivers::handle*>();
-                *handle_ptr = upload_bitmap(*handle_ptr, size, width, height, bpp, data);
-
-                break;
-            }
-
-            default: {
-                break;
-            }
-            }
-        }
-
-        if (should_rerender) {
-            redraw_window_list();
-            should_rerender = false;
-        }
-
-        ImGui::SetCurrentContext(last_context);
+    void ogl_graphics_driver::do_request_queue_clean_job() {
         glDisable(GL_SCISSOR_TEST);
-
-        cond.notify_all();
-        framebuffer.unbind();
     }
 }
