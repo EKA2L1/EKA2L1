@@ -147,11 +147,8 @@ if (BUILD_JIT_LLVM)
 endif()
 
 ## XXHash
-add_library(xxHash
-    xxHash/xxhash.h
-    xxHash/xxhash.c)
-
-target_include_directories(xxHash PUBLIC xxHash)
+add_library(xxHash INTERFACE)
+target_include_directories(xxHash INTERFACE xxHash)
 
 if (BUILD_TOOLS)
     find_package(LibClang QUIET)
