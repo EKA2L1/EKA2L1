@@ -376,6 +376,19 @@ namespace eka2l1::drivers {
                 break;
             }
 
+            case graphics_driver_upload_bitmap: {
+                const std::size_t size = *request->context.pop<std::size_t>(); 
+                const std::uint32_t width = *request->context.pop<std::uint32_t>();
+                const std::uint32_t height = *request->context.pop<std::uint32_t>();
+                const int bpp = *request->context.pop<int>();
+                void *data = *request->context.pop<void*>();
+
+                drivers::handle *handle_ptr = *request->context.pop<drivers::handle*>();
+                *handle_ptr = upload_bitmap(*handle_ptr, size, width, height, bpp, data);
+
+                break;
+            }
+
             default: {
                 break;
             }

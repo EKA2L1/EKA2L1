@@ -177,6 +177,20 @@ namespace eka2l1::drivers {
 
         send_opcode_sync(graphics_driver_set_win_pos, context);
     }
+    
+    drivers::handle graphics_driver_client::upload_bitmap(drivers::handle h, const char *data, const std::size_t size,
+        const std::uint32_t width, const std::uint32_t height, const int bpp) {
+        itc_context context;
+        context.push(size);
+        context.push(width);
+        context.push(height);
+        context.push(bpp);
+        context.push(data);
+        context.push(&h);
+
+        send_opcode_sync(graphics_driver_upload_bitmap, context);
+        return h;
+    }
 
     input_driver_client::input_driver_client(driver_instance driver)
         : driver_client(driver) {
