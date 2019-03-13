@@ -81,7 +81,6 @@ add_library(epocservs
     include/epoc/services/ecom/ecom.h
     include/epoc/services/ecom/plugin.h
     include/epoc/services/fbs/bitmap.h
-    include/epoc/services/fbs/bitmap_cache.h
     include/epoc/services/fbs/fbs.h
     include/epoc/services/fbs/font.h
     include/epoc/services/featmgr/featmgr.h
@@ -94,6 +93,7 @@ add_library(epocservs
     include/epoc/services/sms/sa/sa.h
     include/epoc/services/ui/eikappui.h
     include/epoc/services/ui/oom_app.h
+    include/epoc/services/window/bitmap_cache.h
     include/epoc/services/window/window.h
     include/epoc/ipc.h
     src/services/context.cpp
@@ -112,7 +112,6 @@ add_library(epocservs
     src/services/drm/rights.cpp
     src/services/ecom/ecom.cpp
     src/services/ecom/plugin.cpp
-    src/services/fbs/bitmap_cache.cpp
     src/services/fbs/fbs.cpp
     src/services/fbs/impls/bitmap.cpp
     src/services/fbs/impls/font.cpp
@@ -137,6 +136,7 @@ add_library(epocservs
     src/services/window/classes/winuser.cpp
     src/services/window/classes/wsobj.cpp
     src/services/window/bitmap.cpp
+    src/services/window/bitmap_cache.cpp
     src/services/window/common.cpp
     src/services/window/fifo.cpp
     src/services/window/window.cpp

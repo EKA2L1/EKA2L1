@@ -21,8 +21,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/fbs/bitmap_cache.h>
-#include <epoc/services/fbs/fbs.h>
+#include <epoc/services/window/bitmap_cache.h>
+#include <epoc/kernel.h>
+#include <epoc/kernel/chunk.h>
 
 #include <common/time.h>
 #include <algorithm>
@@ -31,8 +32,8 @@
 #include <xxhash.h>
 
 namespace eka2l1::epoc {
-    bitmap_cache::bitmap_cache(fbs_server *serv_, graphics_driver_client_ptr cli_) 
-        : serv(serv_), cli(cli_) {
+    bitmap_cache::bitmap_cache(kernel_system *kern_, graphics_driver_client_ptr cli_) 
+        : base_large_chunk(nullptr), kern(kern_), cli(cli_) {
     }
 
     std::uint64_t bitmap_cache::hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp) {
@@ -50,7 +51,7 @@ namespace eka2l1::epoc {
         XXH64_update(state, reinterpret_cast<const void*>(&bw_bmp->uid_), sizeof(bw_bmp->uid_));
 
         // Lastly, we needs to hash the data, to see if anything changed
-        XXH64_update(state, serv->get_large_chunk_pointer(bw_bmp->data_offset_), bw_bmp->header_.compressed_len);
+        XXH64_update(state, base_large_chunk + bw_bmp->data_offset_, bw_bmp->header_.compressed_len);
 
         hash = XXH64_digest(state);
         XXH64_freeState(state);
@@ -79,6 +80,11 @@ namespace eka2l1::epoc {
     }
     
     drivers::handle bitmap_cache::add_or_get(epoc::bitwise_bitmap *bmp) {
+        if (!base_large_chunk) {
+            chunk_ptr ch = kern->get_by_name<kernel::chunk>("FbsLargeChunk");
+            base_large_chunk = ch->base().get(kern->get_memory_system());
+        }
+
         std::int64_t idx = 0;
         std::uint64_t crr_timestamp = common::get_current_time_in_microseconds_since_1ad();
 
@@ -108,7 +114,7 @@ namespace eka2l1::epoc {
 
         if (should_upload) {
             driver_textures[idx] = cli->upload_bitmap(driver_textures[idx]
-                , reinterpret_cast<char*>(serv->get_large_chunk_pointer(bmp->data_offset_))
+                , reinterpret_cast<char*>(base_large_chunk + bmp->data_offset_)
                 , bmp->header_.compressed_len, bmp->header_.size_pixels.width(), bmp->header_.size_pixels.height()
                 , bmp->header_.bit_per_pixels);
 

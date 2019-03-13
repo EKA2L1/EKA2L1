@@ -30,7 +30,7 @@
 #include <array>
 
 namespace eka2l1 {
-    class fbs_server;
+    class kernel_system;
 }
 
 namespace eka2l1::epoc {
@@ -49,7 +49,9 @@ namespace eka2l1::epoc {
         timestamps_array            timestamps;
         hashes_array                hashes;
 
-        fbs_server *serv;
+        std::uint8_t *base_large_chunk;
+
+        kernel_system *kern;
         graphics_driver_client_ptr  cli;
 
         std::int64_t last_free { 0 };
@@ -58,7 +60,7 @@ namespace eka2l1::epoc {
         std::uint64_t hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp);
 
     public:
-        explicit bitmap_cache(fbs_server *serv_, graphics_driver_client_ptr cli_);
+        explicit bitmap_cache(kernel_system *kern_, graphics_driver_client_ptr cli_);
 
         std::int64_t get_suitable_bitmap_index();
 
