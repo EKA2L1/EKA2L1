@@ -52,7 +52,7 @@ namespace eka2l1::drivers {
         virtual vec2 get_screen_size() = 0;
         virtual void set_screen_size(const vec2 &s) = 0;
         virtual std::vector<std::uint8_t> get_render_texture_data(std::size_t stride) = 0;
-        virtual std::uint32_t get_render_texture_handle() = 0;        
+        virtual std::uint64_t get_render_texture_handle() = 0;        
         virtual drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, 
             const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) = 0;
     };

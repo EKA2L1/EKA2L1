@@ -9,42 +9,9 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include "imgui_impl_opengl3.h"
-
 namespace eka2l1::drivers {
-    const GLchar *vertex_shader_glsl =  "#version 130\n"
-                                        "uniform mat4 ProjMtx;\n"
-                                        "in vec2 Position;\n"
-                                        "in vec2 UV;\n"
-                                        "in vec4 Color;\n"
-                                        "out vec2 Frag_UV;\n"
-                                        "out vec4 Frag_Color;\n"
-                                        "void main()\n"
-                                        "{\n"
-                                        "    Frag_UV = UV;\n"
-                                        "    Frag_Color = Color;\n"
-                                        "    gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
-                                        "}\n";
-
-    
-    const GLchar *fragment_shader_glsl = "#version 130\n"
-                                         "uniform sampler2D Texture;\n"
-                                        "in vec2 Frag_UV;\n"
-                                        "in vec4 Frag_Color;\n"
-                                        "out vec4 Out_Color;\n"
-                                        "void main()\n"
-                                        "{\n"
-                                        "    Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
-                                        "}\n";
-
     ogl_graphics_driver::ogl_graphics_driver(const vec2 &scr)
         : shared_graphics_driver(graphic_api::opengl, scr) {
-        init_resources();
-    }
-
-    void ogl_graphics_driver::init_resources() {
-        render_program = std::make_unique<ogl_shader>(vertex_shader_glsl, strlen(vertex_shader_glsl),
-            fragment_shader_glsl, strlen(fragment_shader_glsl));
     }
 
     void ogl_graphics_driver::set_screen_size(const vec2 &s) {
@@ -106,14 +73,6 @@ namespace eka2l1::drivers {
         }
 
         return true;
-    }
-
-    void ogl_graphics_driver::start_new_backend_frame() {
-        ImGui_ImplOpenGL3_NewFrame();
-    }
-
-    void ogl_graphics_driver::render_frame(ImDrawData *draw_data) {
-        ImGui_ImplOpenGL3_RenderDrawData(draw_data);
     }
     
     void ogl_graphics_driver::do_request_queue_execute_job() {

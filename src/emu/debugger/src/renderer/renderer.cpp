@@ -18,26 +18,76 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <debugger/renderer/opengl/gl_renderer.h>
+#include <common/vecx.h>
 #include <debugger/renderer/renderer.h>
+#include <drivers/graphics/imgui_renderer.h>
+#include <drivers/graphics/graphics.h>
+#include <drivers/input/input.h>
+
+#include <imgui.h>
 
 namespace eka2l1 {
-    void debugger_renderer::init(drivers::graphics_driver_ptr graphic_driver, drivers::input_driver_ptr input_driver, debugger_ptr dbg) {
+    void debugger_renderer::init(drivers::graphic_api gr_api, drivers::graphics_driver_ptr graphic_driver, 
+        drivers::input_driver_ptr input_driver, debugger_ptr dbg) {
         debugger = dbg;
 
         gr_driver_ = std::move(graphic_driver);
         inp_driver_ = std::move(input_driver);
+
+        irenderer = drivers::make_imgui_renderer(gr_api);
+        irenderer->init();
     }
 
-    debugger_renderer_ptr new_debugger_renderer(const debugger_renderer_type rtype) {
-        switch (rtype) {
-        case debugger_renderer_type::opengl:
-            return std::make_shared<debugger_gl_renderer>();
+    void debugger_renderer::draw(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
+        auto &io = ImGui::GetIO();
 
-        default:
-            break;
+        io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+        io.DisplayFramebufferScale = ImVec2(
+            width > 0 ? ((float)fb_width / width) : 0, height > 0 ? ((float)fb_height / height) : 0);
+
+        ImGui::NewFrame();
+
+        // Draw the imgui ui
+        debugger->show_debugger(width, height, fb_width, fb_height);
+
+        gr_driver_->process_requests();
+        inp_driver_->process_requests();
+
+        eka2l1::vec2 v = gr_driver_->get_screen_size();
+        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(v.x), static_cast<float>(v.y)));
+
+        ImGui::Begin("Emulating Window", nullptr, ImGuiWindowFlags_NoResize);
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+
+        if (ImGui::IsWindowFocused()) {
+            inp_driver_->set_active(true);
+        } else {
+            inp_driver_->set_active(false);
         }
 
-        return nullptr;
+        //pass the texture of the FBO
+        //window.getRenderTexture() is the texture of the FBO
+        //the next parameter is the upper left corner for the uvs to be applied at
+        //the third parameter is the lower right corner
+        //the last two parameters are the UVs
+        //they have to be flipped (normally they would be (0,0);(1,1)
+        ImGui::GetWindowDrawList()->AddImage(
+            reinterpret_cast<ImTextureID>(gr_driver_->get_render_texture_handle()),
+            ImVec2(ImGui::GetCursorScreenPos()),
+            ImVec2(ImGui::GetCursorScreenPos().x + gr_driver_->get_screen_size().x,
+                ImGui::GetCursorScreenPos().y + gr_driver_->get_screen_size().y),
+            ImVec2(0, 1), ImVec2(1, 0));
+
+        //we are done working with this window
+        ImGui::End();
+        ImGui::EndFrame();
+
+        ImGui::Render();
+
+        irenderer->render(ImGui::GetDrawData());
+    }
+
+    void debugger_renderer::deinit() {
+        irenderer->deinit();
     }
 }

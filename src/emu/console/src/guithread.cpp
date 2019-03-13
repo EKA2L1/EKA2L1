@@ -107,7 +107,7 @@ int ui_debugger_thread() {
 
     /* Consider main thread not touching this, no need for mutex */
     ui_debugger_context = ImGui::CreateContext();
-    auto debugger_renderer = eka2l1::new_debugger_renderer(eka2l1::debugger_renderer_type::opengl);
+    auto drenderer = std::make_shared<eka2l1::debugger_renderer>();
 
     /* This will be called by the debug thread */
     debugger->on_pause_toogle = [&](bool spause) {
@@ -126,7 +126,7 @@ int ui_debugger_thread() {
 
     idriver = std::make_shared<drivers::input_driver>();
 
-    debugger_renderer->init(gdriver, idriver, debugger);
+    drenderer->init(drivers::graphic_api::opengl, gdriver, idriver, debugger);
 
     symsys->set_graphics_driver(gdriver);
     symsys->set_input_driver(idriver);
@@ -182,7 +182,7 @@ int ui_debugger_thread() {
 
         io.MousePos = ImVec2(static_cast<float>(mouse_pos[0]), static_cast<float>(mouse_pos[1]));
 
-        debugger_renderer->draw(nws.x, nws.y, nwsb.x, nwsb.y);
+        drenderer->draw(nws.x, nws.y, nwsb.x, nwsb.y);
         debugger_window->swap_buffer();
 
         io.MouseWheel = 0;
@@ -190,8 +190,8 @@ int ui_debugger_thread() {
 
     ImGui::DestroyContext();
 
-    debugger_renderer->deinit();
-    debugger_renderer.reset();
+    drenderer->deinit();
+    drenderer.reset();
 
     // There are still a reference of graphics driver on graphics client
     // Assure that the graphics driver are decrement is reference count on UI thread

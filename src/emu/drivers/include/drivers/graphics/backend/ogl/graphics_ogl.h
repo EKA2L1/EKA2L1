@@ -22,6 +22,7 @@
 
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <drivers/graphics/backend/ogl/shader_ogl.h>
+#include <drivers/graphics/backend/ogl/texture_ogl.h>
 
 #include <common/queue.h>
 #include <glad/glad.h>
@@ -31,12 +32,17 @@
 namespace eka2l1::drivers {
     class ogl_graphics_driver : public shared_graphics_driver {
         std::unique_ptr<ogl_shader> render_program;
-        
-        void init_resources();
+        std::unique_ptr<ogl_texture> font_tex;
 
-    protected:
-        virtual void start_new_backend_frame() override;
-        virtual void render_frame(ImDrawData *draw_data) override;
+        GLuint vao_handle;
+        GLuint vbo_handle;
+        GLuint elements_buffer_handle;
+
+        GLuint tex_loc;
+        GLuint uv_loc;
+        GLuint color_loc;
+        GLuint pos_loc;
+        GLuint proj_loc;
 
     public:
         explicit ogl_graphics_driver(const vec2 &scr);

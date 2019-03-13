@@ -53,7 +53,7 @@ namespace eka2l1::drivers {
         }
 
         virtual std::vector<std::uint8_t> data(std::size_t stride_pixels) = 0;
-        virtual std::uint32_t texture_handle() = 0;
+        virtual std::uint64_t texture_handle() = 0;
     };
 
     using framebuffer_ptr = std::shared_ptr<framebuffer>;

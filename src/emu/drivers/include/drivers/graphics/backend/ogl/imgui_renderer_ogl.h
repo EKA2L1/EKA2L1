@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2019 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project 
  * (see bentokun.github.com/EKA2L1).
@@ -20,34 +20,30 @@
 
 #pragma once
 
+#include <drivers/graphics/imgui_renderer.h>
+
+#include <drivers/graphics/backend/ogl/shader_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
-#include <drivers/graphics/fb.h>
 
-#include <common/vecx.h>
-
-#include <cstdint>
+using GLuint = unsigned int;
 
 namespace eka2l1::drivers {
-    class ogl_framebuffer : public framebuffer {
-        std::uint32_t fbo;
-        std::uint32_t rbo;
+    class ogl_imgui_renderer : public imgui_renderer_base {
+        GLuint vbo_handle;
+        GLuint vao_handle;
+        GLuint elements_handle;
+        GLuint attrib_loc_tex;
+        GLuint attrib_loc_proj_matrix;
+        GLuint attrib_loc_pos;
+        GLuint attrib_loc_uv;
+        GLuint attrib_loc_color;
 
-        ogl_texture texture;
+        drivers::ogl_shader shader;
+        drivers::ogl_texture font_texture;
 
     public:
-        std::uint32_t get_fbo() const {
-            return fbo;
-        }
-
-        explicit ogl_framebuffer(const vec2 &size);
-        ~ogl_framebuffer() override;
-
-        void bind() override;
-        void unbind() override;
-
-        void resize(const vec2 &size) override;
-
-        std::vector<std::uint8_t> data(std::size_t stride_pixels) override;
-        std::uint64_t texture_handle() override;
+        void init() override;
+        void render(ImDrawData *draw_data) override;
+        void deinit() override;
     };
 }

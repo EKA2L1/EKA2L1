@@ -1,5 +1,23 @@
-#include <common/log.h>
+/*
+ * Copyright (c) 2019 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
+#include <common/log.h>
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 
 // Use for render text and draw custom bitmap
@@ -17,10 +35,18 @@ namespace eka2l1::drivers {
         : gr_api_(gr_api) {
         framebuffer = make_framebuffer(gr_api, scr);
         context = ImGui::CreateContext();
+
+        irenderer = make_imgui_renderer(gr_api);
+        irenderer->init();
     }
 
     shared_graphics_driver::~shared_graphics_driver() {
         ImGui::DestroyContext(context);
+        irenderer->deinit();
+    }
+
+    void shared_graphics_driver::render_frame(ImDrawData *draw_data) {
+        irenderer->render(draw_data);
     }
 
     drivers::handle shared_graphics_driver::upload_bitmap(drivers::handle h, const std::size_t size, 

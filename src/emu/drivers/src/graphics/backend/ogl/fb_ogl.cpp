@@ -35,7 +35,8 @@ namespace eka2l1::drivers {
         texture.set_filter_minmag(true, drivers::filter_option::linear);
         texture.set_filter_minmag(false, drivers::filter_option::linear);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.texture_handle(),
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
+            static_cast<GLuint>(texture.texture_handle()),
             texture.get_mip_level());
 
         glGenRenderbuffers(1, &rbo);
@@ -91,7 +92,7 @@ namespace eka2l1::drivers {
         return data;
     }
 
-    std::uint32_t ogl_framebuffer::texture_handle() {
+    std::uint64_t ogl_framebuffer::texture_handle() {
         return texture.texture_handle();
     }
 }

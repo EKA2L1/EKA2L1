@@ -23,6 +23,7 @@
 
 #include <drivers/graphics/fb.h>
 #include <drivers/graphics/texture.h>
+#include <drivers/graphics/imgui_renderer.h>
 
 #include <common/queue.h>
 
@@ -63,13 +64,15 @@ namespace eka2l1::drivers {
         std::uint32_t id_counter = 0;
         embed_window_ptr binding;
 
+        imgui_renderer_instance irenderer;
+
         bool should_rerender = false;
 
         graphic_api gr_api_;
 
         virtual void redraw_window_list();
         virtual void start_new_backend_frame() {}
-        virtual void render_frame(ImDrawData *draw_data) {}
+        virtual void render_frame(ImDrawData *draw_data);
 
     public:
         explicit shared_graphics_driver(const graphic_api gr_api, const vec2 &scr);
@@ -93,7 +96,7 @@ namespace eka2l1::drivers {
             return framebuffer->data(stride);
         }
 
-        std::uint32_t get_render_texture_handle() override {
+        std::uint64_t get_render_texture_handle() override {
             return framebuffer->texture_handle();
         }
     };
