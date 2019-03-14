@@ -27,6 +27,9 @@ namespace eka2l1::drivers {
         case texture_format::rgb:
             return GL_RGB;
 
+        case texture_format::bgr: 
+            return GL_BGR;
+
         case texture_format::rgba:
             return GL_RGBA;
 

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <drivers/graphics/common.h>
+#include <common/vecx.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -33,6 +34,8 @@ namespace eka2l1::drivers {
         virtual void init() = 0;
         virtual void render(ImDrawData *draw_data) = 0;
         virtual void deinit() = 0;
+
+        virtual void draw(drivers::handle h, const eka2l1::rect &r);
     };
 
     using imgui_renderer_instance = std::unique_ptr<imgui_renderer_base>;

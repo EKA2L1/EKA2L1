@@ -29,6 +29,7 @@
 namespace eka2l1::drivers {
     enum class texture_format {
         rgb,
+        bgr,
         rgba,
         depth_stencil,
         depth24_stencil8

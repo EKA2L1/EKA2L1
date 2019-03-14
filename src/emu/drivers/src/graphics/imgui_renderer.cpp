@@ -20,7 +20,19 @@
 #include <drivers/graphics/imgui_renderer.h>
 #include <drivers/graphics/backend/ogl/imgui_renderer_ogl.h>
 
+#include <imgui.h>
+#include <imgui_internal.h>
+
 namespace eka2l1::drivers {
+    void imgui_renderer_base::draw(drivers::handle h, const eka2l1::rect &rect) {
+        ImGui::GetWindowDrawList()->AddImage(
+            reinterpret_cast<ImTextureID>(h),
+            ImVec2(static_cast<float>(rect.top.x), static_cast<float>(rect.top.y)),
+            ImVec2(static_cast<float>(rect.top.x + rect.size.width()), 
+                    static_cast<float>(rect.top.y + rect.size.height())),
+            ImVec2(0, 1), ImVec2(1, 0));
+    }
+    
     imgui_renderer_instance make_imgui_renderer(const graphic_api api) {
         switch (api) {
         case graphic_api::opengl: {

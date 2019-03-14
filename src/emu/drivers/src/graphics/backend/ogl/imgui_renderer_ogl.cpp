@@ -225,7 +225,7 @@ namespace eka2l1::drivers {
         auto state = gl_state{};
         save_gl_state(state);
 
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
@@ -277,7 +277,7 @@ namespace eka2l1::drivers {
                     glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buf_offset);
 
                     // Support for OpenGL < 4.3
-                    GLenum err;
+                    GLenum err = 0;
 
                     err = glGetError();
                     while (err != GL_NO_ERROR) {

@@ -20,7 +20,7 @@
 #include <common/log.h>
 
 #include <glad/glad.h>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include "graphics/scene.h"
 #include "graphics/texture.h"
@@ -70,7 +70,7 @@ int main(int argc, int **argv) {
 
     int crr_scene = 0;
 
-    while (!glfwWindowShouldClose(win)) {
+    while (!glfwWindowShouldClose(win)) {   
         switch (crr_scene) {
         case 0: {
             bitmap_upload_and_draw_scene(&scenes_);
@@ -79,6 +79,17 @@ int main(int argc, int **argv) {
 
         default:
             break;
+        }
+
+        if (scenes_.gr_api == eka2l1::drivers::graphic_api::opengl) {
+            // Support for OpenGL < 4.3
+            GLenum err = 0;
+
+            err = glGetError();
+            while (err != GL_NO_ERROR) {
+                LOG_ERROR("Error in OpenGL operation: {}", err);
+                err = glGetError();
+            }
         }
         
         glfwSwapBuffers(win);

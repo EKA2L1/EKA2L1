@@ -142,8 +142,13 @@ namespace eka2l1::drivers {
         }
 
         switch (var_type) {
+        case shader_set_var_type::integer: {
+            glUniform1i(loc, *reinterpret_cast<const GLint*>(data));
+            return true;
+        }
+
         case shader_set_var_type::mat4: {
-            glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const GLfloat*>(data));
+            glUniformMatrix4fv(loc, 1, GL_FALSE, reinterpret_cast<const GLfloat*>(data));
             return true;
         }
 

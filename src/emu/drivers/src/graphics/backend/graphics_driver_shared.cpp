@@ -64,18 +64,21 @@ namespace eka2l1::drivers {
         }
 
         drivers::texture_format tex_format;
+        drivers::texture_format internal_tex_format;
         drivers::texture_data_type tex_data_type;
 
         // Get the upload format
         switch (bpp) {
         case 24: {
-            tex_format = drivers::texture_format::rgb;
+            tex_format = drivers::texture_format::bgr;
+            internal_tex_format = drivers::texture_format::rgba;
             tex_data_type = drivers::texture_data_type::ubyte;
             break;
         }
 
         case 32: {
             tex_format = drivers::texture_format::rgba; 
+            internal_tex_format = tex_format;
             tex_data_type = drivers::texture_data_type::ubyte;
             break;
         }
@@ -111,7 +114,7 @@ namespace eka2l1::drivers {
     
         if (btex == nullptr) {
             btex = make_texture(gr_api_);
-            btex->create(2, 1, vec3(width, height, 0), drivers::texture_format::rgba, tex_format,
+            btex->create(2, 0, vec3(width, height, 0), internal_tex_format, tex_format,
                 tex_data_type, data);
 
             btex->set_filter_minmag(true, drivers::filter_option::linear);
@@ -364,24 +367,13 @@ namespace eka2l1::drivers {
                 const eka2l1::vec2 win_size = window->fb->get_size();
                 ImVec2 win_pos = ImVec2(static_cast<float>(window->pos.x), static_cast<float>(window->pos.y));
 
-                /*
                 ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(
                     static_cast<std::uint64_t>(window->fb->texture_handle())),
                     ImVec2(base_pos.x + win_pos.x,
                         base_pos.y + win_pos.y),
                     ImVec2(base_pos.x + win_pos.x + win_size.x,
                         base_pos.y + win_pos.y + win_size.y),
-                    ImVec2(0, 1), ImVec2(1, 0));*/
-
-                for (auto tex: bmp_textures) {
-                    ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(
-                        static_cast<std::uint64_t>(tex->texture_handle())),
-                        ImVec2(base_pos.x + win_pos.x,
-                            base_pos.y + win_pos.y),
-                        ImVec2(base_pos.x + win_pos.x + win_size.x,
-                            base_pos.y + win_pos.y + win_size.y),
-                        ImVec2(0, 1), ImVec2(1, 0));
-                }
+                    ImVec2(0, 1), ImVec2(1, 0));
             }
         }
 

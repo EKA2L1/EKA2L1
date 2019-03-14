@@ -34,7 +34,6 @@ namespace eka2l1::drivers {
         // Bitmap data has each row aligned by 4, so set unpack alignment to 4 first
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         h = shared_graphics_driver::upload_bitmap(h, size, width, height, bpp, data);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 0);
 
         return h;
     }
@@ -61,18 +60,12 @@ namespace eka2l1::drivers {
         case graphics_driver_invalidate: {
             auto r = *request->context.pop<rect>();
 
-            GLint dat = 0;
-            glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &dat);
-
-            LOG_TRACE("{}", dat);
-
             // Since it takes the lower left
-            glScissor(0, 0, r.size.x, r.size.y);
+            glScissor(framebuffer->get_size().x  - r.size.x + r.top.x, framebuffer->get_size().y - r.size.y + r.top.y, 
+                r.size.x, r.size.y);
 
             glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
-
-            ImGui::Text("HERE IS A TEST TEXT WHICH WILL FIND OUT ASDL");
 
             break;
         }
@@ -108,8 +101,5 @@ namespace eka2l1::drivers {
     void ogl_graphics_driver::do_request_queue_clean_job() {
         glDisable(GL_SCISSOR_TEST);
         glEnable(GL_DEPTH_TEST);
-        
-        //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 }

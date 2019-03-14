@@ -26,6 +26,7 @@
 
 namespace eka2l1::drivers {
     enum class shader_set_var_type {
+        integer,
         vec3,
         vec4,
         mat4

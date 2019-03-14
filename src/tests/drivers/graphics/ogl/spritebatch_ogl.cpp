@@ -13,6 +13,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <common/log.h>
+
 const char *batch_vert_shader =  "#version 330 core\n"
                             "layout (location = 0) in vec4 vertex;\n"
                             "out vec2 TexCoords;\n"
@@ -61,22 +63,42 @@ sprite_batch_ogl::sprite_batch_ogl() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);  
     glBindVertexArray(0);
+
+    shader_.use();
+    glm::mat4 proj = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f, -1.0f, 1.0f);
+  
+    int tex_ord = 0;
+
+    if (!shader_.set("image", drivers::shader_set_var_type::integer, &tex_ord)) {
+        LOG_ERROR("Sampler uniform index not set!");
+    }
+
+    if (!shader_.set("projection", drivers::shader_set_var_type::mat4, glm::value_ptr(proj))) {
+        LOG_ERROR("Projection matrix uniform not set!");
+    }
 }
 
-void sprite_batch_ogl::draw(const drivers::handle sprite, const eka2l1::vec2 &pos, const eka2l1::vec2 &size, const float rotation, const eka2l1::vec3 &color) {
+void sprite_batch_ogl::draw(const drivers::handle sprite, const eka2l1::vec2 &pos, const eka2l1::vec2 &size, const float rotation, const eka2l1::vec3 &color) {    
     shader_.use();
 
-    glm::mat4 model;
-    model = glm::translate(model, glm::vec3(pos.x, pos.y, 0.0f));  
+    glm::mat4 model = glm::mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
+    model = glm::translate(model, glm::vec3(static_cast<float>(pos.x), static_cast<float>(pos.y), 0.0f));  
 
-    model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f)); 
+    model = glm::translate(model, glm::vec3(0.5f * static_cast<float>(size.x), 0.5f * static_cast<float>(size.y), 0.0f)); 
     model = glm::rotate(model, rotation, glm::vec3(0.0f, 0.0f, 1.0f)); 
-    model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f));
+    model = glm::translate(model, glm::vec3(-0.5f * static_cast<float>(size.x), -0.5f * static_cast<float>(size.y), 0.0f));
 
-    model = glm::scale(model, glm::vec3(size.x, size.y, 1.0f)); 
-  
-    shader_.set("model", drivers::shader_set_var_type::mat4, glm::value_ptr(model));
-    shader_.set("spriteColor", drivers::shader_set_var_type::vec3, &color);
+    model = glm::scale(model, glm::vec3(static_cast<float>(size.x), static_cast<float>(size.y), 1.0f)); 
+    
+    if (!shader_.set("model", drivers::shader_set_var_type::mat4, glm::value_ptr(model))) {
+        LOG_ERROR("Model uniform not set!!");
+    }
+
+    glm::vec3 color_f(color.x, color.y, color.z);
+
+    if (!shader_.set("spriteColor", drivers::shader_set_var_type::vec3, glm::value_ptr(color_f))) {
+        LOG_ERROR("Sprite Color uniform not set!");
+    }
   
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(sprite));
