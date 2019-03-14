@@ -133,4 +133,34 @@ namespace eka2l1::drivers {
 
         return res;
     }
+    
+    bool ogl_shader::set(const std::string &name, const shader_set_var_type var_type, const void *data) {
+        const auto loc = glGetUniformLocation(program, name.c_str());
+
+        if (loc == -1) {
+            return false;
+        }
+
+        switch (var_type) {
+        case shader_set_var_type::mat4: {
+            glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const GLfloat*>(data));
+            return true;
+        }
+
+        case shader_set_var_type::vec3: {
+            glUniform3fv(loc, 1, reinterpret_cast<const GLfloat*>(data));
+            return true;
+        }
+
+        case shader_set_var_type::vec4: {
+            glUniform4fv(loc, 1, reinterpret_cast<const GLfloat*>(data));
+            return true;
+        }
+
+        default:
+            break;
+        }
+
+        return false;
+    }
 }

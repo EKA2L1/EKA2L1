@@ -24,6 +24,8 @@ namespace eka2l1::drivers {
 
         bool use() override;
 
+        bool set(const std::string &name, const shader_set_var_type var_type, const void *data) override;
+
         std::uint32_t program_handle() const {
             return program;
         }
