@@ -30,6 +30,7 @@
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
 #include <epoc/services/window/classes/wsobj.h>
+#include <epoc/services/fbs/fbs.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -41,6 +42,7 @@
 #include <e32err.h>
 
 #include <epoc/epoc.h>
+#include <epoc/kernel.h>
 #include <epoc/timing.h>
 #include <epoc/vfs.h>
 
@@ -712,7 +714,8 @@ namespace eka2l1 {
     }
 
     window_server::window_server(system *sys)
-        : service::server(sys, "!Windowserver", true, true) {
+        : service::server(sys, "!Windowserver", true, true) 
+        , bmp_cache(sys->get_kernel_system()) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
@@ -927,5 +930,14 @@ namespace eka2l1 {
         }
 
         return total;
+    }
+
+    epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
+        if (!fbss) {
+            fbss = reinterpret_cast<fbs_server*>(&(*sys->get_kernel_system()->
+                get_by_name<service::server>("!Fontbitmapserver")));
+        }
+
+        return fbss->get<fbsbitmap>(h)->bitmap_;
     }
 }

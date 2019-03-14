@@ -21,6 +21,8 @@
 #include <glad/glad.h>
 #include <imgui.h>
 
+#include <common/log.h>
+
 namespace eka2l1::drivers {
     struct gl_state {
         GLint last_program;
@@ -136,6 +138,8 @@ namespace eka2l1::drivers {
     void ogl_imgui_renderer::init() {
         shader.create(vertex_shader_renderer, 0, fragment_shader_renderer, 0);
 
+        //err = glGetError();
+
         attrib_loc_tex = *shader.get_uniform_location("Texture");
         attrib_loc_proj_matrix = *shader.get_uniform_location("ProjMtx");
         attrib_loc_pos = *shader.get_attrib_location("Position");
@@ -172,6 +176,43 @@ namespace eka2l1::drivers {
             static_cast<int64_t>(font_texture.texture_handle()));
     }
 
+    static std::string gl_error_to_string(const int e) {
+        switch (e) {
+        case GL_INVALID_ENUM: {
+            return "Invalid enum passed to a function!";
+        }
+
+        case GL_INVALID_VALUE: {
+            return "Invalid value passed to a function!";
+        }
+
+        case GL_INVALID_OPERATION: {
+            return "An invalid operation happened!";
+        }
+
+        case GL_STACK_OVERFLOW: {
+            return "GPU stack overflowed!";
+        }
+
+        case GL_STACK_UNDERFLOW: {
+            return "GPU stack underflowed!";
+        }
+
+        case GL_OUT_OF_MEMORY: {
+            return "GPU can't allocate more memory";
+        }
+
+        case GL_INVALID_FRAMEBUFFER_OPERATION: {
+            return "Invalid framebuffer operation happended!";
+        }
+
+        default:
+            break;
+        }
+
+        return fmt::format("Unknown error happended! (code: {})", e);
+    }
+
     void ogl_imgui_renderer::render(ImDrawData *draw_data) {
         auto &io = ImGui::GetIO();
 
@@ -184,7 +225,7 @@ namespace eka2l1::drivers {
         auto state = gl_state{};
         save_gl_state(state);
 
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
@@ -234,6 +275,15 @@ namespace eka2l1::drivers {
                         static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y));
                     
                     glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buf_offset);
+
+                    // Support for OpenGL < 4.3
+                    GLenum err;
+
+                    err = glGetError();
+                    while (err != GL_NO_ERROR) {
+                        LOG_ERROR("Error in OpenGL operation: {}", gl_error_to_string(err));
+                        err = glGetError();
+                    }
                 }
 
                 idx_buf_offset += pcmd->ElemCount;

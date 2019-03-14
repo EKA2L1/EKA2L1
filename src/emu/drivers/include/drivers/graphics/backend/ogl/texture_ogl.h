@@ -16,6 +16,7 @@ namespace eka2l1::drivers {
         int mip_level;
 
         std::uint32_t texture;
+        int last_tex {0};
 
     public:
         ogl_texture() {}

@@ -34,6 +34,7 @@
 #include <common/queue.h>
 #include <common/vecx.h>
 
+#include <epoc/services/window/bitmap_cache.h>
 #include <epoc/services/window/classes/config.h>
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/fifo.h>
@@ -48,6 +49,7 @@
 
 namespace eka2l1 {
     class window_server;
+    class fbs_server;
 
     namespace drivers {
         class input_driver_client;
@@ -290,8 +292,16 @@ namespace eka2l1 {
 
         void handle_inputs_from_driver(std::uint64_t userdata, int cycles_late);
 
+        epoc::bitmap_cache bmp_cache;
+        fbs_server *fbss { nullptr };
+
     public:
         window_server(system *sys);
+
+        epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
+        epoc::bitmap_cache *get_bitmap_cache() {
+            return &bmp_cache;
+        }
 
         /**
          * \brief Get the number of window groups running in the server

@@ -57,7 +57,7 @@ namespace eka2l1::drivers {
         std::uint32_t vert = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vert, 1, &vert_data, nullptr);
         glCompileShader(vert);
-
+        
         int success;
         char error[512];
 
@@ -92,7 +92,7 @@ namespace eka2l1::drivers {
         glAttachShader(program, frag);
 
         glLinkProgram(program);
-        glGetProgramiv(program, GL_COMPILE_STATUS, &success);
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
 
         if (!success) {
             glGetProgramInfoLog(program, 512, nullptr, error);

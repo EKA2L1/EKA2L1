@@ -61,10 +61,26 @@ namespace eka2l1::drivers {
         case graphics_driver_invalidate: {
             auto r = *request->context.pop<rect>();
 
-            // Since it takes the lower left
-            glScissor(r.top.x, framebuffer->get_size().y - (r.top.y + r.size.y),
-                r.size.x, r.size.y);
+            GLint dat = 0;
+            glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &dat);
 
+            LOG_TRACE("{}", dat);
+
+            // Since it takes the lower left
+            glScissor(0, 0, r.size.x, r.size.y);
+
+            glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            ImGui::Text("HERE IS A TEST TEXT WHICH WILL FIND OUT ASDL");
+
+            break;
+        }
+        
+        case graphics_driver_end_invalidate: {
+            glScissor(0, 0, 0, 0);
+
+            should_rerender = true;
             break;
         }
 
@@ -72,6 +88,7 @@ namespace eka2l1::drivers {
             return false; 
         }
 
+        request->finish(0);
         return true;
     }
     
@@ -80,17 +97,19 @@ namespace eka2l1::drivers {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glScissor(0, 0, 0, 0);
         glEnable(GL_SCISSOR_TEST);
+        glScissor(0, 0, 0, 0);
 
-        glEnable(GL_DEPTH_TEST);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
 
         shared_graphics_driver::do_request_queue_execute_job();
     }
 
     void ogl_graphics_driver::do_request_queue_clean_job() {
         glDisable(GL_SCISSOR_TEST);
+        glEnable(GL_DEPTH_TEST);
+        
+        //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 }

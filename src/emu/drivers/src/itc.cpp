@@ -34,13 +34,15 @@ namespace eka2l1::drivers {
             return false;
         }
 
+        int request = -1;
+
         if (already_locked) {
-            driver->request_queue.push_unsafe({ opcode, ctx });
+            driver->request_queue.push_unsafe({ opcode, &request, ctx });
         } else {
-            driver->request_queue.push({ opcode, ctx });
+            driver->request_queue.push({ opcode, &request, ctx });
         }
 
-        sync_with_driver();
+        sync_with_driver(&request);
 
         return true;
     }
@@ -51,9 +53,9 @@ namespace eka2l1::drivers {
         }
         
         if (already_locked) {
-            driver->request_queue.push_unsafe({ opcode, ctx });
+            driver->request_queue.push_unsafe({ opcode, nullptr, ctx });
         } else {
-            driver->request_queue.push({ opcode, ctx });
+            driver->request_queue.push({ opcode, nullptr, ctx });
         }
 
         return true;
@@ -69,9 +71,14 @@ namespace eka2l1::drivers {
         already_locked = false;
     }
 
-    void driver_client::sync_with_driver() {
+    void driver_client::sync_with_driver(int *req) {
         std::unique_lock<std::mutex> ulock(dri_cli_lock);
-        driver->cond.wait_for(ulock, timeout * 1ms);
+
+        if (should_timeout) {
+            driver->cond.wait_for(ulock, timeout * 1ms);
+        } else {
+            driver->cond.wait(ulock, [&]() { return req ? *req != -1 : true; });
+        }
     }
 
     driver_client::driver_client(driver_instance driver)
@@ -191,9 +198,30 @@ namespace eka2l1::drivers {
         send_opcode_sync(graphics_driver_upload_bitmap, context);
         return h;
     }
+    
+    void graphics_driver_client::draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect) {
+        itc_context context;
+        context.push(h);
+        context.push(dest_rect);
+
+        send_opcode(graphics_driver_draw_bitmap, context);
+    }
+
+    void graphics_driver_client::begin_window(const std::uint32_t id) {
+        itc_context context;
+        context.push(id);
+
+        send_opcode(graphics_driver_begin_window, context);
+    }
+
+    void graphics_driver_client::end_window() {
+        itc_context context;
+        send_opcode(graphics_driver_end_window, context);
+    }
 
     input_driver_client::input_driver_client(driver_instance driver)
         : driver_client(driver) {
+        should_timeout = true;
     }
 
     void input_driver_client::get(input_event *evt, const std::uint32_t total_to_get) {

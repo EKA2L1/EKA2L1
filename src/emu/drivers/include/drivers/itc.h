@@ -100,6 +100,7 @@ namespace eka2l1::drivers {
         bool send_opcode(const int opcode, itc_context &ctx);
         bool send_opcode_sync(const int opcode, itc_context &ctx);
 
+        bool should_timeout { false }; 
         std::uint32_t timeout { 500 };
 
     public:
@@ -128,7 +129,7 @@ namespace eka2l1::drivers {
         /*! \brief Wait for driver. The client locked, waiting for the driver. When driver
                    finished its job (work queue done), notfy all threads
         */
-        void sync_with_driver();
+        void sync_with_driver(int *req);
 
         void lock_driver_from_process();
         void unlock_driver_from_process();
@@ -186,6 +187,9 @@ namespace eka2l1::drivers {
         std::uint32_t create_window(const eka2l1::vec2 &initial_size, const std::uint16_t pri,
             const bool visible_from_start = true);
 
+        void begin_window(const std::uint32_t id);
+        void end_window();
+
         void set_window_visible(const std::uint32_t id, const bool visible);
 
         void set_window_size(const std::uint32_t id, const eka2l1::vec2 &win_size);
@@ -208,6 +212,8 @@ namespace eka2l1::drivers {
          */
         drivers::handle upload_bitmap(drivers::handle h, const char *data, const std::size_t size,
             const std::uint32_t width, const std::uint32_t height, const int bpp);
+
+        void draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect);
     };
 
     class input_driver_client : public driver_client {

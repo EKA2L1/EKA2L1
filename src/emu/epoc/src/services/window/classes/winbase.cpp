@@ -30,7 +30,7 @@ namespace eka2l1::epoc {
 
     // I make this up myself
     std::uint16_t window::redraw_priority() {
-        std::uint16_t pri;
+        std::uint16_t pri = 0;
 
         if (parent) {
             pri = parent->redraw_priority();

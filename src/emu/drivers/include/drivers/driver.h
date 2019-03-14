@@ -30,7 +30,12 @@ namespace eka2l1::drivers {
 
     struct driver_request {
         int opcode;
+        int *status { nullptr };
         itc_context context;
+
+        void finish(const int err_code) {
+            status ? (*status = err_code) : 0;
+        }
     };
 
     class driver {

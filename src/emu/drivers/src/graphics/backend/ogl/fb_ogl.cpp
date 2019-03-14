@@ -39,15 +39,20 @@ namespace eka2l1::drivers {
             static_cast<GLuint>(texture.texture_handle()),
             texture.get_mip_level());
 
+        GLenum err;
+        
         glGenRenderbuffers(1, &rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
-        glFramebufferRenderbuffer(GL_RENDERBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
+        
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             LOG_INFO("Framebuffer not complete!");
         }
+
+        glClearColor(0.2f, 0.4f, 0.8f, 1.0f);    
+        glClear(GL_COLOR_BUFFER_BIT);
 
         unbind();
     }
@@ -57,18 +62,23 @@ namespace eka2l1::drivers {
     }
 
     void ogl_framebuffer::bind() {
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &last_fb);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     }
 
     void ogl_framebuffer::unbind() {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, last_fb);
+        last_fb = 0;
     }
 
     void ogl_framebuffer::resize(const vec2 &s) {
         size = s;
         bind();
 
+        texture.bind();
         texture.change_size(vec3(size.x, size.y, 0));
+        texture.tex();
+        texture.unbind();
 
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);

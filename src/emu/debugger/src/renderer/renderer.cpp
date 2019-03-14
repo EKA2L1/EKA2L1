@@ -54,6 +54,10 @@ namespace eka2l1 {
         inp_driver_->process_requests();
 
         eka2l1::vec2 v = gr_driver_->get_screen_size();
+        auto padding = ImGui::GetStyle().WindowPadding;
+        v = vec2(static_cast<const int>(v.x + ImGui::GetStyle().WindowPadding.x * 2), 
+                 static_cast<const int>(v.y + (ImGui::GetStyle().WindowPadding.y + 10) * 2));
+
         ImGui::SetNextWindowSize(ImVec2(static_cast<float>(v.x), static_cast<float>(v.y)));
 
         ImGui::Begin("Emulating Window", nullptr, ImGuiWindowFlags_NoResize);

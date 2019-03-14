@@ -131,4 +131,9 @@ namespace eka2l1 {
         std::uint32_t key;
         int priority;
     };
+
+    struct ws_cmd_draw_bitmap {
+        std::uint32_t handle;
+        eka2l1::vec2 pos;
+    };
 }

@@ -34,6 +34,8 @@ namespace eka2l1::drivers {
 
         ogl_texture texture;
 
+        int last_fb {0};
+
     public:
         std::uint32_t get_fbo() const {
             return fbo;

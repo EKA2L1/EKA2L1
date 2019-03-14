@@ -42,7 +42,8 @@ namespace eka2l1::drivers {
         graphics_driver_set_visibility,
         graphics_driver_set_win_pos,
         graphics_driver_draw_text_box,
-        graphics_driver_upload_bitmap
+        graphics_driver_upload_bitmap,
+        graphics_driver_draw_bitmap
     };
 
     class graphics_driver : public driver {

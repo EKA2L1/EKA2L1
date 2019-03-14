@@ -22,6 +22,8 @@
  */
 
 #include <epoc/services/window/bitmap_cache.h>
+
+#include <epoc/epoc.h>
 #include <epoc/kernel.h>
 #include <epoc/kernel/chunk.h>
 
@@ -32,8 +34,10 @@
 #include <xxhash.h>
 
 namespace eka2l1::epoc {
-    bitmap_cache::bitmap_cache(kernel_system *kern_, graphics_driver_client_ptr cli_) 
-        : base_large_chunk(nullptr), kern(kern_), cli(cli_) {
+    bitmap_cache::bitmap_cache(kernel_system *kern_) 
+        : base_large_chunk(nullptr), kern(kern_), cli(nullptr) {
+        std::fill(driver_textures.begin(), driver_textures.end(), 0);
+        std::fill(hashes.begin(), hashes.end(), 0);
     }
 
     std::uint64_t bitmap_cache::hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp) {
@@ -85,6 +89,10 @@ namespace eka2l1::epoc {
             base_large_chunk = ch->base().get(kern->get_memory_system());
         }
 
+        if (!cli) {
+            cli = std::move(kern->get_system()->get_graphic_driver_client());
+        }
+
         std::int64_t idx = 0;
         std::uint64_t crr_timestamp = common::get_current_time_in_microseconds_since_1ad();
 
@@ -103,6 +111,8 @@ namespace eka2l1::epoc {
             }
             
             bitmaps[idx] = bmp;
+            driver_textures[idx] = 0;
+            hash = (hashes[idx] == 0) ? hash_bitwise_bitmap(bmp) : hashes[idx];
         } else {            
             // Else, get the index
             idx = std::distance(bitmaps.begin(), bitmap_ite);

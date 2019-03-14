@@ -23,6 +23,7 @@
 #include <epoc/services/context.h>
 #include <epoc/utils/obj.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstddef>
 #include <memory>
@@ -38,6 +39,20 @@ namespace eka2l1::service {
         std::atomic<uid> uid_counter {1};
 
     public:
+        template <typename T>
+        T *get(const service::uid handle) {
+            auto result = std::lower_bound(objs.begin(), objs.end(), handle, 
+                [](const ref_count_object_heap_ptr &lhs, const service::uid &rhs) {
+                    return lhs->id < rhs;
+                });
+
+            if (result == objs.end()) {
+                return nullptr;
+            }
+
+            return reinterpret_cast<T*>((*result).get());
+        }
+
         template <typename T, typename ...Args>
         T *make_new(Args... arguments) {
             ref_count_object_heap_ptr obj = std::make_unique<T>(arguments...);
@@ -60,6 +75,11 @@ namespace eka2l1::service {
         normal_object_container obj_con;
 
     public:
+        template <typename T>
+        T *get(const service::uid handle) {
+            return obj_con.get<T>(handle);
+        }
+
         template <typename T, typename ...Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
             const service::uid suid = ctx->msg->msg_session->unique_id();

@@ -60,7 +60,7 @@ namespace eka2l1::epoc {
         std::uint64_t hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp);
 
     public:
-        explicit bitmap_cache(kernel_system *kern_, graphics_driver_client_ptr cli_);
+        explicit bitmap_cache(kernel_system *kern_);
 
         std::int64_t get_suitable_bitmap_index();
 

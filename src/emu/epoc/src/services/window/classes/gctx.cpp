@@ -44,6 +44,17 @@ namespace eka2l1::epoc {
         context.set_request_status(attached_window->dvc->id);
     }
 
+    void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
+        const eka2l1::rect &dest_rect) {
+        draw_command command;
+        command.gc_command = EWsGcOpDrawBitmap;
+        command.externalize(h);
+        command.externalize(dest_rect);
+        
+        draw_queue.push(command);
+        ctx.set_request_status(KErrNone);
+    }
+
     void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
         if (attached_window->cursor_pos == vec2(-1, -1)) {
             LOG_TRACE("Cursor position not set, not drawing the text");
@@ -90,10 +101,11 @@ namespace eka2l1::epoc {
             attached_window->irect.in_bottom_right - attached_window->irect.in_top_left };
 
         // There should be an invalidate window
+        driver->begin_window(attached_window->driver_win_id);
         driver->invalidate(inv_rect);
 
         attached_window->irect.in_top_left = vec2(0, 0);
-        attached_window->irect.in_bottom_right = vec2(0, 0);
+        attached_window->irect.in_bottom_right = attached_window->size;
 
         while (!draw_queue.empty()) {
             auto draw_command = std::move(draw_queue.front());
@@ -121,6 +133,14 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case EWsGcOpDrawBitmap: {
+                drivers::handle bmp = draw_command.internalize<drivers::handle>();
+                eka2l1::rect draw_rect = draw_command.internalize<eka2l1::rect>();
+                driver->draw_bitmap(bmp, draw_rect);
+
+                break;
+            }
+
             default: {
                 LOG_TRACE("Can't transform IR opcode to driver opcode: 0x{:x}", draw_command.gc_command);
                 break;
@@ -131,6 +151,8 @@ namespace eka2l1::epoc {
         }
 
         driver->end_invalidate();
+        driver->end_window();
+        
         driver->unlock_driver_from_process();
     }
 
@@ -228,15 +250,34 @@ namespace eka2l1::epoc {
         }
 
         case EWsGcOpDeactivate: {
+            // Flushing            
+            flush_queue_to_driver();
+
             auto this_ctx = std::find(attached_window->contexts.begin(), attached_window->contexts.end(),
                 this);
-
             if (this_ctx != attached_window->contexts.end()) {
                 attached_window->contexts.erase(this_ctx);
             }
 
             attached_window.reset();
             ctx.set_request_status(KErrNone);
+
+            break;
+        }
+
+        case EWsGcOpDrawBitmap: {
+            ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap*>(cmd.data_ptr);
+            epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
+
+            if (!bw_bmp) {
+                ctx.set_request_status(KErrArgument);
+                break;
+            }
+
+            epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
+            drivers::handle bmp_driver_handle = cacher->add_or_get(bw_bmp);
+
+            do_command_draw_bitmap(ctx, bmp_driver_handle, rect(bitmap_cmd->pos, bw_bmp->header_.size_pixels));
 
             break;
         }

@@ -24,6 +24,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include <glad/glad.h>
+
 namespace eka2l1::drivers {
     embed_window::embed_window(const graphic_api gr_api, const eka2l1::vec2 &size, const std::uint16_t pri, bool visible)
         : pri(pri)
@@ -36,8 +38,13 @@ namespace eka2l1::drivers {
         framebuffer = make_framebuffer(gr_api, scr);
         context = ImGui::CreateContext();
 
+        auto last_context = ImGui::GetCurrentContext();
+        ImGui::SetCurrentContext(context);
+
         irenderer = make_imgui_renderer(gr_api);
         irenderer->init();
+
+        ImGui::SetCurrentContext(last_context);
     }
 
     shared_graphics_driver::~shared_graphics_driver() {
@@ -51,7 +58,7 @@ namespace eka2l1::drivers {
 
     drivers::handle shared_graphics_driver::upload_bitmap(drivers::handle h, const std::size_t size, 
         const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) {
-        if (bpp != 24 || bpp != 32) {
+        if (bpp != 24 && bpp != 32) {
             LOG_TRACE("Unsupported bit per pixels: {}", bpp);
             return 0;
         }
@@ -107,6 +114,9 @@ namespace eka2l1::drivers {
             btex->create(2, 1, vec3(width, height, 0), drivers::texture_format::rgba, tex_format,
                 tex_data_type, data);
 
+            btex->set_filter_minmag(true, drivers::filter_option::linear);
+            btex->set_filter_minmag(false, drivers::filter_option::linear);
+
             h = btex->texture_handle();
             bmp_textures.push_back(std::move(btex));
 
@@ -125,6 +135,8 @@ namespace eka2l1::drivers {
             std::uint16_t pri = *request->context.pop<std::uint16_t>();
             bool visible = *request->context.pop<bool>();
 
+            framebuffer->unbind();
+
             drivers::embed_window_ptr win = std::make_unique<embed_window>(gr_api_, size, pri, visible);
             win->id = id_counter++;
 
@@ -132,6 +144,8 @@ namespace eka2l1::drivers {
             *data_ret = win->id;
 
             windows.push(std::move(win));
+
+            framebuffer->bind();
 
             break;
         }
@@ -146,7 +160,6 @@ namespace eka2l1::drivers {
             }
 
             // Unbind the current framebuffer
-            framebuffer->unbind();
             (*win_ite)->fb->bind();
 
             ImGui::NewFrame();
@@ -165,6 +178,7 @@ namespace eka2l1::drivers {
             draw_list = ImGui::GetWindowDrawList();
 
             binding = *win_ite;
+            break;
         }
 
         case graphics_driver_end_window: {
@@ -181,10 +195,11 @@ namespace eka2l1::drivers {
             }
 
             binding->fb->unbind();
-            framebuffer->bind();
 
             binding.reset();
             draw_list = nullptr;
+
+            break;
         }
 
         case graphics_driver_resize_screen: {
@@ -278,8 +293,17 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_end_invalidate: {
-            should_rerender = true;
+        case graphics_driver_draw_bitmap: {
+            drivers::handle bmp_handle = *request->context.pop<drivers::handle>();
+            eka2l1::rect rect = *request->context.pop<eka2l1::rect>();
+
+            draw_list->AddImage(
+                reinterpret_cast<ImTextureID>(bmp_handle),
+                ImVec2(static_cast<float>(rect.top.x), static_cast<float>(rect.top.y)),
+                ImVec2(static_cast<float>(rect.top.x + rect.size.width()), 
+                       static_cast<float>(rect.top.y + rect.size.height())),
+                ImVec2(0, 1), ImVec2(1, 0));
+
             break;
         }
 
@@ -301,6 +325,7 @@ namespace eka2l1::drivers {
         }
         }
 
+        request->finish(0);
         return true;
     }
 
@@ -315,7 +340,7 @@ namespace eka2l1::drivers {
                 break;
             }
 
-            do_request_queue_execute_one_request(&(request.value()));       
+            do_request_queue_execute_one_request(&(request.value()));
         }
     }
 
@@ -332,27 +357,39 @@ namespace eka2l1::drivers {
             ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | 
             ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-        ImVec2 base_pos = ImGui::GetCursorScreenPos();
+        ImVec2 base_pos = ImVec2(0.0f, 0.0f);
 
         for (auto &window : windows) {
             if (window->visible) {
                 const eka2l1::vec2 win_size = window->fb->get_size();
                 ImVec2 win_pos = ImVec2(static_cast<float>(window->pos.x), static_cast<float>(window->pos.y));
 
+                /*
                 ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(
                     static_cast<std::uint64_t>(window->fb->texture_handle())),
                     ImVec2(base_pos.x + win_pos.x,
                         base_pos.y + win_pos.y),
-
                     ImVec2(base_pos.x + win_pos.x + win_size.x,
                         base_pos.y + win_pos.y + win_size.y),
-                    ImVec2(0, 1), ImVec2(1, 0));
+                    ImVec2(0, 1), ImVec2(1, 0));*/
+
+                for (auto tex: bmp_textures) {
+                    ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(
+                        static_cast<std::uint64_t>(tex->texture_handle())),
+                        ImVec2(base_pos.x + win_pos.x,
+                            base_pos.y + win_pos.y),
+                        ImVec2(base_pos.x + win_pos.x + win_size.x,
+                            base_pos.y + win_pos.y + win_size.y),
+                        ImVec2(0, 1), ImVec2(1, 0));
+                }
             }
         }
 
         ImGui::End();
         ImGui::EndFrame();
         
+        ImGui::Render();
+
         ImDrawData *data = ImGui::GetDrawData();
 
         if (data) {
@@ -360,7 +397,7 @@ namespace eka2l1::drivers {
         }
     }
 
-    void shared_graphics_driver::process_requests() {
+    void shared_graphics_driver::process_requests() {        
         framebuffer->bind();
 
         auto last_context = ImGui::GetCurrentContext();
@@ -384,7 +421,7 @@ namespace eka2l1::drivers {
             redraw_window_list();
             should_rerender = false;
         }
-
+        
         ImGui::SetCurrentContext(last_context);
         do_request_queue_clean_job();
 

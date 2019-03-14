@@ -164,6 +164,9 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpInvalidateFull: {
+            irect.in_top_left = pos;
+            irect.in_bottom_right = pos + size;
+
             // Invalidate the whole window
             client->queue_redraw(this, rect(pos, pos + size));
             ctx.set_request_status(KErrNone);
