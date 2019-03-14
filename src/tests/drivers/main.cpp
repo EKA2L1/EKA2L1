@@ -34,7 +34,7 @@ static void key_callback(GLFWwindow *win, int key, int scancodes, int action, in
 
 }
 
-int main(int argc, int **argv) {
+int main(int argc, char **argv) {
     // Setup the log
     eka2l1::log::setup_log(nullptr);
 
