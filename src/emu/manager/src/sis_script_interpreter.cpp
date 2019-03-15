@@ -324,8 +324,10 @@ namespace eka2l1 {
                     if (file->op == ss_op::EOpText) {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);
                         //extract_file_with_buf(raw_path, buf);
-                        show_text_func(buf);
-
+                        if (show_text_func) {
+                            show_text_func(buf);
+                        }
+                        
                         LOG_INFO("EOpText: {}", buf.data());
                     } else if (file->op == ss_op::EOpRun) {
                         // Doesn't do anything yet.
