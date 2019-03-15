@@ -263,14 +263,9 @@ namespace eka2l1 {
 
             if (img->header.data_size) {
                 // If there is initialized data, copy that
-                memcpy(dt_ptr + img->header.bss_size, img->data.data() + img->header.data_offset,
+                memcpy(dt_ptr, img->data.data() + img->header.data_offset,
                     img->header.data_size);
             }
-
-            // Definitely, there maybe bss, fill that with zero
-            // I usually depends on this to get my integer zero
-            // Filling zero from beginning of code segment, with size of bss size - 1
-            std::fill(dt_ptr, dt_ptr + img->header.bss_size, 0);
 
             if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
                 for (auto &ib : img->import_section.imports) {

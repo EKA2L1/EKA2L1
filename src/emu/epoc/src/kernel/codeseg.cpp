@@ -76,9 +76,14 @@ namespace eka2l1::kernel {
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
 
             data_addr = data_chunk->base().ptr_address();
-            std::uint8_t *bss = data_chunk->base().get(kern->get_memory_system());
+
+            // BSS is after static data
+            std::uint8_t *bss = data_chunk->base().get(kern->get_memory_system()) + data_size;
 
             // Initialize bss
+            // Definitely, there maybe bss, fill that with zero
+            // I usually depends on this to get my integer zero
+            // Filling zero from beginning of code segment, with size of bss size - 1
             std::fill(bss, bss + bss_size, 0);
 
             info.data_load_addr = data_addr;
