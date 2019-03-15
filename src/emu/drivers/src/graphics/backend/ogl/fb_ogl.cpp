@@ -39,8 +39,6 @@ namespace eka2l1::drivers {
             static_cast<GLuint>(texture.texture_handle()),
             texture.get_mip_level());
 
-        GLenum err;
-        
         glGenRenderbuffers(1, &rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
