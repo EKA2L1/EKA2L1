@@ -18,6 +18,7 @@
  */
 
 #include <epoc/services/framework.h>
+#include <common/log.h>
 
 namespace eka2l1::service {
     bool normal_object_container::remove(epoc::ref_count_object *obj) {

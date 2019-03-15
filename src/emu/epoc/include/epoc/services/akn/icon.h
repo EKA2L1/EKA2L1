@@ -20,8 +20,15 @@
 #include <epoc/services/framework.h>
 
 namespace eka2l1 {
+    class akn_icon_server_session: public service::typical_session {
+    public:
+        explicit akn_icon_server_session(service::typical_server *svr, service::uid client_ss_uid);
+        void fetch(service::ipc_context *ctx) override;
+    };
+
     class akn_icon_server: public service::typical_server {
     public:
-        akn_icon_server(eka2l1::system *sys);
+        explicit akn_icon_server(eka2l1::system *sys);
+        void connect(service::ipc_context context) override;
     };
 }
