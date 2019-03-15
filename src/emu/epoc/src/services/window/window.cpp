@@ -846,23 +846,27 @@ namespace eka2l1 {
         sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
     }
     
+    void window_server::do_base_init() {
+        load_wsini();
+        parse_wsini();
+
+        idriver_cli_ = sys->get_input_driver_client();
+
+        // Schedule an event which will frequently queries input from host
+        timing_system *timing = sys->get_timing_system();
+
+        input_handler_evt_ = timing->register_event("InputUpdateEvent", [this](std::uint64_t userdata, int cycles_late) {
+            handle_inputs_from_driver(userdata, cycles_late);
+        });
+
+        timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
+
+        loaded = true;
+    }
+    
     void window_server::init(service::ipc_context ctx) {
         if (!loaded) {
-            load_wsini();
-            parse_wsini();
-
-            idriver_cli_ = ctx.sys->get_input_driver_client();
-
-            // Schedule an event which will frequently queries input from host
-            timing_system *timing = ctx.sys->get_timing_system();
-
-            input_handler_evt_ = timing->register_event("InputUpdateEvent", [this](std::uint64_t userdata, int cycles_late) {
-                handle_inputs_from_driver(userdata, cycles_late);
-            });
-
-            timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
-
-            loaded = true;
+            do_base_init();
         }
 
         clients.emplace(ctx.msg->msg_session->unique_id(),
@@ -871,6 +875,19 @@ namespace eka2l1 {
         ctx.set_request_status(ctx.msg->msg_session->unique_id());
     }
 
+    epoc::config::screen &window_server::get_current_focus_screen_config() {
+        int num = 0;
+        if (focus_) {
+            num = focus_->dvc->screen;
+        }
+
+        if (!loaded) {
+            do_base_init();
+        }
+
+        return screens[num];
+    }
+    
     void window_server::send_to_command_buffer(service::ipc_context ctx) {
         clients[ctx.msg->msg_session->unique_id()]->parse_command_buffer(ctx);
     }

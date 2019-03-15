@@ -23,6 +23,8 @@
 #include <epoc/services/window/window.h>
 
 namespace eka2l1 {
+    class window_server;
+
     namespace epoc {
         struct sgc_params {
             int window_group_id;
@@ -124,12 +126,10 @@ namespace eka2l1 {
         void get_layout_config_size(service::ipc_context ctx);
         void get_layout_config(service::ipc_context ctx);
 
-        bool layout_config_loaded = false;
-        epoc::config::screen scr_config;
-
         std::string layout_buf;
-
         epoc::sgc_params params;
+
+        window_server *winsrv {nullptr};
 
     protected:
         // This but except it loads the screen0 only

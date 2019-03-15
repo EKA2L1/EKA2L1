@@ -303,6 +303,8 @@ namespace eka2l1 {
             return &bmp_cache;
         }
 
+        epoc::config::screen &get_current_focus_screen_config();
+
         /**
          * \brief Get the number of window groups running in the server
          */
@@ -315,6 +317,8 @@ namespace eka2l1 {
          * \param pri The priority we want to count.
         */
         std::uint32_t get_total_window_groups_with_priority(const std::uint32_t pri);
+
+        void do_base_init();
 
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;
