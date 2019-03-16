@@ -91,7 +91,7 @@ namespace eka2l1 {
     bool ecom_server::load_and_install_plugin_from_buffer(std::uint8_t *buf, const std::size_t size,
         const drive_number drv) {
         common::ro_buf_stream stream(buf, size);
-        loader::rsc_file rsc(stream);
+        loader::rsc_file rsc(reinterpret_cast<common::ro_stream*>(&stream));
 
         ecom_plugin plugin;
         bool result = load_plugin(rsc, plugin);
