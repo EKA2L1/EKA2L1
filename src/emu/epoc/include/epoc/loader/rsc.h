@@ -30,7 +30,7 @@
 
 namespace eka2l1 {
     namespace common {
-        class ro_buf_stream;
+        class ro_stream;
     }
 }
 
@@ -71,14 +71,14 @@ namespace eka2l1::loader {
         std::vector<std::uint16_t> dict_offsets;
 
     protected:
-        void read_header_and_resource_index(common::ro_buf_stream &seri);
+        void read_header_and_resource_index(common::ro_stream *seri);
 
         int decompress(std::uint8_t *buffer, int max, int res_index);
 
         bool own_res_id(const int res_id);
 
     public:
-        explicit rsc_file(common::ro_buf_stream &seri);
+        explicit rsc_file(common::ro_stream *seri);
         bool is_resource_contains_unicode(int res_id, bool first_rsc_is_gen);
 
         std::vector<std::uint8_t> read(const int res_id);
