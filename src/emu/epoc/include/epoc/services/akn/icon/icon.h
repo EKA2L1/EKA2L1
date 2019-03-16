@@ -18,6 +18,7 @@
  */
 
 #include <epoc/services/framework.h>
+#include <epoc/services/akn/icon/common.h>
 
 namespace eka2l1 {
     class akn_icon_server_session: public service::typical_session {
@@ -27,7 +28,20 @@ namespace eka2l1 {
     };
 
     class akn_icon_server: public service::typical_server {
+        enum flags {
+            akn_icon_srv_flag_inited = 0x1
+        };
+        
+        epoc::akn_icon_init_data init_data;
+        std::uint32_t flags {0};
+
+        void init_server();
+
     public:
+        epoc::akn_icon_init_data *get_init_data() {
+            return &init_data;
+        }
+
         explicit akn_icon_server(eka2l1::system *sys);
         void connect(service::ipc_context context) override;
     };

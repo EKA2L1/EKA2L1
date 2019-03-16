@@ -67,7 +67,7 @@ add_library(epocservs
     include/epoc/services/session.h
     include/epoc/services/server.h
     include/epoc/services/property.h
-    include/epoc/services/akn/icon.h
+    include/epoc/services/akn/icon/icon.h
     include/epoc/services/applist/op.h
     include/epoc/services/applist/applist.h
     include/epoc/services/backup/backup.h
@@ -103,7 +103,8 @@ add_library(epocservs
     src/services/property.cpp
     src/services/server.cpp
     src/services/session.cpp
-    src/services/akn/icon.cpp
+    src/services/akn/icon/icon.cpp
+    src/services/akn/icon/init.cpp
     src/services/applist/applist.cpp
     src/services/backup/backup.cpp
     src/services/centralrepo/centralrepo.cpp
