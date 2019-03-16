@@ -1,11 +1,8 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team
+ * Copyright (c) 2019 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project
  * (see bentokun.github.com/EKA2L1).
- * 
- * Initial contributor: pent0
- * Contributors:
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,16 +20,13 @@
 
 #pragma once
 
-#include <common/vecx.h>
-#include <cstdint>
+namespace eka2l1::epoc {
+    struct rsession_base {
+        int session_handle;
+    };
 
-namespace eka2l1::common {
-    inline vecx<int, 4> rgb_to_vec(const std::uint32_t rgb) {
-        return vecx<int, 4>{ static_cast<int>(rgb >> 24),
-            static_cast<int>((rgb & 0x00FF0000) >> 16),
-            static_cast<int>((rgb & 0x0000FF00) >> 8),
-            static_cast<int>(rgb & 0x000000FF) };
-    }
-
-    using rgb = std::uint32_t;
+    struct rsubsession_base {
+        rsession_base session;
+        int subsession_handle;
+    };
 }

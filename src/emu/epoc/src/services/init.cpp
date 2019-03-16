@@ -20,7 +20,7 @@
 
 #include <common/platform.h>
 
-#include <epoc/services/akn/icon.h>
+#include <epoc/services/akn/icon/icon.h>
 #include <epoc/services/applist/applist.h>
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/centralrepo/centralrepo.h>
