@@ -68,6 +68,11 @@ namespace eka2l1 {
 
                 return str;
             }
+            
+            std::uint64_t read(const std::uint64_t pos, void *buf, const std::uint64_t size) {
+                seek(pos, seek_where::beg);
+                return read(buf, size);
+            }
         };
 
         /*! \brief Another buffer stream, base on LLVM's Buffer 
@@ -129,11 +134,6 @@ namespace eka2l1 {
                 }
 
                 crr_pos = (end - beg) + amount;
-            }
-            
-            std::uint64_t read(const std::uint64_t pos, void *buf, const std::uint64_t size) {
-                seek(pos, seek_where::beg);
-                return read(buf, size);
             }
 
             std::uint64_t read(void *buf, const std::uint64_t read_size) override {
