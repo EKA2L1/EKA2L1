@@ -33,4 +33,6 @@ namespace eka2l1::common {
             static_cast<int>((rgb & 0x0000FF00) >> 8),
             static_cast<int>(rgb & 0x000000FF) };
     }
+
+    using rgb = std::uint32_t;
 }
