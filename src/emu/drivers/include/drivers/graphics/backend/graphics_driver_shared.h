@@ -74,8 +74,12 @@ namespace eka2l1::drivers {
         virtual void start_new_backend_frame() {}
         virtual void render_frame(ImDrawData *draw_data);
 
+        void do_init(const graphic_api gr_api, const vec2 &scr);
+
     public:
+        explicit shared_graphics_driver() = default;
         explicit shared_graphics_driver(const graphic_api gr_api, const vec2 &scr);
+
         ~shared_graphics_driver() override;
 
         void do_second_pass();

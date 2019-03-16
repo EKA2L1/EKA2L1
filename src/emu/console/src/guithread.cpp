@@ -103,8 +103,6 @@ int ui_debugger_thread() {
     debugger_window->init(window_title, eka2l1::vec2(1080, 720));
     debugger_window->make_current();
 
-    eka2l1::drivers::init_graphics_library(eka2l1::drivers::graphic_api::opengl);
-
     /* Consider main thread not touching this, no need for mutex */
     ui_debugger_context = ImGui::CreateContext();
     auto drenderer = std::make_shared<eka2l1::debugger_renderer>();

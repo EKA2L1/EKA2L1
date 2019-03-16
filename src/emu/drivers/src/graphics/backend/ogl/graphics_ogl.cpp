@@ -10,8 +10,9 @@
 #include <imgui_internal.h>
 
 namespace eka2l1::drivers {
-    ogl_graphics_driver::ogl_graphics_driver(const vec2 &scr)
-        : shared_graphics_driver(graphic_api::opengl, scr) {
+    ogl_graphics_driver::ogl_graphics_driver(const vec2 &scr) {
+        init_graphics_library(eka2l1::drivers::graphic_api::opengl);
+        do_init(graphic_api::opengl, scr);
     }
 
     void ogl_graphics_driver::set_screen_size(const vec2 &s) {

@@ -35,6 +35,15 @@ namespace eka2l1::drivers {
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api, const vec2 &scr)
         : gr_api_(gr_api) {
+        do_init(gr_api, scr);
+    }
+
+    shared_graphics_driver::~shared_graphics_driver() {
+        ImGui::DestroyContext(context);
+        irenderer->deinit();
+    }
+
+    void shared_graphics_driver::do_init(const graphic_api gr_api, const vec2 &scr) {
         framebuffer = make_framebuffer(gr_api, scr);
         context = ImGui::CreateContext();
 
@@ -45,11 +54,6 @@ namespace eka2l1::drivers {
         irenderer->init();
 
         ImGui::SetCurrentContext(last_context);
-    }
-
-    shared_graphics_driver::~shared_graphics_driver() {
-        ImGui::DestroyContext(context);
-        irenderer->deinit();
     }
 
     void shared_graphics_driver::render_frame(ImDrawData *draw_data) {
