@@ -52,3 +52,6 @@
 [submodule "src/external/xxHash"]
 	path = src/external/xxHash
 	url = https://github.com/Cyan4973/xxHash
+[submodule "src/external/Vulkan-Hpp"]
+	path = src/external/Vulkan-Hpp
+	url = https://github.com/KhronosGroup/Vulkan-Hpp/
