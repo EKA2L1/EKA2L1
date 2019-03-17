@@ -1,3 +1,9 @@
+if (BUILD_WITH_VULKAN)
+    set (DRIVERS_VULKAN_SRC  
+        include/drivers/graphics/backend/vulkan/graphics_vulkan.h
+        src/graphics/backend/vulkan/graphics_vulkan.cpp)
+endif()
+
 add_library(drivers 
     include/drivers/itc.h
     include/drivers/driver.h
@@ -29,7 +35,12 @@ add_library(drivers
     src/graphics/backend/ogl/graphics_ogl.cpp
     src/graphics/backend/ogl/texture_ogl.cpp
     src/graphics/backend/ogl/shader_ogl.cpp
-    src/input/input.cpp)
+    src/input/input.cpp
+    ${DRIVERS_VULKAN_SRC})
 
 target_link_libraries(drivers PRIVATE common imgui glad glfw)
 target_include_directories(drivers PUBLIC include)
+
+if (BUILD_WITH_VULKAN)
+    target_link_libraries(drivers PRIVATE Vulkan)
+endif()

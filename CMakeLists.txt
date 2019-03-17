@@ -8,6 +8,7 @@ option(BUILD_TESTS "Build EKA2L1's tests" ON)
 option(BUILD_JIT_LLVM "Build EKA2L1's LLVM JIT (Experimental)" OFF)
 option(ENABLE_SCRIPTING_ABILITY "Enable to script with Python" OFF)
 option(ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpected exception" ON)
+option(BUILD_WITH_VULKAN "Build Vulkan backends" ON)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})

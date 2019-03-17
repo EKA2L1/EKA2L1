@@ -44,6 +44,8 @@ namespace eka2l1::drivers {
     }
 
     void shared_graphics_driver::do_init(const graphic_api gr_api, const vec2 &scr) {
+        gr_api_ = gr_api;
+        
         framebuffer = make_framebuffer(gr_api, scr);
         context = ImGui::CreateContext();
 

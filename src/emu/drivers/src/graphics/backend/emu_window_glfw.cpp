@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2019 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project 
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <common/log.h>
 #include <common/raw_bind.h>
 #include <drivers/graphics/backend/emu_window_glfw.h>
@@ -39,12 +58,12 @@ void mouse_callback(GLFWwindow *window, int button, int action, int mods) {
 
     int but_action = (action == GLFW_PRESS) ? 0 : ((action == GLFW_REPEAT) ? 1 : 2);
 
-    CALL_IF_VALID(win->raw_mouse_event, eka2l1::point(x, y), but_map, but_action);
+    CALL_IF_VALID(win->raw_mouse_event, eka2l1::point(static_cast<int>(x), static_cast<int>(y)), but_map, but_action);
 
     if (action == GLFW_PRESS) {
-        CALL_IF_VALID(win->touch_pressed, eka2l1::point(x, y));
+        CALL_IF_VALID(win->touch_pressed, eka2l1::point(static_cast<int>(x), static_cast<int>(y)));
     } else if (action == GLFW_REPEAT) {
-        CALL_IF_VALID(win->touch_move, eka2l1::point(x, y));
+        CALL_IF_VALID(win->touch_move, eka2l1::point(static_cast<int>(x), static_cast<int>(y)));
     } else {
         CALL_IF_VALID(win->touch_released);
     }
@@ -52,7 +71,7 @@ void mouse_callback(GLFWwindow *window, int button, int action, int mods) {
 
 void mouse_wheel_callback(GLFWwindow *window, double xoff, double yoff) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
-    CALL_IF_VALID(win->mouse_wheeling, eka2l1::vec2(xoff, yoff));
+    CALL_IF_VALID(win->mouse_wheeling, eka2l1::vec2(static_cast<int>(xoff), static_cast<int>(yoff)));
 }
 
 void fb_resize_callback(GLFWwindow *window, int width, int height) {
