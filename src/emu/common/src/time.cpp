@@ -23,6 +23,12 @@
 
 #include <chrono>
 #include <common/time.h>
+#include <common/platform.h>
+#include <ctime>
+
+#if EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
+#endif
 
 namespace eka2l1::common {
     std::uint64_t get_current_time_in_microseconds_since_1ad() {
@@ -36,5 +42,20 @@ namespace eka2l1::common {
     
     std::uint64_t convert_microsecs_win32_1601_epoch_to_1ad(const std::uint64_t micsecs) {
         return micsecs / 10 + ad_win32_epoch_dist_microsecs;
+    }
+    
+    int get_current_utc_offset() {
+#if EKA2L1_PLATFORM(WIN32)
+        TIME_ZONE_INFORMATION tz_info{};
+        GetTimeZoneInformation(&tz_info);
+
+        // The bias is in minutes
+        return -(tz_info.Bias) * 60;
+#else
+        std::time_t current_time;
+        std::time(&current_time);
+        struct std::tm *timeinfo = std::localtime(&current_time);
+        return static_cast<int>(timeinfo->tm_gmtoff);
+#endif
     }
 }
