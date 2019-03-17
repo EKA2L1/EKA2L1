@@ -25,9 +25,6 @@
 [submodule "ext-boost"]
 	path = src/external/ext-boost
 	url = https://github.com/MerryMage/ext-boost
-[submodule "src/external/date"]
-	path = src/external/date
-	url = https://github.com/HowardHinnant/date
 [submodule "src/external/pybind11"]
 	path = src/external/pybind11
 	url = https://github.com/pybind/pybind11
