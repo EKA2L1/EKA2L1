@@ -14,7 +14,6 @@ add_library(common
     include/common/crypt.h
     include/common/cpudetect.h
     include/common/cvt.h
-    include/common/data_displayer.h
     include/common/dictcomp.h
     include/common/dynamicfile.h
     include/common/fileutils.h
@@ -42,7 +41,6 @@ add_library(common
     src/chunkyseri.cpp
     src/cvt.cpp
     src/crypt.cpp
-    src/data_displayer.cpp
     src/dictcomp.cpp
     src/dynamicfile.cpp
     src/fileutils.cpp

@@ -32,6 +32,10 @@ namespace eka2l1::common {
         ad_win32_epoch_dist_microsecs = (1601 * 365 * 24 * 60) * microsecs_per_sec
     };
 
+    /**
+     * @brief Get total seconds esclaped in microseconds since 1/1/1AD
+     * @returns A 64-bit number indicates the total microseconds.
+     */
     std::uint64_t get_current_time_in_microseconds_since_1ad();
     std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t nsecs);
     std::uint64_t convert_microsecs_win32_1601_epoch_to_1ad(const std::uint64_t nsecs);

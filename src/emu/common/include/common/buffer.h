@@ -76,7 +76,7 @@ namespace eka2l1 {
         };
 
         /*! \brief Another buffer stream, base on LLVM's Buffer 
-		*/
+        */
         class buffer_stream_base {
         protected:
             uint8_t *beg;

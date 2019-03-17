@@ -49,6 +49,20 @@ namespace eka2l1::common {
         }
     };
 
+    /**
+     * @brief Simple serialization class.
+     * 
+     * Using this class, you can serialize your data to buffer, and deserialize it later.
+     * The method of serialize is easy to understand, it simply stores your data to buffer as
+     * binary.
+     * 
+     * There are three serialization mode:
+     * - Read: Deserialize data from buffer.
+     * - Write: Serialize data to buffer.
+     * - Measure: Calculate total bytes of buffer needed when data are done serialized.
+     * 
+     * @see basic_stream ro_stream wo_stream
+     */
     class chunkyseri {
         std::uint8_t *buf;
         std::uint8_t *org;
