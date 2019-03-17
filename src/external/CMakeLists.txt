@@ -40,10 +40,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(glfw)
 
-# Date TZ - Disable tests units
-set (ENABLE_DATE_TESTING OFF CACHE BOOL "" FORCE)
-add_subdirectory(date)
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPy_DEBUG)
     message("Add debug to prevent crash for PyBind11")

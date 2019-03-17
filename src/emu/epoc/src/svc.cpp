@@ -46,18 +46,8 @@
 #include <common/path.h>
 #include <common/platform.h>
 #include <common/random.h>
+#include <common/time.h>
 #include <common/types.h>
-
-#define CURL_STATICLIB
-#if EKA2L1_PLATFORM(WIN32)
-#pragma comment(lib, "wldap32.lib")
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "winmm.lib")
-#pragma comment(lib, "crypt32.lib")
-#pragma comment(lib, "Normaliz.lib")
-#endif
-
-#include <date/tz.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -488,7 +478,8 @@ namespace eka2l1::epoc {
      * \returns The UTC offset, in seconds.
      */
     BRIDGE_FUNC(TInt, UTCOffset) {
-        return static_cast<TInt>(date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
+        // TODO: Users and apps can set this
+        return common::get_current_utc_offset();
     }
 
     enum : uint64_t {
