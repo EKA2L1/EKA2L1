@@ -167,7 +167,7 @@ find_package(Vulkan QUIET)
 
 if (NOT Vulkan_FOUND)
     message("Couldn't find Vulkan SDK, building Vulkan backend not enabled!")
-    set (BUILD_WITH_VULKAN 0)
+    set (BUILD_WITH_VULKAN 0 PARENT_SCOPE)
 endif()
 
 add_library(Vulkan INTERFACE)
