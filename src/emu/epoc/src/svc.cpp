@@ -50,6 +50,14 @@
 #include <common/types.h>
 
 #if EKA2L1_PLATFORM(WIN32)
+#pragma comment(lib, "wldap32.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "Normaliz.lib")
+#endif
+
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
