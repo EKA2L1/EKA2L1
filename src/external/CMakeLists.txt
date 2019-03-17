@@ -162,6 +162,18 @@ if (BUILD_TOOLS)
     endif()
 endif()
 
+# Find Vulkan SDK
+find_package(Vulkan QUIET)
+
+if (NOT Vulkan_FOUND)
+    message("Couldn't find Vulkan SDK, building Vulkan backend not enabled!")
+    set (BUILD_WITH_VULKAN OFF)
+endif()
+
+add_library(Vulkan INTERFACE)
+target_include_directories(Vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(Vulkan INTERFACE ${Vulkan_LIBRARIES})
+
 option(CAPSTONE_BUILD_SHARED "Build shared library" OFF)
 option(CAPSTONE_BUILD_TESTS "Build tests" OFF)
 option(CAPSTONE_ARM_SUPPORT "ARM support" ON)
