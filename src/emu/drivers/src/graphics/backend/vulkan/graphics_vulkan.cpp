@@ -17,6 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/configure.h>
+
+#ifdef BUILD_WITH_VULKAN
+
 #include <drivers/graphics/backend/vulkan/graphics_vulkan.h>
 #include <common/log.h>
 #include <common/platform.h>
@@ -101,3 +105,5 @@ namespace eka2l1::drivers {
         create_debug_callback();
     }
 }
+
+#endif

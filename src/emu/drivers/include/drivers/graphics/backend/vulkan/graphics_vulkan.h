@@ -19,6 +19,10 @@
 
 #pragma once
 
+#include <common/configure.h>
+
+#ifdef BUILD_WITH_VULKAN
+
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <common/platform.h>
 
@@ -47,3 +51,5 @@ namespace eka2l1::drivers {
         explicit vulkan_graphics_driver(const vec2 &scr);
     };
 }
+
+#endif
