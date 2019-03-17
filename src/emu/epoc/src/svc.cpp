@@ -498,7 +498,7 @@ namespace eka2l1::epoc {
         *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;
 
-        *offset = static_cast<TInt>(date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
+        *offset = common::get_current_utc_offset();
 
         return KErrNone;
     }
