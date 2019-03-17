@@ -228,7 +228,6 @@ target_link_libraries(epockern PRIVATE
     drivers
     manager
     hle
-    tz
 )
 
 if (ENABLE_SCRIPTING_ABILITY)
