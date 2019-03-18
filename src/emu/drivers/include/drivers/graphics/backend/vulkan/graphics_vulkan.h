@@ -41,6 +41,7 @@ namespace eka2l1::drivers {
         vk::UniqueInstance inst_;
         vk::UniqueDebugReportCallbackEXT reporter_;
         vk::UniqueDevice dvc_;
+        vk::PhysicalDevice phys_dvc_;
 
         vk::UniqueSurfaceKHR surface_;
 
@@ -50,6 +51,7 @@ namespace eka2l1::drivers {
         bool create_debug_callback();
         bool create_device();
         bool create_surface();
+        bool create_swapchain();
 
         void set_screen_size(const eka2l1::vec2 &size) {}
 

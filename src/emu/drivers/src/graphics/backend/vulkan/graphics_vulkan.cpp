@@ -186,8 +186,6 @@ namespace eka2l1::drivers {
     }
 
     bool vulkan_graphics_driver::create_device() {
-        vk::PhysicalDevice choosen_dvc {};
-
         {
             auto dvcs = inst_->enumeratePhysicalDevices();
             if (dvcs.size() == 0) {
@@ -206,28 +204,52 @@ namespace eka2l1::drivers {
                 }
             }
 
-            choosen_dvc = std::move(dvcs[idx]);
-            LOG_TRACE("Choosing device: {}", choosen_dvc.getProperties().deviceName);
+            phys_dvc_ = std::move(dvcs[idx]);
+            LOG_TRACE("Choosing device: {}", phys_dvc_.getProperties().deviceName);
         }
 
-        std::uint32_t queue_index = 0;
+        std::uint32_t queue_index = 0xFFFF;
+
+        // Get the queue that supports presenting our surface
+        auto fam_queues = phys_dvc_.getQueueFamilyProperties();
+        std::vector<std::size_t> support_presenting;
+
+        for (std::size_t i = 0; i < fam_queues.size(); i++) {
+            if (phys_dvc_.getSurfaceSupportKHR(static_cast<std::uint32_t>(i), surface_.get())) {
+                support_presenting.push_back(i);
+            }
+        }
 
         // We need to find the graphics queue for this physical device
-        auto fam_queues = choosen_dvc.getQueueFamilyProperties();
-        for (std::size_t i = 0; i < fam_queues.size(); i++) {
-            if (fam_queues[i].queueFlags & vk::QueueFlagBits::eGraphics) {
-                // If it's a graphic queue, we choose right away
-                // There might be other checks we need, but for now, let's break
+        // Iterate through queue that currently support presenting, check if those also supports graphics.
+        for (std::size_t i = 0; i < support_presenting.size(); i++) {
+            if (fam_queues[support_presenting[i]].queueFlags & vk::QueueFlagBits::eGraphics) {
                 queue_index = static_cast<std::uint32_t>(i);
                 break;
             }
+        }
+
+        // If we still can't find the queue that satisfy our condition (both support present and graphics, fallback to only graphics)
+        if (queue_index == 0xFFFF) {
+            for (std::size_t i = 0; i < fam_queues.size(); i++) {
+                if (fam_queues[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+                    queue_index = static_cast<std::uint32_t>(i);
+                    break;
+                }
+            }
+        }
+
+        // If no queue satisfy that last test, we failed. Bye!
+        if (queue_index == 0xFFFF) {
+            LOG_ERROR("No queue presents support graphics. Abort");
+            return false;
         }
 
         float queue_pris[1] = {0.0f};
         vk::DeviceQueueCreateInfo queue_create_info(vk::DeviceQueueCreateFlags{}, queue_index, 1, queue_pris);
         vk::DeviceCreateInfo device_create_info(vk::DeviceCreateFlags{}, 1, &queue_create_info);
 
-        dvc_ = choosen_dvc.createDeviceUnique(device_create_info);
+        dvc_ = phys_dvc_.createDeviceUnique(device_create_info);
 
         if (!dvc_) {
             return false;
@@ -267,13 +289,18 @@ namespace eka2l1::drivers {
 
         return true;
     }
+
+    bool vulkan_graphics_driver::create_swapchain() {
+        // Get supported format by surface
+        return true;
+    }
     
     vulkan_graphics_driver::vulkan_graphics_driver(const vec2 &scr, void *native_win_handle)
         : native_win_handle_(native_win_handle) {
         create_instance();
-        create_device();
         create_debug_callback();
         create_surface();
+        create_device();
     }
 
     vulkan_graphics_driver::~vulkan_graphics_driver() {
