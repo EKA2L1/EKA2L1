@@ -139,5 +139,7 @@ namespace eka2l1 {
 
         bool init_window_library(window_type win_type);
         bool destroy_window_library(window_type win_type);
+
+        using emu_window_ptr = std::shared_ptr<emu_window>;
     }
 }

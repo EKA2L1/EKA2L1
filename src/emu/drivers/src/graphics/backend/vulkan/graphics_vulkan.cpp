@@ -108,11 +108,11 @@ namespace eka2l1::drivers {
             }
         }
 
-        auto exts = vk::enumerateInstanceExtensionProperties();
-
         // Enable surface extensions
         std::vector<const char*> enabled_extensions;
         enabled_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+        enabled_extensions.push_back("VK_EXT_debug_report");
+        enabled_extensions.push_back("VK_EXT_debug_utils");
         
 #if EKA2L1_PLATFORM(WIN32)
         enabled_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
@@ -126,7 +126,12 @@ namespace eka2l1::drivers {
         vk::InstanceCreateInfo instance_create_info({}, &app_info, static_cast<std::uint32_t>(enabled_layers.size()),
             enabled_layers.data(), static_cast<std::uint32_t>(enabled_extensions.size()), enabled_extensions.data());
         
-        inst_ = vk::createInstanceUnique(instance_create_info);
+        try {
+            inst_ = vk::createInstanceUnique(instance_create_info);
+        } catch (std::exception &e) {
+            LOG_ERROR("Instance creation failed with error: {}", e.what());
+            return false;
+        }
 
         if (!inst_) {
             return false;
@@ -230,11 +235,49 @@ namespace eka2l1::drivers {
 
         return true;
     }
+
+    bool vulkan_graphics_driver::create_surface() {
+#if EKA2L1_PLATFORM(WIN32)
+        vk::Win32SurfaceCreateInfoKHR surface_create_info(vk::Win32SurfaceCreateFlagsKHR {}, nullptr, reinterpret_cast<HWND>(native_win_handle_));
+        try {
+            surface_ = inst_->createWin32SurfaceKHRUnique(surface_create_info);
+        } catch (std::exception &ex) {
+            LOG_ERROR("Create Win32 Vulkan surface failed with error: {}", ex.what());
+            return false;
+        }
+
+        return true;
+#elif EKA2L1_PLATFORM(ANDROID)
+        vk::AndroidSurfaceCreateInfoKHR surface_create_info(vk::AndroidSurfaceCreateFlagsKHR{}, reinterpret_cast<struct ANativeWindow*>(native_win_handle_));
+        try {
+            surface_ = inst_->createAndroidSurfaceKHRUnique(surface_create_info);
+        } catch (std::exception &ex) {
+            LOG_ERROR("Create Android Vulkan surface failed with error: {}", ex.what());
+            return false;
+        }
+#else
+        vk::XcbSurfaceCreateInfoKHR surface_create_info(vk::XcbSurfaceCreateFlagsKHR {}, nullptr, reinterpret_cast<xcb_window_t>(native_win_handle_));
+        try {
+            surface_ = inst_->createXcbSurfaceKHRUnique(surface_create_info);
+        } catch (std::exception &ex) {
+            LOG_ERROR("Create XCB Vulkan surface failed with error: {}", ex.what());
+            return false;
+        }
+#endif
+
+        return true;
+    }
     
-    vulkan_graphics_driver::vulkan_graphics_driver(const vec2 &scr) {
+    vulkan_graphics_driver::vulkan_graphics_driver(const vec2 &scr, void *native_win_handle)
+        : native_win_handle_(native_win_handle) {
         create_instance();
         create_device();
         create_debug_callback();
+        create_surface();
+    }
+
+    vulkan_graphics_driver::~vulkan_graphics_driver() {
+        // shared_graphics_driver::~shared_graphics_driver();
     }
 }
 

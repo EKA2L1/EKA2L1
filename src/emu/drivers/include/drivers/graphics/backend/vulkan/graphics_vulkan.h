@@ -42,12 +42,20 @@ namespace eka2l1::drivers {
         vk::UniqueDebugReportCallbackEXT reporter_;
         vk::UniqueDevice dvc_;
 
+        vk::UniqueSurfaceKHR surface_;
+
+        void *native_win_handle_;
+
         bool create_instance();
         bool create_debug_callback();
         bool create_device();
+        bool create_surface();
+
+        void set_screen_size(const eka2l1::vec2 &size) {}
 
     public:
-        explicit vulkan_graphics_driver(const vec2 &scr);
+        explicit vulkan_graphics_driver(const vec2 &scr, void *native_win_handle);
+        ~vulkan_graphics_driver() override;
     };
 }
 
