@@ -40,12 +40,11 @@ namespace eka2l1::drivers {
     class vulkan_graphics_driver: public shared_graphics_driver {
         vk::UniqueInstance inst_;
         vk::UniqueDebugReportCallbackEXT reporter_;
-        
-        PFN_vkCreateDebugReportCallbackEXT create_debug_report_callback_ext_;
-        PFN_vkDestroyDebugReportCallbackEXT destroy_debug_report_callback_ext_;
+        vk::UniqueDevice dvc_;
 
-        void create_instance();
-        void create_debug_callback();
+        bool create_instance();
+        bool create_debug_callback();
+        bool create_device();
 
     public:
         explicit vulkan_graphics_driver(const vec2 &scr);

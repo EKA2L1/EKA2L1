@@ -26,6 +26,18 @@
 #include <common/platform.h>
 #include <vector>
 
+PFN_vkCreateDebugReportCallbackEXT create_debug_report_callback_ext_;
+PFN_vkDestroyDebugReportCallbackEXT destroy_debug_report_callback_ext_;
+
+VkResult vkCreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, 
+    VkDebugReportCallbackEXT* pCallback) {
+    return create_debug_report_callback_ext_(instance, pCreateInfo, pAllocator, pCallback);
+}
+
+void vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) {
+    destroy_debug_report_callback_ext_(instance, callback, pAllocator);
+}
+
 namespace eka2l1::drivers {
     static VkBool32 vulkan_reporter(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*objectType*/, uint64_t /*object*/, size_t /*location*/,
         int32_t /*messageCode*/, const char* /*pLayerPrefix*/, const char* pMessage, void* /*pUserData*/) {
@@ -64,10 +76,39 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    void vulkan_graphics_driver::create_instance() {
+    bool vulkan_graphics_driver::create_instance() {
+        auto avail_layers = vk::enumerateInstanceLayerProperties();
+
         std::vector<const char*> enabled_layers;
-        // Enable validations
-        enabled_layers.push_back("VK_LAYER_LUNARG_standard_validation");
+
+        auto add_layer_if_avail = [&](const char *name) -> bool {
+            for (auto &avail_layer: avail_layers) {
+                if (strncmp(avail_layer.layerName, name, strlen(name)) == 0) {
+                    enabled_layers.push_back(name);
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        // Enable layers
+        if (!add_layer_if_avail("VK_LAYER_LUNARG_standard_validation")) {
+            bool result = false;
+
+            result = add_layer_if_avail("VK_LAYER_GOOGLE_threading");
+            result = add_layer_if_avail("VK_LAYER_LUNARG_parameter_validation");
+            result = add_layer_if_avail("VK_LAYER_LUNARG_object_tracker");
+            result = add_layer_if_avail("VK_LAYER_LUNARG_core_validation");
+            result = add_layer_if_avail("VK_LAYER_GOOGLE_unique_objects");
+
+            if (!result) {
+                LOG_ERROR("Instance can't be created, needed validation layers not found!");
+                return false;
+            }
+        }
+
+        auto exts = vk::enumerateInstanceExtensionProperties();
 
         // Enable surface extensions
         std::vector<const char*> enabled_extensions;
@@ -87,21 +128,112 @@ namespace eka2l1::drivers {
         
         inst_ = vk::createInstanceUnique(instance_create_info);
 
-        // We should also get validation functions
-        create_debug_report_callback_ext_ = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(inst_->getProcAddr("vkCreateDebugReportCallbackEXT"));
-        destroy_debug_report_callback_ext_ = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(inst_->getProcAddr("vkDestroyDebugReportCallbackEXT")); 
+        if (!inst_) {
+            return false;
+        }
+
+        return true;
     }
 
-    void vulkan_graphics_driver::create_debug_callback() {
+    bool vulkan_graphics_driver::create_debug_callback() {
+        // We should also get validation functions
+        create_debug_report_callback_ext_ = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(inst_->getProcAddr("vkCreateDebugReportCallbackEXT"));
+        destroy_debug_report_callback_ext_ = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(inst_->getProcAddr("vkDestroyDebugReportCallbackEXT"));
+
+        if (!create_debug_report_callback_ext_ || !destroy_debug_report_callback_ext_) {
+            return false;
+        }
+
         vk::DebugReportFlagsEXT report_callback_flags(vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::ePerformanceWarning | 
             vk::DebugReportFlagBitsEXT::eError);
         vk::DebugReportCallbackCreateInfoEXT report_callback_create_info(report_callback_flags, vulkan_reporter);
 
         reporter_ = inst_->createDebugReportCallbackEXTUnique(report_callback_create_info);
+
+        if (!reporter_) {
+            return false;
+        }
+
+        return true;
+    }
+    
+    static std::uint64_t score_for_me_the_gpu(const vk::PhysicalDevice &dvc) {
+        std::uint64_t scr = 0;
+
+        auto prop = dvc.getProperties();
+        
+        switch (prop.deviceType) {
+        // Prefer discrete GPU, not integrated.
+        case vk::PhysicalDeviceType::eDiscreteGpu: {
+            scr += 1000;
+            break;
+        }
+
+        default: {
+            scr += 500;
+            break;
+        }
+        }
+
+        LOG_TRACE("Found device: {}, score: {}", prop.deviceName, scr);
+
+        return scr;
+    }
+
+    bool vulkan_graphics_driver::create_device() {
+        vk::PhysicalDevice choosen_dvc {};
+
+        {
+            auto dvcs = inst_->enumeratePhysicalDevices();
+            if (dvcs.size() == 0) {
+                LOG_ERROR("No physical devices found for Vulkan!");
+                return false;
+            }
+
+            std::uint64_t last_max_dvc_score = 0;
+            std::size_t idx = 0;
+
+            for (std::size_t i = 0; i < dvcs.size(); i++) {
+                const std::uint64_t scr = score_for_me_the_gpu(dvcs[i]);
+                if (scr > last_max_dvc_score) {
+                    last_max_dvc_score = scr;
+                    idx = i;
+                }
+            }
+
+            choosen_dvc = std::move(dvcs[idx]);
+            LOG_TRACE("Choosing device: {}", choosen_dvc.getProperties().deviceName);
+        }
+
+        std::uint32_t queue_index = 0;
+
+        // We need to find the graphics queue for this physical device
+        auto fam_queues = choosen_dvc.getQueueFamilyProperties();
+        for (std::size_t i = 0; i < fam_queues.size(); i++) {
+            if (fam_queues[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+                // If it's a graphic queue, we choose right away
+                // There might be other checks we need, but for now, let's break
+                queue_index = static_cast<std::uint32_t>(i);
+                break;
+            }
+        }
+
+        float queue_pris[1] = {0.0f};
+        vk::DeviceQueueCreateInfo queue_create_info(vk::DeviceQueueCreateFlags{}, queue_index, 1, queue_pris);
+        vk::DeviceCreateInfo device_create_info(vk::DeviceCreateFlags{}, 1, &queue_create_info);
+
+        dvc_ = choosen_dvc.createDeviceUnique(device_create_info);
+
+        if (!dvc_) {
+            return false;
+        }
+
+        return true;
     }
     
     vulkan_graphics_driver::vulkan_graphics_driver(const vec2 &scr) {
         create_instance();
+        create_device();
         create_debug_callback();
     }
 }
