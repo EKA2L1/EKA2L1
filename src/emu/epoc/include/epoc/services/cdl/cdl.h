@@ -23,7 +23,7 @@
 
 namespace eka2l1 {
     /**
-     * @brief Custom data layout server.
+     * \brief Custom data layout server.
      * 
      * This server provides access to custom layouts for apps and games.
      * 
@@ -35,7 +35,7 @@ namespace eka2l1 {
      * That's how CDL server does the job. It scans layout files in specific folder in each
      * drive, and then provide them to client when it's asked to.
      * 
-     * @see akn_icon_server akn_skin_server
+     * \see akn_icon_server akn_skin_server
      */
     class cdl_server: public service::server {
     public:

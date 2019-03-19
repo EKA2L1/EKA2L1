@@ -477,14 +477,7 @@ namespace eka2l1::epoc {
     /*
     * Warning: It's not possible to set the UTC time and offset in the emulator at the moment.
     */
-
-    /*! \brief Get the UTC offset in seconds. 
-     *
-     * This was proved to be in seconds by the use of it in us_time.cpp (TTime::HomeTimeSecure), where 
-     * the offset was passed as a constructor argument to TTimeIntervalSeconds.
-     *
-     * \returns The UTC offset, in seconds.
-     */
+   
     BRIDGE_FUNC(TInt, UTCOffset) {
         // TODO: Users and apps can set this
         return common::get_current_utc_offset();
@@ -2146,9 +2139,6 @@ namespace eka2l1::epoc {
         TUint32 i2;
     };
 
-    /*! \brief Increase value by 1 if it's positive (> 0)
-        \returns Original value
-    */
     BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal) {
         TInt32 *val = aVal.get(sys->get_memory_system());
         TInt32 org_val = *val;
