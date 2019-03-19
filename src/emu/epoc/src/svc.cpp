@@ -50,6 +50,14 @@
 #include <common/types.h>
 
 #if EKA2L1_PLATFORM(WIN32)
+#pragma comment(lib, "wldap32.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "Normaliz.lib")
+#endif
+
+#if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
@@ -469,14 +477,7 @@ namespace eka2l1::epoc {
     /*
     * Warning: It's not possible to set the UTC time and offset in the emulator at the moment.
     */
-
-    /*! \brief Get the UTC offset in seconds. 
-     *
-     * This was proved to be in seconds by the use of it in us_time.cpp (TTime::HomeTimeSecure), where 
-     * the offset was passed as a constructor argument to TTimeIntervalSeconds.
-     *
-     * \returns The UTC offset, in seconds.
-     */
+   
     BRIDGE_FUNC(TInt, UTCOffset) {
         // TODO: Users and apps can set this
         return common::get_current_utc_offset();
@@ -498,7 +499,7 @@ namespace eka2l1::epoc {
         *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;
 
-        *offset = static_cast<TInt>(date::current_zone()->get_info(std::chrono::system_clock::now()).offset.count());
+        *offset = common::get_current_utc_offset();
 
         return KErrNone;
     }
@@ -2138,9 +2139,6 @@ namespace eka2l1::epoc {
         TUint32 i2;
     };
 
-    /*! \brief Increase value by 1 if it's positive (> 0)
-        \returns Original value
-    */
     BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal) {
         TInt32 *val = aVal.get(sys->get_memory_system());
         TInt32 org_val = *val;

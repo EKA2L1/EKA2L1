@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2019 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 // Header for resolving SVC call for function which we don't want to implement.
 // This exists because of many Symbian devs make their own allocator and switch it
 // Some functions are overriden with HLE functions instead of just implementing the svc call
@@ -13,6 +32,7 @@
 #include <epoc/utils/handle.h>
 #include <epoc/utils/reqsts.h>
 #include <epoc/utils/tl.h>
+#include <epoc/utils/sec.h>
 #include <epoc/utils/uid.h>
 
 #include <hle/bridge.h>
@@ -24,6 +44,10 @@
 #include <e32err.h>
 
 #include <unordered_map>
+
+namespace eka2l1::kernel {
+    struct memory_info;
+}
 
 namespace eka2l1::epoc {
     /*! All of the kernel object type. */
@@ -68,29 +92,12 @@ namespace eka2l1::epoc {
         ETypeMask = 0xff
     };
 
-    struct TSecurityPolicy {
-        TUint8 iType;
-        TUint8 iCaps[3];
-
-        union {
-            TUint32 iSecureId;
-            TUint32 iVendorId;
-            TUint8 iExtraCaps[4];
-        };
-    };
-
     struct TPropertyInfo {
         TUint iAttrib;
         TUint16 iSize;
         TPropertyType iType;
-        TSecurityPolicy iReadPolicy;
-        TSecurityPolicy iWritePolicy;
-    };
-
-    struct TSecurityInfo {
-        TUint iSecureId;
-        TUint iVendorId;
-        TUint iCaps[2];
+        epoc::security_policy iReadPolicy;
+        epoc::security_policy iWritePolicy;
     };
 
     /*! \brief Get the thread-local allocator. 
@@ -153,13 +160,28 @@ namespace eka2l1::epoc {
 
     /*! \brief Get the environment data parameter. 
      *
-     * \param aSlot The slot index to get data from..
-     * \param Pointer to the destination.
-     * \param Max size the destination can hold.
+     * \param aSlot The slot index to get data from.
+     * \param aData Pointer to the destination.
+     * \param aLength Max size the destination can hold.
      *
      * \returns The slot data size, else error code.
      */
     BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength);
+
+    /**
+     * \brief Set a process's environment data parameter.
+     * 
+     * This requires the caller of this system call to be the parent of given process.
+     * 
+     * \param aHandle Handle of the target process.
+     * \param aSlot   The slot index to get data from.
+     * \param aData   Pointers to data to be set.
+     * \param aSize   Size of data to be set.
+     * 
+     * \returns KErrNone if success, KErrPermissionDenined if the caller is not the parent of given
+     *          process, else other system related error.
+     */
+    BRIDGE_FUNC(TInt, ProcessSetDataParameter, TInt aHandle, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aDataSize);
 
     /*! \brief Set the process flags. 
      * \param aHandle The process handle.
@@ -197,7 +219,10 @@ namespace eka2l1::epoc {
     */
     BRIDGE_FUNC(void, DllFreeTLS, TInt iHandle);
 
-    /*! \brief Get the UTC offset. */
+    /**
+     * \brief Get the UTC offset in seconds. 
+     * \returns The UTC offset, in seconds.
+     */
     BRIDGE_FUNC(TInt, UTCOffset);
 
     /*! \brief Create a new session. 
@@ -388,6 +413,170 @@ namespace eka2l1::epoc {
      * \returns Error code. KErrNone if success.
      */
     BRIDGE_FUNC(TInt, PropertyFindGetBin, TInt aCage, TInt aKey, eka2l1::ptr<TUint8> aData, TInt aDataLength);
+
+    /**
+     * \brief Prints text to debug port or host debugger.
+     * 
+     * \param aDes Descriptor to prints.
+     * \param aMode Undocumented.
+     */
+    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, TInt aMode);
+
+    /**
+     * \brief Get the current executable's exception descriptor.
+     * 
+     * Exception descriptor contains informations which will be used by the exception handler
+     * to speed up unwinding.
+     * 
+     * This is not confirms yet to be true.
+     * 
+     * \return Address of the exception descriptor.
+     * \see    StaticCallList
+     */
+    BRIDGE_FUNC(address, ExceptionDescriptor, address aInAddr);
+
+    /**
+     * \brief Increase value by 1 if it's positive (> 0)
+     * \returns Original value
+    */
+    BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal);
+
+    /**
+     * \brief Create a new change notifier object.
+     * 
+     * Change notifier is a kernel object that will notify users about environment change
+     * on the phone. For example, UTC offset change, time change, global data change, and more.
+     * 
+     * \param aOwner The owner of this object's handle.
+     * \returns < 0 means an error, else the handle to this change notifier.
+     */
+    BRIDGE_FUNC(TInt, ChangeNotifierCreate, TOwnerType aOwner);
+
+    /**
+     * \brief Logon an existing change notifier.
+     * 
+     * When users logon an change notifier, they will be notified when there is environment change
+     * on the phone.
+     * 
+     * Logon can be cancel by using ChangeNotifierLogonCancel
+     * 
+     * \param aHandle        Handle to this change notifier.
+     * \param aRequestStatus Pointer to the status to be notified.
+     * 
+     * \returns KErrNone if success, else other system's related error.
+     * \see     ChangeNotifierLogonCancel
+     */
+    BRIDGE_FUNC(TInt, ChangeNotifierLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus);
+
+    /**
+     * \brief Cancel a timer currently running.
+     * \param aHandle Handle to the timer. 
+     */
+    BRIDGE_FUNC(void, TimerCancel, TInt aHandle);
+
+    /**
+     * \brief Let a timer running and notify the client when the time is reached at UTC.
+     * 
+     * This call will let the timer run even when phone is down.
+     * 
+     * \param aHandle         Handle to the timer.
+     * \param aRequestStatus  Status to be notified.
+     * \param aMicrosecondsAt Time for timer to run, in microseconds.
+     * 
+     * \see TimerAfter
+     */
+    BRIDGE_FUNC(void, TimerAtUtc, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TUint64 aMicroSecondsAt);
+
+    /**
+     * \brief Let a timer running and notify the client when the time is reached.
+     * 
+     * If the phone is down, and the time is reached, this will cancel the timer if delay is too much.
+     * 
+     * \param aHandle         Handle to the timer.
+     * \param aRequestStatus  Status to be notified.
+     * \param aMicrosecondsAt Time for timer to run, in microseconds.
+     * 
+     * \see TimerAtUtc
+     */
+    BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds);
+
+    /**
+     * \brief Create a timer.
+     * 
+     * Timer is a countdown object. Users can request the timer to notify the client after a certain amount
+     * of time is passed. This will be handful in many situations, like alarm, or wake up the thread while it's
+     * idling, to make it do something useful.
+     * 
+     * The handle of the timer will always be owned by the process.
+     * 
+     * \returns Handle to the timer if > 0, else error.
+     */
+    BRIDGE_FUNC(TInt, TimerCreate);
+
+    /**
+     * \brief Get exit type of process.
+     * 
+     * Requires the process to first be killed by ProcessKill.
+     * 
+     * \param aHandle Handle to the target process.
+     * \returns Exit type (> 0), else other system related error codes.
+     */
+    BRIDGE_FUNC(TInt, ProcessExitType, TInt aHandle);
+    
+    /**
+     * \brief Notify rendezvous requests with a code.
+     * 
+     * Threads that requests rendezvous on the current process, that is waiting for this
+     * request, will be notified with the given code.
+     * 
+     * \param aRendezvousCode The code to notify all waiting threads.
+     * \see   ProcessLogon ProcessLogonCancel
+     */
+    BRIDGE_FUNC(void, ProcessRendezvous, TInt aRendezvousCode);
+
+    /**
+     * \brief Get a process's memory info.
+     * 
+     * Memory info mentioning here is process's codeseg address, .data, .bss addresses, code size,
+     * and eventually more.
+     * 
+     * \param aHandle Handle to target process.
+     * \param aInfo   Pointer to the memory info struct to be filled.
+     * 
+     * \returns KErrNone if success, else other system's related error.
+     */
+    BRIDGE_FUNC(TInt, ProcessGetMemoryInfo, TInt aHandle, eka2l1::ptr<kernel::memory_info> aInfo);
+
+    /**
+     * \brief Get ID of given process.
+     * \param aHandle Handle to target process.
+     */
+    BRIDGE_FUNC(TInt, ProcessGetId, TInt aHandle);
+    
+    /**
+     * \brief   Get length of command line string passed to a process.
+     * 
+     * \param   aHandle Handle to target process.
+     * \returns The length of the command line string.
+     */
+    BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle);
+
+    /**
+     * \brief Get the command line string.
+     * 
+     * \param aHandle Handle to target process.
+     * \param aData   Descriptor which will hold the cmd line string data.
+     */
+    BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<epoc::des8> aData);
+
+    /**
+     * \brief Set mask for given process.
+     * 
+     * \param aHandle    Handle to target process.
+     * \param aClearMask The mask to be cleared for given process flags.
+     * \param aSetMask   The mask to be set for given process flags.
+     */
+    BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask);
 
     //! The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;

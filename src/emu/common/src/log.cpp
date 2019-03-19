@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <common/log.h>
 #include <common/platform.h>
 
@@ -56,6 +57,7 @@ namespace eka2l1 {
             void sink_it_(const spdlog::details::log_msg &msg) override {
                 fmt::memory_buffer formatted;
                 sink::formatter_->format(msg, formatted);
+                
                 std::string real_msg = fmt::to_string(formatted);
 
                 logger->log(real_msg.c_str());

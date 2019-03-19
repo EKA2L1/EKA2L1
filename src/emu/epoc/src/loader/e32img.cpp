@@ -26,7 +26,6 @@
 #include <common/algorithm.h>
 #include <common/buffer.h>
 #include <common/bytepair.h>
-#include <common/data_displayer.h>
 #include <common/flate.h>
 #include <common/log.h>
 
