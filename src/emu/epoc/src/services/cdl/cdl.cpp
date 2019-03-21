@@ -18,9 +18,38 @@
  */
 
 #include <epoc/services/cdl/cdl.h>
+#include <epoc/services/cdl/ops.h>
+
+#include <common/e32inc.h>
+#include <e32err.h>
 
 namespace eka2l1 {
+    cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid)
+        : service::typical_session(svr, client_ss_uid) {
+    }
+
+    void cdl_server_session::fetch(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
+        case epoc::cdl_server_cmd_notify_change: {
+            notifier.requester = ctx->msg->own_thr;
+            notifier.sts = ctx->msg->request_sts;
+
+            break;
+        }
+
+        default: {
+            LOG_ERROR("Unimplemented IPC opcode for CDL server session: 0x{:X}", ctx->msg->function);
+            break;
+        }
+        }
+    }
+
     cdl_server::cdl_server(eka2l1::system *sys)
-        : service::server(sys, "CdlServer", true) {
+        : service::typical_server(sys, "CdlServer") {
+    }
+
+    void cdl_server::connect(service::ipc_context ctx) {
+        create_session<cdl_server_session>(&ctx);
+        ctx.set_request_status(KErrNone);
     }
 }
