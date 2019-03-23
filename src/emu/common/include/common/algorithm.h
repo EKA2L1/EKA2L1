@@ -32,6 +32,95 @@
 namespace eka2l1 {
     /*! \brief Contains functions that use frequently in the emulator */
     namespace common {
+        using addition_callback_func = std::function<void(const std::size_t)>;
+        using remove_callback_func = addition_callback_func;
+
+        template <typename T>
+        using compare_func = std::function<int(const T &lhs, const T &rhs)>;
+
+        template <typename T>
+        int default_compare_func(const T &lhs, const T &rhs) {
+            if (lhs < rhs) {
+                return -1;
+            } else if (lhs == rhs) {
+                return 0;
+            }
+
+            return 1;
+        }
+
+        /**
+         * \brief Detect changes between two iterable-objects, allow callback to handle
+         *        addition and remove.
+         * 
+         * Given two iterable object: maybe an old and new version of a vector, this function
+         * use binary search to detect changes between them.
+         * 
+         * Changes mentioned here are addition and removal. The function will take two callback function:
+         * - The first function will handle addition. There is only one argument gonna be passed for this function,
+         *   it's the index of the added object in the second iterable object.
+         * - The second function will handle remove. Same as addition, the only argument is the index of the removed
+         *   object in the first iterable object.
+         * 
+         * This function can handle any iterable objects that support these requirements:
+         * - Have at operator []
+         * - Have a function named size(), which will returns an integer.
+         * 
+         * Requires two iterable object to be sorted.
+         * 
+         * \param old_           The first iterable object.
+         * \param new_           The second iterable object.
+         * \param add_callback_  Callback when detect a new element is added to the second object.
+         * \param rev_callback_  Callback when detect an element is removed from the first object.
+         * \param compare_       Function comparing two element of the iterable object.
+         */
+        template <typename T, typename H = T::value_type>
+        void detect_changes(const T &old_, const T &new_, addition_callback_func add_callback_, 
+            remove_callback_func rev_callback_, compare_func<H> compare_ = default_compare_func<H>) {
+            std::size_t index_new = 0;
+            std::size_t index_old = 0;
+
+            const std::size_t size_new = new_.size();
+            const std::size_t size_old = old_.size();
+
+            while (index_old < size_old || index_new < size_new) {
+                if (index_old == size_old) {
+                    // At the end of old list, any elements left in new vector should be addition
+                    add_callback_(index_new);
+                    index_new++;
+                } else if (index_new == size_new) {
+                    // At the end of new list, any elements left in old vector should be removed
+                    rev_callback_(index_old);
+                    index_old++;
+                } else {
+                    int comp_result = compare_(old_[index_old], new_[index_new]);
+
+                    switch (comp_result) {
+                    case 0: {
+                        index_new++;
+                        index_old++;
+
+                        break;
+                    }
+
+                    case -1: {
+                        rev_callback_(index_old);
+                        index_old++;
+
+                        break;
+                    }
+
+                    default: {
+                        add_callback_(index_new);
+                        index_new++;
+
+                        break;
+                    }
+                    }
+                }
+            }
+        }
+
         /**
          * \brief Choose the greater variable 
 		 *
@@ -75,40 +164,6 @@ namespace eka2l1 {
 
         /*! Remove a string from another string if possible */
         void remove(std::string &inp, std::string to_remove);
-
-        // https://stackoverflow.com/questions/12200486/how-to-remove-duplicates-from-unsorted-stdvector-while-keeping-the-original-or
-        struct target_less {
-            template <class It>
-            bool operator()(It const &a, It const &b) const { return *a < *b; }
-        };
-
-        struct target_equal {
-            template <class It>
-            bool operator()(It const &a, It const &b) const { return *a == *b; }
-        };
-
-        /*! Erase all repeated object, but kept things in order. */
-        template <class It>
-        It uniquify(It begin, It const end) {
-            std::vector<It> v;
-            v.reserve(static_cast<size_t>(std::distance(begin, end)));
-            for (It i = begin; i != end; ++i) {
-                v.push_back(i);
-            }
-            std::sort(v.begin(), v.end(), target_less());
-            v.erase(std::unique(v.begin(), v.end(), target_equal()), v.end());
-            std::sort(v.begin(), v.end());
-            size_t j = 0;
-            for (It i = begin; i != end && j != v.size(); ++i) {
-                if (i == v[j]) {
-                    using std::iter_swap;
-                    iter_swap(i, begin);
-                    ++j;
-                    ++begin;
-                }
-            }
-            return begin;
-        }
 
         /*! Get the next power of two of some number. */
         template <typename T>
