@@ -22,6 +22,7 @@
 
 #include <epoc/services/ecom/plugin.h>
 #include <epoc/services/server.h>
+#include <epoc/utils/uid.h>
 
 #include <string>
 #include <vector>
@@ -53,7 +54,6 @@ namespace eka2l1 {
 
     class ecom_server : public service::server {
         std::unordered_map<std::uint32_t, ecom_interface_info> interfaces;
-
         std::vector<ecom_implementation_info *> collected_impls;
 
         bool init{ false };
@@ -92,5 +92,11 @@ namespace eka2l1 {
 
     public:
         explicit ecom_server(eka2l1::system *sys);
+        
+        /**
+         * \brief Get interface info of a given UID.
+         * \returns The pointer to the interface info, null means not found.
+         */
+        ecom_interface_info *get_interface(const epoc::uid interface_uid);
     };
 }

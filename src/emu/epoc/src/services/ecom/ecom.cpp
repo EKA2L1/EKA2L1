@@ -43,11 +43,18 @@ namespace eka2l1 {
     bool ecom_server::register_implementation(const std::uint32_t interface_uid,
         ecom_implementation_info &impl) {
         auto &interface = interfaces[interface_uid];
-        auto impl_ite = std::find_if(interface.implementations.begin(), interface.implementations.end(),
-            [&](const ecom_implementation_info &impl2) { return impl.uid == impl2.uid; });
+        auto impl_ite = std::lower_bound(interface.implementations.begin(), interface.implementations.end(), interface_uid,
+            [&](const ecom_implementation_info &impl1, const epoc::uid &impl2) { return impl1.uid < impl2; });
 
         if (impl_ite == interface.implementations.end()) {
             interface.implementations.push_back(std::move(impl));
+
+            // Sort
+            std::stable_sort(interface.implementations.begin(), interface.implementations.end(),
+                [](const ecom_implementation_info &lhs, const ecom_implementation_info &rhs) {
+                    return lhs.uid < rhs.uid;
+                });
+
             return true;
         }
 
@@ -117,6 +124,18 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    ecom_interface_info *ecom_server::get_interface(const epoc::uid interface_uid) {        
+        // First, lookup the interface
+        auto interface_ite = interfaces.find(interface_uid);
+
+        // We can't find the interface!!
+        if (interface_ite == interfaces.end()) {
+            return nullptr;
+        }
+
+        return &interface_ite->second;
     }
 
     bool ecom_server::load_archives(eka2l1::io_system *io) {
@@ -337,15 +356,12 @@ namespace eka2l1 {
         }
 
         // First, lookup the interface
-        auto interface_ite = interfaces.find(uids.uid1);
+        ecom_interface_info *interface = get_interface(uids.uid1);
 
-        // We can't find the interface!!
-        if (interface_ite == interfaces.end()) {
-            ctx.set_request_status(epoc::ecom_no_interface_identified);
+        if (!interface) {
+            ctx.set_request_status(epoc::ecom_error_code::ecom_no_interface_identified);
             return;
         }
-
-        ecom_interface_info *interface = &interface_ite->second;
 
         // Open a serializer for measure data size
         common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
