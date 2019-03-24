@@ -30,7 +30,7 @@ namespace eka2l1::epoc {
         cdl_server_cmd_notify_change,
         cdl_server_cmd_cancel_notify_change,
         cdl_server_cmd_set_cust,
-        cdl_server_cmd_get_cust_size,
+        cdl_server_cmd_get_refs_size,
         cdl_server_cmd_get_name_size,
         cdl_server_cmd_get_temp_buf,
         cdl_server_cmd_get_all_refs_size,
