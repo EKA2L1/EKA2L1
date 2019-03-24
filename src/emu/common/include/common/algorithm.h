@@ -132,8 +132,8 @@ namespace eka2l1 {
          * \param to_append The iterable object to have its element being inserted to.
          * \param comparator The equal comparator.
          */
-        template <typename T, typename F>
-        void merge_and_replace(T &target, const T &to_append, F &comparator = default_equal_comparator<typename T::value_type>) {
+        template <typename T, typename F = decltype(default_equal_comparator<typename T::value_type>)>
+        void merge_and_replace(T &target, const T &to_append, F comparator = default_equal_comparator<typename T::value_type>) {
             for (auto i = to_append.begin(); i != to_append.end(); i++) {
                 for (auto j = target.begin(); j != target.end(); j++) {
                     if (comparator(*i, *j)) {
@@ -146,7 +146,7 @@ namespace eka2l1 {
         }
 
         template <typename T, typename F>
-        void erase_elements(T &target, F &condition) {
+        void erase_elements(T &target, F condition) {
             auto it = target.begin();
 
             while (it != target.end()) {
