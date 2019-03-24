@@ -111,6 +111,7 @@ add_library(epocservs
     src/services/applist/applist.cpp
     src/services/backup/backup.cpp
     src/services/cdl/cdl.cpp
+    src/services/cdl/observer.cpp
     src/services/cdl/watcher.cpp
     src/services/centralrepo/centralrepo.cpp
     src/services/centralrepo/cre.cpp

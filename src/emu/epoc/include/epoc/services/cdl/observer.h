@@ -17,21 +17,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/cdl/watcher.h>
+#include <epoc/services/cdl/common.h>
+
 #pragma once
 
-#include <epoc/utils/uid.h>
-#include <cstdint>
-#include <string>
-#include <vector>
+namespace eka2l1 {
+    class cdl_server;
+    class io_system;
+}
 
 namespace eka2l1::epoc {
-    constexpr epoc::uid cdl_uid = 0x101F8243;
+    class cdl_ecom_generic_observer: public cdl_ecom_watcher_observer {
+        cdl_server *serv_;
 
-    struct cdl_ref {
-        std::u16string name_;
-        epoc::uid uid_;
-        std::uint32_t id_;
+    public:
+        bool read_refs_of_instance(io_system *io, const std::u16string &path
+            , cdl_ref_collection &collection_);
+
+        explicit cdl_ecom_generic_observer(cdl_server *serv);
+
+        void entry_added(const std::u16string &plugin_path) override;
+        void entry_removed(const std::u16string &plugin_path) override;
     };
-
-    using cdl_ref_collection = std::vector<cdl_ref>;
 }
