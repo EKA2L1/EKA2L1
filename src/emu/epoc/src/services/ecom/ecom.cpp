@@ -43,10 +43,9 @@ namespace eka2l1 {
     bool ecom_server::register_implementation(const std::uint32_t interface_uid,
         ecom_implementation_info &impl) {
         auto &interface = interfaces[interface_uid];
-        auto impl_ite = std::lower_bound(interface.implementations.begin(), interface.implementations.end(), interface_uid,
-            [&](const ecom_implementation_info &impl1, const epoc::uid &impl2) { return impl1.uid < impl2; });
 
-        if (impl_ite == interface.implementations.end()) {
+        if (!std::binary_search(interface.implementations.begin(), interface.implementations.end(), impl,
+            [&](const ecom_implementation_info &impl1, const ecom_implementation_info &impl2) { return impl1.uid < impl2.uid; })) {
             interface.implementations.push_back(std::move(impl));
 
             // Sort
