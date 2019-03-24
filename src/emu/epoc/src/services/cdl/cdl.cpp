@@ -52,4 +52,14 @@ namespace eka2l1 {
         create_session<cdl_server_session>(&ctx);
         ctx.set_request_status(KErrNone);
     }
+
+    void cdl_server::add_refs(epoc::cdl_ref_collection &to_add_col_) {
+        common::merge_and_replace(collection_, to_add_col_, [](const epoc::cdl_ref &lhs, const epoc::cdl_ref &rhs) {
+            return lhs.uid_ == rhs.uid_;
+        });
+    }
+
+    void cdl_server::remove_refs(const std::u16string &name) {
+        common::erase_elements(collection_, [&](const epoc::cdl_ref &elem) { return elem.name_ == name; });
+    }
 }

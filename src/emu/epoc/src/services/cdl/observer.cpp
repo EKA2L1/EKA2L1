@@ -19,6 +19,8 @@
 
 #include <epoc/loader/rsc.h>
 #include <epoc/services/cdl/observer.h>
+#include <epoc/services/cdl/cdl.h>
+#include <epoc/epoc.h>
 #include <epoc/vfs.h>
 
 #include <common/cvt.h>
@@ -70,5 +72,18 @@ namespace eka2l1::epoc {
         }
 
         return true;
+    }
+
+    void cdl_ecom_generic_observer::entry_added(const std::u16string &plugin_path) {
+        cdl_ref_collection collection_;
+        
+        if (read_refs_of_instance(serv_->get_system()->get_io_system(),
+            plugin_path, collection_)) {
+            serv_->add_refs(collection_);
+        }
+    }
+
+    void cdl_ecom_generic_observer::entry_removed(const std::u16string &plugin_path) {
+        serv_->remove_refs(plugin_path);
     }
 }

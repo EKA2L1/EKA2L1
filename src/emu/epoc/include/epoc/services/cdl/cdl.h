@@ -21,6 +21,7 @@
 
 #include <epoc/utils/reqsts.h>
 #include <epoc/services/framework.h>
+#include <epoc/services/cdl/common.h>
 
 namespace eka2l1 {
     class cdl_server_session: public service::typical_session {
@@ -47,9 +48,14 @@ namespace eka2l1 {
      * \see akn_icon_server akn_skin_server
      */
     class cdl_server: public service::typical_server {
+        epoc::cdl_ref_collection collection_;
+
     public:
         explicit cdl_server(eka2l1::system *sys);
 
         void connect(service::ipc_context ctx) override;
+
+        void add_refs(epoc::cdl_ref_collection &col_);
+        void remove_refs(const std::u16string &name);
     };
 }
