@@ -32,8 +32,8 @@ namespace eka2l1 {
 namespace eka2l1::epoc {
     class cdl_ecom_watcher_observer {
     public:
-        virtual void entry_added(const std::u16string &plugin_path);
-        virtual void entry_removed(const std::u16string &plugin_path);
+        virtual void entry_added(const std::u16string &plugin_path) = 0;
+        virtual void entry_removed(const std::u16string &plugin_path) = 0;
     };
 
     class cdl_ecom_watcher {
@@ -49,6 +49,8 @@ namespace eka2l1::epoc {
     public:
         explicit cdl_ecom_watcher(ecom_server *ecom, cdl_ecom_watcher_observer *observer)
             : ecom_(ecom), observer_(observer) {
+            // TODO: Put notification
+            refresh_plugin_list();
         }
     };
 }
