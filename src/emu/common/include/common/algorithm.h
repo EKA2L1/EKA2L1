@@ -126,25 +126,6 @@ namespace eka2l1 {
             return lhs == rhs;
         }
 
-        /**
-         * \brief Merge a iterable object to other one and replaces duplicate elements.
-         * \param target The iterable object to be inserted to.
-         * \param to_append The iterable object to have its element being inserted to.
-         * \param comparator The equal comparator.
-         */
-        template <typename T, typename F = decltype(default_equal_comparator<typename T::value_type>)>
-        void merge_and_replace(T &target, const T &to_append, F comparator = default_equal_comparator<typename T::value_type>) {
-            for (auto i = to_append.begin(); i != to_append.end(); i++) {
-                for (auto j = target.begin(); j != target.end(); j++) {
-                    if (comparator(*i, *j)) {
-                        target.erase(j);
-                    }
-                }
-            }
-
-            target.insert(target.end(), to_append.begin(), to_append.end());
-        }
-
         template <typename T, typename F>
         void erase_elements(T &target, F condition) {
             auto it = target.begin();
@@ -156,6 +137,21 @@ namespace eka2l1 {
                     ++it;
                 }
             }
+        }
+
+        /**
+         * \brief Merge a iterable object to other one and replaces duplicate elements.
+         * \param target The iterable object to be inserted to.
+         * \param to_append The iterable object to have its element being inserted to.
+         * \param comparator The equal comparator.
+         */
+        template <typename T, typename F = decltype(default_equal_comparator<typename T::value_type>)>
+        void merge_and_replace(T &target, const T &to_append, F comparator = default_equal_comparator<typename T::value_type>) {
+            for (auto i = to_append.begin(); i != to_append.end(); i++) {
+                erase_elements(target, [&](const typename T::value_type &rhs) { return comparator(*i, rhs); });
+            }
+
+            target.insert(target.end(), to_append.begin(), to_append.end());
         }
 
         /**
