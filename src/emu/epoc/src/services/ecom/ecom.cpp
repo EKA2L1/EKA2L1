@@ -126,7 +126,15 @@ namespace eka2l1 {
         return true;
     }
 
-    ecom_interface_info *ecom_server::get_interface(const epoc::uid interface_uid) {        
+    ecom_interface_info *ecom_server::get_interface(const epoc::uid interface_uid) {
+        if (!init) {
+            if (!load_plugins(sys->get_io_system())) {
+                LOG_ERROR("An error happens with initialization of ECom");
+            }
+
+            init = true;
+        }
+
         // First, lookup the interface
         auto interface_ite = interfaces.find(interface_uid);
 

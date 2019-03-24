@@ -23,6 +23,9 @@
 #include <common/e32inc.h>
 #include <e32err.h>
 
+#include <epoc/epoc.h>
+#include <epoc/kernel.h>
+
 namespace eka2l1 {
     cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid)
         : service::typical_session(svr, client_ss_uid) {
@@ -48,7 +51,18 @@ namespace eka2l1 {
         : service::typical_server(sys, "CdlServer") {
     }
 
+    void cdl_server::init() {
+        observer_ = std::make_unique<epoc::cdl_ecom_generic_observer>(this);
+        watcher_ = std::make_unique<epoc::cdl_ecom_watcher>(
+            &(*std::reinterpret_pointer_cast<ecom_server>(sys->get_kernel_system()->get_by_name<service::server>("!ecomserver"))),
+            reinterpret_cast<epoc::cdl_ecom_watcher_observer*>(observer_.get()));
+    }
+
     void cdl_server::connect(service::ipc_context ctx) {
+        if (!observer_) {
+            init();
+        }
+
         create_session<cdl_server_session>(&ctx);
         ctx.set_request_status(KErrNone);
     }

@@ -35,7 +35,9 @@ namespace eka2l1::epoc {
         bool read_refs_of_instance(io_system *io, const std::u16string &path
             , cdl_ref_collection &collection_);
 
-        explicit cdl_ecom_generic_observer(cdl_server *serv);
+        explicit cdl_ecom_generic_observer(cdl_server *serv)
+            : serv_(serv) {
+        }
 
         void entry_added(const std::u16string &plugin_path) override;
         void entry_removed(const std::u16string &plugin_path) override;
