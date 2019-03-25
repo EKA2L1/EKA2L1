@@ -24,6 +24,10 @@
 #include <string>
 #include <vector>
 
+namespace eka2l1::common {
+    class chunkyseri;
+}
+
 namespace eka2l1::epoc {
     constexpr epoc::uid cdl_uid = 0x101F8243;
 
@@ -34,4 +38,6 @@ namespace eka2l1::epoc {
     };
 
     using cdl_ref_collection = std::vector<cdl_ref>;
+
+    void do_refs_state(common::chunkyseri &seri, cdl_ref_collection &collection_);
 }

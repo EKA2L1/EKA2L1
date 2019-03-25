@@ -72,6 +72,7 @@ add_library(epocservs
     include/epoc/services/applist/applist.h
     include/epoc/services/backup/backup.h
     include/epoc/services/cdl/cdl.h
+    include/epoc/services/cdl/common.h
     include/epoc/services/cdl/ops.h
     include/epoc/services/cdl/watcher.h
     include/epoc/services/centralrepo/centralrepo.h
@@ -111,6 +112,7 @@ add_library(epocservs
     src/services/applist/applist.cpp
     src/services/backup/backup.cpp
     src/services/cdl/cdl.cpp
+    src/services/cdl/common.cpp
     src/services/cdl/observer.cpp
     src/services/cdl/watcher.cpp
     src/services/centralrepo/centralrepo.cpp

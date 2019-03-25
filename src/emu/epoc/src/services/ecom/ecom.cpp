@@ -371,7 +371,7 @@ namespace eka2l1 {
         }
 
         // Open a serializer for measure data size
-        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
 
         {
             std::uint32_t total_impls = 0;

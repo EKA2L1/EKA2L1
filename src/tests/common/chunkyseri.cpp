@@ -50,7 +50,7 @@ TEST_CASE("do_read_generic", "chunkyseri") {
 }
 
 TEST_CASE("do_measure_generic", "chunkyseri") {
-    common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
+    common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
     std::uint32_t dummy1;
     std::uint32_t dummy2;
 

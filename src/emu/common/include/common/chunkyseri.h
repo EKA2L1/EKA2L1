@@ -29,7 +29,7 @@ namespace eka2l1::common {
     enum chunkyseri_mode {
         SERI_MODE_READ,
         SERI_MODE_WRITE,
-        SERI_MODE_MESAURE
+        SERI_MODE_MEASURE
     };
 
     struct chunkyseri_section {

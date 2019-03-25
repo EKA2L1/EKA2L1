@@ -306,7 +306,7 @@ namespace eka2l1 {
         std::vector<std::uint8_t> bufs;
 
         {
-            common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MESAURE);
+            common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
             do_state_for_cre(seri, *attach_repo);
 
             bufs.resize(seri.size());

@@ -30,6 +30,7 @@
 namespace eka2l1 {
     class cdl_server_session: public service::typical_session {
         epoc::notify_info notifier;
+        std::string temp_buf;
 
     public:
         explicit cdl_server_session(service::typical_server *svr, service::uid client_ss_uid);
@@ -52,6 +53,8 @@ namespace eka2l1 {
      * \see akn_icon_server akn_skin_server
      */
     class cdl_server: public service::typical_server {
+        friend class cdl_server_session;
+
         epoc::cdl_ref_collection collection_;
         
         std::unique_ptr<epoc::cdl_ecom_generic_observer> observer_;

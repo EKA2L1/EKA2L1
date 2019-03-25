@@ -21,6 +21,7 @@
 #include <epoc/services/cdl/ops.h>
 
 #include <common/e32inc.h>
+#include <common/chunkyseri.h>
 #include <e32err.h>
 
 #include <epoc/epoc.h>
@@ -36,6 +37,66 @@ namespace eka2l1 {
         case epoc::cdl_server_cmd_notify_change: {
             notifier.requester = ctx->msg->own_thr;
             notifier.sts = ctx->msg->request_sts;
+
+            break;
+        }
+
+        case epoc::cdl_server_cmd_get_temp_buf: {
+            ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&temp_buf[0]), static_cast<std::uint32_t>(temp_buf.size()));
+            ctx->set_request_status(KErrNone);
+
+            break;
+        }
+
+        case epoc::cdl_server_cmd_get_refs_size: {            
+            epoc::cdl_ref_collection filtered_col;
+
+            // Subset by name
+            if (*ctx->get_arg<int>(1)) {
+                auto name_op = ctx->get_arg<std::u16string>(2);
+
+                if (!name_op) {
+                    ctx->set_request_status(KErrArgument);
+                    return;
+                }
+
+                const std::u16string name = std::move(*name_op);
+
+                // Get by name
+                for (auto &ref_: server<cdl_server>()->collection_) {
+                    if (ref_.name_ == name) {
+                        filtered_col.push_back(ref_);
+                    }
+                }
+            } else {
+                // Get by UID
+                const epoc::uid ref_uid = static_cast<const epoc::uid>(*ctx->get_arg<int>(3));
+
+                // Get by name
+                for (auto &ref_: server<cdl_server>()->collection_) {
+                    if (ref_.uid_ == ref_uid) {
+                        filtered_col.push_back(ref_);
+                    }
+                }
+            }
+
+            // Get size
+            {
+                common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+                epoc::do_refs_state(seri, filtered_col);
+
+                temp_buf.resize(seri.size());
+            }
+
+            {
+                common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(&temp_buf[0]), temp_buf.size(),
+                    common::SERI_MODE_MEASURE);
+
+                epoc::do_refs_state(seri, filtered_col);
+            }
+
+            ctx->write_arg_pkg<std::uint32_t>(0, static_cast<std::uint32_t>(temp_buf.size()));
+            ctx->set_request_status(KErrNone);
 
             break;
         }
