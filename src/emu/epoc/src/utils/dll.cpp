@@ -18,9 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/log.h>
+#include <common/cvt.h>
+
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
-
 #include <epoc/kernel/codeseg.h>
 #include <epoc/kernel/libmanager.h>
 #include <epoc/utils/dll.h>
@@ -48,5 +50,43 @@ namespace eka2l1::epoc {
         }
 
         return 0;
+    }
+    
+    bool get_image_info(hle::lib_manager *mngr, const std::u16string &name, epoc::lib_info &linfo) {
+        auto imgs = mngr->try_search_and_parse(name);
+
+        LOG_TRACE("Get Info of {}", common::ucs2_to_utf8(name));
+
+        if (!imgs.first && !imgs.second) {
+            return false;
+        }
+
+        if (!imgs.first && imgs.second) {
+            auto &rimg = imgs.second;
+
+            linfo.uid1 = rimg->header.uid1;
+            linfo.uid2 = rimg->header.uid2;
+            linfo.uid3 = rimg->header.uid3;
+            linfo.secure_id = rimg->header.sec_info.secure_id;
+            linfo.caps[0] = rimg->header.sec_info.cap1;
+            linfo.caps[1] = rimg->header.sec_info.cap2;
+            linfo.vendor_id = rimg->header.sec_info.vendor_id;
+            linfo.major = rimg->header.major;
+            linfo.minor = rimg->header.minor;
+
+            return true;
+        }
+
+        auto &eimg = imgs.first;
+        memcpy(&linfo.uid1, &eimg->header.uid1, 12);
+
+        linfo.secure_id = eimg->header_extended.info.secure_id;
+        linfo.caps[0] = eimg->header_extended.info.cap1;
+        linfo.caps[1] = eimg->header_extended.info.cap2;
+        linfo.vendor_id = eimg->header_extended.info.vendor_id;
+        linfo.major = eimg->header.major;
+        linfo.minor = eimg->header.minor;
+
+        return true;
     }
 }

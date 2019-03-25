@@ -150,68 +150,17 @@ namespace eka2l1 {
         }
 
         epoc::ldr_info load_info;
-        auto imgs = ctx.sys->get_lib_manager()->try_search_and_parse(*lib_name);
+        epoc::lib_info linfo;
 
-        LOG_TRACE("Get Info of {}", common::ucs2_to_utf8(*lib_name));
-
-        if (!imgs.first && !imgs.second) {
+        if (!epoc::get_image_info(ctx.sys->get_lib_manager(), *lib_name, linfo)) {
             ctx.set_request_status(KErrNotFound);
             return;
         }
 
-        if (!imgs.first && imgs.second) {
-            auto &rimg = imgs.second;
-
-            load_info.uid1 = rimg->header.uid1;
-            load_info.uid2 = rimg->header.uid2;
-            load_info.uid3 = rimg->header.uid3;
-            load_info.min_stack_size = rimg->header.heap_minimum_size;
-            load_info.secure_id = rimg->header.sec_info.secure_id;
-
-            epoc::lib_info linfo;
-            linfo.uid1 = rimg->header.uid1;
-            linfo.uid2 = rimg->header.uid2;
-            linfo.uid3 = rimg->header.uid3;
-            linfo.secure_id = rimg->header.sec_info.secure_id;
-            linfo.caps[0] = rimg->header.sec_info.cap1;
-            linfo.caps[1] = rimg->header.sec_info.cap2;
-            linfo.vendor_id = rimg->header.sec_info.vendor_id;
-            linfo.major = rimg->header.major;
-            linfo.minor = rimg->header.minor;
-
-            if (buffer->max_length >= sizeof(epoc::lib_info2)) {
-                epoc::lib_info2 linfo2;
-                memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
-
-                linfo2.debug_attrib = 1;
-                linfo2.hfp = 0;
-
-                ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
-            } else {
-                ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info2));
-            }
-
-            ctx.write_arg_pkg<epoc::ldr_info>(0, load_info);
-            ctx.set_request_status(KErrNone);
-
-            return;
-        }
-
-        auto &eimg = imgs.first;
-        memcpy(&load_info.uid1, &eimg->header.uid1, 12);
-
-        load_info.min_stack_size = eimg->header.heap_size_min;
-        load_info.secure_id = eimg->header_extended.info.secure_id;
-
-        epoc::lib_info linfo;
-        memcpy(&linfo.uid1, &eimg->header.uid1, 12);
-
-        linfo.secure_id = eimg->header_extended.info.secure_id;
-        linfo.caps[0] = eimg->header_extended.info.cap1;
-        linfo.caps[1] = eimg->header_extended.info.cap2;
-        linfo.vendor_id = eimg->header_extended.info.vendor_id;
-        linfo.major = eimg->header.major;
-        linfo.minor = eimg->header.minor;
+        load_info.uid1 = linfo.uid1;
+        load_info.uid2 = linfo.uid2;
+        load_info.uid3 = linfo.uid3;
+        load_info.secure_id = linfo.secure_id;
 
         if (buffer->max_length >= sizeof(epoc::lib_info2)) {
             epoc::lib_info2 linfo2;
@@ -222,7 +171,7 @@ namespace eka2l1 {
 
             ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
         } else {
-            ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info2));
+            ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info));
         }
 
         ctx.write_arg_pkg<epoc::ldr_info>(0, load_info);
