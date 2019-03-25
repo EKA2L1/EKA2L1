@@ -90,7 +90,7 @@ namespace eka2l1 {
 
             {
                 common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(&temp_buf[0]), temp_buf.size(),
-                    common::SERI_MODE_MEASURE);
+                    common::SERI_MODE_WRITE);
 
                 epoc::do_refs_state(seri, filtered_col);
             }
