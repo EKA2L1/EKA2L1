@@ -32,6 +32,62 @@ namespace eka2l1 {
         : service::typical_session(svr, client_ss_uid) {
     }
 
+    void cdl_server_session::do_get_refs_size(service::ipc_context *ctx) {    
+        epoc::cdl_ref_collection filtered_col;
+
+        // Subset by name
+        if (*ctx->get_arg<int>(1)) {
+            auto name_op = ctx->get_arg<std::u16string>(2);
+
+            if (!name_op) {
+                ctx->set_request_status(KErrArgument);
+                return;
+            }
+
+            const std::u16string name = std::move(*name_op);
+
+            // Get by name
+            for (auto &ref_: server<cdl_server>()->collection_) {
+                if (ref_.name_ == name) {
+                    filtered_col.push_back(ref_);
+                }
+            }
+        } else {
+            // Get by UID
+            const epoc::uid ref_uid = static_cast<const epoc::uid>(*ctx->get_arg<int>(3));
+
+            // Get by name
+            for (auto &ref_: server<cdl_server>()->collection_) {
+                if (ref_.uid_ == ref_uid) {
+                    filtered_col.push_back(ref_);
+                }
+            }
+        }
+
+        // Get size
+        {
+            common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+            epoc::do_refs_state(seri, filtered_col);
+
+            temp_buf.resize(seri.size());
+        }
+
+        {
+            common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(&temp_buf[0]), temp_buf.size(),
+                common::SERI_MODE_WRITE);
+
+            epoc::do_refs_state(seri, filtered_col);
+        }
+
+        ctx->write_arg_pkg<std::uint32_t>(0, static_cast<std::uint32_t>(temp_buf.size()));
+        ctx->set_request_status(KErrNone);
+    }
+
+    void cdl_server_session::do_get_temp_buf(service::ipc_context *ctx) {
+        ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&temp_buf[0]), static_cast<std::uint32_t>(temp_buf.size()));
+        ctx->set_request_status(KErrNone);
+    }
+
     void cdl_server_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::cdl_server_cmd_notify_change: {
@@ -42,62 +98,12 @@ namespace eka2l1 {
         }
 
         case epoc::cdl_server_cmd_get_temp_buf: {
-            ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&temp_buf[0]), static_cast<std::uint32_t>(temp_buf.size()));
-            ctx->set_request_status(KErrNone);
-
+            do_get_temp_buf(ctx);
             break;
         }
 
-        case epoc::cdl_server_cmd_get_refs_size: {            
-            epoc::cdl_ref_collection filtered_col;
-
-            // Subset by name
-            if (*ctx->get_arg<int>(1)) {
-                auto name_op = ctx->get_arg<std::u16string>(2);
-
-                if (!name_op) {
-                    ctx->set_request_status(KErrArgument);
-                    return;
-                }
-
-                const std::u16string name = std::move(*name_op);
-
-                // Get by name
-                for (auto &ref_: server<cdl_server>()->collection_) {
-                    if (ref_.name_ == name) {
-                        filtered_col.push_back(ref_);
-                    }
-                }
-            } else {
-                // Get by UID
-                const epoc::uid ref_uid = static_cast<const epoc::uid>(*ctx->get_arg<int>(3));
-
-                // Get by name
-                for (auto &ref_: server<cdl_server>()->collection_) {
-                    if (ref_.uid_ == ref_uid) {
-                        filtered_col.push_back(ref_);
-                    }
-                }
-            }
-
-            // Get size
-            {
-                common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-                epoc::do_refs_state(seri, filtered_col);
-
-                temp_buf.resize(seri.size());
-            }
-
-            {
-                common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(&temp_buf[0]), temp_buf.size(),
-                    common::SERI_MODE_WRITE);
-
-                epoc::do_refs_state(seri, filtered_col);
-            }
-
-            ctx->write_arg_pkg<std::uint32_t>(0, static_cast<std::uint32_t>(temp_buf.size()));
-            ctx->set_request_status(KErrNone);
-
+        case epoc::cdl_server_cmd_get_refs_size: {
+            do_get_refs_size(ctx);
             break;
         }
 

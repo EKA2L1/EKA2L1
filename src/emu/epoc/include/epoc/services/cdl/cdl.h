@@ -32,6 +32,9 @@ namespace eka2l1 {
         epoc::notify_info notifier;
         std::string temp_buf;
 
+        void do_get_refs_size(service::ipc_context *ctx);
+        void do_get_temp_buf(service::ipc_context *ctx);
+
     public:
         explicit cdl_server_session(service::typical_server *svr, service::uid client_ss_uid);
         void fetch(service::ipc_context *ctx) override;
