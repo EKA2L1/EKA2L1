@@ -129,9 +129,9 @@ namespace eka2l1::common {
             }
         }
 
-        template <typename T, typename F>
+        template <typename T, typename F, typename CONTAINER_SIZE_TYPE = std::uint32_t>
         void absorb_container(std::vector<T> &c, F func) {
-            std::uint32_t s = static_cast<std::uint32_t>(c.size());
+            CONTAINER_SIZE_TYPE s = static_cast<CONTAINER_SIZE_TYPE>(c.size());
             absorb(s);
 
             if (mode == SERI_MODE_WRITE) {
@@ -143,9 +143,9 @@ namespace eka2l1::common {
             }
         }
 
-        template <typename T>
+        template <typename T, typename CONTAINER_SIZE_TYPE = std::uint32_t>
         void absorb_container_do(std::vector<T> &c) {
-            std::uint32_t s = static_cast<std::uint32_t>(c.size());
+            CONTAINER_SIZE_TYPE s = static_cast<CONTAINER_SIZE_TYPE>(c.size());
             absorb(s);
 
             if (mode == SERI_MODE_WRITE) {
