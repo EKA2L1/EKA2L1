@@ -29,7 +29,7 @@
 namespace eka2l1::epoc {
     void cdl_ecom_watcher::refresh_plugin_list() {
         ecom_interface_info *interface_info = ecom_->get_interface(cdl_uid);
-        curr = &interface_info->implementations;
+        std::vector<ecom_implementation_info_ptr> *curr = &interface_info->implementations;
 
         common::addition_callback_func add_callback = 
             [&](const std::size_t idx) { 
@@ -58,5 +58,15 @@ namespace eka2l1::epoc {
 
         // Make a copy
         last = *curr;
+    }
+
+    drive_number cdl_ecom_watcher::get_plugin_drive(const std::u16string &name) {
+        for (auto &plugin: last) {
+            if (plugin->original_name + u".dll" == name) {
+                return plugin->drv;
+            }
+        }
+
+        return drive_invalid;
     }
 }

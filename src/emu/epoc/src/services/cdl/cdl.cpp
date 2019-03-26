@@ -32,6 +32,24 @@ namespace eka2l1 {
         : service::typical_session(svr, client_ss_uid) {
     }
 
+    void cdl_server_session::do_get_plugin_drive(service::ipc_context *ctx) {
+        std::optional<std::u16string> name = ctx->get_arg<std::u16string>(0);
+
+        if (!name) {
+            ctx->set_request_status(KErrArgument);
+            return;
+        }
+
+        const drive_number drv = server<cdl_server>()->watcher_->get_plugin_drive(name.value());
+
+        if (drv == drive_invalid) {
+            ctx->set_request_status(KErrNotFound);
+            return;
+        }
+
+        ctx->set_request_status(static_cast<int>(drv));
+    }
+
     void cdl_server_session::do_get_refs_size(service::ipc_context *ctx) {    
         epoc::cdl_ref_collection filtered_col;
 
@@ -106,6 +124,11 @@ namespace eka2l1 {
 
         case epoc::cdl_server_cmd_get_refs_size: {
             do_get_refs_size(ctx);
+            break;
+        }
+
+        case epoc::cdl_server_cmd_plugin_drive: {
+            do_get_plugin_drive(ctx);
             break;
         }
 

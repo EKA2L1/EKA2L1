@@ -34,6 +34,7 @@ namespace eka2l1 {
 
         void do_get_refs_size(service::ipc_context *ctx);
         void do_get_temp_buf(service::ipc_context *ctx);
+        void do_get_plugin_drive(service::ipc_context *ctx);
 
     public:
         explicit cdl_server_session(service::typical_server *svr, service::uid client_ss_uid);
