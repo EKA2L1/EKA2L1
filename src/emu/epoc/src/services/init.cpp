@@ -21,6 +21,7 @@
 #include <common/platform.h>
 
 #include <epoc/services/akn/icon/icon.h>
+#include <epoc/services/akn/skin/server.h>
 #include <epoc/services/applist/applist.h>
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/cdl/cdl.h>
@@ -255,6 +256,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, eikappui_server);
             CREATE_SERVER(sys, akn_icon_server);
             CREATE_SERVER(sys, cdl_server);
+            CREATE_SERVER(sys, akn_skin_server);
 
             // Don't change order
             CREATE_SERVER(sys, domainmngr_server);

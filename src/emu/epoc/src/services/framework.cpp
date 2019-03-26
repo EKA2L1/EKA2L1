@@ -39,6 +39,11 @@ namespace eka2l1::service {
         : server(sys, name, true, false) {
     }
 
+    void typical_server::disconnect(service::ipc_context ctx) {
+        sessions.erase(ctx.msg->msg_session->unique_id());
+        ctx.set_request_status(0);
+    }
+
     void typical_server::process_accepted_msg() {
         int res = receive(process_msg);
 

@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) 2019 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+OPCODE(enable_notify_skin_change)
+OPCODE(disable_notify_skin_change)
+OPCODE(set_all_item_def_sets)
+OPCODE(set_item_def_set)
+OPCODE(client_error)
+OPCODE(set_notify_handler)
+OPCODE(next_event)
+OPCODE(cancel)
+OPCODE(set_idle_wallpaper)
+OPCODE(set_pinboard_wallpaper)
+OPCODE(store_scaleable_gfx)
+OPCODE(clear_storeable_gfx)
+OPCODE(acknowledge_notification)
+OPCODE(open_bitmap_file)
+OPCODE(delete_skin)
+OPCODE(copy_skin)
+OPCODE(open_ini_file)
+OPCODE(copy_sound_file)
+OPCODE(enumerate_packages)
+OPCODE(receive_packages)
+OPCODE(store_morphing_scaleable_gfx)
+OPCODE(decode_wallpaper_image)
+OPCODE(free_decoded_wallpaper)
+OPCODE(free_layout_bitmaps)
+OPCODE(open_image_ini_file)
+OPCODE(set_slide_set_wp)
+OPCODE(check_icon_config)
+OPCODE(stop_ssini_file_observer)
+OPCODE(cache_wallpaper_image)
