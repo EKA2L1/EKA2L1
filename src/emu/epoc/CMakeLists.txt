@@ -122,6 +122,7 @@ add_library(epocservs
     src/services/drm/helper.cpp
     src/services/drm/rights.cpp
     src/services/ecom/ecom.cpp
+    src/services/ecom/instantiate.cpp
     src/services/ecom/plugin.cpp
     src/services/fbs/fbs.cpp
     src/services/fbs/impls/bitmap.cpp

@@ -22,6 +22,7 @@
 
 #include <common/types.h>
 #include <epoc/loader/rsc.h>
+#include <epoc/utils/dll.h>
 
 #include <cstdint>
 #include <vector>
@@ -33,7 +34,8 @@ namespace eka2l1 {
 
     struct ecom_implementation_info {
         std::u16string original_name;
-
+        epoc::lib_info plugin_dll_info;
+        
         std::uint32_t uid;
         std::uint8_t version;
         std::uint8_t format;
@@ -44,7 +46,8 @@ namespace eka2l1 {
 
         enum {
             FLAG_ROM = 1 << 0,
-            FLAG_HINT_NO_EXTENDED_INTERFACE = 1 << 1
+            FLAG_HINT_NO_EXTENDED_INTERFACE = 1 << 1,
+            FLAG_IMPL_CREATE_INFO_CACHED = 1 << 2
         };
 
         std::uint32_t flags;

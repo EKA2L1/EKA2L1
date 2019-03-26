@@ -123,6 +123,10 @@ namespace eka2l1 {
                 impl->drv = drv;
                 impl->original_name = eka2l1::replace_extension(eka2l1::filename(name), u"");
 
+                if (impl->original_name.back() == u'\0') {
+                    impl->original_name.pop_back();
+                }
+
                 if (!register_implementation(pinterface.uid, impl)) {
                     return false;
                 }
@@ -274,6 +278,53 @@ namespace eka2l1 {
         return true;
     }
 
+    bool ecom_server::unpack_match_str_and_extended_interfaces(std::string &data, std::string &match_str, 
+        std::vector<std::uint32_t> &extended_interfaces) {
+        // Data is empty. No match string, no extended interfaces whatsoever
+        if (data.length() == 0) {
+            extended_interfaces.resize(0);
+            match_str = "";
+
+            return true;
+        }
+
+        common::ro_buf_stream arg2_stream(reinterpret_cast<std::uint8_t *>(&data[0]),
+            data.length());
+
+        int len = 0;
+
+        if (arg2_stream.read(&len, 4) < 4) {
+            return false;
+        }
+
+        match_str.resize(len);
+
+        if (arg2_stream.read(&match_str[0], len) < len) {
+            return false;
+        }
+
+        // Now read all extended interfaces
+        if (auto total_read = arg2_stream.read(&len, 4) < 4) {
+            // No extended interfaces. Probably old version, so just ignore it.
+            if (total_read == 0) {
+                extended_interfaces.resize(0);
+                return true;
+            }
+
+            return false;
+        }
+
+        extended_interfaces.resize(len);
+
+        for (auto &extended_interface : extended_interfaces) {
+            if (arg2_stream.read(&extended_interface, 4) < 4) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+        
     void ecom_server::list_implementations(service::ipc_context ctx) {
         // Clear last cache
         collected_impls.clear();
@@ -312,38 +363,9 @@ namespace eka2l1 {
                 return;
             }
 
-            if (arg2_data.length() != 0) {
-                common::ro_buf_stream arg2_stream(reinterpret_cast<std::uint8_t *>(&arg2_data[0]),
-                    arg2_data.length());
-
-                int len = 0;
-
-                if (arg2_stream.read(&len, 4) < 4) {
-                    ctx.set_request_status(KErrArgument);
-                    return;
-                }
-
-                match_str.resize(len);
-
-                if (arg2_stream.read(&match_str[0], len) < len) {
-                    ctx.set_request_status(KErrArgument);
-                    return;
-                }
-
-                // Now read all extended interfaces
-                if (arg2_stream.read(&len, 4) < 4) {
-                    ctx.set_request_status(KErrArgument);
-                    return;
-                }
-
-                given_extended_interfaces.resize(len);
-
-                for (auto &extended_interface : given_extended_interfaces) {
-                    if (arg2_stream.read(&extended_interface, 4) < 4) {
-                        ctx.set_request_status(KErrArgument);
-                        return;
-                    }
-                }
+            if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
+                ctx.set_request_status(KErrArgument);
+                return;
             }
         }
 
@@ -470,9 +492,14 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
+    void ecom_server::get_implementation_creation_method(service::ipc_context ctx) {
+        do_get_resolved_impl_creation_method(&ctx);
+    }
+        
     ecom_server::ecom_server(eka2l1::system *sys)
         : service::server(sys, "!ecomserver", true) {
         REGISTER_IPC(ecom_server, list_implementations, ecom_list_implementations, "ECom::ListImpls");
+        REGISTER_IPC(ecom_server, get_implementation_creation_method, ecom_get_implementation_creation_method, "ECom::GetImplCreationMethod");
         //REGISTER_IPC(ecom_server, list_implementations, ecom_list_resolved_implementations, "ECom::ListResolvedImpls");
     }
 }

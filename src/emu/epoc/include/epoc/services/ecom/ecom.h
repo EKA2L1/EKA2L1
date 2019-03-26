@@ -30,6 +30,10 @@
 namespace eka2l1 {
     class io_system;
 
+    namespace epoc::fs {
+        struct entry;
+    }
+
     enum ecom_opcodes {
         ecom_notify_on_change,
         ecom_cancel_notify_on_change,
@@ -37,7 +41,7 @@ namespace eka2l1 {
         ecom_list_resolved_implementations,
         ecom_list_custom_resolved_implementations,
         ecom_collect_implementations_list,
-        ecom_get_implementaton_creation_method,
+        ecom_get_implementation_creation_method,
         ecom_get_resolved_creation_method,
         ecom_get_custom_resolved_creation_method,
         ecom_destroyed_implementation,
@@ -57,14 +61,23 @@ namespace eka2l1 {
 
         // Storing implementations pointer for implementation look-up only. Costly
         // to use unordered_map.
-        // We may need to reconsider this
+        // We may need to reconsider this.
         std::vector<ecom_implementation_info_ptr> implementations;
         std::vector<ecom_implementation_info_ptr> collected_impls;
 
         bool init{ false };
 
+        void do_get_resolved_impl_creation_method(service::ipc_context *ctx);
+        bool unpack_match_str_and_extended_interfaces(std::string &data, std::string &match_str,
+            std::vector<std::uint32_t> &extended_interfaces);
+
     protected:
         void list_implementations(service::ipc_context ctx);
+        void get_implementation_creation_method(service::ipc_context ctx);
+
+        bool get_implementation_dll_info(thread_ptr requester, const epoc::uid interface_uid, 
+            const epoc::uid impl_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, const bool check_cap_comp = true);
+
         bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
             const bool support_extended_interface);
 
@@ -90,7 +103,7 @@ namespace eka2l1 {
         std::vector<std::string> get_ecom_plugin_archives(eka2l1::io_system *io);
 
         /*! \brief Load archives
-        */
+         */
         bool load_archives(eka2l1::io_system *io);
 
         void connect(service::ipc_context ctx) override;

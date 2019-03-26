@@ -32,4 +32,11 @@ namespace eka2l1::epoc {
          */
         ecom_no_interface_identified = -17004
     };
+
+    enum {
+        ecom_interface_uid_index = 0,
+        ecom_impl_uid_index = 0,
+        ecom_dtor_uid_index = 1,
+        ecom_resolver_uid_index = 2
+    };
 }
