@@ -83,7 +83,8 @@ enum drive_number {
     drive_x,
     drive_y,
     drive_z,
-    drive_count
+    drive_count,
+    drive_invalid
 };
 
 enum class io_attrib {
