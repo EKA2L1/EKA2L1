@@ -137,9 +137,7 @@ namespace eka2l1 {
     }
 
     void cdl_server::add_refs(epoc::cdl_ref_collection &to_add_col_) {
-        common::merge_and_replace(collection_, to_add_col_, [](const epoc::cdl_ref &lhs, const epoc::cdl_ref &rhs) {
-            return lhs.uid_ == rhs.uid_;
-        });
+        collection_.insert(collection_.end(), to_add_col_.begin(), to_add_col_.end());
     }
 
     void cdl_server::remove_refs(const std::u16string &name) {
