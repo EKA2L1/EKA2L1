@@ -120,7 +120,7 @@ namespace eka2l1::common {
             std::uint32_t s = static_cast<std::uint32_t>(c.size());
             absorb(s);
 
-            if (mode == SERI_MODE_WRITE) {
+            if (mode == SERI_MODE_READ) {
                 c.resize(s);
             }
 
@@ -134,7 +134,7 @@ namespace eka2l1::common {
             CONTAINER_SIZE_TYPE s = static_cast<CONTAINER_SIZE_TYPE>(c.size());
             absorb(s);
 
-            if (mode == SERI_MODE_WRITE) {
+            if (mode == SERI_MODE_READ) {
                 c.resize(s);
             }
 
@@ -148,7 +148,7 @@ namespace eka2l1::common {
             CONTAINER_SIZE_TYPE s = static_cast<CONTAINER_SIZE_TYPE>(c.size());
             absorb(s);
 
-            if (mode == SERI_MODE_WRITE) {
+            if (mode == SERI_MODE_READ) {
                 c.resize(s);
             }
 
