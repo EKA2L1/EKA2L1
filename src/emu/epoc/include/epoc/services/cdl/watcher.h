@@ -21,12 +21,15 @@
 
 #include <epoc/services/ecom/plugin.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace eka2l1 {
     class ecom_server;
     struct ecom_implementation_info;
+
+    using ecom_implementation_info_ptr = std::shared_ptr<ecom_implementation_info>;
 }
 
 namespace eka2l1::epoc {
@@ -40,8 +43,8 @@ namespace eka2l1::epoc {
         ecom_server *ecom_;
         cdl_ecom_watcher_observer *observer_;
 
-        std::vector<ecom_implementation_info> *curr;
-        std::vector<ecom_implementation_info>  last;
+        std::vector<ecom_implementation_info_ptr> *curr;
+        std::vector<ecom_implementation_info_ptr>  last;
 
     protected:
         void refresh_plugin_list();

@@ -54,7 +54,12 @@ namespace eka2l1 {
 
     class ecom_server : public service::server {
         std::unordered_map<std::uint32_t, ecom_interface_info> interfaces;
-        std::vector<ecom_implementation_info *> collected_impls;
+
+        // Storing implementations pointer for implementation look-up only. Costly
+        // to use unordered_map.
+        // We may need to reconsider this
+        //std::vector<ecom_implementation_info> impls;
+        std::vector<ecom_implementation_info_ptr> collected_impls;
 
         bool init{ false };
 
@@ -64,10 +69,10 @@ namespace eka2l1 {
             const bool support_extended_interface);
 
         bool register_implementation(const std::uint32_t interface_uid,
-            ecom_implementation_info &impl);
+            ecom_implementation_info_ptr &impl);
 
         bool load_plugins(eka2l1::io_system *io);
-        bool load_and_install_plugin_from_buffer(std::uint8_t *buf, const std::size_t size,
+        bool load_and_install_plugin_from_buffer(const std::u16string &name, std::uint8_t *buf, const std::size_t size,
             const drive_number drv);
 
         bool load_plugin_on_drive(eka2l1::io_system *io, const drive_number drv);

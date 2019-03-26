@@ -32,6 +32,8 @@ namespace eka2l1 {
     }
 
     struct ecom_implementation_info {
+        std::u16string original_name;
+
         std::uint32_t uid;
         std::uint8_t version;
         std::uint8_t format;
@@ -55,9 +57,11 @@ namespace eka2l1 {
         void do_state(common::chunkyseri &seri, const bool support_extended_interface);
     };
 
+    using ecom_implementation_info_ptr = std::shared_ptr<ecom_implementation_info>;
+
     struct ecom_interface_info {
         std::uint32_t uid;
-        std::vector<ecom_implementation_info> implementations;
+        std::vector<ecom_implementation_info_ptr> implementations;
     };
 
     struct ecom_plugin {

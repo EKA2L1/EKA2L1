@@ -24,6 +24,7 @@
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
+#include <common/path.h>
 #include <common/log.h>
 
 #include <epoc/services/ecom/ecom.h>
@@ -41,17 +42,17 @@
 
 namespace eka2l1 {
     bool ecom_server::register_implementation(const std::uint32_t interface_uid,
-        ecom_implementation_info &impl) {
+        ecom_implementation_info_ptr &impl) {
         auto &interface = interfaces[interface_uid];
 
         if (!std::binary_search(interface.implementations.begin(), interface.implementations.end(), impl,
-            [&](const ecom_implementation_info &impl1, const ecom_implementation_info &impl2) { return impl1.uid < impl2.uid; })) {
+            [&](const ecom_implementation_info_ptr &impl1, const ecom_implementation_info_ptr &impl2) { return impl1->uid < impl2->uid; })) {
             interface.implementations.push_back(std::move(impl));
 
             // Sort
             std::stable_sort(interface.implementations.begin(), interface.implementations.end(),
-                [](const ecom_implementation_info &lhs, const ecom_implementation_info &rhs) {
-                    return lhs.uid < rhs.uid;
+                [](const ecom_implementation_info_ptr &lhs, const ecom_implementation_info_ptr &rhs) {
+                    return lhs->uid < rhs->uid;
                 });
 
             return true;
@@ -94,12 +95,13 @@ namespace eka2l1 {
         return results;
     }
 
-    bool ecom_server::load_and_install_plugin_from_buffer(std::uint8_t *buf, const std::size_t size,
+    bool ecom_server::load_and_install_plugin_from_buffer(const std::u16string &name, std::uint8_t *buf, const std::size_t size,
         const drive_number drv) {
         common::ro_buf_stream stream(buf, size);
         loader::rsc_file rsc(reinterpret_cast<common::ro_stream*>(&stream));
 
         ecom_plugin plugin;
+
         bool result = load_plugin(rsc, plugin);
 
         if (!result) {
@@ -112,7 +114,8 @@ namespace eka2l1 {
             interface_on_server.uid = pinterface.uid;
 
             for (auto &impl : pinterface.implementations) {
-                impl.drv = drv;
+                impl->drv = drv;
+                impl->original_name = eka2l1::replace_extension(eka2l1::filename(name), u"");
 
                 if (!register_implementation(pinterface.uid, impl)) {
                     return false;
@@ -169,7 +172,8 @@ namespace eka2l1 {
             }
 
             for (auto &entry : spi.entries) {
-                result = load_and_install_plugin_from_buffer(&entry.file[0], entry.file.size(), drv);
+                result = load_and_install_plugin_from_buffer(
+                    common::utf8_to_ucs2(entry.name), &entry.file[0], entry.file.size(), drv);
 
                 if (!result) {
                     LOG_WARN("Can't load and install plugin \"{}\"", entry.name);
@@ -220,7 +224,7 @@ namespace eka2l1 {
             f->read_file(&dat[0], static_cast<std::uint32_t>(dat.size()), 1);
             f->close();
 
-            if (!load_and_install_plugin_from_buffer(&dat[0], dat.size(), drv)) {
+            if (!load_and_install_plugin_from_buffer(common::utf8_to_ucs2(entry->full_path), &dat[0], dat.size(), drv)) {
                 LOG_ERROR("Can't load and install plugins description {}", entry->name);
                 return false;
             }
@@ -381,14 +385,14 @@ namespace eka2l1 {
         }
 
         // Iterate thorugh all implementations
-        for (ecom_implementation_info &implementation : interface->implementations) {
+        for (ecom_implementation_info_ptr &implementation : interface->implementations) {
             // Check the extended interfaces first
             bool sastify = true;
 
             for (std::uint32_t &given_extended_interface : given_extended_interfaces) {
-                if (std::lower_bound(implementation.extended_interfaces.begin(), implementation.extended_interfaces.end(),
+                if (std::lower_bound(implementation->extended_interfaces.begin(), implementation->extended_interfaces.end(),
                         given_extended_interface)
-                    == implementation.extended_interfaces.end()) {
+                    == implementation->extended_interfaces.end()) {
                     sastify = false;
                     break;
                 }
@@ -401,8 +405,8 @@ namespace eka2l1 {
 
             // Match string empty, so we should add into nice stuff now
             if (match_str.empty()) {
-                collected_impls.push_back(&implementation);
-                implementation.do_state(seri, support_extended_interface);
+                collected_impls.push_back(implementation);
+                implementation->do_state(seri, support_extended_interface);
                 continue;
             }
 
@@ -411,11 +415,11 @@ namespace eka2l1 {
             // We still need to see if the name is match
             // Generic match ? Wildcard check
             if (list_impl_param.match_type) {
-                if (std::regex_match(common::ucs2_to_utf8(implementation.display_name), wildcard_matcher)) {
+                if (std::regex_match(common::ucs2_to_utf8(implementation->display_name), wildcard_matcher)) {
                     sastify = true;
                 }
             } else {
-                if (match_str == common::ucs2_to_utf8(implementation.display_name)) {
+                if (match_str == common::ucs2_to_utf8(implementation->display_name)) {
                     sastify = true;
                 }
             }
@@ -423,8 +427,8 @@ namespace eka2l1 {
             // TODO: Capability supply
 
             if (sastify) {
-                collected_impls.push_back(&implementation);
-                implementation.do_state(seri, support_extended_interface);
+                collected_impls.push_back(implementation);
+                implementation->do_state(seri, support_extended_interface);
             }
         }
 

@@ -234,9 +234,11 @@ namespace eka2l1 {
             interface.implementations.resize(total_impls);
 
             for (auto &implementation : interface.implementations) {
+                implementation = std::make_shared<ecom_implementation_info>();
+
                 switch (plugin.type) {
                 case ecom_plugin_type_3: {
-                    if (!read_impl_ver3(implementation, stream)) {
+                    if (!read_impl_ver3(*implementation, stream)) {
                         return false;
                     }
 
@@ -244,10 +246,10 @@ namespace eka2l1 {
                 }
 
                 case ecom_plugin_type_2: {
-                    implementation.flags |= 
+                    implementation->flags |= 
                         ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
 
-                    if (!read_impl_ver2(implementation, stream)) {
+                    if (!read_impl_ver2(*implementation, stream)) {
                         return false;
                     }
 
@@ -255,11 +257,11 @@ namespace eka2l1 {
                 }
 
                 default: {
-                    if (!read_impl_ver1(implementation, stream)) {
+                    if (!read_impl_ver1(*implementation, stream)) {
                         return false;
                     }
                     
-                    implementation.flags |= 
+                    implementation->flags |= 
                         ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
                     
                     break;

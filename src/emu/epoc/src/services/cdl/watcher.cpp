@@ -33,21 +33,21 @@ namespace eka2l1::epoc {
 
         common::addition_callback_func add_callback = 
             [&](const std::size_t idx) { 
-                observer_->entry_added(std::u16string(1, drive_to_char16(curr->at(idx).drv)) 
-                    + u":\\" + common::utf8_to_ucs2(common::to_string(curr->at(idx).uid, std::hex)) + u".dll");
+                observer_->entry_added(std::u16string(1, drive_to_char16(curr->at(idx)->drv)) 
+                    + u":\\" + common::utf8_to_ucs2(common::to_string(curr->at(idx)->uid, std::hex)) + u".dll");
             };
 
         common::remove_callback_func rev_callback = 
             [&](const std::size_t idx) { 
-                observer_->entry_removed(std::u16string(1, drive_to_char16(last[idx].drv)) 
-                    + u":\\" + common::utf8_to_ucs2(common::to_string(last[idx].uid, std::hex)) + u".dll");
+                observer_->entry_removed(std::u16string(1, drive_to_char16(last[idx]->drv)) 
+                    + u":\\" + common::utf8_to_ucs2(common::to_string(last[idx]->uid, std::hex)) + u".dll");
             };
 
-        common::compare_func<ecom_implementation_info> comp = 
-            [](const ecom_implementation_info &lhs, const ecom_implementation_info &rhs) {
-                if (lhs.uid < rhs.uid) {
+        common::compare_func<ecom_implementation_info_ptr> comp = 
+            [](const ecom_implementation_info_ptr &lhs, const ecom_implementation_info_ptr &rhs) {
+                if (lhs->uid < rhs->uid) {
                     return -1;
-                } else if (lhs.uid == rhs.uid) {
+                } else if (lhs->uid == rhs->uid) {
                     return 0;
                 }
 
