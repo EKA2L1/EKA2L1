@@ -96,8 +96,8 @@ namespace eka2l1::epoc {
 
         case EWsSdOpTwipsSize: {
             // This doesn't take any arguments
-            eka2l1::vec2 screen_size = crr_mode->size;
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size * twips_mul);
+            eka2l1::vec2 screen_size = crr_mode->size * twips_mul;
+            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
             ctx.set_request_status(0);
 
             break;
