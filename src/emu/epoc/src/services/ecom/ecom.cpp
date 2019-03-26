@@ -47,10 +47,16 @@ namespace eka2l1 {
 
         if (!std::binary_search(interface.implementations.begin(), interface.implementations.end(), impl,
             [&](const ecom_implementation_info_ptr &impl1, const ecom_implementation_info_ptr &impl2) { return impl1->uid < impl2->uid; })) {
-            interface.implementations.push_back(std::move(impl));
+            interface.implementations.push_back(impl);
+            implementations.push_back(impl);
 
             // Sort
-            std::stable_sort(interface.implementations.begin(), interface.implementations.end(),
+            std::sort(interface.implementations.begin(), interface.implementations.end(),
+                [](const ecom_implementation_info_ptr &lhs, const ecom_implementation_info_ptr &rhs) {
+                    return lhs->uid < rhs->uid;
+                });
+            
+            std::sort(implementations.begin(), implementations.end(),
                 [](const ecom_implementation_info_ptr &lhs, const ecom_implementation_info_ptr &rhs) {
                     return lhs->uid < rhs->uid;
                 });

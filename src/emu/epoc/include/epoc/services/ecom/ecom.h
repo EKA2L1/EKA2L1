@@ -58,7 +58,7 @@ namespace eka2l1 {
         // Storing implementations pointer for implementation look-up only. Costly
         // to use unordered_map.
         // We may need to reconsider this
-        //std::vector<ecom_implementation_info> impls;
+        std::vector<ecom_implementation_info_ptr> implementations;
         std::vector<ecom_implementation_info_ptr> collected_impls;
 
         bool init{ false };
