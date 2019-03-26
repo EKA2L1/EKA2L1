@@ -28,9 +28,21 @@ namespace eka2l1 {
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid) 
         : service::typical_session(svr, client_ss_uid) {
     }
+
+    void akn_skin_server_session::do_set_notify_handler(service::ipc_context *ctx) {
+        // The notify handler does nothing rather than gurantee that the client already has a handle mechanic
+        // to the request notification later.
+        client_handler_ = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+        ctx->set_request_status(KErrNone);
+    }
     
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case epoc::akn_skin_server_set_notify_handler: {
+            do_set_notify_handler(ctx);
+            break;
+        }
+        
         default: {
             LOG_ERROR("Unimplemented opcode: {}", epoc::akn_skin_server_opcode_to_str(
                 static_cast<const epoc::akn_skin_server_opcode>(ctx->msg->function)));

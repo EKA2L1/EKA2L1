@@ -18,9 +18,14 @@
  */
 
 #include <epoc/services/framework.h>
+#include <epoc/ptr.h>
 
 namespace eka2l1 {
     class akn_skin_server_session: public service::typical_session {
+        eka2l1::ptr<void> client_handler_;
+
+        void do_set_notify_handler(service::ipc_context *ctx);
+
     public:
         explicit akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid);
         void fetch(service::ipc_context *ctx) override;
