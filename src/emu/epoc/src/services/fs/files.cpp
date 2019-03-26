@@ -51,10 +51,11 @@ namespace eka2l1 {
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
         if (ctx.sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
-            ctx.write_arg_pkg<uint64_t>(0, std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
+            std::uint64_t fsize_u = std::reinterpret_pointer_cast<file>(node->vfs_node)->size();
+            ctx.write_arg_pkg<uint64_t>(0, fsize_u);
         } else {
-            ctx.write_arg_pkg<uint32_t>(0,
-                static_cast<std::uint32_t>(std::reinterpret_pointer_cast<file>(node->vfs_node)->size()));
+            std::uint32_t fsize_u = static_cast<std::uint32_t>(std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
+            ctx.write_arg_pkg<uint32_t>(0, fsize_u);
         }
 
         ctx.set_request_status(KErrNone);
@@ -205,7 +206,8 @@ namespace eka2l1 {
         if ((int)ctx.sys->get_symbian_version_use() >= (int)epocver::epoc10) {
             ctx.write_arg_pkg(2, seek_res);
         } else {
-            ctx.write_arg_pkg(2, static_cast<TInt>(seek_res));
+            int seek_result_i = static_cast<TInt>(seek_res);
+            ctx.write_arg_pkg(2, seek_result_i);
         }
 
         ctx.set_request_status(KErrNone);
@@ -520,9 +522,9 @@ namespace eka2l1 {
             return;
         }
 
-        size_t dup_handle = nodes_table.add_node(*node);
+        int dup_handle = static_cast<int>(nodes_table.add_node(*node));
 
-        ctx.write_arg_pkg<int>(3, static_cast<int>(dup_handle));
+        ctx.write_arg_pkg<int>(3, dup_handle);
         ctx.set_request_status(KErrNone);
     }
 

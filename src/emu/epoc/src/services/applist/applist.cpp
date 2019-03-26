@@ -71,7 +71,9 @@ namespace eka2l1 {
     void applist_server::app_language(service::ipc_context ctx) {
         LOG_TRACE("AppList::AppLanguage stubbed to returns ELangEnglish");
 
-        ctx.write_arg_pkg<TLanguage>(1, ELangEnglish);
+        TLanguage default_lang = ELangEnglish;
+
+        ctx.write_arg_pkg<TLanguage>(1, default_lang);
         ctx.set_request_status(0);
     }
 

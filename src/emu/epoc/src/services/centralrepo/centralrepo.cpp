@@ -542,7 +542,9 @@ namespace eka2l1 {
                     return;
                 }
 
-                ctx->write_arg_pkg<int>(1, static_cast<int>(entry->data.intd));
+                int result = static_cast<int>(entry->data.intd);
+
+                ctx->write_arg_pkg<int>(1, result);
                 break;
             }
 
@@ -552,7 +554,9 @@ namespace eka2l1 {
                     return;
                 }
 
-                ctx->write_arg_pkg<int>(1, static_cast<int>(entry->data.reald));
+                float result = static_cast<float>(entry->data.reald);
+
+                ctx->write_arg_pkg<float>(1, result);
                 break;
             }
 

@@ -92,7 +92,7 @@ namespace eka2l1 {
 
             // Package an argument, write it to a destination
             template <typename T>
-            bool write_arg_pkg(int idx, T data, int *err_code = nullptr, const bool auto_shrink_to_fit = false) {
+            bool write_arg_pkg(int idx, T &data, int *err_code = nullptr, const bool auto_shrink_to_fit = false) {
                 return write_arg_pkg(idx, reinterpret_cast<uint8_t *>(&data), sizeof(T), err_code, auto_shrink_to_fit);
             }
 

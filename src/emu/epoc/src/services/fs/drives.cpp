@@ -268,14 +268,18 @@ namespace eka2l1 {
 
         case epoc::fs::extended_fs_query_command::is_drive_sync: {
             // Check if drive is sync. Yes in this case.
-            ctx.write_arg_pkg(2, true);
+            bool result = true;
+
+            ctx.write_arg_pkg(2, result);
             break;
         }
 
         case epoc::fs::extended_fs_query_command::is_drive_finalised: {
+            bool result = true;
+
             // Check if drive is safe to remove. Yes ?
             LOG_WARN("Checking if drive is finalised, stubbed");
-            ctx.write_arg_pkg(2, true);
+            ctx.write_arg_pkg(2, result);
             break;
         }
 

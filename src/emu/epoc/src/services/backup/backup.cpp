@@ -30,7 +30,10 @@ namespace eka2l1 {
 
     void backup_server::get_backup_operation_state(service::ipc_context ctx) {
         LOG_TRACE("GetBackupOperationState stubbed with false");
-        ctx.write_arg_pkg<bool>(0, false);
+
+        bool state = false;
+
+        ctx.write_arg_pkg<bool>(0, state);
         ctx.set_request_status(KErrNone);
     }
 }

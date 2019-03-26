@@ -79,7 +79,9 @@ namespace eka2l1 {
             epoc::do_refs_state(seri, filtered_col);
         }
 
-        ctx->write_arg_pkg<std::uint32_t>(0, static_cast<std::uint32_t>(temp_buf.size()));
+        std::uint32_t temp_buf_size = static_cast<std::uint32_t>(temp_buf.size());
+
+        ctx->write_arg_pkg<std::uint32_t>(0, temp_buf_size);
         ctx->set_request_status(KErrNone);
     }
 

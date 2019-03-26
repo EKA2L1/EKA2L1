@@ -97,7 +97,9 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
         */
 
-        ctx.write_arg_pkg(1, 1);
+        int result = 1;
+
+        ctx.write_arg_pkg(1, result);
         ctx.set_request_status(KErrNone);
     }
 }

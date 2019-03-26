@@ -82,7 +82,9 @@ namespace eka2l1 {
     void oom_ui_app_server::get_layout_config_size(service::ipc_context ctx) {
         layout_buf = get_layout_buf();
 
-        ctx.write_arg_pkg<int>(0, static_cast<int>(layout_buf.size()));
+        int layout_buf_size = static_cast<int>(layout_buf.size());
+
+        ctx.write_arg_pkg<int>(0, layout_buf_size);
         ctx.set_request_status(KErrNone);
     }
 

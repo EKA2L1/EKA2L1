@@ -70,7 +70,9 @@ namespace eka2l1 {
 
         LOG_TRACE("UID requested: 0x{}, 0x{}, 0x{}", type.uid[0], type.uid[1], type.uid[2]);
 
-        ctx.write_arg_pkg<int>(3, static_cast<int>(dir_handle));
+        int dir_handle_i = static_cast<int>(dir_handle);
+
+        ctx.write_arg_pkg<int>(3, dir_handle_i);
         ctx.set_request_status(KErrNone);
     }
 
