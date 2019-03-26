@@ -255,6 +255,16 @@ namespace eka2l1::epoc {
             reset();
         }
 
+        bool has(capability_set &set) {
+            std::uint32_t check_fail = 0;
+
+            for (int n = static_cast<int>(total_caps_u_size) * 4 - 1; n >= 0; n--) {
+                check_fail |= set.bytes_[n] & ~caps.bytes_[n];
+            }
+
+            return check_fail ? false : true;
+        }
+
         security_info(std::vector<capability> c_caps);
 
         void reset() {

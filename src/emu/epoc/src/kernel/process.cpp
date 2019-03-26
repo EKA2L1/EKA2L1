@@ -261,6 +261,15 @@ namespace eka2l1::kernel {
         return policy.check(sec_info, missing ? *missing : missing_holder);
     }
 
+    bool process::has(epoc::capability_set &cap_set) {
+        // Do not enforce security on EKA1. It's not even there
+        if (kern->get_epoc_version() >= epocver::eka2) {
+            return true;
+        }
+
+        return sec_info.has(cap_set);
+    }
+
     void process::get_memory_info(memory_info &info) {
         info.rt_code_addr = codeseg->get_code_run_addr();
         info.rt_const_data_addr = codeseg->get_data_run_addr();

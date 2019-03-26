@@ -257,6 +257,11 @@ namespace eka2l1::kernel {
          */
         bool satisfy(epoc::security_policy &policy, epoc::security_info *missing = nullptr);
 
+        /**
+         * \brief Check if the process has the following capabilities given in the set.
+         */
+        bool has(epoc::capability_set &cap_set);
+
         process_exit_type get_exit_type() const {
             return exit_type;
         }
