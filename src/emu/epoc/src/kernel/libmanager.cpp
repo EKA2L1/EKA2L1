@@ -405,8 +405,12 @@ namespace eka2l1 {
                             // Add ref
                             acs->add_dependency(ref_seg);
                         } else {
+                            // TODO: Supply right size. The loader doesn't care about size right now
+                            common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem), 
+                                0xFFFF);
+
                             // Load new romimage and add dependency
-                            loader::romimg rimg = *loader::parse_romimg_from_ptr(ref_table->rom_img_headers_ref[i], mem);
+                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&buf_stream), mem);
                             acs->add_dependency(load_as_romimg(rimg));
                         }
                     }
@@ -442,7 +446,7 @@ namespace eka2l1 {
                         return result;
                     }
 
-                    auto parse_result_2 = loader::parse_romimg(f, mem);
+                    auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&image_data_stream), mem);
                     if (parse_result_2 != std::nullopt) {
                         f->close();
                         result.second = std::move(parse_result_2);
@@ -484,17 +488,17 @@ namespace eka2l1 {
                     if (!f) {
                         return nullptr;
                     }
+                
+                    eka2l1::ro_file_stream image_data_stream(f);
 
                     if (entry->media_type == drive_media::rom && io->is_entry_in_rom(lib_path)) {
-                        auto romimg = loader::parse_romimg(f, mem);
+                        auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&image_data_stream), mem);
                         if (!romimg) {
                             return nullptr;
                         }
 
                         return load_as_romimg(*romimg, lib_path);
                     } else {
-                        eka2l1::ro_file_stream image_data_stream(f);
-
                         auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
                         if (!e32img) {
                             return nullptr;
