@@ -48,7 +48,6 @@
 namespace eka2l1 {
     namespace hle {
         // Write simple relocation
-        // Symbian only used this, as found on IDA
         bool write(uint32_t *data, uint32_t sym) {
             *data = sym;
             return true;
@@ -433,7 +432,9 @@ namespace eka2l1 {
                         return result;
                     }
 
-                    auto parse_result = loader::parse_e32img(f);
+                    eka2l1::ro_file_stream image_data_stream(f);
+
+                    auto parse_result = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
                     if (parse_result != std::nullopt) {
                         f->close();
                         result.first = std::move(parse_result);
@@ -492,7 +493,9 @@ namespace eka2l1 {
 
                         return load_as_romimg(*romimg, lib_path);
                     } else {
-                        auto e32img = loader::parse_e32img(f, mem);
+                        eka2l1::ro_file_stream image_data_stream(f);
+
+                        auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
                         if (!e32img) {
                             return nullptr;
                         }

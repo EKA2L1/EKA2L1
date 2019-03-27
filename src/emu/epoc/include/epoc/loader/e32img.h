@@ -28,20 +28,13 @@
 #include <string>
 #include <vector>
 
-// A lightweight loader based on elf2e32
-
 namespace eka2l1 {
     class memory_system;
     class kernel_system;
 
-    struct file;
-    using symfile = std::shared_ptr<file>;
-
-    namespace kernel {
-        class chunk;
+    namespace common {
+        class ro_stream;
     }
-
-    using chunk_ptr = std::shared_ptr<kernel::chunk>;
 
     /*! \brief Contains the loader for E32Image, ROMImage, SIS. */
     namespace loader {
@@ -207,8 +200,14 @@ namespace eka2l1 {
             inffered = 0x3000
         };
 
-        /*! \brief Parse an E32 Image. 
-		 * \param ef The file opened from io_system. */
-        std::optional<e32img> parse_e32img(symfile ef, bool read_reloc = true);
+        /**
+         * \brief Parse an E32 Image from stream.
+         * 
+         * \param stream     The stream to parse from.
+         * \param read_reloc If this is true, relocation section will be read.
+         * 
+         * \returns An optional contains E32 Image. Nullopt if invalid.
+         */
+        std::optional<e32img> parse_e32img(common::ro_stream *stream, bool read_reloc = true);
     }
 }
