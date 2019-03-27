@@ -65,7 +65,12 @@ namespace eka2l1 {
             index_table idx_tab;
 
         public:
+            ibytepair_stream() = default;
             explicit ibytepair_stream(common::ro_stream *stream);
+
+            void set_stream(common::ro_stream *stream) {
+                compress_stream = stream;
+            }
 
             /*! \brief Get the index table */
             index_table table() const;

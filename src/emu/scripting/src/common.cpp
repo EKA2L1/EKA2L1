@@ -18,8 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/buffer.h>
 #include <common/bytepair.h>
 #include <scripting/common.h>
+
+#include <epoc/vfs.h>
 
 #include <pybind11/pybind11.h>
 
@@ -27,8 +30,15 @@ namespace py = pybind11;
 namespace scripting = eka2l1::scripting;
 
 namespace eka2l1::scripting {
-    ibytepair_stream_wrapper::ibytepair_stream_wrapper(const std::string &path)
-        : bytepair_stream(path, 0) {
+    ibytepair_stream_wrapper::ibytepair_stream_wrapper(const std::string &path) {
+        eka2l1::symfile f = eka2l1::physical_file_proxy(path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            throw pybind11::value_error("File doesn't exists!");
+        }
+
+        raw_fstream = std::make_shared<eka2l1::ro_file_stream>(f);
+        bytepair_stream.set_stream(reinterpret_cast<common::ro_stream*>(&(*raw_fstream)));
     }
 
     std::vector<uint32_t> ibytepair_stream_wrapper::get_all_page_offsets() {
