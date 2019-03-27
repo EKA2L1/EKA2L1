@@ -233,7 +233,6 @@ namespace eka2l1::loader {
                 std::vector<char> temp(stream->size() - img.header.code_offset);
                 stream->seek(img.header.code_offset, common::seek_where::beg);
                 stream->read(temp.data(), static_cast<uint32_t>(temp.size()));
-                stream->seek(crr_pos, common::seek_where::beg);
 
                 common::ro_buf_stream raw_bp_stream(reinterpret_cast<std::uint8_t*>(&temp[0]), temp.size());
                 common::ibytepair_stream bpstream(reinterpret_cast<common::ro_stream*>(&raw_bp_stream));
@@ -270,8 +269,11 @@ namespace eka2l1::loader {
         parse_export_dir(img);
         parse_iat(img);
 
-        stream->seek(img.header.import_offset, common::seek_where::beg);
-        stream->read(reinterpret_cast<void *>(&img.import_section.size), 4);
+        common::ro_buf_stream decompressed_stream(reinterpret_cast<std::uint8_t*>(&img.data[0]), 
+            img.data.size());
+
+        decompressed_stream.seek(img.header.import_offset, common::seek_where::beg);
+        decompressed_stream.read(reinterpret_cast<void *>(&img.import_section.size), 4);
 
         img.import_section.imports.resize(img.header.dll_ref_table_count);
 
@@ -279,8 +281,8 @@ namespace eka2l1::loader {
         LOG_INFO("Import offsets: {}", img.header.import_offset);
 
         for (auto &import : img.import_section.imports) {
-            stream->read(reinterpret_cast<void *>(&import.dll_name_offset), 4);
-            stream->read(reinterpret_cast<void *>(&import.number_of_imports), 4);
+            decompressed_stream.read(reinterpret_cast<void *>(&import.dll_name_offset), 4);
+            decompressed_stream.read(reinterpret_cast<void *>(&import.number_of_imports), 4);
 
             img.dll_names.push_back(import.dll_name);
 
@@ -288,13 +290,13 @@ namespace eka2l1::loader {
                 continue;
             }
 
-            auto crr_size = stream->tell();
-            stream->seek(img.header.import_offset + import.dll_name_offset, common::beg);
+            const auto crr_size = decompressed_stream.tell();
+            decompressed_stream.seek(img.header.import_offset + import.dll_name_offset, common::beg);
 
             char temp = 1;
 
             while (temp != 0) {
-                stream->read(&temp, 1);
+                decompressed_stream.read(&temp, 1);
 
                 if (temp != 0) {
                     import.dll_name += temp;
@@ -303,20 +305,20 @@ namespace eka2l1::loader {
 
             LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
 
-            stream->seek(static_cast<uint32_t>(crr_size), common::beg);
+            decompressed_stream.seek(static_cast<uint32_t>(crr_size), common::beg);
 
             import.ordinals.resize(import.number_of_imports);
 
             for (auto &oridinal : import.ordinals) {
-                stream->read(reinterpret_cast<void *>(&oridinal), 4);
+                decompressed_stream.read(reinterpret_cast<void *>(&oridinal), 4);
             }
         }
 
         if (read_reloc) {
-            read_relocations(stream,
+            read_relocations(reinterpret_cast<common::ro_stream*>(&decompressed_stream),
                 img.code_reloc_section, img.header.code_reloc_offset);
 
-            read_relocations(stream,
+            read_relocations(reinterpret_cast<common::ro_stream*>(&decompressed_stream),
                 img.data_reloc_section, img.header.data_reloc_offset);
         }
 
