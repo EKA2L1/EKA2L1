@@ -405,6 +405,16 @@ namespace eka2l1 {
         return &repos[key];
     }
 
+    eka2l1::central_repo *central_repo_server::load_repo_with_lookup(eka2l1::io_system *io, const std::uint32_t key) {
+        auto result = repos.find(key);
+
+        if (result != repos.end()) {
+            return &result->second;
+        }
+
+        return load_repo(io, key);
+    }
+
     eka2l1::central_repo *central_repo_server::get_initial_repo(eka2l1::io_system *io,
         const std::uint32_t key) {
         // Load from cache first
