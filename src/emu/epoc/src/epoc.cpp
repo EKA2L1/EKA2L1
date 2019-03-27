@@ -440,7 +440,16 @@ namespace eka2l1 {
     }
 
     bool system_impl::load_rom(const std::string &path) {
-        std::optional<loader::rom> romf_res = loader::load_rom(path);
+        symfile f = eka2l1::physical_file_proxy(path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            LOG_ERROR("ROM file not present: {}", path);
+            return false;
+        }
+
+        eka2l1::ro_file_stream rom_fstream(f);
+        std::optional<loader::rom> romf_res = loader::load_rom(reinterpret_cast<common::ro_stream*>(
+            &rom_fstream));
 
         if (!romf_res) {
             return false;
