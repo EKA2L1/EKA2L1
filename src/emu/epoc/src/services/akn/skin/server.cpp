@@ -35,11 +35,46 @@ namespace eka2l1 {
         client_handler_ = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
         ctx->set_request_status(KErrNone);
     }
+
+    void akn_skin_server_session::do_next_event(service::ipc_context *ctx) {
+        if (flags & ASS_FLAG_CANCELED) {
+            // Clear the nof list
+            while (!nof_list_.empty()) {
+                nof_list_.pop();
+            }
+
+            // Set the notifier and both the next one getting the event to cancel
+            ctx->set_request_status(KErrCancel);
+            nof_info_.complete(KErrCancel);
+
+            return;
+        }
+
+        // Check the notify list count
+        if (nof_list_.size() > 0) {
+            // The notification list is not empty.
+            // Take the first element in the queue, and than signal the client with that code.
+            const epoc::akn_skin_server_change_handler_notification nof_code = std::move(nof_list_.front());
+            nof_list_.pop();
+
+            ctx->set_request_status(static_cast<int>(nof_code));
+        } else {
+            // There is no notification pending yet.
+            // We have to wait for it, so let's get this client as the one to signal.
+            nof_info_.requester = ctx->msg->own_thr;
+            nof_info_.sts = ctx->msg->request_sts;
+        }
+    }
     
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::akn_skin_server_set_notify_handler: {
             do_set_notify_handler(ctx);
+            break;
+        }
+
+        case epoc::akn_skin_server_next_event: {
+            do_next_event(ctx);
             break;
         }
         

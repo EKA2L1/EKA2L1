@@ -17,14 +17,36 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/akn/skin/common.h>
 #include <epoc/services/framework.h>
 #include <epoc/ptr.h>
+
+#include <queue>
 
 namespace eka2l1 {
     class akn_skin_server_session: public service::typical_session {
         eka2l1::ptr<void> client_handler_;
+        epoc::notify_info nof_info_;        ///< Notify info
+        std::queue<epoc::akn_skin_server_change_handler_notification> nof_list_;
+
+        std::uint32_t flags { 0 };
+
+        enum {
+            ASS_FLAG_CANCELED = 0x1
+        };
 
         void do_set_notify_handler(service::ipc_context *ctx);
+
+        /**
+         * \brief Get the next event in the notify list and notify the waiter.
+         * 
+         * - If cancel flag is set, the client will be notify with code KErrCancel.
+         * - If the notify list is just empty, the requester of this next event will be
+         *   the next one waiting.
+         * - Else, the first element in the queue is popped and the client will be notify
+         *   will that code.
+         */
+        void do_next_event(service::ipc_context *ctx);
 
     public:
         explicit akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid);
