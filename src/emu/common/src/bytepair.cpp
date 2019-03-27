@@ -17,7 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <common/algorithm.h>
+#include <common/buffer.h>
 #include <common/bytepair.h>
 #include <common/log.h>
 
@@ -27,7 +29,7 @@
 
 namespace eka2l1 {
     namespace common {
-        int nokia_bytepair_decompress(void *destination, unsigned int dest_size, void *buffer, unsigned int buf_size) {
+        int bytepair_decompress(void *destination, unsigned int dest_size, void *buffer, unsigned int buf_size) {
             uint8_t *data8 = reinterpret_cast<uint8_t *>(buffer);
             uint32_t lookup_table[0x200];
 
@@ -164,13 +166,8 @@ namespace eka2l1 {
             return 1;
         }
 
-        ibytepair_stream::ibytepair_stream(std::shared_ptr<std::istream> stream) {
-            compress_stream = stream;
-        }
-
-        ibytepair_stream::ibytepair_stream(std::string path, uint32_t start) {
-            compress_stream = std::make_shared<std::ifstream>(path, std::ios::binary);
-            compress_stream->seekg(start);
+        ibytepair_stream::ibytepair_stream(common::ro_stream *stream)
+            : compress_stream(stream) {
         }
 
         ibytepair_stream::index_table ibytepair_stream::table() const {
@@ -178,7 +175,7 @@ namespace eka2l1 {
         }
 
         void ibytepair_stream::seek_fwd(size_t size) {
-            compress_stream->seekg(size, std::ios::cur);
+            compress_stream->seek(size, common::seek_where::cur);
         }
 
         // Read the table entry
@@ -192,7 +189,7 @@ namespace eka2l1 {
 
         uint32_t ibytepair_stream::read_page(char *dest, uint32_t page, size_t size) {
             size_t len = common::min<size_t>(size, 4096);
-            auto crr_pos = compress_stream->tellg();
+            auto crr_pos = compress_stream->tell();
             std::vector<char> buf;
 
             buf.resize(idx_tab.page_size[page]);
@@ -204,9 +201,7 @@ namespace eka2l1 {
                 return 0;
             }
 
-            auto omitted = nokia_bytepair_decompress(dest, static_cast<int>(len), buf.data(), idx_tab.page_size[page]);
-
-            return omitted;
+            return bytepair_decompress(dest, static_cast<int>(len), buf.data(), idx_tab.page_size[page]);
         }
 
         uint32_t ibytepair_stream::read_pages(char *dest, size_t size) {

@@ -30,14 +30,16 @@
 
 namespace eka2l1 {
     namespace common {
-        /*! \brief Given a chunk of data compress by byte-pair compression as specified by Nokia, decompress the chunk.
+        class ro_stream;
+
+        /*! \brief Given a chunk of data compress by byte-pair compression, decompress the chunk.
 		 *
 		 *  \param dest The destination to write decompressed data to
          *  \param dest_size The size of the destination buffer
          *  \param buffer The compressed data
          *  \param buf_size The compressed data size		 
 		*/
-        int nokia_bytepair_decompress(void *dest, unsigned int dest_size, void *buffer, unsigned int buf_size);
+        int bytepair_decompress(void *dest, unsigned int dest_size, void *buffer, unsigned int buf_size);
 
         enum {
             BYTEPAIR_PAGE_SIZE = 4096
@@ -45,7 +47,7 @@ namespace eka2l1 {
 
         /*! \brief A read-only bytepair stream. */
         class ibytepair_stream {
-            std::shared_ptr<std::istream> compress_stream;
+            common::ro_stream *compress_stream;
 
         public:
             struct index_table_header {
@@ -63,20 +65,20 @@ namespace eka2l1 {
             index_table idx_tab;
 
         public:
-            ibytepair_stream(std::shared_ptr<std::istream> stream);
-            ibytepair_stream(std::string path, uint32_t start);
+            explicit ibytepair_stream(common::ro_stream *stream);
 
             /*! \brief Get the index table */
             index_table table() const;
 
-            /*! \brief Seek forward the stream */
+            /** \brief Seek forward the stream */
             void seek_fwd(size_t size);
 
-            /*! \brief Read the index table
+            /**
+             * \brief Read the index table
 			 *
 			 * Bytepair compressed data always has a header (index table), that tells us the uncompressed size
 			 * and each bytepair page's size.
-			*/
+			 */
             void read_table();
 
             /*! \brief Read a page.
