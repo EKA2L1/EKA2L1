@@ -26,6 +26,10 @@
 #include <vector>
 
 namespace eka2l1 {
+    namespace common {
+        class ro_stream;
+    }
+
     namespace loader {
         struct demand_paging_config {
             uint16_t min_pages;
@@ -177,11 +181,9 @@ namespace eka2l1 {
             rom_header header;
             rom_section_header section_header;
 
-            FILE *handler;
-
             root_dir_list root;
         };
 
-        std::optional<rom> load_rom(const std::string &path);
+        std::optional<rom> load_rom(common::ro_stream *stream);
     }
 }

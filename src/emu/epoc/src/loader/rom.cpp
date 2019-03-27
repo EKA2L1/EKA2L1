@@ -19,219 +19,209 @@
  */
 
 #include <common/algorithm.h>
+#include <common/buffer.h>
 #include <common/log.h>
 
 #include <epoc/loader/rom.h>
 
-namespace eka2l1 {
-    namespace loader {
-        enum class file_attrib {
-            dir = 0x0010
-        };
+namespace eka2l1::loader {
+    enum class file_attrib {
+        dir = 0x0010
+    };
 
-        uint32_t rom_to_offset(address romstart, address off) {
-            return off - romstart;
-        }
+    uint32_t rom_to_offset(address romstart, address off) {
+        return off - romstart;
+    }
 
-        rom_header read_rom_header(FILE *file) {
-            rom_header header;
+    static rom_header read_rom_header(common::ro_stream *stream) {
+        rom_header header;
 
-            [[maybe_unused]] std::size_t readed_size = 0;
+        [[maybe_unused]] std::size_t readed_size = 0;
 
-            readed_size += fread(header.jump, 1, sizeof(header.jump), file);
-            readed_size += fread(&header.restart_vector, 1, 4, file);
-            readed_size += fread(&header.time, 1, 8, file);
-            readed_size += fread(&header.time_high, 1, 4, file);
-            readed_size += fread(&header.rom_base, 1, 4, file);
-            readed_size += fread(&header.rom_size, 1, 4, file);
-            readed_size += fread(&header.rom_root_dir_list, 1, 4, file);
-            readed_size += fread(&header.kern_data_address, 1, 4, file);
-            readed_size += fread(&header.kern_limit, 1, 4, file);
-            readed_size += fread(&header.primary_file, 1, 4, file);
-            readed_size += fread(&header.secondary_file, 1, 4, file);
-            readed_size += fread(&header.checksum, 1, 4, file);
+        readed_size += stream->read(header.jump, sizeof(header.jump));
+        readed_size += stream->read(&header.restart_vector, 4);
+        readed_size += stream->read(&header.time, 8);
+        readed_size += stream->read(&header.time_high, 4);
+        readed_size += stream->read(&header.rom_base, 4);
+        readed_size += stream->read(&header.rom_size, 4);
+        readed_size += stream->read(&header.rom_root_dir_list, 4);
+        readed_size += stream->read(&header.kern_data_address, 4);
+        readed_size += stream->read(&header.kern_limit, 4);
+        readed_size += stream->read(&header.primary_file, 4);
+        readed_size += stream->read(&header.secondary_file, 4);
+        readed_size += stream->read(&header.checksum, 4);
 
-            // From this section, all read are invalid
+        // From this section, all read are weird
+        // TODO: Check the spec again
+        readed_size += stream->read(&header.hardware, 4);
+        readed_size += stream->read(&header.lang, 8);
 
-            // Symbian says those are for testing though
-            readed_size += fread(&header.hardware, 1, 4, file);
-            readed_size += fread(&header.lang, 1, 8, file);
+        readed_size += stream->read(&header.kern_config_flags, 4);
+        readed_size += stream->read(&header.rom_exception_search_tab, 4);
+        readed_size += stream->read(&header.rom_header_size, 4);
 
-            readed_size += fread(&header.kern_config_flags, 1, 4, file);
-            readed_size += fread(&header.rom_exception_search_tab, 1, 4, file);
-            readed_size += fread(&header.rom_header_size, 1, 4, file);
+        readed_size += stream->read(&header.rom_section_header, 4);
+        readed_size += stream->read(&header.total_sv_data_size, 4);
+        readed_size += stream->read(&header.variant_file, 4);
+        readed_size += stream->read(&header.extension_file, 4);
+        readed_size += stream->read(&header.reloc_info, 4);
 
-            readed_size += fread(&header.rom_section_header, 1, 4, file);
-            readed_size += fread(&header.total_sv_data_size, 1, 4, file);
-            readed_size += fread(&header.variant_file, 1, 4, file);
-            readed_size += fread(&header.extension_file, 1, 4, file);
-            readed_size += fread(&header.reloc_info, 1, 4, file);
+        readed_size += stream->read(&header.old_trace_mask, 4);
+        readed_size += stream->read(&header.user_data_addr, 4);
+        readed_size += stream->read(&header.total_user_data_size, 4);
 
-            readed_size += fread(&header.old_trace_mask, 1, 4, file);
-            readed_size += fread(&header.user_data_addr, 1, 4, file);
-            readed_size += fread(&header.total_user_data_size, 1, 4, file);
+        readed_size += stream->read(&header.debug_port, 4);
+        readed_size += stream->read(&header.major, 1);
+        readed_size += stream->read(&header.minor, 1);
+        readed_size += stream->read(&header.build, 2);
 
-            readed_size += fread(&header.debug_port, 1, 4, file);
-            readed_size += fread(&header.major, 1, 1, file);
-            readed_size += fread(&header.minor, 1, 1, file);
-            readed_size += fread(&header.build, 1, 2, file);
+        readed_size += stream->read(&header.compress_type, 4);
+        readed_size += stream->read(&header.compress_size, 4);
+        readed_size += stream->read(&header.uncompress_size, 4);
+        readed_size += stream->read(&header.disabled_caps, 2);
+        readed_size += stream->read(&header.trace_mask, 8);
+        readed_size += stream->read(&header.initial_btrace_filter, 4);
 
-            readed_size += fread(&header.compress_type, 1, 4, file);
-            readed_size += fread(&header.compress_size, 1, 4, file);
-            readed_size += fread(&header.uncompress_size, 1, 4, file);
-            readed_size += fread(&header.disabled_caps, 4, 2, file);
-            readed_size += fread(&header.trace_mask, 4, 8, file);
-            readed_size += fread(&header.initial_btrace_filter, 1, 4, file);
+        readed_size += stream->read(&header.initial_btrace_buf, 4);
+        readed_size += stream->read(&header.initial_btrace_mode, 4);
 
-            readed_size += fread(&header.initial_btrace_buf, 1, 4, file);
-            readed_size += fread(&header.initial_btrace_mode, 1, 4, file);
+        readed_size += stream->read(&header.pageable_rom_start, 4);
+        readed_size += stream->read(&header.pageable_rom_size, 4);
 
-            readed_size += fread(&header.pageable_rom_start, 1, 4, file);
-            readed_size += fread(&header.pageable_rom_size, 1, 4, file);
+        readed_size += stream->read(&header.rom_page_idx, 4);
+        readed_size += stream->read(&header.compressed_unpaged_start, 4);
 
-            readed_size += fread(&header.rom_page_idx, 1, 4, file);
-            readed_size += fread(&header.compressed_unpaged_start, 1, 4, file);
+        readed_size += stream->read(&header.unpaged_compressed_size, 4);
+        readed_size += stream->read(&header.hcr_file_addr, 4);
+        readed_size += stream->read(header.spare, 4 * 36);
 
-            readed_size += fread(&header.unpaged_compressed_size, 1, 4, file);
-            readed_size += fread(&header.hcr_file_addr, 1, 4, file);
-            readed_size += fread(header.spare, 4, 36, file);
+        // TODO: Gonna do something with readed size
+        // I suppose i can void all these stream->read, but I don't like to do so
 
-            // Gonna do something with readed size
-            // I suppose i can void all these fread, but I don't like to do so
+        return header;
+    }
 
-            return header;
-        }
+    static rom_dir read_rom_dir(rom &romf, common::ro_stream *stream);
 
-        rom_dir read_rom_dir(rom &romf);
+    static rom_entry read_rom_entry(rom &romf, rom_dir *mother, common::ro_stream *stream) {
+        rom_entry entry;
 
-        rom_entry read_rom_entry(rom &romf, rom_dir *mother) {
-            rom_entry entry;
-            FILE *file = romf.handler;
+        std::size_t readed_size = 0;
 
-            std::size_t readed_size = 0;
+        readed_size += stream->read(&entry.size, 4);
+        readed_size += stream->read(&entry.address_lin, 4);
+        readed_size += stream->read(&entry.attrib, 1);
+        readed_size += stream->read(&entry.name_len, 1);
 
-            readed_size += fread(&entry.size, 1, 4, file);
-            readed_size += fread(&entry.address_lin, 1, 4, file);
-            readed_size += fread(&entry.attrib, 1, 1, file);
-            readed_size += fread(&entry.name_len, 1, 1, file);
-
-            if (readed_size != 10) {
-                LOG_ERROR("Can't read entry header!");
-                return entry;
-            }
-
-            readed_size = 0;
-
-            entry.name.resize(entry.name_len);
-
-            if (fread(entry.name.data(), 2, entry.name_len, file) != entry.name_len) {
-                LOG_ERROR("Can't read entry name!");
-            }
-
-            if (entry.attrib & (int)file_attrib::dir) {
-                auto crr_pos = ftell(file);
-                fseek(file, rom_to_offset(romf.header.rom_base, entry.address_lin), SEEK_SET);
-                entry.dir = std::make_optional<rom_dir>(read_rom_dir(romf));
-                entry.dir->name = entry.name;
-                mother->subdirs.push_back(entry.dir.value());
-                fseek(file, crr_pos, SEEK_SET);
-            }
-
+        if (readed_size != 10) {
+            LOG_ERROR("Can't read entry header!");
             return entry;
         }
 
-        rom_dir read_rom_dir(rom &romf) {
-            rom_dir dir;
+        readed_size = 0;
 
-            auto old_off = ftell(romf.handler);
+        entry.name.resize(entry.name_len);
 
-            if (fread(&dir.size, 1, 4, romf.handler) != 4) {
-                LOG_ERROR("Can't read directory size!");
-                return dir;
-            }
+        if (stream->read(entry.name.data(), 2 * entry.name_len) != (2 * entry.name_len)) {
+            LOG_ERROR("Can't read entry name!");
+        }
 
-            while (ftell(romf.handler) - old_off < dir.size) {
-                dir.entries.push_back(read_rom_entry(romf, &dir));
+        if (entry.attrib & static_cast<int>(file_attrib::dir)) {
+            const auto crr_pos = stream->tell();
+            stream->seek(rom_to_offset(romf.header.rom_base, entry.address_lin), common::seek_where::beg);
+            
+            entry.dir = std::make_optional<rom_dir>(read_rom_dir(romf, stream));
+            entry.dir->name = entry.name;
+            mother->subdirs.push_back(entry.dir.value());
+            
+            stream->seek(crr_pos, common::seek_where::beg);
+        }
 
-                if (ftell(romf.handler) % 4 != 0) {
-                    fseek(romf.handler, 2, SEEK_CUR);
-                }
-            }
+        return entry;
+    }
 
-            // Sort this for lower_bound binary search
-            std::sort(dir.entries.begin(), dir.entries.end(), [](const rom_entry &lhs, const rom_entry &rhs) {
-                return common::compare_ignore_case(lhs.name, rhs.name) == -1;
-            });
+    static rom_dir read_rom_dir(rom &romf, common::ro_stream *stream) {
+        rom_dir dir;
 
-            // Sort this for lower_bound binary search
-            std::sort(dir.subdirs.begin(), dir.subdirs.end(), [](const rom_dir &lhs, const rom_dir &rhs) {
-                return common::compare_ignore_case(lhs.name, rhs.name) == -1;
-            });
+        const auto old_off = stream->tell();
 
+        if (stream->read(&dir.size, 4) != 4) {
+            LOG_ERROR("Can't read directory size!");
             return dir;
         }
 
-        root_dir read_root_dir(rom &romf) {
-            root_dir rdir;
-            FILE *file = romf.handler;
+        while (stream->tell() - old_off < dir.size) {
+            dir.entries.push_back(read_rom_entry(romf, &dir, stream));
 
-            if (fread(&rdir.hardware_variant, 1, 4, file) != 4) {
-                LOG_ERROR("Can't read hardware variant of root directory!");
-                return rdir;
+            if (stream->tell() % 4 != 0) {
+                stream->seek(2, common::seek_where::cur);
             }
+        }
 
-            if (fread(&rdir.addr_lin, 1, 4, file) != 4) {
-                LOG_ERROR("Can't read linear address of root directory!");
-                return rdir;
-            }
+        // Sort this for lower_bound binary search
+        std::sort(dir.entries.begin(), dir.entries.end(), [](const rom_entry &lhs, const rom_entry &rhs) {
+            return common::compare_ignore_case(lhs.name, rhs.name) == -1;
+        });
 
-            fseek(file, rom_to_offset(romf.header.rom_base, rdir.addr_lin), SEEK_SET);
+        // Sort this for lower_bound binary search
+        std::sort(dir.subdirs.begin(), dir.subdirs.end(), [](const rom_dir &lhs, const rom_dir &rhs) {
+            return common::compare_ignore_case(lhs.name, rhs.name) == -1;
+        });
 
-            rdir.dir = read_rom_dir(romf);
+        return dir;
+    }
 
+    static root_dir read_root_dir(rom &romf, common::ro_stream *stream) {
+        root_dir rdir;
+
+        if (stream->read(&rdir.hardware_variant, 4) != 4) {
+            LOG_ERROR("Can't read hardware variant of root directory!");
             return rdir;
         }
 
-        root_dir_list read_root_dir_list(rom &romf) {
-            root_dir_list list;
-            FILE *file = romf.handler;
+        if (stream->read(&rdir.addr_lin, 4) != 4) {
+            LOG_ERROR("Can't read linear address of root directory!");
+            return rdir;
+        }
 
-            if (fread(&list.num_root_dirs, 1, 4, file) != 4) {
-                LOG_ERROR("Can't read number of directories in root directory!");
-                return list;
-            }
+        stream->seek(rom_to_offset(romf.header.rom_base, rdir.addr_lin), common::seek_where::beg);
+        rdir.dir = read_rom_dir(romf, stream);
 
-            for (int i = 0; i < list.num_root_dirs; i++) {
-                auto last_pos = ftell(file);
-                list.root_dirs.push_back(read_root_dir(romf));
-                fseek(file, last_pos, SEEK_SET);
-            }
+        return rdir;
+    }
 
-            // Sort this for lower_bound binary search
-            std::sort(list.root_dirs.begin(), list.root_dirs.end(), [](const root_dir &lhs, const root_dir &rhs) {
-                return (common::compare_ignore_case(lhs.dir.name, rhs.dir.name) == -1);
-            });
+    static root_dir_list read_root_dir_list(rom &romf, common::ro_stream *stream) {
+        root_dir_list list;
 
+        if (stream->read(&list.num_root_dirs, 4) != 4) {
+            LOG_ERROR("Can't read number of directories in root directory!");
             return list;
         }
 
-        // Loading rom supports only uncompressed rn
-        std::optional<rom> load_rom(const std::string &path) {
-            rom romf;
-            romf.handler = fopen(path.c_str(), "rb");
-
-            if (!romf.handler) {
-                return std::optional<rom>{};
-            }
-
-            romf.header = read_rom_header(romf.handler);
-
-            // Seek to the first entry
-            fseek(romf.handler, rom_to_offset(romf.header.rom_base, romf.header.rom_root_dir_list), SEEK_SET);
-
-            romf.root = read_root_dir_list(romf);
-
-            return romf;
+        for (int i = 0; i < list.num_root_dirs; i++) {
+            const auto last_pos = stream->tell();
+            list.root_dirs.push_back(read_root_dir(romf, stream));
+            stream->seek(last_pos, common::seek_where::beg);
         }
+
+        // Sort this for lower_bound binary search
+        std::sort(list.root_dirs.begin(), list.root_dirs.end(), [](const root_dir &lhs, const root_dir &rhs) {
+            return (common::compare_ignore_case(lhs.dir.name, rhs.dir.name) == -1);
+        });
+
+        return list;
+    }
+
+    std::optional<rom> load_rom(common::ro_stream *stream) {
+        rom romf;
+        romf.header = read_rom_header(stream);
+
+        // Seek to the first entry
+        stream->seek(rom_to_offset(romf.header.rom_base, romf.header.rom_root_dir_list), 
+            common::seek_where::beg);
+
+        romf.root = read_root_dir_list(romf, stream);
+
+        return romf;
     }
 }
