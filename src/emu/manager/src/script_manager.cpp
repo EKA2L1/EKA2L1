@@ -109,16 +109,16 @@ namespace eka2l1::manager {
         scripting::set_current_instance(crr_instance);
     }
 
-    void script_manager::call_svcs(int svc_num) {
+    void script_manager::call_svcs(int svc_num, int time) {
         std::lock_guard<std::mutex> guard(smutex);
 
         eka2l1::system *crr_instance = scripting::get_current_instance();
         eka2l1::scripting::set_current_instance(sys);
 
         for (const auto &svc_function : svc_functions) {
-            if (svc_function.first == svc_num) {
+            if (std::get<0>(svc_function) == svc_num && std::get<1>(svc_function) == time) {
                 try {
-                    svc_function.second();
+                    std::get<2>(svc_function)();
                 } catch (py::error_already_set &exec) {
                     LOG_WARN("Script interpreted error: {}", exec.what());
                 }
@@ -132,8 +132,8 @@ namespace eka2l1::manager {
         panic_functions.push_back(panic_func(panic_cage, func));
     }
 
-    void script_manager::register_svc(int svc_num, pybind11::function &func) {
-        svc_functions.push_back(svc_func(svc_num, func));
+    void script_manager::register_svc(int svc_num, int time, pybind11::function &func) {
+        svc_functions.push_back(svc_func(svc_num, time, func));
     }
 
     void script_manager::register_reschedule(pybind11::function &func) {

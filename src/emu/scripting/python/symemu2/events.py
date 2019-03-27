@@ -36,13 +36,17 @@ def emulatorPanicInvoke(panicName):
     return invokeDecorator
     
 # The function registed with this decorator will be invoked when
-# a system call happens. A svc number is passed to function
-def emulatorSystemCallInvoke(svcNum):
+# a system call happens. A svc number is passed to function.
+#
+# Also, an optional time argument is available.
+# - 0 means this hook will be invoked before executing this system call.
+# - 1 means this hook will be invoked after executing this system call.
+def emulatorSystemCallInvoke(svcNum, time = 0):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
             return funcToInvoke
 
-        symemu.registerSvcInvokement(svcNum, funcToInvoke)
+        symemu.registerSvcInvokement(svcNum, time, funcToInvoke)
 
         return funcWrapper
 

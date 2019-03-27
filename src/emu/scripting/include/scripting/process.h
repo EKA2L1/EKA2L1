@@ -20,8 +20,8 @@ namespace eka2l1::scripting {
     public:
         process(uint64_t handle);
 
-        bool read_process_memory(const size_t addr, std::vector<char> &buffer, const size_t size);
-        bool write_process_memory(const size_t addr, std::vector<char> buffer);
+        bool read_process_memory(const std::uint32_t addr, std::vector<char> &buffer, const size_t size);
+        bool write_process_memory(const std::uint32_t addr, std::vector<char> buffer);
 
         std::string get_executable_path();
         std::string get_name();

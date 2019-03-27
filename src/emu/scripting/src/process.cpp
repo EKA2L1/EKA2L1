@@ -36,7 +36,7 @@ namespace eka2l1::scripting {
         : process_handle(std::move(*reinterpret_cast<eka2l1::process_ptr *>(handle))) {
     }
 
-    bool process::read_process_memory(const size_t addr, std::vector<char> &buffer, const size_t size) {
+    bool process::read_process_memory(const std::uint32_t addr, std::vector<char> &buffer, const size_t size) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
 
         if (!ptr) {
@@ -49,7 +49,7 @@ namespace eka2l1::scripting {
         return true;
     }
 
-    bool process::write_process_memory(const size_t addr, std::vector<char> buffer) {
+    bool process::write_process_memory(const std::uint32_t addr, std::vector<char> buffer) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
 
         if (!ptr) {

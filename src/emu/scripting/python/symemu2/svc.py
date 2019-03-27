@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from enum import enum
+from enum import Enum
 
 class Epoc9Svc(Enum):
     WaitForAnyRequest = 0x00800000
@@ -29,7 +29,10 @@ class Epoc9Svc(Enum):
     DebugMask = 0x0080000C
     DebugMaskIndex = 0x0080000D
     UserSvrRomHeaderAddress = 0x00800013
+    UserSvrRomRootDirAddress = 0x00800014
+    SafeInc = 0x00800015
     UTCOffset = 0x00800019
+    GetGlobalUserData = 0x0080001A
     ObjectNext = 0x00
     ChunkBase = 0x01
     ChunkMaxSize = 0x03
@@ -47,6 +50,10 @@ class Epoc9Svc(Enum):
     SessionSendSync = 0x4D 
     DllTls = 0x4E
     HalFunction = 0x4F
+    ProcessCmdLineLength = 0x52
+    DebugPrint = 0x56
+    ThreadContext = 0x5E
+    ProcessGetMemoryInfo = 0x5F
     HandleClose = 0x6A
     ProcessType = 0x64
     ThreadCreate = 0x68
@@ -74,6 +81,11 @@ class Epoc9Svc(Enum):
     LibraryAttach = 0x9E
     LibraryAttached = 0x9F
     StaticCallList = 0xA0
+    LastThreadHandle = 0xA3
+    ThreadRendezvous = 0xA4
+    ProcessRendezvous = 0xA5
+    MessageGetDesLength = 0xA7
+    MessageIpcCopy = 0xA8
     MessageKill = 0xAC
     PropertyDefine = 0xBC
     PropertyAttach = 0xBE
@@ -91,3 +103,6 @@ class Epoc9Svc(Enum):
     ProcessDataParameterLength = 0xD2
     LeaveStart = 0xDF
     LeaveEnd = 0xE0
+
+    def __int__(self):
+        return self.value

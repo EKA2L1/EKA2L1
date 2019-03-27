@@ -11,12 +11,14 @@ is different way to do it.
        - **emulatorSystemCallInvoke**
        - **emulatorPanicInvoke**
        - **emulatorRescheduleInvoke**
+       - **emulatorBreakpointInvoke**
+       - **emulatorEpocFunctionInvoke**
    - See examples (*hello* files), for more information.
    - Scripts should be in the scripts folder. The *scripts* folder must be in the same directory as executable.
 
 ### Logging
    - Logging has the similar syntax like in Python. You can preformat it first or let EKA2L1 do it for you
-   - Use logging through function **emulog**. For e.g . **emulog('Hi, Hello EkA2L1, i just pee xd')**
+   - Use logging through function **emulog**. For e.g . **emulog('Hi, Hello EKA2L1 {}!', 5)**
 
 ### Process
    - Access to process is freely. You can read or write to an address space, if you can confirm it's committed.
@@ -27,8 +29,7 @@ is different way to do it.
 implementation of Symbian. You should make multiple hook for each OS version or not if you can confirm the number is not going to be changed.
 
 ## Symemu2
-   - Unlike Symemu, Symemu2 is compiled to a pyd and not related at all to Symemu. It's a standalone, and provides useful utilities
-to deal with Symbian stuff. For example, you can use to extract a Symbian game information
+   - Unlike Symemu, Symemu2 is compiled to a pyd and not related at all to Symemu. It's a standalone, and provides useful utilities to deal with Symbian stuff. For example, you can use to extract a Symbian game information
    - Some modules are written by hand that will help with scripting
    
 ## FAQ

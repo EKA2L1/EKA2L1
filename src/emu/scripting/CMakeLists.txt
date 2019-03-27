@@ -31,7 +31,7 @@ if (UNIX OR APPLE)
 endif()
 
 target_include_directories(symemu_common PUBLIC include)
-target_link_libraries(symemu_common PRIVATE common pybind11)
+target_link_libraries(symemu_common PRIVATE common epocio pybind11)
 
 if (UNIX OR APPLE)
     target_link_libraries(symemu_common PRIVATE util)

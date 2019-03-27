@@ -569,10 +569,14 @@ namespace eka2l1 {
             }
 
 #ifdef ENABLE_SCRIPTING
-            sys->get_manager_system()->get_script_manager()->call_svcs(svcnum);
+            sys->get_manager_system()->get_script_manager()->call_svcs(svcnum, 0);
 #endif
 
             func.func(sys);
+
+#ifdef ENABLE_SCRIPTING
+            sys->get_manager_system()->get_script_manager()->call_svcs(svcnum, 1);
+#endif
 
             return true;
         }

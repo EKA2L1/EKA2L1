@@ -15,7 +15,7 @@ namespace eka2l1 {
 
 namespace eka2l1::manager {
     using panic_func = std::pair<std::string, pybind11::function>;
-    using svc_func = std::pair<int, pybind11::function>;
+    using svc_func = std::tuple<int, int, pybind11::function>;
 
     using func_list = std::vector<pybind11::function>;
 
@@ -51,13 +51,13 @@ namespace eka2l1::manager {
         bool import_module(const std::string &path);
 
         void call_panics(const std::string &panic_cage, int err_code);
-        void call_svcs(int svc_num);
+        void call_svcs(int svc_num, int time);
         void call_breakpoints(const uint32_t addr);
 
         void call_reschedules();
 
         void register_panic(const std::string &panic_cage, pybind11::function &func);
-        void register_svc(int svc_num, pybind11::function &func);
+        void register_svc(int svc_num, int time, pybind11::function &func);
         void register_reschedule(pybind11::function &func);
         void register_library_hook(const std::string &name, const uint32_t ord, pybind11::function &func);
         void register_breakpoint(const uint32_t addr, pybind11::function &func);
