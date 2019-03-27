@@ -65,6 +65,15 @@ namespace eka2l1 {
             nof_info_.sts = ctx->msg->request_sts;
         }
     }
+
+    void akn_skin_server_session::do_cancel(service::ipc_context *ctx) {
+        // If a handler is set and no pending notifications
+        if (client_handler_ && nof_list_.empty()) {
+            nof_info_.complete(KErrCancel);
+        }
+
+        ctx->set_request_status(KErrNone);
+    }
     
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
@@ -75,6 +84,11 @@ namespace eka2l1 {
 
         case epoc::akn_skin_server_next_event: {
             do_next_event(ctx);
+            break;
+        }
+
+        case epoc::akn_skin_server_cancel: {
+            do_cancel(ctx);
             break;
         }
         

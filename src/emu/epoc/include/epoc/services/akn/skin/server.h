@@ -48,6 +48,15 @@ namespace eka2l1 {
          */
         void do_next_event(service::ipc_context *ctx);
 
+        /**
+         * \brief Cancel a pending signal request, if there is one available.
+         * 
+         * It will be cancel only if 2 conditions are sastified:
+         * - No pending notifications.
+         * - A notify handler must be set.
+         */
+        void do_cancel(service::ipc_context *ctx);
+
     public:
         explicit akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid);
         void fetch(service::ipc_context *ctx) override;
