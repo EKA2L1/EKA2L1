@@ -77,8 +77,6 @@ namespace eka2l1 {
         class session;
     }
 
-    using session_ptr = std::shared_ptr<service::session>;
-
     enum class ipc_message_status {
         delivered,
         accepted,
@@ -93,7 +91,7 @@ namespace eka2l1 {
         thread_ptr own_thr;
         int function;
         ipc_arg args;
-        session_ptr msg_session;
+        service::session *msg_session;
         int session_ptr_lle = 0; // This should be null because the server check for it
 
         eka2l1::ptr<epoc::request_status> request_sts;

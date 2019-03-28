@@ -151,7 +151,7 @@ namespace eka2l1::epoc {
         friend struct window;
         friend struct window_group;
 
-        session_ptr guest_session;
+        service::session *guest_session;
 
         std::atomic<ws::uid> uid_counter;
 
@@ -209,7 +209,7 @@ namespace eka2l1::epoc {
 
         bool delete_object(const std::uint32_t handle);
 
-        explicit window_server_client(session_ptr guest_session,
+        explicit window_server_client(service::session *guest_session,
             thread_ptr own_thread);
 
         eka2l1::window_server &get_ws() {

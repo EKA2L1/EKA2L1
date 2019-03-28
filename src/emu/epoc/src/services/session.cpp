@@ -134,7 +134,7 @@ namespace eka2l1 {
 
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = kern->get_by_id<service::session>(uid);
+            smsg.real_msg->msg_session = this;
             smsg.real_msg->session_ptr_lle = cookie_address;
 
             return svr->deliver(smsg);

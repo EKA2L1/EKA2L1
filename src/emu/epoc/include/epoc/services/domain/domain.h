@@ -35,7 +35,7 @@ namespace eka2l1 {
         hierarchy_ptr hierarchy;
         property_ptr state_prop;
 
-        std::vector<session_ptr> attached_sessions;
+        std::vector<service::session *> attached_sessions;
 
     private:
         void do_members_transition();
@@ -46,8 +46,8 @@ namespace eka2l1 {
         void complete_children_transition();
         void complete_domain_transition();
 
-        bool is_notification_enabled(const session_ptr ss);
-        void set_notification_option(const session_ptr ss, const bool val);
+        bool is_notification_enabled(service::session *ss);
+        void set_notification_option(service::session *ss, const bool val);
 
         void cancel_transition();
 
@@ -61,7 +61,7 @@ namespace eka2l1 {
         ~domain();
 
         /* Functions */
-        void attach_session(session_ptr ss);
+        void attach_session(service::session *ss);
         domain_ptr lookup_child(const std::uint16_t id);
 
         int get_previous_state() {
@@ -78,8 +78,8 @@ namespace eka2l1 {
         eka2l1::memory_system *mem;
 
         domain_ptr root_domain;
-        session_ptr control_session;
-        session_ptr observe_session;
+        service::session *control_session;
+        service::session *observe_session;
 
         TDmTraverseDirection traverse_dir;
         domain_ptr trans_domain;
