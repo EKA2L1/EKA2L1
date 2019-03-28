@@ -40,140 +40,123 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
 
     py::class_<scripting::process>(m, "Process")
         .def(py::init([](uint64_t process_ptr) { return std::make_unique<scripting::process>(process_ptr); }))
-        .def("readProcessMemory", &scripting::process::read_process_memory,
-            R"pbdoc(
-        Read at the specified address in the process's address space.
+        .def("readProcessMemory", &scripting::process::read_process_memory, R"pbdoc(
+            Read at the specified address in the process's address space.
         )pbdoc")
-        .def("writeProcessMemory", &scripting::process::write_process_memory,
-            R"pbdoc(
-        Write at the specified address in the process's address space.
+        .def("writeProcessMemory", &scripting::process::write_process_memory, R"pbdoc(
+            Write at the specified address in the process's address space.
         )pbdoc")
-        .def("getExecutablePath", &scripting::process::get_executable_path,
-            R"pbdoc(
-        Get the executable path in Symbian filesystem.
+        .def("getExecutablePath", &scripting::process::get_executable_path, R"pbdoc(
+            Get the executable path in Symbian filesystem.
         )pbdoc")
-        .def("getName", &scripting::process::get_name,
-            R"pbdoc(
-        Get the current process name
+        .def("getName", &scripting::process::get_name, R"pbdoc(
+            Get the process's name
         )pbdoc")
-        .def("getThreadList", &scripting::process::get_thread_list,
-            R"pbdoc(
-        Get the thread list.
+        .def("getThreadList", &scripting::process::get_thread_list, R"pbdoc(
+            Get the thread list.
         )pbdoc");
 
     py::class_<scripting::thread>(m, "Thread")
         .def(py::init([](uint64_t thread_ptr) { return std::make_unique<scripting::thread>(thread_ptr); }))
-        .def("getName", &scripting::thread::get_name,
-            R"pbdoc(
+        .def("getName", &scripting::thread::get_name,R"pbdoc(
             Get the name of thread
-            )pbdoc")
-        .def("getRegister", &scripting::thread::get_register,
-            R"pbdoc(
+        )pbdoc")
+        .def("getRegister", &scripting::thread::get_register, R"pbdoc(
             Get a register of thread context
-            )pbdoc")
-        .def("getPc", &scripting::thread::get_pc,
-            R"pbdoc(
+        )pbdoc")
+        .def("getPc", &scripting::thread::get_pc, R"pbdoc(
             Get PC of thread context
-            )pbdoc")
-        .def("getSp", &scripting::thread::get_sp,
-            R"pbdoc(
+        )pbdoc")
+        .def("getSp", &scripting::thread::get_sp, R"pbdoc(
             Get PC of thread context
-            )pbdoc")
-        .def("getLr", &scripting::thread::get_lr,
-            R"pbdoc(
+        )pbdoc")
+        .def("getLr", &scripting::thread::get_lr, R"pbdoc(
             Get PC of thread context
-            )pbdoc")
-        .def("getLeaveDepth", &scripting::thread::get_leave_depth,
-            R"pbdoc(
+        )pbdoc")
+        .def("getLeaveDepth", &scripting::thread::get_leave_depth, R"pbdoc(
             Get the leave depth of thread
-            )pbdoc")
-        .def("getExitReason", &scripting::thread::get_exit_reason,
-            R"pbdoc(
+        )pbdoc")
+        .def("getExitReason", &scripting::thread::get_exit_reason, R"pbdoc(
             Get the exit reason of thread
-            )pbdoc")
-        .def("getOwningProcess", &scripting::thread::get_owning_process,
-            R"pbdoc(
+        )pbdoc")
+        .def("getOwningProcess", &scripting::thread::get_owning_process, R"pbdoc(
             Get the own process of thread.
-            )pbdoc")
-        .def("getState", &scripting::thread::get_state,
-            R"pbdoc(
-            Get the own process of thread.
-            )pbdoc")
+        )pbdoc")
+        .def("getState", &scripting::thread::get_state, R"pbdoc(
+            Get the current state of the thread. 
+            
+            States are defined in ThreadState enum.
+        )pbdoc")
         .def("getPriority", &scripting::thread::get_priority,
-            R"pbdoc(
+        R"pbdoc(
             Get the own process of thread.
-            )pbdoc");
+        )pbdoc");
 
     py::class_<scripting::cpu>(m, "Cpu")
-        .def_static("getReg", &scripting::cpu::get_register,
-            R"pbdoc(
+        .def_static("getReg", &scripting::cpu::get_register, R"pbdoc(
             Get a register of the CPU.
-            )pbdoc")
-        .def_static("getCpsr", &scripting::cpu::get_pc,
-            R"pbdoc(
+        )pbdoc")
+        .def_static("getCpsr", &scripting::cpu::get_pc, R"pbdoc(
             Get CPU's cpsr.
-            )pbdoc")
-        .def_static("getLr", &scripting::cpu::get_lr,
-            R"pbdoc(
+        )pbdoc")
+        .def_static("getLr", &scripting::cpu::get_lr, R"pbdoc(
             Get CPU's lr.
-            )pbdoc")
-        .def_static("getSp", &scripting::cpu::get_sp,
-            R"pbdoc(
+        )pbdoc")
+        .def_static("getSp", &scripting::cpu::get_sp, R"pbdoc(
             Get CPU's sp.
-            )pbdoc");
+        )pbdoc");
 
     m.def("emulog", &scripting::emulog, R"pbdoc(
         Log to the emulator's logging system
-        )pbdoc");
+    )pbdoc");
 
-    m.def("registerPanicInvokement", &scripting::register_panic_invokement,
-        R"pbdoc(
+    m.def("registerPanicInvokement", &scripting::register_panic_invokement, R"pbdoc(
         Register a function to be called when a panic happen
-        )pbdoc");
+    )pbdoc");
 
-    m.def("registerSvcInvokement", &scripting::register_svc_invokement,
-        R"pbdoc(
+    m.def("registerSvcInvokement", &scripting::register_svc_invokement, R"pbdoc(
         Register a function to be called when a specific SVC is called
-        )pbdoc");
+    )pbdoc");
 
-    m.def("registerLibraryInvokement", &scripting::register_lib_invokement,
-        R"pbdoc(
+    m.def("registerLibraryInvokement", &scripting::register_lib_invokement, R"pbdoc(
         Register a function to be called when a library function is called
-        )pbdoc");
+    )pbdoc");
 
-    m.def("registerBreakpointInvokement", &scripting::register_breakpoint_invokement,
-        R"pbdoc(
+    m.def("registerBreakpointInvokement", &scripting::register_breakpoint_invokement, R"pbdoc(
         Register a function to be called when a breakpoint is hit.
+        
         Only works on fallback (Dynarmic) and Unicorn JIT.
-        )pbdoc");
+    )pbdoc");
 
-    m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement,
-        R"pbdoc(
+    m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement, R"pbdoc(
         Register a function to be called right before a reschedule is started
-        )pbdoc");
+    )pbdoc");
 
-    m.def("getProcessesList", &scripting::get_process_list,
-        R"pbdoc(
+    m.def("getProcessesList", &scripting::get_process_list, R"pbdoc(
         Get a list of processes currently running
-        )pbdoc");
+    )pbdoc");
 
-    m.def("readByte", &scripting::read_byte,
-        R"pbdoc(
+    m.def("readByte", &scripting::read_byte, R"pbdoc(
         Read a byte from current process address space.
-        )pbdoc");
+    )pbdoc");
 
-    m.def("readDword", &scripting::read_dword,
-        R"pbdoc(
+    m.def("readDword", &scripting::read_dword, R"pbdoc(
         Read a dword from current process address space.
-        )pbdoc");
+    )pbdoc");
 
-    m.def("readWord", &scripting::read_word,
-        R"pbdoc(
+    m.def("readWord", &scripting::read_word, R"pbdoc(
         Read a word from current process address space.
-        )pbdoc");
+    )pbdoc");
 
-    m.def("readQword", &scripting::read_qword,
-        R"pbdoc(
+    m.def("readQword", &scripting::read_qword, R"pbdoc(
         Read a qword from current process address space.
-        )pbdoc");
+    )pbdoc");
+
+    m.def("getCurrentProcess", &scripting::get_current_process, R"pbdoc(
+        Get kernel's current process.
+    )pbdoc");
+        
+    m.def("getCurrentThread", &scripting::get_current_thread, R"pbdoc(
+        Get kernel's current thread.
+    )pbdoc");
 }

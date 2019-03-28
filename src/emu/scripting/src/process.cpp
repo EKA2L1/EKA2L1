@@ -32,8 +32,8 @@
 namespace scripting = eka2l1::scripting;
 
 namespace eka2l1::scripting {
-    process::process(uint64_t handle)
-        : process_handle(std::move(*reinterpret_cast<eka2l1::process_ptr *>(handle))) {
+    process::process(std::uint64_t handle)
+        : process_handle(reinterpret_cast<eka2l1::kernel::process *>(handle)) {
     }
 
     bool process::read_process_memory(const std::uint32_t addr, std::vector<char> &buffer, const size_t size) {
@@ -77,7 +77,7 @@ namespace eka2l1::scripting {
 
         for (const auto &thr : threads) {
             if (thr->owning_process() == &(*process_handle)) {
-                script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(&thr)));
+                script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(&(*thr))));
             }
         }
 
@@ -91,9 +91,14 @@ namespace eka2l1::scripting {
         std::vector<std::unique_ptr<scripting::process>> script_processes;
 
         for (const auto &pr : processes) {
-            script_processes.push_back(std::make_unique<scripting::process>((uint64_t)(&pr)));
+            script_processes.push_back(std::make_unique<scripting::process>((uint64_t)(&(*pr))));
         }
 
         return script_processes;
+    }
+    
+    std::unique_ptr<eka2l1::scripting::process> get_current_process() {
+        return std::make_unique<scripting::process>(reinterpret_cast<std::uint64_t>(
+            get_current_instance()->get_kernel_system()->crr_process()));
     }
 }

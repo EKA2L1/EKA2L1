@@ -20,9 +20,11 @@
 
 #include <pybind11/embed.h>
 
+#include <scripting/instance.h>
 #include <scripting/process.h>
 #include <scripting/thread.h>
 
+#include <epoc/epoc.h>
 #include <epoc/kernel/thread.h>
 #include <epoc/kernel.h>
 
@@ -30,7 +32,7 @@ namespace scripting = eka2l1::scripting;
 
 namespace eka2l1::scripting {
     thread::thread(uint64_t handle)
-        : thread_handle(std::move(*reinterpret_cast<eka2l1::thread_ptr *>(handle))) {
+        : thread_handle(reinterpret_cast<eka2l1::kernel::thread*>(handle)) {
     }
 
     std::string thread::get_name() {
@@ -78,10 +80,12 @@ namespace eka2l1::scripting {
     }
 
     std::unique_ptr<scripting::process> thread::get_owning_process() {
-        process_ptr pr = thread_handle->get_kernel_object_owner()->get_by_id<kernel::process>(
-            thread_handle->owning_process()->unique_id());
-
-        return std::make_unique<scripting::process>((uint64_t)(
-            &pr));
+        kernel::process *pr = thread_handle->owning_process();
+        return std::make_unique<scripting::process>(reinterpret_cast<uint64_t>(pr));
+    }
+    
+    std::unique_ptr<eka2l1::scripting::thread> get_current_thread() {
+        return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(
+            get_current_instance()->get_kernel_system()->crr_thread()));
     }
 }
