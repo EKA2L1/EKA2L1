@@ -237,7 +237,9 @@ namespace eka2l1 {
                 ptr<void> allocator = 0,
                 thread_priority pri = priority_normal);
 
-            ~thread();
+            ~thread() {}
+
+            void destroy() override;
 
             // Physically we can't compare thread.
             bool operator>(const thread &rhs);

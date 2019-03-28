@@ -117,6 +117,7 @@ namespace eka2l1 {
         });                                                                                                      \
         if (res == obj_map.end())                                                                                \
             return false;                                                                                        \
+        (*res)->destroy();                                                                                       \
         obj_map.erase(res);                                                                                      \
         return true;                                                                                             \
     }

@@ -312,7 +312,7 @@ namespace eka2l1 {
             scheduler = kern->get_thread_scheduler();
         }
 
-        thread::~thread() {
+        void thread::destroy() {
             own_process->decrease_thread_count();
         }
 

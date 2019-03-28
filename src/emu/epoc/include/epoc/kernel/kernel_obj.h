@@ -102,6 +102,7 @@ namespace eka2l1 {
         public:
             virtual ~kernel_obj() {}
             virtual void close() {}
+            virtual void destroy() {}
 
             /*! \brief Get the name of the object.
              * \returns Object name.

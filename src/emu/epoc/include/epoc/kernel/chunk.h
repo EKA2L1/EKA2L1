@@ -99,10 +99,6 @@ namespace eka2l1 {
                 const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
                 chunk_attrib attrib, const bool is_heap = false);
 
-            ~chunk() override {
-                destroy();
-            }
-
             /*! \brief Commit to a disconnected chunk. 
 			 *
 			 * Offset and size SHOULD be aligned with the page size, 
@@ -126,7 +122,7 @@ namespace eka2l1 {
             bool decommit(uint32_t offset, size_t size);
 
             /*! \brief Destroy the chunk */
-            void destroy();
+            void destroy() override;
 
             chunk_type get_chunk_type() const {
                 return type;
