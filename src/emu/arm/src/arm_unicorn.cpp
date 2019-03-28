@@ -80,20 +80,16 @@ void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int
         return;
     }
 
-    eka2l1::memory_system *mem = jit->get_memory_sys();
     LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
-    eka2l1::arm::arm_interface::thread_context context_debug;
 
     if (jit == nullptr) {
         LOG_ERROR("Code hook failed: User Data was null");
         return;
     }
-
-    jit->save_context(context_debug);
 
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
