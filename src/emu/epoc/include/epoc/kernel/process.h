@@ -46,7 +46,6 @@ namespace eka2l1 {
         using romimg_ptr = std::shared_ptr<eka2l1::loader::romimg>;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
 
     namespace common {
@@ -135,12 +134,12 @@ namespace eka2l1::kernel {
         int exit_reason = 0;
 
         struct logon_request_form {
-            thread_ptr requester;
+            kernel::thread *requester;
             eka2l1::ptr<epoc::request_status> request_status;
 
             logon_request_form() = default;
 
-            explicit logon_request_form(thread_ptr thr, eka2l1::ptr<epoc::request_status> rsts)
+            explicit logon_request_form(kernel::thread *thr, eka2l1::ptr<epoc::request_status> rsts)
                 : requester(thr)
                 , request_status(rsts) {}
 
@@ -240,7 +239,7 @@ namespace eka2l1::kernel {
         void set_priority(const process_priority new_pri);
 
         void wait_dll_lock();
-        void signal_dll_lock(thread_ptr callee);
+        void signal_dll_lock(kernel::thread *callee);
 
         int get_exit_reason() const {
             return exit_reason;

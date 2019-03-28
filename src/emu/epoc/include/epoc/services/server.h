@@ -99,7 +99,7 @@ namespace eka2l1 {
             std::vector<server_msg> delivered_msgs;
 
             /** The thread own this server */
-            thread_ptr owning_thread;
+            //thread_ptr owning_thread;
 
             /** Placeholder message uses for processing */
         protected:
@@ -110,7 +110,7 @@ namespace eka2l1 {
             eka2l1::ptr<epoc::request_status> request_status = 0;
             eka2l1::ptr<message2> request_data;
 
-            thread_ptr request_own_thread;
+            kernel::thread *request_own_thread;
             ipc_msg_ptr request_msg;
 
             void finish_request_lle(ipc_msg_ptr &session_msg, bool notify_owner);

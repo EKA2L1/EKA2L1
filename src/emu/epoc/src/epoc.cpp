@@ -426,8 +426,6 @@ namespace eka2l1 {
 
             reschedule_pending = false;
         } else {
-            kern.crr_process().reset();
-
             exit = true;
             return 0;
         }

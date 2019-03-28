@@ -43,7 +43,7 @@ namespace eka2l1 {
             for (size_t i = 0; i < signal_count; i++) {
                 if (++avail_count <= 0) {
                     if (waits.size() != 0) {
-                        thread_ptr ready_thread = std::move(waits.top());
+                        kernel::thread *ready_thread = std::move(waits.top());
                         assert(ready_thread->wait_obj == this);
 
                         ready_thread->get_scheduler()->resume(ready_thread);
@@ -59,7 +59,7 @@ namespace eka2l1 {
         }
 
         void semaphore::wait() {
-            thread_ptr calling_thr = kern->crr_thread();
+            kernel::thread *calling_thr = kern->crr_thread();
             --avail_count;
 
             if (avail_count < 0) {
@@ -84,19 +84,17 @@ namespace eka2l1 {
                 return false;
             }
 
-            const auto thr_ite = std::find_if(waits.begin(), waits.end(),
-                [thr](const thread_ptr &wait_thr) { return wait_thr.get() == thr; });
+            const auto thr_ite = std::find(waits.begin(), waits.end(), thr);
 
             if (thr_ite == waits.end()) {
                 LOG_ERROR("Thread given is not found in waits");
                 return false;
             }
 
-            thread_ptr thr_sptr = *thr_ite; // Make a copy of this
-            waits.remove(thr_sptr);
-            suspended.push_back(thr_sptr);
+            waits.remove(thr);
+            suspended.push_back(thr);
 
-            thr_sptr->state = thread_state::wait_fast_sema_suspend;
+            thr->state = thread_state::wait_fast_sema_suspend;
 
             return true;
         }
@@ -108,19 +106,17 @@ namespace eka2l1 {
                 return false;
             }
 
-            const auto thr_ite = std::find_if(suspended.begin(), suspended.end(),
-                [thr](const thread_ptr &sus_thr) { return sus_thr.get() == thr; });
+            const auto thr_ite = std::find(suspended.begin(), suspended.end(), thr);
 
             if (thr_ite == waits.end()) {
                 LOG_ERROR("Thread given is not found in suspended");
                 return false;
             }
 
-            thread_ptr thr_sptr = *thr_ite; // Make a copy of this
             suspended.erase(thr_ite);
-            waits.push(thr_sptr);
+            waits.push(thr);
 
-            thr_sptr->state = thread_state::wait_fast_sema;
+            thr->state = thread_state::wait_fast_sema;
 
             return true;
         }

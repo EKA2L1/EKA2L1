@@ -226,7 +226,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessDataParameterLength, TInt aSlot) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr crr_process = kern->crr_process();
+        kernel::process *crr_process = kern->crr_process();
 
         if (aSlot >= 16 || aSlot < 0) {
             LOG_ERROR("Invalid slot (slot: {} >= 16 or < 0)", aSlot);
@@ -245,7 +245,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr pr = kern->crr_process();
+        kernel::process *pr = kern->crr_process();
 
         if (aSlot >= 16 || aSlot < 0) {
             LOG_ERROR("Invalid slot (slot: {} >= 16 or < 0)", aSlot);
@@ -324,7 +324,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        eka2l1::process_ptr crr_process = kern->crr_process();
+        kernel::process *crr_process = kern->crr_process();
 
         std::u16string cmdline = pr->get_cmd_args();
         char *data_ptr = data->get_pointer(crr_process);
@@ -417,7 +417,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
         eka2l1::kernel::thread_local_data dat = current_local_data(sys);
-        thread_ptr thr = sys->get_kernel_system()->crr_thread();
+        kernel::thread *thr = sys->get_kernel_system()->crr_thread();
 
         for (const auto &tls : dat.tls_slots) {
             if (tls.handle == aHandle) {
@@ -440,7 +440,7 @@ namespace eka2l1::epoc {
 
         slot->pointer = aPtr;
 
-        thread_ptr thr = sys->get_kernel_system()->crr_thread();
+        kernel::thread *thr = sys->get_kernel_system()->crr_thread();
 
         LOG_TRACE("TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<TUint>(aHandle), aPtr.ptr_address(),
             thr->name());
@@ -449,7 +449,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, DllFreeTLS, TInt iHandle) {
-        thread_ptr thr = sys->get_kernel_system()->crr_thread();
+        kernel::thread *thr = sys->get_kernel_system()->crr_thread();
         thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
 
         LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", static_cast<TUint>(iHandle), thr->name());
@@ -635,8 +635,7 @@ namespace eka2l1::epoc {
         const ipc_arg_type type = context.msg->args.get_arg_type(aParam);
 
         if ((int)type & (int)ipc_arg_type::flag_des) {
-            process_ptr own_pr = msg->own_thr->owning_process();
-
+            kernel::process *own_pr = msg->own_thr->owning_process();
             return eka2l1::ptr<epoc::des8>(msg->args.args[aParam]).get(own_pr)->get_max_length(own_pr);
         }
 
@@ -763,7 +762,7 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
-    void query_security_info(eka2l1::process_ptr process, epoc::security_info *info) {
+    static void query_security_info(kernel::process *process, epoc::security_info *info) {
         assert(process);
 
         *info = std::move(process->get_sec_info());
@@ -774,7 +773,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
 
         process_ptr pr = kern->get<kernel::process>(aProcessHandle);
-        query_security_info(pr, sec_info);
+        query_security_info(&(*pr), sec_info);
     }
 
     BRIDGE_FUNC(void, ThreadSecurityInfo, TInt aThreadHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
@@ -807,7 +806,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<desc8> aServerName, TInt aMode) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr crr_pr = std::move(kern->crr_process());
+        kernel::process *crr_pr = std::move(kern->crr_process());
 
         std::string server_name = aServerName.get(sys->get_memory_system())
                                       ->to_std_string(crr_pr);
@@ -988,14 +987,14 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(eka2l1::ptr<void>, LeaveStart) {
         LOG_CRITICAL("Leave started!");
 
-        eka2l1::thread_ptr thr = sys->get_kernel_system()->crr_thread();
+        kernel::thread *thr = sys->get_kernel_system()->crr_thread();
         thr->increase_leave_depth();
 
         return current_local_data(sys).trap_handler;
     }
 
     BRIDGE_FUNC(void, LeaveEnd) {
-        eka2l1::thread_ptr thr = sys->get_kernel_system()->crr_thread();
+        kernel::thread *thr = sys->get_kernel_system()->crr_thread();
         thr->decrease_leave_depth();
 
         if (thr->is_invalid_leave()) {
@@ -1321,7 +1320,7 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        uint32_t res = kern->mirror(kern->get<kernel::thread>(aThreadHandle), aDupHandle,
+        uint32_t res = kern->mirror(&(*kern->get<kernel::thread>(aThreadHandle)), aDupHandle,
             (aOwnerType == EOwnerProcess) ? kernel::owner_type::process : kernel::owner_type::thread);
 
         return res;
@@ -1356,11 +1355,7 @@ namespace eka2l1::epoc {
         kernel_obj_ptr obj = kern->get_kernel_obj_raw(aHandle);
 
         if (!obj) {
-            if (aHandle == 0xFFFF8001) {
-                obj = kern->crr_thread();
-            } else {
-                return;
-            }
+            return;
         }
 
         des8 *desname = aName.get(sys->get_memory_system());
@@ -1593,7 +1588,7 @@ namespace eka2l1::epoc {
         sys->get_manager_system()->get_script_manager()->call_panics(exit_cage, aReason);
 #endif
 
-        kern->get_thread_scheduler()->stop(thr);
+        kern->get_thread_scheduler()->stop(&(*thr));
         kern->prepare_reschedule();
 
         return KErrNone;
@@ -1634,9 +1629,10 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(TInt, ThreadProcess, TInt aHandle) {
         kernel_system *kern = sys->get_kernel_system();
-
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
-        return kern->mirror(thr->owning_process(), kernel::owner_type::thread);
+
+        return kern->mirror(kern->get_by_id<kernel::process>(thr->owning_process()->unique_id()), 
+            kernel::owner_type::thread);
     }
 
     BRIDGE_FUNC(void, ThreadSetPriority, TInt aHandle, TInt aThreadPriority) {
@@ -1661,7 +1657,7 @@ namespace eka2l1::epoc {
 
         switch (thr->current_state()) {
         case kernel::thread_state::create: {
-            kern->get_thread_scheduler()->schedule(thr);
+            kern->get_thread_scheduler()->schedule(&(*thr));
             break;
         }
 
@@ -1890,9 +1886,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        prop->subscribe(aRequestStatus.get(sys->get_memory_system()));
-
-        return;
+        prop->subscribe(aRequestStatus);
     }
 
     BRIDGE_FUNC(void, PropertyCancel, TInt aPropertyHandle) {

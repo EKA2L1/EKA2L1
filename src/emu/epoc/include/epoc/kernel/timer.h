@@ -32,13 +32,11 @@ namespace eka2l1 {
         class thread;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
-
     namespace kernel {
         class timer;
 
         struct signal_info {
-            thread_ptr own_thread;
+            kernel::thread *own_thread;
             epoc::request_status *request_status;
 
             timer *own_timer;
@@ -56,7 +54,7 @@ namespace eka2l1 {
                 kernel::access_type access = access_type::local_access);
             ~timer();
 
-            bool after(thread_ptr requester, epoc::request_status *request_status, uint64_t ms_signal);
+            bool after(kernel::thread *requester, epoc::request_status *request_status, uint64_t ms_signal);
             bool request_finish();
             bool cancel_request();
         };

@@ -24,6 +24,7 @@
 #include <scripting/thread.h>
 
 #include <epoc/kernel/thread.h>
+#include <epoc/kernel.h>
 
 namespace scripting = eka2l1::scripting;
 
@@ -77,7 +78,9 @@ namespace eka2l1::scripting {
     }
 
     std::unique_ptr<scripting::process> thread::get_owning_process() {
-        process_ptr pr = thread_handle->owning_process();
+        process_ptr pr = thread_handle->get_kernel_object_owner()->get_by_id<kernel::process>(
+            thread_handle->owning_process()->unique_id());
+
         return std::make_unique<scripting::process>((uint64_t)(
             &pr));
     }

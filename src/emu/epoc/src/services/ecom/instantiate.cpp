@@ -27,7 +27,7 @@
 #include <epoc/vfs.h>
 
 namespace eka2l1 {
-    bool ecom_server::get_implementation_dll_info(thread_ptr requester, const epoc::uid interface_uid, 
+    bool ecom_server::get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid, 
         const epoc::uid implementation_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, const bool check_cap_comp) {
         if (implementation_uid == 0) {
             return false;

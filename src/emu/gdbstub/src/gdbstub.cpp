@@ -79,11 +79,11 @@ namespace eka2l1 {
         </target>
         )";
 
-    static thread_ptr find_thread_by_id(kernel_system *kern, const std::uint32_t id) {
-        return kern->get_by_id<kernel::thread>(id);
+    static kernel::thread *find_thread_by_id(kernel_system *kern, const std::uint32_t id) {
+        return &(*kern->get_by_id<kernel::thread>(id));
     }
 
-    static std::uint32_t reg_read(std::size_t id, thread_ptr thread = nullptr) {
+    static std::uint32_t reg_read(std::size_t id, kernel::thread *thread = nullptr) {
         if (!thread) {
             return 0;
         }
@@ -97,7 +97,7 @@ namespace eka2l1 {
         }
     }
 
-    static void reg_write(std::size_t id, std::uint32_t val, thread_ptr thread = nullptr) {
+    static void reg_write(std::size_t id, std::uint32_t val, kernel::thread *thread = nullptr) {
         if (!thread) {
             return;
         }
@@ -109,7 +109,7 @@ namespace eka2l1 {
         }
     }
 
-    static std::uint64_t fpu_read(std::size_t id, thread_ptr thread = nullptr) {
+    static std::uint64_t fpu_read(std::size_t id, kernel::thread *thread = nullptr) {
         if (!thread) {
             return 0;
         }
@@ -125,7 +125,7 @@ namespace eka2l1 {
         }
     }
 
-    static void fpu_write(std::size_t id, std::uint64_t val, thread_ptr thread = nullptr) {
+    static void fpu_write(std::size_t id, std::uint64_t val, kernel::thread *thread = nullptr) {
         if (!thread) {
             return;
         }
@@ -509,7 +509,7 @@ namespace eka2l1 {
      *
      * @param signal Signal to be sent to client.
      */
-    void gdbstub::send_signal(thread_ptr thread, std::uint32_t signal, bool full) {
+    void gdbstub::send_signal(kernel::thread *thread, std::uint32_t signal, bool full) {
         if (gdbserver_socket == -1) {
             return;
         }
@@ -1135,7 +1135,7 @@ namespace eka2l1 {
         step_loop = is_step;
     }
 
-    void gdbstub::send_trap_gdb(thread_ptr thread, int trap) {
+    void gdbstub::send_trap_gdb(kernel::thread *thread, int trap) {
         if (!send_trap) {
             return;
         }

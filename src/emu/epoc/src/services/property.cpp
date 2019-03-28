@@ -82,31 +82,21 @@ namespace eka2l1 {
             return local;
         }
 
-        void property::subscribe(epoc::request_status *sts) {
-            if (subscribe_request.request_status) {
+        void property::subscribe(eka2l1::ptr<epoc::request_status> sts) {
+            if (subscribe_request.sts) {
                 return;
             }
 
-            subscribe_request.request_thr = kern->crr_thread();
-            subscribe_request.request_status = sts;
+            subscribe_request.requester = kern->crr_thread();
+            subscribe_request.sts = sts;
         }
 
         void property::cancel() {
-            if (subscribe_request.request_status) {
-                *subscribe_request.request_status = -3;
-                subscribe_request.request_thr->signal_request();
-
-                subscribe_request.request_status = nullptr;
-            }
+            subscribe_request.complete(-3);
         }
 
         void property::notify_request() {
-            if (subscribe_request.request_status) {
-                *subscribe_request.request_status = 0;
-                subscribe_request.request_thr->signal_request();
-
-                subscribe_request.request_status = nullptr;
-            }
+            subscribe_request.complete(0);
         }
     }
 }

@@ -88,7 +88,7 @@ namespace eka2l1 {
     /* Arg: IPC args. Max args = 4 */
     /* Session: Pointer to the session. */
     struct ipc_msg {
-        thread_ptr own_thr;
+        kernel::thread *own_thr;
         int function;
         ipc_arg args;
         service::session *msg_session;
@@ -103,7 +103,7 @@ namespace eka2l1 {
         bool free : true;
 
         ipc_msg() {}
-        ipc_msg(thread_ptr own)
+        ipc_msg(kernel::thread *own)
             : own_thr(own) {}
     };
 

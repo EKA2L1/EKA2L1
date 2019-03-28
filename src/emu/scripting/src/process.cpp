@@ -76,7 +76,7 @@ namespace eka2l1::scripting {
         std::vector<std::unique_ptr<scripting::thread>> script_threads;
 
         for (const auto &thr : threads) {
-            if (thr->owning_process() == process_handle) {
+            if (thr->owning_process() == &(*process_handle)) {
                 script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(&thr)));
             }
         }

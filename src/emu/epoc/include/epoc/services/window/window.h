@@ -161,7 +161,7 @@ namespace eka2l1::epoc {
         epoc::screen_device_ptr primary_device;
         epoc::window_ptr root;
 
-        eka2l1::thread_ptr client_thread;
+        eka2l1::kernel::thread *client_thread;
         eka2l1::epoc::window_group_ptr last_group;
 
         epoc::redraw_fifo redraws;
@@ -210,13 +210,13 @@ namespace eka2l1::epoc {
         bool delete_object(const std::uint32_t handle);
 
         explicit window_server_client(service::session *guest_session,
-            thread_ptr own_thread);
+            kernel::thread *own_thread);
 
         eka2l1::window_server &get_ws() {
             return *(std::reinterpret_pointer_cast<window_server>(guest_session->get_server()));
         }
 
-        eka2l1::thread_ptr &get_client() {
+        kernel::thread *get_client() {
             return client_thread;
         }
 

@@ -46,7 +46,7 @@ namespace eka2l1 {
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
             if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
-                process_ptr own_pr = msg->own_thr->owning_process();
+                kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
 
                 return des->to_std_string(own_pr);
@@ -124,7 +124,7 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
-                process_ptr own_pr = msg->own_thr->owning_process();
+                kernel::process *own_pr = msg->own_thr->owning_process();
 
                 // Please don't change the order
                 if ((int)arg_type & (int)ipc_arg_type::flag_16b) {
@@ -171,7 +171,7 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
-                process_ptr own_pr = msg->own_thr->owning_process();
+                kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
                 return reinterpret_cast<std::uint8_t *>(des->get_pointer_raw(own_pr));
@@ -184,7 +184,7 @@ namespace eka2l1 {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
-                process_ptr own_pr = msg->own_thr->owning_process();
+                kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
                 des->set_length(own_pr, len);

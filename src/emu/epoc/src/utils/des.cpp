@@ -27,7 +27,7 @@
 #include <common/log.h>
 
 namespace eka2l1::epoc {
-    std::uint32_t desc_base::get_max_length(eka2l1::process_ptr pr) {
+    std::uint32_t desc_base::get_max_length(eka2l1::kernel::process *pr) {
         des_type dtype = get_descriptor_type();
 
         switch (dtype) {
@@ -51,7 +51,7 @@ namespace eka2l1::epoc {
         return 0;
     }
 
-    void desc_base::set_length(eka2l1::process_ptr pr, const std::uint32_t new_len) {
+    void desc_base::set_length(eka2l1::kernel::process *pr, const std::uint32_t new_len) {
         des_type dtype = get_descriptor_type();
 
         if ((dtype == buf) || (dtype == ptr) || (dtype == ptr_to_buf)) {
@@ -74,7 +74,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    void *desc_base::get_pointer_raw(eka2l1::process_ptr pr) {
+    void *desc_base::get_pointer_raw(eka2l1::kernel::process *pr) {
         des_type dtype = get_descriptor_type();
 
         switch (dtype) {

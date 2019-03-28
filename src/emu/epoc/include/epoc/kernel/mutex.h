@@ -32,12 +32,12 @@ namespace eka2l1 {
             int lock_count;
 
             //! Thread holding
-            thread_ptr holding;
+            kernel::thread* holding;
 
-            cp_queue<thread_ptr> waits;
-            cp_queue<thread_ptr> pendings;
+            cp_queue<kernel::thread*> waits;
+            cp_queue<kernel::thread*> pendings;
 
-            std::vector<thread_ptr> suspended;
+            std::vector<kernel::thread*> suspended;
 
             timing_system *timing;
 
@@ -65,7 +65,7 @@ namespace eka2l1 {
 
             void wait_for(int msecs);
 
-            bool signal(thread_ptr callee);
+            bool signal(kernel::thread *callee);
 
             /*! \brief This update the mutex accordingly to the priority.
              *

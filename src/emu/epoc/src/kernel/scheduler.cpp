@@ -40,8 +40,8 @@ static void wake_thread(uint64_t ud, int cycles_late) {
 }
 
 namespace eka2l1 {
-    bool thread_comparator::operator()(const thread_ptr &x, const thread_ptr &y) const {
-        return *x < *y;
+    bool thread_comparator::operator()(const kernel::thread *x, const kernel::thread *y) const {
+        return x->current_real_priority() < y->current_real_priority();
     }
 
     namespace kernel {
@@ -59,7 +59,7 @@ namespace eka2l1 {
             }
         }
 
-        void thread_scheduler::switch_context(thread_ptr oldt, thread_ptr newt) {
+        void thread_scheduler::switch_context(kernel::thread *oldt, kernel::thread *newt) {
             if (oldt) {
                 oldt->lrt = timing->get_ticks();
                 jitter->save_context(oldt->ctx);
@@ -73,7 +73,7 @@ namespace eka2l1 {
 
             if (newt) {
                 // cancel wake up
-                timing->unschedule_event(wakeup_evt, reinterpret_cast<uint64_t>(newt.get()));
+                timing->unschedule_event(wakeup_evt, reinterpret_cast<uint64_t>(newt));
 
                 crr_thread = newt;
                 crr_thread->state = thread_state::run;
@@ -93,8 +93,8 @@ namespace eka2l1 {
             }
         }
 
-        thread_ptr thread_scheduler::next_ready_thread() {
-            thread_ptr crr = current_thread();
+        kernel::thread *thread_scheduler::next_ready_thread() {
+            kernel::thread *crr = current_thread();
 
             if (ready_threads.size() == 0) {
                 return nullptr;
@@ -115,14 +115,14 @@ namespace eka2l1 {
         }
 
         void thread_scheduler::reschedule() {
-            thread_ptr crr_thread = current_thread();
-            thread_ptr next_thread = next_ready_thread();
+            kernel::thread *crr_thread = current_thread();
+            kernel::thread *next_thread = next_ready_thread();
 
             switch_context(crr_thread, next_thread);
         }
 
         // Put the thread into the ready queue to run in the next core timing yeid
-        bool thread_scheduler::schedule(thread_ptr thr) {
+        bool thread_scheduler::schedule(kernel::thread *thr) {
             if (thr->state == thread_state::run || thr->state == thread_state::ready || thr->state == thread_state::hold_mutex_pending) {
                 return false;
             }
@@ -133,7 +133,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool thread_scheduler::sleep(thread_ptr thr, uint32_t sl_time) {
+        bool thread_scheduler::sleep(kernel::thread *thr, uint32_t sl_time) {
             if (crr_thread != thr) {
                 return false;
             }
@@ -148,18 +148,16 @@ namespace eka2l1 {
             waiting_threads.push_back(thr);
 
             // Schedule the thread to be waken up
-            timing->schedule_event(sl_time, wakeup_evt,
-                timing->us_to_cycles(reinterpret_cast<uint64_t>(thr.get())));
+            timing->schedule_event(sl_time, wakeup_evt, timing->us_to_cycles(reinterpret_cast<uint64_t>(thr)));
 
             return true;
         }
 
         void thread_scheduler::unschedule_wakeup() {
-            timing->unschedule_event(wakeup_evt,
-                reinterpret_cast<std::uint64_t>(crr_thread.get()));
+            timing->unschedule_event(wakeup_evt, reinterpret_cast<std::uint64_t>(crr_thread));
         }
 
-        bool thread_scheduler::wait(thread_ptr thr) {
+        bool thread_scheduler::wait(kernel::thread *thr) {
             // It's already waiting
             if (thr->state == thread_state::wait || thr->state == thread_state::ready
                 || thr->state == thread_state::wait_fast_sema || thr->state == thread_state::wait_mutex) {
@@ -172,7 +170,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool thread_scheduler::resume(thread_ptr thr) {
+        bool thread_scheduler::resume(kernel::thread *thr) {
             auto res = std::find(waiting_threads.begin(), waiting_threads.end(), thr);
 
             if (res == waiting_threads.end()) {
@@ -200,7 +198,7 @@ namespace eka2l1 {
             return true;
         }
 
-        void thread_scheduler::unschedule(thread_ptr thr) {
+        void thread_scheduler::unschedule(kernel::thread *thr) {
             auto res = std::find(ready_threads.begin(), ready_threads.end(), thr);
 
             if (res == ready_threads.end()) {
@@ -211,8 +209,8 @@ namespace eka2l1 {
             ready_threads.remove(thr);
         }
 
-        bool thread_scheduler::stop(thread_ptr thr) {
-            timing->unschedule_event(wakeup_evt, reinterpret_cast<uint64_t>(thr.get()));
+        bool thread_scheduler::stop(kernel::thread *thr) {
+            timing->unschedule_event(wakeup_evt, reinterpret_cast<uint64_t>(thr));
 
             if (thr->state == thread_state::ready) {
                 unschedule(thr);

@@ -167,7 +167,7 @@ namespace eka2l1 {
 
         std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(dir_node->vfs_node);
 
-        process_ptr own_pr = ctx.msg->own_thr->owning_process();
+        kernel::process *own_pr = ctx.msg->own_thr->owning_process();
 
         epoc::des8 *entry_arr = ptr<epoc::des8>(*entry_arr_vir_ptr).get(own_pr);
         epoc::buf_des<char> *entry_arr_buf = reinterpret_cast<epoc::buf_des<char> *>(entry_arr);

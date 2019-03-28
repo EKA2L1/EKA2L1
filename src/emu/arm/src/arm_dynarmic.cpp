@@ -113,7 +113,7 @@ namespace eka2l1 {
                     LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, parent.get_lr() % 2 != 0 ? parent.mem->read<std::uint16_t>(parent.get_lr() - parent.get_lr() % 2) : parent.mem->read<std::uint32_t>(parent.get_lr() - parent.get_lr() % 2));
                 }
 
-                thread_ptr crr_thread = parent.kern->crr_thread();
+                kernel::thread *crr_thread = parent.kern->crr_thread();
 
                 crr_thread->stop();
                 parent.save_context(crr_thread->get_thread_context());
@@ -124,7 +124,7 @@ namespace eka2l1 {
             }
 
             void invalid_memory_read(const Dynarmic::A32::VAddr addr) {
-                thread_ptr crr_thread = parent.kern->crr_thread();
+                kernel::thread *crr_thread = parent.kern->crr_thread();
                 LOG_CRITICAL("Reading unmapped address (0x{:x}), panic thread {}", addr,
                     crr_thread->name());
 
@@ -132,7 +132,7 @@ namespace eka2l1 {
             }
 
             void invalid_memory_write(const Dynarmic::A32::VAddr addr) {
-                thread_ptr crr_thread = parent.kern->crr_thread();
+                kernel::thread *crr_thread = parent.kern->crr_thread();
                 LOG_CRITICAL("Writing unmapped address (0x{:x}), panic thread {}", addr,
                     crr_thread->name());
 
@@ -281,7 +281,7 @@ namespace eka2l1 {
             void ExceptionRaised(uint32_t pc, Dynarmic::A32::Exception exception) override {
                 switch (exception) {
                 case Dynarmic::A32::Exception::UndefinedInstruction: {
-                    thread_ptr crr_thread = parent.kern->crr_thread();
+                    kernel::thread *crr_thread = parent.kern->crr_thread();
                     LOG_TRACE("Unknown instruction by Dynarmic raised in thread {}",
                         crr_thread->name());
 
@@ -297,7 +297,7 @@ namespace eka2l1 {
                         parent.jit->HaltExecution();
                         parent.set_pc(pc);
 
-                        thread_ptr crr_thread = parent.kern->crr_thread();
+                        kernel::thread *crr_thread = parent.kern->crr_thread();
                         parent.save_context(crr_thread->get_thread_context());
 
                         stub->break_exec();
@@ -332,7 +332,7 @@ namespace eka2l1 {
                 }
 
                 default: {
-                    thread_ptr crr_thread = parent.kern->crr_thread();
+                    kernel::thread *crr_thread = parent.kern->crr_thread();
                     LOG_WARN("Exception Raised at thread {}", crr_thread->name());
 
                     parent.debugger->wait_for_debugger();

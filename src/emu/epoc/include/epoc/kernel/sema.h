@@ -27,14 +27,13 @@
 
 namespace eka2l1 {
     class memory_system;
-    using thread_ptr = std::shared_ptr<kernel::thread>;
 
     namespace kernel {
         class semaphore : public kernel_obj {
             int32_t avail_count;
-            cp_queue<thread_ptr> waits;
+            cp_queue<kernel::thread*> waits;
 
-            std::vector<thread_ptr> suspended;
+            std::vector<kernel::thread*> suspended;
 
             bool signaling;
 

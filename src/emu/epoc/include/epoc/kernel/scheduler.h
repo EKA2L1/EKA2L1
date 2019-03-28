@@ -41,11 +41,8 @@ namespace eka2l1 {
         class process;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
-    using process_ptr = std::shared_ptr<kernel::process>;
-
     struct thread_comparator {
-        bool operator()(const thread_ptr &x, const thread_ptr &y) const;
+        bool operator()(const kernel::thread *x, const kernel::thread *y) const;
     };
 
     namespace kernel {
@@ -54,11 +51,11 @@ namespace eka2l1 {
         using uid = std::uint32_t;
 
         class thread_scheduler {
-            std::vector<thread_ptr> waiting_threads;
-            eka2l1::cp_queue<thread_ptr, thread_comparator> ready_threads;
+            std::vector<kernel::thread*> waiting_threads;
+            eka2l1::cp_queue<kernel::thread*, thread_comparator> ready_threads;
 
-            thread_ptr crr_thread;
-            process_ptr crr_process;
+            kernel::thread *crr_thread;
+            kernel::process *crr_process;
 
             uint32_t ticks_yield;
 
@@ -72,9 +69,8 @@ namespace eka2l1 {
             kernel_system *kern;
 
         protected:
-            thread_ptr next_ready_thread();
-
-            void switch_context(thread_ptr oldt, thread_ptr newt);
+            kernel::thread *next_ready_thread();
+            void switch_context(kernel::thread *oldt, kernel::thread *newt);
 
         public:
             // The constructor also register all the needed event
@@ -83,15 +79,15 @@ namespace eka2l1 {
             void reschedule();
             void unschedule_wakeup();
 
-            bool schedule(thread_ptr thread);
-            bool sleep(thread_ptr thr, uint32_t sl_time);
-            bool wait(thread_ptr thr);
+            bool schedule(kernel::thread *thread);
+            bool sleep(kernel::thread *thr, uint32_t sl_time);
+            bool wait(kernel::thread *thr);
 
-            bool resume(thread_ptr thr);
+            bool resume(kernel::thread *thr);
 
-            void unschedule(thread_ptr thr);
+            void unschedule(kernel::thread *thr);
 
-            bool stop(thread_ptr thr);
+            bool stop(kernel::thread *thr);
 
             void refresh();
 
@@ -100,11 +96,11 @@ namespace eka2l1 {
                     && ready_threads.empty() && !crr_thread;
             }
 
-            thread_ptr current_thread() const {
+            kernel::thread *current_thread() const {
                 return crr_thread;
             }
 
-            process_ptr current_process() const {
+            kernel::process *current_process() const {
                 return crr_process;
             }
         };

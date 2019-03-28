@@ -119,7 +119,7 @@ namespace eka2l1::epoc {
         execute_commands(ctx, std::move(cmds));
     }
 
-    window_server_client::window_server_client(service::session *guest_session, thread_ptr own_thread)
+    window_server_client::window_server_client(service::session *guest_session, kernel::thread *own_thread)
         : guest_session(guest_session)
         , client_thread(own_thread)
         , uid_counter(0) {

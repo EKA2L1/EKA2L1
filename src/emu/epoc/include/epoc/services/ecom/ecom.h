@@ -75,7 +75,7 @@ namespace eka2l1 {
         void list_implementations(service::ipc_context ctx);
         void get_implementation_creation_method(service::ipc_context ctx);
 
-        bool get_implementation_dll_info(thread_ptr requester, const epoc::uid interface_uid, 
+        bool get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid, 
             const epoc::uid impl_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, const bool check_cap_comp = true);
 
         bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,

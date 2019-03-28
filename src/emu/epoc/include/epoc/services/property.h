@@ -60,10 +60,7 @@ namespace eka2l1 {
 
             service::property_type data_type;
 
-            struct request {
-                thread_ptr request_thr;
-                epoc::request_status *request_status = 0;
-            } subscribe_request;
+            epoc::notify_info subscribe_request;
 
         public:
             property(kernel_system *kern);
@@ -113,7 +110,7 @@ namespace eka2l1 {
                 return ret;
             }
 
-            void subscribe(epoc::request_status *sts);
+            void subscribe(eka2l1::ptr<epoc::request_status> sts);
 
             void cancel();
 

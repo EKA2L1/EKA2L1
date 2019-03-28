@@ -138,7 +138,7 @@ namespace eka2l1::kernel {
     }
 
     bool process::run() {
-        return kern->get_thread_scheduler()->schedule(primary_thread);
+        return kern->get_thread_scheduler()->schedule(&(*primary_thread));
     }
 
     std::uint32_t process::get_entry_point_address() {
@@ -243,7 +243,7 @@ namespace eka2l1::kernel {
         dll_lock->wait();
     }
 
-    void process::signal_dll_lock(thread_ptr callee) {
+    void process::signal_dll_lock(kernel::thread *callee) {
         dll_lock->signal(callee);
     }
 
@@ -291,7 +291,7 @@ namespace eka2l1::kernel {
         seri.absorb(request_status.ptr_address());
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            requester = kern->get<kernel::thread>(requester_id);
+            requester = &(*kern->get<kernel::thread>(requester_id));
         }
     }
 

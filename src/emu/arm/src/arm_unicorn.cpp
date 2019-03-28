@@ -291,7 +291,7 @@ namespace eka2l1 {
                     dump_context(context);
 
                     system *sys = get_lib_manager()->get_sys();
-                    thread_ptr thr = sys->get_kernel_system()->crr_thread();
+                    kernel::thread *thr = sys->get_kernel_system()->crr_thread();
 
                     thr->stop();
 
@@ -309,7 +309,7 @@ namespace eka2l1 {
                         set_pc(last_breakpoint.address);
                     }
 
-                    thread_ptr crr_thread = kern->crr_thread();
+                    kernel::thread *crr_thread = kern->crr_thread();
                     save_context(crr_thread->get_thread_context());
 
                     if (last_breakpoint_hit && stub->get_cpu_step_flag()) {

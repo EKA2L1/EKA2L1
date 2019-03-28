@@ -62,7 +62,7 @@ namespace eka2l1 {
 
         fs_node_share share_mode;
 
-        process_ptr own_process;
+        kernel::process *own_process;
 
         bool is_active = false;
         bool temporary = false;
@@ -136,7 +136,7 @@ namespace eka2l1 {
         void set_session_path(service::ipc_context ctx);
         void set_session_to_private(service::ipc_context ctx);
         
-        int new_node(io_system *io, thread_ptr sender, std::u16string name, int org_mode, 
+        int new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, 
             bool overwrite = false, bool temporary = false);
 
         fs_node *get_file_node(int handle);
@@ -168,7 +168,7 @@ namespace eka2l1 {
             std::regex match_pattern;
             notify_type type;
             eka2l1::ptr<epoc::request_status> request_status;
-            thread_ptr request_thread;
+            kernel::thread *request_thread;
         };
 
         std::vector<notify_entry> notify_entries;

@@ -36,8 +36,6 @@ namespace eka2l1 {
         class thread;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
-
     constexpr int GDB_BUFFER_SIZE = 10000;
 
     constexpr char GDB_STUB_START = '$';
@@ -96,7 +94,7 @@ namespace eka2l1 {
         std::uint32_t latest_signal = 0;
         bool memory_break = false;
 
-        thread_ptr current_thread = nullptr;
+        kernel::thread *current_thread = nullptr;
 
         // Binding to a port within the reserved ports range (0-1023) requires root permissions,
         // so default to a port outside of that range.
@@ -139,7 +137,7 @@ namespace eka2l1 {
 
         void send_packet(const char packet);
         void send_reply(const char *reply);
-        void send_signal(thread_ptr thread, std::uint32_t signal, bool full = true);
+        void send_signal(kernel::thread *thread, std::uint32_t signal, bool full = true);
 
         void handle_query();
         void handle_set_thread();
@@ -228,6 +226,6 @@ namespace eka2l1 {
          * @param thread Sending thread.
          * @param trap Trap no.
          */
-        void send_trap_gdb(thread_ptr thread, int trap);
+        void send_trap_gdb(kernel::thread *thread, int trap);
     };
 }

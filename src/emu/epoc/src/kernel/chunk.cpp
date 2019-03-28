@@ -30,7 +30,7 @@
 
 namespace eka2l1 {
     namespace kernel {
-        chunk::chunk(kernel_system *kern, memory_system *mem, process_ptr own_process, std::string name,
+        chunk::chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name,
             address bottom, const address top, const size_t max_size, prot protection,
             chunk_type type, chunk_access chnk_access, chunk_attrib attrib, const bool is_heap)
             : kernel_obj(kern, name, access_type::local_access)
@@ -221,7 +221,7 @@ namespace eka2l1 {
 
             commited_size = top - bottom;
 
-            own_process = kern->get_by_id<kernel::process>(uid_pr);
+            own_process = &(*kern->get_by_id<kernel::process>(uid_pr));
 
             page_table *old = mem->get_current_page_table();
             mem->set_current_page_table(own_process->get_page_table());

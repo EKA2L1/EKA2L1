@@ -37,36 +37,28 @@ namespace eka2l1 {
         }
 
         bool change_notifier::logon(eka2l1::ptr<epoc::request_status> request_sts) {
-            if (request_status) {
+            if (!req_info_.sts) {
                 return false;
             }
 
-            requester = kern->crr_thread();
-            request_status = request_sts;
+            req_info_.requester = kern->crr_thread();
+            req_info_.sts = request_sts;
 
             return true;
         }
 
         bool change_notifier::logon_cancel() {
-            if (!request_status) {
+            if (!req_info_.sts) {
                 return false;
             }
 
-            *request_status.get(kern->get_memory_system()) = -3;
-            requester->signal_request();
-
-            requester = nullptr;
-            request_status = 0;
+            req_info_.complete(-3);
 
             return true;
         }
 
         void change_notifier::notify_change_requester() {
-            *request_status.get(kern->get_memory_system()) = 0;
-            requester->signal_request();
-
-            requester = nullptr;
-            request_status = 0;
+            req_info_.complete(0);
         }
 
         void change_notifier::do_state(common::chunkyseri &seri) {

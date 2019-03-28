@@ -122,7 +122,7 @@ namespace eka2l1 {
             friend class mutex;
             friend class semaphore;
 
-            process_ptr own_process;
+            kernel::process *own_process;
 
             thread_state state;
             std::mutex mut;
@@ -172,10 +172,10 @@ namespace eka2l1 {
             int exit_reason = 0;
 
             struct logon_request_form {
-                thread_ptr requester;
+                kernel::thread *requester;
                 eka2l1::ptr<epoc::request_status> request_status;
 
-                explicit logon_request_form(thread_ptr thr, eka2l1::ptr<epoc::request_status> rsts)
+                explicit logon_request_form(kernel::thread *thr, eka2l1::ptr<epoc::request_status> rsts)
                     : requester(thr)
                     , request_status(rsts) {}
             };
@@ -229,7 +229,7 @@ namespace eka2l1 {
                 obj_type = kernel::object_type::thread;
             }
 
-            thread(kernel_system *kern, memory_system *mem, timing_system *timing, process_ptr owner, kernel::access_type access,
+            thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 bool initial,
@@ -291,7 +291,7 @@ namespace eka2l1 {
                 return scheduler;
             }
 
-            process_ptr owning_process() {
+            kernel::process *owning_process() {
                 return own_process;
             }
 
@@ -299,7 +299,7 @@ namespace eka2l1 {
                 return ctx;
             }
 
-            void owning_process(process_ptr pr);
+            void owning_process(kernel::process *pr);
 
             thread_state current_state() const {
                 return state;

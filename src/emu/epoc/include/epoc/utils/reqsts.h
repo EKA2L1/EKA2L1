@@ -46,7 +46,7 @@ namespace eka2l1::epoc {
 
     struct notify_info {
         eka2l1::ptr<epoc::request_status> sts = 0;
-        eka2l1::thread_ptr requester;
+        eka2l1::kernel::thread *requester;
 
         void complete(int err_code);
     };

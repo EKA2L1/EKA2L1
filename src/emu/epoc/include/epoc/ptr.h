@@ -31,12 +31,10 @@ namespace eka2l1 {
         class process;
     }
 
-    using process_ptr = std::shared_ptr<kernel::process>;
-
     // Symbian is 32 bit
     using address = uint32_t;
 
-    void *get_raw_pointer(process_ptr pr, address addr);
+    void *get_raw_pointer(kernel::process *pr, address addr);
 
     template <typename T>
     class ptr {
@@ -53,9 +51,8 @@ namespace eka2l1 {
             return mem_address;
         }
 
-        T *get(process_ptr pr) {
-            return reinterpret_cast<T *>(
-                get_raw_pointer(pr, mem_address));
+        T *get(kernel::process *pr) {
+            return reinterpret_cast<T *>(get_raw_pointer(pr, mem_address));
         }
 
         T *get(memory_system *mem) const {

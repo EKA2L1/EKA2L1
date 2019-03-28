@@ -65,11 +65,11 @@ namespace eka2l1 {
         thr_sch.reset();
     }
 
-    thread_ptr kernel_system::crr_thread() {
+    kernel::thread *kernel_system::crr_thread() {
         return thr_sch->current_thread();
     }
 
-    process_ptr kernel_system::crr_process() {
+    kernel::process *kernel_system::crr_process() {
         return thr_sch->current_process();
     }
 
@@ -235,9 +235,11 @@ namespace eka2l1 {
 
     kernel_obj_ptr kernel_system::get_kernel_obj_raw(uint32_t handle) {
         if (handle == 0xFFFF8000) {
-            return crr_process();
+            return std::reinterpret_pointer_cast<kernel::kernel_obj>(get_by_id<kernel::process>(
+                crr_process()->unique_id()));
         } else if (handle == 0xFFFF8001) {
-            return crr_thread();
+            return std::reinterpret_pointer_cast<kernel::kernel_obj>(get_by_id<kernel::thread>(
+                crr_thread()->unique_id()));
         }
 
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
@@ -281,17 +283,9 @@ namespace eka2l1 {
         return *prop_res;
     }
 
-    kernel::handle kernel_system::mirror(thread_ptr own_thread, kernel::handle handle, kernel::owner_type owner) {
-        kernel_obj_ptr target_obj;
+    kernel::handle kernel_system::mirror(kernel::thread *own_thread, kernel::handle handle, kernel::owner_type owner) {
+        kernel_obj_ptr target_obj = get_kernel_obj_raw(handle);
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
-
-        if (handle == 0xFFFF8000) {
-            target_obj = crr_process();
-        } else if (handle == 0xFFFF8001) {
-            target_obj = crr_thread();
-        } else {
-            target_obj = get_kernel_obj_raw(handle);
-        }
 
         switch (owner) {
         case kernel::owner_type::kernel:
@@ -336,7 +330,7 @@ namespace eka2l1 {
         return open_handle_with_thread(crr_thread(), obj, owner);
     }
 
-    kernel::handle kernel_system::open_handle_with_thread(thread_ptr thr, kernel_obj_ptr obj, kernel::owner_type owner) {
+    kernel::handle kernel_system::open_handle_with_thread(kernel::thread *thr, kernel_obj_ptr obj, kernel::owner_type owner) {
         switch (owner) {
         case kernel::owner_type::kernel:
             return kernel_handles.add_object(obj);
@@ -365,7 +359,7 @@ namespace eka2l1 {
         std::shared_ptr<eka2l1::posix_server> ps_srv = std::make_shared<eka2l1::posix_server>(sys, pr);
         add_custom_server(std::move(std::reinterpret_pointer_cast<service::server>(ps_srv)));
 
-        pr->primary_thread->owning_process(pr);
+        pr->primary_thread->owning_process(&(*pr));
     }
 
     codeseg_ptr kernel_system::pull_codeseg_by_ep(const address ep) {

@@ -8,31 +8,20 @@
 
 #include <memory>
 
-namespace eka2l1 {
-    class kernel_system;
+namespace eka2l1::kernel {
+    class thread;
+    
+    class change_notifier : public eka2l1::kernel::kernel_obj {
+        epoc::notify_info req_info_;
 
-    namespace kernel {
-        class thread;
-    }
+    public:
+        change_notifier(kernel_system *kern);
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
-}
+        bool logon(eka2l1::ptr<epoc::request_status> request_sts);
+        bool logon_cancel();
 
-namespace eka2l1 {
-    namespace kernel {
-        class change_notifier : public eka2l1::kernel::kernel_obj {
-            eka2l1::ptr<epoc::request_status> request_status;
-            thread_ptr requester;
+        void notify_change_requester();
 
-        public:
-            change_notifier(kernel_system *kern);
-
-            bool logon(eka2l1::ptr<epoc::request_status> request_sts);
-            bool logon_cancel();
-
-            void notify_change_requester();
-
-            void do_state(common::chunkyseri &seri) override;
-        };
-    }
+        void do_state(common::chunkyseri &seri) override;
+    };
 }

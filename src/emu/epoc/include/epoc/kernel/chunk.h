@@ -84,7 +84,7 @@ namespace eka2l1 {
             eka2l1::ptr<uint8_t> chunk_base;
 
             memory_system *mem;
-            process_ptr own_process;
+            kernel::process *own_process;
 
             bool is_heap;
 
@@ -95,7 +95,7 @@ namespace eka2l1 {
                 obj_type = kernel::object_type::chunk;
             }
 
-            chunk(kernel_system *kern, memory_system *mem, process_ptr own_process, std::string name, address bottom,
+            chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name, address bottom,
                 const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
                 chunk_attrib attrib, const bool is_heap = false);
 
@@ -168,11 +168,11 @@ namespace eka2l1 {
                 return commited_size;
             }
 
-            process_ptr get_own_process() {
+            kernel::process *get_own_process() {
                 return own_process;
             }
 
-            void set_own_process(process_ptr new_own) {
+            void set_own_process(kernel::process *new_own) {
                 own_process = new_own;
             }
 

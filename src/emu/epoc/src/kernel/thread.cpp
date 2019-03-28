@@ -149,7 +149,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        int caculate_thread_priority(process_ptr pr, thread_priority pri) {
+        int caculate_thread_priority(kernel::process *pr, thread_priority pri) {
             const uint8_t pris[] = {
                 1, 1, 2, 3, 4, 5, 22, 0,
                 3, 5, 6, 7, 8, 9, 22, 0,
@@ -237,7 +237,7 @@ namespace eka2l1 {
             memcpy(stack_ptr.get(mem), &info, 0x40);
         }
 
-        thread::thread(kernel_system *kern, memory_system *mem, timing_system *timing, process_ptr owner,
+        thread::thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner,
             kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
@@ -348,14 +348,14 @@ namespace eka2l1 {
         }
 
         bool thread::sleep(uint32_t mssecs) {
-            return scheduler->sleep(kern->get_by_id<kernel::thread>(uid), mssecs);
+            return scheduler->sleep(this, mssecs);
         }
 
         bool thread::sleep_nof(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
             assert(!sleep_nof_sts && "Thread supposed to sleep already");
             sleep_nof_sts = sts;
 
-            return scheduler->sleep(kern->get_by_id<kernel::thread>(uid), mssecs);
+            return scheduler->sleep(this, mssecs);
         }
 
         void thread::notify_sleep(const int errcode) {
@@ -381,7 +381,7 @@ namespace eka2l1 {
         }
 
         bool thread::stop() {
-            return scheduler->stop(kern->get<kernel::thread>(uid));
+            return scheduler->stop(this);
         }
 
         void thread::update_priority() {
@@ -433,7 +433,7 @@ namespace eka2l1 {
         }
 
         bool thread::suspend() {
-            bool res = scheduler->wait(kern->get<kernel::thread>(uid));
+            bool res = scheduler->wait(this);
 
             if (!res) {
                 return false;
@@ -464,7 +464,7 @@ namespace eka2l1 {
         }
 
         bool thread::resume() {
-            bool res = scheduler->resume(kern->get<kernel::thread>(uid));
+            bool res = scheduler->resume(this);
 
             if (!res) {
                 return false;
@@ -494,7 +494,7 @@ namespace eka2l1 {
             return res;
         }
 
-        void thread::owning_process(process_ptr pr) {
+        void thread::owning_process(kernel::process *pr) {
             own_process = pr;
             own_process->increase_thread_count();
 

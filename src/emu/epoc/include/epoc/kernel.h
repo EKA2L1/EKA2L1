@@ -233,11 +233,11 @@ namespace eka2l1 {
         void destroy_msg(ipc_msg_ptr msg);
 
         /* Fast duplication, unsafe */
-        kernel::handle mirror(thread_ptr own_thread, kernel::handle handle, kernel::owner_type owner);
+        kernel::handle mirror(kernel::thread *own_thread, kernel::handle handle, kernel::owner_type owner);
         kernel::handle mirror(kernel_obj_ptr obj, kernel::owner_type owner);
 
         kernel::handle open_handle(kernel_obj_ptr obj, kernel::owner_type owner);
-        kernel::handle open_handle_with_thread(thread_ptr thr, kernel_obj_ptr obj, kernel::owner_type owner);
+        kernel::handle open_handle_with_thread(kernel::thread *thr, kernel_obj_ptr obj, kernel::owner_type owner);
 
         std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type);
 
@@ -257,8 +257,8 @@ namespace eka2l1 {
 
         property_ptr get_prop(int cagetory, int key); // Get property by category and key
 
-        thread_ptr crr_thread();
-        process_ptr crr_process();
+        kernel::thread *crr_thread();
+        kernel::process *crr_process();
 
         process_ptr spawn_new_process(const kernel::uid uid);
         process_ptr spawn_new_process(const std::u16string &path,
@@ -476,7 +476,7 @@ namespace eka2l1 {
 
         template <typename T, typename... args>
         std::pair<kernel::handle, std::shared_ptr<T>> create_and_add_thread(kernel::owner_type owner,
-            thread_ptr thr, args... creation_args) {
+            kernel::thread *thr, args... creation_args) {
             std::shared_ptr<T> obj = create<T>(creation_args...);
             return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
         }

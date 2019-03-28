@@ -370,7 +370,6 @@ namespace eka2l1 {
             info.data_size = romimg.header.data_size;
             info.entry_point = romimg.header.entry_point;
             info.bss_size = romimg.header.bss_size;
-            ;
             info.export_table = romimg.exports;
             info.sinfo.caps_u[0] = romimg.header.sec_info.cap1;
             info.sinfo.caps_u[1] = romimg.header.sec_info.cap2;
