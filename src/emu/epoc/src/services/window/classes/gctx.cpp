@@ -88,10 +88,13 @@ namespace eka2l1::epoc {
 
     void graphic_context::flush_queue_to_driver() {
         // Flushing
-        epoc::window_group_ptr group = std::reinterpret_pointer_cast<epoc::window_group>(
-            attached_window->parent);
+        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(attached_window->parent);
+        eka2l1::graphics_driver_client_ptr driver = group->dvc->driver.lock();
 
-        eka2l1::graphics_driver_client_ptr driver = group->dvc->driver;
+        if (!driver) {
+            LOG_ERROR("Graphics driver experied. Opcodes will not get flushed");
+            return;
+        }
 
         // Since we are sending multiple opcodes, lock the driver first
         // That way, all opcodes from this context should be processed in only one take

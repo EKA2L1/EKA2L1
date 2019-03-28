@@ -97,7 +97,7 @@ namespace eka2l1 {
 
     struct fs_server_client {
         fs_handle_table nodes_table;
-        session_ptr user_session;
+        service::session *user_session;
 
         std::u16string ss_path;
 

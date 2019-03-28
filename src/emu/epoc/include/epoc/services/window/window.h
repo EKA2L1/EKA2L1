@@ -276,7 +276,7 @@ namespace eka2l1 {
         std::vector<epoc::config::screen> screens;
         std::unordered_map<epoc::ws::uid, key_capture_request_queue> key_capture_requests;
 
-        epoc::window_group_ptr focus_;
+        epoc::window_group *focus_ { nullptr };
         epoc::pointer_cursor_mode cursor_mode_;
 
         void init(service::ipc_context ctx);
@@ -324,7 +324,7 @@ namespace eka2l1 {
             return cursor_mode_;
         }
 
-        epoc::window_group_ptr &get_focus() {
+        epoc::window_group *&get_focus() {
             return focus_;
         }
 

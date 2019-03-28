@@ -240,14 +240,14 @@ namespace eka2l1::epoc {
             parent_group = root;
         }
 
-        group->parent = parent_group;
+        group->parent = &(*parent_group);
 
         if (last_group) {
             last_group->next_sibling = std::reinterpret_pointer_cast<epoc::window_group>(group);
         }
 
         parent_group->childs.push(group);
-        device_ptr->windows.push_back(group);
+        device_ptr->windows.push_back(&(*group));
 
         if (header->focus) {
             std::reinterpret_pointer_cast<epoc::window_group>(group)->flags |= window_group::focus_receiveable;
@@ -285,7 +285,7 @@ namespace eka2l1::epoc {
         win->driver_win_id = std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver()->
             create_window(eka2l1::vec2(200, 200), 0, true);
 
-        win->parent = parent;
+        win->parent = &(*parent);
         parent->childs.push(win);
 
         ctx.set_request_status(add_object(win));

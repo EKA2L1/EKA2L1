@@ -48,7 +48,7 @@ namespace eka2l1::epoc {
         eka2l1::cp_queue<window_ptr> childs;
         screen_device_ptr dvc;
 
-        window_ptr parent;
+        window *parent { nullptr };
 
         // It's just z value. The second one will be used when there is
         // multiple window with same first z.

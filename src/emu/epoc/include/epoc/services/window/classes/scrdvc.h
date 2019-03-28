@@ -37,20 +37,20 @@ namespace eka2l1::epoc {
     using window_ptr = std::shared_ptr<epoc::window>;
 
     struct screen_device : public window_client_obj {
-        eka2l1::graphics_driver_client_ptr driver;
+        std::weak_ptr<drivers::graphics_driver_client> driver;
         int screen;
 
         epoc::config::screen scr_config;
         epoc::config::screen_mode *crr_mode;
 
-        std::vector<epoc::window_ptr> windows;
-        epoc::window_group_ptr focus;
+        std::vector<epoc::window*> windows;
+        epoc::window_group *focus;
 
         epoc::display_mode disp_mode { display_mode::color16ma };
 
-        epoc::window_group_ptr find_window_group_to_focus();
+        epoc::window_group *find_window_group_to_focus();
 
-        void update_focus(epoc::window_group_ptr closing_group);
+        void update_focus(epoc::window_group *closing_group);
 
         screen_device(window_server_client_ptr client, int number,
             eka2l1::graphics_driver_client_ptr driver);

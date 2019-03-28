@@ -87,8 +87,8 @@ namespace eka2l1::epoc {
         void queue_event(const epoc::event &evt) override;
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
 
-        epoc::window_group_ptr get_group() {
-            return std::reinterpret_pointer_cast<epoc::window_group>(parent);
+        epoc::window_group *get_group() {
+            return reinterpret_cast<epoc::window_group*>(parent);
         }
     };
 }

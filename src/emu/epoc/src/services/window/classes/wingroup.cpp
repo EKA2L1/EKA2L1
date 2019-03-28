@@ -41,7 +41,7 @@ namespace eka2l1::epoc {
     }
 
     eka2l1::graphics_driver_client_ptr window_group::get_driver() {
-        return dvc->driver;
+        return dvc->driver.lock();
     }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd cmd) {

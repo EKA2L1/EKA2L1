@@ -32,18 +32,19 @@ namespace eka2l1::epoc {
         int number, eka2l1::graphics_driver_client_ptr driver)
         : window_client_obj(client)
         , driver(driver)
-        , screen(number) {
+        , screen(number)
+        , focus(nullptr) {
         scr_config = client->get_ws().get_screen_config(number);
         crr_mode = &scr_config.modes[0];
 
         driver->set_screen_size(crr_mode->size);
     }
 
-    epoc::window_group_ptr screen_device::find_window_group_to_focus() {
+    epoc::window_group *screen_device::find_window_group_to_focus() {
         for (auto &win : windows) {
             if (win->type == window_kind::group) {
-                if (std::reinterpret_pointer_cast<epoc::window_group>(win)->can_receive_focus()) {
-                    return std::reinterpret_pointer_cast<epoc::window_group>(win);
+                if (reinterpret_cast<epoc::window_group*>(win)->can_receive_focus()) {
+                    return reinterpret_cast<epoc::window_group*>(win);
                 }
             }
         }
@@ -51,8 +52,8 @@ namespace eka2l1::epoc {
         return nullptr;
     }
 
-    void screen_device::update_focus(epoc::window_group_ptr closing_group) {
-        epoc::window_group_ptr next_to_focus = find_window_group_to_focus();
+    void screen_device::update_focus(epoc::window_group *closing_group) {
+        epoc::window_group *next_to_focus = find_window_group_to_focus();
 
         if (next_to_focus != focus) {
             if (focus && focus != closing_group) {
@@ -216,7 +217,7 @@ namespace eka2l1::epoc {
             ctx.set_request_status(KErrNone);
 
             // Detach the screen device
-            for (epoc::window_ptr &win : windows) {
+            for (epoc::window *&win : windows) {
                 win->dvc.reset();
             }
 
