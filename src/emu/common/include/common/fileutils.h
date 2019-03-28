@@ -40,11 +40,12 @@ namespace eka2l1::common {
     bool is_file(const std::string &path, const file_type expected,
         file_type *result = nullptr);
 
-    /* !\brief Resize given file.
+    /**
+     * \brief Resize given file.
      * \returns 0 if success
      *          -1 if file not found
      *          -2 if file resize failed (file is being readed, etc...)
-    */
+     */
     int resize(const std::string &path, const std::uint64_t size);
 
     /* !\brief Remove a file.
@@ -60,10 +61,11 @@ namespace eka2l1::common {
         std::string name;
     };
 
-    /* !\brief An custom directory iterator that provides more detail if neccessary.
+    /**
+     * \brief An custom directory iterator that provides more detail if neccessary.
      *
      * Born to be portable later
-    */
+     */
     struct dir_iterator {
         void *handle;
         void *find_data;
@@ -82,10 +84,11 @@ namespace eka2l1::common {
 
         bool is_valid() const;
 
-        /*  \brief Get the next entry of the folder
-         *  \returns 0 if success
+        /**
+         * \brief Get the next entry of the folder
+         * \returns 0 if success
          *          -1 if EOF
-        */
+         */
         int next_entry(dir_entry &entry);
     };
 }

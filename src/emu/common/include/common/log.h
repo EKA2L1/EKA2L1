@@ -28,10 +28,6 @@
 namespace eka2l1 {
     extern bool already_setup;
 
-    /*! \brief Logger interface.
-	 * 
-	 * GUI can log by provide the emulator an interface.
-	*/
     class base_logger {
     public:
         virtual void log(const char *fmt, ...) = 0;

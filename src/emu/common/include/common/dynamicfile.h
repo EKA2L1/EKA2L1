@@ -24,14 +24,15 @@
 #include <string>
 
 namespace eka2l1::common {
-    /* !\brief A wrapper around ifstream, support reading many encodings.
+    /**
+     * \brief A wrapper around ifstream, support reading many encodings.
      *
      * This is a wrapper of fstream, supports reading UTF-8 and UCS-2 file
      * to either string or an 16-bit string
      * 
      * It was born to deal with system files in Symbian, where most of them
      * are saved as an UCS2 file.
-    */
+     */
     class dynamic_ifile {
         std::ifstream stream_;
         int ucs2_;
@@ -39,16 +40,18 @@ namespace eka2l1::common {
     public:
         explicit dynamic_ifile(const std::string &name);
 
-        /* ! \brief Read a line to an 8-bit string
+        /**
+         * \brief Read a line to an 8-bit string
          *
          * String will be set to empty if the line is empty or file failed 
-        */
+         */
         bool getline(std::string &line);
 
-        /* ! \brief Read a line to u16string
+        /** 
+         * \brief Read a line to u16string
          *
          * String will be set to empty if the line is empty or file failed 
-        */
+         */
         bool getline(std::u16string &line);
 
         void read(std::string &line, const std::size_t len);

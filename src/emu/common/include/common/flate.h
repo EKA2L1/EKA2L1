@@ -129,7 +129,9 @@ namespace eka2l1 {
             INFLATER_SAFE_ZONE = 8
         };
 
-        /*! \brief Inflate a deflated stream (non-standard gzip). */
+        /**
+         * \brief An inflater for non-standard Gzip data.
+         */
         class inflater {
             bit_input *bits;
             const uint8_t *rptr;
@@ -140,27 +142,28 @@ namespace eka2l1 {
             uint8_t out[DEFLATE_MAX_DIST];
             uint8_t huff[INFLATER_BUF_SIZE + INFLATER_SAFE_ZONE];
 
-            /*! \brief Do inflation */
+            /** \brief Do inflation */
             int inflate();
 
         public:
-            /*! \brief Construct an inflate stream from a bit input */
-            inflater(bit_input &input);
+            explicit inflater(bit_input &input);
             ~inflater() {}
 
             void init();
 
-            /*! \brief Inflate bytes of data. 
-			 * 
-			 * \param buf The destination to write inflated data to.
-			 * \param rlen The number of byte to inflate 
-			*/
+            /**
+             * \brief Inflate data. 
+             * 
+             * \param buf The destination to write inflated data to.
+             * \param rlen The number of byte to inflate 
+             *
+             * \returns The number of bytes written to destination,
+             */
             int read(uint8_t *buf, size_t rlen);
 
-            /*! \brief Skip a number of bytes.
-			 *
-			 *  \param len Number of bytes to skip.
-			*/
+            /**
+             * \brief Skip a number of bytes.
+             */
             int skip(int len);
         };
     }

@@ -156,19 +156,19 @@ namespace eka2l1 {
 
         /**
          * \brief Choose the greater variable 
-		 *
-		 * Compare two objects and choose the greater object to return.
-		 */
+         *
+         * Compare two objects and choose the greater object to return.
+         */
         template <typename T>
         constexpr T max(T a, T b) {
             return a > b ? a : b;
         }
 
-        /* 
+        /** 
          * \brief Choose the less variable
-		 *
-		 * Compare two objects, choose the less object to return.
-		*/
+         *
+         * Compare two objects, choose the less object to return.
+         */
         template <typename T>
         constexpr T min(T a, T b) {
             return a > b ? b : a;
@@ -189,10 +189,12 @@ namespace eka2l1 {
             return gb * MB(1024);
         }
 
-        /*! \brief Find the position of the Nth apperance of a string in another string
-         *  \param idx The Nth apperance
-		 *  \param pos The position to start looking for
-		*/
+        /**
+         * \brief Find the position of the Nth apperance of a string in another string
+         *
+         * \param idx The Nth apperance
+         * \param pos The position to start looking for
+         */
         size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos = 0);
 
         /*! Remove a string from another string if possible */
