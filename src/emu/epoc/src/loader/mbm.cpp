@@ -85,6 +85,8 @@ namespace eka2l1::loader {
 
         std::size_t compressed_size = common::min(stream->left(), static_cast<std::size_t>(single_bm_header.compressed_len));
 
+        common::wo_buf_stream dest_stream(dest, !dest ? 0xFFFFFFFF : dest_max);
+
         switch (single_bm_header.compression) {
         case 0: {
             dest_max = compressed_size;
@@ -96,13 +98,29 @@ namespace eka2l1::loader {
             break;
         }
 
-        case 1: case 2: case 3: {
+        case 2: {
             LOG_ERROR("Unsupport RLE compression type {}", single_bm_header.compression);
             break;
         }
 
+        case 1: {
+            eka2l1::decompress_rle<8>(stream, reinterpret_cast<common::wo_stream*>(&dest_stream));
+            dest_max = dest_stream.tell();
+
+            break;
+        }
+
+        case 3: {
+            eka2l1::decompress_rle<16>(stream, reinterpret_cast<common::wo_stream*>(&dest_stream));
+            dest_max = dest_stream.tell();
+
+            break;
+        }
+
         case 4: {
-            decompress_rle_24bit_stream(stream, compressed_size, dest, dest_max);
+            eka2l1::decompress_rle<24>(stream, reinterpret_cast<common::wo_stream*>(&dest_stream));
+            dest_max = dest_stream.tell();
+
             break;
         }
         }
