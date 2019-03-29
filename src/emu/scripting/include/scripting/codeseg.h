@@ -19,33 +19,33 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
-#include <vector>
+#include <string>
 
-namespace eka2l1 {
-    namespace kernel {
-        class process;
-    }
+namespace eka2l1::kernel {
+    class codeseg;
 }
 
 namespace eka2l1::scripting {
-    class thread;
-
-    class process {
-        eka2l1::kernel::process *process_handle;
+    class codeseg {
+        kernel::codeseg *real_seg_;
 
     public:
-        process(uint64_t handle);
+        codeseg() = default;
+        explicit codeseg(std::uint64_t handle);
 
-        bool read_process_memory(const std::uint32_t addr, std::vector<char> &buffer, const size_t size);
-        bool write_process_memory(const std::uint32_t addr, std::vector<char> buffer);
+        std::uint32_t lookup(const std::uint32_t ord);
+        std::uint32_t code_run_address();
+        std::uint32_t data_run_address();
+        std::uint32_t bss_run_address();
 
-        std::string get_executable_path();
-        std::string get_name();
+        std::uint32_t code_size();
+        std::uint32_t data_size();
+        std::uint32_t bss_size();
 
-        std::vector<std::unique_ptr<eka2l1::scripting::thread>> get_thread_list();
+        std::uint32_t get_export_count();
     };
 
-    std::vector<std::unique_ptr<eka2l1::scripting::process>> get_process_list();
-    std::unique_ptr<eka2l1::scripting::process> get_current_process();
+    std::unique_ptr<scripting::codeseg> load_codeseg(const std::string &virt_path);
 }

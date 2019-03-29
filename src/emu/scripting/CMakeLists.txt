@@ -1,4 +1,7 @@
+include (FileUtils)
+
 add_library(symemu
+    include/scripting/codeseg.h
     include/scripting/cpu.h
     include/scripting/emulog.h
     include/scripting/instance.h
@@ -7,13 +10,14 @@ add_library(symemu
     include/scripting/mem.h
     include/scripting/hook.h
     include/scripting/symemu.inl
+    src/codeseg.cpp
     src/cpu.cpp
     src/emulog.cpp
-    src/process.cpp
+    src/instance.cpp
     src/mem.cpp
     src/hook.cpp
-    src/thread.cpp
-    src/instance.cpp)
+    src/process.cpp
+    src/thread.cpp)
 
 pybind11_add_module(symemu_common
     include/scripting/common.h
@@ -48,20 +52,5 @@ set_target_properties(symemu_common PROPERTIES OUTPUT_NAME common
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/scripts/symemu2"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/scripts/symemu2")
 
-add_custom_command(
-	TARGET symemu
-			POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:symemu>/scripts/example"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/README.md" "$<TARGET_FILE_DIR:symemu>/scripts/example/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/example/hello_eka2l1.py" "$<TARGET_FILE_DIR:symemu>/scripts/example/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/example/hello_panic.py" "$<TARGET_FILE_DIR:symemu>/scripts/example/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/example/hello_svc.py" "$<TARGET_FILE_DIR:symemu>/scripts/example/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/example/hello_reschedule.py" "$<TARGET_FILE_DIR:symemu>/scripts/example/")
-
-add_custom_command(
-	TARGET symemu_common
-			POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/__init__.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/events.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/svc.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/scripting/python/symemu2/descriptor.py" "$<TARGET_FILE_DIR:symemu>/scripts/symemu2/")
+add_assets(symemu ${CMAKE_CURRENT_SOURCE_DIR}/python/example scripts/example)
+add_assets(symemu_common ${CMAKE_CURRENT_SOURCE_DIR}/python/symemu2 .)

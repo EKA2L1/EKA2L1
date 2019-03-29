@@ -82,8 +82,9 @@ namespace eka2l1::manager {
         }
 
         try {
-            modules[module].attr("scriptEntry")(reinterpret_cast<uint64_t>(sys));
+            modules[module].attr("scriptEntry")();
         } catch (py::error_already_set &exec) {
+            LOG_ERROR("Error executing script entry of {}: {}", module, exec.what());
             return false;
         }
 

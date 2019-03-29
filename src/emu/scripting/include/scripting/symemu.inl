@@ -1,3 +1,4 @@
+#include <scripting/codeseg.h>
 #include <scripting/cpu.h>
 #include <scripting/emulog.h>
 #include <scripting/hook.h>
@@ -92,6 +93,33 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get the own process of thread.
         )pbdoc");
 
+    py::class_<scripting::codeseg>(m, "Codeseg")
+        .def(py::init([](uint64_t handle) { return std::make_unique<scripting::codeseg>(handle); }))
+        .def("lookup", &scripting::codeseg::lookup, R"pbdoc(
+            Lookup address of a symbol with given ordinal.
+        )pbdoc")
+        .def("codeRunAddress", &scripting::codeseg::code_run_address, R"pbdoc(
+            Get runtime code section address.
+        )pbdoc")
+        .def("dataRunAddress", &scripting::codeseg::data_run_address, R"pbdoc(
+            Get runtime data section address.
+        )pbdoc")
+        .def("bssRunAddress", &scripting::codeseg::bss_run_address, R"pbdoc(
+            Get runtime BSS address.
+        )pbdoc")
+        .def("codeSize", &scripting::codeseg::code_size, R"pbdoc(
+            Get code section size.
+        )pbdoc")
+        .def("dataSize", &scripting::codeseg::data_size, R"pbdoc(
+            Get data section size.
+        )pbdoc")
+        .def("bssSize", &scripting::codeseg::bss_size, R"pbdoc(
+            Get bss section size.
+        )pbdoc")
+        .def("exportCount", &scripting::codeseg::get_export_count, R"pbdoc(
+            Get total exports provided by this code segment.
+        )pbdoc");
+
     py::class_<scripting::cpu>(m, "Cpu")
         .def_static("getReg", &scripting::cpu::get_register, R"pbdoc(
             Get a register of the CPU.
@@ -158,5 +186,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         
     m.def("getCurrentThread", &scripting::get_current_thread, R"pbdoc(
         Get kernel's current thread.
+    )pbdoc");
+
+    m.def("loadCodeseg", &scripting::load_codeseg, R"pbdoc(
+        Load a codeseg from an E32Image/ROM image.
     )pbdoc");
 }
