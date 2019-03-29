@@ -43,6 +43,7 @@ namespace eka2l1 {
         };
 
         class wo_stream: public basic_stream {
+        public:
             virtual void write(const void *buf, uint32_t size) = 0;
             
             void write_string(const std::string &str) {
@@ -149,11 +150,11 @@ namespace eka2l1 {
 
         class wo_buf_stream : public buffer_stream_base, public wo_stream {
         public:
-            wo_buf_stream(uint8_t *beg)
-                : buffer_stream_base(beg, 0) {}
+            wo_buf_stream(uint8_t *beg, std::size_t max_size = 0xFFFFFFFF)
+                : buffer_stream_base(beg, max_size) {}
 
             bool valid() override {
-                return true;
+                return beg + crr_pos < end;
             }
 
             std::uint64_t size() override {
@@ -183,7 +184,9 @@ namespace eka2l1 {
             }
 
             void write(const void *buf, uint32_t size) override {
-                memcpy(beg + crr_pos, buf, size);
+                if (beg) {
+                    memcpy(beg + crr_pos, buf, size);
+                }
 
                 if (beg + crr_pos > end) {
                     end = beg + crr_pos;
