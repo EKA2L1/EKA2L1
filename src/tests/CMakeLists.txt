@@ -1,4 +1,4 @@
-include(TestUtils)
+include(FileUtils)
 
 add_subdirectory(epoc)
 add_subdirectory(common)
@@ -22,10 +22,10 @@ add_test(
 )
 
 set(EPOC_LOADER_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/loader/assets/")
-add_test_assets(ekatests ${EPOC_LOADER_ASSETS_PATH} "loaderassets")
+add_assets(ekatests ${EPOC_LOADER_ASSETS_PATH} "loaderassets")
 
 set(COMMON_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/common/assets/")
-add_test_assets(ekatests ${COMMON_ASSETS_PATH} "commonassets")
+add_assets(ekatests ${COMMON_ASSETS_PATH} "commonassets")
 
 set(SERVICES_CENTRALREPO_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/centralrepo/assets/")
-add_test_assets(ekatests ${SERVICES_CENTRALREPO_ASSETS_PATH} "centralrepoassets")
+add_assets(ekatests ${SERVICES_CENTRALREPO_ASSETS_PATH} "centralrepoassets")
