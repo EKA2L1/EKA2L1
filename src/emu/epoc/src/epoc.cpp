@@ -328,10 +328,6 @@ namespace eka2l1 {
 
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
-
-#if ENABLE_SCRIPTING == 1
-        load_scripts();
-#endif
     }
 
     system_impl::system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
@@ -363,6 +359,10 @@ namespace eka2l1 {
     bool system_impl::load(uint32_t id) {
         hlelibmngr.reset();
         hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
+
+        #if ENABLE_SCRIPTING == 1
+            load_scripts();
+        #endif
 
         if (!startup_inited) {
             for (auto &startup_app : mngr.get_config_manager()->get_values("startup")) {
