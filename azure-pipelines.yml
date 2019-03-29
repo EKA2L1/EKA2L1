@@ -19,8 +19,8 @@ jobs:
       solution: 'build/ALL_BUILD.vcxproj'
       configuration: 'Release'
       maximumCpuCount: true
-  - script: Release\ekatests
-    workingDirectory: 'build/src/tests'
+  - script: ekatests
+    workingDirectory: 'build/src/tests/Release'
     displayName: Run tests
 
 - job: LinuxGCC8Build
