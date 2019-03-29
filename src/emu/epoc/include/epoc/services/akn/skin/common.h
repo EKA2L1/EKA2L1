@@ -33,4 +33,10 @@ namespace eka2l1::epoc {
         akn_ssch_anim_background_change = 10,
         akn_ssch_ss_wallpaper_change = 11
     };
+
+    enum {
+        AVKON_UID = 0x101F876E,
+        PERSONALISATION_UID = 0x101F876F,
+        THEMES_UID = 0x102818E8
+    };
 }

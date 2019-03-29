@@ -70,6 +70,7 @@ add_library(epocservs
     include/epoc/services/akn/icon/icon.h
     include/epoc/services/akn/skin/ops.h
     include/epoc/services/akn/skin/server.h
+    include/epoc/services/akn/skin/settings.h
     include/epoc/services/applist/op.h
     include/epoc/services/applist/applist.h
     include/epoc/services/backup/backup.h
@@ -113,6 +114,7 @@ add_library(epocservs
     src/services/akn/icon/init.cpp
     src/services/akn/skin/ops.cpp
     src/services/akn/skin/server.cpp
+    src/services/akn/skin/settings.cpp
     src/services/applist/applist.cpp
     src/services/backup/backup.cpp
     src/services/cdl/cdl.cpp

@@ -18,10 +18,12 @@
  */
 
 #include <epoc/services/akn/skin/common.h>
+#include <epoc/services/akn/skin/settings.h>
 #include <epoc/services/framework.h>
 #include <epoc/ptr.h>
 
 #include <queue>
+#include <memory>
 
 namespace eka2l1 {
     class akn_skin_server_session: public service::typical_session {
@@ -63,6 +65,9 @@ namespace eka2l1 {
     };
 
     class akn_skin_server: public service::typical_server {
+        std::unique_ptr<epoc::akn_ss_settings> settings_;
+
+        void do_initialisation();
     public:
         explicit akn_skin_server(eka2l1::system *sys);
 

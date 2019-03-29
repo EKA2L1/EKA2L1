@@ -24,6 +24,9 @@
 #include <common/log.h>
 #include <e32err.h>
 
+#include <epoc/epoc.h>
+#include <epoc/kernel.h>
+
 namespace eka2l1 {
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid) 
         : service::typical_session(svr, client_ss_uid) {
@@ -102,11 +105,24 @@ namespace eka2l1 {
     }
 
     akn_skin_server::akn_skin_server(eka2l1::system *sys) 
-        : service::typical_server(sys, "!AknSkinServer") {
+        : service::typical_server(sys, "!AknSkinServer")
+        , settings_(nullptr) {
     }
 
     void akn_skin_server::connect(service::ipc_context ctx) {
+        if (!settings_) {
+            do_initialisation();
+        }
+
         create_session<akn_skin_server_session>(&ctx);
         ctx.set_request_status(KErrNone);
-    }   
+    }
+
+    void akn_skin_server::do_initialisation() {
+        server_ptr svr = sys->get_kernel_system()->get_by_name<service::server>("!CentralRepository");
+        
+        // Older versions dont use cenrep.
+        settings_ = std::make_unique<epoc::akn_ss_settings>(sys->get_io_system(), !svr ? nullptr :
+            reinterpret_cast<central_repo_server*>(&(*svr)));
+    }
 }
