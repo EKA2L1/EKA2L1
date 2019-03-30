@@ -32,8 +32,6 @@ namespace eka2l1 {
         struct request_status;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
-
     enum class ipc_arg_type {
         unspecified = 0,
         handle = 1,
