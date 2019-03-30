@@ -91,11 +91,11 @@ namespace eka2l1 {
         }
 
         std::optional<T> pop() {
-            if (queue.empty()) {
-                return std::optional<T>{};
-            }
-
             const std::lock_guard<std::mutex> guard(lock);
+
+            if (queue.empty()) {
+                return std::nullopt;
+            }
 
             T val = std::move(queue.front());
             queue.pop();
