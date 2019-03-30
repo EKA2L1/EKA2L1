@@ -24,6 +24,7 @@ namespace eka2l1::epoc {
     skn_file::skn_file(common::ro_stream *stream)
         : master_chunk_size_(0),
           master_chunk_count_(0),
+          crr_filename_id_(0),
           stream_(stream) {
         if (!read_master_chunk()) {
             LOG_ERROR("Reading master chunk failed!");
@@ -79,6 +80,11 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case as_desc_filename: {
+                base_offset += handle_filename_chunk(base_offset);
+                break;
+            }
+
             default: {
                 LOG_ERROR("Unhandled chunk type: {}", chunk_type);
                 base_offset += chunk_size;
@@ -127,6 +133,28 @@ namespace eka2l1::epoc {
 
         name.name.resize(name_len);
         stream_->read(base_offset + skn_desc_dfo_name_name, &name.name[0], name_len * 2);
+
+        return chunk_size;
+    }
+
+    std::uint32_t skn_file::handle_filename_chunk(std::uint32_t base_offset) {
+        std::uint32_t chunk_size = 0;
+        stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
+        
+        std::int32_t id = 0;
+        stream_->read(base_offset + skn_desc_dfo_filename_filename_id, &id, 4);
+
+        id += crr_filename_id_;
+
+        std::uint16_t strlen = 0;
+        stream_->read(base_offset + skn_desc_dfo_filename_len, &strlen, 4);
+
+        std::u16string name;
+        name.resize(strlen);
+
+        stream_->read(base_offset + skn_desc_dfo_filename_filename, &name[0], strlen * 2);
+
+        filenames_.emplace(id, std::move(name));
 
         return chunk_size;
     }

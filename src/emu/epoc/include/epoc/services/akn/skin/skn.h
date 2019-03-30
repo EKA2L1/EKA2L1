@@ -218,8 +218,12 @@ namespace eka2l1::epoc {
         std::uint32_t master_chunk_size_;
         std::int32_t master_chunk_count_;
 
+        std::uint32_t crr_filename_id_;
+
         skn_file_info info_;
         skn_name skin_name_;
+
+        std::unordered_map<std::uint32_t, std::u16string> filenames_;
 
         common::ro_stream *stream_;
 
@@ -228,6 +232,7 @@ namespace eka2l1::epoc {
 
         std::uint32_t handle_info_chunk(std::uint32_t base_offset, skn_file_info &info);
         std::uint32_t handle_name_chunk(std::uint32_t base_offset, skn_name &name);
+        std::uint32_t handle_filename_chunk(std::uint32_t base_offset);
 
         explicit skn_file(common::ro_stream *stream);
     };
