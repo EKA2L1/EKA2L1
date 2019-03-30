@@ -3,6 +3,7 @@
 #include <scripting/emulog.h>
 #include <scripting/hook.h>
 #include <scripting/mem.h>
+#include <scripting/message.h>
 #include <scripting/process.h>
 #include <scripting/thread.h>
 
@@ -120,6 +121,28 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get total exports provided by this code segment.
         )pbdoc");
 
+    py::class_<scripting::ipc_message_wrapper>(m, "IpcMessage")
+        .def(py::init([](const std::uint64_t handle) { return std::make_unique<scripting::ipc_message_wrapper>(handle); }))
+        .def("function", &scripting::ipc_message_wrapper::function, R"pbdoc(
+            Get opcode ordinal of this message.
+        )pbdoc")
+        .def("sender", &scripting::ipc_message_wrapper::sender, R"pbdoc(
+            Get the thread that sends and owns the message.
+        )pbdoc")
+        .def("arg", &scripting::ipc_message_wrapper::arg, R"pbdoc(
+            Get the argument at specified index.
+
+            Parameters
+            ------------------------
+            idx: int
+                 The index of the IPC argument. Must be in [0, 3].
+
+            Returns
+            ------------------------
+            int
+                 An integer, which is the value of argument at the given index.
+        )pbdoc");
+
     py::class_<scripting::cpu>(m, "Cpu")
         .def_static("getReg", &scripting::cpu::get_register, R"pbdoc(
             Get a register of the CPU.
@@ -190,5 +213,19 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
 
     m.def("loadCodeseg", &scripting::load_codeseg, R"pbdoc(
         Load a codeseg from an E32Image/ROM image.
+    )pbdoc");
+
+    m.def("messageFromHandle", &scripting::message_from_handle, R"pbdoc(
+        Retrieve an IPC message object from a handle.
+
+        Parameters
+        -----------------
+        guestHandle: int
+                     A guest handle to the IPC message object.
+
+        Returns
+        -----------------
+        IpcMessage
+                     IPC Message Object.
     )pbdoc");
 }

@@ -8,12 +8,14 @@ add_library(symemu
     include/scripting/process.h
     include/scripting/thread.h
     include/scripting/mem.h
+    include/scripting/message.h
     include/scripting/hook.h
     include/scripting/symemu.inl
     src/codeseg.cpp
     src/cpu.cpp
     src/emulog.cpp
     src/instance.cpp
+    src/message.cpp
     src/mem.cpp
     src/hook.cpp
     src/process.cpp
