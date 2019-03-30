@@ -65,7 +65,7 @@ namespace eka2l1 {
     #define COND_CHECK if (eka2l1::log::spd_logger)
     #define COND_CHECK_AND && eka2l1::log::spd_logger
 #else
-    #define COND_CHECL
+    #define COND_CHECK
     #define COND_CHECK_AND
 #endif
 
