@@ -205,6 +205,26 @@ namespace eka2l1::epoc {
         std::uint16_t lang;
         std::u16string name;
     };
+
+    struct skn_attrib_info {
+        std::uint32_t attrib {0};
+        std::uint8_t align;
+
+        std::int16_t image_coord_x;
+        std::int16_t image_coord_y;
+        std::uint16_t image_size_x;
+        std::uint16_t image_size_y;
+    };
+
+    struct skn_bitmap_info {
+        std::uint32_t major;
+        std::uint32_t minor;
+        std::uint32_t filename_id;
+        std::uint32_t bmp_idx;
+        std::uint32_t mask_bitmap_idx;
+
+        skn_attrib_info attrib;
+    };
     
     struct skn_file_info {
         std::u16string author;
@@ -224,15 +244,21 @@ namespace eka2l1::epoc {
         skn_name skin_name_;
 
         std::unordered_map<std::uint32_t, std::u16string> filenames_;
+        std::vector<skn_bitmap_info> bitmaps_;
 
         common::ro_stream *stream_;
 
         bool read_master_chunk();
         bool process_chunks(std::uint32_t base_offset, const std::int32_t count);
 
+        void process_class_def_chunks(std::uint32_t base_offset, const std::int32_t count);
+        void process_bitmap_def_chunk(std::uint32_t base_offset);
+        void process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib);
+
         std::uint32_t handle_info_chunk(std::uint32_t base_offset, skn_file_info &info);
         std::uint32_t handle_name_chunk(std::uint32_t base_offset, skn_name &name);
         std::uint32_t handle_filename_chunk(std::uint32_t base_offset);
+        std::uint32_t handle_class_chunk(std::uint32_t base_offset);
 
         explicit skn_file(common::ro_stream *stream);
     };

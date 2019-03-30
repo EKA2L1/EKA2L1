@@ -85,6 +85,11 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case as_desc_skin_desc_class: {
+                base_offset += handle_class_chunk(base_offset);
+                break;
+            }
+
             default: {
                 LOG_ERROR("Unhandled chunk type: {}", chunk_type);
                 base_offset += chunk_size;
@@ -157,5 +162,76 @@ namespace eka2l1::epoc {
         filenames_.emplace(id, std::move(name));
 
         return chunk_size;
+    }
+
+    std::uint32_t skn_file::handle_class_chunk(std::uint32_t base_offset) {
+        std::uint32_t chunk_size = 0;
+        stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
+
+        std::uint32_t count = 0;
+        stream_->read(base_offset + skn_desc_dfo_class_chunk_n, &count, 4);
+
+        process_class_def_chunks(base_offset + skn_desc_dfo_class_content, count);
+
+        return chunk_size;
+    }
+    
+    void skn_file::process_class_def_chunks(std::uint32_t base_offset, std::int32_t chunk_count) {
+        for (std::int32_t i = 0; i < chunk_count; i++) {
+            std::uint32_t chunk_size = 0;
+            stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
+
+            std::uint16_t chunk_type = 0;
+            stream_->read(base_offset + skn_desc_dfo_common_type, &chunk_type, 2);
+
+            switch (chunk_type) {
+            case as_desc_skin_desc_bmp_item_def: {
+                process_bitmap_def_chunk(base_offset);
+                break;
+            }
+
+            default: {
+                LOG_ERROR("Unknown class def chunk type: {}", chunk_type);
+                break;
+            }
+            }
+        
+            base_offset += chunk_size;
+        }
+    }
+
+    void skn_file::process_bitmap_def_chunk(std::uint32_t base_offset) {
+        skn_bitmap_info bmp_info_ {};
+        stream_->read(base_offset + skn_desc_dfo_bitmap_major, &bmp_info_.major, 4);
+        stream_->read(base_offset + skn_desc_dfo_bitmap_minor, &bmp_info_.minor, 4);
+        stream_->read(base_offset + skn_desc_dfo_bitmap_filename_id, &bmp_info_.filename_id, 4);
+        stream_->read(base_offset + skn_desc_dfo_bitmap_bitmap_idx, &bmp_info_.bmp_idx, 4);
+        stream_->read(base_offset + skn_desc_dfo_bitmap_mask_idx, &bmp_info_.mask_bitmap_idx, 4);
+
+        process_attrib(base_offset + skn_desc_dfo_bitmap_attribs, bmp_info_.attrib);
+
+        bitmaps_.push_back(std::move(bmp_info_));
+    }
+
+    void skn_file::process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib) {
+        std::uint16_t ver = 0;
+        stream_->read(base_offset + skn_desc_dfo_common_ver, &ver, 2);
+
+        std::uint16_t attrib_and_align = 0;
+        stream_->read(base_offset + skn_desc_dfo_attribs_alignment, &attrib_and_align, 2);
+
+        attrib.attrib = attrib_and_align & 0xFF;
+        attrib.align = (attrib_and_align & 0xFF00) >> 8;
+
+        stream_->read(base_offset + skn_desc_dfo_attribs_coordx, &attrib.image_coord_x, 2);
+        stream_->read(base_offset + skn_desc_dfo_attribs_coordy, &attrib.image_coord_y, 2);
+        stream_->read(base_offset + skn_desc_dfo_attribs_sizew, &attrib.image_size_x, 2);
+        stream_->read(base_offset + skn_desc_dfo_attribs_sizeh, &attrib.image_size_y, 2);
+
+        if (ver >= 2) {
+            // 16-bit flag
+            stream_->read(base_offset + skn_desc_dfo_attribs_ext_attrib_flags, &attrib_and_align, 2);
+            attrib.attrib |= attrib_and_align << 8;
+        }
     }
 }
