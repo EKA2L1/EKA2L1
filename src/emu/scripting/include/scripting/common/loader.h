@@ -19,34 +19,27 @@
 
 #pragma once
 
+#include <epoc/loader/mbm.h>
+
 #include <memory>
-#include <vector>
 #include <string>
 
-namespace eka2l1 {
-    namespace kernel {
-        class process;
-    }
+namespace eka2l1::common {
+    class ro_stream;
 }
 
 namespace eka2l1::scripting {
-    class thread;
-
-    class process {
-        eka2l1::kernel::process *process_handle;
-
+    class mbm_reader {
+        std::unique_ptr<loader::mbm_file> mbm_;
+        std::shared_ptr<common::ro_stream> stream_;
+    
     public:
-        process(uint64_t handle);
+        explicit mbm_reader(const std::string &path);
 
-        bool read_process_memory(const std::uint32_t addr, std::vector<char> &buffer, const size_t size);
-        bool write_process_memory(const std::uint32_t addr, std::vector<char> buffer);
+        std::uint32_t bitmap_count();
+        bool save_bitmap(const std::uint32_t idx, const std::string &dest_path);
 
-        std::string get_executable_path();
-        std::string get_name();
-
-        std::vector<std::unique_ptr<eka2l1::scripting::thread>> get_thread_list();
+        std::uint32_t bits_per_pixel(const std::uint32_t idx);
+        std::pair<int, int> bitmap_size(const std::uint32_t idx);
     };
-
-    std::vector<std::unique_ptr<eka2l1::scripting::process>> get_process_list();
-    std::unique_ptr<eka2l1::scripting::process> get_current_process();
 }

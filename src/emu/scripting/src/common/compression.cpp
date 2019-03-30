@@ -75,32 +75,3 @@ namespace eka2l1::scripting {
         return result;
     }
 }
-
-PYBIND11_MODULE(common, m) {
-    py::class_<scripting::ibytepair_stream_wrapper>
-        bytepair_stream(m, "BytePairReaderStream");
-
-    bytepair_stream.def(py::init([](const std::string &path) {
-        return std::make_unique<scripting::ibytepair_stream_wrapper>(path);
-    }));
-
-    bytepair_stream.def("getAllPageOffsets", &scripting::ibytepair_stream_wrapper::get_all_page_offsets,
-        R"pbdoc(
-        Get the start offset of all pages available in the bytepair stream.
-        )pbdoc");
-
-    bytepair_stream.def("readPageTable", &scripting::ibytepair_stream_wrapper::get_all_page_offsets,
-        R"pbdoc(
-        Read the page table. Page table in the bytepair stream is where all pages information are stored.
-        )pbdoc");
-
-    bytepair_stream.def("readPage", &scripting::ibytepair_stream_wrapper::read_page,
-        R"pbdoc(
-        Read a page at specified index. Throw IndexError if index is out of available pages range.
-        )pbdoc");
-
-    bytepair_stream.def("readPages", &scripting::ibytepair_stream_wrapper::read_page,
-        R"pbdoc(
-        Read all pages available.
-        )pbdoc");
-}
