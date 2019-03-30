@@ -51,5 +51,14 @@ int main(int argc, char **argv) {
         LOG_INFO("{}", eka2l1::common::ucs2_to_utf8(sknf.info_.copyright));
     }
 
+    std::string listed_name = "Associated filenames: \n";
+
+    for (auto &filename_: sknf.filenames_) {
+        listed_name += fmt::format("\t- {} (ID: {})\n", eka2l1::common::ucs2_to_utf8(filename_.second),
+            filename_.first);
+    }
+
+    LOG_INFO("{}", listed_name);
+
     return 0;
 }
