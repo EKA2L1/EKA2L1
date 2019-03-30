@@ -98,11 +98,6 @@ namespace eka2l1::loader {
             break;
         }
 
-        case 2: {
-            LOG_ERROR("Unsupport RLE compression type {}", single_bm_header.compression);
-            break;
-        }
-
         case 1: {
             eka2l1::decompress_rle<8>(stream, reinterpret_cast<common::wo_stream*>(&dest_stream));
             dest_max = dest_stream.tell();
@@ -122,6 +117,13 @@ namespace eka2l1::loader {
             dest_max = dest_stream.tell();
 
             break;
+        }
+        
+        default: {
+            LOG_ERROR("Unsupport RLE compression type {}", single_bm_header.compression);
+            stream->seek(crr_pos, common::beg);
+
+            return false;
         }
         }
 
