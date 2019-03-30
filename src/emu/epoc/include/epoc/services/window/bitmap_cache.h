@@ -52,7 +52,7 @@ namespace eka2l1::epoc {
         std::uint8_t *base_large_chunk;
 
         kernel_system *kern;
-        graphics_driver_client_ptr  cli;
+        std::weak_ptr<drivers::graphics_driver_client> cli;
 
         std::int64_t last_free { 0 };
 

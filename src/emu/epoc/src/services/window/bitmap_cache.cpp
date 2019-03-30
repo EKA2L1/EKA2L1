@@ -35,7 +35,7 @@
 
 namespace eka2l1::epoc {
     bitmap_cache::bitmap_cache(kernel_system *kern_) 
-        : base_large_chunk(nullptr), kern(kern_), cli(nullptr) {
+        : base_large_chunk(nullptr), kern(kern_) {
         std::fill(driver_textures.begin(), driver_textures.end(), 0);
         std::fill(hashes.begin(), hashes.end(), 0);
     }
@@ -82,14 +82,15 @@ namespace eka2l1::epoc {
 
         return oldest_timestamp_idx;
     }
-    
+
     drivers::handle bitmap_cache::add_or_get(epoc::bitwise_bitmap *bmp) {
         if (!base_large_chunk) {
             chunk_ptr ch = kern->get_by_name<kernel::chunk>("FbsLargeChunk");
             base_large_chunk = ch->base().get(kern->get_memory_system());
         }
 
-        if (!cli) {
+        // If the old client is exprired, get a new one
+        if (cli.expired()) {
             cli = std::move(kern->get_system()->get_graphic_driver_client());
         }
 
@@ -123,7 +124,16 @@ namespace eka2l1::epoc {
         }
 
         if (should_upload) {
-            driver_textures[idx] = cli->upload_bitmap(driver_textures[idx]
+            auto cli_unlocked = cli.lock();
+
+            if (!cli_unlocked) {
+                // Graphics driver experied. Maybe the driver die, and a new one replaces it ?
+                // Let users take the consequences.
+                LOG_WARN("Graphics driver expired. Bitmap won't be uploaded.");
+                return 0;
+            }
+
+            driver_textures[idx] = cli_unlocked->upload_bitmap(driver_textures[idx]
                 , reinterpret_cast<char*>(base_large_chunk + bmp->data_offset_)
                 , bmp->header_.compressed_len, bmp->header_.size_pixels.width(), bmp->header_.size_pixels.height()
                 , bmp->header_.bit_per_pixels);
