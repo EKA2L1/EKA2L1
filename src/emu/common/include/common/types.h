@@ -124,6 +124,14 @@ int translate_protection(prot cprot);
 char16_t drive_to_char16(const drive_number drv);
 drive_number char16_to_drive(const char16_t c);
 
+enum class language {
+#define LANG_DECL(x, y) x,
+    #include <common/lang.def>
+#undef LANG_DECL
+};
+
+const char *num_to_lang(const int num);
+
 // Formatting helper, type-specific preprocessing for improving safety and functionality
 template <typename T, typename = void>
 struct fmt_unveil;
