@@ -55,7 +55,7 @@ class DescriptorBase(object):
             DescriptorType.PTR: get_ptr_ptr,
             DescriptorType.BUF: get_ptr_buf,
             DescriptorType.BUF_CONST_PTR: get_ptr_buf_const_ptr
-        };
+        }
         
         lengthAndType = symemu.readDword(address)
         self.length = lengthAndType & 0xFFFFFF
@@ -67,7 +67,7 @@ class Descriptor8(DescriptorBase):
         DescriptorBase.__init__(self, address)
 
     def __str__(self):
-        retstr = '';
+        retstr = ''
     
         for i in range(0, self.length - 1):
             c = symemu.readByte(self.ptr + i * 1)
@@ -80,7 +80,7 @@ class Descriptor16(DescriptorBase):
         DescriptorBase.__init__(self, address)
 
     def __str__(self):
-        retstr = u'';
+        retstr = u''
         
         for i in range(0, self.length - 1):
             uc = symemu.readWord(self.ptr + i * 2)

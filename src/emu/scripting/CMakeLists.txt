@@ -20,8 +20,8 @@ add_library(symemu
     src/thread.cpp)
 
 pybind11_add_module(symemu_common
-    include/scripting/common.h
-    src/common.cpp)
+    include/scripting/common/compression.h
+    src/common/compression.cpp)
 
 target_include_directories(symemu PUBLIC include  ${EPOC32_INCLUDE_DIR})
 target_link_libraries(symemu PRIVATE common epoc epockern manager)
