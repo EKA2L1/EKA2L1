@@ -22,6 +22,8 @@
 #define SPDLOG_FMT_EXTERNAL
 #include <spdlog/spdlog.h>
 
+#include <common/configure.h>
+
 #include <memory>
 #include <string>
 
@@ -59,29 +61,37 @@ namespace eka2l1 {
 #define LOG_ERROR_IF(flag, fmt, ...)
 #define LOG_CRITICAL_IF(flag, fmt, ...)
 #else
-#define LOG_TRACE(fmt, ...) eka2l1::log::spd_logger->trace("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_DEBUG(fmt, ...) eka2l1::log::spd_logger->debug("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...) eka2l1::log::spd_logger->info("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_WARN(fmt, ...) eka2l1::log::spd_logger->warn("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...) eka2l1::log::spd_logger->error("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_CRITICAL(fmt, ...) eka2l1::log::spd_logger->critical("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#ifdef ENABLE_SCRIPTING
+    #define COND_CHECK if (eka2l1::log::spd_logger)
+    #define COND_CHECK_AND && eka2l1::log::spd_logger
+#else
+    #define COND_CHECL
+    #define COND_CHECK_AND
+#endif
+
+#define LOG_TRACE(fmt, ...) COND_CHECK eka2l1::log::spd_logger->trace("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) COND_CHECK eka2l1::log::spd_logger->debug("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...) COND_CHECK eka2l1::log::spd_logger->info("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_WARN(fmt, ...) COND_CHECK eka2l1::log::spd_logger->warn("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) COND_CHECK eka2l1::log::spd_logger->error("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_CRITICAL(fmt, ...) COND_CHECK eka2l1::log::spd_logger->critical("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
 
 #define LOG_TRACE_IF(flag, fmt, ...) \
-    if (flag)                        \
+    if (flag COND_CHECK_AND)         \
     eka2l1::log::spd_logger->trace("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOG_DEBUG_IF(flag, fmt, ...) \
-    if (flag)                        \
+    if (flag COND_CHECK_AND)         \
     eka2l1::log::spd_logger->debug("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOG_INFO_IF(flag, fmt, ...) \
-    if (flag)                       \
+    if (flag COND_CHECK_AND)        \
     eka2l1::log::spd_logger->info("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOG_WARN_IF(flag, fmt, ...) \
-    if (flag)                       \
+    if (flag COND_CHECK_AND)        \
     eka2l1::log::spd_logger->warn("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOG_ERROR_IF(flag, fmt, ...) \
-    if (flag)                        \
+    if (flag COND_CHECK_AND)         \
     eka2l1::log::spd_logger->error("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOG_CRITICAL_IF(flag, fmt, ...) \
-    if (flag)                           \
+    if (flag COND_CHECK_AND)            \
     eka2l1::log::spd_logger->critical("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
 #endif
