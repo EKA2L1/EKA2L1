@@ -23,6 +23,9 @@
 #include <epoc/services/akn/skin/common.h>
 #include <common/buffer.h>
 
+#include <map>
+#include <unordered_map>
+
 namespace eka2l1::epoc {
     enum akn_skin_descriptor_chunk_type {
         as_desc_skin_desc = 0,
@@ -78,8 +81,7 @@ namespace eka2l1::epoc {
         skn_desc_dfo_class_chunk_n = 9,
         skn_desc_dfo_class_content = 13,
 
-        skn_desc_dfo_bitmap_major = 8,
-        skn_desc_dfo_bitmap_minor = 12,
+        skn_desc_dfo_bitmap_hash_id = 8,
         skn_desc_dfo_bitmap_filename_id = 16,
         skn_desc_dfo_bitmap_bitmap_idx = 20,
         skn_desc_dfo_bitmap_mask_idx = 24,
@@ -216,9 +218,16 @@ namespace eka2l1::epoc {
         std::uint16_t image_size_y;
     };
 
-    struct skn_bitmap_info {
-        std::uint32_t major;
-        std::uint32_t minor;
+    enum class skn_def_type {
+        bitmap
+    };
+
+    struct skn_def_base {
+        std::uint64_t id_hash;
+        skn_def_type type;
+    };
+
+    struct skn_bitmap_info : public skn_def_base {
         std::uint32_t filename_id;
         std::uint32_t bmp_idx;
         std::uint32_t mask_bitmap_idx;
@@ -244,7 +253,7 @@ namespace eka2l1::epoc {
         skn_name skin_name_;
 
         std::unordered_map<std::uint32_t, std::u16string> filenames_;
-        std::vector<skn_bitmap_info> bitmaps_;
+        std::map<std::uint64_t, skn_bitmap_info> bitmaps_;
 
         common::ro_stream *stream_;
 

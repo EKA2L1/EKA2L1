@@ -202,15 +202,16 @@ namespace eka2l1::epoc {
 
     void skn_file::process_bitmap_def_chunk(std::uint32_t base_offset) {
         skn_bitmap_info bmp_info_ {};
-        stream_->read(base_offset + skn_desc_dfo_bitmap_major, &bmp_info_.major, 4);
-        stream_->read(base_offset + skn_desc_dfo_bitmap_minor, &bmp_info_.minor, 4);
+        bmp_info_.type = skn_def_type::bitmap;
+        
+        stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &bmp_info_.id_hash, 8);
         stream_->read(base_offset + skn_desc_dfo_bitmap_filename_id, &bmp_info_.filename_id, 4);
         stream_->read(base_offset + skn_desc_dfo_bitmap_bitmap_idx, &bmp_info_.bmp_idx, 4);
         stream_->read(base_offset + skn_desc_dfo_bitmap_mask_idx, &bmp_info_.mask_bitmap_idx, 4);
 
         process_attrib(base_offset + skn_desc_dfo_bitmap_attribs, bmp_info_.attrib);
 
-        bitmaps_.push_back(std::move(bmp_info_));
+        bitmaps_.emplace(bmp_info_.id_hash, std::move(bmp_info_));
     }
 
     void skn_file::process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib) {
