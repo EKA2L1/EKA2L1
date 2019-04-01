@@ -219,7 +219,8 @@ namespace eka2l1::epoc {
     };
 
     enum class skn_def_type {
-        bitmap
+        bitmap,
+        img_tbl
     };
 
     struct skn_def_base {
@@ -232,6 +233,11 @@ namespace eka2l1::epoc {
         std::uint32_t bmp_idx;
         std::uint32_t mask_bitmap_idx;
 
+        skn_attrib_info attrib;
+    };
+
+    struct skn_image_table: public skn_def_base {
+        std::vector<std::uint64_t> images;
         skn_attrib_info attrib;
     };
     
@@ -253,7 +259,9 @@ namespace eka2l1::epoc {
         skn_name skin_name_;
 
         std::unordered_map<std::uint32_t, std::u16string> filenames_;
+
         std::map<std::uint64_t, skn_bitmap_info> bitmaps_;
+        std::map<std::uint64_t, skn_image_table> img_tabs_;
 
         common::ro_stream *stream_;
 
@@ -262,6 +270,7 @@ namespace eka2l1::epoc {
 
         void process_class_def_chunks(std::uint32_t base_offset, const std::int32_t count);
         void process_bitmap_def_chunk(std::uint32_t base_offset);
+        void process_image_table_def_chunk(std::uint32_t base_offset);
         void process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib);
 
         std::uint32_t handle_info_chunk(std::uint32_t base_offset, skn_file_info &info);

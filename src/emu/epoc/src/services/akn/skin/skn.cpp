@@ -190,6 +190,11 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case as_desc_skin_desc_img_tbl_item_def: {
+                process_image_table_def_chunk(base_offset);
+                break;
+            }
+
             default: {
                 LOG_ERROR("Unknown class def chunk type: {}", chunk_type);
                 break;
@@ -212,6 +217,36 @@ namespace eka2l1::epoc {
         process_attrib(base_offset + skn_desc_dfo_bitmap_attribs, bmp_info_.attrib);
 
         bitmaps_.emplace(bmp_info_.id_hash, std::move(bmp_info_));
+    }
+
+    void skn_file::process_image_table_def_chunk(std::uint32_t base_offset) {
+        skn_image_table tab_ {};    
+        tab_.type = skn_def_type::img_tbl;
+        
+        stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &tab_.id_hash, 8);
+
+        // Read count
+        std::uint16_t count = 0;
+        stream_->read(base_offset + skn_desc_dfo_img_table_images_count, &count, 2);
+
+        count &= 0xFF;
+
+        std::uint32_t offset_of_attrib = base_offset + skn_desc_dfo_img_table_image_major0
+            + count * skn_desc_dfo_img_table_image_size;
+
+        process_attrib(offset_of_attrib, tab_.attrib);
+
+        // Move first
+        skn_image_table &tab_ref_ = img_tabs_.emplace(tab_.id_hash, std::move(tab_)).first->second;
+
+        // Read entry
+        for (std::uint16_t i = 0; i < count; i++) {
+            std::uint64_t img_hash = 0;
+            stream_->read(base_offset + skn_desc_dfo_img_table_image_major0 + i * skn_desc_dfo_img_table_image_size,
+                &img_hash, 8);
+
+            tab_ref_.images.push_back(img_hash);
+        }
     }
 
     void skn_file::process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib) {
