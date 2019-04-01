@@ -22,6 +22,7 @@
 
 #include <epoc/services/akn/skin/common.h>
 #include <common/buffer.h>
+#include <common/rgb.h>
 
 #include <map>
 #include <unordered_map>
@@ -220,7 +221,8 @@ namespace eka2l1::epoc {
 
     enum class skn_def_type {
         bitmap,
-        img_tbl
+        img_tbl,
+        color_tbl
     };
 
     struct skn_def_base {
@@ -241,6 +243,11 @@ namespace eka2l1::epoc {
         skn_attrib_info attrib;
     };
     
+    struct skn_color_table: public skn_def_base {
+        std::unordered_map<std::int16_t, common::rgb> colors;
+        skn_attrib_info attrib;
+    };
+
     struct skn_file_info {
         std::u16string author;
         std::u16string copyright;
@@ -262,6 +269,7 @@ namespace eka2l1::epoc {
 
         std::map<std::uint64_t, skn_bitmap_info> bitmaps_;
         std::map<std::uint64_t, skn_image_table> img_tabs_;
+        std::map<std::uint64_t, skn_color_table> color_tabs_;
 
         common::ro_stream *stream_;
 
@@ -271,6 +279,7 @@ namespace eka2l1::epoc {
         void process_class_def_chunks(std::uint32_t base_offset, const std::int32_t count);
         void process_bitmap_def_chunk(std::uint32_t base_offset);
         void process_image_table_def_chunk(std::uint32_t base_offset);
+        void process_color_table_def_chunk(std::uint32_t base_offset);
         void process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib);
 
         std::uint32_t handle_info_chunk(std::uint32_t base_offset, skn_file_info &info);
