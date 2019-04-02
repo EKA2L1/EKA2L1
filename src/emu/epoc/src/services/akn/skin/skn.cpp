@@ -97,6 +97,11 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case as_desc_release_generic: {
+                base_offset += handle_release_generic_restriction_chunk(base_offset);
+                break;
+            }
+
             default: {
                 LOG_ERROR("Unhandled chunk type: {}", chunk_type);
                 base_offset += chunk_size;
@@ -367,7 +372,6 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_release_26_restriction_chunk(std::uint32_t base_offset) {
-        // Always pass
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
 
@@ -380,10 +384,30 @@ namespace eka2l1::epoc {
         stream_->read(base_offset + skn_desc_dfo_release26_plat_major, &plat_major, 1);
         stream_->read(base_offset + skn_desc_dfo_release26_plat_minor, &plat_minor, 1);
 
-        if (ver_ > plat_ver { 2, 6 }) {
+        if (ver_ >= plat_ver { 2, 6 }) {
             process_chunks(base_offset + skn_desc_dfo_release26_content, count);
         }
 
+        return chunk_size;
+    }
+    
+    std::uint32_t skn_file::handle_release_generic_restriction_chunk(std::uint32_t base_offset) {
+        std::uint32_t chunk_size = 0;
+        stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
+
+        std::uint32_t count = 0;
+        stream_->read(base_offset + skn_desc_dfo_release_generic_chunks_count, &count, 4);
+
+        [[maybe_unused]] std::int8_t plat_major = 0;
+        [[maybe_unused]] std::int8_t plat_minor = 0;
+        
+        stream_->read(base_offset + skn_desc_dfo_release_generic_plat_major, &plat_major, 1);
+        stream_->read(base_offset + skn_desc_dfo_release_generic_plat_minor, &plat_minor, 1);
+
+        if (ver_ >= plat_ver { plat_major, plat_minor }) {
+            process_chunks(base_offset + skn_desc_dfo_release_generic_content, count);
+        }
+        
         return chunk_size;
     }
 }
