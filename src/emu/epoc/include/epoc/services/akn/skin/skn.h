@@ -222,7 +222,8 @@ namespace eka2l1::epoc {
     enum class skn_def_type {
         bitmap,
         img_tbl,
-        color_tbl
+        color_tbl,
+        bmp_anim
     };
 
     struct skn_def_base {
@@ -248,6 +249,21 @@ namespace eka2l1::epoc {
         skn_attrib_info attrib;
     };
 
+    struct skn_anim_frame {
+        std::uint64_t frame_bmp_hash;
+        std::int16_t time;
+        std::int16_t posx;
+        std::int16_t posy;
+    };
+
+    struct skn_bitmap_animation: public skn_def_base {
+        std::int16_t interval;
+        std::int16_t play_mode;
+
+        std::vector<skn_anim_frame> frames;
+        skn_attrib_info attrib;
+    };
+
     struct skn_file_info {
         std::u16string author;
         std::u16string copyright;
@@ -270,6 +286,7 @@ namespace eka2l1::epoc {
         std::map<std::uint64_t, skn_bitmap_info> bitmaps_;
         std::map<std::uint64_t, skn_image_table> img_tabs_;
         std::map<std::uint64_t, skn_color_table> color_tabs_;
+        std::map<std::uint64_t, skn_bitmap_animation> bitmap_anims_;
 
         common::ro_stream *stream_;
 
@@ -280,6 +297,7 @@ namespace eka2l1::epoc {
         void process_bitmap_def_chunk(std::uint32_t base_offset);
         void process_image_table_def_chunk(std::uint32_t base_offset);
         void process_color_table_def_chunk(std::uint32_t base_offset);
+        void process_bitmap_anim_def_chunk(std::uint32_t base_offset);
         void process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib);
 
         std::uint32_t handle_info_chunk(std::uint32_t base_offset, skn_file_info &info);

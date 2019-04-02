@@ -200,6 +200,11 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case as_desc_skin_desc_img_bmp_anim: {
+                process_bitmap_anim_def_chunk(base_offset);
+                break;
+            }
+
             default: {
                 LOG_ERROR("Unknown class def chunk type: {}", chunk_type);
                 break;
@@ -288,6 +293,48 @@ namespace eka2l1::epoc {
 
             tab_ref_.colors.emplace(idx, color);
         }
+    }
+
+    void skn_file::process_bitmap_anim_def_chunk(std::uint32_t base_offset) {
+        skn_bitmap_animation anim_ {};
+        anim_.type = skn_def_type::color_tbl;
+        
+        stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &anim_.id_hash, 8);
+
+        // Read count
+        std::int16_t count = 0;
+        stream_->read(base_offset + skn_desc_dfo_bmp_anim_frames_count, &count, 2);
+
+        count &= 0xFF;
+
+        std::uint32_t offset_of_attrib = base_offset + skn_desc_dfo_bmp_anim_frame_major0
+            + count * skn_desc_dfo_bmp_anim_frame_size;
+
+        process_attrib(offset_of_attrib, anim_.attrib);
+
+        // Read interval and play mode
+        stream_->read(base_offset + skn_desc_dfo_bmp_anim_playmode, &anim_.play_mode, 2);
+        stream_->read(base_offset + skn_desc_dfo_bmp_anim_interval, &anim_.interval, 2);
+
+        for (std::int16_t i = 0; i < count; i++) {
+            skn_anim_frame frame{};
+            
+            stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_major0
+                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.frame_bmp_hash, 8);
+
+            stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_time0
+                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.time, 2);
+
+            stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_posx0
+                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.posx, 2);
+                
+            stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_posy0
+                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.posy, 2);
+
+            anim_.frames.push_back(frame);
+        }
+
+        bitmap_anims_.emplace(anim_.id_hash, std::move(anim_));
     }
 
     void skn_file::process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib) {
