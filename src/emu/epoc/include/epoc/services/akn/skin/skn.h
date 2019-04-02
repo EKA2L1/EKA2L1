@@ -311,7 +311,8 @@ namespace eka2l1::epoc {
         std::uint32_t handle_class_chunk(std::uint32_t base_offset);
         std::uint32_t handle_release_26_restriction_chunk(std::uint32_t base_offset);
         std::uint32_t handle_release_generic_restriction_chunk(std::uint32_t base_offset);
-     
+        std::uint32_t handle_lang_restriction_chunk(std::uint32_t base_offset);
+        
         explicit skn_file(common::ro_stream *stream, plat_ver platform_version = { 2, 8 },
             language lang = language::any);
     };

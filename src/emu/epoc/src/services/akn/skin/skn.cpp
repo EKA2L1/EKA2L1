@@ -102,6 +102,11 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case as_desc_lang: {
+                base_offset += handle_lang_restriction_chunk(base_offset);
+                break;
+            }
+
             default: {
                 LOG_ERROR("Unhandled chunk type: {}", chunk_type);
                 base_offset += chunk_size;
@@ -406,6 +411,27 @@ namespace eka2l1::epoc {
 
         if (ver_ >= plat_ver { plat_major, plat_minor }) {
             process_chunks(base_offset + skn_desc_dfo_release_generic_content, count);
+        }
+        
+        return chunk_size;
+    }
+    
+    std::uint32_t skn_file::handle_lang_restriction_chunk(std::uint32_t base_offset) {
+        std::uint32_t chunk_size = 0;
+        stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
+
+        std::uint32_t count = 0;
+        stream_->read(base_offset + skn_desc_dfo_lang_lang_count, &count, 4);
+
+        std::uint16_t lang_restr = 0;
+        stream_->read(base_offset + skn_desc_dfo_lang_lang_restr, &lang_restr, 2);
+
+        [[maybe_unused]] std::uint16_t general_restr = 0;
+        stream_->read(base_offset + skn_desc_dfo_lang_gen_restr, &general_restr, 2);
+
+        if (general_restr == 0 || lang_restr == 0 || importer_lang_ == language::any || 
+            (static_cast<language>(lang_restr) == importer_lang_)) {
+            process_chunks(base_offset + skn_desc_dfo_lang_content, count);
         }
         
         return chunk_size;
