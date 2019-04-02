@@ -23,6 +23,7 @@
 #include <epoc/services/akn/skin/common.h>
 #include <common/buffer.h>
 #include <common/rgb.h>
+#include <common/types.h>
 
 #include <map>
 #include <unordered_map>
@@ -272,6 +273,8 @@ namespace eka2l1::epoc {
         std::uint16_t plat;
     };
 
+    using plat_ver = std::pair<std::int8_t, std::int8_t>;
+
     struct skn_file {
         std::uint32_t master_chunk_size_;
         std::int32_t master_chunk_count_;
@@ -289,6 +292,8 @@ namespace eka2l1::epoc {
         std::map<std::uint64_t, skn_bitmap_animation> bitmap_anims_;
 
         common::ro_stream *stream_;
+        plat_ver ver_;
+        language importer_lang_;
 
         bool read_master_chunk();
         bool process_chunks(std::uint32_t base_offset, const std::int32_t count);
@@ -304,7 +309,9 @@ namespace eka2l1::epoc {
         std::uint32_t handle_name_chunk(std::uint32_t base_offset, skn_name &name);
         std::uint32_t handle_filename_chunk(std::uint32_t base_offset);
         std::uint32_t handle_class_chunk(std::uint32_t base_offset);
+        std::uint32_t handle_release_26_restriction_chunk(std::uint32_t base_offset);
 
-        explicit skn_file(common::ro_stream *stream);
+        explicit skn_file(common::ro_stream *stream, plat_ver platform_version = { 2, 8 },
+            language lang = language::any);
     };
 }

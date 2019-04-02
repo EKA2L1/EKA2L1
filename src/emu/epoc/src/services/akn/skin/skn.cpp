@@ -21,11 +21,13 @@
 #include <common/log.h>
 
 namespace eka2l1::epoc {
-    skn_file::skn_file(common::ro_stream *stream)
+    skn_file::skn_file(common::ro_stream *stream, plat_ver platform_version, language lang)
         : master_chunk_size_(0),
           master_chunk_count_(0),
           crr_filename_id_(0),
-          stream_(stream) {
+          stream_(stream),
+          ver_(std::move(platform_version)),
+          importer_lang_(lang) {
         if (!read_master_chunk()) {
             LOG_ERROR("Reading master chunk failed!");
         }
@@ -87,6 +89,11 @@ namespace eka2l1::epoc {
 
             case as_desc_skin_desc_class: {
                 base_offset += handle_class_chunk(base_offset);
+                break;
+            }
+
+            case as_desc_release26: {
+                base_offset += handle_release_26_restriction_chunk(base_offset);
                 break;
             }
 
@@ -357,5 +364,26 @@ namespace eka2l1::epoc {
             stream_->read(base_offset + skn_desc_dfo_attribs_ext_attrib_flags, &attrib_and_align, 2);
             attrib.attrib |= attrib_and_align << 8;
         }
+    }
+
+    std::uint32_t skn_file::handle_release_26_restriction_chunk(std::uint32_t base_offset) {
+        // Always pass
+        std::uint32_t chunk_size = 0;
+        stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
+
+        std::uint32_t count = 0;
+        stream_->read(base_offset + skn_desc_dfo_release26_chunks_count, &count, 4);
+
+        [[maybe_unused]] std::int8_t plat_major = 0;
+        [[maybe_unused]] std::int8_t plat_minor = 0;
+        
+        stream_->read(base_offset + skn_desc_dfo_release26_plat_major, &plat_major, 1);
+        stream_->read(base_offset + skn_desc_dfo_release26_plat_minor, &plat_minor, 1);
+
+        if (ver_ > plat_ver { 2, 6 }) {
+            process_chunks(base_offset + skn_desc_dfo_release26_content, count);
+        }
+
+        return chunk_size;
     }
 }
