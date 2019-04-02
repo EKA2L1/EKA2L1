@@ -98,4 +98,36 @@ PYBIND11_MODULE(common, m) {
                  Dimension of the target bitmap.
 
         )pbdoc");
+
+    py::class_<scripting::mif_reader>(m, "MifReader")
+        .def(py::init([](const std::string &path) { return std::make_unique<scripting::mif_reader>(path); }))
+        .def("entryCount", &scripting::mif_reader::entry_count, R"pbdoc(
+            Get total of entry this MIF file consists of.
+        )pbdoc")
+        .def("entryDataSize", &scripting::mif_reader::entry_data_size, R"pbdoc(
+            Get the binary data size of a MIF entry.
+            
+            Parameters
+            ------------------------
+            idx: int
+                 Index of the entry. The index is zero-based.
+
+            Returns
+            ------------------------
+            int
+                 The size needed.
+        )pbdoc")
+        .def("readEntry", &scripting::mif_reader::read_entry, R"pbdoc(
+            Read data of a MIF entry.
+
+            Parameters
+            ------------------------
+            idx: int
+                 Index of the entry. The index is zero-based.
+
+            Returns
+            ------------------------
+            str
+                 String contains binary data of the entry.
+        )pbdoc");
 }

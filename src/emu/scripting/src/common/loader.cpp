@@ -66,4 +66,47 @@ namespace eka2l1::scripting {
 
         return { mbm_->sbm_headers[idx].size_pixels.width(), mbm_->sbm_headers[idx].size_pixels.height() };
     }
+
+    mif_reader::mif_reader(const std::string &path) {
+        eka2l1::symfile f = eka2l1::physical_file_proxy(path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            throw std::runtime_error("File doesn't exists!");
+        }
+
+        stream_ = std::reinterpret_pointer_cast<common::ro_stream>(std::make_shared<eka2l1::ro_file_stream>(f));
+        mif_ = std::make_unique<loader::mif_file>(reinterpret_cast<common::ro_stream*>(&(*stream_)));
+
+        if (!mif_->do_parse()) {
+            throw std::runtime_error("Reading MIF headers failed!");
+        }
+    }
+
+    std::uint32_t mif_reader::entry_count() {
+        return mif_->header_.array_len;
+    }
+
+    int mif_reader::entry_data_size(const std::size_t idx) {
+        int size = 0;
+
+        if (!mif_->read_mif_entry(idx, nullptr, size)) {
+            throw pybind11::index_error("Index of MIF entry out of range!");
+        }
+
+        return size;
+    }
+
+    std::string mif_reader::read_entry(const std::size_t idx) {
+        std::string dat;
+        int size = 0;
+       
+        if (!mif_->read_mif_entry(idx, nullptr, size)) {
+            throw pybind11::index_error("Index of MIF entry out of range!");
+        }
+
+        dat.resize(size);
+        mif_->read_mif_entry(idx, reinterpret_cast<std::uint8_t*>(&dat[0]), size);
+
+        return dat;
+    }
 }

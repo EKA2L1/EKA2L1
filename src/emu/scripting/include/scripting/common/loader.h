@@ -20,6 +20,7 @@
 #pragma once
 
 #include <epoc/loader/mbm.h>
+#include <epoc/loader/mif.h>
 
 #include <memory>
 #include <string>
@@ -41,5 +42,17 @@ namespace eka2l1::scripting {
 
         std::uint32_t bits_per_pixel(const std::uint32_t idx);
         std::pair<int, int> bitmap_size(const std::uint32_t idx);
+    };
+
+    class mif_reader {
+        std::unique_ptr<loader::mif_file> mif_;
+        std::shared_ptr<common::ro_stream> stream_;
+    
+    public:
+        explicit mif_reader(const std::string &path);
+
+        std::uint32_t entry_count();
+        int entry_data_size(const std::size_t idx);
+        std::string read_entry(const std::size_t idx);
     };
 }
