@@ -537,6 +537,9 @@ namespace eka2l1::epoc {
         }
 
         LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
+        
+        // Free the message
+        msg->free = true;
 
         return KErrNone;
     }
