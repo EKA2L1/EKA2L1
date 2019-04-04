@@ -47,7 +47,11 @@ namespace eka2l1::scripting {
     std::unique_ptr<scripting::thread> ipc_message_wrapper::sender() {
         return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(msg_->own_thr));
     }
-    
+
+    std::unique_ptr<scripting::session_wrapper> ipc_message_wrapper::session() {
+        return std::make_unique<scripting::session_wrapper>(reinterpret_cast<std::uint64_t>(msg_->msg_session));
+    }
+
     std::unique_ptr<ipc_message_wrapper> message_from_handle(const int guest_handle) {
         ipc_msg_ptr msg = get_current_instance()->get_kernel_system()->get_msg(guest_handle);
 

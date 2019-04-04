@@ -6,6 +6,8 @@
 #include <scripting/message.h>
 #include <scripting/process.h>
 #include <scripting/thread.h>
+#include <scripting/server.h>
+#include <scripting/session.h>
 
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
@@ -129,6 +131,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def("sender", &scripting::ipc_message_wrapper::sender, R"pbdoc(
             Get the thread that sends and owns the message.
         )pbdoc")
+        .def("session", &scripting::ipc_message_wrapper::session, R"pbdoc(
+            Get the session of this message.
+        )pbdoc")
         .def("arg", &scripting::ipc_message_wrapper::arg, R"pbdoc(
             Get the argument at specified index.
 
@@ -141,6 +146,18 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             ------------------------
             int
                  An integer, which is the value of argument at the given index.
+        )pbdoc");
+
+    py::class_<scripting::session_wrapper>(m, "Session")
+        .def(py::init([](std::uint64_t handle) { return std::make_unique<scripting::session_wrapper>(handle); }))
+        .def("server", &scripting::session_wrapper::server, R"pbdoc(
+            Get the target server of this session.
+        )pbdoc");
+
+    py::class_<scripting::server_wrapper>(m, "Server")
+        .def(py::init([](std::uint64_t handle) { return std::make_unique<scripting::server_wrapper>(handle); }))
+        .def("getName", &scripting::server_wrapper::get_name, R"pbdoc(
+            Get name of the server.
         )pbdoc");
 
     py::class_<scripting::cpu>(m, "Cpu")

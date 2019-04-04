@@ -17,29 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <epoc/ipc.h>
-#include <scripting/thread.h>
-#include <scripting/server.h>
 #include <scripting/session.h>
-
-#include <cstddef>
-#include <memory>
+#include <epoc/services/session.h>
 
 namespace eka2l1::scripting {
-    class ipc_message_wrapper {
-        eka2l1::ipc_msg *msg_;
-
-    public:
-        explicit ipc_message_wrapper(std::uint64_t handle);
-
-        int function();
-        std::unique_ptr<scripting::thread> sender();
-
-        std::uint32_t arg(const int idx);
-        std::unique_ptr<scripting::session_wrapper> session();
-    };
-
-    std::unique_ptr<ipc_message_wrapper> message_from_handle(const int guest_handle);
+    session_wrapper::session_wrapper(std::uint64_t handle) 
+        : ss_(reinterpret_cast<service::session*>(handle)) {
+    }
+    
+    std::unique_ptr<scripting::server_wrapper> session_wrapper::server() {
+        return std::make_unique<scripting::server_wrapper>(
+            reinterpret_cast<std::uint64_t>(&(*ss_->get_server())));
+    }
 }

@@ -19,27 +19,21 @@
 
 #pragma once
 
-#include <epoc/ipc.h>
-#include <scripting/thread.h>
-#include <scripting/server.h>
-#include <scripting/session.h>
-
-#include <cstddef>
+#include <string>
 #include <memory>
 
+#include <scripting/server.h>
+
+namespace eka2l1::service {
+    class session;
+}
+
 namespace eka2l1::scripting {
-    class ipc_message_wrapper {
-        eka2l1::ipc_msg *msg_;
+    class session_wrapper {
+        service::session *ss_;
 
     public:
-        explicit ipc_message_wrapper(std::uint64_t handle);
-
-        int function();
-        std::unique_ptr<scripting::thread> sender();
-
-        std::uint32_t arg(const int idx);
-        std::unique_ptr<scripting::session_wrapper> session();
+        explicit session_wrapper(std::uint64_t handle);
+        std::unique_ptr<scripting::server_wrapper> server();
     };
-
-    std::unique_ptr<ipc_message_wrapper> message_from_handle(const int guest_handle);
 }

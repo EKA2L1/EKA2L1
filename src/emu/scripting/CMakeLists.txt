@@ -10,6 +10,8 @@ add_library(symemu
     include/scripting/mem.h
     include/scripting/message.h
     include/scripting/hook.h
+    include/scripting/server.h
+    include/scripting/session.h
     include/scripting/symemu.inl
     src/codeseg.cpp
     src/cpu.cpp
@@ -19,7 +21,9 @@ add_library(symemu
     src/mem.cpp
     src/hook.cpp
     src/process.cpp
-    src/thread.cpp)
+    src/thread.cpp
+    src/server.cpp
+    src/session.cpp)
 
 pybind11_add_module(symemu_common
     include/scripting/common/compression.h
