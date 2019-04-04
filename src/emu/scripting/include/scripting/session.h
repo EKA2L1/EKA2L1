@@ -36,4 +36,6 @@ namespace eka2l1::scripting {
         explicit session_wrapper(std::uint64_t handle);
         std::unique_ptr<scripting::server_wrapper> server();
     };
+
+    std::unique_ptr<session_wrapper> session_from_handle(const std::uint32_t handle);
 }

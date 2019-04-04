@@ -245,4 +245,18 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         IpcMessage
                      IPC Message Object.
     )pbdoc");
+    
+    m.def("sessionFromHandle", &scripting::session_from_handle, R"pbdoc(
+        Retrieve a Session message object from a handle.
+
+        Parameters
+        -----------------
+        guestHandle: int
+                     A guest handle to the session.
+
+        Returns
+        -----------------
+        Session
+                     Session Object.
+    )pbdoc");
 }
