@@ -445,6 +445,7 @@ namespace eka2l1 {
                         return result;
                     }
 
+                    image_data_stream.seek(0, common::seek_where::beg);
                     auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&image_data_stream), mem);
                     if (parse_result_2 != std::nullopt) {
                         f->close();
