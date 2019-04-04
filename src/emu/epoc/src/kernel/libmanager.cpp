@@ -286,16 +286,15 @@ namespace eka2l1 {
 
             // TODO (pent0): Implement external id loading
 
-            std::vector<sid> tids;
+            hle::symbols sb;
             std::string lib_name;
 
 #define LIB(x) lib_name = #x;
 #define EXPORT(x, y)   \
-    tids.push_back(y); \
-    func_names.insert(std::make_pair(y, x));
+    sb.push_back(x);
 #define ENDLIB()                                                                        \
-    ids.insert(std::make_pair(std::u16string(lib_name.begin(), lib_name.end()), tids)); \
-    tids.clear();
+    lib_symbols.emplace(lib_name, sb);                                                  \
+    sb.clear();
 
             if (ver == epocver::epoc6) {
                 //  #include <hle/epoc6_n.def>
@@ -585,7 +584,7 @@ namespace eka2l1 {
             std::string lib_name_lower = common::lowercase_string(lib_name);
             auto lib_ite = lib_symbols.find(lib_name_lower);
             if (lib_ite != lib_symbols.end()) {
-                for (std::size_t i = 0; i < table.size(); i++) {
+                for (std::size_t i = 0; i < common::min(table.size(), lib_ite->second.size()); i++) {
                     addr_symbols.emplace(table[i] & ~0x1, lib_ite->second[i]);
                 }
 
