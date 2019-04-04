@@ -59,7 +59,7 @@ namespace eka2l1 {
     // this server will does thing just fine
     class eikappui_server : public service::server {
     protected:
-        void get_debug_preferences(service::ipc_context ctx);
+        void get_debug_preferences(service::ipc_context &ctx);
 
     public:
         eikappui_server(eka2l1::system *sys);

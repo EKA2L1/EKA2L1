@@ -216,7 +216,7 @@ namespace eka2l1 {
         explicit fbs_server(eka2l1::system *sys);
         service::uid init();
 
-        void connect(service::ipc_context context) override;        
+        void connect(service::ipc_context &context) override;        
 
         std::uint8_t *get_shared_chunk_base() {
             return base_shared_chunk;

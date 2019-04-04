@@ -150,7 +150,7 @@ namespace eka2l1 {
             reinterpret_cast<epoc::cdl_ecom_watcher_observer*>(observer_.get()));
     }
 
-    void cdl_server::connect(service::ipc_context ctx) {
+    void cdl_server::connect(service::ipc_context &ctx) {
         if (!observer_) {
             init();
         }

@@ -79,7 +79,7 @@ namespace eka2l1 {
         return result;
     }
 
-    void oom_ui_app_server::get_layout_config_size(service::ipc_context ctx) {
+    void oom_ui_app_server::get_layout_config_size(service::ipc_context &ctx) {
         layout_buf = get_layout_buf();
 
         int layout_buf_size = static_cast<int>(layout_buf.size());
@@ -88,7 +88,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void oom_ui_app_server::get_layout_config(service::ipc_context ctx) {
+    void oom_ui_app_server::get_layout_config(service::ipc_context &ctx) {
         layout_buf = get_layout_buf();
 
         ctx.write_arg_pkg(0, reinterpret_cast<std::uint8_t *>(&layout_buf[0]),
@@ -97,7 +97,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void oom_ui_app_server::set_sgc_params(service::ipc_context ctx) {
+    void oom_ui_app_server::set_sgc_params(service::ipc_context &ctx) {
         auto params_op = ctx.get_arg_packed<epoc::sgc_params>(0);
 
         if (!params_op) {

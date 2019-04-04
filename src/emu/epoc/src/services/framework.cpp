@@ -39,7 +39,7 @@ namespace eka2l1::service {
         : server(sys, name, true, false) {
     }
 
-    void typical_server::disconnect(service::ipc_context ctx) {
+    void typical_server::disconnect(service::ipc_context &ctx) {
         sessions.erase(ctx.msg->msg_session->unique_id());
         ctx.set_request_status(0);
     }

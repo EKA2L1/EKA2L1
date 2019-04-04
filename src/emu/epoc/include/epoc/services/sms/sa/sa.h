@@ -29,7 +29,7 @@ namespace eka2l1 {
     */
     class sa_server : public service::server {
     private:
-        void unk_op1(service::ipc_context context);
+        void unk_op1(service::ipc_context &context);
 
     public:
         explicit sa_server(eka2l1::system *sys);

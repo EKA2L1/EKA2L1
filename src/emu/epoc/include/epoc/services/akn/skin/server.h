@@ -71,6 +71,6 @@ namespace eka2l1 {
     public:
         explicit akn_skin_server(eka2l1::system *sys);
 
-        void connect(service::ipc_context ctx) override;
+        void connect(service::ipc_context &ctx) override;
     };
 }

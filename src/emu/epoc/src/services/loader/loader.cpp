@@ -42,7 +42,7 @@
 #include <e32err.h>
 
 namespace eka2l1 {
-    void loader_server::load_process(eka2l1::service::ipc_context ctx) {
+    void loader_server::load_process(eka2l1::service::ipc_context &ctx) {
         std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
 
         if (!info) {
@@ -86,7 +86,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void loader_server::load_library(service::ipc_context ctx) {
+    void loader_server::load_library(service::ipc_context &ctx) {
         std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
 
         if (!info) {
@@ -134,7 +134,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void loader_server::get_info(service::ipc_context ctx) {
+    void loader_server::get_info(service::ipc_context &ctx) {
         std::optional<utf16_str> lib_name = ctx.get_arg<utf16_str>(1);
         epoc::des8 *buffer = eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 

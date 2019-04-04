@@ -90,7 +90,7 @@ namespace eka2l1 {
         int closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t ss_id);
 
     public:
-        void redirect_msg_to_session(service::ipc_context ctx);
+        void redirect_msg_to_session(service::ipc_context &ctx);
 
         explicit central_repo_server(eka2l1::system *sys);
         eka2l1::central_repo *get_initial_repo(eka2l1::io_system *io, const std::uint32_t key);
@@ -102,7 +102,7 @@ namespace eka2l1 {
          */
         eka2l1::central_repo *load_repo_with_lookup(eka2l1::io_system *io, const std::uint32_t key);
 
-        void connect(service::ipc_context ctx) override;
-        void disconnect(service::ipc_context ctx) override;
+        void connect(service::ipc_context &ctx) override;
+        void disconnect(service::ipc_context &ctx) override;
     };
 }

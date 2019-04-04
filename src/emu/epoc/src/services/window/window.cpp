@@ -864,7 +864,7 @@ namespace eka2l1 {
         loaded = true;
     }
     
-    void window_server::init(service::ipc_context ctx) {
+    void window_server::init(service::ipc_context &ctx) {
         if (!loaded) {
             do_base_init();
         }
@@ -888,11 +888,11 @@ namespace eka2l1 {
         return screens[num];
     }
     
-    void window_server::send_to_command_buffer(service::ipc_context ctx) {
+    void window_server::send_to_command_buffer(service::ipc_context &ctx) {
         clients[ctx.msg->msg_session->unique_id()]->parse_command_buffer(ctx);
     }
 
-    void window_server::on_unhandled_opcode(service::ipc_context ctx) {
+    void window_server::on_unhandled_opcode(service::ipc_context &ctx) {
         if (ctx.msg->function & EWservMessAsynchronousService) {
             switch (ctx.msg->function & ~EWservMessAsynchronousService) {
             case EWsClOpRedrawReady: {

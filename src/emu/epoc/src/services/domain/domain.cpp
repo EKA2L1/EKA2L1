@@ -253,7 +253,7 @@ namespace eka2l1 {
         return next;
     }
 
-    void domainmngr_server::add_new_hierarchy(service::ipc_context ctx) {
+    void domainmngr_server::add_new_hierarchy(service::ipc_context &ctx) {
         const std::uint8_t hierarchy_id = static_cast<std::uint8_t>(*ctx.get_arg<int>(0));
 
         if (mngr->lookup_hierarchy(hierarchy_id)) {
@@ -273,7 +273,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domainmngr_server::join_hierarchy(service::ipc_context ctx) {
+    void domainmngr_server::join_hierarchy(service::ipc_context &ctx) {
         const std::uint8_t hierarchy_id = static_cast<std::uint8_t>(*ctx.get_arg<int>(0));
         hierarchy_ptr hier = mngr->lookup_hierarchy(hierarchy_id);
 
@@ -293,7 +293,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domain_server::join_domain(service::ipc_context ctx) {
+    void domain_server::join_domain(service::ipc_context &ctx) {
         const std::uint32_t hierarchy_id = *ctx.get_arg<int>(0);
         const std::uint32_t domain_id = *ctx.get_arg<int>(1);
 
@@ -310,21 +310,21 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domain_server::request_transition_nof(service::ipc_context ctx) {
+    void domain_server::request_transition_nof(service::ipc_context &ctx) {
         const std::uint32_t sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = true;
         ctx.set_request_status(KErrNone);
     }
 
-    void domain_server::cancel_transition_nof(service::ipc_context ctx) {
+    void domain_server::cancel_transition_nof(service::ipc_context &ctx) {
         const std::uint32_t sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = false;
         ctx.set_request_status(KErrNone);
     }
 
-    void domain_server::acknowledge_last_state(service::ipc_context ctx) {
+    void domain_server::acknowledge_last_state(service::ipc_context &ctx) {
         const int prop_val = *ctx.get_arg<int>(0);
         const int err_set = *ctx.get_arg<int>(1);
 
@@ -355,7 +355,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNotFound);
     }
 
-    void domain_server::defer_acknowledge(service::ipc_context ctx) {
+    void domain_server::defer_acknowledge(service::ipc_context &ctx) {
         const std::uint32_t ssid = ctx.msg->msg_session->unique_id();
         domain_ptr dm = control_domains[ssid];
 
@@ -379,7 +379,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNotReady);
     }
 
-    void domain_server::cancel_defer_acknowledge(service::ipc_context ctx) {
+    void domain_server::cancel_defer_acknowledge(service::ipc_context &ctx) {
         const std::uint32_t ssid = ctx.msg->msg_session->unique_id();
         domain_ptr dm = control_domains[ssid];
 
@@ -629,7 +629,7 @@ namespace eka2l1 {
         }
     }
 
-    void domainmngr_server::request_domain_transition(service::ipc_context ctx) {
+    void domainmngr_server::request_domain_transition(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -651,7 +651,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domainmngr_server::request_system_transition(service::ipc_context ctx) {
+    void domainmngr_server::request_system_transition(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -672,7 +672,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domainmngr_server::cancel_transition(service::ipc_context ctx) {
+    void domainmngr_server::cancel_transition(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -701,7 +701,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domainmngr_server::get_transition_fail_count(service::ipc_context ctx) {
+    void domainmngr_server::get_transition_fail_count(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -712,7 +712,7 @@ namespace eka2l1 {
         ctx.set_request_status(static_cast<int>(target_hier->transitions_fail.size()));
     }
 
-    void domainmngr_server::observer_join(service::ipc_context ctx) {
+    void domainmngr_server::observer_join(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -731,7 +731,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domainmngr_server::observer_start(service::ipc_context ctx) {
+    void domainmngr_server::observer_start(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -761,7 +761,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domainmngr_server::observer_cancel(service::ipc_context ctx) {
+    void domainmngr_server::observer_cancel(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -784,7 +784,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void domainmngr_server::observer_notify(service::ipc_context ctx) {
+    void domainmngr_server::observer_notify(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
@@ -801,7 +801,7 @@ namespace eka2l1 {
             std::make_pair(ctx.msg->request_sts, ctx.msg->own_thr));
     }
 
-    void domainmngr_server::observed_count(service::ipc_context ctx) {
+    void domainmngr_server::observed_count(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {

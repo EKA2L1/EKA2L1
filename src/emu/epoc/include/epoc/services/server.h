@@ -46,7 +46,7 @@ namespace eka2l1 {
     namespace service {
         struct server_msg;
 
-        using ipc_func_wrapper = std::function<void(ipc_context)>;
+        using ipc_func_wrapper = std::function<void(ipc_context&)>;
         using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 
         /*! \brief A class represents an IPC function */
@@ -126,10 +126,10 @@ namespace eka2l1 {
             // Security layer is ignored rn.
             //
             // Servers can override this method
-            virtual void connect(service::ipc_context ctx);
-            virtual void disconnect(service::ipc_context ctx);
+            virtual void connect(service::ipc_context &ctx);
+            virtual void disconnect(service::ipc_context &ctx);
 
-            virtual void on_unhandled_opcode(service::ipc_context ctx) {}
+            virtual void on_unhandled_opcode(service::ipc_context &ctx) {}
 
         public:
             std::uint32_t frequent_process_event;

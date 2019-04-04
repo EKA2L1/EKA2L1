@@ -223,7 +223,7 @@ namespace eka2l1 {
         return res;
     }
 
-    void posix_server::chdir(service::ipc_context ctx) {
+    void posix_server::chdir(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         std::u16string current_dir(reinterpret_cast<char16_t *>(
@@ -236,7 +236,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::mkdir(service::ipc_context ctx) {
+    void posix_server::mkdir(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         std::u16string current_dir(reinterpret_cast<char16_t *>(
@@ -252,7 +252,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH_WITH_ERR(ctx, res ? EIO : 0);
     }
 
-    void posix_server::open(service::ipc_context ctx) {
+    void posix_server::open(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         std::u16string base_dir = working_dir;
@@ -311,7 +311,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::close(service::ipc_context ctx) {
+    void posix_server::close(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         file_manager.close(params->fid, *errnoptr);
@@ -320,7 +320,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::lseek(service::ipc_context ctx) {
+    void posix_server::lseek(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         eka2l1::file_seek_mode mode = eka2l1::file_seek_mode::beg;
@@ -340,7 +340,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::fstat(service::ipc_context ctx) {
+    void posix_server::fstat(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         struct stat *file_stat = reinterpret_cast<struct stat *>(params->ptr[0].get(ctx.sys->get_memory_system()));
@@ -351,7 +351,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::read(service::ipc_context ctx) {
+    void posix_server::read(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
         params->ret = static_cast<TInt>(file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
 
@@ -362,7 +362,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::write(service::ipc_context ctx) {
+    void posix_server::write(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
         params->ret = static_cast<TInt>(
             file_manager.write(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
@@ -374,7 +374,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::dup(service::ipc_context ctx) {
+    void posix_server::dup(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         const auto new_fid = file_manager.duplicate(params->fid, *errnoptr);
@@ -388,7 +388,7 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
-    void posix_server::dup2(service::ipc_context ctx) {
+    void posix_server::dup2(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
         *errnoptr = file_manager.duplicate_provide_fid(params->pint[0], params->fid);

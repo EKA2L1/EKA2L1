@@ -123,8 +123,8 @@ namespace eka2l1 {
       - Launching: HLE when not doing a full startup. A full startup should launch this server automaticlly.
     */
     class oom_ui_app_server : public service::server {
-        void get_layout_config_size(service::ipc_context ctx);
-        void get_layout_config(service::ipc_context ctx);
+        void get_layout_config_size(service::ipc_context &ctx);
+        void get_layout_config(service::ipc_context &ctx);
 
         std::string layout_buf;
         epoc::sgc_params params;
@@ -136,7 +136,7 @@ namespace eka2l1 {
         void load_screen_mode();
         std::string get_layout_buf();
 
-        void set_sgc_params(service::ipc_context ctx);
+        void set_sgc_params(service::ipc_context &ctx);
 
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);

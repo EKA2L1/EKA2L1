@@ -47,7 +47,7 @@ namespace eka2l1 {
 
         // Load the feature manager config files.
         bool load_featmgr_configs(io_system *io);
-        void feature_supported(service::ipc_context ctx);
+        void feature_supported(service::ipc_context &ctx);
 
     public:
         featmgr_server(system *sys);

@@ -97,7 +97,7 @@ namespace eka2l1::service {
         explicit typical_server(system *sys, const std::string name);
         void process_accepted_msg() override;
 
-        void disconnect(service::ipc_context ctx) override;
+        void disconnect(service::ipc_context &ctx) override;
     };
     
     class typical_session {

@@ -41,6 +41,8 @@ namespace eka2l1 {
     namespace service {
         /*! \brief Context used to pass to IPC function */
         struct ipc_context {
+            ~ipc_context();
+            
             eka2l1::system *sys;
             ipc_msg_ptr msg;
 

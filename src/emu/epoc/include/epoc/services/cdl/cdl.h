@@ -69,7 +69,7 @@ namespace eka2l1 {
     public:
         explicit cdl_server(eka2l1::system *sys);
 
-        void connect(service::ipc_context ctx) override;
+        void connect(service::ipc_context &ctx) override;
 
         void add_refs(epoc::cdl_ref_collection &col_);
         void remove_refs(const std::u16string &name);

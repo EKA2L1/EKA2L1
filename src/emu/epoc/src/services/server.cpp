@@ -30,11 +30,11 @@
 
 namespace eka2l1 {
     namespace service {
-        void server::connect(service::ipc_context ctx) {
+        void server::connect(service::ipc_context &ctx) {
             ctx.set_request_status(0);
         }
 
-        void server::disconnect(service::ipc_context ctx) {
+        void server::disconnect(service::ipc_context &ctx) {
             ctx.set_request_status(0);
         }
 

@@ -72,8 +72,8 @@ namespace eka2l1 {
             std::vector<std::uint32_t> &extended_interfaces);
 
     protected:
-        void list_implementations(service::ipc_context ctx);
-        void get_implementation_creation_method(service::ipc_context ctx);
+        void list_implementations(service::ipc_context &ctx);
+        void get_implementation_creation_method(service::ipc_context &ctx);
 
         bool get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid, 
             const epoc::uid impl_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, const bool check_cap_comp = true);
@@ -106,7 +106,7 @@ namespace eka2l1 {
          */
         bool load_archives(eka2l1::io_system *io);
 
-        void connect(service::ipc_context ctx) override;
+        void connect(service::ipc_context &ctx) override;
 
     public:
         explicit ecom_server(eka2l1::system *sys);

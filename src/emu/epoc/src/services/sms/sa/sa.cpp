@@ -24,7 +24,7 @@
 #include <e32err.h>
 
 namespace eka2l1 {
-    void sa_server::unk_op1(service::ipc_context ctx) {
+    void sa_server::unk_op1(service::ipc_context &ctx) {
         // If it's not working out, we should use this
         //
         // arm_xemitter emitter;

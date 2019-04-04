@@ -33,7 +33,7 @@ namespace eka2l1 {
          *
          * request_status: Error code.
         */
-        void load_process(service::ipc_context context);
+        void load_process(service::ipc_context &context);
 
         /*! \brief Parse a E32 Image / Rom Image, and use informations from parsing to spawn a new library.
          * 
@@ -43,7 +43,7 @@ namespace eka2l1 {
          *
          * request_status: New Process handle.
         */
-        void load_library(service::ipc_context context);
+        void load_library(service::ipc_context &context);
 
         /*! \brief Get library/executable info (uids, security layer, capatibilities, etc..). 
          *
@@ -51,7 +51,7 @@ namespace eka2l1 {
          * arg1: Name
          * arg2: Buffer contains external info
          */
-        void get_info(service::ipc_context context);
+        void get_info(service::ipc_context &context);
 
     public:
         loader_server(system *sys);

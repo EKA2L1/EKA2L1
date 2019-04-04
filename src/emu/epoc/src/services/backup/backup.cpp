@@ -28,7 +28,7 @@ namespace eka2l1 {
             "Backup::GetOperationState");
     }
 
-    void backup_server::get_backup_operation_state(service::ipc_context ctx) {
+    void backup_server::get_backup_operation_state(service::ipc_context &ctx) {
         LOG_TRACE("GetBackupOperationState stubbed with false");
 
         bool state = false;

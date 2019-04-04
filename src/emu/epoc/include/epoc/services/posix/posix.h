@@ -84,20 +84,20 @@ namespace eka2l1 {
 
         std::u16string working_dir;
 
-        void open(service::ipc_context ctx);
-        void close(service::ipc_context ctx);
-        void lseek(service::ipc_context ctx);
-        void fstat(service::ipc_context ctx);
+        void open(service::ipc_context &ctx);
+        void close(service::ipc_context &ctx);
+        void lseek(service::ipc_context &ctx);
+        void fstat(service::ipc_context &ctx);
 
-        void read(service::ipc_context ctx);
-        void write(service::ipc_context ctx);
+        void read(service::ipc_context &ctx);
+        void write(service::ipc_context &ctx);
 
         /*!\brief Change the current directory of the server. */
-        void chdir(service::ipc_context ctx);
-        void mkdir(service::ipc_context ctx);
+        void chdir(service::ipc_context &ctx);
+        void mkdir(service::ipc_context &ctx);
 
-        void dup(service::ipc_context ctx);
-        void dup2(service::ipc_context ctx);
+        void dup(service::ipc_context &ctx);
+        void dup2(service::ipc_context &ctx);
 
     public:
         posix_server(eka2l1::system *sys, process_ptr &associated_process);

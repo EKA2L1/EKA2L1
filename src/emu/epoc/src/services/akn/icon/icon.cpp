@@ -50,7 +50,7 @@ namespace eka2l1 {
         : service::typical_server(sys, "!AknIconServer") {
     }
     
-    void akn_icon_server::connect(service::ipc_context context) {
+    void akn_icon_server::connect(service::ipc_context &context) {
         if (!flags & akn_icon_srv_flag_inited) {
             init_server();
         }

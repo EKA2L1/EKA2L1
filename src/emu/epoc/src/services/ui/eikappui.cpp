@@ -47,7 +47,7 @@ namespace eka2l1 {
     }
 
     // TODO: Make a resource reader and read from the config resource file
-    void eikappui_server::get_debug_preferences(service::ipc_context ctx) {
+    void eikappui_server::get_debug_preferences(service::ipc_context &ctx) {
         debug_preferences preferences;
         LOG_TRACE("GetDebugPreferences stubbed");
 

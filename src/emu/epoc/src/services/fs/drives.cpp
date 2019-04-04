@@ -32,7 +32,7 @@
 namespace eka2l1 {
     void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive);
 
-    void fs_server_client::file_drive(service::ipc_context ctx) {
+    void fs_server_client::file_drive(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -123,7 +123,7 @@ namespace eka2l1 {
     }
 
     /* Simple for now only, in the future this should be more advance. */
-    void fs_server::drive(service::ipc_context ctx) {
+    void fs_server::drive(service::ipc_context &ctx) {
         drive_number drv = static_cast<drive_number>(*ctx.get_arg<int>(1));
         std::optional<epoc::fs::drive_info> info = ctx.get_arg_packed<epoc::fs::drive_info>(0);
 
@@ -145,7 +145,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::drive_list(service::ipc_context ctx) {
+    void fs_server::drive_list(service::ipc_context &ctx) {
         std::optional<int> flags = ctx.get_arg<int>(1);
 
         if (!flags) {
@@ -217,7 +217,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::volume(service::ipc_context ctx) {
+    void fs_server::volume(service::ipc_context &ctx) {
         std::optional<epoc::fs::volume_info> info = ctx.get_arg_packed<epoc::fs::volume_info>(0);
 
         if (!info) {
@@ -246,7 +246,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::query_drive_info_ext(service::ipc_context ctx) {
+    void fs_server::query_drive_info_ext(service::ipc_context &ctx) {
         drive_number drv = static_cast<drive_number>(*ctx.get_arg<int>(0));
         std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(drv);
 

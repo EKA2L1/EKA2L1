@@ -34,7 +34,7 @@
 #include <e32err.h>
 
 namespace eka2l1 {
-    void fs_server_client::file_size(service::ipc_context ctx) {
+    void fs_server_client::file_size(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -61,7 +61,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_set_size(service::ipc_context ctx) {
+    void fs_server_client::file_set_size(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -114,7 +114,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_name(service::ipc_context ctx) {
+    void fs_server_client::file_name(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -135,7 +135,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_full_name(service::ipc_context ctx) {
+    void fs_server_client::file_full_name(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -156,7 +156,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_seek(service::ipc_context ctx) {
+    void fs_server_client::file_seek(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -213,7 +213,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_flush(service::ipc_context ctx) {
+    void fs_server_client::file_flush(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -238,7 +238,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_rename(service::ipc_context ctx) {
+    void fs_server_client::file_rename(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -283,7 +283,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_write(service::ipc_context ctx) {
+    void fs_server_client::file_write(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -336,7 +336,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_read(service::ipc_context ctx) {
+    void fs_server_client::file_read(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -391,7 +391,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_close(service::ipc_context ctx) {
+    void fs_server_client::file_close(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -420,7 +420,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
     
-    void fs_server_client::file_open(service::ipc_context ctx) {
+    void fs_server_client::file_open(service::ipc_context &ctx) {
         std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
         std::optional<int> open_mode_res = ctx.get_arg<int>(1);
 
@@ -444,11 +444,11 @@ namespace eka2l1 {
         new_file_subsession(ctx);
     }
 
-    void fs_server_client::file_replace(service::ipc_context ctx) {
+    void fs_server_client::file_replace(service::ipc_context &ctx) {
         new_file_subsession(ctx, true);
     }
 
-    void fs_server_client::file_temp(service::ipc_context ctx) {
+    void fs_server_client::file_temp(service::ipc_context &ctx) {
         auto dir_create = ctx.get_arg<std::u16string>(0);
 
         if (!dir_create) {
@@ -495,7 +495,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_create(service::ipc_context ctx) {
+    void fs_server_client::file_create(service::ipc_context &ctx) {
         std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
         std::optional<int> open_mode_res = ctx.get_arg<int>(1);
 
@@ -513,7 +513,7 @@ namespace eka2l1 {
         new_file_subsession(ctx, true);
     }
 
-    void fs_server_client::file_duplicate(service::ipc_context ctx) {
+    void fs_server_client::file_duplicate(service::ipc_context &ctx) {
         int target_handle = *ctx.get_arg<int>(0);
         fs_node *node = nodes_table.get_node(target_handle);
 
@@ -528,14 +528,14 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::file_adopt(service::ipc_context ctx) {
+    void fs_server_client::file_adopt(service::ipc_context &ctx) {
         LOG_TRACE("Fs::FileAdopt stubbed");
         // TODO (pent0) : Do an adopt implementation
 
         ctx.set_request_status(KErrNone);
     }
     
-    void fs_server_client::new_file_subsession(service::ipc_context ctx, bool overwrite, bool temporary) {
+    void fs_server_client::new_file_subsession(service::ipc_context &ctx, bool overwrite, bool temporary) {
         std::optional<std::u16string> name_res = ctx.get_arg<std::u16string>(0);
         std::optional<int> open_mode_res = ctx.get_arg<int>(1);
 

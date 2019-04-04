@@ -43,6 +43,6 @@ namespace eka2l1 {
         }
 
         explicit akn_icon_server(eka2l1::system *sys);
-        void connect(service::ipc_context context) override;
+        void connect(service::ipc_context &context) override;
     };
 }

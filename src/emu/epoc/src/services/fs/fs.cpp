@@ -119,7 +119,7 @@ namespace eka2l1 {
         REGISTER_IPC(fs_server, query_drive_info_ext, EFsQueryVolumeInfoExt, "Fs::QueryVolumeInfoExt");
     }
 
-    void fs_server::on_unhandled_opcode(service::ipc_context ctx) {
+    void fs_server::on_unhandled_opcode(service::ipc_context &ctx) {
         auto client = clients.find(ctx.msg->msg_session->unique_id());
 
         if (client == clients.end()) {
@@ -175,7 +175,7 @@ namespace eka2l1 {
         }
     }
 
-    void fs_server_client::replace(service::ipc_context ctx) {
+    void fs_server_client::replace(service::ipc_context &ctx) {
         auto given_path_target = ctx.get_arg<std::u16string>(0);
         auto given_path_dest = ctx.get_arg<std::u16string>(1);
 
@@ -205,7 +205,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::rename(service::ipc_context ctx) {
+    void fs_server_client::rename(service::ipc_context &ctx) {
         auto given_path_target = ctx.get_arg<std::u16string>(0);
         auto given_path_dest = ctx.get_arg<std::u16string>(1);
 
@@ -235,7 +235,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::delete_entry(service::ipc_context ctx) {
+    void fs_server_client::delete_entry(service::ipc_context &ctx) {
         auto given_path = ctx.get_arg<std::u16string>(0);
 
         if (!given_path) {
@@ -256,7 +256,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::synchronize_driver(service::ipc_context ctx) {
+    void fs_server::synchronize_driver(service::ipc_context &ctx) {
         ctx.set_request_status(KErrNone);
     }
 
@@ -264,22 +264,22 @@ namespace eka2l1 {
         return nodes_table.get_node(handle);
     }
 
-    void fs_server::connect(service::ipc_context ctx) {
+    void fs_server::connect(service::ipc_context &ctx) {
         clients.emplace(ctx.msg->msg_session->unique_id(), std::make_unique<fs_server_client>(ctx));
         server::connect(ctx);
     }
 
-    void fs_server::disconnect(service::ipc_context ctx) {
+    void fs_server::disconnect(service::ipc_context &ctx) {
         clients.erase(ctx.msg->msg_session->unique_id());
         server::disconnect(ctx);
     }
 
-    void fs_server_client::session_path(service::ipc_context ctx) {
+    void fs_server_client::session_path(service::ipc_context &ctx) {
         ctx.write_arg(0, ss_path);
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::set_session_path(service::ipc_context ctx) {
+    void fs_server_client::set_session_path(service::ipc_context &ctx) {
         auto new_path = ctx.get_arg<std::u16string>(0);
 
         if (!new_path) {
@@ -291,7 +291,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::set_session_to_private(service::ipc_context ctx) {
+    void fs_server_client::set_session_to_private(service::ipc_context &ctx) {
         auto drive_ordinal = ctx.get_arg<int>(0);
 
         if (!drive_ordinal) {
@@ -310,7 +310,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::is_file_in_rom(service::ipc_context ctx) {
+    void fs_server_client::is_file_in_rom(service::ipc_context &ctx) {
         std::optional<utf16_str> path = ctx.get_arg<utf16_str>(0);
 
         if (!path) {
@@ -333,7 +333,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::notify_change(service::ipc_context ctx) {
+    void fs_server_client::notify_change(service::ipc_context &ctx) {
         notify_entry entry;
 
         entry.match_pattern = ".*";
@@ -344,7 +344,7 @@ namespace eka2l1 {
         notify_entries.push_back(entry);
     }
 
-    void fs_server_client::notify_change_ex(service::ipc_context ctx) {
+    void fs_server_client::notify_change_ex(service::ipc_context &ctx) {
         std::optional<utf16_str> wildcard_match = ctx.get_arg<utf16_str>(1);
 
         if (!wildcard_match) {
@@ -376,7 +376,7 @@ namespace eka2l1 {
         return true;
     }
 
-    void fs_server_client::mkdir(service::ipc_context ctx) {
+    void fs_server_client::mkdir(service::ipc_context &ctx) {
         std::optional<std::u16string> dir = ctx.get_arg<std::u16string>(0);
 
         if (!dir) {
@@ -402,7 +402,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::entry(service::ipc_context ctx) {
+    void fs_server_client::entry(service::ipc_context &ctx) {
         std::optional<std::u16string> fname_op = ctx.get_arg<std::u16string>(0);
 
         if (!fname_op) {
@@ -454,7 +454,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server::private_path(service::ipc_context ctx) {
+    void fs_server::private_path(service::ipc_context &ctx) {
         std::u16string path = u"\\private\\"
             + common::utf8_to_ucs2(common::to_string(std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type()), std::hex))
             + u"\\";
@@ -463,7 +463,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::set_should_notify_failure(service::ipc_context ctx) {
+    void fs_server_client::set_should_notify_failure(service::ipc_context &ctx) {
         should_notify_failures = static_cast<bool>(ctx.get_arg<int>(0));
         ctx.set_request_status(KErrNone);
     }

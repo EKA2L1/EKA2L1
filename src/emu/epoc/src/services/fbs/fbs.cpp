@@ -75,7 +75,7 @@ namespace eka2l1 {
         : service::typical_server(sys, "!Fontbitmapserver") {
     }
 
-    void fbs_server::connect(service::ipc_context context) {
+    void fbs_server::connect(service::ipc_context &context) {
         if (!shared_chunk && !large_chunk) {
             // Initialize those chunks
             kernel_system *kern = context.sys->get_kernel_system();

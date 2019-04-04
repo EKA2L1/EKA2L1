@@ -245,7 +245,7 @@ namespace eka2l1 {
         return true;
     }
 
-    void ecom_server::connect(service::ipc_context ctx) {
+    void ecom_server::connect(service::ipc_context &ctx) {
         if (!init) {
             if (!load_plugins(ctx.sys->get_io_system())) {
                 LOG_ERROR("An error happens with initialization of ECom");
@@ -325,7 +325,7 @@ namespace eka2l1 {
         return true;
     }
         
-    void ecom_server::list_implementations(service::ipc_context ctx) {
+    void ecom_server::list_implementations(service::ipc_context &ctx) {
         // Clear last cache
         collected_impls.clear();
 
@@ -492,7 +492,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void ecom_server::get_implementation_creation_method(service::ipc_context ctx) {
+    void ecom_server::get_implementation_creation_method(service::ipc_context &ctx) {
         do_get_resolved_impl_creation_method(&ctx);
     }
         

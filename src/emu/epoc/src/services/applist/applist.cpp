@@ -50,7 +50,7 @@ namespace eka2l1 {
             EAppListServGetAppCapability, "GetAppCapability")
     }
 
-    void applist_server::is_accepted_to_run(service::ipc_context ctx) {
+    void applist_server::is_accepted_to_run(service::ipc_context &ctx) {
         auto exe_name = ctx.get_arg<std::u16string>(0);
 
         if (!exe_name) {
@@ -62,13 +62,13 @@ namespace eka2l1 {
         ctx.set_request_status(true);
     }
 
-    void applist_server::default_screen_number(service::ipc_context ctx) {
+    void applist_server::default_screen_number(service::ipc_context &ctx) {
         // TODO: Detect if app exists. Sanity check
         LOG_TRACE("DefaultScreenNumber stubbed with 0");
         ctx.set_request_status(0); // KErrNone
     }
 
-    void applist_server::app_language(service::ipc_context ctx) {
+    void applist_server::app_language(service::ipc_context &ctx) {
         LOG_TRACE("AppList::AppLanguage stubbed to returns ELangEnglish");
 
         TLanguage default_lang = ELangEnglish;
@@ -77,7 +77,7 @@ namespace eka2l1 {
         ctx.set_request_status(0);
     }
 
-    void applist_server::get_app_info(service::ipc_context ctx) {
+    void applist_server::get_app_info(service::ipc_context &ctx) {
         manager::package_manager *pkg_mngr = ctx.sys->get_manager_system()->get_package_manager();
         std::optional<manager::app_info> info = pkg_mngr->info(static_cast<std::uint32_t>(*ctx.get_arg<int>(0)));
 
@@ -108,7 +108,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void applist_server::get_capability(service::ipc_context ctx) {
+    void applist_server::get_capability(service::ipc_context &ctx) {
         std::uint32_t app_uid = *ctx.get_arg<int>(1);
 
         LOG_TRACE("GetCapability stubbed");

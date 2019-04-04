@@ -72,7 +72,7 @@ namespace eka2l1 {
         return true;
     }
 
-    void featmgr_server::feature_supported(service::ipc_context ctx) {
+    void featmgr_server::feature_supported(service::ipc_context &ctx) {
         /*
         if (!config_loaded) {
             bool succ = load_featmgr_configs(ctx.sys->get_io_system());

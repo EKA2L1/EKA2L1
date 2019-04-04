@@ -103,56 +103,56 @@ namespace eka2l1 {
 
         explicit fs_server_client(service::ipc_context &ctx);
 
-        void file_open(service::ipc_context ctx);
-        void file_create(service::ipc_context ctx);
-        void file_replace(service::ipc_context ctx);
-        void file_temp(service::ipc_context ctx);
-        void file_flush(service::ipc_context ctx);
-        void file_close(service::ipc_context ctx);
-        void file_duplicate(service::ipc_context ctx);
-        void file_adopt(service::ipc_context ctx);
-        void file_drive(service::ipc_context ctx);
-        void file_name(service::ipc_context ctx);
-        void file_full_name(service::ipc_context ctx);
+        void file_open(service::ipc_context &ctx);
+        void file_create(service::ipc_context &ctx);
+        void file_replace(service::ipc_context &ctx);
+        void file_temp(service::ipc_context &ctx);
+        void file_flush(service::ipc_context &ctx);
+        void file_close(service::ipc_context &ctx);
+        void file_duplicate(service::ipc_context &ctx);
+        void file_adopt(service::ipc_context &ctx);
+        void file_drive(service::ipc_context &ctx);
+        void file_name(service::ipc_context &ctx);
+        void file_full_name(service::ipc_context &ctx);
         
-        void new_file_subsession(service::ipc_context ctx, bool overwrite = false, 
+        void new_file_subsession(service::ipc_context &ctx, bool overwrite = false, 
             bool temporary = false);
         
-        void file_size(service::ipc_context ctx);
-        void file_set_size(service::ipc_context ctx);
+        void file_size(service::ipc_context &ctx);
+        void file_set_size(service::ipc_context &ctx);
 
-        void file_seek(service::ipc_context ctx);
-        void file_read(service::ipc_context ctx);
-        void file_write(service::ipc_context ctx);
+        void file_seek(service::ipc_context &ctx);
+        void file_read(service::ipc_context &ctx);
+        void file_write(service::ipc_context &ctx);
 
-        void file_rename(service::ipc_context ctx);
+        void file_rename(service::ipc_context &ctx);
 
-        void open_dir(service::ipc_context ctx);
-        void read_dir_packed(service::ipc_context ctx);
-        void read_dir(service::ipc_context ctx);
-        void close_dir(service::ipc_context ctx);
+        void open_dir(service::ipc_context &ctx);
+        void read_dir_packed(service::ipc_context &ctx);
+        void read_dir(service::ipc_context &ctx);
+        void close_dir(service::ipc_context &ctx);
         
-        void session_path(service::ipc_context ctx);
-        void set_session_path(service::ipc_context ctx);
-        void set_session_to_private(service::ipc_context ctx);
+        void session_path(service::ipc_context &ctx);
+        void set_session_path(service::ipc_context &ctx);
+        void set_session_to_private(service::ipc_context &ctx);
         
         int new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, 
             bool overwrite = false, bool temporary = false);
 
         fs_node *get_file_node(int handle);
                 
-        void entry(service::ipc_context ctx);
-        void is_file_in_rom(service::ipc_context ctx);
+        void entry(service::ipc_context &ctx);
+        void is_file_in_rom(service::ipc_context &ctx);
 
-        void notify_change_ex(service::ipc_context ctx);
-        void notify_change(service::ipc_context ctx);
+        void notify_change_ex(service::ipc_context &ctx);
+        void notify_change(service::ipc_context &ctx);
 
-        void mkdir(service::ipc_context ctx);
-        void rename(service::ipc_context ctx);
-        void replace(service::ipc_context ctx);
+        void mkdir(service::ipc_context &ctx);
+        void rename(service::ipc_context &ctx);
+        void replace(service::ipc_context &ctx);
 
-        void delete_entry(service::ipc_context ctx);
-        void set_should_notify_failure(service::ipc_context ctx);
+        void delete_entry(service::ipc_context &ctx);
+        void set_should_notify_failure(service::ipc_context &ctx);
 
         enum class notify_type {
             entry = 1,
@@ -184,18 +184,18 @@ namespace eka2l1 {
     class fs_server : public service::server {
         std::unordered_map<kernel::uid, fs_server_client_ptr> clients;
 
-        void connect(service::ipc_context ctx) override;
-        void disconnect(service::ipc_context ctx) override;
+        void connect(service::ipc_context &ctx) override;
+        void disconnect(service::ipc_context &ctx) override;
 
-        void synchronize_driver(service::ipc_context ctx);
-        void private_path(service::ipc_context ctx);
+        void synchronize_driver(service::ipc_context &ctx);
+        void private_path(service::ipc_context &ctx);
 
-        void query_drive_info_ext(service::ipc_context ctx);
-        void drive_list(service::ipc_context ctx);
-        void drive(service::ipc_context ctx);
-        void volume(service::ipc_context ctx);
+        void query_drive_info_ext(service::ipc_context &ctx);
+        void drive_list(service::ipc_context &ctx);
+        void drive(service::ipc_context &ctx);
+        void volume(service::ipc_context &ctx);
 
-        void on_unhandled_opcode(service::ipc_context ctx) override;
+        void on_unhandled_opcode(service::ipc_context &ctx) override;
 
     public:
         fs_server(system *sys);

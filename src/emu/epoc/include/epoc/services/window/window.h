@@ -279,10 +279,10 @@ namespace eka2l1 {
         epoc::window_group *focus_ { nullptr };
         epoc::pointer_cursor_mode cursor_mode_;
 
-        void init(service::ipc_context ctx);
-        void send_to_command_buffer(service::ipc_context ctx);
+        void init(service::ipc_context &ctx);
+        void send_to_command_buffer(service::ipc_context &ctx);
 
-        void on_unhandled_opcode(service::ipc_context ctx) override;
+        void on_unhandled_opcode(service::ipc_context &ctx) override;
 
         void load_wsini();
         void parse_wsini();

@@ -273,7 +273,7 @@ namespace eka2l1 {
         }
     }
 
-    void central_repo_server::redirect_msg_to_session(service::ipc_context ctx) {
+    void central_repo_server::redirect_msg_to_session(service::ipc_context &ctx) {
         const std::uint32_t session_uid = ctx.msg->msg_session->unique_id();
         auto session_ite = client_sessions.find(session_uid);
 
@@ -749,7 +749,7 @@ namespace eka2l1 {
 
     // If a session disconnect, we should at least save all changes it did
     // At least, if the session connected still exist
-    void central_repo_server::disconnect(service::ipc_context ctx) {
+    void central_repo_server::disconnect(service::ipc_context &ctx) {
         // Close all repos that are currently being opened.
         const std::uint32_t ss_id = ctx.msg->msg_session->unique_id();
         auto ss_ite = client_sessions.find(ss_id);
@@ -771,7 +771,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void central_repo_server::connect(service::ipc_context ctx) {
+    void central_repo_server::connect(service::ipc_context &ctx) {
         central_repo_client_session session;
         session.server = this;
 

@@ -82,10 +82,10 @@ namespace eka2l1 {
             [](auto slot) { return !slot || slot->free; });
 
         if (slot_free != msgs.end()) {
-            ipc_msg_ptr msg
-                = std::make_shared<ipc_msg>(crr_thread());
+            if (!*slot_free) {                
+                ipc_msg_ptr msg
+                    = std::make_shared<ipc_msg>(crr_thread());
 
-            if (!*slot_free) {
                 *slot_free = std::move(msg);
             }
 

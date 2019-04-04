@@ -159,12 +159,12 @@ namespace eka2l1 {
 
         std::shared_ptr<domain_manager> mngr;
 
-        void join_domain(service::ipc_context context);
-        void request_transition_nof(service::ipc_context context);
-        void cancel_transition_nof(service::ipc_context context);
-        void acknowledge_last_state(service::ipc_context context);
-        void defer_acknowledge(service::ipc_context context);
-        void cancel_defer_acknowledge(service::ipc_context context);
+        void join_domain(service::ipc_context &context);
+        void request_transition_nof(service::ipc_context &context);
+        void cancel_transition_nof(service::ipc_context &context);
+        void acknowledge_last_state(service::ipc_context &context);
+        void defer_acknowledge(service::ipc_context &context);
+        void cancel_defer_acknowledge(service::ipc_context &context);
 
     public:
         explicit domain_server(eka2l1::system *sys, std::shared_ptr<domain_manager> &mngr);
@@ -181,20 +181,20 @@ namespace eka2l1 {
 
         // These hierarchies already exist in EKA2L1 database and will be taken into
         // use when this is called
-        void add_new_hierarchy(service::ipc_context context);
-        void join_hierarchy(service::ipc_context context);
+        void add_new_hierarchy(service::ipc_context &context);
+        void join_hierarchy(service::ipc_context &context);
 
-        void request_domain_transition(service::ipc_context context);
-        void request_system_transition(service::ipc_context context);
-        void cancel_transition(service::ipc_context context);
-        void get_transition_fail_count(service::ipc_context context);
+        void request_domain_transition(service::ipc_context &context);
+        void request_system_transition(service::ipc_context &context);
+        void cancel_transition(service::ipc_context &context);
+        void get_transition_fail_count(service::ipc_context &context);
 
-        void observer_join(service::ipc_context context);
-        void observer_start(service::ipc_context context);
-        void observer_cancel(service::ipc_context context);
-        void observer_notify(service::ipc_context context);
+        void observer_join(service::ipc_context &context);
+        void observer_start(service::ipc_context &context);
+        void observer_cancel(service::ipc_context &context);
+        void observer_notify(service::ipc_context &context);
 
-        void observed_count(service::ipc_context context);
+        void observed_count(service::ipc_context &context);
 
     public:
         explicit domainmngr_server(eka2l1::system *sys);

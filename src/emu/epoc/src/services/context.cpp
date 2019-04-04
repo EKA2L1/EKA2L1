@@ -28,6 +28,10 @@
 
 namespace eka2l1 {
     namespace service {
+        ipc_context::~ipc_context() {
+            msg->free = true;
+        }
+
         template <>
         std::optional<int> ipc_context::get_arg(int idx) {
             if (idx >= 4) {

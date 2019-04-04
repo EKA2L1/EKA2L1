@@ -91,7 +91,7 @@ namespace eka2l1 {
          * \param arg1: application UID.
          * \param request_sts: KErrNotFound if app doesn't exist.
         */
-        void default_screen_number(service::ipc_context ctx);
+        void default_screen_number(service::ipc_context &ctx);
 
         /*! \brief Get the application language.
          *
@@ -100,7 +100,7 @@ namespace eka2l1 {
          *
          * Expected request status: KErrNone. 
         */
-        void app_language(service::ipc_context ctx);
+        void app_language(service::ipc_context &ctx);
 
         /*! \brief Request the server to run app.
          *
@@ -109,21 +109,21 @@ namespace eka2l1 {
          * 
          * \param arg0: App's uid3
         */
-        void is_accepted_to_run(service::ipc_context ctx);
+        void is_accepted_to_run(service::ipc_context &ctx);
 
         /*! \brief Get the info of the specified application
          *
          * \param arg0: App's uid3
          * \param arg1: Descriptor contains apa_app_info
         */
-        void get_app_info(service::ipc_context ctx);
+        void get_app_info(service::ipc_context &ctx);
 
         /*! \brief Get the capability of an app.
          *
          * \param arg0: Descriptor contains the capability
          * \param arg1: The application's UID
         */
-        void get_capability(service::ipc_context ctx);
+        void get_capability(service::ipc_context &ctx);
 
     public:
         applist_server(system *sys);

@@ -34,7 +34,7 @@
 #include <e32err.h>
 
 namespace eka2l1 {
-    void fs_server_client::open_dir(service::ipc_context ctx) {
+    void fs_server_client::open_dir(service::ipc_context &ctx) {
         auto dir = ctx.get_arg<std::u16string>(0);
 
         LOG_TRACE("Opening directory: {}", common::ucs2_to_utf8(*dir));
@@ -76,7 +76,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::close_dir(service::ipc_context ctx) {
+    void fs_server_client::close_dir(service::ipc_context &ctx) {
         std::optional<int> handle_res = ctx.get_arg<int>(3);
 
         if (!handle_res) {
@@ -95,7 +95,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::read_dir(service::ipc_context ctx) {
+    void fs_server_client::read_dir(service::ipc_context &ctx) {
         std::optional<int> handle = ctx.get_arg<int>(3);
 
         if (!handle) {
@@ -149,7 +149,7 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
-    void fs_server_client::read_dir_packed(service::ipc_context ctx) {
+    void fs_server_client::read_dir_packed(service::ipc_context &ctx) {
         std::optional<int> handle = ctx.get_arg<int>(3);
         std::optional<int> entry_arr_vir_ptr = ctx.get_arg<int>(0);
 

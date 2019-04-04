@@ -46,7 +46,7 @@ namespace eka2l1 {
     };
 
     class backup_server : public service::server {
-        void get_backup_operation_state(service::ipc_context ctx);
+        void get_backup_operation_state(service::ipc_context &ctx);
 
     public:
         explicit backup_server(eka2l1::system *sys);

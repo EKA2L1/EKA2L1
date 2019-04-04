@@ -109,7 +109,7 @@ namespace eka2l1 {
         , settings_(nullptr) {
     }
 
-    void akn_skin_server::connect(service::ipc_context ctx) {
+    void akn_skin_server::connect(service::ipc_context &ctx) {
         if (!settings_) {
             do_initialisation();
         }
