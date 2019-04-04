@@ -82,13 +82,12 @@ namespace eka2l1 {
             [](auto slot) { return !slot || slot->free; });
 
         if (slot_free != msgs.end()) {
-            if (!*slot_free) {                
-                ipc_msg_ptr msg
-                    = std::make_shared<ipc_msg>(crr_thread());
-
+            if (!*slot_free) {
+                ipc_msg_ptr msg = std::make_shared<ipc_msg>(crr_thread());
                 *slot_free = std::move(msg);
             }
 
+            slot_free->get()->own_thr = crr_thread();
             slot_free->get()->free = false;
             slot_free->get()->id = static_cast<std::uint32_t>(slot_free - msgs.begin());
 
@@ -257,6 +256,10 @@ namespace eka2l1 {
     }
 
     void kernel_system::free_msg(ipc_msg_ptr msg) {
+        if (msg->locked()) {
+            return;
+        }
+        
         msg->free = true;
     }
 

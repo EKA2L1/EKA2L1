@@ -98,7 +98,25 @@ namespace eka2l1 {
         ipc_message_status msg_status;
         uint32_t id;
 
+        std::uint32_t attrib = 0;
+
+        enum {
+            MSG_ATTRIB_LOCK_FREE = 0x1
+        };
+
         bool free : true;
+
+        void lock_free() {
+            attrib |= MSG_ATTRIB_LOCK_FREE;
+        }
+
+        void unlock_free() {
+            attrib &= ~MSG_ATTRIB_LOCK_FREE;
+        }
+
+        bool locked() {
+            return attrib & MSG_ATTRIB_LOCK_FREE;
+        }
 
         ipc_msg() {}
         ipc_msg(kernel::thread *own)

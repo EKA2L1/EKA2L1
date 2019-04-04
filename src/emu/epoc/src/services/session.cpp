@@ -65,12 +65,8 @@ namespace eka2l1 {
         }
 
         void session::set_slot_free(ipc_msg_ptr &msg) {
-            if (msg->own_thr->get_sync_msg() == msg) {
-                return;
-            }
-
             if (msgs_pool.empty()) {
-                msg->free = true;
+                kern->free_msg(msg);
                 return;
             }
 

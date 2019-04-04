@@ -56,6 +56,9 @@ namespace eka2l1 {
                 timing->unschedule_event(frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
                 timing->remove_event(frequent_process_event);
             }
+
+            process_msg->unlock_free();
+            kern->free_msg(process_msg);
         }
 
         // Create a server with name
@@ -66,6 +69,7 @@ namespace eka2l1 {
             , kernel_obj(sys->get_kernel_system(), name, kernel::access_type::global_access) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
+            process_msg->lock_free();
 
             obj_type = kernel::object_type::server;
 

@@ -284,6 +284,7 @@ namespace eka2l1 {
             request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
 
             sync_msg = kern->create_msg(owner_type::kernel);
+            sync_msg->lock_free();
 
             /* Create TDesC string. Combine of string length and name data (USC2) */
 

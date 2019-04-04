@@ -29,7 +29,7 @@
 namespace eka2l1 {
     namespace service {
         ipc_context::~ipc_context() {
-            msg->free = true;
+            msg->msg_session->set_slot_free(msg);
         }
 
         template <>
