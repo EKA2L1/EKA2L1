@@ -67,7 +67,12 @@ namespace eka2l1 {
     class akn_skin_server: public service::typical_server {
         std::unique_ptr<epoc::akn_ss_settings> settings_;
 
+        chunk_ptr skin_chunk_;
+        sema_ptr skin_chunk_sema_;
+        mutex_ptr skin_chunk_render_mut_;
+
         void do_initialisation();
+
     public:
         explicit akn_skin_server(eka2l1::system *sys);
 

@@ -123,10 +123,22 @@ namespace eka2l1 {
     }
 
     void akn_skin_server::do_initialisation() {
-        server_ptr svr = sys->get_kernel_system()->get_by_name<service::server>("!CentralRepository");
+        kernel_system *kern = sys->get_kernel_system();
+        server_ptr svr = kern->get_by_name<service::server>("!CentralRepository");
         
         // Older versions dont use cenrep.
         settings_ = std::make_unique<epoc::akn_ss_settings>(sys->get_io_system(), !svr ? nullptr :
             reinterpret_cast<central_repo_server*>(&(*svr)));
+
+        // Create skin chunk
+        skin_chunk_ = kern->create<kernel::chunk>(sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
+            0, 160 * 1024, 384 * 1024, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::global, kernel::chunk_attrib::none);
+
+        // Create semaphores and mutexes
+        skin_chunk_sema_ = kern->create<kernel::semaphore>("AknsSrvWaitSemaphore", 127, kernel::access_type::global_access);
+
+        // Render mutex. Use when render skins
+        skin_chunk_render_mut_ = kern->create<kernel::mutex>(sys->get_timing_system(), "AknsSrvRenderSemaphore", false, 
+            kernel::access_type::global_access);
     }
 }
