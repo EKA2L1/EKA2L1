@@ -30,10 +30,6 @@
 namespace eka2l1 {
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid) 
         : service::typical_session(svr, client_ss_uid) {
-        // TODO (pent0): Remove this hack. It's just prevent from softlock at the moment.
-        // Since the client expects something from the server when first call NextEvent.
-        // Meaning some events are already on the queue.
-        nof_list_.push(epoc::akn_ssch_config_merged);
     }
 
     void akn_skin_server_session::do_set_notify_handler(service::ipc_context *ctx) {
