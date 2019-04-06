@@ -67,20 +67,24 @@ namespace eka2l1 {
             : x(x)
             , y(y) {}
 
-        vec2 operator+(const vec2 &rhs) {
+        vec2 operator+(const vec2 &rhs) const {
             return vec2(x + rhs.x, y + rhs.y);
         }
 
-        vec2 operator-(const vec2 &rhs) {
+        vec2 operator-(const vec2 &rhs) const {
             return vec2(x - rhs.x, y - rhs.y);
         }
 
-        vec2 operator*(const int rhs) {
+        vec2 operator*(const int rhs) const {
             return vec2(x * rhs, y * rhs);
         }
 
-        bool operator==(const vec2 &rhs) {
+        bool operator==(const vec2 &rhs) const {
             return (x == rhs.x) && (y == rhs.y);
+        }
+        
+        bool operator!=(const vec2 &rhs) const {
+            return (x != rhs.x) || (y != rhs.y);
         }
 
         void operator=(const vec2 &rhs) {
@@ -98,15 +102,15 @@ namespace eka2l1 {
             : vec2(x, y)
             , z(z) {}
 
-        vec3 operator+(const vec3 &rhs) {
+        vec3 operator+(const vec3 &rhs) const {
             return vec3(x + rhs.x, y + rhs.y, z + rhs.z);
         }
 
-        vec3 operator-(const vec3 &rhs) {
+        vec3 operator-(const vec3 &rhs) const {
             return vec3(x - rhs.x, y - rhs.y, z - rhs.z);
         }
 
-        vec3 operator*(const int rhs) {
+        vec3 operator*(const int rhs) const {
             return vec3(x * rhs, y * rhs, z * rhs);
         }
     };
