@@ -369,8 +369,9 @@ namespace eka2l1::drivers {
         ImVec2 base_pos = ImVec2(0.0f, 0.0f);
 
         for (auto &window : windows) {
-            if (window->visible) {
-                const eka2l1::vec2 win_size = window->fb->get_size();
+            const eka2l1::vec2 win_size = window->fb->get_size();
+            
+            if (window->visible && win_size != eka2l1::vec2(0, 0)) {
                 ImVec2 win_pos = ImVec2(static_cast<float>(window->pos.x), static_cast<float>(window->pos.y));
 
                 ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(

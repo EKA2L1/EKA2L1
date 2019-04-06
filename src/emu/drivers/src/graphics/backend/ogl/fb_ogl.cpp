@@ -46,7 +46,7 @@ namespace eka2l1::drivers {
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_INFO("Framebuffer not complete!");
+            LOG_ERROR("Framebuffer not complete!");
         }
 
         glClearColor(0.2f, 0.4f, 0.8f, 1.0f);    
@@ -71,6 +71,11 @@ namespace eka2l1::drivers {
 
     void ogl_framebuffer::resize(const vec2 &s) {
         size = s;
+
+        if (size == vec2(0, 0)) {
+            return;
+        }
+        
         bind();
 
         texture.bind();
@@ -83,7 +88,7 @@ namespace eka2l1::drivers {
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_INFO("Framebuffer not complete!");
+            LOG_INFO("Framebuffer not complete when resizing to {}x{}!", size.x, size.y);
         }
 
         unbind();
