@@ -91,6 +91,8 @@ add_library(epocservs
     include/epoc/services/drm/rights.h
     include/epoc/services/ecom/ecom.h
     include/epoc/services/ecom/plugin.h
+    include/epoc/services/fbs/adapter/font_adapter.h
+    include/epoc/services/fbs/adapter/stb_font_adapter.h
     include/epoc/services/fbs/bitmap.h
     include/epoc/services/fbs/fbs.h
     include/epoc/services/fbs/font.h
@@ -134,6 +136,7 @@ add_library(epocservs
     src/services/ecom/ecom.cpp
     src/services/ecom/instantiate.cpp
     src/services/ecom/plugin.cpp
+    src/services/fbs/adapter/stb_font_adapter.cpp
     src/services/fbs/fbs.cpp
     src/services/fbs/impls/bitmap.cpp
     src/services/fbs/impls/font.cpp
