@@ -147,7 +147,7 @@ namespace eka2l1 {
                         return false;
                     }
 
-                    des->assign(own_pr, data, write_size);
+                    des->assign(own_pr, data, write_size * 2);
                 } else {
                     eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
