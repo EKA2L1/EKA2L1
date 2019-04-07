@@ -5,6 +5,7 @@
  *      Author: fewds
  */
 
+#include <intests/fate.h>
 #include <intests/testmanager.h>
 
 #include <e32base.h>
@@ -31,9 +32,6 @@ TInt CTestManager::Run() {
     TInt successfulTests = 0;
     RFs &fs = iAbsorber->GetFsSession();
 
-    TFileName sessionPath;
-    fs.SessionPath(sessionPath);
-
     for (iCurrentTest = 0; iCurrentTest < iTests.Count(); iCurrentTest++) {
         TTest &test = iTests[iCurrentTest];
 
@@ -41,7 +39,7 @@ TInt CTestManager::Run() {
         _LIT(KTestFolder, "expected\\");
 
         HBufC *testPathBuf;
-        TRAPD(err, testPathBuf = HBufC::NewL(test.iCategory->Length() + test.iName->Length() + KTestExt.iTypeLength + 2 + sessionPath.Length() + KTestFolder.iTypeLength));
+        TRAPD(err, testPathBuf = HBufC::NewL(test.iCategory->Length() + test.iName->Length() + KTestExt.iTypeLength + 2 + iSessionPath.Length() + KTestFolder.iTypeLength));
 
         if (err != KErrNone) {
             return err;
@@ -50,7 +48,7 @@ TInt CTestManager::Run() {
         {
             TPtr testPath = testPathBuf->Des();
 
-            testPath.Append(sessionPath);
+            testPath.Append(iSessionPath);
             testPath.Append(KTestFolder);
             testPath.Append(test.iCategory->Des());
             testPath.Append('\\');
@@ -117,6 +115,31 @@ CTestManager::~CTestManager() {
 
 void CTestManager::ConstructL(const TAbsorberMode aAbsorbMode) {
     iAbsorber = CAbsorber::NewL(aAbsorbMode);
+    RFs &fs = iAbsorber->GetFsSession();
+
+#if GEN_TESTS
+    // Search for a memory card drive. Would be best to store on it
+    for (TInt drv = EDriveA; drv <= EDriveZ; drv++) {
+        TDriveInfo drvInfo;
+        if (fs.Drive(drvInfo, drv) == KErrNone) {
+            if (drvInfo.iDriveAtt & KDriveAttRemovable) {
+                TChar c;
+                fs.DriveToChar(drv, c);
+
+                iSessionPath.Append(c);
+                iSessionPath.Append(_L(":\\"));
+
+                break;
+            }
+        }
+    }
+
+    if (iSessionPath.Length() == 0) {
+        iSessionPath = RProcess().FullName().Left(3);
+    }
+#else
+    fs.SessionPath(iSessionPath);
+#endif
 }
 
 void CTestManager::ExpectInputFileEqualL(const TDesC8 &aData) {

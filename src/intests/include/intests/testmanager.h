@@ -54,6 +54,7 @@ private:
 
     RArray<TTest> iTests;
     TInt iCurrentTest;
+    TFileName iSessionPath;
 
     CAbsorber *iAbsorber;
 };
