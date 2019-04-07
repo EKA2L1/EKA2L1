@@ -33,7 +33,9 @@ void EComGetFontRasterizerPluginInfosL() {
     for (TInt i = 0; i < infos.Count(); i++) {
         const TDesC &name = infos[i]->DisplayName();
         TDriveUnit unit = infos[i]->Drive();
-        expectLine.Format(_L8("Openfont Rasterizer Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &unit.Name(), infos[i]->ImplementationUid().iUid);
+        TDriveName unit_name = unit.Name();
+
+        expectLine.Format(_L8("Openfont Rasterizer Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &unit_name, infos[i]->ImplementationUid().iUid);
 
         EXPECT_INPUT_EQUAL_L(expectLine);
     }
@@ -57,7 +59,8 @@ void EComGetFontTrueTypePluginInfosL() {
     for (TInt i = 0; i < infos.Count(); i++) {
         const TDesC &name = infos[i]->DisplayName();
         TDriveUnit unit = infos[i]->Drive();
-        expectLine.Format(_L8("Openfont TrueType Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &unit.Name(), infos[i]->ImplementationUid().iUid);
+        TDriveName unit_name = unit.Name();
+        expectLine.Format(_L8("Openfont TrueType Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &unit_name, infos[i]->ImplementationUid().iUid);
 
         EXPECT_INPUT_EQUAL_L(expectLine);
     }
@@ -65,7 +68,7 @@ void EComGetFontTrueTypePluginInfosL() {
     REComSession::ListImplementationsL(KUidOpenFontTrueTypeExtension, infos);
 }
 
-TInt ImplUidLessThan(const CImplementationInformation& aLhs, const CImplementationInformation& aRhs) {
+TInt ImplUidLessThan(const CImplementationInformation &aLhs, const CImplementationInformation &aRhs) {
     return aLhs.ImplementationUid().iUid - aRhs.ImplementationUid().iUid;
 }
 
@@ -74,7 +77,7 @@ void EComGetCdlPluginInfosL() {
     REComSession::ListImplementationsL(TUid::Uid(0x101f8243), infos);
 
     infos.Sort(&ImplUidLessThan);
-    
+
     TBuf8<256> expectLine;
     expectLine.Format(_L8("Total CDL plugins %d"), infos.Count());
 
@@ -83,7 +86,8 @@ void EComGetCdlPluginInfosL() {
     for (TInt i = 0; i < infos.Count(); i++) {
         const TDesC &name = infos[i]->DisplayName();
         TDriveUnit unit = infos[i]->Drive();
-        expectLine.Format(_L8("CDL Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &unit.Name(), infos[i]->ImplementationUid().iUid);
+        TDriveName drive_name = unit.Name();
+        expectLine.Format(_L8("CDL Plugin %d: %S, drive %S, uid 0x%08x"), i, &name, &drive_name, infos[i]->ImplementationUid().iUid);
 
         EXPECT_INPUT_EQUAL_L(expectLine);
     }

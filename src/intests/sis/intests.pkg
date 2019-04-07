@@ -42,4 +42,7 @@
 "..\expected\EComServer\GetAllFontTrueTypePluginInstall.expected"		-"!:\private\e6f75ec0\Expected\EComServer\GetAllFontTrueTypePluginInstall.expected"
 "..\expected\EComServer\GetCdlPluginInstall.expected"					-"!:\private\e6f75ec0\Expected\EComServer\GetCdlPluginInstall.expected"
 
+; FBS
+"..\expected\FbsFontStore\FontStoreNearestToDesignWithName.expected"	-"!:\private\e6f75ec0\Expected\FbsFontStore\FontStoreNearestToDesignWithName.expected"
+
 @"DummyServ.sisx", (0xe6075ec1)

@@ -15,7 +15,7 @@ SYSTEMINCLUDE   \epoc32\include
 
 DEBUGGABLE_UDEBONLY
 
-LIBRARY charconv.lib efile.lib efsrv.lib euser.lib ws32.lib ecom.lib
+LIBRARY charconv.lib efile.lib efsrv.lib euser.lib ws32.lib ecom.lib fntstr.lib gdi.lib fbscli.lib
 
 SOURCEPATH ..\src
 SOURCE absorber.cpp main.cpp testmanager.cpp
@@ -34,3 +34,5 @@ SOURCEPATH ..\src\ipc
 SOURCE ipc.cpp
 SOURCEPATH ..\src
 SOURCE ws.cpp ecom.cpp
+SOURCEPATH ..\src\fbs
+SOURCE font.cpp

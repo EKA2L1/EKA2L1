@@ -12,16 +12,15 @@
 // Add test file here
 #include <intests/cmd/cmd.h>
 #include <intests/ecom.h>
+#include <intests/fate.h>
+#include <intests/fbs/font.h>
 #include <intests/io/file.h>
 #include <intests/ipc/ipc.h>
 #include <intests/kern/codeseg.h>
+#include <intests/testmanager.h>
 #include <intests/ws/ws.h>
 
-#include <intests/testmanager.h>
-
 #include <w32std.h>
-
-#define GEN_TESTS 1
 
 void MainWrapperL() {
 #if GEN_TESTS
@@ -39,6 +38,7 @@ void MainWrapperL() {
     AddCmdTestCaseL();
     AddFileTestCasesL();
     AddEComTestCasesL();
+    AddFbsFontTestCasesL();
 
     TInt totalPass = instance->Run();
     RDebug::Printf("%d/%d tests passed", totalPass, instance->TotalTests());
