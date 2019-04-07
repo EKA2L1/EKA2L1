@@ -127,14 +127,18 @@ namespace eka2l1 {
             reinterpret_cast<central_repo_server*>(&(*svr)));
 
         // Create skin chunk
-        skin_chunk_ = kern->create<kernel::chunk>(sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
-            0, 160 * 1024, 384 * 1024, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::global, kernel::chunk_attrib::none);
+        skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,
+            sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
+            0, 160 * 1024, 384 * 1024, prot::read_write, kernel::chunk_type::normal, 
+            kernel::chunk_access::global, kernel::chunk_attrib::none).second;
 
         // Create semaphores and mutexes
-        skin_chunk_sema_ = kern->create<kernel::semaphore>("AknsSrvWaitSemaphore", 127, kernel::access_type::global_access);
+        skin_chunk_sema_ = kern->create_and_add<kernel::semaphore>(kernel::owner_type::kernel, 
+            "AknsSrvWaitSemaphore", 127, kernel::access_type::global_access).second;
 
         // Render mutex. Use when render skins
-        skin_chunk_render_mut_ = kern->create<kernel::mutex>(sys->get_timing_system(), "AknsSrvRenderSemaphore", false, 
-            kernel::access_type::global_access);
+        skin_chunk_render_mut_ = kern->create_and_add<kernel::mutex>(kernel::owner_type::kernel,
+            sys->get_timing_system(), "AknsSrvRenderSemaphore", false, 
+            kernel::access_type::global_access).second;
     }
 }

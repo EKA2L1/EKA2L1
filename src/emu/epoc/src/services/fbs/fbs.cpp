@@ -79,7 +79,8 @@ namespace eka2l1 {
         if (!shared_chunk && !large_chunk) {
             // Initialize those chunks
             kernel_system *kern = context.sys->get_kernel_system();
-            shared_chunk = kern->create<kernel::chunk>(
+            shared_chunk = kern->create_and_add<kernel::chunk>(
+                kernel::owner_type::kernel,
                 kern->get_memory_system(),
                 kern->crr_process(),
                 "FbsSharedChunk",
@@ -89,9 +90,10 @@ namespace eka2l1 {
                 prot::read_write,
                 kernel::chunk_type::normal,
                 kernel::chunk_access::global,
-                kernel::chunk_attrib::none);
+                kernel::chunk_attrib::none).second;
 
-            large_chunk = kern->create<kernel::chunk>(
+            large_chunk = kern->create_and_add<kernel::chunk>(
+                kernel::owner_type::kernel,
                 kern->get_memory_system(),
                 kern->crr_process(),
                 "FbsLargeChunk",
@@ -101,7 +103,7 @@ namespace eka2l1 {
                 prot::read_write,
                 kernel::chunk_type::normal,
                 kernel::chunk_access::global,
-                kernel::chunk_attrib::none);
+                kernel::chunk_attrib::none).second;
 
             if (!shared_chunk || !large_chunk) {
                 LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");

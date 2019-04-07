@@ -1340,6 +1340,7 @@ namespace eka2l1::epoc {
             static_cast<kernel::object_type>(aObjectType));
 
         if (!obj) {
+            LOG_ERROR("Can't open object: {}", obj_name);
             return KErrNotFound;
         }
 
