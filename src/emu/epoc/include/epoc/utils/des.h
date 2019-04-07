@@ -107,6 +107,16 @@ namespace eka2l1::epoc {
             return data;
         }
 
+        /**
+         * \brief Assign data to descriptor.
+         * 
+         * \brief pr   The process which the descriptor belongs.
+         * \brief data Raw data to assign to.
+         * \brief size Size of binary data in bytes.
+         * 
+         * \returns des_err_not_large_enough_to_hold if the descriptor capacity is too small to 
+         *          hold the new data. Else returns 0.
+         */
         int assign(eka2l1::kernel::process *pr, const std::uint8_t *data,
             const std::uint32_t size) {
             std::uint8_t *des_buf = reinterpret_cast<std::uint8_t *>(get_pointer_raw(pr));
