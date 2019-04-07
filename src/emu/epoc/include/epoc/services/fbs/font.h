@@ -27,6 +27,36 @@
 #include <epoc/utils/des.h>
 
 namespace eka2l1::epoc {
+    struct open_font_metrics {
+        std::int16_t design_height;
+        std::int16_t ascent;
+        std::int16_t descent;
+        std::int16_t max_height;
+        std::int16_t max_depth;
+        std::int16_t max_width;
+        std::int16_t baseline_correction;
+        std::int16_t reserved;
+    };
+
+    struct open_font_face_attrib {
+        enum {
+            bold = 0x1,
+            italic = 0x2,
+            serif = 0x4,
+            mono_width = 0x8
+        };
+        
+        bufc_static<char16_t, 32> name;
+        std::uint32_t coverage[4];
+        std::int32_t style;
+        std::int32_t reserved;
+        bufc_static<char16_t, 32> fam_name;
+        bufc_static<char16_t, 32> local_full_name;
+        bufc_static<char16_t, 32> local_full_fam_name;
+        std::int32_t min_size_in_pixels;
+        std::int32_t reserved2;
+    };
+
     struct typeface_info {
         epoc::bufc_static<char16_t, 0x18> name;
         std::uint32_t flags;
