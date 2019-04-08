@@ -136,6 +136,7 @@ add_library(epocservs
     src/services/ecom/ecom.cpp
     src/services/ecom/instantiate.cpp
     src/services/ecom/plugin.cpp
+    src/services/fbs/adapter/font_adapter.cpp
     src/services/fbs/adapter/stb_font_adapter.cpp
     src/services/fbs/fbs.cpp
     src/services/fbs/impls/bitmap.cpp

@@ -122,4 +122,27 @@ namespace eka2l1::epoc {
         std::uint32_t reserved;
         std::uint32_t font_uid;
     };
+
+    struct open_font {
+        eka2l1::ptr<void> vtable;
+        eka2l1::ptr<void> allocator;
+
+        open_font_metrics metrics;
+        eka2l1::ptr<void> sharper;
+
+        std::int32_t font_captial_offset;
+        std::int32_t font_max_ascent;
+        std::int32_t font_standard_descent;
+        std::int32_t font_line_gap;
+
+        // Normally, i have seen code access this field to get font attrib, but that's the case if the font store
+        // that creates this object is on the same process as the one who use this font.
+        // FBS generally access the attrib by sending an opcode.
+        std::int32_t file_offset;
+        std::int32_t face_index_offset;
+        std::int32_t glyph_cache_offset;
+        std::int32_t session_cache_list_offset;
+
+        eka2l1::ptr<void> reserved;
+    };
 }

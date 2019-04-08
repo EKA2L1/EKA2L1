@@ -21,13 +21,39 @@
 
 #include <epoc/services/fbs/font.h>
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace eka2l1::epoc::adapter {
+    /**
+     * \brief Base class for adapter.
+     */
     class font_file_adapter_base {
     public:
         virtual bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) = 0;
         virtual bool get_metrics(const std::size_t idx, open_font_metrics &metrics) = 0;
 
+        /**
+         * \brief Get total number of font this file consists of.
+         * \returns Number of font in this file.
+         */
         virtual std::size_t count() = 0;
     };
+
+    enum class font_file_adapter_kind {
+        stb
+        // Add your new adapter here
+    };
+
+    using font_file_adapter_instance = std::unique_ptr<font_file_adapter_base>;
+
+    /**
+     * \brief Create a new font file adapter.
+     * 
+     * \param kind Kind of backend adapter we want to use.
+     * \param dat  Font file data.
+     * 
+     * \returns An instance of the adapter. Null in case of unrecognised kind or failure.
+     */
+    font_file_adapter_instance make_font_file_adapter(const font_file_adapter_kind kind, std::vector<std::uint8_t> &dat);
 }

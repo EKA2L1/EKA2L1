@@ -59,6 +59,11 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_face_attrib: {
+            get_face_attrib(ctx);
+            break;
+        }
+
         case fbs_bitmap_load: {
             load_bitmap(ctx);
             break;

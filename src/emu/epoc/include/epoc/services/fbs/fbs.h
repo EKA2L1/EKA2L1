@@ -24,6 +24,7 @@
 #include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/font.h>
 #include <epoc/services/framework.h>
+#include <epoc/services/fbs/adapter/font_adapter.h>
 
 #include <common/allocator.h>
 #include <common/hash.h>
@@ -32,8 +33,6 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
-
-#include <stb_truetype.h>
 
 namespace eka2l1 {
     struct file;
@@ -114,18 +113,24 @@ namespace eka2l1 {
 
         void get_nearest_font(service::ipc_context *ctx);
         void load_bitmap(service::ipc_context *ctx);
+        void get_face_attrib(service::ipc_context *ctx);
 
         void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
         void fetch(service::ipc_context *ctx) override;
     };
 
-    struct fbsfont : fbsobj {
-        // Reuse and recycle
-        std::vector<std::uint8_t> data;
+    struct open_font_info {
+        std::size_t idx;
 
-        std::unique_ptr<stbtt_fontinfo> stb_handle;
+        epoc::open_font_metrics metrics;
+        epoc::adapter::font_file_adapter_base *adapter;
+        epoc::open_font_face_attrib face_attrib;
+    };
+
+    struct fbsfont : fbsobj {
         eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
+        open_font_info of_info;
 
         explicit fbsfont()
             : fbsobj(fbsobj_kind::font) {
@@ -197,8 +202,12 @@ namespace eka2l1 {
         std::uint8_t *base_shared_chunk;
         std::uint8_t *base_large_chunk;
 
-        std::vector<fbsfont *> font_avails;
-        std::vector<fbsfont *> matched;
+        std::u16string default_system_font;
+
+        std::unordered_map<std::u16string, std::vector<open_font_info>> open_font_store;
+        std::vector<fbsfont*> font_cache;
+
+        std::vector<epoc::adapter::font_file_adapter_instance> font_adapters;
 
         std::unordered_map<fbsbitmap_cache_info, fbsbitmap*> shared_bitmaps;
 
@@ -211,6 +220,10 @@ namespace eka2l1 {
 
     protected:
         void folder_change_callback(eka2l1::io_system *sys, const std::u16string &path, int action);
+        void add_fonts_from_adapter(epoc::adapter::font_file_adapter_instance &adapter);
+
+        fbsfont *search_for_cache(epoc::font_spec &spec, const std::uint32_t desired_max_height);
+        open_font_info *seek_the_open_font(epoc::font_spec &spec);
 
     public:
         explicit fbs_server(eka2l1::system *sys);
