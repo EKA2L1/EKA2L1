@@ -36,8 +36,10 @@
 
 #include <epoc/loader/rom.h>
 
-#ifdef ENABLE_SCRIPTING
 #include <manager/manager.h>
+#include <manager/config_manager.h>
+
+#ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
 #endif
 
