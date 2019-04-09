@@ -330,8 +330,8 @@ namespace eka2l1 {
         vfs_file->seek(write_pos > last_pos ? last_pos : write_pos, file_seek_mode::beg);
         size_t wrote_size = vfs_file->write_file(&(*write_data)[0], 1, write_len);
 
-        LOG_TRACE("File {} wroted with size: {}",
-            common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
+        // LOG_TRACE("File {} wroted with size: {}",
+        //    common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
 
         ctx.set_request_status(KErrNone);
     }
@@ -387,7 +387,7 @@ namespace eka2l1 {
 
         ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
 
-        LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx.msg->args.args[0]);
+        // LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx.msg->args.args[0]);
         ctx.set_request_status(KErrNone);
     }
 
