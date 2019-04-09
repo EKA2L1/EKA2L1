@@ -24,6 +24,7 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 #include <epoc/kernel/chunk.h>
+#include <epoc/kernel/libmanager.h>
 #include <epoc/services/fbs/fbs.h>
 
 #include <common/cvt.h>
@@ -142,6 +143,11 @@ namespace eka2l1 {
 
             large_chunk_allocator = std::make_unique<fbs_chunk_allocator>(large_chunk,
                 base_large_chunk);
+
+            if (auto seg = sys->get_lib_manager()->load(u"fntstr.dll")) {
+                // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#
+                bmp_font_vtab = seg->lookup(97);
+            }
 
             // Probably also indicates that font aren't loaded yet
             load_fonts(context.sys->get_io_system());

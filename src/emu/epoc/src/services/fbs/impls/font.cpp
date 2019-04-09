@@ -79,7 +79,7 @@ namespace eka2l1 {
             
             epoc::bitmapfont *bmpfont = server<fbs_server>()->allocate_general_data<epoc::bitmapfont>();
             bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
-            bmpfont->vtable = epoc::DEAD_VTABLE;
+            bmpfont->vtable = serv->bmp_font_vtab;
 
             font = make_new<fbsfont>();
             font->guest_font_handle = serv->host_ptr_to_guest_general_data(bmpfont).cast<epoc::bitmapfont>();

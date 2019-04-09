@@ -207,6 +207,8 @@ namespace eka2l1 {
         std::uint8_t *base_shared_chunk;
         std::uint8_t *base_large_chunk;
 
+        eka2l1::ptr<void> bmp_font_vtab;
+
         std::u16string default_system_font;
 
         std::unordered_map<std::u16string, std::vector<open_font_info>> open_font_store;
