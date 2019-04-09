@@ -946,7 +946,9 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind sync message");
         }
 
-        // LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
+        if (sys->get_manager_system()->get_config_manager()->get_or_fall("log_ipc", false)) {
+            LOG_TRACE("Sending {} sync to {}", aOrd, ss->get_server()->name());
+        }
 
         return ss->send_receive_sync(aOrd, arg, aStatus);
     }
@@ -978,7 +980,9 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind async message");
         }
 
-        // LOG_TRACE("Sending {:x}, {}", aOrd, ss->get_server()->name());
+        if (sys->get_manager_system()->get_config_manager()->get_or_fall("log_ipc", false)) {
+            LOG_TRACE("Sending {} to {}", aOrd, ss->get_server()->name());
+        }
 
         return ss->send_receive(aOrd, arg, aStatus);
     }
