@@ -114,6 +114,7 @@ namespace eka2l1 {
         void get_nearest_font(service::ipc_context *ctx);
         void load_bitmap(service::ipc_context *ctx);
         void get_face_attrib(service::ipc_context *ctx);
+        void duplicate_font(service::ipc_context *ctx);
 
         void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
@@ -131,10 +132,13 @@ namespace eka2l1 {
     struct fbsfont : fbsobj {
         eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
         open_font_info of_info;
+        fbs_server *serv;
 
         explicit fbsfont()
             : fbsobj(fbsobj_kind::font) {
         }
+
+        void deref() override;
     };
 
     struct fbsbitmap: public fbsobj {
@@ -193,6 +197,7 @@ namespace eka2l1 {
 
     class fbs_server : public service::typical_server {
         friend struct fbscli;
+        friend struct fbsfont;
 
         server_ptr fs_server;
 
@@ -223,6 +228,8 @@ namespace eka2l1 {
         void add_fonts_from_adapter(epoc::adapter::font_file_adapter_instance &adapter);
 
         fbsfont *search_for_cache(epoc::font_spec &spec, const std::uint32_t desired_max_height);
+        fbsfont *search_for_cache_by_id(const std::uint32_t id);
+
         open_font_info *seek_the_open_font(epoc::font_spec &spec);
 
     public:

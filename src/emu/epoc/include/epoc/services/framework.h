@@ -40,8 +40,8 @@ namespace eka2l1::service {
 
     public:
         template <typename T>
-        T *get(const service::uid handle) {
-            auto result = std::lower_bound(objs.begin(), objs.end(), handle, 
+        T *get(const service::uid id) {
+            auto result = std::lower_bound(objs.begin(), objs.end(), id, 
                 [](const ref_count_object_heap_ptr &lhs, const service::uid &rhs) {
                     return lhs->id < rhs;
                 });
@@ -72,6 +72,8 @@ namespace eka2l1::service {
     class typical_server: public server {
         friend class typical_session;
         std::unordered_map<service::uid, typical_session_ptr> sessions;
+
+    protected:
         normal_object_container obj_con;
 
     public:

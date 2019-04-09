@@ -38,6 +38,12 @@ namespace eka2l1 {
         return (opcode == fbs_nearest_font_design_height_in_twips || opcode == fbs_nearest_font_max_height_in_twips);
     }
 
+    struct font_info {
+        std::int32_t handle;
+        std::int32_t address_offset;
+        std::int32_t server_handle;
+    };
+
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
         epoc::font_spec spec = *ctx->get_arg_packed<epoc::font_spec>(0);
 
@@ -95,6 +101,7 @@ namespace eka2l1 {
             font->of_info.metrics.design_height = static_cast<std::int16_t>(font->of_info.metrics.design_height * scale_factor);
             font->of_info.metrics.max_depth = static_cast<std::int16_t>(font->of_info.metrics.max_depth * scale_factor);
             font->of_info.metrics.max_width = static_cast<std::int16_t>(font->of_info.metrics.max_width * scale_factor);
+            font->serv = serv;
 
             of->metrics = font->of_info.metrics;
             of->face_index_offset = static_cast<int>(ofi_suit->idx);
@@ -103,15 +110,31 @@ namespace eka2l1 {
             serv->font_cache.push_back(font);
         }
 
-        struct font_info {
-            std::int32_t handle;
-            std::int32_t address_offset;
-            std::int32_t server_handle;
-        } result_info;
+        font_info result_info;
         
         result_info.handle = obj_table_.add(font);
         result_info.address_offset = font->guest_font_handle.ptr_address() - serv->shared_chunk->base().ptr_address();
-        result_info.server_handle = 0xE11111;
+        result_info.server_handle = static_cast<std::int32_t>(font->id);
+
+        ctx->write_arg_pkg(1, result_info);
+        ctx->set_request_status(KErrNone);
+    }
+
+    void fbscli::duplicate_font(service::ipc_context *ctx) {
+        fbs_server *serv = server<fbs_server>();
+        fbsfont *font = serv->search_for_cache_by_id(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)));
+
+        if (!font) {
+            ctx->set_request_status(KErrNotFound);
+            return;
+        }
+
+        font_info result_info;
+
+        // Add new one
+        result_info.handle = obj_table_.add(font);
+        result_info.address_offset = font->guest_font_handle.ptr_address() - serv->shared_chunk->base().ptr_address();
+        result_info.server_handle = static_cast<std::int32_t>(font->id);
 
         ctx->write_arg_pkg(1, result_info);
         ctx->set_request_status(KErrNone);
@@ -192,6 +215,34 @@ namespace eka2l1 {
         }
 
         return nullptr;
+    }
+
+    fbsfont *fbs_server::search_for_cache_by_id(const std::uint32_t id) {    
+        auto result = std::lower_bound(font_cache.begin(), font_cache.end(),
+            static_cast<std::uint32_t>(id), [](const fbsfont *lhs, const std::uint32_t rhs) {
+                return lhs->id < rhs;
+            });
+
+        if (result == font_cache.end()) {
+            return nullptr;
+        }
+
+        return *result;
+    }
+
+    void fbsfont::deref() {
+        if (count == 1) {
+            auto result = std::lower_bound(serv->font_cache.begin(), serv->font_cache.end(),
+            static_cast<std::uint32_t>(id), [](const fbsfont *lhs, const std::uint32_t rhs) {
+                return lhs->id < rhs;
+            });
+
+            if (result != serv->font_cache.end()) {
+                serv->font_cache.erase(result);
+            }
+        }
+
+        epoc::ref_count_object::deref();
     }
 
     void fbs_server::add_fonts_from_adapter(epoc::adapter::font_file_adapter_instance &adapter) {

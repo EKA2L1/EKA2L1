@@ -40,8 +40,8 @@ namespace eka2l1::epoc {
             : owner(nullptr), count(1) {
         }
 
-        void ref();
-        void deref();
+        virtual void ref();
+        virtual void deref();
     };
 
     class object_container {

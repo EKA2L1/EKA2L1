@@ -69,6 +69,21 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_font_dup: {
+            duplicate_font(ctx);
+            break;
+        }
+
+        case fbs_close: {
+            if (!obj_table_.remove(static_cast<epoc::handle>(*ctx->get_arg<int>(0)))) {
+                ctx->set_request_status(KErrBadHandle);
+                break;
+            }
+
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;
