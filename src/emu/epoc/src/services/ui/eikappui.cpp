@@ -52,9 +52,16 @@ namespace eka2l1 {
         LOG_TRACE("GetDebugPreferences stubbed");
 
         std::string buf = preferences.to_buf();
+
+        // Buffer is not large enough. Unless the length is specified as 0, we are still doing this check
+        if ((*ctx.get_arg<int>(0) != 0) && (static_cast<int>(buf.size()) > *ctx.get_arg<int>(0))) {
+            ctx.set_request_status(static_cast<int>(buf.size()));
+            return;
+        }
+
         ctx.write_arg_pkg(1, reinterpret_cast<std::uint8_t *>(&buf[0]),
             static_cast<std::uint32_t>(buf.size()));
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(0);
     }
 }
