@@ -184,8 +184,8 @@ namespace eka2l1 {
             return;
         }
 
-        auto target = eka2l1::absolute_path(*given_path_target, ss_path);
-        auto dest = eka2l1::absolute_path(*given_path_dest, ss_path);
+        auto target = eka2l1::absolute_path(*given_path_target, ss_path, true);
+        auto dest = eka2l1::absolute_path(*given_path_dest, ss_path, true);
 
         io_system *io = ctx.sys->get_io_system();
 
@@ -214,8 +214,8 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string target = eka2l1::absolute_path(*given_path_target, ss_path);
-        std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path);
+        std::u16string target = eka2l1::absolute_path(*given_path_target, ss_path, true);
+        std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path, true);
 
         io_system *io = ctx.sys->get_io_system();
 
@@ -243,7 +243,7 @@ namespace eka2l1 {
             return;
         }
 
-        auto path = eka2l1::absolute_path(*given_path, ss_path);
+        auto path = eka2l1::absolute_path(*given_path, ss_path, true);
         io_system *io = ctx.sys->get_io_system();
 
         bool success = io->delete_entry(path);
@@ -411,6 +411,7 @@ namespace eka2l1 {
         }
 
         std::u16string fname = std::move(*fname_op);
+        fname = eka2l1::absolute_path(fname, ss_path, true);
 
         LOG_INFO("Get entry of: {}", common::ucs2_to_utf8(fname));
 

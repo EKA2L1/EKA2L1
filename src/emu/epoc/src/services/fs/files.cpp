@@ -261,7 +261,7 @@ namespace eka2l1 {
             return;
         }
 
-        auto new_path_abs = eka2l1::absolute_path(*new_path, ss_path);
+        auto new_path_abs = eka2l1::absolute_path(*new_path, ss_path, true);
         bool res = ctx.sys->get_io_system()->rename(vfs_file->file_name(), new_path_abs);
 
         if (!res) {
@@ -431,7 +431,7 @@ namespace eka2l1 {
 
         // LOG_TRACE("Opening exist {}", common::ucs2_to_utf8(*name_res));
 
-        *name_res = eka2l1::absolute_path(*name_res, ss_path);
+        *name_res = eka2l1::absolute_path(*name_res, ss_path, true);
 
         // Don't open file if it doesn't exist
         if (!ctx.sys->get_io_system()->exist(*name_res)) {
@@ -458,7 +458,7 @@ namespace eka2l1 {
 
         io_system *io = ctx.sys->get_io_system();
 
-        auto full_path = eka2l1::absolute_path(*dir_create, ss_path);
+        auto full_path = eka2l1::absolute_path(*dir_create, ss_path, true);
 
         if (!io->exist(full_path)) {
             LOG_TRACE("Directory for temp file not exists", common::ucs2_to_utf8(full_path));
@@ -544,7 +544,7 @@ namespace eka2l1 {
             return;
         }
 
-        *name_res = eka2l1::absolute_path(*name_res, ss_path);
+        *name_res = eka2l1::absolute_path(*name_res, ss_path, true);
         std::string name_utf8 = common::ucs2_to_utf8(*name_res);
 
         {
