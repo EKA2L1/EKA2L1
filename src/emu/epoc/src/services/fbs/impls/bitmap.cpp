@@ -150,6 +150,24 @@ namespace eka2l1 {
         load_bitmap_impl(ctx, source_file);
     }
 
+    void fbscli::duplicate_bitmap(service::ipc_context *ctx) {
+        fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(static_cast<std::uint32_t>(*(ctx->get_arg<int>(0))));
+        if (!bmp) {
+            ctx->set_request_status(KErrBadHandle);
+            return;
+        }
+
+        bmp_handles handle_info;
+        
+        // Add this object to the object table!
+        handle_info.handle = obj_table_.add(bmp);
+        handle_info.server_handle = bmp->id;
+        handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+
+        ctx->write_arg_pkg(1, handle_info);
+        ctx->set_request_status(KErrNone);
+    }
+
     void fbscli::load_bitmap_impl(service::ipc_context *ctx, symfile source) {
         std::optional<load_bitmap_arg> load_options = ctx->get_arg_packed<load_bitmap_arg>(0);
         if (!load_options) {

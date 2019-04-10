@@ -75,6 +75,11 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_bitmap_dup: {
+            duplicate_bitmap(ctx);
+            break;
+        }
+
         case fbs_close: {
             if (!obj_table_.remove(static_cast<epoc::handle>(*ctx->get_arg<int>(0)))) {
                 ctx->set_request_status(KErrBadHandle);
