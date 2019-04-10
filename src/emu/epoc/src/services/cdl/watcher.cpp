@@ -62,7 +62,7 @@ namespace eka2l1::epoc {
 
     drive_number cdl_ecom_watcher::get_plugin_drive(const std::u16string &name) {
         for (auto &plugin: last) {
-            if (plugin->original_name + u".dll" == name) {
+            if (common::compare_ignore_case(plugin->original_name + u".dll", name) == 0) {
                 return plugin->drv;
             }
         }
