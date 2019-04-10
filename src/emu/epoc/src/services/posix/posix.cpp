@@ -229,7 +229,7 @@ namespace eka2l1 {
         std::u16string current_dir(reinterpret_cast<char16_t *>(
             params->cwptr[0].get(ctx.sys->get_memory_system())));
 
-        working_dir = eka2l1::absolute_path(current_dir, working_dir);
+        working_dir = eka2l1::absolute_path(current_dir, working_dir, true);
 
         params->ret = 0;
 
@@ -244,7 +244,8 @@ namespace eka2l1 {
 
         const std::u16string full_new_path = common::utf8_to_ucs2(eka2l1::absolute_path(
             common::ucs2_to_utf8(current_dir),
-            common::ucs2_to_utf8(working_dir)));
+            common::ucs2_to_utf8(working_dir),
+            true));
 
         bool res = ctx.sys->get_io_system()->create_directories(full_new_path);
         params->ret = res ? -1 : 0;
@@ -274,7 +275,7 @@ namespace eka2l1 {
         std::u16string current_dir(reinterpret_cast<char16_t *>(
             params->cwptr[0].get(ctx.sys->get_memory_system())));
 
-        const std::u16string path_u16 = eka2l1::absolute_path(current_dir, base_dir);
+        const std::u16string path_u16 = eka2l1::absolute_path(current_dir, base_dir, true);
 
         int write_flag_emu = APPEND_MODE;
 
