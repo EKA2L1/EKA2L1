@@ -234,5 +234,12 @@ namespace eka2l1 {
          *              -1 if request already exists
         */
         int add_notify_request(epoc::notify_info &info, const std::uint32_t mask, const std::uint32_t match);
+
+        /**
+         * \brief Cancel all watches to the given key.
+         * 
+         * \param match_key The key to erase notify requests.
+         */
+        void cancel_notify_request(const std::uint32_t match_key, const std::uint32_t mask);
     };
 }

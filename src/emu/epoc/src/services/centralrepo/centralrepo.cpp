@@ -502,10 +502,20 @@ namespace eka2l1 {
             break;
         }
 
+        case cen_rep_group_nof_cancel:
+        case cen_rep_notify_cancel: {
+            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
+            const std::uint32_t partial_key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+
+            cancel_notify_request(partial_key, mask);
+
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
         case cen_rep_group_nof_req:
         case cen_rep_notify_req: {
             const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
-
             const std::uint32_t partial_key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
 
             epoc::notify_info info{ ctx->msg->request_sts, ctx->msg->own_thr };
