@@ -42,6 +42,18 @@ namespace eka2l1::loader {
         int len;
     };
 
+    struct mif_icon_header {
+        std::int32_t uid;
+        std::int32_t version;
+
+        std::int32_t data_offset;
+        std::int32_t data_length;
+        std::int32_t type;
+        std::int32_t depth;
+        std::int32_t animated;
+        std::int32_t mask_depth;
+    };
+
     /**
      * \brief Machine-readable file parser.
      */
