@@ -23,6 +23,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <fstream>
 #include <string>
 
 namespace eka2l1 {
@@ -193,6 +194,44 @@ namespace eka2l1 {
                 }
 
                 crr_pos += size;
+            }
+        };
+        
+        class wo_std_file_stream: public common::wo_stream {
+            mutable std::ofstream fo_;
+
+        public:
+            explicit wo_std_file_stream(const std::string &path)
+                : fo_(path) {
+            }
+            
+            void write(const void *buf, uint32_t size) override {
+                fo_.write(reinterpret_cast<const char*>(buf), size);
+            }
+            
+            void seek(const std::uint64_t amount, common::seek_where wh) override{
+                fo_.seekp(amount, common::beg ? std::ios::beg : (common::cur ? std::ios::cur : std::ios::end));
+            }
+
+            bool valid() override {
+                return !fo_.fail();
+            }
+
+            std::uint64_t left() override {
+                return 0xFFFFFFFF;
+            }
+
+            std::uint64_t tell() const override {
+                return fo_.tellp();
+            }
+
+            std::uint64_t size() override {
+                const std::uint64_t cur_pos = tell();
+                seek(0, common::end);
+                const std::uint64_t s = tell();
+
+                seek(cur_pos, common::beg);
+                return s;
             }
         };
     }
