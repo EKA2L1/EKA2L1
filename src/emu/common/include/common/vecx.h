@@ -31,10 +31,10 @@ namespace eka2l1 {
     */
     template <typename T, int SIZE>
     struct vecx {
-        std::vector<T> elements;
+        mutable std::vector<T> elements;
 
     public:
-        T &operator[](const std::size_t idx) {
+        T &operator[](const std::size_t idx) const {
             return elements[idx];
         }
 
@@ -63,6 +63,11 @@ namespace eka2l1 {
 
         vec2() {}
 
+        vec2(const int d)
+            : x(d)
+            , y(d) {
+        }
+
         vec2(const int x, const int y)
             : x(x)
             , y(y) {}
@@ -85,6 +90,15 @@ namespace eka2l1 {
         
         bool operator!=(const vec2 &rhs) const {
             return (x != rhs.x) || (y != rhs.y);
+        }
+        
+        bool operator<(const vec2 &rhs) const {
+            return (x < rhs.x && y < rhs.y);
+        }
+
+        void operator+=(const vec2 &rhs) {
+            x += rhs.x;
+            y += rhs.y;
         }
 
         void operator=(const vec2 &rhs) {
