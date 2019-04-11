@@ -53,6 +53,29 @@ namespace eka2l1 {
                     return lhs + rhs * rhs;
                 })));
         }
+
+        vecx<T, SIZE> operator*(const int num) {
+            vecx<T, SIZE> newv;
+            for (std::size_t i = 0; i < SIZE; i++) {
+                newv[i] = elements[i] * num;
+            }
+
+            return newv;
+        }
+
+        bool operator == (const eka2l1::vecx<T, SIZE> &v) {
+            for (std::size_t i = 0; i < SIZE; i++) {
+                if (elements[i] != v.elements[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        bool operator != (const eka2l1::vecx<T, SIZE> &v) {
+            return !(*this == v);
+        }
     };
 
     using vec2d = vecx<double, 2>;
@@ -104,6 +127,10 @@ namespace eka2l1 {
         void operator=(const vec2 &rhs) {
             x = rhs.x;
             y = rhs.y;
+        }
+
+        vec2 abs() {
+            return { x < 0 ? -x : x, y < 0 ? -y : y };
         }
     };
 
