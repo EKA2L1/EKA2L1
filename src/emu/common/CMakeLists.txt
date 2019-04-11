@@ -21,6 +21,7 @@ add_library(common
     include/common/hash.h
     include/common/ini.h
     include/common/log.h
+    include/common/paint.h
     include/common/path.h
     include/common/platform.h
     include/common/queue.h
@@ -48,6 +49,7 @@ add_library(common
     src/hash.cpp
     src/ini.cpp
     src/log.cpp
+    src/paint.cpp
     src/path.cpp
     src/random.cpp
     src/runlen.cpp
