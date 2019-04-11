@@ -19,7 +19,7 @@
 
 #include <common/paint.h>
 #include <common/buffer.h>
-#include <Catch2/catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <fstream>
 #include <string>
