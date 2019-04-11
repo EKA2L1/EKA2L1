@@ -25,14 +25,45 @@
 namespace eka2l1::common {
     class wo_stream;
 
+    /**
+     * \brief Basic interface for pixel plotter.
+     */
     class pixel_plotter {
     public:
+        /**
+         * \brief Resize the bitmap the plotter handle to targeted size.
+         * \param size A vector2 contains the width and height of the new bitmap.
+         */
         virtual void resize(const eka2l1::vec2 &size) = 0;
+
+        /**
+         * \brief Set pixel at given coordinate.
+         * 
+         * \param pos Coordinate of the pixel.
+         * \param color The color to set.
+         */
         virtual void plot_pixel(const eka2l1::vec2 &pos, const eka2l1::vecx<int, 4> &color) = 0;
 
+        /**
+         * \brief Get pixel at given index.
+         * \param pos Coordinate of the pixel.
+         * 
+         * \returns A vector-4 contains the color of the pixel.
+         */
+        virtual eka2l1::vecx<int, 4> get_pixel(const eka2l1::vec2 &pos) = 0;
+
+        /**
+         * \brief Get size of the bitmap this plotter handle.
+         */
         virtual eka2l1::vec2 &get_size() = 0;
     };
 
+    /**
+     * \brief A basic 24-bit bitmap pixel plotter.
+     * 
+     * This plotter only stores R,G and B channel, and ignore the alpha channel.
+     * This plotter produces 24 bits per pixel bitmap.
+     */
     class buffer_24bmp_pixel_plotter: public pixel_plotter {
         eka2l1::vec2 size_;
         std::vector<std::uint8_t> buf_;
@@ -42,11 +73,16 @@ namespace eka2l1::common {
     public:
         void resize(const eka2l1::vec2 &size) override;
         void plot_pixel(const eka2l1::vec2 &pos, const eka2l1::vecx<int, 4> &color) override;
+        eka2l1::vecx<int, 4> get_pixel(const eka2l1::vec2 &pos) override;
 
         eka2l1::vec2 &get_size() override {
             return size_;
         }
 
+        /**
+         * \brief Set the content in the bitmap buffer to a stream.
+         * \param stream Write-only stream that will contains BMP file data.
+         */
         void save_to_bmp(wo_stream *stream);
     };
 
@@ -54,14 +90,14 @@ namespace eka2l1::common {
         pixel_plotter *plotter_;
 
         eka2l1::vecx<int, 4> brush_col_;
-        int brush_thick_;
+        int brush_thick_ { 1 };
         int trans_ { 0 };
 
         enum {
             PAINTER_FLAG_FILL_WHEN_DRAW = 0x1
         };
 
-        std::uint32_t flags;
+        std::uint32_t flags { 0 };
 
     public:
         explicit painter(pixel_plotter *plotter);
@@ -83,10 +119,10 @@ namespace eka2l1::common {
         }
 
         void new_art(const eka2l1::vec2 &size);
-        void line(const eka2l1::vec2 &start, const eka2l1::vec2 &end);
+        void line_from_to(const eka2l1::vec2 &start, const eka2l1::vec2 &end);
 
-        void line_direction(const eka2l1::vec2 &start, const eka2l1::vec2 &direction) {
-            line(start, start + direction);
+        void line(const eka2l1::vec2 &start, const eka2l1::vec2 &direction) {
+            line_from_to(start, start + direction);
         }
 
         void horizontal_line(const eka2l1::vec2 &start, const int len) {
@@ -98,6 +134,7 @@ namespace eka2l1::common {
         }
 
         void circle(const eka2l1::vec2 &pos, const int radius);
+        void rect(const eka2l1::rect &re);
         void flood(const eka2l1::vec2 &pos);
     };
 }
