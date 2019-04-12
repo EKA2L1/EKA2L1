@@ -9,6 +9,7 @@ add_library(common
     include/common/bitmap.h
     include/common/buffer.h
     include/common/bytepair.h
+    include/common/bytes.h
     include/common/chunkyseri.h
     include/common/codeblock.h
     include/common/crypt.h
@@ -39,6 +40,7 @@ add_library(common
     src/algorithm.cpp
     src/arm_cpudetect.cpp
     src/bytepair.cpp
+    src/bytes.cpp
     src/chunkyseri.cpp
     src/cvt.cpp
     src/crypt.cpp
