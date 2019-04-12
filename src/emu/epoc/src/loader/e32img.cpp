@@ -24,6 +24,7 @@
 #include <epoc/loader/e32img.h>
 
 #include <common/algorithm.h>
+#include <common/bytes.h>
 #include <common/buffer.h>
 #include <common/bytepair.h>
 #include <common/flate.h>
@@ -141,7 +142,7 @@ namespace eka2l1::loader {
             return std::nullopt;
         }
 
-        uint32_t temp = 0;
+        std::uint32_t temp = 0;
         stream->read(&temp, 4);
 
         if ((temp == 0x2000) || (temp == 0x1000)) {
@@ -183,11 +184,38 @@ namespace eka2l1::loader {
             stream->read(&img.header, sizeof(e32img_header));
         }
 
-        compress_type ctype = (compress_type)(img.header.compression_type);
-        dump_flag_info((int)img.header.flags);
+        if (common::get_system_endian_type() == common::big_endian) {
+            img.header.uid1 = static_cast<e32_img_type>(common::byte_swap(static_cast<std::uint32_t>(img.header.uid1)));
+            img.header.uid2 = common::byte_swap(img.header.uid2);
+            img.header.uid3 = common::byte_swap(img.header.uid3);
+            img.header.check = common::byte_swap(img.header.check);
+            img.header.sig = common::byte_swap(img.header.sig);
+            img.header.petran_build = common::byte_swap(img.header.petran_build);
+            img.header.flags = static_cast<e32_flags>(common::byte_swap(static_cast<std::uint32_t>(img.header.flags)));
+            img.header.code_size = common::byte_swap(img.header.code_size);
+            img.header.data_size = common::byte_swap(img.header.data_size);
+            img.header.heap_size_min = common::byte_swap(img.header.heap_size_min);
+            img.header.stack_size = common::byte_swap(img.header.stack_size);
+            img.header.bss_size = common::byte_swap(img.header.bss_size);
+            img.header.entry_point = common::byte_swap(img.header.entry_point);
+            img.header.code_base = common::byte_swap(img.header.code_base);
+            img.header.data_base = common::byte_swap(img.header.data_base);
+            img.header.dll_ref_table_count = common::byte_swap(img.header.dll_ref_table_count);
+            img.header.export_dir_offset = common::byte_swap(img.header.export_dir_offset);
+            img.header.export_dir_count = common::byte_swap(img.header.export_dir_count);
+            img.header.text_size = common::byte_swap(img.header.text_size);
+            img.header.code_offset = common::byte_swap(img.header.code_offset);
+            img.header.data_offset = common::byte_swap(img.header.data_offset);
+            img.header.code_reloc_offset = common::byte_swap(img.header.code_reloc_offset);
+            img.header.data_reloc_offset = common::byte_swap(img.header.data_reloc_offset);
+            img.header.priority = common::byte_swap(img.header.priority);
+        }
+
+        compress_type ctype = static_cast<compress_type>(img.header.compression_type);
+        dump_flag_info(static_cast<int>(img.header.flags));
 
         if (img.header.compression_type > 0) {
-            int header_format = ((int)img.header.flags >> 24) & 0xF;
+            int header_format = (static_cast<int>(img.header.flags) >> 24) & 0xF;
             stream->read(&img.uncompressed_size, 4);
 
             if (header_format == 2) {
@@ -200,6 +228,20 @@ namespace eka2l1::loader {
                 stream->read(&img.header_extended.export_desc_size, 2);
                 stream->read(&img.header_extended.export_desc_type, 1);
                 stream->read(&img.header_extended.export_desc, 1);
+                
+                if (common::get_system_endian_type() == common::big_endian) {
+                    img.header_extended.exception_des = common::byte_swap(img.header_extended.exception_des);
+                    img.header_extended.spare2 = common::byte_swap(img.header_extended.spare2);
+                    img.header_extended.export_desc_size = common::byte_swap(img.header_extended.export_desc_size);
+                    img.header_extended.info.cap1 = common::byte_swap(img.header_extended.info.cap1);
+                    img.header_extended.info.cap2 = common::byte_swap(img.header_extended.info.cap2);
+                    img.header_extended.info.secure_id = common::byte_swap(img.header_extended.info.secure_id);
+                    img.header_extended.info.vendor_id = common::byte_swap(img.header_extended.info.vendor_id);
+                }
+            }
+
+            if (common::get_system_endian_type() == common::big_endian) {
+                img.uncompressed_size = common::byte_swap(img.uncompressed_size);
             }
 
             img.data.resize(img.uncompressed_size + img.header.code_offset);
