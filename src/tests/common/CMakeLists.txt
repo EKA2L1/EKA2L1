@@ -1,5 +1,6 @@
 set(COMMON_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/bytes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chunkyseri.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ini.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/paint.cpp
