@@ -133,7 +133,9 @@ namespace eka2l1::common {
             line(start, eka2l1::vec2(0, len));
         }
 
-        void circle(const eka2l1::vec2 &pos, const int radius);
+        // WARNING: UNIMPLEMENTED!
+        // void circle(const eka2l1::vec2 &pos, const int radius);
+
         void rect(const eka2l1::rect &re);
         void flood(const eka2l1::vec2 &pos);
     };
