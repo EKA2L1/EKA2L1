@@ -174,6 +174,21 @@ namespace eka2l1 {
             return a > b ? b : a;
         }
 
+        /**
+         * \brief Absolute the given value.
+         * 
+         * If the value is less then zero, it will be duplicate with -1.
+         */
+        template <typename T>
+        constexpr T abs(T val) {
+            return val < 0 ? -val : val;
+        }
+
+        template <typename T>
+        constexpr int sign(T val) {
+            return val <= 0 ? -1 : 1;
+        }
+
         /*! Convert KB to bytes */
         constexpr size_t KB(size_t kb) {
             return kb * 1024;
