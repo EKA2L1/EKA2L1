@@ -32,7 +32,7 @@ TEST_CASE("simple_line", "painter") {
     common::painter artist(&plotter);
 
     artist.new_art({ 240, 320 });
-    artist.set_brush_thickness(5);
+    artist.set_brush_thickness(3);
     artist.set_brush_color({0, 191, 255, 0});
 
     // Draw a rectangle
@@ -45,10 +45,14 @@ TEST_CASE("simple_line", "painter") {
     artist.set_brush_color({ 236, 100, 75, 0 });
     artist.flood({ 156, 12 });
 
-    artist.set_brush_thickness(16);
+    artist.set_brush_thickness(2);
     artist.set_fill_when_draw(true);
     artist.set_brush_color({ 123, 239, 178, 0 });
     artist.rect(eka2l1::rect { {120, 260}, {40, 40} });
+    
+    artist.set_brush_color({ 204, 0, 255, 0 });
+    artist.ellipse({ 120, 120}, { 20, 40 });
+    artist.circle({ 40, 40 }, 33);
 
     plotter.save_to_bmp(reinterpret_cast<common::wo_stream*>(&std_fstream_paint));
 }
