@@ -46,9 +46,38 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def(py::init([](uint64_t process_ptr) { return std::make_unique<scripting::process>(process_ptr); }))
         .def("readProcessMemory", &scripting::process::read_process_memory, R"pbdoc(
             Read at the specified address in the process's address space.
+
+            The function can throw an exception in case the memory at the given address in the memory
+            space is not yet mapped, or the size of the data exceeds the mapped memory size from that
+            address fowards.
+
+            Parameters
+            ----------
+            addr: int
+                  The address that we want to read from.
+
+            size: int
+                  Size of data we want to read.
+
+            Returns
+            -------
+            str
+                A string contains the data.
         )pbdoc")
         .def("writeProcessMemory", &scripting::process::write_process_memory, R"pbdoc(
             Write at the specified address in the process's address space.
+            
+            The function can throw an exception in case the memory at the given address in the memory
+            space is not yet mapped, or the size of the data exceeds the mapped memory size from that
+            address fowards.
+
+            Parameters
+            ----------
+            addr: int
+                  The address that we want to read from.
+
+            dat: str
+                  The data to write to that memory address in the process's address space.
         )pbdoc")
         .def("getExecutablePath", &scripting::process::get_executable_path, R"pbdoc(
             Get the executable path in Symbian filesystem.
@@ -57,28 +86,44 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get the process's name
         )pbdoc")
         .def("getThreadList", &scripting::process::get_thread_list, R"pbdoc(
-            Get the thread list.
+            Get all the thread that the process owns.
+
+            Returns
+            -------
+            List[symemu.Thread]
+                A list of threads that this process owns.
         )pbdoc");
 
+    
     py::class_<scripting::thread>(m, "Thread")
         .def(py::init([](uint64_t thread_ptr) { return std::make_unique<scripting::thread>(thread_ptr); }))
         .def("getName", &scripting::thread::get_name,R"pbdoc(
-            Get the name of thread
+            Get the name of thread.
         )pbdoc")
         .def("getRegister", &scripting::thread::get_register, R"pbdoc(
-            Get a register of thread context
+            Get a register of thread context.
+
+            Parameters
+            ----------
+            idx: int
+                The index of the register, from 0 to 15.
+
+            Returns
+            -------
+            int
+                The value of the register.
         )pbdoc")
         .def("getPc", &scripting::thread::get_pc, R"pbdoc(
-            Get PC of thread context
+            Get PC of thread context.
         )pbdoc")
         .def("getSp", &scripting::thread::get_sp, R"pbdoc(
-            Get PC of thread context
+            Get PC of thread context.
         )pbdoc")
         .def("getLr", &scripting::thread::get_lr, R"pbdoc(
-            Get PC of thread context
+            Get PC of thread context.
         )pbdoc")
         .def("getLeaveDepth", &scripting::thread::get_leave_depth, R"pbdoc(
-            Get the leave depth of thread
+            Get the leave depth of thread.
         )pbdoc")
         .def("getExitReason", &scripting::thread::get_exit_reason, R"pbdoc(
             Get the exit reason of thread
@@ -87,19 +132,33 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get the own process of thread.
         )pbdoc")
         .def("getState", &scripting::thread::get_state, R"pbdoc(
-            Get the current state of the thread. 
-            
-            States are defined in ThreadState enum.
+            Get the current state of the thread. States are defined in ThreadState enum.
         )pbdoc")
         .def("getPriority", &scripting::thread::get_priority,
         R"pbdoc(
             Get the own process of thread.
+        )pbdoc")
+        .def("getStackBase", &scripting::thread::get_stack_base, R"pbdoc(
+            Get the base address of the stack memory chunk.
+        )pbdoc")
+        .def("getHeapBase", &scripting::thread::get_heap_base, R"pbdoc(
+            Get the base address of the heap memory chunk.
         )pbdoc");
 
     py::class_<scripting::codeseg>(m, "Codeseg")
         .def(py::init([](uint64_t handle) { return std::make_unique<scripting::codeseg>(handle); }))
         .def("lookup", &scripting::codeseg::lookup, R"pbdoc(
             Lookup address of a symbol with given ordinal.
+
+            Parameters
+            ----------
+            ord: int
+                The ordinal of the export function to get.
+
+            Returns
+            -------
+            int
+                The address of the export function.
         )pbdoc")
         .def("codeRunAddress", &scripting::codeseg::code_run_address, R"pbdoc(
             Get runtime code section address.
@@ -250,12 +309,12 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         Retrieve a Session message object from a handle.
 
         Parameters
-        -----------------
+        ----------
         guestHandle: int
                      A guest handle to the session.
 
         Returns
-        -----------------
+        -------
         Session
                      Session Object.
     )pbdoc");
