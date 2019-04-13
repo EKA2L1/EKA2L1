@@ -53,6 +53,9 @@ namespace eka2l1::scripting {
         int get_state();
         int get_priority();
 
+        std::uint32_t get_stack_base();
+        std::uint32_t get_heap_base();
+
         std::unique_ptr<scripting::process> get_owning_process();
     };
     

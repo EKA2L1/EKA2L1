@@ -38,6 +38,14 @@ namespace eka2l1::scripting {
     std::string thread::get_name() {
         return thread_handle->name();
     }
+    
+    std::uint32_t thread::get_stack_base() {
+        return thread_handle->get_stack_chunk()->base().ptr_address();
+    }
+    
+    std::uint32_t thread::get_heap_base() {
+        return thread_handle->get_local_data().heap.ptr_address();
+    }
 
     uint32_t thread::get_register(uint8_t index) {
         if (thread_handle->get_thread_context().cpu_registers.size() <= index) {
@@ -85,6 +93,10 @@ namespace eka2l1::scripting {
     }
     
     std::unique_ptr<eka2l1::scripting::thread> get_current_thread() {
+        if (get_current_instance()->get_kernel_system()->crr_thread() == nullptr) {
+            return nullptr;
+        }
+        
         return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(
             get_current_instance()->get_kernel_system()->crr_thread()));
     }
