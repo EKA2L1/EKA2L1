@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -38,8 +40,8 @@ namespace eka2l1::scripting {
     public:
         process(uint64_t handle);
 
-        bool read_process_memory(const std::uint32_t addr, std::vector<char> &buffer, const size_t size);
-        bool write_process_memory(const std::uint32_t addr, std::vector<char> buffer);
+        pybind11::bytes read_process_memory(const std::uint32_t addr, const size_t size);
+        void write_process_memory(const std::uint32_t addr, const std::string &buffer);
 
         std::string get_executable_path();
         std::string get_name();

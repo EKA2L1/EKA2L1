@@ -30,35 +30,36 @@
 #include <epoc/page_table.h>
 
 namespace scripting = eka2l1::scripting;
+namespace py = pybind11;
 
 namespace eka2l1::scripting {
     process::process(std::uint64_t handle)
         : process_handle(reinterpret_cast<eka2l1::kernel::process *>(handle)) {
     }
-
-    bool process::read_process_memory(const std::uint32_t addr, std::vector<char> &buffer, const size_t size) {
+    
+    py::bytes process::read_process_memory(const std::uint32_t addr, const size_t size) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
 
         if (!ptr) {
-            return false;
+            throw std::runtime_error("The memory at specified address hasn't been mapped yet!");
         }
+
+        std::string buffer;
 
         buffer.resize(size);
         memcpy(&buffer[0], ptr, size);
 
-        return true;
+        return buffer;
     }
 
-    bool process::write_process_memory(const std::uint32_t addr, std::vector<char> buffer) {
+    void process::write_process_memory(const std::uint32_t addr, const std::string &buffer) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
 
         if (!ptr) {
-            return false;
+            throw std::runtime_error("The memory at specified address hasn't been mapped yet!");
         }
 
         memcpy(ptr, buffer.data(), buffer.size());
-
-        return true;
     }
 
     std::string process::get_executable_path() {
@@ -98,6 +99,10 @@ namespace eka2l1::scripting {
     }
     
     std::unique_ptr<eka2l1::scripting::process> get_current_process() {
+        if (get_current_instance()->get_kernel_system()->crr_process() == nullptr) {
+            return nullptr;
+        }
+
         return std::make_unique<scripting::process>(reinterpret_cast<std::uint64_t>(
             get_current_instance()->get_kernel_system()->crr_process()));
     }
