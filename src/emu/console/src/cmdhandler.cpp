@@ -25,6 +25,11 @@
 #include <manager/manager.h>
 #include <manager/package_manager.h>
 
+#if ENABLE_SCRIPTING
+#include <manager/script_manager.h>
+#include <pybind11/embed.h>
+#endif
+
 using namespace eka2l1;
 
 bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
@@ -158,3 +163,22 @@ bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std::string
 
     return false;
 }
+
+#if ENABLE_SCRIPTING
+bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    try {
+        pybind11::exec(
+            "import os\n"
+            "import sys\n"
+            "if not hasattr(sys, 'argv'):\n"
+            "   sys.argv = ['temp', '-b', 'html', 'scripts/source/', 'scripts/build/']\n"
+            "import sphinx.cmd.build\n"
+            "sphinx.cmd.build.build_main(['-b', 'html', 'scripts/source/', 'scripts/build/'])"
+        );
+    } catch (pybind11::error_already_set &exec) {
+        std::cout << std::string("Generate documents failed with error: ") + exec.what() << std::endl;
+    }
+
+    return false;
+}
+#endif

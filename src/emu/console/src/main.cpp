@@ -210,6 +210,10 @@ int main(int argc, char **argv) {
         app_specifier_option_handler);
     parser.add("--install, --i", "Install a SIS", app_install_option_handler);
 
+#if ENABLE_SCRIPTING
+    parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
+#endif
+
     if (argc > 1) {
         std::string err;
         should_quit = !parser.parse(&err);
