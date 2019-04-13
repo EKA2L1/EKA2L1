@@ -118,9 +118,29 @@ namespace eka2l1::common {
             }
         }
 
+        /**
+         * \brief Start a drawing session.
+         * 
+         * The function resizes the plotter, and then clear the canavas.
+         * 
+         * \param size The size of the new canavas.
+         */
         void new_art(const eka2l1::vec2 &size);
+
+        /**
+         * \brief Draws a line.
+         * 
+         * \param start The position to start drawing the line from.
+         * \param end   The position that the line ends.
+         */
         void line_from_to(const eka2l1::vec2 &start, const eka2l1::vec2 &end);
 
+        /**
+         * \brief Draw a line with given (X, Y) length.
+         * 
+         * \param start     The position to start drawing the line from.
+         * \param direction The length of the line in both X axis and Y axis.
+         */
         void line(const eka2l1::vec2 &start, const eka2l1::vec2 &direction) {
             line_from_to(start, start + direction);
         }
@@ -133,10 +153,41 @@ namespace eka2l1::common {
             line(start, eka2l1::vec2(0, len));
         }
 
-        // WARNING: UNIMPLEMENTED!
-        // void circle(const eka2l1::vec2 &pos, const int radius);
+        /**
+         * \brief Draw an ellipse.
+         *
+         * \param pos The origin of the ellipse.
+         * \param rad (X, Y) radius of the ellipse.
+         */
+        void ellipse(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad);
+        
+        /**
+         * \brief Draw an ellipse with one-pixel thick.
+         * 
+         * \param pos The origin of the ellipse.
+         * \param rad (X, Y) radius of the ellipse.
+         */
+        void ellipse_one_pix(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad);
 
+        void circle(const eka2l1::vec2 &pos, const int radius) {
+            ellipse(pos, radius);
+        }
+
+        /**
+         * \brief Draws a rectangle.
+         * 
+         * \param re The rectangle to draw.
+         */
         void rect(const eka2l1::rect &re);
-        void flood(const eka2l1::vec2 &pos);
+        
+        /**
+         * \brief Flood-fill a region with scan-line algorithm.
+         * 
+         * \param pos       The position to start the fill.
+         * \param fill_mode If this is set to true, the flood will stop until encouters pixels
+         *                  that have the same color as the brush. Else it will stop until encounters
+         *                  pixels that have the same color as the color of the pixel that starts the flood.
+         */
+        void flood(const eka2l1::vec2 &pos, const bool fill_mode = false);
     };
 }

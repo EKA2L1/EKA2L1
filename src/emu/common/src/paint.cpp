@@ -92,7 +92,7 @@ namespace eka2l1::common {
         }
     }
 
-    void painter::flood(const eka2l1::vec2 &pos) {
+    void painter::flood(const eka2l1::vec2 &pos, const bool fill_mode) {
         // Scanline is being used here
         std::stack<eka2l1::vec2> floody;
         floody.push(pos);
@@ -113,43 +113,109 @@ namespace eka2l1::common {
             floody.pop();
 
             // Scan for the beginning of our pixels sequence
-            while (ant_pos.x >= 0 && plotter_->get_pixel(ant_pos) == old_color) {
+            while (ant_pos.x >= 0 && fill_mode ? (plotter_->get_pixel(ant_pos) != brush_col_) :
+                (plotter_->get_pixel(ant_pos) == old_color)) {
                 ant_pos.x--;
             }
 
             ant_pos.x++;
 
-            span_above = false;
-            span_below = false;
+            if (!fill_mode || (fill_mode && ant_pos.x > 0)) {
+                span_above = false;
+                span_below = false;
 
-            while (ant_pos.x < psize.x && plotter_->get_pixel(ant_pos) == old_color) {
-                // Plot our pixel
-                plotter_->plot_pixel(ant_pos, brush_col_);
+                while (ant_pos.x < psize.x && fill_mode ? (plotter_->get_pixel(ant_pos) != brush_col_) :
+                    (plotter_->get_pixel(ant_pos) == old_color)) {
+                    // Plot our pixel
+                    plotter_->plot_pixel(ant_pos, brush_col_);
 
-                // Scanning above. Well, is there a sign of a sequence to be fill ?
-                if (!span_above && ant_pos.y > 0 && plotter_->get_pixel(ant_pos + vec2(0, -1)) == old_color) {
-                    // There is. Enable span above, to check for end of sequence
-                    floody.push(ant_pos + vec2(0, -1));
-                    span_above = true;
-                } else if (span_above && ant_pos.y > 0 && plotter_->get_pixel(ant_pos + vec2(0, -1)) != old_color) {
-                    // End of sequeuce, disable span above, check for new sequence to push 
-                    span_above = false;
+                    auto pix = plotter_->get_pixel(ant_pos + vec2(0, -1));
+
+                    // Scanning above. Well, is there a sign of a sequence to be fill ?
+                    if (!span_above && ant_pos.y > 0 && (fill_mode ? pix != brush_col_ : pix == old_color)) {
+                        // There is. Enable span above, to check for end of sequence
+                        floody.push(ant_pos + vec2(0, -1));
+                        span_above = true;
+                    } else if (span_above && ant_pos.y > 0 && (fill_mode ? pix == brush_col_ : pix != old_color)) {
+                        // End of sequeuce, disable span above, check for new sequence to push 
+                        span_above = false;
+                    }
+
+                    pix = plotter_->get_pixel(ant_pos + vec2(0, 1));
+
+                    // Scanning below. Well, is there a sign of a sequence to be fill ?
+                    if (!span_below && ant_pos.y < psize.y - 1 && (fill_mode ? pix != brush_col_ : pix == old_color)) {
+                        // There is. Enable span below, to check for end of sequence
+                        floody.push(ant_pos + vec2(0, 1));
+                        span_below = true;
+                    } else if (span_below && ant_pos.y < psize.y - 1 && (fill_mode ? pix == brush_col_ : pix != old_color)) {
+                        // End of sequeuce, disable span below, check for new sequence to push
+                        span_below = false;
+                    }
+
+                    // Increase the plot horizontal pos
+                    ant_pos.x++;
                 }
-
-                // Scanning below. Well, is there a sign of a sequence to be fill ?
-                if (!span_below && ant_pos.y < psize.y - 1 && plotter_->get_pixel(ant_pos + vec2(0, 1)) == old_color) {
-                    // There is. Enable span below, to check for end of sequence
-                    floody.push(ant_pos + vec2(0, 1));
-                    span_below = true;
-                } else if (span_below && ant_pos.y < psize.y - 1 && plotter_->get_pixel(ant_pos + vec2(0, 1)) != old_color) {
-                    // End of sequeuce, disable span below, check for new sequence to push
-                    span_below = false;
-                }
-
-                // Increase the plot horizontal pos
-                ant_pos.x++;
             }
         }
+    }
+
+    void painter::ellipse(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad) {
+        ellipse_one_pix(pos, rad);
+
+        if (brush_thick_ > 1) {
+            ellipse_one_pix(pos, rad + brush_thick_ * 2);
+            flood({ pos.x + rad.x + 1, pos.y }, true);
+        }
+
+        if (flags & PAINTER_FLAG_FILL_WHEN_DRAW) {
+            // Hehe
+            flood(pos, true);
+        }
+    }
+    
+    void painter::ellipse_one_pix(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad) {
+        float p = (rad.y * rad.y) - (rad.x * rad.x) * (0.25f - rad.y);
+        int x = 0;
+        int y = rad.y;
+
+        do {
+            plotter_->plot_pixel({ pos.x + x, pos.y + y }, brush_col_);
+            plotter_->plot_pixel({ pos.x + x, pos.y - y }, brush_col_);
+            plotter_->plot_pixel({ pos.x - x, pos.y + y }, brush_col_);
+            plotter_->plot_pixel({ pos.x - x, pos.y - y }, brush_col_);
+
+            if (p < 0) {
+                x += 1;
+                p += rad.y * rad.y * (2 * x + 1);
+            } else {
+                x += 1;
+                y -= 1;
+                p += rad.y * rad.y * (2 * x + 1) - 2 * rad.x * rad.x * y;
+            }
+        } while (2 * rad.y * rad.y * x < 2 * rad.x * rad.x * y);
+
+        // Upper region
+        p = (rad.y * rad.y * (x + 0.5f)  * (x + 0.5f)) + (((y - 1) * (y - 1) - rad.y * rad.y) * rad.x * rad.x);
+        
+        do {
+            plotter_->plot_pixel({ pos.x + x, pos.y + y }, brush_col_);
+            plotter_->plot_pixel({ pos.x + x, pos.y - y }, brush_col_);
+            plotter_->plot_pixel({ pos.x - x, pos.y + y }, brush_col_);
+            plotter_->plot_pixel({ pos.x - x, pos.y - y }, brush_col_);
+
+            if (p > 0) {
+                y -= 1;
+                p -= rad.x * rad.x * (2 * y - 1);
+            } else {
+                x += 1;
+                y -= 1;
+                p = p - rad.x * rad.x * (2 * y - 1) + 2 * rad.y * rad.y * x;
+            }
+        } while (y != 0);
+
+        plotter_->plot_pixel({ pos.x + rad.x, pos.y }, brush_col_);
+        plotter_->plot_pixel({ pos.x - rad.x, pos.y }, brush_col_);
     }
 
     void painter::rect(const eka2l1::rect &re) {
@@ -159,7 +225,7 @@ namespace eka2l1::common {
         vertical_line({ re.top.x + re.size.x, re.top.y }, re.size.y);
 
         if (flags & PAINTER_FLAG_FILL_WHEN_DRAW) {
-            flood(re.top + brush_thick_);
+            flood(re.top + brush_thick_, true);
         }
     }
 
