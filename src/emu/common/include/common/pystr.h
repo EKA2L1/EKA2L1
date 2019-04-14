@@ -26,7 +26,7 @@
 namespace eka2l1::common {
     template <typename T>
     struct basic_pystr {
-        std::basic_string<T> str_;
+        mutable std::basic_string<T> str_;
 
     public:
         basic_pystr() = default;
@@ -51,8 +51,12 @@ namespace eka2l1::common {
             return str_;
         }
 
-        T *data() const {
+        const T *data() const {
             return str_.data();
+        }
+
+        bool empty() const {
+            return str_.empty();
         }
 
         T &operator [] (const std::size_t index) const {
@@ -95,6 +99,10 @@ namespace eka2l1::common {
             str_ += rhs.str_;
         }
 
+        const T &back() const {
+            return str_.back();
+        }
+
         template <typename I>
         basic_pystr<T> operator *(const I times) const {
             if (times == 0) {
@@ -132,6 +140,30 @@ namespace eka2l1::common {
             }
         }
 
+        basic_pystr<T> lstrip() const {
+            auto news = str_;
+
+            while (news[0] == static_cast<T>(' ')) {
+                news.erase(news.begin(), news.begin() + 1);
+            }
+
+            return news;
+        }
+
+        basic_pystr<T> rstrip() const {
+            auto news = str_;
+
+            while (news.back() == static_cast<T>(' ')) {
+                news.pop_back();
+            }
+
+            return news;
+        }
+
+        basic_pystr<T> strip() const {
+            return lstrip().rstrip();
+        }
+
         std::vector<basic_pystr<T>> split(const basic_pystr<T> &separator = ' ') const {
             std::vector<basic_pystr<T>> strs;
             std::basic_string<T> org_ = str_;
@@ -152,6 +184,30 @@ namespace eka2l1::common {
             }
 
             return strs;
+        }
+
+        template <typename F>
+        std::enable_if_t<std::is_floating_point_v<F>, F> as_fp(const F def_ = 0) const {
+            const std::size_t dot_pos = str_.find('.');
+
+            if (dot_pos == decltype(str_)::npos) {
+                return static_cast<F>(as_int<std::int64_t>(static_cast<std::int64_t>(def_)));
+            }
+
+            const std::int64_t part1 = substr(0, dot_pos).as_int<std::int64_t>();
+            const std::int64_t part2 = substr(dot_pos + 1).as_int<std::int64_t>(-1);
+
+            if (part2 == -1) {
+                return def_;
+            }
+
+            F fract = static_cast<F>(part2) * (part1 < 0 ? -1 : 1);
+
+            for (std::size_t i = 0; i < str_.length() - dot_pos - 1; i++) {
+                fract /= 10;
+            }
+
+            return static_cast<F>(part1) + fract;
         }
 
         template <typename I>
@@ -180,8 +236,13 @@ namespace eka2l1::common {
             }
 
             I num_ = 0;
-
             I factor = 1;
+            
+            if (num_str_[0] == static_cast<T>('-')) {
+                factor *= -1;
+                num_str_.erase(num_str_.begin(), num_str_.begin() + 1);
+            }
+
             const int len_ = static_cast<const int>(num_str_.length());
 
             for (int i = len_ - 1; i >= 0; i--) {
@@ -206,6 +267,10 @@ namespace eka2l1::common {
             }
 
             return num_;
+        }
+
+        basic_pystr<T> substr(const std::size_t start, const std::size_t count = std::basic_string<T>::npos) const {
+            return str_.substr(start, count);
         }
     };
 
