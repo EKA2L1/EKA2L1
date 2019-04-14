@@ -90,6 +90,8 @@ namespace eka2l1::common {
         pixel_plotter *plotter_;
 
         eka2l1::vecx<int, 4> brush_col_;
+        eka2l1::vecx<int, 4> fill_col_;
+
         int brush_thick_ { 1 };
         int trans_ { 0 };
 
@@ -104,6 +106,10 @@ namespace eka2l1::common {
 
         void set_brush_color(const eka2l1::vecx<int, 4> &color) {
             brush_col_ = color;
+        }
+        
+        void set_fill_color(const eka2l1::vecx<int, 4> &color) {
+            fill_col_ = color;
         }
 
         void set_brush_thickness(const int thickness) {
@@ -169,9 +175,9 @@ namespace eka2l1::common {
          */
         void ellipse_one_pix(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad);
 
-        void circle(const eka2l1::vec2 &pos, const int radius) {
-            ellipse(pos, radius);
-        }
+        void circle_one_pix(const eka2l1::vec2 &pos, const int radius);
+
+        void circle(const eka2l1::vec2 &pos, const int radius);
 
         /**
          * \brief Draws a rectangle.

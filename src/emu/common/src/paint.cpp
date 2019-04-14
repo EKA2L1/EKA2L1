@@ -51,7 +51,7 @@ namespace eka2l1::common {
         return { buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3 + 2],
                  buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3 + 1],
                  buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3],
-                 0 };
+                 255 };
     }
 
     void buffer_24bmp_pixel_plotter::save_to_bmp(wo_stream *stream) {
@@ -159,18 +159,78 @@ namespace eka2l1::common {
             }
         }
     }
+       
+    void painter::circle_one_pix(const eka2l1::vec2 &pos, const int radius) {
+        int x = 0;
+        int y = radius;
+
+        auto circular_plot = [&]() {
+            plotter_->plot_pixel({ pos.x + x, pos.y + y }, brush_col_);
+            plotter_->plot_pixel({ pos.x + x, pos.y - y }, brush_col_);
+            plotter_->plot_pixel({ pos.x - x, pos.y + y }, brush_col_);
+            plotter_->plot_pixel({ pos.x - x, pos.y - y }, brush_col_);
+
+            plotter_->plot_pixel({ pos.x + y, pos.y + x }, brush_col_);
+            plotter_->plot_pixel({ pos.x + y, pos.y - x }, brush_col_);
+            plotter_->plot_pixel({ pos.x - y, pos.y + x }, brush_col_);
+            plotter_->plot_pixel({ pos.x - y, pos.y - x }, brush_col_);
+        };
+
+        circular_plot();
+
+        int d = 3 - 2 * radius; 
+
+        while (y >= x) {
+            x++;
+
+            if (d > 0) {
+                y--;
+                d += 4 * (x - y) + 10;
+            } else {
+                d += 4 * x + 6;
+            }
+
+            circular_plot();
+        }
+    }
+    
+    void painter::circle(const eka2l1::vec2 &pos, const int radius) {
+        if (flags & PAINTER_FLAG_FILL_WHEN_DRAW) {
+            // Hehe
+            auto old_color = brush_col_;
+            set_brush_color(fill_col_);
+
+            circle_one_pix(pos, radius + brush_thick_);
+            flood(pos, true);
+
+            set_brush_color(old_color);
+        }
+
+        circle_one_pix(pos, radius);
+
+        if (brush_thick_ > 1) {
+            circle_one_pix(pos, radius + brush_thick_);
+            flood({ pos.x + radius + 1, pos.y }, true);
+        }
+    }
 
     void painter::ellipse(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad) {
+        if (flags & PAINTER_FLAG_FILL_WHEN_DRAW) {
+            // Hehe
+            auto old_color = brush_col_;
+            set_brush_color(fill_col_);
+
+            ellipse_one_pix(pos, rad + brush_thick_);
+            flood(pos, true);
+            
+            set_brush_color(old_color);
+        }
+
         ellipse_one_pix(pos, rad);
 
         if (brush_thick_ > 1) {
-            ellipse_one_pix(pos, rad + brush_thick_ * 2);
+            ellipse_one_pix(pos, rad + brush_thick_);
             flood({ pos.x + rad.x + 1, pos.y }, true);
-        }
-
-        if (flags & PAINTER_FLAG_FILL_WHEN_DRAW) {
-            // Hehe
-            flood(pos, true);
         }
     }
     
