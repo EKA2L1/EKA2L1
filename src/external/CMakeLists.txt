@@ -4,7 +4,8 @@ target_include_directories(miniz PUBLIC miniz)
 # Force Boost directory for Dynarmic - we never use one
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 
-add_definitions(-DCURL_STATICLIB)
+# PugiXML
+add_subdirectory(pugixml)
 
 # fmt
 add_subdirectory(fmt)
