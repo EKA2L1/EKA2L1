@@ -12,6 +12,7 @@ add_library(common
     include/common/bytes.h
     include/common/chunkyseri.h
     include/common/codeblock.h
+    include/common/color.h
     include/common/crypt.h
     include/common/cpudetect.h
     include/common/cvt.h
@@ -30,6 +31,7 @@ add_library(common
     include/common/raw_bind.h
     include/common/resource.h
     include/common/runlen.h
+    include/common/svg.h
     include/common/time.h
     include/common/types.h
     include/common/unicode.h
@@ -43,6 +45,7 @@ add_library(common
     src/bytes.cpp
     src/chunkyseri.cpp
     src/cvt.cpp
+    src/color.cpp
     src/crypt.cpp
     src/dictcomp.cpp
     src/dynamicfile.cpp
@@ -55,6 +58,7 @@ add_library(common
     src/path.cpp
     src/random.cpp
     src/runlen.cpp
+    src/svg.cpp
     src/time.cpp
     src/types.cpp
     src/unicode.cpp
@@ -64,6 +68,7 @@ add_library(common
 
 target_include_directories(common PUBLIC include)
 target_link_libraries(common PUBLIC fmt miniz spdlog)
+target_link_libraries(common PRIVATE pugixml)
 
 if (UNIX OR APPLE)
     set_property(TARGET common PROPERTY POSITION_INDEPENDENT_CODE ON)
