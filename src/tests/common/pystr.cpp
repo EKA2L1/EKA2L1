@@ -75,3 +75,13 @@ TEST_CASE("str_to_int_2_prefix", "pystr") {
     common::pystr test("0b11011");
     REQUIRE(test.as_int<int>() == 0b11011);
 }
+
+TEST_CASE("str_to_fp_no_fract", "pystr") {
+    common::pystr test("60");
+    REQUIRE(test.as_fp<float>() == 60.0f);
+}
+
+TEST_CASE("str_to_fp_fract_neg", "pystr") {
+    common::pystr test("-60.56");
+    REQUIRE(test.as_fp<float>() == -60.56f);
+}
