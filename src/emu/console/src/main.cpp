@@ -135,7 +135,9 @@ void init() {
         symsys->get_gdb_stub()->init(symsys.get());
         symsys->get_gdb_stub()->toggle_server(true);
     }
+}
 
+void init_stage2() {
     bool res = symsys->load_rom(rom_path);
 
     // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be

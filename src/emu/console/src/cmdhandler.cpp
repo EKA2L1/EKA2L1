@@ -53,6 +53,8 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string 
     return true;
 }
 
+extern void init_stage2();
+
 bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
     const char *tok = parser->next_token();
 
@@ -73,6 +75,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
         return false;
     }
 
+    init_stage2();
     bool result = symsys->load(infos[app_idx].id);
 
     if (!result) {
