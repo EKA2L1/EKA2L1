@@ -28,6 +28,7 @@
 
 #include <epoc/services/fbs/fbs.h>
 #include <epoc/services/fs/fs.h>
+#include <epoc/services/window/common.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -270,5 +271,78 @@ namespace eka2l1 {
 
         ctx->write_arg_pkg<bmp_handles>(0, handle_info);
         ctx->set_request_status(KErrNone); 
+    }
+
+    struct bmp_specs {
+        eka2l1::vec2 size;
+        epoc::display_mode bpp;       // Ignore
+        std::uint32_t handle;
+        std::uint32_t server_handle;
+        std::uint32_t address_offset;
+    };
+
+    static int get_bpp_from_display_mode(const epoc::display_mode bpp) {
+        switch (bpp) {
+        case epoc::display_mode::gray2: return 1;
+        case epoc::display_mode::gray4: return 2;
+        case epoc::display_mode::gray16: case epoc::display_mode::color16: return 4;
+        case epoc::display_mode::gray256: case epoc::display_mode::color256: return 8;
+        case epoc::display_mode::color4k: return 12;
+        case epoc::display_mode::color64k: return 16;
+        case epoc::display_mode::color16m: return 24;
+        case epoc::display_mode::color16mu: case epoc::display_mode::color16ma: return 32;
+        }
+
+        return 24;
+    }
+
+    static std::size_t calculate_aligned_bitmap_bytes(const eka2l1::vec2 &size, const epoc::display_mode bpp) {
+        if (size.x == 0 || size.y == 0) {
+            return 0;
+        }
+
+        return get_byte_width(size.x, get_bpp_from_display_mode(bpp)) * size.y;
+    }
+
+    void fbscli::create_bitmap(service::ipc_context *ctx) {
+        std::optional<bmp_specs> specs = ctx->get_arg_packed<bmp_specs>(0);
+
+        if (!specs) {
+            ctx->set_request_status(KErrArgument);
+            return;
+        }
+
+        fbs_server *fbss = server<fbs_server>();
+
+        epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
+        bws_bmp->header_.size_pixels = specs->size;
+        bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(specs->bpp);
+        bws_bmp->data_offset_ = 0;
+
+        // Calculate the size
+        std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(specs->size, specs->bpp);
+        
+        if (alloc_bytes > 0) {
+            // Allocates from the large chunk
+            // Align them with 4 bytes
+            std::size_t avail_dest_size = common::align(alloc_bytes, 4);
+            void *data = fbss->large_chunk_allocator->allocate(avail_dest_size);
+
+            if (!data) {
+                ctx->set_request_status(KErrNoMemory);
+                return;
+            }
+
+            bws_bmp->data_offset_ = static_cast<int>(reinterpret_cast<std::uint8_t*>(data) - fbss->base_large_chunk);
+        }
+
+        fbsbitmap *bmp = make_new<fbsbitmap>(bws_bmp, false);
+
+        specs->handle = obj_table_.add(bmp);
+        specs->server_handle = bmp->id;
+        specs->address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+
+        ctx->write_arg_pkg(0, specs.value());
+        ctx->set_request_status(KErrNone);
     }
 }

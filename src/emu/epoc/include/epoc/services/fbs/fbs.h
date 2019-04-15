@@ -116,6 +116,7 @@ namespace eka2l1 {
         void get_face_attrib(service::ipc_context *ctx);
         void duplicate_font(service::ipc_context *ctx);
         void duplicate_bitmap(service::ipc_context *ctx);
+        void create_bitmap(service::ipc_context *ctx);
         
         void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
