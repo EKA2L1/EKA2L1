@@ -96,7 +96,7 @@ namespace eka2l1::scripting {
         return size;
     }
 
-    std::string mif_reader::read_entry(const std::size_t idx) {
+    py::bytes mif_reader::read_entry(const std::size_t idx) {
         std::string dat;
         int size = 0;
        

@@ -22,6 +22,8 @@
 #include <epoc/loader/mbm.h>
 #include <epoc/loader/mif.h>
 
+#include <pybind11/pybind11.h>
+
 #include <memory>
 #include <string>
 
@@ -53,6 +55,6 @@ namespace eka2l1::scripting {
 
         std::uint32_t entry_count();
         int entry_data_size(const std::size_t idx);
-        std::string read_entry(const std::size_t idx);
+        pybind11::bytes read_entry(const std::size_t idx);
     };
 }
