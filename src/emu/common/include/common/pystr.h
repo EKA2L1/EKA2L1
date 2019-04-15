@@ -110,7 +110,7 @@ namespace eka2l1::common {
             }
 
             if (times == 1) {
-                return;
+                return *this;
             }
 
             std::basic_string<T> news;
@@ -194,8 +194,8 @@ namespace eka2l1::common {
                 return static_cast<F>(as_int<std::int64_t>(static_cast<std::int64_t>(def_)));
             }
 
-            const std::int64_t part1 = substr(0, dot_pos).as_int<std::int64_t>();
-            const std::int64_t part2 = substr(dot_pos + 1).as_int<std::int64_t>(-1);
+            const std::int64_t part1 = substr(0, dot_pos).template as_int<std::int64_t>();
+            const std::int64_t part2 = substr(dot_pos + 1).template as_int<std::int64_t>(-1);
 
             if (part2 == -1) {
                 return def_;
