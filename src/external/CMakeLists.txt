@@ -5,7 +5,12 @@ target_include_directories(miniz PUBLIC miniz)
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 
 # PugiXML
-add_subdirectory(pugixml)
+add_library(pugixml
+    pugixml/src/pugiconfig.hpp
+    pugixml/src/pugixml.cpp
+    pugixml/src/pugixml.hpp)
+
+target_include_directories(pugixml PUBLIC pugixml/src)
 
 # fmt
 add_subdirectory(fmt)
