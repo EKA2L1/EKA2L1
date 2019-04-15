@@ -28,5 +28,7 @@ namespace eka2l1::common::color {
 
     #include <common/color.def>
 
+    #undef COLOR_DECL
+
     const vec_rgb get_color(const char *name);
 }
