@@ -30,6 +30,8 @@
 #include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/thread.h>
 
+#include <drivers/graphics/emu_window.h> // For scancode
+
 #include <common/cvt.h>
 
 #include <mutex>
@@ -345,8 +347,24 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::handle_shortcuts() {
+        ImGuiIO &io = ImGui::GetIO();
+
+        if (io.KeyCtrl && io.KeyShift) {
+            if (io.KeysDown[KEY_L]) {   // Logger
+                should_show_logger = !should_show_logger;
+                io.KeysDown[KEY_L] = false;
+            }
+
+            io.KeyCtrl = false;
+            io.KeyShift = false;
+        }
+    }
+
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
+
+        handle_shortcuts();
 
         if (should_show_threads) {
             show_threads();

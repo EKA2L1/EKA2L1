@@ -75,6 +75,7 @@ namespace eka2l1 {
         }
 
         void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
+        void handle_shortcuts();
 
         void wait_for_debugger() override;
         void notify_clients() override;
