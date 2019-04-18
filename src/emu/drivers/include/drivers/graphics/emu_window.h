@@ -45,6 +45,12 @@
 #define KEY_ENTER 257
 #define KEY_ESCAPE 256
 
+#define KEY_A 65
+#define KEY_H 73
+#define KEY_I 74
+#define KEY_K 75
+#define KEY_L 76
+
 namespace eka2l1 {
     /**
      * \brief Contains implementation for driver.
