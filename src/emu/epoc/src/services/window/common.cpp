@@ -33,80 +33,11 @@ namespace eka2l1::epoc {
     }
     
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code) {
-        switch (scan_code) {
-        case EStdKeyNull: {
-            return EKeyNull;
+        if (scan_code < EStdKeyF1) {
+            return keymap[scan_code];
+        } else if (scan_code >= EStdKeyF1 && scan_code <= EStdKeyApplication27) {
+            return keymap[scan_code - 67];
         }
-
-        case EStdKeyBackspace: {
-            return EKeyBackspace;
-        }
-
-        case EStdKeyTab: {
-            return EKeyTab;
-        }
-
-        case EStdKeyEnter: {
-            return EKeyEnter;
-        }
-
-        case EStdKeyYes: {
-            return EKeyYes;
-        }
-
-        case EStdKeyNo: {
-            return EKeyNo;
-        }
-
-        // Is this a laptop??? :)
-        case EStdKeyIncBrightness: {
-            return EKeyIncBrightness;
-        }
-
-        case EStdKeyDecBrightness: {
-            return EKeyDecBrightness;
-        }
-
-        case EStdKeyIncVolume: {
-            return EKeyIncVolume;
-        }
-
-        case EStdKeyDecVolume: {
-            return EKeyDecVolume;
-        }
-
-        default:
-            break;
-        }
-
-        if (scan_code >= EStdKeyF1 && scan_code <= EStdKeyF24) {
-            return static_cast<TKeyCode>(EKeyF1 + static_cast<int>(scan_code - EStdKeyF1));
-        }
-
-        if (scan_code >= EStdKeyApplication0 && scan_code <= EStdKeyApplicationF) {
-            return static_cast<TKeyCode>(EKeyApplication0 + static_cast<int>(scan_code - EStdKeyApplication0));
-        }
-
-        if (scan_code >= EStdKeyApplication10 && scan_code <= EStdKeyApplication1F) {
-            return static_cast<TKeyCode>(EKeyApplication10 + static_cast<int>(scan_code - EStdKeyApplication10));
-        }
-        
-        if (scan_code >= EStdKeyApplication20 && scan_code <= EStdKeyApplication27) {
-            return static_cast<TKeyCode>(EKeyApplication20 + static_cast<int>(scan_code - EStdKeyApplication20));
-        }
-        
-        if (scan_code >= EStdKeyDevice0 && scan_code <= EStdKeyDevice0) {
-            return static_cast<TKeyCode>(EKeyDevice0 + static_cast<int>(scan_code - EKeyDevice0));
-        }
-
-        if (scan_code >= EStdKeyDevice10 && scan_code <= EStdKeyDevice1F) {
-            return static_cast<TKeyCode>(EKeyDevice10 + static_cast<int>(scan_code - EKeyDevice10));
-        }
-        
-        if (scan_code >= EStdKeyDevice20 && scan_code <= EStdKeyDevice27) {
-            return static_cast<TKeyCode>(EKeyDevice20 + static_cast<int>(scan_code - EKeyDevice20));
-        }
-
         return EKeyNull;
     }
 }
