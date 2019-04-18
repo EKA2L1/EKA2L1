@@ -37,8 +37,7 @@ namespace eka2l1::epoc {
             return keymap[scan_code];
         } else if (scan_code >= EStdKeyF1 && scan_code <= EStdKeyApplication27) {
             return keymap[scan_code - 67];
-        } else {
-            return EKeyNull;
         }
+        return EKeyNull;
     }
 }
