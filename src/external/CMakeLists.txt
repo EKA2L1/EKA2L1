@@ -12,6 +12,9 @@ add_library(pugixml
 
 target_include_directories(pugixml PUBLIC pugixml/src)
 
+# Nativefilediag
+add_subdirectory(filediag)
+
 # fmt
 add_subdirectory(fmt)
 add_library(fmt::fmt ALIAS fmt)
