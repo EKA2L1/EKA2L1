@@ -400,16 +400,14 @@ namespace eka2l1 {
         if (ImGui::BeginMainMenuBar()) {
             sstate.menu_height = ImGui::GetWindowSize().y;
             
-            if (ImGui::BeginMenu("Miscs")) {
+            if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
-                ImGui::MenuItem("Load state", nullptr, &should_load_state);
-                ImGui::MenuItem("Save state", nullptr, &should_save_state);
                 ImGui::MenuItem("Install package", nullptr, &should_install_package);
 
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Advance")) {
+            if (ImGui::BeginMenu("Debugger")) {
                 ImGui::MenuItem("Pause", "CTRL+P", &should_pause);
                 ImGui::MenuItem("Stop", nullptr, &should_stop);
 
@@ -418,13 +416,13 @@ namespace eka2l1 {
                 ImGui::MenuItem("Disassembler", nullptr, &should_show_disassembler);
                 ImGui::MenuItem("Breakpoints", nullptr, &should_show_breakpoint_list);
 
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Objects")) {
-                ImGui::MenuItem("Threads", nullptr, &should_show_threads);
-                ImGui::MenuItem("Mutexs", nullptr, &should_show_mutexs);
-                ImGui::MenuItem("Chunks", nullptr, &should_show_chunks);
+                if (ImGui::BeginMenu("Objects")) {
+                    ImGui::MenuItem("Threads", nullptr, &should_show_threads);
+                    ImGui::MenuItem("Mutexs", nullptr, &should_show_mutexs);
+                    ImGui::MenuItem("Chunks", nullptr, &should_show_chunks);
+                    ImGui::EndMenu();
+                }
+                
                 ImGui::EndMenu();
             }
 
