@@ -25,6 +25,7 @@ matrix:
            - g++-7
            - gcc-7
            - binutils-2.26
+           - libgtk-3-dev
       before_script:    
          - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
          - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
