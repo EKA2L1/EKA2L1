@@ -20,6 +20,8 @@
 
 #include <algorithm>
 #include <debugger/debugger.h>
+#include <yaml-cpp/yaml.h>
+#include <fstream>
 
 namespace eka2l1 {
     void debugger_base::set_breakpoint(const std::uint32_t bkpt_addr, const bool hit,
@@ -71,5 +73,48 @@ namespace eka2l1 {
         }
 
         return breakpoints[breakpoints.size() - 1];
+    }
+
+    void skin_state::serialize() {
+        YAML::Emitter emitter;
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "bkg_alpha" << YAML::Value << bkg_transparency;
+        emitter << YAML::Key << "bkg_path" << YAML::Value << bkg_path;
+        emitter << YAML::Key << "font" << YAML::Value << font_path;
+
+        std::ofstream file("skin.yml");
+        file << emitter.c_str();
+    }
+
+    void skin_state::deserialize() {
+        bkg_path = "";
+        font_path = "";
+        bkg_transparency = 129;
+
+        YAML::Node node;
+
+        try {
+            node = YAML::LoadFile("skin.yml");
+        } catch (YAML::BadFile &exc) {
+            return;
+        }
+
+        try {
+            bkg_path = node["bkg_path"].as<std::string>();
+        } catch (...) {
+            bkg_path = "";
+        }
+
+        try {
+            bkg_transparency = node["bkg_alpha"].as<int>();
+        } catch (...) {
+            bkg_transparency = 129;
+        }
+        
+        try {
+            font_path = node["font"].as<std::string>();
+        } catch (...) {
+            font_path = "";
+        }
     }
 }

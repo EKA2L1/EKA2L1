@@ -16,8 +16,10 @@ target_link_libraries(debugger PRIVATE
     disasm
     epoc
     epockern
-    epocloader 
+    epocloader
     manager
+    nativefilediag
     imgui
-    glad
-    drivers)
+    drivers
+    stb
+    yaml-cpp)

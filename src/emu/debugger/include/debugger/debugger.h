@@ -12,13 +12,35 @@ namespace eka2l1 {
         bool is_hit;
     };
 
+    struct skin_state {
+        float menu_height = 0;
+        int bkg_transparency { 129 };
+        std::string bkg_path;
+        std::string font_path;
+
+        void serialize();
+        void deserialize();
+    };
+
+    class debugger_renderer;
+
     class debugger_base {
     protected:
+        friend class debugger_renderer;
+        
+        debugger_renderer *renderer;
+
         std::vector<debug_breakpoint> breakpoints;
         std::mutex lock;
 
+        skin_state sstate;
+
     public:
         debugger_base() {}
+
+        skin_state *get_skin_state() {
+            return &sstate;
+        }
 
         std::function<void(bool)> on_pause_toogle;
 

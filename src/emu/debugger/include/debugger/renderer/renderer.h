@@ -15,10 +15,12 @@ namespace eka2l1 {
         class graphics_driver;
         class input_driver;
         class imgui_renderer_base;
+        class texture;
 
         using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
         using input_driver_ptr = std::shared_ptr<drivers::input_driver>;
         using imgui_renderer_instance = std::unique_ptr<imgui_renderer_base>;
+        using texture_ptr = std::shared_ptr<texture>;
     }
 
     class debugger_renderer {
@@ -29,6 +31,7 @@ namespace eka2l1 {
         drivers::input_driver_ptr inp_driver_;
 
         drivers::imgui_renderer_instance irenderer;
+        drivers::texture_ptr background_tex_;
 
     public:
         void init(drivers::graphic_api gr_api, drivers::graphics_driver_ptr graphic_driver, drivers::input_driver_ptr input_driver,
@@ -36,6 +39,8 @@ namespace eka2l1 {
 
         void draw(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height);
         void deinit();
+
+        bool change_background(const char *path);
     };
 
     using debugger_renderer_ptr = std::shared_ptr<debugger_renderer>;

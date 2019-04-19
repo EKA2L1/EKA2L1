@@ -47,6 +47,7 @@ namespace eka2l1 {
         bool should_show_disassembler;
         bool should_show_logger;
         bool should_show_breakpoint_list;
+        bool should_show_preferences;
 
         void show_threads();
         void show_mutexs();
@@ -55,6 +56,7 @@ namespace eka2l1 {
         void show_disassembler();
         void show_menu();
         void show_breakpoint_list();
+        void show_preferences();
 
         std::atomic<std::uint32_t> debug_thread_id;
 

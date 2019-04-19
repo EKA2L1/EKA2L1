@@ -19,6 +19,7 @@
  */
 
 #include <debugger/imgui_debugger.h>
+#include <debugger/renderer/renderer.h>
 #include <debugger/logger.h>
 
 #include <imgui.h>
@@ -33,6 +34,7 @@
 #include <drivers/graphics/emu_window.h> // For scancode
 
 #include <common/cvt.h>
+#include <nfd.h>
 
 #include <mutex>
 
@@ -56,7 +58,9 @@ namespace eka2l1 {
         , should_show_disassembler(false)
         , should_show_logger(true)
         , should_show_breakpoint_list(false)
+        , should_show_preferences(false)
         , debug_thread_id(0) {
+        sstate.deserialize();
     }
 
     const char *thread_state_to_string(eka2l1::kernel::thread_state state) {
@@ -313,8 +317,89 @@ namespace eka2l1 {
         ImGui::End();
     }
 
+    template <typename F>
+    bool file_dialog(F callback) {
+        nfdchar_t *out_path = NULL;
+        nfdresult_t result = NFD_OpenDialog( NULL, NULL, &out_path);
+
+        if (result == NFD_OKAY) {
+            callback(out_path);
+        }
+
+        free(out_path);
+        
+        if (result == NFD_OKAY) {
+            return true;
+        }
+
+        return false;
+    }
+    
+    void imgui_debugger::show_preferences() {
+        ImGui::Begin("Preferences", &should_show_preferences);
+
+        ImGui::AlignTextToFramePadding();
+
+        ImGui::Text("Background");
+        ImGui::Separator();
+
+        ImGui::Text("Path         ");
+        ImGui::SameLine();
+        ImGui::InputText("##Background", sstate.bkg_path.data(), sstate.bkg_path.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::SameLine();
+
+        if (ImGui::Button("Change")) {
+            on_pause_toogle(true);
+
+            file_dialog([&](const char *result) {
+                sstate.bkg_path = result;
+                renderer->change_background(result);
+
+                sstate.serialize();
+            });
+
+            should_pause = false;
+            on_pause_toogle(false);
+        }
+
+        ImGui::Text("Transparency ");
+        ImGui::SameLine();
+        ImGui::SliderInt("##BackgroundTransparency", &sstate.bkg_transparency, 0, 255);
+        
+        ImGui::Separator();
+        ImGui::Text("Font");
+        ImGui::Separator();
+
+        ImGui::Text("Path         ");
+        ImGui::SameLine();
+        ImGui::InputText("##FontPath", sstate.font_path.data(), sstate.font_path.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::SameLine();
+
+        if (ImGui::Button("Replace")) {
+            on_pause_toogle(true);
+
+            file_dialog([&](const char *result) {
+                sstate.font_path = result;
+                sstate.serialize();
+            });
+
+            should_pause = false;
+            on_pause_toogle(false);
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Save")) {
+            sstate.serialize();
+        }
+
+        ImGui::End();
+    }
+
     void imgui_debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
+            sstate.menu_height = ImGui::GetWindowSize().y;
+            
             if (ImGui::BeginMenu("Miscs")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
                 ImGui::MenuItem("Load state", nullptr, &should_load_state);
@@ -343,6 +428,11 @@ namespace eka2l1 {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Settings")) {
+                ImGui::MenuItem("Preferences", nullptr, &should_show_preferences);
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMainMenuBar();
         }
     }
@@ -363,7 +453,6 @@ namespace eka2l1 {
 
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
-
         handle_shortcuts();
 
         if (should_show_threads) {
@@ -384,6 +473,10 @@ namespace eka2l1 {
 
         if (should_show_breakpoint_list) {
             show_breakpoint_list();
+        }
+
+        if (should_show_preferences) {
+            show_preferences();
         }
 
         on_pause_toogle(should_pause);
