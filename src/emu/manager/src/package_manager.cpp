@@ -138,27 +138,27 @@ namespace eka2l1 {
                     is_exe = file_des->target.unicode_string.substr(file_des->target.unicode_string.length() - 4) == u".exe";
                 }
 
-                if ((file_des->caps.raw_data.size() != 0) || is_exe) {
+                // Maybe an DLL
+                if ((file_des->caps.raw_data.size() != 0) && is_exe) {
                     info.executable_name = file_des->target.unicode_string;
 
                     // Fixed drive
                     if (info.executable_name[0] != u'!') {
                         LOG_INFO("Fixed drive, unexpected change to {}", char(info.executable_name[0]));
                         info.drive = char16_to_drive(info.executable_name[0]);
-
-                        symfile f = io->open_file(file_des->target.unicode_string, READ_MODE | BIN_MODE);
-                        f->seek(8, file_seek_mode::beg);
-                        f->read_file(&info.id, 1, 4);
-                        f->close();
                     }
 
                     info.executable_name[0] = drive_to_char16(drv);
                     LOG_INFO("Executable_name: {}", common::ucs2_to_utf8(info.executable_name));
 
                     symfile f = io->open_file(info.executable_name, READ_MODE | BIN_MODE);
-                    f->seek(8, file_seek_mode::beg);
-                    f->read_file(&info.id, 1, 4);
-                    f->close();
+
+                    // Only open if it exists
+                    if (f) {
+                        f->seek(8, file_seek_mode::beg);
+                        f->read_file(&info.id, 1, 4);
+                        f->close();
+                    }
 
                     // Get file name
                     size_t slash_pos = info.executable_name.find_last_of(u"\\");
