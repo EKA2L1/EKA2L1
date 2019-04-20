@@ -19,6 +19,7 @@
 
 #include <epoc/services/akn/icon/icon.h>
 #include <epoc/services/akn/icon/ops.h>
+#include <epoc/services/fbs/fbs.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>
@@ -36,6 +37,12 @@ namespace eka2l1 {
                 , nullptr, true);
             ctx->set_request_status(KErrNone);
             
+            break;
+        }
+
+        case akn_icon_server_retrieve_or_create_shared_icon: {
+            // TODO: Create bitmap with FBS server. fbss->create_bitmap(size, bpp_mode)
+            ctx->set_request_status(KErrNone);
             break;
         }
 

@@ -21,6 +21,8 @@
 #include <epoc/services/akn/icon/common.h>
 
 namespace eka2l1 {
+    class fbs_server;
+
     class akn_icon_server_session: public service::typical_session {
     public:
         explicit akn_icon_server_session(service::typical_server *svr, service::uid client_ss_uid);
@@ -34,6 +36,8 @@ namespace eka2l1 {
         
         epoc::akn_icon_init_data init_data;
         std::uint32_t flags {0};
+
+        fbs_server *fbss;
 
         void init_server();
 

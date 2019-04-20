@@ -19,8 +19,10 @@
 
 #include <epoc/services/akn/icon/icon.h>
 #include <epoc/services/akn/icon/common.h>
+#include <epoc/services/fbs/fbs.h>
 
 #include <epoc/epoc.h>
+#include <epoc/kernel.h>
 #include <epoc/vfs.h>
 
 #include <common/log.h>
@@ -28,6 +30,8 @@
 
 namespace eka2l1 {
     void akn_icon_server::init_server() {
+        fbss = reinterpret_cast<fbs_server*>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
+        
         // Get the ROM device, and read the rsc
         eka2l1::io_system *io = sys->get_io_system();
         std::u16string path;
