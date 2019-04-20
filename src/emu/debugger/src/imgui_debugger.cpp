@@ -318,9 +318,9 @@ namespace eka2l1 {
     }
 
     template <typename F>
-    bool file_dialog(F callback) {
+    bool file_dialog(const char *filter, F callback) {
         nfdchar_t *out_path = NULL;
-        nfdresult_t result = NFD_OpenDialog( NULL, NULL, &out_path);
+        nfdresult_t result = NFD_OpenDialog(filter, NULL, &out_path);
 
         if (result == NFD_OKAY) {
             callback(out_path);
@@ -351,7 +351,7 @@ namespace eka2l1 {
         if (ImGui::Button("Change")) {
             on_pause_toogle(true);
 
-            file_dialog([&](const char *result) {
+            file_dialog("png,jpg,bmp", [&](const char *result) {
                 sstate.bkg_path = result;
                 renderer->change_background(result);
 
@@ -378,7 +378,7 @@ namespace eka2l1 {
         if (ImGui::Button("Replace")) {
             on_pause_toogle(true);
 
-            file_dialog([&](const char *result) {
+            file_dialog("ttf", [&](const char *result) {
                 sstate.font_path = result;
                 sstate.serialize();
             });
