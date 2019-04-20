@@ -86,7 +86,32 @@ namespace eka2l1 {
         fbs_unused1,
         fbs_set_system_default_typeface_name,
         fbs_get_all_bitmap_handles,
-        fbs_mess_unused1
+        fbs_mess_unused1,
+        fbs_set_heap_fail,
+        fbs_heap_count,
+        fbs_set_heap_reset,
+        fbs_set_heap_check,
+        fbs_heap,
+        fbs_mess_unused2,
+        fbs_bitmap_clean,
+        fbs_bitmap_load_fast,
+        fbs_bitmap_notify_dirty,
+        fbs_bitmap_cancel_notify_dirty,
+        fbs_register_linked_typeface,
+        fbs_fetch_linked_typeface,
+        fbs_set_duplicate_fail,
+        fbs_update_linked_typeface,
+        fbs_get_font_table,
+        fbs_release_font_table,
+        fbs_get_glyph_outline,
+        fbs_release_glyph_outline,
+        fbs_get_glyphs,
+        fbs_no_op,
+        fbs_get_glyph_metrics,
+        fbs_atlas_font_count,
+        fbs_atlas_glyph_count,
+        fbs_oogm_notification,
+        fbs_get_glyph_cache_metrics
     };
 
     enum class fbsobj_kind {
