@@ -304,6 +304,32 @@ namespace eka2l1 {
         return get_byte_width(size.x, get_bpp_from_display_mode(bpp)) * size.y;
     }
 
+    fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm) {
+        epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
+        bws_bmp->header_.size_pixels = size;
+        bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(dpm);
+        bws_bmp->data_offset_ = 0;
+
+        // Calculate the size
+        std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(size, dpm);
+        
+        if (alloc_bytes > 0) {
+            // Allocates from the large chunk
+            // Align them with 4 bytes
+            std::size_t avail_dest_size = common::align(alloc_bytes, 4);
+            void *data = large_chunk_allocator->allocate(avail_dest_size);
+
+            if (!data) {
+                return nullptr;
+            }
+
+            bws_bmp->data_offset_ = static_cast<int>(reinterpret_cast<std::uint8_t*>(data) - base_large_chunk);
+        }
+
+        fbsbitmap *bmp = make_new<fbsbitmap>(bws_bmp, false);
+        return bmp;
+    }
+    
     void fbscli::create_bitmap(service::ipc_context *ctx) {
         std::optional<bmp_specs> specs = ctx->get_arg_packed<bmp_specs>(0);
 
@@ -313,30 +339,12 @@ namespace eka2l1 {
         }
 
         fbs_server *fbss = server<fbs_server>();
+        fbsbitmap *bmp = fbss->create_bitmap(specs->size, specs->bpp);
 
-        epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
-        bws_bmp->header_.size_pixels = specs->size;
-        bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(specs->bpp);
-        bws_bmp->data_offset_ = 0;
-
-        // Calculate the size
-        std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(specs->size, specs->bpp);
-        
-        if (alloc_bytes > 0) {
-            // Allocates from the large chunk
-            // Align them with 4 bytes
-            std::size_t avail_dest_size = common::align(alloc_bytes, 4);
-            void *data = fbss->large_chunk_allocator->allocate(avail_dest_size);
-
-            if (!data) {
-                ctx->set_request_status(KErrNoMemory);
-                return;
-            }
-
-            bws_bmp->data_offset_ = static_cast<int>(reinterpret_cast<std::uint8_t*>(data) - fbss->base_large_chunk);
+        if (!bmp) {
+            ctx->set_request_status(KErrNoMemory);
+            return;
         }
-
-        fbsbitmap *bmp = make_new<fbsbitmap>(bws_bmp, false);
 
         specs->handle = obj_table_.add(bmp);
         specs->server_handle = bmp->id;

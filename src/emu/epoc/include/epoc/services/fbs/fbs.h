@@ -25,6 +25,7 @@
 #include <epoc/services/fbs/font.h>
 #include <epoc/services/framework.h>
 #include <epoc/services/fbs/adapter/font_adapter.h>
+#include <epoc/services/window/common.h>
 
 #include <common/allocator.h>
 #include <common/hash.h>
@@ -240,7 +241,17 @@ namespace eka2l1 {
         explicit fbs_server(eka2l1::system *sys);
         service::uid init();
 
-        void connect(service::ipc_context &context) override;        
+        void connect(service::ipc_context &context) override;
+
+        /**
+         * \brief Create a new empty bitmap.
+         * 
+         * \param size Size of the bitmap, in pixels.
+         * \param dpm  Bit per pixels as display mode.
+         * 
+         * \returns Bitmap object. The ID of bitmap is the server handle.
+         */
+        fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm);
 
         std::uint8_t *get_shared_chunk_base() {
             return base_shared_chunk;
