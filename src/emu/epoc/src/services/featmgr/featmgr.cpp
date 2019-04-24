@@ -100,6 +100,6 @@ namespace eka2l1 {
         int result = 1;
 
         ctx.write_arg_pkg(1, result);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(0);
     }
 }

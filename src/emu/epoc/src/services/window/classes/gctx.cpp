@@ -29,7 +29,10 @@
 #include <epoc/epoc.h>
 
 #include <common/cvt.h>
+#include <common/e32inc.h>
 #include <common/log.h>
+
+#include <e32err.h>
 
 namespace eka2l1::epoc {
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {

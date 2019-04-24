@@ -22,7 +22,10 @@
 #include <epoc/services/window/op.h>
 
 #include <common/cvt.h>
+#include <common/e32inc.h>
 #include <common/log.h>
+
+#include <e32err.h>
 
 namespace eka2l1::epoc {
     void click_dll::execute_command(service::ipc_context &ctx, ws_cmd cmd) {

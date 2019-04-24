@@ -27,6 +27,9 @@
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 namespace eka2l1::epoc {
     screen_device::screen_device(window_server_client_ptr client,
         int number, eka2l1::graphics_driver_client_ptr driver)

@@ -21,6 +21,9 @@
 #include <epoc/services/window/classes/plugins/animdll.h>
 #include <epoc/services/window/op.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 namespace eka2l1::epoc {
     void anim_dll::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         TWsAnimDllOpcode op = static_cast<decltype(op)>(cmd.header.op);

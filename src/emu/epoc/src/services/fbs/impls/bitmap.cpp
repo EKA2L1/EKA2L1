@@ -34,6 +34,9 @@
 #include <epoc/kernel.h>
 #include <epoc/vfs.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 #include <cassert>
 
 namespace eka2l1 {

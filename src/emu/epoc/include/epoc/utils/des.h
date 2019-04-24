@@ -20,9 +20,6 @@
 
 #pragma once
 
-#include <common/e32inc.h>
-
-#include <e32err.h>
 #include <epoc/ptr.h>
 
 #include <cassert>

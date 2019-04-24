@@ -40,6 +40,8 @@
 #include <epoc/kernel.h>
 #include <epoc/vfs.h>
 
+#include <e32err.h>
+
 namespace eka2l1 {
     fs_handle_table::fs_handle_table() {
         for (size_t i = 0; i < nodes.size(); i++) {

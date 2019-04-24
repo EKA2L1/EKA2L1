@@ -27,7 +27,10 @@
 #include <epoc/utils/sec.h>
 
 #include <common/cvt.h>
+#include <common/e32inc.h>
 #include <common/log.h>
+
+#include <e32err.h>
 
 namespace eka2l1::epoc {
     static epoc::security_policy key_capture_policy({ epoc::cap_sw_event });

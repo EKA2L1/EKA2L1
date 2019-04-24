@@ -23,6 +23,9 @@
 #include <epoc/services/window/opheader.h>
 #include <epoc/services/window/window.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 namespace eka2l1::epoc {
     void window::queue_event(const epoc::event &evt) {
         client->queue_event(evt);
