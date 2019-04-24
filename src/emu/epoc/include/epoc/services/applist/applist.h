@@ -24,6 +24,10 @@
 #include <epoc/utils/des.h>
 
 namespace eka2l1 {
+    namespace common {
+        class ro_stream;
+    }
+
     struct apa_app_info {
         std::uint32_t uid; ///< The UID of the application.
         epoc::filename app_path; ///< The path to the application DLL (EKA1) / EXE (EKA2)
@@ -76,6 +80,24 @@ namespace eka2l1 {
 
         apa_capability() {}
     };
+
+    struct apa_app_registry {
+        apa_app_info mandatory_info;
+        apa_capability caps;
+    };
+
+    /**
+     * \brief Read registeration info from a stream.
+     * 
+     * The function does not know the app UID. To know the UID yourself, check out UID3 field of
+     * the app binary. App binary path is guranteed to be filled in the struct on success.
+     * 
+     * \param stream A read-only stream contains registeration info.
+     * \param reg    APA registry struct. This will be filled with info on success.
+     * 
+     * \returns True on success.
+     */
+    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg);
 
     /*! \brief Applist services
      *

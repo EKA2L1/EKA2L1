@@ -122,6 +122,7 @@ add_library(epocservs
     src/services/akn/skin/settings.cpp
     src/services/akn/skin/skn.cpp
     src/services/applist/applist.cpp
+    src/services/applist/registeration.cpp
     src/services/backup/backup.cpp
     src/services/cdl/cdl.cpp
     src/services/cdl/common.cpp
