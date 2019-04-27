@@ -92,12 +92,13 @@ namespace eka2l1 {
      * The function does not know the app UID. To know the UID yourself, check out UID3 field of
      * the app binary. App binary path is guranteed to be filled in the struct on success.
      * 
-     * \param stream A read-only stream contains registeration info.
-     * \param reg    APA registry struct. This will be filled with info on success.
+     * \param stream      A read-only stream contains registeration info.
+     * \param reg         APA registry struct. This will be filled with info on success.
+     * \param land_drive  The drive contains this registeration.
      * 
      * \returns True on success.
      */
-    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg);
+    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
 
     /*! \brief Applist services
      *

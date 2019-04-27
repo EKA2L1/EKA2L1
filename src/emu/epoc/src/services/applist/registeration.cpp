@@ -19,6 +19,7 @@
 
 #include <epoc/services/applist/applist.h>
 #include <common/buffer.h>
+#include <common/path.h>
 
 namespace eka2l1 {
     static bool read_str16_aligned(common::ro_stream *stream, std::u16string &dat) {
@@ -43,7 +44,7 @@ namespace eka2l1 {
         return true;
     }
     
-    static bool read_mandatory_info(common::ro_stream *stream, apa_app_registry &reg) {
+    static bool read_mandatory_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
         // Skip over reserved variables
         stream->seek(8, common::seek_where::beg);
         std::u16string app_file;
@@ -52,11 +53,31 @@ namespace eka2l1 {
             return false;
         }
 
+        // Read attributes
+        stream->read(&reg.caps.flags, sizeof(reg.caps.flags));
+        std::u16string binary_name = eka2l1::filename(app_file);
+
+        if (binary_name.back() == u'\0') {
+            binary_name.pop_back();
+        }
+
+        if (reg.caps.flags & apa_capability::non_native) {
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + 
+                eka2l1::relative_path(app_file);
+        } else if (reg.caps.flags & apa_capability::built_as_dll) {
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + u"\\:system\\programs\\"
+                + binary_name + u".dll";
+        } else {
+            // Compability with old EKA1
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + u":\\system\\programs\\"
+                + binary_name + u".exe";
+        }
+
         return true;
     }
 
-    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg) {
-        if (!read_mandatory_info(stream, reg)) {
+    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
+        if (!read_mandatory_info(stream, reg, land_drive)) {
             return false;
         }
 
