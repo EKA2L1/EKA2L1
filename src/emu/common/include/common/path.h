@@ -37,12 +37,12 @@ namespace eka2l1 {
     /*! \brief Get the relative path.
 		\param str The path
 	*/
-    std::string relative_path(std::string str, bool symbian_use = false);
+    std::string relative_path(const std::string &str, bool symbian_use = false);
 
     /*! \brief Get the relative path.
 		\param str The path
 	*/
-    std::u16string relative_path(std::u16string str, bool symbian_use = false);
+    std::u16string relative_path(const std::u16string &str, bool symbian_use = false);
 
     /*! \brief Merge two paths together.
 	 * \returns The new path.
