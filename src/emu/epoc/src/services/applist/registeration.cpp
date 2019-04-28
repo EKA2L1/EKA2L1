@@ -132,4 +132,38 @@ namespace eka2l1 {
 
         return true;
     }
+    
+    bool read_localised_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
+        // Skip over reserved variables
+        stream->seek(8, common::seek_where::beg);
+        std::u16string cap;
+
+        if (!read_str16_aligned(stream, cap)) {
+            return false;
+        }
+
+        reg.mandatory_info.short_caption = cap;
+
+        stream->seek(8, common::seek_where::cur);
+
+        if (!read_str16_aligned(stream, cap)) {
+            return false;
+        }
+
+        reg.mandatory_info.long_caption = cap;
+
+        if (stream->read(&reg.icon_count, 2) != 2) {
+            return false;
+        }
+
+        if (!read_str16_aligned(stream, cap)) {
+            return false;
+        }
+
+        reg.icon_file_path = cap;
+
+        // TODO: Read view list and localised group name
+
+        return true;
+    }
 }

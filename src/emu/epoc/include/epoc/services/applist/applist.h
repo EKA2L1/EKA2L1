@@ -89,6 +89,9 @@ namespace eka2l1 {
         std::uint32_t localised_info_rsc_id{ 1 };
 
         std::uint8_t default_screen_number{ 0 };
+
+        std::int16_t icon_count;
+        std::u16string icon_file_path;
     };
 
     /**
@@ -104,6 +107,17 @@ namespace eka2l1 {
      * \returns True on success.
      */
     bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
+
+    /**
+     * \brief Read localised registeration info from a stream.
+     * 
+     * \param stream    Read-only stream contains localised registeration info.
+     * \param reg         APA registry struct. This will be filled with info on success.
+     * \param land_drive  The drive contains this registeration.
+     * 
+     * \returns True on success.
+     */
+    bool read_localised_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
 
     /*! \brief Applist services
      *
