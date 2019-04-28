@@ -64,6 +64,11 @@ namespace eka2l1::loader {
         std::uint32_t flags;
         std::uint16_t size_of_largest_resource_when_uncompressed;
 
+        struct sig_record {
+            std::uint32_t sig;
+            std::uint32_t offset;
+        } signature;
+
         std::vector<std::uint8_t> unicode_flag_array;
         std::vector<std::uint8_t> res_data;
 
@@ -87,5 +92,7 @@ namespace eka2l1::loader {
         std::uint16_t get_total_resources() const {
             return num_res;
         }
+
+        bool confirm_signature();
     };
 }

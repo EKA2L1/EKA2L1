@@ -357,8 +357,11 @@ namespace eka2l1::loader {
     }
 
     bool rsc_file::own_res_id(const int res_id) {
-        // Abadon the offset right now
-        // int offset = res_id & 0xfffff000;
+        int offset = res_id & 0xfffff000;
+
+        if (offset != 0 && offset != signature.offset) {
+            return false;
+        }
 
         int res_index = res_id & 0x00000fff - 1;
         int number_of_res = num_res;
@@ -495,6 +498,19 @@ namespace eka2l1::loader {
 
         assert(false);
         return 0;
+    }
+
+    bool rsc_file::confirm_signature() {
+        auto dat = read(1);
+
+        if (dat.size() > sizeof(sig_record)) {
+            return false;
+        }
+
+        signature = *reinterpret_cast<sig_record*>(&dat[0]);
+        signature.offset &= 0xFFFFF000;
+        
+        return true;
     }
 
     rsc_file::rsc_file(common::ro_stream *buf)
