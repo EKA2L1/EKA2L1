@@ -29,3 +29,6 @@ add_assets(ekatests ${COMMON_ASSETS_PATH} "commonassets")
 
 set(SERVICES_CENTRALREPO_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/centralrepo/assets/")
 add_assets(ekatests ${SERVICES_CENTRALREPO_ASSETS_PATH} "centralrepoassets")
+
+set(SERVICES_APPLIST_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/applist/assets/")
+add_assets(ekatests ${SERVICES_APPLIST_ASSETS_PATH} "applistassets")

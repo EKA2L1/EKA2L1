@@ -7,6 +7,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/mif.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/rsc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/spi.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/applist/registeration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/crebinloader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/creiniloader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/sec.cpp
