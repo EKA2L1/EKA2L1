@@ -28,15 +28,33 @@
 
 using namespace eka2l1;
 
-TEST_CASE("mandatory_check_non_localise", "applist_registeration") {
-    symfile f = eka2l1::physical_file_proxy("applistassets//sample_reg.rsc", READ_MODE | BIN_MODE);
-    REQUIRE(f);
+static bool read_resource_from_file(const char *name, const int id, std::vector<std::uint8_t> &dat,
+    bool confirm_sig = false) {
+    symfile f = eka2l1::physical_file_proxy(name, READ_MODE | BIN_MODE);
+
+    if (!f) {
+        return false;
+    }
 
     eka2l1::ro_file_stream std_rsc_raw(f);
-    REQUIRE(std_rsc_raw.valid());
+    if (!std_rsc_raw.valid()) {
+        return false;
+    }
 
     loader::rsc_file std_rsc(reinterpret_cast<common::ro_stream*>(&std_rsc_raw));
-    auto dat = std_rsc.read(1);
+
+    if (confirm_sig) {
+        std_rsc.confirm_signature();
+    }
+
+    dat = std_rsc.read(id);
+
+    return true;
+}
+
+TEST_CASE("mandatory_check_non_localise", "applist_registeration") {
+    std::vector<std::uint8_t> dat;
+    REQUIRE(read_resource_from_file("applistassets//sample_reg.rsc", 1, dat));
 
     common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
     apa_app_registry reg;
@@ -50,4 +68,19 @@ TEST_CASE("mandatory_check_non_localise", "applist_registeration") {
     REQUIRE(reg.caps.flags == 0);
     REQUIRE(reg.caps.ability == apa_capability::embeddability::not_embeddable);
     REQUIRE(reg.default_screen_number == 0);
+}
+
+TEST_CASE("mandatory_check_localise", "applist_registeration") {
+    std::vector<std::uint8_t> dat;
+    REQUIRE(read_resource_from_file("applistassets//localised_sample_reg.rsc", 0x2EEDE00B, dat, true));
+
+    common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
+    apa_app_registry reg;
+
+    bool result = read_localised_registeration_info(
+        reinterpret_cast<common::ro_stream*>(&app_info_resource_stream), reg, drive_c);
+
+    REQUIRE(result);
+    REQUIRE(reg.mandatory_info.short_caption.to_std_string(nullptr) == u"ITried");
+    REQUIRE(reg.mandatory_info.long_caption.to_std_string(nullptr) == u"ITried");
 }
