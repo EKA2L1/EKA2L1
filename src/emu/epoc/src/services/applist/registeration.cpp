@@ -44,6 +44,47 @@ namespace eka2l1 {
         return true;
     }
     
+    static bool read_non_localisable_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
+        if (!read_str16_aligned(stream, reg.localised_info_rsc_path)) {
+            return false;
+        }
+
+        if (stream->read(&reg.localised_info_rsc_id, 4) != 4) {
+            return false;
+        }
+
+        if (stream->read(&reg.caps.is_hidden, 1) != 1) {
+            return false;
+        }
+
+        if (stream->read(&reg.caps.ability, 1) != 1) {
+            return false;
+        }
+
+        if (stream->read(&reg.caps.support_being_asked_to_create_new_file, 1) != 1) {
+            return false;
+        }
+
+        if (stream->read(&reg.caps.launch_in_background, 1) != 1) {
+            return false;
+        }
+
+        std::u16string group_name;
+        if (!read_str16_aligned(stream, group_name)) {
+            return false;
+        }
+
+        reg.caps.group_name = group_name;
+
+        if (stream->read(&reg.default_screen_number, 1) != 1) {
+            return false;
+        }
+
+        // TODO: Read MIME infos, and file ownership lists
+
+        return true;
+    }
+
     static bool read_mandatory_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
         // Skip over reserved variables
         stream->seek(8, common::seek_where::beg);
@@ -54,7 +95,10 @@ namespace eka2l1 {
         }
 
         // Read attributes
-        stream->read(&reg.caps.flags, sizeof(reg.caps.flags));
+        if (stream->read(&reg.caps.flags, sizeof(reg.caps.flags)) != sizeof(reg.caps.flags)) {
+            return false;
+        }
+
         std::u16string binary_name = eka2l1::filename(app_file);
 
         if (binary_name.back() == u'\0') {
@@ -79,6 +123,11 @@ namespace eka2l1 {
     bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
         if (!read_mandatory_info(stream, reg, land_drive)) {
             return false;
+        }
+
+        if (!read_non_localisable_info(stream, reg, land_drive)) {
+            // Only mandantory is neccessary. Others are ok to missing.
+            return true;
         }
 
         return true;

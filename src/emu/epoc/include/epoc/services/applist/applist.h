@@ -45,7 +45,7 @@ namespace eka2l1 {
          *
          * This was used during EKA1.
         */
-        enum class embeddability {
+        enum class embeddability : std::uint8_t {
             not_embeddable,
             embeddable,
             embeddable_only,
@@ -84,6 +84,11 @@ namespace eka2l1 {
     struct apa_app_registry {
         apa_app_info mandatory_info;
         apa_capability caps;
+
+        std::u16string localised_info_rsc_path;
+        std::uint32_t localised_info_rsc_id{ 1 };
+
+        std::uint8_t default_screen_number{ 0 };
     };
 
     /**
