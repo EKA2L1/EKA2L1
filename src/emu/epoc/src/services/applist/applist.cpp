@@ -184,9 +184,15 @@ namespace eka2l1 {
     }
 
     void applist_server::default_screen_number(service::ipc_context &ctx) {
-        // TODO: Detect if app exists. Sanity check
-        LOG_TRACE("DefaultScreenNumber stubbed with 0");
-        ctx.set_request_status(0); // KErrNone
+        std::uint32_t app_uid = *ctx.get_arg<int>(0);
+        apa_app_registry *reg = get_registeration(app_uid);
+
+        if (!reg) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        ctx.set_request_status(reg->default_screen_number);
     }
 
     void applist_server::app_language(service::ipc_context &ctx) {

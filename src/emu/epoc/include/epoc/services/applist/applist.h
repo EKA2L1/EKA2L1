@@ -143,8 +143,7 @@ namespace eka2l1 {
 
         /*! \brief Get the number of screen shared for an app. 
          * 
-         * \param arg0: pointer to the number of screen.
-         * \param arg1: application UID.
+         * \param arg0: application UID.
          * \param request_sts: KErrNotFound if app doesn't exist.
         */
         void default_screen_number(service::ipc_context &ctx);
