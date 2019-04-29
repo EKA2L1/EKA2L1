@@ -206,7 +206,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_info(service::ipc_context &ctx) {
-        std::uint32_t app_uid = *ctx.get_arg<int>(1);
+        std::uint32_t app_uid = *ctx.get_arg<int>(0);
         apa_app_registry *reg = get_registeration(app_uid);
 
         if (!reg) {
