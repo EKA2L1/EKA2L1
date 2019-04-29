@@ -176,6 +176,7 @@ add_library(epocio
     src/loader/rom.cpp)
 
 add_library(epocutils
+    include/epoc/utils/bafl.h
     include/epoc/utils/des.h
     include/epoc/utils/handle.h
     include/epoc/utils/panic.h
@@ -184,6 +185,7 @@ add_library(epocutils
     include/epoc/utils/sec.h
     include/epoc/utils/tl.h
     include/epoc/utils/obj.h
+    src/utils/bafl.cpp
     src/utils/des.cpp
     src/utils/dll.cpp
     src/utils/panic.cpp
