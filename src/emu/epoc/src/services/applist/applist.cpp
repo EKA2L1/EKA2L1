@@ -24,11 +24,16 @@
 #include <manager/manager.h>
 #include <manager/package_manager.h>
 
+#include <common/benchmark.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
 
 #include <epoc/epoc.h>
+#include <epoc/vfs.h>
+#include <epoc/loader/rsc.h>
+#include <epoc/utils/bafl.h>
+
 #include <functional>
 
 #include <common/e32inc.h>
@@ -48,6 +53,104 @@ namespace eka2l1 {
             EAppListServGetAppInfo, "GetAppInfo");
         REGISTER_IPC(applist_server, get_capability,
             EAppListServGetAppCapability, "GetAppCapability")
+    }
+
+    bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
+        const language ideal_lang) {
+        // common::benchmarker marker(__FUNCTION__);
+
+        apa_app_registry reg;
+
+        // Load the resource
+        symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            return false;
+        }
+
+        auto read_rsc_from_file = [](symfile f, const int id, const bool confirm_sig, std::uint32_t *uid3) -> std::vector<std::uint8_t> {
+            eka2l1::ro_file_stream std_rsc_raw(f);
+            if (!std_rsc_raw.valid()) {
+                return {};
+            }
+
+            loader::rsc_file std_rsc(reinterpret_cast<common::ro_stream*>(&std_rsc_raw));
+
+            if (confirm_sig) {
+                std_rsc.confirm_signature();
+            }
+
+            if (uid3) {
+                *uid3 = std_rsc.get_uid(3);
+            }
+
+            return std_rsc.read(id);
+        };
+
+        // Open the file
+        auto dat = read_rsc_from_file(f, 1, false, &reg.mandatory_info.uid);
+
+        if (dat.empty()) {
+            return false;
+        }
+        
+        common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
+        bool result = read_registeration_info(reinterpret_cast<common::ro_stream*>(&app_info_resource_stream),
+            reg, land_drive);
+
+        if (!result) {
+            return false;
+        }
+
+        // Getting our localised resource info
+        if (reg.localised_info_rsc_path.empty()) {
+            // We will still do registeration. We have our mandatory info read fine.
+            regs.emplace(reg.mandatory_info.uid, std::move(reg));
+            return true;
+        }
+
+        const auto localised_path = utils::get_nearest_lang_file(io, reg.localised_info_rsc_path,
+            ideal_lang, land_drive);
+
+        if (localised_path.empty()) {
+            // We will still do registeration. We have our mandatory info read fine.
+            regs.emplace(reg.mandatory_info.uid, std::move(reg));
+            return true;
+        }
+
+        // Read localised info
+        // Ignore result
+        read_localised_registeration_info(reinterpret_cast<common::ro_stream*>(&app_info_resource_stream),
+            reg, land_drive);
+
+        regs.emplace(reg.mandatory_info.uid, std::move(reg));
+        return true;
+    }
+    
+    void applist_server::rescan_registries(eka2l1::io_system *io) {
+        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+            if (io->get_drive_entry(drv)) {
+                auto reg_dir = io->open_dir(std::u16string(1, drive_to_char16(drv)) + 
+                    u":\\Private\\10003a3f\\import\\apps\\");
+
+                if (reg_dir) {
+                    while (auto ent = reg_dir->get_next_entry()) {
+                        if (ent->type == io_component_type::file) {
+                            load_registry(io, common::utf8_to_ucs2(ent->full_path), drv);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    void applist_server::connect(service::ipc_context &ctx) {
+        if (!(flags & AL_INITED)) {
+            // Initialize
+            rescan_registries(ctx.sys->get_io_system());
+        }
+
+        server::connect(ctx);
     }
 
     void applist_server::is_accepted_to_run(service::ipc_context &ctx) {

@@ -24,6 +24,8 @@
 #include <epoc/utils/des.h>
 
 namespace eka2l1 {
+    class io_system;
+
     namespace common {
         class ro_stream;
     }
@@ -127,6 +129,18 @@ namespace eka2l1 {
 	 * Disable for LLE testings.
      */
     class applist_server : public service::server {
+        std::map<std::uint32_t, apa_app_registry> regs;
+        std::uint32_t flags{ 0 };
+
+        enum {
+            AL_INITED = 0x1
+        };
+
+        bool load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
+            const language ideal_lang = language::en);
+        
+        void rescan_registries(eka2l1::io_system *io);
+
         /*! \brief Get the number of screen shared for an app. 
          * 
          * \param arg0: pointer to the number of screen.
@@ -166,6 +180,8 @@ namespace eka2l1 {
          * \param arg1: The application's UID
         */
         void get_capability(service::ipc_context &ctx);
+
+        void connect(service::ipc_context &ctx);
 
     public:
         applist_server(system *sys);
