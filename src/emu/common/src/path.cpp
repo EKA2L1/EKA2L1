@@ -88,7 +88,7 @@ namespace eka2l1 {
         std::size_t last_dot_pos = path.find_last_of(static_cast<T>('.'));
 
         if (last_dot_pos == std::string::npos) {
-            return path;
+            return path + new_ext;
         }
 
         return path.substr(0, last_dot_pos) + new_ext;
