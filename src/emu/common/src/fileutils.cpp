@@ -332,4 +332,12 @@ namespace eka2l1::common {
         return convert_microsecs_epoch_to_1ad(static_cast<std::uint64_t>(st.st_mtime));
 #endif
     }
+    
+    bool is_system_case_insensitive() {
+#if EKA2L1_PLATFORM(WIN32)
+        return true;
+#else
+        return false;
+#endif
+    }
 }

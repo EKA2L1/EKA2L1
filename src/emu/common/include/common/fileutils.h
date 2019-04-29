@@ -54,6 +54,8 @@ namespace eka2l1::common {
 
     bool move_file(const std::string &path, const std::string &new_path);
 
+    bool is_system_case_insensitive();
+
     struct dir_entry {
         file_type type;
         std::size_t size;
