@@ -185,5 +185,13 @@ namespace eka2l1 {
 
     public:
         applist_server(system *sys);
+
+        /**
+         * \brief Get an app registeration
+         * 
+         * \param uid The UID of the app.
+         * \returns Nullptr if the registeration does not exist. Else the pointer to it.
+         */
+        apa_app_registry *get_registeration(const std::uint32_t uid);
     };
 }

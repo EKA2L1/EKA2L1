@@ -123,11 +123,17 @@ namespace eka2l1 {
         read_localised_registeration_info(reinterpret_cast<common::ro_stream*>(&app_info_resource_stream),
             reg, land_drive);
 
+        LOG_INFO("Found app: {}, uid: 0x{:X}", 
+            common::ucs2_to_utf8(reg.mandatory_info.short_caption.to_std_string(nullptr)), 
+            reg.mandatory_info.uid);
+
         regs.emplace(reg.mandatory_info.uid, std::move(reg));
         return true;
     }
     
     void applist_server::rescan_registries(eka2l1::io_system *io) {
+        LOG_INFO("Loading app registries");
+
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
                 auto reg_dir = io->open_dir(std::u16string(1, drive_to_char16(drv)) + 
@@ -142,6 +148,8 @@ namespace eka2l1 {
                 }
             }
         }
+
+        LOG_INFO("Done loading!");
     }
     
     void applist_server::connect(service::ipc_context &ctx) {
@@ -151,6 +159,16 @@ namespace eka2l1 {
         }
 
         server::connect(ctx);
+    }
+
+    apa_app_registry *applist_server::get_registeration(const std::uint32_t uid) {
+        auto result = regs.find(uid);
+
+        if (result == regs.end()) {
+            return nullptr;
+        }
+
+        return &(result->second);
     }
 
     void applist_server::is_accepted_to_run(service::ipc_context &ctx) {
@@ -213,29 +231,14 @@ namespace eka2l1 {
 
     void applist_server::get_capability(service::ipc_context &ctx) {
         std::uint32_t app_uid = *ctx.get_arg<int>(1);
+        apa_app_registry *reg = get_registeration(app_uid);
 
-        LOG_TRACE("GetCapability stubbed");
-
-        apa_capability cap;
-        cap.ability = apa_capability::embeddability::embeddable;
-        cap.support_being_asked_to_create_new_file = false;
-        cap.is_hidden = false;
-        cap.launch_in_background = false;
-        cap.group_name = u"gamers";
-
-        if (ctx.sys->get_symbian_version_use() < epocver::epoc93) {
-            // EKA1, we should check if app is DLL
-            // TODO: more proper way to check
-            manager::package_manager *pkg_mngr = ctx.sys->get_manager_system()->get_package_manager();
-            std::string app_path = pkg_mngr->get_app_executable_path(app_uid);
-
-            if (eka2l1::path_extension(app_path) == ".app") {
-                cap.flags |= apa_capability::built_as_dll;
-                cap.flags |= apa_capability::non_native;
-            }
+        if (!reg) {
+            ctx.set_request_status(KErrNotFound);
+            return;
         }
 
-        ctx.write_arg_pkg<apa_capability>(0, cap);
+        ctx.write_arg_pkg<apa_capability>(0, reg->caps);
         ctx.set_request_status(KErrNone);
     }
 }
