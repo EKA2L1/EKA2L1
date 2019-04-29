@@ -285,7 +285,7 @@ namespace eka2l1 {
 
             physical_path = real_path;
 
-            LOG_TRACE("Open with mode: {}", cmode);
+            // LOG_TRACE("Open with mode: {}", cmode);
 
             if (!file) {
                 LOG_ERROR("Can't open file: {}", common::ucs2_to_utf8(real_path));
