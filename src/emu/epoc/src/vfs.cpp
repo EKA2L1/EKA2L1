@@ -561,27 +561,23 @@ namespace eka2l1 {
             std::u16string new_path = eka2l1::add_path(map_path, vert_path.substr(root.size()));
             auto sep_char = eka2l1::get_separator();
 
-            // TODO: Throw away the lower need in case-insensitive system
-            // Make it case-insensitive
-            for (auto &c : new_path) {
-                c = std::towlower(c);
-
-                if (eka2l1::is_separator(c)) {
-                    c = sep_char;
+            if (static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+                if (common::compare_ignore_case(u"\\system\\libs", new_path.substr(2, 12)) == 0) {
+                    new_path.replace(2, 12, u"\\sys\\bin");
+                } else if (common::compare_ignore_case(u"\\system\\programs", new_path.substr(2, 16)) == 0) {
+                    new_path.replace(2, 16, u"\\sys\\bin");
                 }
             }
 
-            std::u16string replace_hack_str = u"\\system\\libs";
-            size_t lib_pos = new_path.find(replace_hack_str);
+            if (!common::is_system_case_insensitive()) {
+                // Make it case-insensitive
+                for (auto &c : new_path) {
+                    c = std::towlower(c);
 
-            if (lib_pos == std::string::npos) {
-                replace_hack_str = u"\\system\\programs";
-                lib_pos = new_path.find(replace_hack_str);
-            }
-
-            // TODO (bentokun): Remove this hack with a proper symlink system.
-            if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-                new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
+                    if (eka2l1::is_separator(c)) {
+                        c = sep_char;
+                    }
+                }
             }
 
             return new_path;
@@ -889,28 +885,13 @@ namespace eka2l1 {
             }
 
             std::u16string new_path = path;
-            auto sep_char = eka2l1::get_separator();
 
-            // Make it case-insensitive
-            for (auto &c : new_path) {
-                c = std::towlower(c);
-
-                if (eka2l1::is_separator(c)) {
-                    c = sep_char;
+            if (static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+                if (common::compare_ignore_case(u"\\system\\libs", new_path.substr(2, 12)) == 0) {
+                    new_path.replace(2, 12, u"\\sys\\bin");
+                } else if (common::compare_ignore_case(u"\\system\\programs", new_path.substr(2, 16)) == 0) {
+                    new_path.replace(2, 16, u"\\sys\\bin");
                 }
-            }
-
-            std::u16string replace_hack_str = u"\\system\\libs";
-            size_t lib_pos = new_path.find(replace_hack_str);
-
-            if (lib_pos == std::string::npos) {
-                replace_hack_str = u"\\system\\programs";
-                lib_pos = new_path.find(replace_hack_str);
-            }
-
-            // TODO (bentokun): Remove this hack with a proper symlink system.
-            if (lib_pos != std::string::npos && static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-                new_path.replace(lib_pos, replace_hack_str.length(), u"\\sys\\bin");
             }
 
             auto entry = burn_tree_find_entry(common::ucs2_to_utf8(new_path));
