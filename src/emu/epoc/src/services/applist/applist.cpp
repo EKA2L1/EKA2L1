@@ -156,6 +156,7 @@ namespace eka2l1 {
         if (!(flags & AL_INITED)) {
             // Initialize
             rescan_registries(ctx.sys->get_io_system());
+            flags |= AL_INITED;
         }
 
         server::connect(ctx);
