@@ -136,4 +136,10 @@ namespace eka2l1 {
         std::uint32_t handle;
         eka2l1::vec2 pos;
     };
+
+    struct ws_cmd_window_group_list {
+        std::int32_t priority;
+        std::int32_t count;
+        std::int32_t screen_num;
+    };
 }
