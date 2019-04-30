@@ -343,7 +343,7 @@ namespace eka2l1::epoc {
         // in the window server.
         case EWsClOpNumWindowGroups: {
             int pri = *reinterpret_cast<int *>(cmd.data_ptr);
-            std::uint32_t total = get_ws().get_total_window_groups_with_priority(pri);
+            std::uint32_t total = get_ws().get_total_window_groups(pri);
 
             ctx.set_request_status(static_cast<int>(total));
             break;
@@ -351,7 +351,7 @@ namespace eka2l1::epoc {
 
         // Gets the total number of window groups currently running in the window server.
         case EWsClOpNumWindowGroupsAllPriorities: {
-            ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups()));
+            ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups(-1)));
             break;
         }
 
@@ -550,22 +550,18 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsClOpWindowGroupListAndChain: {
-            // All window groups should be child of root node
-            std::vector<std::uint32_t> ids;
+        case EWsClOpWindowGroupListAndChain:
+        case EWsClOpWindowGroupListAndChainAllPriorities: {
+            ws_cmd_window_group_list *list_req = reinterpret_cast<decltype(list_req)>(cmd.data_ptr);
 
-            // We can use linked node in the window group, but i'm not sure
-            // it will help me traverses all the code
-            for (auto &win : root->childs) {
-                if (win->type == window_kind::group) {
-                    ids.push_back(win->id);
-                }
-            }
+            std::vector<std::uint32_t> ids;
+            get_ws().get_window_group_list(ids, list_req->count, cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities ? 
+                -1 : list_req->priority, list_req->screen_num);
 
             ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]),
                 static_cast<std::uint32_t>(ids.size() * sizeof(std::uint32_t)));
 
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(static_cast<int>(ids.size()));
             break;
         }
 
@@ -589,11 +585,11 @@ namespace eka2l1::epoc {
         return id;
     }
 
-    std::uint32_t window_server_client::get_total_window_groups() {
-        return total_group;
-    }
+    std::uint32_t window_server_client::get_total_window_groups(const int pri, const int scr_num) {
+        if (pri == -1) {
+            return total_group;
+        }
 
-    std::uint32_t window_server_client::get_total_window_groups_with_priority(const std::uint32_t pri) {
         epoc::window_group_ptr gr = nullptr;
         std::uint32_t total = 0;
 
@@ -610,12 +606,42 @@ namespace eka2l1::epoc {
         }
 
         for (; gr != nullptr; gr = gr->next_sibling) {
-            if (gr->priority == pri) {
+            if (gr->priority == pri && gr->dvc->screen == scr_num) {
                 total++;
             }
         }
 
         return total;
+    }
+
+    bool window_server_client::get_window_group_list(std::vector<std::uint32_t> &ids, const std::uint32_t max,
+        const int pri, const int scr_num) {
+        epoc::window_group_ptr gr = nullptr;
+        std::uint32_t total = 0;
+
+        for (auto &child : root->childs) {
+            if (child->type == window_kind::group) {
+                gr = std::reinterpret_pointer_cast<epoc::window_group>(child);
+                break;
+            }
+        }
+
+        if (!gr) {
+            LOG_TRACE("No window group detected");
+            return true;
+        }
+
+        for (; (gr != nullptr) && (static_cast<std::uint32_t>(ids.size()) <= max); gr = gr->next_sibling) {
+            if ((pri == -1 || (gr->priority == pri)) && gr->dvc->screen == scr_num) {
+                ids.push_back(gr->id);
+            }
+        }
+
+        if (ids.size() == max) {
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -929,24 +955,23 @@ namespace eka2l1 {
         }
     }
 
-    std::uint32_t window_server::get_total_window_groups() {
+    std::uint32_t window_server::get_total_window_groups(const int pri, const int scr_num) {
         std::uint32_t total = 0;
 
         for (auto &cli : clients) {
-            total += cli.second->get_total_window_groups();
+            total += cli.second->get_total_window_groups(pri, scr_num);
         }
 
         return total;
     }
 
-    std::uint32_t window_server::get_total_window_groups_with_priority(const std::uint32_t pri) {
-        std::uint32_t total = 0;
-
-        for (auto &cli : clients) {
-            total += cli.second->get_total_window_groups_with_priority(pri);
+    void window_server::get_window_group_list(std::vector<std::uint32_t> &ids, const std::uint32_t max,
+        const int pri, const int scr_num) {
+        for (auto &cli: clients) {
+            if (!cli.second->get_window_group_list(ids, max, pri, scr_num)) {
+                return;
+            }
         }
-
-        return total;
     }
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {

@@ -197,8 +197,9 @@ namespace eka2l1::epoc {
             events.set_listener(nof);
         }
 
-        std::uint32_t get_total_window_groups();
-        std::uint32_t get_total_window_groups_with_priority(const std::uint32_t pri);
+        std::uint32_t get_total_window_groups(const int pri, const int scr_num);
+        bool get_window_group_list(std::vector<std::uint32_t> &id, const std::uint32_t max,
+            const int pri, const int scr_num);
 
         void execute_command(service::ipc_context &ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);
@@ -308,15 +309,13 @@ namespace eka2l1 {
         /**
          * \brief Get the number of window groups running in the server
          */
-        std::uint32_t get_total_window_groups();
+        std::uint32_t get_total_window_groups(const int pri = -1, const int scr_num = 0);
 
         /**
-         * \brief Get the number of window groups running in the server
-         *         with the specified priority.
-         * 
-         * \param pri The priority we want to count.
-        */
-        std::uint32_t get_total_window_groups_with_priority(const std::uint32_t pri);
+         * \brief Get all window group's ID in all sessions
+         */
+        void get_window_group_list(std::vector<std::uint32_t> &id, const std::uint32_t max = 0
+            , const int pri = -1, const int scr_num = 0);
 
         void do_base_init();
 
