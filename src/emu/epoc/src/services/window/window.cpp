@@ -176,7 +176,7 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    void window_server_client::create_screen_device(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::create_screen_device(service::ipc_context &ctx, ws_cmd &cmd) {
         LOG_INFO("Create screen device.");
 
         ws_cmd_screen_device_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
@@ -210,13 +210,13 @@ namespace eka2l1::epoc {
         }
     }
 
-    void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd) {
         THotKey key = *reinterpret_cast<THotKey *>(cmd.data_ptr);
 
         LOG_WARN("Unknown restore key op.");
     }
 
-    void window_server_client::create_window_group(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::create_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_group_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         int device_handle = header->screen_device_handle;
 
@@ -263,7 +263,7 @@ namespace eka2l1::epoc {
         ctx.set_request_status(id);
     }
 
-    void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
 
         epoc::window_ptr parent = find_window_obj(root, header->parent);
@@ -291,13 +291,13 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(win));
     }
 
-    void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd) {
         std::shared_ptr<epoc::graphic_context> gcontext = std::make_shared<epoc::graphic_context>(this);
 
         ctx.set_request_status(add_object(gcontext));
     }
 
-    void window_server_client::create_sprite(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::create_sprite(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_create_sprite_header *sprite_header = reinterpret_cast<decltype(sprite_header)>(cmd.data_ptr);
         epoc::window_ptr win = nullptr;
 
@@ -312,7 +312,7 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(spr));
     }
 
-    void window_server_client::create_anim_dll(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd) {
         int dll_name_length = *reinterpret_cast<int *>(cmd.data_ptr);
         char16_t *dll_name_ptr = reinterpret_cast<char16_t *>(
             reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(int));
@@ -325,13 +325,161 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(animdll));
     }
 
-    void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd &cmd) {
         LOG_TRACE("Create CLICKDLL (button click sound plugin), stubbed object");
 
         std::shared_ptr<epoc::click_dll> clickdll = std::make_shared<epoc::click_dll>(this);
         ctx.set_request_status(add_object(clickdll));
     }
 
+    void window_server_client::get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_window_group_list *list_req = reinterpret_cast<decltype(list_req)>(cmd.data_ptr);
+
+        std::vector<std::uint32_t> ids;
+        get_ws().get_window_group_list(ids, list_req->count, cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities ? 
+            -1 : list_req->priority, (cmd.header.cmd_len == 8) ? 0 : list_req->screen_num);
+
+        ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]),
+            static_cast<std::uint32_t>(ids.size() * sizeof(std::uint32_t)));
+
+        ctx.set_request_status(static_cast<int>(ids.size()));
+    }
+
+    void window_server_client::get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
+        ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups(
+            cmd.header.op == EWsClOpNumWindowGroups ? *static_cast<int*>(cmd.data_ptr) : -1)));
+    }
+
+    void window_server_client::send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
+        queue_event(evt->evt);
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_find_window_group_identifier *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
+
+        epoc::window_group_ptr group = nullptr;
+
+        if (find_info->parent_identifier) {
+            group = std::reinterpret_pointer_cast<epoc::window_group>(find_window_obj(root, find_info->parent_identifier));
+        } else {
+            LOG_TRACE("Parent identifier not specified, use root window group");
+            group = std::reinterpret_pointer_cast<epoc::window_group>(
+                *root->childs.begin());
+        }
+
+        if (!group || group->type != window_kind::group) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
+        std::u16string win_group_name(win_group_name_ptr, find_info->length);
+
+        for (; group; group = group->next_sibling) {
+            if (common::compare_ignore_case(group->name.substr(find_info->offset), win_group_name) == 0) {
+                ctx.set_request_status(group->id);
+                return;
+            }
+        }
+
+        ctx.set_request_status(KErrNotFound);
+    }
+
+    void window_server_client::set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd) {
+        // TODO: Check errors
+        if (get_ws().get_focus() && get_ws().get_focus()->client == this) {
+            get_ws().cursor_mode() = *reinterpret_cast<epoc::pointer_cursor_mode *>(cmd.data_ptr);
+            ctx.set_request_status(KErrNone);
+            return;
+        }
+
+        ctx.set_request_status(KErrPermissionDenied);
+    }
+
+    void window_server_client::get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd) {
+        std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+        epoc::window_ptr win = find_window_obj(root, group_id);
+
+        if (!win || win->type != window_kind::group) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        std::uint32_t thr_id = win->client->get_client()->unique_id();
+
+        ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
+        ctx.set_request_status(KErrNone);
+    }
+    
+    void window_server_client::get_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+        auto evt = redraws.get_evt_opt();
+
+        if (!evt) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        ctx.write_arg_pkg<epoc::redraw_event>(reply_slot, *evt);
+        ctx.set_request_status(KErrNone);
+    }
+
+    void window_server_client::get_event(service::ipc_context &ctx, ws_cmd &cmd) {
+        auto evt = events.get_event();
+
+        // Allow the context to shrink if needed, since the struct certainly got larger as Symbian
+        // grows. S^3 has advance pointer struct which along takes 56 bytes buffer.
+        ctx.write_arg_pkg<epoc::event>(reply_slot, evt, nullptr, true);
+        ctx.set_request_status(KErrNone);
+    }
+    
+    void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+        // TODO: Epoc < 9
+        if (cmd.header.cmd_len == 0) {
+            ctx.set_request_status(primary_device->focus->id);
+            return;
+        }
+
+        int screen_num = *reinterpret_cast<int *>(cmd.data_ptr);
+
+        auto dvc_ite = std::find_if(devices.begin(), devices.end(),
+            [screen_num](const epoc::screen_device_ptr &dvc) { return dvc->screen == screen_num; });
+
+        if (dvc_ite == devices.end()) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        ctx.set_request_status((*dvc_ite)->focus->id);    
+    }
+
+    void window_server_client::get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_get_window_group_name_from_id *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
+
+        epoc::window_group_ptr group = std::reinterpret_pointer_cast<epoc::window_group>(
+            find_window_obj(root, find_info->id));
+
+        if (!group || group->type != window_kind::group) {
+            ctx.set_request_status(KErrArgument);
+            return;
+        }
+
+        if (group->name.length() == 0) {
+            ctx.set_request_status(KErrNotReady);
+            return;
+        }
+
+        std::uint32_t len_to_write = std::min(static_cast<std::uint32_t>(find_info->max_len),
+            static_cast<std::uint32_t>(group->name.length()));
+
+        std::u16string to_write = group->name.substr(0, len_to_write);
+
+        ctx.write_arg(reply_slot, to_write);
+        ctx.set_request_status(KErrNone);
+    }
+    
     epoc::window_ptr window_server_client::find_window_obj(epoc::window_ptr &root, std::uint32_t id) {
         return std::reinterpret_pointer_cast<epoc::window>(get_object(id));
     }
@@ -341,25 +489,14 @@ namespace eka2l1::epoc {
         switch (cmd.header.op) {
         // Gets the total number of window groups with specified priority currently running
         // in the window server.
-        case EWsClOpNumWindowGroups: {
-            int pri = *reinterpret_cast<int *>(cmd.data_ptr);
-            std::uint32_t total = get_ws().get_total_window_groups(pri);
-
-            ctx.set_request_status(static_cast<int>(total));
-            break;
-        }
-
-        // Gets the total number of window groups currently running in the window server.
+        case EWsClOpNumWindowGroups:
         case EWsClOpNumWindowGroupsAllPriorities: {
-            ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups(-1)));
+            get_number_of_window_groups(ctx, cmd);
             break;
         }
 
         case EWsClOpSendEventToWindowGroup: {
-            ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
-            queue_event(evt->evt);
-
-            ctx.set_request_status(KErrNone);
+            send_event_to_window_group(ctx, cmd);
             break;
         }
 
@@ -371,58 +508,22 @@ namespace eka2l1::epoc {
         }
 
         case EWsClOpSetPointerCursorMode: {
-            // TODO: Check errors
-            if (get_ws().get_focus() && get_ws().get_focus()->client == this) {
-                get_ws().cursor_mode() = *reinterpret_cast<epoc::pointer_cursor_mode *>(cmd.data_ptr);
-                ctx.set_request_status(KErrNone);
-
-                break;
-            }
-
-            ctx.set_request_status(KErrPermissionDenied);
-
+            set_pointer_cursor_mode(ctx, cmd);
             break;
         }
 
         case EWsClOpGetWindowGroupClientThreadId: {
-            std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-            epoc::window_ptr win = find_window_obj(root, group_id);
-
-            if (!win || win->type != window_kind::group) {
-                ctx.set_request_status(KErrArgument);
-                break;
-            }
-
-            std::uint32_t thr_id = win->client->get_client()->unique_id();
-
-            ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
-            ctx.set_request_status(KErrNone);
-
+            get_window_group_client_thread_id(ctx, cmd);
             break;
         }
 
         case EWsClOpGetRedraw: {
-            auto evt = redraws.get_evt_opt();
-
-            if (!evt) {
-                ctx.set_request_status(KErrNotFound);
-                break;
-            }
-
-            ctx.write_arg_pkg<epoc::redraw_event>(reply_slot, *evt);
-            ctx.set_request_status(KErrNone);
-
+            get_redraw(ctx, cmd);
             break;
         }
 
         case EWsClOpGetEvent: {
-            auto evt = events.get_event();
-
-            // Allow the context to shrink if needed, since the struct certainly got larger as Symbian
-            // grows. S^3 has advance pointer struct which along takes 56 bytes buffer.
-            ctx.write_arg_pkg<epoc::event>(reply_slot, evt, nullptr, true);
-            ctx.set_request_status(KErrNone);
-
+            get_event(ctx, cmd);
             break;
         }
 
@@ -462,111 +563,29 @@ namespace eka2l1::epoc {
             break;
 
         case EWsClOpGetFocusWindowGroup: {
-            // TODO: Epoc < 9
-            if (cmd.header.cmd_len == 0) {
-                ctx.set_request_status(primary_device->focus->id);
-                break;
-            }
-
-            int screen_num = *reinterpret_cast<int *>(cmd.data_ptr);
-
-            auto dvc_ite = std::find_if(devices.begin(), devices.end(),
-                [screen_num](const epoc::screen_device_ptr &dvc) { return dvc->screen == screen_num; });
-
-            if (dvc_ite == devices.end()) {
-                ctx.set_request_status(KErrArgument);
-                break;
-            }
-
-            ctx.set_request_status((*dvc_ite)->focus->id);
+            get_focus_window_group(ctx, cmd);
             break;
         }
 
         case EWsClOpFindWindowGroupIdentifier: {
-            ws_cmd_find_window_group_identifier *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
-
-            epoc::window_group_ptr group = nullptr;
-
-            if (find_info->parent_identifier) {
-                group = std::reinterpret_pointer_cast<epoc::window_group>(find_window_obj(root, find_info->parent_identifier));
-            } else {
-                LOG_TRACE("Parent identifier not specified, use root window group");
-                group = std::reinterpret_pointer_cast<epoc::window_group>(
-                    *root->childs.begin());
-            }
-
-            if (!group || group->type != window_kind::group) {
-                ctx.set_request_status(KErrNotFound);
-                break;
-            }
-
-            char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
-            std::u16string win_group_name(win_group_name_ptr, find_info->length);
-
-            bool found = false;
-
-            for (; group; group = group->next_sibling) {
-                if (common::compare_ignore_case(group->name.substr(find_info->offset),
-                        win_group_name)
-                    == 0) {
-                    ctx.set_request_status(group->id);
-                    found = true;
-
-                    break;
-                }
-            }
-
-            if (!found) {
-                ctx.set_request_status(KErrNotFound);
-            }
-
+            find_window_group_id(ctx, cmd);
             break;
         }
 
         case EWsClOpGetWindowGroupNameFromIdentifier: {
-            ws_cmd_get_window_group_name_from_id *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
-
-            epoc::window_group_ptr group = std::reinterpret_pointer_cast<epoc::window_group>(
-                find_window_obj(root, find_info->id));
-
-            if (!group || group->type != window_kind::group) {
-                ctx.set_request_status(KErrArgument);
-                break;
-            }
-
-            if (group->name.length() == 0) {
-                ctx.set_request_status(KErrNotReady);
-                break;
-            }
-
-            std::uint32_t len_to_write = std::min(static_cast<std::uint32_t>(find_info->max_len),
-                static_cast<std::uint32_t>(group->name.length()));
-
-            std::u16string to_write = group->name.substr(0, len_to_write);
-
-            ctx.write_arg(reply_slot, to_write);
-            ctx.set_request_status(KErrNone);
-
+            get_window_group_name_from_id(ctx, cmd);
             break;
         }
 
         case EWsClOpWindowGroupListAndChain:
         case EWsClOpWindowGroupListAndChainAllPriorities: {
-            ws_cmd_window_group_list *list_req = reinterpret_cast<decltype(list_req)>(cmd.data_ptr);
-
-            std::vector<std::uint32_t> ids;
-            get_ws().get_window_group_list(ids, list_req->count, cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities ? 
-                -1 : list_req->priority, list_req->screen_num);
-
-            ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]),
-                static_cast<std::uint32_t>(ids.size() * sizeof(std::uint32_t)));
-
-            ctx.set_request_status(static_cast<int>(ids.size()));
+            get_window_group_list(ctx, cmd);
             break;
         }
 
         default:
             LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
+            break;
         }
     }
 

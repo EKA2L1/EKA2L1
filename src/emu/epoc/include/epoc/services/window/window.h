@@ -173,16 +173,25 @@ namespace eka2l1::epoc {
         nof_container<epoc::event_screen_change_user> screen_changes;
         nof_container<epoc::event_error_msg_user> error_notifies;
         
-        void create_screen_device(service::ipc_context &ctx, ws_cmd cmd);
-        void create_window_group(service::ipc_context &ctx, ws_cmd cmd);
-        void create_window_base(service::ipc_context &ctx, ws_cmd cmd);
-        void create_graphic_context(service::ipc_context &ctx, ws_cmd cmd);
-        void create_anim_dll(service::ipc_context &ctx, ws_cmd cmd);
-        void create_click_dll(service::ipc_context &ctx, ws_cmd cmd);
-        void create_sprite(service::ipc_context &ctx, ws_cmd cmd);
-
-        void restore_hotkey(service::ipc_context &ctx, ws_cmd cmd);
-
+        void create_screen_device(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_window_group(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_window_base(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_click_dll(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_sprite(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd);
+        void restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd);
+        void send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd);
+        void find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd);
+        void set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_redraw(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_event(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd);
+    
         void init_device(epoc::window_ptr &win);
         epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
 
