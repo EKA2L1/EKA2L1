@@ -48,8 +48,8 @@ namespace eka2l1 {
         std::vector<icon_cache> icons;
 
         void init_server();
-        std::optional<epoc::akn_icon_srv_return_data> find_cached_icon(epoc::akn_icon_params spec);
-        void add_cached_icon(epoc::akn_icon_srv_return_data ret, epoc::akn_icon_params spec);
+        std::optional<epoc::akn_icon_srv_return_data> find_cached_icon(epoc::akn_icon_params &spec);
+        void add_cached_icon(const epoc::akn_icon_srv_return_data ret, const epoc::akn_icon_params spec);
 
     public:
         epoc::akn_icon_init_data *get_init_data() {

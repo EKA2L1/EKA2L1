@@ -100,7 +100,7 @@ namespace eka2l1 {
         ctx->set_request_status(KErrNone);
     }
 
-    std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_cached_icon(epoc::akn_icon_params spec) {
+    std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_cached_icon(epoc::akn_icon_params &spec) {
         for (std::size_t i = 0; i < icons.size(); i++) {
             epoc::akn_icon_params cached_spec = icons[i].spec;
 
@@ -117,7 +117,7 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    void akn_icon_server::add_cached_icon(epoc::akn_icon_srv_return_data ret, epoc::akn_icon_params spec) {
+    void akn_icon_server::add_cached_icon(const epoc::akn_icon_srv_return_data ret, const epoc::akn_icon_params spec) {
         icon_cache item;
         item.ret = ret;
         item.spec = spec;
