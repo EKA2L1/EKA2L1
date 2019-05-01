@@ -5,7 +5,7 @@ if (ENABLE_SCRIPTING_ABILITY)
 endif()
 
 add_library(manager
-	include/manager/config_manager.h
+	include/manager/config.h
     include/manager/device_manager.h
 	include/manager/manager.h
 	include/manager/rpkg.h
@@ -16,7 +16,7 @@ add_library(manager
 	include/manager/sis_script_interpreter.h
 	include/manager/sis_v1_installer.h
 	include/manager/sis.h
-	src/config_manager.cpp
+	src/config.cpp
 	src/device_manager.cpp
 	src/manager.cpp
 	src/package_manager.cpp

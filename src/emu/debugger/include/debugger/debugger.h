@@ -12,15 +12,9 @@ namespace eka2l1 {
         bool is_hit;
     };
 
-    struct skin_state {
-        float menu_height = 0;
-        int bkg_transparency { 129 };
-        std::string bkg_path;
-        std::string font_path;
-
-        void serialize();
-        void deserialize();
-    };
+    namespace manager {
+        struct config_state;
+    }
 
     class debugger_renderer;
 
@@ -33,14 +27,10 @@ namespace eka2l1 {
         std::vector<debug_breakpoint> breakpoints;
         std::mutex lock;
 
-        skin_state sstate;
-
     public:
         debugger_base() {}
 
-        skin_state *get_skin_state() {
-            return &sstate;
-        }
+        virtual manager::config_state *get_config() = 0;
 
         std::function<void(bool)> on_pause_toogle;
 

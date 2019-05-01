@@ -21,8 +21,6 @@
 #pragma once
 
 #include <common/configure.h>
-
-#include <manager/config_manager.h>
 #include <manager/package_manager.h>
 
 #include <memory>
@@ -47,7 +45,6 @@ namespace eka2l1 {
 #endif
         std::unique_ptr<manager::device_manager> dvmngr;
         std::unique_ptr<manager::package_manager> pkgmngr;
-        std::unique_ptr<manager::config_manager> cfgmngr;
 
         io_system *io;
 

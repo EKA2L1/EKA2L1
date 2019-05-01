@@ -41,6 +41,7 @@
 #include <drivers/graphics/emu_window.h>
 #include <epoc/epoc.h>
 #include <epoc/loader/rom.h>
+#include <manager/config.h>
 
 #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
 #include <console/seh_handler.h>
@@ -53,18 +54,8 @@
 
 using namespace eka2l1;
 
-std::unique_ptr<eka2l1::system> symsys = std::make_unique<eka2l1::system>(nullptr, nullptr);
-arm_emulator_type jit_type = decltype(jit_type)::unicorn;
-
-std::string rom_path = "SYM.ROM";
-std::string mount_c = "drives/c/";
-std::string mount_e = "drives/e/";
-std::string mount_z = "drives/z/";
-
-std::uint16_t gdb_port = 24689;
-bool enable_gdbstub = false;
-
-YAML::Node config;
+std::unique_ptr<eka2l1::system> symsys;
+manager::config_state conf;
 
 std::atomic<bool> should_quit(false);
 std::atomic<bool> should_pause(false);
@@ -82,68 +73,31 @@ std::shared_ptr<eka2l1::imgui_debugger> debugger;
 std::mutex lock;
 std::condition_variable cond;
 
-std::uint8_t device_to_use = 0; ///< Device that will be used
-
-void read_config() {
-    try {
-        config = YAML::LoadFile("config.yml");
-
-        rom_path = config["rom_path"].as<std::string>();
-
-        // TODO: Expand more drives
-        mount_c = config["c_mount"].as<std::string>();
-        mount_e = config["e_mount"].as<std::string>();
-
-        device_to_use = config["device"].as<int>();
-
-        const std::string jit_type_raw = config["jitter"].as<std::string>();
-
-        if (jit_type_raw == "dynarmic") {
-            jit_type = decltype(jit_type)::dynarmic;
-        }
-
-        enable_gdbstub = config["enable_gdbstub"].as<bool>();
-        gdb_port = config["gdb_port"].as<int>();
-    } catch (...) {
-        return;
-    }
-}
-
-void save_config() {
-    config["rom_path"] = rom_path;
-    config["c_mount"] = mount_c;
-    config["e_mount"] = mount_e;
-    config["device"] = static_cast<int>(device_to_use);
-    config["enable_gdbstub"] = enable_gdbstub;
-
-    std::ofstream config_file("config.yml");
-    config_file << config;
-}
-
 void init() {
-    symsys->set_jit_type(jit_type);
+    symsys->set_jit_type(conf.cpu_backend == 0 ? arm_emulator_type::unicorn 
+        : arm_emulator_type::dynarmic);
     symsys->set_debugger(debugger);
 
     symsys->init();
 
-    symsys->set_device(device_to_use);
-    symsys->mount(drive_c, drive_media::physical, mount_c, io_attrib::internal);
-    symsys->mount(drive_e, drive_media::physical, mount_e, io_attrib::removeable);
+    symsys->set_device(conf.device);
+    symsys->mount(drive_c, drive_media::physical, conf.c_mount, io_attrib::internal);
+    symsys->mount(drive_e, drive_media::physical, conf.e_mount, io_attrib::removeable);
 
-    if (enable_gdbstub) {
-        symsys->get_gdb_stub()->set_server_port(gdb_port);
+    if (conf.enable_gdbstub) {
+        symsys->get_gdb_stub()->set_server_port(conf.gdb_port);
         symsys->get_gdb_stub()->init(symsys.get());
         symsys->get_gdb_stub()->toggle_server(true);
     }
 }
 
 void init_stage2() {
-    bool res = symsys->load_rom(rom_path);
+    bool res = symsys->load_rom(conf.rom_path);
 
     // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
     // created for ROM purpose.
     symsys->mount(drive_z, drive_media::rom,
-        mount_z, io_attrib::internal | io_attrib::write_protected);
+        conf.z_mount, io_attrib::internal | io_attrib::write_protected);
 }
 
 void shutdown() {
@@ -151,7 +105,7 @@ void shutdown() {
 }
 
 void do_quit() {
-    save_config();
+    conf.serialize();
     symsys->shutdown();
 }
 
@@ -187,12 +141,15 @@ int main(int argc, char **argv) {
     log::setup_log(logger);
 
     // Start to read the configs
-    read_config();
+    conf.deserialize();
 
     if (should_quit) {
         do_quit();
         return 0;
     }
+
+    // Initialize an empty root.
+    symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
 
     eka2l1::drivers::init_window_library(eka2l1::drivers::window_type::glfw);
     debugger = std::make_shared<eka2l1::imgui_debugger>(symsys.get(), logger);

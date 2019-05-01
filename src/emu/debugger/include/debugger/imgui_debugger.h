@@ -34,6 +34,7 @@ namespace eka2l1 {
 
     class imgui_debugger : public debugger_base {
         system *sys;
+        manager::config_state *conf;
 
         bool should_show_threads;
         bool should_show_mutexs;
@@ -58,6 +59,11 @@ namespace eka2l1 {
         void show_breakpoint_list();
         void show_preferences();
 
+        void show_pref_personalisation();
+        void show_pref_general();
+        void show_pref_mounting();
+
+        std::size_t cur_pref_tab{ 0 };
         std::atomic<std::uint32_t> debug_thread_id;
 
         std::shared_ptr<MemoryEditor> mem_editor;
@@ -81,5 +87,7 @@ namespace eka2l1 {
 
         void wait_for_debugger() override;
         void notify_clients() override;
+        
+        manager::config_state *get_config() override;
     };
 }

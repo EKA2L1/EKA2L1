@@ -25,14 +25,14 @@
 
 namespace eka2l1 {
     namespace arm {
-        jitter create_jitter(kernel_system *kern, timing_system *timing, manager_system *mngr,
-            memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger,
+        jitter create_jitter(kernel_system *kern, timing_system *timing, manager::config_state *conf,
+            manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger,
             arm_emulator_type arm_type) {
             switch (arm_type) {
             case unicorn:
-                return std::make_unique<arm_unicorn>(kern, timing, mngr, mem, asmdis, lmngr, stub);
+                return std::make_unique<arm_unicorn>(kern, timing, conf, mngr, mem, asmdis, lmngr, stub);
             case dynarmic:
-                return std::make_unique<arm_dynarmic>(kern, timing, mngr, mem, asmdis, lmngr, stub, debugger);
+                return std::make_unique<arm_dynarmic>(kern, timing, conf, mngr, mem, asmdis, lmngr, stub, debugger);
             default:
                 return jitter(nullptr);
             }

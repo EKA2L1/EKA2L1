@@ -74,6 +74,10 @@ namespace eka2l1 {
         struct rom;
     }
 
+    namespace manager {
+        struct config_state;
+    }
+
     class system_impl;
 
     /*! A system instance, where all the magic happens. 
@@ -92,7 +96,7 @@ namespace eka2l1 {
         system &operator=(system &&) = delete;
 
         system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
-            arm_emulator_type jit_type = arm_emulator_type::unicorn);
+            manager::config_state *conf);
 
         ~system() = default;
 
@@ -126,6 +130,9 @@ namespace eka2l1 {
         graphics_driver_client_ptr get_graphic_driver_client();
         input_driver_client_ptr get_input_driver_client();
         arm::jitter &get_cpu();
+        manager::config_state *get_config();
+
+        void set_config(manager::config_state *conf);
 
         void mount(drive_number drv, const drive_media media, std::string path,
             const io_attrib attrib = io_attrib::none);

@@ -37,7 +37,7 @@
 #include <epoc/loader/rom.h>
 
 #include <manager/manager.h>
-#include <manager/config_manager.h>
+#include <manager/config.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
@@ -948,7 +948,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind sync message");
         }
 
-        if (sys->get_manager_system()->get_config_manager()->get_or_fall("log_ipc", false)) {
+        if (sys->get_config()->log_ipc) {
             LOG_TRACE("Sending {} sync to {}", aOrd, ss->get_server()->name());
         }
 
@@ -982,7 +982,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending a blind async message");
         }
 
-        if (sys->get_manager_system()->get_config_manager()->get_or_fall("log_ipc", false)) {
+        if (sys->get_config()->log_ipc) {
             LOG_TRACE("Sending {} to {}", aOrd, ss->get_server()->name());
         }
 

@@ -33,6 +33,8 @@
 #include <manager/script_manager.h>
 #endif
 
+#include <manager/config.h>
+
 #include <epoc/loader/e32img.h>
 #include <epoc/loader/romimage.h>
 #include <epoc/vfs.h>
@@ -281,8 +283,6 @@ namespace eka2l1 {
             io = ios;
             mem = mems;
             kern = kerns;
-
-            log_svc = sys->get_manager_system()->get_config_manager()->get_or_fall<bool>("log_svc", false);
 
             // TODO (pent0): Implement external id loading
 
@@ -563,7 +563,7 @@ namespace eka2l1 {
 
             epoc_import_func func = res->second;
 
-            if (log_svc) {
+            if (sys->get_config()->log_svc) {
                 LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
             }
 

@@ -101,7 +101,7 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string 
         return false;
     }
 
-    bool install_result = symsys->install_rpkg(mount_z, path);
+    bool install_result = symsys->install_rpkg(conf.z_mount, path);
     if (!install_result) {
         *err = "RPKG installation failed. Something is wrong, see log";
         return false;

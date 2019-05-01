@@ -42,8 +42,6 @@
 #include <manager/script_manager.h>
 #endif
 
-#include <yaml-cpp/yaml.h>
-
 #include <atomic>
 #include <fstream>
 #include <string>
@@ -64,6 +62,7 @@
 #include <arm/arm_factory.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
+#include <manager/config.h>
 
 namespace eka2l1 {
     /*! A system instance, where all the magic happens. 
@@ -105,6 +104,8 @@ namespace eka2l1 {
         */
         loader::rom romf;
 
+        manager::config_state *conf;
+
         bool reschedule_pending;
 
         epocver ver = epocver::epoc94;
@@ -124,7 +125,7 @@ namespace eka2l1 {
 
     public:
         system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
-            arm_emulator_type jit_type = arm_emulator_type::unicorn);
+            manager::config_state *conf);
 
         ~system_impl() = default;
 
@@ -157,6 +158,14 @@ namespace eka2l1 {
 
         void set_jit_type(const arm_emulator_type type) {
             jit_type = type;
+        }
+
+        manager::config_state *get_config() {
+            return conf;
+        }
+
+        void set_config(manager::config_state *confs) {
+            conf = confs;
         }
 
         loader::rom *get_rom_info() {
@@ -302,7 +311,6 @@ namespace eka2l1 {
 
         // Initialize manager. It doesn't depend much on other
         mngr.init(parent, &io);
-        mngr.get_config_manager()->deserialize("coreconfig.yml");
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
@@ -318,7 +326,7 @@ namespace eka2l1 {
 
         rom_fs_id = io.add_filesystem(rom_fs);
 
-        cpu = arm::create_jitter(&kern, &timing, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, debugger, jit_type);
+        cpu = arm::create_jitter(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, debugger, jit_type);
 
         mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
             get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
@@ -331,9 +339,10 @@ namespace eka2l1 {
     }
 
     system_impl::system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
-        arm_emulator_type jit_type)
-        : jit_type(jit_type)
-        , parent(parent) {
+        manager::config_state *conf)
+        : jit_type(conf->cpu_backend == 0 ? arm_emulator_type::unicorn : arm_emulator_type::dynarmic)
+        , parent(parent)
+        , conf(conf) {
         gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
     }
 
@@ -363,21 +372,6 @@ namespace eka2l1 {
         #if ENABLE_SCRIPTING == 1
             load_scripts();
         #endif
-
-        if (!startup_inited) {
-            for (auto &startup_app : mngr.get_config_manager()->get_values("startup")) {
-                process_ptr st_up = kern.spawn_new_process(
-                    common::utf8_to_ucs2(startup_app));
-
-                if (!st_up) {
-                    return false;
-                }
-
-                st_up->run();
-            }
-
-            startup_inited = true;
-        }
 
         process_ptr pr = kern.spawn_new_process(id);
         if (!pr) {
@@ -479,9 +473,6 @@ namespace eka2l1 {
         mem.shutdown();
         asmdis.shutdown();
 
-        // Save configs
-        mngr.get_config_manager()->serialize("coreconfig.yml");
-
         exit = false;
     }
 
@@ -527,10 +518,18 @@ namespace eka2l1 {
     }
 
     system::system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
-        arm_emulator_type jit_type)
-        : impl(std::make_shared<system_impl>(this, debugger, graphics_driver, jit_type)) {
+        manager::config_state *conf)
+        : impl(std::make_shared<system_impl>(this, debugger, graphics_driver, conf)) {
     }
 
+    manager::config_state *system::get_config() {
+        return impl->get_config();
+    }
+
+    void system::set_config(manager::config_state *conf) {
+        impl->set_config(conf);
+    }
+    
     void system::set_graphics_driver(drivers::driver_instance graphics_driver) {
         return impl->set_graphics_driver(graphics_driver);
     }

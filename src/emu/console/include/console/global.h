@@ -25,9 +25,9 @@
 #include <mutex>
 
 #include <epoc/epoc.h>
+#include <manager/config.h>
 
 #include <imgui.h>
-#include <yaml-cpp/yaml.h>
 
 namespace eka2l1 {
     struct imgui_logger;
@@ -37,18 +37,13 @@ namespace eka2l1 {
 using namespace eka2l1;
 
 extern std::unique_ptr<eka2l1::system> symsys;
-extern arm_emulator_type jit_type;
-
-extern std::uint16_t gdb_port;
-extern std::uint8_t device_to_use; ///< Device that will be used
+extern manager::config_state conf;
 
 extern std::mutex ui_debugger_mutex;
 extern ImGuiContext *ui_debugger_context;
 
 extern std::mutex lock;
 extern std::condition_variable cond;
-
-extern std::string mount_z;
 
 extern std::atomic<bool> should_quit;
 extern std::atomic<bool> should_pause;

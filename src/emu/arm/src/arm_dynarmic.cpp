@@ -35,6 +35,8 @@
 #include <dynarmic/A32/context.h>
 #include <dynarmic/A32/coprocessor.h>
 
+#include <manager/config.h>
+
 namespace eka2l1 {
     namespace arm {
         class arm_dynarmic_cp15 : public Dynarmic::A32::Coprocessor {
@@ -85,10 +87,6 @@ namespace eka2l1 {
         class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
             arm_dynarmic &parent;
             uint64_t interpreted = 0;
-
-            bool log_read = false;
-            bool log_write = false;
-            bool log_code = true;
 
         public:
             explicit arm_dynarmic_callback(arm_dynarmic &parent)
@@ -179,7 +177,7 @@ namespace eka2l1 {
                 uint8_t ret = 0;
                 bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint8_t));
 
-                if (log_read) {
+                if (parent.conf->log_read) {
                     LOG_TRACE("Read uint8_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
 
@@ -192,7 +190,7 @@ namespace eka2l1 {
                 uint16_t ret = 0;
                 bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint16_t));
 
-                if (log_read) {
+                if (parent.conf->log_read) {
                     LOG_TRACE("Read uint16_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
 
@@ -205,7 +203,7 @@ namespace eka2l1 {
                 uint32_t ret = 0;
                 bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint32_t));
 
-                if (log_read) {
+                if (parent.conf->log_read) {
                     LOG_TRACE("Read uint32_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
 
@@ -218,7 +216,7 @@ namespace eka2l1 {
                 uint64_t ret = 0;
                 bool success = parent.get_memory_sys()->read(addr, &ret, sizeof(uint64_t));
 
-                if (log_read) {
+                if (parent.conf->log_read) {
                     LOG_TRACE("Read uint64_t at address: 0x{:x}, val = 0x{:x}", addr, ret);
                 }
 
@@ -230,7 +228,7 @@ namespace eka2l1 {
             void MemoryWrite8(Dynarmic::A32::VAddr addr, uint8_t value) override {
                 bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
-                if (log_write) {
+                if (parent.conf->log_write) {
                     LOG_TRACE("Write uint8_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
 
@@ -240,7 +238,7 @@ namespace eka2l1 {
             void MemoryWrite16(Dynarmic::A32::VAddr addr, uint16_t value) override {
                 bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
-                if (log_write) {
+                if (parent.conf->log_write) {
                     LOG_TRACE("Write uint16_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
 
@@ -250,7 +248,7 @@ namespace eka2l1 {
             void MemoryWrite32(Dynarmic::A32::VAddr addr, uint32_t value) override {
                 bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
-                if (log_write) {
+                if (parent.conf->log_write) {
                     LOG_TRACE("Write uint32_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
 
@@ -260,7 +258,7 @@ namespace eka2l1 {
             void MemoryWrite64(Dynarmic::A32::VAddr addr, uint64_t value) override {
                 bool success = parent.get_memory_sys()->write(addr, &value, sizeof(value));
 
-                if (log_write) {
+                if (parent.conf->log_write) {
                     LOG_TRACE("Write uint64_t at addr: 0x{:x}, val = 0x{:x}", addr, value);
                 }
 
@@ -372,16 +370,17 @@ namespace eka2l1 {
             return std::make_unique<Dynarmic::A32::Jit>(config);
         }
 
-        arm_dynarmic::arm_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
-            disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger)
+        arm_dynarmic::arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+            manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
             , lib_mngr(lmngr)
-            , mngr(mngr)
+            , conf(conf)
             , stub(stub)
             , kern(kern)
-            , fallback_jit(kern, sys, mngr, mem, asmdis, lmngr, stub)
+            , mngr(mngr)
+            , fallback_jit(kern, sys, conf, mngr, mem, asmdis, lmngr, stub)
             , cb(std::make_unique<arm_dynarmic_callback>(*this))
             , debugger(debugger) {
             jit = make_jit(cb, &page_dyn);

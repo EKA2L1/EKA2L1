@@ -39,6 +39,7 @@
 #include <epoc/timing.h>
 #include <gdbstub/gdbstub.h>
 #include <manager/manager.h>
+#include <manager/config.h>
 
 #include <unicorn/unicorn.h>
 
@@ -61,26 +62,20 @@ bool thumb_mode(uc_engine *uc) {
 void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
-    if (jit == nullptr) {
-        LOG_ERROR("Read hook failed: User Data was null");
-        return;
+    if (jit && jit->conf->log_read) {   
+        eka2l1::memory_system *mem = jit->get_memory_sys();
+        mem->read(address, &value, size);
+
+        LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);   
     }
-
-    eka2l1::memory_system *mem = jit->get_memory_sys();
-    mem->read(address, &value, size);
-
-    LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
-    if (jit == nullptr) {
-        LOG_ERROR("Read hook failed: User Data was null");
-        return;
+    if (jit && jit->conf->log_write) {
+        LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
     }
-
-    LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
 }
 
 void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
@@ -94,13 +89,13 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
     eka2l1::hle::lib_manager *mngr = jit->get_lib_manager();
 
 #ifdef ENABLE_SCRIPTING
-    if (jit->enable_breakpoint_script) {
+    if (jit->conf->enable_breakpoint_script) {
         jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
         jit->get_manager_sys()->get_script_manager()->call_breakpoints(address + 1);
     }
 #endif
 
-    if (jit->log_pass && mngr) {
+    if (jit->conf->log_passed && mngr) {
         // Get the name of function at this address
         auto res = mngr->get_symbol(address & ~0x1);
 
@@ -109,7 +104,7 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         }
     }
 
-    if (jit->log_code) {
+    if (jit->conf->log_code) {
         const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());
         size_t buffer_size = eka2l1::common::GB(4) - address;
         bool thumb = thumb_mode(uc);
@@ -197,34 +192,24 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        arm_unicorn::arm_unicorn(kernel_system *kern, timing_system *sys, manager_system *mngr,
-            memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
+        arm_unicorn::arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+            manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
             , lib_mngr(lmngr)
             , stub(stub)
             , kern(kern)
+            , conf(conf)
             , mngr(mngr) {
             uc_err err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &engine);
             assert(err == UC_ERR_OK);
 
             uc_hook hook{};
-            manager::config_manager *cfg_mngr = mngr->get_config_manager();
 
-            if (cfg_mngr->get_or_fall<bool>("log_read", false)) {
-                uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
-            }
-
-            if (cfg_mngr->get_or_fall<bool>("log_write", false)) {
-                uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);
-            }
-
-            log_pass = cfg_mngr->get_or_fall<bool>("log_passed", false);
-            log_code = cfg_mngr->get_or_fall<bool>("log_code", false);
-
-            enable_breakpoint_script = cfg_mngr->get_or_fall<bool>("enable_breakpoint_script", false);
-
+            uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
+            uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);
+            
             uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), this, 1, 0);
 

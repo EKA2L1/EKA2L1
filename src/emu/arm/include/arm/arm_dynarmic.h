@@ -43,7 +43,6 @@ namespace eka2l1 {
     namespace arm {
         class arm_dynarmic_callback;
 
-        /* UNUSABLE */
         class arm_dynarmic : public arm_interface {
             friend class arm_dynarmic_callback;
 
@@ -66,6 +65,8 @@ namespace eka2l1 {
             std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
                 page_dyn;
 
+            manager::config_state *conf;
+
         public:
             timing_system *get_timing_sys() {
                 return timing;
@@ -83,8 +84,9 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            arm_dynarmic(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
-                disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger);
+            arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf, 
+                manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr,
+                gdbstub *stub, debugger_ptr debugger);
 
             ~arm_dynarmic();
 

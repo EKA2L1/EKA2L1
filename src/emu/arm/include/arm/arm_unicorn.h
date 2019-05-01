@@ -37,6 +37,10 @@ namespace eka2l1 {
         class lib_manager;
     }
 
+    namespace manager {
+        struct config_state;
+    }
+
     namespace arm {
         class arm_unicorn : public arm_interface {
             uc_engine *engine;
@@ -45,20 +49,19 @@ namespace eka2l1 {
             timing_system *timing;
             disasm *asmdis;
             memory_system *mem;
-            manager_system *mngr;
             kernel_system *kern;
 
             hle::lib_manager *lib_mngr;
             gdbstub *stub;
 
+            manager_system *mngr;
+
             breakpoint_address last_breakpoint;
             bool last_breakpoint_hit;
 
         public:
-            bool log_code{ false };
-            bool log_pass{ false };
-            bool enable_breakpoint_script{ false };
-
+            manager::config_state *conf;
+            
             bool execute_instructions(uint32_t num_instructions);
 
             timing_system *get_timing_sys() {
@@ -73,10 +76,6 @@ namespace eka2l1 {
                 return mem;
             }
 
-            manager_system *get_manager_sys() {
-                return mngr;
-            }
-
             hle::lib_manager *get_lib_manager() {
                 return lib_mngr;
             }
@@ -85,13 +84,17 @@ namespace eka2l1 {
                 return stub;
             }
 
+            manager_system *get_manager_sys() {
+                return mngr;
+            }
+            
             void record_break(breakpoint_address bkpt) {
                 last_breakpoint = bkpt;
                 last_breakpoint_hit = true;
             }
 
-            arm_unicorn(kernel_system *kern, timing_system *sys, manager_system *mngr, memory_system *mem,
-                disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
+            arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf, 
+                manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
 
             ~arm_unicorn();
 

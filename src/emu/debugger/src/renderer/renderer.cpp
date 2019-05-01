@@ -25,6 +25,8 @@
 #include <drivers/input/input.h>
 #include <drivers/graphics/texture.h>
 
+#include <manager/config.h>
+
 #include <imgui.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -42,7 +44,10 @@ namespace eka2l1 {
         irenderer->init();
 
         debugger->renderer = this;
-        change_background(debugger->sstate.bkg_path.data());
+
+        if (!debugger->get_config()->bkg_path.empty()) {
+            change_background(debugger->get_config()->bkg_path.data());
+        }
     }
 
     bool debugger_renderer::change_background(const char *path) {
@@ -99,7 +104,7 @@ namespace eka2l1 {
         inp_driver_->process_requests();
         
         if (background_tex_) {
-            skin_state *sstate = debugger->get_skin_state();
+            manager::config_state *sstate = debugger->get_config();
 
             ImGui::GetBackgroundDrawList()->AddImage(
                 reinterpret_cast<ImTextureID>(background_tex_->texture_handle()),

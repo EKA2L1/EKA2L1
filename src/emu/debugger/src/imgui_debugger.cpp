@@ -33,6 +33,10 @@
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
+#include <manager/config.h>
+#include <manager/manager.h>
+#include <manager/device_manager.h>
+
 #include <common/cvt.h>
 #include <nfd.h>
 
@@ -49,6 +53,7 @@ const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255
 namespace eka2l1 {
     imgui_debugger::imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger)
         : sys(sys)
+        , conf(sys->get_config())
         , logger(logger)
         , should_stop(false)
         , should_pause(false)
@@ -60,9 +65,12 @@ namespace eka2l1 {
         , should_show_breakpoint_list(false)
         , should_show_preferences(false)
         , debug_thread_id(0) {
-        sstate.deserialize();
     }
 
+    manager::config_state *imgui_debugger::get_config() {
+        return conf;
+    }
+    
     const char *thread_state_to_string(eka2l1::kernel::thread_state state) {
         switch (state) {
         case kernel::thread_state::stop:
@@ -318,9 +326,10 @@ namespace eka2l1 {
     }
 
     template <typename F>
-    bool file_dialog(const char *filter, F callback) {
-        nfdchar_t *out_path = NULL;
-        nfdresult_t result = NFD_OpenDialog(filter, NULL, &out_path);
+    bool file_dialog(const char *filter, F callback, const bool is_picking_folder = false) {
+        nfdchar_t *out_path = nullptr;
+        nfdresult_t result = is_picking_folder ? NFD_PickFolder(nullptr, &out_path) : 
+            NFD_OpenDialog(filter, nullptr, &out_path);
 
         if (result == NFD_OKAY) {
             callback(out_path);
@@ -335,9 +344,7 @@ namespace eka2l1 {
         return false;
     }
     
-    void imgui_debugger::show_preferences() {
-        ImGui::Begin("Preferences", &should_show_preferences);
-
+    void imgui_debugger::show_pref_personalisation() {
         ImGui::AlignTextToFramePadding();
 
         ImGui::Text("Background");
@@ -345,17 +352,17 @@ namespace eka2l1 {
 
         ImGui::Text("Path         ");
         ImGui::SameLine();
-        ImGui::InputText("##Background", sstate.bkg_path.data(), sstate.bkg_path.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputText("##Background", conf->bkg_path.data(), conf->bkg_path.size(), ImGuiInputTextFlags_ReadOnly);
         ImGui::SameLine();
 
         if (ImGui::Button("Change")) {
             on_pause_toogle(true);
 
             file_dialog("png,jpg,bmp", [&](const char *result) {
-                sstate.bkg_path = result;
+                conf->bkg_path = result;
                 renderer->change_background(result);
 
-                sstate.serialize();
+                conf->serialize();
             });
 
             should_pause = false;
@@ -364,23 +371,23 @@ namespace eka2l1 {
 
         ImGui::Text("Transparency ");
         ImGui::SameLine();
-        ImGui::SliderInt("##BackgroundTransparency", &sstate.bkg_transparency, 0, 255);
-        
-        ImGui::Separator();
+        ImGui::SliderInt("##BackgroundTransparency", &conf->bkg_transparency, 0, 255);
+
+        ImGui::NewLine();
         ImGui::Text("Font");
         ImGui::Separator();
 
         ImGui::Text("Path         ");
         ImGui::SameLine();
-        ImGui::InputText("##FontPath", sstate.font_path.data(), sstate.font_path.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputText("##FontPath", conf->font_path.data(), conf->font_path.size(), ImGuiInputTextFlags_ReadOnly);
         ImGui::SameLine();
 
         if (ImGui::Button("Replace")) {
             on_pause_toogle(true);
 
             file_dialog("ttf", [&](const char *result) {
-                sstate.font_path = result;
-                sstate.serialize();
+                conf->font_path = result;
+                conf->serialize();
             });
 
             should_pause = false;
@@ -388,17 +395,144 @@ namespace eka2l1 {
         }
 
         ImGui::Separator();
+    }
+
+    void imgui_debugger::show_pref_general() {
+        ImGui::Text("Logging");
+        ImGui::Separator();
+
+        const float col2 = ImGui::GetWindowSize().x / 2;
+
+        ImGui::Checkbox("CPU Read", &conf->log_read);
+        ImGui::SameLine(col2);
+        ImGui::Checkbox("CPU write", &conf->log_write);
+
+        ImGui::Checkbox("CPU Code", &conf->log_code);
+        ImGui::SameLine(col2);
+        ImGui::Checkbox("IPC", &conf->log_ipc);
+
+        ImGui::Checkbox("Symbian API", &conf->log_passed);
+        ImGui::SameLine(col2);
+        ImGui::Checkbox("System calls", &conf->log_svc);
+
+        ImGui::NewLine();
+        ImGui::Text("System");
+        ImGui::Separator();
+
+        ImGui::Text("CPU");
+        ImGui::SameLine(col2);
+        ImGui::PushItemWidth(col2 - 10);
+
+        if (ImGui::BeginCombo("##CPUCombo", "Unicorn")) {
+            if (ImGui::Selectable("Unicorn")) {
+                conf->cpu_backend = 0;
+                conf->serialize();
+            }
+            
+            if (ImGui::Selectable("Dynarmic")) {
+                conf->cpu_backend = 1;
+                conf->serialize();
+            }
+            
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
+
+        ImGui::Text("Device");
+        ImGui::SameLine(col2);
+        ImGui::PushItemWidth(col2 - 10);
+
+        const auto &dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
+        const std::string preview_info = dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
+                
+        if (ImGui::BeginCombo("##Devicescombo", preview_info.c_str())) {
+            for (std::size_t i = 0; i < dvcs.size(); i++) {
+                const std::string device_info = dvcs[i].model + " (" + dvcs[i].firmware_code + ")";
+                if (ImGui::Selectable(device_info.c_str())) {
+                    conf->device = static_cast<int>(i);
+                    conf->serialize();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
+    }
+
+    void imgui_debugger::show_pref_mounting() {
+        const float col2 = ImGui::GetWindowSize().x / 3;
+
+        auto draw_path_change = [&](const char *title, const char *button, std::string &dat) {
+            ImGui::Text(title);
+            ImGui::SameLine(col2);
+
+            ImGui::PushItemWidth(col2 * 2 - 75);
+            ImGui::InputText("##Path", dat.data(), dat.size(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopItemWidth();
+
+            ImGui::SameLine(col2 * 3 - 65);
+            ImGui::PushItemWidth(30);
+            
+            if (ImGui::Button(button)) {
+                on_pause_toogle(true);
+
+                file_dialog("", [&](const char *res) {
+                    dat = res;
+                }, true);
+                    
+                should_pause = false;
+                on_pause_toogle(false);
+            }
+
+            ImGui::PopItemWidth();
+        };
+
+        draw_path_change("Internal drive (C:)", "Change##1", conf->c_mount);
+        draw_path_change("Memory card drive (E:)", "Change##2", conf->e_mount);
+        draw_path_change("ROM drive (E:)", "Change##3", conf->z_mount);
+    }
+    
+    void imgui_debugger::show_preferences() {
+        ImGui::Begin("Preferences", &should_show_preferences);
+
+        using show_func = std::function<void(imgui_debugger*)>;
+        static std::vector<std::pair<std::string, show_func>> all_prefs = {
+            { "General", &imgui_debugger::show_pref_general },
+            { "Mounting", &imgui_debugger::show_pref_mounting },
+            { "Personalisation", &imgui_debugger::show_pref_personalisation }
+        };
+
+        for (std::size_t i = 0; i < all_prefs.size(); i++) {
+            if (ImGui::Button(all_prefs[i].first.c_str())) {
+                cur_pref_tab = i;
+            }
+
+            ImGui::SameLine(0, 1);
+        }
+
+        ImGui::NewLine();
+        all_prefs[cur_pref_tab].second(this);
+        
+        ImGui::NewLine();
+        ImGui::NewLine();
+        
+        ImGui::SameLine(std::max(0.0f, ImGui::GetWindowSize().x / 2 - 30.0f));
+        ImGui::PushItemWidth(30);
 
         if (ImGui::Button("Save")) {
-            sstate.serialize();
+            conf->serialize();
         }
+
+        ImGui::PopItemWidth();
 
         ImGui::End();
     }
 
     void imgui_debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
-            sstate.menu_height = ImGui::GetWindowSize().y;
+            conf->menu_height = ImGui::GetWindowSize().y;
             
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);

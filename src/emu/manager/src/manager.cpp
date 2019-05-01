@@ -18,7 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <manager/config_manager.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
 #include <manager/package_manager.h>
@@ -42,10 +41,6 @@ namespace eka2l1 {
         return dvmngr.get();
     }
 
-    manager::config_manager *manager_system::get_config_manager() {
-        return cfgmngr.get();
-    }
-
     void manager_system::init(system *sys, io_system *ios) {
         io = ios;
 
@@ -55,6 +50,5 @@ namespace eka2l1 {
         scrmngr = std::make_unique<manager::script_manager>(sys);
 #endif
         dvmngr = std::make_unique<manager::device_manager>();
-        cfgmngr = std::make_unique<manager::config_manager>();
     }
 }

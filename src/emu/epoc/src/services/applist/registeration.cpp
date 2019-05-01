@@ -18,6 +18,8 @@
  */
 
 #include <epoc/services/applist/applist.h>
+
+#include <common/benchmark.h>
 #include <common/buffer.h>
 #include <common/path.h>
 
