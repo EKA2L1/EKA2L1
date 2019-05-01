@@ -117,7 +117,7 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    void akn_icon_server::add_cached_icon(const epoc::akn_icon_srv_return_data ret, const epoc::akn_icon_params spec) {
+    void akn_icon_server::add_cached_icon(const epoc::akn_icon_srv_return_data &ret, const epoc::akn_icon_params &spec) {
         icon_cache item;
         item.ret = ret;
         item.spec = spec;
