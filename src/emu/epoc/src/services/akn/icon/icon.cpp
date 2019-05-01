@@ -101,7 +101,7 @@ namespace eka2l1 {
     }
 
     std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_cached_icon(epoc::akn_icon_params spec) {
-        for (std::vector<int>::size_type i = 0; i != icons.size(); i++) {
+        for (std::size_t i = 0; i < icons.size(); i++) {
             epoc::akn_icon_params cached_spec = icons[i].spec;
 
             if (spec.bitmap_id == cached_spec.bitmap_id && spec.mask_id == cached_spec.mask_id) {
