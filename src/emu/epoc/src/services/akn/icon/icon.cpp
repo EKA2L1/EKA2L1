@@ -41,8 +41,7 @@ namespace eka2l1 {
         }
 
         case akn_icon_server_retrieve_or_create_shared_icon: {
-            // TODO: Create bitmap with FBS server. fbss->create_bitmap(size, bpp_mode)
-            ctx->set_request_status(KErrNone);
+            server<akn_icon_server>()->retrieve_icon(ctx);
             break;
         }
 
@@ -64,5 +63,67 @@ namespace eka2l1 {
         
         create_session<akn_icon_server_session>(&context);
         context.set_request_status(KErrNone);
+    }
+
+    void akn_icon_server::retrieve_icon(service::ipc_context *ctx) {
+        std::optional<epoc::akn_icon_params> spec = ctx->get_arg_packed<epoc::akn_icon_params>(0);
+        std::optional<epoc::akn_icon_srv_return_data> ret = ctx->get_arg_packed<epoc::akn_icon_srv_return_data>(1);
+
+        if (!spec || !ret) {
+            ctx->set_request_status(KErrArgument);
+            return;
+        }
+
+        std::optional<epoc::akn_icon_srv_return_data> cached = find_cached_icon(spec.value());
+        if (!cached) {
+            eka2l1::vec2 size = spec->size;
+            fbsbitmap *bmp = fbss->create_bitmap(size, init_data.icon_mode);
+            fbsbitmap *mask = fbss->create_bitmap(size, init_data.icon_mask_mode);
+
+            if (!bmp || !mask) {
+                ctx->set_request_status(KErrNoMemory);
+                return;
+            }
+
+            ret->bitmap_handle = bmp->id;
+            ret->content_dim.x = size.x;
+            ret->content_dim.y = size.y;
+            ret->mask_handle = mask->id;
+
+            add_cached_icon(ret.value(), spec.value());
+        } else {
+            ret.emplace(cached.value());
+        }
+
+        ctx->write_arg_pkg(0, spec.value());
+        ctx->write_arg_pkg(1, ret.value());
+        ctx->set_request_status(KErrNone);
+    }
+
+    std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_cached_icon(epoc::akn_icon_params spec) {
+        for (std::vector<int>::size_type i = 0; i != icons.size(); i++) {
+            epoc::akn_icon_params cached_spec = icons[i].spec;
+
+            if (spec.bitmap_id == cached_spec.bitmap_id && spec.mask_id == cached_spec.mask_id) {
+                if (spec.flags == cached_spec.flags && spec.mode == cached_spec.mode) {
+                    if (spec.size == cached_spec.size && spec.color == cached_spec.color) {
+                        if (spec.file_name.to_std_string(nullptr) == cached_spec.file_name.to_std_string(nullptr)) {
+                            return icons[i].ret;
+                        }
+                    }
+                }
+            }
+        }
+        return std::nullopt;
+    }
+
+    void akn_icon_server::add_cached_icon(epoc::akn_icon_srv_return_data ret, epoc::akn_icon_params spec) {
+        icon_cache item;
+        item.ret = ret;
+        item.spec = spec;
+        if (icons.size() > MAX_CACHE_SIZE) {
+            icons.erase(icons.begin());
+        }
+        icons.push_back(item);
     }
 }
