@@ -62,6 +62,11 @@ add_library(epocmem
     src/mem.cpp
     src/page_table.cpp)
 
+add_library(epocnmem
+    include/epoc/mem/allocator/std_page_allocator.h
+    include/epoc/mem/page.h
+    src/mem/allocator/std_page_allocator.cpp)
+
 add_library(epocservs 
     include/epoc/services/context.h
     include/epoc/services/framework.h
@@ -197,6 +202,7 @@ add_library(epocutils
 
 target_include_directories(epocloader PUBLIC include)
 target_include_directories(epocmem PUBLIC include)
+target_include_directories(epocnmem PUBLIC include)
 target_include_directories(epockern PUBLIC include)
 target_include_directories(epocservs PUBLIC include)
 target_include_directories(epocutils PUBLIC include)
@@ -206,6 +212,8 @@ target_link_libraries(epocio PUBLIC common)
 target_link_libraries(epocio PRIVATE
     epocmem
 )
+
+target_link_libraries(epocnmem PRIVATE common)
 
 target_link_libraries(epocmem PUBLIC common)
 target_link_libraries(epocmem PRIVATE
