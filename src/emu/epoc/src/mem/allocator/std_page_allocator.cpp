@@ -20,8 +20,8 @@
 #include <epoc/mem/allocator/std_page_allocator.h>
 
 namespace eka2l1::mem {
-    page_table *basic_page_table_allocator::create_new() {
-        page_tabs_.push_back(std::make_unique<page_table>(++id_ct_));
+    page_table *basic_page_table_allocator::create_new(const std::size_t psize) {
+        page_tabs_.push_back(std::make_unique<page_table>(++id_ct_, psize));
         return page_tabs_.back().get();
     }
 

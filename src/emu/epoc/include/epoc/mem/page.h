@@ -20,7 +20,7 @@
 #pragma once
 
 #include <common/types.h>
-#include <array>
+#include <vector>
 
 namespace eka2l1::mem {
     using vm_address = std::uint32_t;
@@ -46,14 +46,21 @@ namespace eka2l1::mem {
      * \brief A table consists of page infos, in a specific range.
      */
     struct page_table {
-        std::array<page_info, PAGE_PER_TABLE> pages_;
+        std::vector<page_info> pages_;
         std::uint32_t id_;
+        std::size_t page_size_;
+        
+        std::uint32_t idx_;
 
     public:
-        explicit page_table(const std::uint32_t id)
-            : id_(id) {
-        }
+        explicit page_table(const std::uint32_t id, const std::size_t page_size);
 
+        /**
+         * \brief Get a page info at the given index.
+         * \param idx The index of the page info to get.
+         * 
+         * \returns Nullptr if index out of range, else the pointer to the page info.
+         */
         page_info *get_page_info(const std::size_t idx);
 
         const std::uint32_t id() const {
@@ -63,20 +70,24 @@ namespace eka2l1::mem {
 
     struct page_table_allocator {
     public:
-        virtual page_table *create_new() = 0;
+        virtual page_table *create_new(const std::size_t psize) = 0;
         virtual page_table *get_page_table_by_id(const std::uint32_t id) = 0;
     };
 
     struct page_directory {
-        std::array<page_table*, PAGE_TABLE_PER_DIR> page_tabs_;
-        page_table_allocator *allocator_;
+        std::vector<page_table*> page_tabs_;
+        std::size_t page_size_;
+
+        std::uint32_t offset_mask_;
+        std::uint32_t page_index_mask_;
+        std::uint32_t page_index_shift_;
+        std::uint32_t page_table_index_shift_;
 
     public:
-        explicit page_directory(page_table_allocator *allocator)
-            : allocator_(allocator) {
-        }
+        explicit page_directory(const std::size_t page_size);
 
-        page_info  *get_or_create_page_info(const vm_address addr);
-        page_table *get_or_create_page_table(const vm_address addr);
+        void *get_pointer(const vm_address addr);
+        page_info  *get_page_info(const vm_address addr);
+        page_table *get_page_table(const vm_address addr);
     };
 }

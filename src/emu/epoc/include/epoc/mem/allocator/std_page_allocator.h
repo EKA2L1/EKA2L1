@@ -35,7 +35,7 @@ namespace eka2l1::mem {
         std::atomic<std::uint32_t> id_ct_;
 
     public:
-        page_table *create_new() override;
+        page_table *create_new(const std::size_t psize) override;
         page_table *get_page_table_by_id(const std::uint32_t id) override;
     };
 }

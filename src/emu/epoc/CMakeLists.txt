@@ -65,7 +65,8 @@ add_library(epocmem
 add_library(epocnmem
     include/epoc/mem/allocator/std_page_allocator.h
     include/epoc/mem/page.h
-    src/mem/allocator/std_page_allocator.cpp)
+    src/mem/allocator/std_page_allocator.cpp
+    src/mem/page.cpp)
 
 add_library(epocservs 
     include/epoc/services/context.h
