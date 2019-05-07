@@ -43,8 +43,11 @@ namespace eka2l1::mem {
         std::uint32_t page_index_shift_;
         std::uint32_t page_table_index_shift_;
 
+        bool mem_map_old_;          ///< Should we use EKA1 mem map model?
+
     public:
-        explicit mmu_base(page_table_allocator *alloc, const std::size_t psize_bits = 10);
+        explicit mmu_base(page_table_allocator *alloc, const std::size_t psize_bits = 10
+            , const bool mem_map_old = false);
 
         /**
          * \brief Get number of bytes a page occupy

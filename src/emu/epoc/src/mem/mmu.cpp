@@ -20,8 +20,9 @@
 #include <epoc/mem/mmu.h>
 
 namespace eka2l1::mem {
-    mmu_base::mmu_base(page_table_allocator *alloc, const std::size_t psize_bits)
-        : alloc_(alloc), page_size_bits_(psize_bits) {
+    mmu_base::mmu_base(page_table_allocator *alloc, const std::size_t psize_bits, const bool mem_map_old)
+        : alloc_(alloc), page_size_bits_(psize_bits)
+        , mem_map_old_(mem_map_old) {
         if (psize_bits == 20) {
             offset_mask_ = OFFSET_MASK_20B;
             page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_20B;
