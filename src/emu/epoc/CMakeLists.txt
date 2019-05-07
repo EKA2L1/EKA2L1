@@ -68,6 +68,7 @@ add_library(epocnmem
     include/epoc/mem/mmu.h
     include/epoc/mem/page.h
     src/mem/allocator/std_page_allocator.cpp
+    src/mem/model/multiple/mmu.cpp
     src/mem/mmu.cpp
     src/mem/page.cpp)
 

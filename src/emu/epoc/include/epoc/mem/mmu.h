@@ -29,6 +29,7 @@ namespace eka2l1::mem {
      * \brief The base of memory management unit.
      */
     class mmu_base {
+    protected:
         page_table_allocator *alloc_;        ///< Page table allocator.
         std::size_t page_size_bits_;         ///< The number of bits of page size.
 
@@ -54,5 +55,12 @@ namespace eka2l1::mem {
          * the MMU is managing.
          */
         virtual page_table *create_new_page_table();
+
+        /**
+         * \brief Create or renew an address space if possible.
+         * 
+         * \returns An ASID identify the address space. -1 if a new one can't be create.
+         */
+        virtual asid rollover_fresh_addr_space() = 0;
     };
 }

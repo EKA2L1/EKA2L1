@@ -57,8 +57,9 @@ namespace eka2l1::mem {
         return &pages_.at(idx);
     }
 
-    page_directory::page_directory(const std::size_t page_size) 
-        : page_size_(page_size) {
+    page_directory::page_directory(const std::size_t page_size, const asid id) 
+        : page_size_(page_size)
+        , id_(id) {
         if (page_size == 20) {
             offset_mask_ = OFFSET_MASK_20B;
             page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_20B;

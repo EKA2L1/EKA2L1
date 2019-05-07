@@ -17,24 +17,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <epoc/mem/page.h>
-
-#include <atomic>
-#include <memory>
+#include <epoc/mem/model/multiple/mmu.h>
+#include <algorithm>
 
 namespace eka2l1::mem {
-    /**
-     * \brief Basic page table allocator using C++ STD's built-in functions.
-     * 
-     * Page table will be automatically free once the allocator is destroyed.
-     */
-    struct basic_page_table_allocator: public page_table_allocator {
-        std::vector<std::unique_ptr<page_table>> page_tabs_;
+    asid mmu_multiple::rollover_fresh_addr_space() {
+        // Try to find existing unoccpied page directory
+        for (std::size_t i = 0; i < dirs_.size(); i++) {
+            if (!dirs_[i]->occupied()) {
+                return dirs_[i]->id();
+            }
+        }
 
-    public:
-        page_table *create_new(const std::size_t psize) override;
-        page_table *get_page_table_by_id(const std::uint32_t id) override;
-    };
+        // 256 is the maximum number of page directories we allow, no more.
+        if (dirs_.size() == 256) {
+            return -1;
+        }
+        
+        // Create new one
+        dirs_.push_back(std::make_unique<page_directory>(page_size_bits_, static_cast<asid>(dirs_.size())));
+        return static_cast<asid>(dirs_.size() - 1);
+    }
 }

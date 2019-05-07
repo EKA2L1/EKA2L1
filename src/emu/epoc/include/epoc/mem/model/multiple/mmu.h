@@ -20,18 +20,20 @@
 #pragma once
 
 #include <epoc/mem/mmu.h>
+#include <memory>
 
 namespace eka2l1::mem {
-    constexpr std::size_t PAGE_SIZE_BYTES_10B = 0x1000;
-    constexpr std::size_t PAGE_SIZE_BYTES_20B = 0x100000;
-
     /**
-     * \brief Memory management unit.
+     * \brief Memory management unit for multiple model.
      */
     class mmu_multiple: public mmu_base {
+        std::vector<std::unique_ptr<page_directory>> dirs_;
+
     public:
         explicit mmu_multiple(page_table_allocator *alloc, const std::size_t psize_bits = 10)
             : mmu_base(alloc, psize_bits) {
         }
+
+        asid rollover_fresh_addr_space() override;
     };
 }

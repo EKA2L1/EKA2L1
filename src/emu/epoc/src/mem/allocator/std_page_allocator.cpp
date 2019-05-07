@@ -21,20 +21,23 @@
 
 namespace eka2l1::mem {
     page_table *basic_page_table_allocator::create_new(const std::size_t psize) {
-        page_tabs_.push_back(std::make_unique<page_table>(++id_ct_, psize));
+        for (std::size_t i = 0; i < page_tabs_.size(); i++) {
+            if (page_tabs_[i]->idx_ == static_cast<std::uint32_t>(-1)) {
+                return page_tabs_[i].get();
+            }
+        }
+
+        page_tabs_.push_back(std::make_unique<page_table>(static_cast<std::uint32_t>(page_tabs_.size()), 
+            psize));
+
         return page_tabs_.back().get();
     }
 
     page_table *basic_page_table_allocator::get_page_table_by_id(const std::uint32_t id) {
-        auto result = std::lower_bound(page_tabs_.begin(), page_tabs_.end(), id,
-            [](const std::unique_ptr<page_table> &tab_, const std::uint32_t &id_) {
-                return tab_->id() < id_;
-            });
-
-        if (result == page_tabs_.end()) {
+        if (page_tabs_.size() >= id) {
             return nullptr;
         }
 
-        return (*result).get();
+        return page_tabs_[id].get();
     }
 }

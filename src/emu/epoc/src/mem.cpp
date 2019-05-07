@@ -19,6 +19,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/benchmark.h>
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/virtualmem.h>
@@ -376,6 +377,8 @@ namespace eka2l1 {
 
     // Commit to page
     int memory_system::commit(ptr<void> addr, uint32_t size) {
+        common::benchmarker marker(__FUNCTION__);
+
         if (size == 0) {
             return 0;
         }
@@ -404,6 +407,8 @@ namespace eka2l1 {
         const auto page_begin_org = page_begin;
 
         prot nprot = page_begin->page_protection;
+        int total_page_committed_so_far = 0;
+        page *page_from_count = nullptr;
 
         for (; page_begin != page_end; page_begin++) {
             // Can commit on commited region or reserved region
@@ -411,9 +416,19 @@ namespace eka2l1 {
                 return -1;
             }
 
-            if (page_begin->sts == page_status::committed) {
-                cpu->unmap_memory(static_cast<address>(addr.ptr_address() + std::distance(page_begin_org, page_begin) * page_size),
-                    page_size);
+            if (page_begin->sts != page_status::committed) {
+                if (total_page_committed_so_far) {
+                    cpu->unmap_memory(static_cast<address>(addr.ptr_address() + std::distance(page_from_count, page_begin) * page_size),
+                        page_size * total_page_committed_so_far);
+
+                    total_page_committed_so_far = 0;
+                }
+            } else {
+                if (!total_page_committed_so_far) {
+                    page_from_count = page_begin;
+                }
+
+                total_page_committed_so_far++;
             }
 
             page_begin->sts = page_status::committed;

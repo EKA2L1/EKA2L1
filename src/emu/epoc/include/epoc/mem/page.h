@@ -74,6 +74,8 @@ namespace eka2l1::mem {
         virtual page_table *get_page_table_by_id(const std::uint32_t id) = 0;
     };
 
+    using asid = std::int32_t;
+
     struct page_directory {
         std::vector<page_table*> page_tabs_;
         std::size_t page_size_;
@@ -83,11 +85,26 @@ namespace eka2l1::mem {
         std::uint32_t page_index_shift_;
         std::uint32_t page_table_index_shift_;
 
+        asid id_;
+        bool occupied_;
+
     public:
-        explicit page_directory(const std::size_t page_size);
+        explicit page_directory(const std::size_t page_size, const asid id);
 
         void *get_pointer(const vm_address addr);
         page_info  *get_page_info(const vm_address addr);
         page_table *get_page_table(const vm_address addr);
+
+        const asid id() const {
+            return id_;
+        }
+
+        const bool occupied() const {
+            return occupied_;
+        }
+
+        void occupied(const bool will_it) {
+            occupied_ = will_it;
+        }
     };
 }
