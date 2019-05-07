@@ -23,6 +23,24 @@
 #include <vector>
 
 namespace eka2l1::mem {
+    constexpr std::size_t PAGE_PER_TABLE_20B = 0b111111;        ///< Page per table constant for 1MB paging
+    constexpr std::size_t PAGE_PER_TABLE_10B = 0b11111111;      ///< Page per table constant for 1KB paging
+
+    constexpr std::size_t TABLE_PER_DIR_20B = 0b111111;         ///< Table per directory constant for 1MB paging
+    constexpr std::size_t TABLE_PER_DIR_10B = 0b111111111111;   ///< Table per directory constant for 1KB paging
+
+    constexpr std::uint32_t OFFSET_MASK_20B = 0b11111111111111111111;       ///< The mask to extract byte offset relative to a page, from a virtual address for 1MB paging
+    constexpr std::uint32_t OFFSET_MASK_10B = 0b1111111111;                 ///< The mask to extract byte offset relative to a page, from a virtual address for 1KB paging
+
+    constexpr std::uint32_t PAGE_TABLE_INDEX_SHIFT_20B = 26;        ///< The amount of left shifting to extract page table index in 1MB paging
+    constexpr std::uint32_t PAGE_TABLE_INDEX_SHIFT_10B = 20;        ///< The amount of left shifting to extract page table index in 1KB paging
+
+    constexpr std::uint32_t PAGE_INDEX_SHIFT_20B = 20;      ///< The amount of left shifting to extract page index in 1MB paging
+    constexpr std::uint32_t PAGE_INDEX_SHIFT_10B = 10;      ///< The amount of left shifting to extract page index in 1KB paging
+
+    constexpr std::uint32_t PAGE_INDEX_MASK_20B = 0b111111;     ///< The mask to extract page index, from a virtual address for 1MB paging
+    constexpr std::uint32_t PAGE_INDEX_MASK_10B = 0b11111111;   ///< The mask to extract page index, from a virtual address for 1KB paging
+
     using vm_address = std::uint32_t;
     
     /**
@@ -94,6 +112,8 @@ namespace eka2l1::mem {
         void *get_pointer(const vm_address addr);
         page_info  *get_page_info(const vm_address addr);
         page_table *get_page_table(const vm_address addr);
+
+        void set_page_table(const std::uint32_t off, page_table *tab);
 
         const asid id() const {
             return id_;

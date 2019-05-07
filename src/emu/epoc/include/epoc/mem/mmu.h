@@ -25,6 +25,11 @@ namespace eka2l1::mem {
     constexpr std::size_t PAGE_SIZE_BYTES_10B = 0x1000;
     constexpr std::size_t PAGE_SIZE_BYTES_20B = 0x100000;
 
+    enum {
+        MMU_ASSIGN_LOCAL_GLOBAL_REGION = 1 << 0,
+        MMU_ASSIGN_GLOBAL = 1 << 1
+    };
+
     /**
      * \brief The base of memory management unit.
      */
@@ -33,10 +38,13 @@ namespace eka2l1::mem {
         page_table_allocator *alloc_;        ///< Page table allocator.
         std::size_t page_size_bits_;         ///< The number of bits of page size.
 
+        std::uint32_t offset_mask_;
+        std::uint32_t page_index_mask_;
+        std::uint32_t page_index_shift_;
+        std::uint32_t page_table_index_shift_;
+
     public:
-        explicit mmu_base(page_table_allocator *alloc, const std::size_t psize_bits = 10)
-            : alloc_(alloc), page_size_bits_(psize_bits) {
-        }
+        explicit mmu_base(page_table_allocator *alloc, const std::size_t psize_bits = 10);
 
         /**
          * \brief Get number of bytes a page occupy
@@ -62,5 +70,17 @@ namespace eka2l1::mem {
          * \returns An ASID identify the address space. -1 if a new one can't be create.
          */
         virtual asid rollover_fresh_addr_space() = 0;
+
+        /**
+         * \brief Set current MMU's address space.
+         * 
+         * \param id The ASID of the target address space
+         */
+        virtual bool set_current_addr_space(const asid id) = 0;
+
+        /**
+         * \brief Assign page tables at linear base address to page directories.
+         */
+        virtual void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags) = 0;
     };
 }
