@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <epoc/mem/common.h>
 #include <common/types.h>
 #include <vector>
 
@@ -71,8 +72,6 @@ namespace eka2l1::mem {
     constexpr std::uint32_t PAGE_INDEX_MASK_20B = 0b111111;     ///< The mask to extract page index, from a virtual address for 1MB paging
     constexpr std::uint32_t PAGE_INDEX_MASK_10B = 0b11111111;   ///< The mask to extract page index, from a virtual address for 1KB paging
 
-    using vm_address = std::uint32_t;
-    
     /**
      * \brief Structure contains info about a page (guest's memory chunk).
      * 
@@ -121,8 +120,6 @@ namespace eka2l1::mem {
         virtual page_table *create_new(const std::size_t psize) = 0;
         virtual page_table *get_page_table_by_id(const std::uint32_t id) = 0;
     };
-
-    using asid = std::int32_t;
 
     struct page_directory {
         std::vector<page_table*> page_tabs_;
