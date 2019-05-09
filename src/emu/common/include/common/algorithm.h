@@ -308,5 +308,15 @@ namespace eka2l1 {
          *  \brief Returns if the platform is case-senstive or not
          */
         bool is_platform_case_sensitive();
+
+        /**
+         * \brief Count the number of leading zero bits.
+         */
+        int count_leading_zero(const std::uint32_t v);
+
+        /**
+         * \brief Get the most significant set bit.
+         */
+        int find_most_significant_bit_one(const std::uint32_t v);
     }
 }
