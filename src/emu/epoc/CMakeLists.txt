@@ -64,7 +64,6 @@ add_library(epocmem
 
 add_library(epocnmem
     include/epoc/mem/allocator/std_page_allocator.h
-    include/epoc/mem/model/multiple/bitmap.h
     include/epoc/mem/model/multiple/mmu.h
     include/epoc/mem/model/multiple/section.h
     include/epoc/mem/common.h

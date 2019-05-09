@@ -86,4 +86,137 @@ namespace eka2l1::common {
         ite->active = false;
         return true;
     }
+
+    bitmap_allocator::bitmap_allocator(const std::size_t total_bits)
+        : words_((total_bits >> 5) + ((total_bits % 32 != 0) ? 1 : 0), 0xFFFFFFFF) {
+    }
+
+    void bitmap_allocator::force_fill(const int offset, const int size, const bool or_mode) {
+        std::uint32_t *word = &words_[0] + (offset >> 5);
+        const int set_bit = offset & 31;
+        int end_bit = set_bit + static_cast<int>(size);
+
+        if (end_bit < 32) {
+            // The bit we need to allocate is in single word
+            const std::uint32_t mask = (~(0xFFFFFFFFU >> size) >> set_bit);
+            *word = or_mode ? (*word | mask) : (*word & ~mask);
+
+            return;
+        }
+
+        // All the bits trails across some other words
+        std::uint32_t mask = 0xFFFFFFFFU >> set_bit;
+
+        while (end_bit > 0) {
+            const std::uint32_t w = *word;
+            *word++ = or_mode ? (w | mask) : (w & ~mask);
+
+            // We only need to be careful with the first word, since it only fills
+            // some first bits. We should fully fill with other word, so set the mask full
+            mask = 0xFFFFFFFFU;
+            end_bit -= 32;
+
+            if (end_bit < 32) {
+                mask = ~(mask >> end_bit);
+            }
+        }
+    }
+
+    void bitmap_allocator::free(const int offset, const int size) {
+        force_fill(offset, size, true);
+    }
+
+    int bitmap_allocator::allocate_from(const int start_offset, const int size, const bool best_fit) {
+        std::uint32_t *word = &words_[0] + (start_offset << 5);
+
+        // We have arrived at le word that still have free position (bit 1)
+        std::uint32_t *word_end = &words_[words_.size() - 1];
+        int soc = start_offset;
+
+        int bflmin = 0xFFFFFF;
+        int bofmin = -1;
+        std::uint32_t *wordmin = nullptr;
+
+        // Keep finding
+        while (word <= word_end) {
+            std::uint32_t wv = *word;
+
+            if (wv != 0) {
+                // Still have free stuff
+                int bflen = 0;
+                int boff = 0;
+                std::uint32_t *bword = nullptr;
+
+                // Start from the most significant bit 1
+                int cursor = common::max(31 - soc & 31, common::find_most_significant_bit_one(wv) - 1);
+
+                while (cursor > 0) {
+                    if (((wv >> cursor) & 1) == 1) {
+                        boff = cursor;
+                        bflen = 0;
+                        bword = word;
+                        
+                        while (cursor >= 0 && ((wv >> cursor) & 1) == 1) {
+                            bflen++;
+                            cursor--;
+
+                            if (cursor < 0 && ++word <= word_end) {
+                                cursor = 31;
+                                soc = 32;
+                                wv = *word;
+                            }
+                        }
+
+                        if (bflen >= size) {
+                            if (!best_fit) {
+                                // Force allocate and then return
+                                const int offset = static_cast<int>(31 - boff + ((bword - &words_[0]) << 5));
+                                force_fill(offset, size, false);
+
+                                return offset;
+                            } else {
+                                if (bflen < bflmin) {
+                                    bflmin = bflen;
+                                    bofmin = boff;
+                                    wordmin = bword;
+                                }
+                            }
+                        }
+                    }
+                
+                    cursor--;
+                }
+            }
+
+            soc = 32;
+            word++;
+        }
+
+        if (best_fit && bofmin) {
+            // Force allocate and then return
+            const int offset = static_cast<int>(31 - bofmin + ((wordmin - &words_[0]) << 5));
+            force_fill(offset, size, false);
+
+            return offset;
+        }
+    
+        return -1;
+    }
+
+    bool bitmap_allocator::set_word(const std::uint32_t off, const std::uint32_t val) {
+        if (off >= words_.size()) {
+            return false;
+        }
+
+        words_[off] = val;
+        return true;
+    }
+
+    const std::uint32_t bitmap_allocator::get_word(const std::uint32_t off) const {
+        if (off >= words_.size()) {
+            return false;
+        }
+
+        return words_[off];
+    }
 }
