@@ -112,6 +112,19 @@ namespace eka2l1::common {
         : words_((total_bits >> 5) + ((total_bits % 32 != 0) ? 1 : 0), 0xFFFFFFFF) {
     }
 
+    void bitmap_allocator::set_maximum(const std::size_t total_bits) {
+        const std::size_t total_before = words_.size();
+        const std::size_t total_after = (total_bits >> 5) + ((total_bits % 32 != 0) ? 1 : 0);
+
+        words_.resize(total_after);
+
+        if (total_after > total_before) {
+            for (std::size_t i = total_before; i < total_after; i++) {
+                words_[i] = 0xFFFFFFFFU;
+            }
+        }
+    }
+    
     void bitmap_allocator::force_fill(const std::uint32_t offset, const int size, const bool or_mode) {
         std::uint32_t *word = &words_[0] + (offset >> 5);
         const std::uint32_t set_bit = offset & 31;

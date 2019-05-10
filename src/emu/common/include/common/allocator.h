@@ -89,6 +89,8 @@ namespace eka2l1::common {
         bitmap_allocator() = default;
         explicit bitmap_allocator(const std::size_t total_bits);
 
+        void set_maximum(const std::size_t total_bits);
+
         void force_fill(const std::uint32_t offset, const int size, const bool or_mode = false);
         int allocate_from(const std::uint32_t start_offset, const int size = 1, const bool best_fit = false);
         void free(const std::uint32_t offset, const int size);
