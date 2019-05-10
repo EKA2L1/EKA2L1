@@ -19,11 +19,20 @@
 
 #pragma once
 
+#include <common/allocator.h>
 #include <epoc/mem/common.h>
 
 namespace eka2l1::mem {
     struct linear_section {
         vm_address beg_;
-        vm_address end_
+        vm_address end_;
+
+        std::size_t psize_;
+
+        common::bitmap_allocator alloc_;
+
+        explicit linear_section(const vm_address start, const vm_address end, const std::size_t psize)
+            : beg_(start), end_(end), psize_(psize), alloc_((end - start) / psize) {
+        }
     };
 }

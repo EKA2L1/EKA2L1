@@ -19,28 +19,27 @@
 
 #pragma once
 
-#include <epoc/mem/mmu.h>
-#include <epoc/mem/model/multiple/section.h>
-
-#include <memory>
+#include <epoc/mem/common.h>
+#include <cstddef>
+#include <cstdint>
 
 namespace eka2l1::mem {
-    /**
-     * \brief Memory management unit for multiple model.
-     */
-    class mmu_multiple: public mmu_base {
-        std::vector<std::unique_ptr<page_directory>> dirs_;
-        page_directory *cur_dir_;
-        page_directory  global_dir_;
+    class mmu_base;
+    class page_directory;
 
-        linear_section user_global_sec_;
-        linear_section user_code_sec_;
+    struct mem_model_chunk {
+    protected:
+        mmu_base *mmu_;
+        asid addr_space_id_;
 
     public:
-        explicit mmu_multiple(page_table_allocator *alloc, const std::size_t psize_bits = 10, const bool mem_map_old = false);
+        explicit mem_model_chunk(mmu_base *mmu, const asid id)
+            : mmu_(mmu)
+            , addr_space_id_(id) {
+        }
 
-        asid rollover_fresh_addr_space() override;
-        bool set_current_addr_space(const asid id) override;
-        void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags) override;
+        virtual const vm_address base() = 0;
+        virtual std::size_t commit(const vm_address offset, const std::size_t size) = 0;
+        virtual void decommit(const vm_address offset, const std::size_t size) = 0;
     };
 }

@@ -56,6 +56,10 @@ namespace eka2l1::mem {
             return page_size_bits_ == 10 ? PAGE_SIZE_BYTES_10B : PAGE_SIZE_BYTES_20B;
         }
 
+        const bool using_old_mem_map() const {
+            return mem_map_old_;
+        }
+
         /**
          * \brief Create a new page table.
          * 

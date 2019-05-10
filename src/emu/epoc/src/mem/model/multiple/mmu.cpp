@@ -21,6 +21,14 @@
 #include <algorithm>
 
 namespace eka2l1::mem {
+    mmu_multiple::mmu_multiple(page_table_allocator *alloc, const std::size_t psize_bits, const bool mem_map_old)
+        : mmu_base(alloc, psize_bits, mem_map_old)
+        , cur_dir_(nullptr)
+        , global_dir_(page_size_bits_, 0)
+        , user_global_sec_(global_data, ram_drive, page_size())
+        , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : rom, page_size()) {
+    }
+    
     asid mmu_multiple::rollover_fresh_addr_space() {
         // Try to find existing unoccpied page directory
         for (std::size_t i = 0; i < dirs_.size(); i++) {
