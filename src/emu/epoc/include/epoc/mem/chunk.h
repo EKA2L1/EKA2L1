@@ -25,7 +25,6 @@
 
 namespace eka2l1::mem {
     class mmu_base;
-    class page_directory;
 
     struct mem_model_chunk {
     protected:

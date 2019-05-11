@@ -21,6 +21,8 @@
 
 #include <epoc/mem/process.h>
 #include <epoc/mem/page.h>
+
+#include <epoc/mem/model/multiple/chunk.h>
 #include <epoc/mem/model/multiple/section.h>
 
 namespace eka2l1::mem {
@@ -29,7 +31,15 @@ namespace eka2l1::mem {
         asid addr_space_id_;
         linear_section user_local_sec_;
 
+        std::vector<std::unique_ptr<multiple_mem_model_chunk>> chunks_;
+
+        multiple_mem_model_chunk *allocate_chunk_struct_ptr();
+        linear_section *get_section(const std::uint32_t flags);
+
     public:
         explicit multiple_mem_model_process(mmu_base *mmu);
+
+        int create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) override;
+        void delete_chunk(mem_model_chunk *chunk) override;
     };
 };

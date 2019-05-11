@@ -29,6 +29,8 @@ namespace eka2l1::mem {
      * \brief Memory management unit for multiple model.
      */
     class mmu_multiple: public mmu_base {
+        friend struct multiple_mem_model_process;
+        
         std::vector<std::unique_ptr<page_directory>> dirs_;
         page_directory *cur_dir_;
         page_directory  global_dir_;

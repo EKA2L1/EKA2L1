@@ -36,6 +36,15 @@ namespace eka2l1::mem {
         MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED = 1 << 5
     };
 
+    enum {
+        MEM_MODEL_CHUNK_ERR_OK = 0,
+        MEM_MODEL_CHUNK_ERR_MAXIMUM_CHUNK_OVERFLOW = -1,
+        MEM_MODEL_CHUNK_ERR_INVALID_REGION = -2,
+        MEM_MODEL_CHUNK_ERR_NO_MEM = -3
+    };
+
+    struct mem_model_process;
+
     struct mem_model_chunk_creation_info {
         std::size_t size;
         std::uint32_t flags;
@@ -52,7 +61,9 @@ namespace eka2l1::mem {
             : mmu_(mmu) {
         }
 
-        virtual void create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) = 0;
+        virtual int create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) = 0;
+        virtual void delete_chunk(mem_model_chunk *chunk);
+
         virtual void *get_pointer(const vm_address addr) = 0;
     };
 }
