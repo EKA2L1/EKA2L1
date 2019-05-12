@@ -27,7 +27,7 @@ namespace eka2l1::mem {
         if (page_size == 20) {
             pages_.resize(PAGE_PER_TABLE_20B);
         } else {
-            pages_.resize(PAGE_PER_TABLE_10B);
+            pages_.resize(PAGE_PER_TABLE_12B);
         }
     }
 
@@ -50,12 +50,12 @@ namespace eka2l1::mem {
 
             page_tabs_.resize(TABLE_PER_DIR_20B);
         } else {
-            offset_mask_ = OFFSET_MASK_10B;
-            page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_10B;
-            page_index_mask_ = PAGE_INDEX_MASK_10B;
-            page_index_shift_ = PAGE_INDEX_SHIFT_10B;
+            offset_mask_ = OFFSET_MASK_12B;
+            page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_12B;
+            page_index_mask_ = PAGE_INDEX_MASK_12B;
+            page_index_shift_ = PAGE_INDEX_SHIFT_12B;
             
-            page_tabs_.resize(TABLE_PER_DIR_10B);
+            page_tabs_.resize(TABLE_PER_DIR_12B);
         }
     }
 

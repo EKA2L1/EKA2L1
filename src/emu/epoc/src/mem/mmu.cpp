@@ -37,13 +37,13 @@ namespace eka2l1::mem {
             chunk_mask_ = CHUNK_MASK_20B;
             chunk_size_ = CHUNK_SIZE_20B;
         } else {
-            offset_mask_ = OFFSET_MASK_10B;
-            page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_10B;
-            page_index_mask_ = PAGE_INDEX_MASK_10B;
-            page_index_shift_ = PAGE_INDEX_SHIFT_10B;
-            chunk_shift_ = CHUNK_SHIFT_10B;
-            chunk_mask_ = CHUNK_MASK_10B;
-            chunk_size_ = CHUNK_SIZE_10B;
+            offset_mask_ = OFFSET_MASK_12B;
+            page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_12B;
+            page_index_mask_ = PAGE_INDEX_MASK_12B;
+            page_index_shift_ = PAGE_INDEX_SHIFT_12B;
+            chunk_shift_ = CHUNK_SHIFT_12B;
+            chunk_mask_ = CHUNK_MASK_12B;
+            chunk_size_ = CHUNK_SIZE_12B;
         }
     }
 

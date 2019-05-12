@@ -55,30 +55,30 @@ namespace eka2l1::mem {
     };
 
     constexpr std::size_t PAGE_PER_TABLE_20B = 0b111111;        ///< Page per table constant for 1MB paging
-    constexpr std::size_t PAGE_PER_TABLE_10B = 0b11111111;      ///< Page per table constant for 1KB paging
+    constexpr std::size_t PAGE_PER_TABLE_12B = 0b11111111;      ///< Page per table constant for 4KB paging
 
     constexpr std::size_t TABLE_PER_DIR_20B = 0b111111;         ///< Table per directory constant for 1MB paging
-    constexpr std::size_t TABLE_PER_DIR_10B = 0b111111111111;   ///< Table per directory constant for 1KB paging
+    constexpr std::size_t TABLE_PER_DIR_12B = 0b111111111111;   ///< Table per directory constant for 4KB paging
 
-    constexpr std::uint32_t OFFSET_MASK_20B = 0b11111111111111111111;       ///< The mask to extract byte offset relative to a page, from a virtual address for 1MB paging
-    constexpr std::uint32_t OFFSET_MASK_10B = 0b1111111111;                 ///< The mask to extract byte offset relative to a page, from a virtual address for 1KB paging
+    constexpr std::uint32_t OFFSET_MASK_20B = 0b11111111111111111111;         ///< The mask to extract byte offset relative to a page, from a virtual address for 1MB paging
+    constexpr std::uint32_t OFFSET_MASK_12B = 0b111111111111;                 ///< The mask to extract byte offset relative to a page, from a virtual address for 4KB paging
 
     constexpr std::uint32_t PAGE_TABLE_INDEX_SHIFT_20B = 26;        ///< The amount of left shifting to extract page table index in 1MB paging
-    constexpr std::uint32_t PAGE_TABLE_INDEX_SHIFT_10B = 20;        ///< The amount of left shifting to extract page table index in 1KB paging
+    constexpr std::uint32_t PAGE_TABLE_INDEX_SHIFT_12B = 20;        ///< The amount of left shifting to extract page table index in 4KB paging
 
     constexpr std::uint32_t PAGE_INDEX_SHIFT_20B = 20;      ///< The amount of left shifting to extract page index in 1MB paging
-    constexpr std::uint32_t PAGE_INDEX_SHIFT_10B = 10;      ///< The amount of left shifting to extract page index in 1KB paging
+    constexpr std::uint32_t PAGE_INDEX_SHIFT_12B = 12;      ///< The amount of left shifting to extract page index in 4KB paging
 
-    constexpr std::uint32_t PAGE_INDEX_MASK_20B = 0b111111;     ///< The mask to extract page index, from a virtual address for 1MB paging
-    constexpr std::uint32_t PAGE_INDEX_MASK_10B = 0b11111111;   ///< The mask to extract page index, from a virtual address for 1KB paging
+    constexpr std::uint32_t PAGE_INDEX_MASK_20B = 0b111111;      ///< The mask to extract page index, from a virtual address for 1MB paging
+    constexpr std::uint32_t PAGE_INDEX_MASK_12B = 0b11111111;   ///< The mask to extract page index, from a virtual address for 4KB paging
 
-    constexpr std::uint32_t CHUNK_SHIFT_10B = 10;       ///< The shift of a chunk (page tables full) for 1KB paging
-    constexpr std::uint32_t CHUNK_SHIFT_20B = 20;       ///< The shift of a chunk (page tables full) for 1MB paging
+    constexpr std::uint32_t CHUNK_SHIFT_12B = 20;       ///< The shift of a chunk (page tables full) for 4KB paging
+    constexpr std::uint32_t CHUNK_SHIFT_20B = 26;       ///< The shift of a chunk (page tables full) for 1MB paging
 
-    constexpr std::uint32_t CHUNK_SIZE_10B = 1 << 10;       ///< The size of a chunk (page tables full) for 1KB paging
-    constexpr std::uint32_t CHUNK_SIZE_20B = 1 << 20;       ///< The size of a chunk (page tables full) for 1MB paging
+    constexpr std::uint32_t CHUNK_SIZE_12B = 1 << 20;       ///< The size of a chunk (page tables full) for 4KB paging
+    constexpr std::uint32_t CHUNK_SIZE_20B = 1 << 26;       ///< The size of a chunk (page tables full) for 1MB paging
 
-    constexpr std::uint32_t CHUNK_MASK_10B = CHUNK_SIZE_10B - 1;       ///< The mask of a chunk (page tables full) for 1KB paging
+    constexpr std::uint32_t CHUNK_MASK_12B = CHUNK_SIZE_10B - 1;       ///< The mask of a chunk (page tables full) for 4KB paging
     constexpr std::uint32_t CHUNK_MASK_20B = CHUNK_SIZE_20B - 1;       ///< The mask of a chunk (page tables full) for 1MB paging
 
     /**
