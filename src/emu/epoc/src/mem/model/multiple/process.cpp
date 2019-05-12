@@ -97,23 +97,24 @@ namespace eka2l1::mem {
             return MEM_MODEL_CHUNK_ERR_INVALID_REGION;
         }
 
+        // Calculate total page table that we will use. Symbian uses a whole page table
+        // too, it's one of a way for it to be fast (not nitpicking places in the table,
+        // but actually alloc the whole table)
+        const std::uint32_t total_pt = static_cast<std::uint32_t>(
+            (create_info.size + mmu_->chunk_mask_) >> mmu_->chunk_shift_);
+
+        mchunk->max_size_ = total_pt << mmu_->chunk_shift_;
+
         // Allocate virtual pages
-        const int offset = chunk_sec->alloc_.allocate_from(0, static_cast<int>(create_info.size / mmu_->page_size()),
-            true);
+        const int offset = chunk_sec->alloc_.allocate_from(0, static_cast<int>(mchunk->max_size_), false);
 
         if (offset == -1) {
             return MEM_MODEL_CHUNK_ERR_NO_MEM;
         }
 
-        const vm_address addr = (offset >> mmu_->page_size_bits_) + chunk_sec->beg_;
+        const vm_address addr = (offset >> mmu_->chunk_shift_) + chunk_sec->beg_;
         mchunk->base_ = addr;
         mchunk->committed_ = 0;
-
-        // Calculate total pages
-        const std::uint32_t total_pages = static_cast<std::uint32_t>(
-            (create_info.size + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
-
-        mchunk->max_size_ = total_pages << mmu_->page_size_bits_;
 
         // Map host base memory
         mchunk->host_base_ = common::map_memory(mchunk->max_size_);
@@ -123,8 +124,8 @@ namespace eka2l1::mem {
         }
         
         // Allocate page table IDs storage that the chunk will use
-        mchunk->page_tabs_.resize((create_info.size + mmu_->chunk_mask_ - 1) >> 
-            mmu_->chunk_shift_);
+        mchunk->page_tabs_.resize(total_pt);
+        std::fill(mchunk->page_tabs_.begin(), mchunk->page_tabs_.end(), 0xFFFFFFFF);
 
         mchunk->permission_ = create_info.perm;
 
