@@ -72,6 +72,15 @@ namespace eka2l1::mem {
     constexpr std::uint32_t PAGE_INDEX_MASK_20B = 0b111111;     ///< The mask to extract page index, from a virtual address for 1MB paging
     constexpr std::uint32_t PAGE_INDEX_MASK_10B = 0b11111111;   ///< The mask to extract page index, from a virtual address for 1KB paging
 
+    constexpr std::uint32_t CHUNK_SHIFT_10B = 10;       ///< The shift of a chunk (page tables full) for 1KB paging
+    constexpr std::uint32_t CHUNK_SHIFT_20B = 20;       ///< The shift of a chunk (page tables full) for 1MB paging
+
+    constexpr std::uint32_t CHUNK_SIZE_10B = 1 << 10;       ///< The size of a chunk (page tables full) for 1KB paging
+    constexpr std::uint32_t CHUNK_SIZE_20B = 1 << 20;       ///< The size of a chunk (page tables full) for 1MB paging
+
+    constexpr std::uint32_t CHUNK_MASK_10B = CHUNK_SIZE_10B - 1;       ///< The mask of a chunk (page tables full) for 1KB paging
+    constexpr std::uint32_t CHUNK_MASK_20B = CHUNK_SIZE_20B - 1;       ///< The mask of a chunk (page tables full) for 1MB paging
+
     /**
      * \brief Structure contains info about a page (guest's memory chunk).
      * 

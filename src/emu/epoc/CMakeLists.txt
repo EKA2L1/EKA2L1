@@ -225,7 +225,7 @@ target_link_libraries(epocio PRIVATE
     epocmem
 )
 
-target_link_libraries(epocnmem PRIVATE common)
+target_link_libraries(epocnmem PRIVATE arm common)
 
 target_link_libraries(epocmem PUBLIC common)
 target_link_libraries(epocmem PRIVATE

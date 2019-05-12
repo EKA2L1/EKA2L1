@@ -18,25 +18,42 @@
  */
 
 #include <epoc/mem/mmu.h>
+#include <arm/arm_interface.h>
 
 namespace eka2l1::mem {
-    mmu_base::mmu_base(page_table_allocator *alloc, const std::size_t psize_bits, const bool mem_map_old)
-        : alloc_(alloc), page_size_bits_(psize_bits)
+    mmu_base::mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old)
+        : alloc_(alloc)
+        , cpu_(cpu)
+        , page_size_bits_(psize_bits)
         , mem_map_old_(mem_map_old) {
         if (psize_bits == 20) {
             offset_mask_ = OFFSET_MASK_20B;
             page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_20B;
             page_index_mask_ = PAGE_INDEX_MASK_20B;
             page_index_shift_ = PAGE_INDEX_SHIFT_20B;
+            chunk_shift_ = CHUNK_SHIFT_20B;
+            chunk_mask_ = CHUNK_MASK_20B;
+            chunk_size_ = CHUNK_SIZE_20B;
         } else {
             offset_mask_ = OFFSET_MASK_10B;
             page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_10B;
             page_index_mask_ = PAGE_INDEX_MASK_10B;
             page_index_shift_ = PAGE_INDEX_SHIFT_10B;
+            chunk_shift_ = CHUNK_SHIFT_10B;
+            chunk_mask_ = CHUNK_MASK_10B;
+            chunk_size_ = CHUNK_SIZE_10B;
         }
     }
 
     page_table *mmu_base::create_new_page_table() {
         return alloc_->create_new(page_size_bits_);
+    }
+
+    void mmu_base::map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm) {
+        cpu_->map_backing_mem(addr, size, reinterpret_cast<std::uint8_t*>(ptr), perm);
+    }
+
+    void mmu_base::unmap_from_cpu(const vm_address addr, const std::size_t size) {
+        cpu_->unmap_memory(addr, size);
     }
 }

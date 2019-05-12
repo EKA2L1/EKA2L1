@@ -21,6 +21,10 @@
 
 #include <epoc/mem/page.h>
 
+namespace eka2l1::arm {
+    class arm_interface;
+}
+
 namespace eka2l1::mem {
     constexpr std::size_t PAGE_SIZE_BYTES_10B = 0x1000;
     constexpr std::size_t PAGE_SIZE_BYTES_20B = 0x100000;
@@ -36,18 +40,26 @@ namespace eka2l1::mem {
     class mmu_base {
     protected:
         page_table_allocator *alloc_;        ///< Page table allocator.
-        std::size_t page_size_bits_;         ///< The number of bits of page size.
 
+    public:
+        std::size_t page_size_bits_;         ///< The number of bits of page size.
         std::uint32_t offset_mask_;
         std::uint32_t page_index_mask_;
         std::uint32_t page_index_shift_;
         std::uint32_t page_table_index_shift_;
+        std::uint32_t chunk_shift_;
+        std::uint32_t chunk_size_;
+        std::uint32_t chunk_mask_;  
 
         bool mem_map_old_;          ///< Should we use EKA1 mem map model?
+        arm::arm_interface *cpu_;
 
     public:
-        explicit mmu_base(page_table_allocator *alloc, const std::size_t psize_bits = 10
+        explicit mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10
             , const bool mem_map_old = false);
+
+        void map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm);
+        void unmap_from_cpu(const vm_address addr, const std::size_t size);
 
         /**
          * \brief Get number of bytes a page occupy
@@ -58,6 +70,13 @@ namespace eka2l1::mem {
 
         const bool using_old_mem_map() const {
             return mem_map_old_;
+        }
+
+        /**
+         * \brief Get a page table by its ID.
+         */
+        page_table *get_page_table_by_id(const std::uint32_t id) {
+            return alloc_->get_page_table_by_id(id);
         }
 
         /**

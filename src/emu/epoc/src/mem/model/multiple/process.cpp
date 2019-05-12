@@ -22,6 +22,7 @@
 #include <epoc/mem/model/multiple/process.h>
 
 #include <epoc/mem/mmu.h>
+#include <common/virtualmem.h>
 
 namespace eka2l1::mem {
     multiple_mem_model_process::multiple_mem_model_process(mmu_base *mmu) 
@@ -99,10 +100,28 @@ namespace eka2l1::mem {
             return MEM_MODEL_CHUNK_ERR_NO_MEM;
         }
 
-        const vm_address addr = offset * mmu_->page_size() + chunk_sec->beg_;
+        const vm_address addr = (offset >> mmu_->page_size_bits_) + chunk_sec->beg_;
+        mchunk->base_ = addr;
+        mchunk->committed_ = 0;
 
-        // We got free pages not allocated yet. Now we need to acquire some page table
-        mmu_multiple *mul_mmu = reinterpret_cast<mmu_multiple*>(mmu_);
+        // Calculate total pages
+        const std::uint32_t total_pages = static_cast<std::uint32_t>(
+            (create_info.size + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
+
+        mchunk->max_size_ = total_pages << mmu_->page_size_bits_;
+
+        // Map host base memory
+        mchunk->host_base_ = common::map_memory(mchunk->max_size_);
+
+        if (!mchunk->host_base_) {
+            return MEM_MODEL_CHUNK_ERR_NO_MEM;
+        }
+        
+        // Allocate page table IDs storage that the chunk will use
+        mchunk->page_tabs_.resize((create_info.size + mmu_->chunk_mask_ - 1) >> 
+            mmu_->chunk_shift_);
+
+        mchunk->permission_ = create_info.perm;
 
         return MEM_MODEL_CHUNK_ERR_OK;
     }

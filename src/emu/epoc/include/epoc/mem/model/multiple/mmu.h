@@ -39,7 +39,7 @@ namespace eka2l1::mem {
         linear_section user_code_sec_;
 
     public:
-        explicit mmu_multiple(page_table_allocator *alloc, const std::size_t psize_bits = 10, const bool mem_map_old = false);
+        explicit mmu_multiple(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
 
         asid rollover_fresh_addr_space() override;
         bool set_current_addr_space(const asid id) override;

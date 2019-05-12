@@ -20,15 +20,25 @@
 #pragma once
 
 #include <epoc/mem/chunk.h>
+#include <vector>
 
 namespace eka2l1::mem {
     struct multiple_mem_model_process;
 
     struct multiple_mem_model_chunk: public mem_model_chunk {
         vm_address base_;
+        void *host_base_;
+
         multiple_mem_model_process *own_process_;
 
         std::size_t chunk_id_in_mmp_;
+        vm_address bottom_;
+        vm_address top_;
+
+        std::size_t committed_;
+        std::size_t max_size_;
+
+        std::vector<std::uint32_t> page_tabs_;
 
     public:
         explicit multiple_mem_model_chunk(mmu_base *mmu, const asid id)

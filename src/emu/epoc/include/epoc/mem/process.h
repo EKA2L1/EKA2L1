@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/types.h>
 #include <epoc/mem/common.h>
 #include <cstddef>
 #include <cstdint>
@@ -48,6 +49,7 @@ namespace eka2l1::mem {
     struct mem_model_chunk_creation_info {
         std::size_t size;
         std::uint32_t flags;
+        prot perm;
     };
 
     /**
