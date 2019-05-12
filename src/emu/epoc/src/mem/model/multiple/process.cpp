@@ -22,6 +22,7 @@
 #include <epoc/mem/model/multiple/process.h>
 
 #include <epoc/mem/mmu.h>
+#include <common/algorithm.h>
 #include <common/virtualmem.h>
 
 namespace eka2l1::mem {
@@ -132,5 +133,17 @@ namespace eka2l1::mem {
 
     void multiple_mem_model_process::delete_chunk(mem_model_chunk *chunk) {
 
+    }
+
+    bool multiple_mem_model_process::attach_chunk(mem_model_chunk *chunk) {
+        multiple_mem_model_chunk *mul_chunk = reinterpret_cast<multiple_mem_model_chunk*>(chunk);
+
+        // Add our address ID space to the chunk
+        mul_chunk->attached_asids_.push_back(addr_space_id_);
+        return true;
+    }
+
+    bool multiple_mem_model_process::detach_chunk(mem_model_chunk *chunk) {
+        return true;
     }
 }

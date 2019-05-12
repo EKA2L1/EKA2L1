@@ -78,7 +78,7 @@ namespace eka2l1::mem {
     constexpr std::uint32_t CHUNK_SIZE_12B = 1 << 20;       ///< The size of a chunk (page tables full) for 4KB paging
     constexpr std::uint32_t CHUNK_SIZE_20B = 1 << 26;       ///< The size of a chunk (page tables full) for 1MB paging
 
-    constexpr std::uint32_t CHUNK_MASK_12B = CHUNK_SIZE_10B - 1;       ///< The mask of a chunk (page tables full) for 4KB paging
+    constexpr std::uint32_t CHUNK_MASK_12B = CHUNK_SIZE_12B - 1;       ///< The mask of a chunk (page tables full) for 4KB paging
     constexpr std::uint32_t CHUNK_MASK_20B = CHUNK_SIZE_20B - 1;       ///< The mask of a chunk (page tables full) for 1MB paging
 
     /**

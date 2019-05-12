@@ -39,6 +39,7 @@ namespace eka2l1::mem {
         std::size_t max_size_;
 
         std::vector<std::uint32_t> page_tabs_;
+        std::vector<asid> attached_asids_;
 
     public:
         explicit multiple_mem_model_chunk(mmu_base *mmu, const asid id)

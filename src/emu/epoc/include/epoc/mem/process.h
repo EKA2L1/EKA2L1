@@ -69,6 +69,9 @@ namespace eka2l1::mem {
         virtual void delete_chunk(mem_model_chunk *chunk);
 
         virtual void *get_pointer(const vm_address addr) = 0;
+
+        virtual bool attach_chunk(mem_model_chunk *chunk) = 0;
+        virtual bool detach_chunk(mem_model_chunk *chunk) = 0;
     };
 
     using mem_model_process_impl = std::unique_ptr<mem_model_process>;

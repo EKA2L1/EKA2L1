@@ -43,5 +43,8 @@ namespace eka2l1::mem {
         void delete_chunk(mem_model_chunk *chunk) override;
         
         void *get_pointer(const vm_address addr) override;
+        
+        bool attach_chunk(mem_model_chunk *chunk) override;
+        bool detach_chunk(mem_model_chunk *chunk) override;
     };
 };
