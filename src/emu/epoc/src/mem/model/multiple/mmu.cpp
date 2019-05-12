@@ -82,4 +82,12 @@ namespace eka2l1::mem {
             }
         }
     }
+
+    void *mmu_multiple::get_host_pointer(const asid id, const vm_address addr) {
+        if (dirs_.size() <= id) {
+            return nullptr;
+        }
+
+        return dirs_[id]->get_pointer(addr);
+    }
 }

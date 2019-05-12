@@ -20,6 +20,8 @@
 #include <epoc/mem/mmu.h>
 #include <arm/arm_interface.h>
 
+#include <epoc/mem/model/multiple/mmu.h>
+
 namespace eka2l1::mem {
     mmu_base::mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old)
         : alloc_(alloc)
@@ -55,5 +57,19 @@ namespace eka2l1::mem {
 
     void mmu_base::unmap_from_cpu(const vm_address addr, const std::size_t size) {
         cpu_->unmap_memory(addr, size);
+    }
+    
+    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old,
+        const mem_model_type model) {
+        switch (model) {
+        case mem_model_type::multiple: {
+            return std::make_unique<mmu_multiple>(alloc, cpu, psize_bits, mem_map_old);
+        }
+
+        default:
+            break;
+        }
+
+        return nullptr;
     }
 }

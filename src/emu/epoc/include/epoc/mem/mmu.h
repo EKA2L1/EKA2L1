@@ -20,6 +20,7 @@
 #pragma once
 
 #include <epoc/mem/page.h>
+#include <memory>
 
 namespace eka2l1::arm {
     class arm_interface;
@@ -80,6 +81,11 @@ namespace eka2l1::mem {
         }
 
         /**
+         * \brief Get host pointer of a virtual address, in the specified address space.
+         */
+        virtual void *get_host_pointer(const asid id, const vm_address addr) = 0;
+
+        /**
          * \brief Create a new page table.
          * 
          * The new page table will not be assigned to any existing page directory, until
@@ -109,4 +115,9 @@ namespace eka2l1::mem {
          */
         virtual void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags) = 0;
     };
+
+    using mmu_impl = std::unique_ptr<mmu_base>;
+
+    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old,
+        const mem_model_type model);
 }

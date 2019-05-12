@@ -41,6 +41,8 @@ namespace eka2l1::mem {
     public:
         explicit mmu_multiple(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
 
+        void *get_host_pointer(const asid id, const vm_address addr) override;
+
         asid rollover_fresh_addr_space() override;
         bool set_current_addr_space(const asid id) override;
         void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags) override;

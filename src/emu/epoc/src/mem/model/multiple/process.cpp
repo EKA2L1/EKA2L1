@@ -75,6 +75,10 @@ namespace eka2l1::mem {
 
         return nullptr;
     }
+
+    void *multiple_mem_model_process::get_pointer(const vm_address addr) {
+        return mmu_->get_host_pointer(addr_space_id_, addr);
+    }
     
     int multiple_mem_model_process::create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) {
         // Allocate free chunk pointer first

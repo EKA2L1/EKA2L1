@@ -21,8 +21,10 @@
 
 #include <common/types.h>
 #include <epoc/mem/common.h>
+
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace eka2l1::mem {
     struct mem_model_chunk;
@@ -68,4 +70,8 @@ namespace eka2l1::mem {
 
         virtual void *get_pointer(const vm_address addr) = 0;
     };
+
+    using mem_model_process_impl = std::unique_ptr<mem_model_process>;
+
+    mem_model_process_impl make_new_mem_model_process(mmu_base *mmu, const mem_model_type model);
 }

@@ -17,16 +17,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <cstdint>
+#include <epoc/mem/process.h>
+#include <epoc/mem/model/multiple/process.h>
 
 namespace eka2l1::mem {
-    using vm_address = std::uint32_t;
-    using asid = std::int32_t;
+    mem_model_process_impl make_new_mem_model_process(mmu_base *mmu, const mem_model_type model) {
+        switch (model) {
+        case mem_model_type::multiple: {
+            return std::make_unique<multiple_mem_model_process>(mmu);
+        }
 
-    enum class mem_model_type {
-        moving,
-        multiple
-    };
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
 }

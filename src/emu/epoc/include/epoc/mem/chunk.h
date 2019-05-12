@@ -21,8 +21,10 @@
 
 #include <epoc/mem/common.h>
 #include <common/types.h>
+
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace eka2l1::mem {
     class mmu_base;
@@ -43,4 +45,9 @@ namespace eka2l1::mem {
         virtual std::size_t commit(const vm_address offset, const std::size_t size) = 0;
         virtual void decommit(const vm_address offset, const std::size_t size) = 0;
     };
+
+    using mem_model_chunk_impl = std::unique_ptr<mem_model_chunk>;
+
+    mem_model_chunk_impl make_new_mem_model_chunk(mmu_base *mmu, const asid addr_space_id,
+        const mem_model_type mmt);
 }

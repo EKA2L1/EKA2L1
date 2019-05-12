@@ -76,8 +76,10 @@ add_library(epocnmem
     src/mem/allocator/std_page_allocator.cpp
     src/mem/model/multiple/mmu.cpp
     src/mem/model/multiple/process.cpp
+    src/mem/chunk.cpp
     src/mem/mmu.cpp
-    src/mem/page.cpp)
+    src/mem/page.cpp
+    src/mem/process.cpp)
 
 add_library(epocservs 
     include/epoc/services/context.h

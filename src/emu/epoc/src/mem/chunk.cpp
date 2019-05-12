@@ -17,16 +17,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <cstdint>
+#include <epoc/mem/chunk.h>
+#include <epoc/mem/model/multiple/chunk.h>
 
 namespace eka2l1::mem {
-    using vm_address = std::uint32_t;
-    using asid = std::int32_t;
+    mem_model_chunk_impl make_new_mem_model_chunk(mmu_base *mmu, const asid addr_space_id,
+        const mem_model_type mmt) {
+        switch (mmt) {
+        case mem_model_type::multiple: {
+            return std::make_unique<multiple_mem_model_chunk>(mmu, addr_space_id);
+        }
 
-    enum class mem_model_type {
-        moving,
-        multiple
-    };
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
 }
