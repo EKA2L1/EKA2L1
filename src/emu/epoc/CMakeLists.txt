@@ -58,11 +58,6 @@ add_library(epockern
 
 add_library(epocmem
     include/epoc/mem.h
-    include/epoc/page_table.h
-    src/mem.cpp
-    src/page_table.cpp)
-
-add_library(epocnmem
     include/epoc/mem/allocator/std_page_allocator.h
     include/epoc/mem/model/multiple/chunk.h
     include/epoc/mem/model/multiple/mmu.h
@@ -73,6 +68,7 @@ add_library(epocnmem
     include/epoc/mem/mmu.h
     include/epoc/mem/page.h
     include/epoc/mem/process.h
+    src/mem.cpp
     src/mem/allocator/std_page_allocator.cpp
     src/mem/model/multiple/chunk.cpp
     src/mem/model/multiple/mmu.cpp
@@ -217,7 +213,6 @@ add_library(epocutils
 
 target_include_directories(epocloader PUBLIC include)
 target_include_directories(epocmem PUBLIC include)
-target_include_directories(epocnmem PUBLIC include)
 target_include_directories(epockern PUBLIC include)
 target_include_directories(epocservs PUBLIC include)
 target_include_directories(epocutils PUBLIC include)
@@ -228,13 +223,8 @@ target_link_libraries(epocio PRIVATE
     epocmem
 )
 
-target_link_libraries(epocnmem PRIVATE arm common)
-
 target_link_libraries(epocmem PUBLIC common)
-target_link_libraries(epocmem PRIVATE
-    arm
-    epocnmem
-    epockern)
+target_link_libraries(epocmem PRIVATE arm)
 
 target_include_directories(epocloader PUBLIC
     ${YAML_INCLUDE_DIR})

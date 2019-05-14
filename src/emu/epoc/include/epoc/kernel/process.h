@@ -23,8 +23,8 @@
 #include <epoc/kernel/mutex.h>
 #include <epoc/kernel/object_ix.h>
 #include <epoc/kernel/thread.h>
+#include <epoc/mem/process.h>
 #include <epoc/utils/sec.h>
-
 #include <epoc/utils/reqsts.h>
 
 #include <cassert>
@@ -41,11 +41,6 @@ namespace eka2l1 {
 
     namespace common {
         class chunkyseri;
-    }
-
-    namespace mem {
-        struct mem_model_process;
-        using mem_model_process_impl = std::unique_ptr<mem_model_process>;
     }
 }
 

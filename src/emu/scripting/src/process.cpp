@@ -27,7 +27,6 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 #include <epoc/kernel/process.h>
-#include <epoc/page_table.h>
 
 namespace scripting = eka2l1::scripting;
 namespace py = pybind11;
