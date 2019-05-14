@@ -77,4 +77,22 @@ namespace eka2l1::common {
             return false;
         }
     };
+
+    struct bitmap_allocator {
+        std::vector<std::uint32_t> words_;
+
+    public:
+        // For testing, don't use this if not neccessary
+        bool set_word(const std::uint32_t off, const std::uint32_t val);
+        const std::uint32_t get_word(const std::uint32_t off) const;
+
+        bitmap_allocator() = default;
+        explicit bitmap_allocator(const std::size_t total_bits);
+
+        void set_maximum(const std::size_t total_bits);
+
+        void force_fill(const std::uint32_t offset, const int size, const bool or_mode = false);
+        int allocate_from(const std::uint32_t start_offset, const int size = 1, const bool best_fit = false);
+        void free(const std::uint32_t offset, const int size);
+    };
 }

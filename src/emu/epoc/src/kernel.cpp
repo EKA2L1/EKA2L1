@@ -25,6 +25,7 @@
 #include <arm/arm_analyser.h>
 #include <arm/arm_interface.h>
 
+#include <common/buffer.h>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -40,6 +41,9 @@
 #include <epoc/ptr.h>
 #include <epoc/services/posix/posix.h>
 #include <epoc/vfs.h>
+
+#include <epoc/loader/e32img.h>
+#include <epoc/loader/romimage.h>
 
 #include <epoc/services/init.h>
 
@@ -291,43 +295,63 @@ namespace eka2l1 {
         kernel_obj_ptr target_obj = get_kernel_obj_raw(handle);
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
+        kernel::handle h = INVALID_HANDLE;
+
         switch (owner) {
         case kernel::owner_type::kernel:
             return kernel_handles.add_object(target_obj);
 
         case kernel::owner_type::thread: {
             if (!own_thread) {
-                return 0xFFFFFFFF;
+                return INVALID_HANDLE;
             }
 
-            return own_thread->thread_handles.add_object(target_obj);
+            h = own_thread->thread_handles.add_object(target_obj);
+            break;
         }
 
         case kernel::owner_type::process: {
-            return crr_process()->process_handles.add_object(target_obj);
+            h = own_thread->own_process->process_handles.add_object(target_obj);
+            break;
         }
 
         default:
-            return 0xFFFFFFFF;
+            break;
         }
+    
+        if (h != INVALID_HANDLE) {    
+            target_obj->open_to(own_thread->own_process);
+        }
+
+        return h;
     }
 
     uint32_t kernel_system::mirror(kernel_obj_ptr obj, kernel::owner_type owner) {
+        kernel::handle h = INVALID_HANDLE;
+
         switch (owner) {
         case kernel::owner_type::kernel:
             return kernel_handles.add_object(obj);
 
         case kernel::owner_type::thread: {
-            return crr_thread()->thread_handles.add_object(obj);
+            h = crr_thread()->thread_handles.add_object(obj);
+            break;
         }
 
         case kernel::owner_type::process: {
-            return crr_process()->process_handles.add_object(obj);
+            h = crr_process()->process_handles.add_object(obj);
+            break;
         }
 
         default:
-            return 0xFFFFFFFF;
+            return INVALID_HANDLE;
         }
+
+        if (h != INVALID_HANDLE) {
+            obj->open_to(crr_process());
+        }
+
+        return h;
     }
 
     kernel::handle kernel_system::open_handle(kernel_obj_ptr obj, kernel::owner_type owner) {
@@ -335,23 +359,31 @@ namespace eka2l1 {
     }
 
     kernel::handle kernel_system::open_handle_with_thread(kernel::thread *thr, kernel_obj_ptr obj, kernel::owner_type owner) {
+        kernel::handle h = INVALID_HANDLE;
+
         switch (owner) {
         case kernel::owner_type::kernel:
             return kernel_handles.add_object(obj);
 
         case kernel::owner_type::thread: {
-            return thr->thread_handles.add_object(obj);
+            h = thr->thread_handles.add_object(obj);
+            break;
         }
 
         case kernel::owner_type::process: {
-            return thr->owning_process()->process_handles.add_object(obj);
+            h = thr->owning_process()->process_handles.add_object(obj);
+            break;
         }
 
         default:
             break;
         }
 
-        return INVALID_HANDLE;
+        if (h != INVALID_HANDLE) {
+            obj->open_to(thr->owning_process());
+        }
+
+        return h;
     }
 
     uint32_t kernel_system::next_uid() const {

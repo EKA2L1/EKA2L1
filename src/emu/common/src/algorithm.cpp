@@ -25,6 +25,10 @@
 #include <Windows.h>
 #endif
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 #include <cctype>
 #include <cwctype>
 
@@ -158,6 +162,21 @@ namespace eka2l1 {
                 start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
             }
             return str;
+        }
+        
+        int count_leading_zero(const std::uint32_t v) {
+        #if defined(__GNUC__) || defined(__clang__)
+            return __builtin_clz(v);
+        #elif defined(_MSC_VER)
+            DWORD lz = 0;
+            _BitScanReverse(&lz, v);
+
+            return static_cast<int>(lz);
+        #endif 
+        }
+
+        int find_most_significant_bit_one(const std::uint32_t v) {
+            return 32 - count_leading_zero(v);
         }
     }
 }

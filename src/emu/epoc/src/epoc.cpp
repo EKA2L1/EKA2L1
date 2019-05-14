@@ -328,10 +328,7 @@ namespace eka2l1 {
 
         cpu = arm::create_jitter(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, debugger, jit_type);
 
-        mem.init(cpu, get_symbian_version_use() <= epocver::epoc6 ? ram_code_addr_eka1 : ram_code_addr,
-            get_symbian_version_use() <= epocver::epoc6 ? shared_data_eka1 : shared_data,
-            get_symbian_version_use() <= epocver::epoc6 ? shared_data_end_eka1 - shared_data_eka1 : ram_code_addr - shared_data);
-
+        mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
         kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
 
         epoc::init_hal(parent);

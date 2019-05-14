@@ -32,6 +32,7 @@ namespace eka2l1 {
 
     namespace kernel {
         using handle = std::uint32_t;
+        class process;
 
         /*! \brief Ownership type for handle */
         enum class owner_type {
@@ -103,6 +104,8 @@ namespace eka2l1 {
             virtual ~kernel_obj() {}
             virtual void close() {}
             virtual void destroy() {}
+
+            virtual void open_to(process *own) {}
 
             /*! \brief Get the name of the object.
              * \returns Object name.
