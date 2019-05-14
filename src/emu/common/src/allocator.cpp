@@ -71,7 +71,7 @@ namespace eka2l1::common {
             }
         }
 
-        if (farest_end_offset >= max_size) {
+        if (farest_end_offset + bytes > max_size) {
             // It's time to expand
             if (!expand(common::max(max_size * 2, rounded_size))) {
                 return nullptr;
