@@ -27,7 +27,7 @@ namespace eka2l1::arm {
 }
 
 namespace eka2l1::mem {
-    constexpr std::size_t PAGE_SIZE_BYTES_10B = 0x1000;
+    constexpr std::size_t PAGE_SIZE_BYTES_12B = 0x1000;
     constexpr std::size_t PAGE_SIZE_BYTES_20B = 0x100000;
 
     enum {
@@ -50,7 +50,8 @@ namespace eka2l1::mem {
         std::uint32_t page_table_index_shift_;
         std::uint32_t chunk_shift_;
         std::uint32_t chunk_size_;
-        std::uint32_t chunk_mask_;  
+        std::uint32_t chunk_mask_;
+        std::uint32_t page_per_tab_shift_;
 
         bool mem_map_old_;          ///< Should we use EKA1 mem map model?
         arm::arm_interface *cpu_;
@@ -66,7 +67,7 @@ namespace eka2l1::mem {
          * \brief Get number of bytes a page occupy
          */
         const std::size_t page_size() const {
-            return page_size_bits_ == 10 ? PAGE_SIZE_BYTES_10B : PAGE_SIZE_BYTES_20B;
+            return page_size_bits_ == 12 ? PAGE_SIZE_BYTES_12B : PAGE_SIZE_BYTES_20B;
         }
 
         const bool using_old_mem_map() const {
@@ -110,10 +111,13 @@ namespace eka2l1::mem {
          */
         virtual bool set_current_addr_space(const asid id) = 0;
 
+        virtual const asid current_addr_space() const = 0;
+
         /**
          * \brief Assign page tables at linear base address to page directories.
          */
-        virtual void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags) = 0;
+        virtual void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags
+            , asid *id_list = nullptr, const std::uint32_t id_list_size = 0) = 0;
     };
 
     using mmu_impl = std::unique_ptr<mmu_base>;

@@ -234,7 +234,7 @@ namespace eka2l1 {
 
             info.total_size = 0x40;
 
-            memcpy(stack_ptr.get(mem), &info, 0x40);
+            memcpy(stack_ptr.get(own_process), &info, 0x40);
         }
 
         thread::thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner,
@@ -275,10 +275,10 @@ namespace eka2l1 {
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
-            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), kern->crr_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
+            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), own_process, "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
-            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), kern->crr_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), own_process, "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
             request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
@@ -290,7 +290,7 @@ namespace eka2l1 {
 
             std::u16string name_16(name.begin(), name.end());
 
-            memcpy(name_chunk->base().get(mem), name_16.data(), name.length() * 2);
+            memcpy(name_chunk->base().get(own_process), name_16.data(), name.length() * 2);
 
             // TODO: Not hardcode this
             const size_t metadata_size = 0x40;
@@ -301,8 +301,8 @@ namespace eka2l1 {
             ptr<uint8_t> stack_phys_beg(stack_chunk->base().ptr_address());
             ptr<uint8_t> stack_phys_end(stack_top);
 
-            uint8_t *start = stack_phys_beg.get(mem);
-            uint8_t *end = stack_phys_end.get(mem);
+            uint8_t *start = stack_phys_beg.get(own_process);
+            uint8_t *end = stack_phys_end.get(own_process);
 
             // Fill the stack with garbage
             std::fill(start, end, 0xcc);

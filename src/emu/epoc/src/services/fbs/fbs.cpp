@@ -38,7 +38,7 @@
 
 namespace eka2l1 {
     fbs_chunk_allocator::fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *dat_ptr)
-        : block_allocator(dat_ptr, de_chunk->get_size())
+        : block_allocator(dat_ptr, de_chunk->committed())
         , target_chunk(std::move(de_chunk)) {
     }
 
@@ -113,7 +113,7 @@ namespace eka2l1 {
             shared_chunk = kern->create_and_add<kernel::chunk>(
                 kernel::owner_type::kernel,
                 kern->get_memory_system(),
-                kern->crr_process(),
+                nullptr,
                 "FbsSharedChunk",
                 0,
                 0x10000,
@@ -126,7 +126,7 @@ namespace eka2l1 {
             large_chunk = kern->create_and_add<kernel::chunk>(
                 kernel::owner_type::kernel,
                 kern->get_memory_system(),
-                kern->crr_process(),
+                nullptr,
                 "FbsLargeChunk",
                 0,
                 0,
@@ -145,8 +145,8 @@ namespace eka2l1 {
 
             memory_system *mem = sys->get_memory_system();
 
-            base_shared_chunk = shared_chunk->base().get(mem);
-            base_large_chunk = large_chunk->base().get(mem);
+            base_shared_chunk = reinterpret_cast<std::uint8_t*>(shared_chunk->host_base());
+            base_large_chunk = reinterpret_cast<std::uint8_t*>(large_chunk->host_base());
 
             shared_chunk_allocator = std::make_unique<fbs_chunk_allocator>(shared_chunk,
                 base_shared_chunk);

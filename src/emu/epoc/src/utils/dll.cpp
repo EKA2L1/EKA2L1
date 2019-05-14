@@ -27,6 +27,9 @@
 #include <epoc/kernel/libmanager.h>
 #include <epoc/utils/dll.h>
 
+#include <epoc/loader/e32img.h>
+#include <epoc/loader/romimage.h>
+
 namespace eka2l1::epoc {
     std::optional<std::u16string> get_dll_full_path(eka2l1::system *sys, const std::uint32_t addr) {
         hle::lib_manager &mngr = *sys->get_lib_manager();

@@ -55,8 +55,8 @@ namespace eka2l1 {
             return reinterpret_cast<T *>(get_raw_pointer(pr, mem_address));
         }
 
-        T *get(memory_system *mem) const {
-            return reinterpret_cast<T *>(mem->get_real_pointer(mem_address));
+        T *get(memory_system *mem, const mem::asid optional_asid = -1) const {
+            return reinterpret_cast<T *>(mem->get_real_pointer(mem_address, optional_asid));
         }
 
         void reset() {

@@ -30,6 +30,7 @@ namespace eka2l1::mem {
      */
     class mmu_multiple: public mmu_base {
         friend struct multiple_mem_model_process;
+        friend struct multiple_mem_model_chunk;
         
         std::vector<std::unique_ptr<page_directory>> dirs_;
         page_directory *cur_dir_;
@@ -43,8 +44,12 @@ namespace eka2l1::mem {
 
         void *get_host_pointer(const asid id, const vm_address addr) override;
 
+        const asid current_addr_space() const override;
+
         asid rollover_fresh_addr_space() override;
         bool set_current_addr_space(const asid id) override;
-        void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags) override;
+        
+        void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags,
+            asid *id_list = nullptr, const std::uint32_t id_list_size = 0) override;
     };
 }

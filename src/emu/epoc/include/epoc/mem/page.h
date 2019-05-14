@@ -54,11 +54,11 @@ namespace eka2l1::mem {
         code_seg_section_number_entries = code_seg_section_size / page_size
     };
 
-    constexpr std::size_t PAGE_PER_TABLE_20B = 0b111111;        ///< Page per table constant for 1MB paging
-    constexpr std::size_t PAGE_PER_TABLE_12B = 0b11111111;      ///< Page per table constant for 4KB paging
+    constexpr std::size_t PAGE_PER_TABLE_20B = 0b111111 + 1;        ///< Page per table constant for 1MB paging
+    constexpr std::size_t PAGE_PER_TABLE_12B = 0b11111111 + 1;      ///< Page per table constant for 4KB paging
 
-    constexpr std::size_t TABLE_PER_DIR_20B = 0b111111;         ///< Table per directory constant for 1MB paging
-    constexpr std::size_t TABLE_PER_DIR_12B = 0b111111111111;   ///< Table per directory constant for 4KB paging
+    constexpr std::size_t TABLE_PER_DIR_20B = 0b111111 + 1;         ///< Table per directory constant for 1MB paging
+    constexpr std::size_t TABLE_PER_DIR_12B = 0b111111111111 + 1;   ///< Table per directory constant for 4KB paging
 
     constexpr std::uint32_t OFFSET_MASK_20B = 0b11111111111111111111;         ///< The mask to extract byte offset relative to a page, from a virtual address for 1MB paging
     constexpr std::uint32_t OFFSET_MASK_12B = 0b111111111111;                 ///< The mask to extract byte offset relative to a page, from a virtual address for 4KB paging
@@ -80,6 +80,9 @@ namespace eka2l1::mem {
 
     constexpr std::uint32_t CHUNK_MASK_12B = CHUNK_SIZE_12B - 1;       ///< The mask of a chunk (page tables full) for 4KB paging
     constexpr std::uint32_t CHUNK_MASK_20B = CHUNK_SIZE_20B - 1;       ///< The mask of a chunk (page tables full) for 1MB paging
+
+    constexpr std::uint32_t PAGE_PER_TABLE_SHIFT_12B = 8;
+    constexpr std::uint32_t PAGE_PER_TABLE_SHIFT_20B = 8;
 
     /**
      * \brief Structure contains info about a page (guest's memory chunk).
@@ -106,7 +109,7 @@ namespace eka2l1::mem {
         std::uint32_t id_;
         std::size_t page_size_;
         
-        std::uint32_t idx_;
+        std::uint32_t idx_ { 0xFFFFFFFF };
 
     public:
         explicit page_table(const std::uint32_t id, const std::size_t page_size);
@@ -122,12 +125,18 @@ namespace eka2l1::mem {
         const std::uint32_t id() const {
             return id_;
         }
+
+        const std::uint32_t count() const {
+            return static_cast<std::uint32_t>(pages_.size());
+        }
     };
 
     struct page_table_allocator {
     public:
         virtual page_table *create_new(const std::size_t psize) = 0;
         virtual page_table *get_page_table_by_id(const std::uint32_t id) = 0;
+
+        virtual void free_page_table(const std::uint32_t id) = 0;
     };
 
     struct page_directory {
@@ -140,7 +149,7 @@ namespace eka2l1::mem {
         std::uint32_t page_table_index_shift_;
 
         asid id_;
-        bool occupied_;
+        bool occupied_ { false };
 
     public:
         explicit page_directory(const std::size_t page_size, const asid id);

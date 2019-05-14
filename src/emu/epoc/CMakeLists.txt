@@ -74,6 +74,7 @@ add_library(epocnmem
     include/epoc/mem/page.h
     include/epoc/mem/process.h
     src/mem/allocator/std_page_allocator.cpp
+    src/mem/model/multiple/chunk.cpp
     src/mem/model/multiple/mmu.cpp
     src/mem/model/multiple/process.cpp
     src/mem/chunk.cpp
@@ -232,6 +233,7 @@ target_link_libraries(epocnmem PRIVATE arm common)
 target_link_libraries(epocmem PUBLIC common)
 target_link_libraries(epocmem PRIVATE
     arm
+    epocnmem
     epockern)
 
 target_include_directories(epocloader PUBLIC

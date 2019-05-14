@@ -26,7 +26,10 @@
 
 #include <epoc/kernel.h>
 #include <epoc/kernel/chunk.h>
+
 #include <epoc/mem.h>
+#include <epoc/mem/chunk.h>
+#include <epoc/mem/process.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -34,19 +37,19 @@ namespace eka2l1 {
             address bottom, const address top, const size_t max_size, prot protection,
             chunk_type type, chunk_access chnk_access, chunk_attrib attrib, const bool is_heap)
             : kernel_obj(kern, name, access_type::local_access)
-            , type(type)
-            , caccess(chnk_access)
-            , attrib(attrib)
-            , max_size(max_size)
-            , protection(protection)
             , mem(mem)
             , own_process(own_process)
-            , is_heap(is_heap) 
-            , commited_size(0) {
+            , is_heap(is_heap)
+            , type(type) {
             obj_type = object_type::chunk;
+            mem::mem_model_chunk_creation_info create_info {};
 
-            if (caccess == chunk_access::global) {
+            create_info.perm = protection;
+            create_info.size = max_size;
+
+            if (chnk_access == chunk_access::global) {
                 access = access_type::global_access;
+                create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_GLOBAL;
             }
 
             if (attrib == chunk_attrib::anonymous) {
@@ -54,78 +57,77 @@ namespace eka2l1 {
                 obj_name = "anonymous" + common::to_string(eka2l1::random());
             }
 
-            if (caccess == chunk_access::local && name == "") {
-                obj_name = "local" + common::to_string(eka2l1::random());
+            if (chnk_access == chunk_access::local) {
+                create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_LOCAL;
+
+                if (name == "") {
+                    obj_name = "local" + common::to_string(eka2l1::random());
+                }
             }
 
-            if (caccess == chunk_access::code) {
+            if (chnk_access == chunk_access::code) {
                 obj_name = "code" + common::to_string(eka2l1::random());
+                create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_CODE;
             }
 
-            address new_top = top;
-            address new_bottom = bottom;
-
-            if (type == chunk_type::normal) {
-                // Adjust the top and bottom. Later
-                size_t init_commit_size = new_top - new_bottom;
-
-                new_top = static_cast<address>(init_commit_size);
-                new_bottom = 0;
-            }
-
-            address range_beg = 0;
-            address range_end = 0;
-
-            switch (caccess) {
-            case chunk_access::local: {
-                range_beg = local_data;
-                range_end = dll_static_data;
+            switch (type) {
+            case chunk_type::disconnected: {
+                create_info.flags |= mem::MEM_MODEL_CHUNK_TYPE_DISCONNECT;
                 break;
             }
 
-            case chunk_access::global: {
-                if (kern->get_epoc_version() == epocver::epoc6) {
-                    range_beg = shared_data_eka1;
-                    range_end = shared_data_end_eka1;
-                } else {
-                    range_beg = shared_data;
-                    range_end = ram_code_addr; // Drive D
-                }
-
+            case chunk_type::double_ended: {
+                create_info.flags |= mem::MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED;
                 break;
             }
 
-            case chunk_access::code: {
-                if (kern->get_epoc_version() == epocver::epoc6) {
-                    range_beg = ram_code_addr_eka1;
-                    range_end = ram_code_addr_eka1_end;
-                } else {
-                    range_beg = ram_code_addr;
-                    range_end = rom;
-                }
-
+            case chunk_type::normal: {
+                create_info.flags |= mem::MEM_MODEL_CHUNK_TYPE_NORMAL;
                 break;
             }
+
+            default:
+                break;
             }
 
-            chunk_base = mem->chunk_range(range_beg, range_end, new_bottom, new_top, static_cast<std::uint32_t>(max_size),
-                                protection)
-                             .cast<std::uint8_t>();
+            mmc_impl_ = nullptr;
 
-            this->top = new_top;
-            this->bottom = new_bottom;
+            if (own_process) {
+                own_process->get_mem_model()->create_chunk(mmc_impl_, create_info);
+            } else {
+                mmc_impl_unq_ = mem::make_new_mem_model_chunk(mem->get_mmu(), 0, mem::mem_model_type::multiple);
+                mmc_impl_unq_->do_create(create_info);
 
-            this->commited_size = this->top - this->bottom;
+                mmc_impl_ = mmc_impl_unq_.get();
+            }
 
-            LOG_INFO("Chunk created: {}, base: 0x{:x}, max size: 0x{:x}, bottom: {}, top: {}, type: {}, access: {}{}", obj_name, chunk_base.ptr_address(),
-                max_size, new_bottom, new_top,
-                (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
-                (caccess == chunk_access::local ? "local" : (caccess == chunk_access::code ? "code " : "global")),
+            mmc_impl_->adjust(bottom, top);
+
+            LOG_INFO("Chunk created: {}, base: 0x{:x}, max size: 0x{:x} type: {}, access: {}{}", obj_name,
+                mmc_impl_->base(), max_size, (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
+                (chnk_access == chunk_access::local ? "local" : (chnk_access == chunk_access::code ? "code " : "global")),
                 (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));
         }
 
         void chunk::destroy() {
-            mem->unchunk(chunk_base.cast<void>(), static_cast<std::uint32_t>(max_size));
+            if (!mmc_impl_unq_)
+                own_process->get_mem_model()->delete_chunk(mmc_impl_);
+        }
+    
+        void chunk::open_to(process *own) {
+            own->get_mem_model()->attach_chunk(mmc_impl_);
+        }
+
+        ptr<uint8_t> chunk::base() {
+            return mmc_impl_->base();
+        }
+
+        const std::size_t chunk::max_size() const {
+            return mmc_impl_->max();
+        }
+
+        const std::size_t chunk::committed() const {
+            return mmc_impl_->committed();
         }
 
         bool chunk::commit(uint32_t offset, size_t size) {
@@ -133,17 +135,9 @@ namespace eka2l1 {
                 return false;
             }
 
-            mem->commit(chunk_base.cast<void>() + offset, static_cast<std::uint32_t>(size));
-
-            if (offset + size > top) {
-                top = offset;
+            if (mmc_impl_->commit(offset, size) == 0) {
+                return false;
             }
-
-            if (offset < bottom) {
-                bottom = offset;
-            }
-
-            commited_size += size;
 
             return true;
         }
@@ -152,26 +146,17 @@ namespace eka2l1 {
             if (type != kernel::chunk_type::disconnected) {
                 return false;
             }
-
-            mem->decommit(ptr<void>(chunk_base.ptr_address() + offset), static_cast<std::uint32_t>(size));
-
-            top = common::max(top, (uint32_t)(offset + size));
-            bottom = common::min(bottom, offset);
-
-            commited_size -= size;
-
+            
+            mmc_impl_->decommit(offset, size);
             return true;
         }
 
-        bool chunk::adjust(size_t adj_size) {
+        bool chunk::adjust(std::size_t adj_size) {
             if (type == kernel::chunk_type::disconnected) {
                 return false;
             }
 
-            mem->commit(ptr<void>(chunk_base.ptr_address() + bottom), static_cast<std::uint32_t>(adj_size));
-            top = static_cast<address>(bottom + adj_size);
-
-            return true;
+            return mmc_impl_->adjust(0xFFFFFFFF, static_cast<address>(adj_size));
         }
 
         bool chunk::adjust_de(size_t ntop, size_t nbottom) {
@@ -179,65 +164,19 @@ namespace eka2l1 {
                 return false;
             }
 
-            if (ntop - nbottom > max_size) {
-                return false;
-            }
-
-            top = static_cast<address>(ntop);
-            bottom = static_cast<address>(nbottom);
-
-            mem->commit(chunk_base.cast<void>() + bottom, top - bottom);
-
-            return true;
+            return mmc_impl_->adjust(static_cast<address>(nbottom), static_cast<address>(ntop));
         }
 
-        uint32_t chunk::allocate(size_t size) {
-            commit(top, size);
-            return static_cast<std::uint32_t>(top - size);
+        bool chunk::allocate(size_t size) {
+            if (type != kernel::chunk_type::disconnected) {
+                return 0;
+            }
+
+            return mmc_impl_->allocate(size);
         }
 
-        void chunk::do_state(common::chunkyseri &seri) {
-            auto s = seri.section("Chunk", 1);
-
-            if (!s) {
-                return;
-            }
-
-            std::uint32_t uid_pr = 0;
-
-            if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                uid_pr = own_process->unique_id();
-            }
-
-            seri.absorb(type);
-            seri.absorb(attrib);
-            seri.absorb(caccess);
-            seri.absorb(max_size);
-            seri.absorb(top);
-            seri.absorb(bottom);
-            seri.absorb(chunk_base.ptr_address());
-            seri.absorb(uid_pr);
-            seri.absorb(protection);
-
-            commited_size = top - bottom;
-
-            own_process = &(*kern->get_by_id<kernel::process>(uid_pr));
-
-            page_table *old = mem->get_current_page_table();
-            mem->set_current_page_table(own_process->get_page_table());
-
-            // Start reading
-            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-                mem->chunk(chunk_base.ptr_address(), bottom, top, static_cast<std::uint32_t>(max_size), protection);
-            }
-
-            const auto ps = mem->get_page_size();
-
-            for (std::size_t i = 0; i < commited_size / mem->get_page_size(); i++) {
-                seri.absorb_impl((chunk_base + static_cast<address>(i * ps)).get(mem), ps);
-            }
-
-            mem->set_current_page_table(*old);
+        void *chunk::host_base() {
+            return mmc_impl_->host_base();
         }
     }
 }

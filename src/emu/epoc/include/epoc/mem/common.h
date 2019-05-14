@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/types.h>
+#include <cstddef>
 #include <cstdint>
 
 namespace eka2l1::mem {
@@ -28,5 +30,27 @@ namespace eka2l1::mem {
     enum class mem_model_type {
         moving,
         multiple
+    };
+    
+    enum {
+        MEM_MODEL_CHUNK_REGION_USER_GLOBAL = 1 << 0,
+        MEM_MODEL_CHUNK_REGION_USER_LOCAL = 1 << 1,
+        MEM_MODEL_CHUNK_REGION_USER_CODE = 1 << 2,
+        MEM_MODEL_CHUNK_TYPE_DISCONNECT = 1 << 3,
+        MEM_MODEL_CHUNK_TYPE_NORMAL = 1 << 4,
+        MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED = 1 << 5
+    };
+
+    enum {
+        MEM_MODEL_CHUNK_ERR_OK = 0,
+        MEM_MODEL_CHUNK_ERR_MAXIMUM_CHUNK_OVERFLOW = -1,
+        MEM_MODEL_CHUNK_ERR_INVALID_REGION = -2,
+        MEM_MODEL_CHUNK_ERR_NO_MEM = -3
+    };
+
+    struct mem_model_chunk_creation_info {
+        std::size_t size;
+        std::uint32_t flags;
+        prot perm;
     };
 }

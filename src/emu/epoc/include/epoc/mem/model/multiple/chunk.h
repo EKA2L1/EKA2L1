@@ -19,7 +19,12 @@
 
 #pragma once
 
+#include <common/allocator.h>
 #include <epoc/mem/chunk.h>
+#include <epoc/mem/model/multiple/section.h>
+
+#include <memory>
+#include <memory>
 #include <vector>
 
 namespace eka2l1::mem {
@@ -29,11 +34,11 @@ namespace eka2l1::mem {
         vm_address base_;
         void *host_base_;
 
-        multiple_mem_model_process *own_process_;
+        multiple_mem_model_process *own_process_ { nullptr };
 
         std::size_t chunk_id_in_mmp_;
-        vm_address bottom_;
-        vm_address top_;
+        vm_address bottom_ { 0 };
+        vm_address top_ { 0 };
 
         std::size_t committed_;
         std::size_t max_size_;
@@ -41,7 +46,14 @@ namespace eka2l1::mem {
         std::vector<std::uint32_t> page_tabs_;
         std::vector<asid> attached_asids_;
 
+        std::unique_ptr<common::bitmap_allocator> page_bma_;
+        linear_section *get_section(const std::uint32_t flags);
+
+        void do_selection_cpu_memory_manipulation(const bool unmap);
+
     public:
+        bool is_local { false };
+
         explicit multiple_mem_model_chunk(mmu_base *mmu, const asid id)
             : mem_model_chunk(mmu, id) {
         }
@@ -49,8 +61,31 @@ namespace eka2l1::mem {
         const vm_address base() override {
             return base_;
         }
+        
+        void *host_base() override {
+            return host_base_;
+        }
+        
+        const vm_address bottom() const override;
+        const vm_address top() const override;
+
+        const std::size_t committed() const override {
+            return committed_;
+        }
+
+        const std::size_t max() const override {
+            return max_size_;
+        }
+
+        int do_create(const mem_model_chunk_creation_info &create_info) override;
 
         std::size_t commit(const vm_address offset, const std::size_t size) override;
         void decommit(const vm_address offset, const std::size_t size) override;
+
+        bool allocate(const std::size_t size) override;
+        bool adjust(const address bottom, const address top) override;
+        
+        void unmap_from_cpu() override;
+        void map_to_cpu() override;
     };
 }

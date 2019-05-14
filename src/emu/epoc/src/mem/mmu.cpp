@@ -36,6 +36,7 @@ namespace eka2l1::mem {
             chunk_shift_ = CHUNK_SHIFT_20B;
             chunk_mask_ = CHUNK_MASK_20B;
             chunk_size_ = CHUNK_SIZE_20B;
+            page_per_tab_shift_ = PAGE_PER_TABLE_SHIFT_20B;
         } else {
             offset_mask_ = OFFSET_MASK_12B;
             page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_12B;
@@ -44,6 +45,7 @@ namespace eka2l1::mem {
             chunk_shift_ = CHUNK_SHIFT_12B;
             chunk_mask_ = CHUNK_MASK_12B;
             chunk_size_ = CHUNK_SIZE_12B;
+            page_per_tab_shift_ = PAGE_PER_TABLE_SHIFT_12B;
         }
     }
 

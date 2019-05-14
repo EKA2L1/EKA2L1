@@ -137,17 +137,17 @@ namespace eka2l1 {
 
     void imgui_debugger::show_chunks() {
         if (ImGui::Begin("Chunks", &should_show_chunks)) {
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-8s    %-8s    %-8s    %-8s      %-32s", "ID",
-                "Chunk name", "Base", "Bottom", "Top", "Max", "Creator process");
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-8s       %-8s    %-8s      %-32s", "ID",
+                "Chunk name", "Base", "Committed", "Max", "Creator process");
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
             for (const auto &chnk : sys->get_kernel_system()->chunks) {
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
-                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    0x%08X    0x%08X    0x%08X    0x%08lX      %-32s",
-                    chnk->unique_id(), chnk->name().c_str(), chnk->base().ptr_address(), chnk->get_bottom(), chnk->get_top(),
-                    chnk->get_max_size(), process_name.c_str());
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08X    0x%08lX      %-32s",
+                    chnk->unique_id(), chnk->name().c_str(), chnk->base().ptr_address(), chnk->committed(),
+                    chnk->max_size(), process_name.c_str());
             }
         }
 
@@ -196,11 +196,8 @@ namespace eka2l1 {
             if (debug_thread) {
                 arm::arm_interface::thread_context &ctx = debug_thread->get_thread_context();
 
-                // Using the table for also situation like local JIT code from guest
-                page_table &table = debug_thread->owning_process()->get_page_table();
-
                 for (std::uint32_t pc = ctx.pc - 12, i = 0; i < 12; i++) {
-                    void *codeptr = table.get_ptr(pc);
+                    void *codeptr = debug_thread->owning_process()->get_ptr_on_addr_space(pc);
 
                     if (!codeptr) {
                         break;

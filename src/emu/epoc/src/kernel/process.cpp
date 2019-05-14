@@ -30,17 +30,17 @@
 #include <epoc/kernel/process.h>
 #include <epoc/kernel/scheduler.h>
 
+#include <epoc/mem/process.h>
+#include <epoc/mem/mmu.h>
+
 namespace eka2l1::kernel {
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
         uint32_t heap_max, kernel::thread_priority pri) {
-        page_table *last = mem->get_current_page_table();
-        mem->set_current_page_table(page_tab);
-
         primary_thread
             = kern->create<kernel::thread>(
                 mem,
                 kern->get_timing_system(),
-                nullptr,
+                this,
                 kernel::access_type::local_access,
                 process_name + "::Main", ep_off,
                 stack_size, heap_min, heap_max,
@@ -49,10 +49,6 @@ namespace eka2l1::kernel {
 
         ++thread_count;
 
-        if (last) {
-            mem->set_current_page_table(*last);
-        }
-
         dll_lock = kern->create<kernel::mutex>(kern->get_timing_system(),
             "dllLockMutexProcess" + common::to_string(puid),
             false, kernel::access_type::local_access);
@@ -60,8 +56,7 @@ namespace eka2l1::kernel {
 
     process::process(kernel_system *kern, memory_system *mem)
         : kernel_obj(kern)
-        , mem(mem)
-        , page_tab(mem->get_page_size()) {
+        , mem(mem) {
         obj_type = kernel::object_type::process;
     }
 
@@ -77,7 +72,6 @@ namespace eka2l1::kernel {
         , mem(mem)
         , exe_path(exe_path)
         , cmd_args(cmd_args)
-        , page_tab(mem->get_page_size())
         , priority(pri)
         , codeseg(std::move(arg_codeseg))
         , process_handles(kern, handle_array_owner::process) {
@@ -101,6 +95,9 @@ namespace eka2l1::kernel {
 
             LOG_INFO("Process {} capabilities: {}", process_name, all_caps.empty() ? "None" : all_caps);
         }
+
+        // Create mem model implementation
+        mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem::mem_model_type::multiple);
 
         create_prim_thread(
             codeseg->get_code_run_addr(), codeseg->get_entry_point(),
@@ -157,12 +154,7 @@ namespace eka2l1::kernel {
     }
 
     void *process::get_ptr_on_addr_space(address addr) {
-        if (!page_tab.pointers[addr / page_tab.page_size]) {
-            return nullptr;
-        }
-
-        return static_cast<void *>(page_tab.pointers[addr / page_tab.page_size]
-            + addr % page_tab.page_size);
+        return mem->get_mmu()->get_host_pointer(mm_impl_->address_space_id(), addr);
     }
 
     // EKA2L1 doesn't use multicore yet, so rendezvous and logon

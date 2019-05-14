@@ -60,9 +60,19 @@ namespace eka2l1::mem {
     }
 
     void *page_directory::get_pointer(const vm_address addr) {
-        return reinterpret_cast<std::uint8_t*>(page_tabs_[addr >> page_table_index_shift_]
-            ->get_page_info((addr >> page_index_shift_) & page_index_mask_)
-            ->host_addr) + (addr & offset_mask_);
+        page_table *pt = page_tabs_[addr >> page_table_index_shift_];
+
+        if (!pt) {
+            return nullptr;
+        }
+        
+        page_info *pi = pt->get_page_info((addr >> page_index_shift_) & page_index_mask_);
+
+        if (!pi) {
+            return nullptr;
+        }
+
+        return reinterpret_cast<std::uint8_t*>(pi->host_addr) + (addr & offset_mask_);
     }
 
     page_info  *page_directory::get_page_info(const vm_address addr) {
@@ -74,6 +84,10 @@ namespace eka2l1::mem {
     }
 
     void page_directory::set_page_table(const std::uint32_t off, page_table *tab) {
+        if (off == 0xFFFFFFFF) {
+            return;
+        }
+        
         if (off >= offset_mask_) {
             return;
         }

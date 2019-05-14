@@ -54,7 +54,7 @@ namespace eka2l1::kernel {
         data_addr = info.data_load_addr;
 
         if (code_addr == 0) {
-            code_chunk = kern->create<kernel::chunk>(mem, kern->crr_process(), name, 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
+            code_chunk = kern->create<kernel::chunk>(mem, nullptr, name, 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
 
             code_addr = code_chunk->base().ptr_address();

@@ -1088,7 +1088,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        return static_cast<TInt>(chunk->get_max_size());
+        return static_cast<TInt>(chunk->max_size());
     }
 
     BRIDGE_FUNC(eka2l1::ptr<TUint8>, ChunkBase, TInt aChunkHandle) {

@@ -34,10 +34,18 @@ namespace eka2l1::mem {
     }
 
     page_table *basic_page_table_allocator::get_page_table_by_id(const std::uint32_t id) {
-        if (page_tabs_.size() >= id) {
+        if (page_tabs_.size() < id) {
             return nullptr;
         }
 
         return page_tabs_[id].get();
+    }
+
+    void basic_page_table_allocator::free_page_table(const std::uint32_t id) {
+        if (page_tabs_.size() < id || !page_tabs_[id]) {
+            return;
+        }
+
+        page_tabs_[id]->idx_ = static_cast<std::uint32_t>(-1);
     }
 }

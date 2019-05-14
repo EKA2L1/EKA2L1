@@ -36,5 +36,7 @@ namespace eka2l1::mem {
     public:
         page_table *create_new(const std::size_t psize) override;
         page_table *get_page_table_by_id(const std::uint32_t id) override;
+
+        void free_page_table(const std::uint32_t id) override;
     };
 }

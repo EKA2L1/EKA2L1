@@ -21,6 +21,7 @@
 #pragma once
 
 #include <epoc/kernel/kernel_obj.h>
+#include <epoc/mem/chunk.h>
 #include <epoc/mem.h>
 #include <epoc/ptr.h>
 
@@ -38,6 +39,10 @@ namespace eka2l1 {
 
     namespace kernel {
         class process;
+    }
+
+    namespace mem {
+        struct mem_model_chunk;
     }
 
     using process_ptr = std::shared_ptr<kernel::process>;
@@ -69,35 +74,28 @@ namespace eka2l1 {
 		*/
         class chunk : public kernel_obj {
             // The reversed region that the chunk can commit to
-            address top;
-            address bottom;
-
-            prot protection;
-            size_t max_size;
-
-            size_t commited_size;
-
-            chunk_type type;
-            chunk_access caccess;
-            chunk_attrib attrib;
-
-            eka2l1::ptr<uint8_t> chunk_base;
+            mem::mem_model_chunk *mmc_impl_;
+            std::unique_ptr<mem::mem_model_chunk> mmc_impl_unq_;
 
             memory_system *mem;
             kernel::process *own_process;
 
             bool is_heap;
 
+            chunk_type type;
+
         public:
-            chunk(kernel_system *kern, memory_system *mem)
+            explicit chunk(kernel_system *kern, memory_system *mem)
                 : kernel_obj(kern)
                 , mem(mem) {
                 obj_type = kernel::object_type::chunk;
             }
 
-            chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name, address bottom,
+            explicit chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name, address bottom,
                 const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
                 chunk_attrib attrib, const bool is_heap = false);
+
+            ~chunk() = default;
 
             /*! \brief Commit to a disconnected chunk. 
 			 *
@@ -124,26 +122,10 @@ namespace eka2l1 {
             /*! \brief Destroy the chunk */
             void destroy() override;
 
-            chunk_type get_chunk_type() const {
-                return type;
-            }
+            void open_to(process *own) override;
 
             /*! \brief Get the base of the chunk. */
-            ptr<uint8_t> base() {
-                return chunk_base;
-            }
-
-            address get_bottom() const {
-                return bottom;
-            }
-
-            address get_top() const {
-                return top;
-            }
-
-            size_t get_max_size() const {
-                return max_size;
-            }
+            ptr<uint8_t> base();
 
             /*! \brief Adjust the chunk size.
 			 * \param adj_size The size of the new adjusted chunk.
@@ -158,11 +140,7 @@ namespace eka2l1 {
             /*! \brief The definition of this is blurry and unclearn. However, 
              * afaik it commits to the top with size 
              */
-            uint32_t allocate(size_t size);
-
-            size_t get_size() {
-                return commited_size;
-            }
+            bool allocate(size_t size);
 
             kernel::process *get_own_process() {
                 return own_process;
@@ -176,7 +154,10 @@ namespace eka2l1 {
                 return is_heap;
             }
 
-            void do_state(common::chunkyseri &seri) override;
+            const std::size_t max_size() const;
+            const std::size_t committed() const;
+
+            void *host_base();
         };
     }
 }

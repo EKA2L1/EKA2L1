@@ -17,12 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <algorithm>
 #include <common/log.h>
 #include <epoc/kernel.h>
 #include <epoc/kernel/scheduler.h>
 #include <epoc/kernel/thread.h>
 #include <epoc/mem.h>
+#include <epoc/mem/mmu.h>
+#include <epoc/mem/process.h>
 #include <epoc/timing.h>
 #include <functional>
 
@@ -78,11 +81,17 @@ namespace eka2l1 {
                 crr_thread = newt;
                 crr_thread->state = thread_state::run;
 
-                if (!oldt || oldt->owning_process() != newt->owning_process()) {
+                if (crr_process != newt->owning_process()) {
+                    if (crr_process) {
+                        crr_process->get_mem_model()->unmap_locals_from_cpu();
+                    }
+
                     crr_process = newt->owning_process();
 
                     memory_system *mem = kern->get_memory_system();
-                    mem->set_current_page_table(crr_process->get_page_table());
+                    mem->get_mmu()->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
+
+                    crr_process->get_mem_model()->remap_locals_to_cpu();
                 }
 
                 ready_threads.remove(newt);

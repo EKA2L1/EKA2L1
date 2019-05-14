@@ -30,29 +30,7 @@ namespace eka2l1::mem {
     struct mem_model_chunk;
     class mmu_base;
 
-    enum {
-        MEM_MODEL_CHUNK_REGION_USER_GLOBAL = 1 << 0,
-        MEM_MODEL_CHUNK_REGION_USER_LOCAL = 1 << 1,
-        MEM_MODEL_CHUNK_REGION_USER_CODE = 1 << 2,
-        MEM_MODEL_CHUNK_TYPE_DISCONNECT = 1 << 3,
-        MEM_MODEL_CHUNK_TYPE_NORMAL = 1 << 4,
-        MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED = 1 << 5
-    };
-
-    enum {
-        MEM_MODEL_CHUNK_ERR_OK = 0,
-        MEM_MODEL_CHUNK_ERR_MAXIMUM_CHUNK_OVERFLOW = -1,
-        MEM_MODEL_CHUNK_ERR_INVALID_REGION = -2,
-        MEM_MODEL_CHUNK_ERR_NO_MEM = -3
-    };
-
     struct mem_model_process;
-
-    struct mem_model_chunk_creation_info {
-        std::size_t size;
-        std::uint32_t flags;
-        prot perm;
-    };
 
     /**
      * \brief A component in process implementation, that provides memory manipulation of process address space.
@@ -65,13 +43,18 @@ namespace eka2l1::mem {
             : mmu_(mmu) {
         }
 
+        virtual const asid address_space_id() const = 0;
+
         virtual int create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) = 0;
-        virtual void delete_chunk(mem_model_chunk *chunk);
+        virtual void delete_chunk(mem_model_chunk *chunk) = 0;
 
         virtual void *get_pointer(const vm_address addr) = 0;
 
         virtual bool attach_chunk(mem_model_chunk *chunk) = 0;
         virtual bool detach_chunk(mem_model_chunk *chunk) = 0;
+
+        virtual void unmap_locals_from_cpu() = 0;
+        virtual void remap_locals_to_cpu() = 0;
     };
 
     using mem_model_process_impl = std::unique_ptr<mem_model_process>;

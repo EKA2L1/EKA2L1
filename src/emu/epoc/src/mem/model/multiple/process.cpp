@@ -59,24 +59,6 @@ namespace eka2l1::mem {
         return chunks_.back().get();
     }
 
-    linear_section *multiple_mem_model_process::get_section(const std::uint32_t flags) {
-        mmu_multiple *mul_mmu = reinterpret_cast<mmu_multiple*>(mmu_); 
-        
-        if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
-            return &mul_mmu->user_code_sec_;
-        }
-
-        if (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL) {
-            return &mul_mmu->user_global_sec_;
-        }
-
-        if (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) {
-            return &user_local_sec_;
-        }
-
-        return nullptr;
-    }
-
     void *multiple_mem_model_process::get_pointer(const vm_address addr) {
         return mmu_->get_host_pointer(addr_space_id_, addr);
     }
@@ -89,62 +71,102 @@ namespace eka2l1::mem {
             return MEM_MODEL_CHUNK_ERR_MAXIMUM_CHUNK_OVERFLOW;
         }
 
-        // get the right virtual address space allocator
-        linear_section *chunk_sec = get_section(create_info.flags);
+        mchunk->own_process_ = this;
+        chunk = reinterpret_cast<mem_model_chunk*>(mchunk);
 
-        if (!chunk_sec) {
-            // No allocator suitable for the given flags
-            return MEM_MODEL_CHUNK_ERR_INVALID_REGION;
-        }
-
-        // Calculate total page table that we will use. Symbian uses a whole page table
-        // too, it's one of a way for it to be fast (not nitpicking places in the table,
-        // but actually alloc the whole table)
-        const std::uint32_t total_pt = static_cast<std::uint32_t>(
-            (create_info.size + mmu_->chunk_mask_) >> mmu_->chunk_shift_);
-
-        mchunk->max_size_ = total_pt << mmu_->chunk_shift_;
-
-        // Allocate virtual pages
-        const int offset = chunk_sec->alloc_.allocate_from(0, static_cast<int>(mchunk->max_size_), false);
-
-        if (offset == -1) {
-            return MEM_MODEL_CHUNK_ERR_NO_MEM;
-        }
-
-        const vm_address addr = (offset >> mmu_->chunk_shift_) + chunk_sec->beg_;
-        mchunk->base_ = addr;
-        mchunk->committed_ = 0;
-
-        // Map host base memory
-        mchunk->host_base_ = common::map_memory(mchunk->max_size_);
-
-        if (!mchunk->host_base_) {
-            return MEM_MODEL_CHUNK_ERR_NO_MEM;
-        }
-        
-        // Allocate page table IDs storage that the chunk will use
-        mchunk->page_tabs_.resize(total_pt);
-        std::fill(mchunk->page_tabs_.begin(), mchunk->page_tabs_.end(), 0xFFFFFFFF);
-
-        mchunk->permission_ = create_info.perm;
-
-        return MEM_MODEL_CHUNK_ERR_OK;
+        return mchunk->do_create(create_info);
     }
 
     void multiple_mem_model_process::delete_chunk(mem_model_chunk *chunk) {
+        multiple_mem_model_chunk *mul_chunk = reinterpret_cast<multiple_mem_model_chunk*>(chunk);
 
+        // Decommit the whole things
+        mul_chunk->decommit(0, mul_chunk->max_size_);
+
+        // Ignore the result, just unmap things
+        common::unmap_memory(mul_chunk->host_base_, mul_chunk->max_size_);
+
+        for (std::size_t i = 0; i < chunks_.size(); i++) {
+            if (chunks_[i].get() == mul_chunk) {
+                chunks_[i].reset();
+            }
+        }
     }
 
     bool multiple_mem_model_process::attach_chunk(mem_model_chunk *chunk) {
         multiple_mem_model_chunk *mul_chunk = reinterpret_cast<multiple_mem_model_chunk*>(chunk);
 
+        if (mul_chunk->is_local && mul_chunk->own_process_ != this) {
+            return false;
+        } else {
+            // Already attach it
+            return true;
+        }
+
+        if (std::find(attached_.begin(), attached_.end(), mul_chunk) == attached_.end()) {
+            return false;
+        }
+
+        attached_.push_back(mul_chunk);
+
         // Add our address ID space to the chunk
         mul_chunk->attached_asids_.push_back(addr_space_id_);
+
+        // Assign page tables
+        for (std::size_t i = 0; i< mul_chunk->page_tabs_.size(); i++) {
+            if (mul_chunk->page_tabs_[i] != 0xFFFFFFFF) {
+                mmu_->assign_page_table(mmu_->get_page_table_by_id(mul_chunk->page_tabs_[i]),
+                    static_cast<vm_address>(mul_chunk->base_ + (i << mmu_->page_size_bits_)),
+                    0, &addr_space_id_, 1);
+            }
+        }
+
         return true;
     }
 
     bool multiple_mem_model_process::detach_chunk(mem_model_chunk *chunk) {
+        multiple_mem_model_chunk *mul_chunk = reinterpret_cast<multiple_mem_model_chunk*>(chunk);
+
+        // Delete our address space ID attached in the chunk
+        auto result = std::find(mul_chunk->attached_asids_.begin(), mul_chunk->attached_asids_.end(),
+            addr_space_id_);
+
+        if (result == mul_chunk->attached_asids_.end()) {
+            // Our id not found
+            return false;
+        }
+
+        attached_.erase(std::find(attached_.begin(), attached_.end(), mul_chunk));
+
+        // Remove it
+        mul_chunk->attached_asids_.erase(result);
+
+        // Unassign page tables
+        for (std::size_t i = 0; i< mul_chunk->page_tabs_.size(); i++) {
+            if (mul_chunk->page_tabs_[i] != 0xFFFFFFFF) {
+                mmu_->assign_page_table(nullptr, static_cast<vm_address>(mul_chunk->base_ + (i << mmu_->page_size_bits_)),
+                    0, &addr_space_id_, 1);
+            }
+        }
+
         return true;
+    }
+    
+    void multiple_mem_model_process::unmap_locals_from_cpu() {
+        for (auto &c: chunks_) {
+            if (c->is_local) {
+                // Local
+                c->unmap_from_cpu();
+            }
+        }
+    }
+    
+    void multiple_mem_model_process::remap_locals_to_cpu() {
+        for (auto &c: chunks_) {
+            if (c->is_local) {
+                // Local
+                c->map_to_cpu();
+            }
+        }
     }
 }

@@ -27,13 +27,9 @@
 
 #include <epoc/utils/reqsts.h>
 
-#include <epoc/loader/e32img.h>
-#include <epoc/loader/romimage.h>
-
-#include <epoc/page_table.h>
-
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -41,15 +37,15 @@
 namespace eka2l1 {
     class kernel_system;
 
-    namespace loader {
-        using e32img_ptr = std::shared_ptr<eka2l1::loader::e32img>;
-        using romimg_ptr = std::shared_ptr<eka2l1::loader::romimg>;
-    }
-
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
 
     namespace common {
         class chunkyseri;
+    }
+
+    namespace mem {
+        struct mem_model_process;
+        using mem_model_process_impl = std::unique_ptr<mem_model_process>;
     }
 }
 
@@ -109,6 +105,8 @@ namespace eka2l1::kernel {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
 
+        mem::mem_model_process_impl mm_impl_;
+
         uint32_t puid;
         thread_ptr primary_thread;
 
@@ -124,7 +122,6 @@ namespace eka2l1::kernel {
         std::u16string exe_path;
         std::u16string cmd_args;
 
-        page_table page_tab;
         object_ix process_handles;
 
         uint32_t flags;
@@ -169,6 +166,10 @@ namespace eka2l1::kernel {
             return --thread_count;
         }
 
+        mem::mem_model_process *get_mem_model() {
+            return mm_impl_.get();
+        }
+
         void logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
         bool logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
 
@@ -176,12 +177,14 @@ namespace eka2l1::kernel {
 
         void finish_logons();
 
-        process(kernel_system *kern, memory_system *mem);
-        process(kernel_system *kern, memory_system *mem, uint32_t uid,
+        explicit process(kernel_system *kern, memory_system *mem);
+        explicit process(kernel_system *kern, memory_system *mem, uint32_t uid,
             const std::string &process_name, const std::u16string &exe_path,
             const std::u16string &cmd_args, codeseg_ptr codeseg,
             uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max, const process_priority pri = process_priority::foreground);
+
+        ~process() = default;
 
         bool run();
 
@@ -214,10 +217,6 @@ namespace eka2l1::kernel {
 
         std::uint32_t get_uid() {
             return puid;
-        }
-
-        page_table &get_page_table() {
-            return page_tab;
         }
 
         void set_flags(const uint32_t new_flags) {
