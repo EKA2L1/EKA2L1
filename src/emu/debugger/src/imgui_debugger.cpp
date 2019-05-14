@@ -145,7 +145,7 @@ namespace eka2l1 {
             for (const auto &chnk : sys->get_kernel_system()->chunks) {
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
-                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08X    0x%08lX      %-32s",
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08lX    0x%08lX      %-32s",
                     chnk->unique_id(), chnk->name().c_str(), chnk->base().ptr_address(), chnk->committed(),
                     chnk->max_size(), process_name.c_str());
             }
