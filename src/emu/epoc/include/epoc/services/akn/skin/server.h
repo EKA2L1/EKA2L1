@@ -18,6 +18,7 @@
  */
 
 #include <epoc/services/akn/skin/common.h>
+#include <epoc/services/akn/skin/icon_cfg.h>
 #include <epoc/services/akn/skin/settings.h>
 #include <epoc/services/framework.h>
 #include <epoc/ptr.h>
@@ -36,6 +37,8 @@ namespace eka2l1 {
         enum {
             ASS_FLAG_CANCELED = 0x1
         };
+
+        void check_icon_config(service::ipc_context *ctx);
 
         void do_set_notify_handler(service::ipc_context *ctx);
 
@@ -66,6 +69,7 @@ namespace eka2l1 {
 
     class akn_skin_server: public service::typical_server {
         std::unique_ptr<epoc::akn_ss_settings> settings_;
+        std::unique_ptr<epoc::akn_skin_icon_config_map> icon_config_map_;
 
         chunk_ptr skin_chunk_;
         sema_ptr skin_chunk_sema_;
@@ -76,6 +80,7 @@ namespace eka2l1 {
     public:
         explicit akn_skin_server(eka2l1::system *sys);
 
+        int is_icon_configured(const epoc::uid app_uid);
         void connect(service::ipc_context &ctx) override;
     };
 }

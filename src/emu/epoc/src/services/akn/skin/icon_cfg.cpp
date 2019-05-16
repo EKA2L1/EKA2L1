@@ -84,21 +84,22 @@ namespace eka2l1::epoc {
         std::sort(cfgs_.begin(), cfgs_.end());
     }
 
-    bool akn_skin_icon_config_map::is_icon_configured(const epoc::uid app_uid) {
+    int akn_skin_icon_config_map::is_icon_configured(const epoc::uid app_uid) {
         if (!inited_) {
             read_and_parse_repo();
             inited_ = true;
         }
 
         if (cfgs_.empty()) {
-            return false;
+            // Cenrep file not present. -1 is also KErrNotFound
+            return -1;
         }
 
         // Try to search
         if (std::lower_bound(cfgs_.begin(), cfgs_.end(), app_uid) != cfgs_.end()) {
-            return true;
+            return 1;
         }
 
-        return false;
+        return 0;
     }
 }

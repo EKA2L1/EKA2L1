@@ -57,8 +57,8 @@ namespace eka2l1::epoc {
          * TODO: Find more about what this mean.
          * 
          * \param    app_uid The target UID we want to check.
-         * \returns  True on configured.
+         * \returns  1 on configured. 0 on not. -1 on cenrep file not present.
          */
-        bool is_icon_configured(const epoc::uid app_uid);
+        int is_icon_configured(const epoc::uid app_uid);
     };
 }

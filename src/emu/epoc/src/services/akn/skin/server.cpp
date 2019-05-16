@@ -39,6 +39,18 @@ namespace eka2l1 {
         ctx->set_request_status(KErrNone);
     }
 
+    void akn_skin_server_session::check_icon_config(service::ipc_context *ctx) {
+        const std::optional<epoc::uid> id = ctx->get_arg_packed<epoc::uid>(0);
+
+        if (!id) {
+            ctx->set_request_status(KErrArgument);
+            return;
+        }
+
+        // Check if icon is configured
+        ctx->set_request_status(server<akn_skin_server>()->is_icon_configured(id.value()));
+    }
+
     void akn_skin_server_session::do_next_event(service::ipc_context *ctx) {
         if (flags & ASS_FLAG_CANCELED) {
             // Clear the nof list
@@ -94,6 +106,11 @@ namespace eka2l1 {
             do_cancel(ctx);
             break;
         }
+
+        case epoc::akn_skin_server_check_icon_config: {
+            check_icon_config(ctx);
+            break;
+        }
         
         default: {
             LOG_ERROR("Unimplemented opcode: {}", epoc::akn_skin_server_opcode_to_str(
@@ -118,6 +135,10 @@ namespace eka2l1 {
         ctx.set_request_status(KErrNone);
     }
 
+    int akn_skin_server::is_icon_configured(const epoc::uid app_uid) {
+        return icon_config_map_->is_icon_configured(app_uid);
+    }
+
     void akn_skin_server::do_initialisation() {
         kernel_system *kern = sys->get_kernel_system();
         server_ptr svr = kern->get_by_name<service::server>("!CentralRepository");
@@ -125,6 +146,10 @@ namespace eka2l1 {
         // Older versions dont use cenrep.
         settings_ = std::make_unique<epoc::akn_ss_settings>(sys->get_io_system(), !svr ? nullptr :
             reinterpret_cast<central_repo_server*>(&(*svr)));
+
+        icon_config_map_ = std::make_unique<epoc::akn_skin_icon_config_map>(!svr ? nullptr :
+            reinterpret_cast<central_repo_server*>(&(*svr)), sys->get_io_system(),
+            sys->get_system_language());
 
         // Create skin chunk
         skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,
