@@ -123,6 +123,8 @@ namespace eka2l1 {
 
         system *parent;
 
+        language sys_lang = language::en;
+
     public:
         system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
             manager::config_state *conf);
@@ -179,6 +181,14 @@ namespace eka2l1 {
         void prepare_reschedule() {
             cpu->prepare_rescheduling();
             reschedule_pending = true;
+        }
+
+        const language get_system_language() const {
+            return sys_lang;
+        }
+
+        void set_system_language(const language new_lang) {
+            sys_lang = new_lang;
         }
 
         void init();
@@ -666,5 +676,13 @@ namespace eka2l1 {
 
     void system::do_state(common::chunkyseri &seri) {
         return impl->do_state(seri);
+    }
+    
+    const language system::get_system_language() const {
+        return impl->get_system_language();
+    }
+
+    void system::set_system_language(const language new_lang) {
+        impl->set_system_language(new_lang);
     }
 }

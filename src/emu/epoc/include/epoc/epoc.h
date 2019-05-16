@@ -156,5 +156,8 @@ namespace eka2l1 {
 
         void add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com);
         hal_ptr get_hal(uint32_t cagetory);
+
+        const language get_system_language() const;
+        void set_system_language(const language new_lang);
     };
 }
