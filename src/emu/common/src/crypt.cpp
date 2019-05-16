@@ -1,4 +1,24 @@
+/*
+ * Copyright (c) 2019 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <common/crypt.h>
+#include <string>
 
 namespace eka2l1::crypt {
     static const std::uint32_t crc_tab[256] = {
@@ -35,5 +55,135 @@ namespace eka2l1::crypt {
         while (cur < end) {
             crc = (crc << 8) ^ (crc_tab[((crc >> 8) ^ *cur++) & 0xff]);
         }
+    }
+    
+    static const std::string base64_ascii_map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    std::size_t base64_encode(const std::uint8_t *source, const std::size_t source_size, char *dest,
+        const std::size_t dest_max_size) {
+        std::size_t dest_written = 0;
+
+        for (std::size_t i = 0; i < source_size; i += 3) {
+            const std::uint8_t b1 = source[i];
+            const std::uint8_t b2 = (i + 1 > source_size) ? 0 : source[i + 1];
+            const std::uint8_t b3 = (i + 2 > source_size) ? 0 : source[i + 2];
+
+            if (dest) {
+                if (dest_written == dest_max_size) {
+                    return dest_written;
+                }
+                
+                dest[dest_written] = base64_ascii_map[(b1 & 0b11111100) >> 2];
+            }
+
+            dest_written++;
+
+            if (dest) {
+                if (dest_written == dest_max_size) {
+                    return dest_written;
+                }
+                    
+                dest[dest_written] = base64_ascii_map[((b1 & 0b11) << 4) | (b2 & 0b11110000) >> 4];
+            }
+
+            dest_written++;
+
+            if (dest) {
+                if (dest_written == dest_max_size) {
+                    return dest_written;
+                }
+                
+                dest[dest_written] = base64_ascii_map[((b2 & 0b1111) << 2) | (b3 & 0b11000000) >> 6];
+            }
+
+            dest_written++;
+            
+            if (dest) {
+                if (dest_written == dest_max_size) {
+                    return dest_written;
+                }
+                
+                dest[dest_written] = base64_ascii_map[(b3 & 0b111111)];
+            }
+            
+            dest_written++;
+        }
+
+        if (dest && source_size % 3 != 0) {
+            for (std::size_t i = 0; i < 3 - source_size % 3; i++) {
+                dest[dest_written - i - 1] = '='; 
+            }
+        }
+
+        return dest_written;
+    }
+    
+    std::size_t base64_decode(const std::uint8_t *source, const std::size_t source_size, char *dest,
+        const std::size_t dest_max_size) {
+        std::size_t dest_written = 0;
+
+        if (source_size % 4 != 0) {
+            return dest_written;
+        }
+
+        for (std::size_t i = 0; i < source_size; i += 4) {
+            const std::uint8_t b0 = static_cast<std::uint8_t>(base64_ascii_map.find(source[i]));
+            const std::uint8_t b1 = static_cast<std::uint8_t>(base64_ascii_map.find(source[i + 1]));
+            const std::uint8_t b2 = source[i + 2] == '=' ? 0 : static_cast<std::uint8_t>(base64_ascii_map.find(source[i + 2]));
+            const std::uint8_t b3 = source[i + 3] == '=' ? 0 : static_cast<std::uint8_t>(base64_ascii_map.find(source[i + 3]));
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4309)
+#endif
+            if (b0 == static_cast<std::uint8_t>(std::string::npos) || 
+                b1 == static_cast<std::uint8_t>(std::string::npos) ||
+                b2 == static_cast<std::uint8_t>(std::string::npos) ||
+                b3 == static_cast<std::uint8_t>(std::string::npos)) {
+                return dest_written;
+            }
+    
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
+            if (dest) {
+                if (dest_written == dest_max_size) {
+                    return dest_written;
+                }
+
+                dest[dest_written] = ((b0 & 0b111111) << 2) | ((b1 & 0b00110000) >> 4);
+            }
+
+            dest_written++;
+
+            if (dest) {
+                if (dest_written == dest_max_size) {
+                    return dest_written;
+                }
+
+                dest[dest_written] = ((b1 & 0b1111) << 4) | ((b2 & 0b00111100) >> 2);
+            }
+
+            dest_written++;
+
+            if (dest) {
+                if (dest_written == dest_max_size) {
+                    return dest_written;
+                }
+
+                dest[dest_written] = ((b2 & 0b11) << 6) | (b3 & 0b00111111);
+            }
+
+            dest_written++;
+        }
+
+        for (std::size_t i = 0; i < 2; i++) {
+            if (source[source_size - i - 1] == '=') {
+                dest_written--;
+            }
+        }
+
+        return dest_written;
     }
 }
