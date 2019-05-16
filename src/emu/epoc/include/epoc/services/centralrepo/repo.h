@@ -86,6 +86,8 @@ namespace eka2l1 {
     struct central_repo {
         drive_number reside_place;
 
+        std::uint32_t access_count;
+
         // TODO (pent0): Add read/write cap
         std::uint8_t ver;
         std::uint8_t keyspace_type;
@@ -174,7 +176,7 @@ namespace eka2l1 {
 
         std::unordered_map<std::uint32_t, cache_entry> entries;
 
-        void free_oldest();
+        bool free_oldest();
 
         eka2l1::central_repo *add_repo(const std::uint32_t key, eka2l1::central_repo &repo);
         bool remove_repo(const std::uint32_t key);

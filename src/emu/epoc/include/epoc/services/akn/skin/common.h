@@ -37,6 +37,7 @@ namespace eka2l1::epoc {
     enum {
         AVKON_UID = 0x101F876E,
         PERSONALISATION_UID = 0x101F876F,
-        THEMES_UID = 0x102818E8
+        THEMES_UID = 0x102818E8,
+        ICON_CAPTION_UID = 0x1028583D
     };
 }
