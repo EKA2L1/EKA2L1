@@ -113,7 +113,7 @@ namespace eka2l1 {
         void prepare_reschedule();
 
         void init();
-        bool load(uint32_t id);
+        bool load(const std::u16string &path, const std::u16string &cmd_arg);
 
         int loop();
         void shutdown();

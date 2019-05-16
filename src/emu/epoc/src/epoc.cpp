@@ -192,7 +192,7 @@ namespace eka2l1 {
         }
 
         void init();
-        bool load(uint32_t id);
+        bool load(const std::u16string &path, const std::u16string &cmd_arg);
         int loop();
         void shutdown();
 
@@ -372,7 +372,7 @@ namespace eka2l1 {
         idriver_client = std::make_shared<drivers::input_driver_client>(input_driver);
     }
 
-    bool system_impl::load(uint32_t id) {
+    bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
         hlelibmngr.reset();
         hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
 
@@ -380,7 +380,7 @@ namespace eka2l1 {
             load_scripts();
         #endif
 
-        process_ptr pr = kern.spawn_new_process(id);
+        process_ptr pr = kern.spawn_new_process(path, cmd_arg);
         if (!pr) {
             return false;
         }
@@ -577,8 +577,8 @@ namespace eka2l1 {
         return impl->init();
     }
 
-    bool system::load(uint32_t id) {
-        return impl->load(id);
+    bool system::load(const std::u16string &path, const std::u16string &cmd_arg) {
+        return impl->load(path, cmd_arg);
     }
 
     int system::loop() {
