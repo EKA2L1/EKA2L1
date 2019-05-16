@@ -537,6 +537,7 @@ namespace eka2l1 {
         std::optional<std::u16string> get_real_physical_path(const std::u16string &vert_path) {
             std::string path_ucs8 = common::ucs2_to_utf8(vert_path);
             const std::string root = eka2l1::root_name(path_ucs8);
+            std::u16string vert_path_copy = vert_path;
 
             if (root == "" || !mappings[ascii_to_drive_number(static_cast<char>(std::towlower(root[0])))].second) {
                 return std::nullopt;
@@ -557,17 +558,17 @@ namespace eka2l1 {
 
                 map_path += common::utf8_to_ucs2(firmcode);
             }
-
-            std::u16string new_path = eka2l1::add_path(map_path, vert_path.substr(root.size()));
-            auto sep_char = eka2l1::get_separator();
-
+            
             if (static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
-                if (common::compare_ignore_case(u"\\system\\libs", new_path.substr(2, 12)) == 0) {
-                    new_path.replace(2, 12, u"\\sys\\bin");
-                } else if (common::compare_ignore_case(u"\\system\\programs", new_path.substr(2, 16)) == 0) {
-                    new_path.replace(2, 16, u"\\sys\\bin");
+                if (common::compare_ignore_case(u"\\system\\libs", vert_path_copy.substr(2, 12)) == 0) {
+                    vert_path_copy.replace(2, 12, u"\\sys\\bin");
+                } else if (common::compare_ignore_case(u"\\system\\programs", vert_path_copy.substr(2, 16)) == 0) {
+                    vert_path_copy.replace(2, 16, u"\\sys\\bin");
                 }
             }
+
+            std::u16string new_path = eka2l1::add_path(map_path, vert_path_copy.substr(root.size()));
+            auto sep_char = eka2l1::get_separator();
 
             if (!common::is_system_case_insensitive()) {
                 // Make it case-insensitive
