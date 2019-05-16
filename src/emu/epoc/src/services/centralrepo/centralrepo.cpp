@@ -199,20 +199,11 @@ namespace eka2l1 {
     void central_repo_client_session::init(service::ipc_context *ctx) {
         // The UID repo to load
         const std::uint32_t repo_uid = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
-        eka2l1::central_repo *repo = nullptr;
+        eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), repo_uid);
 
-        auto ite = server->repos.find(repo_uid);
-
-        if (ite != server->repos.end()) {
-            // Load
-            repo = &(ite->second);
-        } else {
-            repo = server->load_repo(ctx->sys->get_io_system(), repo_uid);
-
-            if (!repo) {
-                ctx->set_request_status(KErrNotFound);
-                return;
-            }
+        if (!repo) {
+            ctx->set_request_status(KErrNotFound);
+            return;
         }
 
         // New client session
@@ -361,6 +352,7 @@ namespace eka2l1 {
                         }
 
                         repo->reside_place = drv;
+                        repo->access_count = 1;
 
                         return 0;
                     }
@@ -380,6 +372,7 @@ namespace eka2l1 {
             repo->uid = key;
             if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), *repo)) {
                 repo->reside_place = avail_drives[0];
+                repo->access_count = 1;
                 return 0;
             }
         }
@@ -409,6 +402,7 @@ namespace eka2l1 {
         auto result = repos.find(key);
 
         if (result != repos.end()) {
+            result->second.access_count++;
             return &result->second;
         }
 
