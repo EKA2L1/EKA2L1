@@ -192,5 +192,10 @@ namespace eka2l1 {
          * \returns Nullptr if the registeration does not exist. Else the pointer to it.
          */
         apa_app_registry *get_registeration(const std::uint32_t uid);
+        
+        /**
+         * \brief Get all app registerations.
+         */
+        std::map<std::uint32_t, apa_app_registry> &get_registerations();
     };
 }

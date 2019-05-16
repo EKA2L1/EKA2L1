@@ -153,16 +153,26 @@ namespace eka2l1 {
     }
     
     void applist_server::connect(service::ipc_context &ctx) {
-        if (!(flags & AL_INITED)) {
-            // Initialize
-            rescan_registries(ctx.sys->get_io_system());
-            flags |= AL_INITED;
-        }
-
         server::connect(ctx);
     }
 
+    std::map<std::uint32_t, apa_app_registry> &applist_server::get_registerations() {
+        if (!(flags & AL_INITED)) {
+            // Initialize
+            rescan_registries(sys->get_io_system());
+            flags |= AL_INITED;
+        }
+        
+        return regs;
+    }
+    
     apa_app_registry *applist_server::get_registeration(const std::uint32_t uid) {
+        if (!(flags & AL_INITED)) {
+            // Initialize
+            rescan_registries(sys->get_io_system());
+            flags |= AL_INITED;
+        }
+        
         auto result = regs.find(uid);
 
         if (result == regs.end()) {
