@@ -58,6 +58,14 @@ namespace eka2l1::common {
         return argv[counter++];
     }
 
+    const char *arg_parser::peek_token() {
+        if (counter == argc) {
+            return nullptr;
+        }
+
+        return argv[counter];
+    }
+
     bool arg_parser::add(const std::string &option, const std::string &help,
         arg_handler_function handler) {
         // SLAYY THEM OFF

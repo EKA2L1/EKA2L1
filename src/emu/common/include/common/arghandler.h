@@ -68,6 +68,11 @@ namespace eka2l1::common {
         */
         const char *next_token();
 
+        /**
+         * \brief Peek the next token without increasing the read pointer.
+         */
+        const char *peek_token();
+
         /*! \brief Start parsing.
          *
          * When a handler is called, it will return a boolean, which will
