@@ -68,13 +68,25 @@ namespace eka2l1 {
 
         return &(*ite);
     }
+    
+    void central_repo::query_entries(const std::uint32_t partial_key, const std::uint32_t mask,
+        std::vector<central_repo_entry*> &matched_entries,
+        const central_repo_entry_type etype) {
+        std::uint32_t required_mask = mask & partial_key;
+
+        for (auto &entry: entries) {
+            if ((entry.key & required_mask) && (entry.data.etype == etype)) {
+                matched_entries.push_back(&entry);
+            }
+        }
+    }
 
     void central_repo_client_subsession::modification_success(const std::uint32_t key) {
         // Iters through all
         for (std::size_t i = 0; i < notifies.size(); i++) {
             cenrep_notify_info &notify = notifies[i];
 
-            if ((key & notify.mask) == (notify.match & notify.mask)) {
+            if ((key & (notify.match & notify.mask))) {
                 // Notify and delete this request from the list
                 notify.sts.complete(0);
                 notifies.erase(notifies.begin() + i);

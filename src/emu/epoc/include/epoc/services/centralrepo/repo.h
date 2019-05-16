@@ -114,6 +114,39 @@ namespace eka2l1 {
         bool add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var);
         bool add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var,
             const std::uint32_t meta);
+
+        /**
+         * \brief Query all entries that match given bit pattern.
+         * 
+         * The mask marks bit which is mandatory, and partial key is the pattern to be matched.
+         * 
+         * For example, let say we have these keys:
+         * 
+         * 0x02B30B11                       0x07B10B52
+         * 
+         * If the mask is 0xF0FF0000, these will be ignored.
+         * 
+         * 0x02B30B11                       0x07B10B52
+         *    ^  ^^^^                          ^  ^^^^
+         *    i  iiii                          i  iiii
+         * 
+         * Than, the partial key comes in, which is the pattern for the rest of the available bits
+         * to be matched. If partial key = 0x03B100000. (v is match, x is not match, i is ignored)
+         * 
+         * 0x0-B3----                       0x0-B1----
+         *   vivxiiii                         vivviiii
+         * 0x03B10000                       0x03B10000
+         * 
+         * As you can see, the one that match our description is 0x07B10B52
+         * 
+         * \param partial_key     The bit pattern to be matched.
+         * \param mask            The mask that requires which bit is mandatory.
+         * \param matched_entries Reference to vector containing entries.
+         * \param etype           The type of all the entries to be matched.
+         */
+        void query_entries(const std::uint32_t partial_key, const std::uint32_t mask,
+            std::vector<central_repo_entry*> &matched_entries, 
+            const central_repo_entry_type etype);
     };
 
     struct central_repo_client_subsession;
