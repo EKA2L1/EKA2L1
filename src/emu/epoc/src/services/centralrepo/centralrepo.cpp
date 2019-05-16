@@ -716,6 +716,13 @@ namespace eka2l1 {
             all_attached.erase(attach_this_ite);
         }
 
+        // Decrease access count
+        if (repo_subsession.attach_repo->access_count > 0) {
+            repo_subsession.attach_repo->access_count--;
+        } else {
+            LOG_ERROR("Repo 0x{:X} has access count to be negative!", repo_subsession.attach_repo->uid);
+        }
+
         // Bie...
         client_subsessions.erase(repo_subsession_ite);
         return 0;

@@ -156,24 +156,31 @@ namespace eka2l1 {
         return &(transactor.changes[key]);
     }
 
-    void central_repos_cacher::free_oldest() {
-        std::uint32_t repo_key = 0;
+    bool central_repos_cacher::free_oldest() {
+        std::uint32_t repo_key = 0xFFFFFFFF;
         std::uint64_t oldest_access = 0xFFFFFFFFFFFFFFFF;
 
         for (auto &[key, entry] : entries) {
-            if (entry.last_access < oldest_access) {
+            if (entry.last_access < oldest_access && entry.repo.access_count == 0) {
                 oldest_access = entry.last_access;
                 repo_key = key;
             }
         }
 
-        entries.erase(repo_key);
+        if (repo_key != 0xFFFFFFFF) {
+            entries.erase(repo_key);
+            return true;
+        }
+
+        return false;
     }
 
     eka2l1::central_repo *central_repos_cacher::add_repo(const std::uint32_t key, eka2l1::central_repo &repo) {
         if (entries.size() == MAX_REPO_CACHE_ENTRIES) {
             // Free the oldest
-            free_oldest();
+            if (!free_oldest()) {
+                return nullptr;
+            }
         }
 
         cache_entry entry;
@@ -181,6 +188,8 @@ namespace eka2l1 {
                                 .count();
 
         entry.repo = std::move(repo);
+        entry.repo.access_count = 1;
+
         auto res = entries.emplace(key, std::move(entry));
 
         if (res.second) {
@@ -207,6 +216,7 @@ namespace eka2l1 {
 
         ite->second.last_access = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
                                       .count();
+        ite->second.repo.access_count++;
 
         return &(ite->second.repo);
     }
