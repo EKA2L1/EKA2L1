@@ -19,6 +19,8 @@
 
 #include <common/arghandler.h>
 #include <common/cvt.h>
+#include <common/pystr.h>
+#include <common/path.h>
 #include <console/cmdhandler.h>
 #include <console/global.h>
 #include <manager/device_manager.h>
@@ -29,6 +31,9 @@
 #include <manager/script_manager.h>
 #include <pybind11/embed.h>
 #endif
+
+#include <epoc/services/applist/applist.h>
+#include <epoc/kernel.h>
 
 using namespace eka2l1;
 
@@ -63,27 +68,74 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
         return false;
     }
 
-    auto infos = symsys->get_manager_system()->get_package_manager()->get_apps_info();
-    std::uint8_t app_idx = 0;
+    std::string tokstr = tok;
 
-    try {
-        app_idx = static_cast<decltype(app_idx)>(std::atoi(tok));
-    } catch (...) {
-        *err = "Expect an app index after --app, got ";
-        *err += tok;
+    const char *cmdline = parser->peek_token();
 
-        return false;
+    std::string cmdlinestr = "";
+
+    if (cmdline) {
+        cmdlinestr = cmdline;
+
+        if (cmdlinestr.substr(0, 2) == "--") {
+            cmdlinestr = "";
+        }
     }
 
     init_stage2();
-    bool result = symsys->load(infos[app_idx].id);
 
-    if (!result) {
-        *err = "Application load failed";
+    // Get app list server
+    std::shared_ptr<eka2l1::applist_server> svr = 
+        std::reinterpret_pointer_cast<eka2l1::applist_server>(symsys->get_kernel_system()
+        ->get_by_name<service::server>("!AppListServer"));
+
+    if (!svr) {
+        *err = "Can't get app list server!\n";
         return false;
     }
 
-    return true;
+    // It's an UID if it's starting with 0x
+    if (tokstr.length() > 2 && tokstr.substr(0, 2) == "0x") {
+        const std::uint32_t uid = common::pystr(tokstr).as_int<std::uint32_t>();
+        eka2l1::apa_app_registry *registry = svr->get_registeration(uid);
+
+        if (registry) {
+            symsys->load(registry->mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+            return true;
+        }
+
+        // Load
+        *err = "App with UID: ";
+        *err += tokstr;
+        *err += " doesn't exist";
+    } else {
+        if (eka2l1::has_root_dir(tokstr)) {
+            if (!symsys->load(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr))) {
+                *err = "Executable doesn't exists";
+                return false;
+            }
+
+            return true;
+        }
+
+        // Load with name
+        std::map<std::uint32_t, apa_app_registry> &regs = svr->get_registerations();
+
+        for (auto &reg: regs) {
+            if (common::ucs2_to_utf8(reg.second.mandatory_info.short_caption.to_std_string(nullptr))
+                == tokstr) {
+                // Load the app
+                symsys->load(reg.second.mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+                return true;
+            }
+        }
+
+        *err = "No app name found with the name: {}";
+        *err += tokstr;
+        *err += ". Make sure the name is right and try again.";
+    }
+
+    return false;
 }
 
 bool help_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
@@ -111,14 +163,19 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string 
 }
 
 bool list_app_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
-    auto infos = symsys->get_manager_system()->get_package_manager()->get_apps_info();
+    init_stage2();
 
-    for (auto &info : infos) {
-        std::cout << "[0x" << common::to_string(info.id, std::hex) << "]: "
-                  << common::ucs2_to_utf8(info.name) << " (drive: " << static_cast<char>('A' + info.drive)
-                  << " , executable name: " << common::ucs2_to_utf8(info.executable_name) << ")" << std::endl;
+    // Get app list server
+    std::shared_ptr<eka2l1::applist_server> svr = 
+        std::reinterpret_pointer_cast<eka2l1::applist_server>(symsys->get_kernel_system()
+        ->get_by_name<service::server>("!AppListServer"));
+
+    if (!svr) {
+        *err = "Can't get app list server!\n";
+        return false;
     }
 
+    [[maybe_unused]] const auto &regs = svr->get_registerations();
     return false;
 }
 

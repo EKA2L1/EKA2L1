@@ -165,8 +165,16 @@ int main(int argc, char **argv) {
     parser.add("--help, --h", "Display helps menu", help_option_handler);
     parser.add("--listapp", "List all installed applications", list_app_option_handler);
     parser.add("--listdevices", "List all installed devices", list_devices_option_handler);
-    parser.add("--app, --a, --run", "Run an app with specified index. See index of an app in --listapp",
+    parser.add("--app, --a, --run", "Run an app with given name or UID, or the absolute virtual path to executable.\n"
+                                    "\t\t\t  See list of apps with --listapp.\n"
+                                    "\t\t\t  Extra command line arguments can be passed to the application.\n"
+                                    "\n"
+                                    "\t\t\t  Some example:\n"
+                                    "\t\t\t    eka2l1 --run C:\\sys\\bin\\BitmapTest.exe \"--hi --arg 5\"\n"
+                                    "\t\t\t    eka2l1 --run Bounce\n"
+                                    "\t\t\t    eka2l1 --run 0x200412ED\n",
         app_specifier_option_handler);
+
     parser.add("--install, --i", "Install a SIS", app_install_option_handler);
 
 #if ENABLE_SCRIPTING
