@@ -72,18 +72,18 @@ namespace eka2l1 {
         };
 
         struct sis_old_file_record {
-            uint32_t file_record_type;
-            uint32_t file_type;
-            uint32_t file_details;
-            uint32_t source_name_len;
-            uint32_t source_name_ptr;
-            uint32_t des_name_len;
-            uint32_t des_name_ptr;
-            uint32_t len;
-            uint32_t ptr;
-            uint32_t org_file_len;
-            uint32_t mime_type_len;
-            uint32_t mine_type_ptr;
+            std::uint32_t file_record_type;
+            std::uint32_t file_type;
+            std::uint32_t file_details;
+            std::uint32_t source_name_len;
+            std::uint32_t source_name_ptr;
+            std::uint32_t des_name_len;
+            std::uint32_t des_name_ptr;
+            std::uint32_t len;
+            std::uint32_t ptr;
+            std::uint32_t org_file_len;
+            std::uint32_t mime_type_len;
+            std::uint32_t mine_type_ptr;
         };
 
         struct sis_old_file {
@@ -93,16 +93,14 @@ namespace eka2l1 {
         };
 
         struct sis_old {
-            epocver epoc_ver;
-
             sis_old_header header;
             std::vector<sis_old_file> files;
 
-            // The app path or exe path
-            std::optional<std::u16string> app_path;
-            std::optional<std::u16string> exe_path;
+            epocver epoc_ver;
+            std::vector<std::u16string> comp_names;
+            std::vector<language> langs;
         };
 
-        std::optional<sis_old> parse_sis_old(const std::string path);
+        std::optional<sis_old> parse_sis_old(const std::string &path);
     }
 }

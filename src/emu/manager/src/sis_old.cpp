@@ -30,7 +30,7 @@
 #include <miniz.h>
 
 namespace eka2l1::loader {
-    std::optional<sis_old> parse_sis_old(const std::string path) {
+    std::optional<sis_old> parse_sis_old(const std::string &path) {
         FILE *f = fopen(path.c_str(), "rb");
 
         if (!f) {
@@ -70,16 +70,7 @@ namespace eka2l1::loader {
 
             total_size_read = fread(old_file.dest.data(), 2, old_file_record.des_name_len / 2, f);
 
-            if (old_file.dest.find(u".app") != std::u16string::npos || old_file.dest.find(u".APP") != std::u16string::npos) {
-                sold.app_path = old_file.dest;
-            }
-
-            if (old_file.dest.find(u".exe") != std::u16string::npos || old_file.dest.find(u".EXE") != std::u16string::npos) {
-                sold.exe_path = old_file.dest;
-            }
-
             old_file.record = std::move(old_file_record);
-
             sold.files.push_back(std::move(old_file));
 
             if (sold.epoc_ver != epocver::epoc6) {
@@ -87,6 +78,36 @@ namespace eka2l1::loader {
             } else {
                 fseek(f, crr, SEEK_SET);
             }
+        }
+
+        for (std::uint32_t i = 0; i < sold.header.num_langs; i++) {
+            // Read the language
+            std::uint16_t lang = 0;
+            fseek(f, sold.header.lang_ptr + i * 2, SEEK_SET);
+            fread(&lang, 2, 1, f);
+
+            sold.langs.push_back(static_cast<language>(lang));
+
+            // Read component name
+            std::u16string name;
+            
+            fseek(f, sold.header.comp_name_ptr + i * 4, SEEK_SET);
+
+            // Read only one name
+            std::uint32_t name_len = 0;
+            fread(&name_len, 4, 1, f);
+
+            name.resize(name_len);
+
+            // Read name offset
+            fseek(f, sold.header.comp_name_ptr + 4 * sold.header.num_langs + i * 4, SEEK_SET);
+            std::uint32_t pkg_name_offset = 0;
+
+            fread(&pkg_name_offset, 4, 1, f);
+            fseek(f, pkg_name_offset, SEEK_SET);
+            fread(&name[0], name_len, 1, f);
+
+            sold.comp_names.push_back(name);
         }
 
         return sold;
