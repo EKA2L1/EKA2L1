@@ -147,11 +147,6 @@ namespace eka2l1 {
         return false;
     }
 
-    process_ptr kernel_system::spawn_new_process(const kernel::uid uid) {
-        return spawn_new_process(
-            common::utf8_to_ucs2(mngr->get_package_manager()->get_app_executable_path(uid)));
-    }
-
     // We can support also ELF!
     process_ptr kernel_system::spawn_new_process(const std::u16string &path,
         const std::u16string &cmd_arg, const kernel::uid promised_uid3,

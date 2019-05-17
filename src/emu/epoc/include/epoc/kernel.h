@@ -260,7 +260,6 @@ namespace eka2l1 {
         kernel::thread *crr_thread();
         kernel::process *crr_process();
 
-        process_ptr spawn_new_process(const kernel::uid uid);
         process_ptr spawn_new_process(const std::u16string &path,
             const std::u16string &cmd_arg = u"", const kernel::uid promised_uid3 = 0,
             const std::uint32_t stack_size = 0);
