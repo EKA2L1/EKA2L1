@@ -58,6 +58,25 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string 
     return true;
 }
 
+bool package_remove_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+    const char *uid = parser->next_token();
+
+    if (!uid) {
+        *err = "Request to remove a package, but UID not given";
+        return false;
+    }
+
+    std::uint32_t vuid = common::pystr(uid).as_int<std::uint32_t>();
+    bool result = symsys->get_manager_system()->get_package_manager()->uninstall_package(vuid);
+
+    if (!result) {
+        *err = "Fail to remove package.";
+        return false;
+    }
+
+    return true;
+}
+
 extern void init_stage2();
 
 bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {

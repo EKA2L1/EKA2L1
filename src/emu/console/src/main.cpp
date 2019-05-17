@@ -175,7 +175,8 @@ int main(int argc, char **argv) {
                                     "\t\t\t    eka2l1 --run 0x200412ED\n",
         app_specifier_option_handler);
 
-    parser.add("--install, --i", "Install a SIS", app_install_option_handler);
+    parser.add("--install, --i", "Install a SIS.", app_install_option_handler);
+    parser.add("--remove, --r", "Remove an package.", package_remove_option_handler);
 
 #if ENABLE_SCRIPTING
     parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);

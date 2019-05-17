@@ -27,6 +27,7 @@ namespace eka2l1::common {
 }
 
 bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
+bool package_remove_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
 bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
 bool help_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
 bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
