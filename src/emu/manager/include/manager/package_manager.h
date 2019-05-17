@@ -23,6 +23,7 @@
 
 #include <map>
 #include <optional>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -37,20 +38,17 @@ namespace eka2l1 {
     namespace manager {
         using uid = uint32_t;
 
-        struct app_info {
+        struct package_info {
             std::u16string name;
             std::u16string vendor_name;
-            std::u16string executable_name;
             drive_number drive;
 
             uid id;
-            epocver ver;
         };
 
-        // A package manager, serves for managing apps
-        // and implements part of HAL
+        // A package manager, serves for managing packages
         class package_manager {
-            std::map<uid, app_info> apps;
+            std::map<uid, package_info> packages;
 
             bool load_sdb_yaml(const std::string &path);
             bool write_sdb_yaml(const std::string &path);
@@ -58,28 +56,20 @@ namespace eka2l1 {
             io_system *io;
 
             bool install_controller(loader::sis_controller *ctrl, drive_number drv);
+            bool add_to_file_bucket(const uid package_uid, const std::string &path);
 
         public:
             package_manager() = default;
-            package_manager(io_system *io)
-                : io(io) { load_sdb_yaml("apps_registry.yml"); }
+            package_manager(io_system *io);
 
-            bool installed(uid app_uid);
+            bool installed(const uid pkg_uid);
 
-            std::size_t app_count() {
-                return apps.size();
+            const std::size_t package_count() const {
+                return packages.size();
             }
 
-            std::vector<app_info> get_apps_info();
-
-            std::u16string app_name(uid app_uid);
-            std::optional<app_info> info(uid app_uid);
-
             bool install_package(const std::u16string &path, drive_number drive);
-            bool uninstall_package(uid app_uid);
-
-            std::string get_app_executable_path(uint32_t uid);
-            std::string get_app_name(uint32_t uid);
+            bool uninstall_package(const uid app_uid);
         };
     }
 }
