@@ -180,6 +180,14 @@ namespace eka2l1 {
         */
         void get_capability(service::ipc_context &ctx);
 
+        /**
+         * \brief Get the path to an app's icon.
+         * 
+         * The first argument contains the app UID. The second argument contains the
+         * filename package.
+         */
+        void get_app_icon_file_name(service::ipc_context &ctx);
+
         void connect(service::ipc_context &ctx);
 
     public:
