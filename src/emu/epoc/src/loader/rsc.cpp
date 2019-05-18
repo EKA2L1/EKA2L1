@@ -357,13 +357,13 @@ namespace eka2l1::loader {
     }
 
     bool rsc_file::own_res_id(const int res_id) {
-        int offset = res_id & 0xfffff000;
+        int offset = res_id & 0xFFFFF000;
 
         if (offset != 0 && offset != signature.offset) {
             return false;
         }
 
-        int res_index = res_id & 0x00000fff - 1;
+        int res_index = (res_id & 0xFFF) - 1;
         int number_of_res = num_res;
 
         if (flags & generate_rss_sig_for_first_user_res) {
@@ -509,7 +509,7 @@ namespace eka2l1::loader {
 
         signature = *reinterpret_cast<sig_record*>(&dat[0]);
         signature.offset &= 0xFFFFF000;
-        
+
         return true;
     }
 
