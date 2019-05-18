@@ -141,7 +141,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
         std::map<std::uint32_t, apa_app_registry> &regs = svr->get_registerations();
 
         for (auto &reg: regs) {
-            if (common::ucs2_to_utf8(reg.second.mandatory_info.short_caption.to_std_string(nullptr))
+            if (common::ucs2_to_utf8(reg.second.mandatory_info.long_caption.to_std_string(nullptr))
                 == tokstr) {
                 // Load the app
                 symsys->load(reg.second.mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
