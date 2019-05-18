@@ -186,6 +186,10 @@ namespace eka2l1::epoc {
             desc_base::set_descriptor_type(buf_const);
         }
 
+        bufc_static(const std::basic_string<T> &str) {
+            desc<T>::assign(nullptr, str);
+        }
+
         void operator=(const std::basic_string<T> &str) {
             desc<T>::assign(nullptr, str);
         }
@@ -198,6 +202,10 @@ namespace eka2l1::epoc {
         buf_static() {
             des<T>::set_max_length(MAX_ELEM);
             desc_base::set_descriptor_type(buf);
+        }
+
+        buf_static(const std::basic_string<T> &str) {
+            desc<T>::assign(nullptr, str);
         }
 
         void operator=(const std::basic_string<T> &str) {
