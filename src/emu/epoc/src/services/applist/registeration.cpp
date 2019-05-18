@@ -32,6 +32,11 @@ namespace eka2l1 {
             return false;
         }
 
+        if (len == 0) {
+            dat = u"";
+            return true;
+        }
+
         // Align if neccessary. Required align by 2.
         if (stream->tell() % 2 != 0) {
             stream->seek(1, common::seek_where::cur);
