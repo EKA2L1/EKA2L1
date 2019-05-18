@@ -32,37 +32,68 @@ namespace eka2l1 {
             msg->msg_session->set_slot_free(msg);
         }
 
-        template <>
-        std::optional<int> ipc_context::get_arg(int idx) {
+        template <typename T>
+        std::enable_if_t<std::is_integral_v<T>, std::optional<T>> get_integral_arg_from_msg(
+            ipc_msg_ptr &msg, const int idx) {
             if (idx >= 4) {
-                return std::optional<int>{};
+                return std::nullopt;
             }
 
-            return msg->args.args[idx];
+            return static_cast<T>(msg->args.args[idx]);
         }
 
         template <>
-        std::optional<std::u16string> ipc_context::get_arg(int idx) {
+        std::optional<std::uint8_t> ipc_context::get_arg(const int idx) {
+            return get_integral_arg_from_msg<std::uint8_t>(msg, idx);
+        }
+        
+        template <>
+        std::optional<std::uint16_t> ipc_context::get_arg(const int idx) {
+            return get_integral_arg_from_msg<std::uint16_t>(msg, idx);
+        }
+        
+        template <>
+        std::optional<std::uint32_t> ipc_context::get_arg(const int idx) {
+            return get_integral_arg_from_msg<std::uint32_t>(msg, idx);
+        }
+        
+        template <>
+        std::optional<std::int8_t> ipc_context::get_arg(const int idx) {
+            return get_integral_arg_from_msg<std::int8_t>(msg, idx);
+        }
+        
+        template <>
+        std::optional<std::int16_t> ipc_context::get_arg(const int idx) {
+            return get_integral_arg_from_msg<std::int16_t>(msg, idx);
+        }
+        
+        template <>
+        std::optional<std::int32_t> ipc_context::get_arg(const int idx) {
+            return get_integral_arg_from_msg<std::int32_t>(msg, idx);
+        }
+
+        template <>
+        std::optional<std::u16string> ipc_context::get_arg(const int idx) {
             if (idx >= 4) {
-                return std::optional<std::u16string>{};
+                return std::nullopt;
             }
 
-            ipc_arg_type iatype = msg->args.get_arg_type(idx);
+            const ipc_arg_type iatype = msg->args.get_arg_type(idx);
 
-            if ((int)iatype & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
+            if (static_cast<int>(iatype) & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
                 kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
 
                 return des->to_std_string(own_pr);
             }
 
-            return std::optional<std::u16string>{};
+            return std::nullopt;
         }
 
         template <>
         std::optional<std::string> ipc_context::get_arg(int idx) {
             if (idx >= 4) {
-                return std::optional<std::string>{};
+                return std::nullopt;
             }
 
             ipc_arg_type iatype = msg->args.get_arg_type(idx);
@@ -74,7 +105,7 @@ namespace eka2l1 {
                 return des->to_std_string(msg->own_thr->owning_process());
             }
 
-            return std::optional<std::string>{};
+            return std::nullopt;
         }
 
         void ipc_context::set_request_status(int res) {

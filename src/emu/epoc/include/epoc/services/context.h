@@ -49,10 +49,10 @@ namespace eka2l1 {
             bool signaled = false;
 
             template <typename T>
-            std::optional<T> get_arg(int idx);
+            std::optional<T> get_arg(const int idx);
 
             template <typename T>
-            std::optional<T> get_arg_packed(int idx) {
+            std::optional<T> get_arg_packed(const int idx) {
                 T ret;
 
                 std::optional<std::string> dat = get_arg<std::string>(idx);
