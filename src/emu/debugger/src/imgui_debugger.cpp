@@ -64,7 +64,62 @@ namespace eka2l1 {
         , should_show_logger(true)
         , should_show_breakpoint_list(false)
         , should_show_preferences(false)
+        , should_package_manager(false)
+        , should_package_manager_display_file_list(false)
+        , should_package_manager_remove(false)
+        , should_package_manager_display_installer_text(false)
+        , should_package_manager_display_language_choose(false)
+        , selected_package_index(0xFFFFFFFF)
         , debug_thread_id(0) {
+        // Setup hook
+        manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
+
+        pkg_mngr->show_text = [&](const char *text_buf) -> bool {
+            installer_text = text_buf;
+            should_package_manager_display_installer_text = true;
+
+            std::unique_lock<std::mutex> ul(installer_mut);
+            installer_cond.wait(ul);
+
+            // Normally debug thread won't touch this
+            should_package_manager_display_installer_text = false;
+
+            return installer_text_result;
+        };
+
+        pkg_mngr->choose_lang = [&](const int *lang, const int count) -> int {
+            installer_langs = lang;
+            installer_lang_size = count;
+            
+            should_package_manager_display_language_choose = true;
+
+            std::unique_lock<std::mutex> ul(installer_mut);
+            installer_cond.wait(ul);
+
+            // Normally debug thread won't touch this
+            should_package_manager_display_language_choose = false;
+
+            return installer_lang_choose_result;
+        };
+
+        install_thread = std::make_unique<std::thread>([&]() {
+            while (true && !install_thread_should_stop) {
+                while (auto result = install_list.pop()) {
+                    if (!install_thread_should_stop) {
+                        get_sys()->install_package(common::utf8_to_ucs2(result.value()), drive_c);
+                    }
+                }
+            
+                std::unique_lock<std::mutex> ul(install_thread_mut);
+                install_thread_cond.wait(ul);
+            }
+        });
+    }
+
+    imgui_debugger::~imgui_debugger() {
+        install_thread_should_stop = true;
+        install_thread_cond.notify_one();
+        install_thread->join();
     }
 
     manager::config_state *imgui_debugger::get_config() {
@@ -420,7 +475,7 @@ namespace eka2l1 {
         ImGui::SameLine(col2);
         ImGui::PushItemWidth(col2 - 10);
 
-        if (ImGui::BeginCombo("##CPUCombo", "Unicorn")) {
+        if (ImGui::BeginCombo("##CPUCombo", (conf->cpu_backend == 0) ? "Unicorn" : "Dynarmic")) {
             if (ImGui::Selectable("Unicorn")) {
                 conf->cpu_backend = 0;
                 conf->serialize();
@@ -441,7 +496,8 @@ namespace eka2l1 {
         ImGui::PushItemWidth(col2 - 10);
 
         const auto &dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
-        const std::string preview_info = dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
+        const std::string preview_info = dvcs.empty() ? "No device present" : 
+            dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
                 
         if (ImGui::BeginCombo("##Devicescombo", preview_info.c_str())) {
             for (std::size_t i = 0; i < dvcs.size(); i++) {
@@ -490,6 +546,34 @@ namespace eka2l1 {
         draw_path_change("Memory card drive (E:)", "Change##2", conf->e_mount);
         draw_path_change("ROM drive (E:)", "Change##3", conf->z_mount);
     }
+
+    void imgui_debugger::show_pref_hal() {
+        ImGui::Text("Screen Size");
+        const float col2 = ImGui::GetWindowSize().x / 3;
+
+        ImGui::SameLine(col2);
+        ImGui::Text("X");
+        ImGui::SameLine(col2 + 10);
+        ImGui::PushItemWidth(col2 - 20);
+        ImGui::InputInt("##ScreenSizeXInput", &conf->display_size_x_pixs);
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine(col2 * 2);
+        ImGui::Text("Y");
+        ImGui::SameLine(col2 * 2 + 10);
+        ImGui::PushItemWidth(col2 - 20);
+        ImGui::InputInt("##ScreenSizeYInput", &conf->display_size_y_pixs);
+        ImGui::PopItemWidth();
+
+        ImGui::Text("RAM size");
+        ImGui::SameLine(col2);
+
+        int mb_initial = static_cast<int>(conf->maximum_ram / common::MB(1));
+        ImGui::PushItemWidth(col2 * 2 - 30);
+        ImGui::SliderInt("MB", &mb_initial, 64, 512);
+        ImGui::PopItemWidth();
+        conf->maximum_ram = static_cast<std::uint32_t>(mb_initial * common::MB(1));
+    }
     
     void imgui_debugger::show_preferences() {
         ImGui::Begin("Preferences", &should_show_preferences);
@@ -498,7 +582,8 @@ namespace eka2l1 {
         static std::vector<std::pair<std::string, show_func>> all_prefs = {
             { "General", &imgui_debugger::show_pref_general },
             { "Mounting", &imgui_debugger::show_pref_mounting },
-            { "Personalisation", &imgui_debugger::show_pref_personalisation }
+            { "Personalisation", &imgui_debugger::show_pref_personalisation },
+            { "HAL", &imgui_debugger::show_pref_hal }
         };
 
         for (std::size_t i = 0; i < all_prefs.size(); i++) {
@@ -527,13 +612,227 @@ namespace eka2l1 {
         ImGui::End();
     }
 
+    void imgui_debugger::show_package_manager() {
+        // Get package manager
+        manager::package_manager *manager = sys->get_manager_system()->get_package_manager();
+        ImGui::Begin("Packages", &should_package_manager, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("Package")) {
+                if (ImGui::MenuItem("Install")) {
+                    std::string path = "";
+
+                    on_pause_toogle(true);
+
+                    file_dialog("sis,sisx", [&](const char *res) {
+                        path = res;
+                    }, false);
+                        
+                    should_pause = false;
+                    on_pause_toogle(false);
+
+                    if (!path.empty()) {
+                        install_list.push(path);
+                        install_thread_cond.notify_one();
+                    }
+                }
+
+                if (ImGui::MenuItem("Remove", nullptr, &should_package_manager_remove)) {
+                    should_package_manager_remove = true;
+                }
+
+                if (ImGui::MenuItem("File lists", nullptr, &should_package_manager_display_file_list)) {
+                    should_package_manager_display_file_list = true;
+                }
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenuBar();
+        }
+        ImGui::Columns(4);
+
+        ImGui::SetColumnWidth(0, ImGui::CalcTextSize("0x11111111").x + 20.0f);
+
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "UID");
+        ImGui::NextColumn();
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Name");
+        ImGui::NextColumn();
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Vendor");
+        ImGui::NextColumn();
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Drive");
+        ImGui::NextColumn();
+
+        ImGuiListClipper clipper(static_cast<int>(manager->package_count()), ImGui::GetTextLineHeight());
+        
+        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+            const manager::package_info *pkg = manager->package(i);
+            std::string str = "0x" + common::to_string(pkg->id, std::hex);
+
+            ImGui::Text(str.c_str());
+            ImGui::NextColumn();
+
+            str = common::ucs2_to_utf8(pkg->name);
+
+            if (ImGui::Selectable(str.c_str(), selected_package_index == i)) {
+                if (!should_package_manager_remove) {
+                    selected_package_index = i;
+                    should_package_manager_display_file_list = false;
+                }
+            }
+
+            if (selected_package_index == i && ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("File lists")) {
+                    should_package_manager_display_file_list = true;
+                }
+
+                if (ImGui::MenuItem("Remove")) {
+                    should_package_manager_remove = true;
+                }
+
+                ImGui::EndPopup();
+            }
+
+            ImGui::NextColumn();
+
+            str = common::ucs2_to_utf8(pkg->vendor_name);
+            
+            ImGui::Text(str.c_str());
+            ImGui::NextColumn();
+
+            str = static_cast<char>(drive_to_char16(pkg->drive));
+            str += ":";
+            
+            ImGui::Text(str.c_str());
+            ImGui::NextColumn();
+        }
+
+        clipper.End();
+
+        ImGui::Columns(1);
+        ImGui::End();
+
+        if (should_package_manager_display_file_list) {
+            const std::lock_guard<std::mutex> guard(manager->lockdown);
+            const manager::package_info *pkg = manager->package(selected_package_index);
+
+            if (pkg != nullptr) {
+                const std::string pkg_title = common::ucs2_to_utf8(pkg->name) + " (0x" + 
+                    common::to_string(pkg->id, std::hex) + ") file lists";
+
+                std::vector<std::string> paths;
+                manager->get_file_bucket(pkg->id, paths);
+
+                ImGui::Begin(pkg_title.c_str(), &should_package_manager_display_file_list);
+
+                for (auto &path: paths) {
+                    ImGui::Text(path.c_str());
+                }
+
+                ImGui::End();   
+            }
+        }
+
+        if (should_package_manager_remove) {
+            const std::lock_guard<std::mutex> guard(manager->lockdown);
+            const manager::package_info *pkg = manager->package(selected_package_index);
+
+            ImGui::OpenPopup("Info");
+
+            if (ImGui::BeginPopupModal("Info", &should_package_manager_remove)) {
+                if (pkg == nullptr) {
+                    ImGui::Text("No package selected.");
+                } else {
+                    std::string ask_question = "Are you sure you want to remove the package ("
+                        + common::ucs2_to_utf8(pkg->name) + ")?";
+                    
+                    ImGui::Text(ask_question.c_str());
+                }
+
+                ImGui::NewLine();
+
+                ImGui::SameLine(ImGui::CalcItemWidth() / 2 + 20.0f);
+
+                if (ImGui::Button("Yes")) {
+                    should_package_manager_remove = false;
+                    should_package_manager_display_file_list = false;
+
+                    if (pkg != nullptr) {
+                        manager->uninstall_package(pkg->id);
+                    }
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("No")) {
+                    should_package_manager_remove = false;
+                }
+
+                ImGui::EndPopup();
+            }
+        }
+    }
+
+    void imgui_debugger::show_installer_text_popup() {
+        ImGui::OpenPopup("Installer Text Popup");
+
+        if (ImGui::BeginPopupModal("Installer Text Popup")) {
+            ImGui::Text(installer_text);
+
+            if (ImGui::Button("Yes")) {
+                installer_text_result = true;
+                installer_cond.notify_one();
+                
+                should_package_manager_display_installer_text = false;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("No")) {
+                installer_text_result = false;
+                installer_cond.notify_one();
+    
+                should_package_manager_display_installer_text = false;
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+    
+    void imgui_debugger::show_installer_choose_lang_popup() {
+        ImGui::OpenPopup("Choose the language for this package");
+
+        if (ImGui::BeginPopupModal("Choose the language for this package")) {
+            for (int i = 0; i < installer_lang_size; i++) {
+                if (ImGui::Selectable(num_to_lang(installer_langs[i]), installer_current_lang_idx == i)) {
+                    installer_current_lang_idx = i;
+                }
+            }
+
+            if (ImGui::Button("OK")) {
+                installer_lang_choose_result = installer_langs[installer_current_lang_idx];
+                installer_cond.notify_one();
+                
+                should_package_manager_display_language_choose = false;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel")) {
+                installer_cond.notify_one();
+                should_package_manager_display_language_choose = false;
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
     void imgui_debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
             conf->menu_height = ImGui::GetWindowSize().y;
             
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
-                ImGui::MenuItem("Install package", nullptr, &should_install_package);
+                ImGui::MenuItem("Packages", nullptr, &should_package_manager);
 
                 ImGui::EndMenu();
             }
@@ -584,6 +883,10 @@ namespace eka2l1 {
         show_menu();
         handle_shortcuts();
 
+        if (should_package_manager) {
+            show_package_manager();
+        }
+
         if (should_show_threads) {
             show_threads();
         }
@@ -606,6 +909,14 @@ namespace eka2l1 {
 
         if (should_show_preferences) {
             show_preferences();
+        }
+
+        if (should_package_manager_display_installer_text) {
+            show_installer_text_popup();
+        }
+
+        if (should_package_manager_display_language_choose) {
+            show_installer_choose_lang_popup();
         }
 
         on_pause_toogle(should_pause);

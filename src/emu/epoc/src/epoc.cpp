@@ -320,7 +320,7 @@ namespace eka2l1 {
         exit = false;
 
         // Initialize manager. It doesn't depend much on other
-        mngr.init(parent, &io);
+        mngr.init(parent, &io, conf);
 
         // Initialize all the system that doesn't depend on others first
         timing.init();
@@ -435,7 +435,8 @@ namespace eka2l1 {
     }
 
     bool system_impl::install_package(std::u16string path, drive_number drv) {
-        return mngr.get_package_manager()->install_package(path, drv);
+        std::atomic<int> h;
+        return mngr.get_package_manager()->install_package(path, drv, h);
     }
 
     bool system_impl::load_rom(const std::string &path) {

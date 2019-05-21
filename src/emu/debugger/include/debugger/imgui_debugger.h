@@ -24,6 +24,7 @@
 #include <memory>
 #include <mutex>
 
+#include <common/queue.h>
 #include <debugger/debugger.h>
 
 struct MemoryEditor;
@@ -44,11 +45,28 @@ namespace eka2l1 {
         bool should_stop;
         bool should_load_state;
         bool should_save_state;
-        bool should_install_package;
+        bool should_package_manager;
         bool should_show_disassembler;
         bool should_show_logger;
         bool should_show_breakpoint_list;
         bool should_show_preferences;
+
+        bool should_package_manager_display_file_list;
+        bool should_package_manager_remove;
+
+        const char *installer_text;
+        bool installer_text_result { false };
+
+        std::condition_variable installer_cond;
+        std::mutex installer_mut;
+
+        const int *installer_langs;
+        int installer_lang_size;
+        int installer_lang_choose_result { -1 };
+        int installer_current_lang_idx { -1 };
+
+        bool should_package_manager_display_installer_text;
+        bool should_package_manager_display_language_choose;
 
         void show_threads();
         void show_mutexs();
@@ -58,10 +76,22 @@ namespace eka2l1 {
         void show_menu();
         void show_breakpoint_list();
         void show_preferences();
+        void show_package_manager();
 
         void show_pref_personalisation();
         void show_pref_general();
         void show_pref_mounting();
+        void show_pref_hal();
+
+        void show_installer_text_popup();
+        void show_installer_choose_lang_popup();
+
+        std::unique_ptr<std::thread> install_thread;
+        threadsafe_cn_queue<std::string> install_list;
+        std::mutex install_thread_mut;
+        std::condition_variable install_thread_cond;
+
+        bool install_thread_should_stop = false;
 
         std::size_t cur_pref_tab{ 0 };
         std::atomic<std::uint32_t> debug_thread_id;
@@ -70,6 +100,7 @@ namespace eka2l1 {
         std::shared_ptr<imgui_logger> logger;
 
         std::uint32_t addr = 0;
+        std::uint32_t selected_package_index = 0;
         std::int32_t modify_element = -1;
 
         std::mutex debug_lock;
@@ -77,9 +108,14 @@ namespace eka2l1 {
 
     public:
         explicit imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger);
+        ~imgui_debugger();
 
         bool should_emulate_stop() override {
             return should_stop;
+        }
+
+        system *get_sys() const {
+            return sys;
         }
 
         void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
