@@ -17,17 +17,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
 #include <common/algorithm.h>
 
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <fstream>
 #include <string>
 
 namespace eka2l1 {
     namespace common {
+        enum file_mode {
+            text_mode = 0,
+            binary_mode = 1 << 0,
+            read_mode = 0,
+            write_mode = 1 << 1
+        };
+
         enum seek_where {
             beg,
             cur,
@@ -75,6 +84,9 @@ namespace eka2l1 {
                 seek(pos, seek_where::beg);
                 return read(buf, size);
             }
+        };
+
+        class rw_stream: public ro_stream, public wo_stream {
         };
 
         /*! \brief Another buffer stream, base on LLVM's Buffer 
@@ -194,6 +206,62 @@ namespace eka2l1 {
                 }
 
                 crr_pos += size;
+            }
+        };
+
+        class ro_std_file_stream: public common::ro_stream {
+            mutable FILE *fi_;
+
+        public:
+            explicit ro_std_file_stream(const std::string &path, const bool binary) {
+                fi_ = fopen(path.c_str(), binary ? "rb" : "r");
+            }
+
+            bool valid() override {
+                return fi_;
+            }
+            
+            std::uint64_t read(void *buf, const std::uint64_t read_size) override {
+                return fread(buf, read_size, 1, fi_);
+            }
+
+            void seek(const std::uint64_t amount, common::seek_where wh) override {
+                int flags = 0;
+                switch (wh) {
+                case common::seek_where::beg: {
+                    flags = SEEK_SET;
+                    break;
+                }
+
+                case common::seek_where::cur: {
+                    flags = SEEK_CUR;
+                    break;
+                }
+
+                default: {
+                    flags = SEEK_END;
+                    break;
+                }
+                }
+
+                fseek(fi_, static_cast<long>(amount), flags);
+            }
+            
+            std::uint64_t left() override {
+                return size() - tell();
+            }
+
+            std::uint64_t tell() const override {
+                return ftell(fi_);
+            }
+
+            std::uint64_t size() override {
+                const std::uint64_t cur_pos = tell();
+                seek(0, common::end);
+                const std::uint64_t s = tell();
+
+                seek(cur_pos, common::beg);
+                return s;
             }
         };
         
