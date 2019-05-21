@@ -34,6 +34,8 @@ namespace eka2l1 {
         class device_manager;
         class config_manager;
 
+        struct config_state;
+
 #ifdef ENABLE_SCRIPTING
         class script_manager;
 #endif
@@ -52,7 +54,7 @@ namespace eka2l1 {
         manager_system() = default;
         ~manager_system() = default;
 
-        void init(system *sys, io_system *ios);
+        void init(system *sys, io_system *ios, manager::config_state *conf);
 
         manager::package_manager *get_package_manager();
 

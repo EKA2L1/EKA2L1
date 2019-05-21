@@ -66,7 +66,7 @@ namespace eka2l1 {
             SISInstallBlock = 28,
             SISExpression = 29,
             SISData = 30,
-            SISdataUnit = 31,
+            SISDataUnit = 31,
             SISFileData = 32,
             SISSupportedOption = 33,
             SISControllerChecksum = 34,
@@ -257,10 +257,10 @@ namespace eka2l1 {
         };
 
         enum class ss_op {
+            EOpNull = 0,
             EOpInstall = 1,
             EOpRun = 2,
-            EOpText = 4,
-            EOpNull = 8
+            EOpText = 4
         };
 
         enum class ss_io_option {
@@ -360,6 +360,8 @@ namespace eka2l1 {
             sis_install_block install_block;
             std::vector<sis_sig_cert_chain> sigcert_chains;
             sis_data_index idx;
+
+            sis_lang choosen_lang = sis_lang::en;
         };
 
         struct sis_expression;
