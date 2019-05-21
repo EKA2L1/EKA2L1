@@ -59,139 +59,32 @@ namespace eka2l1 {
             parse_field_child(&arr);
 
             stream->read(reinterpret_cast<char *>(&arr.element_type), 4);
+            std::uint64_t crr_pos = stream->tellg();
 
-            uint64_t crr_pos = stream->tellg();
+            #define PARSE_ELEMENT_TYPE(element_case, handler_result_type, handler)                                                          \
+                case sis_field_type::element_case:                                                                                          \
+                    while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {            \
+                        auto elem = std::make_shared<handler_result_type>(handler(true));                                                   \
+                        elem->type = arr.element_type;                                                                                      \
+                        arr.fields.push_back(std::reinterpret_pointer_cast<sis_field>(elem));                                               \
+                        valid_offset();                                                                                                     \
+                    }                                                                                                                       \
+                    break;
 
             switch (arr.element_type) {
-            case sis_field_type::SISString:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_string>(parse_string(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISSupportedOption:
-                while ((uint32_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_supported_option>(parse_supported_option(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISLanguage:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_supported_lang>(parse_supported_lang(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISDependency:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_dependency>(parse_dependency(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISProperty:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_property>(parse_property(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISFileDes:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_file_des>(parse_file_description(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISController:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_controller>(parse_controller(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISFileData:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_file_data>(parse_file_data(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISdataUnit:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_data_unit>(parse_data_unit(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISExpression:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_expression>(parse_expression(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISIf:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_if>(parse_if(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISElseIf:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_else_if>(parse_if_else(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
-
-            case sis_field_type::SISSignature:
-                while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {
-                    auto str = std::make_shared<sis_sig>(parse_signature(true));
-                    str->type = arr.element_type;
-                    arr.fields.push_back(str);
-                    valid_offset();
-                }
-
-                break;
+            PARSE_ELEMENT_TYPE(SISString, sis_string, parse_string)
+            PARSE_ELEMENT_TYPE(SISSupportedOption, sis_supported_option, parse_supported_option)
+            PARSE_ELEMENT_TYPE(SISLanguage, sis_supported_lang, parse_supported_lang)
+            PARSE_ELEMENT_TYPE(SISDependency, sis_dependency, parse_dependency)
+            PARSE_ELEMENT_TYPE(SISProperty, sis_property, parse_property)
+            PARSE_ELEMENT_TYPE(SISFileDes, sis_file_des, parse_file_description)
+            PARSE_ELEMENT_TYPE(SISController, sis_controller, parse_controller)
+            PARSE_ELEMENT_TYPE(SISFileData, sis_file_data, parse_file_data)
+            PARSE_ELEMENT_TYPE(SISDataUnit, sis_data_unit, parse_data_unit)
+            PARSE_ELEMENT_TYPE(SISExpression, sis_expression, parse_expression)
+            PARSE_ELEMENT_TYPE(SISIf, sis_if, parse_if)
+            PARSE_ELEMENT_TYPE(SISElseIf, sis_else_if, parse_if_else)
+            PARSE_ELEMENT_TYPE(SISSignature, sis_sig, parse_signature)
 
             default:
                 break;
@@ -451,7 +344,7 @@ namespace eka2l1 {
 
             contents.controller = parse_controller();
 
-            //LOG_INFO("Current stream position: {}, compressed data size: {}", stream->tellg(), compress_data.uncompressed_size);
+            LOG_INFO("Current stream position: {}, compressed data size: {}", stream->tellg(), compress_data.uncompressed_size);
             assert((uint64_t)stream->tellg() == compress_data.uncompressed_size);
 
             switch_stream();
@@ -752,22 +645,25 @@ namespace eka2l1 {
 
             stream->read(reinterpret_cast<char *>(&expr.op), 4);
 
-            if (expr.op == ss_expr_op::EPrimTypeNumber || expr.op == ss_expr_op::EPrimTypeVariable
-                || expr.op == ss_expr_op::EPrimTypeOption) {
-                stream->read(reinterpret_cast<char *>(&expr.int_val), 4);
-            }
+            // Only notice this field with EPrimTypeNumber, EPrimTypeVariable, EPrimTypeOption
+            stream->read(reinterpret_cast<char *>(&expr.int_val), 4);
 
             if (expr.op == ss_expr_op::EFuncExists || expr.op == ss_expr_op::EPrimTypeString) {
                 expr.val = parse_string();
             }
 
-            if (((int)expr.op >= 2 && ((int)expr.op <= 8))
+            if ((static_cast<int>(expr.op) >= static_cast<int>(ss_expr_op::EBinOpEqual) 
+                && (static_cast<int>(expr.op) <= static_cast<int>(ss_expr_op::ELogOpOr)))
                 || (expr.op == ss_expr_op::EFuncAppProperties)
                 || (expr.op == ss_expr_op::EFuncDevProperties)) {
                 expr.left_expr = std::make_shared<sis_expression>(parse_expression());
             }
 
-            if (((int)expr.op >= 4) && (expr.op != ss_expr_op::EFuncExists)) {
+            if ((expr.op != ss_expr_op::EPrimTypeString) &&
+                (expr.op != ss_expr_op::EPrimTypeOption) &&
+                (expr.op != ss_expr_op::EPrimTypeVariable) &&
+                (expr.op != ss_expr_op::EPrimTypeNumber) &&
+                (expr.op != ss_expr_op::EFuncExists)) {
                 expr.right_expr = std::make_shared<sis_expression>(parse_expression());
             }
 
@@ -781,15 +677,10 @@ namespace eka2l1 {
 
             parse_field_child(&ib, no_type);
 
-            size_t org_pos = stream->tellg();
-
             ib.files = parse_array();
             ib.controllers = parse_array();
-
-            stream->seekg(org_pos);
-            stream->seekg(ib.len_low, std::ios::cur);
-            //ib.if_blocks = parse_array();
-
+            ib.if_blocks = parse_array();
+            
             valid_offset();
 
             return ib;

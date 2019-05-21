@@ -86,7 +86,6 @@ namespace eka2l1 {
             compressed.compressed_data.resize(us);
 
             data_stream->seek(compressed.offset, common::seek_where::beg);
-            LOG_TRACE("{} {}", data_stream->size(), data_stream->tell());
             data_stream->read(&compressed.compressed_data[0], us);
 
             if (compressed.algorithm == sis_compressed_algorithm::none) {

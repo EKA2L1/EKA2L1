@@ -36,8 +36,9 @@
 
 namespace eka2l1 {
     namespace manager {
-        package_manager::package_manager(io_system *io)
+        package_manager::package_manager(io_system *io, config_state *conf)
             : io(io) 
+            , conf(conf)
         { 
             load_sdb_yaml("apps_registry.yml");
             eka2l1::create_directory("packages");
@@ -53,6 +54,21 @@ namespace eka2l1 {
 
             bucket_stream << path << '\n';
             return true;
+        }
+    
+        void package_manager::get_file_bucket(const manager::uid pkg_uid, std::vector<std::string> &paths) {
+            std::fstream bucket_stream("packages\\" + common::to_string(pkg_uid, std::hex) + ".txt",
+                std::ios::in);
+
+            if (!bucket_stream) {
+                return;
+            }
+
+            std::string path = "";
+
+            while (std::getline(bucket_stream, path)) {
+                paths.push_back(path);
+            }
         }
         
         bool package_manager::load_sdb_yaml(const std::string &path) {
@@ -78,7 +94,7 @@ namespace eka2l1 {
                 const auto vendor = app["vendor"].as<std::string>();
                 info.vendor_name = common::utf8_to_ucs2(vendor);
 
-                packages.emplace(info.id, info);
+                add_package(info);
             }
 
             return true;
@@ -96,13 +112,13 @@ namespace eka2l1 {
             emitter << YAML::BeginMap;
 
             for (const auto &package : packages) {
-                emitter << YAML::Key << common::ucs2_to_utf8(package.second.name);
+                emitter << YAML::Key << common::ucs2_to_utf8(package.name);
                 emitter << YAML::Value << YAML::BeginMap;
 
-                emitter << YAML::Key << "drive" << YAML::Value << package.second.drive;
-                emitter << YAML::Key << "uid" << YAML::Value << package.second.id;
-                emitter << YAML::Key << "name" << YAML::Value << common::ucs2_to_utf8(package.second.name);
-                emitter << YAML::Key << "vendor" << YAML::Value << common::ucs2_to_utf8(package.second.vendor_name);
+                emitter << YAML::Key << "drive" << YAML::Value << package.drive;
+                emitter << YAML::Key << "uid" << YAML::Value << package.id;
+                emitter << YAML::Key << "name" << YAML::Value << common::ucs2_to_utf8(package.name);
+                emitter << YAML::Key << "vendor" << YAML::Value << common::ucs2_to_utf8(package.vendor_name);
 
                 emitter << YAML::EndMap;
             }
@@ -114,17 +130,53 @@ namespace eka2l1 {
             return true;
         }
 
+        const package_info *package_manager::package(const std::size_t idx) const {
+            if (packages.size() <= idx) {
+                return nullptr;
+            }
+
+            return &packages[idx];
+        }
+        
+        void package_manager::add_package(package_info &pkg) {
+            // Lock the list.
+            const std::lock_guard<std::mutex> guard(lockdown);
+
+            // Add to package list
+            packages.push_back(std::move(pkg));
+            std::sort(packages.begin(), packages.end(), [](const package_info &lhs, const package_info &rhs) {
+                return lhs.id < rhs.id;
+            });
+        }
+        
         bool package_manager::installed(uid app_uid) {
-            return (packages.find(app_uid) != packages.end());
+            // Lock the list.
+            const std::lock_guard<std::mutex> guard(lockdown);
+
+            package_info temp;
+            temp.id = app_uid;
+
+            if (std::binary_search(packages.begin(), packages.end(), temp,
+                [](const package_info &lhs, const package_info &rhs) {
+                    return lhs.id < rhs.id;
+                })) {
+                return true;
+            }
+
+            return false;
         }
 
-        bool package_manager::install_controller(loader::sis_controller *ctrl, drive_number drv) {
+        bool package_manager::install_controller(loader::sis_controller *ctrl, const drive_number drive) {
             package_info info{};
 
             info.vendor_name = ctrl->info.vendor_name.unicode_string;
             info.name = ((loader::sis_string *)(ctrl->info.names.fields[0].get()))->unicode_string;
-            info.drive = drv;
+            info.drive = drive;
             info.id = ctrl->info.uid.uid;
+
+            if (installed(info.id)) {
+                return false;
+            }
 
             LOG_INFO("Package UID: 0x{:x}", info.id);
 
@@ -134,28 +186,27 @@ namespace eka2l1 {
                 std::string file_path = common::ucs2_to_utf8(file_des->target.unicode_string);
 
                 if (file_path[0] == '!') {
-                    file_path[0] = static_cast<char>(drive_to_char16(drv));
+                    file_path[0] = static_cast<char>(drive_to_char16(drive));
                 }
 
                 // If we are really going to install this
                 if (file_des->op == loader::ss_op::EOpInstall) {
-                    add_to_file_bucket(info.id, file_path);
                 }
             }
 
-            // Add to package list
-            packages[info.id] = std::move(info);
+            add_package(info);
 
             for (auto &wrap_mini_ctrl : ctrl->install_block.controllers.fields) {
                 loader::sis_controller *mini_ctrl = (loader::sis_controller *)(wrap_mini_ctrl.get());
                 // Recursively install controller
-                install_controller(mini_ctrl, drv);
+                install_controller(mini_ctrl, drive);
             }
 
             return true;
         }
 
-        bool package_manager::install_package(const std::u16string &path, drive_number drive) {
+        bool package_manager::install_package(const std::u16string &path, const drive_number drive,
+            std::atomic<int> &progress) {
             std::optional<epocver> sis_ver = loader::get_epoc_ver(common::ucs2_to_utf8(path));
 
             if (!sis_ver) {
@@ -164,17 +215,27 @@ namespace eka2l1 {
 
             if (*sis_ver == epocver::epoc94) {
                 loader::sis_contents res = loader::parse_sis(common::ucs2_to_utf8(path));
+                common::ro_std_file_stream stream(common::ucs2_to_utf8(path), true);
 
                 // Interpret the file
-                loader::ss_interpreter interpreter(std::make_shared<std::ifstream>(common::ucs2_to_utf8(path), std::ios::binary),
+                loader::ss_interpreter interpreter(reinterpret_cast<common::ro_stream*>(&stream),
                     io,
                     this,
-                    res.controller.install_block,
-                    res.data,
+                    conf,
+                    &res.controller,
+                    &res.data,
                     drive);
 
-                interpreter.interpret();
+                // Set up hooks
+                if (show_text) {
+                    interpreter.show_text = show_text;
+                }
 
+                if (choose_lang) {
+                    interpreter.choose_lang = choose_lang;
+                }
+                
+                interpreter.interpret(progress);
                 install_controller(&res.controller, drive);
             } else {
                 package_info de_info;
@@ -182,38 +243,65 @@ namespace eka2l1 {
 
                 loader::install_sis_old(path, io, drive, de_info, files);
 
+                if (installed(de_info.id)) {
+                    return false;
+                }
+
                 for (const auto &file: files) {
                     add_to_file_bucket(de_info.id, common::ucs2_to_utf8(file));
                 }
-
-                packages.emplace(de_info.id, de_info);
+                
+                add_package(de_info);
             }
 
             write_sdb_yaml("apps_registry.yml");
 
+            if (show_text) {
+                show_text("Installation done!");
+            }
+            
+            LOG_TRACE("Installation done!");
+
             return true;
         }
 
-        bool package_manager::uninstall_package(const uid pkg_uid) {
-            packages.erase(pkg_uid);
-
+        void package_manager::delete_files_and_bucket(const uid pkg_uid) {
             const std::string pkg_file = "packages\\" + common::to_string(pkg_uid, std::hex) + ".txt";
 
             // Get the package file, delete all related files
-            std::fstream bucket_stream(pkg_file, std::ios::in);
+            std::ifstream bucket_stream(pkg_file);
 
-            if (!bucket_stream) {
+            if (bucket_stream) {    
+                std::string file_path = "";
+
+                while (std::getline(bucket_stream, file_path)) {
+                    io->delete_entry(common::utf8_to_ucs2(file_path));
+                }
+
+                // Remove myself too!
+                bucket_stream.close();
+                common::remove(pkg_file);
+            }
+        }
+
+        bool package_manager::uninstall_package(const uid pkg_uid) {
+            auto pkg = std::lower_bound(packages.begin(), packages.end(), pkg_uid,
+                [](const package_info &lhs, const manager::uid auid) {
+                    return lhs.id < auid;
+                });
+
+            if (pkg == packages.end()) {
                 return false;
             }
 
-            std::string file_path = "";
+            packages.erase(pkg);
 
-            while (std::getline(bucket_stream, file_path)) {
-                io->delete_entry(common::utf8_to_ucs2(file_path));
-            }
+            std::sort(packages.begin(), packages.end(), [](const package_info &lhs, const package_info &rhs) {
+                return lhs.id < rhs.id;
+            });
 
-            // Remove myself too!
-            common::remove(pkg_file);
+            delete_files_and_bucket(pkg_uid);
+
             write_sdb_yaml("apps_registry.yml");
 
             return true;
