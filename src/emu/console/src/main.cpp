@@ -52,6 +52,10 @@
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
 
+#if EKA2L1_PLATFORM(WIN32)
+extern "C" _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+#endif
+
 using namespace eka2l1;
 
 std::unique_ptr<eka2l1::system> symsys;
@@ -152,9 +156,9 @@ int main(int argc, char **argv) {
     symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
 
     eka2l1::drivers::init_window_library(eka2l1::drivers::window_type::glfw);
-    debugger = std::make_shared<eka2l1::imgui_debugger>(symsys.get(), logger);
-
     init();
+    
+    debugger = std::make_shared<eka2l1::imgui_debugger>(symsys.get(), logger);
 
     // Let's set up this
     eka2l1::common::arg_parser parser(argc, argv);
@@ -182,6 +186,12 @@ int main(int argc, char **argv) {
     parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
 #endif
 
+    std::thread debug_window_thread(ui_debugger_thread);
+    std::unique_lock<std::mutex> ulock(lock);
+
+    // Wait for debug thread to intialize
+    cond.wait(ulock);
+
     if (argc > 1) {
         std::string err;
         should_quit = !parser.parse(&err);
@@ -191,18 +201,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (should_quit) {
-        do_quit();
-        return 0;
+    if (!should_quit) {
+        run();
     }
-
-    std::thread debug_window_thread(ui_debugger_thread);
-    std::unique_lock<std::mutex> ulock(lock);
-
-    // Wait for debug thread to intialize
-    cond.wait(ulock);
-
-    run();
 
     debug_window_thread.join();
     do_quit();
