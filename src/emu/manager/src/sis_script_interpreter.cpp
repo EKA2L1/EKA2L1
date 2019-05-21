@@ -19,6 +19,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/buffer.h>
 #include <common/cvt.h>
 #include <common/flate.h>
 #include <common/log.h>
@@ -26,6 +27,7 @@
 #include <common/types.h>
 
 #include <epoc/vfs.h>
+#include <manager/config.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 
@@ -33,17 +35,6 @@
 
 namespace eka2l1 {
     namespace loader {
-        bool exists(const utf16_str &str) {
-            FILE *temp = fopen(common::ucs2_to_utf8(str).c_str(), "rb");
-
-            if (temp) {
-                fclose(temp);
-                return true;
-            }
-
-            return false;
-        }
-
         std::string get_install_path(const std::u16string &pseudo_path, drive_number drv) {
             std::u16string raw_path = pseudo_path;
 
@@ -67,37 +58,36 @@ namespace eka2l1 {
         }
 
         ss_interpreter::ss_interpreter() {
-            data_stream.reset();
         }
 
-        ss_interpreter::ss_interpreter(std::shared_ptr<std::istream> stream,
+        ss_interpreter::ss_interpreter(common::ro_stream *stream,
             io_system *io,
             manager::package_manager *pkgmngr,
-            sis_install_block inst_blck,
-            sis_data inst_data,
+            manager::config_state *conf,
+            sis_controller *main_controller,
+            sis_data *inst_data,
             drive_number inst_drv)
-            : data_stream(std::move(stream))
+            : data_stream(stream)
             , mngr(pkgmngr)
+            , conf(conf)
             , io(io)
-            , install_block(inst_blck)
+            , main_controller(main_controller)
             , install_data(inst_data)
-            , install_drive(inst_drv) {}
+            , install_drive(inst_drv) {
+        }
 
         std::vector<uint8_t> ss_interpreter::get_small_file_buf(uint32_t data_idx, uint16_t crr_blck_idx) {
             sis_file_data *data = reinterpret_cast<sis_file_data *>(
-                reinterpret_cast<sis_data_unit *>(install_data.data_units.fields[crr_blck_idx].get())->data_unit.fields[data_idx].get());
+                reinterpret_cast<sis_data_unit *>(install_data->data_units.fields[crr_blck_idx].get())->data_unit.fields[data_idx].get());
             sis_compressed compressed = data->raw_data;
 
             std::uint64_t us = ((compressed.len_low) | (static_cast<uint64_t>(compressed.len_high) << 32)) - 12;
 
             compressed.compressed_data.resize(us);
 
-            data_stream->seekg(compressed.offset, std::ios::beg);
-            data_stream->read(reinterpret_cast<char *>(compressed.compressed_data.data()), us);
-
-            if (data_stream->eof()) {
-                data_stream->clear();
-            }
+            data_stream->seek(compressed.offset, common::seek_where::beg);
+            LOG_TRACE("{} {}", data_stream->size(), data_stream->tell());
+            data_stream->read(&compressed.compressed_data[0], us);
 
             if (compressed.algorithm == sis_compressed_algorithm::none) {
                 return compressed.compressed_data;
@@ -141,13 +131,13 @@ namespace eka2l1 {
 
             FILE *file = fopen(path.c_str(), "wb");
 
-            sis_data_unit *data_unit = reinterpret_cast<sis_data_unit *>(install_data.data_units.fields[crr_blck_idx].get());
+            sis_data_unit *data_unit = reinterpret_cast<sis_data_unit *>(install_data->data_units.fields[crr_blck_idx].get());
             sis_file_data *data = reinterpret_cast<sis_file_data *>(data_unit->data_unit.fields[idx].get());
 
             sis_compressed compressed = data->raw_data;
 
             std::uint64_t left = ((compressed.len_low) | (static_cast<std::uint64_t>(compressed.len_high) << 32)) - 12;
-            data_stream->seekg(compressed.offset, std::ios::beg);
+            data_stream->seek(compressed.offset, common::seek_where::beg);
 
             std::vector<unsigned char> temp_chunk;
             temp_chunk.resize(CHUNK_SIZE);
@@ -172,11 +162,9 @@ namespace eka2l1 {
                 std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
                 int grab = static_cast<int>(left < CHUNK_SIZE ? left : CHUNK_SIZE);
 
-                data_stream->read(reinterpret_cast<char *>(temp_chunk.data()), grab);
+                data_stream->read(&temp_chunk[0], grab);
 
-                if (data_stream->eof()) {
-                    data_stream->clear();
-                } else if (data_stream->fail()) {
+                if (!data_stream->valid()) {
                     LOG_ERROR("Stream fail, skipping this file, should report to developers.");
                     return;
                 }
@@ -213,223 +201,305 @@ namespace eka2l1 {
             fclose(file);
         }
 
-        bool operator==(const sis_expression &lhs, const sis_expression &rhs) {
-            if (lhs.op != rhs.op) {
-                return false;
-            }
-
-            if ((lhs.op == ss_expr_op::EPrimTypeNumber)
-                || (lhs.op == ss_expr_op::EPrimTypeOption)
-                || (lhs.op == ss_expr_op::EPrimTypeVariable)) {
-                return lhs.int_val == rhs.int_val;
-            }
-
-            if (lhs.op == ss_expr_op::EPrimTypeString) {
-                return lhs.val.unicode_string == rhs.val.unicode_string;
-            }
-
-            return false;
+        static bool is_expression_integral_type(const ss_expr_op op) {
+            return (op == ss_expr_op::EPrimTypeNumber)
+                    || (op == ss_expr_op::EPrimTypeOption)
+                    || (op == ss_expr_op::EPrimTypeVariable);
         }
 
-        bool operator>(const sis_expression &lhs, const sis_expression &rhs) {
-            if (lhs.op != rhs.op) {
-                return false;
+        int ss_interpreter::gasp_true_form_of_integral_expression(const sis_expression &expr) {
+            switch (expr.op) {
+            case ss_expr_op::EPrimTypeVariable: {
+                switch (expr.int_val) {
+                // Language variable. We choosen upper
+                case 0x1000: {
+                    return static_cast<int>(current_controller->choosen_lang);
+                }
+
+                default: {
+                    break;
+                }
+                }
+                
+                return static_cast<int>(conf->get_hal_entry(expr.int_val));
             }
 
-            if ((lhs.op == ss_expr_op::EPrimTypeNumber)
-                || (lhs.op == ss_expr_op::EPrimTypeOption)
-                || (lhs.op == ss_expr_op::EPrimTypeVariable)) {
-                return lhs.int_val > rhs.int_val;
+            default:
+                break;
             }
 
-            if (lhs.op == ss_expr_op::EPrimTypeString) {
-                return lhs.val.unicode_string > rhs.val.unicode_string;
-            }
-
-            return false;
+            return expr.int_val;
         }
 
-        bool operator<(const sis_expression &lhs, const sis_expression &rhs) {
-            if (lhs.op != rhs.op) {
-                return false;
+        bool ss_interpreter::condition_passed(sis_field *wrap_if_stmt) {
+            // We can also use this for else. Technically they have the same structure
+            sis_if *if_stmt = reinterpret_cast<sis_if *>(wrap_if_stmt);
+            const ss_expr_op stmt_type = if_stmt->expr.op;
+
+            bool pass = false;
+
+            switch (stmt_type) {
+            case ss_expr_op::EBinOpEqual:
+            case ss_expr_op::EBinOpNotEqual:
+            case ss_expr_op::EBinOpGreaterThan:
+            case ss_expr_op::EBinOpLessThan:
+            case ss_expr_op::EBinOpGreaterThanOrEqual:
+            case ss_expr_op::EBinOpLessOrEqual:
+            case ss_expr_op::ELogOpAnd:
+            case ss_expr_op::ELogOpOr: {
+                const auto lhs = *if_stmt->expr.left_expr;
+                const auto rhs = *if_stmt->expr.right_expr;
+
+                if (is_expression_integral_type(lhs.op) && is_expression_integral_type(rhs.op)) {
+                    const int val1 = gasp_true_form_of_integral_expression(lhs);
+                    const int val2 = gasp_true_form_of_integral_expression(rhs);
+
+                    switch (stmt_type) {
+                    case ss_expr_op::EBinOpEqual: {
+                        pass = (val1 == val2);
+                        break;
+                    }
+
+                    case ss_expr_op::EBinOpNotEqual: {
+                        pass = (val1 != val2);
+                        break;
+                    }
+
+                    case ss_expr_op::EBinOpGreaterThan: {
+                        pass = (val1 > val2);
+                        break;
+                    }
+
+                    case ss_expr_op::EBinOpLessThan: {
+                        pass = (val1 < val2);
+                        break;
+                    }
+
+                    case ss_expr_op::EBinOpGreaterThanOrEqual: {
+                        pass = (val1 >= val2);
+                        break;
+                    }
+
+                    case ss_expr_op::EBinOpLessOrEqual: {
+                        pass = (val1 <= val2);
+                        break;
+                    }
+
+                    case ss_expr_op::ELogOpAnd: {
+                        pass = static_cast<std::uint32_t>(val1) & static_cast<std::uint32_t>(val2);
+                        break;
+                    }
+
+                    case ss_expr_op::ELogOpOr: {
+                        pass = static_cast<std::uint32_t>(val1) | static_cast<std::uint32_t>(val2);
+                        break;
+                    }
+
+                    default: {
+                        pass = false;
+                        break;
+                    }
+                    }
+                } else {
+                    if (lhs.op != ss_expr_op::EPrimTypeString || rhs.op != ss_expr_op::EPrimTypeString) {
+                        LOG_ERROR("Trying to do comparision between string and non-string type!");
+                    } else {
+                        switch (stmt_type) {
+                        case ss_expr_op::EBinOpEqual: {
+                            pass = lhs.val.unicode_string == rhs.val.unicode_string;
+                            break;
+                        }
+
+                        case ss_expr_op::EBinOpNotEqual: {
+                            pass = lhs.val.unicode_string != rhs.val.unicode_string;
+                            break;
+                        }
+
+                        case ss_expr_op::EBinOpGreaterThan: {
+                            pass = lhs.val.unicode_string > rhs.val.unicode_string;
+                            break;
+                        }
+
+                        case ss_expr_op::EBinOpLessThan: {
+                            pass = lhs.val.unicode_string < rhs.val.unicode_string;
+                            break;
+                        }
+
+                        case ss_expr_op::EBinOpGreaterThanOrEqual: {
+                            pass = lhs.val.unicode_string >= rhs.val.unicode_string;
+                            break;
+                        }
+
+                        case ss_expr_op::EBinOpLessOrEqual: {
+                            pass = lhs.val.unicode_string <= rhs.val.unicode_string;
+                            break;
+                        }
+
+                        default: {
+                            LOG_ERROR("Can't use op OR or AND (logical operation) with string!");
+                            pass = false;
+                            break;
+                        }
+                        }
+                    }
+                }
+
+                break;
             }
 
-            if ((lhs.op == ss_expr_op::EPrimTypeNumber)
-                || (lhs.op == ss_expr_op::EPrimTypeOption)
-                || (lhs.op == ss_expr_op::EPrimTypeVariable)) {
-                return lhs.int_val < rhs.int_val;
+            case ss_expr_op::EUnaryOpNot: {
+                pass = !if_stmt->expr.int_val;
+                break;
             }
 
-            if (lhs.op == ss_expr_op::EPrimTypeString) {
-                return lhs.val.unicode_string < rhs.val.unicode_string;
+            case ss_expr_op::EFuncExists: {
+                pass = io->exist(if_stmt->expr.val.unicode_string);
+                break;
             }
 
-            return false;
+            default: {
+                LOG_WARN("Unimplemented operation {} for expression", static_cast<int>(stmt_type));
+                break;
+            }
+            }
+
+            return pass;
+        }
+    
+        bool ss_interpreter::interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress) {
+            // Set current controller
+            current_controller = controller;
+            mngr->delete_files_and_bucket(controller->info.uid.uid);
+
+            // Ask for language. If we can't choose the first one, or none
+            if (controller->langs.langs.fields.size() != 1 && choose_lang) {
+                std::vector<int> langs;
+
+                for (auto &lang_field: controller->langs.langs.fields) {
+                    langs.push_back(static_cast<int>(std::reinterpret_pointer_cast<sis_language>(lang_field)->language));
+                }
+
+                controller->choosen_lang = static_cast<sis_lang>(choose_lang(&langs[0], static_cast<int>(langs.size())));
+
+                if (controller->choosen_lang == static_cast<sis_lang>(-1)) {
+                    std::string error_string = fmt::format("Abort choosing language, leading to installation canceled for controller 0x{:X}!",
+                        controller->info.uid.uid);
+
+                    LOG_ERROR("{}", error_string);
+                    
+                    if (show_text) {
+                        show_text(error_string.c_str());
+                    }
+
+                    return false;
+                }
+            } else {
+                controller->choosen_lang =
+                    std::reinterpret_pointer_cast<sis_language>(controller->langs.langs.fields[0])->language;
+            }
+
+            // TODO: Choose options
+            return interpret(controller->install_block, progress, base_data_idx + controller->idx.data_index);
         }
 
-        // Take two expression, return if logical and is bigger than 0 or not
-        bool operator&(const sis_expression &lhs, const sis_expression &rhs) {
-            if (lhs.op != rhs.op) {
-                return false;
-            }
-
-            if ((lhs.op == ss_expr_op::EPrimTypeNumber)
-                || (lhs.op == ss_expr_op::EPrimTypeOption)
-                || (lhs.op == ss_expr_op::EPrimTypeVariable)) {
-                return lhs.int_val & rhs.int_val;
-            }
-
-            return false;
-        }
-
-        // Take two expression, return if logical and is bigger than 0 or not
-        bool operator|(const sis_expression &lhs, const sis_expression &rhs) {
-            if (lhs.op != rhs.op) {
-                return false;
-            }
-
-            if ((lhs.op == ss_expr_op::EPrimTypeNumber)
-                || (lhs.op == ss_expr_op::EPrimTypeOption)
-                || (lhs.op == ss_expr_op::EPrimTypeVariable)) {
-                return lhs.int_val | rhs.int_val;
-            }
-
-            return false;
-        }
-
-        bool operator!=(const sis_expression &lhs, const sis_expression &rhs) {
-            return !(lhs == rhs);
-        }
-
-        bool operator>=(const sis_expression &lhs, const sis_expression &rhs) {
-            return (lhs > rhs) || (lhs == rhs);
-        }
-
-        bool operator<=(const sis_expression &lhs, const sis_expression &rhs) {
-            return (lhs < rhs) || (lhs == rhs);
-        }
-
-        bool ss_interpreter::interpret(sis_install_block install_block, uint16_t crr_blck_idx) {
+        bool ss_interpreter::interpret(sis_install_block &install_block, std::atomic<int> &progress, uint16_t crr_blck_idx) {
             // Process file
-            auto install_file = [&](sis_install_block inst_blck, uint16_t crr_blck_idx) {
+            auto install_file = [&](sis_install_block &inst_blck, uint16_t crr_blck_idx) {
                 for (auto &wrap_file : inst_blck.files.fields) {
                     sis_file_des *file = (sis_file_des *)(wrap_file.get());
                     std::string raw_path = "";
+                    std::string install_path = "";
 
                     if (file->target.unicode_string.length() > 0) {
-                        raw_path = common::ucs2_to_utf8(*(io->get_raw_path(
-                            common::utf8_to_ucs2(get_install_path(file->target.unicode_string, install_drive)))));
+                        install_path = get_install_path(file->target.unicode_string, install_drive);
+                        raw_path = common::ucs2_to_utf8(*(io->get_raw_path(common::utf8_to_ucs2(install_path))));
                     }
 
-                    if (file->op == ss_op::EOpText) {
+                    switch (file->op) {
+                    case ss_op::EOpText: {
                         auto buf = get_small_file_buf(file->idx, crr_blck_idx);
-                        //extract_file_with_buf(raw_path, buf);
-                        if (show_text_func) {
-                            show_text_func(buf);
+                        buf.push_back(0);
+
+                        bool yes_choosen = true;
+
+                        if (show_text) {
+                            yes_choosen = show_text(reinterpret_cast<const char*>(buf.data()));
                         }
                         
-                        LOG_INFO("EOpText: {}", buf.data());
-                    } else if (file->op == ss_op::EOpRun) {
-                        // Doesn't do anything yet.
-                        LOG_INFO("EOpRun {}", raw_path);
-                    } else if (file->op == ss_op::EOpInstall) {
-                        LOG_INFO("EOpInstall {}", raw_path);
-                        extract_file(raw_path, file->idx, crr_blck_idx);
+                        LOG_INFO("EOpText: {}", reinterpret_cast<const char*>(buf.data()));
 
-                        raw_path = common::lowercase_string(raw_path);
-
-                        if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
-                            LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
-                            mngr->install_package(common::utf8_to_ucs2(raw_path), drive_c);
+                        switch (file->op_op) {
+                        case 1 << 10: {     // Skip next files
+                            skip_next_file = true;
+                            break;
                         }
-                    } else {
-                        LOG_INFO("EOpNull");
+
+                        case 1 << 11:
+                        case 1 << 12: {     // Abort
+                            mngr->delete_files_and_bucket(current_controller->info.uid.uid);
+                            const std::string err_string = fmt::format("Choosing No, installation abort for controller 0x{:X}"
+                                , current_controller->info.uid.uid);
+
+                            LOG_ERROR("{}", err_string);
+
+                            if (show_text) {
+                                show_text(err_string.c_str());
+                            }
+
+                            break;
+                        }
+
+                        default: {
+                            break;
+                        }
+                        }
+
+                        break;
+                    }
+
+                    case ss_op::EOpInstall:
+                    case ss_op::EOpNull: {
+                        if (!skip_next_file) {
+                            extract_file(raw_path, file->idx, crr_blck_idx);
+
+                            raw_path = common::lowercase_string(raw_path);
+
+                            if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
+                                LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
+                                mngr->install_package(common::utf8_to_ucs2(raw_path), drive_c, progress);
+                            }
+
+                            LOG_INFO("EOpInstall: {}", raw_path);
+
+                            // Add to bucket
+                            mngr->add_to_file_bucket(current_controller->info.uid.uid, install_path);
+                        } else {
+                            skip_next_file = false;
+                        }
+
+                        break;
+                    }
+
+                    default:
+                        break;
                     }
                 }
             };
 
             install_file(install_block, crr_blck_idx);
 
-            auto can_pass = [&](sis_field *wrap_if_stmt) -> bool {
-                sis_if *if_stmt = (sis_if *)(wrap_if_stmt);
-                ss_expr_op stmt_type = if_stmt->expr.op;
-
-                bool pass = false;
-
-                if (stmt_type == ss_expr_op::EBinOpEqual) {
-                    pass = (*if_stmt->expr.left_expr == *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpNotEqual) {
-                    pass = (*if_stmt->expr.left_expr != *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpGreaterThan) {
-                    pass = (*if_stmt->expr.left_expr > *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpGreaterThanOrEqual) {
-                    pass = (*if_stmt->expr.left_expr >= *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpLessThan) {
-                    pass = (*if_stmt->expr.left_expr < *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpLessOrEqual) {
-                    pass = (*if_stmt->expr.left_expr <= *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::ELogOpAnd) {
-                    pass = (*if_stmt->expr.left_expr & *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::ELogOpOr) {
-                    pass = (*if_stmt->expr.left_expr | *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EFuncExists) {
-                    pass = exists(if_stmt->expr.val.unicode_string);
-                } else if (stmt_type == ss_expr_op::EFuncAppProperties) {
-                    pass = /*appprop(if_stmt->expr.left_expr, );*/ false;
-                } else if (stmt_type == ss_expr_op::EFuncDevProperties) {
-                    pass = false;
-                }
-
-                return pass;
-            };
-
-            auto can_pass_else = [&](sis_field *wrap_if_stmt) -> bool {
-                sis_else_if *if_stmt = (sis_else_if *)(wrap_if_stmt);
-                ss_expr_op stmt_type = if_stmt->expr.op;
-
-                bool pass = false;
-
-                if (stmt_type == ss_expr_op::EBinOpEqual) {
-                    pass = (*if_stmt->expr.left_expr == *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpNotEqual) {
-                    pass = (*if_stmt->expr.left_expr != *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpGreaterThan) {
-                    pass = (*if_stmt->expr.left_expr > *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpGreaterThanOrEqual) {
-                    pass = (*if_stmt->expr.left_expr >= *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpLessThan) {
-                    pass = (*if_stmt->expr.left_expr < *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EBinOpLessOrEqual) {
-                    pass = (*if_stmt->expr.left_expr <= *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::ELogOpAnd) {
-                    pass = (*if_stmt->expr.left_expr & *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::ELogOpOr) {
-                    pass = (*if_stmt->expr.left_expr | *if_stmt->expr.right_expr);
-                } else if (stmt_type == ss_expr_op::EFuncExists) {
-                    pass = exists(if_stmt->expr.val.unicode_string);
-                } else if (stmt_type == ss_expr_op::EFuncAppProperties) {
-                    pass = /*appprop(if_stmt->expr.left_expr, );*/ false;
-                } else if (stmt_type == ss_expr_op::EFuncDevProperties) {
-                    pass = false;
-                }
-
-                return pass;
-            };
-
             // Parse if blocks
             for (auto &wrap_if_statement : install_block.if_blocks.fields) {
-                bool pass = /* can_pass(wrap_if_statement.get()); */ true;
                 sis_if *if_stmt = (sis_if *)(wrap_if_statement.get());
 
-                if (pass) {
-                    interpret(if_stmt->install_block, ++crr_blck_idx);
+                if (condition_passed(wrap_if_statement.get())) {
+                    interpret(if_stmt->install_block, progress, crr_blck_idx);
                 } else {
-                    for (auto &wrap_else_brnch : if_stmt->else_if.fields) {
-                        pass = /*can_pass_else(wrap_else_brnch.get()); */ true;
-                        sis_else_if *if_stmt = (sis_else_if *)(wrap_if_statement.get());
+                    for (auto &wrap_else_branch : if_stmt->else_if.fields) {
+                        sis_else_if *if_stmt = (sis_else_if *)(wrap_else_branch.get());
 
-                        if (pass) {
-                            interpret(if_stmt->install_block, ++crr_blck_idx);
+                        if (condition_passed(wrap_else_branch.get())) {
+                            interpret(if_stmt->install_block, progress, crr_blck_idx);
                         }
                     }
                 }
@@ -437,7 +507,7 @@ namespace eka2l1 {
 
             for (auto &wrap_mini_pkg : install_block.controllers.fields) {
                 sis_controller *ctrl = (sis_controller *)(wrap_mini_pkg.get());
-                interpret(ctrl->install_block, ++crr_blck_idx);
+                interpret(ctrl, crr_blck_idx, progress);
             }
 
             return true;

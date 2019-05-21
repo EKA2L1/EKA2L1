@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <string>
 #include <vector>
@@ -31,25 +32,49 @@ namespace eka2l1 {
 
     namespace manager {
         class package_manager;
+        struct config_state;
+    }
+    
+    namespace common {
+        class ro_stream;
     }
 
     namespace loader {
         // An interpreter that runs SIS install script
         class ss_interpreter {
-            sis_install_block install_block;
-            sis_data install_data;
+            sis_controller *main_controller;
+            sis_data *install_data;
+            manager::config_state *conf;
+
+            sis_controller *current_controller = nullptr;
+
             drive_number install_drive;
 
-            std::shared_ptr<std::istream> data_stream;
-            std::function<bool(std::vector<uint8_t>)> show_text_func;
+            common::ro_stream *data_stream;
 
             io_system *io;
             manager::package_manager *mngr;
 
-            bool appprop(sis_uid uid, sis_property prop);
-            bool package(sis_uid uid);
+            bool skip_next_file { false };
+
+            bool appprop(const sis_uid uid, sis_property prop);
+            bool package(const sis_uid uid);
+
+            /**
+             * \brief Check if the given IF statement can be passed.
+             * \return True if it can be passed.
+             */
+            bool condition_passed(sis_field *wrap_if_stmt);
+            
+            /**
+             * \brief Get the true integral value from an expression.
+             */
+            int gasp_true_form_of_integral_expression(const sis_expression &expr);
 
         public:
+            show_text_func show_text;                       ///< Hook function to display texts.
+            choose_lang_func choose_lang;                   ///< Hook function to choose controller's language.
+
             /**
              * \brief Get the data in the index of a buffer block in the SIS.
              * 
@@ -77,15 +102,22 @@ namespace eka2l1 {
             void extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx);
 
             explicit ss_interpreter();
-            ss_interpreter(std::shared_ptr<std::istream> stream,
+            explicit ss_interpreter(common::ro_stream *stream,
                 io_system *io,
                 manager::package_manager *pkgmngr,
-                sis_install_block inst_blck,
-                sis_data inst_data,
+                manager::config_state *conf,
+                sis_controller *main_controller,
+                sis_data *inst_data,
                 drive_number install_drv);
 
-            bool interpret(sis_install_block install_block, uint16_t crr_blck_idx = 0);
-            bool interpret() { return interpret(install_block); }
+            bool interpret(sis_install_block &install_block, std::atomic<int> &progress, 
+                uint16_t crr_blck_idx = 0);
+
+            bool interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress);
+            
+            bool interpret(std::atomic<int> &progress) {
+                return interpret(main_controller, 0, progress); 
+            }
         };
     }
 }
