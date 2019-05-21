@@ -41,10 +41,10 @@ namespace eka2l1 {
         return dvmngr.get();
     }
 
-    void manager_system::init(system *sys, io_system *ios) {
+    void manager_system::init(system *sys, io_system *ios, manager::config_state *conf) {
         io = ios;
 
-        pkgmngr = std::make_unique<manager::package_manager>(ios);
+        pkgmngr = std::make_unique<manager::package_manager>(ios, conf);
 
 #ifdef ENABLE_SCRIPTING
         scrmngr = std::make_unique<manager::script_manager>(sys);
