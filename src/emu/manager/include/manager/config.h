@@ -1,11 +1,37 @@
+/*
+ * Copyright (c) 2019 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <optional>
 
 namespace eka2l1::manager {
+    enum class hal_entry_key {
+        #define HAL_ENTRY(generic_name, display_name, key) generic_name = key,
+        #include <manager/hal.def>
+        #undef HAL_ENTRY
+    };
+    
     struct config_state {
         float menu_height = 0;
         int bkg_transparency { 129 };
@@ -34,7 +60,14 @@ namespace eka2l1::manager {
         std::string e_mount = "drives/e/";
         std::string z_mount = "drives/z/";
 
+        int display_size_x_pixs { 360 };
+        int display_size_y_pixs { 640 };
+
+        std::uint32_t maximum_ram;
+
         void serialize();
         void deserialize();
+
+        const std::uint32_t get_hal_entry(const int key) const;
     };
 }

@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2019 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <common/algorithm.h>
+#include <common/log.h>
+
 #include <manager/config.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
@@ -51,6 +73,9 @@ namespace eka2l1::manager {
         config_file_emit_single(emitter, "c-mount", c_mount);
         config_file_emit_single(emitter, "e-mount", e_mount);
         config_file_emit_single(emitter, "z-mount", z_mount);
+        config_file_emit_single(emitter, "display-size-x", display_size_x_pixs);
+        config_file_emit_single(emitter, "display-size-y", display_size_y_pixs);
+        config_file_emit_single(emitter, "ram-max", maximum_ram);
         config_file_emit_single(emitter, "gdb-port", gdb_port);
 
         emitter << YAML::EndMap;
@@ -87,6 +112,9 @@ namespace eka2l1::manager {
         get_yaml_value(node, "c-mount", &c_mount, "drives/c/");
         get_yaml_value(node, "e-mount", &e_mount, "drives/e/");
         get_yaml_value(node, "z-mount", &z_mount, "drives/z/");
+        get_yaml_value(node, "display_size_x", &display_size_x_pixs, 360);
+        get_yaml_value(node, "display_size_y", &display_size_y_pixs, 640);
+        get_yaml_value(node, "ram-max", &maximum_ram, static_cast<std::uint32_t>(common::MB(512)));
         get_yaml_value(node, "gdb-port", &gdb_port, 24689);
 
         try {
@@ -97,5 +125,35 @@ namespace eka2l1::manager {
             }
         } catch (...) {
         }
+    }
+
+    const std::uint32_t config_state::get_hal_entry(const int hal_key) const {
+        const hal_entry_key key = static_cast<hal_entry_key>(hal_key);
+
+        switch (key) {
+        case hal_entry_key::display_screen_x_pixels: {
+            return display_size_x_pixs;
+        }
+
+        case hal_entry_key::display_screen_y_pixels: {
+            return display_size_y_pixs;
+        }
+
+        case hal_entry_key::cpu: {
+            // 0 = ARM, 1 = x86, 2 = MCORE
+            return 0;
+        }
+
+        case hal_entry_key::ram: {
+            return maximum_ram;
+        }
+
+        default: {
+            LOG_ERROR("Unimplement HAL variable, key = 0x{:X}, return 0 by default", hal_key);
+            break;
+        }
+        }
+
+        return 0;
     }
 }
