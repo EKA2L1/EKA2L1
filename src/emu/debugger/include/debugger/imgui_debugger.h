@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 #include <common/queue.h>
 #include <debugger/debugger.h>

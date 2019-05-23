@@ -518,7 +518,7 @@ namespace eka2l1 {
         const float col2 = ImGui::GetWindowSize().x / 3;
 
         auto draw_path_change = [&](const char *title, const char *button, std::string &dat) {
-            ImGui::Text(title);
+            ImGui::Text("%s", title);
             ImGui::SameLine(col2);
 
             ImGui::PushItemWidth(col2 * 2 - 75);
@@ -668,7 +668,7 @@ namespace eka2l1 {
             const manager::package_info *pkg = manager->package(i);
             std::string str = "0x" + common::to_string(pkg->id, std::hex);
 
-            ImGui::Text(str.c_str());
+            ImGui::Text("%s", str.c_str());
             ImGui::NextColumn();
 
             str = common::ucs2_to_utf8(pkg->name);
@@ -696,13 +696,13 @@ namespace eka2l1 {
 
             str = common::ucs2_to_utf8(pkg->vendor_name);
             
-            ImGui::Text(str.c_str());
+            ImGui::Text("%s", str.c_str());
             ImGui::NextColumn();
 
             str = static_cast<char>(drive_to_char16(pkg->drive));
             str += ":";
             
-            ImGui::Text(str.c_str());
+            ImGui::Text("%s", str.c_str());
             ImGui::NextColumn();
         }
 
@@ -725,7 +725,7 @@ namespace eka2l1 {
                 ImGui::Begin(pkg_title.c_str(), &should_package_manager_display_file_list);
 
                 for (auto &path: paths) {
-                    ImGui::Text(path.c_str());
+                    ImGui::Text("%s", path.c_str());
                 }
 
                 ImGui::End();   
@@ -745,7 +745,7 @@ namespace eka2l1 {
                     std::string ask_question = "Are you sure you want to remove the package ("
                         + common::ucs2_to_utf8(pkg->name) + ")?";
                     
-                    ImGui::Text(ask_question.c_str());
+                    ImGui::Text("%s", ask_question.c_str());
                 }
 
                 ImGui::NewLine();
@@ -776,7 +776,7 @@ namespace eka2l1 {
         ImGui::OpenPopup("Installer Text Popup");
 
         if (ImGui::BeginPopupModal("Installer Text Popup")) {
-            ImGui::Text(installer_text);
+            ImGui::Text("%s", installer_text);
 
             if (ImGui::Button("Yes")) {
                 installer_text_result = true;
