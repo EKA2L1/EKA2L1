@@ -57,6 +57,7 @@ namespace eka2l1::service {
         T *make_new(Args... arguments) {
             ref_count_object_heap_ptr obj = std::make_unique<T>(arguments...);
             obj->id = uid_counter++;
+            obj->owner = this;
 
             objs.push_back(std::move(obj));
 
@@ -94,6 +95,11 @@ namespace eka2l1::service {
         template <typename T, typename ...Args>
         T *make_new(Args... arguments) {
             return obj_con.make_new<T, Args...>(arguments...);
+        }
+
+        template <typename T>
+        bool remove(T *obj) {
+            return obj_con.remove(reinterpret_cast<epoc::ref_count_object*>(obj));
         }
 
         explicit typical_server(system *sys, const std::string name);
