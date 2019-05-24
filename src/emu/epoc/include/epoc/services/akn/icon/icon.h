@@ -23,9 +23,11 @@
 namespace eka2l1 {
     constexpr std::uint32_t MAX_CACHE_SIZE = 1024;
 
-    struct icon_cache {
+    struct icon_data_item {
         epoc::akn_icon_params spec;
         epoc::akn_icon_srv_return_data ret;
+
+        int use_count { 0 };
     };
 
     class fbs_server;
@@ -45,11 +47,12 @@ namespace eka2l1 {
         std::uint32_t flags {0};
 
         fbs_server *fbss;
-        std::vector<icon_cache> icons;
+        std::vector<icon_data_item> icons;
 
         void init_server();
-        std::optional<epoc::akn_icon_srv_return_data> find_cached_icon(epoc::akn_icon_params &spec);
-        void add_cached_icon(const epoc::akn_icon_srv_return_data &ret, const epoc::akn_icon_params &spec);
+        std::optional<epoc::akn_icon_srv_return_data> find_existing_icon(epoc::akn_icon_params &spec, std::size_t *idx = nullptr);
+        void add_icon(const epoc::akn_icon_srv_return_data &ret, const epoc::akn_icon_params &spec);
+        bool cache_or_delete_icon(const std::size_t icon_idx);
 
     public:
         epoc::akn_icon_init_data *get_init_data() {
@@ -59,6 +62,8 @@ namespace eka2l1 {
         explicit akn_icon_server(eka2l1::system *sys);
 
         void retrieve_icon(service::ipc_context *ctx);
+        void free_bitmap(service::ipc_context *ctx);
+
         void connect(service::ipc_context &context) override;
     };
 }
