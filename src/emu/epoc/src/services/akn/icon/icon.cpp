@@ -45,6 +45,11 @@ namespace eka2l1 {
             break;
         }
 
+        case akn_icon_server_free_bitmap: {
+            server<akn_icon_server>()->free_bitmap(ctx);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented IPC opcode for AknIconServer session: 0x{:X}", ctx->msg->function);
             break;
@@ -74,7 +79,8 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<epoc::akn_icon_srv_return_data> cached = find_cached_icon(spec.value());
+        std::size_t icon_index = 0;
+        std::optional<epoc::akn_icon_srv_return_data> cached = find_existing_icon(spec.value(), &icon_index);
         if (!cached) {
             eka2l1::vec2 size = spec->size;
             fbsbitmap *bmp = fbss->create_bitmap(size, init_data.icon_mode);
@@ -90,9 +96,10 @@ namespace eka2l1 {
             ret->content_dim.y = size.y;
             ret->mask_handle = mask->id;
 
-            add_cached_icon(ret.value(), spec.value());
+            add_icon(ret.value(), spec.value());
         } else {
             ret.emplace(cached.value());
+            icons[icon_index].use_count++;
         }
 
         ctx->write_arg_pkg(0, spec.value());
@@ -100,16 +107,82 @@ namespace eka2l1 {
         ctx->set_request_status(KErrNone);
     }
 
-    std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_cached_icon(epoc::akn_icon_params &spec) {
+    bool akn_icon_server::cache_or_delete_icon(const std::size_t icon_idx) {
+        if (icon_idx >= icons.size()) {
+            return false;
+        }
+
+        icon_data_item &icon = icons[icon_idx];
+
+        // TODO: Cache
+        fbsbitmap *original = fbss->get<fbsbitmap>(icon.ret.bitmap_handle);
+        fbsbitmap *mask = fbss->get<fbsbitmap>(icon.ret.mask_handle);
+
+        if (original) {
+            // Try to free original bitmap, ignore result.
+            original->count--;
+            fbss->free_bitmap(original);
+        }
+
+        if (mask) {
+            // Try to free mask bitmap, ignore result
+            mask->count--;
+            fbss->free_bitmap(mask);
+        }
+
+        // Delete the icon from the icon item list
+        icons.erase(icons.begin() + icon_idx);
+
+        return true;
+    }
+
+    void akn_icon_server::free_bitmap(service::ipc_context *ctx) {
+        std::optional<epoc::akn_icon_params> params = ctx->get_arg_packed<epoc::akn_icon_params>(0);
+
+        std::size_t icon_index = 0;
+        if (!find_existing_icon(params.value(), &icon_index)) {
+            // We can't find the icon. The params is fraud!!
+            ctx->set_request_status(KErrNotFound);
+            return;
+        }
+
+        // We have found the icon
+        // Decrease the reference count
+        icons[icon_index].use_count--;
+
+        // If the reference count is 0, it means no one is using this bitmap anymore, for now. We have two options:
+        // Cache the bitmap, or delete it from the server
+        if (icons[icon_index].use_count == 0) {
+            if (!cache_or_delete_icon(icon_index)) {
+                ctx->set_request_status(KErrGeneral);
+                return;
+            }
+        }
+
+        // Success, return error none.
+        ctx->set_request_status(KErrNone);
+    }
+
+    std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_existing_icon(epoc::akn_icon_params &spec, std::size_t *idx) {
         for (std::size_t i = 0; i < icons.size(); i++) {
             epoc::akn_icon_params cached_spec = icons[i].spec;
 
-            if (spec.bitmap_id == cached_spec.bitmap_id && spec.mask_id == cached_spec.mask_id) {
-                if (spec.flags == cached_spec.flags && spec.mode == cached_spec.mode) {
-                    if (spec.size == cached_spec.size && spec.color == cached_spec.color) {
-                        if (spec.file_name.to_std_string(nullptr) == cached_spec.file_name.to_std_string(nullptr)) {
-                            return icons[i].ret;
+            /**
+             * The original implementation only check for the equal of:
+             * - The bitmap ID.
+             * - The bitmap container file (compare folded aka ignoring case)
+             * - App icon?
+             *
+             * These three are the decesive elements that decide if two requests are trying to get the same bitmap.
+             */
+            if (spec.bitmap_id == cached_spec.bitmap_id) {
+                if (common::compare_ignore_case(spec.file_name.to_std_string(nullptr), cached_spec.file_name.to_std_string(nullptr)) == 0) {
+                    if (spec.app_icon == cached_spec.app_icon) {
+                        if (idx) {
+                            *idx = i;
                         }
+
+                        return icons[i].ret;
                     }
                 }
             }
@@ -117,13 +190,12 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    void akn_icon_server::add_cached_icon(const epoc::akn_icon_srv_return_data &ret, const epoc::akn_icon_params &spec) {
-        icon_cache item;
+    void akn_icon_server::add_icon(const epoc::akn_icon_srv_return_data &ret, const epoc::akn_icon_params &spec) {
+        icon_data_item item;
         item.ret = ret;
         item.spec = spec;
-        if (icons.size() > MAX_CACHE_SIZE) {
-            icons.erase(icons.begin());
-        }
+        item.use_count = 1;
+
         icons.push_back(item);
     }
 }
