@@ -108,6 +108,10 @@ namespace eka2l1 {
         return word_width * 4;
     }
 
+    fbsbitmap::~fbsbitmap() {
+        serv_->free_bitmap(this);
+    }
+
     std::optional<std::size_t> fbs_server::load_uncomp_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_
         , int *err_code) {
         // First, get the size of data when uncompressed
@@ -257,7 +261,7 @@ namespace eka2l1 {
             bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
             bws_bmp->uid_ = epoc::bitwise_bitmap_uid;
 
-            bmp = make_new<fbsbitmap>(bws_bmp, static_cast<bool>(load_options->share));
+            bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share));
         }
 
         if (load_options->share) {
@@ -329,8 +333,26 @@ namespace eka2l1 {
             bws_bmp->data_offset_ = static_cast<int>(reinterpret_cast<std::uint8_t*>(data) - base_large_chunk);
         }
 
-        fbsbitmap *bmp = make_new<fbsbitmap>(bws_bmp, false);
+        fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false);
         return bmp;
+    }
+
+    bool fbs_server::free_bitmap(fbsbitmap *bmp) {
+        if (!bmp->bitmap_ || bmp->count > 0) {
+            return false;
+        }
+
+        // First, free the bitmap pixels.
+        if (!large_chunk_allocator->free(base_large_chunk + bmp->bitmap_->data_offset_)) {
+            return false;
+        }
+
+        // Free the bitwise bitmap.
+        if (!free_general_data(bmp->bitmap_)) {
+            return false;
+        }
+
+        return true;
     }
     
     void fbscli::create_bitmap(service::ipc_context *ctx) {

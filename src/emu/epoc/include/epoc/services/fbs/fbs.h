@@ -171,12 +171,18 @@ namespace eka2l1 {
 
     struct fbsbitmap: public fbsobj {
         epoc::bitwise_bitmap *bitmap_;
+        fbs_server *serv_;
+
         bool shared_ { false };
 
-        explicit fbsbitmap(epoc::bitwise_bitmap *bitmap, const bool shared)
-            : fbsobj(fbsobj_kind::bitmap), bitmap_(bitmap)
+        explicit fbsbitmap(fbs_server *srv, epoc::bitwise_bitmap *bitmap, const bool shared)
+            : fbsobj(fbsobj_kind::bitmap)
+            , bitmap_(bitmap)
+            , serv_(srv)
             , shared_(shared) {
         }
+
+        ~fbsbitmap();
     };
 
     struct fbsbitmap_cache_info {
@@ -269,14 +275,31 @@ namespace eka2l1 {
         void connect(service::ipc_context &context) override;
 
         /**
-         * \brief Create a new empty bitmap.
+         * \brief  Create a new empty bitmap.
          * 
-         * \param size Size of the bitmap, in pixels.
-         * \param dpm  Bit per pixels as display mode.
+         * \param  size Size of the bitmap, in pixels.
+         * \param  dpm  Bit per pixels as display mode.
          * 
          * \returns Bitmap object. The ID of bitmap is the server handle.
+         * 
+         * \see    free_bitmap
          */
         fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm);
+        
+        /**
+         * \brief   Free a bitmap object.
+         * 
+         * The function frees bitmap pixels and allocated object from the server's heap.
+         * 
+         * It will fail if the object is still being referenced by some forces, meaning, if the object
+         * reference count is bigger than 0, the function will fail.
+         * 
+         * \param   bmp The server bitmap object.
+         * \returns True if success.
+         * 
+         * \see     create_bitmap
+         */
+        bool free_bitmap(fbsbitmap *bmp);
 
         std::uint8_t *get_shared_chunk_base() {
             return base_shared_chunk;
