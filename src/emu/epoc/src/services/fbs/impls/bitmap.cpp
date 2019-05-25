@@ -378,4 +378,47 @@ namespace eka2l1 {
         ctx->write_arg_pkg(0, specs.value());
         ctx->set_request_status(KErrNone);
     }
+
+    fbscli::~fbscli() {
+        // Remove notification if there is
+        if (nof_) {  
+            std::vector<fbs_dirty_notify_request> &notifies = server<fbs_server>()->dirty_nofs;
+
+            for (std::size_t i = 0; i < notifies.size(); i++) {
+                if (notifies[i].client == this) {
+                    notifies.erase(notifies.begin() + i);
+                }
+            }
+        }
+    }
+
+    void fbscli::notify_dirty_bitmap(service::ipc_context *ctx) {
+        if (!nof_) {
+            server<fbs_server>()->dirty_nofs.push_back({ this, { ctx->msg->request_sts, ctx->msg->own_thr }});
+            nof_ = &server<fbs_server>()->dirty_nofs.back();
+        }
+
+        if (nof_->dirty) {
+            ctx->set_request_status(KErrNone);
+            return;
+        }
+
+        nof_->dirty = false;
+        nof_->nof = { ctx->msg->request_sts, ctx->msg->own_thr };
+    }
+    
+    void fbscli::cancel_notify_dirty_bitmap(service::ipc_context *ctx) {
+        std::vector<fbs_dirty_notify_request> &notifies = server<fbs_server>()->dirty_nofs;
+
+        for (std::size_t i = 0; i < notifies.size(); i++) {
+            if (notifies[i].client == this) {
+                // Officially cancel the request
+                notifies[i].nof.complete(KErrCancel);
+                notifies.erase(notifies.begin() + i);
+            }
+        }
+
+        nof_ = nullptr;
+        ctx->set_request_status(KErrNone);
+    }
 }

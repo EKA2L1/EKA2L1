@@ -129,13 +129,25 @@ namespace eka2l1 {
     };
 
     class fbs_server;
+    struct fbscli;
+
+    struct fbs_dirty_notify_request {
+        fbscli *client;
+        epoc::notify_info nof;
+
+        bool dirty { false };
+    };
 
     struct fbscli : public service::typical_session {
         service::uid connection_id_ {0};
+        fbs_dirty_notify_request *nof_;
 
         explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id)
-            : service::typical_session(serv, ss_id) {
+            : service::typical_session(serv, ss_id)
+            , nof_(nullptr) {
         }
+
+        ~fbscli();
 
         void get_nearest_font(service::ipc_context *ctx);
         void load_bitmap(service::ipc_context *ctx);
@@ -143,6 +155,8 @@ namespace eka2l1 {
         void duplicate_font(service::ipc_context *ctx);
         void duplicate_bitmap(service::ipc_context *ctx);
         void create_bitmap(service::ipc_context *ctx);
+        void notify_dirty_bitmap(service::ipc_context *ctx);
+        void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
         
         void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
@@ -249,6 +263,7 @@ namespace eka2l1 {
         std::vector<fbsfont*> font_cache;
 
         std::vector<epoc::adapter::font_file_adapter_instance> font_adapters;
+        std::vector<fbs_dirty_notify_request> dirty_nofs;
 
         std::unordered_map<fbsbitmap_cache_info, fbsbitmap*> shared_bitmaps;
 
