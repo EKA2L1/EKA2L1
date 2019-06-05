@@ -61,7 +61,7 @@ namespace eka2l1::kernel {
             info.code_load_addr = code_addr;
 
             for (auto &export_entry : export_table) {
-                export_entry += code_addr;
+                export_entry += code_addr - info.code_base;
             }
 
             ep += code_addr;
