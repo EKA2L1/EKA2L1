@@ -84,10 +84,6 @@ namespace eka2l1 {
 
         ctx.write_arg_pkg(0, *info);
         ctx.set_request_status(KErrNone);
-
-        // 4201636
-        void *me = (ctx.sys->get_memory_system()->get_real_pointer(4201636));
-        int b = 5;
     }
 
     void loader_server::load_library(service::ipc_context &ctx) {
