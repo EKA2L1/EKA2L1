@@ -73,7 +73,7 @@ namespace eka2l1::mem {
             // Commit the memory to the host
             if (!common::commit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_)
                 + pt_base, page_num << mmu_->page_size_bits_, permission_)) {
-                return 0;
+                return running_offset - offset;
             }
 
             // Fill the entry
@@ -125,7 +125,7 @@ namespace eka2l1::mem {
             running_offset += (page_num << mmu_->page_size_bits_);
         }
 
-        return 0;
+        return running_offset - offset;
     }
 
     void multiple_mem_model_chunk::decommit(const vm_address offset, const std::size_t size) {
