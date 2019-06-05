@@ -55,7 +55,8 @@ namespace eka2l1 {
             break;
         }
 
-        case fbs_nearest_font_design_height_in_pixels: {
+        case fbs_nearest_font_design_height_in_pixels:
+        case fbs_nearest_font_design_height_in_twips: {
             get_nearest_font(ctx);
             break;
         }
