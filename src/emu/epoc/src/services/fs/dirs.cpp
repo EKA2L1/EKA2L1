@@ -229,7 +229,7 @@ namespace eka2l1 {
             memcpy(entry_buf, &entry, entry_write_size);
             entry_buf += entry_write_size;
 
-            memcpy(entry_buf, &entry.name.data[0], info->name.length());
+            memcpy(entry_buf, &entry.name.data[0], info->name.length() * 2);
             entry_buf += common::align(info->name.length() * 2, 4);
 
             if (should_support_64bit_size) {
