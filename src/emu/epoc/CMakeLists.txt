@@ -86,6 +86,7 @@ add_library(epocservs
     include/epoc/services/server.h
     include/epoc/services/property.h
     include/epoc/services/akn/icon/icon.h
+    include/epoc/services/akn/skin/chunk_maintainer.h
     include/epoc/services/akn/skin/icon_cfg.h
     include/epoc/services/akn/skin/ops.h
     include/epoc/services/akn/skin/server.h
@@ -134,6 +135,7 @@ add_library(epocservs
     src/services/session.cpp
     src/services/akn/icon/icon.cpp
     src/services/akn/icon/init.cpp
+    src/services/akn/skin/chunk_maintainer.cpp
     src/services/akn/skin/icon_cfg.cpp
     src/services/akn/skin/ops.cpp
     src/services/akn/skin/server.cpp
