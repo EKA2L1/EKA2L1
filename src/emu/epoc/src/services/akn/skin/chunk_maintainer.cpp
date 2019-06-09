@@ -1,5 +1,6 @@
 #include <epoc/services/akn/skin/chunk_maintainer.h>
 #include <epoc/kernel/chunk.h>
+#include <common/path.h>
 
 namespace eka2l1::epoc {
     constexpr std::int64_t AKNS_CHUNK_ITEM_DEF_HASH_BASE_SIZE_GRAN = -4;
@@ -21,6 +22,77 @@ namespace eka2l1::epoc {
         add_area(akn_skin_chunk_area_base_offset::item_def_area_base, AKNS_CHUNK_ITEM_DEF_AREA_BASE_SIZE_GRAN);
         add_area(akn_skin_chunk_area_base_offset::data_area_base, AKNS_CHUNK_DATA_AREA_BASE_SIZE_GRAN);
         add_area(akn_skin_chunk_area_base_offset::gfx_area_base, AKNS_CHUNK_SCALEABLE_GFX_AREA_BASE_SIZE_GRAN);
+    }
+
+    const std::uint32_t akn_skin_chunk_maintainer::maximum_filename() {
+        const std::size_t area_size = get_area_size(akn_skin_chunk_area_base_offset::filename_area_base);
+
+        // If the filename area doesn't exist
+        if (area_size == static_cast<std::size_t>(-1)) {
+            return static_cast<std::uint32_t>(-1);
+        }
+
+        return static_cast<std::uint32_t>(area_size / AKN_SKIN_SERVER_MAX_FILENAME_BYTES);
+    }
+
+    const std::uint32_t akn_skin_chunk_maintainer::current_filename_count() {
+        const std::size_t area_crr_size = get_area_current_size(akn_skin_chunk_area_base_offset::filename_area_base);
+
+        // If the filename area doesn't exist
+        if (area_crr_size == static_cast<std::size_t>(-1)) {
+            return static_cast<std::uint32_t>(-1);
+        }
+
+        return static_cast<std::uint32_t>(area_crr_size / AKN_SKIN_SERVER_MAX_FILENAME_BYTES);
+    }
+
+    bool akn_skin_chunk_maintainer::update_filename(const std::uint32_t filename_id, const std::u16string &filename,
+        const std::u16string &filename_base) {
+        // We need to search for the one and only.
+        // Get the base first
+        std::uint32_t *areaptr = reinterpret_cast<std::uint32_t*>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
+
+        if (areaptr == nullptr) {
+            // Area doesn't exist
+            return false;
+        }
+
+        const std::uint32_t crr_fn_count = current_filename_count();
+        bool found = false;
+
+        // Do a smally search.
+        for (std::uint32_t i = 0; i < crr_fn_count; i++) {
+            if (areaptr[0] == filename_id) {
+                found = true;
+                break;
+            }
+
+            // We need to continue
+            areaptr += AKN_SKIN_SERVER_MAX_FILENAME_BYTES / 4;
+        }
+
+        // Check if we found the name?
+        if (!found) {
+            // Nope, expand the chunk and add this guy in
+            set_area_current_size(akn_skin_chunk_area_base_offset::filename_area_base,
+                static_cast<std::uint32_t>(get_area_current_size(akn_skin_chunk_area_base_offset::filename_area_base)
+                + AKN_SKIN_SERVER_MAX_FILENAME_BYTES));
+        }
+
+        // Let's do copy!
+        areaptr[0] = filename_id;
+        areaptr += 4;
+
+        // Copy the base in
+        std::copy(filename_base.data(), filename_base.data() + filename_base.length(), reinterpret_cast<char16_t*>(areaptr));
+        std::copy(filename.data(), filename.data() + filename.length(), reinterpret_cast<char16_t*>(
+            reinterpret_cast<std::uint8_t*>(areaptr) + filename_base.length() * 2));
+
+        // Fill 0 in the unused places
+        std::fill(reinterpret_cast<std::uint8_t*>(areaptr) + filename_base.length() * 2 + filename.length() * 2,
+            reinterpret_cast<std::uint8_t*>(areaptr) + AKN_SKIN_SERVER_MAX_FILENAME_BYTES, 0);
+
+        return true;
     }
 
     bool akn_skin_chunk_maintainer::add_area(const akn_skin_chunk_area_base_offset offset_type, 
@@ -123,7 +195,7 @@ namespace eka2l1::epoc {
 
     void *akn_skin_chunk_maintainer::get_area_base(const akn_skin_chunk_area_base_offset area_type, 
         std::uint64_t *offset_from_begin) {
-         akn_skin_chunk_area *area = get_area_info(area_type);
+        akn_skin_chunk_area *area = get_area_info(area_type);
 
         if (!area) {
             // We can't get the area. Abort!!!
@@ -137,5 +209,33 @@ namespace eka2l1::epoc {
         }
 
         return reinterpret_cast<std::uint8_t*>(shared_chunk_->host_base()) + (area->gran_off_ * granularity_);
+    }
+
+    const std::size_t akn_skin_chunk_maintainer::get_area_current_size(const akn_skin_chunk_area_base_offset area_type) {
+        akn_skin_chunk_area *area = get_area_info(area_type);
+
+        if (!area) {
+            // We can't get the area. Abort!!!
+            return static_cast<std::size_t>(-1);
+        }
+
+        // Get chunk base
+        std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
+        return static_cast<std::size_t>(base[static_cast<int>(area_type) + 2]);
+    }
+
+    bool akn_skin_chunk_maintainer::set_area_current_size(const akn_skin_chunk_area_base_offset area_type, const std::uint32_t new_size) {
+         akn_skin_chunk_area *area = get_area_info(area_type);
+
+        if (!area) {
+            // We can't get the area. Abort!!!
+            return false;
+        }
+        
+        // Get chunk base
+        std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
+        base[static_cast<int>(area_type) + 2] = new_size;
+
+        return true;
     }
 }

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace eka2l1::kernel {
@@ -46,6 +47,16 @@ namespace eka2l1::epoc {
     };
 
     /**
+     * Maximum length of a filename in shared chunk.
+     */
+    constexpr std::uint32_t AKN_SKIN_SERVER_MAX_FILENAME_LENGTH = 256;
+    
+    /**
+     * Maximum bytes of a filename in shared chunk.
+     */
+    constexpr std::uint32_t AKN_SKIN_SERVER_MAX_FILENAME_BYTES = AKN_SKIN_SERVER_MAX_FILENAME_LENGTH * 2;
+
+    /**
      * \brief The AKN skin server's chunk maintainer.
      * 
      * The shared chunk stores skin data, which is accessible to all clients which has access to the chunk.
@@ -68,6 +79,18 @@ namespace eka2l1::epoc {
 
         // Remember to sort this
         std::vector<akn_skin_chunk_area> areas_;
+
+        /**
+         * \brief    Get maximum number of filename that the filename area can hold.
+         * \returns  uint32_t(-1) if the filename area doesn't exist, else the expected value.
+         */
+        const std::uint32_t maximum_filename();
+
+        /**
+         * \brief    Get current number of filename that the filename area holds.
+         * \returns  uint32_t(-1) if the filename area doesn't exist, else the expected value.
+         */
+        const std::uint32_t current_filename_count();
 
         /**
          * \brief Add a new area in the chunk. 
@@ -100,14 +123,38 @@ namespace eka2l1::epoc {
         explicit akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity);
 
         /**
-         * \brief   Get an area's size
+         * \brief   Get an area's max size
          * 
          * \param   area_type   The kind of area. Must be from enum member "*_base".
-         * \returns size_t(-1) if an area doesn't exist, else returns the size of area, in bytes.
+         * \returns size_t(-1) if an area doesn't exist, else returns the maximum size of area, in bytes.
          * 
          * \see     get_area_base
          */
         const std::size_t get_area_size(const akn_skin_chunk_area_base_offset area_type);
+
+        /**
+         * \brief   Get an area's current size
+         * 
+         * \param   area_type   The kind of area. Must be from enum member "*_base".
+         * \returns size_t(-1) if an area doesn't exist, else returns the current size of area, in bytes.
+         * 
+         * \see     set_area_current_size
+         */
+        const std::size_t get_area_current_size(const akn_skin_chunk_area_base_offset area_type);
+
+        /**
+         * \brief   Set an area's current size.
+         * 
+         * This is not safe to use directly, but is still being exposed public anyway. Use at your own risks.
+         * 
+         * \param   area_type   The kind of area. Must be from enum member "*_base".
+         * \param   new_size    The new size of the area.
+         * 
+         * \returns True if success.
+         * 
+         * \see     get_area_current_size
+         */
+        bool set_area_current_size(const akn_skin_chunk_area_base_offset area_type, const std::uint32_t new_size);
 
         /**
          * \brief   Get a pointer to an existing area's base.
@@ -122,5 +169,26 @@ namespace eka2l1::epoc {
          * \see     get_area_size
          */
         void *get_area_base(const akn_skin_chunk_area_base_offset area_type, std::uint64_t *offset_from_begin = nullptr);
+
+        /**
+         * \brief Update a filename in the shared chunk.
+         * 
+         * The function first will tries to lookup the filename ID. If the ID doesn't exist yet, the area will be expanded,
+         * and the filename will be added to the end of the list.
+         * 
+         * The second situation is when the filename ID has already exist. In this case, the filename in the chunk will be
+         * updated, or we can say, overwritten with the provided filename string.
+         * 
+         * Each filename has 512 bytes reserved for it:
+         * - The first four bytes store the ID of the filename. This is used for lookup.
+         * - The left are for filename base and the filename.
+         * 
+         * \param filename_id    The ID of filename.
+         * \param filename       Filename to be updated.
+         * \param filename_base  Base path to the filename.
+         * 
+         * \returns True if success.
+         */
+        bool  update_filename(const std::uint32_t filename_id, const std::u16string &filename, const std::u16string &filename_base);
     };
 }
