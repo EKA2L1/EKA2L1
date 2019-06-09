@@ -45,6 +45,14 @@ namespace eka2l1::epoc {
         item_def_hash_current_size = 14
     };
 
+    /**
+     * \brief The AKN skin server's chunk maintainer.
+     * 
+     * The shared chunk stores skin data, which is accessible to all clients which has access to the chunk.
+     * 
+     * The chunk maintainer manages the shared chunk's area and read/write operation to the shared chunk, like
+     * storing skin or image data, or writing filenames.
+     */
     class akn_skin_chunk_maintainer {
         struct akn_skin_chunk_area {
             akn_skin_chunk_area_base_offset base_;
@@ -75,7 +83,44 @@ namespace eka2l1::epoc {
          */
         bool add_area(const akn_skin_chunk_area_base_offset offset_type, const std::int64_t allocated_size_gran);
 
+        /**
+         * \brief   Find an existing area and return the area's info.
+         * 
+         * \param   area_type   The kind of area. Must be from enum member "*_base".
+         * 
+         * \returns Nullptr if the condition doesn't meet or area doesn't exist, else returns pointer to
+         *          the area info.
+         * 
+         * \see     get_area_size
+         * \see     get_area_base
+         */
+        akn_skin_chunk_area *get_area_info(const akn_skin_chunk_area_base_offset area_type);
+
     public:
         explicit akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity);
+
+        /**
+         * \brief   Get an area's size
+         * 
+         * \param   area_type   The kind of area. Must be from enum member "*_base".
+         * \returns size_t(-1) if an area doesn't exist, else returns the size of area, in bytes.
+         * 
+         * \see     get_area_base
+         */
+        const std::size_t get_area_size(const akn_skin_chunk_area_base_offset area_type);
+
+        /**
+         * \brief   Get a pointer to an existing area's base.
+         * 
+         * \param   area_type              The kind of area. Must be from enum member "*_base".
+         * \param   offset_from_begin      Optional parameter, a pointer to the number that will contains the offset of the area
+         *                               starting from the beginning of the shared memory chunk.
+         * 
+         * \returns Nullptr if the condition doesn't meet or area doesn't exist, else returns base pointer to
+         *          the area.
+         * 
+         * \see     get_area_size
+         */
+        void *get_area_base(const akn_skin_chunk_area_base_offset area_type, std::uint64_t *offset_from_begin = nullptr);
     };
 }
