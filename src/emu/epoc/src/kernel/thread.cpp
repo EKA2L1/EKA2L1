@@ -570,17 +570,17 @@ namespace eka2l1 {
             }
 
             if (rendezvous) {
-                rendezvous_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
+                rendezvous_requests.emplace_back(logon_request, kern->crr_thread());
                 return;
             }
 
-            logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
+            logon_requests.emplace_back(logon_request, kern->crr_thread());
         }
 
         bool thread::logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
             if (rendezvous) {
                 auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
-                    [&](logon_request_form &form) { return form.request_status.ptr_address() == logon_request.ptr_address(); });
+                    [&](epoc::notify_info &form) { return form.sts.ptr_address() == logon_request.ptr_address(); });
 
                 if (req_info != rendezvous_requests.end()) {
                     *logon_request.get(req_info->requester->owning_process()) = -3;
@@ -593,7 +593,7 @@ namespace eka2l1 {
             }
 
             auto req_info = std::find_if(logon_requests.begin(), logon_requests.end(),
-                [&](logon_request_form &form) { return form.request_status.ptr_address() == logon_request.ptr_address(); });
+                [&](epoc::notify_info &form) { return form.sts.ptr_address() == logon_request.ptr_address(); });
 
             if (req_info != logon_requests.end()) {
                 *logon_request.get(req_info->requester->owning_process()) = -3;
@@ -607,7 +607,7 @@ namespace eka2l1 {
 
         void thread::rendezvous(int rendezvous_reason) {
             for (auto &ren : rendezvous_requests) {
-                *(ren.request_status.get(ren.requester->owning_process())) = rendezvous_reason;
+                *(ren.sts.get(ren.requester->owning_process())) = rendezvous_reason;
                 ren.requester->signal_request();
             }
 
@@ -616,12 +616,12 @@ namespace eka2l1 {
 
         void thread::finish_logons() {
             for (auto &req : logon_requests) {
-                *(req.request_status.get(req.requester->owning_process())) = exit_reason;
+                *(req.sts.get(req.requester->owning_process())) = exit_reason;
                 req.requester->signal_request();
             }
 
             for (auto &req : rendezvous_requests) {
-                *(req.request_status.get(req.requester->owning_process())) = exit_reason;
+                *(req.sts.get(req.requester->owning_process())) = exit_reason;
                 req.requester->signal_request();
             }
 

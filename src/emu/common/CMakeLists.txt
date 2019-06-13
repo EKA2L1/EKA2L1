@@ -22,6 +22,7 @@ add_library(common
     include/common/flate.h
     include/common/hash.h
     include/common/ini.h
+    include/common/linked.h
     include/common/log.h
     include/common/paint.h
     include/common/path.h

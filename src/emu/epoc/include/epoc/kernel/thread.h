@@ -28,6 +28,8 @@
 #include <string>
 
 #include <arm/arm_factory.h>
+
+#include <common/linked.h>
 #include <common/resource.h>
 
 #include <epoc/kernel/chunk.h>
@@ -171,22 +173,15 @@ namespace eka2l1 {
             int rendezvous_reason = 0;
             int exit_reason = 0;
 
-            struct logon_request_form {
-                kernel::thread *requester;
-                eka2l1::ptr<epoc::request_status> request_status;
-
-                explicit logon_request_form(kernel::thread *thr, eka2l1::ptr<epoc::request_status> rsts)
-                    : requester(thr)
-                    , request_status(rsts) {}
-            };
-
-            std::vector<logon_request_form> logon_requests;
-            std::vector<logon_request_form> rendezvous_requests;
+            std::vector<epoc::notify_info> logon_requests;
+            std::vector<epoc::notify_info> rendezvous_requests;
 
             std::uint64_t create_time = 0;
 
             eka2l1::ptr<epoc::request_status> sleep_nof_sts;
             eka2l1::ptr<epoc::request_status> timeout_sts;
+
+            common::double_link<kernel::thread> scheduler_link;
 
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);
