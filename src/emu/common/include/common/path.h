@@ -122,6 +122,8 @@ namespace eka2l1 {
     /*! \brief Create directories. */
     void create_directories(std::string path);
 
+    bool set_current_directory(const std::string &path);
+
     bool is_separator(const char sep);
     bool is_separator(const char16_t sep);
 

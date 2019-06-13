@@ -448,4 +448,12 @@ namespace eka2l1 {
             }
         }
     }
+
+    bool set_current_directory(const std::string &path) {
+#if EKA2L1_PLATFORM(WIN32)
+        return SetCurrentDirectory(path.c_str());
+#else
+        return (chdir(path.c_str()) == 0);
+#endif
+    }
 }
