@@ -162,12 +162,6 @@ namespace eka2l1::mem {
 
             const auto pt_base = (running_offset >> mmu_->chunk_shift_) << mmu_->chunk_shift_;
 
-            // Commit the memory to the host
-            if (!common::decommit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base,
-                page_num << mmu_->page_size_bits_)) {
-                continue;
-            }
-            
             // Fill the entry
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
                 // If the entry has not yet been committed.
@@ -192,9 +186,15 @@ namespace eka2l1::mem {
                 }
             }
 
-            // Map the rest
+            // Unmap the rest
             if (size_just_unmapped != 0 && (!own_process_ || own_process_->addr_space_id_ == mmu_->current_addr_space())) {
                 mmu_->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
+            }
+            
+            // Decommit the memory from the host
+            if (!common::decommit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base,
+                page_num << mmu_->page_size_bits_)) {
+                continue;
             }
             
             // Dealloc in-house bits
