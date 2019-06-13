@@ -44,6 +44,8 @@
 #include <epoc/epoc.h>
 #include <epoc/services/init.h>
 
+#include <manager/config.h>
+
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
@@ -241,22 +243,50 @@ namespace eka2l1 {
         void init_services(system *sys) {
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
-            CREATE_SERVER(sys, ecom_server);
+
+            manager::config_state *cfg = sys->get_config();
+
+            if (cfg->enable_srv_ecom)
+                CREATE_SERVER(sys, ecom_server);
+
             CREATE_SERVER(sys, fbs_server);
             CREATE_SERVER(sys, window_server);
-            CREATE_SERVER(sys, central_repo_server);
+
+            if (cfg->enable_srv_cenrep)
+                CREATE_SERVER(sys, central_repo_server);
+
             CREATE_SERVER(sys, featmgr_server);
-            CREATE_SERVER(sys, backup_server);
-            CREATE_SERVER(sys, install_server);
-            CREATE_SERVER(sys, rights_server);
-            CREATE_SERVER(sys, sa_server);
-            CREATE_SERVER(sys, drm_helper_server);
+            
+            if (cfg->enable_srv_backup)
+                CREATE_SERVER(sys, backup_server);
+
+            if (cfg->enable_srv_install)
+                CREATE_SERVER(sys, install_server);
+            
+            if (cfg->enable_srv_rights)
+                CREATE_SERVER(sys, rights_server);
+            
+            if (cfg->enable_srv_sa)
+                CREATE_SERVER(sys, sa_server);
+            
+            if (cfg->enable_srv_drm)
+                CREATE_SERVER(sys, drm_helper_server);
+            
+            // These needed to be HLEd
             CREATE_SERVER(sys, applist_server);
             CREATE_SERVER(sys, oom_ui_app_server);
-            CREATE_SERVER(sys, eikappui_server);
-            CREATE_SERVER(sys, akn_icon_server);
-            CREATE_SERVER(sys, cdl_server);
-            CREATE_SERVER(sys, akn_skin_server);
+
+            if (cfg->enable_srv_eikapp_ui)
+                CREATE_SERVER(sys, eikappui_server);
+
+            if (cfg->enable_srv_akn_icon)
+                CREATE_SERVER(sys, akn_icon_server);
+            
+            if (cfg->enable_srv_cdl)
+                CREATE_SERVER(sys, cdl_server);
+            
+            if (cfg->enable_srv_akn_skin)
+                CREATE_SERVER(sys, akn_skin_server);
 
             // Don't change order
             CREATE_SERVER(sys, domainmngr_server);

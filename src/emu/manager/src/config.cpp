@@ -77,6 +77,17 @@ namespace eka2l1::manager {
         config_file_emit_single(emitter, "display-size-y", display_size_y_pixs);
         config_file_emit_single(emitter, "ram-max", maximum_ram);
         config_file_emit_single(emitter, "gdb-port", gdb_port);
+        config_file_emit_single(emitter, "enable-srv-ecom", enable_srv_ecom);
+        config_file_emit_single(emitter, "enable-srv-cenrep", enable_srv_cenrep);
+        config_file_emit_single(emitter, "enable-srv-backup", enable_srv_backup);
+        config_file_emit_single(emitter, "enable-srv-install", enable_srv_install);
+        config_file_emit_single(emitter, "enable-srv-rights", enable_srv_rights);
+        config_file_emit_single(emitter, "enable-srv-sa", enable_srv_sa);
+        config_file_emit_single(emitter, "enable-srv-drm", enable_srv_drm);
+        config_file_emit_single(emitter, "enable-srv-eikappui", enable_srv_eikapp_ui);
+        config_file_emit_single(emitter, "enable-srv-akn-icon", enable_srv_akn_icon);
+        config_file_emit_single(emitter, "enable-srv-akn-skin", enable_srv_akn_skin);
+        config_file_emit_single(emitter, "enable-srv-cdl", enable_srv_cdl);
 
         emitter << YAML::EndMap;
         
@@ -116,6 +127,17 @@ namespace eka2l1::manager {
         get_yaml_value(node, "display_size_y", &display_size_y_pixs, 640);
         get_yaml_value(node, "ram-max", &maximum_ram, static_cast<std::uint32_t>(common::MB(512)));
         get_yaml_value(node, "gdb-port", &gdb_port, 24689);
+        get_yaml_value(node, "enable-srv-ecom", &enable_srv_ecom, true);
+        get_yaml_value(node, "enable-srv-cenrep", &enable_srv_cenrep, true);
+        get_yaml_value(node, "enable-srv-backup", &enable_srv_backup, true);
+        get_yaml_value(node, "enable-srv-install", &enable_srv_install, true);
+        get_yaml_value(node, "enable-srv-rights", &enable_srv_rights, true);
+        get_yaml_value(node, "enable-srv-sa", &enable_srv_sa, true);
+        get_yaml_value(node, "enable-srv-drm", &enable_srv_drm, true);
+        get_yaml_value(node, "enable-srv-eikappui", &enable_srv_eikapp_ui, true);
+        get_yaml_value(node, "enable-srv-akn-icon", &enable_srv_akn_icon, true);
+        get_yaml_value(node, "enable-srv-akn-skin", &enable_srv_akn_skin, true);
+        get_yaml_value(node, "enable-srv-cdl", &enable_srv_cdl, true);
 
         try {
             YAML::Node force_loads_node = node["force-load"];

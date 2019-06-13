@@ -65,6 +65,18 @@ namespace eka2l1::manager {
 
         std::uint32_t maximum_ram;
 
+        bool enable_srv_ecom {true};
+        bool enable_srv_cenrep {true};
+        bool enable_srv_backup {true};
+        bool enable_srv_install {true};
+        bool enable_srv_rights {true};
+        bool enable_srv_sa { true };
+        bool enable_srv_drm { true };
+        bool enable_srv_eikapp_ui { true };
+        bool enable_srv_akn_icon { true };
+        bool enable_srv_akn_skin { true };
+        bool enable_srv_cdl { true };
+
         void serialize();
         void deserialize();
 
