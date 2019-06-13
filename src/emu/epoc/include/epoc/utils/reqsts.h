@@ -48,6 +48,13 @@ namespace eka2l1::epoc {
         eka2l1::ptr<epoc::request_status> sts = 0;
         eka2l1::kernel::thread *requester;
 
+        explicit notify_info() = default;
+        
+        explicit notify_info(eka2l1::ptr<epoc::request_status> &sts, eka2l1::kernel::thread *requester)
+            : sts(sts)
+            , requester(requester) {
+        }
+        
         void complete(int err_code);
     };
 }

@@ -394,7 +394,7 @@ namespace eka2l1 {
 
     void fbscli::notify_dirty_bitmap(service::ipc_context *ctx) {
         if (!nof_) {
-            server<fbs_server>()->dirty_nofs.push_back({ this, { ctx->msg->request_sts, ctx->msg->own_thr }});
+            server<fbs_server>()->dirty_nofs.push_back({ this, epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr) });
             nof_ = &server<fbs_server>()->dirty_nofs.back();
         }
 
@@ -404,7 +404,8 @@ namespace eka2l1 {
         }
 
         nof_->dirty = false;
-        nof_->nof = { ctx->msg->request_sts, ctx->msg->own_thr };
+        nof_->nof.sts = ctx->msg->request_sts;
+        nof_->nof.requester = ctx->msg->own_thr;
     }
     
     void fbscli::cancel_notify_dirty_bitmap(service::ipc_context *ctx) {
