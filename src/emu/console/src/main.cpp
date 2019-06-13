@@ -32,6 +32,7 @@
 #include <common/cvt.h>
 #include <common/ini.h>
 #include <common/log.h>
+#include <common/path.h>
 #include <common/platform.h>
 #include <common/types.h>
 #include <console/cmdhandler.h>
@@ -142,6 +143,10 @@ int main(int argc, char **argv) {
     // Episode 1: I think of a funny joke about Symbian and I will told my virtual wife
     std::cout << "-------------- EKA2L1: Experimental Symbian Emulator -----------------"
               << std::endl;
+
+    // Change current directory to executable directory, prevent any confusion
+    const auto executable_directory = eka2l1::file_directory(argv[0]);
+    eka2l1::set_current_directory(executable_directory);
 
     // Register SEH handler 
     #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
