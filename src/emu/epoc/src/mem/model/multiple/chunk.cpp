@@ -342,7 +342,7 @@ namespace eka2l1::mem {
                 mmu_->unmap_from_cpu(base_ + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_);
             } else {
                 mmu_->map_to_cpu(base_ + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_,
-                    host_base_, permission_);
+                    reinterpret_cast<std::uint8_t*>(host_base_) + (bottom_ << mmu_->page_size_bits_), permission_);
             }
 
             return;
@@ -394,9 +394,9 @@ namespace eka2l1::mem {
                     // Map those just mapped to the CPU. It will love this
                     if (size_mani != 0) {
                         if (unmap) {
-                            mmu_->map_to_cpu(off_start_mani, size_mani, host_start_mani, permission_);
-                        } else {
                             mmu_->unmap_from_cpu(off_start_mani, size_mani);
+                        } else {
+                            mmu_->map_to_cpu(off_start_mani, size_mani, host_start_mani, permission_);
                         }
                     }
                 }
@@ -405,9 +405,9 @@ namespace eka2l1::mem {
             // Map those just mapped to the CPU. It will love this
             if (size_mani != 0) {
                 if (unmap) {
-                    mmu_->map_to_cpu(off_start_mani, size_mani, host_start_mani, permission_);
-                } else {
                     mmu_->unmap_from_cpu(off_start_mani, size_mani);
+                } else {
+                    mmu_->map_to_cpu(off_start_mani, size_mani, host_start_mani, permission_);
                 }
             }
             
