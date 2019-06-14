@@ -61,6 +61,7 @@ namespace eka2l1 {
 
         public:
             manager::config_state *conf;
+            std::uint32_t num_insts_runned;
             
             bool execute_instructions(uint32_t num_instructions);
 
@@ -86,6 +87,10 @@ namespace eka2l1 {
 
             manager_system *get_manager_sys() {
                 return mngr;
+            }
+
+            std::uint32_t get_num_instruction_executed() override {
+                return num_insts_runned;
             }
             
             void record_break(breakpoint_address bkpt) {

@@ -66,6 +66,7 @@ namespace eka2l1 {
                 page_dyn;
 
             manager::config_state *conf;
+            std::uint32_t ticks_executed;
 
         public:
             timing_system *get_timing_sys() {
@@ -134,6 +135,8 @@ namespace eka2l1 {
             void clear_instruction_cache() override;
 
             void imb_range(address addr, std::size_t size) override;
+
+            std::uint32_t get_num_instruction_executed() override;
 
             bool should_clear_old_memory_map() const override {
                 return false;

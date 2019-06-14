@@ -116,6 +116,8 @@ namespace eka2l1 {
             virtual bool should_clear_old_memory_map() const {
                 return true;
             }
+
+            virtual std::uint32_t get_num_instruction_executed() = 0;
         };
     }
 }

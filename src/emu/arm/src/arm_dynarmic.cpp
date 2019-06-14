@@ -353,6 +353,7 @@ namespace eka2l1 {
 
             void AddTicks(uint64_t ticks) override {
                 parent.get_timing_sys()->add_ticks(static_cast<std::uint32_t>(ticks - interpreted));
+                parent.ticks_executed += static_cast<std::uint32_t>(ticks - interpreted);
                 interpreted = 0;
             }
 
@@ -389,6 +390,7 @@ namespace eka2l1 {
         arm_dynarmic::~arm_dynarmic() {}
 
         void arm_dynarmic::run() {
+            ticks_executed = 0;
             jit->Run();
         }
 
@@ -534,6 +536,10 @@ namespace eka2l1 {
 
         void arm_dynarmic::imb_range(address addr, std::size_t size) {
             jit->InvalidateCacheRange(addr, size);
+        }
+        
+        std::uint32_t arm_dynarmic::get_num_instruction_executed() {
+            return ticks_executed;
         }
     }
 }

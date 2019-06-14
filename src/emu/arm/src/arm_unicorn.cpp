@@ -125,6 +125,8 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
             uc_emu_stop(uc);
         }
     }
+
+    jit->num_insts_runned++;
 }
 
 // Read the symbol and redirect to HLE function
@@ -282,8 +284,10 @@ namespace eka2l1 {
                 assert(err == UC_ERR_OK);
 
                 if (timing) {
-                    timing->add_ticks(num_instructions - 1);
+                    timing->add_ticks(num_insts_runned);
                 }
+
+                num_insts_runned = 0;
 
                 if (stub && stub->is_server_enabled()) {
                     if (last_breakpoint_hit) {
