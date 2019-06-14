@@ -72,6 +72,10 @@ namespace eka2l1 {
         void fire_mhz_changes();
 
     public:
+        int get_slice_length() {
+            return slice_len;
+        }
+        
         inline int64_t ms_to_cycles(int ms) {
             return CPU_HZ / 1000 * ms;
         }
