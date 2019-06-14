@@ -25,7 +25,7 @@ namespace eka2l1::common {
      */
     template <typename T>
     struct single_link {
-        T *next;
+        T *next { nullptr };
     };
 
     /**
@@ -33,7 +33,7 @@ namespace eka2l1::common {
      */
     template <typename T>
     struct double_link {
-        T *previous;
-        T *next;
+        T *previous { nullptr };
+        T *next { nullptr };
     };
 }
