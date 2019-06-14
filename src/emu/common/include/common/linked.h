@@ -19,6 +19,9 @@
 
 #pragma once
 
+#define LOFF(linked, object, linked_field) reinterpret_cast<object*>(reinterpret_cast<unsigned char*>(linked)   \
+    - offsetof(object, linked_field))
+
 namespace eka2l1::common {
     /**
      * \brief Represents a link in an one-way linked list
@@ -35,5 +38,60 @@ namespace eka2l1::common {
     struct double_link {
         T *previous { nullptr };
         T *next { nullptr };
+    };
+
+    struct double_linked_queue_element: public double_link<double_linked_queue_element> {
+        void insert_before(double_linked_queue_element *this_guy) {
+            previous = this_guy->previous;
+            next = this_guy;
+
+            this_guy->previous->next = this;
+            this_guy->previous = this;
+        }
+
+        void insert_after(double_linked_queue_element *this_guy) {
+            previous = this_guy;
+            next = this_guy->next;
+
+            this_guy->next->previous = this;
+            this_guy->next = this;
+        }
+
+        void deque() {
+            next->previous = previous;
+            previous->next = next;
+
+            next = nullptr;
+            previous = nullptr;
+        }
+    };
+
+    /**
+     * \brief A double-linked queue.
+     */
+    struct roundabout {
+        double_linked_queue_element elem_;
+
+    public:
+        explicit roundabout() {
+            elem_.next = &elem_;
+            elem_.previous = &elem_;
+        }
+
+        double_linked_queue_element *first() {
+            return elem_.next;
+        }
+
+        double_linked_queue_element *last() {
+            return elem_.previous;
+        }
+
+        void push(double_linked_queue_element *new_elem) {
+            new_elem->previous = elem_.previous;
+            new_elem->next = &elem_;
+
+            elem_.previous->next = new_elem;
+            elem_.previous = new_elem;
+        }
     };
 }
