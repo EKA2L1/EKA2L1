@@ -98,6 +98,11 @@ namespace eka2l1::kernel {
         }
     }
 
+// Release code generation is corrupted somewhere on MSVC. Force fill is good so i guess it's the other.
+// Either way, until when i can repro this in a short code, files and bug got fixed, this stays here.
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
     kernel::thread *thread_scheduler::next_ready_thread() {
         // Check the most significant bit and get the non-empty read queue
         int non_empty = common::count_leading_zero(ready_mask[0]);
@@ -114,6 +119,9 @@ namespace eka2l1::kernel {
 
         return nullptr;
     }
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
 
     void thread_scheduler::reschedule() {
         kernel::thread *crr_thread = current_thread();
