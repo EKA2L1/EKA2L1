@@ -51,8 +51,8 @@ namespace eka2l1 {
         using uid = std::uint32_t;
 
         class thread_scheduler {
-            std::vector<kernel::thread*> waiting_threads;
-            eka2l1::cp_queue<kernel::thread*, thread_comparator> ready_threads;
+            kernel::thread *readys[64];
+            std::uint32_t ready_mask[2] { 0, 0 };
 
             kernel::thread *crr_thread;
             kernel::process *crr_process;
@@ -72,28 +72,24 @@ namespace eka2l1 {
             kernel::thread *next_ready_thread();
             void switch_context(kernel::thread *oldt, kernel::thread *newt);
 
+            void queue_thread_ready(kernel::thread *thr);
+            void dequeue_thread_from_ready(kernel::thread *thr);
+
         public:
             // The constructor also register all the needed event
             thread_scheduler(kernel_system *kern, timing_system *sys, arm::arm_interface &jitter);
 
             void reschedule();
             void unschedule_wakeup();
-
             bool schedule(kernel::thread *thread);
             bool sleep(kernel::thread *thr, uint32_t sl_time);
             bool wait(kernel::thread *thr);
-
             bool resume(kernel::thread *thr);
-
             void unschedule(kernel::thread *thr);
-
             bool stop(kernel::thread *thr);
 
-            void refresh();
-
             bool should_terminate() {
-                return waiting_threads.empty()
-                    && ready_threads.empty() && !crr_thread;
+                return false;
             }
 
             kernel::thread *current_thread() const {

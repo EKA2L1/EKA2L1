@@ -416,6 +416,8 @@ namespace eka2l1 {
             } else {
                 cpu->step();
             }
+
+            kern.crr_thread()->add_ticks(static_cast<int>(cpu->get_num_instruction_executed()));
         }
 
         if (!kern.should_terminate()) {

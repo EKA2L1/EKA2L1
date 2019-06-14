@@ -269,6 +269,8 @@ namespace eka2l1 {
             }
 
             create_time = timing->get_ticks();
+            timeslice = timing->get_slice_length();
+            time = timing->get_slice_length();
 
             obj_type = object_type::thread;
             state = thread_state::create; // Suspended.
@@ -408,18 +410,10 @@ namespace eka2l1 {
                     break;
                 }
             }
-
-            if (state == kernel::thread_state::ready || state == kernel::thread_state::hold_mutex_pending) {
-                scheduler->refresh();
-            }
         }
 
         void thread::set_priority(const thread_priority new_pri) {
             priority = new_pri;
-
-            if (state == kernel::thread_state::ready) {
-                scheduler->refresh();
-            }
 
             update_priority();
             kern->prepare_reschedule();
@@ -631,6 +625,10 @@ namespace eka2l1 {
 
         chunk_ptr thread::get_stack_chunk() {
             return stack_chunk;
+        }
+        
+        void thread::add_ticks(const int num) {
+            time = common::max(0, time - num);
         }
     }
 }

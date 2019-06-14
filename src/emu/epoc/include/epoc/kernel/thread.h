@@ -147,6 +147,8 @@ namespace eka2l1 {
             timing_system *timing;
 
             std::uint64_t lrt;
+            int time;
+            int timeslice;
 
             chunk_ptr stack_chunk;
             chunk_ptr name_chunk;
@@ -267,6 +269,8 @@ namespace eka2l1 {
             void notify_after(const int errcode);
 
             bool stop();
+
+            void add_ticks(const int num);
 
             thread_priority get_priority() const {
                 return priority;
