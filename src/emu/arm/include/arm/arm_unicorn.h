@@ -61,7 +61,7 @@ namespace eka2l1 {
 
         public:
             manager::config_state *conf;
-            std::uint32_t num_insts_runned;
+            std::uint32_t num_insts_runned { 0 };
             
             bool execute_instructions(uint32_t num_instructions);
 

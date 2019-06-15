@@ -66,7 +66,7 @@ namespace eka2l1 {
                 page_dyn;
 
             manager::config_state *conf;
-            std::uint32_t ticks_executed;
+            std::uint32_t ticks_executed { 0 };
 
         public:
             timing_system *get_timing_sys() {
