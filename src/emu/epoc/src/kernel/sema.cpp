@@ -92,7 +92,7 @@ namespace eka2l1 {
             }
 
             waits.remove(thr);
-            suspended.push_back(thr);
+            suspended.push(&thr->suspend_link);
 
             thr->state = thread_state::wait_fast_sema_suspend;
 
@@ -106,14 +106,12 @@ namespace eka2l1 {
                 return false;
             }
 
-            const auto thr_ite = std::find(suspended.begin(), suspended.end(), thr);
-
-            if (thr_ite == waits.end()) {
+            if (thr->suspend_link.alone()) {
                 LOG_ERROR("Thread given is not found in suspended");
                 return false;
             }
 
-            suspended.erase(thr_ite);
+            thr->suspend_link.deque();
             waits.push(thr);
 
             thr->state = thread_state::wait_fast_sema;

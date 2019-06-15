@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/linked.h>
 #include <common/queue.h>
 #include <epoc/kernel/thread.h>
 
@@ -32,8 +33,7 @@ namespace eka2l1 {
         class semaphore : public kernel_obj {
             int32_t avail_count;
             cp_queue<kernel::thread*> waits;
-
-            std::vector<kernel::thread*> suspended;
+            common::roundabout suspended;
 
             bool signaling;
 
