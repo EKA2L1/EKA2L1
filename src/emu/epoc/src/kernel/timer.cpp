@@ -63,10 +63,8 @@ namespace eka2l1 {
             info.own_thread = requester;
             info.own_timer = this;
 
-            size_t invoke_time = timing->ms_to_cycles(ms_signal);
-
-            timing->schedule_event(invoke_time, callback_type,
-                (uint64_t)(&info));
+            const int64_t invoke_time = timing->us_to_cycles(ms_signal);
+            timing->schedule_event(invoke_time, callback_type, (uint64_t)(&info));
 
             return false;
         }
@@ -94,8 +92,7 @@ namespace eka2l1 {
             // If the timer hasn't finished yet, please unschedule it.
             if (outstanding) {
                 // Cancel
-                timing->unschedule_event(callback_type,
-                    reinterpret_cast<std::uint64_t>(&info));
+                timing->unschedule_event(callback_type, reinterpret_cast<std::uint64_t>(&info));
             }
 
             return request_finish();
