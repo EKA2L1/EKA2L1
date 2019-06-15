@@ -389,10 +389,21 @@ namespace eka2l1 {
 
         void thread::update_priority() {
             last_priority = real_priority;
+
+            bool should_reschedule_back = false;
+            
+            if (scheduler_link.next != nullptr && scheduler_link.previous != nullptr) {
+                // It's in the queue!!! Move it!
+                scheduler->dequeue_thread_from_ready(this);
+                should_reschedule_back = true;
+            }
+
             real_priority = caculate_thread_priority(own_process, priority);
 
-            int new_priority = current_real_priority();
-            real_priority = new_priority;
+            if (should_reschedule_back) {
+                // It's in the queue!!! Move it!
+                scheduler->queue_thread_ready(this);
+            }
 
             if (wait_obj) {
                 switch (wait_obj->get_object_type()) {
@@ -414,7 +425,6 @@ namespace eka2l1 {
 
         void thread::set_priority(const thread_priority new_pri) {
             priority = new_pri;
-
             update_priority();
             kern->prepare_reschedule();
         }
@@ -504,59 +514,6 @@ namespace eka2l1 {
             return thread_handles.get_object(handle);
         }
 
-        bool thread::operator>(const thread &rhs) {
-            if (real_priority == rhs.real_priority) {
-                if (uid < rhs.uid) {
-                    return true;
-                }
-
-                return false;
-            }
-
-            return real_priority > rhs.real_priority;
-        }
-
-        bool thread::operator<(const thread &rhs) {
-            if (real_priority == rhs.real_priority) {
-                // First thread comes first
-                if (uid > rhs.uid) {
-                    return true;
-                }
-
-                return false;
-            }
-
-            return real_priority < rhs.real_priority;
-        }
-
-        bool thread::operator==(const thread &rhs) {
-            return (real_priority == rhs.real_priority) && (uid <= rhs.uid);
-        }
-
-        bool thread::operator>=(const thread &rhs) {
-            if (real_priority == rhs.real_priority) {
-                if (uid <= rhs.uid) {
-                    return true;
-                }
-
-                return false;
-            }
-
-            return real_priority >= rhs.real_priority;
-        }
-
-        bool thread::operator<=(const thread &rhs) {
-            if (real_priority == rhs.real_priority) {
-                if (uid >= rhs.uid) {
-                    return true;
-                }
-
-                return false;
-            }
-
-            return real_priority <= rhs.real_priority;
-        }
-
         void thread::logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
             if (state == thread_state::stop) {
                 *(logon_request.get(kern->crr_process())) = exit_reason;
@@ -577,7 +534,7 @@ namespace eka2l1 {
                     [&](epoc::notify_info &form) { return form.sts.ptr_address() == logon_request.ptr_address(); });
 
                 if (req_info != rendezvous_requests.end()) {
-                    *logon_request.get(req_info->requester->owning_process()) = -3;
+                    (*req_info).complete(-3);
                     rendezvous_requests.erase(req_info);
 
                     return true;
@@ -590,7 +547,7 @@ namespace eka2l1 {
                 [&](epoc::notify_info &form) { return form.sts.ptr_address() == logon_request.ptr_address(); });
 
             if (req_info != logon_requests.end()) {
-                *logon_request.get(req_info->requester->owning_process()) = -3;
+                (*req_info).complete(-3);
                 logon_requests.erase(req_info);
 
                 return true;
@@ -601,8 +558,7 @@ namespace eka2l1 {
 
         void thread::rendezvous(int rendezvous_reason) {
             for (auto &ren : rendezvous_requests) {
-                *(ren.sts.get(ren.requester->owning_process())) = rendezvous_reason;
-                ren.requester->signal_request();
+                ren.complete(rendezvous_reason);
             }
 
             rendezvous_requests.clear();
@@ -610,13 +566,11 @@ namespace eka2l1 {
 
         void thread::finish_logons() {
             for (auto &req : logon_requests) {
-                *(req.sts.get(req.requester->owning_process())) = exit_reason;
-                req.requester->signal_request();
+                req.complete(exit_reason);
             }
 
             for (auto &req : rendezvous_requests) {
-                *(req.sts.get(req.requester->owning_process())) = exit_reason;
-                req.requester->signal_request();
+                req.complete(exit_reason);
             }
 
             logon_requests.clear();

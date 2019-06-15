@@ -240,13 +240,6 @@ namespace eka2l1 {
 
             void destroy() override;
 
-            // Physically we can't compare thread.
-            bool operator>(const thread &rhs);
-            bool operator<(const thread &rhs);
-            bool operator==(const thread &rhs);
-            bool operator>=(const thread &rhs);
-            bool operator<=(const thread &rhs);
-
             chunk_ptr get_stack_chunk();
 
             tls_slot *get_tls_slot(std::uint32_t handle, std::uint32_t dll_uid);
