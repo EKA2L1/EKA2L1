@@ -19,7 +19,7 @@
 
 #pragma once
 
-#define LOFF(linked, object, linked_field) reinterpret_cast<object*>(reinterpret_cast<unsigned char*>(linked)   \
+#define E_LOFF(linked, object, linked_field) reinterpret_cast<object*>(reinterpret_cast<unsigned char*>(linked)   \
     - offsetof(object, linked_field))
 
 namespace eka2l1::common {
@@ -57,12 +57,18 @@ namespace eka2l1::common {
             this_guy->next = this;
         }
 
-        void deque() {
+        double_linked_queue_element *deque() {
             next->previous = previous;
             previous->next = next;
 
             next = nullptr;
             previous = nullptr;
+
+            return this;
+        }
+
+        bool alone() const {
+            return next == previous;
         }
     };
 
@@ -92,6 +98,10 @@ namespace eka2l1::common {
 
             elem_.previous->next = new_elem;
             elem_.previous = new_elem;
+        }
+
+        bool empty() const {
+            return elem_.next == &elem_;
         }
     };
 }
