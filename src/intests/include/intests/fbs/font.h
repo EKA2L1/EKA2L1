@@ -9,6 +9,7 @@
 #define FBS_FONT_H_
 
 void FbsFontstoreNearestToDesignWithNameL();
+void FbsFontstoreGetCharacterDataL();
 void AddFbsFontTestCasesL();
 
 #endif /* FONT_H_ */
