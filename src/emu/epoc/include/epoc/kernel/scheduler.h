@@ -72,12 +72,12 @@ namespace eka2l1 {
             kernel::thread *next_ready_thread();
             void switch_context(kernel::thread *oldt, kernel::thread *newt);
 
-            void queue_thread_ready(kernel::thread *thr);
-            void dequeue_thread_from_ready(kernel::thread *thr);
-
         public:
             // The constructor also register all the needed event
             thread_scheduler(kernel_system *kern, timing_system *sys, arm::arm_interface &jitter);
+
+            void queue_thread_ready(kernel::thread *thr);
+            void dequeue_thread_from_ready(kernel::thread *thr);
 
             void reschedule();
             void unschedule_wakeup();
