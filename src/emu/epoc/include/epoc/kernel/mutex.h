@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/linked.h>
 #include <common/queue.h>
 #include <epoc/kernel/thread.h>
 
@@ -35,9 +36,8 @@ namespace eka2l1 {
             kernel::thread* holding;
 
             cp_queue<kernel::thread*> waits;
-            cp_queue<kernel::thread*> pendings;
-
-            std::vector<kernel::thread*> suspended;
+            common::roundabout pendings;
+            common::roundabout suspended;
 
             timing_system *timing;
 
@@ -55,6 +55,8 @@ namespace eka2l1 {
 
             mutex(kernel_system *kern, timing_system *timing, std::string name, bool init_locked,
                 kernel::access_type access = kernel::access_type::local_access);
+
+            ~mutex();
 
             /*! \brief Timeout reached, whether it's on the pendings
             */
@@ -91,8 +93,6 @@ namespace eka2l1 {
             */
             bool suspend_thread(thread *thr);
             bool unsuspend_thread(thread *thr);
-
-            void do_state(common::chunkyseri &seri) override;
         };
     }
 }

@@ -184,6 +184,8 @@ namespace eka2l1 {
             eka2l1::ptr<epoc::request_status> timeout_sts;
 
             common::double_link<kernel::thread> scheduler_link;
+            common::double_linked_queue_element pending_link;
+            common::double_linked_queue_element suspend_link;
 
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);

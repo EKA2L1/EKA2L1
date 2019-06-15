@@ -44,6 +44,20 @@ namespace eka2l1 {
             }
         }
 
+        mutex::~mutex() {
+            while (!pendings.empty()) {
+                thread *thr = E_LOFF(pendings.first()->deque(), thread, pending_link);
+                thr->state = thread_state::ready;
+                thr->wait_obj = nullptr;
+            }
+
+            while (!suspended.empty()) {
+                thread *thr = E_LOFF(suspended.first()->deque(), thread, suspend_link);
+                thr->wait_obj = nullptr;
+                thr->get_scheduler()->resume(thr);
+            }
+        }
+
         void mutex::wait() {
             if (!holding) {
                 holding = kern->crr_thread();
@@ -52,7 +66,7 @@ namespace eka2l1 {
                     holding->state = thread_state::ready;
                     holding->wait_obj = nullptr;
 
-                    pendings.remove(holding);
+                    holding->pending_link.deque();
                 }
             }
 
@@ -77,7 +91,7 @@ namespace eka2l1 {
                     holding->state = thread_state::ready;
                     holding->wait_obj = nullptr;
 
-                    pendings.remove(holding);
+                    holding->pending_link.deque();
                 }
             }
 
@@ -96,14 +110,12 @@ namespace eka2l1 {
 
             switch (thread_to_wake->current_state()) {
             case thread_state::hold_mutex_pending: {
-                auto thr_ite = std::find(pendings.begin(), pendings.end(), thread_to_wake);
-
-                if (thr_ite == pendings.end()) {
+                if (thread_to_wake->pending_link.alone()) {
                     LOG_ERROR("Thread request to wake up with this mutex is not in hold pending queue");
                     return;
                 }
 
-                pendings.remove(thread_to_wake);
+                thread_to_wake->pending_link.deque();
 
                 break;
             }
@@ -117,7 +129,6 @@ namespace eka2l1 {
                 }
 
                 waits.remove(thread_to_wake);
-
                 break;
             }
 
@@ -166,10 +177,9 @@ namespace eka2l1 {
 
                 ready_thread->get_scheduler()->resume(ready_thread);
                 ready_thread->state = thread_state::hold_mutex_pending;
+                ready_thread->wait_obj = this;
 
-                ready_thread->wait_obj = nullptr;
-
-                pendings.push(ready_thread);
+                pendings.push(&ready_thread->pending_link);
 
                 holding = nullptr;
             }
@@ -181,7 +191,7 @@ namespace eka2l1 {
             kernel::thread *thr = waits.top();
             waits.pop();
 
-            pendings.push(thr);
+            pendings.push(&thr->pending_link);
 
             thr->scheduler->resume(thr);
             thr->state = thread_state::hold_mutex_pending;
@@ -190,13 +200,9 @@ namespace eka2l1 {
         void mutex::priority_change(thread *thr) {
             switch (thr->state) {
             case thread_state::hold_mutex_pending: {
-                pendings.resort();
-
-                const auto &pending_thr_ite = std::find(pendings.begin(), pendings.end(), thr);
-
-                if (pending_thr_ite != pendings.end() && thr->real_priority < waits.top()->real_priority) {
+                if (!thr->pending_link.alone() && thr->real_priority < waits.top()->real_priority) {
                     // Remove this from pending
-                    pendings.remove(thr);
+                    thr->pending_link.deque();
 
                     waits.push(thr);
                     waits.resort();
@@ -217,7 +223,7 @@ namespace eka2l1 {
 
                     if (wait_thr_ite != waits.end()) {
                         waits.remove(thr);
-                        pendings.push(thr);
+                        pendings.push(&thr->pending_link);
 
                         thr->get_scheduler()->resume(thr);
                         thr->state = thread_state::hold_mutex_pending;
@@ -245,7 +251,7 @@ namespace eka2l1 {
                 }
 
                 waits.remove(thr);
-                suspended.push_back(thr);
+                suspended.push(&thr->suspend_link);
 
                 thr->state = thread_state::wait_mutex_suspend;
 
@@ -273,52 +279,17 @@ namespace eka2l1 {
                 return false;
             }
 
-            const auto thr_ite = std::find(suspended.begin(), suspended.end(), thr);
-
-            if (thr_ite == waits.end()) {
+            if (thr->suspend_link.alone()) {
                 LOG_ERROR("Thread given is not found in suspended");
                 return false;
             }
 
-            suspended.erase(thr_ite);
+            thr->suspend_link.deque();
             waits.push(thr);
 
             thr->state = thread_state::wait_mutex;
 
             return true;
-        }
-
-        void mutex::do_state(common::chunkyseri &seri) {
-            std::uint32_t holding_id = (holding ? holding->unique_id() : 0);
-            seri.absorb(holding_id);
-
-            if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                holding = &(*kern->get<kernel::thread>(holding_id));
-            }
-
-            std::uint32_t total_waits = static_cast<std::uint32_t>(waits.size());
-            seri.absorb(total_waits);
-
-            for (size_t i = 0; i < total_waits; i++) {
-                std::uint32_t wait_thr_id = (waits.empty() ? 0 : (*(waits.begin() + i))->unique_id());
-                seri.absorb(wait_thr_id);
-
-                if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                    waits.push(&(*kern->get<kernel::thread>(wait_thr_id)));
-                }
-            }
-
-            std::uint32_t total_suspended = static_cast<std::uint32_t>(suspended.size());
-            seri.absorb(total_suspended);
-
-            for (size_t i = 0; i < total_suspended; i++) {
-                std::uint32_t sus_thr_id;
-                seri.absorb(sus_thr_id);
-
-                if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                    suspended.push_back(&(*kern->get<kernel::thread>(sus_thr_id)));
-                }
-            }
         }
     }
 }
