@@ -499,7 +499,8 @@ namespace eka2l1 {
     ecom_server::ecom_server(eka2l1::system *sys)
         : service::server(sys, "!ecomserver", true) {
         REGISTER_IPC(ecom_server, list_implementations, ecom_list_implementations, "ECom::ListImpls");
+        REGISTER_IPC(ecom_server, list_implementations, ecom_list_resolved_implementations, "ECom::ListResolvedImpls");
+        REGISTER_IPC(ecom_server, list_implementations, ecom_list_custom_resolved_implementations, "ECom::ListCustomResolvedImpls");
         REGISTER_IPC(ecom_server, get_implementation_creation_method, ecom_get_implementation_creation_method, "ECom::GetImplCreationMethod");
-        //REGISTER_IPC(ecom_server, list_implementations, ecom_list_resolved_implementations, "ECom::ListResolvedImpls");
     }
 }
