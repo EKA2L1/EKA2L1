@@ -36,3 +36,5 @@ SOURCEPATH ..\src
 SOURCE ws.cpp ecom.cpp
 SOURCEPATH ..\src\fbs
 SOURCE font.cpp
+SOURCEPATH ..\src\kern
+SOURCE chunk.cpp

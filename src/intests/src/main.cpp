@@ -16,6 +16,7 @@
 #include <intests/fbs/font.h>
 #include <intests/io/file.h>
 #include <intests/ipc/ipc.h>
+#include <intests/kern/chunk.h>
 #include <intests/kern/codeseg.h>
 #include <intests/testmanager.h>
 #include <intests/ws/ws.h>
@@ -34,6 +35,7 @@ void MainWrapperL() {
     // Add all tests back
     AddWsTestCasesL();
     AddIpcTestCasesL();
+    AddKernChunkTestCasesL();
     AddCodeSegTestCasesL();
     AddCmdTestCaseL();
     AddFileTestCasesL();
