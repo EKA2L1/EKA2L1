@@ -952,7 +952,14 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending {} sync to {}", aOrd, ss->get_server()->name());
         }
 
-        return ss->send_receive_sync(aOrd, arg, aStatus);
+        const int result = ss->send_receive_sync(aOrd, arg, aStatus);
+
+        if (ss->get_server()->is_hle()) {
+            // Process it right away.
+            ss->get_server()->process_accepted_msg();
+        }
+
+        return result;
     }
 
     BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
@@ -986,7 +993,14 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending {} to {}", aOrd, ss->get_server()->name());
         }
 
-        return ss->send_receive(aOrd, arg, aStatus);
+        const int result = ss->send_receive(aOrd, arg, aStatus);
+        
+        if (ss->get_server()->is_hle()) {
+            // Process it right away.
+            ss->get_server()->process_accepted_msg();
+        }
+
+        return result;
     }
 
     /**********************************/

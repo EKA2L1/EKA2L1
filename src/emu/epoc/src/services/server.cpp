@@ -50,13 +50,6 @@ namespace eka2l1 {
         }
 
         server::~server() {
-            if (hle) {
-                timing_system *timing = sys->get_timing_system();
-
-                timing->unschedule_event(frequent_process_event, reinterpret_cast<std::uint64_t>(timing));
-                timing->remove_event(frequent_process_event);
-            }
-
             process_msg->unlock_free();
             kern->free_msg(process_msg);
         }
@@ -75,23 +68,6 @@ namespace eka2l1 {
 
             REGISTER_IPC(server, connect, -1, "Server::Connect");
             REGISTER_IPC(server, disconnect, -2, "Server::Disconnect");
-
-            if (hle) {
-                timing_system *timing = sys->get_timing_system();
-
-                // Schedule frequent processing
-                frequent_process_event = timing->register_event(name + "_freq_process",
-                    [](std::uint64_t userdata, int cycles_late) {
-                        service::server *svr = reinterpret_cast<service::server *>(userdata);
-                        svr->process_accepted_msg();
-
-                        // Maybe more ? But 2 reschedules should be logical enough
-                        svr->get_system()->get_timing_system()->schedule_event(20000 - cycles_late,
-                            svr->frequent_process_event, userdata);
-                    });
-
-                timing->schedule_event(20000, frequent_process_event, reinterpret_cast<std::uint64_t>(this));
-            }
         }
 
         int server::receive(ipc_msg_ptr &msg) {
