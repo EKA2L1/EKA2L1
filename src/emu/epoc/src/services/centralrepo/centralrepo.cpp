@@ -517,7 +517,6 @@ namespace eka2l1 {
 
             switch (err) {
             case 0: {
-                ctx->set_request_status(KErrNone);
                 break;
             }
 
