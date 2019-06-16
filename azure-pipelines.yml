@@ -32,10 +32,10 @@ jobs:
   - script: sudo apt-get install xorg-dev libglu1-mesa-dev
     displayName: Install MESA and X11 dependencies
   - script: |
-      sudo apt-get install g++-8 gcc-8 libgtk-3-dev
-      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
-      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
-    displayName: Setup GCC 8
+      sudo apt-get install g++-7 gcc-7 libgtk-3-dev
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
+      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    displayName: Setup GCC 7
   - script: mkdir build
     displayName: Make build directory
   - task: CMake@1
