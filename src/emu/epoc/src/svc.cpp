@@ -1059,24 +1059,27 @@ namespace eka2l1::epoc {
         TChunkCreate createInfo = *aChunkCreate.get(mem);
         desc8 *name = aName.get(mem);
 
-        kernel::chunk_type type;
+        kernel::chunk_type type = kernel::chunk_type::normal;
         kernel::chunk_access access = kernel::chunk_access::local;
         kernel::chunk_attrib att = decltype(att)::none;
+        prot perm = prot::read_write;
 
         // Fetch chunk type
         if (createInfo.iAtt & TChunkCreate::EDisconnected) {
             type = kernel::chunk_type::disconnected;
         } else if (createInfo.iAtt & TChunkCreate::EDoubleEnded) {
             type = kernel::chunk_type::double_ended;
-        } else {
-            type = kernel::chunk_type::normal;
         }
 
         // Fetch chunk access
-        if (!(createInfo.iAtt & TChunkCreate::EGlobal)) {
-            access = kernel::chunk_access::local;
-        } else {
+        if (createInfo.iAtt & TChunkCreate::EGlobal) {
             access = kernel::chunk_access::global;
+        } else {
+            access = kernel::chunk_access::local;
+        }
+
+        if (createInfo.iAtt & TChunkCreate::ECode) {
+            perm = prot::read_write_exec;
         }
 
         if ((access == decltype(access)::global) && ((!name) || (name->get_length() == 0))) {
@@ -1086,7 +1089,7 @@ namespace eka2l1::epoc {
         const kernel::handle handle = kern->create_and_add<kernel::chunk>(
                                               aOwnerType == EOwnerProcess ? kernel::owner_type::process : kernel::owner_type::thread,
                                               sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", createInfo.iInitialBottom,
-                                              createInfo.iInitialTop, createInfo.iMaxSize, prot::read_write, type, access, att)
+                                              createInfo.iInitialTop, createInfo.iMaxSize, perm, type, access, att)
                                           .first;
 
         if (handle == INVALID_HANDLE) {
