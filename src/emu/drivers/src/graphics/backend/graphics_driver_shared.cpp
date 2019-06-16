@@ -310,8 +310,7 @@ namespace eka2l1::drivers {
                 reinterpret_cast<ImTextureID>(bmp_handle),
                 ImVec2(static_cast<float>(rect.top.x), static_cast<float>(rect.top.y)),
                 ImVec2(static_cast<float>(rect.top.x + rect.size.width()), 
-                       static_cast<float>(rect.top.y + rect.size.height())),
-                ImVec2(0, 1), ImVec2(1, 0));
+                       static_cast<float>(rect.top.y + rect.size.height())));
 
             break;
         }
