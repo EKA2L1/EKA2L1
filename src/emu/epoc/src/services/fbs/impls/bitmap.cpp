@@ -40,6 +40,48 @@
 #include <cassert>
 
 namespace eka2l1 {
+    namespace epoc {
+        display_mode bitwise_bitmap::settings::initial_display_mode() const {
+            return static_cast<display_mode>(flags_ & 0x000000FF);
+        }
+
+        display_mode bitwise_bitmap::settings::current_display_mode() const {
+            return static_cast<display_mode>((flags_ & 0x0000FF00) >> 8);
+        }
+
+        void bitwise_bitmap::settings::current_display_mode(const display_mode &mode) {
+            flags_ &= 0xFFFFFF00;
+            flags_ |= (static_cast<std::uint32_t>(mode) << 8);
+        }
+
+        void bitwise_bitmap::settings::initial_display_mode(const display_mode &mode) {
+            flags_ &= 0xFFFFFF00;
+            flags_ |= static_cast<std::uint32_t>(mode);
+        }
+
+        bool bitwise_bitmap::settings::dirty_bitmap() const {
+            return flags_ & settings_flag::dirty_bitmap;
+        }
+
+        void bitwise_bitmap::settings::dirty_bitmap(const bool is_it) {
+            if (is_it)
+                flags_ &= settings_flag::dirty_bitmap;
+            else
+                flags_ &= ~(settings_flag::dirty_bitmap);
+        }
+
+        bool bitwise_bitmap::settings::violate_bitmap() const {
+            return flags_ & settings_flag::violate_bitmap;
+        }
+
+        void bitwise_bitmap::settings::violate_bitmap(const bool is_it) {
+            if (is_it)
+                flags_ &= settings_flag::violate_bitmap;
+            else
+                flags_ &= ~(settings_flag::violate_bitmap);
+        }
+    }
+
     struct load_bitmap_arg {
         std::uint32_t bitmap_id;
         std::int32_t share;
@@ -51,6 +93,37 @@ namespace eka2l1 {
         std::int32_t server_handle;
         std::int32_t address_offset;
     };
+
+    static epoc::display_mode get_display_mode_from_bpp(const int bpp) {
+        switch (bpp) {
+        case 1: return epoc::display_mode::gray2;
+        case 2: return epoc::display_mode::gray4;
+        case 4: return epoc::display_mode::color16;
+        case 8: return epoc::display_mode::color256;
+        case 12: return epoc::display_mode::color4k;
+        case 16: return epoc::display_mode::color64k;
+        case 24: return epoc::display_mode::color16m;
+        case 32: return epoc::display_mode::color16ma;
+        default: break;
+        }
+
+        return epoc::display_mode::color16m;
+    }
+
+    static int get_bpp_from_display_mode(const epoc::display_mode bpp) {
+        switch (bpp) {
+        case epoc::display_mode::gray2: return 1;
+        case epoc::display_mode::gray4: return 2;
+        case epoc::display_mode::gray16: case epoc::display_mode::color16: return 4;
+        case epoc::display_mode::gray256: case epoc::display_mode::color256: return 8;
+        case epoc::display_mode::color4k: return 12;
+        case epoc::display_mode::color64k: return 16;
+        case epoc::display_mode::color16m: return 24;
+        case epoc::display_mode::color16mu: case epoc::display_mode::color16ma: return 32;
+        }
+
+        return 24;
+    }
 
     static int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
         int word_width = 0;
@@ -261,6 +334,11 @@ namespace eka2l1 {
             bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
             bws_bmp->uid_ = epoc::bitwise_bitmap_uid;
 
+            // Get display mode
+            const epoc::display_mode dpm = get_display_mode_from_bpp(bws_bmp->header_.bit_per_pixels);
+            bws_bmp->settings_.initial_display_mode(dpm);
+            bws_bmp->settings_.current_display_mode(dpm);
+
             bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share));
         }
 
@@ -288,21 +366,6 @@ namespace eka2l1 {
         std::uint32_t address_offset;
     };
 
-    static int get_bpp_from_display_mode(const epoc::display_mode bpp) {
-        switch (bpp) {
-        case epoc::display_mode::gray2: return 1;
-        case epoc::display_mode::gray4: return 2;
-        case epoc::display_mode::gray16: case epoc::display_mode::color16: return 4;
-        case epoc::display_mode::gray256: case epoc::display_mode::color256: return 8;
-        case epoc::display_mode::color4k: return 12;
-        case epoc::display_mode::color64k: return 16;
-        case epoc::display_mode::color16m: return 24;
-        case epoc::display_mode::color16mu: case epoc::display_mode::color16ma: return 32;
-        }
-
-        return 24;
-    }
-
     static std::size_t calculate_aligned_bitmap_bytes(const eka2l1::vec2 &size, const epoc::display_mode bpp) {
         if (size.x == 0 || size.y == 0) {
             return 0;
@@ -316,6 +379,9 @@ namespace eka2l1 {
         bws_bmp->header_.size_pixels = size;
         bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(dpm);
         bws_bmp->data_offset_ = 0;
+
+        bws_bmp->settings_.current_display_mode(dpm);
+        bws_bmp->settings_.initial_display_mode(dpm);
 
         // Calculate the size
         std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(size, dpm);

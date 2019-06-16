@@ -20,6 +20,7 @@
 #pragma once
 
 #include <epoc/loader/mbm.h>
+#include <epoc/services/window/common.h>
 #include <epoc/utils/uid.h>
 #include <epoc/ptr.h>
 
@@ -31,7 +32,26 @@ namespace eka2l1::epoc {
         };
 
         uid                uid_;
-        std::uint32_t      flags_;
+
+        struct settings {
+            // The first 8 bits are reserved for initial display mode
+            // The next 8 bits are reserved for current display mode
+            // 16 bits left are for flags
+            std::uint32_t flags_ { 0 };
+
+            display_mode initial_display_mode() const;
+            display_mode current_display_mode() const;
+
+            void current_display_mode(const display_mode &mode);
+            void initial_display_mode(const display_mode &mode);
+
+            bool dirty_bitmap() const;
+            void dirty_bitmap(const bool is_it);
+
+            bool violate_bitmap() const;
+            void violate_bitmap(const bool is_it);
+        } settings_;
+
         eka2l1::ptr<void>  allocator_;
         eka2l1::ptr<void>  pile_;
         int                byte_width_;
