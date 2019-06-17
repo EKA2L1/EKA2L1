@@ -84,7 +84,7 @@ namespace eka2l1 {
         return -1;
     }
 
-    int timing_system::get_downcount() {
+    std::int64_t timing_system::get_downcount() {
         return downcount;
     }
 
@@ -203,7 +203,7 @@ namespace eka2l1 {
     void timing_system::advance() {
         move_events();
 
-        int cycles_executed = slice_len - downcount;
+        const std::int64_t cycles_executed = slice_len - downcount;
         global_timer += cycles_executed;
         slice_len = INITIAL_SLICE_LENGTH;
 
@@ -221,8 +221,8 @@ namespace eka2l1 {
         }
 
         if (!events.empty()) {
-            slice_len = std::min(static_cast<int>(events.back().event_time - global_timer),
-                static_cast<int>(MAX_SLICE_LENGTH));
+            slice_len = std::min(static_cast<std::int64_t>(events.back().event_time - global_timer),
+                static_cast<std::int64_t>(MAX_SLICE_LENGTH));
         }
 
         downcount = slice_len;
@@ -266,7 +266,7 @@ namespace eka2l1 {
     }
 
     void timing_system::force_check() {
-        int cycles_executed = slice_len - downcount;
+        const std::int64_t cycles_executed = slice_len - downcount;
         global_timer += cycles_executed;
         downcount = -1;
         slice_len = -1;

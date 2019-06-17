@@ -31,7 +31,7 @@ namespace eka2l1 {
     using dfc = timed_callback;
 
     enum {
-        MAX_SLICE_LENGTH = 100000000,
+        MAX_SLICE_LENGTH = 20000,
         INITIAL_SLICE_LENGTH = 20000
     };
 
@@ -52,8 +52,8 @@ namespace eka2l1 {
 
     // class NTimer
     class timing_system {
-        int slice_len;
-        int downcount;
+        std::int64_t slice_len;
+        std::int64_t downcount;
 
         int64_t CPU_HZ;
 
@@ -72,7 +72,7 @@ namespace eka2l1 {
         void fire_mhz_changes();
 
     public:
-        int get_slice_length() {
+        std::int64_t get_slice_length() {
             return slice_len;
         }
         
@@ -153,7 +153,7 @@ namespace eka2l1 {
 
         void set_clock_frequency_mhz(int cpu_mhz);
         uint32_t get_clock_frequency_mhz();
-        int get_downcount();
+        std::int64_t get_downcount();
 
         void do_state(common::chunkyseri &seri);
     };

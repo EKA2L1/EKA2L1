@@ -315,7 +315,7 @@ namespace eka2l1 {
                 return;
             }
 
-            execute_instructions(std::max(timing->get_downcount(), 0));
+            execute_instructions(std::max<std::uint32_t>(static_cast<std::uint32_t>(timing->get_downcount()), 0));
         }
 
         void arm_unicorn::stop() {
