@@ -40,21 +40,27 @@ namespace eka2l1 {
             state = library_state::loaded;
         }
 
-        std::optional<uint32_t> library::get_ordinal_address(const uint8_t idx) {
-            return codeseg->lookup(idx);
+        std::optional<uint32_t> library::get_ordinal_address(kernel::process *pr, const std::uint32_t idx) {
+            return codeseg->lookup(pr, idx);
         }
 
-        std::vector<uint32_t> library::attach() {
+        std::vector<uint32_t> library::attach(kernel::process *pr) {
             if (state == library_state::loaded) {
                 state = library_state::attaching;
 
                 std::vector<std::uint32_t> call_list;
+
+                codeseg->attach(pr);
                 codeseg->queries_call_list(call_list);
 
                 return call_list;
             }
 
             return std::vector<uint32_t>{};
+        }
+        
+        void library::detach(kernel::process *pr) {
+            codeseg->detatch(pr);
         }
 
         bool library::attached() {

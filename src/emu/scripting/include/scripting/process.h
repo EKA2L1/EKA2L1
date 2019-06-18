@@ -47,6 +47,10 @@ namespace eka2l1::scripting {
         std::string get_name();
 
         std::vector<std::unique_ptr<eka2l1::scripting::thread>> get_thread_list();
+        
+        eka2l1::kernel::process *get_process_handle() {
+            return process_handle;
+        }
     };
 
     std::vector<std::unique_ptr<eka2l1::scripting::process>> get_process_list();

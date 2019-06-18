@@ -44,18 +44,17 @@
 #include <epoc/kernel.h>
 #include <epoc/kernel/codeseg.h>
 
-#include <arm/arm_analyser.h>
 #include <cctype>
 
 namespace eka2l1 {
     namespace hle {
         // Write simple relocation
-        bool write(uint32_t *data, uint32_t sym) {
+        static bool write(uint32_t *data, uint32_t sym) {
             *data = sym;
             return true;
         }
 
-        bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, uint32_t data_delta) {
+        static bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, uint32_t data_delta) {
             if (type == loader::relocation_type::reserved) {
                 return true;
             }
@@ -83,7 +82,7 @@ namespace eka2l1 {
         }
 
         // Given relocation entries, relocate the code and data
-        bool relocate(std::vector<loader::e32_reloc_entry> entries,
+        static bool relocate(std::vector<loader::e32_reloc_entry> entries,
             uint8_t *dest_addr,
             uint32_t code_delta,
             uint32_t data_delta) {
@@ -109,7 +108,7 @@ namespace eka2l1 {
             return true;
         }
 
-        std::string get_real_dll_name(std::string dll_name) {
+        static std::string get_real_dll_name(std::string dll_name) {
             size_t dll_name_end_pos = dll_name.find_first_of("{");
 
             if (FOUND_STR(dll_name_end_pos)) {
@@ -125,13 +124,12 @@ namespace eka2l1 {
             return dll_name + ".dll";
         }
 
-        bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, loader::e32img &me,
-            loader::e32img_import_block &import_block, loader::e32img_iat &iat, uint32_t &crr_idx,
-            codeseg_ptr &parent_codeseg) {
+        static bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, std::uint32_t *iat_pointer,
+            kernel::process *pr, loader::e32img_import_block &import_block, uint32_t &crr_idx, codeseg_ptr &parent_codeseg) {
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
-            codeseg_ptr cs = mngr.load(dll_name);
+            codeseg_ptr cs = mngr.load(dll_name, pr);
 
             if (!cs) {
                 LOG_TRACE("Can't found {}", dll_name8);
@@ -146,22 +144,21 @@ namespace eka2l1 {
             for (uint32_t i = crr_idx, j = 0;
                  i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
                  i++, j++) {
-                uint32_t iat_off = me.header.code_offset + me.header.code_size;
-                *reinterpret_cast<std::uint32_t *>(me.data[iat_off + i * 4]) = cs->lookup(import_block.ordinals[j]);
+                *iat_pointer = cs->lookup(pr, import_block.ordinals[j]);
             }
 
             crr_idx += static_cast<uint32_t>(import_block.ordinals.size());
             return true;
         }
 
-        bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, loader::e32img &me,
-            loader::e32img_import_block &import_block, codeseg_ptr &parent_cs) {
+        static bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, std::uint8_t *code_addr,
+            kernel::process *pr, loader::e32img_import_block &import_block, codeseg_ptr &parent_cs) {
             LOG_INFO("Fixup for: {}", import_block.dll_name);
 
             const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
             const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
-            codeseg_ptr cs = mngr.load(dll_name);
+            codeseg_ptr cs = mngr.load(dll_name, pr);
 
             if (!cs) {
                 LOG_TRACE("Can't found {}", dll_name8);
@@ -175,7 +172,7 @@ namespace eka2l1 {
 
             for (uint32_t i = 0; i < import_block.ordinals.size(); i++) {
                 uint32_t off = imdir[i];
-                uint32_t *code_ptr = ptr<uint32_t>(me.rt_code_addr + off).get(mem);
+                uint32_t *code_ptr = reinterpret_cast<std::uint32_t*>(code_addr + off);
 
                 uint32_t import_inf = *code_ptr;
                 uint32_t ord = import_inf & 0xffff;
@@ -185,7 +182,7 @@ namespace eka2l1 {
                 uint32_t val = 0;
 
                 if (ord > 0) {
-                    export_addr = cs->lookup(ord);
+                    export_addr = cs->lookup(pr, ord);
                     assert(export_addr != 0);
 
                     // The export address provided is already added with relative code/data
@@ -200,7 +197,44 @@ namespace eka2l1 {
             return true;
         }
 
-        codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr, const std::u16string &path = u"") {
+        static void relocate_e32img(loader::e32img *img, kernel::process *pr, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
+            std::uint8_t *code_base = nullptr;
+            std::uint8_t *data_base = nullptr;
+
+            uint32_t rtcode_addr = cs->get_code_run_addr(pr, &code_base);
+            uint32_t rtdata_addr = cs->get_data_run_addr(pr, &data_base);
+
+            LOG_INFO("Runtime code: 0x{:x}", rtcode_addr);
+
+            img->rt_code_addr = rtcode_addr;
+
+            // Ram code address is the run time address of the code
+            uint32_t code_delta = rtcode_addr - img->header.code_base;
+            uint32_t data_delta = rtdata_addr - img->header.data_base;
+
+            relocate(img->code_reloc_section.entries, code_base, code_delta, data_delta);
+
+            if (img->header.data_size)
+                relocate(img->data_reloc_section.entries, data_base, code_delta, data_delta);
+
+            if (img->epoc_ver == epocver::epoc6) {
+                uint32_t track = 0;
+
+                for (auto &ib : img->import_section.imports) {
+                    pe_fix_up_iat(mem, mngr, reinterpret_cast<std::uint32_t*>(code_base + img->header.code_size),
+                        pr, ib, track, cs);
+                }
+            }
+
+            if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
+                for (auto &ib : img->import_section.imports) {
+                    elf_fix_up_import_dir(mem, mngr, code_base, pr, ib, cs);
+                }
+            }
+        }
+
+        static codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr, kernel::process *pr,
+            const std::u16string &path = u"") {
             std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
             kernel::codeseg_create_info info;
 
@@ -229,51 +263,17 @@ namespace eka2l1 {
                 }
             }
 
+            info.constant_data = reinterpret_cast<std::uint8_t*>(&img->data[img->header.data_offset]);
+            info.code_data = reinterpret_cast<std::uint8_t*>(&img->data[img->header.code_offset]);
+
             codeseg_ptr cs = kern->create<kernel::codeseg>("codeseg", info);
+            cs->attach(pr);
+            
             mngr.register_exports(
                 common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
-                cs->get_export_table());
+                cs->get_export_table(pr));
 
-            uint32_t rtcode_addr = cs->get_code_run_addr();
-            uint32_t rtdata_addr = cs->get_data_run_addr();
-
-            LOG_INFO("Runtime code: 0x{:x}", rtcode_addr);
-
-            img->rt_code_addr = rtcode_addr;
-            img->rt_data_addr = rtdata_addr;
-
-            // Ram code address is the run time address of the code
-            uint32_t code_delta = rtcode_addr - img->header.code_base;
-            uint32_t data_delta = rtdata_addr - img->header.data_base;
-
-            relocate(img->code_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.code_offset), code_delta, data_delta);
-
-            if (img->header.data_size)
-                relocate(img->data_reloc_section.entries, reinterpret_cast<uint8_t *>(img->data.data() + img->header.data_offset), code_delta, data_delta);
-
-            if (img->epoc_ver == epocver::epoc6) {
-                uint32_t track = 0;
-
-                for (auto &ib : img->import_section.imports) {
-                    pe_fix_up_iat(mem, mngr, *img, ib, img->iat, track, cs);
-                }
-            }
-
-            memcpy(ptr<void>(rtcode_addr).get(mem), img->data.data() + img->header.code_offset, img->header.code_size);
-            std::uint8_t *dt_ptr = ptr<std::uint8_t>(rtdata_addr).get(mem);
-
-            if (img->header.data_size) {
-                // If there is initialized data, copy that
-                memcpy(dt_ptr, img->data.data() + img->header.data_offset,
-                    img->header.data_size);
-            }
-
-            if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
-                for (auto &ib : img->import_section.imports) {
-                    elf_fix_up_import_dir(mem, mngr, *img, ib, cs);
-                }
-            }
-
+            relocate_e32img(img, pr, mem, mngr, cs);
             LOG_INFO("Load e32img success");
             return cs;
         }
@@ -321,39 +321,23 @@ namespace eka2l1 {
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
         }
 
-        codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, const std::u16string &path) {
+        codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
             if (auto seg = kern->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
                     img.header.uid2, img.header.uid3)) {
+                if (seg->attach(pr))
+                    relocate_e32img(&img, pr, kern->get_memory_system(), *this, seg);
+
                 return seg;
             }
 
-            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone,
-                [&](const vaddress offset) {
-                    return *reinterpret_cast<std::uint32_t *>(&img.data[img.header.code_offset + offset - img.header.code_base]);
-                });
-
-            std::unordered_map<vaddress, arm::arm_function> funcs;
-            analyser->analyse(funcs, img.header.entry_point + img.header.code_base, img.header.code_base + img.header.code_size);
-
-            LOG_TRACE("Analyzing {}, found {} functions", common::ucs2_to_utf8(path), funcs.size());
-
-            return import_e32img(&img, mem, kern, *this, path);
+            return import_e32img(&img, mem, kern, *this, pr, path);
         }
 
-        codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path) {
+        codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, kernel::process *pr, const std::u16string &path) {
             if (auto seg = kern->pull_codeseg_by_ep(romimg.header.entry_point)) {
+                seg->attach(pr);
                 return seg;
             }
-
-            auto analyser = arm::make_analyser(arm::arm_disassembler_backend::capstone,
-                [&](const vaddress offset) {
-                    return *reinterpret_cast<std::uint32_t *>(mem->get_real_pointer(offset));
-                });
-
-            std::unordered_map<vaddress, arm::arm_function> funcs;
-            analyser->analyse(funcs, romimg.header.entry_point, romimg.header.code_address + romimg.header.code_size);
-
-            LOG_TRACE("Analyzing {}, found {} functions", common::ucs2_to_utf8(path), funcs.size());
 
             kernel::codeseg_create_info info;
 
@@ -362,7 +346,7 @@ namespace eka2l1 {
             info.uids[1] = romimg.header.uid2;
             info.uids[2] = romimg.header.uid3;
             info.code_base = romimg.header.code_address;
-            info.data_base = romimg.header.data_address;
+            info.data_base = romimg.header.data_bss_linear_base_address;
             info.code_load_addr = romimg.header.code_address;
             info.data_load_addr = romimg.header.data_address;
             info.code_size = romimg.header.code_size;
@@ -375,12 +359,14 @@ namespace eka2l1 {
             info.sinfo.vendor_id = romimg.header.sec_info.vendor_id;
             info.sinfo.secure_id = romimg.header.sec_info.secure_id;
             info.exception_descriptor = romimg.header.exception_des;
+            info.constant_data = reinterpret_cast<std::uint8_t*>(mem->get_real_pointer(romimg.header.data_address));
 
             auto cs = kern->create<kernel::codeseg>("codeseg", info);
+            cs->attach(pr);
 
             register_exports(
                 common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
-                cs->get_export_table());
+                cs->get_export_table(pr));
 
             struct dll_ref_table {
                 uint16_t flags;
@@ -409,7 +395,7 @@ namespace eka2l1 {
 
                             // Load new romimage and add dependency
                             loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&buf_stream), mem);
-                            acs->add_dependency(load_as_romimg(rimg));
+                            acs->add_dependency(load_as_romimg(rimg, pr));
                         }
                     }
                 }
@@ -478,7 +464,7 @@ namespace eka2l1 {
             return open_and_get(lib_path);
         }
 
-        codeseg_ptr lib_manager::load(const std::u16string &name) {
+        codeseg_ptr lib_manager::load(const std::u16string &name, kernel::process *pr) {
             auto load_depend_on_drive = [&](drive_number drv, const std::u16string &lib_path) -> codeseg_ptr {
                 auto entry = io->get_drive_entry(drv);
 
@@ -496,14 +482,14 @@ namespace eka2l1 {
                             return nullptr;
                         }
 
-                        return load_as_romimg(*romimg, lib_path);
+                        return load_as_romimg(*romimg, pr, lib_path);
                     } else {
                         auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
                         if (!e32img) {
                             return nullptr;
                         }
 
-                        return load_as_e32img(*e32img, lib_path);
+                        return load_as_e32img(*e32img, pr, lib_path);
                     }
                 }
 

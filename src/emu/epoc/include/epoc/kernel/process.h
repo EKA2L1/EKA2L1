@@ -172,12 +172,12 @@ namespace eka2l1::kernel {
 
         void finish_logons();
 
+        void construct_with_codeseg(codeseg_ptr codeseg, uint32_t stack_size, uint32_t heap_min, uint32_t heap_max,
+            const process_priority pri);
+
         explicit process(kernel_system *kern, memory_system *mem);
-        explicit process(kernel_system *kern, memory_system *mem, uint32_t uid,
-            const std::string &process_name, const std::u16string &exe_path,
-            const std::u16string &cmd_args, codeseg_ptr codeseg,
-            uint32_t stack_size, uint32_t heap_min,
-            uint32_t heap_max, const process_priority pri = process_priority::foreground);
+        explicit process(kernel_system *kern, memory_system *mem, const std::string &process_name,
+            const std::u16string &exe_path, const std::u16string &cmd_args);
 
         ~process() = default;
 

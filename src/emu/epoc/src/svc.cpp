@@ -1431,7 +1431,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        std::vector<uint32_t> entries = lib->attach();
+        std::vector<uint32_t> entries = lib->attach(kern->crr_process());
 
         *aNumEps.get(mem) = static_cast<TInt>(entries.size());
 
@@ -1452,7 +1452,8 @@ namespace eka2l1::epoc {
             return 0;
         }
 
-        std::optional<uint32_t> func_addr = lib->get_ordinal_address(static_cast<uint8_t>(aOrdinalIndex));
+        std::optional<uint32_t> func_addr = lib->get_ordinal_address(kern->crr_process(),
+            static_cast<std::uint32_t>(aOrdinalIndex));
 
         if (!func_addr) {
             return 0;

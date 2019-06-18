@@ -112,7 +112,7 @@ namespace eka2l1 {
             *lib_path += u".dll";
         }
 
-        codeseg_ptr cs = ctx.sys->get_lib_manager()->load(*lib_path);
+        codeseg_ptr cs = ctx.sys->get_lib_manager()->load(*lib_path, ctx.msg->own_thr->owning_process());
 
         if (!cs) {
             ctx.set_request_status(KErrNotFound);

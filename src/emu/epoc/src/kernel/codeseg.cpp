@@ -19,15 +19,13 @@
  */
 
 #include <algorithm>
+#include <common/algorithm.h>
 #include <epoc/kernel.h>
 #include <epoc/kernel/codeseg.h>
 
 namespace eka2l1::kernel {
-    codeseg::codeseg(kernel_system *kern, const std::string &name,
-        codeseg_create_info &info)
-        : kernel_obj(kern, name, kernel::access_type::global_access)
-        , code_chunk(nullptr)
-        , data_chunk(nullptr) {
+    codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
+        : kernel_obj(kern, name, kernel::access_type::global_access) {
         std::copy(info.uids, info.uids + 3, uids);
         code_base = info.code_base;
         data_base = info.data_base;
@@ -45,57 +43,197 @@ namespace eka2l1::kernel {
         export_table = std::move(info.export_table);
         full_path = std::move(info.full_path);
 
-        // Only allows write when it's not open yet
-        memory_system *mem = kern->get_memory_system();
-        const auto code_size_align = common::align(code_size, mem->get_page_size());
-        const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
-
         code_addr = info.code_load_addr;
         data_addr = info.data_load_addr;
 
-        if (code_addr == 0) {
-            code_chunk = kern->create<kernel::chunk>(mem, nullptr, name, 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
-                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
-
-            code_addr = code_chunk->base().ptr_address();
-            info.code_load_addr = code_addr;
-
-            for (auto &export_entry : export_table) {
-                export_entry += code_addr - info.code_base;
-            }
-
-            ep += code_addr;
-
-            if (exception_descriptor != 0) {
-                exception_descriptor += code_addr;
-            }
+        if (info.data_size) {
+            constant_data = std::make_unique<std::uint8_t[]>(info.data_size);
+            std::copy(info.constant_data, info.constant_data + info.data_size, constant_data.get());
         }
 
-        if (data_size_align && data_addr == 0) {
-            data_chunk = kern->create<kernel::chunk>(mem, kern->crr_process(), name, 0, data_size_align, data_size_align, prot::read_write, kernel::chunk_type::normal,
-                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
-
-            data_addr = data_chunk->base().ptr_address();
-
-            // BSS is after static data
-            std::uint8_t *bss = data_chunk->base().get(kern->get_memory_system()) + data_size;
-
-            // Initialize bss
-            // Definitely, there maybe bss, fill that with zero
-            // I usually depends on this to get my integer zero
-            // Filling zero from beginning of code segment, with size of bss size - 1
-            std::fill(bss, bss + bss_size, 0);
-
-            info.data_load_addr = data_addr;
+        if (code_addr == 0) {
+            code_data = std::make_unique<std::uint8_t[]>(info.code_size);
+            std::copy(info.code_data, info.code_data + info.code_size, code_data.get());
         }
     }
 
-    address codeseg::lookup(const std::uint32_t ord) {
-        if (ord > export_table.size()) {
+    bool codeseg::attach(kernel::process *new_foe) {
+        if (new_foe == nullptr) {
+            return true;
+        }
+
+        if (common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == new_foe;
+        })) {
+            return false;
+        }
+
+        // Allocate new data chunk for this!
+        memory_system *mem = kern->get_memory_system();
+        const auto data_size_align = common::align(data_addr ? bss_size : data_size + bss_size, mem->get_page_size());
+        const auto code_size_align = common::align(code_size, mem->get_page_size());
+
+        chunk_ptr code_chunk = nullptr;
+        chunk_ptr dt_chunk = nullptr;
+        
+        if (code_addr == 0) {
+            code_chunk = kern->create<kernel::chunk>(mem, nullptr, "", 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
+                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
+
+            // Copy data
+            std::uint8_t *code_base = reinterpret_cast<std::uint8_t*>(code_chunk->host_base());
+            std::copy(code_data.get(), code_data.get() + code_size, code_base);               // .code
+        }
+
+        if (data_size_align != 0) {
+            dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
+                prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::none, false,
+                data_addr ? data_base : 0);
+
+            if (!dt_chunk) {
+                return false;
+            }
+            
+            std::uint8_t *dt_base = reinterpret_cast<std::uint8_t*>(dt_chunk->host_base());
+
+            if (data_addr == 0) {
+                // Confirmed that if data is in ROM, only BSS is reserved
+                std::copy(constant_data.get(), constant_data.get() + data_size, dt_base);         // .data
+            }
+
+            const std::uint32_t bss_off = data_addr ? 0 : data_size;
+            std::fill(dt_base + bss_off, dt_base + bss_off + bss_size, 0);                // .bss
+        }
+
+        attaches.push_back({ new_foe, dt_chunk, code_chunk });
+
+        return true;
+    }
+
+    bool codeseg::detatch(kernel::process *de_foe) {
+        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == de_foe;
+        });
+
+        if (attach_info == nullptr) {
+            return false;
+        }
+
+        // Free the chunk data
+        if (attach_info->data_chunk) {
+            kern->destroy(attach_info->data_chunk);
+        }
+
+        if (attach_info->code_chunk) {
+            kern->destroy(attach_info->code_chunk);
+        }
+
+        attaches.erase(attaches.begin() + std::distance(attaches.data(), attach_info));
+
+        if (attaches.empty()) {
+            // MUDA MUDA MUDA MUDA MUDA MUDA MUDA
+            kern->destroy(kern->get_by_id<kernel::codeseg>(uid));
+        }
+
+        return true;
+    }
+    
+    address codeseg::get_code_run_addr(kernel::process *pr, std::uint8_t **base) {
+        if (code_addr != 0) {
+            return code_addr;
+        }
+
+        // Find our stuffs
+        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == pr;
+        });
+
+        if (attach_info == nullptr) {
+            return 0;
+        }
+
+        if (base) {
+            *base = reinterpret_cast<std::uint8_t*>(attach_info->code_chunk->host_base());
+        }
+
+        return attach_info->code_chunk->base().ptr_address();
+    }
+    
+    address codeseg::get_data_run_addr(kernel::process *pr, std::uint8_t **base) {
+        if (data_addr != 0) {
+            return data_addr;
+        }
+
+        // Find our stuffs
+        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == pr;
+        });
+
+        if (attach_info == nullptr || !attach_info->data_chunk) {
+            return 0;
+        }
+
+        if (base) {
+            *base = reinterpret_cast<std::uint8_t*>(attach_info->data_chunk->host_base());
+        }
+
+        return attach_info->data_chunk->base().ptr_address();
+    }
+    
+    std::uint32_t codeseg::get_exception_descriptor(kernel::process *pr) {
+        // Find our stuffs
+        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == pr;
+        });
+
+        if (attach_info == nullptr) {
+            return 0;
+        }
+
+        return attach_info->code_chunk->base().ptr_address() + exception_descriptor;
+    }
+
+    address codeseg::get_entry_point(kernel::process *pr) {
+        if (code_addr != 0) {
+            return ep;
+        }
+
+        // Find our stuffs
+        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == pr;
+        });
+
+        if (attach_info == nullptr) {
+            return 0;
+        }
+
+        return attach_info->code_chunk->base().ptr_address() + ep;
+    }
+
+    address codeseg::lookup_no_relocate(const std::uint32_t ord) {
+        if (ord > export_table.size() || ord == 0) {
             return 0;
         }
 
         return export_table[ord - 1];
+    }
+    
+    address codeseg::lookup(kernel::process *pr, const std::uint32_t ord) {
+        const address lookup_res = lookup_no_relocate(ord);
+
+        if (code_addr != 0 || !lookup_res) {
+            return lookup_res;
+        }
+
+        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == pr;
+        });
+
+        if (attach_info == nullptr) {
+            return 0;
+        }
+
+        return attach_info->code_chunk->base().ptr_address() + lookup_res - code_base;
     }
 
     void codeseg::queries_call_list(std::vector<std::uint32_t> &call_list) {
@@ -128,5 +266,28 @@ namespace eka2l1::kernel {
         }
 
         return false;
+    }
+
+    std::vector<std::uint32_t> codeseg::get_export_table(kernel::process *pr) {
+        if (code_addr != 0) {
+            return export_table;
+        }
+
+        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
+            return info.attached_process == pr;
+        });
+
+        if (attach_info == nullptr) {
+            return {};
+        }
+
+        std::vector<std::uint32_t> new_table = export_table;
+        const std::uint32_t delta = attach_info->code_chunk->base().ptr_address() - code_base;
+
+        for (auto &entry: new_table) {
+            entry += delta;
+        }
+
+        return new_table;
     }
 }

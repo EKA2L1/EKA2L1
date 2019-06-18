@@ -54,34 +54,18 @@ namespace eka2l1::kernel {
             false, kernel::access_type::local_access);
     }
 
-    process::process(kernel_system *kern, memory_system *mem)
-        : kernel_obj(kern)
-        , mem(mem) {
-        obj_type = kernel::object_type::process;
-    }
-
-    process::process(kernel_system *kern, memory_system *mem, uint32_t uid,
-        const std::string &process_name, const std::u16string &exe_path,
-        const std::u16string &cmd_args, codeseg_ptr arg_codeseg,
-        uint32_t stack_size, uint32_t heap_min, uint32_t heap_max,
-        const process_priority pri)
-        : kernel_obj(kern, process_name, access_type::local_access)
-        , puid(uid)
-        , process_name(process_name)
-        , kern(kern)
-        , mem(mem)
-        , exe_path(exe_path)
-        , cmd_args(cmd_args)
-        , priority(pri)
-        , codeseg(std::move(arg_codeseg))
-        , process_handles(kern, handle_array_owner::process) {
-        obj_type = kernel::object_type::process;
-        sec_info = codeseg->get_sec_info();
-
-        if (!process_name.empty() && process_name.back() == '\0') {
-            this->process_name.pop_back();
+    void process::construct_with_codeseg(codeseg_ptr arg_codeseg, uint32_t stack_size, uint32_t heap_min, uint32_t heap_max,
+        const process_priority pri) {
+        if (codeseg) {
+            return;
         }
 
+        codeseg = std::move(arg_codeseg);
+        sec_info = codeseg->get_sec_info();
+
+        puid = std::get<2>(codeseg->get_uids());
+        priority = pri;
+        
         if (kern->get_epoc_version() >= epocver::eka2) {
             std::string all_caps;
 
@@ -96,15 +80,38 @@ namespace eka2l1::kernel {
             LOG_INFO("Process {} capabilities: {}", process_name, all_caps.empty() ? "None" : all_caps);
         }
 
-        // Create mem model implementation
-        mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem::mem_model_type::multiple);
-
         create_prim_thread(
-            codeseg->get_code_run_addr(), codeseg->get_entry_point(),
+            codeseg->get_code_run_addr(this), codeseg->get_entry_point(this),
             stack_size, heap_min, heap_max,
             kernel::thread_priority::priority_absolute_foreground_normal);
 
         // TODO: Load all references DLL in the export list.
+    }
+
+    process::process(kernel_system *kern, memory_system *mem)
+        : kernel_obj(kern)
+        , mem(mem) {
+        obj_type = kernel::object_type::process;
+    }
+
+    process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
+        const std::u16string &cmd_args)
+        : kernel_obj(kern, process_name, access_type::local_access)
+        , process_name(process_name)
+        , kern(kern)
+        , mem(mem)
+        , exe_path(exe_path)
+        , cmd_args(cmd_args)
+        , codeseg(nullptr)
+        , process_handles(kern, handle_array_owner::process) {
+        obj_type = kernel::object_type::process;
+
+        if (!process_name.empty() && process_name.back() == '\0') {
+            this->process_name.pop_back();
+        }
+
+        // Create mem model implementation
+        mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem::mem_model_type::multiple);
     }
 
     void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {
@@ -139,7 +146,7 @@ namespace eka2l1::kernel {
     }
 
     std::uint32_t process::get_entry_point_address() {
-        return codeseg->get_entry_point();
+        return codeseg->get_entry_point(this);
     }
 
     void process::set_priority(const process_priority new_pri) {
@@ -263,8 +270,8 @@ namespace eka2l1::kernel {
     }
 
     void process::get_memory_info(memory_info &info) {
-        info.rt_code_addr = codeseg->get_code_run_addr();
-        info.rt_const_data_addr = codeseg->get_data_run_addr();
+        info.rt_code_addr = codeseg->get_code_run_addr(this);
+        info.rt_const_data_addr = codeseg->get_data_run_addr(this);
         info.rt_bss_addr = info.rt_const_data_addr;
         info.rt_bss_size = codeseg->get_bss_size();
         // TODO: More

@@ -28,6 +28,9 @@ namespace eka2l1::kernel {
 }
 
 namespace eka2l1::scripting {
+    class process;
+    using process_inst = std::shared_ptr<process>;
+
     class codeseg {
         kernel::codeseg *real_seg_;
 
@@ -35,10 +38,10 @@ namespace eka2l1::scripting {
         codeseg() = default;
         explicit codeseg(std::uint64_t handle);
 
-        std::uint32_t lookup(const std::uint32_t ord);
-        std::uint32_t code_run_address();
-        std::uint32_t data_run_address();
-        std::uint32_t bss_run_address();
+        std::uint32_t lookup(process_inst pr, const std::uint32_t ord);
+        std::uint32_t code_run_address(process_inst pr);
+        std::uint32_t data_run_address(process_inst pr);
+        std::uint32_t bss_run_address(process_inst pr);
 
         std::uint32_t code_size();
         std::uint32_t data_size();
@@ -47,5 +50,5 @@ namespace eka2l1::scripting {
         std::uint32_t get_export_count();
     };
 
-    std::unique_ptr<scripting::codeseg> load_codeseg(const std::string &virt_path);
+    std::unique_ptr<scripting::codeseg> load_codeseg(process_inst pr, const std::string &virt_path);
 }

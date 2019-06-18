@@ -25,8 +25,10 @@ namespace eka2l1::kernel {
         library(kernel_system *kern, codeseg_ptr codeseg);
         ~library() {}
 
-        std::optional<uint32_t> get_ordinal_address(const uint8_t idx);
-        std::vector<uint32_t> attach();
+        std::optional<uint32_t> get_ordinal_address(kernel::process *pr, const std::uint32_t idx);
+        std::vector<uint32_t> attach(kernel::process *pr);
+
+        void detach(kernel::process *pr);
 
         bool attached();
 

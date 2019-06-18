@@ -164,7 +164,8 @@ namespace eka2l1 {
             ipc_msg_ptr sync_msg;
 
             void reset_thread_ctx(std::uint32_t entry_point, std::uint32_t stack_top, bool inital);
-            void create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator_ptr, std::uint32_t name_len, address name_ptr, address epa);
+            void create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator_ptr, 
+                std::uint32_t name_len, address name_ptr, address epa);
 
             int leave_depth = -1;
 

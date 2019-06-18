@@ -209,8 +209,8 @@ namespace eka2l1 {
             }
         }
 
-        void thread::create_stack_metadata(ptr<void> stack_ptr, ptr<void> allocator, uint32_t name_len,
-            address name_ptr, const address epa) {
+        void thread::create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator,
+            uint32_t name_len, address name_ptr, const address epa) {
             epoc9_std_epoc_thread_create_info info;
             info.allocator = allocator.ptr_address();
             info.func_ptr = epa;
@@ -228,13 +228,13 @@ namespace eka2l1 {
             info.supervisor_stack = 0;
             info.supervisor_stack_size = 0;
 
-            info.user_stack = stack_ptr.ptr_address();
+            info.user_stack = stack_ptr;
             info.user_stack_size = stack_size;
             info.padding = 0;
 
             info.total_size = 0x40;
 
-            memcpy(stack_ptr.get(own_process), &info, 0x40);
+            memcpy(stack_host_ptr, &info, 0x40);
         }
 
         thread::thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner,
@@ -269,8 +269,9 @@ namespace eka2l1 {
             }
 
             create_time = timing->get_ticks();
-            timeslice = timing->get_slice_length();
-            time = timing->get_slice_length();
+            
+            timeslice = 20000;
+            time = 20000;
 
             obj_type = object_type::thread;
             state = thread_state::create; // Suspended.
@@ -291,24 +292,19 @@ namespace eka2l1 {
             /* Create TDesC string. Combine of string length and name data (USC2) */
 
             std::u16string name_16(name.begin(), name.end());
-
-            memcpy(name_chunk->base().get(own_process), name_16.data(), name.length() * 2);
+            memcpy(name_chunk->host_base(), name_16.data(), name.length() * 2);
 
             // TODO: Not hardcode this
             const size_t metadata_size = 0x40;
 
-            // Left the space for the program to put thread create information
+            std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t*>(stack_chunk->host_base());
+            std::uint8_t *stack_top_ptr = stack_beg_meta_ptr + stack_size - metadata_size;
+
             const address stack_top = stack_chunk->base().ptr_address() + static_cast<address>(stack_size - metadata_size);
 
-            ptr<uint8_t> stack_phys_beg(stack_chunk->base().ptr_address());
-            ptr<uint8_t> stack_phys_end(stack_top);
-
-            uint8_t *start = stack_phys_beg.get(own_process);
-            uint8_t *end = stack_phys_end.get(own_process);
-
             // Fill the stack with garbage
-            std::fill(start, end, 0xcc);
-            create_stack_metadata(ptr<void>(stack_top), allocator, static_cast<std::uint32_t>(name.length()),
+            std::fill(stack_beg_meta_ptr, stack_top_ptr, 0xcc);
+            create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
                 name_chunk->base().ptr_address(), epa);
 
             reset_thread_ctx(epa, stack_top, inital);

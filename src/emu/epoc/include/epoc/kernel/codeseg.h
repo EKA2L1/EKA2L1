@@ -30,6 +30,7 @@
 namespace eka2l1 {
     namespace kernel {
         class chunk;
+        class process;
         class codeseg;
     }
 
@@ -60,6 +61,9 @@ namespace eka2l1::kernel {
 
         std::vector<std::uint32_t> export_table;
         epoc::security_info sinfo;
+
+        std::uint8_t *constant_data;
+        std::uint8_t *code_data;
     };
 
     class codeseg : public kernel::kernel_obj {
@@ -81,16 +85,24 @@ namespace eka2l1::kernel {
         // Full path (if there is)
         std::u16string full_path;
 
-        // Invalid handle if those are not available
-        chunk_ptr code_chunk;
-        chunk_ptr data_chunk;
-
         std::vector<std::uint32_t> export_table;
         std::vector<codeseg_ptr> dependencies;
 
         epoc::security_info sinfo;
 
+        std::unique_ptr<std::uint8_t[]> constant_data;
+        std::unique_ptr<std::uint8_t[]> code_data;
+
         bool mark{ false };
+
+        struct attached_info {
+            kernel::process *attached_process;
+
+            chunk_ptr data_chunk;
+            chunk_ptr code_chunk;
+        };
+
+        std::vector<attached_info> attaches;
 
     public:
         /*! \brief Create a new codeseg
@@ -108,6 +120,8 @@ namespace eka2l1::kernel {
         virtual ~codeseg() {}
 
         void queries_call_list(std::vector<std::uint32_t> &call_list);
+        bool attach(kernel::process *new_foe);
+        bool detatch(kernel::process *de_foe);
 
         /*! \brief Add new dependency.
         */
@@ -115,7 +129,8 @@ namespace eka2l1::kernel {
 
         /*! \brief Lookup for export.
         */
-        address lookup(const std::uint32_t ord);
+        address lookup(kernel::process *pr, const std::uint32_t ord);
+        address lookup_no_relocate(const std::uint32_t ord);
 
         void set_full_path(const std::u16string &seg_full_path) {
             full_path = seg_full_path;
@@ -125,13 +140,8 @@ namespace eka2l1::kernel {
             return full_path;
         }
 
-        address get_code_run_addr() const {
-            return code_addr;
-        }
-
-        address get_data_run_addr() const {
-            return data_addr;
-        }
+        address get_code_run_addr(kernel::process *pr, std::uint8_t **base = nullptr);
+        address get_data_run_addr(kernel::process *pr, std::uint8_t **base = nullptr);
 
         std::uint32_t get_bss_size() const {
             return bss_size;
@@ -145,24 +155,21 @@ namespace eka2l1::kernel {
             return data_size;
         }
 
-        std::uint32_t get_exception_descriptor() const {
-            return exception_descriptor;
-        }
-
-        address get_entry_point() {
-            return ep;
-        }
+        std::uint32_t get_exception_descriptor(kernel::process *pr);
+        address get_entry_point(kernel::process *pr);
 
         epoc::security_info &get_sec_info() {
             return sinfo;
+        }
+
+        std::uint32_t export_count() const {
+            return static_cast<std::uint32_t>(export_table.size());
         }
 
         std::tuple<std::uint32_t, std::uint32_t, std::uint32_t> get_uids() {
             return std::make_tuple(uids[0], uids[1], uids[2]);
         }
 
-        std::vector<std::uint32_t> &get_export_table() {
-            return export_table;
-        }
+        std::vector<std::uint32_t> get_export_table(kernel::process *pr);
     };
 }

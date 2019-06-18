@@ -128,14 +128,14 @@ namespace eka2l1 {
              * 
              * Else it will just load E32 Image or a ROM image and returns a codeseg
             */
-            codeseg_ptr load(const std::u16string &name);
+            codeseg_ptr load(const std::u16string &name, kernel::process *pr);
 
             // Search through all drives, which will parse all existing file
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
             try_search_and_parse(const std::u16string &path);
 
-            codeseg_ptr load_as_e32img(loader::e32img &img, const std::u16string &path = u"");
-            codeseg_ptr load_as_romimg(loader::romimg &img, const std::u16string &path = u"");
+            codeseg_ptr load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path = u"");
+            codeseg_ptr load_as_romimg(loader::romimg &img, kernel::process *pr, const std::u16string &path = u"");
 
             std::optional<std::string> get_symbol(const address addr) {
                 auto res = addr_symbols.find(addr);

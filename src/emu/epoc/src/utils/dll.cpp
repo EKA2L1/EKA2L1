@@ -33,9 +33,10 @@
 namespace eka2l1::epoc {
     std::optional<std::u16string> get_dll_full_path(eka2l1::system *sys, const std::uint32_t addr) {
         hle::lib_manager &mngr = *sys->get_lib_manager();
+        kernel::process *crr_process = sys->get_kernel_system()->crr_process();
 
         for (const auto &seg : sys->get_kernel_system()->get_codeseg_list()) {
-            if (seg && seg->get_entry_point() == addr) {
+            if (seg && seg->get_entry_point(crr_process) == addr) {
                 return seg->get_full_path();
             }
         }
@@ -45,10 +46,13 @@ namespace eka2l1::epoc {
 
     address get_exception_descriptor_addr(eka2l1::system *sys, address runtime_addr) {
         hle::lib_manager *manager = sys->get_lib_manager();
+        kernel::process *crr_process = sys->get_kernel_system()->crr_process();
 
         for (const auto &seg : sys->get_kernel_system()->get_codeseg_list()) {
-            if (seg->get_code_run_addr() <= runtime_addr && seg->get_code_run_addr() + seg->get_code_size() >= runtime_addr) {
-                return seg->get_exception_descriptor();
+            const address seg_code_addr = seg->get_code_run_addr(crr_process);
+
+            if (seg_code_addr <= runtime_addr && seg_code_addr + seg->get_code_size() >= runtime_addr) {
+                return seg->get_exception_descriptor(crr_process);
             }
         }
 
