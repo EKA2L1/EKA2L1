@@ -148,8 +148,7 @@ namespace eka2l1 {
     }
 
     // We can support also ELF!
-    process_ptr kernel_system::spawn_new_process(const std::u16string &path,
-        const std::u16string &cmd_arg, const kernel::uid promised_uid3,
+    process_ptr kernel_system::spawn_new_process(const std::u16string &path, const std::u16string &cmd_arg, const kernel::uid promised_uid3,
         const std::uint32_t stack_size) {
         auto imgs = libmngr->try_search_and_parse(path);
 
@@ -157,10 +156,22 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        codeseg_ptr cs = nullptr;
-
         std::string path8 = common::ucs2_to_utf8(path);
         std::string process_name = eka2l1::filename(path8);
+
+        /* Create process through kernel system. */
+        process_ptr pr = create<kernel::process>(mem, process_name, path, cmd_arg);
+
+        if (!pr) {
+            return false;
+        }
+
+        codeseg_ptr cs = nullptr;
+
+        std::uint32_t new_stack_size = (stack_size == 0) ? 0xFFFFFFFF : stack_size;
+        kernel::process_priority pri = kernel::process_priority::high;
+        std::uint32_t heap_min = 0;
+        std::uint32_t heap_max = 0;
 
         if (imgs.first) {
             auto &eimg = imgs.first;
@@ -170,47 +181,46 @@ namespace eka2l1 {
             }
 
             // Load and add to cache
-            if (!cs) {
-                cs = libmngr->load_as_e32img(*eimg, path);
+            if (stack_size == 0) {
+                new_stack_size = imgs.first->header.stack_size;
+            } else {
+                new_stack_size = std::min<std::uint32_t>(imgs.first->header.stack_size, stack_size);
             }
+            
+            pri = static_cast<kernel::process_priority>(imgs.first->header.priority);
+            heap_min = imgs.first->header.heap_size_min;
+            heap_max = imgs.first->header.heap_size_max;
 
-            /* Create process through kernel system. */
-            process_ptr pr = create<kernel::process>(
-                mem, eimg->header.uid3, process_name, path,
-                cmd_arg, cs, stack_size ? std::min(stack_size, eimg->header.stack_size) : eimg->header.stack_size,
-                eimg->header.heap_size_min, eimg->header.heap_size_max,
-                static_cast<kernel::process_priority>(eimg->header.priority));
-
-            if (pr) {
-                LOG_TRACE("Spawned process: {}", process_name);
-            }
-
-            return pr;
-        }
-
-        if (promised_uid3 != 0 && imgs.second->header.uid3 != promised_uid3) {
-            return nullptr;
+            cs = libmngr->load_as_e32img(*eimg, &(*pr), path);
         }
 
         // Rom image
+        if (!cs && imgs.second) {
+            if (promised_uid3 != 0 && imgs.second->header.uid3 != promised_uid3) {
+                return nullptr;
+            }
+
+            if (stack_size == 0) {
+                new_stack_size = imgs.second->header.stack_size;
+            } else {
+                new_stack_size = std::min<std::uint32_t>(imgs.second->header.stack_size, stack_size);
+            }
+
+            pri = static_cast<kernel::process_priority>(imgs.second->header.priority);
+            heap_min = imgs.second->header.heap_minimum_size;
+            heap_max = imgs.second->header.heap_maximum_size;
+
+            cs = libmngr->load_as_romimg(*imgs.second, &(*pr), path);
+        }
+
         if (!cs) {
-            cs = libmngr->load_as_romimg(*imgs.second, path);
+            destroy(pr);
+            return nullptr;
         }
 
-        auto &rimg = imgs.second;
+        LOG_TRACE("Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
 
-        /* Create process through kernel system. */
-        process_ptr pr = create<kernel::process>(
-            mem, rimg->header.uid3, process_name, path,
-            cmd_arg, cs,
-            stack_size ? std::min(stack_size, static_cast<std::uint32_t>(rimg->header.stack_size)) : static_cast<std::uint32_t>(rimg->header.stack_size),
-            rimg->header.heap_minimum_size, rimg->header.heap_maximum_size,
-            static_cast<kernel::process_priority>(rimg->header.priority));
-
-        if (pr) {
-            LOG_TRACE("Spawned process: {}, entry point: 0x{:x}", process_name, rimg->header.entry_point);
-        }
-
+        pr->construct_with_codeseg(cs, new_stack_size, heap_min, heap_max, pri);
         return pr;
     }
 
@@ -389,13 +399,11 @@ namespace eka2l1 {
     void kernel_system::setup_new_process(process_ptr pr) {
         std::shared_ptr<eka2l1::posix_server> ps_srv = std::make_shared<eka2l1::posix_server>(sys, pr);
         add_custom_server(std::move(std::reinterpret_pointer_cast<service::server>(ps_srv)));
-
-        pr->primary_thread->owning_process(&(*pr));
     }
 
     codeseg_ptr kernel_system::pull_codeseg_by_ep(const address ep) {
         auto res = std::find_if(codesegs.begin(), codesegs.end(), [=](const auto &cs) -> bool {
-            return cs->get_entry_point() == ep;
+            return cs->get_entry_point(nullptr) == ep;
         });
 
         if (res == codesegs.end()) {
