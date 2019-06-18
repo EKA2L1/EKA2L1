@@ -52,5 +52,8 @@ namespace eka2l1::mem {
         std::size_t size;
         std::uint32_t flags;
         prot perm;
+        
+        // Use non-zero value to force the address. Use at your own risk, since this is not checked for overlapping.
+        vm_address addr { 0 };      
     };
 }

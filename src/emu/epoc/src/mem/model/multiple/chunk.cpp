@@ -216,7 +216,8 @@ namespace eka2l1::mem {
         const std::size_t size_pages = num_pages << mmu_->page_size_bits_;
 
         // Allocate space that hasn't been allocated yet
-        const int off = page_bma_->allocate_from(0, static_cast<int>(num_pages), true);
+        int num_pages_i = static_cast<int>(num_pages);
+        const int off = page_bma_->allocate_from(0, num_pages_i, true);
 
         if (off == -1) {
             return false;
@@ -304,14 +305,26 @@ namespace eka2l1::mem {
         max_size_ = total_pt << mmu_->chunk_shift_;
 
         // Allocate virtual pages
-        const int offset = chunk_sec->alloc_.allocate_from(0, 
-            static_cast<int>(total_pt << mmu_->page_per_tab_shift_), false);
+        vm_address addr = create_info.addr;
 
-        if (offset == -1) {
-            return MEM_MODEL_CHUNK_ERR_NO_MEM;
+        if (addr == 0) {
+            int max_page = total_pt << mmu_->page_per_tab_shift_;
+            const int offset = chunk_sec->alloc_.allocate_from(0, max_page, false);
+
+            if (offset == -1) {
+                return MEM_MODEL_CHUNK_ERR_NO_MEM;
+            }
+
+            addr = (offset << mmu_->page_size_bits_) + chunk_sec->beg_;
+            max_size_ = static_cast<std::size_t>(max_page) << mmu_->page_size_bits_;
+        } else {
+            // Mark those as allocated
+            max_size_ = chunk_sec->alloc_.force_fill((addr - chunk_sec->beg_) >> mmu_->page_size_bits_, 
+                static_cast<int>(total_pt << mmu_->page_per_tab_shift_), false);
+
+            max_size_ <<= mmu_->page_size_bits_;
         }
 
-        const vm_address addr = (offset << mmu_->page_size_bits_) + chunk_sec->beg_;
         base_ = addr;
         committed_ = 0;
 

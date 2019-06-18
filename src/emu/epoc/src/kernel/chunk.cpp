@@ -34,8 +34,8 @@
 namespace eka2l1 {
     namespace kernel {
         chunk::chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name,
-            address bottom, const address top, const size_t max_size, prot protection,
-            chunk_type type, chunk_access chnk_access, chunk_attrib attrib, const bool is_heap)
+            address bottom, const address top, const size_t max_size, prot protection, chunk_type type, chunk_access chnk_access,
+            chunk_attrib attrib, const bool is_heap, const address force_addr)
             : kernel_obj(kern, name, access_type::local_access)
             , mem(mem)
             , own_process(own_process)
@@ -90,6 +90,7 @@ namespace eka2l1 {
                 break;
             }
 
+            create_info.addr = force_addr;
             mmc_impl_ = nullptr;
 
             if (own_process) {
