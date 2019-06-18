@@ -117,12 +117,6 @@ void do_quit() {
 }
 
 void run() {
-    hle::lib_manager *libmngr = symsys->get_lib_manager();
-
-    for (auto &module: conf.force_load_modules) {
-        libmngr->load(common::utf8_to_ucs2(module));
-    }
-    
     while (!should_quit && !symsys->should_exit()) {
         try {
             symsys->loop();
