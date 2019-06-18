@@ -125,10 +125,10 @@ namespace eka2l1::common {
         }
     }
     
-    void bitmap_allocator::force_fill(const std::uint32_t offset, const int size, const bool or_mode) {
+    int bitmap_allocator::force_fill(const std::uint32_t offset, const int size, const bool or_mode) {
         std::uint32_t *word = &words_[0] + (offset >> 5);
         const std::uint32_t set_bit = offset & 31;
-        int end_bit = static_cast<std::uint32_t>(set_bit + size);
+        int end_bit = static_cast<int>(set_bit + size);
 
         std::uint32_t wval = *word;
 
@@ -142,13 +142,13 @@ namespace eka2l1::common {
                 *word = wval & (~mask);
             }
 
-            return;
+            return std::min<int>(size, static_cast<int>((words_.size() << 5) - set_bit));
         }
 
         // All the bits trails across some other words
         std::uint32_t mask = 0xFFFFFFFFU >> set_bit;
 
-        while (end_bit > 0) {
+        while (end_bit > 0 && word != words_.data() + words_.size()) {
             wval = *word;
 
             if (or_mode) {
@@ -168,6 +168,8 @@ namespace eka2l1::common {
                 mask = ~(mask >> static_cast<std::uint32_t>(end_bit));
             }
         }
+
+        return std::min<int>(size, static_cast<int>((words_.size() << 5) - set_bit));
     }
 
     void bitmap_allocator::free(const std::uint32_t offset, const int size) {
@@ -179,7 +181,7 @@ namespace eka2l1::common {
 #ifdef _MSC_VER
 #pragma optimize("", off)
 #endif
-    int bitmap_allocator::allocate_from(const std::uint32_t start_offset, const int size, const bool best_fit) {
+    int bitmap_allocator::allocate_from(const std::uint32_t start_offset, int &size, const bool best_fit) {
         std::uint32_t *word = &words_[0] + (start_offset << 5);
 
         // We have arrived at le word that still have free position (bit 1)
@@ -224,7 +226,7 @@ namespace eka2l1::common {
                             if (!best_fit) {
                                 // Force allocate and then return
                                 const int offset = static_cast<int>(31 - boff + ((bword - &words_[0]) << 5));
-                                force_fill(static_cast<const std::uint32_t>(offset), size, false);
+                                size = force_fill(static_cast<const std::uint32_t>(offset), size, false);
 
                                 return offset;
                             } else {
@@ -248,7 +250,7 @@ namespace eka2l1::common {
         if (best_fit && bofmin) {
             // Force allocate and then return
             const int offset = static_cast<int>(31 - bofmin + ((wordmin - &words_[0]) << 5));
-            force_fill(static_cast<std::uint32_t>(offset), size, false);
+            size = force_fill(static_cast<std::uint32_t>(offset), size, false);
 
             return offset;
         }
