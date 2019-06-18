@@ -154,6 +154,26 @@ namespace eka2l1 {
             target.insert(target.end(), to_append.begin(), to_append.end());
         }
 
+        template <typename C>
+        typename C::value_type *find_and_ret(C &container, typename C::value_type &value) {
+            auto result = std::find(container.begin(), container.end(), value);
+            if (result == container.end()) {
+                return nullptr;
+            }
+
+            return &(*result);
+        }
+
+        template <typename C, typename F>
+        typename C::value_type *find_and_ret_if(C &container, F if_func) {
+            auto result = std::find_if(container.begin(), container.end(), if_func);
+            if (result == container.end()) {
+                return nullptr;
+            }
+
+            return &(*result);
+        }
+
         /**
          * \brief Choose the greater variable 
          *
