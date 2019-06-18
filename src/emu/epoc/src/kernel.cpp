@@ -163,7 +163,7 @@ namespace eka2l1 {
         process_ptr pr = create<kernel::process>(mem, process_name, path, cmd_arg);
 
         if (!pr) {
-            return false;
+            return nullptr;
         }
 
         codeseg_ptr cs = nullptr;
