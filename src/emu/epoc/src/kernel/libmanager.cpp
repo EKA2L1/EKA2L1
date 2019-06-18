@@ -566,7 +566,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool lib_manager::register_exports(const std::string &lib_name, export_table &table) {
+        bool lib_manager::register_exports(const std::string &lib_name, export_table table) {
             std::string lib_name_lower = common::lowercase_string(lib_name);
             auto lib_ite = lib_symbols.find(lib_name_lower);
             if (lib_ite != lib_symbols.end()) {

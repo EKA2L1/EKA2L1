@@ -103,7 +103,7 @@ namespace eka2l1 {
 
             lib_manager(){};
 
-            bool register_exports(const std::string &lib_name, export_table &table);
+            bool register_exports(const std::string &lib_name, export_table table);
 
             /*! \brief Intialize the library manager. 
 			 * \param ver The EPOC version to import HLE functions.
