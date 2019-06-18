@@ -37,7 +37,14 @@ namespace eka2l1::kernel {
     using uid = std::uint32_t;
 }
 
+namespace eka2l1::service {
+    class property;
+}
+
 namespace eka2l1 {
+    static constexpr std::uint32_t FS_UID = 0x100039E3;
+    static constexpr std::uint32_t SYSTEM_DRIVE_KEY = 0x10283049;
+    
     class io_system;
 
     struct file;
@@ -183,6 +190,7 @@ namespace eka2l1 {
 
     class fs_server : public service::server {
         std::unordered_map<kernel::uid, fs_server_client_ptr> clients;
+        service::property *system_drive_prop;
 
         void connect(service::ipc_context &ctx) override;
         void disconnect(service::ipc_context &ctx) override;
