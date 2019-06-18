@@ -31,7 +31,11 @@ namespace eka2l1 {
 #endif
 
         // VS2017 bug: https://stackoverflow.com/questions/32055357/visual-studio-c-2015-stdcodecvt-with-char16-t-or-char32-t
-        std::string ucs2_to_utf8(std::u16string str) {
+        std::string ucs2_to_utf8(const std::u16string &str) {
+            if (str.empty()) {
+                return "";
+            }
+
             std::wstring_convert<std::codecvt_utf8_utf16<char_ucs2>, char_ucs2> convert;
             auto p = reinterpret_cast<const char_ucs2 *>(str.data());
 
@@ -39,6 +43,10 @@ namespace eka2l1 {
         }
 
         std::u16string utf8_to_ucs2(const std::string &str) {
+            if (str.empty()) {
+                return u"";
+            }
+
             std::wstring_convert<std::codecvt_utf8_utf16<char_ucs2>, char_ucs2> converter;
             auto wstr = converter.from_bytes(str);
 
