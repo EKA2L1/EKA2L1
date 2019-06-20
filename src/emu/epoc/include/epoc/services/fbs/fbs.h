@@ -142,6 +142,8 @@ namespace eka2l1 {
         service::uid connection_id_ {0};
         fbs_dirty_notify_request *nof_;
 
+        bool support_dirty_bitmap { true };
+
         explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id)
             : service::typical_session(serv, ss_id)
             , nof_(nullptr) {
@@ -157,6 +159,7 @@ namespace eka2l1 {
         void create_bitmap(service::ipc_context *ctx);
         void notify_dirty_bitmap(service::ipc_context *ctx);
         void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
+        void get_clean_bitmap(service::ipc_context *ctx);
         
         void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
@@ -186,14 +189,17 @@ namespace eka2l1 {
     struct fbsbitmap: public fbsobj {
         epoc::bitwise_bitmap *bitmap_;
         fbs_server *serv_;
-
         bool shared_ { false };
+        fbsbitmap *clean_bitmap;
+        bool support_dirty_bitmap;
 
-        explicit fbsbitmap(fbs_server *srv, epoc::bitwise_bitmap *bitmap, const bool shared)
+        explicit fbsbitmap(fbs_server *srv, epoc::bitwise_bitmap *bitmap, const bool shared, const bool support_dirty_bitmap)
             : fbsobj(fbsobj_kind::bitmap)
             , bitmap_(bitmap)
             , serv_(srv)
-            , shared_(shared) {
+            , shared_(shared)
+            , clean_bitmap(nullptr)
+            , support_dirty_bitmap(support_dirty_bitmap) {
         }
 
         ~fbsbitmap();
@@ -292,14 +298,15 @@ namespace eka2l1 {
         /**
          * \brief  Create a new empty bitmap.
          * 
-         * \param  size Size of the bitmap, in pixels.
-         * \param  dpm  Bit per pixels as display mode.
+         * \param  size           Size of the bitmap, in pixels.
+         * \param  dpm            Bit per pixels as display mode.
+         * \param  support_dirty  True if this bitmap supports clean variant. For backwards compability.
          * 
          * \returns Bitmap object. The ID of bitmap is the server handle.
          * 
          * \see    free_bitmap
          */
-        fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm);
+        fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool support_dirty = true);
         
         /**
          * \brief   Free a bitmap object.

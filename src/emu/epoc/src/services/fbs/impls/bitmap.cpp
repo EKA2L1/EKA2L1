@@ -339,7 +339,7 @@ namespace eka2l1 {
             bws_bmp->settings_.initial_display_mode(dpm);
             bws_bmp->settings_.current_display_mode(dpm);
 
-            bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share));
+            bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share), support_dirty_bitmap);
         }
 
         if (load_options->share) {
@@ -374,7 +374,7 @@ namespace eka2l1 {
         return get_byte_width(size.x, get_bpp_from_display_mode(bpp)) * size.y;
     }
 
-    fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm) {
+    fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool support_dirty) {
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
         bws_bmp->header_.size_pixels = size;
         bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(dpm);
@@ -399,7 +399,7 @@ namespace eka2l1 {
             bws_bmp->data_offset_ = static_cast<int>(reinterpret_cast<std::uint8_t*>(data) - base_large_chunk);
         }
 
-        fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false);
+        fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty);
         return bmp;
     }
 
@@ -486,6 +486,33 @@ namespace eka2l1 {
         }
 
         nof_ = nullptr;
+        ctx->set_request_status(KErrNone);
+    }
+
+    void fbscli::get_clean_bitmap(service::ipc_context *ctx) {
+        const epoc::handle bmp_handle = static_cast<epoc::handle>(*(ctx->get_arg<int>(0)));
+        fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
+
+        if (!bmp) {
+            ctx->set_request_status(KErrBadHandle);
+            return;
+        }
+
+        while (bmp->clean_bitmap != nullptr) {
+            bmp = bmp->clean_bitmap;
+        }
+
+        // Close the old handle
+        obj_table_.remove(bmp_handle);
+
+        bmp_handles handle_info;
+        
+        // Get the clean bitmap handle!
+        handle_info.handle = obj_table_.add(bmp);
+        handle_info.server_handle = bmp->id;
+        handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+
+        ctx->write_arg_pkg(1, handle_info);
         ctx->set_request_status(KErrNone);
     }
 }
