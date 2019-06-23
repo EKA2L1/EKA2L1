@@ -312,7 +312,10 @@ namespace eka2l1 {
                         set_pc(last_breakpoint.address);
                     } else {
                         // Increase the PC a little bit, so GDB won't loop
-                        set_pc(get_pc() + (is_thumb_mode() ? 3 : 4));
+                        // When we stop because of read/write hook, the PC hasn't got updated yet.
+                        // Example, when read occurs in 0x4, the PC is in 0x0. The read already finished in this case.
+                        // We would like to increase our PC to next instruction, 0x8
+                        set_pc(get_pc() + (is_thumb_mode() ? 5 : 8));
                     }
 
                     kernel::thread *crr_thread = kern->crr_thread();
