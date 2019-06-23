@@ -111,7 +111,7 @@ namespace eka2l1::mem {
 
             if (ptid == 0xFFFFFFFF) {
                 // Assign the new page table to the specified address
-                mmu_->assign_page_table(pt, (ps_off << mmu_->page_size_bits_) + base_ + pt_base, !is_local ? MMU_ASSIGN_LOCAL_GLOBAL_REGION : 0,
+                mmu_->assign_page_table(pt, base_ + pt_base, !is_local ? MMU_ASSIGN_LOCAL_GLOBAL_REGION : 0,
                     is_local ? &own_process_->addr_space_id_ : nullptr, is_local ? 1 : 0);
 
                 page_tabs_[running_offset >> mmu_->chunk_shift_] = pt->id();
@@ -188,6 +188,7 @@ namespace eka2l1::mem {
 
             // Unmap the rest
             if (size_just_unmapped != 0 && (!own_process_ || own_process_->addr_space_id_ == mmu_->current_addr_space())) {
+                //LOG_TRACE("Unmapped from CPU: 0x{:X}, size 0x{:X}", off_start_just_unmapped, size_just_unmapped);
                 mmu_->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
             }
             
