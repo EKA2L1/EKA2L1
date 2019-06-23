@@ -161,7 +161,7 @@ namespace eka2l1::kernel {
     
     address codeseg::get_data_run_addr(kernel::process *pr, std::uint8_t **base) {
         if (data_addr != 0) {
-            return data_addr;
+            return data_base;
         }
 
         // Find our stuffs

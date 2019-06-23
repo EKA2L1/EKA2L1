@@ -49,7 +49,7 @@ namespace eka2l1 {
 
     bool memory_system::map_rom(mem::vm_address addr, const std::string &path) {
         rom_addr_ = addr;
-        rom_map_ = common::map_file(path);
+        rom_map_ = common::map_file(path, prot::read_write, 0, true);
         rom_size_ = common::file_size(path);
 
         LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map_));
