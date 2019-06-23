@@ -320,7 +320,7 @@ namespace eka2l1 {
 
         if (type == breakpoint_type::Execute) {
             sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), static_cast<std::uint32_t>(
-                bp->second.inst.size()));
+                bp->second.len));
             sys->get_cpu()->clear_instruction_cache();
         }
 
@@ -730,6 +730,11 @@ namespace eka2l1 {
         start_offset = addr_pos + 1;
         std::uint32_t len = hex_to_int(start_offset, static_cast<std::uint32_t>((command_buffer + command_length) - start_offset));
 
+        if (addr < 0x400000) {
+            codeseg_ptr process_codeseg = current_thread->owning_process()->get_codeseg();
+            addr += process_codeseg->get_data_run_addr(current_thread->owning_process());
+        }
+
         LOG_DEBUG("gdb: addr: {:08x} len: {:08x}", addr, len);
 
         if (len * 2 > sizeof(reply)) {
@@ -756,15 +761,18 @@ namespace eka2l1 {
         auto len_pos = std::find(start_offset, command_buffer + command_length, ':');
         std::uint32_t len = hex_to_int(start_offset, static_cast<std::uint32_t>(len_pos - start_offset));
 
-        if (!sys->get_memory_system()->get_real_pointer(addr)) {
-            return send_reply("E00");
+        if (addr < 0x400000) {
+            codeseg_ptr process_codeseg = current_thread->owning_process()->get_codeseg();
+            addr += process_codeseg->get_data_run_addr(current_thread->owning_process());
         }
 
         std::vector<std::uint8_t> data(len);
 
         gdb_hex_to_mem(data.data(), len_pos + 1, len);
-        sys->get_memory_system()->write(addr, &data[0], len);
-        // TODO: Clear instruction cache
+
+        if (!sys->get_memory_system()->write(addr, &data[0], len)) {
+            return send_reply("E00");
+        }
 
         send_reply("OK");
     }
@@ -820,12 +828,13 @@ namespace eka2l1 {
         br.len = static_cast<std::uint32_t>(len);
 
         if (type == breakpoint_type::Execute) {
-            sys->get_memory_system()->read(addr, &br.inst[0], static_cast<std::uint32_t>(br.inst.size()));
-            static std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xe1 };
-            sys->get_memory_system()->write(addr, &(btrap[0]), static_cast<std::uint32_t>(btrap.size()));
+            sys->get_memory_system()->read(addr, &br.inst[0], len);
+            static std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xE1 };
+            static std::array<std::uint8_t, 2> btrap_thumb{ 0x00, 0xBE };
+            sys->get_memory_system()->write(addr, (len <= 2) ? &btrap_thumb[0] : &(btrap[0]), len);
+            sys->get_cpu()->clear_instruction_cache();
         }
 
-        // TODO: Clear instructions cache
         p.insert({ addr, br });
 
         LOG_DEBUG("gdb: added {} breakpoint: {:08x} bytes at {:08x}", static_cast<int>(type), br.len, br.addr);
