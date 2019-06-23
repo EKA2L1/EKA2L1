@@ -82,12 +82,18 @@ namespace eka2l1::common {
     int get_host_page_size();
 
     /**
-     * \brief Map a file to memory with read-only attribute.
+     * \brief Map a file to memory.
+     * 
+     * \param file_name The name of the file.
+     * \param perm The permission of mapped pages.
+     * \param size Total size of the file to be mapped. Use 0 to map the whole file.
+     * \param is_private Use this so any write to the mapped regions are abadoned when the mapped file close.
+     *                   On Linux this is always private.
      *
      * \returns A valid pointer to the mapped region on success.
     */
-    void *map_file(const std::string &file_name, const prot perm = prot::read,
-        const std::size_t size = 0);
+    void *map_file(const std::string &file_name, const prot perm = prot::read, const std::size_t size = 0,
+        const bool is_private = false);
 
     /**
      * \brief Unmap a file mapped to memory

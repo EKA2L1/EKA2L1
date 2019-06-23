@@ -131,7 +131,7 @@ namespace eka2l1::common {
 #endif
     }
 
-    void *map_file(const std::string &file_name, const prot perm, const std::size_t size) {
+    void *map_file(const std::string &file_name, const prot perm, const std::size_t size, const bool is_private) {
 #if EKA2L1_PLATFORM(WIN32)
         DWORD desired_access = 0;
         DWORD share_mode = 0;
@@ -154,7 +154,7 @@ namespace eka2l1::common {
             desired_access = GENERIC_WRITE;
             share_mode = FILE_SHARE_WRITE;
             page_type = PAGE_READWRITE;
-            open_type = CREATE_ALWAYS;
+            open_type = OPEN_ALWAYS;
             map_type = FILE_MAP_WRITE;
 
             break;
@@ -164,7 +164,7 @@ namespace eka2l1::common {
             desired_access = GENERIC_WRITE | GENERIC_READ;
             share_mode = FILE_SHARE_WRITE | FILE_SHARE_READ;
             page_type = PAGE_READWRITE;
-            open_type = CREATE_ALWAYS;
+            open_type = OPEN_ALWAYS;
             map_type = FILE_MAP_WRITE | FILE_MAP_READ;
 
             break;
@@ -175,6 +175,11 @@ namespace eka2l1::common {
         }
         }
 
+        if (is_private) {
+            map_type = FILE_MAP_COPY;
+        }
+
+
         HANDLE file_handle = CreateFileA(file_name.c_str(), desired_access, share_mode,
             NULL, open_type, NULL, NULL);
 
@@ -182,15 +187,22 @@ namespace eka2l1::common {
             return false;
         }
 
+        std::size_t map_size = size;
+        if (map_size == 0) {
+            DWORD size_high = 0;
+            DWORD size_low = GetFileSize(file_handle, &size_high);
+
+            map_size = (static_cast<std::size_t>(size_high) << 32) | size_low;
+        }
+
         HANDLE map_file_handle = CreateFileMappingA(file_handle, NULL, page_type,
-            size >> 32, static_cast<DWORD>(size), file_name.c_str());
+            map_size >> 32, static_cast<DWORD>(map_size), file_name.c_str());
 
         if (!map_file_handle || map_file_handle == INVALID_HANDLE_VALUE) {
             return false;
         }
 
-        auto map_ptr = MapViewOfFile(map_file_handle, map_type,
-            0, 0, 0);
+        auto map_ptr = MapViewOfFile(map_file_handle, map_type, 0, 0, 0);
 #else
         int open_mode = 0;
         const int prot_mode = translate_protection(perm);
@@ -231,8 +243,7 @@ namespace eka2l1::common {
             map_size = file_stat.st_size;
         }
 
-        auto map_ptr = mmap(nullptr, map_size, prot_mode, MAP_PRIVATE,
-            file_handle, 0);
+        auto map_ptr = mmap(nullptr, map_size, prot_mode, MAP_PRIVATE, file_handle, 0);
 #endif
 
         return map_ptr;
