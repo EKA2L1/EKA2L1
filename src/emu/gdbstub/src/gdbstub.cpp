@@ -22,7 +22,6 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel/process.h>
 #include <gdbstub/gdbstub.h>
-//#include "epoc/loader/loader.h"
 #include <epoc/kernel.h>
 #include <epoc/mem.h>
 
@@ -30,54 +29,53 @@ namespace eka2l1 {
     // For sample XML files see the GDB source /gdb/features
     // GDB also wants the l character at the start
     // This XML defines what the registers are for this specific ARM device
-
     constexpr char target_xml[] =
         R"(l<?xml version="1.0"?>
-        <!DOCTYPE target SYSTEM "gdb-target.dtd">
-        <target version="1.0">
-          <feature name="org.gnu.gdb.arm.core">
-            <reg name="r0" bitsize="32"/>
-            <reg name="r1" bitsize="32"/>
-            <reg name="r2" bitsize="32"/>
-            <reg name="r3" bitsize="32"/>
-            <reg name="r4" bitsize="32"/>
-            <reg name="r5" bitsize="32"/>
-            <reg name="r6" bitsize="32"/>
-            <reg name="r7" bitsize="32"/>
-            <reg name="r8" bitsize="32"/>
-            <reg name="r9" bitsize="32"/>
-            <reg name="r10" bitsize="32"/>
-            <reg name="r11" bitsize="32"/>
-            <reg name="r12" bitsize="32"/>
-            <reg name="sp" bitsize="32" type="data_ptr"/>
-            <reg name="lr" bitsize="32"/>
-            <reg name="pc" bitsize="32" type="code_ptr"/>
-            <!-- The CPSR is register 25, rather than register 16, because
-                 the FPA registers historically were placed between the PC
-                 and the CPSR in the "g" packet.  -->
-            <reg name="cpsr" bitsize="32" regnum="25"/>
-          </feature>
-          <feature name="org.gnu.gdb.arm.vfp">
-            <reg name="d0" bitsize="64" type="float"/>
-            <reg name="d1" bitsize="64" type="float"/>
-            <reg name="d2" bitsize="64" type="float"/>
-            <reg name="d3" bitsize="64" type="float"/>
-            <reg name="d4" bitsize="64" type="float"/>
-            <reg name="d5" bitsize="64" type="float"/>
-            <reg name="d6" bitsize="64" type="float"/>
-            <reg name="d7" bitsize="64" type="float"/>
-            <reg name="d8" bitsize="64" type="float"/>
-            <reg name="d9" bitsize="64" type="float"/>
-            <reg name="d10" bitsize="64" type="float"/>
-            <reg name="d11" bitsize="64" type="float"/>
-            <reg name="d12" bitsize="64" type="float"/>
-            <reg name="d13" bitsize="64" type="float"/>
-            <reg name="d14" bitsize="64" type="float"/>
-            <reg name="d15" bitsize="64" type="float"/>
-            <reg name="fpscr" bitsize="32" type="int" group="float"/>
-          </feature>
-        </target>
-        )";
+<!DOCTYPE target SYSTEM "gdb-target.dtd">
+<target version="1.0">
+    <feature name="org.gnu.gdb.arm.core">
+    <reg name="r0" bitsize="32"/>
+    <reg name="r1" bitsize="32"/>
+    <reg name="r2" bitsize="32"/>
+    <reg name="r3" bitsize="32"/>
+    <reg name="r4" bitsize="32"/>
+    <reg name="r5" bitsize="32"/>
+    <reg name="r6" bitsize="32"/>
+    <reg name="r7" bitsize="32"/>
+    <reg name="r8" bitsize="32"/>
+    <reg name="r9" bitsize="32"/>
+    <reg name="r10" bitsize="32"/>
+    <reg name="r11" bitsize="32"/>
+    <reg name="r12" bitsize="32"/>
+    <reg name="sp" bitsize="32" type="data_ptr"/>
+    <reg name="lr" bitsize="32"/>
+    <reg name="pc" bitsize="32" type="code_ptr"/>
+    <!-- The CPSR is register 25, rather than register 16, because
+            the FPA registers historically were placed between the PC
+            and the CPSR in the "g" packet.  -->
+    <reg name="cpsr" bitsize="32" regnum="25"/>
+    </feature>
+    <feature name="org.gnu.gdb.arm.vfp">
+    <reg name="d0" bitsize="64" type="float"/>
+    <reg name="d1" bitsize="64" type="float"/>
+    <reg name="d2" bitsize="64" type="float"/>
+    <reg name="d3" bitsize="64" type="float"/>
+    <reg name="d4" bitsize="64" type="float"/>
+    <reg name="d5" bitsize="64" type="float"/>
+    <reg name="d6" bitsize="64" type="float"/>
+    <reg name="d7" bitsize="64" type="float"/>
+    <reg name="d8" bitsize="64" type="float"/>
+    <reg name="d9" bitsize="64" type="float"/>
+    <reg name="d10" bitsize="64" type="float"/>
+    <reg name="d11" bitsize="64" type="float"/>
+    <reg name="d12" bitsize="64" type="float"/>
+    <reg name="d13" bitsize="64" type="float"/>
+    <reg name="d14" bitsize="64" type="float"/>
+    <reg name="d15" bitsize="64" type="float"/>
+    <reg name="fpscr" bitsize="32" type="int" group="float"/>
+    </feature>
+</target>
+)";
 
     static kernel::thread *find_thread_by_id(kernel_system *kern, const std::uint32_t id) {
         return &(*kern->get_by_id<kernel::thread>(id));
@@ -320,9 +318,11 @@ namespace eka2l1 {
         LOG_DEBUG("gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
             bp->second.len, bp->second.addr, static_cast<int>(type));
 
-        sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]),
-            static_cast<std::uint32_t>(bp->second.inst.size()));
-        // TODO: Clear instruction cache
+        if (type == breakpoint_type::Execute) {
+            sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), static_cast<std::uint32_t>(
+                bp->second.inst.size()));
+            sys->get_cpu()->clear_instruction_cache();
+        }
 
         p.erase(addr);
     }
@@ -458,12 +458,13 @@ namespace eka2l1 {
             std::string buffer;
             buffer += "l<?xml version=\"1.0\"?>";
             buffer += "<threads>";
-            /*
-            const auto &threads = Kernel::GetThreadList();
+            
+            const auto &threads = sys->get_kernel_system()->threads;
             for (const auto &thread : threads) {
-                buffer += fmt::format(R"*(<thread id="{:x}" name="Thread {:x}"></thread>)*",
-                    thread->GetThreadId(), thread->GetThreadId());
-            }*/
+                buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
+                    thread->unique_id(), thread->name());
+            }
+
             buffer += "</threads>";
             send_reply(buffer.c_str());
         } else {
@@ -523,9 +524,8 @@ namespace eka2l1 {
         std::string buffer;
         if (full) {
             buffer = fmt::format("T{:02x}{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", latest_signal,
-                PC_REGISTER, htonl(sys->get_cpu()->get_pc()), SP_REGISTER,
-                htonl(sys->get_cpu()->get_sp()), LR_REGISTER,
-                htonl(sys->get_cpu()->get_lr()));
+                PC_REGISTER, htonl(sys->get_cpu()->get_pc()), SP_REGISTER, htonl(sys->get_cpu()->get_sp()),
+                LR_REGISTER, htonl(sys->get_cpu()->get_lr()));
         } else {
             buffer = fmt::format("T{:02x}", latest_signal);
         }
@@ -736,12 +736,10 @@ namespace eka2l1 {
             send_reply("E01");
         }
 
-        if (!sys->get_memory_system()->get_real_pointer(addr)) {
+        std::vector<std::uint8_t> data(len);
+        if (!sys->get_memory_system()->read(addr, &data[0], len)) {
             return send_reply("E00");
         }
-
-        std::vector<std::uint8_t> data(len);
-        sys->get_memory_system()->read(addr, &data[0], len);
 
         mem_to_gdb_hex(reply, data.data(), len);
         reply[len * 2] = '\0';
@@ -821,18 +819,16 @@ namespace eka2l1 {
         br.addr = addr;
         br.len = static_cast<std::uint32_t>(len);
 
-        sys->get_memory_system()->read(addr, &br.inst[0],
-            static_cast<std::uint32_t>(br.inst.size()));
-
-        std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xe1 };
-        sys->get_memory_system()->write(addr, &(btrap[0]),
-            static_cast<std::uint32_t>(btrap.size()));
+        if (type == breakpoint_type::Execute) {
+            sys->get_memory_system()->read(addr, &br.inst[0], static_cast<std::uint32_t>(br.inst.size()));
+            static std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xe1 };
+            sys->get_memory_system()->write(addr, &(btrap[0]), static_cast<std::uint32_t>(btrap.size()));
+        }
 
         // TODO: Clear instructions cache
         p.insert({ addr, br });
 
-        LOG_DEBUG("gdb: added {} breakpoint: {:08x} bytes at {:08x}",
-            static_cast<int>(type), br.len, br.addr);
+        LOG_DEBUG("gdb: added {} breakpoint: {:08x} bytes at {:08x}", static_cast<int>(type), br.len, br.addr);
 
         return true;
     }

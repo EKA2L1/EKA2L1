@@ -57,7 +57,7 @@ namespace eka2l1 {
             manager_system *mngr;
 
             breakpoint_address last_breakpoint;
-            bool last_breakpoint_hit;
+            bool last_breakpoint_hit { false };
 
         public:
             manager::config_state *conf;

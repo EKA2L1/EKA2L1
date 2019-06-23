@@ -127,7 +127,7 @@ namespace eka2l1 {
     class kernel_system {
         friend class debugger_base;
         friend class imgui_debugger;
-
+        friend class gdbstub;
         friend class kernel::process;
 
         /* Kernel objects map */

@@ -47,7 +47,7 @@
 
 bool noppify_func = false;
 
-bool thumb_mode(uc_engine *uc) {
+static bool thumb_mode(uc_engine *uc) {
     size_t mode = 0;
     auto err = uc_query(uc, UC_QUERY_MODE, &mode);
 
@@ -59,7 +59,24 @@ bool thumb_mode(uc_engine *uc) {
     return mode & UC_MODE_THUMB;
 }
 
-void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
+static bool break_for(eka2l1::arm::arm_unicorn *jit, uc_engine *uc, const eka2l1::address address, const eka2l1::breakpoint_type bt) {
+    eka2l1::gdbstub *stub = jit->get_gdb_stub();
+
+    if (stub) {
+        eka2l1::breakpoint_address bkpt = stub->get_next_breakpoint_from_addr(address, bt);
+
+        if (stub->is_memory_break() || (bkpt.type != eka2l1::breakpoint_type::None && address == bkpt.address)) {
+            jit->record_break(bkpt);
+            uc_emu_stop(uc);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
     if (jit && jit->conf->log_read) {   
@@ -68,17 +85,21 @@ void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int6
 
         LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);   
     }
+    
+    break_for(jit, uc, address, eka2l1::breakpoint_type::Read);
 }
 
-void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
+static void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
     if (jit && jit->conf->log_write) {
         LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
     }
+    
+    break_for(jit, uc, address, eka2l1::breakpoint_type::Write);
 }
 
-void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
+static void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
     if (jit == nullptr) {
@@ -113,24 +134,12 @@ void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user_data) 
         LOG_TRACE("{:#08x} {} 0x{:x}", address, disassembly, thumb ? *(uint16_t *)code : *(uint32_t *)code);
     }
 
-    eka2l1::gdbstub *stub = jit->get_gdb_stub();
-
-    if (stub) {
-        eka2l1::breakpoint_address bkpt = stub->get_next_breakpoint_from_addr(
-            address, eka2l1::breakpoint_type::Execute);
-
-        if (stub->is_memory_break() && bkpt.type != eka2l1::breakpoint_type::None
-            && address == bkpt.address) {
-            jit->record_break(bkpt);
-            uc_emu_stop(uc);
-        }
-    }
-
+    break_for(jit, uc, address, eka2l1::breakpoint_type::Execute);
     jit->num_insts_runned++;
 }
 
 // Read the symbol and redirect to HLE function
-void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
+static void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
     if (jit == nullptr) {
@@ -138,27 +147,36 @@ void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
         return;
     }
 
-    uint32_t imm = 0;
+    switch (int_no) {
+    case 2: {
+        uint32_t imm = 0;
+        bool thumb = thumb_mode(uc);
 
-    bool thumb = thumb_mode(uc);
+        if (thumb) {
+            uint16_t svc_inst = 0;
 
-    if (thumb) {
-        uint16_t svc_inst = 0;
+            address svca = jit->get_pc() - 2;
+            uc_mem_read(uc, svca, &svc_inst, 2);
+            imm = svc_inst & 0xff;
+        } else {
+            uint32_t svc_inst = 0;
 
-        address svca = jit->get_pc() - 2;
-        uc_mem_read(uc, svca, &svc_inst, 2);
-        imm = svc_inst & 0xff;
-    } else {
-        uint32_t svc_inst = 0;
+            address svca = jit->get_pc() - 4;
+            uc_mem_read(uc, svca, &svc_inst, 4);
+            imm = svc_inst & 0xffffff;
+        }
 
-        address svca = jit->get_pc() - 4;
-        uc_mem_read(uc, svca, &svc_inst, 4);
-        imm = svc_inst & 0xffffff;
+        if (!jit->get_lib_manager()->call_svc(imm)) {
+            LOG_WARN("Unimplement SVC call: 0x{:x}", imm);
+        }
+
+        break;
     }
 
-    if (!jit->get_lib_manager()->call_svc(imm)) {
-        LOG_WARN("Unimplement SVC call: 0x{:x}", imm);
+    default:
+        break;
     }
+    
 }
 
 namespace eka2l1 {
@@ -290,14 +308,17 @@ namespace eka2l1 {
                 num_insts_runned = 0;
 
                 if (stub && stub->is_server_enabled()) {
-                    if (last_breakpoint_hit) {
+                    if (last_breakpoint_hit && last_breakpoint.type == breakpoint_type::Execute) {
                         set_pc(last_breakpoint.address);
+                    } else {
+                        // Increase the PC a little bit, so GDB won't loop
+                        set_pc(get_pc() + (is_thumb_mode() ? 3 : 4));
                     }
 
                     kernel::thread *crr_thread = kern->crr_thread();
                     save_context(crr_thread->get_thread_context());
 
-                    if (last_breakpoint_hit && stub->get_cpu_step_flag()) {
+                    if (last_breakpoint_hit || stub->is_memory_break() || stub->get_cpu_step_flag()) {
                         last_breakpoint_hit = false;
 
                         stub->break_exec();
