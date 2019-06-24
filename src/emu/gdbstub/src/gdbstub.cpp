@@ -442,7 +442,7 @@ namespace eka2l1 {
             send_reply("T0");
         } else if (strncmp(query, "Supported", strlen("Supported")) == 0) {
             // PacketSize needs to be large enough for target xml
-            send_reply("PacketSize=2000;qXfer:features:read+;qXfer:threads:read+");
+            send_reply("PacketSize=2000;qXfer:features:read+;qXfer:threads:read+;qXfer:libraries:read+");
         } else if (strncmp(query, "Xfer:features:read:target.xml:",
                        strlen("Xfer:features:read:target.xml:"))
             == 0) {
@@ -510,7 +510,7 @@ namespace eka2l1 {
      *
      * @param signal Signal to be sent to client.
      */
-    void gdbstub::send_signal(kernel::thread *thread, std::uint32_t signal, bool full) {
+    void gdbstub::send_signal(kernel::thread *thread, std::uint32_t signal, bool full, const char *extra_pair) {
         if (gdbserver_socket == -1) {
             return;
         }
@@ -521,17 +521,21 @@ namespace eka2l1 {
             full = false;
         }
 
-        std::string buffer;
+        std::string buffer = fmt::format("T{:02x}", latest_signal);
+
+
         if (full) {
-            buffer = fmt::format("T{:02x}{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", latest_signal,
-                PC_REGISTER, htonl(sys->get_cpu()->get_pc()), SP_REGISTER, htonl(sys->get_cpu()->get_sp()),
+            buffer += fmt::format("{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", PC_REGISTER,
+                htonl(sys->get_cpu()->get_pc()), SP_REGISTER, htonl(sys->get_cpu()->get_sp()),
                 LR_REGISTER, htonl(sys->get_cpu()->get_lr()));
-        } else {
-            buffer = fmt::format("T{:02x}", latest_signal);
         }
 
         if (thread) {
             buffer += fmt::format(";thread:{:x};", thread->unique_id());
+        }
+
+        if (extra_pair) {
+            buffer += fmt::format("{};", extra_pair);
         }
 
         LOG_DEBUG("Response: {}", buffer);
@@ -1140,15 +1144,16 @@ namespace eka2l1 {
         step_loop = is_step;
     }
 
-    void gdbstub::send_trap_gdb(kernel::thread *thread, int trap) {
+    void gdbstub::send_trap_gdb(kernel::thread *thread, int trap, const char *extra_pair) {
         if (!send_trap) {
             return;
         }
 
         if (!halt_loop || current_thread == thread) {
             current_thread = thread;
-            send_signal(thread, trap);
+            send_signal(thread, trap, true, extra_pair);
         }
+
         halt_loop = true;
         send_trap = false;
     }

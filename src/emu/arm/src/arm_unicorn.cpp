@@ -67,8 +67,6 @@ static bool break_for(eka2l1::arm::arm_unicorn *jit, uc_engine *uc, const eka2l1
 
         if (stub->is_memory_break() || (bkpt.type != eka2l1::breakpoint_type::None && address == bkpt.address)) {
             jit->record_break(bkpt);
-            uc_emu_stop(uc);
-
             return true;
         }
     }
@@ -136,6 +134,11 @@ static void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user
 
     break_for(jit, uc, address, eka2l1::breakpoint_type::Execute);
     jit->num_insts_runned++;
+
+    if (jit->get_gdb_stub() && jit->did_last_breakpoint_hit()) {
+        uc_emu_stop(uc);
+        jit->set_breakpoint_hit_address(address);
+    }
 }
 
 // Read the symbol and redirect to HLE function
@@ -309,13 +312,9 @@ namespace eka2l1 {
 
                 if (stub && stub->is_server_enabled()) {
                     if (last_breakpoint_hit && last_breakpoint.type == breakpoint_type::Execute) {
-                        set_pc(last_breakpoint.address);
+                        set_pc(last_breakpoint.address + (is_thumb_mode() ? 1 : 0));
                     } else {
-                        // Increase the PC a little bit, so GDB won't loop
-                        // When we stop because of read/write hook, the PC hasn't got updated yet.
-                        // Example, when read occurs in 0x4, the PC is in 0x0. The read already finished in this case.
-                        // We would like to increase our PC to next instruction, 0x8
-                        set_pc(get_pc() + (is_thumb_mode() ? 5 : 8));
+                        set_pc(breakpoint_hit_addr + (is_thumb_mode() ? 1 : 0));
                     }
 
                     kernel::thread *crr_thread = kern->crr_thread();
@@ -325,7 +324,34 @@ namespace eka2l1 {
                         last_breakpoint_hit = false;
 
                         stub->break_exec();
-                        stub->send_trap_gdb(crr_thread, 5);
+
+                        std::string extra_pair = "";
+
+                        switch (last_breakpoint.type) {
+                        case breakpoint_type::Access: {
+                            extra_pair = "awatch:";
+                            break;
+                        }
+
+                        case breakpoint_type::Read: {
+                            extra_pair = "rwatch:";
+                            break;
+                        }
+
+                        case breakpoint_type::Write: {
+                            extra_pair = "watch:";
+                            break;
+                        }
+
+                        default:
+                            break;
+                        }
+
+                        if (!extra_pair.empty()) {
+                            extra_pair += fmt::format("{:x}", last_breakpoint.address);
+                        }
+
+                        stub->send_trap_gdb(crr_thread, 5, extra_pair.empty() ? nullptr : extra_pair.c_str());
                     }
                 }
             }
@@ -355,6 +381,23 @@ namespace eka2l1 {
         }
 
         uint32_t arm_unicorn::get_reg(size_t idx) {
+            switch (idx) {
+            case 13: {
+                return get_sp();
+            }
+
+            case 15: {
+                return get_pc();
+            }
+
+            case 14: {
+                return get_lr();
+            }
+
+            default:
+                break;
+            }
+
             uint32_t val = 0;
             auto treg = UC_ARM_REG_R0 + static_cast<uint8_t>(idx);
             auto err = uc_reg_read(engine, treg, &val);

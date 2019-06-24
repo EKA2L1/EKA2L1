@@ -137,7 +137,7 @@ namespace eka2l1 {
 
         void send_packet(const char packet);
         void send_reply(const char *reply);
-        void send_signal(kernel::thread *thread, std::uint32_t signal, bool full = true);
+        void send_signal(kernel::thread *thread, std::uint32_t signal, bool full = true, const char *extra_pair = nullptr);
 
         void handle_query();
         void handle_set_thread();
@@ -226,6 +226,6 @@ namespace eka2l1 {
          * @param thread Sending thread.
          * @param trap Trap no.
          */
-        void send_trap_gdb(kernel::thread *thread, int trap);
+        void send_trap_gdb(kernel::thread *thread, int trap, const char *extra_pair = nullptr);
     };
 }

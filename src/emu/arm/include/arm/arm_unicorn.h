@@ -58,6 +58,7 @@ namespace eka2l1 {
 
             breakpoint_address last_breakpoint;
             bool last_breakpoint_hit { false };
+            address breakpoint_hit_addr { 0 };
 
         public:
             manager::config_state *conf;
@@ -92,10 +93,18 @@ namespace eka2l1 {
             std::uint32_t get_num_instruction_executed() override {
                 return num_insts_runned;
             }
+
+            bool did_last_breakpoint_hit() const {
+                return last_breakpoint_hit;
+            }
             
             void record_break(breakpoint_address bkpt) {
                 last_breakpoint = bkpt;
                 last_breakpoint_hit = true;
+            }
+
+            void set_breakpoint_hit_address(const address addr) {
+                breakpoint_hit_addr = addr;
             }
 
             arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf, 
