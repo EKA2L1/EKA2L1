@@ -68,7 +68,7 @@ namespace eka2l1::mem {
         
         page_info *pi = pt->get_page_info((addr >> page_index_shift_) & page_index_mask_);
 
-        if (!pi) {
+        if (!pi || !pi->host_addr) {
             return nullptr;
         }
 
