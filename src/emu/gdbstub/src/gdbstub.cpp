@@ -450,6 +450,12 @@ namespace eka2l1 {
         } else if (strncmp(query, "fThreadInfo", strlen("fThreadInfo")) == 0) {
             std::string val = "m";
             // TODO: Get list of threads
+            
+            const auto &threads = sys->get_kernel_system()->threads;
+            for (const auto &thread : threads) {
+                val += fmt::format("{:x},", thread->unique_id());
+            }
+
             val.pop_back();
             send_reply(val.c_str());
         } else if (strncmp(query, "sThreadInfo", strlen("sThreadInfo")) == 0) {

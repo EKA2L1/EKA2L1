@@ -311,16 +311,18 @@ namespace eka2l1 {
                 num_insts_runned = 0;
 
                 if (stub && stub->is_server_enabled()) {
-                    if (last_breakpoint_hit && last_breakpoint.type == breakpoint_type::Execute) {
-                        set_pc(last_breakpoint.address + (is_thumb_mode() ? 1 : 0));
-                    } else {
-                        set_pc(breakpoint_hit_addr + (is_thumb_mode() ? 1 : 0));
+                    if (last_breakpoint_hit) {
+                        if (last_breakpoint.type == breakpoint_type::Execute) {
+                            set_pc(last_breakpoint.address + (is_thumb_mode() ? 1 : 0));
+                        } else {
+                            set_pc(breakpoint_hit_addr + (is_thumb_mode() ? 1 : 0));
+                        }
                     }
 
-                    kernel::thread *crr_thread = kern->crr_thread();
-                    save_context(crr_thread->get_thread_context());
-
                     if (last_breakpoint_hit || stub->is_memory_break() || stub->get_cpu_step_flag()) {
+                        kernel::thread *crr_thread = kern->crr_thread();
+                        save_context(crr_thread->get_thread_context());
+                        
                         last_breakpoint_hit = false;
 
                         stub->break_exec();
