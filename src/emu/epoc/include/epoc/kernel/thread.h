@@ -123,6 +123,7 @@ namespace eka2l1 {
             friend class thread_scheduler;
             friend class mutex;
             friend class semaphore;
+            friend class process;
 
             kernel::process *own_process;
 
@@ -187,6 +188,7 @@ namespace eka2l1 {
             common::double_link<kernel::thread> scheduler_link;
             common::double_linked_queue_element pending_link;
             common::double_linked_queue_element suspend_link;
+            common::double_linked_queue_element process_thread_link;
 
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);

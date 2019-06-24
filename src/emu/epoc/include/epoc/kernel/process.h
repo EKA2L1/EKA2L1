@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <common/linked.h>
+
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/kernel/mutex.h>
 #include <epoc/kernel/object_ix.h>
@@ -148,6 +150,8 @@ namespace eka2l1::kernel {
         mutex_ptr dll_lock;
         epoc::security_info sec_info;
 
+        common::roundabout thread_list;
+
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max, kernel::thread_priority pri);
@@ -264,5 +268,9 @@ namespace eka2l1::kernel {
         }
 
         void do_state(common::chunkyseri &seri);
+
+        common::roundabout &get_thread_list() {
+            return thread_list;
+        }
     };
 }

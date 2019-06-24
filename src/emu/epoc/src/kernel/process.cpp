@@ -151,12 +151,11 @@ namespace eka2l1::kernel {
 
     void process::set_priority(const process_priority new_pri) {
         priority = new_pri;
+        common::double_linked_queue_element *elem = thread_list.first();
 
-        for (const auto &thr : kern->threads) {
-            // I think this will be invoked not much, but this sure hurts performance
-            if (thr->owning_process()->unique_id() == uid) {
-                thr->update_priority();
-            }
+        while (elem && !elem->alone()) {
+            E_LOFF(elem, kernel::thread, process_thread_link)->update_priority();
+            elem = elem->next;
         }
     }
 

@@ -309,9 +309,14 @@ namespace eka2l1 {
 
             reset_thread_ctx(epa, stack_top, inital);
             scheduler = kern->get_thread_scheduler();
+
+            // Add thread to process's thread list
+            owner->get_thread_list().push(&process_thread_link);
         }
 
         void thread::destroy() {
+            // Unlink from proces's thread list
+            process_thread_link.deque();
             own_process->decrease_thread_count();
         }
 
