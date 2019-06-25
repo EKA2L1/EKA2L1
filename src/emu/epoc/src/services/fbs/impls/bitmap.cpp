@@ -41,6 +41,12 @@
 
 namespace eka2l1 {
     namespace epoc {
+        constexpr std::uint32_t MAGIC_FBS_PILE_PTR = 0xDEADFB55;
+
+        // Magic heap pointer so the client knows that we allocate from the large chunk.
+        // The 8 is actually H, so you get my idea.
+        constexpr std::uint32_t MAGIC_FBS_HEAP_PTR = 0xDEADFB88;
+
         display_mode bitwise_bitmap::settings::initial_display_mode() const {
             return static_cast<display_mode>(flags_ & 0x000000FF);
         }
@@ -327,8 +333,10 @@ namespace eka2l1 {
             }
 
             // Place holder value indicates we allocate through the large chunk.
-            // If guest uses this, than we are doom. But gonna put it here anyway
-            bws_bmp->pile_ = 0x1EA5EB0;
+            // If guest uses this, than we are doom. But gonna put it here anyway    
+            bws_bmp->pile_ = epoc::MAGIC_FBS_PILE_PTR;
+            bws_bmp->allocator_ = epoc::MAGIC_FBS_HEAP_PTR;
+            
             bws_bmp->data_offset_ = static_cast<std::uint32_t>(bmp_data_offset.value());
             bws_bmp->compressed_in_ram_ = false;
             bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
@@ -376,6 +384,10 @@ namespace eka2l1 {
 
     fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool support_dirty) {
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
+        // Initialize magic pointer. This will let the client know we use the large heap
+        bws_bmp->pile_ = epoc::MAGIC_FBS_PILE_PTR;
+        bws_bmp->allocator_ = epoc::MAGIC_FBS_HEAP_PTR;
+
         bws_bmp->header_.size_pixels = size;
         bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(dpm);
         bws_bmp->data_offset_ = 0;
