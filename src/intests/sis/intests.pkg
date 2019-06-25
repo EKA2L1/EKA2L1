@@ -28,6 +28,9 @@
 ; CodeSeg Kern
 "..\expected\CodeSeg\ExceptionDescriptorForRamCode.expected"	  -"!:\private\e6f75ec0\Expected\CodeSeg\ExceptionDescriptorForRamCode.expected"
 
+; Chunk Kern
+"..\expected\Chunk\ChunkCodeExecution.expected"	  -"!:\private\e6f75ec0\Expected\Chunk\ChunkCodeExecution.expected"
+
 ; IPC
 "..\expected\IPC\ReadWriteDescriptorWithoutOffset.expected"		  		-"!:\private\e6f75ec0\Expected\IPC\ReadWriteDescriptorWithoutOffset.expected"
 "..\expected\IPC\WriteDescriptorWithoutOffset.expected"		  	  		-"!:\private\e6f75ec0\Expected\IPC\WriteDescriptorWithoutOffset.expected"
@@ -44,5 +47,6 @@
 
 ; FBS
 "..\expected\FbsFontStore\FontStoreNearestToDesignWithName.expected"	-"!:\private\e6f75ec0\Expected\FbsFontStore\FontStoreNearestToDesignWithName.expected"
+"..\expected\FbsBitmap\BitmapZeroSize.expected"							-"!:\private\e6f75ec0\Expected\FbsBitmap\BitmapZeroSize.expected"
 
 @"DummyServ.sisx", (0xe6075ec1)

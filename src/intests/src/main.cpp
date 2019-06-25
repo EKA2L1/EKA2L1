@@ -13,6 +13,7 @@
 #include <intests/cmd/cmd.h>
 #include <intests/ecom.h>
 #include <intests/fate.h>
+#include <intests/fbs/bitmap.h>
 #include <intests/fbs/font.h>
 #include <intests/io/file.h>
 #include <intests/ipc/ipc.h>
@@ -29,7 +30,10 @@ void MainWrapperL() {
 #else
     TAbsorberMode mode = EAbsorbVerify;
 #endif
-
+    
+    // Connect!
+    RFbsSession::Connect();
+    
     instance = CTestManager::NewLC(mode);
 
     // Add all tests back
@@ -41,6 +45,7 @@ void MainWrapperL() {
     AddFileTestCasesL();
     AddEComTestCasesL();
     AddFbsFontTestCasesL();
+    AddFbsBitmapTestCasesL();
 
     TInt totalPass = instance->Run();
     RDebug::Printf("%d/%d tests passed", totalPass, instance->TotalTests());

@@ -8,6 +8,6 @@
 #ifndef FATE_H_
 #define FATE_H_
 
-#define GEN_TESTS 0
+#define GEN_TESTS 1
 
 #endif /* FATE_H_ */

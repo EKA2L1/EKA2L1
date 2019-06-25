@@ -74,8 +74,6 @@ void FbsFontstoreNearestToDesignWithNameL() {
 }
 
 void AddFbsFontTestCasesL() {
-    // Connect!
-    RFbsSession::Connect();
     ADD_TEST_CASE_L(FontStoreNearestToDesignWithName, FbsFontStore, FbsFontstoreNearestToDesignWithNameL);
-    ADD_TEST_CASE_L(FontStoreCharacterData, FbsFontStore, FbsFontstoreGetCharacterDataL);
+    //ADD_TEST_CASE_L(FontStoreCharacterData, FbsFontStore, FbsFontstoreGetCharacterDataL);
 }

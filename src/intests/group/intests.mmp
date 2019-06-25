@@ -38,3 +38,5 @@ SOURCEPATH ..\src\fbs
 SOURCE font.cpp
 SOURCEPATH ..\src\kern
 SOURCE chunk.cpp
+SOURCEPATH ..\src\fbs
+SOURCE bitmap.cpp

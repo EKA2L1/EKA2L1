@@ -1,0 +1,2 @@
+Try to create a bitmap with zero size and 16 bit color mode, return code 0
+The bitmap zero size after create has stride = 0, height = 0, width = 0
