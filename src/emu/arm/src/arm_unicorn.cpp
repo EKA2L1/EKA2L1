@@ -269,9 +269,8 @@ namespace eka2l1 {
                     LOG_CRITICAL("Unicorn error {} at: start PC: {:#08x} error PC {:#08x} LR: {:#08x}",
                         uc_strerror(err), pc, error_pc, lr);
 
-                    thread_context context;
-
-                    save_context(context);
+                    kernel::thread *crr_thread = kern->crr_thread();
+                    save_context(crr_thread->get_thread_context());
 
                     if (mem->get_real_pointer(get_pc())) {
                         const std::string disassemble_inst = asmdis->disassemble(
@@ -292,12 +291,14 @@ namespace eka2l1 {
                             get_lr() % 2 != 0 ? mem->read<std::uint16_t>(get_lr() - get_lr() % 2) : mem->read<std::uint32_t>(get_lr() - get_lr() % 2));
                     }
 
-                    dump_context(context);
+                    dump_context(crr_thread->get_thread_context());
+                    crr_thread->stop();
 
-                    system *sys = get_lib_manager()->get_sys();
-                    kernel::thread *thr = sys->get_kernel_system()->crr_thread();
-
-                    thr->stop();
+                    if (stub && stub->is_server_enabled()) {
+                        // Send it SIGSEGV
+                        stub->break_exec();
+                        stub->send_trap_gdb(crr_thread, 11);
+                    }
 
                     return false;
                 }
