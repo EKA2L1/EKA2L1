@@ -111,6 +111,12 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_bitmap_bg_compress: {
+            LOG_WARN("BitmapBgCompress stubbed with 0");
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;
