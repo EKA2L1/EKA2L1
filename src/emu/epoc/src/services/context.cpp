@@ -28,8 +28,14 @@
 
 namespace eka2l1 {
     namespace service {
+        ipc_context::ipc_context(const bool auto_free)
+            : auto_free(auto_free) {
+        }
+
         ipc_context::~ipc_context() {
-            msg->msg_session->set_slot_free(msg);
+            if (auto_free) {
+                msg->msg_session->set_slot_free(msg);
+            }
         }
 
         template <typename T>

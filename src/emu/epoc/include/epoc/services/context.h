@@ -41,12 +41,15 @@ namespace eka2l1 {
     namespace service {
         /*! \brief Context used to pass to IPC function */
         struct ipc_context {
+            explicit ipc_context(const bool auto_free = true);
             ~ipc_context();
             
             eka2l1::system *sys;
             ipc_msg_ptr msg;
 
             bool signaled = false;
+            bool auto_free = false;     ///< Auto free this message when the context is destroyed. Useful 
+                                        ///< for HLE context.
 
             template <typename T>
             std::optional<T> get_arg(const int idx);
@@ -62,8 +65,8 @@ namespace eka2l1 {
                 }
 
                 if (dat->length() > sizeof(T)) {
-                    LOG_WARN("Size of data provided in descriptor index is larger than size of data to get ({} vs {})",
-                        dat->length(), sizeof(T));
+                    LOG_WARN("Size of data provided in descriptor index is larger than "
+                        "size of data to get ({} vs {})", dat->length(), sizeof(T));
                 }
 
                 memcpy(&ret, dat->data(), common::min(sizeof(T), dat->length()));

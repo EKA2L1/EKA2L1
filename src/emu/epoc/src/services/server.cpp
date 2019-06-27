@@ -151,7 +151,10 @@ namespace eka2l1 {
 
             if (func_ite == ipc_funcs.end()) {
                 if (unhandle_callback_enable) {
-                    ipc_context context{ sys, process_msg };
+                    ipc_context context;
+                    context.sys = sys;
+                    context.msg = process_msg;
+
                     on_unhandled_opcode(context);
 
                     return;
@@ -166,7 +169,9 @@ namespace eka2l1 {
             }
 
             ipc_func ipf = func_ite->second;
-            ipc_context context{ sys, process_msg };
+            ipc_context context;
+            context.sys = sys;
+            context.msg = process_msg;
 
             if (sys->get_config()->log_ipc) {
                 LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);

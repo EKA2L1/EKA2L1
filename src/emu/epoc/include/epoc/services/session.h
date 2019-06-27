@@ -67,8 +67,8 @@ namespace eka2l1 {
 
             void prepare_destroy();
 
-            int send_receive_sync(int function, ipc_arg args, eka2l1::ptr<epoc::request_status> request_sts);
-            int send_receive(int function, ipc_arg args, eka2l1::ptr<epoc::request_status> request_sts);
+            int send_receive_sync(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts);
+            int send_receive(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts);
 
             void set_cookie_address(const uint32_t addr) {
                 cookie_address = addr;

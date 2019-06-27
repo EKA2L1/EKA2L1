@@ -79,8 +79,7 @@ namespace eka2l1 {
         }
 
         // This behaves a little different then other
-        int session::send_receive_sync(int function, ipc_arg args,
-            eka2l1::ptr<epoc::request_status> request_sts) {
+        int session::send_receive_sync(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts) {
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -101,14 +100,14 @@ namespace eka2l1 {
                     uint16_t build;
                 };
 
-                version sreq_ver = *reinterpret_cast<version *>(&args.args[0]);
+                const version sreq_ver = *reinterpret_cast<const version *>(&args.args[0]);
                 LOG_TRACE("Requested server version: {}.{}.{}", sreq_ver.major, sreq_ver.minor, sreq_ver.build);
             }
 
             return 0;
         }
 
-        int session::send_receive(int function, ipc_arg args, eka2l1::ptr<epoc::request_status> request_sts) {
+        int session::send_receive(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts) {
             ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {

@@ -633,11 +633,7 @@ namespace eka2l1::epoc {
             return KErrBadHandle;
         }
 
-        service::ipc_context context;
-        context.msg = msg;
-        context.sys = sys;
-
-        const ipc_arg_type type = context.msg->args.get_arg_type(aParam);
+        const ipc_arg_type type = msg->args.get_arg_type(aParam);
 
         if ((int)type & (int)ipc_arg_type::flag_des) {
             kernel::process *own_pr = msg->own_thr->owning_process();
@@ -691,7 +687,7 @@ namespace eka2l1::epoc {
         }
 
         if (read) {
-            service::ipc_context context;
+            service::ipc_context context(false);
             context.sys = sys;
             context.msg = msg;
 
@@ -724,13 +720,13 @@ namespace eka2l1::epoc {
             return lengthToRead;
         }
 
-        service::ipc_context context;
+        service::ipc_context context(false);
         context.sys = sys;
         context.msg = msg;
 
         std::string content;
+        
         // We must keep the other part behind the offset
-
         if (des8) {
             content = std::move(*context.get_arg<std::string>(aParam));
         } else {

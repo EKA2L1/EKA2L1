@@ -51,7 +51,10 @@ namespace eka2l1::service {
             return;
         }
 
-        ipc_context context{ sys, process_msg };
+        ipc_context context;
+        context.sys = sys;
+        context.msg = process_msg;
+        
         auto func = ipc_funcs.find(process_msg->function);
 
         if (func != ipc_funcs.end()) {
