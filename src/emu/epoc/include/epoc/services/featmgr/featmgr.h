@@ -19,7 +19,9 @@
  */
 
 #include <epoc/services/server.h>
-#include <unordered_map>
+#include <epoc/common.h>
+
+#include <vector>
 
 namespace eka2l1 {
     class io_system;
@@ -42,12 +44,16 @@ namespace eka2l1 {
     };
 
     class featmgr_server : public service::server {
-        std::unordered_map<uint32_t, uint32_t> features;
+        std::vector<epoc::uid> enable_features;
+        std::vector<featmgr_config_range> enable_feature_ranges;
+
         bool config_loaded = false;
 
         // Load the feature manager config files.
         bool load_featmgr_configs(io_system *io);
         void feature_supported(service::ipc_context &ctx);
+
+        void do_feature_scanning(system *sys);
 
     public:
         featmgr_server(system *sys);
