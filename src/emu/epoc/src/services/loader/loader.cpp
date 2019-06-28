@@ -58,7 +58,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
+        const std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
 
         LOG_TRACE("Trying to summon: {}", name_process);
 
@@ -70,11 +70,10 @@ namespace eka2l1 {
         }
 
         kernel_system *kern = ctx.sys->get_kernel_system();
-
-        process_ptr pr = kern->spawn_new_process(*process_name16,
-            *process_args, info->uid3, info->min_stack_size);
+        process_ptr pr = kern->spawn_new_process(*process_name16, *process_args, info->uid3, info->min_stack_size);
 
         if (!pr) {
+            LOG_DEBUG("Try spawning process {} failed", name_process);
             ctx.set_request_status(KErrNotFound);
             return;
         }
@@ -101,8 +100,8 @@ namespace eka2l1 {
             return;
         }
 
-        std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
-        std::u16string pext = path_extension(*lib_path);
+        const std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
+        const std::u16string pext = path_extension(*lib_path);
 
         // This hack prevents the lib manager from loading wrong file.
         // For example, if there is no extension, and the file is load must be DLL, and two files with same name
@@ -115,6 +114,7 @@ namespace eka2l1 {
         codeseg_ptr cs = ctx.sys->get_lib_manager()->load(*lib_path, ctx.msg->own_thr->owning_process());
 
         if (!cs) {
+            LOG_DEBUG("Try loading {} to {} failed", lib_name, ctx.msg->own_thr->owning_process()->name());
             ctx.set_request_status(KErrNotFound);
             return;
         }
