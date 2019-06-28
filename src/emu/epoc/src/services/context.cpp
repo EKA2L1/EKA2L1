@@ -85,10 +85,16 @@ namespace eka2l1 {
             }
 
             const ipc_arg_type iatype = msg->args.get_arg_type(idx);
+            const bool is_descriptor = (int)iatype & (int)ipc_arg_type::flag_des;
+            const bool is_16_bit = (int)iatype & (int)ipc_arg_type::flag_16b;
 
-            if (static_cast<int>(iatype) & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
+            if ((is_descriptor && is_16_bit) || iatype == ipc_arg_type::unspecified) {
                 kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
+
+                if (!des) {
+                    return std::nullopt;
+                }
 
                 return des->to_std_string(own_pr);
             }
@@ -102,11 +108,18 @@ namespace eka2l1 {
                 return std::nullopt;
             }
 
-            ipc_arg_type iatype = msg->args.get_arg_type(idx);
+            const ipc_arg_type iatype = msg->args.get_arg_type(idx);
+            const bool is_descriptor = (int)iatype & (int)ipc_arg_type::flag_des;
+            const bool is_16_bit = (int)iatype & (int)ipc_arg_type::flag_16b;
 
             // If it has descriptor flag and it doesn't have an 16-bit flag, it should be 8-bit one.
-            if (((int)iatype & (int)ipc_arg_type::flag_des) && !((int)iatype & (int)ipc_arg_type::flag_16b)) {
-                eka2l1::epoc::desc8 *des = ptr<epoc::desc8>(msg->args.args[idx]).get(msg->own_thr->owning_process());
+            if ((is_descriptor && !is_16_bit) || iatype == ipc_arg_type::unspecified) {
+                kernel::process *own_process = msg->own_thr->owning_process();
+                eka2l1::epoc::desc8 *des = ptr<epoc::desc8>(msg->args.args[idx]).get(own_process);
+
+                if (!des) {
+                    return std::nullopt;
+                }
 
                 return des->to_std_string(msg->own_thr->owning_process());
             }
