@@ -1,0 +1,21 @@
+/*
+============================================================================
+ Name		: BitmapCanavas.mmp
+ Author	  : 
+ Copyright   : (c) 2019 pent0
+ Description : This is the project specification file for BitmapCanavas.
+============================================================================
+*/
+
+TARGET		  BitmapCanavas.exe
+TARGETTYPE	  exe
+UID			 0 0xef338ed8
+
+SYSTEMINCLUDE   \epoc32\include
+
+DEBUGGABLE_UDEBONLY
+
+LIBRARY euser.lib gdi.lib fbscli.lib bitgdi.lib
+
+SOURCEPATH ..\src
+SOURCE main.cpp

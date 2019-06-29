@@ -1,0 +1,15 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : 
+ Copyright   : (c) 2019 pent0
+ Description : This file provides the information required for building the
+				whole of a BitmapCanavas.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_MMPFILES
+BitmapCanavas.mmp

@@ -1,0 +1,10 @@
+#{"BitmapTest"},(0xef338ed8),1,0,0
+
+
+;Localised Vendor name
+%{"Vendor-EN"}
+
+;Unique Vendor name
+:"Vendor"
+
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\BitmapCanavas.exe"		  -"!:\sys\bin\BitmapCanavas.exe"
