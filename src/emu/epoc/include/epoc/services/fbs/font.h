@@ -26,6 +26,8 @@
 #include <epoc/ptr.h>
 #include <epoc/utils/des.h>
 
+#include <vector>
+
 namespace eka2l1::epoc {
     struct open_font_metrics {
         std::int16_t design_height;
@@ -144,5 +146,57 @@ namespace eka2l1::epoc {
         std::int32_t session_cache_list_offset;
 
         eka2l1::ptr<void> reserved;
+    };
+
+    enum glyph_bitmap_type : std::int16_t {
+        default_glyph_bitmap,           ///< High chance (?) is monochrome.
+        monochrome_glyph_bitmap,        ///< 1 bit per pixel. This thing is usually compressed using RLE.
+        antialised_glyph_bitmap,        ///< 8 bit per pixel. Standard. Not compressed.
+        subpixel_glyph_bitmap,
+        four_color_blend_glyph_bitmap,
+        undefined_glyph_bitmap,
+        antialised_or_monochrome_glyph_bitmap
+    };
+
+    struct open_font_character_metric {
+        std::int16_t width;
+        std::int16_t height;
+        std::int16_t horizontal_bearing_x;
+        std::int16_t horizontal_bearing_y;
+        std::int16_t horizontal_advance;
+        std::int16_t vertical_bearing_x;
+        std::int16_t vertical_bearing_y;
+        std::int16_t vertical_advance;
+        glyph_bitmap_type bitmap_type;
+        std::int16_t reserved;
+    };
+
+    struct open_font_glyph {
+        std::int32_t codepoint;             ///< Unicode value of character.
+        std::int32_t glyph_index;           ///< The index of this glyph.
+        open_font_character_metric metric;
+        std::int32_t offset;                ///< Offset from *this* pointer to the bitmap data.
+    };
+
+    struct open_font_session_cache {
+        std::int32_t session_handle;
+        std::int64_t random_seed;
+
+        std::int32_t offset_array;          /**< Offset of the array contains font glyph offset, starting from
+                                                *this* pointer. */
+
+        std::int32_t offset_array_count;    ///< Total entry in the array.
+    };
+    
+    enum {
+        NORMAL_SESSION_CACHE_LIST_ENTRY_COUNT = 256
+    };
+
+    struct open_font_session_cache_list {
+        std::vector<std::int32_t> session_handle_array;
+        std::vector<std::int32_t> cache_offset_array;
+
+        // Do this so we can dynamically handle all Symbian variant of FBS
+        explicit open_font_session_cache_list(const int cache_entry_count);
     };
 }

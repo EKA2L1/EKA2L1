@@ -33,6 +33,13 @@
 
 #include <e32err.h>
 
+namespace eka2l1::epoc {
+    open_font_session_cache_list::open_font_session_cache_list(const int cache_entry_count) {
+        cache_offset_array.resize(cache_entry_count);
+        session_handle_array.resize(cache_entry_count);
+    }
+}
+
 namespace eka2l1 {
     static bool is_opcode_ruler_twips(const int opcode) {
         return (opcode == fbs_nearest_font_design_height_in_twips || opcode == fbs_nearest_font_max_height_in_twips);
