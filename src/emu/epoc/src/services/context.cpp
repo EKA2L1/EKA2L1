@@ -144,7 +144,7 @@ namespace eka2l1 {
         }
 
         bool ipc_context::write_arg(int idx, uint32_t data) {
-            if (idx < 4 && msg->args.get_arg_type(idx) == ipc_arg_type::handle) {
+            if (idx >= 0 && idx < 4 && msg->args.get_arg_type(idx) == ipc_arg_type::handle) {
                 msg->args.args[idx] = data;
                 return true;
             }
@@ -171,7 +171,7 @@ namespace eka2l1 {
         }
 
         bool ipc_context::write_arg_pkg(int idx, uint8_t *data, uint32_t len, int *err_code, const bool auto_shrink_to_fit) {
-            if (idx >= 4) {
+            if (idx >= 4 || idx < 0) {
                 return false;
             }
 
@@ -222,7 +222,7 @@ namespace eka2l1 {
         }
 
         std::uint8_t *ipc_context::get_arg_ptr(int idx) {
-            ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+            const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if ((int)arg_type & (int)ipc_arg_type::flag_des) {
                 kernel::process *own_pr = msg->own_thr->owning_process();
@@ -232,6 +232,29 @@ namespace eka2l1 {
             }
 
             return nullptr;
+        }
+    
+        std::size_t ipc_context::get_arg_size(int idx) {
+            if (idx >= 4 || idx < 0) {
+                return static_cast<std::size_t>(-1);
+            }
+
+            const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+
+            if ((static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::unspecified))
+                || (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::handle))) {
+                return 4;
+            }
+
+            // Cast it to descriptor
+            kernel::process *own_pr = msg->own_thr->owning_process();
+            epoc::des8 *descriptor = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
+
+            if (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::flag_16b)) {
+                return descriptor->get_length() * 2;
+            }
+
+            return descriptor->get_length();
         }
 
         bool ipc_context::set_arg_des_len(const int idx, const std::uint32_t len) {
