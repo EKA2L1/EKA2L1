@@ -114,6 +114,7 @@ add_library(epocservs
     include/epoc/services/fbs/bitmap.h
     include/epoc/services/fbs/fbs.h
     include/epoc/services/fbs/font.h
+    include/epoc/services/fbs/font_store.h
     include/epoc/services/featmgr/featmgr.h
     include/epoc/services/fs/fs.h
     include/epoc/services/loader/loader.h
@@ -162,6 +163,7 @@ add_library(epocservs
     src/services/fbs/fbs.cpp
     src/services/fbs/impls/bitmap.cpp
     src/services/fbs/impls/font.cpp
+    src/services/fbs/impls/font_store.cpp
     src/services/featmgr/featmgr.cpp
     src/services/fs/dirs.cpp
     src/services/fs/drives.cpp

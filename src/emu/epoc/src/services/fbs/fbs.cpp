@@ -125,7 +125,8 @@ namespace eka2l1 {
     }
 
     fbs_server::fbs_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!Fontbitmapserver") {
+        : service::typical_server(sys, "!Fontbitmapserver")
+        , persistent_font_store(sys->get_io_system()) {
     }
 
     void fbs_server::connect(service::ipc_context &context) {
@@ -185,6 +186,9 @@ namespace eka2l1 {
             load_fonts(context.sys->get_io_system());
 
             fs_server = kern->get_by_name<service::server>("!FileServer");
+
+            // Create session cache list
+            session_cache_list = allocate_general_data<epoc::open_font_session_cache_list>();
         }
 
         // Create new server client
@@ -193,7 +197,7 @@ namespace eka2l1 {
     }
 
     service::uid fbs_server::init() {
-        return connection_id_counter++;
+        return ++connection_id_counter;
     }
 
     void *fbs_server::allocate_general_data_impl(const std::size_t s) {
@@ -212,5 +216,10 @@ namespace eka2l1 {
         }
 
         return shared_chunk_allocator->free(ptr);
+    }
+    
+    fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id)
+        : service::typical_session(serv, ss_id)
+        , nof_(nullptr) {
     }
 }

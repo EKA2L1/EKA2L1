@@ -33,13 +33,6 @@
 
 #include <e32err.h>
 
-namespace eka2l1::epoc {
-    open_font_session_cache_list::open_font_session_cache_list(const int cache_entry_count) {
-        cache_offset_array.resize(cache_entry_count);
-        session_handle_array.resize(cache_entry_count);
-    }
-}
-
 namespace eka2l1 {
     static bool is_opcode_ruler_twips(const int opcode) {
         return (opcode == fbs_nearest_font_design_height_in_twips || opcode == fbs_nearest_font_max_height_in_twips);
@@ -71,51 +64,52 @@ namespace eka2l1 {
         }
 
         // Search the cache
-        fbsfont *font = serv->search_for_cache(spec, size_info.x);
+        fbsfont *font = nullptr;
+        epoc::open_font_info *ofi_suit = serv->persistent_font_store.seek_the_open_font(spec);
 
-        if (!font) {
-            // We need to create new one!
-            open_font_info *ofi_suit = serv->seek_the_open_font(spec);
-
-            if (!ofi_suit) {
-                ctx->set_request_status(KErrNotFound);
-            }
-
-            // Scale it
-            epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
-            
-            epoc::bitmapfont *bmpfont = server<fbs_server>()->allocate_general_data<epoc::bitmapfont>();
-            bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
-            bmpfont->vtable = serv->bmp_font_vtab;
-
-            font = make_new<fbsfont>();
-            font->guest_font_handle = serv->host_ptr_to_guest_general_data(bmpfont).cast<epoc::bitmapfont>();
-            font->of_info = *ofi_suit;
-
-            // TODO: Adjust with physical size.            
-            float scale_factor = 0;
-
-            if (size_info.x != 0) {
-                // Scale for max height
-                scale_factor = static_cast<float>(size_info.x) / font->of_info.metrics.max_height;
-            } else {
-                scale_factor = static_cast<float>(spec.height) / font->of_info.metrics.design_height;
-            }
-
-            font->of_info.metrics.max_height = static_cast<std::int16_t>(font->of_info.metrics.max_height * scale_factor);
-            font->of_info.metrics.ascent = static_cast<std::int16_t>(font->of_info.metrics.ascent * scale_factor);
-            font->of_info.metrics.descent = static_cast<std::int16_t>(font->of_info.metrics.descent * scale_factor);
-            font->of_info.metrics.design_height = static_cast<std::int16_t>(font->of_info.metrics.design_height * scale_factor);
-            font->of_info.metrics.max_depth = static_cast<std::int16_t>(font->of_info.metrics.max_depth * scale_factor);
-            font->of_info.metrics.max_width = static_cast<std::int16_t>(font->of_info.metrics.max_width * scale_factor);
-            font->serv = serv;
-
-            of->metrics = font->of_info.metrics;
-            of->face_index_offset = static_cast<int>(ofi_suit->idx);
-            of->vtable = epoc::DEAD_VTABLE;
-
-            serv->font_cache.push_back(font);
+        if (!ofi_suit) {
+            ctx->set_request_status(KErrNotFound);
         }
+
+        // Scale it
+        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
+        
+        epoc::bitmapfont *bmpfont = server<fbs_server>()->allocate_general_data<epoc::bitmapfont>();
+        bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
+        bmpfont->vtable = serv->bmp_font_vtab;
+
+        font = serv->font_obj_container.make_new<fbsfont>();
+        font->guest_font_handle = serv->host_ptr_to_guest_general_data(bmpfont).cast<epoc::bitmapfont>();
+        font->of_info = *ofi_suit;
+
+        // TODO: Adjust with physical size.            
+        float scale_factor = 0;
+
+        if (size_info.x != 0) {
+            // Scale for max height
+            scale_factor = static_cast<float>(size_info.x) / font->of_info.metrics.max_height;
+        } else {
+            scale_factor = static_cast<float>(spec.height) / font->of_info.metrics.design_height;
+        }
+
+        font->of_info.metrics.max_height = static_cast<std::int16_t>(font->of_info.metrics.max_height * scale_factor);
+        font->of_info.metrics.ascent = static_cast<std::int16_t>(font->of_info.metrics.ascent * scale_factor);
+        font->of_info.metrics.descent = static_cast<std::int16_t>(font->of_info.metrics.descent * scale_factor);
+        font->of_info.metrics.design_height = static_cast<std::int16_t>(font->of_info.metrics.design_height * scale_factor);
+        font->of_info.metrics.max_depth = static_cast<std::int16_t>(font->of_info.metrics.max_depth * scale_factor);
+        font->of_info.metrics.max_width = static_cast<std::int16_t>(font->of_info.metrics.max_width * scale_factor);
+        font->serv = serv;
+
+        of->metrics = font->of_info.metrics;
+        of->face_index_offset = static_cast<int>(ofi_suit->idx);
+        of->vtable = epoc::DEAD_VTABLE;
+
+        // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
+        // Since I don't know the version that starts using offset yet, we just leave it be this for now
+        of->session_cache_list_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_general_data(
+            serv->session_cache_list).ptr_address());
+
+        // TODO (pent0): Fill basic font info to epoc::open_font
 
         font_info result_info;
         
@@ -129,7 +123,7 @@ namespace eka2l1 {
 
     void fbscli::duplicate_font(service::ipc_context *ctx) {
         fbs_server *serv = server<fbs_server>();
-        fbsfont *font = serv->search_for_cache_by_id(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)));
+        fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
 
         if (!font) {
             ctx->set_request_status(KErrNotFound);
@@ -149,14 +143,14 @@ namespace eka2l1 {
 
     void fbscli::get_face_attrib(service::ipc_context *ctx) {
         // Look for bitmap font with this same handle
-        fbsfont *font = nullptr;
-
-        auto &cache = server<fbs_server>()->font_cache;
+        const fbsfont *font = nullptr;
         std::uint32_t addr = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
 
-        for (std::size_t i = 0; i < cache.size(); i++) {
-            if (cache[i]->guest_font_handle.ptr_address() == addr) {
-                font = cache[i];
+        for (const auto &font_cache_obj_ptr: server<fbs_server>()->font_obj_container) {
+            const fbsfont *temp_font_ptr = reinterpret_cast<const fbsfont*>(font_cache_obj_ptr.get());
+
+            if (temp_font_ptr && temp_font_ptr->guest_font_handle.ptr_address() == addr) {
+                font = temp_font_ptr;
                 break;
             }
         }
@@ -165,131 +159,13 @@ namespace eka2l1 {
             ctx->set_request_status(false);
             return;
         }
-
+ 
         ctx->write_arg_pkg(1, font->of_info.face_attrib);
         ctx->set_request_status(true);
     }
 
-    open_font_info *fbs_server::seek_the_open_font(epoc::font_spec &spec) {
-        open_font_info *best = nullptr;
-        int best_score = -99999999;
-
-        const std::u16string my_name = spec.tf.name.to_std_string(nullptr);
-
-        for (auto &[fam_name, collection]: open_font_store) {
-            bool maybe_same_family = (my_name.find(fam_name) != std::string::npos);
-
-            // Seek the way out! Seek the one that contains my name first!
-            for (auto &info: collection) {
-                int score = 0;
-
-                // Better returns me!
-                if (info.face_attrib.name.to_std_string(nullptr) == my_name) {
-                    return &info;
-                }
-
-                if (maybe_same_family) {
-                    score += 100;
-                }
-
-                if ((spec.style.flags & epoc::font_style::italic) == (info.face_attrib.style & epoc::open_font_face_attrib::italic)) {
-                    score += 50;
-                }
-                
-                if ((spec.style.flags & epoc::font_style::bold) == (info.face_attrib.style & epoc::open_font_face_attrib::bold)) {
-                    score += 50;
-                }
-
-                if (score > best_score) {
-                    best = &info;
-                    best_score = score;
-                }
-            }
-        }
-
-        return best;
-    }
-
-    fbsfont *fbs_server::search_for_cache(epoc::font_spec &spec, const std::uint32_t desired_max_height) {
-        for (std::size_t i = 0; i < font_cache.size(); i++) {
-            if (font_cache[i]->of_info.face_attrib.name.to_std_string(nullptr) == spec.tf.name.to_std_string(nullptr)) {
-                // Do further test
-                if ((desired_max_height != 0 && desired_max_height == font_cache[i]->of_info.metrics.max_height) ||
-                    (font_cache[i]->of_info.metrics.design_height == spec.height)) {
-                    return font_cache[i];
-                }
-            }
-        }
-
-        return nullptr;
-    }
-
-    fbsfont *fbs_server::search_for_cache_by_id(const std::uint32_t id) {    
-        auto result = std::lower_bound(font_cache.begin(), font_cache.end(),
-            static_cast<std::uint32_t>(id), [](const fbsfont *lhs, const std::uint32_t rhs) {
-                return lhs->id < rhs;
-            });
-
-        if (result == font_cache.end()) {
-            return nullptr;
-        }
-
-        return *result;
-    }
-
     void fbsfont::deref() {
-        if (count == 1) {
-            auto result = std::lower_bound(serv->font_cache.begin(), serv->font_cache.end(),
-            static_cast<std::uint32_t>(id), [](const fbsfont *lhs, const std::uint32_t rhs) {
-                return lhs->id < rhs;
-            });
-
-            if (result != serv->font_cache.end()) {
-                serv->font_cache.erase(result);
-            }
-        }
-
         epoc::ref_count_object::deref();
-    }
-
-    void fbs_server::add_fonts_from_adapter(epoc::adapter::font_file_adapter_instance &adapter) {
-        // Iterates through all fonts in this file
-        for (std::size_t i = 0; i < adapter->count(); i++) {
-            epoc::open_font_face_attrib attrib;
-            
-            if (!adapter->get_face_attrib(i, attrib)) {
-                continue;
-            }
-
-            const std::u16string fam_name = attrib.fam_name.to_std_string(nullptr);
-            const std::u16string name = attrib.name.to_std_string(nullptr);
-            auto &font_fam_collection = open_font_store[fam_name];
-
-            bool found = false;
-
-            // Are we facing duplicate fonts ?
-            for (std::size_t i = 0; i < font_fam_collection.size(); i++) {
-                if (font_fam_collection[i].face_attrib.name.to_std_string(nullptr) == name) {
-                    found = true;
-                    break;
-                }
-            }
-            
-            // No duplicate font
-            if (!found) {
-                // Get the metrics and make new open font
-                open_font_info info;
-                adapter->get_metrics(i, info.metrics);
-
-                info.idx = static_cast<std::int32_t>(i);
-                info.face_attrib = attrib;
-                info.adapter = adapter.get();
-
-                font_fam_collection.push_back(std::move(info));
-            }
-        }
-            
-        font_adapters.push_back(std::move(adapter));
     }
 
     void fbs_server::load_fonts(eka2l1::io_system *io) {
@@ -313,11 +189,8 @@ namespace eka2l1 {
 
                         f->close();
 
-                        // Create font file adapter instance
-                        auto adapter = epoc::adapter::make_font_file_adapter(epoc::adapter::font_file_adapter_kind::stb,
-                            buf);
-
-                        add_fonts_from_adapter(adapter);
+                        // Add fonts
+                        persistent_font_store.add_fonts(buf);
                     }
                 }
 

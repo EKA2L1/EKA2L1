@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <common/map.h>
+
 #include <epoc/ptr.h>
 #include <epoc/utils/des.h>
 
@@ -135,6 +137,7 @@ namespace eka2l1::epoc {
         std::int32_t font_captial_offset;
         std::int32_t font_max_ascent;
         std::int32_t font_standard_descent;
+        std::int32_t font_max_descent;
         std::int32_t font_line_gap;
 
         // Normally, i have seen code access this field to get font attrib, but that's the case if the font store
@@ -178,6 +181,14 @@ namespace eka2l1::epoc {
         std::int32_t offset;                ///< Offset from *this* pointer to the bitmap data.
     };
 
+    struct open_font_session_cache_entry: public open_font_glyph {
+        std::int32_t font_offset;           ///< Offset of the font that contains this glyph.
+    };
+
+    enum {
+        NORMAL_SESSION_CACHE_ENTRY_COUNT = 512
+    };
+
     struct open_font_session_cache {
         std::int32_t session_handle;
         std::int64_t random_seed;
@@ -192,11 +203,6 @@ namespace eka2l1::epoc {
         NORMAL_SESSION_CACHE_LIST_ENTRY_COUNT = 256
     };
 
-    struct open_font_session_cache_list {
-        std::vector<std::int32_t> session_handle_array;
-        std::vector<std::int32_t> cache_offset_array;
-
-        // Do this so we can dynamically handle all Symbian variant of FBS
-        explicit open_font_session_cache_list(const int cache_entry_count);
-    };
+    using open_font_session_cache_list = typename common::vector_static_map<std::int32_t, std::int32_t,
+        NORMAL_SESSION_CACHE_ENTRY_COUNT>;
 }

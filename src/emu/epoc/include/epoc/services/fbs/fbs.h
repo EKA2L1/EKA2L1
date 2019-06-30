@@ -23,6 +23,7 @@
 
 #include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/font.h>
+#include <epoc/services/fbs/font_store.h>
 #include <epoc/services/framework.h>
 #include <epoc/services/fbs/adapter/font_adapter.h>
 #include <epoc/services/window/common.h>
@@ -141,13 +142,9 @@ namespace eka2l1 {
     struct fbscli : public service::typical_session {
         service::uid connection_id_ {0};
         fbs_dirty_notify_request *nof_;
-
         bool support_dirty_bitmap { true };
 
-        explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id)
-            : service::typical_session(serv, ss_id)
-            , nof_(nullptr) {
-        }
+        explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id);
 
         ~fbscli();
 
@@ -166,17 +163,9 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
-    struct open_font_info {
-        std::size_t idx;
-
-        epoc::open_font_metrics metrics;
-        epoc::adapter::font_file_adapter_base *adapter;
-        epoc::open_font_face_attrib face_attrib;
-    };
-
     struct fbsfont : fbsobj {
         eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
-        open_font_info of_info;
+        epoc::open_font_info of_info;
         fbs_server *serv;
 
         explicit fbsfont()
@@ -264,30 +253,21 @@ namespace eka2l1 {
         eka2l1::ptr<void> bmp_font_vtab;
 
         std::u16string default_system_font;
-
-        std::unordered_map<std::u16string, std::vector<open_font_info>> open_font_store;
-        std::vector<fbsfont*> font_cache;
-
-        std::vector<epoc::adapter::font_file_adapter_instance> font_adapters;
         std::vector<fbs_dirty_notify_request> dirty_nofs;
 
         std::unordered_map<fbsbitmap_cache_info, fbsbitmap*> shared_bitmaps;
 
         std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
+        
+        epoc::open_font_session_cache_list *session_cache_list;
+        epoc::font_store persistent_font_store;
 
         void load_fonts(eka2l1::io_system *io);
 
-        std::atomic<service::uid> connection_id_counter {1};
+        std::atomic<service::uid> connection_id_counter;
 
-    protected:
-        void folder_change_callback(eka2l1::io_system *sys, const std::u16string &path, int action);
-        void add_fonts_from_adapter(epoc::adapter::font_file_adapter_instance &adapter);
-
-        fbsfont *search_for_cache(epoc::font_spec &spec, const std::uint32_t desired_max_height);
-        fbsfont *search_for_cache_by_id(const std::uint32_t id);
-
-        open_font_info *seek_the_open_font(epoc::font_spec &spec);
+        service::normal_object_container font_obj_container;    ///< Specifically storing fonts
 
     public:
         explicit fbs_server(eka2l1::system *sys);
@@ -335,8 +315,8 @@ namespace eka2l1 {
             return shared_chunk->base() + static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
 
-        std::uint32_t host_ptr_to_guest_shared_offset(void *ptr) {
-            return static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
+        std::int32_t host_ptr_to_guest_shared_offset(void *ptr) {
+            return static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
 
         /**
