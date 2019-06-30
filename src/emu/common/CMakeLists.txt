@@ -24,6 +24,7 @@ add_library(common
     include/common/ini.h
     include/common/linked.h
     include/common/log.h
+    include/common/map.h
     include/common/paint.h
     include/common/path.h
     include/common/platform.h
