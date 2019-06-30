@@ -47,7 +47,7 @@ namespace eka2l1 {
         ptr(const uint32_t addr)
             : mem_address(addr) {}
 
-        address &ptr_address() {
+        address ptr_address() const {
             return mem_address;
         }
 
@@ -65,6 +65,10 @@ namespace eka2l1 {
 
         explicit operator bool() const {
             return mem_address != 0;
+        }
+
+        const bool operator == (const eka2l1::ptr<T> rhs) const {
+            return mem_address == rhs.mem_address;
         }
 
         template <typename U>
