@@ -206,7 +206,7 @@ namespace eka2l1 {
              * \returns  True on success.
              * \sa       write_arg
              */
-            bool write_arg_pkg(int idx, uint8_t *data, uint32_t len, int *err_code = nullptr, const bool auto_shrink_to_fit = false);
+            bool write_arg_pkg(int idx, const uint8_t *data, uint32_t len, int *err_code = nullptr, const bool auto_shrink_to_fit = false);
 
             /**
              * \brief    Write a struct to an IPC argument.
@@ -225,8 +225,8 @@ namespace eka2l1 {
              * \sa       write_arg
              */
             template <typename T>
-            bool write_arg_pkg(int idx, T &data, int *err_code = nullptr, const bool auto_shrink_to_fit = false) {
-                return write_arg_pkg(idx, reinterpret_cast<uint8_t *>(&data), sizeof(T), err_code, auto_shrink_to_fit);
+            bool write_arg_pkg(int idx, const T &data, int *err_code = nullptr, const bool auto_shrink_to_fit = false) {
+                return write_arg_pkg(idx, reinterpret_cast<const uint8_t *>(&data), sizeof(T), err_code, auto_shrink_to_fit);
             }
 
             /**

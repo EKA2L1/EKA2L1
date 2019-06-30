@@ -170,7 +170,7 @@ namespace eka2l1 {
             return false;
         }
 
-        bool ipc_context::write_arg_pkg(int idx, uint8_t *data, uint32_t len, int *err_code, const bool auto_shrink_to_fit) {
+        bool ipc_context::write_arg_pkg(int idx, const uint8_t *data, uint32_t len, int *err_code, const bool auto_shrink_to_fit) {
             if (idx >= 4 || idx < 0) {
                 return false;
             }
