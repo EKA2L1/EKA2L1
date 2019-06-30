@@ -56,5 +56,9 @@ namespace eka2l1::epoc {
         }
         
         void complete(int err_code);
+
+        const bool operator == (const notify_info &rhs) const {
+            return (sts == rhs.sts) && (requester == rhs.requester);
+        }
     };
 }
