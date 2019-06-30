@@ -120,30 +120,13 @@ namespace eka2l1::kernel {
         std::u16string cmd_args;
 
         object_ix process_handles;
-
-        uint32_t flags;
-
+        std::uint32_t flags;
         process_priority priority;
-
         int exit_reason = 0;
-
-        struct logon_request_form {
-            kernel::thread *requester;
-            eka2l1::ptr<epoc::request_status> request_status;
-
-            logon_request_form() = default;
-
-            explicit logon_request_form(kernel::thread *thr, eka2l1::ptr<epoc::request_status> rsts)
-                : requester(thr)
-                , request_status(rsts) {}
-
-            void do_state(kernel_system *kern, common::chunkyseri &seri);
-        };
-
         process_exit_type exit_type;
 
-        std::vector<logon_request_form> logon_requests;
-        std::vector<logon_request_form> rendezvous_requests;
+        std::vector<epoc::notify_info> logon_requests;
+        std::vector<epoc::notify_info> rendezvous_requests;
 
         uint32_t thread_count = 0;
 

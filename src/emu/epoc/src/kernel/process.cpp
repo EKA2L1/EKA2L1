@@ -172,39 +172,26 @@ namespace eka2l1::kernel {
         }
 
         if (rendezvous) {
-            rendezvous_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
+            rendezvous_requests.emplace_back(logon_request, kern->crr_thread());
             return;
         }
 
-        logon_requests.push_back(logon_request_form{ kern->crr_thread(), logon_request });
+        logon_requests.emplace_back(logon_request, kern->crr_thread());
     }
 
     bool process::logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
-        if (rendezvous) {
-            auto req_info = std::find_if(rendezvous_requests.begin(), rendezvous_requests.end(),
-                [&](logon_request_form &form) { return form.request_status.ptr_address() == logon_request.ptr_address(); });
+        decltype(rendezvous_requests) *container = rendezvous ? &rendezvous_requests : &logon_requests;
 
-            if (req_info != rendezvous_requests.end()) {
-                *(logon_request.get(req_info->requester->owning_process())) = -3;
-                rendezvous_requests.erase(req_info);
+        const auto find_result = std::find(container->begin(), container->end(), epoc::notify_info(
+            logon_request, kern->crr_thread()));
 
-                return true;
-            }
-
+        if (find_result == container->end()) {
             return false;
         }
 
-        auto req_info = std::find_if(logon_requests.begin(), logon_requests.end(),
-            [&](logon_request_form &form) { return form.request_status.ptr_address() == logon_request.ptr_address(); });
-
-        if (req_info != logon_requests.end()) {
-            *(logon_request.get(req_info->requester->owning_process())) = -3;
-            logon_requests.erase(req_info);
-
-            return true;
-        }
-
-        return false;
+        find_result->complete(-3);
+        container->erase(find_result);
+        return true;
     }
 
     void process::rendezvous(int rendezvous_reason) {
@@ -212,11 +199,8 @@ namespace eka2l1::kernel {
         exit_type = process_exit_type::pending;
 
         for (auto &ren : rendezvous_requests) {
-            *(ren.request_status.get(ren.requester->owning_process())) = rendezvous_reason;
-
+            ren.complete(rendezvous_reason);
             LOG_TRACE("Rendezvous to: {}", ren.requester->name());
-
-            ren.requester->signal_request();
         }
 
         rendezvous_requests.clear();
@@ -224,13 +208,11 @@ namespace eka2l1::kernel {
 
     void process::finish_logons() {
         for (auto &req : logon_requests) {
-            *(req.request_status.get(req.requester->owning_process())) = exit_reason;
-            req.requester->signal_request();
+            req.complete(exit_reason);
         }
 
         for (auto &req : rendezvous_requests) {
-            *(req.request_status.get(req.requester->owning_process())) = exit_reason;
-            req.requester->signal_request();
+            req.complete(exit_reason);
         }
 
         logon_requests.clear();
@@ -274,23 +256,6 @@ namespace eka2l1::kernel {
         info.rt_bss_addr = info.rt_const_data_addr;
         info.rt_bss_size = codeseg->get_bss_size();
         // TODO: More
-    }
-
-    void process::logon_request_form::do_state(kernel_system *kern, common::chunkyseri &seri) {
-        auto s = seri.section("ProcessLogonRequest", 1);
-
-        if (!s) {
-            return;
-        }
-
-        std::uint32_t requester_id = (requester ? requester->unique_id() : 0);
-
-        seri.absorb(requester_id);
-        seri.absorb(request_status.ptr_address());
-
-        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            requester = &(*kern->get<kernel::thread>(requester_id));
-        }
     }
 
     void pass_arg::do_state(common::chunkyseri &seri) {
