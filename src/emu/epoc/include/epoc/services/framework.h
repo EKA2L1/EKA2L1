@@ -63,6 +63,14 @@ namespace eka2l1::service {
 
             return reinterpret_cast<T*>(objs.back().get());
         }
+        
+        decltype(objs)::iterator begin() {
+            return objs.begin();
+        }
+
+        decltype(objs)::iterator end() {
+            return objs.end();
+        }
 
         bool remove(epoc::ref_count_object *obj) override;
     };
