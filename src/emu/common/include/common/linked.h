@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/algorithm.h>
+
 #define E_LOFF(linked, object, linked_field) reinterpret_cast<object*>(reinterpret_cast<unsigned char*>(linked)   \
     - offsetof(object, linked_field))
 
@@ -102,6 +104,57 @@ namespace eka2l1::common {
 
         bool empty() const {
             return elem_.next == &elem_;
+        }
+    };
+
+    template <size_t NUM>
+    struct priority_roundabout_list {
+        static constexpr std::size_t MASK_COUNT = (NUM + 31) >> 5;
+
+        roundabout queues[NUM];
+        std::uint32_t empty_mask[MASK_COUNT];
+
+    public:
+        explicit priority_roundabout_list() {
+            std::fill(queues, queues + NUM, nullptr);
+            std::fill(empty_mask, empty_mask + MASK_COUNT, 0);
+        }
+
+        bool add(const std::size_t priority, double_linked_queue_element *elem) {
+            if (priority < NUM) {
+                return false;
+            }
+
+            // Mark position to not be empty anymore!
+            empty_mask[priority >> 5] |= 1 << (priority & 31);
+            queues[priority].push(elem);
+
+            return true;
+        }
+
+        double_linked_queue_element *highest() {  
+            // Release code generation is corrupted somewhere on MSVC. Force fill is good so i guess it's the other.
+            // Either way, until when i can repro this in a short code, files and bug got fixed, this stays here.
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
+            // Check the most significant bit and get the non-empty read queue
+            for (std::uint32_t i = 0; i < NUM; i++) {
+                int non_empty = common::count_leading_zero(ready_mask[0]);
+
+                if (non_empty != 0) {
+                    return queues[non_empty + i * 32];
+                }
+            }
+
+            return nullptr;
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
+        }
+
+        bool is_empty(const std::uint32_t pri) {
+            return (empty_mask[pri >> 5] & (1 << (pri & 31)));
         }
     };
 }
