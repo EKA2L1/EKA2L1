@@ -22,6 +22,7 @@
 #include <epoc/services/server.h>
 #include <epoc/services/context.h>
 #include <epoc/utils/obj.h>
+#include <epoc/utils/version.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -97,7 +98,10 @@ namespace eka2l1::service {
             sessions.emplace(suid, std::make_unique<T>(
                 reinterpret_cast<typical_server*>(this), suid, arguments...));
 
-            return reinterpret_cast<T*>(sessions[suid].get());
+            auto &target_session = sessions[suid];
+            target_session->client_version().u32 = *ctx->get_arg<std::uint32_t>(0);
+
+            return reinterpret_cast<T*>(target_session.get());
         }
 
         template <typename T, typename ...Args>
@@ -122,6 +126,7 @@ namespace eka2l1::service {
     protected:
         service::uid client_ss_uid_;
         epoc::object_table obj_table_;
+        epoc::version ver_;
 
     public:
         explicit typical_session(typical_server *svr, service::uid client_ss_uid)
@@ -136,6 +141,10 @@ namespace eka2l1::service {
         template <typename T>
         T *server() {
             return reinterpret_cast<T*>(svr_);
+        }
+
+        epoc::version &client_version() {
+            return ver_;
         }
 
         virtual void fetch(service::ipc_context *ctx) = 0;
