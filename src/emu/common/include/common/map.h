@@ -61,11 +61,19 @@ namespace eka2l1::common {
             std::memset(values, 0, sizeof(V) * LEN);
         }
 
+        void init(IS_EMPTY_FUNC_TYPE a_is_empty_func = is_vector_static_map_entry_empty<typename K>,
+            MARK_EMPTY_FUNC_TYPE a_mark_empty_func = mark_vector_static_map_entry_empty<typename K>) {
+            is_empty_func = a_is_empty_func;
+            mark_empty_func = a_mark_empty_func;
+
+            clear();
+        }
+
         constexpr std::size_t count() const {
             return LEN;
         }
 
-        bool add(K &key, V &value) {
+        bool add(const K &key, const V &value) {
             for (std::size_t i = 0; i < LEN; i++) {
                 if (is_empty_func(keys[i])) {
                     keys[i] = std::move(key);
