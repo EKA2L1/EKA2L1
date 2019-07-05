@@ -140,7 +140,7 @@ namespace eka2l1::common {
 #endif
             // Check the most significant bit and get the non-empty read queue
             for (std::uint32_t i = 0; i < NUM; i++) {
-                int non_empty = common::count_leading_zero(ready_mask[0]);
+                int non_empty = common::count_leading_zero(empty_mask[0]);
 
                 if (non_empty != 0) {
                     return queues[non_empty + i * 32];
