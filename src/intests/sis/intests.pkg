@@ -7,6 +7,7 @@
 :"pent0"
 
 "$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\eintests.exe"						-"!:\sys\bin\eintests.exe"
+"$(EPOCROOT)epoc32\data\z\resource\apps\holder.mbm"									-"!:\private\e6f75ec0\assets\holder.mbm"
 
 ; Adding input files
 

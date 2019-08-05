@@ -40,3 +40,9 @@ SOURCEPATH ..\src\kern
 SOURCE chunk.cpp
 SOURCEPATH ..\src\fbs
 SOURCE bitmap.cpp
+START BITMAP holder.mbm
+	TARGETPATH resource\apps
+	HEADER
+	SOURCEPATH ..\assets\FBS
+	SOURCE c24 holder.bmp
+END
