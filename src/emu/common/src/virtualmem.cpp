@@ -196,7 +196,7 @@ namespace eka2l1::common {
         }
 
         HANDLE map_file_handle = CreateFileMappingA(file_handle, NULL, page_type,
-            map_size >> 32, static_cast<DWORD>(map_size), file_name.c_str());
+            map_size >> 32, static_cast<DWORD>(map_size), NULL);
 
         if (!map_file_handle || map_file_handle == INVALID_HANDLE_VALUE) {
             return false;
