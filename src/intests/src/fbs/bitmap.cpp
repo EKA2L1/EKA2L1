@@ -40,8 +40,6 @@ void FbsBitmapCheckSettingsL() {
     fs.SessionPath(holderFilename);
     holderFilename.Append(_L("assets\\holder.mbm"));
     
-    fs.Close();
-    
     CFbsBitmap *test = new (ELeave) CFbsBitmap;
     CleanupStack::PushL(test);
     User::LeaveIfError(test->Load(holderFilename));
@@ -59,7 +57,21 @@ void FbsBitmapCheckSettingsL() {
     // Check size
     text.Format(_L8("Size x %d, size y %d"), test->SizeInPixels().iWidth, test->SizeInPixels().iHeight);
     EXPECT_INPUT_EQUAL_L(text);
+
+    TUint32 height = test->SizeInPixels().iHeight;
     
+    // Try to check data
+    test->BeginDataAccess();
+    
+    RFile expectedBin;
+    User::LeaveIfError(expectedBin.Replace(fs, _L("E:\\expected\\fbsbitmap\\datainside.bin"), EFileShareAny | EFileWrite));
+    
+    TPtrC8 dataPtrDes(reinterpret_cast<TUint8*>(test->DataAddress()), test->DataStride() * height);
+    expectedBin.Write(0, dataPtrDes);
+    
+    test->EndDataAccess(ETrue);
+    
+    fs.Close();
     CleanupStack::Pop(test);
 }
 
