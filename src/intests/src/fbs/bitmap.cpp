@@ -68,9 +68,23 @@ void FbsBitmapCheckSettingsL() {
     
     TPtrC8 dataPtrDes(reinterpret_cast<TUint8*>(test->DataAddress()), test->DataStride() * height);
     expectedBin.Write(0, dataPtrDes);
+    expectedBin.Close();
     
     test->EndDataAccess(ETrue);
+
+    // Try to get a scanline
+    TInt scanLineStride = test->DataStride();
+    TUint8 *scanLineBuf = (TUint8*)User::Alloc(scanLineStride);
+    TPtr8 scanLineBufPtr(scanLineBuf, scanLineStride);
     
+    RDebug::Printf("Before %d", scanLineBufPtr.Size());
+    test->GetScanLine(scanLineBufPtr, TPoint(0, 256), scanLineStride, test->DisplayMode());
+    RDebug::Printf("After %d", scanLineBufPtr.Size());
+    
+    User::LeaveIfError(expectedBin.Replace(fs, _L("E:\\expected\\fbsbitmap\\datainside2.bin"), EFileShareAny | EFileWrite));
+    expectedBin.Write(0, scanLineBufPtr);
+    expectedBin.Close();
+  
     fs.Close();
     CleanupStack::Pop(test);
 }
