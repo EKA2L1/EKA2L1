@@ -155,6 +155,18 @@ namespace eka2l1::kernel {
             return data_size;
         }
 
+        address get_code_base() const {
+            return code_base;
+        }
+
+        address get_data_base() const {
+            return data_base;
+        }
+
+        bool is_rom() const {
+            return data_addr != 0;
+        }
+
         std::uint32_t get_exception_descriptor(kernel::process *pr);
         address get_entry_point(kernel::process *pr);
 
