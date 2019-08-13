@@ -39,6 +39,17 @@
 namespace eka2l1 {
     struct file;
     using symfile = std::shared_ptr<file>;
+
+    namespace epoc {    
+        // Before and in build 94, the multiple memory model still make it possible to directly return pointer, since
+        // chunk address don't change with each process.
+        // But since build 95, the flexible memory model comes in with multi-core, and chunk address may be different
+        // with each process, so they use offset instead. This makes a huge change in FBS.
+        // They should probably use offset from the beginning.
+        constexpr std::uint16_t RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT = 94;
+        
+        bool does_client_use_pointer_instead_of_offset(fbscli *cli);
+    }
     
     enum fbs_opcode {
         fbs_init,
@@ -139,6 +150,8 @@ namespace eka2l1 {
         bool dirty { false };
     };
 
+    struct fbsfont;
+
     struct fbscli : public service::typical_session {
         service::uid connection_id_ {0};
         fbs_dirty_notify_request *nof_;
@@ -157,10 +170,13 @@ namespace eka2l1 {
         void notify_dirty_bitmap(service::ipc_context *ctx);
         void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
         void get_clean_bitmap(service::ipc_context *ctx);
+        void rasterize_glyph(service::ipc_context *ctx);
         
         void load_bitmap_impl(service::ipc_context *ctx, symfile source);
         
         void fetch(service::ipc_context *ctx) override;
+
+        fbsfont *get_font_object(service::ipc_context *ctx);
     };
 
     struct fbsfont : fbsobj {
@@ -261,11 +277,13 @@ namespace eka2l1 {
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
         
         epoc::open_font_session_cache_list *session_cache_list;
+        epoc::open_font_session_cache_link *session_cache_link;
+
         epoc::font_store persistent_font_store;
 
         void load_fonts(eka2l1::io_system *io);
 
-        std::atomic<service::uid> connection_id_counter;
+        std::atomic<service::uid> connection_id_counter { 0x1234 }; // Easier to debug
 
         service::normal_object_container font_obj_container;    ///< Specifically storing fonts
 
@@ -302,6 +320,8 @@ namespace eka2l1 {
          * \see     create_bitmap
          */
         bool free_bitmap(fbsbitmap *bmp);
+
+        fbsfont *look_for_font_with_address(const eka2l1::address addr);
 
         std::uint8_t *get_shared_chunk_base() {
             return base_shared_chunk;
@@ -342,6 +362,20 @@ namespace eka2l1 {
 
         // General...
         bool free_general_data_impl(const void *ptr);
+
+        /**
+         * \brief Use to allocate large data such as bitmap (font bitmap, raw bitmap, etc...).
+         * 
+         * \param     s Size of data to be allocated.
+         * \returns   Pointer to the large data if memory is efficient.   
+         */
+        void *allocate_large_data(const std::size_t s);
+
+        /**
+         * \brief    Free the large data pointer.
+         * \returns  True on success.
+         */
+        bool free_large_data(const void *ptr);
 
         /*! \brief Use to Allocate structure from server side.
          *
