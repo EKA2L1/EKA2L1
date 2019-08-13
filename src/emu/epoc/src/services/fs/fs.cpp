@@ -43,53 +43,6 @@
 #include <e32err.h>
 
 namespace eka2l1 {
-    fs_handle_table::fs_handle_table() {
-        for (size_t i = 0; i < nodes.size(); i++) {
-            nodes[i].id = static_cast<std::uint32_t>(i + 1);
-        }
-    }
-
-    size_t fs_handle_table::add_node(fs_node node) {
-        for (size_t i = 0; i < nodes.size(); i++) {
-            if (!nodes[i].is_active) {
-                nodes[i] = std::move(node);
-                nodes[i].is_active = true;
-
-                return i + 1;
-            }
-        }
-
-        return 0;
-    }
-
-    bool fs_handle_table::close_nodes(size_t handle) {
-        if (handle <= nodes.size() && nodes[handle - 1].is_active) {
-            nodes[handle - 1].is_active = false;
-
-            return true;
-        }
-
-        return false;
-    }
-
-    fs_node *fs_handle_table::get_node(size_t handle) {
-        if (handle <= nodes.size() && nodes[handle - 1].is_active) {
-            return &nodes[handle - 1];
-        }
-
-        return nullptr;
-    }
-
-    fs_node *fs_handle_table::get_node(const std::u16string &path) {
-        for (auto &file_node : nodes) {
-            if ((file_node.is_active && file_node.vfs_node->type == io_component_type::file) && (std::reinterpret_pointer_cast<file>(file_node.vfs_node)->file_name() == path)) {
-                return &file_node;
-            }
-        }
-
-        return nullptr;
-    }
-
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
         utf16_str copy(key);
 
@@ -105,14 +58,13 @@ namespace eka2l1 {
         return (common::compare_ignore_case(x, y) == -1);
     }
 
-    fs_server_client::fs_server_client(service::ipc_context &ctx) 
-        : user_session(ctx.msg->msg_session) {     
+    fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, service::ipc_context *ctx)
+        : typical_session(srv, suid) {     
         // Please don't remove the seperator, absolute path needs this to determine root directory
-        ss_path = eka2l1::root_name(ctx.msg->own_thr->owning_process()->get_exe_path(), true) + u'\\';
+        ss_path = eka2l1::root_name(ctx->msg->own_thr->owning_process()->get_exe_path(), true) + u'\\';
     }
 
-    fs_server::fs_server(system *sys)
-        : service::server(sys, "!FileServer", true, true) {
+    fs_server::fs_server(system *sys) : service::typical_server(sys, "!FileServer") {
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());
@@ -121,27 +73,13 @@ namespace eka2l1 {
 
         system_drive_prop->first = static_cast<int>(FS_UID);
         system_drive_prop->second = static_cast<int>(SYSTEM_DRIVE_KEY);
-
-        REGISTER_IPC(fs_server, drive_list, EFsDriveList, "Fs::DriveList");
-        REGISTER_IPC(fs_server, drive, EFsDrive, "Fs::Drive");
-        REGISTER_IPC(fs_server, synchronize_driver, EFsSynchroniseDriveThread, "Fs::SyncDriveThread");
-        REGISTER_IPC(fs_server, private_path, EFsPrivatePath, "Fs::PrivatePath");
-        REGISTER_IPC(fs_server, volume, EFsVolume, "Fs::Volume");
-        REGISTER_IPC(fs_server, query_drive_info_ext, EFsQueryVolumeInfoExt, "Fs::QueryVolumeInfoExt");
     }
 
-    void fs_server::on_unhandled_opcode(service::ipc_context &ctx) {
-        auto client = clients.find(ctx.msg->msg_session->unique_id());
-
-        if (client == clients.end()) {
-            LOG_ERROR("FS client session not found for guest session id {}");
-            return;
-        }
-
-        switch (ctx.msg->function) {
+    void fs_server_client::fetch(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
         // For debug purpose, uncomment the log
         #define HANDLE_CLIENT_IPC(name, op, debug_func_str)                                         \
-            case (op): { client->second->name(ctx); /*LOG_TRACE("{}", debug_func_str);*/ break; }
+            case (op): { name(ctx); /*LOG_TRACE("{}", debug_func_str);*/ break; }
 
         HANDLE_CLIENT_IPC(entry, EFsEntry, "Fs::Entry");
         HANDLE_CLIENT_IPC(file_open, EFsFileOpen, "Fs::FileOpen");
@@ -176,9 +114,15 @@ namespace eka2l1 {
         HANDLE_CLIENT_IPC(rename, EFsRename, "Fs::Rename(Move)");
         HANDLE_CLIENT_IPC(replace, EFsReplace, "Fs::Replace");
         HANDLE_CLIENT_IPC(set_should_notify_failure, EFsSetNotifyUser, "Fs::SetShouldNotifyFailure");
-        
+        HANDLE_CLIENT_IPC(server<fs_server>()->drive_list, EFsDriveList, "Fs::DriveList");
+        HANDLE_CLIENT_IPC(server<fs_server>()->drive, EFsDrive, "Fs::Drive");
+        HANDLE_CLIENT_IPC(server<fs_server>()->synchronize_driver, EFsSynchroniseDriveThread, "Fs::SyncDriveThread");
+        HANDLE_CLIENT_IPC(server<fs_server>()->private_path, EFsPrivatePath, "Fs::PrivatePath");
+        HANDLE_CLIENT_IPC(server<fs_server>()->volume, EFsVolume, "Fs::Volume");
+        HANDLE_CLIENT_IPC(server<fs_server>()->query_drive_info_ext, EFsQueryVolumeInfoExt, "Fs::QueryVolumeInfoExt");
+
         default: {
-            LOG_ERROR("Unknown FSServer client opcode {}!", ctx.msg->function);
+            LOG_ERROR("Unknown FSServer client opcode {}!", ctx->msg->function);
             break;
         }
 
@@ -186,19 +130,19 @@ namespace eka2l1 {
         }
     }
 
-    void fs_server_client::replace(service::ipc_context &ctx) {
-        auto given_path_target = ctx.get_arg<std::u16string>(0);
-        auto given_path_dest = ctx.get_arg<std::u16string>(1);
+    void fs_server_client::replace(service::ipc_context *ctx) {
+        auto given_path_target = ctx->get_arg<std::u16string>(0);
+        auto given_path_dest = ctx->get_arg<std::u16string>(1);
 
         if (!given_path_target || !given_path_dest) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         auto target = eka2l1::absolute_path(*given_path_target, ss_path, true);
         auto dest = eka2l1::absolute_path(*given_path_dest, ss_path, true);
 
-        io_system *io = ctx.sys->get_io_system();
+        io_system *io = ctx->sys->get_io_system();
 
         // If exists, delete it so the new file can be replaced
         if (io->exist(dest)) {
@@ -208,105 +152,100 @@ namespace eka2l1 {
         bool res = io->rename(target, dest);
 
         if (!res) {
-            ctx.set_request_status(KErrGeneral);
+            ctx->set_request_status(KErrGeneral);
             return;
         }
 
         // A new app list may be created
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::rename(service::ipc_context &ctx) {
-        auto given_path_target = ctx.get_arg<std::u16string>(0);
-        auto given_path_dest = ctx.get_arg<std::u16string>(1);
+    void fs_server_client::rename(service::ipc_context *ctx) {
+        auto given_path_target = ctx->get_arg<std::u16string>(0);
+        auto given_path_dest = ctx->get_arg<std::u16string>(1);
 
         if (!given_path_target || !given_path_dest) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         std::u16string target = eka2l1::absolute_path(*given_path_target, ss_path, true);
         std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path, true);
 
-        io_system *io = ctx.sys->get_io_system();
+        io_system *io = ctx->sys->get_io_system();
 
         if (io->exist(dest)) {
-            ctx.set_request_status(KErrAlreadyExists);
+            ctx->set_request_status(KErrAlreadyExists);
             return;
         }
 
         bool res = io->rename(target, dest);
 
         if (!res) {
-            ctx.set_request_status(KErrGeneral);
+            ctx->set_request_status(KErrGeneral);
             return;
         }
 
         // A new app list may be created
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::delete_entry(service::ipc_context &ctx) {
-        auto given_path = ctx.get_arg<std::u16string>(0);
+    void fs_server_client::delete_entry(service::ipc_context *ctx) {
+        auto given_path = ctx->get_arg<std::u16string>(0);
 
         if (!given_path) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         auto path = eka2l1::absolute_path(*given_path, ss_path, true);
-        io_system *io = ctx.sys->get_io_system();
+        io_system *io = ctx->sys->get_io_system();
 
         bool success = io->delete_entry(path);
 
         if (!success) {
-            ctx.set_request_status(KErrNotFound);
+            ctx->set_request_status(KErrNotFound);
             return;
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server::synchronize_driver(service::ipc_context &ctx) {
-        ctx.set_request_status(KErrNone);
-    }
-
-    fs_node *fs_server_client::get_file_node(int handle) {
-        return nodes_table.get_node(handle);
+    void fs_server::synchronize_driver(service::ipc_context *ctx) {
+        ctx->set_request_status(KErrNone);
     }
 
     void fs_server::connect(service::ipc_context &ctx) {
-        clients.emplace(ctx.msg->msg_session->unique_id(), std::make_unique<fs_server_client>(ctx));
-        server::connect(ctx);
+        create_session<fs_server_client>(&ctx, &ctx);
+        typical_server::connect(ctx);
     }
 
     void fs_server::disconnect(service::ipc_context &ctx) {
-        clients.erase(ctx.msg->msg_session->unique_id());
-        server::disconnect(ctx);
+        typical_server::disconnect(ctx);
     }
 
-    void fs_server_client::session_path(service::ipc_context &ctx) {
-        ctx.write_arg(0, ss_path);
-        ctx.set_request_status(KErrNone);
+    void fs_server_client::session_path(service::ipc_context *ctx) {
+        ctx->write_arg(0, ss_path);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::set_session_path(service::ipc_context &ctx) {
-        auto new_path = ctx.get_arg<std::u16string>(0);
+    void fs_server_client::set_session_path(service::ipc_context *ctx) {
+        auto new_path = ctx->get_arg<std::u16string>(0);
 
         if (!new_path) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         ss_path = std::move(new_path.value());
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::set_session_to_private(service::ipc_context &ctx) {
-        auto drive_ordinal = ctx.get_arg<int>(0);
+    void fs_server_client::set_session_to_private(service::ipc_context *ctx) {
+        auto drive_ordinal = ctx->get_arg<int>(0);
 
         if (!drive_ordinal) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
@@ -314,18 +253,18 @@ namespace eka2l1 {
         std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
 
         // Try to get the app uid
-        uint32_t uid = std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type());
+        uint32_t uid = std::get<2>(ctx->msg->own_thr->owning_process()->get_uid_type());
         std::string hex_id = common::to_string(uid, std::hex);
 
         ss_path = drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::is_file_in_rom(service::ipc_context &ctx) {
-        std::optional<utf16_str> path = ctx.get_arg<utf16_str>(0);
+    void fs_server_client::is_file_in_rom(service::ipc_context *ctx) {
+        std::optional<utf16_str> path = ctx->get_arg<utf16_str>(0);
 
         if (!path) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
@@ -335,39 +274,39 @@ namespace eka2l1 {
             final_path = eka2l1::absolute_path(final_path, ss_path, true);
         }
 
-        symfile f = ctx.sys->get_io_system()->open_file(final_path, READ_MODE);
+        symfile f = ctx->sys->get_io_system()->open_file(final_path, READ_MODE);
         address addr = f->rom_address();
 
         f->close();
 
-        ctx.write_arg_pkg<address>(1, addr);
-        ctx.set_request_status(KErrNone);
+        ctx->write_arg_pkg<address>(1, addr);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::notify_change(service::ipc_context &ctx) {
+    void fs_server_client::notify_change(service::ipc_context *ctx) {
         notify_entry entry;
 
         entry.match_pattern = ".*";
-        entry.type = static_cast<notify_type>(*ctx.get_arg<int>(0));
-        entry.request_status = ctx.msg->request_sts;
-        entry.request_thread = ctx.msg->own_thr;
+        entry.type = static_cast<notify_type>(*ctx->get_arg<int>(0));
+        entry.request_status = ctx->msg->request_sts;
+        entry.request_thread = ctx->msg->own_thr;
 
         notify_entries.push_back(entry);
     }
 
-    void fs_server_client::notify_change_ex(service::ipc_context &ctx) {
-        std::optional<utf16_str> wildcard_match = ctx.get_arg<utf16_str>(1);
+    void fs_server_client::notify_change_ex(service::ipc_context *ctx) {
+        std::optional<utf16_str> wildcard_match = ctx->get_arg<utf16_str>(1);
 
         if (!wildcard_match) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         notify_entry entry;
         entry.match_pattern = common::wildcard_to_regex_string(common::ucs2_to_utf8(*wildcard_match));
-        entry.type = static_cast<notify_type>(*ctx.get_arg<int>(0));
-        entry.request_status = ctx.msg->request_sts;
-        entry.request_thread = ctx.msg->own_thr;
+        entry.type = static_cast<notify_type>(*ctx->get_arg<int>(0));
+        entry.request_status = ctx->msg->request_sts;
+        entry.request_thread = ctx->msg->own_thr;
 
         notify_entries.push_back(entry);
 
@@ -387,37 +326,37 @@ namespace eka2l1 {
         return true;
     }
 
-    void fs_server_client::mkdir(service::ipc_context &ctx) {
-        std::optional<std::u16string> dir = ctx.get_arg<std::u16string>(0);
+    void fs_server_client::mkdir(service::ipc_context *ctx) {
+        std::optional<std::u16string> dir = ctx->get_arg<std::u16string>(0);
 
         if (!dir) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         bool res = false;
 
-        if (*ctx.get_arg<int>(1)) {
-            res = ctx.sys->get_io_system()->create_directories(eka2l1::file_directory(*dir));
+        if (*ctx->get_arg<int>(1)) {
+            res = ctx->sys->get_io_system()->create_directories(eka2l1::file_directory(*dir));
         } else {
-            res = ctx.sys->get_io_system()->create_directory(eka2l1::file_directory(*dir));
+            res = ctx->sys->get_io_system()->create_directory(eka2l1::file_directory(*dir));
         }
 
         if (!res) {
             // The guide specified: if it's parent does not exist or the sub-directory
             // already created, this should returns
-            ctx.set_request_status(KErrAlreadyExists);
+            ctx->set_request_status(KErrAlreadyExists);
             return;
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::entry(service::ipc_context &ctx) {
-        std::optional<std::u16string> fname_op = ctx.get_arg<std::u16string>(0);
+    void fs_server_client::entry(service::ipc_context *ctx) {
+        std::optional<std::u16string> fname_op = ctx->get_arg<std::u16string>(0);
 
         if (!fname_op) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
@@ -428,12 +367,12 @@ namespace eka2l1 {
 
         bool dir = false;
 
-        io_system *io = ctx.sys->get_io_system();
+        io_system *io = ctx->sys->get_io_system();
 
         std::optional<entry_info> entry_hle = io->get_entry_info(fname);
 
         if (!entry_hle) {
-            ctx.set_request_status(KErrNotFound);
+            ctx->set_request_status(KErrNotFound);
             return;
         }
 
@@ -462,21 +401,21 @@ namespace eka2l1 {
         entry.name = fname;
         entry.modified = epoc::time { entry_hle->last_write };
 
-        ctx.write_arg_pkg<epoc::fs::entry>(1, entry);
-        ctx.set_request_status(KErrNone);
+        ctx->write_arg_pkg<epoc::fs::entry>(1, entry);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server::private_path(service::ipc_context &ctx) {
+    void fs_server::private_path(service::ipc_context *ctx) {
         std::u16string path = u"\\private\\"
-            + common::utf8_to_ucs2(common::to_string(std::get<2>(ctx.msg->own_thr->owning_process()->get_uid_type()), std::hex))
+            + common::utf8_to_ucs2(common::to_string(std::get<2>(ctx->msg->own_thr->owning_process()->get_uid_type()), std::hex))
             + u"\\";
 
-        ctx.write_arg(0, path);
-        ctx.set_request_status(KErrNone);
+        ctx->write_arg(0, path);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server_client::set_should_notify_failure(service::ipc_context &ctx) {
-        should_notify_failures = static_cast<bool>(ctx.get_arg<int>(0));
-        ctx.set_request_status(KErrNone);
+    void fs_server_client::set_should_notify_failure(service::ipc_context *ctx) {
+        should_notify_failures = static_cast<bool>(ctx->get_arg<int>(0));
+        ctx->set_request_status(KErrNone);
     }
 }
