@@ -353,6 +353,12 @@ namespace eka2l1 {
             bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
             bws_bmp->uid_ = epoc::bitwise_bitmap_uid;
 
+            // The header still has compression type set maybe. Since right now we are decompressing it,
+            // let's set them to no compression
+            // TODO: Make this more dynamic.
+            bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
+            bws_bmp->header_.bitmap_size = sizeof(loader::sbm_header) + bws_bmp->byte_width_ * bws_bmp->header_.size_pixels.height();
+
             // Get display mode
             const epoc::display_mode dpm = get_display_mode_from_bpp(bws_bmp->header_.bit_per_pixels);
             bws_bmp->settings_.initial_display_mode(dpm);
