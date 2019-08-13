@@ -218,6 +218,11 @@ namespace eka2l1 {
             session_cache_list = allocate_general_data<epoc::open_font_session_cache_list>();
             session_cache_link = allocate_general_data<epoc::open_font_session_cache_link>();
             session_cache_list->init();
+
+            // Alloc 4 bytes of padding, so the offset 0 never exist. 0 is always a check if data
+            // is available.
+            large_chunk_allocator->allocate(4);
+            shared_chunk_allocator->allocate(4);
         }
 
         // Create new server client
