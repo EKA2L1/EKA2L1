@@ -1,4 +1,4 @@
-#{"BitmapTest"},(0xef338ed8),1,0,0
+#{"BitmapCanavas"},(0xef338ed8),1,0,0
 
 
 ;Localised Vendor name
@@ -8,3 +8,4 @@
 :"Vendor"
 
 "$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\BitmapCanavas.exe"		  -"!:\sys\bin\BitmapCanavas.exe"
+"$(EPOCROOT)epoc32\data\z\resource\apps\holder.mbm"					-"!:\private\ef338ed8\assets\holder.mbm"
