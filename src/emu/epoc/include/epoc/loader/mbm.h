@@ -31,7 +31,7 @@ namespace eka2l1::common {
 
 namespace eka2l1::loader {
     struct sbm_header {
-        std::uint32_t compressed_len;
+        std::uint32_t bitmap_size;
         std::uint32_t header_len;
         eka2l1::object_size  size_pixels;
         eka2l1::object_size  size_twips;

@@ -55,7 +55,8 @@ namespace eka2l1::epoc {
         XXH64_update(state, reinterpret_cast<const void*>(&bw_bmp->uid_), sizeof(bw_bmp->uid_));
 
         // Lastly, we needs to hash the data, to see if anything changed
-        XXH64_update(state, base_large_chunk + bw_bmp->data_offset_, bw_bmp->header_.compressed_len);
+        XXH64_update(state, base_large_chunk + bw_bmp->data_offset_, bw_bmp->header_.bitmap_size - 
+            sizeof(bw_bmp->header_));
 
         hash = XXH64_digest(state);
         XXH64_freeState(state);
@@ -135,7 +136,7 @@ namespace eka2l1::epoc {
 
             driver_textures[idx] = cli_unlocked->upload_bitmap(driver_textures[idx]
                 , reinterpret_cast<char*>(base_large_chunk + bmp->data_offset_)
-                , bmp->header_.compressed_len, bmp->header_.size_pixels.width(), bmp->header_.size_pixels.height()
+                , bmp->header_.bitmap_size, bmp->header_.size_pixels.width(), bmp->header_.size_pixels.height()
                 , bmp->header_.bit_per_pixels);
 
             hashes[idx] = hash;
