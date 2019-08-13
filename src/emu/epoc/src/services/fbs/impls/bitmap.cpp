@@ -41,6 +41,7 @@
 
 namespace eka2l1 {
     namespace epoc {
+        constexpr std::uint32_t BITWISE_BITMAP_UID = 0x10000040;
         constexpr std::uint32_t MAGIC_FBS_PILE_PTR = 0xDEADFB55;
 
         // Magic heap pointer so the client knows that we allocate from the large chunk.
@@ -56,7 +57,7 @@ namespace eka2l1 {
         }
 
         void bitwise_bitmap::settings::current_display_mode(const display_mode &mode) {
-            flags_ &= 0xFFFFFF00;
+            flags_ &= 0xFFFF00FF;
             flags_ |= (static_cast<std::uint32_t>(mode) << 8);
         }
 
@@ -129,6 +130,16 @@ namespace eka2l1 {
         }
 
         return 24;
+    }
+
+    static epoc::bitmap_color get_bitmap_color_type_from_display_mode(const epoc::display_mode bpp) {
+        switch (bpp) {
+        case epoc::display_mode::gray2: return epoc::monochrome_bitmap;
+        case epoc::display_mode::color16ma: case epoc::display_mode::color16map: return epoc::color_bitmap_with_alpha;
+        default: break;
+        }
+
+        return epoc::color_bitmap;
     }
 
     static int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
@@ -227,7 +238,7 @@ namespace eka2l1 {
         const std::uint32_t fs_file_handle = static_cast<std::uint32_t>(*(ctx->get_arg<int>(3)));
 
         auto fs_server = std::reinterpret_pointer_cast<eka2l1::fs_server>(server<fbs_server>()->fs_server);
-        symfile source_file = fs_server->get_fs_node_as<eka2l1::file>(fs_target_session->unique_id(), fs_file_handle);
+        symfile source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
 
         if (!source_file) {
             ctx->set_request_status(KErrArgument);
@@ -245,7 +256,7 @@ namespace eka2l1 {
         }
 
         bmp_handles handle_info;
-        
+
         // Add this object to the object table!
         handle_info.handle = obj_table_.add(bmp);
         handle_info.server_handle = bmp->id;
@@ -387,14 +398,21 @@ namespace eka2l1 {
         // Initialize magic pointer. This will let the client know we use the large heap
         bws_bmp->pile_ = epoc::MAGIC_FBS_PILE_PTR;
         bws_bmp->allocator_ = epoc::MAGIC_FBS_HEAP_PTR;
+        bws_bmp->header_.header_len = sizeof(loader::sbm_header);
+        bws_bmp->uid_ = epoc::BITWISE_BITMAP_UID;
 
         bws_bmp->header_.size_pixels = size;
+        bws_bmp->header_.size_twips = size * 15;
+        bws_bmp->header_.color = get_bitmap_color_type_from_display_mode(dpm);
         bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(dpm);
+        bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
+        bws_bmp->header_.bitmap_size = (bws_bmp->byte_width_ * size.y) + sizeof(bws_bmp->header_);
+        bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
         bws_bmp->data_offset_ = 0;
 
         bws_bmp->settings_.current_display_mode(dpm);
         bws_bmp->settings_.initial_display_mode(dpm);
-
+        
         // Calculate the size
         std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(size, dpm);
         
@@ -455,19 +473,6 @@ namespace eka2l1 {
 
         ctx->write_arg_pkg(0, specs.value());
         ctx->set_request_status(KErrNone);
-    }
-
-    fbscli::~fbscli() {
-        // Remove notification if there is
-        if (nof_) {  
-            std::vector<fbs_dirty_notify_request> &notifies = server<fbs_server>()->dirty_nofs;
-
-            for (std::size_t i = 0; i < notifies.size(); i++) {
-                if (notifies[i].client == this) {
-                    notifies.erase(notifies.begin() + i);
-                }
-            }
-        }
     }
 
     void fbscli::notify_dirty_bitmap(service::ipc_context *ctx) {
