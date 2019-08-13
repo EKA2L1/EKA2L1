@@ -54,17 +54,18 @@ namespace eka2l1 {
 
         bool should_package_manager_display_file_list;
         bool should_package_manager_remove;
+        bool should_install_package;
 
         const char *installer_text;
-        bool installer_text_result { false };
+        bool installer_text_result{ false };
 
         std::condition_variable installer_cond;
         std::mutex installer_mut;
 
         const int *installer_langs;
         int installer_lang_size;
-        int installer_lang_choose_result { -1 };
-        int installer_current_lang_idx { -1 };
+        int installer_lang_choose_result{ -1 };
+        int installer_current_lang_idx{ -1 };
 
         bool should_package_manager_display_installer_text;
         bool should_package_manager_display_language_choose;
@@ -107,6 +108,9 @@ namespace eka2l1 {
         std::mutex debug_lock;
         std::condition_variable debug_cv;
 
+    protected:
+        void do_install_package();
+
     public:
         explicit imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger);
         ~imgui_debugger();
@@ -124,7 +128,7 @@ namespace eka2l1 {
 
         void wait_for_debugger() override;
         void notify_clients() override;
-        
+
         manager::config_state *get_config() override;
     };
 }

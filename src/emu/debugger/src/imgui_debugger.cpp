@@ -19,8 +19,8 @@
  */
 
 #include <debugger/imgui_debugger.h>
-#include <debugger/renderer/renderer.h>
 #include <debugger/logger.h>
+#include <debugger/renderer/renderer.h>
 
 #include <imgui.h>
 
@@ -34,8 +34,8 @@
 #include <drivers/graphics/emu_window.h> // For scancode
 
 #include <manager/config.h>
-#include <manager/manager.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 
 #include <common/cvt.h>
 #include <nfd.h>
@@ -69,6 +69,7 @@ namespace eka2l1 {
         , should_package_manager_remove(false)
         , should_package_manager_display_installer_text(false)
         , should_package_manager_display_language_choose(false)
+        , should_install_package(false)
         , selected_package_index(0xFFFFFFFF)
         , debug_thread_id(0) {
         // Setup hook
@@ -90,7 +91,7 @@ namespace eka2l1 {
         pkg_mngr->choose_lang = [&](const int *lang, const int count) -> int {
             installer_langs = lang;
             installer_lang_size = count;
-            
+
             should_package_manager_display_language_choose = true;
 
             std::unique_lock<std::mutex> ul(installer_mut);
@@ -109,7 +110,7 @@ namespace eka2l1 {
                         get_sys()->install_package(common::utf8_to_ucs2(result.value()), drive_c);
                     }
                 }
-            
+
                 std::unique_lock<std::mutex> ul(install_thread_mut);
                 install_thread_cond.wait(ul);
             }
@@ -125,7 +126,7 @@ namespace eka2l1 {
     manager::config_state *imgui_debugger::get_config() {
         return conf;
     }
-    
+
     const char *thread_state_to_string(eka2l1::kernel::thread_state state) {
         switch (state) {
         case kernel::thread_state::stop:
@@ -380,22 +381,21 @@ namespace eka2l1 {
     template <typename F>
     bool file_dialog(const char *filter, F callback, const bool is_picking_folder = false) {
         nfdchar_t *out_path = nullptr;
-        nfdresult_t result = is_picking_folder ? NFD_PickFolder(nullptr, &out_path) : 
-            NFD_OpenDialog(filter, nullptr, &out_path);
+        nfdresult_t result = is_picking_folder ? NFD_PickFolder(nullptr, &out_path) : NFD_OpenDialog(filter, nullptr, &out_path);
 
         if (result == NFD_OKAY) {
             callback(out_path);
         }
 
         free(out_path);
-        
+
         if (result == NFD_OKAY) {
             return true;
         }
 
         return false;
     }
-    
+
     void imgui_debugger::show_pref_personalisation() {
         ImGui::AlignTextToFramePadding();
 
@@ -480,12 +480,12 @@ namespace eka2l1 {
                 conf->cpu_backend = 0;
                 conf->serialize();
             }
-            
+
             if (ImGui::Selectable("Dynarmic")) {
                 conf->cpu_backend = 1;
                 conf->serialize();
             }
-            
+
             ImGui::EndCombo();
         }
 
@@ -496,9 +496,8 @@ namespace eka2l1 {
         ImGui::PushItemWidth(col2 - 10);
 
         const auto &dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
-        const std::string preview_info = dvcs.empty() ? "No device present" : 
-            dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
-                
+        const std::string preview_info = dvcs.empty() ? "No device present" : dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
+
         if (ImGui::BeginCombo("##Devicescombo", preview_info.c_str())) {
             for (std::size_t i = 0; i < dvcs.size(); i++) {
                 const std::string device_info = dvcs[i].model + " (" + dvcs[i].firmware_code + ")";
@@ -527,14 +526,15 @@ namespace eka2l1 {
 
             ImGui::SameLine(col2 * 3 - 65);
             ImGui::PushItemWidth(30);
-            
+
             if (ImGui::Button(button)) {
                 on_pause_toogle(true);
 
                 file_dialog("", [&](const char *res) {
                     dat = res;
-                }, true);
-                    
+                },
+                    true);
+
                 should_pause = false;
                 on_pause_toogle(false);
             }
@@ -574,11 +574,11 @@ namespace eka2l1 {
         ImGui::PopItemWidth();
         conf->maximum_ram = static_cast<std::uint32_t>(mb_initial * common::MB(1));
     }
-    
+
     void imgui_debugger::show_preferences() {
         ImGui::Begin("Preferences", &should_show_preferences);
 
-        using show_func = std::function<void(imgui_debugger*)>;
+        using show_func = std::function<void(imgui_debugger *)>;
         static std::vector<std::pair<std::string, show_func>> all_prefs = {
             { "General", &imgui_debugger::show_pref_general },
             { "Mounting", &imgui_debugger::show_pref_mounting },
@@ -596,10 +596,10 @@ namespace eka2l1 {
 
         ImGui::NewLine();
         all_prefs[cur_pref_tab].second(this);
-        
+
         ImGui::NewLine();
         ImGui::NewLine();
-        
+
         ImGui::SameLine(std::max(0.0f, ImGui::GetWindowSize().x / 2 - 30.0f));
         ImGui::PushItemWidth(30);
 
@@ -612,6 +612,25 @@ namespace eka2l1 {
         ImGui::End();
     }
 
+    void imgui_debugger::do_install_package() {
+        std::string path = "";
+
+        on_pause_toogle(true);
+
+        file_dialog("sis,sisx", [&](const char *res) {
+            path = res;
+        },
+            false);
+
+        should_pause = false;
+        on_pause_toogle(false);
+
+        if (!path.empty()) {
+            install_list.push(path);
+            install_thread_cond.notify_one();
+        }
+    }
+
     void imgui_debugger::show_package_manager() {
         // Get package manager
         manager::package_manager *manager = sys->get_manager_system()->get_package_manager();
@@ -619,21 +638,7 @@ namespace eka2l1 {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("Package")) {
                 if (ImGui::MenuItem("Install")) {
-                    std::string path = "";
-
-                    on_pause_toogle(true);
-
-                    file_dialog("sis,sisx", [&](const char *res) {
-                        path = res;
-                    }, false);
-                        
-                    should_pause = false;
-                    on_pause_toogle(false);
-
-                    if (!path.empty()) {
-                        install_list.push(path);
-                        install_thread_cond.notify_one();
-                    }
+                    do_install_package();
                 }
 
                 if (ImGui::MenuItem("Remove", nullptr, &should_package_manager_remove)) {
@@ -663,7 +668,7 @@ namespace eka2l1 {
         ImGui::NextColumn();
 
         ImGuiListClipper clipper(static_cast<int>(manager->package_count()), ImGui::GetTextLineHeight());
-        
+
         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
             const manager::package_info *pkg = manager->package(i);
             std::string str = "0x" + common::to_string(pkg->id, std::hex);
@@ -695,13 +700,13 @@ namespace eka2l1 {
             ImGui::NextColumn();
 
             str = common::ucs2_to_utf8(pkg->vendor_name);
-            
+
             ImGui::Text("%s", str.c_str());
             ImGui::NextColumn();
 
             str = static_cast<char>(drive_to_char16(pkg->drive));
             str += ":";
-            
+
             ImGui::Text("%s", str.c_str());
             ImGui::NextColumn();
         }
@@ -716,19 +721,18 @@ namespace eka2l1 {
             const manager::package_info *pkg = manager->package(selected_package_index);
 
             if (pkg != nullptr) {
-                const std::string pkg_title = common::ucs2_to_utf8(pkg->name) + " (0x" + 
-                    common::to_string(pkg->id, std::hex) + ") file lists";
+                const std::string pkg_title = common::ucs2_to_utf8(pkg->name) + " (0x" + common::to_string(pkg->id, std::hex) + ") file lists";
 
                 std::vector<std::string> paths;
                 manager->get_file_bucket(pkg->id, paths);
 
                 ImGui::Begin(pkg_title.c_str(), &should_package_manager_display_file_list);
 
-                for (auto &path: paths) {
+                for (auto &path : paths) {
                     ImGui::Text("%s", path.c_str());
                 }
 
-                ImGui::End();   
+                ImGui::End();
             }
         }
 
@@ -744,7 +748,7 @@ namespace eka2l1 {
                 } else {
                     std::string ask_question = "Are you sure you want to remove the package ("
                         + common::ucs2_to_utf8(pkg->name) + ")?";
-                    
+
                     ImGui::Text("%s", ask_question.c_str());
                 }
 
@@ -781,7 +785,7 @@ namespace eka2l1 {
             if (ImGui::Button("Yes")) {
                 installer_text_result = true;
                 installer_cond.notify_one();
-                
+
                 should_package_manager_display_installer_text = false;
             }
 
@@ -790,14 +794,14 @@ namespace eka2l1 {
             if (ImGui::Button("No")) {
                 installer_text_result = false;
                 installer_cond.notify_one();
-    
+
                 should_package_manager_display_installer_text = false;
             }
 
             ImGui::EndPopup();
         }
     }
-    
+
     void imgui_debugger::show_installer_choose_lang_popup() {
         ImGui::OpenPopup("Choose the language for this package");
 
@@ -811,7 +815,7 @@ namespace eka2l1 {
             if (ImGui::Button("OK")) {
                 installer_lang_choose_result = installer_langs[installer_current_lang_idx];
                 installer_cond.notify_one();
-                
+
                 should_package_manager_display_language_choose = false;
             }
 
@@ -829,10 +833,11 @@ namespace eka2l1 {
     void imgui_debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
             conf->menu_height = ImGui::GetWindowSize().y;
-            
+
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
                 ImGui::MenuItem("Packages", nullptr, &should_package_manager);
+                ImGui::MenuItem("Install package", nullptr, &should_install_package);
 
                 ImGui::EndMenu();
             }
@@ -852,7 +857,7 @@ namespace eka2l1 {
                     ImGui::MenuItem("Chunks", nullptr, &should_show_chunks);
                     ImGui::EndMenu();
                 }
-                
+
                 ImGui::EndMenu();
             }
 
@@ -869,7 +874,7 @@ namespace eka2l1 {
         ImGuiIO &io = ImGui::GetIO();
 
         if (io.KeyCtrl && io.KeyShift) {
-            if (io.KeysDown[KEY_L]) {   // Logger
+            if (io.KeysDown[KEY_L]) { // Logger
                 should_show_logger = !should_show_logger;
                 io.KeysDown[KEY_L] = false;
             }
@@ -917,6 +922,11 @@ namespace eka2l1 {
 
         if (should_package_manager_display_language_choose) {
             show_installer_choose_lang_popup();
+        }
+
+        if (should_install_package) {
+            should_install_package = false;
+            do_install_package();
         }
 
         on_pause_toogle(should_pause);
