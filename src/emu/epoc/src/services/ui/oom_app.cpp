@@ -33,15 +33,72 @@
 
 namespace eka2l1 {
     oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys)
-        : service::server(sys, "101fdfae_10207218_AppServer", true) {
+        : service::typical_server(sys, "101fdfae_10207218_AppServer") {
         REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
         REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
         REGISTER_IPC(oom_ui_app_server, set_sgc_params, EAknEikAppUiSetSgcParams, "OOM::SetSgcParams");
     }
 
+    void oom_ui_app_server::connect(service::ipc_context &ctx) {
+        create_session<oom_ui_app_session>(&ctx);
+        typical_server::connect(ctx);
+    }
+
+    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid)
+        : service::typical_session(svr, client_ss_uid)
+        , blank_count(0) {
+    }
+
+    void oom_ui_app_session::fetch(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
+        case EAknEikAppUiLayoutConfigSize: {
+            server<oom_ui_app_server>()->get_layout_config_size(*ctx);
+            break;
+        }
+
+        case EAknEikAppUiGetLayoutConfig: {
+            server<oom_ui_app_server>()->get_layout_config(*ctx);
+            break;
+        }
+
+        case EAknEikAppUiSetSgcParams: {
+            server<oom_ui_app_server>()->set_sgc_params(*ctx);
+            break;
+        }
+
+        case EAknSBlankScreen: {
+            blank_count++;
+
+            if (blank_count == 0) {
+                // No way... This is impossible
+                LOG_ERROR("App session has blank count negative before called blank screen");
+                ctx->set_request_status(KErrAbort);
+                break;
+            }
+
+            LOG_TRACE("Blanking screen in AKNCAP session stubbed");
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
+        case EAknSUnblankScreen: {
+            blank_count--;
+
+            LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
+        default: {
+            LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with KErrNone", ctx->msg->function);
+            ctx->set_request_status(KErrNone);
+        }
+        }
+    }
+
     std::string oom_ui_app_server::get_layout_buf() {
         if (!winsrv) {
-            winsrv = reinterpret_cast<window_server*>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Windowserver")));
+            winsrv = reinterpret_cast<window_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Windowserver")));
         }
 
         epoc::config::screen &scr_config = winsrv->get_current_focus_screen_config();
