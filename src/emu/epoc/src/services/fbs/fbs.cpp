@@ -264,7 +264,7 @@ namespace eka2l1 {
     bool fbs_server::free_large_data(const void *ptr) {
         if (!large_chunk || !large_chunk_allocator) {
             LOG_CRITICAL("FBS server hasn't initialized yet");
-            return nullptr;
+            return false;
         }
 
         return large_chunk_allocator->free(ptr);
