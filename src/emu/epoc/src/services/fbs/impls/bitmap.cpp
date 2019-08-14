@@ -40,6 +40,120 @@
 #include <cassert>
 
 namespace eka2l1 {
+    static epoc::display_mode get_display_mode_from_bpp(const int bpp) {
+        switch (bpp) {
+        case 1:
+            return epoc::display_mode::gray2;
+        case 2:
+            return epoc::display_mode::gray4;
+        case 4:
+            return epoc::display_mode::color16;
+        case 8:
+            return epoc::display_mode::color256;
+        case 12:
+            return epoc::display_mode::color4k;
+        case 16:
+            return epoc::display_mode::color64k;
+        case 24:
+            return epoc::display_mode::color16m;
+        case 32:
+            return epoc::display_mode::color16ma;
+        default:
+            break;
+        }
+
+        return epoc::display_mode::color16m;
+    }
+
+    static int get_bpp_from_display_mode(const epoc::display_mode bpp) {
+        switch (bpp) {
+        case epoc::display_mode::gray2:
+            return 1;
+        case epoc::display_mode::gray4:
+            return 2;
+        case epoc::display_mode::gray16:
+        case epoc::display_mode::color16:
+            return 4;
+        case epoc::display_mode::gray256:
+        case epoc::display_mode::color256:
+            return 8;
+        case epoc::display_mode::color4k:
+            return 12;
+        case epoc::display_mode::color64k:
+            return 16;
+        case epoc::display_mode::color16m:
+            return 24;
+        case epoc::display_mode::color16mu:
+        case epoc::display_mode::color16ma:
+            return 32;
+        }
+
+        return 24;
+    }
+
+    static epoc::bitmap_color get_bitmap_color_type_from_display_mode(const epoc::display_mode bpp) {
+        switch (bpp) {
+        case epoc::display_mode::gray2:
+            return epoc::monochrome_bitmap;
+        case epoc::display_mode::color16ma:
+        case epoc::display_mode::color16map:
+            return epoc::color_bitmap_with_alpha;
+        default:
+            break;
+        }
+
+        return epoc::color_bitmap;
+    }
+
+    static int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
+        int word_width = 0;
+
+        switch (bits_per_pixel) {
+        case 1: {
+            word_width = (pixels_width + 31) / 32;
+            break;
+        }
+
+        case 2: {
+            word_width = (pixels_width + 15) / 16;
+            break;
+        }
+
+        case 4: {
+            word_width = (pixels_width + 7) / 8;
+            break;
+        }
+
+        case 8: {
+            word_width = (pixels_width + 3) / 4;
+            break;
+        }
+
+        case 12:
+        case 16: {
+            word_width = (pixels_width + 1) / 2;
+            break;
+        }
+
+        case 24: {
+            word_width = (((pixels_width * 3) + 11) / 12) * 3;
+            break;
+        }
+
+        case 32: {
+            word_width = pixels_width;
+            break;
+        }
+
+        default: {
+            assert(false);
+            break;
+        }
+        }
+
+        return word_width * 4;
+    }
+
     namespace epoc {
         constexpr std::uint32_t BITWISE_BITMAP_UID = 0x10000040;
         constexpr std::uint32_t MAGIC_FBS_PILE_PTR = 0xDEADFB55;
@@ -87,6 +201,37 @@ namespace eka2l1 {
             else
                 flags_ &= ~(settings_flag::violate_bitmap);
         }
+
+        static void do_white_fill(std::uint8_t *dest, const std::size_t size, epoc::display_mode mode) {
+            std::fill(dest, dest + size, 0xFF);
+        }
+
+        void bitwise_bitmap::construct(loader::sbm_header &info, void *data, const void *base, const bool white_fill) {
+            uid_ = epoc::BITWISE_BITMAP_UID;
+            allocator_ = MAGIC_FBS_HEAP_PTR;
+            pile_ = MAGIC_FBS_PILE_PTR;
+            byte_width_ = 0;
+            header_ = info;
+            spare1_ = 0;
+            data_offset_ = 0xFFFFFF;
+
+            if (info.compression != epoc::bitmap_file_no_compression) {
+                // Compressed in RAM!
+                compressed_in_ram_ = true;
+            }
+
+            data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) - reinterpret_cast<const std::uint8_t *>(base));
+
+            const epoc::display_mode disp_pixel_mode = get_display_mode_from_bpp(info.bit_per_pixels);
+            settings_.current_display_mode(disp_pixel_mode);
+            settings_.initial_display_mode(disp_pixel_mode);
+
+            byte_width_ = get_byte_width(info.size_pixels.width(), static_cast<std::uint8_t>(info.bit_per_pixels));
+
+            if (white_fill) {
+                do_white_fill(reinterpret_cast<std::uint8_t *>(data), info.bitmap_size - sizeof(loader::sbm_header), settings_.current_display_mode());
+            }
+        }
     }
 
     struct load_bitmap_arg {
@@ -101,109 +246,11 @@ namespace eka2l1 {
         std::int32_t address_offset;
     };
 
-    static epoc::display_mode get_display_mode_from_bpp(const int bpp) {
-        switch (bpp) {
-        case 1: return epoc::display_mode::gray2;
-        case 2: return epoc::display_mode::gray4;
-        case 4: return epoc::display_mode::color16;
-        case 8: return epoc::display_mode::color256;
-        case 12: return epoc::display_mode::color4k;
-        case 16: return epoc::display_mode::color64k;
-        case 24: return epoc::display_mode::color16m;
-        case 32: return epoc::display_mode::color16ma;
-        default: break;
-        }
-
-        return epoc::display_mode::color16m;
-    }
-
-    static int get_bpp_from_display_mode(const epoc::display_mode bpp) {
-        switch (bpp) {
-        case epoc::display_mode::gray2: return 1;
-        case epoc::display_mode::gray4: return 2;
-        case epoc::display_mode::gray16: case epoc::display_mode::color16: return 4;
-        case epoc::display_mode::gray256: case epoc::display_mode::color256: return 8;
-        case epoc::display_mode::color4k: return 12;
-        case epoc::display_mode::color64k: return 16;
-        case epoc::display_mode::color16m: return 24;
-        case epoc::display_mode::color16mu: case epoc::display_mode::color16ma: return 32;
-        }
-
-        return 24;
-    }
-
-    static epoc::bitmap_color get_bitmap_color_type_from_display_mode(const epoc::display_mode bpp) {
-        switch (bpp) {
-        case epoc::display_mode::gray2: return epoc::monochrome_bitmap;
-        case epoc::display_mode::color16ma: case epoc::display_mode::color16map: return epoc::color_bitmap_with_alpha;
-        default: break;
-        }
-
-        return epoc::color_bitmap;
-    }
-
-    static int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
-        int word_width = 0;
-
-        switch (bits_per_pixel) {
-        case 1: 
-        {
-            word_width = (pixels_width + 31) / 32;
-            break;
-        }
-
-        case 2: 
-        {
-            word_width = (pixels_width + 15) / 16;
-            break;
-        }
-
-        case 4: 
-        {
-            word_width = (pixels_width + 7) / 8;
-            break;
-        }
-
-        case 8:
-        {
-            word_width = (pixels_width + 3) / 4;
-            break;
-        }
-
-        case 12:
-        case 16: 
-        {
-            word_width = (pixels_width + 1) / 2;
-            break;
-        }
-
-        case 24:
-        {
-            word_width = (((pixels_width * 3) + 11) / 12) * 3;
-            break;
-        }
-
-        case 32: 
-        {
-            word_width = pixels_width;
-            break;
-        }
-
-        default: {
-            assert(false);
-            break;
-        }
-        }
-
-        return word_width * 4;
-    }
-
     fbsbitmap::~fbsbitmap() {
         serv_->free_bitmap(this);
     }
 
-    std::optional<std::size_t> fbs_server::load_uncomp_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_
-        , int *err_code) {
+    std::optional<std::size_t> fbs_server::load_uncomp_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code) {
         // First, get the size of data when uncompressed
         std::size_t size_when_uncompressed = 0;
         if (!mbmf_.read_single_bitmap(idx_, nullptr, size_when_uncompressed)) {
@@ -223,13 +270,13 @@ namespace eka2l1 {
 
         // Yay, we manage to alloc memory to load the data in
         // So let's get to work
-        if (!mbmf_.read_single_bitmap(idx_, reinterpret_cast<std::uint8_t*>(data), avail_dest_size)) {
+        if (!mbmf_.read_single_bitmap(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size)) {
             *err_code = fbs_load_data_err_read_decomp_fail;
             return std::nullopt;
         }
 
         *err_code = fbs_load_data_err_none;
-        return reinterpret_cast<std::uint8_t*>(data) - base_large_chunk;
+        return reinterpret_cast<std::uint8_t *>(data) - base_large_chunk;
     }
 
     void fbscli::load_bitmap(service::ipc_context *ctx) {
@@ -298,7 +345,7 @@ namespace eka2l1 {
         if (!bmp) {
             // Let's load the MBM from file first
             eka2l1::ro_file_stream stream_(source);
-            loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream*>(&stream_));
+            loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream *>(&stream_));
 
             mbmf_.do_read_headers();
 
@@ -344,10 +391,10 @@ namespace eka2l1 {
             }
 
             // Place holder value indicates we allocate through the large chunk.
-            // If guest uses this, than we are doom. But gonna put it here anyway    
+            // If guest uses this, than we are doom. But gonna put it here anyway
             bws_bmp->pile_ = epoc::MAGIC_FBS_PILE_PTR;
             bws_bmp->allocator_ = epoc::MAGIC_FBS_HEAP_PTR;
-            
+
             bws_bmp->data_offset_ = static_cast<std::uint32_t>(bmp_data_offset.value());
             bws_bmp->compressed_in_ram_ = false;
             bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
@@ -380,12 +427,12 @@ namespace eka2l1 {
         handle_info.address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg<bmp_handles>(0, handle_info);
-        ctx->set_request_status(KErrNone); 
+        ctx->set_request_status(KErrNone);
     }
 
     struct bmp_specs {
         eka2l1::vec2 size;
-        epoc::display_mode bpp;       // Ignore
+        epoc::display_mode bpp; // Ignore
         std::uint32_t handle;
         std::uint32_t server_handle;
         std::uint32_t address_offset;
@@ -401,39 +448,34 @@ namespace eka2l1 {
 
     fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool support_dirty) {
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
-        // Initialize magic pointer. This will let the client know we use the large heap
-        bws_bmp->pile_ = epoc::MAGIC_FBS_PILE_PTR;
-        bws_bmp->allocator_ = epoc::MAGIC_FBS_HEAP_PTR;
-        bws_bmp->header_.header_len = sizeof(loader::sbm_header);
-        bws_bmp->uid_ = epoc::BITWISE_BITMAP_UID;
 
-        bws_bmp->header_.size_pixels = size;
-        bws_bmp->header_.size_twips = size * 15;
-        bws_bmp->header_.color = get_bitmap_color_type_from_display_mode(dpm);
-        bws_bmp->header_.bit_per_pixels = get_bpp_from_display_mode(dpm);
-        bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
-        bws_bmp->header_.bitmap_size = (bws_bmp->byte_width_ * size.y) + sizeof(bws_bmp->header_);
-        bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
-        bws_bmp->data_offset_ = 0;
-
-        bws_bmp->settings_.current_display_mode(dpm);
-        bws_bmp->settings_.initial_display_mode(dpm);
-        
         // Calculate the size
         std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(size, dpm);
-        
+        void *data = nullptr;
+
         if (alloc_bytes > 0) {
             // Allocates from the large chunk
             // Align them with 4 bytes
             std::size_t avail_dest_size = common::align(alloc_bytes, 4);
-            void *data = large_chunk_allocator->allocate(avail_dest_size);
+            data = large_chunk_allocator->allocate(avail_dest_size);
 
             if (!data) {
+                shared_chunk_allocator->free(bws_bmp);
                 return nullptr;
             }
-
-            bws_bmp->data_offset_ = static_cast<int>(reinterpret_cast<std::uint8_t*>(data) - base_large_chunk);
         }
+
+        loader::sbm_header header;
+        header.compression = epoc::bitmap_file_no_compression;
+        header.bitmap_size = alloc_bytes + sizeof(loader::sbm_header);
+        header.size_pixels = size;
+        header.color = get_bitmap_color_type_from_display_mode(dpm);
+        header.header_len = sizeof(loader::sbm_header);
+        header.palette_size = 0;
+        header.size_twips = size * twips_mul;
+        header.bit_per_pixels = get_bpp_from_display_mode(dpm);
+
+        bws_bmp->construct(header, data, base_large_chunk, true);
 
         fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty);
         return bmp;
@@ -456,7 +498,7 @@ namespace eka2l1 {
 
         return true;
     }
-    
+
     void fbscli::create_bitmap(service::ipc_context *ctx) {
         std::optional<bmp_specs> specs = ctx->get_arg_packed<bmp_specs>(0);
 
@@ -496,7 +538,7 @@ namespace eka2l1 {
         nof_->nof.sts = ctx->msg->request_sts;
         nof_->nof.requester = ctx->msg->own_thr;
     }
-    
+
     void fbscli::cancel_notify_dirty_bitmap(service::ipc_context *ctx) {
         std::vector<fbs_dirty_notify_request> &notifies = server<fbs_server>()->dirty_nofs;
 
@@ -529,7 +571,7 @@ namespace eka2l1 {
         obj_table_.remove(bmp_handle);
 
         bmp_handles handle_info;
-        
+
         // Get the clean bitmap handle!
         handle_info.handle = obj_table_.add(bmp);
         handle_info.server_handle = bmp->id;
