@@ -206,7 +206,7 @@ namespace eka2l1::epoc::adapter {
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
 
         if (!info) {
-            return nullptr;
+            return false;
         }
 
         int adv_width = 0;
