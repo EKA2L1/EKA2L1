@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <algorithm>
 #include <functional>
 #include <type_traits>
