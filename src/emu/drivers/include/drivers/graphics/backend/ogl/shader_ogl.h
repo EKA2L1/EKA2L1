@@ -19,12 +19,12 @@ namespace eka2l1::drivers {
         explicit ogl_shader(const char *vert_data, const std::size_t vert_size,
             const char *frag_data, const std::size_t frag_size);
 
-        bool create(const char *vert_data, const std::size_t vert_size,
+        bool create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
             const char *frag_data, const std::size_t frag_size) override;
 
-        bool use() override;
+        bool use(graphics_driver *driver) override;
 
-        bool set(const std::string &name, const shader_set_var_type var_type, const void *data) override;
+        bool set(graphics_driver *driver, const std::string &name, const shader_set_var_type var_type, const void *data) override;
 
         std::uint32_t program_handle() const {
             return program;

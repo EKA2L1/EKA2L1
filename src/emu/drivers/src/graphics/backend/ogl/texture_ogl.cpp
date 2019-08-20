@@ -24,11 +24,20 @@
 namespace eka2l1::drivers {
     static GLint to_gl_format(const texture_format format) {
         switch (format) {
+        case texture_format::r:
+            return GL_RED;
+
+        case texture_format::rg:
+            return GL_RG;
+
         case texture_format::rgb:
             return GL_RGB;
 
-        case texture_format::bgr: 
+        case texture_format::bgr:
             return GL_BGR;
+
+        case texture_format::bgra:
+            return GL_BGRA;
 
         case texture_format::rgba:
             return GL_RGBA;
@@ -82,7 +91,7 @@ namespace eka2l1::drivers {
         return 0;
     }
 
-    bool ogl_texture::tex(const bool is_first) {
+    bool ogl_texture::tex(graphics_driver *driver, const bool is_first) {
         switch (dimensions) {
         case 1:
             glTexImage1D(GL_TEXTURE_1D, mip_level, to_gl_format(internal_format), tex_size.x, 0, to_gl_format(format),
@@ -103,7 +112,7 @@ namespace eka2l1::drivers {
             break;
 
         default: {
-            unbind();
+            unbind(driver);
             glDeleteTextures(1, &texture);
 
             return false;
@@ -113,7 +122,7 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    bool ogl_texture::create(const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
+    bool ogl_texture::create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
         const texture_format format, const texture_data_type data_type, void *data) {
         glGenTextures(1, &texture);
 
@@ -123,13 +132,13 @@ namespace eka2l1::drivers {
         tex_data = data;
         mip_level = miplvl;
 
-        bind();
+        bind(driver);
 
         this->internal_format = internal_format;
         this->format = format;
 
-        bool res = tex(true);
-        unbind();
+        bool res = tex(driver, true);
+        unbind(driver);
 
         if (!res) {
             glDeleteTextures(1, &texture);
@@ -170,9 +179,9 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::set_filter_minmag(const bool min, const filter_option op) {
-        bind();
+        bind(nullptr);
         glTexParameteri(GL_TEXTURE_2D, min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER, to_filter_option(op));
-        unbind();
+        unbind(nullptr);
     }
 
     static GLenum get_binding_enum_dim(const int dim) {
@@ -189,20 +198,42 @@ namespace eka2l1::drivers {
             return GL_TEXTURE_BINDING_3D;
         }
 
-        default: 
+        default:
             break;
         }
 
         return GL_TEXTURE_BINDING_2D;
     }
 
-    void ogl_texture::bind() {
+    void ogl_texture::bind(graphics_driver *driver) {
         glGetIntegerv(get_binding_enum_dim(dimensions), &last_tex);
         glBindTexture(to_gl_tex_dim(dimensions), texture);
     }
 
-    void ogl_texture::unbind() {
+    void ogl_texture::unbind(graphics_driver *driver) {
         glBindTexture(to_gl_tex_dim(dimensions), last_tex);
         last_tex = 0;
+    }
+
+    void ogl_texture::update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
+        const texture_data_type data_type, const void *data) {
+        switch (dimensions) {
+        case 1:
+            glTexSubImage1D(GL_TEXTURE_1D, mip_lvl, offset.x, size.x, to_gl_format(data_format), to_gl_data_type(data_type), data);
+            break;
+
+        case 2:
+            glTexSubImage2D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, size.x, size.y, to_gl_format(data_format), to_gl_data_type(data_type), data);
+            break;
+
+        case 3:
+            glTexSubImage3D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, offset.z, size.x, size.y, size.z, to_gl_format(data_format),
+                to_gl_data_type(data_type), data);
+
+            break;
+
+        default:
+            break;
+        }
     }
 }

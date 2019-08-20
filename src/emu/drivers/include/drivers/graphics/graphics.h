@@ -27,40 +27,43 @@
 #include <memory>
 
 namespace eka2l1::drivers {
-    enum graphics_driver_opcode {
+    enum graphics_driver_opcode : std::uint16_t {
+        // Mode -1: Miscs
+        graphics_driver_invalidate_rect,
+        graphics_driver_set_invalidate,
+
+        // Mode 0: Immediate - Draw direct 2D elements to screen
         graphics_driver_clear,
-        graphics_driver_resize_screen,
-        graphics_driver_create_window,
-        graphics_driver_destroy_window,
-        graphics_driver_begin_window,
-        graphics_driver_invalidate,
-        graphics_driver_end_invalidate,
-        graphics_driver_end_window,
+        graphics_driver_create_bitmap,
+        graphics_driver_destroy_bitmap,
+        graphics_driver_bind_bitmap,
         graphics_driver_set_brush_color,
-        graphics_driver_set_window_size,
-        graphics_driver_set_priority,
-        graphics_driver_set_visibility,
-        graphics_driver_set_win_pos,
         graphics_driver_draw_text_box,
-        graphics_driver_upload_bitmap,
-        graphics_driver_draw_bitmap
+        graphics_driver_update_bitmap,
+        graphics_driver_draw_bitmap,
+        graphics_driver_resize_bitmap
+
+        // Mode 1: Advance - Lower access to functions
     };
 
     class graphics_driver : public driver {
-    public:
-        graphics_driver() {}
+        graphic_api api_;
 
-        virtual vec2 get_screen_size() = 0;
-        virtual void set_screen_size(const vec2 &s) = 0;
-        virtual std::vector<std::uint8_t> get_render_texture_data(std::size_t stride) = 0;
-        virtual std::uint64_t get_render_texture_handle() = 0;        
-        virtual drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, 
-            const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) = 0;
+    public:
+        explicit graphics_driver(graphic_api api)
+            : api_(api) {}
+
+        const graphic_api get_current_api() const {
+            return api_;
+        }
+
+        virtual void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
+            const eka2l1::vec2 &dim, const int bpp, const void *data) = 0;
     };
 
     using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
 
     bool init_graphics_library(graphic_api api);
 
-    graphics_driver_ptr create_graphics_driver(const graphic_api api, const vec2 &screen_size);
+    graphics_driver_ptr create_graphics_driver(const graphic_api api);
 };

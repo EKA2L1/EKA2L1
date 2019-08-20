@@ -27,9 +27,15 @@
 #include <memory>
 
 namespace eka2l1::drivers {
+    class graphics_driver;
+
     enum class texture_format {
+        none,
+        r,
+        rg,
         rgb,
         bgr,
+        bgra,
         rgba,
         depth_stencil,
         depth24_stencil8
@@ -51,14 +57,13 @@ namespace eka2l1::drivers {
     public:
         texture() {}
 
-        virtual bool create(const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data)
-            = 0;
+        virtual bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
+            const texture_format format, const texture_data_type data_type, void *data) = 0;
 
         virtual ~texture(){};
         virtual std::uint64_t texture_handle() = 0;
 
-        virtual bool tex(const bool is_first) = 0;
+        virtual bool tex(graphics_driver *driver, const bool is_first) = 0;
 
         virtual void change_size(const vec3 &new_size) = 0;
         virtual void change_data(const texture_data_type data_type, void *data) = 0;
@@ -66,8 +71,8 @@ namespace eka2l1::drivers {
 
         virtual void set_filter_minmag(const bool min, const filter_option op) = 0;
 
-        virtual void bind() = 0;
-        virtual void unbind() = 0;
+        virtual void bind(graphics_driver *driver) = 0;
+        virtual void unbind(graphics_driver *driver) = 0;
 
         virtual vec2 get_size() const = 0;
         virtual texture_format get_format() const = 0;
@@ -75,9 +80,12 @@ namespace eka2l1::drivers {
         virtual int get_total_dimensions() const = 0;
         virtual void *get_data_ptr() const = 0;
         virtual int get_mip_level() const = 0;
+
+        virtual void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
+            const texture_data_type data_type, const void *data) = 0;
     };
 
     using texture_ptr = std::shared_ptr<texture>;
 
-    texture_ptr make_texture(const graphic_api gr_api);
+    texture_ptr make_texture(graphics_driver *driver);
 }

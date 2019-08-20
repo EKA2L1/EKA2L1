@@ -38,7 +38,7 @@ add_library(drivers
     src/input/input.cpp
     ${DRIVERS_VULKAN_SRC})
 
-target_link_libraries(drivers PRIVATE common imgui glad glfw)
+target_link_libraries(drivers PRIVATE common imgui glad glm glfw)
 target_include_directories(drivers PUBLIC include)
 
 if (BUILD_WITH_VULKAN)

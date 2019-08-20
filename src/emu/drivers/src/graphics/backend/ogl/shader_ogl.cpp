@@ -52,7 +52,7 @@ namespace eka2l1::drivers {
         create(vert_data, vert_size, frag_data, frag_size);
     }
 
-    bool ogl_shader::create(const char *vert_data, const std::size_t vert_size,
+    bool ogl_shader::create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
         const char *frag_data, const std::size_t frag_size) {
         std::uint32_t vert = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vert, 1, &vert_data, nullptr);
@@ -109,7 +109,7 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    bool ogl_shader::use() {
+    bool ogl_shader::use(graphics_driver *driver) {
         glUseProgram(program);
         return true;
     }
@@ -134,7 +134,7 @@ namespace eka2l1::drivers {
         return res;
     }
     
-    bool ogl_shader::set(const std::string &name, const shader_set_var_type var_type, const void *data) {
+    bool ogl_shader::set(graphics_driver *driver, const std::string &name, const shader_set_var_type var_type, const void *data) {
         const auto loc = glGetUniformLocation(program, name.c_str());
 
         if (loc == -1) {

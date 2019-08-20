@@ -18,108 +18,110 @@
  */
 
 #include <common/log.h>
+#include <fstream>
+#include <sstream>
 
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
 #include <glad/glad.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
-// Use for render text and draw custom bitmap
-#include <imgui.h>
-#include <imgui_internal.h>
-
 namespace eka2l1::drivers {
-    ogl_graphics_driver::ogl_graphics_driver(const vec2 &scr) {
+    ogl_graphics_driver::ogl_graphics_driver()
+        : shared_graphics_driver(graphic_api::opengl) {
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
-        do_init(graphic_api::opengl, scr);
     }
 
-    void ogl_graphics_driver::set_screen_size(const vec2 &s) {
-        framebuffer->resize(s);
-        framebuffer->bind();
+    static constexpr char *sprite_norm_v_path = "resources//sprite_norm.vert";
+    static constexpr char *sprite_norm_f_path = "resources//sprite_norm.frag";
 
-        glEnable(GL_DEPTH_TEST);
-        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    void ogl_graphics_driver::do_init() {
+        sprite_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_norm_f_path);
 
-        glEnable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        static GLfloat vertices[] = {
+            // Pos      // Tex
+            0.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
 
-        framebuffer->unbind();
+            0.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 0.0f
+        };
+
+        glGenVertexArrays(1, &sprite_vao);
+        glGenBuffers(1, &sprite_vbo);
+
+        glBindVertexArray(sprite_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        color_loc = sprite_program->get_uniform_location("u_color").value();
+        projection_loc = sprite_program->get_uniform_location("u_projection").value();
+        model_loc = sprite_program->get_uniform_location("u_model").value();
     }
 
-    drivers::handle ogl_graphics_driver::upload_bitmap(drivers::handle h, const std::size_t size, 
-        const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) {
-        // Bitmap data has each row aligned by 4, so set unpack alignment to 4 first
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        h = shared_graphics_driver::upload_bitmap(h, size, width, height, bpp, data);
+    void ogl_graphics_driver::draw_bitmap(command_helper &helper) {
+        // Get bitmap to draw
+        drivers::handle to_draw = 0;
+        helper.pop(to_draw);
 
-        return h;
+        bitmap *bmp = get_bitmap(to_draw);
+
+        if (!bmp) {
+            LOG_ERROR("Invalid bitmap handle to draw");
+            return;
+        }
+
+        sprite_program->use(this);
+        glBindVertexArray(sprite_vao);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(bmp->tex->texture_handle()));
+
+        // Build model matrix
+        eka2l1::rect draw_rect;
+        helper.pop(draw_rect);
+
+        glm::mat4 model_matrix = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(draw_rect.top.x), static_cast<float>(draw_rect.top.y), 0.0f));
+
+        // Make size and rotation
+        model_matrix = glm::translate(model_matrix, glm::vec3(0.5f * static_cast<float>(draw_rect.size.x), 0.5f * static_cast<float>(draw_rect.size.y), 0.0f));
+        model_matrix = glm::rotate(model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        model_matrix = glm::translate(model_matrix, glm::vec3(-0.5f * static_cast<float>(draw_rect.size.x), -0.5f * static_cast<float>(draw_rect.size.y), 0.0f));
+
+        glUniform4fv(projection_loc, 4, glm::value_ptr(projection_matrix));
+        glUniform4fv(model_loc, 4, glm::value_ptr(model_matrix));
+
+        const GLfloat color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glUniform4fv(color_loc, 1, color);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
     }
+
+    void ogl_graphics_driver::set_invalidate(command_helper &helper) {
+        bool enable = false;
+        helper.pop(enable);
+
+        if (enable) {
+            glEnable(GL_SCISSOR_TEST);
+        } else {
+            glDisable(GL_SCISSOR_TEST);
+        }
+    }
+
+    void ogl_graphics_driver::invalidate_rect(command_helper &helper) {
+        eka2l1::rect inv_rect;
+        helper.pop(inv_rect);
     
-    bool ogl_graphics_driver::do_request_queue_execute_one_request(drivers::driver_request *request) {
-        if (shared_graphics_driver::do_request_queue_execute_one_request(request)) {
-            return true;
-        }
-
-        switch (request->opcode) {
-        case graphics_driver_clear: {
-            int c[4];
-
-            for (std::size_t i = 0; i < 4; i++) {
-                c[i] = *request->context.pop<int>();
-            }
-
-            glClearColor(c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            break;
-        }
-
-        case graphics_driver_invalidate: {
-            auto r = *request->context.pop<rect>();
-
-            // Since it takes the lower left
-            glScissor(framebuffer->get_size().x  - r.size.x + r.top.x, framebuffer->get_size().y - r.size.y + r.top.y, 
-                r.size.x, r.size.y);
-
-            glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            break;
-        }
-        
-        case graphics_driver_end_invalidate: {
-            glScissor(0, 0, 0, 0);
-
-            should_rerender = true;
-            break;
-        }
-
-        default:
-            return false; 
-        }
-
-        request->finish(0);
-        return true;
-    }
-    
-    void ogl_graphics_driver::do_request_queue_execute_job() {
-        glEnable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        glEnable(GL_SCISSOR_TEST);
-        glScissor(0, 0, 0, 0);
-
-        glDisable(GL_DEPTH_TEST);
-
-        shared_graphics_driver::do_request_queue_execute_job();
-    }
-
-    void ogl_graphics_driver::do_request_queue_clean_job() {
-        glDisable(GL_SCISSOR_TEST);
-        glEnable(GL_DEPTH_TEST);
+        glScissor(inv_rect.top.x, binding->tex->get_size().y - inv_rect.top.y, inv_rect.size.x, inv_rect.size.y);
     }
 }

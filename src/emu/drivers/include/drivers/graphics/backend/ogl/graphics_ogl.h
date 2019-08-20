@@ -31,30 +31,21 @@
 
 namespace eka2l1::drivers {
     class ogl_graphics_driver : public shared_graphics_driver {
-        std::unique_ptr<ogl_shader> render_program;
-        std::unique_ptr<ogl_texture> font_tex;
+        std::unique_ptr<ogl_shader> sprite_program;
+        GLuint sprite_vao;
+        GLuint sprite_vbo;
+        GLuint sprite_ibo;
 
-        GLuint vao_handle;
-        GLuint vbo_handle;
-        GLuint elements_buffer_handle;
+        GLint projection_loc;
+        GLint model_loc;
+        GLint color_loc;
 
-        GLuint tex_loc;
-        GLuint uv_loc;
-        GLuint color_loc;
-        GLuint pos_loc;
-        GLuint proj_loc;
+        void do_init();
+        void draw_bitmap(command_helper &helper);
+        void set_invalidate(command_helper &helper);
+        void invalidate_rect(command_helper &helper);
 
     public:
-        explicit ogl_graphics_driver(const vec2 &scr);
-
-        bool do_request_queue_execute_one_request(drivers::driver_request *request) override;
-
-        void do_request_queue_execute_job() override;
-        void do_request_queue_clean_job() override;
-
-        drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, const std::uint32_t width,
-            const std::uint32_t height, const int bpp, void *data) override;
-
-        void set_screen_size(const vec2 &s) override;
+        explicit ogl_graphics_driver();
     };
 }

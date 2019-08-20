@@ -22,9 +22,9 @@ namespace eka2l1::drivers {
         ogl_texture() {}
         ~ogl_texture() override;
 
-        bool tex(const bool is_first = false) override;
+        bool tex(graphics_driver *driver, const bool is_first = false) override;
 
-        bool create(const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
+        bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
             const texture_format format, const texture_data_type data_type, void *data) override;
 
         void change_size(const vec3 &new_size) override;
@@ -33,8 +33,11 @@ namespace eka2l1::drivers {
 
         void set_filter_minmag(const bool min, const filter_option op) override;
 
-        void bind() override;
-        void unbind() override;
+        void bind(graphics_driver *driver) override;
+        void unbind(graphics_driver *driver) override;
+        
+        void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
+            const texture_data_type data_type, const void *data) override;
 
         vec2 get_size() const override {
             return tex_size;

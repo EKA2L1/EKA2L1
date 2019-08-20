@@ -29,196 +29,97 @@
 using namespace std::chrono_literals;
 
 namespace eka2l1::drivers {
-    bool driver_client::send_opcode_sync(const int opcode, itc_context &ctx) {
-        if (!driver) {
-            return false;
+    static int send_sync_command_detail(driver *drv, command *cmd) {
+        int status = -100;
+        cmd->status_ = &status;
+
+        command_list cmd_list;
+        cmd_list.add(cmd);
+
+        std::unique_lock<std::mutex> ulock(drv->mut_);
+        drv->add_list(cmd_list);
+        drv->cond_.wait(ulock, [&]() { return status != -100; });
+
+        return status;
+    }
+
+    template <typename T, typename... Args>
+    static int send_sync_command(T drv, const std::uint16_t opcode, Args... args) {
+        command *cmd = make_command(opcode, nullptr, args...);
+        return send_sync_command_detail(reinterpret_cast<driver *>(&(*drv)), cmd);
+    }
+
+    static void *make_data_copy(const void *source, const std::size_t size) {
+        void *copy = new std::uint8_t[size];
+        std::copy(reinterpret_cast<const std::uint8_t *>(source), reinterpret_cast<const std::uint8_t *>(source) + size, copy);
+
+        return copy;
+    }
+
+    drivers::handle create_bitmap(graphics_driver_ptr driver, const eka2l1::vec2 &size) {
+        drivers::handle handle_num = 0;
+
+        if (send_sync_command(driver, graphics_driver_create_bitmap, size.x, size.y, &handle_num) != 0) {
+            return 0;
         }
 
-        int request = -1;
-
-        if (already_locked) {
-            driver->request_queue.push_unsafe({ opcode, &request, ctx });
-        } else {
-            driver->request_queue.push({ opcode, &request, ctx });
-        }
-
-        sync_with_driver(&request);
-
-        return true;
+        return handle_num;
     }
 
-    bool driver_client::send_opcode(const int opcode, itc_context &ctx) {
-        if (!driver) {
-            return false;
-        }
-        
-        if (already_locked) {
-            driver->request_queue.push_unsafe({ opcode, nullptr, ctx });
-        } else {
-            driver->request_queue.push({ opcode, nullptr, ctx });
-        }
-
-        return true;
+    graphics_command_list_builder::graphics_command_list_builder(command_list *list)
+        : list_(list) {
     }
 
-    void driver_client::lock_driver_from_process() {
-        driver->request_queue.lock.lock();
-        already_locked = true;
+    void graphics_command_list_builder::invalidate_rect(eka2l1::rect &rect) {
+        command *cmd = make_command(graphics_driver_invalidate_rect, nullptr, rect.top.x, rect.top.y,
+            rect.size.x, rect.size.y);
+
+        list_->add(cmd);
     }
 
-    void driver_client::unlock_driver_from_process() {
-        driver->request_queue.lock.unlock();
-        already_locked = false;
+    void graphics_command_list_builder::set_invalidate(const bool enabled) {
+        command *cmd = make_command(graphics_driver_invalidate_rect, nullptr, enabled);
+        list_->add(cmd);
     }
 
-    void driver_client::sync_with_driver(int *req) {
-        std::unique_lock<std::mutex> ulock(dri_cli_lock);
-
-        if (should_timeout) {
-            driver->cond.wait_for(ulock, timeout * 1ms);
-        } else {
-            driver->cond.wait(ulock, [&]() { return req ? *req != -1 : true; });
-        }
+    void graphics_command_list_builder::clear(vecx<int, 4> color) {
+        command *cmd = make_command(graphics_driver_clear, nullptr, color[0], color[1], color[2], color[3]);
+        list_->add(cmd);
     }
 
-    driver_client::driver_client(driver_instance driver)
-        : driver(driver) {
+    void graphics_command_list_builder::draw_text(eka2l1::rect rect, const std::u16string &str) {
+        command *cmd = new command(graphics_driver_draw_text_box, nullptr);
+        command_helper helper(cmd);
+
+        helper.push(rect);
+        helper.push_string(str);
     }
 
-    graphics_driver_client::graphics_driver_client(driver_instance driver)
-        : driver_client(driver) {
+    void graphics_command_list_builder::resize_bitmap(const eka2l1::vec2 &new_size) {
+        // This opcode has two variant: sync or async.
+        // The first argument is bitmap handle. If it's null then the currently binded one will be used.
+        command *cmd = make_command(graphics_driver_resize_bitmap, nullptr, 0, new_size);
+        list_->add(cmd);
     }
 
-    /*! \brief Get the screen size in pixels
-    */
-    vec2 graphics_driver_client::screen_size() {
-        // Synchronize call should directly use the client
-        std::shared_ptr<graphics_driver> gdriver = std::reinterpret_pointer_cast<graphics_driver>(driver);
-
-        return gdriver->get_screen_size();
+    void graphics_command_list_builder::update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size,
+        const eka2l1::vec2 &offset, const eka2l1::vec2 &dim) {
+        // Copy data
+        command *cmd = make_command(graphics_driver_update_bitmap, nullptr, make_data_copy(data, size), bpp, size, offset, dim, bpp);
+        list_->add(cmd);
     }
 
-    void graphics_driver_client::set_screen_size(eka2l1::vec2 &s) {
-        itc_context context;
-        context.push(s);
-
-        send_opcode(graphics_driver_resize_screen, context);
+    void graphics_command_list_builder::draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect) {
+        command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, dest_rect.top, dest_rect.size);
+        list_->add(cmd);
     }
 
-    void graphics_driver_client::invalidate(eka2l1::rect &rect) {
-        itc_context context;
-        context.push(rect);
-
-        send_opcode(graphics_driver_invalidate, context);
+    void graphics_command_list_builder::bind_bitmap(const drivers::handle h) {
+        command *cmd = make_command(graphics_driver_bind_bitmap, nullptr, h);
+        list_->add(cmd);
     }
 
-    void graphics_driver_client::end_invalidate() {
-        itc_context context;
-        send_opcode(graphics_driver_end_invalidate, context);
-    }
-
-    std::uint32_t graphics_driver_client::create_window(const eka2l1::vec2 &initial_size, const std::uint16_t pri,
-        const bool visible_from_start) {
-        std::uint32_t result = 0;
-
-        itc_context context;
-        context.push(initial_size);
-        context.push(pri);
-        context.push(visible_from_start);
-        context.push(&result);
-
-        send_opcode_sync(graphics_driver_create_window, context);
-
-        return result;
-    }
-
-    /*! \brief Clear the screen with color.
-        \params color A RGBA vector 4 color
-    */
-    void graphics_driver_client::clear(vecx<int, 4> color) {
-        itc_context context;
-        context.push(color[0]);
-        context.push(color[1]);
-        context.push(color[2]);
-        context.push(color[3]);
-
-        send_opcode(graphics_driver_clear, context);
-    }
-
-    void graphics_driver_client::draw_text(eka2l1::rect rect, const std::string &str) {
-        itc_context context;
-        context.push(rect);
-        context.push_string(str);
-
-        send_opcode(graphics_driver_draw_text_box, context);
-    }
-
-    void graphics_driver_client::set_window_visible(const std::uint32_t id, const bool visible) {
-        itc_context context;
-        context.push(id);
-        context.push(visible);
-
-        send_opcode_sync(graphics_driver_set_visibility, context);
-    }
-
-    void graphics_driver_client::set_window_size(const std::uint32_t id, const eka2l1::vec2 &win_size) {
-        itc_context context;
-        context.push(id);
-        context.push(win_size);
-
-        send_opcode_sync(graphics_driver_set_window_size, context);
-    }
-
-    void graphics_driver_client::set_window_priority(const std::uint32_t id, const std::uint16_t pri) {
-        itc_context context;
-        context.push(id);
-        context.push(pri);
-
-        send_opcode_sync(graphics_driver_set_priority, context);
-    }
-
-    void graphics_driver_client::set_window_pos(const std::uint32_t id, const eka2l1::vec2 &pos) {
-        itc_context context;
-        context.push(id);
-        context.push(pos);
-
-        send_opcode_sync(graphics_driver_set_win_pos, context);
-    }
-    
-    drivers::handle graphics_driver_client::upload_bitmap(drivers::handle h, const char *data, const std::size_t size,
-        const std::uint32_t width, const std::uint32_t height, const int bpp) {
-        itc_context context;
-        context.push(size);
-        context.push(width);
-        context.push(height);
-        context.push(bpp);
-        context.push(data);
-        context.push(&h);
-
-        send_opcode_sync(graphics_driver_upload_bitmap, context);
-        return h;
-    }
-    
-    void graphics_driver_client::draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect) {
-        itc_context context;
-        context.push(h);
-        context.push(dest_rect);
-
-        send_opcode(graphics_driver_draw_bitmap, context);
-    }
-
-    void graphics_driver_client::begin_window(const std::uint32_t id) {
-        itc_context context;
-        context.push(id);
-
-        send_opcode(graphics_driver_begin_window, context);
-    }
-
-    void graphics_driver_client::end_window() {
-        itc_context context;
-        send_opcode(graphics_driver_end_window, context);
-    }
-
+    /*
     input_driver_client::input_driver_client(driver_instance driver)
         : driver_client(driver) {
         should_timeout = true;
@@ -250,5 +151,5 @@ namespace eka2l1::drivers {
 
         send_opcode_sync(input_driver_get_total_events, context);
         return total;
-    }
+    }*/
 }

@@ -37,10 +37,10 @@ namespace eka2l1::drivers {
         return false;
     }
 
-    graphics_driver_ptr create_graphics_driver(const graphic_api api, const vec2 &screen_size) {
+    graphics_driver_ptr create_graphics_driver(const graphic_api api) {
         switch (api) {
         case graphic_api::opengl: {
-            return std::make_shared<ogl_graphics_driver>(screen_size);
+            return std::make_shared<ogl_graphics_driver>();
         }
 
         default:
