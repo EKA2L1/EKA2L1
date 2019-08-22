@@ -32,4 +32,7 @@ namespace eka2l1::drivers {
         opengl,
         vulkan
     };
+
+    class graphics_object {
+    };
 }

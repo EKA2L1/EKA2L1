@@ -19,10 +19,7 @@
 
 #include <common/log.h>
 #include <drivers/graphics/backend/graphics_driver_shared.h>
-
-// Use for render text and draw custom bitmap
-#include <imgui.h>
-#include <imgui_internal.h>
+#include <drivers/graphics/shader.h>
 
 #include <glad/glad.h>
 
@@ -70,7 +67,8 @@ namespace eka2l1::drivers {
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
         : graphics_driver(gr_api)
-        , binding(nullptr) {
+        , binding(nullptr)
+        , brush_color({ 1.0f, 1.0f, 1.0f, 1.0f }) {
     }
 
     shared_graphics_driver::~shared_graphics_driver() {
@@ -82,6 +80,27 @@ namespace eka2l1::drivers {
         }
 
         return bmp_textures[h - 1].get();
+    }
+
+    drivers::handle shared_graphics_driver::append_graphics_object(graphics_object_instance &instance) {
+        auto free_slot = std::find(graphic_objects.begin(), graphic_objects.end(), nullptr);
+
+        if (free_slot == graphic_objects.end()) {
+            *free_slot = std::move(instance);
+            return std::distance(graphic_objects.begin(), free_slot) + 1;
+        }
+
+        graphic_objects.push_back(std::move(instance));
+        return graphic_objects.size();
+    }
+
+    bool shared_graphics_driver::delete_graphics_object(const drivers::handle handle) {
+        if (handle > graphic_objects.size() || handle == 0) {
+            return 0;
+        }
+
+        graphic_objects[handle - 1].reset();
+        return true;
     }
 
     void shared_graphics_driver::update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
@@ -181,6 +200,98 @@ namespace eka2l1::drivers {
         bmp_textures[h - 1].reset();
     }
 
+    void shared_graphics_driver::set_brush_color(command_helper &helper) {
+        float r = 0.0f;
+        float g = 0.0f;
+        float b = 0.0f;
+        float a = 0.0f;
+
+        helper.pop(r);
+        helper.pop(g);
+        helper.pop(b);
+        helper.pop(a);
+
+        brush_color = { r, g, b, a };
+    }
+
+    void shared_graphics_driver::create_program(command_helper &helper) {
+        char *vert_data = nullptr;
+        char *frag_data = nullptr;
+
+        std::size_t vert_size = 0;
+        std::size_t frag_size = 0;
+
+        helper.pop(vert_data);
+        helper.pop(frag_data);
+        helper.pop(vert_size);
+        helper.pop(frag_size);
+
+        auto obj = make_shader(this);
+        if (!obj->create(this, vert_data, vert_size, frag_data, frag_size)) {
+            LOG_ERROR("Fail to create shader");
+            return;
+        }
+
+        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
+        drivers::handle res = append_graphics_object(obj_casted);
+
+        drivers::handle *store = nullptr;
+        helper.pop(store);
+
+        *store = res;
+        helper.finish(this, 0);
+    }
+
+    void shared_graphics_driver::create_texture(command_helper &helper) {
+        std::uint8_t dim = 0;
+        std::uint8_t mip_level = 0;
+
+        drivers::texture_format internal_format = drivers::texture_format::none;
+        drivers::texture_format data_format = drivers::texture_format::none;
+        drivers::texture_data_type data_type = drivers::texture_data_type::ubyte;
+        void *data = nullptr;
+
+        helper.pop(dim);
+        helper.pop(mip_level);
+        helper.pop(internal_format);
+        helper.pop(data_format);
+        helper.pop(data_type);
+        helper.pop(data);
+
+        std::uint32_t width = 0;
+        std::uint32_t height = 0;
+        std::uint32_t depth = 0;
+
+        switch (dim) {
+        case 3:
+            helper.pop(depth);
+            [[fallthrough]]
+
+            case 2 : helper.pop(height);
+            [[fallthrough]]
+
+            case 1 : helper.pop(width);
+            break;
+
+        default:
+            break;
+        }
+
+        auto obj = make_texture(this);
+        obj->create(this, static_cast<int>(dim), static_cast<int>(mip_level), eka2l1::vec3(width, height, depth),
+            internal_format, data_format, data_type, data);
+
+        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
+        drivers::handle res = append_graphics_object(obj_casted);
+
+        drivers::handle *store = nullptr;
+        helper.pop(store);
+
+        *store = res;
+
+        helper.finish(this, 0);
+    }
+
     void shared_graphics_driver::dispatch(command *cmd) {
         command_helper helper(cmd);
 
@@ -202,6 +313,21 @@ namespace eka2l1::drivers {
 
         case graphics_driver_destroy_bitmap: {
             destroy_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_set_brush_color: {
+            set_brush_color(helper);
+            break;
+        }
+
+        case graphics_driver_create_program: {
+            create_program(helper);
+            break;
+        }
+
+        case graphics_driver_create_texture: {
+            create_texture(helper);
             break;
         }
 

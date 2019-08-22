@@ -25,7 +25,7 @@ namespace eka2l1::drivers {
     texture_ptr make_texture(graphics_driver *driver) {
         switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_shared<ogl_texture>();
+            return std::make_unique<ogl_texture>();
             break;
         }
 

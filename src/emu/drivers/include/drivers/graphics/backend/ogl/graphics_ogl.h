@@ -41,6 +41,7 @@ namespace eka2l1::drivers {
         GLint color_loc;
 
         void do_init();
+
         void draw_bitmap(command_helper &helper);
         void set_invalidate(command_helper &helper);
         void invalidate_rect(command_helper &helper);

@@ -38,12 +38,15 @@ namespace eka2l1::drivers {
         graphics_driver_destroy_bitmap,
         graphics_driver_bind_bitmap,
         graphics_driver_set_brush_color,
-        graphics_driver_draw_text_box,
         graphics_driver_update_bitmap,
         graphics_driver_draw_bitmap,
-        graphics_driver_resize_bitmap
+        graphics_driver_resize_bitmap,
 
         // Mode 1: Advance - Lower access to functions
+        graphics_driver_create_program,
+        graphics_driver_create_texture,
+        graphics_driver_backup_state,       // Backup all possible state to a struct
+        graphics_driver_restore_state       // Restore previously backup data
     };
 
     class graphics_driver : public driver {

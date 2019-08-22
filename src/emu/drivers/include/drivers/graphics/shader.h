@@ -20,7 +20,10 @@
 
 #pragma once
 
+#include <drivers/graphics/common.h>
+
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -34,7 +37,7 @@ namespace eka2l1::drivers {
         mat4
     };
 
-    class shader {
+    class shader : public graphics_object {
     public:
         virtual bool create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
             const char *frag_data, const std::size_t frag_size) = 0;
@@ -45,4 +48,6 @@ namespace eka2l1::drivers {
         virtual std::optional<int> get_uniform_location(const std::string &name) = 0;
         virtual std::optional<int> get_attrib_location(const std::string &name) = 0;
     };
+
+    std::unique_ptr<shader> make_shader(graphics_driver *driver);
 }

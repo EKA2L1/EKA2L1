@@ -100,8 +100,16 @@ namespace eka2l1::drivers {
         glUniform4fv(projection_loc, 4, glm::value_ptr(projection_matrix));
         glUniform4fv(model_loc, 4, glm::value_ptr(model_matrix));
 
+        bool use_brush = false;
+        helper.pop(use_brush);
+
         const GLfloat color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        glUniform4fv(color_loc, 1, color);
+
+        if (use_brush) {
+            glUniform4fv(color_loc, 1, brush_color.elements.data());
+        } else {
+            glUniform4fv(color_loc, 1, color);
+        }
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
@@ -121,7 +129,7 @@ namespace eka2l1::drivers {
     void ogl_graphics_driver::invalidate_rect(command_helper &helper) {
         eka2l1::rect inv_rect;
         helper.pop(inv_rect);
-    
+
         glScissor(inv_rect.top.x, binding->tex->get_size().y - inv_rect.top.y, inv_rect.size.x, inv_rect.size.y);
     }
 }

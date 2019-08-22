@@ -28,6 +28,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <common/queue.h>
+#include <common/vecx.h>
 
 namespace eka2l1::drivers {
     /**
@@ -43,23 +44,32 @@ namespace eka2l1::drivers {
     };
 
     using bitmap_ptr = std::unique_ptr<bitmap>;
+    using graphics_object_instance = std::unique_ptr<graphics_object>;
 
     class shared_graphics_driver : public graphics_driver {
     protected:
         std::vector<bitmap_ptr> bmp_textures;
+        std::vector<graphics_object_instance> graphic_objects;
 
         bitmap *binding;
         bitmap *get_bitmap(const drivers::handle h);
 
         glm::mat4 projection_matrix;
+        eka2l1::vecx<float, 4> brush_color;
+
+        drivers::handle append_graphics_object(graphics_object_instance &instance);
+        bool delete_graphics_object(const drivers::handle handle);
 
         // Implementations
         void create_bitmap(command_helper &helper);
         void update_bitmap(command_helper &helper);
         void bind_bitmap(command_helper &helper);
         void destroy_bitmap(command_helper &helper);
+        void set_brush_color(command_helper &helper);
+        void create_program(command_helper &helper);
+        void create_texture(command_helper &helper);
 
-    public:
+    public :
         explicit shared_graphics_driver() = default;
         explicit shared_graphics_driver(const graphic_api gr_api);
 

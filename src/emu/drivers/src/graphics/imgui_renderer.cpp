@@ -17,33 +17,56 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <drivers/graphics/graphics.h>
 #include <drivers/graphics/imgui_renderer.h>
-#include <drivers/graphics/backend/ogl/imgui_renderer_ogl.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>
 
 namespace eka2l1::drivers {
-    void imgui_renderer_base::draw(drivers::handle h, const eka2l1::rect &rect) {
-        ImGui::GetWindowDrawList()->AddImage(
-            reinterpret_cast<ImTextureID>(h),
-            ImVec2(static_cast<float>(rect.top.x), static_cast<float>(rect.top.y)),
-            ImVec2(static_cast<float>(rect.top.x + rect.size.width()), 
-                    static_cast<float>(rect.top.y + rect.size.height())),
-            ImVec2(0, 1), ImVec2(1, 0));
-    }
-    
-    imgui_renderer_instance make_imgui_renderer(const graphic_api api) {
-        switch (api) {
+    static const char *gl_vertex_shader_renderer = "#version 330\n"
+                                                   "uniform mat4 ProjMtx;\n"
+                                                   "in vec2 Position;\n"
+                                                   "in vec2 UV;\n"
+                                                   "in vec4 Color;\n"
+                                                   "out vec2 Frag_UV;\n"
+                                                   "out vec4 Frag_Color;\n"
+                                                   "void main()\n"
+                                                   "{\n"
+                                                   "	Frag_UV = UV;\n"
+                                                   "	Frag_Color = Color;\n"
+                                                   "	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
+                                                   "}\n";
+
+    static const char *gl_fragment_shader_renderer = "#version 330\n"
+                                                     "uniform sampler2D Texture;\n"
+                                                     "in vec2 Frag_UV;\n"
+                                                     "in vec4 Frag_Color;\n"
+                                                     "out vec4 Out_Color;\n"
+                                                     "void main()\n"
+                                                     "{\n"
+                                                     "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
+                                                     "}\n";
+
+    static void get_render_shader(graphics_driver *driver, const char *&vert_dat, const char *&frag_dat) {
+        switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_unique<ogl_imgui_renderer>();
+            vert_dat = gl_vertex_shader_renderer;
+            frag_dat = gl_fragment_shader_renderer;
+
             break;
         }
 
         default:
             break;
         }
+    }
 
-        return nullptr;
+    void imgui_renderer::init(graphics_driver *driver) {
+        const char *vert_dat = nullptr;
+        const char *frag_dat = nullptr;
+
+        get_render_shader(driver, vert_dat, frag_dat);
+        shader = create_program(driver, vert_dat, 0, frag_dat, 0);
     }
 }

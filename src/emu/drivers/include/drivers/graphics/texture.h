@@ -53,7 +53,7 @@ namespace eka2l1::drivers {
 
     /*! \brief Base class for backend texture.
     */
-    class texture {
+    class texture : public graphics_object {
     public:
         texture() {}
 
@@ -85,7 +85,7 @@ namespace eka2l1::drivers {
             const texture_data_type data_type, const void *data) = 0;
     };
 
-    using texture_ptr = std::shared_ptr<texture>;
+    using texture_ptr = std::unique_ptr<texture>;
 
     texture_ptr make_texture(graphics_driver *driver);
 }

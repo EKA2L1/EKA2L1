@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <drivers/graphics/common.h>
 #include <common/vecx.h>
+#include <drivers/graphics/common.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -29,15 +29,17 @@
 struct ImDrawData;
 
 namespace eka2l1::drivers {
-    class imgui_renderer_base {
+    class graphics_driver;
+
+    class imgui_renderer {
+        drivers::handle shader;
+        drivers::handle font_texture;
+
     public:
-        virtual void init() = 0;
+        void init(graphics_driver *driver);
         virtual void render(ImDrawData *draw_data) = 0;
         virtual void deinit() = 0;
 
         virtual void draw(drivers::handle h, const eka2l1::rect &r);
     };
-
-    using imgui_renderer_instance = std::unique_ptr<imgui_renderer_base>;
-    imgui_renderer_instance make_imgui_renderer(const graphic_api api);
 }

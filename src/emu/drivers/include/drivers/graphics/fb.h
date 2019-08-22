@@ -31,7 +31,7 @@
 namespace eka2l1::drivers {
     class graphics_driver;
 
-    class framebuffer {
+    class framebuffer: public graphics_object {
     protected:
         texture_ptr color_buffer;
         texture_ptr depth_buffer;
