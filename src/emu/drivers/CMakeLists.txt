@@ -7,6 +7,7 @@ endif()
 add_library(drivers 
     include/drivers/itc.h
     include/drivers/driver.h
+    include/drivers/graphics/buffer.h
     include/drivers/graphics/emu_window.h
     include/drivers/graphics/fb.h
     include/drivers/graphics/graphics.h
@@ -15,6 +16,7 @@ add_library(drivers
     include/drivers/graphics/texture.h
     include/drivers/graphics/backend/emu_window_glfw.h
     include/drivers/graphics/backend/graphics_driver_shared.h
+    include/drivers/graphics/backend/ogl/buffer_ogl.h
     include/drivers/graphics/backend/ogl/fb_ogl.h
     include/drivers/graphics/backend/ogl/imgui_renderer_ogl.h
     include/drivers/graphics/backend/ogl/graphics_ogl.h
@@ -27,9 +29,11 @@ add_library(drivers
     src/graphics/emu_window.cpp
     src/graphics/imgui_renderer.cpp
     src/graphics/graphics.cpp
+    src/graphics/shader.cpp
     src/graphics/texture.cpp
     src/graphics/backend/emu_window_glfw.cpp
     src/graphics/backend/graphics_driver_shared.cpp
+    src/graphics/backend/ogl/buffer_ogl.cpp
     src/graphics/backend/ogl/fb_ogl.cpp
     src/graphics/backend/ogl/imgui_renderer_ogl.cpp
     src/graphics/backend/ogl/graphics_ogl.cpp
