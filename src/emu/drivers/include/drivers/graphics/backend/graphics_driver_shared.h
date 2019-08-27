@@ -54,11 +54,14 @@ namespace eka2l1::drivers {
         bitmap *binding;
         bitmap *get_bitmap(const drivers::handle h);
 
+        int current_fb_height;
+
         glm::mat4 projection_matrix;
         eka2l1::vecx<float, 4> brush_color;
 
         drivers::handle append_graphics_object(graphics_object_instance &instance);
         bool delete_graphics_object(const drivers::handle handle);
+        graphics_object *get_graphics_object(const drivers::handle num);
 
         // Implementations
         void create_bitmap(command_helper &helper);
@@ -68,6 +71,13 @@ namespace eka2l1::drivers {
         void set_brush_color(command_helper &helper);
         void create_program(command_helper &helper);
         void create_texture(command_helper &helper);
+        void create_buffer(command_helper &helper);
+        void use_program(command_helper &helper);
+        void set_uniform(command_helper &helper);
+        void bind_texture(command_helper &helper);
+        void bind_buffer(command_helper &helper);
+        void update_buffer(command_helper &helper);
+        void attach_descriptors(command_helper &helper);
 
     public :
         explicit shared_graphics_driver() = default;
@@ -77,6 +87,9 @@ namespace eka2l1::drivers {
 
         void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset, const eka2l1::vec2 &dim,
             const int bpp, const void *data) override;
+
+        void attach_descriptors(drivers::handle h, const int stride, const bool instance_move, const attribute_descriptor *descriptors,
+            const int descriptor_count) override;
 
         virtual void dispatch(command *cmd);
     };

@@ -19,6 +19,7 @@
  */
 
 #include <drivers/graphics/backend/ogl/buffer_ogl.h>
+#include <drivers/graphics/backend/ogl/common_ogl.h>
 
 namespace eka2l1::drivers {
     static GLenum get_trait_from_buffer_hint(const buffer_hint hint) {
@@ -107,40 +108,8 @@ namespace eka2l1::drivers {
 
     static void data_format_to_gl_comp_count_and_data_type(const int format, int &comp_count, GLenum &gl_format) {
         comp_count = (format & 0b1111);
-        const buffer_data_format our_format = static_cast<buffer_data_format>((format >> 4) & 0b1111);
-
-        switch (our_format) {
-        case buffer_data_format::byte:
-            gl_format = GL_UNSIGNED_BYTE;
-            break;
-
-        case buffer_data_format::sbyte:
-            gl_format = GL_BYTE;
-            break;
-
-        case buffer_data_format::sword:
-            gl_format = GL_SHORT;
-            break;
-
-        case buffer_data_format::word:
-            gl_format = GL_UNSIGNED_SHORT;
-            break;
-
-        case buffer_data_format::uint:
-            gl_format = GL_UNSIGNED_INT;
-            break;
-
-        case buffer_data_format::sint:
-            gl_format = GL_INT;
-            break;
-
-        case buffer_data_format::sfloat:
-            gl_format = GL_FLOAT;
-            break;
-
-        default:
-            break;
-        }
+        const data_format our_format = static_cast<data_format>((format >> 4) & 0b1111);
+        gl_format = data_format_to_gl_enum(our_format);
     }
 
     ogl_buffer::ogl_buffer()
@@ -203,10 +172,15 @@ namespace eka2l1::drivers {
     void ogl_buffer::update_data(graphics_driver *driver, const void *data, const std::size_t offset, std::size_t size) {
         bind(driver);
 
-        if (offset + size <= size_) {
-            // Use subdata to update
-            glBufferSubData(hint_gl_, static_cast<GLintptr>(offset), static_cast<GLintptr>(size), data);
+        if (offset + size > size_) {
+            if (offset == 0) {
+                // Orphan the buffer
+                glBufferData(hint_gl_, size, nullptr, usage_hint_gl_);
+            }
         }
+
+        // Use subdata to update
+        glBufferSubData(hint_gl_, static_cast<GLintptr>(offset), static_cast<GLintptr>(size), data);
 
         unbind(driver);
     }

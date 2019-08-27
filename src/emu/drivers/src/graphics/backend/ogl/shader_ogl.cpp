@@ -27,6 +27,54 @@
 #include <sstream>
 
 namespace eka2l1::drivers {
+    /**
+      * \brief Build a shader program's metadata. This is for client who desired performance, traded for memory.
+      */
+    static void build_metadata(GLuint program, std::vector<std::uint8_t> &data) {
+        GLint total_attributes = 0;
+        GLint total_uniforms = 0;
+
+        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &total_attributes);
+        glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &total_uniforms);
+
+        data.resize(4);
+
+        reinterpret_cast<std::uint16_t *>(&data[0])[0] = 8;
+
+        GLchar buf[257];
+        GLint size = 0;
+        GLsizei name_len = 0;
+        GLenum type = 0;
+
+        for (int i = 0; i < total_attributes; i++) {
+            glGetActiveAttrib(program, i, 256, &name_len, &size, &type, buf);
+
+            // Push
+            data.push_back(static_cast<std::uint8_t>(name_len));
+            data.insert(data.end(), buf, buf + name_len);
+
+            buf[name_len] = '\0';
+
+            data.push_back(static_cast<std::uint8_t>(static_cast<std::int8_t>(glGetAttribLocation(program, buf))));
+        }
+
+        reinterpret_cast<std::uint16_t *>(&data[0])[1] = static_cast<std::uint16_t>(data.size());
+        reinterpret_cast<std::uint16_t *>(&data[0])[2] = static_cast<std::uint16_t>(total_attributes);
+        reinterpret_cast<std::uint16_t *>(&data[0])[3] = static_cast<std::uint16_t>(total_uniforms);
+
+        for (int i = 0; i < total_uniforms; i++) {
+            glGetActiveUniform(program, i, 256, &name_len, &size, &type, buf);
+
+            buf[name_len] = '\0';
+
+            // Push
+            data.push_back(static_cast<std::uint8_t>(name_len));
+            data.insert(data.end(), buf, buf + name_len);
+
+            data.push_back(static_cast<std::uint8_t>(static_cast<std::int8_t>(glGetUniformLocation(program, buf))));
+        }
+    }
+
     ogl_shader::ogl_shader(const std::string &vert_path,
         const std::string &frag_path) {
         std::ifstream vert_file(vert_path, std::ios_base::binary);
@@ -43,21 +91,29 @@ namespace eka2l1::drivers {
         std::string vertex_code = vertex_stream.str();
         std::string fragment_code = fragment_stream.str();
 
-        create(vertex_code.data(), vertex_code.size(), fragment_code.data(),
+        create(nullptr, vertex_code.data(), vertex_code.size(), fragment_code.data(),
             fragment_code.size());
     }
 
     ogl_shader::ogl_shader(const char *vert_data, const std::size_t vert_size,
         const char *frag_data, const std::size_t frag_size) {
-        create(vert_data, vert_size, frag_data, frag_size);
+        create(nullptr, vert_data, vert_size, frag_data, frag_size);
+    }
+
+    ogl_shader::~ogl_shader() {
+        if (metadata) {
+            delete metadata;
+        }
     }
 
     bool ogl_shader::create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
         const char *frag_data, const std::size_t frag_size) {
+        metadata = nullptr;
+
         std::uint32_t vert = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vert, 1, &vert_data, nullptr);
         glCompileShader(vert);
-        
+
         int success;
         char error[512];
 
@@ -133,7 +189,7 @@ namespace eka2l1::drivers {
 
         return res;
     }
-    
+
     bool ogl_shader::set(graphics_driver *driver, const std::string &name, const shader_set_var_type var_type, const void *data) {
         const auto loc = glGetUniformLocation(program, name.c_str());
 
@@ -141,24 +197,28 @@ namespace eka2l1::drivers {
             return false;
         }
 
+        return set(driver, loc, var_type, data);
+    }
+
+    bool ogl_shader::set(graphics_driver *driver, const int binding, const shader_set_var_type var_type, const void *data) {
         switch (var_type) {
         case shader_set_var_type::integer: {
-            glUniform1i(loc, *reinterpret_cast<const GLint*>(data));
+            glUniform1i(binding, *reinterpret_cast<const GLint *>(data));
             return true;
         }
 
         case shader_set_var_type::mat4: {
-            glUniformMatrix4fv(loc, 1, GL_FALSE, reinterpret_cast<const GLfloat*>(data));
+            glUniformMatrix4fv(binding, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(data));
             return true;
         }
 
         case shader_set_var_type::vec3: {
-            glUniform3fv(loc, 1, reinterpret_cast<const GLfloat*>(data));
+            glUniform3fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
             return true;
         }
 
         case shader_set_var_type::vec4: {
-            glUniform4fv(loc, 1, reinterpret_cast<const GLfloat*>(data));
+            glUniform4fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
             return true;
         }
 
@@ -167,5 +227,17 @@ namespace eka2l1::drivers {
         }
 
         return false;
+    }
+
+    void *ogl_shader::get_metadata() {
+        if (!metadata) {
+            std::vector<std::uint8_t> data;
+            build_metadata(program, data);
+
+            metadata = new std::uint8_t[data.size()];
+            std::copy(data.begin(), data.end(), metadata);
+        }
+
+        return metadata;
     }
 }

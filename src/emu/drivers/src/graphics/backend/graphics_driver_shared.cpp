@@ -19,6 +19,7 @@
 
 #include <common/log.h>
 #include <drivers/graphics/backend/graphics_driver_shared.h>
+#include <drivers/graphics/buffer.h>
 #include <drivers/graphics/shader.h>
 
 #include <glad/glad.h>
@@ -68,7 +69,8 @@ namespace eka2l1::drivers {
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
         : graphics_driver(gr_api)
         , binding(nullptr)
-        , brush_color({ 1.0f, 1.0f, 1.0f, 1.0f }) {
+        , brush_color({ 1.0f, 1.0f, 1.0f, 1.0f })
+        , current_fb_height(0) {
     }
 
     shared_graphics_driver::~shared_graphics_driver() {
@@ -101,6 +103,14 @@ namespace eka2l1::drivers {
 
         graphic_objects[handle - 1].reset();
         return true;
+    }
+
+    graphics_object *shared_graphics_driver::get_graphics_object(const drivers::handle num) {
+        if (num > graphic_objects.size() || num == 0) {
+            return nullptr;
+        }
+
+        return graphic_objects[num - 1].get();
     }
 
     void shared_graphics_driver::update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
@@ -186,6 +196,9 @@ namespace eka2l1::drivers {
         // Build projection matrixx
         projection_matrix = glm::ortho(0.0f, static_cast<float>(bmp->tex->get_size().x), static_cast<float>(bmp->tex->get_size().y),
             0.0f, -1.0f, 1.0f);
+
+        current_fb_height = bmp->tex->get_size().y;
+        set_viewport(eka2l1::rect(eka2l1::vec2(0, 0), bmp->tex->get_size()));
     }
 
     void shared_graphics_driver::destroy_bitmap(command_helper &helper) {
@@ -217,6 +230,7 @@ namespace eka2l1::drivers {
     void shared_graphics_driver::create_program(command_helper &helper) {
         char *vert_data = nullptr;
         char *frag_data = nullptr;
+        void **metadata = nullptr;
 
         std::size_t vert_size = 0;
         std::size_t frag_size = 0;
@@ -225,6 +239,7 @@ namespace eka2l1::drivers {
         helper.pop(frag_data);
         helper.pop(vert_size);
         helper.pop(frag_size);
+        helper.pop(metadata);
 
         auto obj = make_shader(this);
         if (!obj->create(this, vert_data, vert_size, frag_data, frag_size)) {
@@ -239,6 +254,11 @@ namespace eka2l1::drivers {
         helper.pop(store);
 
         *store = res;
+
+        if (metadata) {
+            *metadata = obj->get_metadata();
+        }
+
         helper.finish(this, 0);
     }
 
@@ -292,6 +312,143 @@ namespace eka2l1::drivers {
         helper.finish(this, 0);
     }
 
+    void shared_graphics_driver::create_buffer(command_helper &helper) {
+        std::size_t initial_size = 0;
+        buffer_hint hint = buffer_hint::none;
+        buffer_upload_hint upload_hint = static_cast<buffer_upload_hint>(0);
+
+        helper.pop(initial_size);
+        helper.pop(hint);
+        helper.pop(upload_hint);
+
+        auto obj = make_buffer(this);
+        obj->create(this, initial_size, hint, upload_hint);
+
+        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
+        drivers::handle res = append_graphics_object(obj_casted);
+
+        drivers::handle *store = nullptr;
+        helper.pop(store);
+
+        *store = res;
+
+        helper.finish(this, 0);
+    }
+
+    void shared_graphics_driver::use_program(command_helper &helper) {
+        drivers::handle num;
+        helper.pop(num);
+
+        shader *shobj = reinterpret_cast<shader *>(get_graphics_object(num));
+
+        if (!shobj) {
+            return;
+        }
+
+        shobj->use(this);
+    }
+
+    void shared_graphics_driver::set_uniform(command_helper &helper) {
+        drivers::handle num;
+        drivers::shader_set_var_type var_type;
+        void *data = nullptr;
+        int binding = 0;
+
+        helper.pop(num);
+        helper.pop(var_type);
+        helper.pop(data);
+        helper.pop(binding);
+
+        shader *shobj = reinterpret_cast<shader *>(get_graphics_object(num));
+
+        if (!shobj) {
+            return;
+        }
+
+        shobj->set(this, binding, var_type, data);
+
+        delete data;
+    }
+
+    void shared_graphics_driver::bind_texture(command_helper &helper) {
+        drivers::handle num = 0;
+        int binding = 0;
+
+        helper.pop(num);
+        helper.pop(binding);
+
+        texture *texobj = reinterpret_cast<texture *>(get_graphics_object(num));
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->bind(this, binding);
+    }
+
+    void shared_graphics_driver::bind_buffer(command_helper &helper) {
+        drivers::handle num = 0;
+
+        helper.pop(num);
+
+        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(num));
+
+        if (!bufobj) {
+            return;
+        }
+
+        bufobj->bind(this);
+    }
+
+    void shared_graphics_driver::update_buffer(command_helper &helper) {
+        drivers::handle num = 0;
+        void *data = nullptr;
+        std::size_t offset = 0;
+        std::size_t size = 0;
+
+        helper.pop(num);
+        helper.pop(data);
+        helper.pop(offset);
+        helper.pop(size);
+
+        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(num));
+
+        if (!bufobj) {
+            return;
+        }
+
+        bufobj->update_data(this, data, offset, size);
+
+        delete data;
+    }
+
+    void shared_graphics_driver::attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
+        const attribute_descriptor *descriptors, const int descriptor_count) {
+        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(h));
+
+        if (!bufobj) {
+            return;
+        }
+
+        bufobj->attach_descriptors(this, stride, instance_move, descriptors, descriptor_count);
+    }
+
+    void shared_graphics_driver::attach_descriptors(command_helper &helper) {
+        drivers::handle h = 0;
+        int stride = 0;
+        bool instance_move = false;
+        attribute_descriptor *descriptors = nullptr;
+        int descriptor_count = 0;
+
+        helper.pop(h);
+        helper.pop(stride);
+        helper.pop(instance_move);
+        helper.pop(descriptors);
+        helper.pop(descriptor_count);
+
+        attach_descriptors(h, stride, instance_move, descriptors, descriptor_count);
+    }
+
     void shared_graphics_driver::dispatch(command *cmd) {
         command_helper helper(cmd);
 
@@ -328,6 +485,36 @@ namespace eka2l1::drivers {
 
         case graphics_driver_create_texture: {
             create_texture(helper);
+            break;
+        }
+
+        case graphics_driver_create_buffer: {
+            create_buffer(helper);
+            break;
+        }
+
+        case graphics_driver_set_uniform: {
+            set_uniform(helper);
+            break;
+        }
+
+        case graphics_driver_use_program: {
+            use_program(helper);
+            break;
+        }
+
+        case graphics_driver_bind_texture: {
+            bind_texture(helper);
+            break;
+        }
+
+        case graphics_driver_update_buffer: {
+            update_buffer(helper);
+            break;
+        }
+
+        case graphics_driver_attach_descriptors: {
+            attach_descriptors(helper);
             break;
         }
 

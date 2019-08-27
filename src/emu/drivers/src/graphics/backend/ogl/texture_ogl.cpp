@@ -132,7 +132,7 @@ namespace eka2l1::drivers {
         tex_data = data;
         mip_level = miplvl;
 
-        bind(driver);
+        bind(driver, 0);
 
         this->internal_format = internal_format;
         this->format = format;
@@ -179,7 +179,7 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::set_filter_minmag(const bool min, const filter_option op) {
-        bind(nullptr);
+        bind(nullptr, 0);
         glTexParameteri(GL_TEXTURE_2D, min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER, to_filter_option(op));
         unbind(nullptr);
     }
@@ -205,12 +205,16 @@ namespace eka2l1::drivers {
         return GL_TEXTURE_BINDING_2D;
     }
 
-    void ogl_texture::bind(graphics_driver *driver) {
+    void ogl_texture::bind(graphics_driver *driver, const int binding) {
         glGetIntegerv(get_binding_enum_dim(dimensions), &last_tex);
+        glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active);
+
+        glActiveTexture(GL_TEXTURE0 + binding);
         glBindTexture(to_gl_tex_dim(dimensions), texture);
     }
 
     void ogl_texture::unbind(graphics_driver *driver) {
+        glActiveTexture(last_tex);
         glBindTexture(to_gl_tex_dim(dimensions), last_tex);
         last_tex = 0;
     }

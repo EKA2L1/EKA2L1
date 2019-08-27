@@ -35,4 +35,18 @@ namespace eka2l1::drivers {
 
     class graphics_object {
     };
+
+    enum class graphics_primitive_mode : std::uint8_t {
+        triangles
+    };
+
+    enum class data_format {
+        byte = 0,
+        sbyte = 1,
+        word = 2,
+        sword = 3,
+        sfloat = 4,
+        uint = 5,
+        sint = 6
+    };
 }

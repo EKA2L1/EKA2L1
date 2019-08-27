@@ -29,7 +29,7 @@
 namespace eka2l1::drivers {
     class graphics_driver;
 
-    enum class texture_format {
+    enum class texture_format: std::uint16_t {
         none,
         r,
         rg,
@@ -41,7 +41,7 @@ namespace eka2l1::drivers {
         depth24_stencil8
     };
 
-    enum class texture_data_type {
+    enum class texture_data_type : std::uint16_t {
         ubyte,
         ushort,
         uint_24_8
@@ -71,7 +71,7 @@ namespace eka2l1::drivers {
 
         virtual void set_filter_minmag(const bool min, const filter_option op) = 0;
 
-        virtual void bind(graphics_driver *driver) = 0;
+        virtual void bind(graphics_driver *driver, const int binding) = 0;
         virtual void unbind(graphics_driver *driver) = 0;
 
         virtual vec2 get_size() const = 0;

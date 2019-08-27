@@ -33,13 +33,18 @@ namespace eka2l1::drivers {
 
     class imgui_renderer {
         drivers::handle shader;
-        drivers::handle font_texture;
+        drivers::handle vbo;
+        drivers::handle ibo;
+
+        shader_metadata smeta;
+        std::int8_t proj_matrix_loc;
+
+        std::unique_ptr<graphics_command_list> cmd_list;
+        std::unique_ptr<graphics_command_list_builder> cmd_builder;
 
     public:
         void init(graphics_driver *driver);
-        virtual void render(ImDrawData *draw_data) = 0;
-        virtual void deinit() = 0;
-
-        virtual void draw(drivers::handle h, const eka2l1::rect &r);
+        void render(graphics_driver *driver, ImDrawData *draw_data);
+        void deinit(graphics_driver *driver);
     };
 }

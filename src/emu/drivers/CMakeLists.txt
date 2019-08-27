@@ -25,6 +25,7 @@ add_library(drivers
     include/drivers/input/input.h
     src/driver.cpp
     src/itc.cpp
+    src/graphics/buffer.cpp
     src/graphics/fb.cpp
     src/graphics/emu_window.cpp
     src/graphics/imgui_renderer.cpp

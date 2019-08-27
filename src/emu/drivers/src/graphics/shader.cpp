@@ -35,4 +35,41 @@ namespace eka2l1::drivers {
 
         return nullptr;
     }
+
+    shader_metadata::shader_metadata(const std::uint8_t *metadata)
+        : metadata_(metadata) {
+    }
+
+    const std::uint16_t shader_metadata::get_attribute_count() const {
+        return reinterpret_cast<const std::uint16_t *>(metadata_)[2];
+    }
+
+    const std::uint16_t shader_metadata::get_uniform_count() const {
+        return reinterpret_cast<const std::uint16_t *>(metadata_)[3];
+    }
+
+    static std::int8_t search_binding(const std::uint8_t *metadata, const char *name, const std::uint16_t offset,
+        const std::uint16_t count) {
+        const std::uint8_t *data = metadata + offset;
+
+        for (std::uint16_t i = 0; i < count; i++) {
+            std::uint16_t name_len = *data;
+
+            if (strncmp(name, reinterpret_cast<const char *>(data + 1), name_len) == 0) {
+                return data[name_len + 1];
+            }
+
+            data += name_len + 2;
+        }
+
+        return -1;
+    }
+
+    const std::int8_t shader_metadata::get_uniform_binding(const char *name) const {
+        return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[3], get_uniform_count());
+    }
+
+    const std::int8_t shader_metadata::get_attribute_binding(const char *name) const {
+        return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[2], get_attribute_count());
+    }
 }

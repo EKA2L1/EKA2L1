@@ -17,6 +17,7 @@ namespace eka2l1::drivers {
 
         std::uint32_t texture;
         int last_tex {0};
+        int last_active{ 0 };
 
     public:
         ogl_texture() {}
@@ -33,7 +34,7 @@ namespace eka2l1::drivers {
 
         void set_filter_minmag(const bool min, const filter_option op) override;
 
-        void bind(graphics_driver *driver) override;
+        void bind(graphics_driver *driver, const int binding) override;
         void unbind(graphics_driver *driver) override;
         
         void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
