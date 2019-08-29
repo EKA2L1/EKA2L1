@@ -180,22 +180,16 @@ namespace eka2l1::drivers {
     };
 
     class driver {
-    protected:
-        request_queue<command_list> cmd_lists_;
-
     public:
         std::mutex mut_;
         std::condition_variable cond_;
 
         virtual ~driver() {}
         virtual void run() = 0;
+        virtual void abort() = 0;
 
         void wake_clients() {
             cond_.notify_all();
-        }
-
-        void add_list(command_list &list) {
-            cmd_lists_.push(list);
         }
     };
 }

@@ -363,11 +363,12 @@ namespace eka2l1::drivers {
         return std::make_unique<server_graphics_command_list>();
     }
 
-    std::unique_ptr<graphics_command_list_builder> new_command_builder(graphics_command_list *list) {
+    std::unique_ptr<graphics_command_list_builder> ogl_graphics_driver::new_command_builder(graphics_command_list *list) {
         return std::make_unique<server_graphics_command_list_builder>(list);
     }
 
     void ogl_graphics_driver::submit_command_list(graphics_command_list &command_list) {
+        list_queue.push(static_cast<server_graphics_command_list &>(command_list));
     }
 
     void ogl_graphics_driver::dispatch(command *cmd) {
@@ -413,5 +414,32 @@ namespace eka2l1::drivers {
             shared_graphics_driver::dispatch(cmd);
             break;
         }
+    }
+
+    void ogl_graphics_driver::run() {
+        while (!should_stop) {
+            std::optional<server_graphics_command_list> list = list_queue.pop();
+
+            if (!list) {
+                LOG_ERROR("Corrupted graphics command list! Emulation halt.");
+                break;
+            }
+
+            command *cmd = list->list_.first_;
+
+            while (cmd) {
+                dispatch(cmd);
+                cmd = cmd->next_;
+
+                // TODO: If any command list requires not rebuilding the buffer, dont delete the command.
+                // For now, not likely
+                delete cmd;
+            }
+        }
+    }
+
+    void ogl_graphics_driver::abort() {
+        list_queue.abort();
+        should_stop = true;
     }
 }

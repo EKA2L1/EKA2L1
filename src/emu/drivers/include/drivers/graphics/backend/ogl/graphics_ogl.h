@@ -63,6 +63,7 @@ namespace eka2l1::drivers {
         GLint color_loc;
 
         ogl_state backup;
+        std::atomic_bool should_stop;
 
         void do_init();
 
@@ -88,6 +89,8 @@ namespace eka2l1::drivers {
         void submit_command_list(graphics_command_list &command_list) override;
         std::unique_ptr<graphics_command_list_builder> new_command_builder(graphics_command_list *list) override;
 
+        void run() override;
+        void abort() override;
         void dispatch(command *cmd) override;
     };
 }
