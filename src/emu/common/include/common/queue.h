@@ -170,7 +170,7 @@ namespace eka2l1 {
             queue_empty_cond_.notify_one();
         }
 
-        T pop(const int ms = 0) {
+        std::optional<T> pop(const int ms = 0) {
             T item{ T() };
 
             {
@@ -187,7 +187,7 @@ namespace eka2l1 {
                 }
 
                 if (abort_ || queue_.empty()) {
-                    return {};
+                    return std::nullopt;
                 }
 
                 item = queue_.front();
