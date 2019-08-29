@@ -26,7 +26,6 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/graphics/shader.h>
 #include <drivers/graphics/texture.h>
-#include <drivers/input/common.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -358,20 +357,4 @@ namespace eka2l1::drivers {
 
         void load_backup_state() override;
     };
-
-    /*
-    class input_driver_client : public driver_client {
-    public:
-        input_driver_client() {}
-        explicit input_driver_client(driver_instance driver);
-
-        void lock();
-        void release();
-
-        std::uint32_t total();
-        void get(input_event *evt, const std::uint32_t total_to_get);
-    };*/
-}
-
-namespace eka2l1 {
 }

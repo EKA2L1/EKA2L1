@@ -29,15 +29,17 @@
 using namespace std::chrono_literals;
 
 namespace eka2l1::drivers {
-    static int send_sync_command_detail(driver *drv, command *cmd) {
+    static int send_sync_command_detail(graphics_driver *drv, command *cmd) {
         int status = -100;
         cmd->status_ = &status;
 
         command_list cmd_list;
         cmd_list.add(cmd);
 
+        server_graphics_command_list gcmd_list(cmd_list);
+
         std::unique_lock<std::mutex> ulock(drv->mut_);
-        drv->add_list(cmd_list);
+        drv->submit_command_list(gcmd_list);
         drv->cond_.wait(ulock, [&]() { return status != -100; });
 
         return status;
@@ -271,38 +273,4 @@ namespace eka2l1::drivers {
         command *cmd = make_command(graphics_driver_attach_descriptors, nullptr, h, stride, instance_move, des, descriptor_count);
         get_command_list().add(cmd);
     }
-
-    /*
-        input_driver_client::input_driver_client(driver_instance driver)
-            : driver_client(driver) {
-            should_timeout = true;
-        }
-
-        void input_driver_client::get(input_event *evt, const std::uint32_t total_to_get) {
-            itc_context context;
-            context.push(evt);
-            context.push(total_to_get);
-
-            send_opcode_sync(input_driver_get_events, context);
-        }
-
-        void input_driver_client::lock() {
-            itc_context context;
-            send_opcode_sync(input_driver_lock, context);
-        }
-
-        void input_driver_client::release() {
-            itc_context context;
-            send_opcode_sync(input_driver_release, context);
-        }
-
-        std::uint32_t input_driver_client::total() {
-            std::uint32_t total = 0;
-
-            itc_context context;
-            context.push(&total);
-
-            send_opcode_sync(input_driver_get_total_events, context);
-            return total;
-        }*/
 }
