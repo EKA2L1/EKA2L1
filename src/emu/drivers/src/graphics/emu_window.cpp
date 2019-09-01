@@ -22,14 +22,14 @@
 
 namespace eka2l1 {
     namespace drivers {
-        std::shared_ptr<emu_window> new_emu_window(window_type win_type) {
+        std::unique_ptr<emu_window> new_emu_window(window_type win_type) {
             switch (win_type) {
             case window_type::glfw: {
-                return std::make_shared<emu_window_glfw3>();
+                return std::make_unique<emu_window_glfw3>();
             }
             }
 
-            return std::shared_ptr<emu_window>(nullptr);
+            return std::make_unique<emu_window>(nullptr);
         }
 
         bool init_window_library(window_type win_type) {
