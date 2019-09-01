@@ -31,16 +31,13 @@
 #include <e32err.h>
 
 namespace eka2l1::epoc {
-    screen_device::screen_device(window_server_client_ptr client,
-        int number, eka2l1::graphics_driver_client_ptr driver)
+    screen_device::screen_device(window_server_client_ptr client, int number, drivers::graphics_driver *driver)
         : window_client_obj(client)
         , driver(driver)
         , screen(number)
         , focus(nullptr) {
         scr_config = client->get_ws().get_screen_config(number);
         crr_mode = &scr_config.modes[0];
-
-        driver->set_screen_size(crr_mode->size);
     }
 
     epoc::window_group *screen_device::find_window_group_to_focus() {

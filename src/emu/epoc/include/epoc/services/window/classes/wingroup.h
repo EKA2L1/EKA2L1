@@ -49,6 +49,6 @@ namespace eka2l1::epoc {
         void lost_focus();
         void gain_focus();
 
-        eka2l1::graphics_driver_client_ptr get_driver();
+        drivers::graphics_driver *get_driver();
     };
 }

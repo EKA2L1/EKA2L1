@@ -37,6 +37,8 @@ namespace eka2l1::epoc {
         eka2l1::vec2 pos{ 0, 0 };
         eka2l1::vec2 size{ 0, 0 };
 
+        bool resize_needed;
+
         std::vector<epoc::graphic_context *> contexts;
 
         std::uint32_t clear_color = 0xFFFFFFFF;
@@ -58,7 +60,8 @@ namespace eka2l1::epoc {
             epoc::window_type type_of_window, epoc::display_mode dmode)
             : window(client, dvc, window_kind::client)
             , win_type(type_of_window)
-            , dmode(dmode) {
+            , dmode(dmode)
+            , resize_needed(false) {
         }
 
         int shadow_height{ 0 };

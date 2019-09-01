@@ -43,7 +43,7 @@ namespace eka2l1::epoc {
     }
 
     void window_user::priority_updated() {
-        get_group()->get_driver()->set_window_priority(driver_win_id, redraw_priority());
+        //get_group()->get_driver()->set_window_priority(driver_win_id, redraw_priority());
     }
 
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
@@ -75,11 +75,19 @@ namespace eka2l1::epoc {
             ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
 
             pos = extent->pos;
-            size = extent->size;
 
-            // Set position to the driver
-            get_group()->get_driver()->set_window_size(driver_win_id, size);
-            get_group()->get_driver()->set_window_pos(driver_win_id, pos);
+            // TODO (pent0): Currently our implementation differs from Symbian, that we invalidates the whole
+            // window. The reason is because, when we are resizing the texture in OpenGL/Vulkan, there is
+            // no easy way to keep buffer around without overheads. So Im just gonna make it redraw all.
+            //
+            // Where on Symbian, it only invalidates the reason which is empty when size is bigger.
+            if (extent->size != size) {
+                // We do really need resize!
+                resize_needed = true;
+                client->queue_redraw(this, rect({ 0, 0 }, extent->size));
+            }
+
+            size = extent->size;
 
             ctx.set_request_status(KErrNone);
 
@@ -97,8 +105,6 @@ namespace eka2l1::epoc {
             const bool op = *reinterpret_cast<bool *>(cmd.data_ptr);
 
             set_visible(op);
-            get_group()->get_driver()->set_window_visible(driver_win_id, op);
-
             ctx.set_request_status(KErrNone);
 
             break;
@@ -192,10 +198,6 @@ namespace eka2l1::epoc {
         case EWsWinOpBeginRedraw: case EWsWinOpBeginRedrawFull: {
             for (auto &context : contexts) {
                 context->recording = true;
-
-                while (!context->draw_queue.empty()) {
-                    context->draw_queue.pop();
-                }
             }
 
             LOG_TRACE("Begin redraw!");
@@ -213,6 +215,18 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpEndRedraw: {
+            if (resize_needed) {
+                // Queue a resize command
+                drivers::graphics_driver *drv = get_group()->get_driver();
+                auto cmd_list = drv->new_command_list();
+                auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+                cmd_builder->resize_bitmap(driver_win_id, size);
+                drv->submit_command_list(*cmd_list);
+
+                resize_needed = false;
+            }
+
             for (auto &context : contexts) {
                 context->recording = false;
                 context->flush_queue_to_driver();

@@ -265,7 +265,6 @@ namespace eka2l1::epoc {
 
     void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
-
         epoc::window_ptr parent = find_window_obj(root, header->parent);
 
         if (!parent) {
@@ -282,8 +281,8 @@ namespace eka2l1::epoc {
         std::shared_ptr<epoc::window_user> win = std::make_shared<epoc::window_user>(this, parent->dvc,
             header->win_type, header->dmode);
 
-        win->driver_win_id = std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver()->
-            create_window(eka2l1::vec2(200, 200), 0, true);
+        win->driver_win_id = drivers::create_bitmap(std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver(),
+            { 200, 200 });
 
         win->parent = &(*parent);
         parent->childs.push(win);
@@ -293,7 +292,6 @@ namespace eka2l1::epoc {
 
     void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd) {
         std::shared_ptr<epoc::graphic_context> gcontext = std::make_shared<epoc::graphic_context>(this);
-
         ctx.set_request_status(add_object(gcontext));
     }
 
@@ -771,6 +769,7 @@ namespace eka2l1 {
 
     constexpr std::int64_t input_update_ticks = 10000;
 
+    /*
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
         // We still have to fill valid value for event_code::key
@@ -890,7 +889,8 @@ namespace eka2l1 {
 
         sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
     }
-    
+    */
+
     void window_server::do_base_init() {
         load_wsini();
         parse_wsini();
@@ -900,11 +900,11 @@ namespace eka2l1 {
         // Schedule an event which will frequently queries input from host
         timing_system *timing = sys->get_timing_system();
 
-        input_handler_evt_ = timing->register_event("InputUpdateEvent", [this](std::uint64_t userdata, int cycles_late) {
-            handle_inputs_from_driver(userdata, cycles_late);
-        });
+        //input_handler_evt_ = timing->register_event("InputUpdateEvent", [this](std::uint64_t userdata, int cycles_late) {
+        //    handle_inputs_from_driver(userdata, cycles_late);
+        //});
 
-        timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
+        //timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
 
         loaded = true;
     }

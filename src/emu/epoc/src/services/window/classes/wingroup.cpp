@@ -43,8 +43,8 @@ namespace eka2l1::epoc {
         queue_event(epoc::event{ id, epoc::event_code::focus_gained });
     }
 
-    eka2l1::graphics_driver_client_ptr window_group::get_driver() {
-        return dvc->driver.lock();
+    drivers::graphics_driver *window_group::get_driver() {
+        return dvc->driver;
     }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd cmd) {

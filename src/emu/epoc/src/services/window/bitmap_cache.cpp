@@ -27,15 +27,16 @@
 #include <epoc/kernel.h>
 #include <epoc/kernel/chunk.h>
 
-#include <common/time.h>
 #include <algorithm>
+#include <common/time.h>
 
 #define XXH_INLINE_ALL
 #include <xxhash.h>
 
 namespace eka2l1::epoc {
-    bitmap_cache::bitmap_cache(kernel_system *kern_) 
-        : base_large_chunk(nullptr), kern(kern_) {
+    bitmap_cache::bitmap_cache(kernel_system *kern_)
+        : base_large_chunk(nullptr)
+        , kern(kern_) {
         std::fill(driver_textures.begin(), driver_textures.end(), 0);
         std::fill(hashes.begin(), hashes.end(), 0);
     }
@@ -48,15 +49,14 @@ namespace eka2l1::epoc {
         XXH64_reset(state, hash);
 
         // First, hash the single bitmap header
-        XXH64_update(state, reinterpret_cast<const void*>(&bw_bmp->header_), sizeof(loader::sbm_header));
+        XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->header_), sizeof(loader::sbm_header));
 
         // Now, hash the byte width and UID, if it changes, we need to update
-        XXH64_update(state, reinterpret_cast<const void*>(&bw_bmp->byte_width_), sizeof(bw_bmp->byte_width_));
-        XXH64_update(state, reinterpret_cast<const void*>(&bw_bmp->uid_), sizeof(bw_bmp->uid_));
+        XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->byte_width_), sizeof(bw_bmp->byte_width_));
+        XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->uid_), sizeof(bw_bmp->uid_));
 
         // Lastly, we needs to hash the data, to see if anything changed
-        XXH64_update(state, base_large_chunk + bw_bmp->data_offset_, bw_bmp->header_.bitmap_size - 
-            sizeof(bw_bmp->header_));
+        XXH64_update(state, base_large_chunk + bw_bmp->data_offset_, bw_bmp->header_.bitmap_size - sizeof(bw_bmp->header_));
 
         hash = XXH64_digest(state);
         XXH64_freeState(state);
@@ -64,7 +64,7 @@ namespace eka2l1::epoc {
         return hash;
     }
 
-    std::int64_t bitmap_cache::get_suitable_bitmap_index(){
+    std::int64_t bitmap_cache::get_suitable_bitmap_index() {
         // First time, will scans through the bitmap array to find empty box
         // Sometimes, app might purges a lot of bitmaps at same time
         for (std::int64_t i = MAX_CACHE_SIZE - 1; i >= 0; i--) {
@@ -77,22 +77,18 @@ namespace eka2l1::epoc {
         std::uint64_t oldest_timestamp_idx = 0;
         for (std::int64_t i = 1; i < MAX_CACHE_SIZE; i++) {
             if (timestamps[i] < timestamps[oldest_timestamp_idx]) {
-                oldest_timestamp_idx = i; 
+                oldest_timestamp_idx = i;
             }
         }
 
         return oldest_timestamp_idx;
     }
 
-    drivers::handle bitmap_cache::add_or_get(epoc::bitwise_bitmap *bmp) {
+    drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+        epoc::bitwise_bitmap *bmp) {
         if (!base_large_chunk) {
             chunk_ptr ch = kern->get_by_name<kernel::chunk>("FbsLargeChunk");
             base_large_chunk = ch->base().get(kern->get_memory_system());
-        }
-
-        // If the old client is exprired, get a new one
-        if (cli.expired()) {
-            cli = std::move(kern->get_system()->get_graphic_driver_client());
         }
 
         std::int64_t idx = 0;
@@ -111,11 +107,11 @@ namespace eka2l1::epoc {
             } else {
                 idx = get_suitable_bitmap_index();
             }
-            
+
             bitmaps[idx] = bmp;
             driver_textures[idx] = 0;
             hash = (hashes[idx] == 0) ? hash_bitwise_bitmap(bmp) : hashes[idx];
-        } else {            
+        } else {
             // Else, get the index
             idx = std::distance(bitmaps.begin(), bitmap_ite);
 
@@ -125,19 +121,10 @@ namespace eka2l1::epoc {
         }
 
         if (should_upload) {
-            auto cli_unlocked = cli.lock();
-
-            if (!cli_unlocked) {
-                // Graphics driver experied. Maybe the driver die, and a new one replaces it ?
-                // Let users take the consequences.
-                LOG_WARN("Graphics driver expired. Bitmap won't be uploaded.");
-                return 0;
-            }
-
-            driver_textures[idx] = cli_unlocked->upload_bitmap(driver_textures[idx]
-                , reinterpret_cast<char*>(base_large_chunk + bmp->data_offset_)
-                , bmp->header_.bitmap_size, bmp->header_.size_pixels.width(), bmp->header_.size_pixels.height()
-                , bmp->header_.bit_per_pixels);
+            driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels);
+            builder->update_bitmap(driver_textures[idx], bmp->header_.bit_per_pixels, 
+                reinterpret_cast<const char*>(base_large_chunk + bmp->data_offset_), bmp->header_.bitmap_size - sizeof(loader::mbm_header), 
+                { 0, 0 }, bmp->header_.size_pixels);
 
             hashes[idx] = hash;
         }
