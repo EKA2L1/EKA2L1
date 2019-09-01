@@ -30,7 +30,7 @@
 
 namespace eka2l1::common {
     class arg_parser;
-    using arg_handler_function = std::function<bool(arg_parser *, std::string *)>;
+    using arg_handler_function = std::function<bool(arg_parser *, void *, std::string *)>;
 
     /*! \brief A parser for command line arguments.
      *
@@ -77,15 +77,18 @@ namespace eka2l1::common {
          *
          * When a handler is called, it will return a boolean, which will
          * tell parser to stop.
+         *
+         * \param userdata      Pointer to userdata.
+
+         * \param err           Pointer to a string, which error code will be written to 
+         *                      if the return value of this function is 0
+         *
          * 
-         * \param err Pointer to a string, which error code will be written to 
-         *            if the return value of this function is 0
-         * 
-         * \returns   True on success, false on failure or force stop.
-         *            Handler should report errors on real failure. Force stop will 
-         *            leave the error string empty.
+         * \returns             True on success, false on failure or force stop.
+         *                      Handler should report errors on real failure. Force stop will 
+         *                      leave the error string empty.
         */
-        bool parse(std::string *err);
+        bool parse(void *userdata, std::string *err);
 
         // I haven't think of any case where I would like to remove an option at runtime.
         // Of course, the design already prepares for this situation

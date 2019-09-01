@@ -93,7 +93,7 @@ namespace eka2l1::common {
         return true;
     }
 
-    bool arg_parser::parse(std::string *err) {
+    bool arg_parser::parse(void *userdata, std::string *err) {
         while (const char *tok = next_token()) {
             auto ite = handlers.find(tok);
             if (ite == handlers.end()) {
@@ -103,7 +103,7 @@ namespace eka2l1::common {
                 return false;
             }
 
-            if (!ite->second(this, err)) {
+            if (!ite->second(this, userdata, err)) {
                 return false;
             }
         }
