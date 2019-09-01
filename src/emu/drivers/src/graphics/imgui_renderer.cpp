@@ -62,12 +62,9 @@ namespace eka2l1::drivers {
         }
     }
 
-    void imgui_renderer::init(graphics_driver *driver) {
+    void imgui_renderer::init(graphics_driver *driver, graphics_command_list_builder *builder) {
         const char *vert_dat = nullptr;
         const char *frag_dat = nullptr;
-
-        cmd_list = driver->new_command_list();
-        cmd_builder = driver->new_command_builder(cmd_list.get());
 
         proj_matrix_loc = -1;
 
@@ -102,7 +99,7 @@ namespace eka2l1::drivers {
         descriptor[2].set_format(4, data_format::byte);
         descriptor[2].offset = offsetof(ImDrawVert, col);
 
-        cmd_builder->attach_descriptors(vbo, 20, false, descriptor, 3);
+        builder->attach_descriptors(vbo, 20, false, descriptor, 3);
 
         // If meta is not available, there is a high chance that this is in a uniform buffer.
         if (smeta.is_available()) {
@@ -110,7 +107,7 @@ namespace eka2l1::drivers {
         }
     }
 
-    void imgui_renderer::render(graphics_driver *driver, ImDrawData *draw_data) {
+    void imgui_renderer::render(graphics_driver *driver, graphics_command_list_builder *cmd_builder, ImDrawData *draw_data) {
         auto &io = ImGui::GetIO();
 
         // Scale clip rects
@@ -233,12 +230,13 @@ namespace eka2l1::drivers {
             vert_offset += cmd_list->VtxBuffer.Size;
         }
 
-        // Restore modified GL state
+        // Restore modified state
         cmd_builder->load_backup_state();
+    }
 
-        driver->submit_command_list(*cmd_list);
-
-        cmd_list = driver->new_command_list();
-        cmd_builder = driver->new_command_builder(cmd_list.get());
+    void imgui_renderer::deinit(graphics_command_list_builder *builder) {
+        builder->destroy(this->shader);
+        builder->destroy(vbo);
+        builder->destroy(ibo);
     }
 }

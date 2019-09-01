@@ -21,6 +21,7 @@
 
 #include <common/vecx.h>
 #include <drivers/graphics/common.h>
+#include <drivers/itc.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -39,12 +40,9 @@ namespace eka2l1::drivers {
         shader_metadata smeta;
         std::int8_t proj_matrix_loc;
 
-        std::unique_ptr<graphics_command_list> cmd_list;
-        std::unique_ptr<graphics_command_list_builder> cmd_builder;
-
     public:
-        void init(graphics_driver *driver);
-        void render(graphics_driver *driver, ImDrawData *draw_data);
-        void deinit(graphics_driver *driver);
+        void init(graphics_driver *driver, graphics_command_list_builder *builder);
+        void render(graphics_driver *driver, graphics_command_list_builder *builder, ImDrawData *draw_data);
+        void deinit(graphics_command_list_builder *builder);
     };
 }
