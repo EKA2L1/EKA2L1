@@ -20,9 +20,8 @@
 
 #include <common/vecx.h>
 #include <debugger/renderer/renderer.h>
-#include <drivers/graphics/imgui_renderer.h>
 #include <drivers/graphics/graphics.h>
-#include <drivers/input/input.h>
+#include <drivers/graphics/imgui_renderer.h>
 #include <drivers/graphics/texture.h>
 
 #include <manager/config.h>
@@ -33,24 +32,25 @@
 #include <stb_image.h>
 
 namespace eka2l1 {
-    void debugger_renderer::init(drivers::graphic_api gr_api, drivers::graphics_driver_ptr graphic_driver,         
-        drivers::input_driver_ptr input_driver, debugger_ptr dbg) {
-        debugger = dbg;
+    void debugger_renderer::init(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+        debugger_base *debugger) {
+        debugger_ = debugger;
+        debugger_->renderer = this;
+        background_change_path_.clear();
 
-        gr_driver_ = std::move(graphic_driver);
-        inp_driver_ = std::move(input_driver);
+        irenderer_ = std::make_unique<drivers::imgui_renderer>();
+        irenderer_->init(driver, builder);
 
-        irenderer = drivers::make_imgui_renderer(gr_api);
-        irenderer->init();
-
-        debugger->renderer = this;
-
-        if (!debugger->get_config()->bkg_path.empty()) {
-            change_background(debugger->get_config()->bkg_path.data());
+        if (!debugger_->get_config()->bkg_path.empty()) {
+            change_background_internal(driver, builder, debugger_->get_config()->bkg_path.data());
         }
     }
 
     bool debugger_renderer::change_background(const char *path) {
+        background_change_path_ = path;
+    }
+
+    bool debugger_renderer::change_background_internal(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder, const char *path) {
         if (!path || strlen(path) == 0) {
             return false;
         }
@@ -65,30 +65,28 @@ namespace eka2l1 {
             return false;
         }
 
-        if (!background_tex_) {    
-            background_tex_ = drivers::make_texture(drivers::graphic_api::opengl);
-            background_tex_->create(2, 0, { width, height, 0}, drivers::texture_format::rgba, drivers::texture_format::rgba, drivers::texture_data_type::ubyte,
-                dat);
-
-            background_tex_->set_filter_minmag(true, drivers::filter_option::linear);
-            background_tex_->set_filter_minmag(false, drivers::filter_option::linear);
-            
-            stbi_image_free(dat);
-            return true;
+        if (background_tex_) {
+            // Free previous texture
+            builder->destroy(background_tex_);
         }
 
-        background_tex_->change_data(drivers::texture_data_type::ubyte, dat);
-        background_tex_->change_size({ width, height, 0 });
-        background_tex_->bind();
-        background_tex_->tex(false);
-        background_tex_->unbind();
+        background_tex_ = drivers::create_texture(driver, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
+            drivers::texture_data_type::ubyte, dat, { width, height, 0 });
+        builder->set_texture_filter(background_tex_, drivers::filter_option::linear, drivers::filter_option::linear);
 
-        stbi_image_free(background_tex_->get_data_ptr());
-
+        stbi_image_free(dat);
         return true;
     }
 
-    void debugger_renderer::draw(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
+    void debugger_renderer::draw(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+        const std::uint32_t width, const std::uint32_t height, const std::uint32_t fb_width,
+        const std::uint32_t fb_height) {
+        if (!background_change_path_.empty()) {
+            // Update the background
+            change_background_internal(driver, builder, background_change_path_.c_str());
+            background_change_path_.clear();
+        }
+
         auto &io = ImGui::GetIO();
 
         io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
@@ -96,30 +94,27 @@ namespace eka2l1 {
             width > 0 ? ((float)fb_width / width) : 0, height > 0 ? ((float)fb_height / height) : 0);
 
         ImGui::NewFrame();
-        
-        // Draw the imgui ui
-        debugger->show_debugger(width, height, fb_width, fb_height);
 
-        gr_driver_->process_requests();
-        inp_driver_->process_requests();
-        
+        // Draw the imgui ui
+        debugger_->show_debugger(width, height, fb_width, fb_height);
+
         if (background_tex_) {
-            manager::config_state *sstate = debugger->get_config();
+            manager::config_state *sstate = debugger_->get_config();
 
             ImGui::GetBackgroundDrawList()->AddImage(
-                reinterpret_cast<ImTextureID>(background_tex_->texture_handle()),
+                reinterpret_cast<ImTextureID>(background_tex_),
                 ImVec2(0.0f, sstate->menu_height),
                 ImVec2(static_cast<float>(width), static_cast<float>(height)),
                 ImVec2(0, 0),
                 ImVec2(1, 1),
-                IM_COL32(255, 255, 255, sstate->bkg_transparency)
-            );
+                IM_COL32(255, 255, 255, sstate->bkg_transparency));
         }
 
+        /*
         eka2l1::vec2 v = gr_driver_->get_screen_size();
         auto padding = ImGui::GetStyle().WindowPadding;
-        v = vec2(static_cast<const int>(v.x + ImGui::GetStyle().WindowPadding.x * 2), 
-                 static_cast<const int>(v.y + (ImGui::GetStyle().WindowPadding.y + 10) * 2));
+        v = vec2(static_cast<const int>(v.x + ImGui::GetStyle().WindowPadding.x * 2),
+            static_cast<const int>(v.y + (ImGui::GetStyle().WindowPadding.y + 10) * 2));
 
         ImGui::SetNextWindowSize(ImVec2(static_cast<float>(v.x), static_cast<float>(v.y)));
 
@@ -144,17 +139,17 @@ namespace eka2l1 {
             ImVec2(ImGui::GetCursorScreenPos().x + gr_driver_->get_screen_size().x,
                 ImGui::GetCursorScreenPos().y + gr_driver_->get_screen_size().y),
             ImVec2(0, 1), ImVec2(1, 0));
-
+            
+*/
         //we are done working with this window
         ImGui::End();
         ImGui::EndFrame();
-
         ImGui::Render();
 
-        irenderer->render(ImGui::GetDrawData());
+        irenderer_->render(driver, builder, ImGui::GetDrawData());
     }
 
-    void debugger_renderer::deinit() {
-        irenderer->deinit();
+    void debugger_renderer::deinit(drivers::graphics_command_list_builder *builder) {
+        irenderer_->deinit(builder);
     }
 }

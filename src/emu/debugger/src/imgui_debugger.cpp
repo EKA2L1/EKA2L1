@@ -542,9 +542,7 @@ namespace eka2l1 {
             ImGui::PopItemWidth();
         };
 
-        draw_path_change("Internal drive (C:)", "Change##1", conf->c_mount);
-        draw_path_change("Memory card drive (E:)", "Change##2", conf->e_mount);
-        draw_path_change("ROM drive (E:)", "Change##3", conf->z_mount);
+        draw_path_change("Data storage", "Change##1", conf->storage);
     }
 
     void imgui_debugger::show_pref_hal() {

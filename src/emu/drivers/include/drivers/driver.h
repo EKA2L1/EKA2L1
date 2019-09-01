@@ -191,5 +191,12 @@ namespace eka2l1::drivers {
         void wake_clients() {
             cond_.notify_all();
         }
+
+        void wait_for(int *status) {
+            *status = -100;
+
+            std::unique_lock<std::mutex> ulock(mut_);
+            cond_.wait(ulock, [&]() { return *status != -100; });
+        }
     };
 }
