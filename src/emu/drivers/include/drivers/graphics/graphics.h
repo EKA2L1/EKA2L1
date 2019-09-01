@@ -24,6 +24,7 @@
 #include <drivers/driver.h>
 #include <drivers/graphics/common.h>
 
+#include <functional>
 #include <memory>
 
 namespace eka2l1::drivers {
@@ -72,6 +73,8 @@ namespace eka2l1::drivers {
         graphics_driver_create_program,
         graphics_driver_create_texture,
         graphics_driver_create_buffer,
+        graphics_driver_destroy_object,
+        graphics_driver_set_texture_filter,
         graphics_driver_use_program,
         graphics_driver_set_uniform,
         graphics_driver_bind_texture,
@@ -80,12 +83,18 @@ namespace eka2l1::drivers {
         graphics_driver_update_buffer,
         graphics_driver_set_state,
         graphics_driver_attach_descriptors,
+        graphics_driver_display,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
     };
 
+    using display_hook = std::function<void()>;
+
     class graphics_driver : public driver {
         graphic_api api_;
+
+    protected:
+        display_hook disp_hook_;
 
     public:
         explicit graphics_driver(graphic_api api)
@@ -93,6 +102,20 @@ namespace eka2l1::drivers {
 
         const graphic_api get_current_api() const {
             return api_;
+        }
+
+        /**
+         * \brief Set a hook when display function is called.
+         *
+         * On Vulkan, display may be done using vkQueueDisplayKHR, then you can hook to do things like for example,
+         * polling window events.
+         *
+         * On OpenGL, this hook is expected to swap buffers and also do other things.
+         *
+         * \param hook    Contains function to hook.
+         */
+        void set_display_hook(display_hook hook) {
+            disp_hook_ = hook;
         }
 
         virtual void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
@@ -119,7 +142,7 @@ namespace eka2l1::drivers {
         virtual void submit_command_list(graphics_command_list &command_list) = 0;
     };
 
-    using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
+    using graphics_driver_ptr = std::unique_ptr<graphics_driver>;
 
     bool init_graphics_library(graphic_api api);
 

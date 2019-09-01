@@ -139,7 +139,7 @@ namespace eka2l1::drivers {
          */
         virtual void bind_bitmap(const drivers::handle handle) = 0;
 
-        virtual void resize_bitmap(const eka2l1::vec2 &new_size) = 0;
+        virtual void resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size) = 0;
 
         /**
          * \brief Update a bitmap' data region.
@@ -277,6 +277,21 @@ namespace eka2l1::drivers {
         virtual void attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
             const attribute_descriptor *descriptors, const int descriptor_count)
             = 0;
+
+        /**
+         * \brief Present swapchain to screen.
+         */
+        virtual void present(int *status) = 0;
+
+        /**
+         * \brief Destroy an object.
+         *
+         * \param h Handle to the object.
+         */
+        virtual void destroy(drivers::handle h) = 0;
+
+        // TODO: Document
+        virtual void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -318,7 +333,7 @@ namespace eka2l1::drivers {
          */
         void bind_bitmap(const drivers::handle handle) override;
 
-        void resize_bitmap(const eka2l1::vec2 &new_size) override;
+        void resize_bitmap(drivers::handle h, eka2l1::vec2 &new_size) override;
 
         void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim) override;
@@ -356,5 +371,11 @@ namespace eka2l1::drivers {
         void backup_state() override;
 
         void load_backup_state() override;
+
+        void present(int *status) override;
+
+        void destroy(drivers::handle h) override;
+
+        void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) override;
     };
 }

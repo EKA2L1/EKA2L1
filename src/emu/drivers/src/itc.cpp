@@ -19,10 +19,8 @@
  */
 
 #include <drivers/driver.h>
-#include <drivers/itc.h>
-
 #include <drivers/graphics/graphics.h>
-#include <drivers/input/input.h>
+#include <drivers/itc.h>
 
 #include <chrono>
 
@@ -36,7 +34,8 @@ namespace eka2l1::drivers {
         command_list cmd_list;
         cmd_list.add(cmd);
 
-        server_graphics_command_list gcmd_list(cmd_list);
+        server_graphics_command_list gcmd_list;
+        gcmd_list.list_ = cmd_list;
 
         std::unique_lock<std::mutex> ulock(drv->mut_);
         drv->submit_command_list(gcmd_list);
@@ -149,10 +148,10 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::resize_bitmap(const eka2l1::vec2 &new_size) {
+    void server_graphics_command_list_builder::resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size) {
         // This opcode has two variant: sync or async.
         // The first argument is bitmap handle. If it's null then the currently binded one will be used.
-        command *cmd = make_command(graphics_driver_resize_bitmap, nullptr, 0, new_size);
+        command *cmd = make_command(graphics_driver_resize_bitmap, nullptr, h, new_size);
         get_command_list().add(cmd);
     }
 
@@ -271,6 +270,21 @@ namespace eka2l1::drivers {
         const attribute_descriptor *descriptors, const int descriptor_count) {
         void *des = make_data_copy(descriptors, descriptor_count * sizeof(attribute_descriptor));
         command *cmd = make_command(graphics_driver_attach_descriptors, nullptr, h, stride, instance_move, des, descriptor_count);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::present(int *status) {
+        command *cmd = make_command(graphics_driver_display, status);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::destroy(drivers::handle h) {
+        command *cmd = make_command(graphics_driver_destroy_object, nullptr, h);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) {
+        command *cmd = make_command(graphics_driver_set_texture_filter, nullptr, h);
         get_command_list().add(cmd);
     }
 }

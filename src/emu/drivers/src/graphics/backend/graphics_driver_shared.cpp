@@ -213,6 +213,25 @@ namespace eka2l1::drivers {
         bmp_textures[h - 1].reset();
     }
 
+    void shared_graphics_driver::resize_bitmap(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        bitmap *bmp = get_bitmap(h);
+
+        if (!bmp) {
+            LOG_ERROR("Bitmap handle invalid to be binded");
+            return;
+        }
+
+        vec2 new_size = { 0, 0 };
+        helper.pop(new_size);
+
+        // Change texture size
+        bmp->tex->change_size({ new_size.x, new_size.y, 0 });
+        bmp->tex->tex(this, false);
+    }
+
     void shared_graphics_driver::set_brush_color(command_helper &helper) {
         float r = 0.0f;
         float g = 0.0f;
@@ -449,6 +468,32 @@ namespace eka2l1::drivers {
         attach_descriptors(h, stride, instance_move, descriptors, descriptor_count);
     }
 
+    void shared_graphics_driver::destroy_object(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        delete_graphics_object(h);
+    }
+
+    void shared_graphics_driver::set_filter(command_helper &helper) {
+        drivers::handle h = 0;
+        drivers::filter_option min = drivers::filter_option::linear;
+        drivers::filter_option mag = drivers::filter_option::linear;
+
+        helper.pop(h);
+        helper.pop(min);
+        helper.pop(mag);
+
+        texture *texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->set_filter_minmag(false, min);
+        texobj->set_filter_minmag(true, mag);
+    }
+
     void shared_graphics_driver::dispatch(command *cmd) {
         command_helper helper(cmd);
 
@@ -470,6 +515,11 @@ namespace eka2l1::drivers {
 
         case graphics_driver_destroy_bitmap: {
             destroy_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_destroy_object: {
+            destroy_object(helper);
             break;
         }
 
@@ -515,6 +565,11 @@ namespace eka2l1::drivers {
 
         case graphics_driver_attach_descriptors: {
             attach_descriptors(helper);
+            break;
+        }
+
+        case graphics_driver_set_texture_filter: {
+            set_filter(helper);
             break;
         }
 

@@ -78,8 +78,11 @@ namespace eka2l1::drivers {
         void bind_buffer(command_helper &helper);
         void update_buffer(command_helper &helper);
         void attach_descriptors(command_helper &helper);
+        void destroy_object(command_helper &helper);
+        void set_filter(command_helper &helper);
+        void resize_bitmap(command_helper &helper);
 
-    public :
+    public : 
         explicit shared_graphics_driver() = default;
         explicit shared_graphics_driver(const graphic_api gr_api);
 

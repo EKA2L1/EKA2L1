@@ -371,6 +371,10 @@ namespace eka2l1::drivers {
         list_queue.push(static_cast<server_graphics_command_list &>(command_list));
     }
 
+    void ogl_graphics_driver::display(command_helper &helper) {
+        disp_hook_();
+    }
+
     void ogl_graphics_driver::dispatch(command *cmd) {
         command_helper helper(cmd);
 

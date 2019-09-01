@@ -77,6 +77,7 @@ namespace eka2l1::drivers {
         void set_blend(command_helper &helper);
         void set_cull(command_helper &helper);
         void blend_formula(command_helper &helper);
+        void display(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();
