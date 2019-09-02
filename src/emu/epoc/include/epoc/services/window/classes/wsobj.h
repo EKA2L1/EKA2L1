@@ -34,13 +34,16 @@ namespace eka2l1::epoc {
     class window_server_client;
     using window_server_client_ptr = window_server_client *;
 
+    struct screen;
+
     struct window_client_obj {
         ws::uid id;
         ws::handle owner_handle;
 
         window_server_client *client;
+        screen *scr;
 
-        explicit window_client_obj(window_server_client_ptr client);
+        explicit window_client_obj(window_server_client_ptr client, screen *scr);
         virtual ~window_client_obj() {}
 
         virtual void execute_command(eka2l1::service::ipc_context &ctx,

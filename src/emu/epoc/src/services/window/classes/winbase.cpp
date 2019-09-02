@@ -31,22 +31,71 @@ namespace eka2l1::epoc {
         client->queue_event(evt);
     }
 
-    // I make this up myself
-    std::uint16_t window::redraw_priority() {
-        std::uint16_t pri = 0;
-
-        if (parent) {
-            pri = parent->redraw_priority();
+    void window::set_parent(window *new_parent) {
+        if (parent != nullptr) {
+            // If the last parent exists, let's detach
         }
 
-        pri += (priority << 4) + secondary_priority;
-        return pri;
+        new_parent = parent;
+        sibling = parent->child;
+        parent->child = this;
     }
 
-    void window::priority_updated() {
-        for (auto &child : childs) {
-            child->priority_updated();
+    void window::set_position(const int new_pos) {
+
+    }
+
+    bool window::check_order_change(const int new_pos) {
+        // The more soon we reach the window in the linked list, the higher priority it's.
+        window *cur = parent->child;
+        window *prev = nullptr;
+
+        // If the current window is the head: iterates to next child right away.
+        // Iterates until we meet a window that has smaller or equal priority then us.
+        while (cur == this || (cur != nullptr && priority < cur->priority)) {
+            prev = cur;
+            cur = cur->sibling;
         }
+
+        if (prev == this) {
+            cur = this;
+        } else if (cur == nullptr || (cur->sibling == this && priority > cur->sibling->priority)) {
+            // If there is no window that has smaller priority then us, we need to order this at the end
+            // of the list. That means there is some order change
+            //
+            // Case 2: this window is the next sibling of the current. if the priority of the current window is larger
+            // then it's in the wrong order and really can't do a position check (since priority not equal).
+            return true;
+        }
+
+        // Traverse and find our current window, and see if we need to change order
+        int pos = new_pos;
+        
+        while (pos-- != 0 && cur->sibling != nullptr && priority == cur->sibling->priority) {
+            cur = cur->sibling;
+        }
+
+        return (cur != this);
+    }
+    
+    void window::remove_from_sibling_list() {
+        window *ite = parent->child;
+
+        if (parent->child == this) {
+            // Make the next sibling oldest
+            parent->child = sibling;
+            return;
+        }
+
+        while (true) {
+            if (ite->sibling == this) {
+                break;
+            }
+
+            ite = ite->sibling;
+        }
+
+        ite->sibling = sibling;
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {

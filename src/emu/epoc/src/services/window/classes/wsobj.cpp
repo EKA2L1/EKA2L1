@@ -24,9 +24,10 @@
 #include <epoc/services/window/window.h> ///< Unwanted include
 
 namespace eka2l1::epoc {
-    window_client_obj::window_client_obj(window_server_client_ptr client)
+    window_client_obj::window_client_obj(window_server_client_ptr client, screen *scr)
         : client(client)
-        , id(static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1) {
+        , id(static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1)
+        , scr(scr) {
     }
 
     void window_client_obj::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
