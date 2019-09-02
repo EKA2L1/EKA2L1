@@ -35,6 +35,16 @@ namespace eka2l1::epoc {
         top_client,
         client
     };
+    
+    /**
+     * \brief Class to hook for tree walking.
+     */
+    struct window_tree_walker {
+        /**
+         * \brief Handle function for a window.
+         */
+        virtual void just_do_it(window *win);
+    };
 
     /** \brief Base class for all window. */
     struct window : public window_client_obj {
@@ -53,6 +63,8 @@ namespace eka2l1::epoc {
         /*! \brief Generic event queueing
         */
         virtual void queue_event(const epoc::event &evt);
+
+        void move_window(epoc::window *new_parent, const int new_pos);
 
         /**
          * \brief Set position of the window.

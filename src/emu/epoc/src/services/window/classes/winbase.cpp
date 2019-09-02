@@ -32,17 +32,40 @@ namespace eka2l1::epoc {
     }
 
     void window::set_parent(window *new_parent) {
-        if (parent != nullptr) {
-            // If the last parent exists, let's detach
-        }
-
+        // New one will be the oldest. Quirky, but how WSERV functions.
         new_parent = parent;
         sibling = parent->child;
         parent->child = this;
     }
 
     void window::set_position(const int new_pos) {
+        if (check_order_change(new_pos)) {
+            move_window(parent, new_pos);
+        }
+    }
 
+    void window::move_window(epoc::window *new_parent, const int new_pos) {
+        remove_from_sibling_list();
+
+        // The window that will be previous sibling of our future window.
+        window **prev = &new_parent->child;
+
+        // Iterates until finding a younger window
+        while (*prev != nullptr && priority < (*prev)->priority) {
+            prev = &((*prev)->sibling);
+        }
+
+        int pos = new_pos;
+
+        // Iterates to find right window position.
+        while (pos-- != 0 && *prev != nullptr && (*prev)->priority == priority) {
+            prev = &((*prev)->sibling);
+        }
+
+        // Link to the list
+        sibling = *prev;
+        parent = new_parent;
+        *prev = this;
     }
 
     bool window::check_order_change(const int new_pos) {
@@ -114,8 +137,8 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetOrdinalPosition: {
-            priority = *reinterpret_cast<int *>(cmd.data_ptr);
-            priority_updated();
+            const int position = *reinterpret_cast<int *>(cmd.data_ptr);
+            set_position(position);
 
             ctx.set_request_status(KErrNone);
 
@@ -125,10 +148,9 @@ namespace eka2l1::epoc {
         case EWsWinOpSetOrdinalPositionPri: {
             ws_cmd_ordinal_pos_pri *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
             priority = info->pri1;
-            secondary_priority = info->pri2;
+            const int position = info->pri2;
 
-            priority_updated();
-
+            set_position(position);
             ctx.set_request_status(KErrNone);
 
             return true;
