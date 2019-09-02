@@ -22,7 +22,6 @@ add_library(drivers
     include/drivers/graphics/backend/ogl/graphics_ogl.h
     include/drivers/graphics/backend/ogl/shader_ogl.h
     include/drivers/graphics/backend/ogl/texture_ogl.h
-    include/drivers/input/input.h
     src/driver.cpp
     src/itc.cpp
     src/graphics/buffer.cpp
@@ -40,7 +39,6 @@ add_library(drivers
     src/graphics/backend/ogl/graphics_ogl.cpp
     src/graphics/backend/ogl/texture_ogl.cpp
     src/graphics/backend/ogl/shader_ogl.cpp
-    src/input/input.cpp
     ${DRIVERS_VULKAN_SRC})
 
 target_link_libraries(drivers PRIVATE common imgui glad glm glfw)
