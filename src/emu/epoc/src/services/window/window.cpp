@@ -21,6 +21,7 @@
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/window.h>
 
+#include <epoc/services/fbs/fbs.h>
 #include <epoc/services/window/classes/gctx.h>
 #include <epoc/services/window/classes/plugins/animdll.h>
 #include <epoc/services/window/classes/plugins/clickdll.h>
@@ -30,7 +31,6 @@
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
 #include <epoc/services/window/classes/wsobj.h>
-#include <epoc/services/fbs/fbs.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -52,8 +52,8 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
 
-namespace eka2l1::epoc {    
-    bool operator < (const event_capture_key_notifier &lhs, const event_capture_key_notifier &rhs) {
+namespace eka2l1::epoc {
+    bool operator<(const event_capture_key_notifier &lhs, const event_capture_key_notifier &rhs) {
         return lhs.pri_ < rhs.pri_;
     }
 
@@ -123,7 +123,7 @@ namespace eka2l1::epoc {
         : guest_session(guest_session)
         , client_thread(own_thread)
         , uid_counter(0) {
-        add_object(std::make_shared<epoc::window>(this));
+        add_object(std::make_unique<epoc::window>(this));
         root = std::reinterpret_pointer_cast<epoc::window>(objects.back());
     }
 
@@ -141,19 +141,28 @@ namespace eka2l1::epoc {
 
     std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &r) {
         // Calculate the priority
-        return redraws.queue_event(epoc::redraw_event{ user->id, r.top, 
-        vec2(r.top.x + r.size.x, r.top.y + r.size.y) },
+        return redraws.queue_event(epoc::redraw_event{ user->id, r.top,
+                                       vec2(r.top.x + r.size.x, r.top.y + r.size.y) },
             user->redraw_priority());
     }
 
-    std::uint32_t window_server_client::add_object(window_client_obj_ptr obj) {
+    std::uint32_t window_server_client::add_object(window_client_obj_ptr &obj) {
+        auto free_slot = std::find(objects.begin(), objects.end(), nullptr);
+
+        if (free_slot != objects.end()) {
+            *free_slot = std::move(obj);
+            (*free_slot)->id = ++uid_counter;
+
+            return ((std::distance(objects.begin(), free_slot) + 1) & 0xFFFF) | ((uid_counter.load()) << 16);
+        }
+
         objects.push_back(std::move(obj));
         objects.back()->id = ++uid_counter;
 
-        return (objects.size() & 0xFFFF) | (uid_counter.load()) << 16;
+        return (objects.size() & 0xFFFF) | ((uid_counter.load()) << 16);
     }
 
-    window_client_obj_ptr window_server_client::get_object(const std::uint32_t handle) {
+    epoc::window_client_obj *window_server_client::get_object(const std::uint32_t handle) {
         const std::uint32_t idx = handle & 0xFFFF;
 
         if (idx > objects.size() || idx == 0) {
@@ -161,7 +170,7 @@ namespace eka2l1::epoc {
             return nullptr;
         }
 
-        return objects[idx - 1];
+        return objects[idx - 1].get();
     }
 
     bool window_server_client::delete_object(const std::uint32_t handle) {
@@ -182,7 +191,7 @@ namespace eka2l1::epoc {
         ws_cmd_screen_device_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
 
         epoc::screen_device_ptr device
-            = std::make_shared<epoc::screen_device>(
+            = std::make_unique<epoc::screen_device>(
                 this, header->num_screen, ctx.sys->get_graphic_driver_client());
 
         if (!primary_device) {
@@ -232,7 +241,7 @@ namespace eka2l1::epoc {
             device_ptr = primary_device;
         }
 
-        epoc::window_ptr group = std::make_shared<epoc::window_group>(this, device_ptr);
+        epoc::window_ptr group = std::make_unique<epoc::window_group>(this, device_ptr);
         epoc::window_ptr parent_group = find_window_obj(root, header->parent_id);
 
         if (!parent_group) {
@@ -278,7 +287,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        std::shared_ptr<epoc::window_user> win = std::make_shared<epoc::window_user>(this, parent->dvc,
+        std::shared_ptr<epoc::window_user> win = std::make_unique<epoc::window_user>(this, parent->dvc,
             header->win_type, header->dmode);
 
         win->driver_win_id = drivers::create_bitmap(std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver(),
@@ -291,7 +300,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd) {
-        std::shared_ptr<epoc::graphic_context> gcontext = std::make_shared<epoc::graphic_context>(this);
+        std::shared_ptr<epoc::graphic_context> gcontext = std::make_unique<epoc::graphic_context>(this);
         ctx.set_request_status(add_object(gcontext));
     }
 
@@ -306,7 +315,7 @@ namespace eka2l1::epoc {
             win = std::reinterpret_pointer_cast<epoc::window>(get_object(sprite_header->window_handle));
         }
 
-        std::shared_ptr<epoc::sprite> spr = std::make_shared<epoc::sprite>(this, std::move(win), sprite_header->base_pos);
+        std::shared_ptr<epoc::sprite> spr = std::make_unique<epoc::sprite>(this, std::move(win), sprite_header->base_pos);
         ctx.set_request_status(add_object(spr));
     }
 
@@ -319,14 +328,14 @@ namespace eka2l1::epoc {
 
         LOG_TRACE("Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
 
-        std::shared_ptr<epoc::anim_dll> animdll = std::make_shared<epoc::anim_dll>(this);
+        std::shared_ptr<epoc::anim_dll> animdll = std::make_unique<epoc::anim_dll>(this);
         ctx.set_request_status(add_object(animdll));
     }
 
     void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd &cmd) {
         LOG_TRACE("Create CLICKDLL (button click sound plugin), stubbed object");
 
-        std::shared_ptr<epoc::click_dll> clickdll = std::make_shared<epoc::click_dll>(this);
+        std::shared_ptr<epoc::click_dll> clickdll = std::make_unique<epoc::click_dll>(this);
         ctx.set_request_status(add_object(clickdll));
     }
 
@@ -334,8 +343,7 @@ namespace eka2l1::epoc {
         ws_cmd_window_group_list *list_req = reinterpret_cast<decltype(list_req)>(cmd.data_ptr);
 
         std::vector<std::uint32_t> ids;
-        get_ws().get_window_group_list(ids, list_req->count, cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities ? 
-            -1 : list_req->priority, (cmd.header.cmd_len == 8) ? 0 : list_req->screen_num);
+        get_ws().get_window_group_list(ids, list_req->count, cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities ? -1 : list_req->priority, (cmd.header.cmd_len == 8) ? 0 : list_req->screen_num);
 
         ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]),
             static_cast<std::uint32_t>(ids.size() * sizeof(std::uint32_t)));
@@ -345,7 +353,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
         ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups(
-            cmd.header.op == EWsClOpNumWindowGroups ? *static_cast<int*>(cmd.data_ptr) : -1)));
+            cmd.header.op == EWsClOpNumWindowGroups ? *static_cast<int *>(cmd.data_ptr) : -1)));
     }
 
     void window_server_client::send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -411,7 +419,7 @@ namespace eka2l1::epoc {
         ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
         ctx.set_request_status(KErrNone);
     }
-    
+
     void window_server_client::get_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         auto evt = redraws.get_evt_opt();
 
@@ -432,7 +440,7 @@ namespace eka2l1::epoc {
         ctx.write_arg_pkg<epoc::event>(reply_slot, evt, nullptr, true);
         ctx.set_request_status(KErrNone);
     }
-    
+
     void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Epoc < 9
         if (cmd.header.cmd_len == 0) {
@@ -450,7 +458,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        ctx.set_request_status((*dvc_ite)->focus->id);    
+        ctx.set_request_status((*dvc_ite)->focus->id);
     }
 
     void window_server_client::get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -477,7 +485,7 @@ namespace eka2l1::epoc {
         ctx.write_arg(reply_slot, to_write);
         ctx.set_request_status(KErrNone);
     }
-    
+
     epoc::window_ptr window_server_client::find_window_obj(epoc::window_ptr &root, std::uint32_t id) {
         return std::reinterpret_pointer_cast<epoc::window>(get_object(id));
     }
@@ -591,7 +599,7 @@ namespace eka2l1::epoc {
         const ws::uid id = ++get_ws().key_capture_uid_counter;
         notifier.id = id;
 
-        window_server::key_capture_request_queue &rqueue =  get_ws().key_capture_requests[notifier.keycode_];
+        window_server::key_capture_request_queue &rqueue = get_ws().key_capture_requests[notifier.keycode_];
 
         if (!rqueue.empty() && notifier.pri_ == 0) {
             notifier.pri_ = rqueue.top().pri_ + 1;
@@ -757,7 +765,7 @@ namespace eka2l1 {
     }
 
     window_server::window_server(system *sys)
-        : service::server(sys, "!Windowserver", true, true) 
+        : service::server(sys, "!Windowserver", true, true)
         , bmp_cache(sys->get_kernel_system()) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
@@ -908,14 +916,14 @@ namespace eka2l1 {
 
         loaded = true;
     }
-    
+
     void window_server::init(service::ipc_context &ctx) {
         if (!loaded) {
             do_base_init();
         }
 
         clients.emplace(ctx.msg->msg_session->unique_id(),
-            std::make_shared<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr));
+            std::make_unique<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr));
 
         ctx.set_request_status(ctx.msg->msg_session->unique_id());
     }
@@ -932,7 +940,7 @@ namespace eka2l1 {
 
         return screens[num];
     }
-    
+
     void window_server::send_to_command_buffer(service::ipc_context &ctx) {
         clients[ctx.msg->msg_session->unique_id()]->parse_command_buffer(ctx);
     }
@@ -986,7 +994,7 @@ namespace eka2l1 {
 
     void window_server::get_window_group_list(std::vector<std::uint32_t> &ids, const std::uint32_t max,
         const int pri, const int scr_num) {
-        for (auto &cli: clients) {
+        for (auto &cli : clients) {
             if (!cli.second->get_window_group_list(ids, max, pri, scr_num)) {
                 return;
             }
@@ -995,8 +1003,7 @@ namespace eka2l1 {
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
         if (!fbss) {
-            fbss = reinterpret_cast<fbs_server*>(&(*sys->get_kernel_system()->
-                get_by_name<service::server>("!Fontbitmapserver")));
+            fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
         }
 
         return fbss->get<fbsbitmap>(h)->bitmap_;

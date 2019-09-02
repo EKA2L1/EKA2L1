@@ -110,16 +110,16 @@ namespace eka2l1::epoc {
     };
 
     struct window_client_obj;
-    using window_client_obj_ptr = std::shared_ptr<window_client_obj>;
+    using window_client_obj_ptr = std::unique_ptr<window_client_obj>;
 
     struct screen_device;
-    using screen_device_ptr = std::shared_ptr<screen_device>;
+    using screen_device_ptr = std::unique_ptr<screen_device>;
 
     struct window;
-    using window_ptr = std::shared_ptr<window>;
+    using window_ptr = std::unique_ptr<window>;
 
     struct window_group;
-    using window_group_ptr = std::shared_ptr<window_group>;
+    using window_group_ptr = std::unique_ptr<window_group>;
 
     struct window_user;
 
@@ -214,8 +214,8 @@ namespace eka2l1::epoc {
         void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);
         void parse_command_buffer(service::ipc_context &ctx);
 
-        std::uint32_t add_object(window_client_obj_ptr obj);
-        window_client_obj_ptr get_object(const std::uint32_t handle);
+        std::uint32_t add_object(window_client_obj_ptr &obj);
+        epoc::window_client_obj *get_object(const std::uint32_t handle);
 
         bool delete_object(const std::uint32_t handle);
 
