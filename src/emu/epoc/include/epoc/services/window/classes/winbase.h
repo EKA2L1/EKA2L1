@@ -35,6 +35,12 @@ namespace eka2l1::epoc {
         top_client,
         client
     };
+
+    enum class window_tree_walk_style {
+        bonjour_previous_siblings,
+        bonjour_children,
+        bonjour_children_and_previous_siblings
+    };
     
     /**
      * \brief Class to hook for tree walking.
@@ -43,8 +49,10 @@ namespace eka2l1::epoc {
         /**
          * \brief Handle function for a window.
          */
-        virtual void just_do_it(window *win);
+        virtual bool do_it(window *win) = 0;
     };
+
+    void walk_tree_back_to_front(window *start, window_tree_walker *walker);
 
     /** \brief Base class for all window. */
     struct window : public window_client_obj {
@@ -57,12 +65,30 @@ namespace eka2l1::epoc {
 
         window_kind type;
 
+        /***
+         * \brief Get the root window.
+         */
+        window *root_window();
+
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx,
             eka2l1::ws_cmd cmd);
 
         /*! \brief Generic event queueing
         */
         virtual void queue_event(const epoc::event &evt);
+
+        /**
+         * \brief Walk through window tree, with the root from the current window.
+         * 
+         * The function walks through the tree in order from front to back:
+         * - Child windows will be in front of parent windows.
+         * 
+         * \param walker The class hooking the walk.
+         * \param style  Walk style.
+         */
+        void walk_tree(window_tree_walker *walker, const window_tree_walk_style style);
+
+        void walk_tree_back_to_front(window_tree_walker *walker);
 
         void move_window(epoc::window *new_parent, const int new_pos);
 

@@ -22,6 +22,7 @@
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
 #include <epoc/services/window/window.h>
+#include <epoc/services/window/screen.h>
 
 #include <common/e32inc.h>
 #include <e32err.h>
@@ -38,6 +39,53 @@ namespace eka2l1::epoc {
         parent->child = this;
     }
 
+    window *window::root_window() {
+        return scr->root;
+    }
+    
+    void window::walk_tree(window_tree_walker *walker, const window_tree_walk_style style) {
+        window *end = root_window();
+        window *cur = this;
+        window *sibling = cur->sibling;
+        window *parent = cur->parent;
+
+        if (style != window_tree_walk_style::bonjour_previous_siblings) {
+            if (style == window_tree_walk_style::bonjour_children) {
+                end = this;
+            }
+
+            sibling = cur;
+
+            while (sibling->child != nullptr) {
+                sibling = sibling->child;
+            }
+        }
+
+        do {
+            if (sibling != nullptr) {
+                // Traverse to our next sibling
+                cur = sibling;
+
+                // If this has a child, traverse to the oldest possible child.
+                // We can start walking again from bottom. Don't question much, this code is like why does it work idk.
+                // TODO (pent0): figure out the magic behind this. This is ripped from OSS code.
+                while (cur->child != nullptr) {
+                    cur = cur->child;
+                }
+            } else {
+                // No more sibling present. Get to the parent.
+                cur = parent;
+            }
+
+            parent = cur->parent;
+            sibling = cur->sibling;
+
+            if (cur->type == window_kind::group && walker->do_it(cur)) {
+                return;
+            }
+        } while (cur != end);
+    }
+    
     void window::set_position(const int new_pos) {
         if (check_order_change(new_pos)) {
             move_window(parent, new_pos);
@@ -119,6 +167,29 @@ namespace eka2l1::epoc {
         }
 
         ite->sibling = sibling;
+    }
+
+    // This is the biggest sin i have commit, using DFS
+    // 9:10 PM 5/9/2019 pent0
+    void walk_tree_back_to_front(window *start, window_tree_walker *walker) {
+        if (start == nullptr) {
+            return;
+        }
+
+        if (start->type != window_kind::group && walker->do_it(start)) {
+            return;
+        }
+
+        // Gone through all siblings, walk on their childs
+        // TODO: Is this correct? Older guy, children of older guy, then newer guy, children of newer guy.
+        while (start != nullptr) {
+            walk_tree_back_to_front(start->child, walker);
+            start = start->sibling;
+        }
+    }
+
+    void window::walk_tree_back_to_front(window_tree_walker *walker) {
+        eka2l1::epoc::walk_tree_back_to_front(this, walker);
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
