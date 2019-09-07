@@ -23,15 +23,18 @@
 #include <epoc/services/window/classes/winuser.h>
 #include <drivers/graphics/common.h>
 #include <drivers/graphics/graphics.h>
+#include <common/linked.h>
 
 #include <queue>
 #include <string>
 
 namespace eka2l1::epoc {
     struct graphic_context : public window_client_obj {
-        std::shared_ptr<window_user> attached_window;
+        window_user *attached_window;
         std::unique_ptr<drivers::graphics_command_list> cmd_list;
         std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder;
+
+        common::double_linked_queue_element context_attach_link;
 
         bool recording{ false };
 
@@ -46,11 +49,11 @@ namespace eka2l1::epoc {
             eka2l1::vec2 bottom_right, std::u16string text);
         void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, 
             const eka2l1::rect &dest_rect);
-        void do_command_set_color(service::ipc_context &ctx, const set_color_type to_set);
+        void do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set);
 
         void active(service::ipc_context &context, ws_cmd cmd);
         void execute_command(service::ipc_context &context, ws_cmd cmd) override;
 
-        explicit graphic_context(window_server_client_ptr client, window_ptr win = nullptr);
+        explicit graphic_context(window_server_client_ptr client, epoc::window *attach_win = nullptr);
     };
 }

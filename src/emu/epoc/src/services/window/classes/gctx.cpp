@@ -31,24 +31,27 @@
 #include <common/cvt.h>
 #include <common/e32inc.h>
 #include <common/log.h>
+#include <common/rgb.h>
 
 #include <e32err.h>
 
 namespace eka2l1::epoc {
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        attached_window = std::reinterpret_pointer_cast<epoc::window_user>(client->get_object(window_to_attach_handle));
+        attached_window = reinterpret_cast<epoc::window_user*>(client->get_object(window_to_attach_handle));
 
         // Attach context with window
-        attached_window->contexts.push_back(this);
+        attached_window->attached_contexts.push(&context_attach_link);
 
         // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
         // this.
-        context.set_request_status(attached_window->dvc->id);
+        context.set_request_status(attached_window->scr->number);
+
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
         // Make new command list
-        cmd_list = attached_window->dvc->driver->new_command_list();
-        cmd_builder = attached_window->dvc->driver->new_command_builder(cmd_list.get());
+        cmd_list = drv->new_command_list();
+        cmd_builder = drv->new_command_builder(cmd_list.get());
 
         // Add first command list, binding our window bitmap
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
@@ -71,11 +74,12 @@ namespace eka2l1::epoc {
         ctx.set_request_status(KErrNone);
     }
 
-    void graphic_context::do_command_set_color(service::ipc_context &ctx, const set_color_type to_set) {
+    void graphic_context::do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set) {
+        const eka2l1::vecx<int, 4> color = common::rgb_to_vec(*reinterpret_cast<const common::rgb*>(data));
         
         switch (to_set) {
         case set_color_type::brush: {
-            cmd_builder->set_brush_color();
+            cmd_builder->set_brush_color({ color[0], color[1], color[2] });
             break;
         }
 
@@ -84,11 +88,12 @@ namespace eka2l1::epoc {
             break;
         }
         }
+
+        ctx.set_request_status(KErrNone);
     }
 
     void graphic_context::flush_queue_to_driver() {
-        epoc::window_group *group = reinterpret_cast<epoc::window_group *>(attached_window->parent);
-        drivers::graphics_driver *driver = group->dvc->driver;
+        drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
 
         // Unbind current bitmap
         cmd_builder->bind_bitmap(0);
@@ -106,7 +111,7 @@ namespace eka2l1::epoc {
 
         // Brush is fill, pen is outline
         case EWsGcOpSetBrushColor: {
-            do_command_set_color(ctx, set_color_type::brush);
+            do_command_set_color(ctx, cmd.data_ptr, set_color_type::brush);
             break;
         }
 
@@ -180,16 +185,9 @@ namespace eka2l1::epoc {
         }
 
         case EWsGcOpDeactivate: {
-            // Flushing
-            flush_queue_to_driver();
+            context_attach_link.deque();
 
-            auto this_ctx = std::find(attached_window->contexts.begin(), attached_window->contexts.end(),
-                this);
-            if (this_ctx != attached_window->contexts.end()) {
-                attached_window->contexts.erase(this_ctx);
-            }
-
-            attached_window.reset();
+            attached_window = nullptr;
             ctx.set_request_status(KErrNone);
 
             break;
@@ -204,9 +202,7 @@ namespace eka2l1::epoc {
                 break;
             }
 
-            epoc::window_group *group = reinterpret_cast<epoc::window_group *>(attached_window->parent);
-            drivers::graphics_driver *driver = group->dvc->driver;
-
+            drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
             epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
             drivers::handle bmp_driver_handle = cacher->add_or_get(driver, cmd_builder.get(), bw_bmp);
 
@@ -222,8 +218,8 @@ namespace eka2l1::epoc {
         }
     }
 
-    graphic_context::graphic_context(window_server_client_ptr client, window_ptr win)
-        : window_client_obj(client)
-        , attached_window(std::reinterpret_pointer_cast<window_user>(win)) {
+    graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
+        : window_client_obj(client, nullptr)
+        , attached_window(reinterpret_cast<epoc::window_user*>(attach_win)) {
     }
 }
