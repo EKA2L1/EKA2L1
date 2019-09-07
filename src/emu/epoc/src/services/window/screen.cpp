@@ -18,7 +18,9 @@
  */
 
 #include <epoc/services/window/screen.h>
+#include <epoc/services/window/window.h>
 #include <epoc/services/window/classes/winbase.h>
+#include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
 
 #include <drivers/itc.h>
@@ -35,11 +37,24 @@ namespace eka2l1::epoc {
             assert(win->type == window_kind::client && "Window to draw must have kind of user");
             window_user *winuser = reinterpret_cast<window_user*>(win);
 
+            if (!winuser->irect.empty()) {
+                // Wakeup windows, we have a region to invalidate
+                // Yes, I'm referencing a meme. Send help.
+                // The invalidate region is there. Gone with what we have first, but do redraw still
+                winuser->client->queue_redraw(winuser, winuser->irect);
+            }
+
             // Draw it onto current binding buffer
             builder_->draw_bitmap(winuser->driver_win_id, eka2l1::rect({0, 0}, winuser->size), false);
             return false;
         }
     };
+
+    screen::screen(const int number, epoc::config::screen &scr_conf) 
+        : scr_config(scr_conf)
+        , crr_mode(0)
+        , next(nullptr) {
+    }
 
     void screen::redraw(drivers::graphics_command_list_builder *cmd_builder) {
         cmd_builder->bind_bitmap(screen_texture);
@@ -67,8 +82,6 @@ namespace eka2l1::epoc {
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
 
-        size = new_size;
-
         if (!screen_texture) {
             // Create new one!
             screen_texture = drivers::create_bitmap(driver, new_size);
@@ -78,5 +91,58 @@ namespace eka2l1::epoc {
 
         redraw(cmd_builder.get());
         driver->submit_command_list(*cmd_list);
+    }
+
+    epoc::window_group *screen::update_focus(epoc::window_group *closing_group) {
+        // Iterate through root's childs.
+        epoc::window_group *next_to_focus = reinterpret_cast<epoc::window_group*>(root->child);
+
+        while (next_to_focus != nullptr) {
+            assert(next_to_focus->type == window_kind::group && "The window kind of lvl1 root's child must be window group");
+            if (next_to_focus->can_receive_focus())
+                break;
+            
+            next_to_focus = reinterpret_cast<epoc::window_group*>(next_to_focus->sibling);
+        }
+
+        if (next_to_focus != focus) {
+            if (focus && focus != closing_group) {
+                focus->lost_focus();
+            }
+
+            if (next_to_focus) {
+                next_to_focus->gain_focus();
+                focus = std::move(next_to_focus);
+            }
+        }
+
+        return next_to_focus;
+    }
+
+    void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {
+        crr_mode = mode;
+        resize(drv, mode_info(mode)->size);
+    }
+
+    const epoc::config::screen_mode *screen::mode_info(const int number) const {
+        for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
+            if (scr_config.modes[i].mode_number == number) {
+                return &scr_config.modes[i];
+            }
+        }
+
+        return nullptr;
+    }
+    
+    const epoc::config::screen_mode &screen::current_mode() const {
+        return *mode_info(crr_mode);
+    }
+
+    eka2l1::vec2 screen::size() const {
+        return current_mode().size;
+    }
+
+    const int screen::total_screen_mode() const {
+        return static_cast<int>(scr_config.modes.size());
     }
 }
