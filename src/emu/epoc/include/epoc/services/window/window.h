@@ -35,13 +35,13 @@
 #include <common/vecx.h>
 
 #include <epoc/services/window/bitmap_cache.h>
+#include <epoc/services/window/screen.h>
+#include <epoc/services/window/scheduler.h>
 #include <epoc/services/window/classes/config.h>
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/fifo.h>
+#include <epoc/services/window/screen.h>
 #include <epoc/services/window/opheader.h>
-
-#include <drivers/graphics/graphics.h>
-#include <drivers/itc.h>
 
 #include <epoc/ptr.h>
 #include <epoc/services/server.h>
@@ -52,10 +52,8 @@ namespace eka2l1 {
     class fbs_server;
 
     namespace drivers {
-        class input_driver_client;
+        class graphics_driver;
     }
-
-    using input_driver_client_ptr = std::shared_ptr<drivers::input_driver_client>;
 }
 
 namespace eka2l1::epoc {
@@ -275,7 +273,7 @@ namespace eka2l1 {
     private:
         friend class epoc::window_server_client;
 
-        std::unordered_map<std::uint64_t, std::shared_ptr<epoc::window_server_client>>
+        std::unordered_map<std::uint64_t, std::unique_ptr<epoc::window_server_client>>
             clients;
 
         common::ini_file ws_config;
@@ -283,11 +281,19 @@ namespace eka2l1 {
 
         std::atomic<epoc::ws::uid> key_capture_uid_counter {0};
 
-        std::vector<epoc::config::screen> screens;
+        std::vector<epoc::config::screen> screen_configs;
+        epoc::screen *screens;          ///< Linked list of all screens.
+
         std::unordered_map<epoc::ws::uid, key_capture_request_queue> key_capture_requests;
 
         epoc::window_group *focus_ { nullptr };
         epoc::pointer_cursor_mode cursor_mode_;
+        
+        epoc::bitmap_cache bmp_cache;
+        epoc::animation_scheduler anim_sched;
+
+        fbs_server *fbss { nullptr };
+        int input_handler_evt_;
 
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);
@@ -297,21 +303,35 @@ namespace eka2l1 {
         void load_wsini();
         void parse_wsini();
 
-        input_driver_client_ptr idriver_cli_;
-        int input_handler_evt_;
-
         void handle_inputs_from_driver(std::uint64_t userdata, int cycles_late);
-
-        epoc::bitmap_cache bmp_cache;
-        fbs_server *fbss { nullptr };
+        void init_screens();
 
     public:
-        window_server(system *sys);
+        explicit window_server(system *sys);
+        ~window_server();
 
-        epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
         epoc::bitmap_cache *get_bitmap_cache() {
             return &bmp_cache;
         }
+
+        epoc::animation_scheduler *get_anim_scheduler() {
+            return &anim_sched;
+        }
+        
+        epoc::pointer_cursor_mode &cursor_mode() {
+            return cursor_mode_;
+        }
+
+        epoc::window_group *&get_focus() {
+            return focus_;
+        }
+
+        epoc::config::screen &get_screen_config(const int num) {
+            assert(num < screen_configs.size());
+            return screen_configs[num];
+        }
+
+        epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
 
         epoc::config::screen &get_current_focus_screen_config();
 
@@ -326,20 +346,8 @@ namespace eka2l1 {
         void get_window_group_list(std::vector<std::uint32_t> &id, const std::uint32_t max = 0
             , const int pri = -1, const int scr_num = 0);
 
+        drivers::graphics_driver *get_graphics_driver();
+
         void do_base_init();
-
-        epoc::pointer_cursor_mode &cursor_mode() {
-            return cursor_mode_;
-        }
-
-        epoc::window_group *&get_focus() {
-            return focus_;
-        }
-
-        epoc::config::screen &get_screen_config(int num) {
-            assert(num < screens.size());
-            return screens[num];
-        }
     };
-
 }

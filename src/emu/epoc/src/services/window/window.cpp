@@ -123,8 +123,6 @@ namespace eka2l1::epoc {
         : guest_session(guest_session)
         , client_thread(own_thread)
         , uid_counter(0) {
-        add_object(std::make_unique<epoc::window>(this));
-        root = std::reinterpret_pointer_cast<epoc::window>(objects.back());
     }
 
     void window_server_client::execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds) {
@@ -760,7 +758,7 @@ namespace eka2l1 {
                 scr.modes.push_back(scr_mode);
             } while (true);
 
-            screens.push_back(scr);
+            screen_configs.push_back(scr);
         } while (screen_node != nullptr);
     }
 
@@ -773,6 +771,22 @@ namespace eka2l1 {
             "Ws::CommandBuffer");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessSyncMsgBuf,
             "Ws::MessSyncBuf");
+    }
+
+    window_server::~window_server() {
+        drivers::graphics_driver *drv = get_graphics_driver();
+
+        // Destroy all screens
+        while (screens != nullptr) {
+            epoc::screen *next = screens->next;
+            screens->deinit(drv);
+            delete screens;
+            screens = next;
+        }
+    }
+
+    drivers::graphics_driver *window_server::get_graphics_driver() {
+        return get_system()->get_graphics_driver();
     }
 
     constexpr std::int64_t input_update_ticks = 10000;
@@ -899,18 +913,29 @@ namespace eka2l1 {
     }
     */
 
+    void window_server::init_screens() {
+        // Create first screen
+        screens = new epoc::screen(0, get_screen_config(0));
+        epoc::screen *crr = screens;
+
+        // Create other available screens. Plugged in screen later will be created explicitly
+        for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
+            crr->next = new epoc::screen(1, get_screen_config(1));
+            crr = crr->next;
+        }
+    }
+
     void window_server::do_base_init() {
         load_wsini();
         parse_wsini();
-
-        idriver_cli_ = sys->get_input_driver_client();
+        init_screens();
 
         // Schedule an event which will frequently queries input from host
         timing_system *timing = sys->get_timing_system();
 
-        //input_handler_evt_ = timing->register_event("InputUpdateEvent", [this](std::uint64_t userdata, int cycles_late) {
-        //    handle_inputs_from_driver(userdata, cycles_late);
-        //});
+        input_handler_evt_ = timing->register_event("ws_serv_input_update_event", [this](std::uint64_t userdata, int cycles_late) {
+            handle_inputs_from_driver(userdata, cycles_late);
+        });
 
         //timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
 
@@ -1003,7 +1028,8 @@ namespace eka2l1 {
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
         if (!fbss) {
-            fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
+            fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name
+                <service::server>("!Fontbitmapserver")));
         }
 
         return fbss->get<fbsbitmap>(h)->bitmap_;
