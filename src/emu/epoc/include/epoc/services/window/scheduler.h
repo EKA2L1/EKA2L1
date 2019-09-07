@@ -25,7 +25,7 @@
 namespace eka2l1 {
     class timing_system;
 
-    namespace driver {    
+    namespace drivers {    
         class graphics_driver;
     }
 };
