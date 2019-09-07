@@ -65,8 +65,12 @@
 #include <manager/config.h>
 
 namespace eka2l1 {
-    /*! A system instance, where all the magic happens. 
-     *
+    // Add JIT backend name here
+    static constexpr char *dynarmic_jit_backend_name = "dynarmic";  ///< Dynarmic recompiler backend name
+    static constexpr char *unicorn_jit_backend_name = "unicorn";    ///< Unicorn recompiler backend name
+    static constexpr char *earm_jit_backend_name = "earm";          ///< EKA2L1's ARM recompiler backend name
+    
+    /* A system instance, where all the magic happens.
      * Represents the Symbian system. You can switch the system version dynamiclly.
     */
     class system_impl {
@@ -80,8 +84,7 @@ namespace eka2l1 {
         arm::jitter cpu;
         arm_emulator_type jit_type;
 
-        graphics_driver_client_ptr gdriver_client;
-        input_driver_client_ptr idriver_client;
+        drivers::graphics_driver *gdriver;
 
         memory_system mem;
         kernel_system kern;
@@ -112,7 +115,7 @@ namespace eka2l1 {
         bool exit = false;
 
         std::unordered_map<std::string, bool> bool_configs;
-        std::unordered_map<uint32_t, hal_ptr> hals;
+        std::unordered_map<uint32_t, hal_instance> hals;
 
         bool startup_inited = false;
 
@@ -126,13 +129,12 @@ namespace eka2l1 {
         language sys_lang = language::en;
 
     public:
-        system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
+        system_impl(system *parent, debugger_ptr debugger, drivers::graphics_driver *graphics_driver,
             manager::config_state *conf);
 
         ~system_impl() = default;
 
-        void set_graphics_driver(drivers::driver_instance graphics_driver);
-        void set_input_driver(drivers::driver_instance input_driver);
+        void set_graphics_driver(drivers::graphics_driver *graphics_driver);
 
         void set_debugger(debugger_ptr new_debugger) {
             debugger = std::move(new_debugger);
@@ -256,12 +258,8 @@ namespace eka2l1 {
             return &gdb_stub;
         }
 
-        graphics_driver_client_ptr get_graphic_driver_client() {
-            return gdriver_client;
-        }
-
-        input_driver_client_ptr get_input_driver_client() {
-            return idriver_client;
+        drivers::graphics_driver *get_graphic_driver() {
+            return gdriver;
         }
 
         arm::jitter &get_cpu() {
@@ -291,8 +289,8 @@ namespace eka2l1 {
             return exit;
         }
 
-        void add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com);
-        hal_ptr get_hal(uint32_t cagetory);
+        void add_new_hal(uint32_t hal_cagetory, hal_instance &hal_com);
+        epoc::hal *get_hal(uint32_t cagetory);
     };
 
     void system_impl::load_scripts() {
@@ -345,31 +343,21 @@ namespace eka2l1 {
         epoc::init_panic_descriptions();
     }
 
-    system_impl::system_impl(system *parent, debugger_ptr debugger, drivers::driver_instance graphics_driver,
+    system_impl::system_impl(system *parent, debugger_ptr debugger, drivers::graphics_driver *graphics_driver,
         manager::config_state *conf)
-        : jit_type(conf->cpu_backend == 0 ? arm_emulator_type::unicorn : arm_emulator_type::dynarmic)
-        , parent(parent)
+        : parent(parent)
         , conf(conf) {
-        gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
+        if (conf->cpu_backend == unicorn_jit_backend_name) {
+            jit_type = arm_emulator_type::unicorn;
+        } else if (conf->cpu_backend == dynarmic_jit_backend_name) {
+            jit_type = arm_emulator_type::dynarmic;
+        } else {
+            assert(false && "JIT backend config name is invalid");
+        }
     }
 
-    void system_impl::set_graphics_driver(drivers::driver_instance graphics_driver) {
-        if (graphics_driver == nullptr) {
-            gdriver_client.reset();
-            return;
-        }
-
-        gdriver_client = std::make_shared<drivers::graphics_driver_client>(graphics_driver);
-    }
-
-    void system_impl::set_input_driver(drivers::driver_instance input_driver) {
-        if (input_driver == nullptr) {
-            idriver_client->disconnect();
-            idriver_client.reset();
-            return;
-        }
-        
-        idriver_client = std::make_shared<drivers::input_driver_client>(input_driver);
+    void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
+        gdriver = graphics_driver;
     }
 
     bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
@@ -514,12 +502,12 @@ namespace eka2l1 {
         return true;
     }
 
-    void system_impl::add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com) {
+    void system_impl::add_new_hal(uint32_t hal_cagetory, hal_instance &hal_com) {
         hals.emplace(hal_cagetory, std::move(hal_com));
     }
 
-    hal_ptr system_impl::get_hal(uint32_t cagetory) {
-        return hals[cagetory];
+    epoc::hal *system_impl::get_hal(uint32_t cagetory) {
+        return hals[cagetory].get();
     }
 
     bool system_impl::save_snapshot_processes(const std::string &path,
@@ -527,9 +515,8 @@ namespace eka2l1 {
         return true;
     }
 
-    system::system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
-        manager::config_state *conf)
-        : impl(std::make_shared<system_impl>(this, debugger, graphics_driver, conf)) {
+    system::system(debugger_ptr debugger, drivers::graphics_driver *gdriver, manager::config_state *conf)
+        : impl(std::make_unique<system_impl>(this, debugger, gdriver, conf)) {
     }
 
     manager::config_state *system::get_config() {
@@ -540,12 +527,8 @@ namespace eka2l1 {
         impl->set_config(conf);
     }
     
-    void system::set_graphics_driver(drivers::driver_instance graphics_driver) {
+    void system::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
         return impl->set_graphics_driver(graphics_driver);
-    }
-
-    void system::set_input_driver(drivers::driver_instance input_driver) {
-        return impl->set_input_driver(input_driver);
     }
 
     void system::set_debugger(debugger_ptr new_debugger) {
@@ -623,12 +606,8 @@ namespace eka2l1 {
         return impl->get_gdb_stub();
     }
 
-    graphics_driver_client_ptr system::get_graphic_driver_client() {
-        return impl->get_graphic_driver_client();
-    }
-
-    input_driver_client_ptr system::get_input_driver_client() {
-        return impl->get_input_driver_client();
+    drivers::graphics_driver *system::get_graphics_driver() {
+        return impl->get_graphic_driver();
     }
 
     arm::jitter &system::get_cpu() {
@@ -669,11 +648,11 @@ namespace eka2l1 {
         return impl->should_exit();
     }
 
-    void system::add_new_hal(uint32_t hal_category, hal_ptr hal_com) {
+    void system::add_new_hal(uint32_t hal_category, hal_instance &hal_com) {
         return impl->add_new_hal(hal_category, hal_com);
     }
 
-    hal_ptr system::get_hal(uint32_t category) {
+    epoc::hal *system::get_hal(uint32_t category) {
         return impl->get_hal(category);
     }
 
