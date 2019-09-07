@@ -70,6 +70,15 @@ namespace eka2l1::epoc {
          */
         window *root_window();
 
+        /**
+         * \brief   Get the ordinal position of the window.
+         * 
+         * \param   full Enable traversing to siblings with same priority, then find the position there.
+         * 
+         * \returns The ordinal position of this window.
+         */
+        int ordinal_position(const bool full);
+
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx,
             eka2l1::ws_cmd cmd);
 

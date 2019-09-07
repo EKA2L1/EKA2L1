@@ -192,6 +192,24 @@ namespace eka2l1::epoc {
         eka2l1::epoc::walk_tree_back_to_front(this, walker);
     }
 
+    int window::ordinal_position(const bool full) {
+        window *win = parent->child;
+
+        if (full) {
+            while (win->priority > priority) {
+                win = win->sibling;
+            }
+        }
+
+        int count = 0;
+
+        for (count = 0; win != this; count++) {
+            win = win->sibling;
+        }
+
+        return count;
+    }
+
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
