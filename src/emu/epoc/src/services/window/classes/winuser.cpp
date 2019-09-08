@@ -204,7 +204,7 @@ namespace eka2l1::epoc {
         ctx.set_request_status(KErrNone);
     }
 
-    void window_user::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {

@@ -100,7 +100,7 @@ namespace eka2l1::epoc {
         driver->submit_command_list(*cmd_list);
     }
 
-    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         TWsGcOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {

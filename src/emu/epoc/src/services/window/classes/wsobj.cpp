@@ -30,7 +30,7 @@ namespace eka2l1::epoc {
         , scr(scr) {
     }
 
-    void window_client_obj::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
+    void window_client_obj::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         LOG_ERROR("Unimplemented command handler for object with handle: 0x{:x}", cmd.obj_handle);
     }
 }

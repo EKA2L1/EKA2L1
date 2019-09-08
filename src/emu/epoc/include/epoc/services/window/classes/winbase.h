@@ -79,8 +79,7 @@ namespace eka2l1::epoc {
          */
         int ordinal_position(const bool full);
 
-        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx,
-            eka2l1::ws_cmd cmd);
+        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         /*! \brief Generic event queueing
         */

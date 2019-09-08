@@ -99,7 +99,7 @@ namespace eka2l1::epoc {
         ctx.set_request_status(KErrNone);
     }
             
-    void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) {
+    void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         TWsScreenDeviceOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {

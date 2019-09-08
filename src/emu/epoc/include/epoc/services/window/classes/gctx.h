@@ -52,7 +52,7 @@ namespace eka2l1::epoc {
         void do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set);
 
         void active(service::ipc_context &context, ws_cmd cmd);
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         explicit graphic_context(window_server_client_ptr client, epoc::window *attach_win = nullptr);
     };

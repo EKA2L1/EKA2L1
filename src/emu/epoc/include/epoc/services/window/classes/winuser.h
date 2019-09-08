@@ -99,7 +99,7 @@ namespace eka2l1::epoc {
         // ===================== OPCODE IMPLEMENTATIONS ===========================
         void begin_redraw(service::ipc_context &context, ws_cmd &cmd);
         void end_redraw(service::ipc_context &context, ws_cmd &cmd);
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         epoc::window_group *get_group() {
             return reinterpret_cast<epoc::window_group*>(parent);
