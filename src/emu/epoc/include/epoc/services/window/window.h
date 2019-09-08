@@ -347,6 +347,7 @@ namespace eka2l1 {
             , const int pri = -1, const int scr_num = 0);
 
         drivers::graphics_driver *get_graphics_driver();
+        timing_system *get_timing_system();
 
         void do_base_init();
     };

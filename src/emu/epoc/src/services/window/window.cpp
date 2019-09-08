@@ -788,6 +788,10 @@ namespace eka2l1 {
     drivers::graphics_driver *window_server::get_graphics_driver() {
         return get_system()->get_graphics_driver();
     }
+    
+    timing_system *window_server::get_timing_system() {
+        return get_system()->get_timing_system();
+    }
 
     constexpr std::int64_t input_update_ticks = 10000;
 
