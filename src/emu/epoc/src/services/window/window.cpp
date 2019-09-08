@@ -126,7 +126,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds) {
-        for (const auto &cmd : cmds) {
+        for (auto &cmd : cmds) {
             if (cmd.obj_handle == guest_session->unique_id()) {
                 execute_command(ctx, cmd);
             } else {
@@ -188,33 +188,22 @@ namespace eka2l1::epoc {
 
         ws_cmd_screen_device_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
 
-        epoc::screen_device_ptr device
-            = std::make_unique<epoc::screen_device>(
-                this, header->num_screen, ctx.sys->get_graphic_driver_client());
+        // Get screen object
+        epoc::screen *target_screen = get_ws().get_screen(header->num_screen);
+
+        if (!target_screen) {
+            LOG_ERROR("Can't find screen object with number {}", header->num_screen);
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        window_client_obj_ptr device = std::make_unique<epoc::screen_device>(this, target_screen);
 
         if (!primary_device) {
             primary_device = device;
         }
 
-        init_device(root);
-        devices.push_back(device);
-
         ctx.set_request_status(add_object(device));
-    }
-
-    void window_server_client::init_device(epoc::window_ptr &win) {
-        if (win->type == epoc::window_kind::group) {
-            epoc::window_group_ptr group_win = std::reinterpret_pointer_cast<epoc::window_group>(
-                win);
-
-            if (!group_win->dvc) {
-                group_win->dvc = primary_device;
-            }
-        }
-
-        for (auto &child_win : win->childs) {
-            init_device(child_win);
-        }
     }
 
     void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -227,38 +216,29 @@ namespace eka2l1::epoc {
         ws_cmd_window_group_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         int device_handle = header->screen_device_handle;
 
-        epoc::screen_device_ptr device_ptr;
+        epoc::screen_device *device_ptr;
 
         if (device_handle <= 0) {
             device_ptr = primary_device;
         } else {
-            device_ptr = std::reinterpret_pointer_cast<epoc::screen_device>(get_object(device_handle));
+            device_ptr = reinterpret_cast<epoc::screen_device*>(get_object(device_handle));
         }
 
         if (!device_ptr) {
             device_ptr = primary_device;
         }
 
-        epoc::window_ptr group = std::make_unique<epoc::window_group>(this, device_ptr);
-        epoc::window_ptr parent_group = find_window_obj(root, header->parent_id);
-
+        epoc::window *parent_group = reinterpret_cast<epoc::window*>(get_object(header->parent_id));
+        
         if (!parent_group) {
             LOG_WARN("Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
-            parent_group = root;
+            parent_group = device_ptr->scr->root;
         }
 
-        group->parent = &(*parent_group);
-
-        if (last_group) {
-            last_group->next_sibling = std::reinterpret_pointer_cast<epoc::window_group>(group);
-        }
-
-        parent_group->childs.push(group);
-        device_ptr->windows.push_back(&(*group));
+        auto group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group);
 
         if (header->focus) {
             std::reinterpret_pointer_cast<epoc::window_group>(group)->flags |= window_group::focus_receiveable;
-
             device_ptr->update_focus(nullptr);
         }
 
@@ -266,17 +246,17 @@ namespace eka2l1::epoc {
         total_group++;
 
         std::uint32_t id = add_object(group);
-
         ctx.set_request_status(id);
     }
 
     void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
-        epoc::window_ptr parent = find_window_obj(root, header->parent);
+        epoc::window *parent = reinterpret_cast<epoc::window*>(get_object(header->parent));
 
         if (!parent) {
             LOG_WARN("Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
-            parent = root;
+            ctx.set_request_status(KErrArgument);
+            return;
         }
 
         if (parent->type != window_kind::group) {
@@ -285,14 +265,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        std::shared_ptr<epoc::window_user> win = std::make_unique<epoc::window_user>(this, parent->dvc,
-            header->win_type, header->dmode);
-
-        win->driver_win_id = drivers::create_bitmap(std::reinterpret_pointer_cast<epoc::window_group>(parent)->get_driver(),
-            { 200, 200 });
-
-        win->parent = &(*parent);
-        parent->childs.push(win);
+        std::unique_ptr<epoc::window_user> win = std::make_unique<epoc::window_user>(this, parent->dvc->scr,
+            parent, header->win_type, header->dmode);
 
         ctx.set_request_status(add_object(win));
     }
@@ -304,36 +278,34 @@ namespace eka2l1::epoc {
 
     void window_server_client::create_sprite(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_create_sprite_header *sprite_header = reinterpret_cast<decltype(sprite_header)>(cmd.data_ptr);
-        epoc::window_ptr win = nullptr;
+        epoc::window *win = reinterpret_cast<epoc::window*>(get_object(sprite_header->window_handle));
 
-        if (sprite_header->window_handle <= 0) {
-            LOG_WARN("Window handle is invalid, use root");
-            win = root;
-        } else {
-            win = std::reinterpret_pointer_cast<epoc::window>(get_object(sprite_header->window_handle));
+        if (!win) {
+            LOG_WARN("Window handle is invalid! Abort");
+            ctx.set_request_status(KErrArgument);
+            return;
         }
 
-        std::shared_ptr<epoc::sprite> spr = std::make_unique<epoc::sprite>(this, std::move(win), sprite_header->base_pos);
+        std::unique_ptr<epoc::sprite> spr = std::make_unique<epoc::sprite>(this, win, sprite_header->base_pos);
         ctx.set_request_status(add_object(spr));
     }
 
     void window_server_client::create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd) {
-        int dll_name_length = *reinterpret_cast<int *>(cmd.data_ptr);
-        char16_t *dll_name_ptr = reinterpret_cast<char16_t *>(
-            reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(int));
+        const int dll_name_length = *reinterpret_cast<int *>(cmd.data_ptr);
+        const char16_t *dll_name_ptr = reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(int));
 
-        std::u16string dll_name(dll_name_ptr, dll_name_length);
+        const std::u16string dll_name(dll_name_ptr, dll_name_length);
 
         LOG_TRACE("Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
 
-        std::shared_ptr<epoc::anim_dll> animdll = std::make_unique<epoc::anim_dll>(this);
+        std::unique_ptr<epoc::anim_dll> animdll = std::make_unique<epoc::anim_dll>(this);
         ctx.set_request_status(add_object(animdll));
     }
 
     void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd &cmd) {
         LOG_TRACE("Create CLICKDLL (button click sound plugin), stubbed object");
 
-        std::shared_ptr<epoc::click_dll> clickdll = std::make_unique<epoc::click_dll>(this);
+        std::unique_ptr<epoc::click_dll> clickdll = std::make_unique<epoc::click_dll>(this);
         ctx.set_request_status(add_object(clickdll));
     }
 
@@ -363,26 +335,25 @@ namespace eka2l1::epoc {
 
     void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_find_window_group_identifier *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
+        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(primary_device->scr->root->child);
 
-        epoc::window_group_ptr group = nullptr;
+        if (find_info->previous_id) {
+            // Find our lost sibling!!!!! Bring him to me....
+            group = get_ws().get_group_from_id(find_info->previous_id);
 
-        if (find_info->parent_identifier) {
-            group = std::reinterpret_pointer_cast<epoc::window_group>(find_window_obj(root, find_info->parent_identifier));
-        } else {
-            LOG_TRACE("Parent identifier not specified, use root window group");
-            group = std::reinterpret_pointer_cast<epoc::window_group>(
-                *root->childs.begin());
+            if (!group) {
+                LOG_ERROR("Previous group sibling not found with id {}", find_info->previous_id);
+                ctx.set_request_status(KErrNotFound);
+                return;
+            }
+
+            group = group->sibling;
         }
 
-        if (!group || group->type != window_kind::group) {
-            ctx.set_request_status(KErrNotFound);
-            return;
-        }
+        const char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
+        const std::u16string win_group_name(win_group_name_ptr, find_info->length);
 
-        char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
-        std::u16string win_group_name(win_group_name_ptr, find_info->length);
-
-        for (; group; group = group->next_sibling) {
+        for (; group; group = group->sibling) {
             if (common::compare_ignore_case(group->name.substr(find_info->offset), win_group_name) == 0) {
                 ctx.set_request_status(group->id);
                 return;
@@ -405,14 +376,15 @@ namespace eka2l1::epoc {
 
     void window_server_client::get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd) {
         std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        epoc::window_ptr win = find_window_obj(root, group_id);
+        epoc::window_group *win = get_ws().get_group_win_id(group_id);
 
         if (!win || win->type != window_kind::group) {
+            LOG_TRACE("Can't find group with id {}", group_id);
             ctx.set_request_status(KErrArgument);
             return;
         }
 
-        std::uint32_t thr_id = win->client->get_client()->unique_id();
+        const std::uint32_t thr_id = win->client->get_client()->unique_id();
 
         ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
         ctx.set_request_status(KErrNone);
@@ -442,21 +414,20 @@ namespace eka2l1::epoc {
     void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Epoc < 9
         if (cmd.header.cmd_len == 0) {
-            ctx.set_request_status(primary_device->focus->id);
+            ctx.set_request_status(primary_device->scr->focus->id);
             return;
         }
 
         int screen_num = *reinterpret_cast<int *>(cmd.data_ptr);
+        epoc::screen *scr = get_ws().get_screen(screen_num);
 
-        auto dvc_ite = std::find_if(devices.begin(), devices.end(),
-            [screen_num](const epoc::screen_device_ptr &dvc) { return dvc->screen == screen_num; });
-
-        if (dvc_ite == devices.end()) {
+        if (!scr) {
+            LOG_ERROR("Invalid screen number {}", screen_number);
             ctx.set_request_status(KErrArgument);
             return;
         }
 
-        ctx.set_request_status((*dvc_ite)->focus->id);
+        ctx.set_request_status(scr->focus->id);
     }
 
     void window_server_client::get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -606,65 +577,6 @@ namespace eka2l1::epoc {
         rqueue.push(std::move(notifier));
 
         return id;
-    }
-
-    std::uint32_t window_server_client::get_total_window_groups(const int pri, const int scr_num) {
-        if (pri == -1) {
-            return total_group;
-        }
-
-        epoc::window_group_ptr gr = nullptr;
-        std::uint32_t total = 0;
-
-        for (auto &child : root->childs) {
-            if (child->type == window_kind::group) {
-                gr = std::reinterpret_pointer_cast<epoc::window_group>(child);
-                break;
-            }
-        }
-
-        if (!gr) {
-            LOG_TRACE("No window group detected");
-            return 0;
-        }
-
-        for (; gr != nullptr; gr = gr->next_sibling) {
-            if (gr->priority == pri && gr->dvc->screen == scr_num) {
-                total++;
-            }
-        }
-
-        return total;
-    }
-
-    bool window_server_client::get_window_group_list(std::vector<std::uint32_t> &ids, const std::uint32_t max,
-        const int pri, const int scr_num) {
-        epoc::window_group_ptr gr = nullptr;
-        std::uint32_t total = 0;
-
-        for (auto &child : root->childs) {
-            if (child->type == window_kind::group) {
-                gr = std::reinterpret_pointer_cast<epoc::window_group>(child);
-                break;
-            }
-        }
-
-        if (!gr) {
-            LOG_TRACE("No window group detected");
-            return true;
-        }
-
-        for (; (gr != nullptr) && (static_cast<std::uint32_t>(ids.size()) <= max); gr = gr->next_sibling) {
-            if ((pri == -1 || (gr->priority == pri)) && gr->dvc->screen == scr_num) {
-                ids.push_back(gr->id);
-            }
-        }
-
-        if (ids.size() == max) {
-            return false;
-        }
-
-        return true;
     }
 }
 
@@ -929,6 +841,29 @@ namespace eka2l1 {
         }
     }
 
+    epoc::screen *window_server::get_screen(const int number) {
+        epoc::screen *crr = screens;
+
+        while (crr && crr->number != number) {
+            crr = crr->next;
+        }
+
+        return crr;
+    }
+
+    epoc::window_group *window_server::get_group_from_id(const ws::uid id) {
+        epoc::screen *current = screens;
+
+        while (current) {
+            epoc::window_group *group = reinterpret_cast<epoc::window_group*>(current->scr->root->child);
+            while (group && group->id != find_info->previous_id) {
+                group = group->sibling;
+            }
+
+            current = current->next;
+        }
+    }
+
     void window_server::do_base_init() {
         load_wsini();
         parse_wsini();
@@ -1013,9 +948,19 @@ namespace eka2l1 {
 
     std::uint32_t window_server::get_total_window_groups(const int pri, const int scr_num) {
         std::uint32_t total = 0;
+        epoc::screen *scr = get_screen(scr_num);
 
-        for (auto &cli : clients) {
-            total += cli.second->get_total_window_groups(pri, scr_num);
+        if (!scr) {
+            LOG_TRACE("Screen number {} doesnt exist", scr_num);
+            return false;
+        }
+
+        // Tchhh... Im referencing a game...
+        epoc::window_group *the_first_of_us = reinterpret_cast<epoc::window_group*>(scr->root->child);
+        while (the_first_of_us) {
+            if ((pri == -1) || (the_first_of_us->priority == pri)) {
+                total++;
+            }
         }
 
         return total;
@@ -1023,11 +968,26 @@ namespace eka2l1 {
 
     void window_server::get_window_group_list(std::vector<std::uint32_t> &ids, const std::uint32_t max,
         const int pri, const int scr_num) {
-        for (auto &cli : clients) {
-            if (!cli.second->get_window_group_list(ids, max, pri, scr_num)) {
-                return;
-            }
+        epoc::screen *scr = get_screen(scr_num);
+
+        if (!scr) {
+            LOG_TRACE("Screen number {} doesnt exist", scr_num);
+            return false;
         }
+
+        // Tchhh... Im referencing a game... This time again..
+        epoc::window_group *the_first_of_us = reinterpret_cast<epoc::window_group*>(scr->root->child);
+
+        while (pri != -1 && the_first_of_us->priority > pri) {
+            the_first_of_us = the_first_of_us->sibling;
+        }
+
+        while (the_first_of_us && (pri == -1 || the_first_of_us->priority == pri) && static_cast<std::uint32_t>(ids.size()) < max) {
+            ids.push_back(the_first_of_us->id);
+            the_first_of_us = the_first_of_us->sibling;
+        }
+
+        return true;
     }
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {

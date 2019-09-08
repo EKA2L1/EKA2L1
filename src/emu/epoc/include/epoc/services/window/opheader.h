@@ -71,7 +71,7 @@ namespace eka2l1 {
     };
 
     struct ws_cmd_find_window_group_identifier {
-        std::uint32_t parent_identifier;
+        std::uint32_t previous_id;
         int offset;
         int length;
     };

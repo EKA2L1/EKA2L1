@@ -54,6 +54,10 @@ namespace eka2l1::epoc {
         cmd_builder = drv->new_command_builder(cmd_list.get());
 
         // Add first command list, binding our window bitmap
+        if (attached_window->driver_win_id == 0) {    
+            attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size);
+        }
+
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
     }
 

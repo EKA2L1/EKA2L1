@@ -107,23 +107,13 @@ namespace eka2l1::epoc {
         graphics_orientation orientation;
     };
 
-    struct window_client_obj;
-    using window_client_obj_ptr = std::unique_ptr<window_client_obj>;
-
-    struct screen_device;
-    using screen_device_ptr = std::unique_ptr<screen_device>;
-
-    struct window;
-    using window_ptr = std::unique_ptr<window>;
-
-    struct window_group;
-    using window_group_ptr = std::unique_ptr<window_group>;
-
     struct window_user;
 
     namespace ws {
         using uid = std::uint32_t;
     };
+
+    using window_client_obj_ptr = std::unique_ptr<window_client_obj>;
 
     class window_server_client {
     public:
@@ -154,13 +144,9 @@ namespace eka2l1::epoc {
         std::atomic<ws::uid> uid_counter;
 
         std::vector<window_client_obj_ptr> objects;
-        std::vector<epoc::screen_device_ptr> devices;
-
-        epoc::screen_device_ptr primary_device;
-        epoc::window_ptr root;
+        epoc::screen_device *primary_device;
 
         eka2l1::kernel::thread *client_thread;
-        eka2l1::epoc::window_group_ptr last_group;
 
         epoc::redraw_fifo redraws;
         epoc::event_fifo events;
@@ -189,9 +175,6 @@ namespace eka2l1::epoc {
         void get_event(service::ipc_context &ctx, ws_cmd &cmd);
         void get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd);
-    
-        void init_device(epoc::window_ptr &win);
-        epoc::window_ptr find_window_obj(epoc::window_ptr &root, std::uint32_t id);
 
         std::uint32_t total_group{ 0 };
 
@@ -203,10 +186,6 @@ namespace eka2l1::epoc {
         void add_event_listener(notify_info nof) {
             events.set_listener(nof);
         }
-
-        std::uint32_t get_total_window_groups(const int pri, const int scr_num);
-        bool get_window_group_list(std::vector<std::uint32_t> &id, const std::uint32_t max,
-            const int pri, const int scr_num);
 
         void execute_command(service::ipc_context &ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);
@@ -331,7 +310,11 @@ namespace eka2l1 {
             return screen_configs[num];
         }
 
+        epoc::screen *get_screen(const int number);
+        
         epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
+
+        epoc::window_group *get_group_from_id(const ws::uid id);
 
         epoc::config::screen &get_current_focus_screen_config();
 
@@ -343,7 +326,7 @@ namespace eka2l1 {
         /**
          * \brief Get all window group's ID in all sessions
          */
-        void get_window_group_list(std::vector<std::uint32_t> &id, const std::uint32_t max = 0
+        bool get_window_group_list(std::vector<std::uint32_t> &id, const std::uint32_t max = 0
             , const int pri = -1, const int scr_num = 0);
 
         drivers::graphics_driver *get_graphics_driver();
