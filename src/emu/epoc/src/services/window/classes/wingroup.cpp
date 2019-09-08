@@ -43,11 +43,39 @@ namespace eka2l1::epoc {
         queue_event(epoc::event{ id, epoc::event_code::focus_gained });
     }
 
-    drivers::graphics_driver *window_group::get_driver() {
-        return dvc->driver;
+    void window_group::receive_focus(service::ipc_context &context, ws_cmd &cmd) {
+        flags &= ~focus_receiveable;
+
+        if (*reinterpret_cast<bool *>(cmd.data_ptr)) {
+            flags |= focus_receiveable;
+
+            LOG_TRACE("Request group {} to enable keyboard focus", common::ucs2_to_utf8(name));
+        } else {
+            LOG_TRACE("Request group {} to disable keyboard focus", common::ucs2_to_utf8(name));
+        }
+
+        scr->update_focus(nullptr);
+        context.set_request_status(KErrNone);
+    }
+    
+    void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
+        // Warn myself in the future!
+        LOG_WARN("Set cursor text is mostly a stubbed now");
+
+        ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
+        auto window_user_to_set = reinterpret_cast<window_user*>(client->get_object(cmd_set->win));
+
+        if (!window_user_to_set || window_user_to_set->type == window_kind::client) {
+            LOG_ERROR("Window not found or not client kind to set text cursor");
+            context.set_request_status(KErrNotFound);
+            return;
+        }
+
+        window_user_to_set->cursor_pos = cmd_set->pos + window_user_to_set->pos;
+        context.set_request_status(KErrNone);   
     }
 
-    void window_group::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
@@ -110,47 +138,22 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpReceiveFocus: {
-            flags &= ~focus_receiveable;
-
-            if (*reinterpret_cast<bool *>(cmd.data_ptr)) {
-                flags |= focus_receiveable;
-
-                LOG_TRACE("Request group {} to enable keyboard focus",
-                    common::ucs2_to_utf8(name));
-            } else {
-                LOG_TRACE("Request group {} to disable keyboard focus",
-                    common::ucs2_to_utf8(name));
-            }
-
-            dvc->update_focus(nullptr);
-            ctx.set_request_status(KErrNone);
+            receive_focus(ctx, cmd);
             break;
         }
 
         case EWsWinOpSetTextCursor: {
-            ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
-            auto window_user_to_set = std::find_if(childs.begin(), childs.end(),
-                [&](const epoc::window_ptr &win) { return win->id == cmd_set->win; });
-
-            if (window_user_to_set == childs.end()) {
-                ctx.set_request_status(KErrNotFound);
-                break;
-            }
-
-            std::shared_ptr<epoc::window_user> win_user = std::reinterpret_pointer_cast<epoc::window_user>(*window_user_to_set);
-
-            win_user->cursor_pos = cmd_set->pos + win_user->pos;
-            ctx.set_request_status(KErrNone);
+            set_text_cursor(ctx, cmd);
             break;
         }
 
         case EWsWinOpOrdinalPosition: {
-            ctx.set_request_status(priority);
+            ctx.set_request_status(ordinal_position(true));
             break;
         }
 
         case EWsWinOpOrdinalPriority: {
-            ctx.set_request_status(secondary_priority);
+            ctx.set_request_status(priority);
             break;
         }
 

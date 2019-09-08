@@ -24,11 +24,7 @@
 #include <epoc/services/window/classes/winbase.h>
 
 namespace eka2l1::epoc {
-    struct window_group;
-    using window_group_ptr = std::shared_ptr<window_group>;
-
     struct window_group : public epoc::window {
-        epoc::window_group_ptr next_sibling{ nullptr };
         std::u16string name;
 
         enum {
@@ -41,14 +37,16 @@ namespace eka2l1::epoc {
             return flags & focus_receiveable;
         }
 
-        window_group(window_server_client_ptr client, screen_device_ptr dvc)
-            : window(client, dvc, window_kind::group) {
+        window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent)
+            : window(client, scr, parent, window_kind::group) {
         }
 
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+        // ===================== COMMAND OPCODES =======================
+        void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);
+        void receive_focus(service::ipc_context &context, ws_cmd &cmd);
+        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        
         void lost_focus();
         void gain_focus();
-
-        drivers::graphics_driver *get_driver();
     };
 }
