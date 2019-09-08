@@ -24,6 +24,8 @@
 #include <epoc/services/window/window.h>
 #include <epoc/services/window/screen.h>
 
+#include <epoc/timing.h>
+
 #include <common/e32inc.h>
 #include <e32err.h>
 
@@ -93,6 +95,12 @@ namespace eka2l1::epoc {
     }
 
     void window::move_window(epoc::window *new_parent, const int new_pos) {
+        if (type == window_kind::group || type == window_kind::client || new_parent != parent) {
+            // TODO: Check if any childs need a redraw before hassle.
+            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
+                scr, client->get_ws().get_timing_system()->get_global_time_us());
+        }
+
         remove_from_sibling_list();
 
         // The window that will be previous sibling of our future window.
