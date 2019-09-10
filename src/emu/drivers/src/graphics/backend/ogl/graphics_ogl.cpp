@@ -33,8 +33,8 @@ namespace eka2l1::drivers {
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
     }
 
-    static constexpr char *sprite_norm_v_path = "resources//sprite_norm.vert";
-    static constexpr char *sprite_norm_f_path = "resources//sprite_norm.frag";
+    static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
+    static constexpr const char *sprite_norm_f_path = "resources//sprite_norm.frag";
 
     void ogl_graphics_driver::do_init() {
         sprite_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_norm_f_path);
