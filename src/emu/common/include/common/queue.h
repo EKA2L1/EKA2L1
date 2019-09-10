@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <algorithm>
+#include <condition_variable>
 #include <mutex>
 #include <optional>
 #include <queue>
