@@ -299,7 +299,7 @@ namespace eka2l1 {
             if (ver == epocver::epoc6) {
                 //  #include <hle/epoc6_n.def>
             } else {
-                #include <hle/epoc9_n.def>
+                // #include <hle/epoc9_n.def>
             }
 
 #undef LIB
