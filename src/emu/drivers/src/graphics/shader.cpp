@@ -22,6 +22,8 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/graphics/shader.h>
 
+#include <cstring>
+
 namespace eka2l1::drivers {
     std::unique_ptr<shader> make_shader(graphics_driver *driver) {
         switch (driver->get_current_api()) {
