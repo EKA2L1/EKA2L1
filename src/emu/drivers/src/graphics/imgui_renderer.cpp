@@ -206,9 +206,11 @@ namespace eka2l1::drivers {
                     //    static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x),
                     //   static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y));
 
-                    cmd_builder->invalidate_rect(eka2l1::rect(
+                    eka2l1::rect inv_rect(
                         eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.y) },
-                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) }));
+                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
+                    
+                    cmd_builder->invalidate_rect(inv_rect);
 
                     //glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buf_offset);
                     cmd_builder->draw_indexed(drivers::graphics_primitive_mode::triangles, pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? drivers::data_format::word : drivers::data_format::uint,
