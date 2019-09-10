@@ -54,6 +54,6 @@ TEST_CASE("mbm_header_trailer_and_single_headers", "mbm_file") {
     REQUIRE(mbmf.trailer.count == 1);
     REQUIRE(mbmf.trailer.sbm_offsets[0] == 20);
 
-    REQUIRE(mbmf.sbm_headers[0].compressed_len == 3545);
+    REQUIRE(mbmf.sbm_headers[0].bitmap_size == 3545);
     REQUIRE(mbmf.sbm_headers[0].bit_per_pixels == 24);
 }
