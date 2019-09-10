@@ -23,6 +23,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 #include <epoc/epoc.h>
 #include <manager/config.h>
