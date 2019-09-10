@@ -30,14 +30,15 @@
 
 namespace eka2l1::drivers {
     class graphics_driver;
+    class texture;
 
     class framebuffer: public graphics_object {
     protected:
-        texture_ptr color_buffer;
-        texture_ptr depth_buffer;
+        texture *color_buffer;
+        texture *depth_buffer;
 
     public:
-        explicit framebuffer(texture_ptr &color_buffer, texture_ptr &depth_buffer)
+        explicit framebuffer(texture *color_buffer, texture *depth_buffer)
             : color_buffer(color_buffer)
             , depth_buffer(depth_buffer) {
         }
@@ -51,7 +52,7 @@ namespace eka2l1::drivers {
         virtual std::uint64_t texture_handle() = 0;
     };
 
-    using framebuffer_ptr = std::shared_ptr<framebuffer>;
+    using framebuffer_ptr = std::unique_ptr<framebuffer>;
 
-    framebuffer_ptr make_framebuffer(graphics_driver *driver, texture_ptr &color_buffer, texture_ptr &depth_buffer);
+    framebuffer_ptr make_framebuffer(graphics_driver *driver, texture *color_buffer, texture *depth_buffer);
 }

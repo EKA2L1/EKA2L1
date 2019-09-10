@@ -12,5 +12,7 @@ namespace eka2l1::drivers {
         default:
             break;
         }
+
+        return nullptr;
     }
 }

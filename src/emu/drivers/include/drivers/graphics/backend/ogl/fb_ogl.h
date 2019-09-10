@@ -40,7 +40,7 @@ namespace eka2l1::drivers {
             return fbo;
         }
 
-        explicit ogl_framebuffer(texture_ptr &color_buffer, texture_ptr &depth_buffer);
+        explicit ogl_framebuffer(texture *color_buffer, texture *depth_buffer);
         ~ogl_framebuffer() override;
 
         void bind(graphics_driver *driver) override;

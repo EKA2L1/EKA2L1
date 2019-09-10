@@ -21,9 +21,9 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <drivers/driver.h>
 #include <drivers/graphics/buffer.h>
 #include <drivers/graphics/common.h>
-#include <drivers/graphics/graphics.h>
 #include <drivers/graphics/shader.h>
 #include <drivers/graphics/texture.h>
 
@@ -290,6 +290,8 @@ namespace eka2l1::drivers {
          */
         virtual void destroy(drivers::handle h) = 0;
 
+        virtual void destroy_bitmap(drivers::handle h) = 0;
+
         // TODO: Document
         virtual void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) = 0;
     };
@@ -333,7 +335,7 @@ namespace eka2l1::drivers {
          */
         void bind_bitmap(const drivers::handle handle) override;
 
-        void resize_bitmap(drivers::handle h, eka2l1::vec2 &new_size) override;
+        void resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size) override;
 
         void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim) override;
@@ -375,6 +377,8 @@ namespace eka2l1::drivers {
         void present(int *status) override;
 
         void destroy(drivers::handle h) override;
+
+        void destroy_bitmap(drivers::handle h) override;
 
         void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) override;
     };

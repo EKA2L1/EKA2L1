@@ -15,6 +15,7 @@ target_link_libraries(console PRIVATE
 	debugger 
 	drivers
 	epoc
+	epocservs
 	manager
 	gdbstub
 	imgui

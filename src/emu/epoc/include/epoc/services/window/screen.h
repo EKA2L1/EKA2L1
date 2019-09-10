@@ -47,8 +47,6 @@ namespace eka2l1::epoc {
 
         epoc::window_group *focus;              ///< Current window group that is being focused
 
-        epoc::display_mode disp_mode{ display_mode::color16ma };
-
         screen *next;
 
         explicit screen(const int number, epoc::config::screen &scr_conf);

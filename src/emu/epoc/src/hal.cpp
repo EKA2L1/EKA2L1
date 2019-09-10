@@ -34,11 +34,18 @@
 #include <drivers/graphics/graphics.h>
 #include <epoc/utils/des.h>
 
+#include <manager/config.h>
+
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
     funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2))
 
+#define REGISTER_HAL_D(sys, cage, hal_name) \
+    std::unique_ptr<epoc::hal> hal_com = std::make_unique<hal_name>(sys);   \
+    sys->add_new_hal(cage, hal_com);
+
 #define REGISTER_HAL(sys, cage, hal_name) \
-    sys->add_new_hal(cage, std::make_shared<hal_name>(sys))
+    hal_com = std::make_unique<hal_name>(sys);   \
+    sys->add_new_hal(cage, hal_com);
 
 namespace eka2l1::epoc {
     hal::hal(eka2l1::system *sys)
@@ -126,7 +133,7 @@ namespace eka2l1::epoc {
             epoc::TVideoInfoV01 *info_ptr = reinterpret_cast<epoc::TVideoInfoV01 *>(
                 package->get_pointer(sys->get_kernel_system()->crr_process()));
 
-            info_ptr->iSizeInPixels = sys->get_graphic_driver_client()->screen_size();
+            info_ptr->iSizeInPixels = eka2l1::vec2(sys->get_config()->display_size_x_pixs, sys->get_config()->display_size_y_pixs);
             info_ptr->iSizeInTwips = info_ptr->iSizeInPixels * 15;
             info_ptr->iIsMono = false; // This can be changed
             info_ptr->iBitsPerPixel = 3;
@@ -152,13 +159,13 @@ namespace eka2l1::epoc {
     };
 
     void init_hal(eka2l1::system *sys) {
-        REGISTER_HAL(sys, 0, kern_hal);
+        REGISTER_HAL_D(sys, 0, kern_hal);
         REGISTER_HAL(sys, 1, variant_hal);
         REGISTER_HAL(sys, 4, display_hal);
     }
 
     int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2) {
-        hal_ptr hal_com = sys->get_hal(cage);
+        hal *hal_com = sys->get_hal(cage);
 
         if (!hal_com) {
             LOG_TRACE("HAL cagetory not found or unimplemented: 0x{:x} (for function: 0x{:x})",

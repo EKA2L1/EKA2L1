@@ -80,7 +80,7 @@ namespace eka2l1 {
     */
     class system {
         // TODO: Make unique
-        std::unique_ptr<system_impl> impl;
+        system_impl *impl;
 
     public:
         system(const system &) = delete;
@@ -92,7 +92,7 @@ namespace eka2l1 {
         system(debugger_ptr debugger, drivers::graphics_driver *graphics_driver,
             manager::config_state *conf);
 
-        ~system() = default;
+        ~system();
 
         void set_graphics_driver(drivers::graphics_driver *driver);
         void set_debugger(debugger_ptr new_debugger);

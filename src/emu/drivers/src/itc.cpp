@@ -51,7 +51,7 @@ namespace eka2l1::drivers {
     }
 
     static void *make_data_copy(const void *source, const std::size_t size) {
-        void *copy = new std::uint8_t[size];
+        std::uint8_t *copy = new std::uint8_t[size];
         std::copy(reinterpret_cast<const std::uint8_t *>(source), reinterpret_cast<const std::uint8_t *>(source) + size, copy);
 
         return copy;
@@ -283,6 +283,11 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
+    void server_graphics_command_list_builder::destroy_bitmap(drivers::handle h) {
+        command *cmd = make_command(graphics_driver_destroy_bitmap, nullptr, h);
+        get_command_list().add(cmd);
+    }
+    
     void server_graphics_command_list_builder::set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) {
         command *cmd = make_command(graphics_driver_set_texture_filter, nullptr, h);
         get_command_list().add(cmd);

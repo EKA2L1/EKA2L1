@@ -17,8 +17,8 @@ add_library(drivers
     include/drivers/graphics/backend/emu_window_glfw.h
     include/drivers/graphics/backend/graphics_driver_shared.h
     include/drivers/graphics/backend/ogl/buffer_ogl.h
+    include/drivers/graphics/backend/ogl/common_ogl.h
     include/drivers/graphics/backend/ogl/fb_ogl.h
-    include/drivers/graphics/backend/ogl/imgui_renderer_ogl.h
     include/drivers/graphics/backend/ogl/graphics_ogl.h
     include/drivers/graphics/backend/ogl/shader_ogl.h
     include/drivers/graphics/backend/ogl/texture_ogl.h
@@ -34,8 +34,8 @@ add_library(drivers
     src/graphics/backend/emu_window_glfw.cpp
     src/graphics/backend/graphics_driver_shared.cpp
     src/graphics/backend/ogl/buffer_ogl.cpp
+    src/graphics/backend/ogl/common_ogl.cpp
     src/graphics/backend/ogl/fb_ogl.cpp
-    src/graphics/backend/ogl/imgui_renderer_ogl.cpp
     src/graphics/backend/ogl/graphics_ogl.cpp
     src/graphics/backend/ogl/texture_ogl.cpp
     src/graphics/backend/ogl/shader_ogl.cpp

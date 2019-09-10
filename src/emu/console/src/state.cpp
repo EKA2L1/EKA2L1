@@ -17,9 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/log.h>
 #include <console/state.h>
 #include <common/log.h>
 #include <gdbstub/gdbstub.h>
+
+#include <debugger/imgui_debugger.h>
+#include <drivers/graphics/graphics.h>
+#include <debugger/logger.h>
+
+#include <epoc/kernel.h>
 
 namespace eka2l1::desktop {
     void emulator::stage_one() {
@@ -34,12 +41,8 @@ namespace eka2l1::desktop {
         symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
 
         // Make debugger. Go watch Case Closed.
-        debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger);
+        debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger.get());
 
-        // Set up system.
-        symsys->set_jit_type(conf.cpu_backend == 0 ? arm_emulator_type::unicorn
-                                                   : arm_emulator_type::dynarmic);
-        
         // TODO
         // symsys->set_debugger(debugger);
 
@@ -54,6 +57,9 @@ namespace eka2l1::desktop {
             symsys->get_gdb_stub()->init(symsys.get());
             symsys->get_gdb_stub()->toggle_server(true);
         }
+        
+        winserv = reinterpret_cast<eka2l1::window_server*>(symsys->get_kernel_system()->get_by_name
+            <eka2l1::service::server>("!Windowserver").get());
     }
 
     void emulator::stage_two() {

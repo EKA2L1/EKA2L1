@@ -55,7 +55,8 @@ namespace eka2l1::drivers {
 
     class buffer : public graphics_object {
     public:
-        virtual ~buffer() = 0;
+        virtual ~buffer() {   
+        };
 
         virtual void bind(graphics_driver *driver) = 0;
         virtual void unbind(graphics_driver *driver) = 0;

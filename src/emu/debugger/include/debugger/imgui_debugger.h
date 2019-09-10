@@ -99,7 +99,7 @@ namespace eka2l1 {
         std::atomic<std::uint32_t> debug_thread_id;
 
         std::shared_ptr<MemoryEditor> mem_editor;
-        std::shared_ptr<imgui_logger> logger;
+        imgui_logger *logger;
 
         std::uint32_t addr = 0;
         std::uint32_t selected_package_index = 0;
@@ -112,7 +112,7 @@ namespace eka2l1 {
         void do_install_package();
 
     public:
-        explicit imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger);
+        explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger);
         ~imgui_debugger();
 
         bool should_emulate_stop() override {

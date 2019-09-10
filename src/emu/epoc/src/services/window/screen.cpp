@@ -77,6 +77,18 @@ namespace eka2l1::epoc {
         driver->submit_command_list(*cmd_list);
     }
 
+    void screen::deinit(drivers::graphics_driver *driver) {
+        // Make command list first, and bind our screen bitmap
+        auto cmd_list = driver->new_command_list();
+        auto cmd_builder = driver->new_command_builder(cmd_list.get());
+
+        if (screen_texture) {
+            cmd_builder->destroy_bitmap(screen_texture);
+        }
+
+        driver->submit_command_list(*cmd_list);
+    }
+
     void screen::resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size) {
         // Make command list first, and bind our screen bitmap
         auto cmd_list = driver->new_command_list();

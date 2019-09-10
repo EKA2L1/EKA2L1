@@ -49,4 +49,24 @@ namespace eka2l1::drivers {
         uint = 5,
         sint = 6
     };
+    
+    enum class blend_equation {
+        add,
+        sub,
+        isub
+    };
+
+    enum class blend_factor {
+        one = 0,
+        zero = 1,
+        frag_out_alpha = 2,
+        one_minus_frag_out_alpha = 3,
+        current_alpha = 4,
+        one_minus_current_alpha = 5
+    };
+
+    enum clear_bits: std::uint8_t {
+        clear_bit_color_buffer = 1 << 0,
+        clear_bit_depth_buffer = 1 << 1
+    };
 }

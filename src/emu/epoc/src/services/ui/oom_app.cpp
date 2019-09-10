@@ -101,11 +101,12 @@ namespace eka2l1 {
             winsrv = reinterpret_cast<window_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Windowserver")));
         }
 
-        epoc::config::screen &scr_config = winsrv->get_current_focus_screen_config();
+        epoc::config::screen *scr_config = winsrv->get_current_focus_screen_config();
+        assert(scr_config && "Current screen config must be valid");
 
         akn_layout_config akn_config;
 
-        akn_config.num_screen_mode = static_cast<int>(scr_config.modes.size());
+        akn_config.num_screen_mode = static_cast<int>(scr_config->modes.size());
 
         // TODO: Find out what this really does
         akn_config.num_hardware_mode = 0;
@@ -117,15 +118,15 @@ namespace eka2l1 {
         std::string result;
         result.append(reinterpret_cast<char *>(&akn_config), sizeof(akn_layout_config));
 
-        for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
+        for (std::size_t i = 0; i < scr_config->modes.size(); i++) {
             akn_screen_mode_info mode_info;
 
             // TODO: Change this based on user settings
             mode_info.loc = akn_softkey_loc::bottom;
-            mode_info.mode_num = scr_config.modes[i].mode_number;
+            mode_info.mode_num = scr_config->modes[i].mode_number;
             mode_info.dmode = epoc::display_mode::color16ma;
-            mode_info.info.orientation = epoc::number_to_orientation(scr_config.modes[i].rotation);
-            mode_info.info.pixel_size = scr_config.modes[i].size;
+            mode_info.info.orientation = epoc::number_to_orientation(scr_config->modes[i].rotation);
+            mode_info.info.pixel_size = scr_config->modes[i].size;
             mode_info.info.twips_size = mode_info.info.pixel_size * twips_mul;
 
             result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));

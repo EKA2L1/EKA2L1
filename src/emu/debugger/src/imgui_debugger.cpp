@@ -38,6 +38,8 @@
 #include <manager/manager.h>
 
 #include <common/cvt.h>
+#include <common/platform.h>
+
 #include <nfd.h>
 
 #include <mutex>
@@ -51,7 +53,7 @@ const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
 const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255.0f);
 
 namespace eka2l1 {
-    imgui_debugger::imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger)
+    imgui_debugger::imgui_debugger(eka2l1::system *sys, imgui_logger *logger)
         : sys(sys)
         , conf(sys->get_config())
         , logger(logger)
@@ -475,14 +477,14 @@ namespace eka2l1 {
         ImGui::SameLine(col2);
         ImGui::PushItemWidth(col2 - 10);
 
-        if (ImGui::BeginCombo("##CPUCombo", (conf->cpu_backend == 0) ? "Unicorn" : "Dynarmic")) {
+        if (ImGui::BeginCombo("##CPUCombo", (conf->cpu_backend == eka2l1::unicorn_jit_backend_name) ? "Unicorn" : "Dynarmic")) {
             if (ImGui::Selectable("Unicorn")) {
-                conf->cpu_backend = 0;
+                conf->cpu_backend = eka2l1::unicorn_jit_backend_name;
                 conf->serialize();
             }
 
             if (ImGui::Selectable("Dynarmic")) {
-                conf->cpu_backend = 1;
+                conf->cpu_backend = eka2l1::dynarmic_jit_backend_name;
                 conf->serialize();
             }
 

@@ -122,7 +122,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         eka2l1::apa_app_registry *registry = svr->get_registeration(uid);
 
         if (registry) {
-            symsys->load(registry->mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+            emu->symsys->load(registry->mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
             return true;
         }
 
@@ -132,7 +132,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         *err += " doesn't exist";
     } else {
         if (eka2l1::has_root_dir(tokstr)) {
-            if (!symsys->load(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr))) {
+            if (!emu->symsys->load(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr))) {
                 *err = "Executable doesn't exists";
                 return false;
             }
@@ -147,7 +147,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             if (common::ucs2_to_utf8(reg.second.mandatory_info.long_caption.to_std_string(nullptr))
                 == tokstr) {
                 // Load the app
-                symsys->load(reg.second.mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+                emu->symsys->load(reg.second.mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
                 return true;
             }
         }
@@ -177,7 +177,7 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userda
     
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
     
-    bool install_result = emu->symsys->install_rpkg(conf.storage + "/drives/z/", path);
+    bool install_result = emu->symsys->install_rpkg(emu->conf.storage + "/drives/z/", path);
     if (!install_result) {
         *err = "RPKG installation failed. Something is wrong, see log";
         return false;

@@ -29,6 +29,7 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/random.h>
+#include <common/platform.h>
 
 #include <disasm/disasm.h>
 
@@ -65,11 +66,6 @@
 #include <manager/config.h>
 
 namespace eka2l1 {
-    // Add JIT backend name here
-    static constexpr char *dynarmic_jit_backend_name = "dynarmic";  ///< Dynarmic recompiler backend name
-    static constexpr char *unicorn_jit_backend_name = "unicorn";    ///< Unicorn recompiler backend name
-    static constexpr char *earm_jit_backend_name = "earm";          ///< EKA2L1's ARM recompiler backend name
-    
     /* A system instance, where all the magic happens.
      * Represents the Symbian system. You can switch the system version dynamiclly.
     */
@@ -132,7 +128,8 @@ namespace eka2l1 {
         system_impl(system *parent, debugger_ptr debugger, drivers::graphics_driver *graphics_driver,
             manager::config_state *conf);
 
-        ~system_impl() = default;
+        ~system_impl() {   
+        };
 
         void set_graphics_driver(drivers::graphics_driver *graphics_driver);
 
@@ -516,7 +513,11 @@ namespace eka2l1 {
     }
 
     system::system(debugger_ptr debugger, drivers::graphics_driver *gdriver, manager::config_state *conf)
-        : impl(std::make_unique<system_impl>(this, debugger, gdriver, conf)) {
+        : impl(new system_impl(this, debugger, gdriver, conf)) {
+    }
+
+    system::~system() {
+        delete impl;
     }
 
     manager::config_state *system::get_config() {

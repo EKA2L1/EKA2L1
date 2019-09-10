@@ -41,6 +41,7 @@
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
 #include <drivers/graphics/emu_window.h>
+#include <drivers/graphics/graphics.h>          // Declaration for graphics driver. Happy!
 #include <epoc/epoc.h>
 #include <epoc/loader/rom.h>
 #include <manager/config.h>
@@ -115,7 +116,7 @@ int main(int argc, char **argv) {
 
             if (state->should_emu_quit) {
                 std::cout << err << std::endl;
-                return;
+                return -1;
             }
         }
 

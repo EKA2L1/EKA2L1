@@ -49,7 +49,7 @@ namespace eka2l1::manager {
         bool enable_breakpoint_script { false };
 
         std::vector<std::string> force_load_modules;
-        int cpu_backend { 0 };
+        std::string cpu_backend { "unicorn" };
         int device { 0 };
         
         bool enable_gdbstub { false };

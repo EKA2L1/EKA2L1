@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <algorithm>
 #include <mutex>
 #include <optional>

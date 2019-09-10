@@ -87,7 +87,7 @@ namespace eka2l1::epoc {
 
     animation_scheduler::anim_schedule *animation_scheduler::get_scheduled_screen_update(const int scr_num) {
         if (schedules_.size() <= scr_num) {
-            return;
+            return nullptr;
         }
 
         if (!schedules_[scr_num].scheduled) {
@@ -132,7 +132,7 @@ namespace eka2l1::epoc {
                     // and replace with our due.
                     //
                     // Else, wait for the existing update to finish, then do redraw.
-                    if (until_due < scr_state.time_expected_redraw - now) {
+                    if (until_due < static_cast<std::int64_t>(scr_state.time_expected_redraw) - static_cast<std::int64_t>(now)) {
                         // Cancel the schedule
                         timing_->unschedule_event(anim_due_evt_, reinterpret_cast<std::uint64_t>(
                             &callback_datas_[screen_number]));
@@ -150,7 +150,7 @@ namespace eka2l1::epoc {
                     } else {
                         scr_state.time_expected_redraw = now + until_due;
                         scr_state.flags = screen_state::scheduled;
-                        timing_->schedule_event(until_due, reinterpret_cast<std::uint64_t>(
+                        timing_->schedule_event(static_cast<int64_t>(until_due), anim_due_evt_, reinterpret_cast<std::uint64_t>(
                             &callback_datas_[screen_number]));
                     }
                 }

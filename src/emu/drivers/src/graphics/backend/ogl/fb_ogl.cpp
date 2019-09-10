@@ -24,7 +24,7 @@
 #include <common/log.h>
 
 namespace eka2l1::drivers {
-    ogl_framebuffer::ogl_framebuffer(texture_ptr &color_buffer, texture_ptr &depth_buffere)
+    ogl_framebuffer::ogl_framebuffer(texture *color_buffer, texture *depth_buffere)
         : framebuffer(color_buffer, depth_buffer) {
         glGenFramebuffers(1, &fbo);
         bind(nullptr);

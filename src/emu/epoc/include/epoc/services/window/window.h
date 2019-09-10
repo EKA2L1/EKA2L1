@@ -47,6 +47,8 @@
 #include <epoc/services/server.h>
 #include <epoc/utils/des.h>
 
+#include <drivers/input/common.h>
+
 namespace eka2l1 {
     class window_server;
     class fbs_server;
@@ -113,6 +115,9 @@ namespace eka2l1::epoc {
         using uid = std::uint32_t;
     };
 
+    struct window_client_obj;
+    struct screen_device;
+
     using window_client_obj_ptr = std::unique_ptr<window_client_obj>;
 
     class window_server_client {
@@ -175,8 +180,6 @@ namespace eka2l1::epoc {
         void get_event(service::ipc_context &ctx, ws_cmd &cmd);
         void get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd);
-
-        std::uint32_t total_group{ 0 };
 
     public:
         void add_redraw_listener(notify_info nof) {
@@ -285,6 +288,9 @@ namespace eka2l1 {
         void handle_inputs_from_driver(std::uint64_t userdata, int cycles_late);
         void init_screens();
 
+        std::mutex input_queue_mut;
+        std::queue<drivers::input_event> input_events;
+
     public:
         explicit window_server(system *sys);
         ~window_server();
@@ -314,9 +320,9 @@ namespace eka2l1 {
         
         epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
 
-        epoc::window_group *get_group_from_id(const ws::uid id);
+        epoc::window_group *get_group_from_id(const epoc::ws::uid id);
 
-        epoc::config::screen &get_current_focus_screen_config();
+        epoc::config::screen *get_current_focus_screen_config();
 
         /**
          * \brief Get the number of window groups running in the server
@@ -332,6 +338,7 @@ namespace eka2l1 {
         drivers::graphics_driver *get_graphics_driver();
         timing_system *get_timing_system();
 
+        void queue_input_from_driver(drivers::input_event &evt);
         void do_base_init();
     };
 }

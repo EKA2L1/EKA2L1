@@ -48,6 +48,7 @@ namespace eka2l1 {
 
     bool debugger_renderer::change_background(const char *path) {
         background_change_path_ = path;
+        return true;
     }
 
     bool debugger_renderer::change_background_internal(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder, const char *path) {

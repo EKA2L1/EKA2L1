@@ -162,10 +162,10 @@ namespace eka2l1::drivers {
         auto slot_free = std::find(bmp_textures.begin(), bmp_textures.end(), nullptr);
 
         if (slot_free == bmp_textures.end()) {
-            *slot_free = std::make_unique<bitmap>(size, 32);
+            *slot_free = std::make_unique<bitmap>(this, size, 32);
             *result = std::distance(bmp_textures.begin(), slot_free) + 1;
         } else {
-            bmp_textures.push_back(std::make_unique<bitmap>(size, 32));
+            bmp_textures.push_back(std::make_unique<bitmap>(this, size, 32));
             *result = bmp_textures.size();
         }
 
@@ -186,7 +186,7 @@ namespace eka2l1::drivers {
 
         if (!bmp->fb) {
             // Make new one
-            bmp->fb = make_framebuffer(this, bmp->tex, nullptr);
+            bmp->fb = make_framebuffer(this, bmp->tex.get(), nullptr);
         }
 
         // Bind the framebuffer
@@ -304,10 +304,10 @@ namespace eka2l1::drivers {
         switch (dim) {
         case 3:
             helper.pop(depth);
-            [[fallthrough]]
+            [[fallthrough]];
 
             case 2 : helper.pop(height);
-            [[fallthrough]]
+            [[fallthrough]];
 
             case 1 : helper.pop(width);
             break;

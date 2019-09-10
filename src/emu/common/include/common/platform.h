@@ -104,3 +104,10 @@
 #if EKA2L1_PLATFORM(ANDROID) || EKA2L1_PLATFORM(UNIX)
 #define EKA2L1_PLATFORM_POSIX 1
 #endif
+
+namespace eka2l1 {
+    // Add JIT backend name here
+    static constexpr char *dynarmic_jit_backend_name = "dynarmic";  ///< Dynarmic recompiler backend name
+    static constexpr char *unicorn_jit_backend_name = "unicorn";    ///< Unicorn recompiler backend name
+    static constexpr char *earm_jit_backend_name = "earm";          ///< EKA2L1's ARM recompiler backend name
+}

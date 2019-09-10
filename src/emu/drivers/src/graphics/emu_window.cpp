@@ -29,7 +29,7 @@ namespace eka2l1 {
             }
             }
 
-            return std::make_unique<emu_window>(nullptr);
+            return nullptr;
         }
 
         bool init_window_library(window_type win_type) {

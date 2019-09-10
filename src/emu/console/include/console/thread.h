@@ -26,13 +26,13 @@ namespace eka2l1::desktop {
      * \brief Entry point to the graphics driver thread.
      * \param state Emulator state.
      */
-    int graphics_driver_thread(emulator &state);
+    void graphics_driver_thread(emulator &state);
 
     /**
      * \brief Entry point to the UI thread.
      * \param state Emulator state.
      */
-    int ui_thread(emulator &state);
+    void ui_thread(emulator &state);
 
     /**
      * \brief Entry point to thread emulate Symbian OS.
@@ -41,7 +41,7 @@ namespace eka2l1::desktop {
      *
      * \param state Emulator state.
      */
-    int os_thread(emulator &state);
+    void os_thread(emulator &state);
 
     /**
      * \brief Entry to emulator.

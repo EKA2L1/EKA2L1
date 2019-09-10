@@ -30,6 +30,10 @@
 
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
+#include <drivers/input/common.h>
+
+#include <epoc/services/window/window.h>
+#include <e32keys.h>
 
 /*
 using namespace eka2l1;
@@ -173,6 +177,15 @@ static void on_ui_window_mouse_scrolling(void *userdata, eka2l1::vec2 v) {
     io.MouseWheel += static_cast<float>(v.y);
 }
 
+static eka2l1::drivers::input_event make_key_event_driver(const int key, const eka2l1::drivers::key_state key_state) {
+    eka2l1::drivers::input_event evt;
+    evt.type_ = eka2l1::drivers::input_event_type::key;
+    evt.key_.state_ = key_state;
+    evt.key_.code_ = EStdKeyApplication0;       // TODO: Flexible .-.
+
+    return evt;
+}
+
 static void on_ui_window_key_release(void *userdata, const int key) {
     ImGuiIO &io = ImGui::GetIO();
     io.KeysDown[key] = false;
@@ -181,9 +194,10 @@ static void on_ui_window_key_release(void *userdata, const int key) {
     io.KeyShift = io.KeysDown[KEY_LEFT_SHIFT] || io.KeysDown[KEY_RIGHT_SHIFT];
     io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
     io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
-
-    // Queue key!!!
-    //idriver->queue_key_event(key, drivers::key_state::released);
+    
+    eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+    auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::released);
+    emu->winserv->queue_input_from_driver(key_evt);
 }
 
 static void on_ui_window_key_press(void *userdata, const int key) {
@@ -196,7 +210,9 @@ static void on_ui_window_key_press(void *userdata, const int key) {
     io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
     io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
 
-    // idriver->queue_key_event(key, drivers::key_state::pressed);
+    eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+    auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::pressed);
+    emu->winserv->queue_input_from_driver(key_evt);
 }
 
 static void on_ui_window_char_type(void *userdata, std::uint32_t c) {
@@ -267,11 +283,12 @@ namespace eka2l1::desktop {
         return 0;
     }
 
-    int graphics_driver_thread(emulator &state) {
+    void graphics_driver_thread(emulator &state) {
         int result = graphics_driver_thread_initialization(state);
 
         if (result != 0) {
-            return result;
+            LOG_ERROR("Graphics driver initialization failed with code {}", result);
+            return;
         }
 
         // Keep running. User which want to change the graphics backend will have to restart EKA2L1.
@@ -280,10 +297,9 @@ namespace eka2l1::desktop {
         result = graphics_driver_thread_deinitialization(state);
 
         if (result != 0) {
-            return result;
+            LOG_ERROR("Graphics driver deinitialization failed with code {}", result);
+            return;
         }
-
-        return 0;
     }
 
     static int ui_thread_initialization(emulator &state) {
@@ -342,11 +358,12 @@ namespace eka2l1::desktop {
         return 0;
     }
 
-    int ui_thread(emulator &state) {
+    void ui_thread(emulator &state) {
         int result = ui_thread_initialization(state);
 
         if (result != 0) {
-            return -1;
+            LOG_ERROR("UI thread initialization failed with code {}", result);
+            return;
         }
 
         ImGuiIO &io = ImGui::GetIO();
@@ -404,13 +421,12 @@ namespace eka2l1::desktop {
         result = ui_thread_deinitialization(state);
 
         if (result != 0) {
-            return -1;
+            LOG_ERROR("UI thread deinitialization failed with code {}", result);
+            return;
         }
-
-        return 0;
     }
 
-    int os_thread(emulator &state) {
+    void os_thread(emulator &state) {
         // TODO: Multi core. Currently it's single core.
         while (!state.should_emu_quit) {
             try {
@@ -430,11 +446,11 @@ namespace eka2l1::desktop {
 
     int emulator_entry(emulator &state) {
         // First, initialize the graphics driver. This is needed for all graphics operations on the emulator.
-        std::thread graphics_thread_obj(graphics_driver_thread, state);
-        std::thread ui_thread_obj(ui_thread, state);
+        std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
+        std::thread ui_thread_obj(ui_thread, std::ref(state));
 
         // Launch the OS thread now
-        std::thread os_thread_obj(os_thread, state);
+        std::thread os_thread_obj(os_thread, std::ref(state));
 
         // Wait for the OS thread to be killed now
         os_thread_obj.join();

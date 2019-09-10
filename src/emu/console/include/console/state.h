@@ -24,7 +24,6 @@
 #include <memory>
 #include <mutex>
 
-#include <common/log.h>
 #include <epoc/epoc.h>
 #include <manager/config.h>
 
@@ -40,6 +39,8 @@ namespace eka2l1 {
     namespace drivers {
         class graphics_driver;
     }
+
+    class window_server;
 }
 
 namespace eka2l1::desktop {
@@ -52,7 +53,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<drivers::graphics_driver> graphics_driver;
         std::unique_ptr<debugger_renderer> deb_renderer;
         std::unique_ptr<imgui_debugger> debugger;
-        std::shared_ptr<base_logger> logger;
+        std::shared_ptr<imgui_logger> logger;
         drivers::emu_window_ptr window;
 
         std::atomic<bool> should_emu_quit;
@@ -63,6 +64,7 @@ namespace eka2l1::desktop {
         std::condition_variable graphics_cond;
 
         manager::config_state conf;
+        window_server *winserv;
 
         bool mouse_down[3];
         std::mutex input_mutex;

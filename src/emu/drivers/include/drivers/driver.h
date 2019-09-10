@@ -21,8 +21,6 @@
 #pragma once
 
 #include <common/queue.h>
-#include <drivers/itc.h>
-
 #include <condition_variable>
 
 namespace eka2l1::drivers {
@@ -94,7 +92,7 @@ namespace eka2l1::drivers {
 
         template <typename T>
         bool pop(T &dest) {
-            return pop(reinterpret_cast<std::uint8_t *>(&data), sizeof(T));
+            return pop(reinterpret_cast<std::uint8_t *>(&dest), sizeof(T));
         }
 
         template <typename T>
@@ -105,7 +103,7 @@ namespace eka2l1::drivers {
 
         bool push_string(const std::u16string &data) {
             // Alloc memory for the string
-            std::uint16_t length = data.length();
+            std::uint16_t length = static_cast<std::uint16_t>(data.length());
 
             if (!push(length)) {
                 return false;
@@ -145,7 +143,7 @@ namespace eka2l1::drivers {
     inline void push_arguments(command_helper &helper, Head arg1, Args... args) {
         helper.push(arg1);
 
-        if (sizeof...(Args) > 0) {
+        if constexpr(sizeof...(Args) > 0) {
             push_arguments(helper, args...);
         }
     }
@@ -155,7 +153,9 @@ namespace eka2l1::drivers {
         command *cmd = new command(opcode, status);
         command_helper helper(cmd);
 
-        push_arguments(arguments);
+        if constexpr(sizeof...(Args) > 0)
+            push_arguments(helper, arguments...);
+        
         return cmd;
     }
 
