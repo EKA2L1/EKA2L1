@@ -2,7 +2,6 @@ include(FileUtils)
 
 add_subdirectory(epoc)
 add_subdirectory(common)
-add_subdirectory(drivers)
 
 add_executable(ekatests 
 	tests.cpp
