@@ -177,6 +177,13 @@ namespace eka2l1::drivers {
         drivers::handle h = 0;
         helper.pop(h);
 
+        if (h == 0) {
+            current_fb_height = swapchain_size.y;
+            binding = nullptr;
+
+            return;
+        }
+
         bitmap *bmp = get_bitmap(h);
 
         if (!bmp) {
@@ -300,19 +307,16 @@ namespace eka2l1::drivers {
         std::uint32_t height = 0;
         std::uint32_t depth = 0;
 
-        switch (dim) {
-        case 3:
-            helper.pop(depth);
-            [[fallthrough]];
+        if (dim >= 1) {
+            helper.pop(width);
 
-            case 2 : helper.pop(height);
-            [[fallthrough]];
+            if (dim >= 2) {
+                helper.pop(height);
 
-            case 1 : helper.pop(width);
-            break;
-
-        default:
-            break;
+                if (dim == 3) {
+                    helper.pop(depth);
+                }
+            }
         }
 
         auto obj = make_texture(this);
@@ -493,6 +497,17 @@ namespace eka2l1::drivers {
         texobj->set_filter_minmag(true, mag);
     }
 
+    void shared_graphics_driver::set_swapchain_size(command_helper &helper) {
+        eka2l1::vec2 size;
+        helper.pop(size);
+
+        swapchain_size = size;
+
+        if (!binding) {
+            current_fb_height = swapchain_size.y;
+        }
+    }
+
     void shared_graphics_driver::dispatch(command *cmd) {
         command_helper helper(cmd);
 
@@ -557,6 +572,11 @@ namespace eka2l1::drivers {
             break;
         }
 
+        case graphics_driver_bind_buffer: {
+            bind_buffer(helper);
+            break;
+        }
+
         case graphics_driver_update_buffer: {
             update_buffer(helper);
             break;
@@ -569,6 +589,11 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_texture_filter: {
             set_filter(helper);
+            break;
+        }
+
+        case graphics_driver_set_swapchain_size: {
+            set_swapchain_size(helper);
             break;
         }
 

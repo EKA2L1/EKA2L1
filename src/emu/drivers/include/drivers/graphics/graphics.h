@@ -40,6 +40,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_cull,
         graphics_driver_blend_formula,
         graphics_driver_set_back_face_rule,
+        graphics_driver_set_swapchain_size,
 
         // Mode 0: Immediate - Draw direct 2D elements to screen
         graphics_driver_clear,

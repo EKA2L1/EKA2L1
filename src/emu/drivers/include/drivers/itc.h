@@ -292,6 +292,8 @@ namespace eka2l1::drivers {
 
         virtual void destroy_bitmap(drivers::handle h) = 0;
 
+        virtual void set_swapchain_size(const eka2l1::vec2 &swsize) = 0;
+
         // TODO: Document
         virtual void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) = 0;
     };
@@ -379,6 +381,8 @@ namespace eka2l1::drivers {
         void destroy(drivers::handle h) override;
 
         void destroy_bitmap(drivers::handle h) override;
+
+        void set_swapchain_size(const eka2l1::vec2 &swsize) override;
 
         void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) override;
     };

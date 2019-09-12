@@ -132,7 +132,7 @@ namespace eka2l1::drivers {
         eka2l1::rect inv_rect;
         helper.pop(inv_rect);
 
-        glScissor(inv_rect.top.x, binding->tex->get_size().y - inv_rect.top.y, inv_rect.size.x, inv_rect.size.y);
+        glScissor(inv_rect.top.x, current_fb_height - inv_rect.top.y, inv_rect.size.x, inv_rect.size.y);
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {
@@ -381,6 +381,21 @@ namespace eka2l1::drivers {
         command_helper helper(cmd);
 
         switch (cmd->opcode_) {
+        case graphics_driver_set_invalidate: {
+            set_invalidate(helper);
+            break;
+        }
+
+        case graphics_driver_invalidate_rect: {
+            invalidate_rect(helper);
+            break;
+        }
+
+        case graphics_driver_draw_indexed: {
+            draw_indexed(helper);
+            break;
+        }
+
         case graphics_driver_backup_state: {
             save_gl_state();
             break;
@@ -413,6 +428,11 @@ namespace eka2l1::drivers {
 
         case graphics_driver_clear: {
             clear(helper);
+            break;
+        }
+
+        case graphics_driver_set_viewport: {
+            set_viewport(helper);
             break;
         }
 

@@ -55,6 +55,7 @@ namespace eka2l1::drivers {
         bitmap *get_bitmap(const drivers::handle h);
 
         int current_fb_height;
+        eka2l1::vec2 swapchain_size;
 
         glm::mat4 projection_matrix;
         eka2l1::vecx<float, 4> brush_color;
@@ -64,6 +65,7 @@ namespace eka2l1::drivers {
         graphics_object *get_graphics_object(const drivers::handle num);
 
         // Implementations
+        void set_swapchain_size(command_helper &helper);
         void create_bitmap(command_helper &helper);
         void update_bitmap(command_helper &helper);
         void bind_bitmap(command_helper &helper);
@@ -83,7 +85,6 @@ namespace eka2l1::drivers {
         void resize_bitmap(command_helper &helper);
 
     public : 
-        explicit shared_graphics_driver() = default;
         explicit shared_graphics_driver(const graphic_api gr_api);
 
         ~shared_graphics_driver() override;
