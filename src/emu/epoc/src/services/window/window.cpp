@@ -669,7 +669,8 @@ namespace eka2l1 {
     window_server::window_server(system *sys)
         : service::server(sys, "!Windowserver", true, true)
         , bmp_cache(sys->get_kernel_system())
-        , anim_sched(sys->get_timing_system(), 1) {
+        , anim_sched(sys->get_timing_system(), 1) 
+        , screens(nullptr) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
