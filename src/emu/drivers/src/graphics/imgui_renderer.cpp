@@ -89,15 +89,15 @@ namespace eka2l1::drivers {
         attribute_descriptor descriptor[3];
         descriptor[0].location = 0;
         descriptor[0].set_format(2, data_format::sfloat);
-        descriptor[0].offset = offsetof(ImDrawVert, pos);
+        descriptor[0].offset = offsetof(ImDrawVert, uv);
 
         descriptor[1].location = 1;
-        descriptor[1].set_format(2, data_format::sfloat);
-        descriptor[1].offset = offsetof(ImDrawVert, uv);
+        descriptor[1].set_format(4, data_format::byte);
+        descriptor[1].offset = offsetof(ImDrawVert, col);
 
         descriptor[2].location = 2;
-        descriptor[2].set_format(4, data_format::byte);
-        descriptor[2].offset = offsetof(ImDrawVert, col);
+        descriptor[2].set_format(2, data_format::sfloat);
+        descriptor[2].offset = offsetof(ImDrawVert, pos);
 
         builder->attach_descriptors(vbo, 20, false, descriptor, 3);
 
@@ -114,6 +114,9 @@ namespace eka2l1::drivers {
         auto fb_width = static_cast<int>(io.DisplaySize.x * io.DisplayFramebufferScale.x);
         auto fb_height = static_cast<int>(io.DisplaySize.y * io.DisplayFramebufferScale.y);
         draw_data->ScaleClipRects(io.DisplayFramebufferScale);
+
+        const eka2l1::vec2 swapchain_size(fb_width, fb_height);
+        cmd_builder->set_swapchain_size(swapchain_size);
 
         // Backup GL state
         cmd_builder->backup_state();
@@ -176,10 +179,10 @@ namespace eka2l1::drivers {
         for (auto n = 0; n < draw_data->CmdListsCount; n++) {
             const ImDrawList *cmd_list = draw_data->CmdLists[n];
             vbo_pointers[n] = &cmd_list->VtxBuffer.front();
-            vbo_sizes[n] = static_cast<std::uint16_t>(cmd_list->VtxBuffer.size());
+            vbo_sizes[n] = static_cast<std::uint16_t>(cmd_list->VtxBuffer.size() * sizeof(ImDrawVert));
 
             ibo_pointers[n] = &cmd_list->IdxBuffer.front();
-            ibo_sizes[n] = static_cast<std::uint16_t>(cmd_list->IdxBuffer.size());
+            ibo_sizes[n] = static_cast<std::uint16_t>(cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx));
         }
 
         cmd_builder->update_buffer_data(vbo, 0, draw_data->CmdListsCount, vbo_pointers.data(), vbo_sizes.data());
@@ -214,7 +217,7 @@ namespace eka2l1::drivers {
 
                     //glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buf_offset);
                     cmd_builder->draw_indexed(drivers::graphics_primitive_mode::triangles, pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? drivers::data_format::word : drivers::data_format::uint,
-                        elem_offset, vert_offset);
+                        elem_offset + pcmd->IdxOffset * sizeof(ImDrawIdx), vert_offset + pcmd->VtxOffset);
 
                     // Support for OpenGL < 4.3
                     // GLenum err = 0;
@@ -225,10 +228,9 @@ namespace eka2l1::drivers {
                     //    err = glGetError();
                     //}
                 }
-
-                elem_offset += pcmd->ElemCount;
             }
 
+            elem_offset += cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx);
             vert_offset += cmd_list->VtxBuffer.Size;
         }
 
