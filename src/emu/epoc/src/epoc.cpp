@@ -95,7 +95,7 @@ namespace eka2l1 {
 
         gdbstub gdb_stub;
 
-        debugger_ptr debugger;
+        debugger_base *debugger;
 
         //! The ROM
         /*! This is the information parsed
@@ -125,16 +125,15 @@ namespace eka2l1 {
         language sys_lang = language::en;
 
     public:
-        system_impl(system *parent, debugger_ptr debugger, drivers::graphics_driver *graphics_driver,
-            manager::config_state *conf);
+        system_impl(system *parent, drivers::graphics_driver *graphics_driver, manager::config_state *conf);
 
         ~system_impl() {   
         };
 
         void set_graphics_driver(drivers::graphics_driver *graphics_driver);
 
-        void set_debugger(debugger_ptr new_debugger) {
-            debugger = std::move(new_debugger);
+        void set_debugger(debugger_base *new_debugger) {
+            debugger = new_debugger;
         }
 
         void set_symbian_version_use(const epocver ever) {
@@ -340,8 +339,7 @@ namespace eka2l1 {
         epoc::init_panic_descriptions();
     }
 
-    system_impl::system_impl(system *parent, debugger_ptr debugger, drivers::graphics_driver *graphics_driver,
-        manager::config_state *conf)
+    system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, manager::config_state *conf)
         : parent(parent)
         , conf(conf) {
         if (conf->cpu_backend == unicorn_jit_backend_name) {
@@ -512,8 +510,8 @@ namespace eka2l1 {
         return true;
     }
 
-    system::system(debugger_ptr debugger, drivers::graphics_driver *gdriver, manager::config_state *conf)
-        : impl(new system_impl(this, debugger, gdriver, conf)) {
+    system::system(drivers::graphics_driver *gdriver, manager::config_state *conf)
+        : impl(new system_impl(this, gdriver, conf)) {
     }
 
     system::~system() {
@@ -532,7 +530,7 @@ namespace eka2l1 {
         return impl->set_graphics_driver(graphics_driver);
     }
 
-    void system::set_debugger(debugger_ptr new_debugger) {
+    void system::set_debugger(debugger_base *new_debugger) {
         return impl->set_debugger(new_debugger);
     }
 

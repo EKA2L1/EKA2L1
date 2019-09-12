@@ -60,8 +60,6 @@ namespace eka2l1 {
     }
 
     class debugger_base;
-    using debugger_ptr = std::shared_ptr<debugger_base>;
-
     using hal_instance = std::unique_ptr<epoc::hal>;
 
     namespace loader {
@@ -89,13 +87,12 @@ namespace eka2l1 {
         system(system &&) = delete;
         system &operator=(system &&) = delete;
 
-        system(debugger_ptr debugger, drivers::graphics_driver *graphics_driver,
-            manager::config_state *conf);
+        system(drivers::graphics_driver *graphics_driver, manager::config_state *conf);
 
         ~system();
 
         void set_graphics_driver(drivers::graphics_driver *driver);
-        void set_debugger(debugger_ptr new_debugger);
+        void set_debugger(debugger_base *new_debugger);
         void set_symbian_version_use(const epocver ever);
         void set_jit_type(const arm_emulator_type type);
 
