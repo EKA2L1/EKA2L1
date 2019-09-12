@@ -60,7 +60,7 @@ namespace eka2l1 {
             hle::lib_manager *lib_mngr;
 
             gdbstub *stub;
-            debugger_ptr debugger;
+            debugger_base *debugger;
 
             std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
                 page_dyn;
@@ -87,7 +87,7 @@ namespace eka2l1 {
 
             arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf, 
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr,
-                gdbstub *stub, debugger_ptr debugger);
+                gdbstub *stub, debugger_base *debugger);
 
             ~arm_dynarmic();
 

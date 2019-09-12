@@ -373,7 +373,7 @@ namespace eka2l1 {
         }
 
         arm_dynarmic::arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
-            manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_ptr debugger)
+            manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_base *debugger)
             : timing(sys)
             , mem(mem)
             , asmdis(asmdis)
