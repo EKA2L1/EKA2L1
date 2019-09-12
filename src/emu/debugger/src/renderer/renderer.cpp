@@ -143,7 +143,7 @@ namespace eka2l1 {
             
 */
         //we are done working with this window
-        ImGui::End();
+        //ImGui::End();
         ImGui::EndFrame();
         ImGui::Render();
 
