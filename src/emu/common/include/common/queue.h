@@ -154,6 +154,10 @@ namespace eka2l1 {
     public:
         std::uint32_t max_pending_count_;
 
+        explicit request_queue()
+            : abort_(false) {
+        }
+
         void push(const T &item) {
             {
                 std::unique_lock<std::mutex> ulock(queue_mut_);
