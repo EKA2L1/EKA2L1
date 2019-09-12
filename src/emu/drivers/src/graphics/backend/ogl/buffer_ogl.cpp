@@ -157,7 +157,7 @@ namespace eka2l1::drivers {
         hint_gl_ = get_trait_from_buffer_hint(hint);
         usage_hint_gl_ = get_usage_hint(use_hint);
 
-        glCreateBuffers(1, &buffer_);
+        glGenBuffers(1, &buffer_);
 
         // Prealloc data first
         bind(driver);
@@ -205,7 +205,7 @@ namespace eka2l1::drivers {
 
             data_format_to_gl_comp_count_and_data_type(descriptor.format, comp_count, data_type);
 
-            glEnableVertexArrayAttrib(descriptor_, descriptor.location);
+            glEnableVertexAttribArray(descriptor.location);
             glVertexAttribPointer(descriptor.location, comp_count, data_type, false, stride, (GLvoid *)descriptor.offset);
         }
 

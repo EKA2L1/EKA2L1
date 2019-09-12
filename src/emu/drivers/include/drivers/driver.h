@@ -24,7 +24,7 @@
 #include <condition_variable>
 
 namespace eka2l1::drivers {
-    static constexpr std::uint32_t MAX_COMMAND_DATA_SIZE = 40;
+    static constexpr std::uint32_t MAX_COMMAND_DATA_SIZE = 80;
 
     /**
      * \brief Represent a command for driver.
@@ -78,8 +78,7 @@ namespace eka2l1::drivers {
                 return false;
             }
 
-            std::copy(todo_->data_ + MAX_COMMAND_DATA_SIZE - cursor_ - dest_size,
-                todo_->data_ + MAX_COMMAND_DATA_SIZE - cursor_, dest);
+            std::copy(todo_->data_ + cursor_, todo_->data_ + cursor_ + dest_size, dest);
 
             cursor_ += dest_size;
             return true;
@@ -193,8 +192,10 @@ namespace eka2l1::drivers {
         }
 
         void wait_for(int *status) {
-            *status = -100;
-
+            if (*status == 0) {
+                return;
+            }
+            
             std::unique_lock<std::mutex> ulock(mut_);
             cond_.wait(ulock, [&]() { return *status != -100; });
         }

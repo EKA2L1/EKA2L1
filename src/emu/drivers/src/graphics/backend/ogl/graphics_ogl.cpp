@@ -29,7 +29,8 @@
 
 namespace eka2l1::drivers {
     ogl_graphics_driver::ogl_graphics_driver()
-        : shared_graphics_driver(graphic_api::opengl) {
+        : shared_graphics_driver(graphic_api::opengl)
+        , should_stop(false) {
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
     }
 
@@ -373,6 +374,7 @@ namespace eka2l1::drivers {
 
     void ogl_graphics_driver::display(command_helper &helper) {
         disp_hook_();
+        helper.finish(this, 0);
     }
 
     void ogl_graphics_driver::dispatch(command *cmd) {
@@ -414,6 +416,11 @@ namespace eka2l1::drivers {
             break;
         }
 
+        case graphics_driver_display: {
+            display(helper);
+            break;
+        }
+
         default:
             shared_graphics_driver::dispatch(cmd);
             break;
@@ -430,14 +437,16 @@ namespace eka2l1::drivers {
             }
 
             command *cmd = list->list_.first_;
+            command *next = nullptr;
 
             while (cmd) {
                 dispatch(cmd);
-                cmd = cmd->next_;
+                next = cmd->next_;
 
                 // TODO: If any command list requires not rebuilding the buffer, dont delete the command.
                 // For now, not likely
                 delete cmd;
+                cmd = next;
             }
         }
     }

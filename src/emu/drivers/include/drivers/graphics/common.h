@@ -34,6 +34,9 @@ namespace eka2l1::drivers {
     };
 
     class graphics_object {
+        virtual int holder() {
+            return 0;
+        }
     };
 
     enum class graphics_primitive_mode : std::uint8_t {

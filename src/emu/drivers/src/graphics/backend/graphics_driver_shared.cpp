@@ -87,7 +87,7 @@ namespace eka2l1::drivers {
     drivers::handle shared_graphics_driver::append_graphics_object(graphics_object_instance &instance) {
         auto free_slot = std::find(graphic_objects.begin(), graphic_objects.end(), nullptr);
 
-        if (free_slot == graphic_objects.end()) {
+        if (free_slot != graphic_objects.end()) {
             *free_slot = std::move(instance);
             return std::distance(graphic_objects.begin(), free_slot) + 1;
         }
@@ -266,6 +266,10 @@ namespace eka2l1::drivers {
             return;
         }
 
+        if (metadata) {
+            *metadata = obj->get_metadata();
+        }
+
         std::unique_ptr<graphics_object> obj_casted = std::move(obj);
         drivers::handle res = append_graphics_object(obj_casted);
 
@@ -273,11 +277,6 @@ namespace eka2l1::drivers {
         helper.pop(store);
 
         *store = res;
-
-        if (metadata) {
-            *metadata = obj->get_metadata();
-        }
-
         helper.finish(this, 0);
     }
 
@@ -574,6 +573,7 @@ namespace eka2l1::drivers {
         }
 
         default:
+            LOG_ERROR("Unimplemented opcode {} for graphics driver", cmd->opcode_);
             break;
         }
     }
