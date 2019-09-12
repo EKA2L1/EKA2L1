@@ -132,7 +132,8 @@ namespace eka2l1::drivers {
         eka2l1::rect inv_rect;
         helper.pop(inv_rect);
 
-        glScissor(inv_rect.top.x, current_fb_height - inv_rect.top.y, inv_rect.size.x, inv_rect.size.y);
+        glScissor(inv_rect.top.x, current_fb_height - (inv_rect.top.y + inv_rect.size.y),
+            inv_rect.size.x, inv_rect.size.y);
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {
