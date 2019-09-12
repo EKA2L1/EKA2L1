@@ -241,6 +241,7 @@ namespace eka2l1::desktop {
         std::string window_title = "EKA2L1 (" GIT_BRANCH " " GIT_COMMIT_HASH ")";
 
         state.window->init(window_title, eka2l1::vec2(1080, 720));
+        state.window->set_userdata(&state);
         state.window->make_current();
 
         // We got window and context ready (OpenGL, let makes stuff now)
@@ -278,7 +279,6 @@ namespace eka2l1::desktop {
             return -1;
         }
 
-        state.window->done_current();
         state.window->shutdown();
 
         return 0;
@@ -355,6 +355,9 @@ namespace eka2l1::desktop {
 
         // Submit destroy to driver. UI thread resources
         state.graphics_driver->submit_command_list(*cmd_list);
+
+        // Make the graphics driver abort
+        state.graphics_driver->abort();
 
         return 0;
     }
