@@ -139,7 +139,7 @@ namespace eka2l1::drivers {
     }
 
     void server_graphics_command_list_builder::set_invalidate(const bool enabled) {
-        command *cmd = make_command(graphics_driver_invalidate_rect, nullptr, enabled);
+        command *cmd = make_command(graphics_driver_set_invalidate, nullptr, enabled);
         get_command_list().add(cmd);
     }
 
