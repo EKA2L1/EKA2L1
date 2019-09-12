@@ -163,6 +163,7 @@ namespace eka2l1::drivers {
      */
     struct command_list {
         command *first_;
+        command *last_;
 
         explicit command_list()
             : first_(nullptr) {
@@ -171,10 +172,13 @@ namespace eka2l1::drivers {
         void add(command *cmd_) {
             if (first_ == nullptr) {
                 first_ = cmd_;
+                last_ = cmd_;
+
                 return;
             }
 
-            first_->next_ = cmd_;
+            last_->next_ = cmd_;
+            last_ = cmd_;
         }
     };
 
