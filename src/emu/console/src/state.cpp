@@ -38,16 +38,13 @@ namespace eka2l1::desktop {
         conf.deserialize();
 
         // Initialize an empty root.
-        symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
+        symsys = std::make_unique<eka2l1::system>(nullptr, &conf);
+        symsys->init();
 
         // Make debugger. Go watch Case Closed.
         debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger.get());
 
-        // TODO
-        // symsys->set_debugger(debugger);
-
-        symsys->init();
-
+        symsys->set_debugger(debugger.get());
         symsys->set_device(conf.device);
         symsys->mount(drive_c, drive_media::physical, conf.storage + "/drives/c/", io_attrib::internal);
         symsys->mount(drive_e, drive_media::physical, conf.storage + "/drives/e/", io_attrib::removeable);
@@ -68,6 +65,6 @@ namespace eka2l1::desktop {
         // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
         // created for ROM purpose.
         symsys->mount(drive_z, drive_media::rom,
-            conf.storage + "/drives/e/", io_attrib::internal | io_attrib::write_protected);
+            conf.storage + "/drives/z/", io_attrib::internal | io_attrib::write_protected);
     }
 }
