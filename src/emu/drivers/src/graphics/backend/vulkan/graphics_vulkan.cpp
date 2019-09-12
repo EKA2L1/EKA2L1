@@ -296,7 +296,8 @@ namespace eka2l1::drivers {
     }
     
     vulkan_graphics_driver::vulkan_graphics_driver(const vec2 &scr, void *native_win_handle)
-        : native_win_handle_(native_win_handle) {
+        : shared_graphics_driver(graphic_api::vulkan)
+        , native_win_handle_(native_win_handle) {
         create_instance();
         create_debug_callback();
         create_surface();
