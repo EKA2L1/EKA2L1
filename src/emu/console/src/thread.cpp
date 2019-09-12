@@ -21,6 +21,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/vecx.h>
+#include <common/thread.h>
 #include <console/state.h>
 #include <console/thread.h>
 
@@ -444,6 +445,10 @@ namespace eka2l1::desktop {
         }
     }
 
+    static constexpr const char *graphics_driver_thread_name = "Graphics thread";
+    static constexpr const char *ui_thread_name = "UI thread";
+    static constexpr const char *os_thread_name = "Symbian OS thread";
+
     int emulator_entry(emulator &state) {
         // First, initialize the graphics driver. This is needed for all graphics operations on the emulator.
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
@@ -451,6 +456,18 @@ namespace eka2l1::desktop {
 
         // Launch the OS thread now
         std::thread os_thread_obj(os_thread, std::ref(state));
+
+        // Halloween decoration breath of the graphics
+        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(graphics_thread_obj.native_handle()),
+            graphics_driver_thread_name);
+
+        // Breath of the UI
+        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(ui_thread_obj.native_handle()),
+            ui_thread_name);
+
+        // Breath of the dead (jk please dont overreact)
+        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(os_thread_obj.native_handle()),
+            os_thread_name);
 
         // Wait for the OS thread to be killed now
         os_thread_obj.join();
