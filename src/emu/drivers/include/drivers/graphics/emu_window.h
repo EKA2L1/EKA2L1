@@ -105,6 +105,7 @@ namespace eka2l1 {
 
             virtual bool get_mouse_button_hold(const int mouse_btt) = 0;
             virtual void set_userdata(void *userdata) = 0;
+            virtual void *get_userdata() = 0;
 
             std::function<void(void *, vec2)> resize_hook;
 
