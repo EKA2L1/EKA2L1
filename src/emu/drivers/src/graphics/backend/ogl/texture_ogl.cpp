@@ -214,7 +214,7 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::unbind(graphics_driver *driver) {
-        glActiveTexture(last_tex);
+        glActiveTexture(GL_TEXTURE0 + last_active);
         glBindTexture(to_gl_tex_dim(dimensions), last_tex);
         last_tex = 0;
     }
