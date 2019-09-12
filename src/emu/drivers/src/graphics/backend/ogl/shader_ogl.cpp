@@ -37,7 +37,7 @@ namespace eka2l1::drivers {
         glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &total_attributes);
         glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &total_uniforms);
 
-        data.resize(4);
+        data.resize(8);
 
         reinterpret_cast<std::uint16_t *>(&data[0])[0] = 8;
 

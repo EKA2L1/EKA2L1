@@ -68,10 +68,10 @@ namespace eka2l1::drivers {
     }
 
     const std::int8_t shader_metadata::get_uniform_binding(const char *name) const {
-        return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[3], get_uniform_count());
+        return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[1], get_uniform_count());
     }
 
     const std::int8_t shader_metadata::get_attribute_binding(const char *name) const {
-        return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[2], get_attribute_count());
+        return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[0], get_attribute_count());
     }
 }
