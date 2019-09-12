@@ -34,7 +34,7 @@ namespace eka2l1::drivers {
                                                    "void main()\n"
                                                    "{\n"
                                                    "	Frag_UV = UV;\n"
-                                                   "	Frag_Color = Color;\n"
+                                                   "	Frag_Color = Color / vec4(255.0);\n"
                                                    "	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
                                                    "}\n";
 
@@ -130,7 +130,7 @@ namespace eka2l1::drivers {
         //glBlendEquation(GL_FUNC_ADD);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         cmd_builder->blend_formula(blend_equation::add, blend_equation::add, blend_factor::frag_out_alpha,
-            blend_factor::one_minus_frag_out_alpha, blend_factor::frag_out_alpha, blend_factor::one_minus_frag_out_alpha);
+            blend_factor::one_minus_frag_out_alpha, blend_factor::one, blend_factor::zero);
 
         //glDisable(GL_CULL_FACE);
         cmd_builder->set_cull_mode(false);
