@@ -42,10 +42,10 @@ namespace eka2l1::drivers {
                                                      "uniform sampler2D Texture;\n"
                                                      "in vec2 Frag_UV;\n"
                                                      "in vec4 Frag_Color;\n"
-                                                     "out vec4 Out_Color;\n"
+                                                     "out vec4 Out_Color;\n"    
                                                      "void main()\n"
                                                      "{\n"
-                                                     "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
+                                                     "	Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
                                                      "}\n";
 
     static void get_render_shader(graphics_driver *driver, const char *&vert_dat, const char *&frag_dat) {
@@ -85,6 +85,9 @@ namespace eka2l1::drivers {
         vbo = create_buffer(driver, 120, drivers::buffer_hint::vertex_buffer, static_cast<drivers::buffer_upload_hint>(buffer_upload_stream | buffer_upload_draw));
         ibo = create_buffer(driver, 120, drivers::buffer_hint::index_buffer, static_cast<drivers::buffer_upload_hint>(buffer_upload_stream | buffer_upload_draw));
 
+        // Set texture filter
+        builder->set_texture_filter(font_tex, drivers::filter_option::linear, drivers::filter_option::linear);
+
         // Attach descriptor
         attribute_descriptor descriptor[3];
         descriptor[0].location = 0;
@@ -120,7 +123,7 @@ namespace eka2l1::drivers {
 
         // Backup GL state
         cmd_builder->backup_state();
-        cmd_builder->clear({ 0, 0, 0, 0 }, clear_bit_color_buffer);
+        //cmd_builder->clear({ 0, 0, 0, 0 }, clear_bit_color_buffer);
 
         // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
 
