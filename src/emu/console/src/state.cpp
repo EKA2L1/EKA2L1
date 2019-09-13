@@ -57,6 +57,8 @@ namespace eka2l1::desktop {
         
         winserv = reinterpret_cast<eka2l1::window_server*>(symsys->get_kernel_system()->get_by_name
             <eka2l1::service::server>("!Windowserver").get());
+
+        should_emu_pause = true;
     }
 
     void emulator::stage_two() {
