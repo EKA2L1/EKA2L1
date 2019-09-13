@@ -36,127 +36,6 @@
 #include <epoc/services/window/window.h>
 #include <e32keys.h>
 
-/*
-using namespace eka2l1;
-
-std::shared_ptr<drivers::input_driver> idriver;
-
-
-int ui_debugger_thread() {
-    auto debugger_window = eka2l1::drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
-
-    debugger_window->raw_mouse_event = on_ui_window_mouse_evt;
-    debugger_window->mouse_wheeling = on_ui_window_mouse_scrolling;
-    debugger_window->button_pressed = on_ui_window_key_press;
-    debugger_window->button_released = on_ui_window_key_release;
-    debugger_window->char_hook = on_ui_window_char_type;
-
-    std::string window_title = "Debugging Window (" GIT_BRANCH " " GIT_COMMIT_HASH ")";
-
-    debugger_window->init(window_title, eka2l1::vec2(1080, 720));
-    debugger_window->make_current();
-    */
-/* Consider main thread not touching this, no need for mutex */
-//ui_debugger_context = ImGui::CreateContext();
-//auto drenderer = std::make_shared<eka2l1::debugger_renderer>();
-
-/* This will be called by the debug thread */
-/*debugger->on_pause_toogle = [&](bool spause) {
-        if (spause != should_pause) {
-            if (spause == false && should_pause == true) {
-                should_pause = spause;
-                debugger->notify_clients();
-            }
-        }
-
-        should_pause = spause;
-    };
-
-    auto gdriver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
-        eka2l1::vec2(500, 500));
-
-    idriver = std::make_shared<drivers::input_driver>();
-
-    drenderer->init(drivers::graphic_api::opengl, gdriver, idriver, debugger);
-
-    symsys->set_graphics_driver(gdriver);
-    symsys->set_input_driver(idriver);
-
-    cond.notify_one();
-
-    ImGuiIO &io = ImGui::GetIO();
-
-    io.KeyMap[ImGuiKey_A] = 'A';
-    io.KeyMap[ImGuiKey_C] = 'C';
-    io.KeyMap[ImGuiKey_V] = 'V';
-    io.KeyMap[ImGuiKey_X] = 'X';
-    io.KeyMap[ImGuiKey_Y] = 'Y';
-    io.KeyMap[ImGuiKey_Z] = 'Z';
-
-    io.KeyMap[ImGuiKey_Tab] = KEY_TAB;
-    io.KeyMap[ImGuiKey_Backspace] = KEY_BACKSPACE;
-    io.KeyMap[ImGuiKey_LeftArrow] = KEY_LEFT;
-    io.KeyMap[ImGuiKey_RightArrow] = KEY_RIGHT;
-    io.KeyMap[ImGuiKey_UpArrow] = KEY_UP;
-    io.KeyMap[ImGuiKey_Escape] = KEY_ESCAPE;
-    io.KeyMap[ImGuiKey_DownArrow] = KEY_DOWN;
-    io.KeyMap[ImGuiKey_Enter] = KEY_ENTER;
-
-    while (!debugger_quit) {
-        vec2 nws = debugger_window->window_size();
-        vec2 nwsb = debugger_window->window_fb_size();
-
-        debugger_window->poll_events();
-
-        if (debugger_window->should_quit()) {
-            should_quit = true;
-            debugger_quit = true;
-
-            // Notify that debugger is dead
-            debugger->notify_clients();
-
-            break;
-        }
-
-        // Stop the emulation but keep the debugger
-        if (debugger->should_emulate_stop()) {
-            should_quit = true;
-        }
-
-        for (std::uint8_t i = 0; i < 5; i++) {
-            io.MouseDown[i] = ui_window_mouse_down[i] || debugger_window->get_mouse_button_hold(i);
-
-            set_mouse_down(i, false);
-        }
-
-        vec2d mouse_pos = debugger_window->get_mouse_pos();
-
-        io.MousePos = ImVec2(static_cast<float>(mouse_pos[0]), static_cast<float>(mouse_pos[1]));
-
-        drenderer->draw(nws.x, nws.y, nwsb.x, nwsb.y);
-        debugger_window->swap_buffer();
-
-        io.MouseWheel = 0;
-    }
-
-    ImGui::DestroyContext();
-
-    drenderer->deinit();
-    drenderer.reset();
-
-    // There are still a reference of graphics driver on graphics client
-    // Assure that the graphics driver are decrement is reference count on UI thread
-    // So FB is destroyed on the right thread.
-    symsys->set_graphics_driver(nullptr);
-    symsys->set_input_driver(nullptr);
-
-    debugger_window->done_current();
-    debugger_window->shutdown();
-
-    return 0;
-}
-*/
-
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
 
@@ -416,7 +295,7 @@ namespace eka2l1::desktop {
             state.graphics_driver->wait_for(&wait_status);
 
             io.MouseWheel = 0;
-
+            
             // Recreate the list and builder
             cmd_list = state.graphics_driver->new_command_list();
             cmd_builder = state.graphics_driver->new_command_builder(cmd_list.get());

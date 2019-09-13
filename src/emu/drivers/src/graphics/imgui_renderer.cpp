@@ -123,31 +123,16 @@ namespace eka2l1::drivers {
 
         // Backup GL state
         cmd_builder->backup_state();
-        //cmd_builder->clear({ 0, 0, 0, 0 }, clear_bit_color_buffer);
-
-        // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
-
-        // glEnable(GL_BLEND);
         cmd_builder->set_blend_mode(true);
 
-        //glBlendEquation(GL_FUNC_ADD);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         cmd_builder->blend_formula(blend_equation::add, blend_equation::add, blend_factor::frag_out_alpha,
             blend_factor::one_minus_frag_out_alpha, blend_factor::one, blend_factor::zero);
 
-        //glDisable(GL_CULL_FACE);
         cmd_builder->set_cull_mode(false);
-
-        // glDisable(GL_DEPTH_TEST);
         cmd_builder->set_depth(false);
-
-        //glEnable(GL_SCISSOR_TEST);
         cmd_builder->set_invalidate(true);
 
-        //glActiveTexture(GL_TEXTURE0);
-
         // Setup viewport, orthographic projection matrix
-        //glViewport(0, 0, static_cast<GLsizei>(fb_width), static_cast<GLsizei>(fb_height));
         cmd_builder->set_viewport(eka2l1::rect{ eka2l1::vec2{ 0, 0 }, eka2l1::vec2{ fb_width, fb_height } });
 
         const float ortho_projection[4][4] = {
@@ -157,15 +142,11 @@ namespace eka2l1::drivers {
             { -1.0f, 1.0f, 0.0f, 1.0f },
         };
 
-        //shader.use();
         cmd_builder->use_program(shader);
 
         if (proj_matrix_loc != -1) {
-            // glUniformMatrix4fv(attrib_loc_proj_matrix, 1, GL_FALSE, &ortho_projection[0][0]);
             cmd_builder->set_uniform(shader, proj_matrix_loc, drivers::shader_set_var_type::mat4, &ortho_projection[0][0], 64);
         }
-
-        //glBindVertexArray(vao_handle);
 
         // Upload data as contiguous chunk
         std::vector<const void *> vbo_pointers;
@@ -205,12 +186,7 @@ namespace eka2l1::drivers {
                 if (pcmd->UserCallback) {
                     pcmd->UserCallback(cmd_list, pcmd);
                 } else {
-                    // glBindTexture(GL_TEXTURE_2D, static_cast<const GLuint>(reinterpret_cast<std::ptrdiff_t>(pcmd->TextureId)));
                     cmd_builder->bind_texture(reinterpret_cast<drivers::handle>(pcmd->TextureId), 0);
-
-                    //glScissor(static_cast<int>(pcmd->ClipRect.x), static_cast<int>(fb_height - pcmd->ClipRect.w),
-                    //    static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x),
-                    //   static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y));
 
                     eka2l1::rect inv_rect(
                         eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.y) },
@@ -218,18 +194,8 @@ namespace eka2l1::drivers {
                     
                     cmd_builder->invalidate_rect(inv_rect);
 
-                    //glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buf_offset);
                     cmd_builder->draw_indexed(drivers::graphics_primitive_mode::triangles, pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? drivers::data_format::word : drivers::data_format::uint,
                         elem_offset + pcmd->IdxOffset * sizeof(ImDrawIdx), vert_offset + pcmd->VtxOffset);
-
-                    // Support for OpenGL < 4.3
-                    // GLenum err = 0;
-
-                    // err = glGetError();
-                    // while (err != GL_NO_ERROR) {
-                    //    LOG_ERROR("Error in OpenGL operation: {}", gl_error_to_string(err));
-                    //    err = glGetError();
-                    //}
                 }
             }
 
