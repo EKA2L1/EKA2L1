@@ -214,21 +214,24 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::unbind(graphics_driver *driver) {
-        glActiveTexture(GL_TEXTURE0 + last_active);
+        glActiveTexture(last_active);
         glBindTexture(to_gl_tex_dim(dimensions), last_tex);
         last_tex = 0;
     }
 
     void ogl_texture::update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
         const texture_data_type data_type, const void *data) {
+        bind(driver, 0);
+
         switch (dimensions) {
         case 1:
             glTexSubImage1D(GL_TEXTURE_1D, mip_lvl, offset.x, size.x, to_gl_format(data_format), to_gl_data_type(data_type), data);
             break;
 
-        case 2:
-            glTexSubImage2D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, size.x, size.y, to_gl_format(data_format), to_gl_data_type(data_type), data);
+        case 2: {
+            glTexSubImage2D(GL_TEXTURE_2D, mip_lvl, offset.x, offset.y, size.x, size.y, to_gl_format(data_format), to_gl_data_type(data_type), data);
             break;
+        }
 
         case 3:
             glTexSubImage3D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, offset.z, size.x, size.y, size.z, to_gl_format(data_format),
@@ -239,5 +242,7 @@ namespace eka2l1::drivers {
         default:
             break;
         }
+
+        unbind(driver);
     }
 }
