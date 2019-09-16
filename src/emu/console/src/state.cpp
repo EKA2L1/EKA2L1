@@ -41,8 +41,13 @@ namespace eka2l1::desktop {
         symsys = std::make_unique<eka2l1::system>(nullptr, &conf);
         symsys->init();
 
+        first_time = true;
+        launch_requests.max_pending_count_ = 100;
+
         // Make debugger. Go watch Case Closed.
-        debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger.get());
+        debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger.get(), [&](const std::u16string &path) {
+            launch_requests.push(path);
+        });
 
         symsys->set_debugger(debugger.get());
         symsys->set_device(conf.device);
@@ -57,8 +62,6 @@ namespace eka2l1::desktop {
         
         winserv = reinterpret_cast<eka2l1::window_server*>(symsys->get_kernel_system()->get_by_name
             <eka2l1::service::server>("!Windowserver").get());
-
-        should_emu_pause = true;
     }
 
     void emulator::stage_two() {

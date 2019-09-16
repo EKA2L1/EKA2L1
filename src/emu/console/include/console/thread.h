@@ -35,6 +35,12 @@ namespace eka2l1::desktop {
     void ui_thread(emulator &state);
 
     /**
+     * \rief Entry point to high level interface thread.
+     * \param state Emulator state.
+     */
+    void high_level_interface_thread(emulator &state);
+
+    /**
      * \brief Entry point to thread emulate Symbian OS.
      *
      * This thread may spawn mutiple small threads emulating cores in the future.

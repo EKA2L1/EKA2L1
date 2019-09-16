@@ -104,6 +104,11 @@ static void on_ui_window_char_type(void *userdata, std::uint32_t c) {
 }
 
 namespace eka2l1::desktop {
+    static constexpr const char *graphics_driver_thread_name = "Graphics thread";
+    static constexpr const char *ui_thread_name = "UI thread";
+    static constexpr const char *os_thread_name = "Symbian OS thread";
+    static constexpr const char *hli_thread_name = "High level interface thread";
+
     static int graphics_driver_thread_initialization(emulator &state) {
         if (!drivers::init_window_library(drivers::window_type::glfw)) {
             return -1;
@@ -126,6 +131,7 @@ namespace eka2l1::desktop {
         // We got window and context ready (OpenGL, let makes stuff now)
         // TODO: Configurable
         state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl);
+        state.symsys->set_graphics_driver(state.graphics_driver.get());
 
         drivers::emu_window *window = state.window.get();
 
@@ -149,16 +155,19 @@ namespace eka2l1::desktop {
         }
 
         // Signal that the initialization is done
-        state.graphics_cond.notify_all();
+        state.graphics_sema.notify();
         return 0;
     }
 
     static int graphics_driver_thread_deinitialization(emulator &state) {
+        state.graphics_sema.wait();
+
+        state.graphics_driver.reset();
+        state.window->shutdown();
+
         if (!drivers::destroy_window_library(eka2l1::drivers::window_type::glfw)) {
             return -1;
         }
-
-        state.window->shutdown();
 
         return 0;
     }
@@ -217,8 +226,7 @@ namespace eka2l1::desktop {
         };
 
         // Now wait for the graphics thread before starting anything
-        std::unique_lock<std::mutex> ulock(state.graphics_mutex);
-        state.graphics_cond.wait(ulock);
+        state.graphics_sema.wait();
 
         return 0;
     }
@@ -237,6 +245,8 @@ namespace eka2l1::desktop {
 
         // Make the graphics driver abort
         state.graphics_driver->abort();
+        
+        state.launch_requests.abort();
 
         return 0;
     }
@@ -309,6 +319,37 @@ namespace eka2l1::desktop {
         }
     }
 
+    void high_level_interface_thread(emulator &state) {
+        std::unique_ptr<std::thread> os_thread_obj;
+
+        while (true) {
+            auto launch = state.launch_requests.pop();
+
+            if (!launch) {
+                break;
+            }
+
+            state.symsys->load(launch.value(), u"");
+
+            if (state.first_time) {
+                state.first_time = false;
+                
+                // Launch the OS thread now
+                os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
+                
+                // Breath of the dead (jk please dont overreact)
+                eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(os_thread_obj->native_handle()),
+                    os_thread_name);
+            }
+        }
+
+        if (os_thread_obj) {
+            os_thread_obj->join();
+        }
+
+        state.graphics_sema.notify();
+    }
+
     void os_thread(emulator &state) {
         // TODO: Multi core. Currently it's single core.
         while (!state.should_emu_quit) {
@@ -325,19 +366,18 @@ namespace eka2l1::desktop {
                 state.debugger->wait_for_debugger();
             }
         }
+
+        state.symsys.reset();
     }
 
-    static constexpr const char *graphics_driver_thread_name = "Graphics thread";
-    static constexpr const char *ui_thread_name = "UI thread";
-    static constexpr const char *os_thread_name = "Symbian OS thread";
-
     int emulator_entry(emulator &state) {
+        state.stage_two();
+
         // First, initialize the graphics driver. This is needed for all graphics operations on the emulator.
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
         std::thread ui_thread_obj(ui_thread, std::ref(state));
 
-        // Launch the OS thread now
-        std::thread os_thread_obj(os_thread, std::ref(state));
+        std::thread hli_thread_obj(high_level_interface_thread, std::ref(state));
 
         // Halloween decoration breath of the graphics
         eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(graphics_thread_obj.native_handle()),
@@ -347,12 +387,12 @@ namespace eka2l1::desktop {
         eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(ui_thread_obj.native_handle()),
             ui_thread_name);
 
-        // Breath of the dead (jk please dont overreact)
-        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(os_thread_obj.native_handle()),
-            os_thread_name);
+        // Breath of the ???
+        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(hli_thread_obj.native_handle()),
+            hli_thread_name);
 
-        // Wait for the OS thread to be killed now
-        os_thread_obj.join();
+        // Wait for interface thread to be killed.
+        hli_thread_obj.join();
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();

@@ -24,7 +24,10 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <queue>
 
+#include <common/queue.h>
+#include <common/sync.h>
 #include <epoc/epoc.h>
 #include <manager/config.h>
 
@@ -61,8 +64,11 @@ namespace eka2l1::desktop {
         std::atomic<bool> should_emu_pause;
         std::atomic<bool> should_ui_quit;
 
-        std::mutex graphics_mutex;
-        std::condition_variable graphics_cond;
+        eka2l1::request_queue<std::u16string> launch_requests;
+
+        bool first_time;
+
+        common::semaphore graphics_sema;
 
         manager::config_state conf;
         window_server *winserv;
