@@ -164,10 +164,16 @@ namespace eka2l1::drivers {
          * \brief Draw a bitmap to currently binded bitmap.
          *
          * \param h            The handle of the bitmap to blit.
-         * \param dest_rect    Blit rect, specifiy the region in the given bitmap dimensions to be drawn.
+         * \param pos          The position of the bitmap on the screen.
+         * \param source_rect  The source rectangle to strip.
          * \param use_brush    Use brush color.
          */
-        virtual void draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect, const bool use_brush) = 0;
+        virtual void draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const eka2l1::rect &source_rect, const bool use_brush) = 0;
+
+        void draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const bool use_brush = false) {
+            eka2l1::rect empty;
+            draw_bitmap(h, pos, use_brush);
+        }
 
         /**
          * \brief Use a shader program.
@@ -215,7 +221,7 @@ namespace eka2l1::drivers {
          * \param chunk_ptr         Pointer to all chunks.
          * \param chunk_size        Pointer to size of all chunks.
          */
-        virtual void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint16_t *chunk_size) = 0;
+        virtual void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size) = 0;
 
         /**
          * \brief Set current viewport.
@@ -342,7 +348,7 @@ namespace eka2l1::drivers {
         void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim) override;
 
-        void draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect, const bool use_brush) override;
+        void draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const eka2l1::rect &source_rect, const bool use_brush) override;
 
         void use_program(drivers::handle h) override;
 
@@ -353,7 +359,7 @@ namespace eka2l1::drivers {
 
         void bind_buffer(drivers::handle h) override;
 
-        void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint16_t *chunk_size) override;
+        void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size) override;
 
         void draw_indexed(const graphics_primitive_mode prim_mode, const int count, const data_format index_type, const int index_off, const int vert_base) override;
 

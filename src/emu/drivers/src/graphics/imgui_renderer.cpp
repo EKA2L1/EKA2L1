@@ -123,6 +123,8 @@ namespace eka2l1::drivers {
 
         // Backup GL state
         cmd_builder->backup_state();
+        cmd_builder->clear({ 0, 0, 0, 0 }, clear_bit_color_buffer);
+
         cmd_builder->set_blend_mode(true);
 
         cmd_builder->blend_formula(blend_equation::add, blend_equation::add, blend_factor::frag_out_alpha,
@@ -150,10 +152,10 @@ namespace eka2l1::drivers {
 
         // Upload data as contiguous chunk
         std::vector<const void *> vbo_pointers;
-        std::vector<std::uint16_t> vbo_sizes;
+        std::vector<std::uint32_t> vbo_sizes;
 
         std::vector<const void *> ibo_pointers;
-        std::vector<std::uint16_t> ibo_sizes;
+        std::vector<std::uint32_t> ibo_sizes;
 
         vbo_pointers.resize(draw_data->CmdListsCount);
         vbo_sizes.resize(draw_data->CmdListsCount);
@@ -163,10 +165,10 @@ namespace eka2l1::drivers {
         for (auto n = 0; n < draw_data->CmdListsCount; n++) {
             const ImDrawList *cmd_list = draw_data->CmdLists[n];
             vbo_pointers[n] = &cmd_list->VtxBuffer.front();
-            vbo_sizes[n] = static_cast<std::uint16_t>(cmd_list->VtxBuffer.size() * sizeof(ImDrawVert));
+            vbo_sizes[n] = static_cast<std::uint32_t>(cmd_list->VtxBuffer.size() * sizeof(ImDrawVert));
 
             ibo_pointers[n] = &cmd_list->IdxBuffer.front();
-            ibo_sizes[n] = static_cast<std::uint16_t>(cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx));
+            ibo_sizes[n] = static_cast<std::uint32_t>(cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx));
         }
 
         cmd_builder->update_buffer_data(vbo, 0, draw_data->CmdListsCount, vbo_pointers.data(), vbo_sizes.data());

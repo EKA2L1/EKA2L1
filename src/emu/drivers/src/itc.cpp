@@ -158,12 +158,12 @@ namespace eka2l1::drivers {
     void server_graphics_command_list_builder::update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size,
         const eka2l1::vec2 &offset, const eka2l1::vec2 &dim) {
         // Copy data
-        command *cmd = make_command(graphics_driver_update_bitmap, nullptr, make_data_copy(data, size), bpp, size, offset, dim, bpp);
+        command *cmd = make_command(graphics_driver_update_bitmap, nullptr, h, make_data_copy(data, size), bpp, size, offset, dim);
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect, const bool use_brush) {
-        command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, dest_rect.top, dest_rect.size, use_brush);
+    void server_graphics_command_list_builder::draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const eka2l1::rect &source_rect, const bool use_brush) {
+        command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, pos, source_rect, use_brush);
         get_command_list().add(cmd);
     }
 
@@ -207,8 +207,8 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint16_t *chunk_size) {
-        std::uint32_t total_chunk_size = 0;
+    void server_graphics_command_list_builder::update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size) {
+        std::size_t total_chunk_size = 0;
         std::uint32_t cursor = 0;
 
         for (int i = 0; i < chunk_count; i++) {
@@ -222,7 +222,7 @@ namespace eka2l1::drivers {
             cursor += chunk_size[i];
         }
 
-        command *cmd = make_command(graphics_driver_update_buffer, nullptr, h, data, offset, static_cast<std::size_t>(total_chunk_size));
+        command *cmd = make_command(graphics_driver_update_buffer, nullptr, h, data, offset, total_chunk_size);
         get_command_list().add(cmd);
     }
 
