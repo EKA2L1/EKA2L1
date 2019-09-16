@@ -78,6 +78,9 @@ namespace eka2l1 {
         applist_server *alserv;
         app_launch_function app_launch;
 
+        std::mutex errors_mut;
+        std::queue<std::string> error_queue;
+
         void show_app_launch();
 
         void show_threads();
@@ -97,6 +100,7 @@ namespace eka2l1 {
 
         void show_installer_text_popup();
         void show_installer_choose_lang_popup();
+        void show_errors();
 
         std::unique_ptr<std::thread> install_thread;
         threadsafe_cn_queue<std::string> install_list;
@@ -134,6 +138,7 @@ namespace eka2l1 {
         }
 
         void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
+        void queue_error(const std::string &error);
         void handle_shortcuts();
 
         void wait_for_debugger() override;

@@ -846,9 +846,9 @@ namespace eka2l1 {
 
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
+                ImGui::MenuItem("Launch apps", "CTRL+R", &should_show_app_launch);
                 ImGui::MenuItem("Packages", nullptr, &should_package_manager);
                 ImGui::MenuItem("Install package", nullptr, &should_install_package);
-                ImGui::MenuItem("Launch", nullptr, &should_show_app_launch);
 
                 ImGui::EndMenu();
             }
@@ -884,49 +884,90 @@ namespace eka2l1 {
     void imgui_debugger::handle_shortcuts() {
         ImGuiIO &io = ImGui::GetIO();
 
-        if (io.KeyCtrl && io.KeyShift) {
-            if (io.KeysDown[KEY_L]) { // Logger
-                should_show_logger = !should_show_logger;
-                io.KeysDown[KEY_L] = false;
+        if (io.KeyCtrl) {
+            if (io.KeyShift) {
+                if (io.KeysDown[KEY_L]) { // Logger
+                    should_show_logger = !should_show_logger;
+                    io.KeysDown[KEY_L] = false;
+                }
+
+                io.KeyShift = false;
+            }
+
+            if (io.KeysDown[KEY_R]) {
+                should_show_app_launch = !should_show_app_launch;
+                io.KeysDown[KEY_R] = false;
             }
 
             io.KeyCtrl = false;
-            io.KeyShift = false;
         }
     }
 
     void imgui_debugger::show_app_launch() {
+        static ImGuiTextFilter app_search_box;
         ImGui::Begin("App launcher", &should_show_app_launch);
 
         if (alserv) {
-            std::map<std::uint32_t, apa_app_registry> &registerations = alserv->get_registerations();
+            std::vector<apa_app_registry> &registerations = alserv->get_registerations();
+            const float uid_col_size = ImGui::CalcTextSize("00000000").x + 30.0f;
 
-            ImGui::Columns(2);
-        
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "UID");
-            ImGui::NextColumn();
+            {
+                ImGui::Text("Search ");
+                ImGui::SameLine();
+                app_search_box.Draw("##AppSearchBox");
 
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Name");
-            ImGui::NextColumn();
+                ImGui::Columns(2);
 
-            // TODO: Should escape from using map
-            for (auto &[uid, registeration]: registerations) {
-                const std::string name = common::ucs2_to_utf8(registeration.mandatory_info.long_caption.to_std_string(nullptr));
-                const std::string uid_name = common::to_string(uid, std::hex);
+                ImGui::SetColumnWidth(0, uid_col_size + 8.0f);
 
-                ImGui::Text(uid_name.c_str());
+                ImGui::TextColored(GUI_COLOR_TEXT_TITLE, " UID");
                 ImGui::NextColumn();
 
-                ImGui::Text(name.c_str());
+                ImGui::TextColored(GUI_COLOR_TEXT_TITLE, " Name");
                 ImGui::NextColumn();
 
-                if (ImGui::IsItemClicked()) {
-                    // Launch app!
-                    should_show_app_launch = false;
-                    app_launch(registeration.mandatory_info.app_path.to_std_string(nullptr));
-                }
+                ImGui::Separator();
+                ImGui::Columns(1);
             }
+            
+            ImGui::BeginChild("##AppListScroll");
+            {
+                ImGui::Columns(2);
 
+                ImGui::SetColumnWidth(0, uid_col_size);
+
+                ImGuiListClipper clipper;
+
+                if (app_search_box.Filters.empty())
+                    clipper.Begin(static_cast<int>(registerations.size()), ImGui::GetTextLineHeight());
+
+                const int clip_start = (app_search_box.Filters.empty()) ? clipper.DisplayStart : 0;
+                const int clip_end = (app_search_box.Filters.empty()) ? clipper.DisplayEnd : static_cast<int>(registerations.size());
+
+                for (int i = clip_start; i < clip_end; i++) {
+                    const std::string name = " " + common::ucs2_to_utf8(registerations[i].mandatory_info.long_caption.to_std_string(nullptr));
+                    const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
+
+                    if (app_search_box.PassFilter(name.c_str())) {
+                        ImGui::Text(uid_name.c_str());
+                        ImGui::NextColumn();
+
+                        ImGui::Text(name.c_str());
+                        ImGui::NextColumn();
+
+                        if (ImGui::IsItemClicked()) {
+                            // Launch app!
+                            should_show_app_launch = false;
+                            app_launch(registerations[i].mandatory_info.app_path.to_std_string(nullptr));
+                        }
+                    }
+                }
+
+                if (app_search_box.Filters.empty())
+                    clipper.End();
+
+                ImGui::EndChild();
+            }
             ImGui::Columns(1);
         } else {
             ImGui::Text("App List Server is not available");
@@ -935,9 +976,43 @@ namespace eka2l1 {
         ImGui::End();
     }
 
+    void imgui_debugger::queue_error(const std::string &error) {
+        const std::lock_guard<std::mutex> guard(errors_mut);
+        error_queue.push(error);
+    }
+
+    void imgui_debugger::show_errors() {
+        std::string first_error = "";
+
+        {
+            const std::lock_guard<std::mutex> guard(errors_mut);
+            if (error_queue.empty()) {
+                return;
+            }
+
+            first_error = error_queue.front();
+        }
+
+        ImGui::OpenPopup("A wild error appears!");
+
+        if (ImGui::BeginPopupModal("A wild error appears!")) {
+            ImGui::Text(first_error.c_str());
+            ImGui::Text("Please attach the log and report this to a developer!");
+
+            if (ImGui::Button("OK")) {
+                const std::lock_guard<std::mutex> guard(errors_mut);
+                error_queue.pop();
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
         handle_shortcuts();
+
+        show_errors();
 
         if (should_package_manager) {
             show_package_manager();
