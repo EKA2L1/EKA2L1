@@ -132,22 +132,18 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         *err += " doesn't exist";
     } else {
         if (eka2l1::has_root_dir(tokstr)) {
-            if (!emu->symsys->load(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr))) {
-                *err = "Executable doesn't exists";
-                return false;
-            }
-
+            emu->launch_requests.push(common::utf8_to_ucs2(tokstr));
             return true;
         }
 
         // Load with name
-        std::map<std::uint32_t, apa_app_registry> &regs = svr->get_registerations();
+        std::vector<apa_app_registry> &regs = svr->get_registerations();
 
         for (auto &reg: regs) {
-            if (common::ucs2_to_utf8(reg.second.mandatory_info.long_caption.to_std_string(nullptr))
+            if (common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr))
                 == tokstr) {
                 // Load the app
-                emu->symsys->load(reg.second.mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+                emu->launch_requests.push(reg.mandatory_info.app_path.to_std_string(nullptr));
                 return true;
             }
         }
