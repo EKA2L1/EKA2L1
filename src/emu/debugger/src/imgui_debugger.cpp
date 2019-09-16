@@ -605,6 +605,8 @@ namespace eka2l1 {
         }
 
         ImGui::NewLine();
+
+        ImGui::BeginChild("##PrefTab");
         all_prefs[cur_pref_tab].second(this);
 
         ImGui::NewLine();
@@ -618,6 +620,7 @@ namespace eka2l1 {
         }
 
         ImGui::PopItemWidth();
+        ImGui::EndChild();
 
         ImGui::End();
     }
