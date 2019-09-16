@@ -58,9 +58,9 @@ namespace eka2l1::drivers {
         GLuint sprite_vbo;
         GLuint sprite_ibo;
 
-        GLint projection_loc;
-        GLint model_loc;
         GLint color_loc;
+        GLint proj_loc;
+        GLint model_loc;
 
         ogl_state backup;
         std::atomic_bool should_stop;

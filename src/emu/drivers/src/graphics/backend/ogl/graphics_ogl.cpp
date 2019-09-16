@@ -40,36 +40,36 @@ namespace eka2l1::drivers {
     void ogl_graphics_driver::do_init() {
         sprite_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_norm_f_path);
 
-        static GLfloat vertices[] = {
-            // Pos      // Tex
-            0.0f, 1.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-
-            0.0f, 1.0f, 0.0f, 1.0f,
-            1.0f, 1.0f, 1.0f, 1.0f,
-            1.0f, 0.0f, 1.0f, 0.0f
+        static GLushort indices[] = {
+            0, 1, 2,
+            0, 3, 1
         };
 
         glGenVertexArrays(1, &sprite_vao);
         glGenBuffers(1, &sprite_vbo);
-
         glBindVertexArray(sprite_vao);
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
         glBindVertexArray(0);
 
-        color_loc = sprite_program->get_uniform_location("u_color").value();
-        projection_loc = sprite_program->get_uniform_location("u_projection").value();
-        model_loc = sprite_program->get_uniform_location("u_model").value();
+        glGenBuffers(1, &sprite_ibo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite_ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        color_loc = sprite_program->get_uniform_location("u_color").value_or(-1);
+        proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
+        model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
     }
 
     void ogl_graphics_driver::draw_bitmap(command_helper &helper) {
+        if (!sprite_program) {
+            do_init();
+        }
+
         // Get bitmap to draw
         drivers::handle to_draw = 0;
         helper.pop(to_draw);
@@ -81,27 +81,81 @@ namespace eka2l1::drivers {
             return;
         }
 
+        eka2l1::vec2 position;
+        helper.pop(position);
+
         sprite_program->use(this);
+
+        // Build texcoords
+        eka2l1::rect source_rect;
+        helper.pop(source_rect);
+
+        struct sprite_vertex {
+            float top[2];
+            float coord[2];
+        } verts[4];
+
+        static GLfloat verts_default[] = {
+            0.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+        };
+
+        void *vert_pointer = verts_default;
+
+        if (!source_rect.empty()) {
+            const float texel_width = 1.0f / bmp->tex->get_size().x;
+            const float texel_height = 1.0f / bmp->tex->get_size().y;
+
+            // Bottom left
+            verts[0].top[0] = 0.0f;
+            verts[0].top[1] = 1.0f;
+
+            verts[0].coord[0] = source_rect.top.x * texel_width;
+            verts[0].coord[1] = (source_rect.top.y + source_rect.size.y) * texel_height;
+            
+            // Top right
+            verts[1].top[0] = 1.0f;
+            verts[1].top[1] = 0.0f;
+
+            verts[1].coord[0] = (source_rect.top.x + source_rect.size.x) * texel_width;
+            verts[1].coord[1] = source_rect.top.y * texel_height;
+
+            // Top left
+            verts[2].top[0] = 0.0f;
+            verts[2].top[1] = 0.0f;
+
+            verts[2].coord[0] = source_rect.top.x * texel_width;
+            verts[2].coord[1] = source_rect.top.y * texel_height;
+
+            // Bottom right
+            verts[3].top[0] = 1.0f;
+            verts[3].top[1] = 1.0f;
+
+            verts[3].coord[0] = (source_rect.top.x + source_rect.size.x) * texel_width;
+            verts[3].coord[1] = (source_rect.top.y + source_rect.size.y) * texel_height;
+
+            vert_pointer = verts;
+        }
+
         glBindVertexArray(sprite_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(verts), nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(verts), vert_pointer, GL_STATIC_DRAW);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(bmp->tex->texture_handle()));
 
         // Build model matrix
-        eka2l1::rect draw_rect;
-        helper.pop(draw_rect);
+        glm::mat4 model_matrix = glm::identity<glm::mat4>();
+        model_matrix = glm::translate(model_matrix, { position.x, position.y, 0.0f });
+        model_matrix = glm::scale(model_matrix, glm::vec3(source_rect.size.x, source_rect.size.y, 0.0f));
 
-        glm::mat4 model_matrix = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-        model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(draw_rect.top.x), static_cast<float>(draw_rect.top.y), 0.0f));
+        glUniformMatrix4fv(model_loc, 1, false, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv(proj_loc, 1, false, glm::value_ptr(projection_matrix));
 
-        // Make size and rotation
-        model_matrix = glm::translate(model_matrix, glm::vec3(0.5f * static_cast<float>(draw_rect.size.x), 0.5f * static_cast<float>(draw_rect.size.y), 0.0f));
-        model_matrix = glm::rotate(model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        model_matrix = glm::translate(model_matrix, glm::vec3(-0.5f * static_cast<float>(draw_rect.size.x), -0.5f * static_cast<float>(draw_rect.size.y), 0.0f));
-
-        glUniform4fv(projection_loc, 4, glm::value_ptr(projection_matrix));
-        glUniform4fv(model_loc, 4, glm::value_ptr(model_matrix));
-
+        // Supply brush
         bool use_brush = false;
         helper.pop(use_brush);
 
@@ -113,7 +167,9 @@ namespace eka2l1::drivers {
             glUniform4fv(color_loc, 1, color);
         }
 
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite_ibo);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
         glBindVertexArray(0);
     }
 
@@ -382,6 +438,11 @@ namespace eka2l1::drivers {
         command_helper helper(cmd);
 
         switch (cmd->opcode_) {
+        case graphics_driver_draw_bitmap: {
+            draw_bitmap(helper);
+            break;
+        }
+
         case graphics_driver_set_invalidate: {
             set_invalidate(helper);
             break;

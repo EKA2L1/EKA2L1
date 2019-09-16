@@ -161,7 +161,7 @@ namespace eka2l1::drivers {
         // Find free slot
         auto slot_free = std::find(bmp_textures.begin(), bmp_textures.end(), nullptr);
 
-        if (slot_free == bmp_textures.end()) {
+        if (slot_free != bmp_textures.end()) {
             *slot_free = std::make_unique<bitmap>(this, size, 32);
             *result = std::distance(bmp_textures.begin(), slot_free) + 1;
         } else {
@@ -201,6 +201,7 @@ namespace eka2l1::drivers {
         binding = bmp;
 
         // Build projection matrixx
+        projection_matrix = glm::identity<glm::mat4>();
         projection_matrix = glm::ortho(0.0f, static_cast<float>(bmp->tex->get_size().x), static_cast<float>(bmp->tex->get_size().y),
             0.0f, -1.0f, 1.0f);
 
@@ -506,6 +507,10 @@ namespace eka2l1::drivers {
         if (!binding) {
             current_fb_height = swapchain_size.y;
         }
+        
+        projection_matrix = glm::identity<glm::mat4>();
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(swapchain_size.x), static_cast<float>(swapchain_size.y),
+            0.0f, -1.0f, 1.0f);
     }
 
     void shared_graphics_driver::dispatch(command *cmd) {
