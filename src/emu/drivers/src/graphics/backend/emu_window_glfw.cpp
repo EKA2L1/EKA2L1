@@ -33,7 +33,7 @@ void char_callback(GLFWwindow *window, unsigned int c) {
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
-
+    
     if (action == GLFW_PRESS) {
         CALL_IF_VALID(win->button_pressed, win->get_userdata(), key);
     } else if (action == GLFW_RELEASE) {

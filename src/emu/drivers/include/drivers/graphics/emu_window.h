@@ -50,6 +50,12 @@
 #define KEY_I 74
 #define KEY_K 75
 #define KEY_L 76
+#define KEY_M 77
+#define KEY_N 78
+#define KEY_O 79
+#define KEY_P 80
+#define KEY_Q 81
+#define KEY_R 82
 
 namespace eka2l1 {
     /**
