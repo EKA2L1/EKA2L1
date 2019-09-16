@@ -175,8 +175,10 @@ namespace eka2l1::drivers {
         if (offset + size > size_) {
             if (offset == 0) {
                 // Orphan the buffer
-                glBufferData(hint_gl_, size, nullptr, usage_hint_gl_);
+                glBufferData(hint_gl_, offset + size, nullptr, usage_hint_gl_);
             }
+
+            size_ = offset + size;
         }
 
         // Use subdata to update
