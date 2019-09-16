@@ -22,8 +22,10 @@
 #include <common/log.h>
 #include <common/vecx.h>
 #include <common/thread.h>
+#include <common/random.h>
 #include <console/state.h>
 #include <console/thread.h>
+#include <console/seh_handler.h>
 
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
@@ -77,7 +79,9 @@ static void on_ui_window_key_release(void *userdata, const int key) {
     
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::released);
-    emu->winserv->queue_input_from_driver(key_evt);
+    
+    if (emu->symsys)
+        emu->winserv->queue_input_from_driver(key_evt);
 }
 
 static void on_ui_window_key_press(void *userdata, const int key) {
@@ -92,7 +96,9 @@ static void on_ui_window_key_press(void *userdata, const int key) {
 
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::pressed);
-    emu->winserv->queue_input_from_driver(key_evt);
+
+    if (emu->symsys)
+        emu->winserv->queue_input_from_driver(key_evt);
 }
 
 static void on_ui_window_char_type(void *userdata, std::uint32_t c) {
@@ -123,6 +129,21 @@ namespace eka2l1::desktop {
         state.window->char_hook = on_ui_window_char_type;
 
         std::string window_title = "EKA2L1 (" GIT_BRANCH " " GIT_COMMIT_HASH ")";
+
+        static constexpr const char *random_references[] = {
+            "Get ready, ready to set you off!",
+            "A demon lady with a bread in her mouth, shining in the sun",
+            "The story of pirates never ends",
+            "Uchiha with his brother go to clothes shop in prepare of his real estate job",
+            "Living inside the sewer as a clown",
+            "Me and the boys discovering this emulator and a bunch of Russians opening another dimension",
+            "Having a cyborg as my wife doing dishes and writing the emulator brb"
+            // You can add more, but probably when the emulator becomes more functional
+        };
+        
+        constexpr const int random_references_count = sizeof(random_references) / sizeof(const char*);
+
+        window_title += std::string(" - ") + random_references[eka2l1::random_range(0, random_references_count - 1)];
 
         state.window->init(window_title, eka2l1::vec2(1080, 720));
         state.window->set_userdata(&state);
@@ -351,12 +372,18 @@ namespace eka2l1::desktop {
     }
 
     void os_thread(emulator &state) {
+        // Register SEH handler for this thread
+#if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
+        _set_se_translator(seh_handler_translator_func);
+#endif
+
         // TODO: Multi core. Currently it's single core.
         while (!state.should_emu_quit) {
             try {
                 state.symsys->loop();
             } catch (std::exception &exc) {
                 std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
+                state.debugger->queue_error(exc.what());
                 state.should_emu_quit = true;
 
                 break;

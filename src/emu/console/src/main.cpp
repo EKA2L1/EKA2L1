@@ -72,11 +72,6 @@ int main(int argc, char **argv) {
     const auto executable_directory = eka2l1::file_directory(argv[0]);
     eka2l1::set_current_directory(executable_directory);
 
-    // Register SEH handler
-#if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
-    _set_se_translator(seh_handler_translator_func);
-#endif
-
     int result = 0;
 
     {
