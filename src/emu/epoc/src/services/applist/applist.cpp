@@ -106,7 +106,7 @@ namespace eka2l1 {
         // Getting our localised resource info
         if (reg.localised_info_rsc_path.empty()) {
             // We will still do registeration. We have our mandatory info read fine.
-            regs.emplace(reg.mandatory_info.uid, std::move(reg));
+            regs.push_back(std::move(reg));
             return true;
         }
 
@@ -115,7 +115,7 @@ namespace eka2l1 {
 
         if (localised_path.empty()) {
             // We will still do registeration. We have our mandatory info read fine.
-            regs.emplace(reg.mandatory_info.uid, std::move(reg));
+            regs.push_back(std::move(reg));
             return true;
         }
 
@@ -153,7 +153,7 @@ namespace eka2l1 {
             }
         }
 
-        regs.emplace(reg.mandatory_info.uid, std::move(reg));
+        regs.push_back(std::move(reg));
         return true;
     }
     
@@ -175,6 +175,10 @@ namespace eka2l1 {
             }
         }
 
+        std::sort(regs.begin(), regs.end(), [](const apa_app_registry &lhs, const apa_app_registry &rhs) {
+            return lhs.mandatory_info.uid < rhs.mandatory_info.uid;
+        });
+
         LOG_INFO("Done loading!");
     }
     
@@ -182,7 +186,7 @@ namespace eka2l1 {
         server::connect(ctx);
     }
 
-    std::map<std::uint32_t, apa_app_registry> &applist_server::get_registerations() {
+    std::vector<apa_app_registry> &applist_server::get_registerations() {
         if (!(flags & AL_INITED)) {
             // Initialize
             rescan_registries(sys->get_io_system());
@@ -199,13 +203,15 @@ namespace eka2l1 {
             flags |= AL_INITED;
         }
         
-        auto result = regs.find(uid);
+        auto result = std::lower_bound(regs.begin(), regs.end(), uid, [](const apa_app_registry &lhs, const std::uint32_t rhs) {
+            return lhs.mandatory_info.uid < rhs;
+        });
 
-        if (result == regs.end()) {
-            return nullptr;
+        if (result != regs.end() && result->mandatory_info.uid == uid) {
+            return &(*result);
         }
 
-        return &(result->second);
+        return nullptr;
     }
 
     void applist_server::is_accepted_to_run(service::ipc_context &ctx) {
