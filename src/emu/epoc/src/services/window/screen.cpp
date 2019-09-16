@@ -45,7 +45,7 @@ namespace eka2l1::epoc {
             }
 
             // Draw it onto current binding buffer
-            builder_->draw_bitmap(winuser->driver_win_id, eka2l1::rect({0, 0}, winuser->size), false);
+            builder_->draw_bitmap(winuser->driver_win_id, winuser->pos, eka2l1::rect({0, 0}, { 0, 0 }), false);
             return false;
         }
     };

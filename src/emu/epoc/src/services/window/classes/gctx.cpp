@@ -63,7 +63,11 @@ namespace eka2l1::epoc {
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
         const eka2l1::rect &dest_rect) {
-        cmd_builder->draw_bitmap(h, dest_rect, false);
+        eka2l1::rect source_rect;
+        source_rect.top = { 0, 0 };
+        source_rect.size = dest_rect.size;
+
+        cmd_builder->draw_bitmap(h, dest_rect.top, source_rect, false);
         ctx.set_request_status(KErrNone);
     }
 

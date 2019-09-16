@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker https://www.codeandweb.com/texturepacker -->
+<!-- $TexturePacker:SmartUpdate:364532bea5d30ebe9e67619db19ad8ce:c0547dabf15b43ea41ece9f2a20cfdc0:64ec28c92840f35a599141c674fa13f9$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+pX => x pos of the pivot point (relative to sprite width)
+pY => y pos of the pivot point (relative to sprite height)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+with polygon mode enabled:
+vertices   => points in sprite coordinate system (x0,y0,x1,y1,x2,y2, ...)
+verticesUV => points in sheet coordinate system (x0,y0,x1,y1,x2,y2, ...)
+triangles  => sprite triangulation, 3 vertex indices per triangle
+-->
+<TextureAtlas imagePath="difficulties_sheet.png" width="656" height="218">
+    <sprite n="difficulties0000.png" x="1" y="1" w="162" h="216" oX="31" oY="40" oW="256" oH="256"/>
+    <sprite n="difficulties0001.png" x="165" y="1" w="162" h="216" oX="31" oY="40" oW="256" oH="256"/>
+    <sprite n="difficulties0002.png" x="329" y="1" w="162" h="216" oX="31" oY="40" oW="256" oH="256"/>
+    <sprite n="difficulties0003.png" x="493" y="1" w="162" h="216" oX="31" oY="40" oW="256" oH="256"/>
+</TextureAtlas>

@@ -31,6 +31,8 @@
 #include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/thread.h>
 
+#include <epoc/services/applist/applist.h>
+
 #include <drivers/graphics/emu_window.h> // For scancode
 
 #include <manager/config.h>
@@ -53,7 +55,7 @@ const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
 const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255.0f);
 
 namespace eka2l1 {
-    imgui_debugger::imgui_debugger(eka2l1::system *sys, imgui_logger *logger)
+    imgui_debugger::imgui_debugger(eka2l1::system *sys, imgui_logger *logger, app_launch_function app_launch)
         : sys(sys)
         , conf(sys->get_config())
         , logger(logger)
@@ -72,8 +74,10 @@ namespace eka2l1 {
         , should_package_manager_display_installer_text(false)
         , should_package_manager_display_language_choose(false)
         , should_install_package(false)
+        , should_show_app_launch(false)
         , selected_package_index(0xFFFFFFFF)
-        , debug_thread_id(0) {
+        , debug_thread_id(0)
+        , app_launch(app_launch) {
         // Setup hook
         manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
 
@@ -117,6 +121,12 @@ namespace eka2l1 {
                 install_thread_cond.wait(ul);
             }
         });
+        
+        std::shared_ptr<eka2l1::applist_server> svr = 
+            std::reinterpret_pointer_cast<eka2l1::applist_server>(sys->get_kernel_system()
+            ->get_by_name<service::server>("!AppListServer"));
+
+        alserv = svr.get();
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -838,6 +848,7 @@ namespace eka2l1 {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
                 ImGui::MenuItem("Packages", nullptr, &should_package_manager);
                 ImGui::MenuItem("Install package", nullptr, &should_install_package);
+                ImGui::MenuItem("Launch", nullptr, &should_show_app_launch);
 
                 ImGui::EndMenu();
             }
@@ -884,6 +895,46 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::show_app_launch() {
+        ImGui::Begin("App launcher", &should_show_app_launch);
+
+        if (alserv) {
+            std::map<std::uint32_t, apa_app_registry> &registerations = alserv->get_registerations();
+
+            ImGui::Columns(2);
+        
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "UID");
+            ImGui::NextColumn();
+
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Name");
+            ImGui::NextColumn();
+
+            // TODO: Should escape from using map
+            for (auto &[uid, registeration]: registerations) {
+                const std::string name = common::ucs2_to_utf8(registeration.mandatory_info.long_caption.to_std_string(nullptr));
+                const std::string uid_name = common::to_string(uid, std::hex);
+
+                ImGui::Text(uid_name.c_str());
+                ImGui::NextColumn();
+
+                ImGui::Text(name.c_str());
+                ImGui::NextColumn();
+
+                if (ImGui::IsItemClicked()) {
+                    // Launch app!
+                    should_show_app_launch = false;
+                    app_launch(registeration.mandatory_info.app_path.to_std_string(nullptr));
+                }
+            }
+
+            ImGui::Columns(1);
+        } else {
+            ImGui::Text("App List Server is not available");
+        }
+
+        ImGui::End();
+    }
+
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
         handle_shortcuts();
@@ -927,6 +978,10 @@ namespace eka2l1 {
         if (should_install_package) {
             should_install_package = false;
             do_install_package();
+        }
+
+        if (should_show_app_launch) {
+            show_app_launch();
         }
 
         on_pause_toogle(should_pause);

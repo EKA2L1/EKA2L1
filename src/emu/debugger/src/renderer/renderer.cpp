@@ -20,16 +20,18 @@
 
 #include <common/vecx.h>
 #include <debugger/renderer/renderer.h>
+#include <debugger/renderer/common.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/graphics/imgui_renderer.h>
 #include <drivers/graphics/texture.h>
 
 #include <manager/config.h>
-
 #include <imgui.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+#include <chrono>
 
 namespace eka2l1 {
     void debugger_renderer::init(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
@@ -40,6 +42,8 @@ namespace eka2l1 {
 
         irenderer_ = std::make_unique<drivers::imgui_renderer>();
         irenderer_->init(driver, builder);
+
+        error_sheet.load(driver, builder, "resources//difficulties_sheet.png", "resources//difficulties_meta.xml", 7);
 
         if (!debugger_->get_config()->bkg_path.empty()) {
             change_background_internal(driver, builder, debugger_->get_config()->bkg_path.data());
@@ -52,31 +56,17 @@ namespace eka2l1 {
     }
 
     bool debugger_renderer::change_background_internal(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder, const char *path) {
-        if (!path || strlen(path) == 0) {
-            return false;
-        }
-
-        int width = 0;
-        int height = 0;
-        int comp = 0;
-
-        unsigned char *dat = stbi_load(path, &width, &height, &comp, STBI_rgb_alpha);
-
-        if (dat == nullptr) {
-            return false;
-        }
-
-        if (background_tex_) {
+        drivers::handle new_tex = renderer::load_texture_from_file(driver, builder, path);
+        
+        if (background_tex_ && new_tex) {
             // Free previous texture
             builder->destroy(background_tex_);
         }
+    
+        if (new_tex)
+            background_tex_ = new_tex;
 
-        background_tex_ = drivers::create_texture(driver, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
-            drivers::texture_data_type::ubyte, dat, { width, height, 0 });
-        builder->set_texture_filter(background_tex_, drivers::filter_option::linear, drivers::filter_option::linear);
-
-        stbi_image_free(dat);
-        return true;
+        return false;
     }
 
     void debugger_renderer::draw(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
@@ -96,6 +86,16 @@ namespace eka2l1 {
 
         ImGui::NewFrame();
 
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - prev_time).count();
+
+        prev_time = now;
+
+        error_sheet.play(elapsed);
+        ImVec2 uv_min, uv_max;
+
+        error_sheet.get_current_frame_uv_coords(uv_min.x, uv_max.x, uv_min.y, uv_max.y);
+
         // Draw the imgui ui
         debugger_->show_debugger(width, height, fb_width, fb_height);
 
@@ -110,40 +110,15 @@ namespace eka2l1 {
                 ImVec2(1, 1),
                 IM_COL32(255, 255, 255, sstate->bkg_transparency));
         }
+        
+        ImGui::GetBackgroundDrawList()->AddImage(
+            reinterpret_cast<ImTextureID>(error_sheet.sheet_),
+            ImVec2(120.0f, 120.0f),
+            ImVec2(120.0f + error_sheet.metas_[error_sheet.current_].size_.x, 120.0f + error_sheet.metas_[error_sheet.current_].size_.y),
+            uv_min,
+            uv_max
+        );
 
-        /*
-        eka2l1::vec2 v = gr_driver_->get_screen_size();
-        auto padding = ImGui::GetStyle().WindowPadding;
-        v = vec2(static_cast<const int>(v.x + ImGui::GetStyle().WindowPadding.x * 2),
-            static_cast<const int>(v.y + (ImGui::GetStyle().WindowPadding.y + 10) * 2));
-
-        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(v.x), static_cast<float>(v.y)));
-
-        ImGui::Begin("Emulating Window", nullptr, ImGuiWindowFlags_NoResize);
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-
-        if (ImGui::IsWindowFocused()) {
-            inp_driver_->set_active(true);
-        } else {
-            inp_driver_->set_active(false);
-        }
-
-        //pass the texture of the FBO
-        //window.getRenderTexture() is the texture of the FBO
-        //the next parameter is the upper left corner for the uvs to be applied at
-        //the third parameter is the lower right corner
-        //the last two parameters are the UVs
-        //they have to be flipped (normally they would be (0,0);(1,1)
-        ImGui::GetWindowDrawList()->AddImage(
-            reinterpret_cast<ImTextureID>(gr_driver_->get_render_texture_handle()),
-            ImVec2(ImGui::GetCursorScreenPos()),
-            ImVec2(ImGui::GetCursorScreenPos().x + gr_driver_->get_screen_size().x,
-                ImGui::GetCursorScreenPos().y + gr_driver_->get_screen_size().y),
-            ImVec2(0, 1), ImVec2(1, 0));
-            
-*/
-        //we are done working with this window
-        //ImGui::End();
         ImGui::EndFrame();
         ImGui::Render();
 

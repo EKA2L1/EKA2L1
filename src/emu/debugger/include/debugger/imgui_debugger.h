@@ -33,6 +33,9 @@ struct MemoryEditor;
 namespace eka2l1 {
     class system;
     struct imgui_logger;
+    class applist_server;
+
+    using app_launch_function = std::function<void(const std::u16string &path)>;
 
     class imgui_debugger : public debugger_base {
         system *sys;
@@ -69,6 +72,13 @@ namespace eka2l1 {
 
         bool should_package_manager_display_installer_text;
         bool should_package_manager_display_language_choose;
+
+        bool should_show_app_launch;
+
+        applist_server *alserv;
+        app_launch_function app_launch;
+
+        void show_app_launch();
 
         void show_threads();
         void show_mutexs();
@@ -112,7 +122,7 @@ namespace eka2l1 {
         void do_install_package();
 
     public:
-        explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger);
+        explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger, app_launch_function app_launch);
         ~imgui_debugger();
 
         bool should_emulate_stop() override {
