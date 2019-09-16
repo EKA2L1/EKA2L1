@@ -62,14 +62,20 @@ namespace eka2l1::desktop {
         
         winserv = reinterpret_cast<eka2l1::window_server*>(symsys->get_kernel_system()->get_by_name
             <eka2l1::service::server>("!Windowserver").get());
+
+        stage_two_inited = false;
     }
 
     void emulator::stage_two() {
-        bool res = symsys->load_rom(conf.storage + conf.rom_path);
+        if (!stage_two_inited) {
+            bool res = symsys->load_rom(conf.storage + conf.rom_path);
 
-        // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
-        // created for ROM purpose.
-        symsys->mount(drive_z, drive_media::rom,
-            conf.storage + "/drives/z/", io_attrib::internal | io_attrib::write_protected);
+            // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
+            // created for ROM purpose.
+            symsys->mount(drive_z, drive_media::rom,
+                conf.storage + "/drives/z/", io_attrib::internal | io_attrib::write_protected);
+
+            stage_two_inited = true;
+        }
     }
 }

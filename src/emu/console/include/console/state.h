@@ -63,6 +63,7 @@ namespace eka2l1::desktop {
         std::atomic<bool> should_emu_quit;
         std::atomic<bool> should_emu_pause;
         std::atomic<bool> should_ui_quit;
+        std::atomic<bool> stage_two_inited;
 
         eka2l1::request_queue<std::u16string> launch_requests;
 
