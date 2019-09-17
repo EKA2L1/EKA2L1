@@ -135,13 +135,19 @@ namespace eka2l1::epoc {
 
         explicit window(window_server_client_ptr client, screen *scr, window *parent)
             : window_client_obj(client, scr)
-            , type(window_kind::normal) {
+            , type(window_kind::normal)
+            , parent(nullptr)
+            , sibling(nullptr)
+            , child(nullptr) {
             set_parent(parent);
         }
 
         explicit window(window_server_client_ptr client, screen *scr, window *parent, window_kind type)
             : window_client_obj(client, scr)
-            , type(type) {
+            , type(type)
+            , parent(nullptr)
+            , sibling(nullptr)
+            , child(nullptr) {
             set_parent(parent);
         }
     };
