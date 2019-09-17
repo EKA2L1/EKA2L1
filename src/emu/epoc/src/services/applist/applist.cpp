@@ -187,6 +187,8 @@ namespace eka2l1 {
     }
 
     std::vector<apa_app_registry> &applist_server::get_registerations() {
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
+
         if (!(flags & AL_INITED)) {
             // Initialize
             rescan_registries(sys->get_io_system());
@@ -197,6 +199,8 @@ namespace eka2l1 {
     }
     
     apa_app_registry *applist_server::get_registeration(const std::uint32_t uid) {
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
+
         if (!(flags & AL_INITED)) {
             // Initialize
             rescan_registries(sys->get_io_system());

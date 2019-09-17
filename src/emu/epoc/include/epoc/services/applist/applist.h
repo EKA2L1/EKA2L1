@@ -24,6 +24,7 @@
 #include <epoc/utils/des.h>
 
 #include <vector>
+#include <mutex>
 
 namespace eka2l1 {
     class io_system;
@@ -194,6 +195,8 @@ namespace eka2l1 {
 
     public:
         applist_server(system *sys);
+
+        std::mutex list_access_mut_;
 
         /**
          * \brief Get an app registeration
