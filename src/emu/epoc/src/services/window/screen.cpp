@@ -54,7 +54,7 @@ namespace eka2l1::epoc {
         : number(number)
         , screen_texture(0)
         , scr_config(scr_conf)
-        , crr_mode(0)
+        , crr_mode(1)
         , next(nullptr)
         , focus(nullptr) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
