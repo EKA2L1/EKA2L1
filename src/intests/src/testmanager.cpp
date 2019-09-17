@@ -37,7 +37,7 @@ TInt CTestManager::Run() {
 
         _LIT(KTestExt, ".expected");
         _LIT(KTestFolder, "expected\\");
-
+        
         HBufC *testPathBuf;
         TRAPD(err, testPathBuf = HBufC::NewL(test.iCategory->Length() + test.iName->Length() + KTestExt.iTypeLength + 2 + iSessionPath.Length() + KTestFolder.iTypeLength));
 
@@ -50,6 +50,7 @@ TInt CTestManager::Run() {
 
             testPath.Append(iSessionPath);
             testPath.Append(KTestFolder);
+
             testPath.Append(test.iCategory->Des());
             testPath.Append('\\');
             testPath.Append(test.iName->Des());
@@ -135,7 +136,7 @@ void CTestManager::ConstructL(const TAbsorberMode aAbsorbMode) {
     }
 
     if (iSessionPath.Length() == 0) {
-        iSessionPath = RProcess().FullName().Left(3);
+        iSessionPath = RProcess().FileName().Left(3);
     }
 #else
     fs.SessionPath(iSessionPath);
