@@ -32,7 +32,7 @@ namespace eka2l1 {
     namespace kernel {
         change_notifier::change_notifier(kernel_system *kern)
             : eka2l1::kernel::kernel_obj(kern, "changenotifier" + common::to_string(eka2l1::random()),
-                kernel::access_type::local_access) {
+                nullptr, kernel::access_type::local_access) {
             obj_type = object_type::change_notifier;
         }
 

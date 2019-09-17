@@ -122,6 +122,7 @@ namespace eka2l1::epoc {
     window_server_client::window_server_client(service::session *guest_session, kernel::thread *own_thread)
         : guest_session(guest_session)
         , client_thread(own_thread)
+        , primary_device(nullptr)
         , uid_counter(0) {
     }
 

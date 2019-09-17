@@ -36,9 +36,8 @@ namespace eka2l1 {
         chunk::chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name,
             address bottom, const address top, const size_t max_size, prot protection, chunk_type type, chunk_access chnk_access,
             chunk_attrib attrib, const bool is_heap, const address force_addr)
-            : kernel_obj(kern, name, access_type::local_access)
+            : kernel_obj(kern, name, own_process, access_type::local_access)
             , mem(mem)
-            , own_process(own_process)
             , is_heap(is_heap)
             , type(type) {
             obj_type = object_type::chunk;
@@ -112,7 +111,7 @@ namespace eka2l1 {
 
         void chunk::destroy() {
             if (!mmc_impl_unq_)
-                own_process->get_mem_model()->delete_chunk(mmc_impl_);
+                get_own_process()->get_mem_model()->delete_chunk(mmc_impl_);
         }
     
         void chunk::open_to(process *own) {

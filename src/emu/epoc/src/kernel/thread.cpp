@@ -195,7 +195,7 @@ namespace eka2l1 {
                - r4: Startup reason. Thread startup is 1, process startup is 0.
             */
 
-            ctx.pc = own_process ? (inital ? entry_point : own_process->get_entry_point_address())
+            ctx.pc = owner ? (inital ? entry_point : owning_process()->get_entry_point_address())
                                  : entry_point;
 
             ctx.sp = stack_top;
@@ -245,8 +245,7 @@ namespace eka2l1 {
             ptr<void> usrdata,
             ptr<void> allocator,
             thread_priority pri)
-            : kernel_obj(kern, name, access)
-            , own_process(owner)
+            : kernel_obj(kern, name, reinterpret_cast<kernel_obj*>(owner), access)
             , stack_size(static_cast<int>(stack_size))
             , min_heap_size(static_cast<int>(min_heap_size))
             , max_heap_size(static_cast<int>(max_heap_size))
@@ -264,7 +263,7 @@ namespace eka2l1 {
 
             if (owner) {
                 owner->increase_thread_count();
-                real_priority = caculate_thread_priority(own_process, pri);
+                real_priority = caculate_thread_priority(owning_process(), pri);
                 last_priority = real_priority;
             }
 
@@ -278,10 +277,10 @@ namespace eka2l1 {
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
-            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), own_process, "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
+            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
-            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), own_process, "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
             request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
@@ -317,7 +316,7 @@ namespace eka2l1 {
         void thread::destroy() {
             // Unlink from proces's thread list
             process_thread_link.deque();
-            own_process->decrease_thread_count();
+            owning_process()->decrease_thread_count();
         }
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
@@ -364,7 +363,7 @@ namespace eka2l1 {
 
         void thread::notify_sleep(const int errcode) {
             if (sleep_nof_sts) {
-                *(sleep_nof_sts.get(own_process)) = errcode;
+                *(sleep_nof_sts.get(owning_process())) = errcode;
                 sleep_nof_sts = 0;
 
                 signal_request();
@@ -375,7 +374,7 @@ namespace eka2l1 {
 
         void thread::notify_after(const int errcode) {
             if (timeout_sts) {
-                *(timeout_sts.get(own_process)) = errcode;
+                *(timeout_sts.get(owning_process())) = errcode;
                 timeout_sts = 0;
 
                 signal_request();
@@ -399,7 +398,7 @@ namespace eka2l1 {
                 should_reschedule_back = true;
             }
 
-            real_priority = caculate_thread_priority(own_process, priority);
+            real_priority = caculate_thread_priority(owning_process(), priority);
 
             if (should_reschedule_back) {
                 // It's in the queue!!! Move it!
@@ -501,11 +500,11 @@ namespace eka2l1 {
         }
 
         void thread::owning_process(kernel::process *pr) {
-            own_process = pr;
-            own_process->increase_thread_count();
+            owner = reinterpret_cast<kernel_obj*>(pr);
+            owning_process()->increase_thread_count();
 
-            name_chunk->set_own_process(own_process);
-            stack_chunk->set_own_process(own_process);
+            name_chunk->set_owner(pr);
+            stack_chunk->set_owner(pr);
 
             update_priority();
             last_priority = real_priority;

@@ -36,9 +36,12 @@ namespace eka2l1::epoc {
 
     void window::set_parent(window *new_parent) {
         // New one will be the oldest. Quirky, but how WSERV functions.
-        new_parent = parent;
-        sibling = parent->child;
-        parent->child = this;
+        parent = new_parent;
+
+        if (parent) {
+            sibling = parent->child;
+            parent->child = this;
+        }
     }
 
     window *window::root_window() {

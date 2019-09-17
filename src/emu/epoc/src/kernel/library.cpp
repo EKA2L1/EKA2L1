@@ -34,7 +34,7 @@
 namespace eka2l1 {
     namespace kernel {
         library::library(kernel_system *kern, codeseg_ptr codeseg)
-            : kernel_obj(kern, codeseg->name(), access_type::global_access)
+            : kernel_obj(kern, codeseg->name(), nullptr, access_type::global_access)
             , codeseg(std::move(codeseg)) {
             obj_type = object_type::library;
             state = library_state::loaded;

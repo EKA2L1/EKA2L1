@@ -30,7 +30,7 @@ namespace eka2l1 {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
             : svr(svr)
             , cookie_address(0)
-            , kernel_obj(kern, "", kernel::access_type::global_access) {
+            , kernel_obj(kern, "", kern->crr_process(), kernel::access_type::global_access) {
             obj_type = kernel::object_type::session;
 
             svr->attach(this);

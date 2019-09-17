@@ -42,7 +42,7 @@ namespace eka2l1::kernel {
                 kern->get_timing_system(),
                 this,
                 kernel::access_type::local_access,
-                process_name + "::Main", ep_off,
+                "Main", ep_off,
                 stack_size, heap_min, heap_max,
                 true,
                 0, 0, pri);
@@ -96,7 +96,7 @@ namespace eka2l1::kernel {
 
     process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
         const std::u16string &cmd_args)
-        : kernel_obj(kern, process_name, access_type::local_access)
+        : kernel_obj(kern, process_name, nullptr, access_type::local_access)
         , process_name(process_name)
         , kern(kern)
         , mem(mem)

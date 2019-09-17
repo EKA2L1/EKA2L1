@@ -83,21 +83,23 @@ namespace eka2l1 {
             /*! Even local object will have a randomized name in here.
             */
             std::string obj_name;
+            kernel_obj *owner;
 
             kernel_system *kern;
 
             access_type access;
             object_type obj_type;
 
-            kernel_obj(kernel_system *kern, const std::string &obj_name,
+            explicit kernel_obj(kernel_system *kern, const std::string &obj_name, kernel_obj *owner = nullptr,
                 kernel::access_type access = access_type::local_access);
 
             int access_count = 0;
 
             uint32_t uid;
 
-            kernel_obj(kernel_system *kern)
-                : kern(kern) {
+            explicit kernel_obj(kernel_system *kern, kernel_obj *owner = nullptr)
+                : kern(kern)
+                , owner(owner) {
             }
 
         public:
@@ -132,6 +134,13 @@ namespace eka2l1 {
             object_type get_object_type() const {
                 return obj_type;
             }
+
+            // WARNING: This function have not ever set child owner. Child owner stays the same.
+            void set_owner(kernel_obj *new_owner) {
+                owner = new_owner;
+            }
+
+            void full_name(std::string &name_will_full);
 
             void increase_access_count() { access_count++; }
             void decrease_access_count() { access_count--; };
