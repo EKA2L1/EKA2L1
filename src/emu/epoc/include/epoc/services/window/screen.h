@@ -38,7 +38,7 @@ namespace eka2l1::epoc {
 
         // The root window, used to traverse window tree
         // Draw order will be child in front of parent, newer in front of older.
-        epoc::window *root;
+        std::unique_ptr<epoc::window> root;
         drivers::handle screen_texture; ///< Server handle to texture of the screen
         epoc::display_mode disp_mode;
 
@@ -50,7 +50,7 @@ namespace eka2l1::epoc {
         screen *next;
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
-        
+
         // ========================= UTILITIES FUNCTIONS ===========================
         /**
          * \brief Get the size of this screen, in pixels.

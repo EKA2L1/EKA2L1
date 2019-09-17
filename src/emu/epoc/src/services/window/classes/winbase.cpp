@@ -42,7 +42,7 @@ namespace eka2l1::epoc {
     }
 
     window *window::root_window() {
-        return scr->root;
+        return scr->root.get();
     }
     
     void window::walk_tree(window_tree_walker *walker, const window_tree_walk_style style) {

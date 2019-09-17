@@ -51,9 +51,13 @@ namespace eka2l1::epoc {
     };
 
     screen::screen(const int number, epoc::config::screen &scr_conf) 
-        : scr_config(scr_conf)
+        : number(number)
+        , screen_texture(0)
+        , scr_config(scr_conf)
         , crr_mode(0)
-        , next(nullptr) {
+        , next(nullptr)
+        , focus(nullptr) {
+        root = std::make_unique<epoc::window>(nullptr, this, nullptr);
     }
 
     void screen::redraw(drivers::graphics_command_list_builder *cmd_builder) {

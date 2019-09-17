@@ -232,7 +232,7 @@ namespace eka2l1::epoc {
         
         if (!parent_group) {
             LOG_WARN("Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
-            parent_group = device_ptr->scr->root;
+            parent_group = device_ptr->scr->root.get();
         }
 
         window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group);
@@ -711,6 +711,10 @@ namespace eka2l1 {
     }
     
     void window_server::queue_input_from_driver(drivers::input_event &evt) {
+        if (!loaded) {
+            return;
+        }
+
         const std::lock_guard<std::mutex> guard(input_queue_mut);
         input_events.push(std::move(evt));
     }
@@ -855,7 +859,7 @@ namespace eka2l1 {
             handle_inputs_from_driver(userdata, cycles_late);
         });
 
-        //timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
+        timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
 
         loaded = true;
     }
