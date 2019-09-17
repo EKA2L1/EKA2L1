@@ -24,6 +24,8 @@
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/classes/config.h>
 
+#include <memory>
+
 namespace eka2l1::drivers {
     class graphics_driver;
     class graphics_command_list_builder;
