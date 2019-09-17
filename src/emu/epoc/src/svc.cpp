@@ -1313,7 +1313,7 @@ namespace eka2l1::epoc {
         LOG_TRACE("Finding object name: {}", name);
 
         std::optional<find_handle> info = kern->find_object(name, handle->iHandle,
-            static_cast<kernel::object_type>(aObjectType));
+            static_cast<kernel::object_type>(aObjectType), true);
 
         if (!info) {
             return KErrNotFound;
@@ -1383,6 +1383,22 @@ namespace eka2l1::epoc {
 
         des8 *desname = aName.get(sys->get_memory_system());
         desname->assign(kern->crr_process(), obj->name());
+    }
+
+    BRIDGE_FUNC(void, HandleFullName, TInt aHandle, eka2l1::ptr<des8> aFullname) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel_obj_ptr obj = kern->get_kernel_obj_raw(aHandle);
+
+        if (!obj) {
+            return;
+        }
+
+        des8 *desname = aFullname.get(sys->get_memory_system());
+
+        std::string full_name;
+        obj->full_name(full_name);
+
+        desname->assign(kern->crr_process(), full_name);
     }
 
     /******************************/
@@ -2238,6 +2254,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x39, ChangeNotifierLogon),
         BRIDGE_REGISTER(0x3B, RequestSignal),
         BRIDGE_REGISTER(0x3C, HandleName),
+        BRIDGE_REGISTER(0x3D, HandleFullName),
         BRIDGE_REGISTER(0x40, After),
         BRIDGE_REGISTER(0x42, MessageComplete),
         BRIDGE_REGISTER(0x44, TimeNow),
