@@ -285,7 +285,7 @@ namespace eka2l1 {
         const std::uint32_t fs_file_handle = static_cast<std::uint32_t>(*(ctx->get_arg<int>(3)));
 
         auto fs_server = std::reinterpret_pointer_cast<eka2l1::fs_server>(server<fbs_server>()->fs_server);
-        symfile source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
+        file *source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
 
         if (!source_file) {
             ctx->set_request_status(KErrArgument);
@@ -313,7 +313,7 @@ namespace eka2l1 {
         ctx->set_request_status(KErrNone);
     }
 
-    void fbscli::load_bitmap_impl(service::ipc_context *ctx, symfile source) {
+    void fbscli::load_bitmap_impl(service::ipc_context *ctx, file *source) {
         std::optional<load_bitmap_arg> load_options = ctx->get_arg_packed<load_bitmap_arg>(0);
         if (!load_options) {
             ctx->set_request_status(KErrArgument);

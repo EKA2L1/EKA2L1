@@ -69,8 +69,8 @@ namespace eka2l1 {
             return false;
         }
 
-        auto read_rsc_from_file = [](symfile f, const int id, const bool confirm_sig, std::uint32_t *uid3) -> std::vector<std::uint8_t> {
-            eka2l1::ro_file_stream std_rsc_raw(f);
+        auto read_rsc_from_file = [](symfile &f, const int id, const bool confirm_sig, std::uint32_t *uid3) -> std::vector<std::uint8_t> {
+            eka2l1::ro_file_stream std_rsc_raw(f.get());
             if (!std_rsc_raw.valid()) {
                 return {};
             }

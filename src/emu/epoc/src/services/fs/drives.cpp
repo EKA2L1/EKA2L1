@@ -47,7 +47,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *f = reinterpret_cast<file*>(node->vfs_node.get());
 
         drive_number drv = static_cast<drive_number>(std::towlower(f->file_name()[0]) - 'a');
         epoc::fs::drive_info info;

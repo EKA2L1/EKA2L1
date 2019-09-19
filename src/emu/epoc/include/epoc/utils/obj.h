@@ -37,7 +37,7 @@ namespace eka2l1::epoc {
         object_container *owner;
 
         ref_count_object()
-            : owner(nullptr), count(1) {
+            : owner(nullptr), count(0) {
         }
 
         virtual void ref();

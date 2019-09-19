@@ -432,7 +432,7 @@ namespace eka2l1 {
             return false;
         }
 
-        eka2l1::ro_file_stream rom_fstream(f);
+        eka2l1::ro_file_stream rom_fstream(f.get());
         std::optional<loader::rom> romf_res = loader::load_rom(reinterpret_cast<common::ro_stream*>(
             &rom_fstream));
 

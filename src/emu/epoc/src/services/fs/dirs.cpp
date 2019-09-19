@@ -110,8 +110,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(
-            dir_node->vfs_node);
+        directory *dir = reinterpret_cast<directory*>(dir_node->vfs_node.get());
 
         epoc::fs::entry entry;
         std::optional<entry_info> info = dir->get_next_entry();
@@ -165,7 +164,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::shared_ptr<directory> dir = std::reinterpret_pointer_cast<directory>(dir_node->vfs_node);
+        directory *dir = reinterpret_cast<directory*>(dir_node->vfs_node.get());
 
         kernel::process *own_pr = ctx->msg->own_thr->owning_process();
 

@@ -48,10 +48,10 @@ namespace eka2l1 {
     class io_system;
 
     struct file;
-    using symfile = std::shared_ptr<file>;
+    using symfile = std::unique_ptr<file>;
 
     struct io_component;
-    using io_component_ptr = std::shared_ptr<io_component>;
+    using io_component_ptr = std::unique_ptr<io_component>;
 
     enum class fs_file_attrib_flag {
         exclusive = 1 << 0,
@@ -237,6 +237,6 @@ namespace eka2l1 {
     public:
         explicit fs_server(system *sys);
 
-        symfile get_file(const kernel::uid session_uid, const std::uint32_t handle);
+        file *get_file(const kernel::uid session_uid, const std::uint32_t handle);
     };
 }

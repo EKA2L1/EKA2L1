@@ -69,14 +69,14 @@ namespace eka2l1 {
         }
     }
 
-    symfile fs_server::get_file(const kernel::uid session_uid, const std::uint32_t handle) {
+    file *fs_server::get_file(const kernel::uid session_uid, const std::uint32_t handle) {
         auto ss = session<fs_server_client>(session_uid);
 
         if (!ss) {
             return nullptr;
         }
 
-        return std::reinterpret_pointer_cast<eka2l1::file>(ss->get_file_node(static_cast<int>(handle))->vfs_node);
+        return reinterpret_cast<eka2l1::file*>(ss->get_file_node(static_cast<int>(handle))->vfs_node.get());
     }
     
     void fs_server_client::file_size(service::ipc_context *ctx) {
@@ -96,10 +96,10 @@ namespace eka2l1 {
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
         if (ctx->sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
-            std::uint64_t fsize_u = std::reinterpret_pointer_cast<file>(node->vfs_node)->size();
+            std::uint64_t fsize_u = reinterpret_cast<file*>(node->vfs_node.get())->size();
             ctx->write_arg_pkg<uint64_t>(0, fsize_u);
         } else {
-            std::uint32_t fsize_u = static_cast<std::uint32_t>(std::reinterpret_pointer_cast<file>(node->vfs_node)->size());
+            std::uint32_t fsize_u = static_cast<std::uint32_t>(reinterpret_cast<file*>(node->vfs_node.get())->size());
             ctx->write_arg_pkg<uint32_t>(0, fsize_u);
         }
 
@@ -128,7 +128,7 @@ namespace eka2l1 {
         }
 
         int size = *ctx->get_arg<int>(0);
-        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *f = reinterpret_cast<file*>(node->vfs_node.get());
         std::size_t fsize = f->size();
 
         if (size == fsize) {
@@ -174,7 +174,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *f = reinterpret_cast<file*>(node->vfs_node.get());
 
         ctx->write_arg(0, eka2l1::filename(f->file_name(), true));
         ctx->set_request_status(KErrNone);
@@ -195,7 +195,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *f = reinterpret_cast<file*>(node->vfs_node.get());
 
         ctx->write_arg(0, f->file_name());
         ctx->set_request_status(KErrNone);
@@ -216,7 +216,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
 
         std::optional<int> seek_mode = ctx->get_arg<int>(1);
         std::optional<int> seek_off = ctx->get_arg<int>(0);
@@ -273,7 +273,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
 
         if (!vfs_file->flush()) {
             ctx->set_request_status(KErrGeneral);
@@ -298,7 +298,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
         auto new_path = ctx->get_arg<std::u16string>(0);
 
         if (!new_path) {
@@ -320,10 +320,10 @@ namespace eka2l1 {
 
         vfs_file->close();
 
-        vfs_file = ctx->sys->get_io_system()->open_file(new_path_abs, last_mode);
-        vfs_file->seek(last_pos, file_seek_mode::beg);
+        symfile new_vfs_file = ctx->sys->get_io_system()->open_file(new_path_abs, last_mode);
+        new_vfs_file->seek(last_pos, file_seek_mode::beg);
 
-        node->vfs_node = std::move(vfs_file);
+        node->vfs_node = std::move(new_vfs_file);
 
         ctx->set_request_status(KErrNone);
     }
@@ -350,7 +350,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
 
         if (!(node->open_mode & WRITE_MODE)) {
             ctx->set_request_status(KErrAccessDenied);
@@ -396,7 +396,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
 
         if (!(node->open_mode & READ_MODE)) {
             ctx->set_request_status(KErrAccessDenied);
@@ -451,7 +451,11 @@ namespace eka2l1 {
             return;
         }
 
-        symfile vfs_file = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
+
+        // TODO: Let RAII do the work
+        // Vtable so buggy
+        vfs_file->close();
 
         // Delete temporary file
         if (node->temporary) {

@@ -38,7 +38,7 @@
 
 namespace eka2l1 {
     struct file;
-    using symfile = std::shared_ptr<file>;
+    using symfile = std::unique_ptr<file>;
 
     namespace epoc {    
         // Before and in build 94, the multiple memory model still make it possible to directly return pointer, since
@@ -172,7 +172,7 @@ namespace eka2l1 {
         void get_clean_bitmap(service::ipc_context *ctx);
         void rasterize_glyph(service::ipc_context *ctx);
         
-        void load_bitmap_impl(service::ipc_context *ctx, symfile source);
+        void load_bitmap_impl(service::ipc_context *ctx, file *source);
         
         void fetch(service::ipc_context *ctx) override;
 
