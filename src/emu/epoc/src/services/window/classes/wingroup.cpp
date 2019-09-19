@@ -54,7 +54,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("Request group {} to disable keyboard focus", common::ucs2_to_utf8(name));
         }
 
-        scr->update_focus(nullptr);
+        scr->update_focus(&client->get_ws(), nullptr);
         context.set_request_status(KErrNone);
     }
     

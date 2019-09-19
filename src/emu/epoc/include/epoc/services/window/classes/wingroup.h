@@ -37,8 +37,16 @@ namespace eka2l1::epoc {
             return flags & focus_receiveable;
         }
 
+        void set_receive_focus(const bool val) {
+            flags &= ~focus_receiveable;
+
+            if (val)
+                flags |= focus_receiveable;
+        }
+
         window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent)
-            : window(client, scr, parent, window_kind::group) {
+            : window(client, scr, parent, window_kind::group)
+            , flags(0) {
         }
 
         // ===================== COMMAND OPCODES =======================

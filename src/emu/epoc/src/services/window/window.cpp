@@ -239,8 +239,8 @@ namespace eka2l1::epoc {
         window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group);
 
         if (header->focus) {
-            reinterpret_cast<epoc::window_group*>(group.get())->flags |= window_group::focus_receiveable;
-            device_ptr->scr->update_focus(nullptr);
+            reinterpret_cast<epoc::window_group*>(group.get())->set_receive_focus(true);
+            device_ptr->scr->update_focus(&get_ws(), nullptr);
         }
 
         std::uint32_t id = add_object(group);
@@ -671,7 +671,8 @@ namespace eka2l1 {
         : service::server(sys, "!Windowserver", true, true)
         , bmp_cache(sys->get_kernel_system())
         , anim_sched(sys->get_timing_system(), 1) 
-        , screens(nullptr) {
+        , screens(nullptr)
+        , focus_screen_(nullptr) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
@@ -721,7 +722,7 @@ namespace eka2l1 {
     }
 
     void window_server::handle_inputs_from_driver(std::uint64_t userdata, int cycles_late) {
-        if (!focus_) {
+        if (!focus_screen_ || !focus_screen_->focus) {
             sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
             return;
         }
@@ -753,13 +754,13 @@ namespace eka2l1 {
             }
 
             // Report to the focused window first
-            guest_event.handle = focus_->owner_handle;    // TODO: this should work
-            extra_key_evt.handle = focus_->owner_handle;    // TODO: this should work
-            focus_->queue_event(guest_event);
+            guest_event.handle = get_focus()->owner_handle;    // TODO: this should work
+            extra_key_evt.handle = get_focus()->owner_handle;    // TODO: this should work
+            get_focus()->queue_event(guest_event);
     
             // Send a key event also
             if (guest_event.type == epoc::event_code::key_down) {
-                focus_->queue_event(extra_key_evt);
+                get_focus()->queue_event(extra_key_evt);
             }
 
             // Now we find all request from other windows and start doing horrible stuffs with it
@@ -770,7 +771,7 @@ namespace eka2l1 {
                 epoc::ws::uid top_id;
 
                 for (auto ite = rqueue.end(); ite != rqueue.begin(); ite--) {
-                    if (ite->user->id == focus_->id) {
+                    if (ite->user->id == get_focus()->id) {
                         break;
                     }
 
@@ -817,6 +818,9 @@ namespace eka2l1 {
             crr->next = new epoc::screen(1, get_screen_config(1));
             crr = crr->next;
         }
+
+        // Set default focus screen to be the first
+        focus_screen_ = screens;
     }
 
     epoc::screen *window_server::get_screen(const int number) {
@@ -878,8 +882,8 @@ namespace eka2l1 {
 
     epoc::config::screen *window_server::get_current_focus_screen_config() {
         int num = 0;
-        if (focus_) {
-            return &focus_->scr->scr_config;
+        if (focus_screen_) {
+            return &focus_screen_->scr_config;
         }
 
         if (!loaded) {
