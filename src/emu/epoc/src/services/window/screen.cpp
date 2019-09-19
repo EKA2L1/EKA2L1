@@ -109,8 +109,7 @@ namespace eka2l1::epoc {
         driver->submit_command_list(*cmd_list);
     }
 
-    epoc::window_group *screen::update_focus(epoc::window_group *closing_group) {
-        // Iterate through root's childs.
+    static epoc::window_group *find_group_to_focus(epoc::window *root) {
         epoc::window_group *next_to_focus = reinterpret_cast<epoc::window_group*>(root->child);
 
         while (next_to_focus != nullptr) {
@@ -121,18 +120,57 @@ namespace eka2l1::epoc {
             next_to_focus = reinterpret_cast<epoc::window_group*>(next_to_focus->sibling);
         }
 
-        if (next_to_focus != focus) {
-            if (focus && focus != closing_group) {
-                focus->lost_focus();
+        return next_to_focus;
+    }
+
+    epoc::window_group *screen::update_focus(window_server *serv, epoc::window_group *closing_group) {
+        epoc::window_group *old_focus = focus;
+
+        // Iterate through root's childs.
+        focus = find_group_to_focus(root.get());
+        const bool is_me_currently_focus = (serv->get_current_focus_screen() == this);
+
+        epoc::window_group *alternative_focus = nullptr;
+        screen *new_focus_screen = nullptr;
+
+        if (is_me_currently_focus && !focus) {
+            // Don't give up hope! There must be one group to be focused, and it may be present
+            // in other screen.
+            // iterate through all screen
+            new_focus_screen = serv->get_screens();
+
+            while (new_focus_screen != nullptr) {
+                if (new_focus_screen != this) {
+                    // Try finding out a new group
+                    alternative_focus = find_group_to_focus(new_focus_screen->root.get());
+                }
+
+                if (alternative_focus) {
+                    break;
+                }
+
+                new_focus_screen = new_focus_screen->next;
             }
 
-            if (next_to_focus) {
-                next_to_focus->gain_focus();
-                focus = std::move(next_to_focus);
+            if (!alternative_focus) {
+                new_focus_screen = nullptr;
             }
         }
 
-        return next_to_focus;
+        if (old_focus != focus || new_focus_screen) {
+            if (old_focus && old_focus != closing_group && is_me_currently_focus) {
+                focus->lost_focus();
+            }
+
+            if (new_focus_screen) {
+                serv->set_focus_screen(new_focus_screen);
+                alternative_focus->gain_focus();
+            } else if (focus && is_me_currently_focus) {
+                focus->gain_focus();
+            }
+        }
+
+        return (new_focus_screen ? alternative_focus : focus);
     }
 
     void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {

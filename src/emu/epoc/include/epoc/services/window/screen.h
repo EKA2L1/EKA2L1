@@ -26,6 +26,10 @@
 
 #include <memory>
 
+namespace eka2l1 {
+    class window_server;
+}
+
 namespace eka2l1::drivers {
     class graphics_driver;
     class graphics_command_list_builder;
@@ -111,6 +115,6 @@ namespace eka2l1::epoc {
         /**
          * \brief Update the window group focus.
          */
-        epoc::window_group *update_focus(epoc::window_group *closing_group);
+        epoc::window_group *update_focus(window_server *serv, epoc::window_group *closing_group);
     };
 }

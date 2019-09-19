@@ -268,7 +268,7 @@ namespace eka2l1 {
 
         std::unordered_map<epoc::ws::uid, key_capture_request_queue> key_capture_requests;
 
-        epoc::window_group *focus_ { nullptr };
+        epoc::screen *focus_screen_ { nullptr };
         epoc::pointer_cursor_mode cursor_mode_;
         
         epoc::bitmap_cache bmp_cache;
@@ -308,12 +308,24 @@ namespace eka2l1 {
         }
 
         epoc::window_group *&get_focus() {
-            return focus_;
+            return focus_screen_->focus;
         }
 
         epoc::config::screen &get_screen_config(const int num) {
             assert(num < screen_configs.size());
             return screen_configs[num];
+        }
+
+        epoc::screen *get_screens() {
+            return screens;
+        }
+
+        epoc::screen *get_current_focus_screen() {
+            return focus_screen_;
+        }
+
+        void set_focus_screen(epoc::screen *scr) {
+            focus_screen_ = scr;
         }
 
         epoc::screen *get_screen(const int number);
