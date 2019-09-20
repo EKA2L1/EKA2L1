@@ -195,6 +195,10 @@ namespace eka2l1::epoc {
         case EWsGcOpDeactivate: {
             context_attach_link.deque();
 
+            // Might have to flush sooner, since this window can be used with another
+            // TODO pent0: This may gone insane
+            flush_queue_to_driver();
+
             attached_window = nullptr;
             ctx.set_request_status(KErrNone);
 
