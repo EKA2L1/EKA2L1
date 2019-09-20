@@ -57,6 +57,15 @@ namespace eka2l1::epoc {
         scr->update_focus(&client->get_ws(), nullptr);
         context.set_request_status(KErrNone);
     }
+
+    window_group::window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent)
+        : window(client, scr, parent, window_kind::group)
+        , flags(0) {
+        // Create window group as child
+        top = std::make_unique<window_top_user>(client, scr, this);
+        child = top.get();
+    }
+
     
     void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
         // Warn myself in the future!

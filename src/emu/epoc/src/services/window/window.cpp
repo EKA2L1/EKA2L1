@@ -263,8 +263,9 @@ namespace eka2l1::epoc {
             return;
         }
 
+        // We have to be child's parent child, which is top user.
         window_client_obj_ptr win = std::make_unique<epoc::window_user>(this, parent->scr,
-            parent, header->win_type, header->dmode);
+            parent->child, header->win_type, header->dmode);
 
         ctx.set_request_status(add_object(win));
     }

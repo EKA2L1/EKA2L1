@@ -24,8 +24,11 @@
 #include <epoc/services/window/classes/winbase.h>
 
 namespace eka2l1::epoc {
+    struct window_top_user;
+
     struct window_group : public epoc::window {
         std::u16string name;
+        std::unique_ptr<window_top_user> top;
 
         enum {
             focus_receiveable = 0x1000
@@ -44,10 +47,7 @@ namespace eka2l1::epoc {
                 flags |= focus_receiveable;
         }
 
-        window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent)
-            : window(client, scr, parent, window_kind::group)
-            , flags(0) {
-        }
+        window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent);
 
         // ===================== COMMAND OPCODES =======================
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);

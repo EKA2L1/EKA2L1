@@ -130,7 +130,7 @@ namespace eka2l1::epoc {
         }
 
         int shift = 0;
-        int parent_pri = redraw_priority(&shift);
+        int parent_pri = reinterpret_cast<window_user_base*>(parent)->redraw_priority(&shift);
 
         if (shift > 0) {
             shift--;
