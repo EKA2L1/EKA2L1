@@ -96,5 +96,7 @@ namespace eka2l1::drivers {
             const int descriptor_count) override;
 
         virtual void dispatch(command *cmd);
+
+        virtual void bind_swapchain_framebuf() = 0;
     };
 }

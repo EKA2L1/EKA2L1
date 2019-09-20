@@ -65,6 +65,10 @@ namespace eka2l1::drivers {
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
     }
 
+    void ogl_graphics_driver::bind_swapchain_framebuf() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
     void ogl_graphics_driver::draw_bitmap(command_helper &helper) {
         if (!sprite_program) {
             do_init();

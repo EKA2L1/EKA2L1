@@ -93,5 +93,6 @@ namespace eka2l1::drivers {
         void run() override;
         void abort() override;
         void dispatch(command *cmd) override;
+        void bind_swapchain_framebuf() override;
     };
 }

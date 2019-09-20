@@ -181,6 +181,9 @@ namespace eka2l1::drivers {
             current_fb_height = swapchain_size.y;
             binding = nullptr;
 
+            // bind back to what we used to
+            bind_swapchain_framebuf();
+
             return;
         }
 
@@ -529,6 +532,11 @@ namespace eka2l1::drivers {
 
         case graphics_driver_update_bitmap: {
             update_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_resize_bitmap: {
+            resize_bitmap(helper);
             break;
         }
 
