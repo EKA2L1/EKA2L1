@@ -175,6 +175,13 @@ namespace eka2l1::epoc {
         } while (ite != end);
 
         LOG_DEBUG("End redraw to window 0x{:X}!", id);
+
+        // Want to trigger a screen redraw
+        if (is_visible()) {
+            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
+                scr, client->get_ws().get_timing_system()->get_global_time_us());
+        }
+
         ctx.set_request_status(KErrNone);
     }
 
