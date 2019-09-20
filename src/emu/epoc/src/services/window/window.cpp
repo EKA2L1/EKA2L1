@@ -945,12 +945,19 @@ namespace eka2l1 {
             return false;
         }
 
+        bool hit_priority = false;
+
         // Tchhh... Im referencing a game...
         epoc::window_group *the_first_of_us = reinterpret_cast<epoc::window_group*>(scr->root->child);
         while (the_first_of_us) {
             if ((pri == -1) || (the_first_of_us->priority == pri)) {
                 total++;
+                hit_priority = true;
+            } else if (hit_priority) {
+                break;
             }
+
+            the_first_of_us = reinterpret_cast<epoc::window_group*>(the_first_of_us->sibling);
         }
 
         return total;
