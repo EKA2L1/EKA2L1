@@ -36,7 +36,7 @@ static bool read_resource_from_file(const char *name, const int id, std::vector<
         return false;
     }
 
-    eka2l1::ro_file_stream std_rsc_raw(f);
+    eka2l1::ro_file_stream std_rsc_raw(f.get());
     if (!std_rsc_raw.valid()) {
         return false;
     }
