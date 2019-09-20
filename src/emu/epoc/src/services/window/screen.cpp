@@ -28,14 +28,24 @@
 namespace eka2l1::epoc {
     struct window_drawer_walker: public window_tree_walker {
         drivers::graphics_command_list_builder *builder_;
+        std::uint32_t total_redrawed_;
 
         explicit window_drawer_walker(drivers::graphics_command_list_builder *builder)
-            : builder_(builder) {
+            : builder_(builder)
+            , total_redrawed_(0) {
         }
 
         bool do_it(window *win) {
-            assert(win->type == window_kind::client && "Window to draw must have kind of user");
+            if (win->type != window_kind::client) {
+                return true;
+            }
+
             window_user *winuser = reinterpret_cast<window_user*>(win);
+
+            if (!winuser && !winuser->driver_win_id) {
+                // No need to redraw this window yet. It doesn't even have any content ready.
+                return true;
+            }
 
             if (!winuser->irect.empty()) {
                 // Wakeup windows, we have a region to invalidate
@@ -46,6 +56,8 @@ namespace eka2l1::epoc {
 
             // Draw it onto current binding buffer
             builder_->draw_bitmap(winuser->driver_win_id, winuser->pos, eka2l1::rect({0, 0}, { 0, 0 }), false);
+            total_redrawed_++;
+
             return false;
         }
     };
