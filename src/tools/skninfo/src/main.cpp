@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     }
 
     eka2l1::symfile f = eka2l1::physical_file_proxy(argv[1], READ_MODE | BIN_MODE);
-    eka2l1::ro_file_stream f_stream(f);
+    eka2l1::ro_file_stream f_stream(f.get());
 
     eka2l1::epoc::skn_file sknf(reinterpret_cast<eka2l1::common::ro_stream*>(&f_stream));
 
