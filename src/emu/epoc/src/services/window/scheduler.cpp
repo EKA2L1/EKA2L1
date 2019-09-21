@@ -105,8 +105,8 @@ namespace eka2l1::epoc {
             return 0;
         }
 
-        // TODO: Clamp to it's not too large
-        return due - timing_->get_global_time_us();
+        // TODO: Clamp to not bigger than 30 mins maybe?
+        return std::max<std::int64_t>(due - timing_->get_global_time_us(), 0);
     }
 
     void animation_scheduler::scan_for_redraw(drivers::graphics_driver *driver, const int screen_number, const bool force_redraw) {
@@ -147,6 +147,7 @@ namespace eka2l1::epoc {
                     if (until_due == 0) {
                         // Invoke the due right away.
                         scr_state.time_expected_redraw = now;
+                        invoke_due_animation(driver, screen_number);
                     } else {
                         scr_state.time_expected_redraw = now + until_due;
                         scr_state.flags = screen_state::scheduled;
