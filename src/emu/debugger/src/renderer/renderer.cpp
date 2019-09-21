@@ -91,7 +91,7 @@ namespace eka2l1 {
 
         prev_time = now;
 
-        error_sheet.play(elapsed);
+        error_sheet.play(static_cast<const float>(elapsed));
         ImVec2 uv_min, uv_max;
 
         error_sheet.get_current_frame_uv_coords(uv_min.x, uv_max.x, uv_min.y, uv_max.y);

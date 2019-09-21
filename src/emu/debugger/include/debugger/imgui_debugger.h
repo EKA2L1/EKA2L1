@@ -34,6 +34,7 @@ namespace eka2l1 {
     class system;
     struct imgui_logger;
     class applist_server;
+    class window_server;
 
     using app_launch_function = std::function<void(const std::u16string &path)>;
 
@@ -76,6 +77,7 @@ namespace eka2l1 {
         bool should_show_app_launch;
 
         applist_server *alserv;
+        window_server  *winserv;
         app_launch_function app_launch;
 
         std::mutex errors_mut;
@@ -101,6 +103,7 @@ namespace eka2l1 {
         void show_installer_text_popup();
         void show_installer_choose_lang_popup();
         void show_errors();
+        void show_screens();
 
         std::unique_ptr<std::thread> install_thread;
         threadsafe_cn_queue<std::string> install_list;

@@ -32,6 +32,7 @@
 #include <epoc/kernel/thread.h>
 
 #include <epoc/services/applist/applist.h>
+#include <epoc/services/window/window.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
@@ -122,11 +123,14 @@ namespace eka2l1 {
             }
         });
         
-        std::shared_ptr<eka2l1::applist_server> svr = 
-            std::reinterpret_pointer_cast<eka2l1::applist_server>(sys->get_kernel_system()
+        auto applist_svr_ptr = std::reinterpret_pointer_cast<eka2l1::applist_server>(sys->get_kernel_system()
             ->get_by_name<service::server>("!AppListServer"));
 
-        alserv = svr.get();
+        auto winserv_ptr = std::reinterpret_pointer_cast<eka2l1::window_server>(sys->get_kernel_system()
+            ->get_by_name<service::server>("!Windowserver"));
+
+        alserv = applist_svr_ptr.get();
+        winserv = winserv_ptr.get();
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -1011,10 +1015,29 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::show_screens() {
+        // Iterate through all screen from window server
+        if (!winserv) {
+            return;
+        }
+
+        epoc::screen *scr = winserv->get_screens();
+
+        for (int i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
+            const std::string name = fmt::format("Screen {}", i);
+            const eka2l1::vec2 size = scr->size();
+
+            ImGui::SetNextWindowSize(ImVec2(size.x + 30.0f, size.y + 30.0f));
+            ImGui::Begin(name.c_str());
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y));
+            ImGui::End();
+        }
+    }
+
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
         handle_shortcuts();
-
+        show_screens();
         show_errors();
 
         if (should_package_manager) {
