@@ -185,7 +185,7 @@ namespace eka2l1::drivers {
             = 0;
 
         /**
-         * \brief Bind a texture to a binding slot.
+         * \brief Bind a texture or bitmap (as texture) to a binding slot.
          *
          * \param h       Handle to the texture.
          * \param binding Number of slot to bind.

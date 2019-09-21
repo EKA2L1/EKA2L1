@@ -147,13 +147,31 @@ namespace eka2l1::drivers {
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), nullptr, GL_STATIC_DRAW);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), vert_pointer, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(bmp->tex->texture_handle()));
 
+        // For unknown reason my intel driver go out for an all out attack and garbage the filter...
+        // so i have to set it here...
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);    
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
         // Build model matrix
         glm::mat4 model_matrix = glm::identity<glm::mat4>();
         model_matrix = glm::translate(model_matrix, { position.x, position.y, 0.0f });
+
+        if (source_rect.size.x == 0) {
+            source_rect.size.x = bmp->tex->get_size().x;
+        }
+
+        if (source_rect.size.y == 0) {
+            source_rect.size.y = bmp->tex->get_size().y;
+        }
+
         model_matrix = glm::scale(model_matrix, glm::vec3(source_rect.size.x, source_rect.size.y, 0.0f));
 
         glUniformMatrix4fv(model_loc, 1, false, glm::value_ptr(model_matrix));

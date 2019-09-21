@@ -39,11 +39,11 @@ namespace eka2l1::drivers {
             break;
 
         case 24:
-            format = texture_format::rgb;
+            format = texture_format::bgr;
             break;
 
         case 32:
-            format = texture_format::rgba;
+            format = texture_format::bgra;
             break;
 
         default:
@@ -62,8 +62,6 @@ namespace eka2l1::drivers {
         translate_bpp_to_format(bpp, internal_format, data_format);
 
         tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, texture_data_type::ubyte, nullptr);
-        tex->set_filter_minmag(false, drivers::filter_option::linear);
-        tex->set_filter_minmag(true, drivers::filter_option::linear);
     }
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
@@ -76,12 +74,18 @@ namespace eka2l1::drivers {
     shared_graphics_driver::~shared_graphics_driver() {
     }
 
+    #define HANDLE_BITMAP (1ULL << 32)
+
     bitmap *shared_graphics_driver::get_bitmap(const drivers::handle h) {
-        if (h > bmp_textures.size()) {
+        if ((h & HANDLE_BITMAP) == 0) {
             return nullptr;
         }
 
-        return bmp_textures[h - 1].get();
+        if ((h & ~HANDLE_BITMAP) > bmp_textures.size()) {
+            return nullptr;
+        }
+
+        return bmp_textures[(h & ~HANDLE_BITMAP) - 1].get();
     }
 
     drivers::handle shared_graphics_driver::append_graphics_object(graphics_object_instance &instance) {
@@ -129,6 +133,7 @@ namespace eka2l1::drivers {
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), data_format,
             texture_data_type::ubyte, data);
+        
     }
 
     void shared_graphics_driver::update_bitmap(command_helper &helper) {
@@ -168,6 +173,8 @@ namespace eka2l1::drivers {
             bmp_textures.push_back(std::make_unique<bitmap>(this, size, 32));
             *result = bmp_textures.size();
         }
+
+        *result |= HANDLE_BITMAP;
 
         // Notify
         helper.finish(this, 0);
@@ -240,7 +247,10 @@ namespace eka2l1::drivers {
 
         // Change texture size
         bmp->tex->change_size({ new_size.x, new_size.y, 0 });
+
+        bmp->tex->bind(this, 0);
         bmp->tex->tex(this, false);
+        bmp->tex->unbind(this);
     }
 
     void shared_graphics_driver::set_brush_color(command_helper &helper) {
@@ -402,6 +412,18 @@ namespace eka2l1::drivers {
 
         helper.pop(num);
         helper.pop(binding);
+
+        if (num & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(num);
+
+            if (!b) {
+                return;
+            }
+
+            b->tex->bind(this, binding);
+            return;
+        }
 
         texture *texobj = reinterpret_cast<texture *>(get_graphics_object(num));
 

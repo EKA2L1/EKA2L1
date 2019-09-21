@@ -20,6 +20,7 @@ target_link_libraries(debugger PRIVATE
     disasm
     drivers
     epoc
+    epocapi
     epockern
     epocloader
     manager
