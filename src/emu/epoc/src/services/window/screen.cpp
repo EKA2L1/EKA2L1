@@ -37,14 +37,14 @@ namespace eka2l1::epoc {
 
         bool do_it(window *win) {
             if (win->type != window_kind::client) {
-                return true;
+                return false;
             }
 
             window_user *winuser = reinterpret_cast<window_user*>(win);
 
             if (!winuser && !winuser->driver_win_id) {
                 // No need to redraw this window yet. It doesn't even have any content ready.
-                return true;
+                return false;
             }
 
             if (!winuser->irect.empty()) {
@@ -86,6 +86,10 @@ namespace eka2l1::epoc {
     }
     
     void screen::redraw(drivers::graphics_driver *driver) {
+        if (!screen_texture) {
+            set_screen_mode(driver, crr_mode);
+        }
+    
         // Make command list first, and bind our screen bitmap
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
