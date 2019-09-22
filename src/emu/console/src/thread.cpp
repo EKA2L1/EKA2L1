@@ -176,7 +176,7 @@ namespace eka2l1::desktop {
         }
 
         // Signal that the initialization is done
-        state.graphics_sema.notify();
+        state.graphics_sema.notify(-1);
         return 0;
     }
 
@@ -355,6 +355,9 @@ namespace eka2l1::desktop {
             if (state.first_time) {
                 state.first_time = false;
                 
+                // Try to wait for graphics to correctly initialize
+                state.graphics_sema.wait();
+                
                 // Launch the OS thread now
                 os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
                 
@@ -368,7 +371,7 @@ namespace eka2l1::desktop {
             os_thread_obj->join();
         }
 
-        state.graphics_sema.notify();
+        state.graphics_sema.notify(-1);
     }
 
     void os_thread(emulator &state) {
