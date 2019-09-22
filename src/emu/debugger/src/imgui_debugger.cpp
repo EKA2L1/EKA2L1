@@ -1027,7 +1027,7 @@ namespace eka2l1 {
             const std::string name = fmt::format("Screen {}", i);
             const eka2l1::vec2 size = scr->size();
 
-            ImGui::SetNextWindowSize(ImVec2(size.x + 30.0f, size.y + 30.0f));
+            ImGui::SetNextWindowSize(ImVec2(size.x + 15.0f, size.y + 35.0f));
             ImGui::Begin(name.c_str());
             ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y));
             ImGui::End();
