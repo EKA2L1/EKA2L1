@@ -26,9 +26,9 @@
 namespace eka2l1::drivers {
     static const char *gl_vertex_shader_renderer = "#version 330\n"
                                                    "uniform mat4 ProjMtx;\n"
-                                                   "in vec2 Position;\n"
                                                    "in vec2 UV;\n"
                                                    "in vec4 Color;\n"
+                                                   "in vec2 Position;\n"
                                                    "out vec2 Frag_UV;\n"
                                                    "out vec4 Frag_Color;\n"
                                                    "void main()\n"
@@ -137,11 +137,16 @@ namespace eka2l1::drivers {
         // Setup viewport, orthographic projection matrix
         cmd_builder->set_viewport(eka2l1::rect{ eka2l1::vec2{ 0, 0 }, eka2l1::vec2{ fb_width, fb_height } });
 
-        const float ortho_projection[4][4] = {
-            { 2.0f / io.DisplaySize.x, 0.0f, 0.0f, 0.0f },
-            { 0.0f, 2.0f / -io.DisplaySize.y, 0.0f, 0.0f },
-            { 0.0f, 0.0f, -1.0f, 0.0f },
-            { -1.0f, 1.0f, 0.0f, 1.0f },
+        float L = draw_data->DisplayPos.x;
+        float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
+        float T = draw_data->DisplayPos.y;
+        float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
+        const float ortho_projection[4][4] =
+        {
+            { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
+            { 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
+            { 0.0f,         0.0f,        -1.0f,   0.0f },
+            { (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
         };
 
         cmd_builder->use_program(shader);
