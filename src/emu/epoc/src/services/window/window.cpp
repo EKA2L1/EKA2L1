@@ -150,15 +150,11 @@ namespace eka2l1::epoc {
 
         if (free_slot != objects.end()) {
             *free_slot = std::move(obj);
-            (*free_slot)->id = ++uid_counter;
-
-            return ((std::distance(objects.begin(), free_slot) + 1) & 0xFFFF) | ((uid_counter.load()) << 16);
+            return ((std::distance(objects.begin(), free_slot) + 1) & 0xFFFF) | (++uid_counter << 16);
         }
 
         objects.push_back(std::move(obj));
-        objects.back()->id = ++uid_counter;
-
-        return (objects.size() & 0xFFFF) | ((uid_counter.load()) << 16);
+        return (objects.size() & 0xFFFF) | (++uid_counter << 16);
     }
 
     epoc::window_client_obj *window_server_client::get_object(const std::uint32_t handle) {

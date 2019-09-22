@@ -150,5 +150,7 @@ namespace eka2l1::epoc {
             , child(nullptr) {
             set_parent(parent);
         }
+
+        ~window() override;
     };
 }

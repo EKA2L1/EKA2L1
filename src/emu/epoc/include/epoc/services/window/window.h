@@ -262,6 +262,7 @@ namespace eka2l1 {
         bool loaded{ false };
 
         std::atomic<epoc::ws::uid> key_capture_uid_counter {0};
+        std::atomic<epoc::ws::uid> obj_uid {0};
 
         std::vector<epoc::config::screen> screen_configs;
         epoc::screen *screens;          ///< Linked list of all screens.
@@ -294,6 +295,10 @@ namespace eka2l1 {
     public:
         explicit window_server(system *sys);
         ~window_server();
+
+        epoc::ws::uid next_uid() {
+            return ++obj_uid;
+        }
 
         epoc::bitmap_cache *get_bitmap_cache() {
             return &bmp_cache;

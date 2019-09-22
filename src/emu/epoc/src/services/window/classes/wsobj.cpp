@@ -28,7 +28,7 @@ namespace eka2l1::epoc {
         : client(client)
         , scr(scr) {
         if (client) {
-            id = static_cast<std::uint32_t>(client->objects.size()) + base_handle + 1;
+            id = client->get_ws().next_uid();
         } else {
             // Most likely root
             id = 123456789;

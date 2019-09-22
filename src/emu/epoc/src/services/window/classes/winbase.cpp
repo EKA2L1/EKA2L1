@@ -91,6 +91,10 @@ namespace eka2l1::epoc {
         } while (cur != end);
     }
     
+    window::~window() {
+        remove_from_sibling_list();
+    }
+    
     void window::set_position(const int new_pos) {
         if (check_order_change(new_pos)) {
             move_window(parent, new_pos);
