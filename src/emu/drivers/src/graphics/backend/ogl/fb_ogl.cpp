@@ -36,10 +36,12 @@ namespace eka2l1::drivers {
         if (depth_buffer) {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
                 static_cast<GLuint>(depth_buffer->texture_handle()),
-                depth_buffer->texture_handle());
+                depth_buffer->get_mip_level());
         }
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+        if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
             LOG_ERROR("Framebuffer not complete!");
         }
 
