@@ -27,7 +27,7 @@
 namespace eka2l1::drivers {
     static void translate_bpp_to_format(const int bpp, texture_format &internal_format, texture_format &format) {
         // Hope the driver likes this, it always does.
-        internal_format = texture_format::bgra;
+        internal_format = texture_format::rgba;
 
         switch (bpp) {
         case 8:
@@ -62,6 +62,8 @@ namespace eka2l1::drivers {
         translate_bpp_to_format(bpp, internal_format, data_format);
 
         tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, texture_data_type::ubyte, nullptr);
+        tex->set_filter_minmag(false, drivers::filter_option::linear);
+        tex->set_filter_minmag(true, drivers::filter_option::linear);
     }
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
