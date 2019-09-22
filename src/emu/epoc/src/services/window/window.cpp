@@ -307,11 +307,25 @@ namespace eka2l1::epoc {
     void window_server_client::get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_group_list *list_req = reinterpret_cast<decltype(list_req)>(cmd.data_ptr);
 
-        std::vector<std::uint32_t> ids;
-        get_ws().get_window_group_list(ids, list_req->count, cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities ? -1 : list_req->priority, (cmd.header.cmd_len == 8) ? 0 : list_req->screen_num);
+        std::vector<std::uint8_t> ids;
+        std::uint32_t total = 0;
 
-        ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]), static_cast<std::uint32_t>(ids.size() * sizeof(std::uint32_t)));
-        ctx.set_request_status(static_cast<int>(ids.size()));
+        const int screen = (cmd.header.cmd_len == 8) ? 0 : list_req->screen_num;
+        const int accept_priority = ((cmd.header.op == EWsClOpWindowGroupListAllPriorities) || 
+            (cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities)) ? -1 : list_req->priority;
+
+        if (cmd.header.op == EWsClOpWindowGroupList || cmd.header.op == EWsClOpWindowGroupListAllPriorities) {
+            ids.resize(list_req->count * sizeof(std::uint32_t));
+            total = get_ws().get_window_group_list(reinterpret_cast<std::uint32_t*>(&ids[0]), list_req->count,
+                accept_priority, screen);
+        } else {
+            ids.resize(list_req->count * sizeof(epoc::window_group_chain_info));
+            total = get_ws().get_window_group_list_and_chain(reinterpret_cast<epoc::window_group_chain_info*>(&ids[0]),
+                list_req->count, accept_priority, screen);
+        }
+
+        ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]), static_cast<std::uint32_t>(ids.size()));
+        ctx.set_request_status(static_cast<int>(total));
     }
 
     void window_server_client::get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -450,6 +464,8 @@ namespace eka2l1::epoc {
 
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+        //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
+
         switch (cmd.header.op) {
         // Gets the total number of window groups with specified priority currently running
         // in the window server.
@@ -541,6 +557,8 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsClOpWindowGroupList:
+        case EWsClOpWindowGroupListAllPriorities:
         case EWsClOpWindowGroupListAndChain:
         case EWsClOpWindowGroupListAndChainAllPriorities: {
             get_window_group_list(ctx, cmd);
@@ -932,8 +950,69 @@ namespace eka2l1 {
         }
     }
 
+    struct window_group_tree_moonwalker: public epoc::window_tree_walker {
+        epoc::screen *scr;
+        std::uint32_t total;
+        std::uint32_t max;
+        std::uint8_t flags;
+        std::int32_t accept_pri;
+        void *buffer_vector;
+
+        enum {
+            FLAGS_GET_CHAIN = 1 << 0
+        };
+
+        // Unlike on Symbian, I just try to make window group recursive... Hopefully the stack opens their heart..
+        explicit window_group_tree_moonwalker(epoc::screen *scr, void *buffer_vector, const std::uint8_t flags,
+            const std::int32_t accept_pri, const std::uint32_t max)
+            : scr(scr)
+            , total(0)
+            , max(max)
+            , flags(flags)
+            , accept_pri(accept_pri)
+            , buffer_vector(buffer_vector) {
+        }
+
+        bool do_it(epoc::window *win) {
+            if (win && win->type != epoc::window_kind::group && ((accept_pri == -1) || (win->priority == accept_pri))) {
+                return false;
+            }
+
+            total++;
+
+            if (buffer_vector) {
+                if (flags & FLAGS_GET_CHAIN) {
+                    epoc::window_group_chain_info *infos = reinterpret_cast<decltype(infos)>(buffer_vector);
+                    
+                    epoc::window_group_chain_info chain_info;
+                    chain_info.id = win->id;
+                    chain_info.parent_id = 0;
+
+                    if (win->parent && win->parent->type == epoc::window_kind::group) {
+                        // Chain!
+                        chain_info.parent_id = win->parent->id;
+                    }
+    
+                    infos[total - 1] = chain_info;
+
+                    if (total >= max) {
+                        return true;
+                    }
+                } else {
+                    std::uint32_t *infos = reinterpret_cast<decltype(infos)>(buffer_vector);
+                    infos[total - 1] = win->id;
+
+                    if (total >= max) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+    };
+
     std::uint32_t window_server::get_total_window_groups(const int pri, const int scr_num) {
-        std::uint32_t total = 0;
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
@@ -944,23 +1023,27 @@ namespace eka2l1 {
         bool hit_priority = false;
 
         // Tchhh... Im referencing a game...
-        epoc::window_group *the_first_of_us = reinterpret_cast<epoc::window_group*>(scr->root->child);
-        while (the_first_of_us) {
-            if ((pri == -1) || (the_first_of_us->priority == pri)) {
-                total++;
-                hit_priority = true;
-            } else if (hit_priority) {
-                break;
-            }
+        window_group_tree_moonwalker walker(scr, nullptr, 0, pri, -1);
+        scr->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
 
-            the_first_of_us = reinterpret_cast<epoc::window_group*>(the_first_of_us->sibling);
-        }
-
-        return total;
+        return walker.total;
     }
 
-    bool window_server::get_window_group_list(std::vector<std::uint32_t> &ids, const std::uint32_t max,
-        const int pri, const int scr_num) {
+    std::uint32_t window_server::get_window_group_list(std::uint32_t *ids, const std::uint32_t max, const int pri, const int scr_num) {
+        epoc::screen *scr = get_screen(scr_num);
+
+        if (!scr) {
+            LOG_TRACE("Screen number {} doesnt exist", scr_num);
+            return 0;
+        }
+
+        window_group_tree_moonwalker walker(scr, ids, 0, pri, max);
+        scr->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+
+        return walker.total;
+    }
+
+    std::uint32_t window_server::get_window_group_list_and_chain(epoc::window_group_chain_info *infos, const std::uint32_t max, const int pri, const int scr_num) {
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
@@ -968,19 +1051,10 @@ namespace eka2l1 {
             return false;
         }
 
-        // Tchhh... Im referencing a game... This time again..
-        epoc::window_group *the_first_of_us = reinterpret_cast<epoc::window_group*>(scr->root->child);
+        window_group_tree_moonwalker walker(scr, infos, window_group_tree_moonwalker::FLAGS_GET_CHAIN, pri, max);
+        scr->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
 
-        while (pri != -1 && the_first_of_us->priority > pri) {
-            the_first_of_us = reinterpret_cast<epoc::window_group*>(the_first_of_us->sibling);
-        }
-
-        while (the_first_of_us && (pri == -1 || the_first_of_us->priority == pri) && static_cast<std::uint32_t>(ids.size()) < max) {
-            ids.push_back(the_first_of_us->id);
-            the_first_of_us = reinterpret_cast<epoc::window_group*>(the_first_of_us->sibling);
-        }
-
-        return true;
+        return walker.total;
     }
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {

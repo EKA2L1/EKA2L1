@@ -244,6 +244,11 @@ namespace eka2l1::epoc {
         }
     };
 
+    struct window_group_chain_info {
+        epoc::ws::uid id;
+        epoc::ws::uid parent_id;
+    };
+
     epoc::graphics_orientation number_to_orientation(int rot);
 }
 
@@ -347,10 +352,10 @@ namespace eka2l1 {
         std::uint32_t get_total_window_groups(const int pri = -1, const int scr_num = 0);
 
         /**
-         * \brief Get all window group's ID in all sessions
+         * \brief Get all window group's ID on a screen.
          */
-        bool get_window_group_list(std::vector<std::uint32_t> &id, const std::uint32_t max = 0
-            , const int pri = -1, const int scr_num = 0);
+        std::uint32_t get_window_group_list(std::uint32_t *id, const std::uint32_t max = 0, const int pri = -1, const int scr_num = 0);
+        std::uint32_t get_window_group_list_and_chain(epoc::window_group_chain_info *infos, const std::uint32_t max = 0, const int pri = -1, const int scr_num = 0);
 
         drivers::graphics_driver *get_graphics_driver();
         timing_system *get_timing_system();
