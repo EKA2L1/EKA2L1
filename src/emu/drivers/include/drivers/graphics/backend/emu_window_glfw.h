@@ -37,6 +37,8 @@ namespace eka2l1 {
             GLFWwindow *emu_win;
             vec2 emu_screen_size;
 
+            void *userdata;
+
         public:
             bool get_mouse_button_hold(const int mouse_btt) override;
 
@@ -47,6 +49,8 @@ namespace eka2l1 {
             void done_current() override;
             void swap_buffer() override;
             void poll_events() override;
+            void set_userdata(void *userdata) override;
+            void *get_userdata() override;
 
             bool should_quit() override;
 

@@ -23,13 +23,23 @@
 #include <epoc/services/window/classes/winbase.h>
 #include <epoc/services/window/common.h>
 
+#include <common/linked.h>
+
 namespace eka2l1::epoc {
     struct graphic_context;
-
     struct window_group;
-    using window_group_ptr = std::shared_ptr<epoc::window_group>;
 
-    struct window_user : public epoc::window {
+    struct window_user_base: public epoc::window {
+        explicit window_user_base(window_server_client_ptr client, screen *scr, window *parent, const window_kind kind);
+        virtual std::uint32_t redraw_priority(int *shift = nullptr) = 0;
+    };
+
+    struct window_top_user: public window_user_base {
+        explicit window_top_user(window_server_client_ptr client, screen *scr, window *parent);
+        std::uint32_t redraw_priority(int *shift = nullptr) override;
+    };
+
+    struct window_user : public window_user_base {
         epoc::display_mode dmode;
         epoc::window_type win_type;
 
@@ -37,55 +47,60 @@ namespace eka2l1::epoc {
         eka2l1::vec2 pos{ 0, 0 };
         eka2l1::vec2 size{ 0, 0 };
 
-        std::vector<epoc::graphic_context *> contexts;
+        bool resize_needed;
 
-        std::uint32_t clear_color = 0xFFFFFFFF;
-        std::uint32_t filter = pointer_filter_type::all;
+        common::roundabout attached_contexts;
 
-        eka2l1::vec2 cursor_pos{ -1, -1 };
+        std::uint32_t clear_color;
+        std::uint32_t filter;
 
-        struct invalidate_rect {
-            vec2 in_top_left;
-            vec2 in_bottom_right;
-        } irect;
+        eka2l1::vec2 cursor_pos;
+        eka2l1::rect irect;
 
         std::uint32_t redraw_evt_id;
-        std::uint32_t driver_win_id{ 0 };
+        std::uint64_t driver_win_id;
 
-        void priority_updated() override;
-
-        window_user(window_server_client_ptr client, screen_device_ptr dvc,
-            epoc::window_type type_of_window, epoc::display_mode dmode)
-            : window(client, dvc, window_kind::client)
-            , win_type(type_of_window)
-            , dmode(dmode) {
-        }
-
-        int shadow_height{ 0 };
+        int shadow_height;
 
         enum {
-            shadow_disable = 0x1000,
-            active = 0x2000,
-            visible = 0x4000,
-            allow_pointer_grab = 0x8000
+            shadow_disable = 1 << 0,
+            active = 1 << 1,
+            visible = 1 << 2,
+            allow_pointer_grab = 1 << 3
         };
 
         std::uint32_t flags;
 
-        bool is_visible() {
+        explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
+            const epoc::window_type type_of_window, const epoc::display_mode dmode);
+
+        std::uint32_t redraw_priority(int *shift = nullptr) override;
+
+        /**
+         * \brief Set window extent in screen space.
+         * 
+         * \param top   The position of the window on the screen coords, in pixels.
+         * \param size  The size of the window, in pixel.
+         */
+        void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
+
+        bool is_visible() const {
             return flags & visible;
         }
 
-        void set_visible(bool vis) {
-            flags &= ~visible;
-
-            if (vis) {
-                flags |= visible;
-            }
-        }
+        /**
+         * \brief Set window visibility.
+         * 
+         * This will trigger a screen redraw if the visibility is changed.
+         */
+        void set_visible(const bool vis);
 
         void queue_event(const epoc::event &evt) override;
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+
+        // ===================== OPCODE IMPLEMENTATIONS ===========================
+        void begin_redraw(service::ipc_context &context, ws_cmd &cmd);
+        void end_redraw(service::ipc_context &context, ws_cmd &cmd);
+        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         epoc::window_group *get_group() {
             return reinterpret_cast<epoc::window_group*>(parent);

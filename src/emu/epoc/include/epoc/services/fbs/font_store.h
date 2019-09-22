@@ -32,6 +32,8 @@ namespace eka2l1 {
 namespace eka2l1::epoc {
     struct open_font_info {
         std::size_t idx;
+        float scale_factor_x;
+        float scale_factor_y;
 
         epoc::open_font_metrics metrics;
         epoc::adapter::font_file_adapter_base *adapter;

@@ -43,7 +43,7 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        eka2l1::ro_file_stream ref_rsc_file_stream(rsc_file);
+        eka2l1::ro_file_stream ref_rsc_file_stream(rsc_file.get());
         loader::rsc_file ref_rsc_stream(reinterpret_cast<common::ro_stream*>(&ref_rsc_file_stream));
 
         auto ref_rsc_data = ref_rsc_stream.read(1);

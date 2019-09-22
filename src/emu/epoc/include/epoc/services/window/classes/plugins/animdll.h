@@ -24,14 +24,13 @@
 #include <epoc/services/window/classes/wsobj.h>
 
 namespace eka2l1::epoc {
+    struct screen;
+
     struct anim_dll : public window_client_obj {
         // Nothing yet
-        anim_dll(window_server_client_ptr client)
-            : window_client_obj(client) {
-        }
+        explicit anim_dll(window_server_client_ptr client, screen *scr);
 
-        std::uint32_t user_count{ 0 };
-
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+        std::uint32_t user_count;
+        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
     };
 }

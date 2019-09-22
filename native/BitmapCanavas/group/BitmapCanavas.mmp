@@ -15,7 +15,13 @@ SYSTEMINCLUDE   \epoc32\include
 
 DEBUGGABLE_UDEBONLY
 
-LIBRARY euser.lib gdi.lib fbscli.lib bitgdi.lib
+LIBRARY euser.lib gdi.lib fbscli.lib bitgdi.lib efsrv.lib
 
 SOURCEPATH ..\src
 SOURCE main.cpp
+START BITMAP holder.mbm
+	TARGETPATH resource\apps
+	HEADER
+	SOURCEPATH ..\assets
+	SOURCE c24 holder.bmp
+END

@@ -46,11 +46,32 @@ namespace eka2l1 {
         return target_chunk->adjust(target);
     }
 
+    fbscli::~fbscli() {
+        // Remove notification if there is
+        if (nof_) {  
+            std::vector<fbs_dirty_notify_request> &notifies = server<fbs_server>()->dirty_nofs;
+
+            for (std::size_t i = 0; i < notifies.size(); i++) {
+                if (notifies[i].client == this) {
+                    notifies.erase(notifies.begin() + i);
+                }
+            }
+        }
+
+        // Try to remove the session cache if it exists
+        if (epoc::does_client_use_pointer_instead_of_offset(this)) {
+            // Free in the linked list
+            server<fbs_server>()->session_cache_link->remove(this);
+        } else {
+            server<fbs_server>()->session_cache_list->erase_cache(this);
+        }
+    }
+
     void fbscli::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case fbs_init: {
             connection_id_ = server<fbs_server>()->init();
-            ctx->set_request_status(client_ss_uid_);
+            ctx->set_request_status(connection_id_);
             
             break;
         }
@@ -60,9 +81,14 @@ namespace eka2l1 {
             get_nearest_font(ctx);
             break;
         }
-
+    
         case fbs_face_attrib: {
             get_face_attrib(ctx);
+            break;
+        }
+
+        case fbs_rasterize: {
+            rasterize_glyph(ctx);
             break;
         }
 
@@ -179,7 +205,8 @@ namespace eka2l1 {
 
             if (auto seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {
                 // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#
-                bmp_font_vtab = seg->lookup(nullptr, 97);
+                // Skip the filler (vtable start address) and the typeinfo
+                bmp_font_vtab = seg->lookup(nullptr, 97) + 2 * 4;
             }
 
             // Probably also indicates that font aren't loaded yet
@@ -189,6 +216,13 @@ namespace eka2l1 {
 
             // Create session cache list
             session_cache_list = allocate_general_data<epoc::open_font_session_cache_list>();
+            session_cache_link = allocate_general_data<epoc::open_font_session_cache_link>();
+            session_cache_list->init();
+
+            // Alloc 4 bytes of padding, so the offset 0 never exist. 0 is always a check if data
+            // is available.
+            large_chunk_allocator->allocate(4);
+            shared_chunk_allocator->allocate(4);
         }
 
         // Create new server client
@@ -216,6 +250,24 @@ namespace eka2l1 {
         }
 
         return shared_chunk_allocator->free(ptr);
+    }
+
+    void *fbs_server::allocate_large_data(const std::size_t s) {
+        if (!large_chunk || !large_chunk_allocator) {
+            LOG_CRITICAL("FBS server hasn't initialized yet");
+            return nullptr;
+        }
+
+        return large_chunk_allocator->allocate(s);
+    }
+
+    bool fbs_server::free_large_data(const void *ptr) {
+        if (!large_chunk || !large_chunk_allocator) {
+            LOG_CRITICAL("FBS server hasn't initialized yet");
+            return false;
+        }
+
+        return large_chunk_allocator->free(ptr);
     }
     
     fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id)

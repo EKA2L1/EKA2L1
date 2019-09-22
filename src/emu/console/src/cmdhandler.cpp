@@ -22,7 +22,7 @@
 #include <common/pystr.h>
 #include <common/path.h>
 #include <console/cmdhandler.h>
-#include <console/global.h>
+#include <console/state.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
 #include <manager/package_manager.h>
@@ -37,7 +37,7 @@
 
 using namespace eka2l1;
 
-bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     const char *path = parser->next_token();
 
     if (!path) {
@@ -45,10 +45,12 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string 
         return false;
     }
 
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+
     // Since it's inconvinient for user to specify the drive (they are all the same on computer),
     // and it's better to install in C since there is many apps required
     // to be in it and hardcoded the drive, just hardcode drive C here.
-    bool result = symsys->install_package(common::utf8_to_ucs2(path), drive_c);
+    bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_c);
 
     if (!result) {
         *err = "Installation of SIS failed";
@@ -58,7 +60,7 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string 
     return true;
 }
 
-bool package_remove_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+bool package_remove_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     const char *uid = parser->next_token();
 
     if (!uid) {
@@ -67,7 +69,9 @@ bool package_remove_option_handler(eka2l1::common::arg_parser *parser, std::stri
     }
 
     std::uint32_t vuid = common::pystr(uid).as_int<std::uint32_t>();
-    bool result = symsys->get_manager_system()->get_package_manager()->uninstall_package(vuid);
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+
+    bool result = emu->symsys->get_manager_system()->get_package_manager()->uninstall_package(vuid);
 
     if (!result) {
         *err = "Fail to remove package.";
@@ -77,9 +81,7 @@ bool package_remove_option_handler(eka2l1::common::arg_parser *parser, std::stri
     return true;
 }
 
-extern void init_stage2();
-
-bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     const char *tok = parser->next_token();
 
     if (!tok) {
@@ -101,11 +103,12 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
         }
     }
 
-    init_stage2();
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    emu->stage_two();
 
     // Get app list server
     std::shared_ptr<eka2l1::applist_server> svr = 
-        std::reinterpret_pointer_cast<eka2l1::applist_server>(symsys->get_kernel_system()
+        std::reinterpret_pointer_cast<eka2l1::applist_server>(emu->symsys->get_kernel_system()
         ->get_by_name<service::server>("!AppListServer"));
 
     if (!svr) {
@@ -119,7 +122,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
         eka2l1::apa_app_registry *registry = svr->get_registeration(uid);
 
         if (registry) {
-            symsys->load(registry->mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+            emu->symsys->load(registry->mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
             return true;
         }
 
@@ -129,22 +132,18 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
         *err += " doesn't exist";
     } else {
         if (eka2l1::has_root_dir(tokstr)) {
-            if (!symsys->load(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr))) {
-                *err = "Executable doesn't exists";
-                return false;
-            }
-
+            emu->launch_requests.push(common::utf8_to_ucs2(tokstr));
             return true;
         }
 
         // Load with name
-        std::map<std::uint32_t, apa_app_registry> &regs = svr->get_registerations();
+        std::vector<apa_app_registry> &regs = svr->get_registerations();
 
         for (auto &reg: regs) {
-            if (common::ucs2_to_utf8(reg.second.mandatory_info.long_caption.to_std_string(nullptr))
+            if (common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr))
                 == tokstr) {
                 // Load the app
-                symsys->load(reg.second.mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+                emu->launch_requests.push(reg.mandatory_info.app_path.to_std_string(nullptr));
                 return true;
             }
         }
@@ -157,12 +156,12 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::strin
     return false;
 }
 
-bool help_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+bool help_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     std::cout << parser->get_help_string();
     return false;
 }
 
-bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     // Base Z drive is mount_z
     // The RPKG path is the next token
     const char *path = parser->next_token();
@@ -171,8 +170,10 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string 
         *err = "RPKG installation failed. No path provided";
         return false;
     }
-
-    bool install_result = symsys->install_rpkg(conf.z_mount, path);
+    
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    
+    bool install_result = emu->symsys->install_rpkg(emu->conf.storage + "/drives/z/", path);
     if (!install_result) {
         *err = "RPKG installation failed. Something is wrong, see log";
         return false;
@@ -181,12 +182,12 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string 
     return false;
 }
 
-bool list_app_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
-    init_stage2();
-
+bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    
     // Get app list server
     std::shared_ptr<eka2l1::applist_server> svr = 
-        std::reinterpret_pointer_cast<eka2l1::applist_server>(symsys->get_kernel_system()
+        std::reinterpret_pointer_cast<eka2l1::applist_server>(emu->symsys->get_kernel_system()
         ->get_by_name<service::server>("!AppListServer"));
 
     if (!svr) {
@@ -198,8 +199,9 @@ bool list_app_option_handler(eka2l1::common::arg_parser *parser, std::string *er
     return false;
 }
 
-bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
-    auto &devices_list = symsys->get_manager_system()->get_device_manager()->get_devices();
+bool list_devices_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    auto &devices_list = emu->symsys->get_manager_system()->get_device_manager()->get_devices();
 
     for (std::size_t i = 0; i < devices_list.size(); i++) {
         std::cout << i << " : " << devices_list[i].model << " (" << devices_list[i].firmware_code << ", "
@@ -244,7 +246,7 @@ bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std::string
 }
 
 #if ENABLE_SCRIPTING
-bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, std::string *err) {
+bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     try {
         pybind11::exec(
             "import os\n"

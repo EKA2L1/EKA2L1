@@ -33,6 +33,10 @@ struct MemoryEditor;
 namespace eka2l1 {
     class system;
     struct imgui_logger;
+    class applist_server;
+    class window_server;
+
+    using app_launch_function = std::function<void(const std::u16string &path)>;
 
     class imgui_debugger : public debugger_base {
         system *sys;
@@ -54,20 +58,32 @@ namespace eka2l1 {
 
         bool should_package_manager_display_file_list;
         bool should_package_manager_remove;
+        bool should_install_package;
 
         const char *installer_text;
-        bool installer_text_result { false };
+        bool installer_text_result{ false };
 
         std::condition_variable installer_cond;
         std::mutex installer_mut;
 
         const int *installer_langs;
         int installer_lang_size;
-        int installer_lang_choose_result { -1 };
-        int installer_current_lang_idx { -1 };
+        int installer_lang_choose_result{ -1 };
+        int installer_current_lang_idx{ -1 };
 
         bool should_package_manager_display_installer_text;
         bool should_package_manager_display_language_choose;
+
+        bool should_show_app_launch;
+
+        applist_server *alserv;
+        window_server  *winserv;
+        app_launch_function app_launch;
+
+        std::mutex errors_mut;
+        std::queue<std::string> error_queue;
+
+        void show_app_launch();
 
         void show_threads();
         void show_mutexs();
@@ -86,6 +102,8 @@ namespace eka2l1 {
 
         void show_installer_text_popup();
         void show_installer_choose_lang_popup();
+        void show_errors();
+        void show_screens();
 
         std::unique_ptr<std::thread> install_thread;
         threadsafe_cn_queue<std::string> install_list;
@@ -98,7 +116,7 @@ namespace eka2l1 {
         std::atomic<std::uint32_t> debug_thread_id;
 
         std::shared_ptr<MemoryEditor> mem_editor;
-        std::shared_ptr<imgui_logger> logger;
+        imgui_logger *logger;
 
         std::uint32_t addr = 0;
         std::uint32_t selected_package_index = 0;
@@ -107,8 +125,11 @@ namespace eka2l1 {
         std::mutex debug_lock;
         std::condition_variable debug_cv;
 
+    protected:
+        void do_install_package();
+
     public:
-        explicit imgui_debugger(eka2l1::system *sys, std::shared_ptr<imgui_logger> logger);
+        explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger, app_launch_function app_launch);
         ~imgui_debugger();
 
         bool should_emulate_stop() override {
@@ -120,11 +141,12 @@ namespace eka2l1 {
         }
 
         void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
+        void queue_error(const std::string &error);
         void handle_shortcuts();
 
         void wait_for_debugger() override;
         void notify_clients() override;
-        
+
         manager::config_state *get_config() override;
     };
 }

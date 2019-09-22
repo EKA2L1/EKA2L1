@@ -31,30 +31,43 @@
 #include <common/cvt.h>
 #include <common/e32inc.h>
 #include <common/log.h>
+#include <common/rgb.h>
 
 #include <e32err.h>
 
 namespace eka2l1::epoc {
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        attached_window = std::reinterpret_pointer_cast<epoc::window_user>(client->get_object(window_to_attach_handle));
+        attached_window = reinterpret_cast<epoc::window_user*>(client->get_object(window_to_attach_handle));
 
         // Attach context with window
-        attached_window->contexts.push_back(this);
+        attached_window->attached_contexts.push(&context_attach_link);
 
         // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
         // this.
-        context.set_request_status(attached_window->dvc->id);
+        context.set_request_status(attached_window->scr->number);
+
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+        // Make new command list
+        cmd_list = drv->new_command_list();
+        cmd_builder = drv->new_command_builder(cmd_list.get());
+
+        // Add first command list, binding our window bitmap
+        if (attached_window->driver_win_id == 0) {    
+            attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size);
+        }
+
+        cmd_builder->bind_bitmap(attached_window->driver_win_id);
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
         const eka2l1::rect &dest_rect) {
-        draw_command command;
-        command.gc_command = EWsGcOpDrawBitmap;
-        command.externalize(h);
-        command.externalize(dest_rect);
-        
-        draw_queue.push(command);
+        eka2l1::rect source_rect;
+        source_rect.top = { 0, 0 };
+        source_rect.size = dest_rect.size;
+
+        cmd_builder->draw_bitmap(h, dest_rect.top, source_rect, false);
         ctx.set_request_status(KErrNone);
     }
 
@@ -64,105 +77,38 @@ namespace eka2l1::epoc {
             return;
         }
 
-        draw_command command;
-        command.gc_command = EWsGcOpDrawTextPtr;
+        // TODO: Get text data from the font. Maybe upload them as atlas.
 
-        auto pos_to_screen = attached_window->cursor_pos + top_left;
-        command.externalize(pos_to_screen);
+        ctx.set_request_status(KErrNone);
+    }
 
-        if (bottom_right == vec2(-1, -1)) {
-            command.externalize(bottom_right);
-        } else {
-            pos_to_screen = bottom_right + attached_window->cursor_pos;
-            command.externalize(pos_to_screen);
+    void graphic_context::do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set) {
+        const eka2l1::vecx<int, 4> color = common::rgb_to_vec(*reinterpret_cast<const common::rgb*>(data));
+        
+        switch (to_set) {
+        case set_color_type::brush: {
+            cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+            break;
         }
 
-        std::uint32_t text_len = static_cast<std::uint32_t>(text.length());
-
-        // LOG_TRACE("Drawing to window text {}", common::ucs2_to_utf8(text));
-
-        command.externalize(text_len);
-        command.buf.append(reinterpret_cast<char *>(&text[0]), text_len * sizeof(char16_t));
-
-        draw_queue.push(command);
+        default: {
+            LOG_ERROR("Unhandle support for setting color for type {}", static_cast<int>(to_set));
+            break;
+        }
+        }
 
         ctx.set_request_status(KErrNone);
     }
 
     void graphic_context::flush_queue_to_driver() {
-        // Flushing
-        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(attached_window->parent);
-        eka2l1::graphics_driver_client_ptr driver = group->dvc->driver.lock();
+        drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
 
-        if (!driver) {
-            LOG_ERROR("Graphics driver experied. Opcodes will not get flushed");
-            return;
-        }
-
-        // Since we are sending multiple opcodes, lock the driver first
-        // That way, all opcodes from this context should be processed in only one take
-        driver->lock_driver_from_process();
-
-        rect inv_rect = rect{ attached_window->irect.in_top_left,
-            attached_window->irect.in_bottom_right - attached_window->irect.in_top_left };
-
-        // There should be an invalidate window
-        driver->begin_window(attached_window->driver_win_id);
-        driver->invalidate(inv_rect);
-
-        attached_window->irect.in_top_left = vec2(0, 0);
-        attached_window->irect.in_bottom_right = attached_window->size;
-
-        while (!draw_queue.empty()) {
-            auto draw_command = std::move(draw_queue.front());
-
-            switch (draw_command.gc_command) {
-            case EWsGcOpDrawTextPtr: {
-                // Deopt and send
-                eka2l1::vec2 top_left = draw_command.internalize<vec2>();
-                eka2l1::vec2 bottom_right = draw_command.internalize<vec2>();
-
-                eka2l1::rect r;
-                r.top = top_left;
-
-                if (bottom_right == vec2(-1, -1)) {
-                    r.size = vec2(-1, -1);
-                } else {
-                    r.size = bottom_right - top_left;
-                }
-
-                std::uint32_t text_len = draw_command.internalize<std::uint32_t>();
-
-                std::u16string text(reinterpret_cast<char16_t *>(&draw_command.buf[0]), text_len);
-                driver->draw_text(r, common::ucs2_to_utf8(text));
-
-                break;
-            }
-
-            case EWsGcOpDrawBitmap: {
-                drivers::handle bmp = draw_command.internalize<drivers::handle>();
-                eka2l1::rect draw_rect = draw_command.internalize<eka2l1::rect>();
-                driver->draw_bitmap(bmp, draw_rect);
-
-                break;
-            }
-
-            default: {
-                LOG_TRACE("Can't transform IR opcode to driver opcode: 0x{:x}", draw_command.gc_command);
-                break;
-            }
-            }
-
-            draw_queue.pop();
-        }
-
-        driver->end_invalidate();
-        driver->end_window();
-        
-        driver->unlock_driver_from_process();
+        // Unbind current bitmap
+        cmd_builder->bind_bitmap(0);
+        driver->submit_command_list(*cmd_list);
     }
 
-    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         TWsGcOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
@@ -173,16 +119,7 @@ namespace eka2l1::epoc {
 
         // Brush is fill, pen is outline
         case EWsGcOpSetBrushColor: {
-            std::string buf;
-            buf.resize(sizeof(int));
-
-            std::memcpy(&buf[0], cmd.data_ptr, sizeof(int));
-
-            draw_command command{ EWsGcOpSetBrushColor, buf };
-            draw_queue.push(command);
-
-            ctx.set_request_status(KErrNone);
-
+            do_command_set_color(ctx, cmd.data_ptr, set_color_type::brush);
             break;
         }
 
@@ -193,14 +130,14 @@ namespace eka2l1::epoc {
         }
 
         case EWsGcOpSetPenStyle: {
-            LOG_ERROR("Pen operation not supported yet (wait for ImGui support outline color)");
+            LOG_ERROR("Pen operation not supported yet");
             ctx.set_request_status(KErrNone);
 
             break;
         }
 
         case EWsGcOpSetPenColor: {
-            LOG_ERROR("Pen operation not supported yet (wait for ImGui support outline color)");
+            LOG_ERROR("Pen operation not supported yet");
             ctx.set_request_status(KErrNone);
             break;
         }
@@ -256,23 +193,20 @@ namespace eka2l1::epoc {
         }
 
         case EWsGcOpDeactivate: {
-            // Flushing            
+            context_attach_link.deque();
+
+            // Might have to flush sooner, since this window can be used with another
+            // TODO pent0: This may gone insane
             flush_queue_to_driver();
 
-            auto this_ctx = std::find(attached_window->contexts.begin(), attached_window->contexts.end(),
-                this);
-            if (this_ctx != attached_window->contexts.end()) {
-                attached_window->contexts.erase(this_ctx);
-            }
-
-            attached_window.reset();
+            attached_window = nullptr;
             ctx.set_request_status(KErrNone);
 
             break;
         }
 
         case EWsGcOpDrawBitmap: {
-            ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap*>(cmd.data_ptr);
+            ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap *>(cmd.data_ptr);
             epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
 
             if (!bw_bmp) {
@@ -280,8 +214,9 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
             epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
-            drivers::handle bmp_driver_handle = cacher->add_or_get(bw_bmp);
+            drivers::handle bmp_driver_handle = cacher->add_or_get(driver, cmd_builder.get(), bw_bmp);
 
             do_command_draw_bitmap(ctx, bmp_driver_handle, rect(bitmap_cmd->pos, bw_bmp->header_.size_pixels));
 
@@ -295,9 +230,8 @@ namespace eka2l1::epoc {
         }
     }
 
-    graphic_context::graphic_context(window_server_client_ptr client, screen_device_ptr scr,
-        window_ptr win)
-        : window_client_obj(client)
-        , attached_window(std::reinterpret_pointer_cast<window_user>(win)) {
+    graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
+        : window_client_obj(client, nullptr)
+        , attached_window(reinterpret_cast<epoc::window_user*>(attach_win)) {
     }
 }

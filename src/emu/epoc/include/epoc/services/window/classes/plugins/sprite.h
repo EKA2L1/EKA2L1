@@ -24,15 +24,15 @@
 
 namespace eka2l1::epoc {
     struct window;
-    using window_ptr = std::shared_ptr<epoc::window>;
-
+    struct screen;
+    
     // Is this a 2D game engine ?
     struct sprite : public window_client_obj {
-        window_ptr attached_window;
+        window *attached_window;
         eka2l1::vec2 position;
 
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
-        explicit sprite(window_server_client_ptr client, window_ptr attached_window = nullptr,
+        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        explicit sprite(window_server_client_ptr client, screen *scr, window *attached_window = nullptr,
             eka2l1::vec2 pos = eka2l1::vec2(0, 0));
     };
 }

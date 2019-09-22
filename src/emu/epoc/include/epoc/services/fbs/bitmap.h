@@ -59,7 +59,27 @@ namespace eka2l1::epoc {
         int                spare1_;
         int                data_offset_;
         bool               compressed_in_ram_;
+
+        void construct(loader::sbm_header &info, void *data, const void *base, const bool white_fill = false);
     };
 
     constexpr epoc::uid bitwise_bitmap_uid = 0x10000040;
+
+    enum bitmap_file_compression {
+        bitmap_file_no_compression = 0,
+        bitmap_file_byte_rle_compression = 1,
+        bitmap_file_twelve_bit_rle_compression = 2,
+        bitmap_file_sixteen_bit_rle_compression = 3,
+        bitmap_file_twenty_four_bit_rle_compression = 4,
+        bitmap_file_twenty_four_u_bit_rle_compression = 5,
+        bitmap_file_thirty_two_u_bit_rle_compression = 6,
+        bitmap_file_thirty_two_a_bit_rle_compression = 7
+    };
+
+    enum bitmap_color {
+        monochrome_bitmap = 0,
+        color_bitmap = 1,
+        color_bitmap_with_alpha = 2,
+        color_bitmap_with_alpha_pm = 3
+    };
 }

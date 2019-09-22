@@ -29,7 +29,7 @@ namespace eka2l1 {
 
         timer::timer(kernel_system *kern, timing_system *timing, std::string name,
             kernel::access_type access)
-            : kernel_obj(kern, name, access)
+            : kernel_obj(kern, name, nullptr, access)
             , timing(timing)
             , outstanding(false) {
             obj_type = object_type::timer;

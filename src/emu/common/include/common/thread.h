@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team.
+ * Copyright (c) 2019 EKA2L1 Team
  * 
- * This file is part of EKA2L1 project
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,4 +19,14 @@
 
 #pragma once
 
-int ui_debugger_thread();
+#include <cstdint>
+
+namespace eka2l1::common {
+    /**
+     * \brief Rename a thread.
+     * 
+     * \param thread_id         The native handle to the thread.
+     * \param thread_name       New name of the thread.
+     */
+    void set_thread_name(std::uint64_t thread_id, const char* thread_name);
+}

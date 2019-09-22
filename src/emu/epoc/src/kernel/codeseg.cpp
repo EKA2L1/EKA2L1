@@ -25,7 +25,7 @@
 
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
-        : kernel_obj(kern, name, kernel::access_type::global_access) {
+        : kernel_obj(kern, name, nullptr, kernel::access_type::global_access) {
         std::copy(info.uids, info.uids + 3, uids);
         code_base = info.code_base;
         data_base = info.data_base;

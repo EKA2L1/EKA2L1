@@ -27,7 +27,7 @@
 namespace eka2l1 {
     namespace service {
         property::property(kernel_system *kern)
-            : kernel::kernel_obj(kern, "", kernel::access_type::global_access) {
+            : kernel::kernel_obj(kern, "", nullptr, kernel::access_type::global_access) {
             obj_type = kernel::object_type::prop;
         }
 

@@ -420,7 +420,7 @@ namespace eka2l1 {
                         return result;
                     }
 
-                    eka2l1::ro_file_stream image_data_stream(f);
+                    eka2l1::ro_file_stream image_data_stream(f.get());
 
                     auto parse_result = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
                     if (parse_result != std::nullopt) {
@@ -474,7 +474,7 @@ namespace eka2l1 {
                         return nullptr;
                     }
                 
-                    eka2l1::ro_file_stream image_data_stream(f);
+                    eka2l1::ro_file_stream image_data_stream(f.get());
 
                     if (entry->media_type == drive_media::rom && io->is_entry_in_rom(lib_path)) {
                         auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&image_data_stream), mem);

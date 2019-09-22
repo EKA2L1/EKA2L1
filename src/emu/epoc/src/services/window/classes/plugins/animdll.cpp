@@ -25,7 +25,12 @@
 #include <e32err.h>
 
 namespace eka2l1::epoc {
-    void anim_dll::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+    anim_dll::anim_dll(window_server_client_ptr client, screen *scr)
+        : window_client_obj(client, scr)
+        , user_count(0) {
+    }
+
+    void anim_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         TWsAnimDllOpcode op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {

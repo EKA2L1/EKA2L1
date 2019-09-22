@@ -52,7 +52,7 @@ namespace eka2l1::epoc {
         std::uint8_t *base_large_chunk;
 
         kernel_system *kern;
-        std::weak_ptr<drivers::graphics_driver_client> cli;
+        drivers::graphics_driver *driver;
 
         std::int64_t last_free { 0 };
 
@@ -73,10 +73,12 @@ namespace eka2l1::epoc {
          * without a method to notify the user, this also hashes bitmap data (using xxHash),
          * and will reupload the bitmap to driver if the texture data is different.
          * 
-         * \param   bmp The pointer to bitwise bitmap.
+         * \param   driver  Pointer
+         * \param   bmp     The pointer to bitwise bitmap.
          * \returns Handle to driver's texture associated with this bitmap.
          */
-        drivers::handle add_or_get(epoc::bitwise_bitmap *bmp);
+        drivers::handle add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+            epoc::bitwise_bitmap *bmp);
 
         /**
          * \brief   Remove the bitmap from cache.

@@ -23,6 +23,9 @@
 #include <epoc/services/server.h>
 #include <epoc/utils/des.h>
 
+#include <vector>
+#include <mutex>
+
 namespace eka2l1 {
     class io_system;
 
@@ -129,7 +132,7 @@ namespace eka2l1 {
 	 * Disable for LLE testings.
      */
     class applist_server : public service::server {
-        std::map<std::uint32_t, apa_app_registry> regs;
+        std::vector<apa_app_registry> regs;
         std::uint32_t flags{ 0 };
 
         enum {
@@ -193,6 +196,8 @@ namespace eka2l1 {
     public:
         applist_server(system *sys);
 
+        std::mutex list_access_mut_;
+
         /**
          * \brief Get an app registeration
          * 
@@ -204,6 +209,6 @@ namespace eka2l1 {
         /**
          * \brief Get all app registerations.
          */
-        std::map<std::uint32_t, apa_app_registry> &get_registerations();
+        std::vector<apa_app_registry> &get_registerations();
     };
 }

@@ -19,89 +19,84 @@
 
 #pragma once
 
-#include <drivers/graphics/graphics.h>
-
 #include <drivers/graphics/fb.h>
+#include <drivers/graphics/graphics.h>
 #include <drivers/graphics/texture.h>
-#include <drivers/graphics/imgui_renderer.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <common/queue.h>
-
-struct ImGuiContext;
-struct ImDrawData;
-struct ImDrawList;
+#include <common/vecx.h>
 
 namespace eka2l1::drivers {
-    struct embed_window {
+    /**
+     * \brief Bitmap is basically a texture. It can be drawn into and can be taken to draw.
+     */
+    struct bitmap {
         std::uint32_t id;
         framebuffer_ptr fb;
+        texture_ptr tex;
+        int bpp;
 
-        eka2l1::vec2 pos;
-        std::uint16_t pri;
-
-        bool visible{ false };
-
-        explicit embed_window(const graphic_api gr_api, const eka2l1::vec2 &size, 
-            const std::uint16_t pri, bool visible = false);
-
-        bool operator<(const embed_window &rhs) {
-            return pri < rhs.pri;
-        }
+        explicit bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp);
     };
 
-    using embed_window_ptr = std::shared_ptr<embed_window>;
+    using bitmap_ptr = std::unique_ptr<bitmap>;
+    using graphics_object_instance = std::unique_ptr<graphics_object>;
 
     class shared_graphics_driver : public graphics_driver {
     protected:
-        framebuffer_ptr framebuffer;
-        ImGuiContext *context;
+        std::vector<bitmap_ptr> bmp_textures;
+        std::vector<graphics_object_instance> graphic_objects;
 
-        ImDrawList *draw_list;
+        bitmap *binding;
+        bitmap *get_bitmap(const drivers::handle h);
 
-        eka2l1::cp_queue<embed_window_ptr> windows;
-        std::vector<texture_ptr> bmp_textures;
+        int current_fb_height;
+        eka2l1::vec2 swapchain_size;
 
-        std::uint32_t id_counter = 0;
-        embed_window_ptr binding;
+        glm::mat4 projection_matrix;
+        eka2l1::vecx<float, 4> brush_color;
 
-        imgui_renderer_instance irenderer;
+        drivers::handle append_graphics_object(graphics_object_instance &instance);
+        bool delete_graphics_object(const drivers::handle handle);
+        graphics_object *get_graphics_object(const drivers::handle num);
 
-        bool should_rerender = false;
+        // Implementations
+        void set_swapchain_size(command_helper &helper);
+        void create_bitmap(command_helper &helper);
+        void update_bitmap(command_helper &helper);
+        void bind_bitmap(command_helper &helper);
+        void destroy_bitmap(command_helper &helper);
+        void set_brush_color(command_helper &helper);
+        void create_program(command_helper &helper);
+        void create_texture(command_helper &helper);
+        void create_buffer(command_helper &helper);
+        void use_program(command_helper &helper);
+        void set_uniform(command_helper &helper);
+        void bind_texture(command_helper &helper);
+        void bind_buffer(command_helper &helper);
+        void update_buffer(command_helper &helper);
+        void attach_descriptors(command_helper &helper);
+        void destroy_object(command_helper &helper);
+        void set_filter(command_helper &helper);
+        void resize_bitmap(command_helper &helper);
 
-        graphic_api gr_api_;
-
-        virtual void redraw_window_list();
-        virtual void start_new_backend_frame() {}
-        virtual void render_frame(ImDrawData *draw_data);
-
-        void do_init(const graphic_api gr_api, const vec2 &scr);
-
-    public:
-        explicit shared_graphics_driver() = default;
-        explicit shared_graphics_driver(const graphic_api gr_api, const vec2 &scr);
+    public : 
+        explicit shared_graphics_driver(const graphic_api gr_api);
 
         ~shared_graphics_driver() override;
 
-        void do_second_pass();
-        virtual void process_requests() override;
+        void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset, const eka2l1::vec2 &dim,
+            const int bpp, const void *data) override;
 
-        virtual bool do_request_queue_execute_one_request(drivers::driver_request *request);
-        virtual void do_request_queue_execute_job();
-        virtual void do_request_queue_clean_job() {};
+        void attach_descriptors(drivers::handle h, const int stride, const bool instance_move, const attribute_descriptor *descriptors,
+            const int descriptor_count) override;
 
-        virtual drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, const std::uint32_t width,
-            const std::uint32_t height, const int bpp, void *data) override;
+        virtual void dispatch(command *cmd);
 
-        vec2 get_screen_size() override {
-            return framebuffer->get_size();
-        }
-
-        std::vector<std::uint8_t> get_render_texture_data(std::size_t stride) override {
-            return framebuffer->data(stride);
-        }
-
-        std::uint64_t get_render_texture_handle() override {
-            return framebuffer->texture_handle();
-        }
+        virtual void bind_swapchain_framebuf() = 0;
     };
 }

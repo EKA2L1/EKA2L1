@@ -11,3 +11,5 @@ src/emu/lazarus/*.dll
 docs
 CMakeSettings.json
 .vscode
+out
+.metadata

@@ -70,9 +70,7 @@ namespace eka2l1::manager {
         config_file_emit_single(emitter, "device", device);
         config_file_emit_single(emitter, "enable-gdb-stub", enable_gdbstub);
         config_file_emit_single(emitter, "rom", rom_path);
-        config_file_emit_single(emitter, "c-mount", c_mount);
-        config_file_emit_single(emitter, "e-mount", e_mount);
-        config_file_emit_single(emitter, "z-mount", z_mount);
+        config_file_emit_single(emitter, "data-storage", storage);
         config_file_emit_single(emitter, "display-size-x", display_size_x_pixs);
         config_file_emit_single(emitter, "display-size-y", display_size_y_pixs);
         config_file_emit_single(emitter, "ram-max", maximum_ram);
@@ -120,9 +118,7 @@ namespace eka2l1::manager {
         get_yaml_value(node, "device", &device, 0);
         get_yaml_value(node, "enable-gdb-stub", &enable_gdbstub, false);
         get_yaml_value(node, "rom", &rom_path, "SYM.ROM");
-        get_yaml_value(node, "c-mount", &c_mount, "drives/c/");
-        get_yaml_value(node, "e-mount", &e_mount, "drives/e/");
-        get_yaml_value(node, "z-mount", &z_mount, "drives/z/");
+        get_yaml_value(node, "data-storage", &storage, "");
         get_yaml_value(node, "display_size_x", &display_size_x_pixs, 360);
         get_yaml_value(node, "display_size_y", &display_size_y_pixs, 640);
         get_yaml_value(node, "ram-max", &maximum_ram, static_cast<std::uint32_t>(common::MB(512)));

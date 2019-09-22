@@ -23,14 +23,12 @@
 #include <epoc/services/window/classes/wsobj.h>
 #include <epoc/services/window/common.h>
 
-#include <common/queue.h>
-
+#include <common/linked.h>
 #include <memory>
 
 namespace eka2l1::epoc {
     struct window;
-    using window_ptr = std::shared_ptr<epoc::window>;
-
+    
     enum class window_kind {
         normal,
         group,
@@ -38,72 +36,121 @@ namespace eka2l1::epoc {
         client
     };
 
-    struct screen_device;
-    using screen_device_ptr = std::shared_ptr<epoc::screen_device>;
+    enum class window_tree_walk_style {
+        bonjour_previous_siblings,
+        bonjour_children,
+        bonjour_children_and_previous_siblings
+    };
+    
+    /**
+     * \brief Class to hook for tree walking.
+     */
+    struct window_tree_walker {
+        /**
+         * \brief Handle function for a window.
+         */
+        virtual bool do_it(window *win) = 0;
+    };
 
-    using window_client_obj_ptr = std::shared_ptr<window_client_obj>;
+    void walk_tree_back_to_front(window *start, window_tree_walker *walker);
 
     /** \brief Base class for all window. */
     struct window : public window_client_obj {
-        eka2l1::cp_queue<window_ptr> childs;
-        screen_device_ptr dvc;
+        window *parent{ nullptr };          ///< Pointer to the parent
+        window *sibling{ nullptr };         ///< Pointer to oldest sibling
+        window *child{ nullptr  };          ///< Pointer to the oldest child
 
-        window *parent { nullptr };
-
-        // It's just z value. The second one will be used when there is
-        // multiple window with same first z.
+        // The priority of the window.
         std::uint16_t priority{ 0 };
-        std::uint16_t secondary_priority{ 0 };
-
-        std::uint16_t redraw_priority();
-        virtual void priority_updated();
 
         window_kind type;
 
-        bool operator==(const window &rhs) {
-            return priority == rhs.priority;
-        }
+        /***
+         * \brief Get the root window.
+         */
+        window *root_window();
 
-        bool operator!=(const window &rhs) {
-            return priority != rhs.priority;
-        }
+        /**
+         * \brief   Get the ordinal position of the window.
+         * 
+         * \param   full Enable traversing to siblings with same priority, then find the position there.
+         * 
+         * \returns The ordinal position of this window.
+         */
+        int ordinal_position(const bool full);
 
-        bool operator>(const window &rhs) {
-            return priority > rhs.priority;
-        }
-
-        bool operator<(const window &rhs) {
-            return priority < rhs.priority;
-        }
-
-        bool operator>=(const window &rhs) {
-            return priority >= rhs.priority;
-        }
-
-        bool operator<=(const window &rhs) {
-            return priority <= rhs.priority;
-        }
-
-        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx,
-            eka2l1::ws_cmd cmd);
+        bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         /*! \brief Generic event queueing
         */
         virtual void queue_event(const epoc::event &evt);
 
-        window(window_server_client_ptr client)
-            : window_client_obj(client)
+        /**
+         * \brief Walk through window tree, with the root from the current window.
+         * 
+         * The function walks through the tree in order from front to back:
+         * - Child windows will be in front of parent windows.
+         * 
+         * \param walker The class hooking the walk.
+         * \param style  Walk style.
+         */
+        void walk_tree(window_tree_walker *walker, const window_tree_walk_style style);
+
+        void walk_tree_back_to_front(window_tree_walker *walker);
+
+        void move_window(epoc::window *new_parent, const int new_pos);
+
+        /**
+         * \brief Set position of the window.
+         * 
+         * \param new_pos      New position of the window.
+         */
+        void set_position(const int new_pos);
+
+        /**
+         * \brief Check if the current priority and the given window position will requires
+         *        window order change.
+         * 
+         * With sibling windows, a window is consider "older" when it has greater priority then
+         * other siblings. If multiple windows have the same priority, the one that go first will
+         * be drawn.
+         * 
+         * This function first check:
+         * - Does the priority of the window feels weird? Should it be reorder?
+         * - Then... Does the position of the window feels weird? Like it should be at the front
+         *   of other window with same priority.
+         * 
+         * \param new_pos The new position of the window, compares to other siblings with same priority.
+         * 
+         * \returns True if the window needs to be reordered.
+         */
+        bool check_order_change(const int new_pos);
+        
+        /**
+         * \brief Remove the window from the sibling list.
+         */
+        void remove_from_sibling_list();
+
+        void set_parent(window *parent);
+
+        explicit window(window_server_client_ptr client, screen *scr, window *parent)
+            : window_client_obj(client, scr)
             , type(window_kind::normal)
-            , dvc(nullptr) {}
+            , parent(nullptr)
+            , sibling(nullptr)
+            , child(nullptr) {
+            set_parent(parent);
+        }
 
-        window(window_server_client_ptr client, window_kind type)
-            : window_client_obj(client)
+        explicit window(window_server_client_ptr client, screen *scr, window *parent, window_kind type)
+            : window_client_obj(client, scr)
             , type(type)
-            , dvc(nullptr) {}
+            , parent(nullptr)
+            , sibling(nullptr)
+            , child(nullptr) {
+            set_parent(parent);
+        }
 
-        window(window_server_client_ptr client, screen_device_ptr dvc, window_kind type)
-            : window_client_obj(client)
-            , type(type)
-            , dvc(dvc) {}
+        ~window() override;
     };
 }

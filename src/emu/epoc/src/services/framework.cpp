@@ -31,6 +31,9 @@ namespace eka2l1::service {
             return false;
         }
 
+        // For sure, reset
+        res->reset();
+
         objs.erase(res);
         return true;
     }

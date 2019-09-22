@@ -23,13 +23,16 @@
 #include <epoc/services/window/classes/wsobj.h>
 
 namespace eka2l1::epoc {
+    struct screen;
+    
     struct click_dll : public window_client_obj {
-        click_dll(window_server_client_ptr client)
-            : window_client_obj(client) {
+        explicit click_dll(window_server_client_ptr client, screen *scr)
+            : window_client_obj(client, scr)
+            , loaded(false) {
         }
 
-        bool loaded{ false };
+        bool loaded;
 
-        void execute_command(service::ipc_context &context, ws_cmd cmd) override;
+        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
     };
 }

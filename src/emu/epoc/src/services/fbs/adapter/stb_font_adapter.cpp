@@ -143,4 +143,115 @@ namespace eka2l1::epoc::adapter {
 
         return true;
     }
+
+    std::uint8_t *stb_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code,
+        const float scale_x, const float scale_y, int *rasterized_width, int *rasterized_height,
+        epoc::glyph_bitmap_type *bmp_type) {
+        bool get_codepoint = true;
+
+        if (code & 0x80000000) {
+            // It's truly the glyph index.
+            code &= ~0x80000000;
+            get_codepoint = false;
+        }
+
+        if (code == 0) {
+            // Fallback character.
+            code = '?';
+        }
+
+        int off = 0;
+        stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
+
+        if (!info) {
+            return nullptr;
+        }
+
+        std::uint8_t *result = nullptr;
+
+        if (get_codepoint) {
+            result = stbtt_GetCodepointBitmap(info, scale_x, scale_y, static_cast<int>(code), rasterized_width,
+                rasterized_height, nullptr, nullptr);
+        } else {
+            result = stbtt_GetGlyphBitmap(info, scale_x, scale_y, static_cast<int>(code), rasterized_width,
+                rasterized_height, nullptr, nullptr);
+        }
+
+        if (bmp_type) {
+            *bmp_type = epoc::glyph_bitmap_type::antialised_glyph_bitmap;
+        }
+
+        return result;
+    }
+
+    bool stb_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, 
+        open_font_character_metric &character_metric, const std::int32_t baseline_horz_off, 
+        const float scale_x, const float scale_y) {
+        bool get_codepoint = true;
+
+        if (code & 0x80000000) {
+            // It's truly the glyph index.
+            code &= ~0x80000000;
+            get_codepoint = false;
+        }
+
+        if (code == 0) {
+            // Fallback character.
+            // I honestly love you! Let me tell me this to you...
+            code = '?';
+        }
+
+        // And I'm sure you love me! It's going to get through
+        int off = 0;
+        stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
+
+        if (!info) {
+            return false;
+        }
+
+        int adv_width = 0;
+        int left_side_bearing = 0;
+        int x0, x1, y0, y1 = 0;
+
+        // Let's look for a glass slipper that fit you
+        if (get_codepoint) {
+            stbtt_GetCodepointHMetrics(info, static_cast<int>(code), &adv_width, &left_side_bearing);
+            stbtt_GetCodepointBox(info, static_cast<int>(code), &x0, &y0, &x1, &y1);
+        } else {
+            stbtt_GetGlyphHMetrics(info, static_cast<int>(code), &adv_width, &left_side_bearing);
+            stbtt_GetGlyphBox(info, static_cast<int>(code), &x0, &y0, &x1, &y1);
+        }
+
+        character_metric.width = static_cast<std::int16_t>(std::round((x1 - x0) * scale_x));
+        character_metric.height = static_cast<std::int16_t>(std::round((y1 - y0) * scale_y));
+        character_metric.horizontal_advance = static_cast<std::int16_t>(std::round(adv_width * scale_x));
+        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(std::round(left_side_bearing * scale_x));
+
+        // As two! Step and go! ...
+        // Let's calculate vertical advance. Every character of the font should have same vertical size.
+        // So use getFontVMetrics
+        int ascent = 0;
+        int descent = 0;
+        int linegap = 0;
+
+        stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
+
+        // Calculate verical advance by ascent - descent + linegap
+        character_metric.vertical_advance = static_cast<std::int16_t>(std::round(ascent - descent + linegap) * scale_y);
+        
+        // FreeType 2 rasterizer on WINS fill this as 0, so I guess this is ok?
+        character_metric.vertical_bearing_y = 0;
+        character_metric.vertical_bearing_x = 0;
+        
+        // I use image at here as reference
+        // https://www.freetype.org/freetype2/docs/tutorial/step2.html
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(std::round(y1 *
+            scale_y) - baseline_horz_off);
+
+        return true;
+    }
+
+    void stb_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
+        stbtt_FreeBitmap(data, nullptr);
+    }
 }

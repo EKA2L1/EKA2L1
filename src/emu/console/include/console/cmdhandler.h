@@ -26,14 +26,14 @@ namespace eka2l1::common {
     class arg_parser;
 }
 
-bool app_install_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
-bool package_remove_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
-bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
-bool help_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
-bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
-bool list_app_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
-bool list_devices_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
+bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool package_remove_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool help_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool list_devices_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 
 #if ENABLE_SCRIPTING
-bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, std::string *err);
+bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 #endif

@@ -92,6 +92,15 @@ namespace eka2l1::service {
             return obj_con.get<T>(handle);
         }
 
+        template <typename T>
+        T *session(const service::uid session_uid) {
+            if (sessions.find(session_uid) == sessions.end()) {
+                return nullptr;
+            }
+            
+            return reinterpret_cast<T*>(&*sessions[session_uid]);
+        }
+
         template <typename T, typename ...Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
             const service::uid suid = ctx->msg->msg_session->unique_id();

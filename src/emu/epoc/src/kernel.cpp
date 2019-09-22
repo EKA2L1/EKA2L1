@@ -316,7 +316,7 @@ namespace eka2l1 {
         }
 
         case kernel::owner_type::process: {
-            h = own_thread->own_process->process_handles.add_object(target_obj);
+            h = own_thread->owning_process()->process_handles.add_object(target_obj);
             break;
         }
 
@@ -325,7 +325,7 @@ namespace eka2l1 {
         }
     
         if (h != INVALID_HANDLE) {    
-            target_obj->open_to(own_thread->own_process);
+            target_obj->open_to(own_thread->owning_process());
         }
 
         return h;
@@ -426,7 +426,7 @@ namespace eka2l1 {
         return *res;
     }
 
-    std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type) {
+    std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name) {
         find_handle handle_find_info;
         SYNCHRONIZE_ACCESS;
 
@@ -434,7 +434,13 @@ namespace eka2l1 {
 #define OBJECT_SEARCH(obj_type, obj_map)                                                       \
     case kernel::object_type::obj_type: {                                                      \
         auto res = std::find_if(obj_map.begin() + start, obj_map.end(), [&](const auto &rhs) { \
-            return name == rhs->name();                                                        \
+            std::string to_compare = "";                                                       \
+            if (use_full_name) {                                                               \
+                rhs->full_name(to_compare);                                                    \
+            } else {                                                                           \
+                to_compare = rhs->name();                                                      \
+            }                                                                                  \
+            return name == to_compare;                                                         \
         });                                                                                    \
         if (res == obj_map.end())                                                              \
             return std::nullopt;                                                               \

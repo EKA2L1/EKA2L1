@@ -28,28 +28,24 @@
 #include <cstdint>
 
 namespace eka2l1::drivers {
+    class graphics_driver;
+
     class ogl_framebuffer : public framebuffer {
         std::uint32_t fbo;
-        std::uint32_t rbo;
 
-        ogl_texture texture;
-
-        int last_fb {0};
+        int last_fb{ 0 };
 
     public:
         std::uint32_t get_fbo() const {
             return fbo;
         }
 
-        explicit ogl_framebuffer(const vec2 &size);
+        explicit ogl_framebuffer(texture *color_buffer, texture *depth_buffer);
         ~ogl_framebuffer() override;
 
-        void bind() override;
-        void unbind() override;
+        void bind(graphics_driver *driver) override;
+        void unbind(graphics_driver *driver) override;
 
-        void resize(const vec2 &size) override;
-
-        std::vector<std::uint8_t> data(std::size_t stride_pixels) override;
         std::uint64_t texture_handle() override;
     };
 }

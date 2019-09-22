@@ -20,41 +20,27 @@
 
 #pragma once
 
-#include <epoc/services/window/classes/config.h>
 #include <epoc/services/window/classes/wsobj.h>
 #include <epoc/services/window/common.h>
-
-#include <drivers/graphics/graphics.h>
-#include <drivers/itc.h>
 
 #include <memory>
 
 namespace eka2l1::epoc {
+    struct screen;
     struct window_group;
-    using window_group_ptr = std::shared_ptr<epoc::window_group>;
 
-    struct window;
-    using window_ptr = std::shared_ptr<epoc::window>;
-
+    /**
+     * \brief Represents a screen.
+     */
     struct screen_device : public window_client_obj {
-        std::weak_ptr<drivers::graphics_driver_client> driver;
-        int screen;
+        void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) override;
 
-        epoc::config::screen scr_config;
-        epoc::config::screen_mode *crr_mode;
+        void set_screen_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void get_screen_size_mode_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void get_screen_size_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
+            const bool bonus_the_twips);
 
-        std::vector<epoc::window*> windows;
-        epoc::window_group *focus;
-
-        epoc::display_mode disp_mode { display_mode::color16ma };
-
-        epoc::window_group *find_window_group_to_focus();
-
-        void update_focus(epoc::window_group *closing_group);
-
-        screen_device(window_server_client_ptr client, int number,
-            eka2l1::graphics_driver_client_ptr driver);
-
-        void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd cmd) override;
+        explicit screen_device(window_server_client_ptr client, epoc::screen *scr);
     };
 }

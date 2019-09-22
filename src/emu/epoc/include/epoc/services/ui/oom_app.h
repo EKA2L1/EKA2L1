@@ -19,6 +19,7 @@
  */
 
 #include <epoc/services/context.h>
+#include <epoc/services/framework.h>
 #include <epoc/services/server.h>
 #include <epoc/services/window/window.h>
 
@@ -115,6 +116,14 @@ namespace eka2l1 {
         eka2l1::ptr<akn_hardware_info> hardware_infos;
     };
 
+    class oom_ui_app_session : public service::typical_session {
+        std::int32_t blank_count;
+
+    public:
+        explicit oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid);
+        void fetch(service::ipc_context *ctx) override;
+    };
+
     /*! \brief OOM App Server Memebers can receive notification when memory ran out and can't be
        freed. This is basiclly AknCapServer but loaded with this plugin.
       
@@ -122,20 +131,23 @@ namespace eka2l1 {
 
       - Launching: HLE when not doing a full startup. A full startup should launch this server automaticlly.
     */
-    class oom_ui_app_server : public service::server {
+    class oom_ui_app_server : public service::typical_server {
+        friend class oom_ui_app_session;
+
         void get_layout_config_size(service::ipc_context &ctx);
         void get_layout_config(service::ipc_context &ctx);
 
         std::string layout_buf;
         epoc::sgc_params params;
 
-        window_server *winsrv {nullptr};
+        window_server *winsrv{ nullptr };
+
+        void connect(service::ipc_context &ctx) override;
 
     protected:
         // This but except it loads the screen0 only
         void load_screen_mode();
         std::string get_layout_buf();
-
         void set_sgc_params(service::ipc_context &ctx);
 
     public:

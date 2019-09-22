@@ -239,7 +239,7 @@ namespace eka2l1 {
         kernel::handle open_handle(kernel_obj_ptr obj, kernel::owner_type owner);
         kernel::handle open_handle_with_thread(kernel::thread *thr, kernel_obj_ptr obj, kernel::owner_type owner);
 
-        std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type);
+        std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name = false);
 
         void add_custom_server(server_ptr svr) {
             SYNCHRONIZE_ACCESS;

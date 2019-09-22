@@ -18,13 +18,14 @@
  */
 
 #include <drivers/graphics/fb.h>
+#include <drivers/graphics/graphics.h>
 #include <drivers/graphics/backend/ogl/fb_ogl.h>
 
 namespace eka2l1::drivers {
-    framebuffer_ptr make_framebuffer(const graphic_api api, const vec2 &size) {
-        switch (api) {
+    framebuffer_ptr make_framebuffer(graphics_driver *driver, texture *color_buffer, texture *depth_buffer) {
+        switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_shared<ogl_framebuffer>(size);
+            return std::make_unique<ogl_framebuffer>(color_buffer, depth_buffer);
             break;
         }
 

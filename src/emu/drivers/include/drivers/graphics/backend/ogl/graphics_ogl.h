@@ -28,33 +28,71 @@
 #include <glad/glad.h>
 
 #include <memory>
+#include <queue>
 
 namespace eka2l1::drivers {
+    struct ogl_state {
+        GLint last_program;
+        GLint last_texture;
+        GLint last_active_texture;
+        GLint last_array_buffer;
+        GLint last_element_array_buffer;
+        GLint last_vertex_array;
+        GLint last_blend_src;
+        GLint last_blend_dst;
+        GLint last_blend_equation_rgb;
+        GLint last_blend_equation_alpha;
+        GLint last_viewport[4];
+        GLint last_scissor[4];
+        GLboolean last_enable_blend;
+        GLboolean last_enable_cull_face;
+        GLboolean last_enable_depth_test;
+        GLboolean last_enable_scissor_test;
+    };
+
     class ogl_graphics_driver : public shared_graphics_driver {
-        std::unique_ptr<ogl_shader> render_program;
-        std::unique_ptr<ogl_texture> font_tex;
+        eka2l1::request_queue<server_graphics_command_list> list_queue;
+        std::unique_ptr<ogl_shader> sprite_program;
 
-        GLuint vao_handle;
-        GLuint vbo_handle;
-        GLuint elements_buffer_handle;
+        GLuint sprite_vao;
+        GLuint sprite_vbo;
+        GLuint sprite_ibo;
 
-        GLuint tex_loc;
-        GLuint uv_loc;
-        GLuint color_loc;
-        GLuint pos_loc;
-        GLuint proj_loc;
+        GLint color_loc;
+        GLint proj_loc;
+        GLint model_loc;
+
+        ogl_state backup;
+        std::atomic_bool should_stop;
+
+        void do_init();
+
+        void clear(command_helper &helper);
+        void draw_bitmap(command_helper &helper);
+        void set_invalidate(command_helper &helper);
+        void invalidate_rect(command_helper &helper);
+        void draw_indexed(command_helper &helper);
+        void set_viewport(command_helper &helper);
+        void set_depth(command_helper &helper);
+        void set_blend(command_helper &helper);
+        void set_cull(command_helper &helper);
+        void blend_formula(command_helper &helper);
+        void display(command_helper &helper);
+
+        void save_gl_state();
+        void load_gl_state();
 
     public:
-        explicit ogl_graphics_driver(const vec2 &scr);
+        explicit ogl_graphics_driver();
 
-        bool do_request_queue_execute_one_request(drivers::driver_request *request) override;
+        void set_viewport(const eka2l1::rect &viewport) override;
+        std::unique_ptr<graphics_command_list> new_command_list() override;
+        void submit_command_list(graphics_command_list &command_list) override;
+        std::unique_ptr<graphics_command_list_builder> new_command_builder(graphics_command_list *list) override;
 
-        void do_request_queue_execute_job() override;
-        void do_request_queue_clean_job() override;
-
-        drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, const std::uint32_t width,
-            const std::uint32_t height, const int bpp, void *data) override;
-
-        void set_screen_size(const vec2 &s) override;
+        void run() override;
+        void abort() override;
+        void dispatch(command *cmd) override;
+        void bind_swapchain_framebuf() override;
     };
 }

@@ -67,8 +67,8 @@ namespace eka2l1 {
             return 0;
         }
 
-        const auto &free_slot = std::find_if_not(files.begin(),
-            files.end(), [](symfile &f) { return f; });
+        const auto &free_slot = std::find_if_not(files.begin(), files.end(),
+            [](const symfile &f) -> bool { return f.get(); });
 
         if (free_slot == files.end()) {
             files.push_back(nullptr);
@@ -127,7 +127,8 @@ namespace eka2l1 {
             return std::optional<fid>{};
         }
 
-        files[suit - 1] = files[id - 1];
+        // Open a new file descriptor with same attribute as last
+        files[suit - 1] = io->open_file(files[id - 1]->file_name(), files[id - 1]->file_mode());
         return suit;
     }
 
@@ -153,7 +154,7 @@ namespace eka2l1 {
             }
         }
 
-        files[newid - 1] = files[oldid - 1];
+        files[newid - 1] = io->open_file(files[oldid - 1]->file_name(), files[oldid - 1]->file_mode());files[oldid - 1];
         return 0;
     }
 

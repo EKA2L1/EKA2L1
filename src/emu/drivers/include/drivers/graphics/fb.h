@@ -29,34 +29,30 @@
 #include <vector>
 
 namespace eka2l1::drivers {
-    class instance;
-    using instance_ptr = std::shared_ptr<instance>;
+    class graphics_driver;
+    class texture;
 
-    class framebuffer {
+    class framebuffer: public graphics_object {
     protected:
-        vec2 size;
+        texture *color_buffer;
+        texture *depth_buffer;
 
     public:
-        explicit framebuffer(const vec2 &size)
-            : size(size) {}
+        explicit framebuffer(texture *color_buffer, texture *depth_buffer)
+            : color_buffer(color_buffer)
+            , depth_buffer(depth_buffer) {
+        }
 
         framebuffer() = default;
         virtual ~framebuffer(){};
 
-        virtual void bind() = 0;
-        virtual void unbind() = 0;
+        virtual void bind(graphics_driver *driver) = 0;
+        virtual void unbind(graphics_driver *driver) = 0;
 
-        virtual void resize(const vec2 &size) = 0;
-
-        vec2 get_size() {
-            return size;
-        }
-
-        virtual std::vector<std::uint8_t> data(std::size_t stride_pixels) = 0;
         virtual std::uint64_t texture_handle() = 0;
     };
 
-    using framebuffer_ptr = std::shared_ptr<framebuffer>;
+    using framebuffer_ptr = std::unique_ptr<framebuffer>;
 
-    framebuffer_ptr make_framebuffer(const graphic_api api, const vec2 &size);
+    framebuffer_ptr make_framebuffer(graphics_driver *driver, texture *color_buffer, texture *depth_buffer);
 }

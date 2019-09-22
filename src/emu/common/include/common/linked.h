@@ -87,11 +87,11 @@ namespace eka2l1::common {
         }
 
         double_linked_queue_element *first() {
-            return elem_.next;
+            return empty() ? nullptr : elem_.next;
         }
 
         double_linked_queue_element *last() {
-            return elem_.previous;
+            return empty() ? nullptr : elem_.previous;
         }
 
         void push(double_linked_queue_element *new_elem) {

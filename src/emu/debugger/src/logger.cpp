@@ -52,7 +52,7 @@ namespace eka2l1 {
 
     /* Data not change but only be added, corruption is small chance */
     void imgui_logger::draw(const char *title, bool *p_opened) {
-        ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
         ImGui::Begin(title, p_opened);
 
         if (ImGui::Button("Clear")) {

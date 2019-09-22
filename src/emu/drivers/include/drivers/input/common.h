@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,18 +31,11 @@ namespace eka2l1::drivers {
         repeat
     };
 
-    enum key_scancode {
-        // TODO: Need more codes for QWERTY and etc...
-        key_mid_button = 180,
-        key_left_button = 196,
-        key_right_button = 197
-    };
-
     /**
      * Event for key press/key release.
      */
     struct key_event {
-        key_scancode code_;
+        int code_;
         key_state state_;
     };
 

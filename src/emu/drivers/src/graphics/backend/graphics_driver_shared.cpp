@@ -19,411 +19,624 @@
 
 #include <common/log.h>
 #include <drivers/graphics/backend/graphics_driver_shared.h>
-
-// Use for render text and draw custom bitmap
-#include <imgui.h>
-#include <imgui_internal.h>
+#include <drivers/graphics/buffer.h>
+#include <drivers/graphics/shader.h>
 
 #include <glad/glad.h>
 
 namespace eka2l1::drivers {
-    embed_window::embed_window(const graphic_api gr_api, const eka2l1::vec2 &size, const std::uint16_t pri, bool visible)
-        : pri(pri)
-        , visible(visible) {
-        fb = make_framebuffer(gr_api, size);
+    static void translate_bpp_to_format(const int bpp, texture_format &internal_format, texture_format &format) {
+        // Hope the driver likes this, it always does.
+        internal_format = texture_format::rgba;
+
+        switch (bpp) {
+        case 8:
+            format = texture_format::r;
+            break;
+
+        case 16:
+            format = texture_format::rg;
+            break;
+
+        case 24:
+            format = texture_format::bgr;
+            break;
+
+        case 32:
+            format = texture_format::bgra;
+            break;
+
+        default:
+            break;
+        }
     }
 
-    shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api, const vec2 &scr)
-        : gr_api_(gr_api) {
-        do_init(gr_api, scr);
+    bitmap::bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp)
+        : bpp(initial_bpp) {
+        // Make color buffer for our bitmap!
+        tex = make_texture(driver);
+
+        texture_format internal_format = texture_format::none;
+        texture_format data_format = texture_format::none;
+
+        translate_bpp_to_format(bpp, internal_format, data_format);
+
+        tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, texture_data_type::ubyte, nullptr);
+        tex->set_filter_minmag(false, drivers::filter_option::linear);
+        tex->set_filter_minmag(true, drivers::filter_option::linear);
+    }
+
+    shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
+        : graphics_driver(gr_api)
+        , binding(nullptr)
+        , brush_color({ 1.0f, 1.0f, 1.0f, 1.0f })
+        , current_fb_height(0) {
     }
 
     shared_graphics_driver::~shared_graphics_driver() {
-        ImGui::DestroyContext(context);
-        irenderer->deinit();
     }
 
-    void shared_graphics_driver::do_init(const graphic_api gr_api, const vec2 &scr) {
-        gr_api_ = gr_api;
-        
-        framebuffer = make_framebuffer(gr_api, scr);
-        context = ImGui::CreateContext();
+    #define HANDLE_BITMAP (1ULL << 32)
 
-        auto last_context = ImGui::GetCurrentContext();
-        ImGui::SetCurrentContext(context);
+    bitmap *shared_graphics_driver::get_bitmap(const drivers::handle h) {
+        if ((h & HANDLE_BITMAP) == 0) {
+            return nullptr;
+        }
 
-        irenderer = make_imgui_renderer(gr_api);
-        irenderer->init();
+        if ((h & ~HANDLE_BITMAP) > bmp_textures.size()) {
+            return nullptr;
+        }
 
-        ImGui::SetCurrentContext(last_context);
+        return bmp_textures[(h & ~HANDLE_BITMAP) - 1].get();
     }
 
-    void shared_graphics_driver::render_frame(ImDrawData *draw_data) {
-        irenderer->render(draw_data);
+    drivers::handle shared_graphics_driver::append_graphics_object(graphics_object_instance &instance) {
+        auto free_slot = std::find(graphic_objects.begin(), graphic_objects.end(), nullptr);
+
+        if (free_slot != graphic_objects.end()) {
+            *free_slot = std::move(instance);
+            return std::distance(graphic_objects.begin(), free_slot) + 1;
+        }
+
+        graphic_objects.push_back(std::move(instance));
+        return graphic_objects.size();
     }
 
-    drivers::handle shared_graphics_driver::upload_bitmap(drivers::handle h, const std::size_t size, 
-        const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) {
-        if (bpp != 24 && bpp != 32) {
-            LOG_TRACE("Unsupported bit per pixels: {}", bpp);
+    bool shared_graphics_driver::delete_graphics_object(const drivers::handle handle) {
+        if (handle > graphic_objects.size() || handle == 0) {
             return 0;
         }
 
-        drivers::texture_format tex_format;
-        drivers::texture_format internal_tex_format;
-        drivers::texture_data_type tex_data_type;
-
-        // Get the upload format
-        switch (bpp) {
-        case 24: {
-            tex_format = drivers::texture_format::bgr;
-            internal_tex_format = drivers::texture_format::rgba;
-            tex_data_type = drivers::texture_data_type::ubyte;
-            break;
-        }
-
-        case 32: {
-            tex_format = drivers::texture_format::rgba; 
-            internal_tex_format = tex_format;
-            tex_data_type = drivers::texture_data_type::ubyte;
-            break;
-        }
-
-        default: 
-            break;
-        }
-
-        texture_ptr btex = nullptr;
-        
-        // Create a new texture if it doesn't exist
-        if (h != 0) {
-            // Iterate through all available textures
-            auto result = std::lower_bound(bmp_textures.begin(), bmp_textures.end(), h,
-                [=](const texture_ptr &tex, const drivers::handle &h) {
-                    return tex->texture_handle() < h;
-                });
-
-            // Can't find it.
-            if (result == bmp_textures.end()) {
-                return 0;
-            }
-
-            btex = *result;
-            btex->change_data(tex_data_type, data);
-            btex->change_size(vec3(width, height, 0));
-            btex->change_texture_format(tex_format);
-
-            btex->bind();
-            btex->tex(false);
-            btex->unbind();
-        }
-    
-        if (btex == nullptr) {
-            btex = make_texture(gr_api_);
-            btex->create(2, 0, vec3(width, height, 0), internal_tex_format, tex_format,
-                tex_data_type, data);
-
-            btex->set_filter_minmag(true, drivers::filter_option::linear);
-            btex->set_filter_minmag(false, drivers::filter_option::linear);
-
-            h = btex->texture_handle();
-            bmp_textures.push_back(std::move(btex));
-
-            std::stable_sort(bmp_textures.begin(), bmp_textures.end(), [](const texture_ptr &lhs, const texture_ptr &rhs) {
-                return lhs->texture_handle() < rhs->texture_handle();
-            });
-        }
-
-        return h;
-    }
-    
-    bool shared_graphics_driver::do_request_queue_execute_one_request(drivers::driver_request *request) {
-        switch (request->opcode) {
-        case graphics_driver_create_window: {
-            eka2l1::vec2 size = *request->context.pop<vec2>();
-            std::uint16_t pri = *request->context.pop<std::uint16_t>();
-            bool visible = *request->context.pop<bool>();
-
-            framebuffer->unbind();
-
-            drivers::embed_window_ptr win = std::make_unique<embed_window>(gr_api_, size, pri, visible);
-            win->id = id_counter++;
-
-            std::uint32_t *data_ret = *request->context.pop<std::uint32_t *>();
-            *data_ret = win->id;
-
-            windows.push(std::move(win));
-
-            framebuffer->bind();
-
-            break;
-        }
-
-        case graphics_driver_begin_window: {
-            std::uint32_t id = *request->context.pop<std::uint32_t>();
-            auto win_ite = std::find_if(windows.begin(), windows.end(),
-                [=](const embed_window_ptr &win) { return win->id == id; });
-
-            if (win_ite == windows.end()) {
-                break;
-            }
-
-            // Unbind the current framebuffer
-            (*win_ite)->fb->bind();
-
-            ImGui::NewFrame();
-
-            eka2l1::vec2 win_fb_size = (*win_ite)->fb->get_size();
-            ImVec2 overlay_size(static_cast<float>(win_fb_size.x), static_cast<float>(win_fb_size.y));
-
-            ImGui::SetNextWindowPos(ImVec2(0, 0));
-            ImGui::SetNextWindowSize(overlay_size);
-            ImGui::Begin("BCKGND", NULL, overlay_size, 0.0f,
-                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | 
-                ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse |
-                ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs |
-                ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-
-            draw_list = ImGui::GetWindowDrawList();
-
-            binding = *win_ite;
-            break;
-        }
-
-        case graphics_driver_end_window: {
-            assert(binding && "No window are currently binded");
-
-            ImGui::End();
-            ImGui::EndFrame();
-            ImGui::Render();
-
-            ImDrawData *data = ImGui::GetDrawData();
-
-            if (data) {
-                render_frame(data);
-            }
-
-            binding->fb->unbind();
-
-            binding.reset();
-            draw_list = nullptr;
-
-            break;
-        }
-
-        case graphics_driver_resize_screen: {
-            assert(!binding && "Sanity check, discovered that currently a window is binded. Unbind to resize.");
-            framebuffer->unbind();
-
-            auto v = *request->context.pop<vec2>();
-            set_screen_size(v);
-
-            framebuffer->bind();
-
-            break;
-        }
-
-        case graphics_driver_destroy_window: {
-            std::uint32_t id = *request->context.pop<std::uint32_t>();
-            auto win_ite = std::find_if(windows.begin(), windows.end(),
-                [=](const embed_window_ptr &win) { return win->id == id; });
-
-            if (win_ite == windows.end()) {
-                break;
-            }
-
-            windows.remove(*win_ite);
-
-            break;
-        }
-
-        case graphics_driver_set_window_size: {
-            std::uint32_t id = *request->context.pop<std::uint32_t>();
-            auto win_ite = std::find_if(windows.begin(), windows.end(),
-                [=](const embed_window_ptr &win) { return win->id == id; });
-
-            if (win_ite == windows.end()) {
-                break;
-            }
-
-            (*win_ite)->fb->resize(*request->context.pop<vec2>());
-            break;
-        }
-
-        case graphics_driver_set_priority: {
-            std::uint32_t id = *request->context.pop<std::uint32_t>();
-            auto win_ite = std::find_if(windows.begin(), windows.end(),
-                [=](const embed_window_ptr &win) { return win->id == id; });
-
-            if (win_ite == windows.end()) {
-                break;
-            }
-
-            (*win_ite)->pri = (*request->context.pop<std::uint16_t>());
-            windows.resort();
-
-            break;
-        }
-
-        case graphics_driver_set_visibility: {
-            std::uint32_t id = *request->context.pop<std::uint32_t>();
-            auto win_ite = std::find_if(windows.begin(), windows.end(),
-                [=](const embed_window_ptr &win) { return win->id == id; });
-
-            if (win_ite == windows.end()) {
-                break;
-            }
-
-            (*win_ite)->visible = (*request->context.pop<bool>());
-            break;
-        }
-
-        case graphics_driver_set_win_pos: {
-            std::uint32_t id = *request->context.pop<std::uint32_t>();
-            auto win_ite = std::find_if(windows.begin(), windows.end(),
-                [=](const embed_window_ptr &win) { return win->id == id; });
-
-            if (win_ite == windows.end()) {
-                break;
-            }
-
-            (*win_ite)->pos = (*request->context.pop<vec2>());
-            break;
-        }
-
-        case graphics_driver_draw_text_box: {
-            eka2l1::rect bound = *request->context.pop<rect>();
-            std::string text = *request->context.pop_string();
-
-            // TODO: Use the actual clip. Must calculate text size
-            draw_list->AddText(nullptr, 6.0f, ImVec2(static_cast<float>(bound.top.x), static_cast<float>(bound.top.y)),
-                ImColor(0.0f, 0.0f, 0.0f, 1.0f), &text[0], text.length() == 1 ? nullptr : &text[text.length() - 1]);
-
-            break;
-        }
-
-        case graphics_driver_draw_bitmap: {
-            drivers::handle bmp_handle = *request->context.pop<drivers::handle>();
-            eka2l1::rect rect = *request->context.pop<eka2l1::rect>();
-
-            draw_list->AddImage(
-                reinterpret_cast<ImTextureID>(bmp_handle),
-                ImVec2(static_cast<float>(rect.top.x), static_cast<float>(rect.top.y)),
-                ImVec2(static_cast<float>(rect.top.x + rect.size.width()), 
-                       static_cast<float>(rect.top.y + rect.size.height())));
-
-            break;
-        }
-
-        case graphics_driver_upload_bitmap: {
-            const std::size_t size = *request->context.pop<std::size_t>(); 
-            const std::uint32_t width = *request->context.pop<std::uint32_t>();
-            const std::uint32_t height = *request->context.pop<std::uint32_t>();
-            const int bpp = *request->context.pop<int>();
-            void *data = *request->context.pop<void*>();
-
-            drivers::handle *handle_ptr = *request->context.pop<drivers::handle*>();
-            *handle_ptr = upload_bitmap(*handle_ptr, size, width, height, bpp, data);
-
-            break;
-        }
-
-        default: {
-            return false;
-        }
-        }
-
-        request->finish(0);
+        graphic_objects[handle - 1].reset();
         return true;
     }
 
-    void shared_graphics_driver::do_request_queue_execute_job() {
-        /* When framebuffer change size, all elements must be redraw*/
-        draw_list = nullptr;
-
-        for (;;) {
-            auto request = request_queue.pop();
-
-            if (!request) {
-                break;
-            }
-
-            do_request_queue_execute_one_request(&(request.value()));
+    graphics_object *shared_graphics_driver::get_graphics_object(const drivers::handle num) {
+        if (num > graphic_objects.size() || num == 0) {
+            return nullptr;
         }
+
+        return graphic_objects[num - 1].get();
     }
 
-    void shared_graphics_driver::redraw_window_list() {
-        assert(!binding && "A window is currently being binded, not able to redraw window list!");
+    void shared_graphics_driver::update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
+        const eka2l1::vec2 &dim, int bpp, const void *data) {
+        // Get our bitmap
+        bitmap *bmp = get_bitmap(h);
 
-        ImGui::NewFrame();
-        ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-        ImGui::Begin("BCKGND", NULL, ImGui::GetIO().DisplaySize, 0.0f,
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | 
-            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | 
-            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | 
-            ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | 
-            ImGuiWindowFlags_NoBringToFrontOnFocus);
+        if (bmp == nullptr) {
+            return;
+        }
 
-        ImVec2 base_pos = ImVec2(0.0f, 0.0f);
+        texture_format internal_format = texture_format::none;
+        texture_format data_format = texture_format::none;
 
-        for (auto &window : windows) {
-            const eka2l1::vec2 win_size = window->fb->get_size();
-            
-            if (window->visible && win_size != eka2l1::vec2(0, 0)) {
-                ImVec2 win_pos = ImVec2(static_cast<float>(window->pos.x), static_cast<float>(window->pos.y));
+        translate_bpp_to_format(bpp, internal_format, data_format);
 
-                ImGui::GetWindowDrawList()->AddImage(reinterpret_cast<ImTextureID>(
-                    static_cast<std::uint64_t>(window->fb->texture_handle())),
-                    ImVec2(base_pos.x + win_pos.x,
-                        base_pos.y + win_pos.y),
-                    ImVec2(base_pos.x + win_pos.x + win_size.x,
-                        base_pos.y + win_pos.y + win_size.y),
-                    ImVec2(0, 1), ImVec2(1, 0));
+        bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), data_format,
+            texture_data_type::ubyte, data);
+        
+    }
+
+    void shared_graphics_driver::update_bitmap(command_helper &helper) {
+        drivers::handle handle = 0;
+        void *data = nullptr;
+        int bpp = 0;
+        std::size_t size = 0;
+        eka2l1::vec2 offset;
+        eka2l1::vec2 dim;
+
+        helper.pop(handle);
+        helper.pop(data);
+        helper.pop(bpp);
+        helper.pop(size);
+        helper.pop(offset);
+        helper.pop(dim);
+
+        update_bitmap(handle, size, offset, dim, bpp, data);
+
+        delete data;
+    }
+
+    void shared_graphics_driver::create_bitmap(command_helper &helper) {
+        eka2l1::vec2 size;
+        drivers::handle *result = nullptr;
+
+        helper.pop(size);
+        helper.pop(result);
+
+        // Find free slot
+        auto slot_free = std::find(bmp_textures.begin(), bmp_textures.end(), nullptr);
+
+        if (slot_free != bmp_textures.end()) {
+            *slot_free = std::make_unique<bitmap>(this, size, 32);
+            *result = std::distance(bmp_textures.begin(), slot_free) + 1;
+        } else {
+            bmp_textures.push_back(std::make_unique<bitmap>(this, size, 32));
+            *result = bmp_textures.size();
+        }
+
+        *result |= HANDLE_BITMAP;
+
+        // Notify
+        helper.finish(this, 0);
+    }
+
+    void shared_graphics_driver::bind_bitmap(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        if (h == 0) {
+            current_fb_height = swapchain_size.y;
+            binding = nullptr;
+
+            // bind back to what we used to
+            bind_swapchain_framebuf();
+
+            return;
+        }
+
+        bitmap *bmp = get_bitmap(h);
+
+        if (!bmp) {
+            LOG_ERROR("Bitmap handle invalid to be binded");
+            return;
+        }
+
+        if (!bmp->fb) {
+            // Make new one
+            bmp->fb = make_framebuffer(this, bmp->tex.get(), nullptr);
+        }
+
+        // Bind the framebuffer
+        bmp->fb->bind(this);
+        binding = bmp;
+
+        // Build projection matrixx
+        projection_matrix = glm::identity<glm::mat4>();
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(bmp->tex->get_size().x), static_cast<float>(bmp->tex->get_size().y),
+            0.0f, -1.0f, 1.0f);
+
+        current_fb_height = bmp->tex->get_size().y;
+        set_viewport(eka2l1::rect(eka2l1::vec2(0, 0), bmp->tex->get_size()));
+    }
+
+    void shared_graphics_driver::destroy_bitmap(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        if (h > bmp_textures.size()) {
+            LOG_ERROR("Invalid bitmap handle to destroy");
+            return;
+        }
+
+        bmp_textures[h - 1].reset();
+    }
+
+    void shared_graphics_driver::resize_bitmap(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        bitmap *bmp = get_bitmap(h);
+
+        if (!bmp) {
+            LOG_ERROR("Bitmap handle invalid to be binded");
+            return;
+        }
+
+        vec2 new_size = { 0, 0 };
+        helper.pop(new_size);
+
+        // Change texture size
+        bmp->tex->change_size({ new_size.x, new_size.y, 0 });
+
+        bmp->tex->bind(this, 0);
+        bmp->tex->tex(this, false);
+        bmp->tex->unbind(this);
+    }
+
+    void shared_graphics_driver::set_brush_color(command_helper &helper) {
+        float r = 0.0f;
+        float g = 0.0f;
+        float b = 0.0f;
+        float a = 0.0f;
+
+        helper.pop(r);
+        helper.pop(g);
+        helper.pop(b);
+        helper.pop(a);
+
+        brush_color = { r, g, b, a };
+    }
+
+    void shared_graphics_driver::create_program(command_helper &helper) {
+        char *vert_data = nullptr;
+        char *frag_data = nullptr;
+        void **metadata = nullptr;
+
+        std::size_t vert_size = 0;
+        std::size_t frag_size = 0;
+
+        helper.pop(vert_data);
+        helper.pop(frag_data);
+        helper.pop(vert_size);
+        helper.pop(frag_size);
+        helper.pop(metadata);
+
+        auto obj = make_shader(this);
+        if (!obj->create(this, vert_data, vert_size, frag_data, frag_size)) {
+            LOG_ERROR("Fail to create shader");
+            return;
+        }
+
+        if (metadata) {
+            *metadata = obj->get_metadata();
+        }
+
+        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
+        drivers::handle res = append_graphics_object(obj_casted);
+
+        drivers::handle *store = nullptr;
+        helper.pop(store);
+
+        *store = res;
+        helper.finish(this, 0);
+    }
+
+    void shared_graphics_driver::create_texture(command_helper &helper) {
+        std::uint8_t dim = 0;
+        std::uint8_t mip_level = 0;
+
+        drivers::texture_format internal_format = drivers::texture_format::none;
+        drivers::texture_format data_format = drivers::texture_format::none;
+        drivers::texture_data_type data_type = drivers::texture_data_type::ubyte;
+        void *data = nullptr;
+
+        helper.pop(dim);
+        helper.pop(mip_level);
+        helper.pop(internal_format);
+        helper.pop(data_format);
+        helper.pop(data_type);
+        helper.pop(data);
+
+        std::uint32_t width = 0;
+        std::uint32_t height = 0;
+        std::uint32_t depth = 0;
+
+        if (dim >= 1) {
+            helper.pop(width);
+
+            if (dim >= 2) {
+                helper.pop(height);
+
+                if (dim == 3) {
+                    helper.pop(depth);
+                }
             }
         }
 
-        ImGui::End();
-        ImGui::EndFrame();
-        
-        ImGui::Render();
+        auto obj = make_texture(this);
+        obj->create(this, static_cast<int>(dim), static_cast<int>(mip_level), eka2l1::vec3(width, height, depth),
+            internal_format, data_format, data_type, data);
 
-        ImDrawData *data = ImGui::GetDrawData();
+        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
+        drivers::handle res = append_graphics_object(obj_casted);
 
-        if (data) {
-            render_frame(data);
-        }
+        drivers::handle *store = nullptr;
+        helper.pop(store);
+
+        *store = res;
+
+        helper.finish(this, 0);
     }
 
-    void shared_graphics_driver::process_requests() {        
-        framebuffer->bind();
+    void shared_graphics_driver::create_buffer(command_helper &helper) {
+        std::size_t initial_size = 0;
+        buffer_hint hint = buffer_hint::none;
+        buffer_upload_hint upload_hint = static_cast<buffer_upload_hint>(0);
 
-        auto last_context = ImGui::GetCurrentContext();
-        ImGui::SetCurrentContext(context);
+        helper.pop(initial_size);
+        helper.pop(hint);
+        helper.pop(upload_hint);
 
-        ImGuiStyle &style = ImGui::GetStyle();
-        style.WindowBorderSize = 0.0f;
+        auto obj = make_buffer(this);
+        obj->create(this, initial_size, hint, upload_hint);
 
-        /* Start new ImGui frame */
-        start_new_backend_frame();
-        ImGuiIO &io = ImGui::GetIO();
+        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
+        drivers::handle res = append_graphics_object(obj_casted);
 
-        auto fb_size = framebuffer->get_size();
+        drivers::handle *store = nullptr;
+        helper.pop(store);
 
-        io.DisplaySize = ImVec2(static_cast<float>(fb_size.x), static_cast<float>(fb_size.y));
-        io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+        *store = res;
 
-        do_request_queue_execute_job();
+        helper.finish(this, 0);
+    }
 
-        if (should_rerender) {
-            redraw_window_list();
-            should_rerender = false;
+    void shared_graphics_driver::use_program(command_helper &helper) {
+        drivers::handle num;
+        helper.pop(num);
+
+        shader *shobj = reinterpret_cast<shader *>(get_graphics_object(num));
+
+        if (!shobj) {
+            return;
+        }
+
+        shobj->use(this);
+    }
+
+    void shared_graphics_driver::set_uniform(command_helper &helper) {
+        drivers::handle num;
+        drivers::shader_set_var_type var_type;
+        void *data = nullptr;
+        int binding = 0;
+
+        helper.pop(num);
+        helper.pop(var_type);
+        helper.pop(data);
+        helper.pop(binding);
+
+        shader *shobj = reinterpret_cast<shader *>(get_graphics_object(num));
+
+        if (!shobj) {
+            return;
+        }
+
+        shobj->set(this, binding, var_type, data);
+
+        delete data;
+    }
+
+    void shared_graphics_driver::bind_texture(command_helper &helper) {
+        drivers::handle num = 0;
+        int binding = 0;
+
+        helper.pop(num);
+        helper.pop(binding);
+
+        if (num & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(num);
+
+            if (!b) {
+                return;
+            }
+
+            b->tex->bind(this, binding);
+            return;
+        }
+
+        texture *texobj = reinterpret_cast<texture *>(get_graphics_object(num));
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->bind(this, binding);
+    }
+
+    void shared_graphics_driver::bind_buffer(command_helper &helper) {
+        drivers::handle num = 0;
+
+        helper.pop(num);
+
+        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(num));
+
+        if (!bufobj) {
+            return;
+        }
+
+        bufobj->bind(this);
+    }
+
+    void shared_graphics_driver::update_buffer(command_helper &helper) {
+        drivers::handle num = 0;
+        void *data = nullptr;
+        std::size_t offset = 0;
+        std::size_t size = 0;
+
+        helper.pop(num);
+        helper.pop(data);
+        helper.pop(offset);
+        helper.pop(size);
+
+        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(num));
+
+        if (!bufobj) {
+            return;
+        }
+
+        bufobj->update_data(this, data, offset, size);
+
+        delete data;
+    }
+
+    void shared_graphics_driver::attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
+        const attribute_descriptor *descriptors, const int descriptor_count) {
+        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(h));
+
+        if (!bufobj) {
+            return;
+        }
+
+        bufobj->attach_descriptors(this, stride, instance_move, descriptors, descriptor_count);
+    }
+
+    void shared_graphics_driver::attach_descriptors(command_helper &helper) {
+        drivers::handle h = 0;
+        int stride = 0;
+        bool instance_move = false;
+        attribute_descriptor *descriptors = nullptr;
+        int descriptor_count = 0;
+
+        helper.pop(h);
+        helper.pop(stride);
+        helper.pop(instance_move);
+        helper.pop(descriptors);
+        helper.pop(descriptor_count);
+
+        attach_descriptors(h, stride, instance_move, descriptors, descriptor_count);
+    }
+
+    void shared_graphics_driver::destroy_object(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        delete_graphics_object(h);
+    }
+
+    void shared_graphics_driver::set_filter(command_helper &helper) {
+        drivers::handle h = 0;
+        drivers::filter_option min = drivers::filter_option::linear;
+        drivers::filter_option mag = drivers::filter_option::linear;
+
+        helper.pop(h);
+        helper.pop(min);
+        helper.pop(mag);
+
+        texture *texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->set_filter_minmag(false, min);
+        texobj->set_filter_minmag(true, mag);
+    }
+
+    void shared_graphics_driver::set_swapchain_size(command_helper &helper) {
+        eka2l1::vec2 size;
+        helper.pop(size);
+
+        swapchain_size = size;
+
+        if (!binding) {
+            current_fb_height = swapchain_size.y;
         }
         
-        ImGui::SetCurrentContext(last_context);
-        do_request_queue_clean_job();
+        projection_matrix = glm::identity<glm::mat4>();
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(swapchain_size.x), static_cast<float>(swapchain_size.y),
+            0.0f, -1.0f, 1.0f);
+    }
 
-        cond.notify_all();
-        framebuffer->unbind();
+    void shared_graphics_driver::dispatch(command *cmd) {
+        command_helper helper(cmd);
+
+        switch (cmd->opcode_) {
+        case graphics_driver_create_bitmap: {
+            create_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_bind_bitmap: {
+            bind_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_update_bitmap: {
+            update_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_resize_bitmap: {
+            resize_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_destroy_bitmap: {
+            destroy_bitmap(helper);
+            break;
+        }
+
+        case graphics_driver_destroy_object: {
+            destroy_object(helper);
+            break;
+        }
+
+        case graphics_driver_set_brush_color: {
+            set_brush_color(helper);
+            break;
+        }
+
+        case graphics_driver_create_program: {
+            create_program(helper);
+            break;
+        }
+
+        case graphics_driver_create_texture: {
+            create_texture(helper);
+            break;
+        }
+
+        case graphics_driver_create_buffer: {
+            create_buffer(helper);
+            break;
+        }
+
+        case graphics_driver_set_uniform: {
+            set_uniform(helper);
+            break;
+        }
+
+        case graphics_driver_use_program: {
+            use_program(helper);
+            break;
+        }
+
+        case graphics_driver_bind_texture: {
+            bind_texture(helper);
+            break;
+        }
+
+        case graphics_driver_bind_buffer: {
+            bind_buffer(helper);
+            break;
+        }
+
+        case graphics_driver_update_buffer: {
+            update_buffer(helper);
+            break;
+        }
+
+        case graphics_driver_attach_descriptors: {
+            attach_descriptors(helper);
+            break;
+        }
+
+        case graphics_driver_set_texture_filter: {
+            set_filter(helper);
+            break;
+        }
+
+        case graphics_driver_set_swapchain_size: {
+            set_swapchain_size(helper);
+            break;
+        }
+
+        default:
+            LOG_ERROR("Unimplemented opcode {} for graphics driver", cmd->opcode_);
+            break;
+        }
     }
 }

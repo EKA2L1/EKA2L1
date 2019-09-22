@@ -125,8 +125,6 @@ namespace eka2l1 {
             friend class semaphore;
             friend class process;
 
-            kernel::process *own_process;
-
             thread_state state;
             std::mutex mut;
             std::condition_variable todo;
@@ -291,7 +289,7 @@ namespace eka2l1 {
             }
 
             kernel::process *owning_process() {
-                return own_process;
+                return reinterpret_cast<kernel::process*>(owner);
             }
 
             arm::arm_interface::thread_context &get_thread_context() {

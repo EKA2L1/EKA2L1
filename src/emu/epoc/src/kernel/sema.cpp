@@ -30,7 +30,7 @@ namespace eka2l1 {
         semaphore::semaphore(kernel_system *sys, std::string sema_name,
             int32_t init_count,
             kernel::access_type access)
-            : kernel_obj(sys, std::move(sema_name), access)
+            : kernel_obj(sys, std::move(sema_name), sys->crr_process(), access)
             , avail_count(init_count)
             , signaling(false) {
             obj_type = object_type::sema;

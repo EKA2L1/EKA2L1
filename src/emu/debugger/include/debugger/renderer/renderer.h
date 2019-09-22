@@ -1,47 +1,43 @@
 #pragma once
 
 #include <cstdint>
+#include <chrono>
 #include <memory>
+#include <string>
 
 #include <drivers/graphics/common.h>
 #include <drivers/graphics/imgui_renderer.h>
-
 #include <debugger/debugger.h>
+#include <debugger/renderer/spritesheet.h>
 
 namespace eka2l1 {
-    using debugger_ptr = std::shared_ptr<debugger_base>;
-
     namespace drivers {
         class graphics_driver;
-        class input_driver;
-        class imgui_renderer_base;
-        class texture;
-
-        using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
-        using input_driver_ptr = std::shared_ptr<drivers::input_driver>;
-        using imgui_renderer_instance = std::unique_ptr<imgui_renderer_base>;
-        using texture_ptr = std::shared_ptr<texture>;
     }
 
     class debugger_renderer {
     protected:
-        debugger_ptr debugger;
+        debugger_base *debugger_;
+        drivers::handle background_tex_;
+        std::unique_ptr<drivers::imgui_renderer> irenderer_;
+        renderer::spritesheet error_sheet;
 
-        drivers::graphics_driver_ptr gr_driver_;
-        drivers::input_driver_ptr inp_driver_;
+        std::string background_change_path_;
+        std::chrono::steady_clock::time_point prev_time;
 
-        drivers::imgui_renderer_instance irenderer;
-        drivers::texture_ptr background_tex_;
+    protected:
+        bool change_background_internal(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder, const char *path);
 
     public:
-        void init(drivers::graphic_api gr_api, drivers::graphics_driver_ptr graphic_driver, drivers::input_driver_ptr input_driver,
-            debugger_ptr debugger);
+        void init(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+            debugger_base *debugger);
 
-        void draw(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height);
-        void deinit();
+        void draw(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+            const std::uint32_t width, const std::uint32_t height, const std::uint32_t fb_width,
+            const std::uint32_t fb_height);
+
+        void deinit(drivers::graphics_command_list_builder *builder);
 
         bool change_background(const char *path);
     };
-
-    using debugger_renderer_ptr = std::shared_ptr<debugger_renderer>;
 }

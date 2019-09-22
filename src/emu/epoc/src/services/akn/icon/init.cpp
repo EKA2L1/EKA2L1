@@ -54,7 +54,7 @@ namespace eka2l1 {
         }
 
         // Read the file
-        eka2l1::ro_file_stream config_file_stream(config_file);
+        eka2l1::ro_file_stream config_file_stream(config_file.get());
         loader::rsc_file config_rsc(reinterpret_cast<common::ro_stream*>(&config_file_stream));
 
         // Read the initialisation data

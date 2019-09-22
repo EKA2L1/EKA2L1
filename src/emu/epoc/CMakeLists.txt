@@ -131,6 +131,8 @@ add_library(epocservs
     include/epoc/services/ui/eikappui.h
     include/epoc/services/ui/oom_app.h
     include/epoc/services/window/bitmap_cache.h
+    include/epoc/services/window/scheduler.h
+    include/epoc/services/window/screen.h
     include/epoc/services/window/window.h
     include/epoc/ipc.h
     src/services/context.cpp
@@ -192,6 +194,8 @@ add_library(epocservs
     src/services/window/bitmap_cache.cpp
     src/services/window/common.cpp
     src/services/window/fifo.cpp
+    src/services/window/scheduler.cpp
+    src/services/window/screen.cpp
     src/services/window/window.cpp
     src/ipc.cpp
 )

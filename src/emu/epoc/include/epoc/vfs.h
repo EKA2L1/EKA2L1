@@ -79,7 +79,8 @@ namespace eka2l1 {
         io_component_type type;
 
         io_component() {}
-        virtual ~io_component() {}
+        virtual ~io_component() {
+        }
 
         explicit io_component(io_component_type type, io_attrib attrib = io_attrib::none);
     };
@@ -91,6 +92,9 @@ namespace eka2l1 {
     */
     struct file : public io_component {
         explicit file(io_attrib attrib = io_attrib::none);
+
+        virtual ~file() override {
+        }
 
         /*! \brief Write to the file. 
          *
@@ -173,8 +177,8 @@ namespace eka2l1 {
             std::uint32_t count);
     };
 
-    using symfile = std::shared_ptr<file>;
-    using io_component_ptr = std::shared_ptr<io_component>;
+    using symfile = std::unique_ptr<file>;
+    using io_component_ptr = std::unique_ptr<io_component>;
 
     /*! \brief A VFS drive. */
     struct drive : public io_component {
@@ -246,8 +250,8 @@ namespace eka2l1 {
 
         virtual bool unmount(const drive_number drv) = 0;
 
-        virtual std::shared_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
-        virtual std::shared_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) = 0;
+        virtual std::unique_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
+        virtual std::unique_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) = 0;
 
         virtual std::optional<entry_info> get_entry_info(const std::u16string &path) = 0;
 
@@ -357,11 +361,11 @@ namespace eka2l1 {
         *
         * \returns Null if the file doesn't exist or can't be open with given mode.
         */
-        std::shared_ptr<file> open_file(std::u16string vir_path, int mode);
+        std::unique_ptr<file> open_file(std::u16string vir_path, int mode);
 
         /*! \brief Open the directory in guest.
         */
-        std::shared_ptr<directory> open_dir(std::u16string vir_path,
+        std::unique_ptr<directory> open_dir(std::u16string vir_path,
             const io_attrib attrib = io_attrib::none);
 
         /*! \brief Get a drive info.
@@ -395,10 +399,10 @@ namespace eka2l1 {
     symfile physical_file_proxy(const std::string &path, int mode);
 
     class ro_file_stream: public common::ro_stream {
-        symfile f_;
+        file *f_;
 
     public:
-        explicit ro_file_stream(symfile f): f_(f) {
+        explicit ro_file_stream(file *f): f_(f) {
         }
 
         void seek(const std::uint64_t amount, common::seek_where wh) override;

@@ -78,7 +78,6 @@ namespace eka2l1 {
             std::unique_ptr<mem::mem_model_chunk> mmc_impl_unq_;
 
             memory_system *mem;
-            kernel::process *own_process;
 
             bool is_heap;
 
@@ -143,11 +142,7 @@ namespace eka2l1 {
             bool allocate(size_t size);
 
             kernel::process *get_own_process() {
-                return own_process;
-            }
-
-            void set_own_process(kernel::process *new_own) {
-                own_process = new_own;
+                return reinterpret_cast<kernel::process*>(owner);
             }
 
             bool is_chunk_heap() const {

@@ -17,14 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <drivers/graphics/graphics.h>
 #include <drivers/graphics/texture.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
 
 namespace eka2l1::drivers {
-    texture_ptr make_texture(const graphic_api gr_api) {
-        switch (gr_api) {
+    texture_ptr make_texture(graphics_driver *driver) {
+        switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_shared<ogl_texture>();
+            return std::make_unique<ogl_texture>();
             break;
         }
 

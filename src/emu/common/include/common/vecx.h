@@ -200,5 +200,14 @@ namespace eka2l1 {
         explicit rect(const vec2 &top_, const vec2 &obj_size_)
             : top(top_), size(obj_size_) { 
         }
+
+        /**
+         * \brief Check if the rectangle region is empty.
+         * 
+         * This is equals to checking if the size is 0
+         */
+        bool empty() const {
+            return (size.x == 0) && (size.y == 0);
+        }
     };
 }

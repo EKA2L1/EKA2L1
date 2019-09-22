@@ -21,46 +21,113 @@
 #pragma once
 
 #include <common/vecx.h>
+
 #include <drivers/driver.h>
+#include <drivers/itc.h>
 #include <drivers/graphics/common.h>
 
+#include <functional>
 #include <memory>
 
 namespace eka2l1::drivers {
-    enum graphics_driver_opcode {
+    enum graphics_driver_opcode : std::uint16_t {
+        // Mode -1: Miscs
+        graphics_driver_invalidate_rect,
+        graphics_driver_set_invalidate,
+        graphics_driver_set_viewport,
+        graphics_driver_set_blend,
+        graphics_driver_set_depth,
+        graphics_driver_set_cull,
+        graphics_driver_blend_formula,
+        graphics_driver_set_back_face_rule,
+        graphics_driver_set_swapchain_size,
+
+        // Mode 0: Immediate - Draw direct 2D elements to screen
         graphics_driver_clear,
-        graphics_driver_resize_screen,
-        graphics_driver_create_window,
-        graphics_driver_destroy_window,
-        graphics_driver_begin_window,
-        graphics_driver_invalidate,
-        graphics_driver_end_invalidate,
-        graphics_driver_end_window,
+        graphics_driver_create_bitmap,
+        graphics_driver_destroy_bitmap,
+        graphics_driver_bind_bitmap,
         graphics_driver_set_brush_color,
-        graphics_driver_set_window_size,
-        graphics_driver_set_priority,
-        graphics_driver_set_visibility,
-        graphics_driver_set_win_pos,
-        graphics_driver_draw_text_box,
-        graphics_driver_upload_bitmap,
-        graphics_driver_draw_bitmap
+        graphics_driver_update_bitmap,
+        graphics_driver_draw_bitmap,
+        graphics_driver_resize_bitmap,
+
+        // Mode 1: Advance - Lower access to functions
+        graphics_driver_create_program,
+        graphics_driver_create_texture,
+        graphics_driver_create_buffer,
+        graphics_driver_destroy_object,
+        graphics_driver_set_texture_filter,
+        graphics_driver_use_program,
+        graphics_driver_set_uniform,
+        graphics_driver_bind_texture,
+        graphics_driver_bind_buffer,
+        graphics_driver_draw_indexed,
+        graphics_driver_update_buffer,
+        graphics_driver_set_state,
+        graphics_driver_attach_descriptors,
+        graphics_driver_display,
+        graphics_driver_backup_state, // Backup all possible state to a struct
+        graphics_driver_restore_state // Restore previously backup data
     };
+
+    using display_hook = std::function<void()>;
 
     class graphics_driver : public driver {
-    public:
-        graphics_driver() {}
+        graphic_api api_;
 
-        virtual vec2 get_screen_size() = 0;
-        virtual void set_screen_size(const vec2 &s) = 0;
-        virtual std::vector<std::uint8_t> get_render_texture_data(std::size_t stride) = 0;
-        virtual std::uint64_t get_render_texture_handle() = 0;        
-        virtual drivers::handle upload_bitmap(drivers::handle h, const std::size_t size, 
-            const std::uint32_t width, const std::uint32_t height, const int bpp, void *data) = 0;
+    protected:
+        display_hook disp_hook_;
+
+    public:
+        explicit graphics_driver(graphic_api api)
+            : api_(api) {}
+
+        const graphic_api get_current_api() const {
+            return api_;
+        }
+
+        /**
+         * \brief Set a hook when display function is called.
+         *
+         * On Vulkan, display may be done using vkQueueDisplayKHR, then you can hook to do things like for example,
+         * polling window events.
+         *
+         * On OpenGL, this hook is expected to swap buffers and also do other things.
+         *
+         * \param hook    Contains function to hook.
+         */
+        void set_display_hook(display_hook hook) {
+            disp_hook_ = hook;
+        }
+
+        virtual void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
+            const eka2l1::vec2 &dim, const int bpp, const void *data)
+            = 0;
+
+        virtual void attach_descriptors(drivers::handle h, const int stride, const bool instance_move, const attribute_descriptor *descriptors,
+            const int descriptor_count)
+            = 0;
+
+        virtual void set_viewport(const eka2l1::rect &viewport) = 0;
+
+        virtual std::unique_ptr<graphics_command_list> new_command_list() = 0;
+
+        virtual std::unique_ptr<graphics_command_list_builder> new_command_builder(graphics_command_list *list) = 0;
+
+        /**
+         * \brief Submit a command list.
+         * 
+         * The list object will be copied within the function, and can be safely delete after.
+         *
+         * \param command_list     Command list to submit.
+         */
+        virtual void submit_command_list(graphics_command_list &command_list) = 0;
     };
 
-    using graphics_driver_ptr = std::shared_ptr<graphics_driver>;
+    using graphics_driver_ptr = std::unique_ptr<graphics_driver>;
 
     bool init_graphics_library(graphic_api api);
 
-    graphics_driver_ptr create_graphics_driver(const graphic_api api, const vec2 &screen_size);
+    graphics_driver_ptr create_graphics_driver(const graphic_api api);
 };

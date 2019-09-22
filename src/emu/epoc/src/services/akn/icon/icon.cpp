@@ -91,6 +91,10 @@ namespace eka2l1 {
                 return;
             }
 
+            // Increase ref
+            bmp->ref();
+            mask->ref();
+
             ret->bitmap_handle = bmp->id;
             ret->content_dim.x = size.x;
             ret->content_dim.y = size.y;

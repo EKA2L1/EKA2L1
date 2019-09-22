@@ -24,88 +24,48 @@
 #include <common/log.h>
 
 namespace eka2l1::drivers {
-    ogl_framebuffer::ogl_framebuffer(const vec2 &size)
-        : framebuffer(size) {
+    ogl_framebuffer::ogl_framebuffer(texture *color_buffer, texture *depth_buffere)
+        : framebuffer(color_buffer, depth_buffere) {
         glGenFramebuffers(1, &fbo);
-        bind();
+        bind(nullptr);
 
-        texture.create(2, 0, vec3(size.x, size.y, 0), texture_format::rgba, texture_format::rgba,
-            texture_data_type::ubyte, nullptr);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+            static_cast<GLuint>(color_buffer->texture_handle()),
+            color_buffer->get_mip_level());
 
-        texture.set_filter_minmag(true, drivers::filter_option::linear);
-        texture.set_filter_minmag(false, drivers::filter_option::linear);
+        if (depth_buffer) {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                static_cast<GLuint>(depth_buffer->texture_handle()),
+                depth_buffer->get_mip_level());
+        }
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
-            static_cast<GLuint>(texture.texture_handle()),
-            texture.get_mip_level());
+        const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
-        glGenRenderbuffers(1, &rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
             LOG_ERROR("Framebuffer not complete!");
         }
 
-        glClearColor(0.2f, 0.4f, 0.8f, 1.0f);    
+        glClearColor(0.2f, 0.4f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        unbind();
+        unbind(nullptr);
     }
 
     ogl_framebuffer::~ogl_framebuffer() {
         glDeleteFramebuffers(1, &fbo);
     }
 
-    void ogl_framebuffer::bind() {
+    void ogl_framebuffer::bind(graphics_driver *driver) {
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &last_fb);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     }
 
-    void ogl_framebuffer::unbind() {
+    void ogl_framebuffer::unbind(graphics_driver *driver) {
         glBindFramebuffer(GL_FRAMEBUFFER, last_fb);
         last_fb = 0;
     }
 
-    void ogl_framebuffer::resize(const vec2 &s) {
-        size = s;
-
-        if (size == vec2(0, 0)) {
-            return;
-        }
-        
-        bind();
-
-        texture.bind();
-        texture.change_size(vec3(size.x, size.y, 0));
-        texture.tex();
-        texture.unbind();
-
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_INFO("Framebuffer not complete when resizing to {}x{}!", size.x, size.y);
-        }
-
-        unbind();
-    }
-
-    std::vector<std::uint8_t> ogl_framebuffer::data(std::size_t stride_pixels) {
-        std::vector<std::uint8_t> data;
-        data.resize(size.x * size.y);
-
-        glPixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(stride_pixels));
-        glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
-        glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-
-        return data;
-    }
-
     std::uint64_t ogl_framebuffer::texture_handle() {
-        return texture.texture_handle();
+        return color_buffer->texture_handle();
     }
 }

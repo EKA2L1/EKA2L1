@@ -51,12 +51,7 @@ namespace eka2l1 {
     class gdbstub;
 
     namespace drivers {
-        class graphics_driver_client;
-        class input_driver_client;
-
-        class driver;
-
-        using driver_instance = std::shared_ptr<driver>;
+        class graphics_driver;
     }
 
     namespace arm {
@@ -65,11 +60,7 @@ namespace eka2l1 {
     }
 
     class debugger_base;
-    using debugger_ptr = std::shared_ptr<debugger_base>;
-
-    using hal_ptr = std::shared_ptr<epoc::hal>;
-    using graphics_driver_client_ptr = std::shared_ptr<drivers::graphics_driver_client>;
-    using input_driver_client_ptr = std::shared_ptr<drivers::input_driver_client>;
+    using hal_instance = std::unique_ptr<epoc::hal>;
 
     namespace loader {
         struct rom;
@@ -87,7 +78,7 @@ namespace eka2l1 {
     */
     class system {
         // TODO: Make unique
-        std::shared_ptr<system_impl> impl;
+        system_impl *impl;
 
     public:
         system(const system &) = delete;
@@ -96,14 +87,12 @@ namespace eka2l1 {
         system(system &&) = delete;
         system &operator=(system &&) = delete;
 
-        system(debugger_ptr debugger, drivers::driver_instance graphics_driver,
-            manager::config_state *conf);
+        system(drivers::graphics_driver *graphics_driver, manager::config_state *conf);
 
-        ~system() = default;
+        ~system();
 
-        void set_graphics_driver(drivers::driver_instance graphics_driver);
-        void set_input_driver(drivers::driver_instance input_driver);
-        void set_debugger(debugger_ptr new_debugger);
+        void set_graphics_driver(drivers::graphics_driver *driver);
+        void set_debugger(debugger_base *new_debugger);
         void set_symbian_version_use(const epocver ever);
         void set_jit_type(const arm_emulator_type type);
 
@@ -128,8 +117,7 @@ namespace eka2l1 {
         timing_system *get_timing_system();
         disasm *get_disasm();
         gdbstub *get_gdb_stub();
-        graphics_driver_client_ptr get_graphic_driver_client();
-        input_driver_client_ptr get_input_driver_client();
+        drivers::graphics_driver *get_graphics_driver();
         arm::jitter &get_cpu();
         manager::config_state *get_config();
 
@@ -154,8 +142,8 @@ namespace eka2l1 {
         void request_exit();
         bool should_exit() const;
 
-        void add_new_hal(uint32_t hal_cagetory, hal_ptr hal_com);
-        hal_ptr get_hal(uint32_t cagetory);
+        void add_new_hal(uint32_t hal_cagetory, hal_instance &hal_com);
+        epoc::hal *get_hal(uint32_t cagetory);
 
         const language get_system_language() const;
         void set_system_language(const language new_lang);

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <algorithm>
 #include <functional>
 #include <type_traits>
@@ -39,8 +40,8 @@ namespace eka2l1::common {
     }
 
     template <typename K, typename V, size_t LEN,
-              typename IS_EMPTY_FUNC_TYPE = decltype(is_vector_static_map_entry_empty<typename K>),
-              typename MARK_EMPTY_FUNC_TYPE = decltype(mark_vector_static_map_entry_empty<typename K>)>
+        typename IS_EMPTY_FUNC_TYPE = decltype(is_vector_static_map_entry_empty<K>),
+        typename MARK_EMPTY_FUNC_TYPE = decltype(mark_vector_static_map_entry_empty<K>)>
     class vector_static_map {
         K keys[LEN];
         V values[LEN];
@@ -49,8 +50,8 @@ namespace eka2l1::common {
         std::function<void(K&)> mark_empty_func;
 
     public:
-        explicit vector_static_map(IS_EMPTY_FUNC_TYPE is_empty_func = is_vector_static_map_entry_empty<typename K>,
-            MARK_EMPTY_FUNC_TYPE mark_empty_func = mark_vector_static_map_entry_empty<typename K>)
+        explicit vector_static_map(IS_EMPTY_FUNC_TYPE is_empty_func = is_vector_static_map_entry_empty<K>,
+            MARK_EMPTY_FUNC_TYPE mark_empty_func = mark_vector_static_map_entry_empty<K>)
             : is_empty_func(is_empty_func)
             , mark_empty_func(mark_empty_func) {
             clear();
@@ -61,8 +62,8 @@ namespace eka2l1::common {
             std::memset(values, 0, sizeof(V) * LEN);
         }
 
-        void init(IS_EMPTY_FUNC_TYPE a_is_empty_func = is_vector_static_map_entry_empty<typename K>,
-            MARK_EMPTY_FUNC_TYPE a_mark_empty_func = mark_vector_static_map_entry_empty<typename K>) {
+        void init(IS_EMPTY_FUNC_TYPE a_is_empty_func = is_vector_static_map_entry_empty<K>,
+            MARK_EMPTY_FUNC_TYPE a_mark_empty_func = mark_vector_static_map_entry_empty<K>) {
             is_empty_func = a_is_empty_func;
             mark_empty_func = a_mark_empty_func;
 

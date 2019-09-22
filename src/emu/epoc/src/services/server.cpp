@@ -59,7 +59,7 @@ namespace eka2l1 {
             : sys(sys)
             , hle(hle)
             , unhandle_callback_enable(unhandle_callback_enable)
-            , kernel_obj(sys->get_kernel_system(), name, kernel::access_type::global_access) {
+            , kernel_obj(sys->get_kernel_system(), name, nullptr, kernel::access_type::global_access) {
             kernel_system *kern = sys->get_kernel_system();
             process_msg = kern->create_msg(kernel::owner_type::process);
             process_msg->lock_free();

@@ -25,6 +25,9 @@
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
 #include <epoc/services/window/window.h>
+#include <epoc/services/window/screen.h>
+
+#include <epoc/timing.h>
 
 #include <common/e32inc.h>
 #include <common/log.h>
@@ -32,21 +35,183 @@
 #include <e32err.h>
 
 namespace eka2l1::epoc {
+    static constexpr std::uint8_t bits_per_ordpos = 4;
+    static constexpr std::uint8_t max_ordpos_pri = 0b1111;
+    static constexpr std::uint8_t max_pri_level = (sizeof(std::uint32_t) / bits_per_ordpos) - 1;
+
+    // ======================= WINDOW USER BASE ======================================
+    window_user_base::window_user_base(window_server_client_ptr client, screen *scr, window *parent, const window_kind kind)
+         : window(client, scr, parent, kind) {
+    }
+    
+    // ======================= WINDOW TOP USER (CLIENT) ===============================
+    window_top_user::window_top_user(window_server_client_ptr client, screen *scr, window *parent)
+        : window_user_base(client, scr, parent, window_kind::top_client) {
+
+    }
+
+    std::uint32_t window_top_user::redraw_priority(int *shift) {
+        const std::uint32_t ordinal_pos = std::min<std::uint32_t>(max_ordpos_pri, ordinal_position(false));
+        if (shift) {
+            *shift = max_pri_level;
+        }
+
+        return (ordinal_pos << (max_pri_level * bits_per_ordpos));
+    }
+    
+    window_user::window_user(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode)
+        : window_user_base(client, scr, parent, window_kind::client)
+        , win_type(type_of_window)
+        , pos(0, 0)
+        , size(0, 0)
+        , resize_needed(false) 
+        , clear_color(0xFFFFFFFF)
+        , filter(pointer_filter_type::all)
+        , cursor_pos(-1, -1)
+        , irect({ 0, 0 }, { 0, 0 })
+        , dmode(dmode)
+        , redraw_evt_id(0)
+        , driver_win_id(0)
+        , shadow_height(0)
+        , flags(0) {
+    }
+    
     void window_user::queue_event(const epoc::event &evt) {
         if (!is_visible()) {
-            LOG_TRACE("The window 0x{:X} is not visible, and can't receive any events",
-                id);
+            // TODO: Im not sure... I think it can certainly receive
+            LOG_TRACE("The client window 0x{:X} is not visible, and can't receive any events", id);
             return;
         }
 
         window::queue_event(evt);
     }
 
-    void window_user::priority_updated() {
-        get_group()->get_driver()->set_window_priority(driver_win_id, redraw_priority());
+    void window_user::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {        
+        pos = top;
+
+        // TODO (pent0): Currently our implementation differs from Symbian, that we invalidates the whole
+        // window. The reason is because, when we are resizing the texture in OpenGL/Vulkan, there is
+        // no easy way to keep buffer around without overheads. So Im just gonna make it redraw all.
+        //
+        // Where on Symbian, it only invalidates the reason which is empty when size is bigger.
+        if (new_size != size) {
+            // We do really need resize!
+            resize_needed = true;
+            client->queue_redraw(this, rect({ 0, 0 }, new_size));
+        }
+
+        size = new_size;
     }
 
-    void window_user::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+    void window_user::set_visible(const bool vis) {
+        bool should_trigger_redraw = false;
+
+        if (static_cast<bool>(flags & visible) != vis) {
+            should_trigger_redraw = true;
+        }
+
+        flags &= ~visible;
+
+        if (vis) {
+            flags |= visible;
+        }
+
+        if (should_trigger_redraw) {
+            // Redraw the screen. NOW!
+            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
+                scr, client->get_ws().get_timing_system()->get_global_time_us());
+        }
+    }
+
+    std::uint32_t window_user::redraw_priority(int *child_shift) {
+        int ordpos = ordinal_position(false);
+        if (ordpos > max_ordpos_pri) {
+            ordpos = max_ordpos_pri;
+        }
+
+        int shift = 0;
+        int parent_pri = reinterpret_cast<window_user_base*>(parent)->redraw_priority(&shift);
+
+        if (shift > 0) {
+            shift--;
+        }
+
+        if (child_shift) {
+            *child_shift = shift;
+        }
+
+        return (parent_pri + (ordpos << (bits_per_ordpos * shift)));
+    }
+
+    void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+            
+        if (resize_needed) {
+            // Queue a resize command
+            auto cmd_list = drv->new_command_list();
+            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+            cmd_builder->resize_bitmap(driver_win_id, size);
+            drv->submit_command_list(*cmd_list);
+
+            resize_needed = false;
+        }
+
+        common::double_linked_queue_element *ite = attached_contexts.first();
+        common::double_linked_queue_element *end = ite;
+
+        // Set all contexts to be in recording
+        do {
+            if (!ite) {
+                break;
+            }
+
+            epoc::graphic_context *ctx = E_LOFF(ite, epoc::graphic_context, context_attach_link);
+
+            ctx->recording = false;
+            ctx->flush_queue_to_driver();
+
+            ite = ite->next;
+        } while (ite != end);
+
+        LOG_DEBUG("End redraw to window 0x{:X}!", id);
+
+        // Want to trigger a screen redraw
+        if (is_visible()) {
+            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
+                scr, client->get_ws().get_timing_system()->get_global_time_us());
+        }
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+        common::double_linked_queue_element *ite = attached_contexts.first();
+        common::double_linked_queue_element *end = ite;
+
+        // Set all contexts to be in recording
+        do {
+            if (!ite) {
+                break;
+            }
+
+            E_LOFF(ite, epoc::graphic_context, context_attach_link)->recording = true;
+            ite = ite->next;
+        } while (ite != end);
+
+        LOG_TRACE("Begin redraw to window 0x{:X}!", id);
+
+        // Cancel pending redraw event, since by using this,
+        // we already starts one
+        if (redraw_evt_id) {
+            client->deque_redraw(redraw_evt_id);
+            redraw_evt_id = 0;
+        }
+
+        ctx.set_request_status(KErrNone);
+    }
+
+    void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
@@ -54,6 +219,7 @@ namespace eka2l1::epoc {
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        //LOG_TRACE("Window user op: {}", (int)op);
 
         switch (op) {
         case EWsWinOpRequiredDisplayMode: {
@@ -65,7 +231,7 @@ namespace eka2l1::epoc {
 
         // Fall through to get system display mode
         case EWsWinOpGetDisplayMode: {
-            ctx.write_arg_pkg<epoc::display_mode>(reply_slot, dvc->disp_mode);
+            ctx.write_arg_pkg<epoc::display_mode>(reply_slot, scr->disp_mode);
             ctx.set_request_status(KErrNone);
 
             break;
@@ -73,16 +239,8 @@ namespace eka2l1::epoc {
         
         case EWsWinOpSetExtent: {
             ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
-
-            pos = extent->pos;
-            size = extent->size;
-
-            // Set position to the driver
-            get_group()->get_driver()->set_window_size(driver_win_id, size);
-            get_group()->get_driver()->set_window_pos(driver_win_id, pos);
-
+            set_extent(extent->pos, extent->size);
             ctx.set_request_status(KErrNone);
-
             break;
         }
 
@@ -97,8 +255,6 @@ namespace eka2l1::epoc {
             const bool op = *reinterpret_cast<bool *>(cmd.data_ptr);
 
             set_visible(op);
-            get_group()->get_driver()->set_window_visible(driver_win_id, op);
-
             ctx.set_request_status(KErrNone);
 
             break;
@@ -167,8 +323,8 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpInvalidateFull: {
-            irect.in_top_left = pos;
-            irect.in_bottom_right = pos + size;
+            irect.top = pos;
+            irect.size = size;
 
             // Invalidate the whole window
             client->queue_redraw(this, rect(pos, pos + size));
@@ -178,11 +334,17 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpInvalidate: {
-            irect = *reinterpret_cast<invalidate_rect *>(cmd.data_ptr);
+            struct invalidate_rect {
+                eka2l1::vec2 in_top_left;
+                eka2l1::vec2 in_bottom_right;
+            };
+
+            const invalidate_rect prototype_irect = *reinterpret_cast<invalidate_rect *>(cmd.data_ptr);
+            irect.top = prototype_irect.in_top_left;
+            irect.size = prototype_irect.in_bottom_right - prototype_irect.in_top_left;
 
             // Invalidate needs redraw
-            redraw_evt_id = client->queue_redraw(this, rect(irect.in_top_left, 
-                irect.in_bottom_right - irect.in_top_left));
+            redraw_evt_id = client->queue_redraw(this, rect(irect.top, irect.size));
 
             ctx.set_request_status(KErrNone);
 
@@ -190,38 +352,13 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpBeginRedraw: case EWsWinOpBeginRedrawFull: {
-            for (auto &context : contexts) {
-                context->recording = true;
-
-                while (!context->draw_queue.empty()) {
-                    context->draw_queue.pop();
-                }
-            }
-
-            LOG_TRACE("Begin redraw!");
-
-            // Cancel pending redraw event, since by using this,
-            // we already starts one
-            if (redraw_evt_id) {
-                client->deque_redraw(redraw_evt_id);
-                redraw_evt_id = 0;
-            }
-
-            ctx.set_request_status(KErrNone);
-
+            begin_redraw(ctx, cmd);
             break;
         }
 
         case EWsWinOpEndRedraw: {
-            for (auto &context : contexts) {
-                context->recording = false;
-                context->flush_queue_to_driver();
-            }
-
-            LOG_TRACE("End redraw!");
-
-            ctx.set_request_status(KErrNone);
-            break;
+            end_redraw(ctx, cmd);
+            break;  
         }
 
         default: {

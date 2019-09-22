@@ -26,8 +26,9 @@
 
 namespace eka2l1 {
     namespace kernel {
-        kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name, kernel::access_type access)
+        kernel_obj::kernel_obj(kernel_system *kern, const std::string &obj_name, kernel_obj *owner, kernel::access_type access)
             : obj_name(obj_name)
+            , owner(owner)
             , kern(kern)
             , access(access)
             , uid(kern->next_uid()) {
@@ -49,6 +50,16 @@ namespace eka2l1 {
             seri.absorb(obj_type);
             seri.absorb(access);
             seri.absorb(access_count);
+        }
+    
+        void kernel_obj::full_name(std::string &name_will_full) {
+            if (owner) {
+                // recusively calling parent's owner to get name
+                owner->full_name(name_will_full);
+                name_will_full += "::";
+            }
+
+            name_will_full += obj_name;
         }
     }
 }

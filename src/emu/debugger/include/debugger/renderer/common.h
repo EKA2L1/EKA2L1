@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,15 @@
 
 #pragma once
 
-#include <drivers/graphics/texture.h>
 #include <drivers/graphics/common.h>
+#include <string>
 
-#include <memory>
+namespace eka2l1::drivers {
+    class graphics_driver;
+    class graphics_command_list_builder;
+}
 
-using namespace eka2l1;
-
-class sprite_batch {
-public:
-    virtual void draw(const drivers::handle sprite, const eka2l1::vec2 &pos, const eka2l1::vec2 &size,
-        const float rotation = 0.0f, const eka2l1::vec3 &color = eka2l1::vec3(1, 1, 1)) = 0;
-};
-
-using sprite_batch_inst = std::unique_ptr<sprite_batch>;
-
-sprite_batch_inst create_sprite_batch(const drivers::graphic_api gr_api);
+namespace eka2l1::renderer {
+    drivers::handle load_texture_from_file(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+        const std::string &path, const bool as_bitmap = false, int *width = nullptr, int *height = nullptr);
+}

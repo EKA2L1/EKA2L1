@@ -259,12 +259,12 @@ namespace eka2l1 {
     if (closed)    \
         LOG_WARN("File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
 
-        physical_file(utf16_str vfs_path, utf16_str real_path, int mode)
+        physical_file(const utf16_str &vfs_path, const utf16_str &real_path, const int mode)
             : file(nullptr) {
             init(vfs_path, real_path, mode);
         }
 
-        ~physical_file() {
+        ~physical_file() override {
             shutdown();
         }
 
@@ -276,7 +276,7 @@ namespace eka2l1 {
             return fmode;
         }
 
-        void init(utf16_str vfs_path, utf16_str real_path, int mode) {
+        void init(const utf16_str &vfs_path, const utf16_str &real_path, const int mode) {
             // Disable directory check here
             closed = false;
 
@@ -292,7 +292,7 @@ namespace eka2l1 {
                 return;
             }
 
-            input_name = std::move(vfs_path);
+            input_name = vfs_path;
             fmode = mode;
 
             if (file) {
@@ -681,7 +681,7 @@ namespace eka2l1 {
             return mappings[static_cast<int>(drv)].first;
         }
 
-        std::shared_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) override {
+        std::unique_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) override {
             std::u16string vir_path = path;
 
             size_t pos_bs = vir_path.find_last_of(u"\\");
@@ -709,16 +709,16 @@ namespace eka2l1 {
             auto new_path = get_real_physical_path(vir_path);
 
             if (!new_path) {
-                return std::shared_ptr<directory>(nullptr);
+                return std::unique_ptr<directory>(nullptr);
             }
 
             std::string new_path_utf8 = common::ucs2_to_utf8(*new_path);
 
             if (!eka2l1::exists(new_path_utf8)) {
-                return std::shared_ptr<directory>(nullptr);
+                return std::unique_ptr<directory>(nullptr);
             }
 
-            return std::make_shared<physical_directory>(this, new_path_utf8,
+            return std::make_unique<physical_directory>(this, new_path_utf8,
                 common::ucs2_to_utf8(vir_path), filter, attrib);
         }
 
@@ -763,7 +763,7 @@ namespace eka2l1 {
             return info;
         }
 
-        std::shared_ptr<file> open_file(const std::u16string &path, const int mode) override {
+        std::unique_ptr<file> open_file(const std::u16string &path, const int mode) override {
             std::optional<std::u16string> real_path = get_real_physical_path(path);
 
             if (!real_path) {
@@ -776,7 +776,7 @@ namespace eka2l1 {
                 return nullptr;
             }
 
-            return std::make_shared<physical_file>(path, *real_path, mode);
+            return std::make_unique<physical_file>(path, *real_path, mode);
         }
     };
 
@@ -874,7 +874,7 @@ namespace eka2l1 {
             return abstract_file_system_err_code::no;
         }
 
-        std::shared_ptr<file> open_file(const std::u16string &path, const int mode) override {
+        std::unique_ptr<file> open_file(const std::u16string &path, const int mode) override {
             if (mode & WRITE_MODE) {
                 LOG_ERROR("Opening a read-only file (ROM + ROFS) with write mode");
                 return nullptr;
@@ -901,7 +901,7 @@ namespace eka2l1 {
                 return physical_file_system::open_file(new_path, mode);
             }
 
-            return std::make_shared<rom_file>(mem, rom_cache, *entry);
+            return std::make_unique<rom_file>(mem, rom_cache, *entry);
         }
 
         std::optional<entry_info> get_entry_info(const std::u16string &path) override {
@@ -929,12 +929,12 @@ namespace eka2l1 {
     };
 
     std::shared_ptr<abstract_file_system> create_physical_filesystem(const epocver ver, const std::string &product_code) {
-        return std::make_shared<physical_file_system>(ver, product_code);
+        return std::make_unique<physical_file_system>(ver, product_code);
     }
 
     std::shared_ptr<abstract_file_system> create_rom_filesystem(loader::rom *rom_cache, memory_system *mem,
         const epocver ver, const std::string &product_code) {
-        return std::make_shared<rom_file_system>(rom_cache, mem, ver, product_code);
+        return std::make_unique<rom_file_system>(rom_cache, mem, ver, product_code);
     }
 
     io_component::io_component(io_component_type type, io_attrib attrib)
@@ -1008,7 +1008,7 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    std::shared_ptr<file> io_system::open_file(utf16_str vir_path, int mode) {
+    std::unique_ptr<file> io_system::open_file(utf16_str vir_path, int mode) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1020,7 +1020,7 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    std::shared_ptr<directory> io_system::open_dir(std::u16string vir_path, const io_attrib attrib) {
+    std::unique_ptr<directory> io_system::open_dir(std::u16string vir_path, const io_attrib attrib) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1155,7 +1155,7 @@ namespace eka2l1 {
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {
-        return std::make_shared<physical_file>(common::utf8_to_ucs2(path), common::utf8_to_ucs2(path), mode);
+        return std::make_unique<physical_file>(common::utf8_to_ucs2(path), common::utf8_to_ucs2(path), mode);
     }
 
     void ro_file_stream::seek(const std::uint64_t amount, common::seek_where wh) {

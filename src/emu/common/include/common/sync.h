@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team.
+ * Copyright (c) 2019 EKA2L1 Team
  * 
- * This file is part of EKA2L1 project
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,18 +17,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "spritebatch.h"
-#include "ogl/spritebatch_ogl.h"
+#pragma once
 
-sprite_batch_inst create_sprite_batch(const drivers::graphic_api gr_api) {
-    switch (gr_api) {
-    case drivers::graphic_api::opengl: {
-        return std::make_unique<sprite_batch_ogl>();
-    }
+#include <condition_variable>
+#include <mutex>
 
-    default:
-        break;
-    }
+namespace eka2l1::common {
+    class semaphore {
+        std::mutex mut_;
+        std::condition_variable cond_;
 
-    return nullptr;
+        int count_;
+
+    public:
+        explicit semaphore(const int inital = 0);
+
+        void notify(const int count = 1);
+        void wait();
+    };
 }

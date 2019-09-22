@@ -32,27 +32,27 @@
 namespace eka2l1 {
     void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive);
 
-    void fs_server_client::file_drive(service::ipc_context &ctx) {
-        std::optional<int> handle_res = ctx.get_arg<int>(3);
+    void fs_server_client::file_drive(service::ipc_context *ctx) {
+        std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx.set_request_status(KErrBadHandle);
+            ctx->set_request_status(KErrBadHandle);
             return;
         }
 
-        symfile f = std::reinterpret_pointer_cast<file>(node->vfs_node);
+        file *f = reinterpret_cast<file*>(node->vfs_node.get());
 
         drive_number drv = static_cast<drive_number>(std::towlower(f->file_name()[0]) - 'a');
         epoc::fs::drive_info info;
 
-        std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(
+        std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(
             static_cast<drive_number>(drv));
 
         if (!io_drive) {
@@ -61,10 +61,10 @@ namespace eka2l1 {
             fill_drive_info(&(info), *io_drive);
         }
 
-        ctx.write_arg_pkg<drive_number>(0, drv);
-        ctx.write_arg_pkg<epoc::fs::drive_info>(1, info);
+        ctx->write_arg_pkg<drive_number>(0, drv);
+        ctx->write_arg_pkg<epoc::fs::drive_info>(1, info);
 
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
     void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive) {
@@ -114,7 +114,7 @@ namespace eka2l1 {
         }
 
         if (static_cast<int>(io_drive.attribute & io_attrib::removeable)) {
-            info->drive_att |= epoc::fs::drive_att_logically_removeable;
+            info->drive_att |= epoc::fs::drive_att_removeable;
         }
 
         if (static_cast<int>(io_drive.attribute & io_attrib::write_protected)) {
@@ -123,17 +123,17 @@ namespace eka2l1 {
     }
 
     /* Simple for now only, in the future this should be more advance. */
-    void fs_server::drive(service::ipc_context &ctx) {
-        drive_number drv = static_cast<drive_number>(*ctx.get_arg<int>(1));
-        std::optional<epoc::fs::drive_info> info = ctx.get_arg_packed<epoc::fs::drive_info>(0);
+    void fs_server::drive(service::ipc_context *ctx) {
+        drive_number drv = static_cast<drive_number>(*ctx->get_arg<int>(1));
+        std::optional<epoc::fs::drive_info> info = ctx->get_arg_packed<epoc::fs::drive_info>(0);
 
         if (!info) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
         std::optional<eka2l1::drive> io_drive = 
-            ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+            ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
         if (!io_drive) {
             info->type = epoc::fs::media_unknown;
@@ -141,15 +141,15 @@ namespace eka2l1 {
             fill_drive_info(&(*info), *io_drive);
         }
 
-        ctx.write_arg_pkg<epoc::fs::drive_info>(0, *info);
-        ctx.set_request_status(KErrNone);
+        ctx->write_arg_pkg<epoc::fs::drive_info>(0, *info);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server::drive_list(service::ipc_context &ctx) {
-        std::optional<int> flags = ctx.get_arg<int>(1);
+    void fs_server::drive_list(service::ipc_context *ctx) {
+        std::optional<int> flags = ctx->get_arg<int>(1);
 
         if (!flags) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
@@ -170,7 +170,7 @@ namespace eka2l1 {
         std::fill(dlist.begin(), dlist.end(), 0);
 
         for (size_t i = drive_a; i < drive_count; i += 1) {
-            auto drv_op = ctx.sys->get_io_system()->get_drive_entry(
+            auto drv_op = ctx->sys->get_io_system()->get_drive_entry(
                 static_cast<drive_number>(i));
 
             if (drv_op) {
@@ -206,27 +206,27 @@ namespace eka2l1 {
             }
         }
 
-        bool success = ctx.write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]),
+        bool success = ctx->write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]),
             static_cast<std::uint32_t>(dlist.size()));
 
         if (!success) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server::volume(service::ipc_context &ctx) {
-        std::optional<epoc::fs::volume_info> info = ctx.get_arg_packed<epoc::fs::volume_info>(0);
+    void fs_server::volume(service::ipc_context *ctx) {
+        std::optional<epoc::fs::volume_info> info = ctx->get_arg_packed<epoc::fs::volume_info>(0);
 
         if (!info) {
-            ctx.set_request_status(KErrArgument);
+            ctx->set_request_status(KErrArgument);
             return;
         }
 
-        drive_number drv = static_cast<drive_number>(*ctx.get_arg<int>(1));
-        std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+        drive_number drv = static_cast<drive_number>(*ctx->get_arg<int>(1));
+        std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
         if (!io_drive) {
             info->drv_info.type = epoc::fs::media_unknown;
@@ -242,27 +242,27 @@ namespace eka2l1 {
         info->size = common::GB(1);
         info->free = common::GB(1);
 
-        ctx.write_arg_pkg<epoc::fs::volume_info>(0, *info);
-        ctx.set_request_status(KErrNone);
+        ctx->write_arg_pkg<epoc::fs::volume_info>(0, *info);
+        ctx->set_request_status(KErrNone);
     }
 
-    void fs_server::query_drive_info_ext(service::ipc_context &ctx) {
-        drive_number drv = static_cast<drive_number>(*ctx.get_arg<int>(0));
-        std::optional<eka2l1::drive> io_drive = ctx.sys->get_io_system()->get_drive_entry(drv);
+    void fs_server::query_drive_info_ext(service::ipc_context *ctx) {
+        drive_number drv = static_cast<drive_number>(*ctx->get_arg<int>(0));
+        std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(drv);
 
         // If the drive hasn't been mounted yet, return KErrNotFound
         if (!io_drive) {
-            ctx.set_request_status(KErrNotFound);
+            ctx->set_request_status(KErrNotFound);
             return;
         }
 
         epoc::fs::extended_fs_query_command query_cmd = 
-            static_cast<decltype(query_cmd)>(*ctx.get_arg<int>(1));
+            static_cast<decltype(query_cmd)>(*ctx->get_arg<int>(1));
 
         switch (query_cmd) {
         case epoc::fs::extended_fs_query_command::file_system_sub_type: {
             // Query file system type. Using FAT32 as default.
-            ctx.write_arg(2, u"FAT32");
+            ctx->write_arg(2, u"FAT32");
             break;
         }
 
@@ -270,7 +270,7 @@ namespace eka2l1 {
             // Check if drive is sync. Yes in this case.
             bool result = true;
 
-            ctx.write_arg_pkg(2, result);
+            ctx->write_arg_pkg(2, result);
             break;
         }
 
@@ -279,7 +279,7 @@ namespace eka2l1 {
 
             // Check if drive is safe to remove. Yes ?
             LOG_WARN("Checking if drive is finalised, stubbed");
-            ctx.write_arg_pkg(2, result);
+            ctx->write_arg_pkg(2, result);
             break;
         }
 
@@ -292,7 +292,7 @@ namespace eka2l1 {
             param.rec_write_buf_size = 16384;
 
             LOG_INFO("IOParamInfo stubbed");
-            ctx.write_arg_pkg(2, param);
+            ctx->write_arg_pkg(2, param);
 
             break;
         }
@@ -303,6 +303,6 @@ namespace eka2l1 {
         }
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx->set_request_status(KErrNone);
     }
 }

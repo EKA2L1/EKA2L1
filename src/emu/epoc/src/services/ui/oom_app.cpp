@@ -33,22 +33,80 @@
 
 namespace eka2l1 {
     oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys)
-        : service::server(sys, "101fdfae_10207218_AppServer", true) {
+        : service::typical_server(sys, "101fdfae_10207218_AppServer") {
         REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
         REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
         REGISTER_IPC(oom_ui_app_server, set_sgc_params, EAknEikAppUiSetSgcParams, "OOM::SetSgcParams");
     }
 
-    std::string oom_ui_app_server::get_layout_buf() {
-        if (!winsrv) {
-            winsrv = reinterpret_cast<window_server*>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Windowserver")));
+    void oom_ui_app_server::connect(service::ipc_context &ctx) {
+        create_session<oom_ui_app_session>(&ctx);
+        typical_server::connect(ctx);
+    }
+
+    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid)
+        : service::typical_session(svr, client_ss_uid)
+        , blank_count(0) {
+    }
+
+    void oom_ui_app_session::fetch(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
+        case EAknEikAppUiLayoutConfigSize: {
+            server<oom_ui_app_server>()->get_layout_config_size(*ctx);
+            break;
         }
 
-        epoc::config::screen &scr_config = winsrv->get_current_focus_screen_config();
+        case EAknEikAppUiGetLayoutConfig: {
+            server<oom_ui_app_server>()->get_layout_config(*ctx);
+            break;
+        }
+
+        case EAknEikAppUiSetSgcParams: {
+            server<oom_ui_app_server>()->set_sgc_params(*ctx);
+            break;
+        }
+
+        case EAknSBlankScreen: {
+            blank_count++;
+
+            if (blank_count == 0) {
+                // No way... This is impossible
+                LOG_ERROR("App session has blank count negative before called blank screen");
+                ctx->set_request_status(KErrAbort);
+                break;
+            }
+
+            LOG_TRACE("Blanking screen in AKNCAP session stubbed");
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
+        case EAknSUnblankScreen: {
+            blank_count--;
+
+            LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
+        default: {
+            LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with KErrNone", ctx->msg->function);
+            ctx->set_request_status(KErrNone);
+        }
+        }
+    }
+
+    std::string oom_ui_app_server::get_layout_buf() {
+        if (!winsrv) {
+            winsrv = reinterpret_cast<window_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Windowserver")));
+        }
+
+        epoc::config::screen *scr_config = winsrv->get_current_focus_screen_config();
+        assert(scr_config && "Current screen config must be valid");
 
         akn_layout_config akn_config;
 
-        akn_config.num_screen_mode = static_cast<int>(scr_config.modes.size());
+        akn_config.num_screen_mode = static_cast<int>(scr_config->modes.size());
 
         // TODO: Find out what this really does
         akn_config.num_hardware_mode = 0;
@@ -60,15 +118,15 @@ namespace eka2l1 {
         std::string result;
         result.append(reinterpret_cast<char *>(&akn_config), sizeof(akn_layout_config));
 
-        for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
+        for (std::size_t i = 0; i < scr_config->modes.size(); i++) {
             akn_screen_mode_info mode_info;
 
             // TODO: Change this based on user settings
             mode_info.loc = akn_softkey_loc::bottom;
-            mode_info.mode_num = scr_config.modes[i].mode_number;
+            mode_info.mode_num = scr_config->modes[i].mode_number;
             mode_info.dmode = epoc::display_mode::color16ma;
-            mode_info.info.orientation = epoc::number_to_orientation(scr_config.modes[i].rotation);
-            mode_info.info.pixel_size = scr_config.modes[i].size;
+            mode_info.info.orientation = epoc::number_to_orientation(scr_config->modes[i].rotation);
+            mode_info.info.pixel_size = scr_config->modes[i].size;
             mode_info.info.twips_size = mode_info.info.pixel_size * twips_mul;
 
             result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));
