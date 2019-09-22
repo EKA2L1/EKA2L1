@@ -156,6 +156,7 @@ namespace eka2l1 {
         }
 
         void emu_window_glfw3::swap_buffer() {
+            glfwSwapInterval(1);
             glfwSwapBuffers(emu_win);
         }
 
