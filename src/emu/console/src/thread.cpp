@@ -176,7 +176,7 @@ namespace eka2l1::desktop {
         }
 
         // Signal that the initialization is done
-        state.graphics_sema.notify(-1);
+        state.graphics_sema.notify(2);
         return 0;
     }
 
@@ -371,7 +371,7 @@ namespace eka2l1::desktop {
             os_thread_obj->join();
         }
 
-        state.graphics_sema.notify(-1);
+        state.graphics_sema.notify(2);
     }
 
     void os_thread(emulator &state) {
