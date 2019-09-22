@@ -92,6 +92,7 @@ namespace eka2l1::epoc {
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        //LOG_TRACE("Window group op: {}", (int)op);
 
         switch (op) {
         case EWsWinOpEnableScreenChangeEvents: {

@@ -219,6 +219,7 @@ namespace eka2l1::epoc {
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        //LOG_TRACE("Window user op: {}", (int)op);
 
         switch (op) {
         case EWsWinOpRequiredDisplayMode: {

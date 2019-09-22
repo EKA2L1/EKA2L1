@@ -26,12 +26,13 @@
 namespace eka2l1::epoc {
     window_client_obj::window_client_obj(window_server_client_ptr client, screen *scr)
         : client(client)
-        , scr(scr) {
+        , scr(scr)
+        , id(0) {
         if (client) {
             id = client->get_ws().next_uid();
         } else {
             // Most likely root
-            id = 123456789;
+            id = 0;
         }
     }
 
