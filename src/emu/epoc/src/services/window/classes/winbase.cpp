@@ -92,7 +92,6 @@ namespace eka2l1::epoc {
     }
     
     window::~window() {
-        remove_from_sibling_list();
     }
     
     void window::set_position(const int new_pos) {
@@ -165,6 +164,10 @@ namespace eka2l1::epoc {
     }
     
     void window::remove_from_sibling_list() {
+        if (!parent) {
+            return;
+        }
+
         window *ite = parent->child;
 
         if (parent->child == this) {

@@ -145,7 +145,7 @@ namespace eka2l1::epoc {
 
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-            
+
         if (resize_needed) {
             // Queue a resize command
             auto cmd_list = drv->new_command_list();
