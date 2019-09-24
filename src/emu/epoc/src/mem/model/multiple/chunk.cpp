@@ -228,7 +228,7 @@ namespace eka2l1::mem {
     }
 
     bool multiple_mem_model_chunk::adjust(const address bottom, const address top) {
-        const std::size_t top_page_off = (top >> mmu_->page_size_bits_);
+        const std::size_t top_page_off = ((top + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
         const std::size_t bottom_page_off = (bottom >> mmu_->page_size_bits_);
         
         // Check the top
