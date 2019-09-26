@@ -69,6 +69,42 @@ namespace eka2l1::loader {
         return valid();
     }
 
+    bool mbm_file::read_single_bitmap_raw(const std::size_t index, std::uint8_t *dest,
+        std::size_t &dest_max) {
+        if (index >= trailer.count) {
+            return false;
+        }
+
+        sbm_header &single_bm_header = sbm_headers[index];
+
+        // If the dest pointer is null or the size are not sufficent enough, dest_max will contains
+        // the required size.
+        if (dest == nullptr || dest_max < single_bm_header.bitmap_size - single_bm_header.header_len) {
+            dest_max = single_bm_header.bitmap_size - single_bm_header.header_len;
+            return (dest == nullptr) ? true : false;
+        }
+
+        const std::size_t data_offset = trailer.sbm_offsets[index] + single_bm_header.header_len;
+        const std::size_t size_to_get = common::min<std::size_t>(dest_max, single_bm_header.bitmap_size - single_bm_header.header_len);
+
+        const auto crr_pos = stream->tell();
+        stream->seek(data_offset, common::beg);
+
+        bool result = true;
+
+        // Assign with number of bytes we are getting.
+        dest_max = stream->read(dest, size_to_get);
+
+        // If the size read is not equal to the size function caller requested, we fail
+        if (dest_max != size_to_get) {
+            result = false;
+        }
+
+        stream->seek(crr_pos, common::beg);
+
+        return result;
+    }
+    
     bool mbm_file::read_single_bitmap(const std::size_t index, std::uint8_t *dest, 
         std::size_t &dest_max) {
         if (index >= trailer.count) {

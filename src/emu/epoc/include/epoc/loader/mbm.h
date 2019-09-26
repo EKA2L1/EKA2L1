@@ -78,7 +78,16 @@ namespace eka2l1::loader {
          */
         bool read_single_bitmap(const std::size_t index, std::uint8_t *dest, 
             std::size_t &dest_max);
-            
+
+        /**
+         * \brief Read raw bitmap data to a buffer with given bitmap index.
+         * \returns On success, returns true, and dest_max is written back with total
+         *          of bytes written in.
+         *          On failure, dest_max should contains the size of the bitmap data.
+         */
+        bool read_single_bitmap_raw(const std::size_t index, std::uint8_t *dest,
+            std::size_t &dest_max);
+
         /**
          * \brief Save bitmap at specified index to a file as a BMP file.
          * 
