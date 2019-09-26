@@ -340,7 +340,7 @@ namespace eka2l1 {
         }
 
         /**
-         * \brief Load uncompressed image data to large chunk.
+         * \brief Load compressed image data to large chunk.
          * 
          * \param mbmf_ The MBM file stream
          * \param idx_ Index of the bitmap in MBM. Index base is 0.
@@ -348,7 +348,7 @@ namespace eka2l1 {
          * 
          * \return Starting offset from the large chunk.
          */
-        std::optional<std::size_t> load_uncomp_data_to_rom(loader::mbm_file &mbmf_, 
+        std::optional<std::size_t> load_data_to_rom(loader::mbm_file &mbmf_, 
             const std::size_t idx_, int *err_code);
 
         /*! \brief Use to Allocate structure from server side.

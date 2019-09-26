@@ -250,17 +250,17 @@ namespace eka2l1 {
         serv_->free_bitmap(this);
     }
 
-    std::optional<std::size_t> fbs_server::load_uncomp_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code) {
-        // First, get the size of data when uncompressed
-        std::size_t size_when_uncompressed = 0;
-        if (!mbmf_.read_single_bitmap(idx_, nullptr, size_when_uncompressed)) {
+    std::optional<std::size_t> fbs_server::load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code) {
+        // First, get the size of data when compressed
+        std::size_t size_when_compressed = 0;
+        if (!mbmf_.read_single_bitmap_raw(idx_, nullptr, size_when_compressed)) {
             *err_code = fbs_load_data_err_read_decomp_fail;
             return std::nullopt;
         }
 
         // Allocates from the large chunk
         // Align them with 4 bytes
-        std::size_t avail_dest_size = common::align(size_when_uncompressed, 4);
+        std::size_t avail_dest_size = common::align(size_when_compressed, 4);
         void *data = large_chunk_allocator->allocate(avail_dest_size);
         if (data == nullptr) {
             // We can't allocate at all
@@ -270,7 +270,7 @@ namespace eka2l1 {
 
         // Yay, we manage to alloc memory to load the data in
         // So let's get to work
-        if (!mbmf_.read_single_bitmap(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size)) {
+        if (!mbmf_.read_single_bitmap_raw(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size)) {
             *err_code = fbs_load_data_err_read_decomp_fail;
             return std::nullopt;
         }
@@ -363,7 +363,7 @@ namespace eka2l1 {
 
             // Load the bitmap data to large chunk
             int err_code = fbs_load_data_err_none;
-            auto bmp_data_offset = fbss->load_uncomp_data_to_rom(mbmf_, load_options->bitmap_id - 1, &err_code);
+            auto bmp_data_offset = fbss->load_data_to_rom(mbmf_, load_options->bitmap_id - 1, &err_code);
 
             if (!bmp_data_offset) {
                 switch (err_code) {
@@ -399,12 +399,6 @@ namespace eka2l1 {
             bws_bmp->compressed_in_ram_ = false;
             bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
             bws_bmp->uid_ = epoc::bitwise_bitmap_uid;
-
-            // The header still has compression type set maybe. Since right now we are decompressing it,
-            // let's set them to no compression
-            // TODO: Make this more dynamic.
-            bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
-            bws_bmp->header_.bitmap_size = sizeof(loader::sbm_header) + bws_bmp->byte_width_ * bws_bmp->header_.size_pixels.height();
 
             // Get display mode
             const epoc::display_mode dpm = get_display_mode_from_bpp(bws_bmp->header_.bit_per_pixels);
@@ -467,7 +461,7 @@ namespace eka2l1 {
 
         loader::sbm_header header;
         header.compression = epoc::bitmap_file_no_compression;
-        header.bitmap_size = alloc_bytes + sizeof(loader::sbm_header);
+        header.bitmap_size = static_cast<std::uint32_t>(alloc_bytes + sizeof(loader::sbm_header));
         header.size_pixels = size;
         header.color = get_bitmap_color_type_from_display_mode(dpm);
         header.header_len = sizeof(loader::sbm_header);

@@ -28,6 +28,9 @@
 #include <epoc/kernel/chunk.h>
 
 #include <algorithm>
+
+#include <common/buffer.h>
+#include <common/runlen.h>
 #include <common/time.h>
 
 #define XXH_INLINE_ALL
@@ -122,9 +125,45 @@ namespace eka2l1::epoc {
 
         if (should_upload) {
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels);
-            builder->update_bitmap(driver_textures[idx], bmp->header_.bit_per_pixels, 
-                reinterpret_cast<const char*>(base_large_chunk + bmp->data_offset_), bmp->header_.bitmap_size - sizeof(loader::mbm_header), 
-                { 0, 0 }, bmp->header_.size_pixels);
+            char *data_pointer = reinterpret_cast<char*>(base_large_chunk + bmp->data_offset_);
+            
+            std::vector<std::uint8_t> decompressed;
+            std::uint32_t raw_size = 0;
+
+            if (bmp->header_.compression != bitmap_file_no_compression) {
+                raw_size = bmp->byte_width_ * bmp->header_.size_pixels.y;
+                decompressed.resize(raw_size);
+
+                const std::uint32_t compressed_size = bmp->header_.bitmap_size - bmp->header_.header_len;
+
+                common::wo_buf_stream dest_stream(&decompressed[0]);
+                common::ro_buf_stream source_stream(reinterpret_cast<std::uint8_t*>(data_pointer), compressed_size);
+
+                switch (bmp->header_.compression) {
+                case bitmap_file_byte_rle_compression:
+                    eka2l1::decompress_rle<8>(&source_stream, &dest_stream);
+                    break;
+
+                case bitmap_file_sixteen_bit_rle_compression:
+                    eka2l1::decompress_rle<16>(&source_stream, &dest_stream);
+                    break;
+
+                case bitmap_file_twenty_four_bit_rle_compression:
+                    eka2l1::decompress_rle<24>(&source_stream, &dest_stream);
+                    break;
+
+                default:
+                    LOG_ERROR("Unsupported bitmap format to decode {}", bmp->header_.compression);
+                    break;
+                }
+
+                data_pointer = reinterpret_cast<char*>(&decompressed[0]);
+            } else {
+                raw_size = bmp->header_.bitmap_size - bmp->header_.header_len;
+            }
+
+            builder->update_bitmap(driver_textures[idx], bmp->header_.bit_per_pixels, data_pointer, 
+                raw_size, { 0, 0 }, bmp->header_.size_pixels);
 
             hashes[idx] = hash;
         }
