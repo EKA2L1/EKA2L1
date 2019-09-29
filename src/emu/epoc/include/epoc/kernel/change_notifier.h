@@ -15,7 +15,7 @@ namespace eka2l1::kernel {
         epoc::notify_info req_info_;
 
     public:
-        change_notifier(kernel_system *kern);
+        explicit change_notifier(kernel_system *kern);
 
         bool logon(eka2l1::ptr<epoc::request_status> request_sts);
         bool logon_cancel();

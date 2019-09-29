@@ -37,7 +37,8 @@ namespace eka2l1 {
         }
 
         bool change_notifier::logon(eka2l1::ptr<epoc::request_status> request_sts) {
-            if (!req_info_.sts) {
+            // If this is already logon
+            if (req_info_.sts) {
                 return false;
             }
 
@@ -62,16 +63,7 @@ namespace eka2l1 {
         }
 
         void change_notifier::do_state(common::chunkyseri &seri) {
-            /*
-            std::uint32_t requester_id = (requester ? 0 : requester->unique_id());
-
-            seri.absorb(requester_id);
-            seri.absorb(request_status.ptr_address());
-
-            if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-                requester = std::reinterpret_pointer_cast<kernel::thread>(kern->get_kernel_obj_by_id(requester_id));
-            }
-            */
+            req_info_.do_state(seri);
         }
     }
 }
