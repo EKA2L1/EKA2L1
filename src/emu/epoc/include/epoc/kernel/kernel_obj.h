@@ -32,6 +32,8 @@ namespace eka2l1 {
 
     namespace kernel {
         using handle = std::uint32_t;
+        using uid = std::uint32_t;
+
         class process;
 
         /*! \brief Ownership type for handle */
@@ -95,7 +97,7 @@ namespace eka2l1 {
 
             int access_count = 0;
 
-            uint32_t uid;
+            kernel::uid uid;
 
             explicit kernel_obj(kernel_system *kern, kernel_obj *owner = nullptr)
                 : kern(kern)
@@ -147,8 +149,8 @@ namespace eka2l1 {
 
             int get_access_count() { return access_count; }
 
-            std::uint32_t unique_id() const {
-                return uid;
+            kernel::uid unique_id() const {
+                return this->uid;
             }
 
             /*! \brief Rename the kernel object. 
