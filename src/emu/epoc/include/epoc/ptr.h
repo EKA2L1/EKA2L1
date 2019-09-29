@@ -31,6 +31,10 @@ namespace eka2l1 {
         class process;
     }
 
+    namespace common {
+        class chunkyseri;
+    }
+
     // Symbian is 32 bit
     using address = uint32_t;
 
@@ -61,6 +65,10 @@ namespace eka2l1 {
 
         void reset() {
             mem_address = 0;
+        }
+
+        void do_state(common::chunkyseri &seri) {
+            seri.absorb(mem_address);
         }
 
         explicit operator bool() const {
