@@ -24,6 +24,7 @@ namespace eka2l1::epoc {
      * \brief Class manages emulated device's lighting.
      */
     struct light_resource: public resource_interface {
+        void get_supported_targets(service::ipc_context &ctx);
         void execute_command(service::ipc_context &ctx) override;
     };
 }

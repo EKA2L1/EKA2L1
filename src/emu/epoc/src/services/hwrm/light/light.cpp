@@ -21,6 +21,9 @@
 #include <epoc/services/hwrm/op.h>
 #include <epoc/services/context.h>
 
+#include <common/e32inc.h>
+#include <e32err.h>
+
 namespace eka2l1::epoc {
     const char *light_op_to_string(const int op) {
         switch (op) {
@@ -55,8 +58,21 @@ namespace eka2l1::epoc {
         return "Unknown ?";
     }
 
+    void light_resource::get_supported_targets(service::ipc_context &ctx) {
+        LOG_TRACE("Light resource's get supported targets stubbed with -1 (all permitted)");
+        std::uint32_t support_mask = static_cast<std::uint32_t>(-1);
+
+        ctx.write_arg_pkg(0, support_mask);
+        ctx.set_request_status(KErrNone);
+    }
+
     void light_resource::execute_command(service::ipc_context &ctx) {
         switch (ctx.msg->function) {
+        case hwrm_light_op_supported_targets: {
+            get_supported_targets(ctx);
+            break;
+        }
+
         default:
             LOG_ERROR("Unimplemented operation for light resource: {} ({})", light_op_to_string(ctx.msg->function),
                 ctx.msg->function);
