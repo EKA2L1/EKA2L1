@@ -18,6 +18,12 @@
  */
 
 #include <epoc/services/hwrm/hwrm.h>
+#include <epoc/services/hwrm/op.h>
+
+#include <epoc/services/hwrm/light/light.h>
+
+#include <common/e32inc.h>
+#include <e32err.h>
 
 namespace eka2l1 {    
     hwrm_session::hwrm_session(service::typical_server *serv, service::uid client_ss_uid) 
@@ -26,8 +32,27 @@ namespace eka2l1 {
 
     void hwrm_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case hwrm_fundamental_op_create_light_service: {
+            resource_ = std::make_unique<epoc::light_resource>();
+            ctx->set_request_status(KErrNone);
+            break;
+        }
+
         default: {
-            LOG_ERROR("Unimplemented opcode for HWMR session 0x{:X}", ctx->msg->function);
+            int cmd_num = ctx->msg->function;
+
+            if (cmd_num >= 1000) {
+                // TODO: Check back with later version. For S60v5 light command base is 2000
+                if (cmd_num >= 2000 && cmd_num <= 3000) {
+                    cmd_num -= 1000;
+                }
+
+                ctx->msg->function = cmd_num;
+                resource_->execute_command(*ctx);
+            } else {
+                LOG_ERROR("Unimplemented opcode for HWMR session 0x{:X}", ctx->msg->function);
+            }
+
             break;
         }
         }

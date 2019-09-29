@@ -17,26 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <epoc/services/framework.h>
 #include <epoc/services/hwrm/resource.h>
 
-#include <memory>
-
-namespace eka2l1 {
-    class hwrm_session: public service::typical_session {
-        std::unique_ptr<epoc::resource_interface> resource_;
-
-    public:
-        explicit hwrm_session(service::typical_server *serv, service::uid client_ss_uid);
-
-        void fetch(service::ipc_context *ctx) override;
-    };
-
-    class hwrm_server: public service::typical_server {
-    public:
-        explicit hwrm_server(system *sys);
-        void connect(service::ipc_context &ctx) override;
+namespace eka2l1::epoc {
+    /**
+     * \brief Class manages emulated device's lighting.
+     */
+    struct light_resource: public resource_interface {
+        void execute_command(service::ipc_context &ctx) override;
     };
 }

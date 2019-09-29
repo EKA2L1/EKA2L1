@@ -124,6 +124,8 @@ add_library(epocservs
     include/epoc/services/fs/fs.h
     include/epoc/services/hwrm/hwrm.h
     include/epoc/services/hwrm/op.h
+    include/epoc/services/hwrm/light/light.h
+    include/epoc/services/hwrm/vibration/vibration.h
     include/epoc/services/loader/loader.h
     include/epoc/services/install/install.h
     include/epoc/services/loader/op.h
@@ -179,6 +181,8 @@ add_library(epocservs
     src/services/fs/files.cpp
     src/services/fs/fs.cpp
     src/services/hwrm/hwrm.cpp
+    src/services/hwrm/light/light.cpp
+    src/services/hwrm/vibration/vibration.cpp
     src/services/install/install.cpp
     src/services/loader/loader.cpp
     src/services/posix/posix.cpp
