@@ -33,6 +33,7 @@
 #include <epoc/services/fbs/fbs.h>
 #include <epoc/services/featmgr/featmgr.h>
 #include <epoc/services/fs/fs.h>
+#include <epoc/services/hwrm/hwrm.h>
 #include <epoc/services/install/install.h>
 #include <epoc/services/loader/loader.h>
 #include <epoc/services/sms/sa/sa.h>
@@ -275,6 +276,7 @@ namespace eka2l1 {
             // These needed to be HLEd
             CREATE_SERVER(sys, applist_server);
             CREATE_SERVER(sys, oom_ui_app_server);
+            CREATE_SERVER(sys, hwrm_server);
 
             if (cfg->enable_srv_eikapp_ui)
                 CREATE_SERVER(sys, eikappui_server);
