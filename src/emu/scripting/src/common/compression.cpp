@@ -37,7 +37,7 @@ namespace eka2l1::scripting {
             throw pybind11::value_error("File doesn't exists!");
         }
 
-        raw_fstream = std::reinterpret_pointer_cast<common::ro_stream>(std::make_shared<eka2l1::ro_file_stream>(f));
+        raw_fstream = std::reinterpret_pointer_cast<common::ro_stream>(std::make_shared<eka2l1::ro_file_stream>(f.get()));
         bytepair_stream.set_stream(reinterpret_cast<common::ro_stream*>(&(*raw_fstream)));
     }
 
