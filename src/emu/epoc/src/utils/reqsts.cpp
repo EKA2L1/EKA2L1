@@ -25,7 +25,14 @@
 #include <epoc/kernel/thread.h>
 #include <epoc/utils/reqsts.h>
 
+#include <common/chunkyseri.h>
+
 namespace eka2l1::epoc {
+    void request_status::do_state(common::chunkyseri &seri) {
+        seri.absorb(status);
+        seri.absorb(flags);
+    }
+
     void notify_info::complete(int err_code) {
         if (sts.ptr_address() == 0) {
             return;
@@ -35,5 +42,16 @@ namespace eka2l1::epoc {
         sts = 0;
 
         requester->signal_request();
+    }
+
+    void notify_info::do_state(common::chunkyseri &seri) {
+        sts.do_state(seri);
+
+        auto thread_uid = requester->unique_id();
+        seri.absorb(thread_uid);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            // TODO: Get the thread
+        }
     }
 }

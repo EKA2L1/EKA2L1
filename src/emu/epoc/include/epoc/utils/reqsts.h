@@ -8,14 +8,21 @@ namespace eka2l1 {
         class thread;
     }
 
+    namespace common {
+        class chunkyseri;
+    }
+
     using thread_ptr = std::shared_ptr<kernel::thread>;
 }
 
 /* Header only request status */
 namespace eka2l1::epoc {
+    // Don't change the structure! Specifically no more fields and no vtable!
     struct request_status {
         int status;
         int flags;
+
+        void do_state(common::chunkyseri &seri);
 
         enum flag_type {
             active = 1,
@@ -56,6 +63,7 @@ namespace eka2l1::epoc {
         }
         
         void complete(int err_code);
+        void do_state(common::chunkyseri &seri);
 
         const bool operator == (const notify_info &rhs) const {
             return (sts == rhs.sts) && (requester == rhs.requester);
