@@ -38,7 +38,8 @@ namespace eka2l1 {
     namespace service {
         enum class property_type {
             int_data,
-            bin_data
+            bin_data,
+            unk
         };
 
         /*! \brief Property is a kind of environment data. 
