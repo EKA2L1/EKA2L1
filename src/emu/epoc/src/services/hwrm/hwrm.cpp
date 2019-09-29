@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/epoc.h>
 #include <epoc/services/hwrm/hwrm.h>
 #include <epoc/services/hwrm/op.h>
-
 #include <epoc/services/hwrm/light/light.h>
 
 #include <common/e32inc.h>
@@ -33,7 +33,7 @@ namespace eka2l1 {
     void hwrm_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case hwrm_fundamental_op_create_light_service: {
-            resource_ = std::make_unique<epoc::light_resource>();
+            resource_ = std::make_unique<epoc::light_resource>(ctx->sys->get_kernel_system());
             ctx->set_request_status(KErrNone);
             break;
         }

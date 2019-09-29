@@ -19,11 +19,18 @@
 
 #include <epoc/services/hwrm/resource.h>
 
+namespace eka2l1 {
+    class kernel_system;
+}
+
 namespace eka2l1::epoc {
     /**
      * \brief Class manages emulated device's lighting.
      */
     struct light_resource: public resource_interface {
+        kernel_system *kern_;
+
+        explicit light_resource(kernel_system *kern);
         void get_supported_targets(service::ipc_context &ctx);
         void execute_command(service::ipc_context &ctx) override;
     };

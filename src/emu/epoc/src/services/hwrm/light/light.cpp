@@ -25,7 +25,7 @@
 #include <e32err.h>
 
 namespace eka2l1::epoc {
-    const char *light_op_to_string(const int op) {
+    static const char *light_op_to_string(const int op) {
         switch (op) {
         case hwrm_light_op_on:
             return "Light on";
@@ -58,7 +58,12 @@ namespace eka2l1::epoc {
         return "Unknown ?";
     }
 
+    light_resource::light_resource(kernel_system *kern)
+        : kern_(kern) {
+    }
+
     void light_resource::get_supported_targets(service::ipc_context &ctx) {
+        // Which do we supported? Primary display light? primary keyboard light? etc...
         LOG_TRACE("Light resource's get supported targets stubbed with -1 (all permitted)");
         std::uint32_t support_mask = static_cast<std::uint32_t>(-1);
 
