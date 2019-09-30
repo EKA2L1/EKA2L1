@@ -75,4 +75,5 @@ namespace eka2l1::epoc::hwrm::light {
 
     // The phone is not a power supply you can't just have a festival on it.
     static constexpr std::uint32_t MAXIMUM_LIGHT = 31;      ///< Maximum light a device can have.
+    static constexpr std::uint32_t LIGHT_STATUS_PROP_KEY = 0x2001;      ///< Property key of the light status.
 }

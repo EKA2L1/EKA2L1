@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <array>
+#include <memory>
 
 #include <epoc/services/hwrm/light/light_def.h>
 
@@ -28,6 +29,8 @@ namespace eka2l1 {
     namespace service {
         class property;
     }
+
+    using property_ptr = std::shared_ptr<service::property>;
 
     class kernel_system;
 
@@ -41,19 +44,35 @@ namespace eka2l1 {
         };
 
         struct resource_data {
-            std::array<target_info, MAXIMUM_LIGHT> infos_;
-            service::property *infos_prop_;
+        private:
+            std::array<target_info, MAXIMUM_LIGHT> infos_;          ///< Light brief info array.
+            property_ptr infos_prop_;                         ///< Pointer to the property
+
+            /**
+             * \brief   Initialise internal light resource components.
+             * 
+             * This include:
+             * - Light status property: Provide way for clients to know status of device lights.
+             * 
+             * \param   kern Pointer to kernel state.
+             * \returns True on success.
+             * 
+             * \internal
+             */
+            bool initialise_components(kernel_system *kern);
 
         public:
             explicit resource_data(kernel_system *kern);
 
             /**
-             * \brief Publish new light status.
+             * \brief   Publish new light status.
              * 
-             * \param light_target The target of the light to change.
-             * \param sts          The status of the light.
+             * \param   light_target The target of the light to change.
+             * \param   sts          The status of the light.
+             * 
+             * \returns True on success.
              */
-            void publish_light(target light_target, status sts);
+            bool publish_light(target light_target, status sts);
         };
     }
 }

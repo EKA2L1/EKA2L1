@@ -20,6 +20,7 @@
 #pragma once
 
 #include <epoc/services/framework.h>
+#include <epoc/services/hwrm/light/light_data.h>
 #include <epoc/services/hwrm/resource.h>
 
 #include <memory>
@@ -35,6 +36,14 @@ namespace eka2l1 {
     };
 
     class hwrm_server: public service::typical_server {
+        std::unique_ptr<epoc::hwrm::light::resource_data> light_data_;
+
+        /**
+         * \brief       Initialise all shared service data.
+         * \returns     True on success.
+         */
+        bool init();
+
     public:
         explicit hwrm_server(system *sys);
         void connect(service::ipc_context &ctx) override;

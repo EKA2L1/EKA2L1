@@ -17,6 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <epoc/services/hwrm/resource.h>
 
 namespace eka2l1 {

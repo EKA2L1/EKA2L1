@@ -64,7 +64,19 @@ namespace eka2l1 {
     }
 
     void hwrm_server::connect(service::ipc_context &ctx) {
+        if (!light_data_) {
+            if (!init()) {
+                LOG_ERROR("Fail to initialise HWRM service shared data!");
+            }
+        }
+
         create_session<hwrm_session>(&ctx);
         typical_server::connect(ctx);
+    }
+
+    bool hwrm_server::init() {
+        // Initialise light common data
+        light_data_ = std::make_unique<epoc::hwrm::light::resource_data>(sys->get_kernel_system());
+        return true;
     }
 }
