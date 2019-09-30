@@ -1843,11 +1843,21 @@ namespace eka2l1::epoc {
         TUint8 *data_ptr = aData.get(mem);
         auto data_vec = prop->get_bin();
 
-        if (data_vec.size() < aDataLength) {
-            return KErrOverflow;
+        const std::size_t size_to_copy = std::min<std::size_t>(data_vec.size(), aDataLength);
+        TInt return_code = KErrNone;
+
+        if (data_vec.size() > aDataLength) {
+            // The given buffer can't hold ours.
+            return_code = KErrOverflow;
         }
 
-        memcpy(data_ptr, data_vec.data(), aDataLength);
+        // Whether the buffer is too small, we still have to either copy truncated or full data.
+        std::copy(data_vec.begin(), data_vec.begin() + size_to_copy, aData.get(mem));
+
+        if (return_code != KErrNone) {
+            return return_code;
+        }
+        
         return aDataLength;
     }
 
@@ -1999,7 +2009,7 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
-    BRIDGE_FUNC(TInt, PropertyGetBin, TInt aHandle, TInt aSize, eka2l1::ptr<TUint8> aDataPtr) {
+    BRIDGE_FUNC(TInt, PropertyGetBin, TInt aHandle, eka2l1::ptr<TUint8> aDataPtr, TInt aSize) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -2015,11 +2025,20 @@ namespace eka2l1::epoc {
             return KErrArgument;
         }
 
-        if (dat.size() < aSize) {
-            return KErrOverflow;
+        const std::size_t size_to_copy = std::min<std::size_t>(dat.size(), aSize);
+        TInt return_code = KErrNone;
+
+        if (dat.size() > aSize) {
+            // The given buffer can't hold ours.
+            return_code = KErrOverflow;
         }
 
-        std::copy(dat.begin(), dat.begin() + aSize, aDataPtr.get(mem));
+        // Whether the buffer is too small, we still have to either copy truncated or full data.
+        std::copy(dat.begin(), dat.begin() + size_to_copy, aDataPtr.get(mem));
+
+        if (return_code != KErrNone) {
+            return return_code;
+        }
 
         return aSize;
     }
@@ -2043,7 +2062,7 @@ namespace eka2l1::epoc {
         return KErrNone;
     }
 
-    BRIDGE_FUNC(TInt, PropertyFindSetBin, TInt aCage, TInt aKey, TInt aSize, eka2l1::ptr<TUint8> aDataPtr) {
+    BRIDGE_FUNC(TInt, PropertyFindSetBin, TInt aCage, TInt aKey, eka2l1::ptr<TUint8> aDataPtr, TInt aSize) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
