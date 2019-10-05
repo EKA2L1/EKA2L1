@@ -53,6 +53,8 @@ namespace eka2l1::epoc {
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);
         void receive_focus(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+
+        eka2l1::vec2 get_origin() override;
         
         void lost_focus();
         void gain_focus();

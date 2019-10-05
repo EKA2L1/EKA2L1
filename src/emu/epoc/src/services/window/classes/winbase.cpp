@@ -93,7 +93,11 @@ namespace eka2l1::epoc {
     
     window::~window() {
     }
-    
+
+    eka2l1::vec2 window::get_origin() {
+        return { 0, 0 };
+    }
+
     void window::set_position(const int new_pos) {
         if (check_order_change(new_pos)) {
             move_window(parent, new_pos);
@@ -228,6 +232,22 @@ namespace eka2l1::epoc {
         return count;
     }
 
+    void window::inquire_offset(service::ipc_context &ctx, ws_cmd &cmd) {        
+        // The data given is a 32 bit handle.
+        // We are suppose to write back the offset distance between the given window and this.
+        const std::uint32_t handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        epoc::window *win = reinterpret_cast<epoc::window*>(client->get_object(handle));
+
+        if (!win) {
+            ctx.set_request_status(KErrNotFound);
+            return;
+        }
+
+        eka2l1::vec2 offset_dist = get_origin() - win->get_origin();
+        ctx.write_arg_pkg(0, offset_dist);
+        ctx.set_request_status(KErrNone);
+    }
+
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -277,6 +297,11 @@ namespace eka2l1::epoc {
             client->add_event_notifier<epoc::event_error_msg_user>(nof);
             ctx.set_request_status(KErrNone);
 
+            return true;
+        }
+
+        case EWsWinOpInquireOffset: {
+            inquire_offset(ctx, cmd);
             return true;
         }
 

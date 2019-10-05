@@ -37,6 +37,8 @@ namespace eka2l1::epoc {
     struct window_top_user: public window_user_base {
         explicit window_top_user(window_server_client_ptr client, screen *scr, window *parent);
         std::uint32_t redraw_priority(int *shift = nullptr) override;
+
+        eka2l1::vec2 get_origin() override;
     };
 
     struct window_user : public window_user_base {
@@ -74,6 +76,8 @@ namespace eka2l1::epoc {
         explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::window_type type_of_window, const epoc::display_mode dmode);
 
+        eka2l1::vec2 get_origin() override;
+        
         std::uint32_t redraw_priority(int *shift = nullptr) override;
 
         /**

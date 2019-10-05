@@ -58,7 +58,11 @@ namespace eka2l1::epoc {
 
         return (ordinal_pos << (max_pri_level * bits_per_ordpos));
     }
-    
+
+    eka2l1::vec2 window_top_user::get_origin() {
+        return { 0, 0 };
+    }
+        
     window_user::window_user(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode)
         : window_user_base(client, scr, parent, window_kind::client)
         , win_type(type_of_window)
@@ -74,6 +78,10 @@ namespace eka2l1::epoc {
         , driver_win_id(0)
         , shadow_height(0)
         , flags(0) {
+    }
+    
+    eka2l1::vec2 window_user::get_origin() {
+        return pos;
     }
     
     void window_user::queue_event(const epoc::event &evt) {

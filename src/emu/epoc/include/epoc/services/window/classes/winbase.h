@@ -24,6 +24,8 @@
 #include <epoc/services/window/common.h>
 
 #include <common/linked.h>
+#include <common/vecx.h>
+
 #include <memory>
 
 namespace eka2l1::epoc {
@@ -79,11 +81,23 @@ namespace eka2l1::epoc {
          */
         int ordinal_position(const bool full);
 
+        /**
+         * \brief Handler for InquireOffset opcode.
+         * 
+         * The offset calculates origin distance between this window and a targeted window given by the handle.
+         */
+        void inquire_offset(service::ipc_context &ctx, ws_cmd &cmd);
+
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         /*! \brief Generic event queueing
         */
         virtual void queue_event(const epoc::event &evt);
+
+        /**
+         * \brief Get the origin of window.
+         */
+        virtual eka2l1::vec2 get_origin();
 
         /**
          * \brief Walk through window tree, with the root from the current window.

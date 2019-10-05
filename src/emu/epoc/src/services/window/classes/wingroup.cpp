@@ -66,6 +66,9 @@ namespace eka2l1::epoc {
         child = top.get();
     }
 
+    eka2l1::vec2 window_group::get_origin() {
+        return { 0, 0 };
+    }
     
     void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
         // Warn myself in the future!
