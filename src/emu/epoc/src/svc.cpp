@@ -2208,6 +2208,20 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
+    BRIDGE_FUNC(bool, VirtualReality) {
+        // Call host function. Hack.
+        typedef bool (*reality_func)(void* data);
+
+        const std::uint32_t current = sys->get_cpu()->get_pc();
+        std::uint64_t *data = reinterpret_cast<std::uint64_t*>(sys->get_kernel_system()->
+            crr_process()->get_ptr_on_addr_space(current - 16));
+
+        reality_func to_call = reinterpret_cast<reality_func>(*data++);
+        void *userdata = reinterpret_cast<void*>(*data++);
+
+        return to_call(userdata);
+    }
+
     /*
     BRIDGE_FUNC(TInt32, AtomicTas32, eka2l1::ptr<SAtomicOpInfo32> aAtomicInfo) {
         SAtomicOpInfo32 *info = aAtomicInfo.get(sys->get_memory_system());
@@ -2341,7 +2355,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDC, ExceptionDescriptor),
         BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
-        BRIDGE_REGISTER(0xE0, LeaveEnd)
+        BRIDGE_REGISTER(0xE0, LeaveEnd),
+        BRIDGE_REGISTER(0xFF, VirtualReality)
     };
 
     const eka2l1::hle::func_map svc_register_funcs_v93 = {
