@@ -42,6 +42,7 @@ add_library(common
     include/common/virtualmem.h
     include/common/wildcard.h
     src/arghandler.cpp
+    src/armemitter.cpp
     src/allocator.cpp
     src/algorithm.cpp
     src/arm_cpudetect.cpp

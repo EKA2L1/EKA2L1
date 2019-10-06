@@ -77,6 +77,7 @@ namespace eka2l1::common {
         bool bVFPv4;
         bool bIDIVa;
         bool bIDIVt;
+        bool bARMv7;
 
         // ARMv8 specific
         bool bFP;
