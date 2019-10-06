@@ -21,6 +21,7 @@
 #include <vector>
 
 #include <common/armcommon.h>
+#include <common/cpudetect.h>
 #include <common/codeblock.h>
 #include <common/log.h>
 
@@ -495,9 +496,11 @@ namespace eka2l1::common::armgen {
 
     private:
         std::uint8_t *code, *startcode;
-        std::uint8_t *lastCacheFlushEnd;
+        std::uint8_t *last_cache_flush_end;
         std::uint32_t condition;
-        std::vector<literal_pool> currentLitPool;
+        std::vector<literal_pool> current_lit_pool;
+
+        cpu_info context_info;
 
         void write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 op2, bool RegAdd);
         void write_reg_store_op(std::uint32_t op, arm_reg dest, bool WriteBack, std::uint16_t RegList);
@@ -527,16 +530,17 @@ namespace eka2l1::common::armgen {
         }
 
     public:
-        armx_emitter()
+        explicit armx_emitter()
             : code(0)
             , startcode(0)
-            , lastCacheFlushEnd(0) {
+            , last_cache_flush_end(0) {
             condition = CC_AL << 28;
         }
 
-        armx_emitter(std::uint8_t *code_ptr) {
+        explicit armx_emitter(std::uint8_t *code_ptr, cpu_info context_info)
+            : context_info(context_info) {
             code = code_ptr;
-            lastCacheFlushEnd = code_ptr;
+            last_cache_flush_end = code_ptr;
             startcode = code_ptr;
             condition = CC_AL << 28;
         }
@@ -986,7 +990,7 @@ namespace eka2l1::common::armgen {
     // You get memory management for free, plus, you can use all the MOV etc functions without
     // having to prefix them with gen-> or something similar.
 
-    class armx_code_block : public common::code_block<armx_emitter> {
+    class armx_codeblock : public common::codeblock<armx_emitter> {
     public:
         void poision_memory(int offset) override;
     };
