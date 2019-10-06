@@ -19,17 +19,28 @@
 
 #pragma once
 
+#include <epoc/ptr.h>
+#include <memory>
+#include <string>
+
+// Foward declaration
 namespace eka2l1 {
+    class kernel_system;
+    
     namespace kernel {
         class process;
+        class chunk;
     }
+
+    namespace hle {
+        class lib_manager;
+    }
+
+    using chunk_ptr = std::shared_ptr<kernel::chunk>;
 }
 
 namespace eka2l1::service {
     class faker;
-
-    class faker_mentor {
-    };
 
     /**
      * \brief Allow manipulation of raw Symbian's native code.
@@ -46,8 +57,98 @@ namespace eka2l1::service {
      * Symbian thought this is like a real thread running.
      */
     class faker {
+    private:
         kernel::process *process_;
+        chunk_ptr        trampoline_;
+
+        address lr_addr_;
+        address data_offset_;
 
     public:
+        struct chain {
+            typedef void (*chain_func)(void *userdata);
+
+            chain       *next_;
+            faker       *daddy_;
+
+            enum class chain_type {
+                raw_code,
+                hook
+            };
+            
+            struct {
+                chain_type type_;
+
+                union chain_data {
+                    struct {        
+                        chain_func  func_;
+                        void        *userdata_;
+                    };
+
+                    struct {
+                        std::uint32_t raw_func_addr_;
+                        std::uint32_t raw_func_args_[4];
+                    };
+                } data_;
+            };
+
+            explicit chain(faker *daddy);
+            chain *then(void *userdata, chain_func func);
+
+            /**
+             * \brief Continue the chain with new native code task after the current task has been done.
+             * 
+             * \param raw_func_addr The address of the function in emulated space address.
+             * 
+             * \returns Pointer to start of next hook.
+             */
+            chain *then(eka2l1::ptr<void> raw_func_addr);
+
+            /**
+             * \brief Continue the chain with new native code task after the current task has been done.
+             * 
+             * \param raw_func_addr The address of the function in emulated space address.
+             * \param arg1          The first argument of the chain.
+             * 
+             * \returns Pointer to start of next hook.
+             */
+            chain *then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1);
+            chain *then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1, const std::uint32_t arg2);
+        };
+
+    private:
+        chain *initial_;
+
+        eka2l1::address trampoline_address() const;
+
+        /**
+         * \brief Initialise the fake process.
+         * 
+         * \param kern Kernel system.
+         * \param mngr The library manager system.
+         * \param name UTF-16 string contains name of process.
+         * 
+         * \returns True on success.
+         * 
+         * \internal
+         */
+        bool initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name);
+
+    public:
+        explicit faker(kernel_system *kern, hle::lib_manager *mngr, const std::string &name);
+
+        // ==================== UTILITIES =======================
+        chain *then(void *userdata, chain::chain_func func);
+        
+        chain *then(eka2l1::ptr<void> raw_func_addr);
+        chain *then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1);
+        chain *then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1, const std::uint32_t arg2);
+
+        bool walk();
+
+        // ==================== GETTER =========================
+        kernel::process *process() {
+            return process_;
+        }
     };
 }

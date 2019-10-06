@@ -51,6 +51,10 @@ namespace eka2l1 {
         class process;
     }
 
+    namespace service {
+        class faker;
+    }
+
     using chunk_ptr = std::shared_ptr<kernel::chunk>;
     using mutex_ptr = std::shared_ptr<kernel::mutex>;
     using sema_ptr = std::shared_ptr<kernel::semaphore>;
@@ -124,6 +128,7 @@ namespace eka2l1 {
             friend class mutex;
             friend class semaphore;
             friend class process;
+            friend class service::faker;
 
             thread_state state;
             std::mutex mut;

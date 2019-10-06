@@ -85,6 +85,7 @@ add_library(epocmem
 
 add_library(epocservs 
     include/epoc/services/context.h
+    include/epoc/services/faker.h
     include/epoc/services/framework.h
     include/epoc/services/init.h
     include/epoc/services/session.h
@@ -143,6 +144,7 @@ add_library(epocservs
     include/epoc/services/window/window.h
     include/epoc/ipc.h
     src/services/context.cpp
+    src/services/faker.cpp
     src/services/framework.cpp
     src/services/init.cpp
     src/services/property.cpp
