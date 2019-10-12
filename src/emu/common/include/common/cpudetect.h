@@ -98,7 +98,9 @@ namespace eka2l1::common {
         } sQuirks;
 
         // Call Detect()
-        explicit cpu_info();
+        explicit cpu_info() {
+            
+        }
 
         // Turn the cpu info into a string we can show
         // std::string summarize();
