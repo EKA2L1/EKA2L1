@@ -44,7 +44,7 @@ namespace eka2l1::common::armgen {
         return (a << amount) | (a >> (32 - amount));
     }
 
-    static bool try_make_operand2(std::uint32_t imm, operand2 &op2) {
+    bool try_make_operand2(std::uint32_t imm, operand2 &op2) {
         // Just brute force it.
         for (int i = 0; i < 16; i++) {
             int mask = rotr(0xFF, i * 2);
@@ -56,7 +56,7 @@ namespace eka2l1::common::armgen {
         return false;
     }
 
-    static bool try_make_operand2_allow_inverse(std::uint32_t imm, operand2 &op2, bool *inverse) {
+    bool try_make_operand2_allow_inverse(std::uint32_t imm, operand2 &op2, bool *inverse) {
         if (!try_make_operand2(imm, op2)) {
             *inverse = true;
             return try_make_operand2(~imm, op2);

@@ -78,7 +78,7 @@ namespace eka2l1::common {
             }
 
             // If not WX Exclusive, no need to call ProtectMemoryPages because we never change the protection from RWX.
-            posion_memory(offset);
+            poision_memory(offset);
             reset_codeptr(offset);
 
             if (is_memory_wx_exclusive()) {
@@ -104,7 +104,7 @@ namespace eka2l1::common {
 
         void end_write() {
             // OK, we're done. Re-protect the memory we touched.
-            if (PlatformIsWXExclusive() && writeStart_ != nullptr) {
+            if (is_memory_wx_exclusive() && writeStart_ != nullptr) {
                 const uint8_t *end = get_code_ptr();
                 change_protection(writeStart_, end - writeStart_, prot::read_exec);
                 writeStart_ = nullptr;
