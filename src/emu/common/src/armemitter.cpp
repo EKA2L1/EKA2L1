@@ -686,7 +686,7 @@ namespace eka2l1::common::armgen {
     void armx_emitter::B_CC(cc_flags Cond, const void *fnptr)
     {
         ptrdiff_t distance = (intptr_t)fnptr - ((intptr_t)(code) + 8);
-        LOG_ERROR_IF(distance > -0x2000000 && distance < 0x2000000, "B_CC out of range ({} calls {})", code, fnptr);
+        LOG_ERROR_IF((distance <= -0x2000000) || (distance >= 0x2000000), "B_CC out of range ({} calls {})", code, fnptr);
         write32((Cond << 28) | 0x0A000000 | ((distance >> 2) & 0x00FFFFFF));
     }
 
@@ -703,7 +703,7 @@ namespace eka2l1::common::armgen {
     void armx_emitter::Setjump_target(fixup_branch const &branch)
     {
         ptrdiff_t distance =  ((intptr_t)(code) - 8)  - (intptr_t)branch.ptr;
-        LOG_ERROR_IF((distance > -0x2000000 && distance < 0x2000000), "SetJumpTarget out of range ({} calls {})", code,
+        LOG_ERROR_IF((distance <= -0x2000000) || (distance >= 0x2000000), "SetJumpTarget out of range ({} calls {})", code,
             branch.ptr);
         
         std::uint32_t instr = (std::uint32_t)(branch.condition | ((distance >> 2) & 0x00FFFFFF));
@@ -713,7 +713,7 @@ namespace eka2l1::common::armgen {
     void armx_emitter::B(const void *fnptr)
     {
         ptrdiff_t distance = (intptr_t)fnptr - (intptr_t(code) + 8);
-        LOG_ERROR_IF((distance > -0x2000000) && (distance < 0x2000000), "B out of range ({} calls {})", code, fnptr);
+        LOG_ERROR_IF((distance <= -0x2000000) || (distance >= 0x2000000), "B out of range ({} calls {})", code, fnptr);
 
         write32(condition | 0x0A000000 | ((distance >> 2) & 0x00FFFFFF));
     }
@@ -734,7 +734,7 @@ namespace eka2l1::common::armgen {
     void armx_emitter::BL(const void *fnptr)
     {
         ptrdiff_t distance = (intptr_t)fnptr - (intptr_t(code) + 8);
-        LOG_ERROR_IF((distance > -0x2000000) && (distance < 0x2000000), "BL out of range ({} calls {})", code, fnptr);
+        LOG_ERROR_IF((distance <= -0x2000000) || (distance >= 0x2000000), "BL out of range ({} calls {})", code, fnptr);
         write32(condition | 0x0B000000 | ((distance >> 2) & 0x00FFFFFF));
     }
     void armx_emitter::BL(arm_reg src)
@@ -969,7 +969,7 @@ namespace eka2l1::common::armgen {
     }
 
     void armx_emitter::PLD(arm_reg rn, int offset, bool forWrite) {
-        LOG_ERROR_IF(offset < 0x3ff && offset > -0x3ff, "PLD: Max 12 bits of offset allowed");
+        LOG_ERROR_IF(!(offset < 0x3ff && offset > -0x3ff), "PLD: Max 12 bits of offset allowed");
 
         bool U = offset >= 0;
         if (offset < 0) offset = -offset;
@@ -1184,7 +1184,7 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::write_vreg_store_op(std::uint32_t op, arm_reg Rn, bool Double, bool WriteBack, arm_reg Vd, std::uint8_t numregs)
     {
-        LOG_ERROR_IF(!WriteBack || Rn != R_PC, "VLDM/VSTM cannot use WriteBack with PC (PC is deprecated anyway.)");
+        LOG_ERROR_IF(!(!WriteBack || Rn != R_PC), "VLDM/VSTM cannot use WriteBack with PC (PC is deprecated anyway.)");
         write32(condition | (op << 20) | (WriteBack << 21) | (Rn << 16) | encode_vd(Vd) | ((0xA | (int)Double) << 8) | (numregs << (int)Double));
     }
     void armx_emitter::STMFD(arm_reg dest, bool WriteBack, const int Regnum, ...)
@@ -1378,7 +1378,7 @@ namespace eka2l1::common::armgen {
         else if (value & I_64)
             return 3;
         else
-            LOG_ERROR_IF(false, "Passed invalid size to integer NEON instruction");
+            LOG_ERROR_IF(!(false), "Passed invalid size to integer NEON instruction");
         return 0;
     }
 
@@ -1461,13 +1461,13 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VLDMDB(arm_reg ptr, bool WriteBack, arm_reg firstvreg, int numvregs)
     {
-        LOG_ERROR_IF(WriteBack, "Writeback is required for VLDMDB");
+        LOG_ERROR_IF(!(WriteBack), "Writeback is required for VLDMDB");
         write_vreg_store_op(0x80 | 0x040 | 0x10 | 1, ptr, firstvreg >= D0, WriteBack, firstvreg, numvregs);
     }
 
     void armx_emitter::VSTMDB(arm_reg ptr, bool WriteBack, arm_reg firstvreg, int numvregs)
     {
-        LOG_ERROR_IF(WriteBack, "Writeback is required for VSTMDB");
+        LOG_ERROR_IF(!(WriteBack), "Writeback is required for VSTMDB");
         write_vreg_store_op(0x80 | 0x040 | 0x10, ptr, firstvreg >= D0, WriteBack, firstvreg, numvregs);
     }
 
@@ -1655,7 +1655,7 @@ namespace eka2l1::common::armgen {
             arm_reg Src = Rt;
             arm_reg Dest = Vd;
 
-            LOG_ERROR_IF((Size & (I_UNSIGNED | I_SIGNED | F_32)) != 0, "Must specify I_SIGNED or I_UNSIGNED in VMOV, unless F_32");
+            LOG_ERROR_IF((Size & (I_UNSIGNED | I_SIGNED | F_32)) == 0, "Must specify I_SIGNED or I_UNSIGNED in VMOV), unless F_32");
             int U = (Size & I_UNSIGNED) ? (1 << 23) : 0;
 
             write32(condition | (0xE1 << 20) | U | (opc1 << 21) | EncodeVn(Src) | (Dest << 12) | (0xB << 8) | (opc2 << 5) | (1 << 4));
@@ -1839,9 +1839,9 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VABA(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
         bool register_quad = Vd >= Q0;
 
         write32((0xF2 << 24) | ((Size & I_UNSIGNED ? 1 : 0) << 24) | EncodeVn(Vn) \
@@ -1850,11 +1850,11 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VABAL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vn >= D0 && Vn < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0 && Vm < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vn >= D0 && Vn < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0 && Vm < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         write32((0xF2 << 24) | ((Size & I_UNSIGNED ? 1 : 0) << 24) | (1 << 23) | EncodeVn(Vn) \
             | (encodedSize(Size) << 20) | encode_vd(Vd) | (0x50 << 4) | EncodeVm(Vm));
@@ -1862,8 +1862,8 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VABD(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
         if (Size & F_32)
@@ -1875,11 +1875,11 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VABDL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vn >= D0 && Vn < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0 && Vm < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vn >= D0 && Vn < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0 && Vm < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         write32((0xF2 << 24) | ((Size & I_UNSIGNED ? 1 : 0) << 24) | (1 << 23) | EncodeVn(Vn) \
             | (encodedSize(Size) << 20) | encode_vd(Vd) | (0x70 << 4) | EncodeVm(Vm));
@@ -1887,8 +1887,8 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VABS(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
         write32((0xF3 << 24) | (0xB1 << 16) | (encodedSize(Size) << 18) | encode_vd(Vd) \
@@ -1898,8 +1898,8 @@ namespace eka2l1::common::armgen {
     void armx_emitter::VACGE(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
         // Only Float
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
         write32((0xF3 << 24) | EncodeVn(Vn) | encode_vd(Vd) \
@@ -1909,8 +1909,8 @@ namespace eka2l1::common::armgen {
     void armx_emitter::VACGT(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
         // Only Float
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
         write32((0xF3 << 24) | (1 << 21) | EncodeVn(Vn) | encode_vd(Vd) \
@@ -1929,8 +1929,8 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VADD(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -1943,11 +1943,11 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VADDHN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vn >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vn >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         write32((0xF2 << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) \
             | encode_vd(Vd) | (0x80 << 4) | EncodeVm(Vm));
@@ -1955,84 +1955,84 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VADDL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vn >= D0 && Vn < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0 && Vm < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vn >= D0 && Vn < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0 && Vm < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         write32((0xF2 << 24) | ((Size & I_UNSIGNED ? 1 : 0) << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) \
             | encode_vd(Vd) | EncodeVm(Vm));
     }
     void armx_emitter::VADDW(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vn >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0 && Vm < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vn >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0 && Vm < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         write32((0xF2 << 24) | ((Size & I_UNSIGNED ? 1 : 0) << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) \
             | encode_vd(Vd) | (1 << 8) | EncodeVm(Vm));
     }
     void armx_emitter::VAND(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Vd == Vn && Vn == Vm), "All operands the same for %s is a nop");
-        // LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Vd == Vn && Vn == Vm)), "All operands the same for %s is a nop");
+        // LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
         bool register_quad = Vd >= Q0;
 
         write32((0xF2 << 24) | EncodeVn(Vn) | encode_vd(Vd) | (0x11 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VBIC(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        //  LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        //  LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
         bool register_quad = Vd >= Q0;
 
         write32((0xF2 << 24) | (1 << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x11 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VEOR(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s: %i", Vd);
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(Vd < D0, "Pass invalid register to %s: %i", Vd);
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;	
 
         write32((0xF3 << 24) | EncodeVn(Vn) | encode_vd(Vd) | (0x11 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VBIF(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        // LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        // LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
         bool register_quad = Vd >= Q0;
 
         write32((0xF3 << 24) | (3 << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x11 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VBIT(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        // LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        // LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
         bool register_quad = Vd >= Q0;
 
         write32((0xF3 << 24) | (2 << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x11 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VBSL(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        // LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        // LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
         bool register_quad = Vd >= Q0;
 
         write32((0xF3 << 24) | (1 << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x11 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VCEQ(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         if (Size & F_32)
@@ -2044,8 +2044,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCEQ(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2054,8 +2054,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCGE(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         if (Size & F_32)
@@ -2066,8 +2066,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCGE(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         write32((0xF3 << 24) | (0xB << 20) | (encodedSize(Size) << 18) | (1 << 16) \
@@ -2075,8 +2075,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCGT(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         if (Size & F_32)
@@ -2087,8 +2087,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCGT(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         write32((0xF3 << 24) | (0xD << 20) | (encodedSize(Size) << 18) | (1 << 16) \
@@ -2100,8 +2100,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCLE(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         write32((0xF3 << 24) | (0xD << 20) | (encodedSize(Size) << 18) | (1 << 16) \
@@ -2109,9 +2109,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCLS(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         bool register_quad = Vd >= Q0;
         write32((0xF3 << 24) | (0xD << 20) | (encodedSize(Size) << 18) \
@@ -2123,8 +2123,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCLT(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         write32((0xF3 << 24) | (0xD << 20) | (encodedSize(Size) << 18) | (1 << 16) \
@@ -2132,8 +2132,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCLZ(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         write32((0xF3 << 24) | (0xD << 20) | (encodedSize(Size) << 18) \
@@ -2141,9 +2141,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VCNT(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(Size & I_8, "Can only use I_8 with %s");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Size & I_8), "Can only use I_8 with %s");
 
         bool register_quad = Vd >= Q0;
         write32((0xF3 << 24) | (0xD << 20) | (encodedSize(Size) << 18) \
@@ -2151,9 +2151,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VDUP(std::uint32_t Size, arm_reg Vd, arm_reg Vm, std::uint8_t index)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         std::uint32_t imm4 = 0;
@@ -2168,9 +2168,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VDUP(std::uint32_t Size, arm_reg Vd, arm_reg Rt)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Rt < S0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Rt < S0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         Vd = subbase(Vd);
@@ -2187,8 +2187,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VEXT(arm_reg Vd, arm_reg Vn, arm_reg Vm, std::uint8_t index)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
         write32((0xF2 << 24) | (0xB << 20) | EncodeVn(Vn) | encode_vd(Vd) | (index & 0xF) \
@@ -2196,29 +2196,29 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VFMA(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Size == F_32, "Passed invalid size to FP-only NEON instruction");
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(context_info.bVFPv4, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Size == F_32), "Passed invalid size to FP-only NEON instruction");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bVFPv4), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
         write32((0xF2 << 24) | EncodeVn(Vn) | encode_vd(Vd) | (0xC1 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VFMS(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Size == F_32, "Passed invalid size to FP-only NEON instruction");
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(context_info.bVFPv4, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Size == F_32), "Passed invalid size to FP-only NEON instruction");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bVFPv4), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
         write32((0xF2 << 24) | (1 << 21) | EncodeVn(Vn) | encode_vd(Vd) | (0xC1 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VHADD(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         bool register_quad = Vd >= Q0;
 
@@ -2227,9 +2227,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VHSUB(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         bool register_quad = Vd >= Q0;
 
@@ -2238,8 +2238,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VMAX(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2251,8 +2251,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VMIN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2264,8 +2264,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VMLA(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2276,8 +2276,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VMLS(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2288,30 +2288,30 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VMLAL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vn >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0 && Vm < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vn >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0 && Vm < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         write32((0xF2 << 24) | ((Size & I_UNSIGNED ? 1 : 0) << 24) | (encodedSize(Size) << 20) \
             | EncodeVn(Vn) | encode_vd(Vd) | (0x80 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VMLSL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vn >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0 && Vm < Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float.");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vn >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0 && Vm < Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float.");
 
         write32((0xF2 << 24) | ((Size & I_UNSIGNED ? 1 : 0) << 24) | (encodedSize(Size) << 20) \
             | EncodeVn(Vn) | encode_vd(Vd) | (0xA0 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VMUL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2323,17 +2323,17 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VMULL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF2 << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0xC0 << 4) | ((Size & I_POLYNOMIAL) ? 1 << 9 : 0) | EncodeVm(Vm));
     }
     void armx_emitter::VMLA_scalar(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2341,15 +2341,15 @@ namespace eka2l1::common::armgen {
         if (Size & F_32)
             write32((0xF2 << 24) | (register_quad << 24) | (1 << 23) | (2 << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x14 << 4) | EncodeVm(Vm));
         else
-            LOG_ERROR_IF(false, "VMLA_scalar only supports float atm");
+            LOG_ERROR_IF(!(false), "VMLA_scalar only supports float atm");
         //else
         //	write32((0xF2 << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x90 << 4) | (1 << 6) | EncodeVm(Vm));
         // Unsigned support missing
     }
     void armx_emitter::VMUL_scalar(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2358,7 +2358,7 @@ namespace eka2l1::common::armgen {
         if (Size & F_32)  // Q flag
             write32((0xF2 << 24) | (register_quad << 24) | (1 << 23) | (2 << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x94 << 4) | VmEnc);
         else
-            LOG_ERROR_IF(false, "VMUL_scalar only supports float atm");
+            LOG_ERROR_IF(!(false), "VMUL_scalar only supports float atm");
         
             // write32((0xF2 << 24) | ((Size & I_POLYNOMIAL) ? (1 << 24) : 0) | (1 << 23) | (encodedSize(Size) << 20) | 
             // EncodeVn(Vn) | encode_vd(Vd) | (0x84 << 4) | (register_quad << 6) | EncodeVm(Vm));
@@ -2367,8 +2367,8 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VMVN(arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2378,8 +2378,8 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VNEG(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2388,8 +2388,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VORN(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2397,9 +2397,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VORR(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Vd == Vn && Vn == Vm), "All operands the same for %s is a nop");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Vd == Vn && Vn == Vm)), "All operands the same for %s is a nop");
 
         bool register_quad = Vd >= Q0;
 
@@ -2407,9 +2407,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VPADAL(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2418,8 +2418,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VPADD(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         if (Size & F_32)
             write32((0xF3 << 24) | EncodeVn(Vn) | encode_vd(Vd) | (0xD0 << 4) | EncodeVm(Vm));
@@ -2429,9 +2429,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VPADDL(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2440,8 +2440,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VPMAX(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         if (Size & F_32)
             write32((0xF3 << 24) | EncodeVn(Vn) | encode_vd(Vd) | (0xF0 << 4) | EncodeVm(Vm));
@@ -2451,8 +2451,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VPMIN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         if (Size & F_32)
             write32((0xF3 << 24) | (1 << 21) | EncodeVn(Vn) | encode_vd(Vd) | (0xF0 << 4) | EncodeVm(Vm));
@@ -2462,9 +2462,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VQABS(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2473,9 +2473,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VQADD(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2484,45 +2484,45 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VQDMLAL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF2 << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0x90 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VQDMLSL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF2 << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0xB0 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VQDMULH(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF2 << 24) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0xB0 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VQDMULL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF2 << 24) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0xD0 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VQNEG(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2531,18 +2531,18 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VQRDMULH(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF3 << 24) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0xB0 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VQRSHL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2551,9 +2551,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VQSHL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2562,9 +2562,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VQSUB(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2573,17 +2573,17 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VRADDHN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF3 << 24) | (1 << 23) | ((encodedSize(Size) - 1) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0x40 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VRECPE(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2592,8 +2592,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VRECPS(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2601,9 +2601,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VRHADD(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2612,9 +2612,9 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VRSHL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2623,8 +2623,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VRSQRTE(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
         Vd = subbase(Vd);
@@ -2636,8 +2636,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VRSQRTS(arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2646,18 +2646,18 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VRSUBHN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         write32((0xF3 << 24) | (1 << 23) | ((encodedSize(Size) - 1) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0x60 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VSHL(std::uint32_t Size, arm_reg Vd, arm_reg Vm, arm_reg Vn)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
 
         bool register_quad = Vd >= Q0;
 
@@ -2674,7 +2674,7 @@ namespace eka2l1::common::armgen {
         case I_64: sz = 64; break;
         }
         if (inverse && halve) {
-            LOG_ERROR_IF(amount <= sz / 2, "Amount %d too large for narrowing shift (max %d)", amount, sz/2);
+            LOG_ERROR_IF(amount > sz / 2, "Amount %d too large for narrowing shift (max %d)", amount, sz/2);
             return (sz / 2) + (sz / 2) - amount;
         } else if (inverse) {
             return sz + (sz - amount);
@@ -2684,9 +2684,9 @@ namespace eka2l1::common::armgen {
     }
 
     void armx_emitter::encode_shift_by_imm(std::uint32_t Size, arm_reg Vd, arm_reg Vm, int shiftAmount, std::uint8_t opcode, bool register_quad, bool inverse, bool halve) {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF(!(Size & F_32), "%s doesn't support float");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(!(Size & F_32)), "%s doesn't support float");
         int imm7 = EncodeSizeShift(Size, shiftAmount, inverse, halve);
         int L = (imm7 >> 6) & 1;
         int U = (Size & I_UNSIGNED) ? 1 : 0;
@@ -2707,7 +2707,7 @@ namespace eka2l1::common::armgen {
             case I_16: sz = 1; break;
             case I_32: sz = 2; break;
             case I_64:
-                LOG_ERROR_IF(false, "Cannot VSHLL 64-bit elements");
+                LOG_ERROR_IF(!(false), "Cannot VSHLL 64-bit elements");
             }
             int imm6 = 0x32 | (sz << 2);
             std::uint32_t value = (0xF3 << 24) | (1 << 23) | (imm6 << 16) | encode_vd(Vd) | (0x3 << 8) | EncodeVm(Vm);
@@ -2728,8 +2728,8 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VSUB(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2742,32 +2742,32 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VSUBHN(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         write32((0xF2 << 24) | (1 << 23) | ((encodedSize(Size) - 1) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0x60 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VSUBL(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         write32((0xF2 << 24) | (Size & I_UNSIGNED ? 1 << 24 : 0) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0x20 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VSUBW(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         write32((0xF2 << 24) | (Size & I_UNSIGNED ? 1 << 24 : 0) | (1 << 23) | (encodedSize(Size) << 20) | EncodeVn(Vn) | encode_vd(Vd) | \
                 (0x30 << 4) | EncodeVm(Vm));
     }
     void armx_emitter::VSWP(arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2776,8 +2776,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VTRN(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2786,8 +2786,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VTST(std::uint32_t Size, arm_reg Vd, arm_reg Vn, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2796,8 +2796,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VUZP(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2806,8 +2806,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::VZIP(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= D0, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(Vd >= D0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
 
         bool register_quad = Vd >= Q0;
 
@@ -2817,10 +2817,10 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VMOVL(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vd >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vm >= D0 && Vm <= D31, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF((Size & (I_UNSIGNED | I_SIGNED)) != 0, "Must specify I_SIGNED or I_UNSIGNED in VMOVL");
+        LOG_ERROR_IF(!(Vd >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vm >= D0 && Vm <= D31), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!((Size & (I_UNSIGNED | I_SIGNED)) != 0), "Must specify I_SIGNED or I_UNSIGNED in VMOVL");
 
         bool unsign = (Size & I_UNSIGNED) != 0;
         int imm3 = 0;
@@ -2834,10 +2834,10 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VMOVN(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vm >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vd >= D0 && Vd <= D31, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF((Size & I_8) == 0, "%s cannot narrow from I_8");
+        LOG_ERROR_IF(!(Vm >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vd >= D0 && Vd <= D31), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!((Size & I_8) == 0), "%s cannot narrow from I_8");
 
         // For consistency with assembler syntax and VMOVL - encode one size down.
         int halfSize = encodedSize(Size) - 1;
@@ -2847,11 +2847,11 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VQMOVN(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vm >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vd >= D0 && Vd <= D31, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF((Size & (I_UNSIGNED | I_SIGNED)) != 0, "Must specify I_SIGNED or I_UNSIGNED in %s NEON");
-        LOG_ERROR_IF((Size & I_8) == 0, "%s cannot narrow from I_8");
+        LOG_ERROR_IF(!(Vm >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vd >= D0 && Vd <= D31), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!((Size & (I_UNSIGNED | I_SIGNED)) != 0), "Must specify I_SIGNED or I_UNSIGNED in %s NEON");
+        LOG_ERROR_IF(!((Size & I_8) == 0), "%s cannot narrow from I_8");
 
         int halfSize = encodedSize(Size) - 1;
         int op = (1 << 7) | (Size & I_UNSIGNED ? 1 << 6 : 0);
@@ -2861,10 +2861,10 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VQMOVUN(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF(Vm >= Q0, "Pass invalid register to %s");
-        LOG_ERROR_IF(Vd >= D0 && Vd <= D31, "Pass invalid register to %s");
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
-        LOG_ERROR_IF((Size & I_8) == 0, "%s cannot narrow from I_8");
+        LOG_ERROR_IF(!(Vm >= Q0), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(Vd >= D0 && Vd <= D31), "Pass invalid register to %s");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!((Size & I_8) == 0), "%s cannot narrow from I_8");
 
         int halfSize = encodedSize(Size) - 1;
         int op = (1 << 6);
@@ -2874,7 +2874,7 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::VCVT(std::uint32_t Size, arm_reg Vd, arm_reg Vm)
     {
-        LOG_ERROR_IF((Size & (I_UNSIGNED | I_SIGNED)) != 0, "Must specify I_SIGNED or I_UNSIGNED in VCVT NEON");
+        LOG_ERROR_IF(!((Size & (I_UNSIGNED | I_SIGNED)) != 0), "Must specify I_SIGNED or I_UNSIGNED in VCVT NEON");
 
         bool register_quad = Vd >= Q0;
         bool toInteger = (Size & I_32) != 0;
@@ -2887,18 +2887,18 @@ namespace eka2l1::common::armgen {
     static int RegCountToType(int nRegs, NEONAlignment align) {
         switch (nRegs) {
         case 1:
-            LOG_ERROR_IF(!((int)align & 1), "align & 1 must be == 0");
+            LOG_ERROR_IF(!(!((int)align & 1)), "align & 1 must be == 0");
             return 7;
         case 2:
-            LOG_ERROR_IF(!((int)align == 3), "align must be != 3");
+            LOG_ERROR_IF(!(!((int)align == 3)), "align must be != 3");
             return 10;
         case 3:
-            LOG_ERROR_IF(!((int)align & 1), "align & 1 must be == 0");
+            LOG_ERROR_IF(!(!((int)align & 1)), "align & 1 must be == 0");
             return 6;
         case 4:
             return 2;
         default:
-            LOG_ERROR_IF(false, "Invalid number of registers passed to vector load/store");
+            LOG_ERROR_IF(!(false), "Invalid number of registers passed to vector load/store");
             return 0;
         }
     }
@@ -2914,12 +2914,12 @@ namespace eka2l1::common::armgen {
     }
 
     void armx_emitter::VLD1(std::uint32_t Size, arm_reg Vd, arm_reg Rn, int regCount, NEONAlignment align, arm_reg Rm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         write_vldst1(true, Size, Vd, Rn, regCount, align, Rm);
     }
 
     void armx_emitter::VST1(std::uint32_t Size, arm_reg Vd, arm_reg Rn, int regCount, NEONAlignment align, arm_reg Rm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         write_vldst1(false, Size, Vd, Rn, regCount, align, Rm);
     }
 
@@ -2949,12 +2949,12 @@ namespace eka2l1::common::armgen {
     }
 
     void armx_emitter::VLD1_lane(std::uint32_t Size, arm_reg Vd, arm_reg Rn, int lane, bool aligned, arm_reg Rm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         write_vldst1_lane(true, Size, Vd, Rn, lane, aligned, Rm);
     }
 
     void armx_emitter::VST1_lane(std::uint32_t Size, arm_reg Vd, arm_reg Rn, int lane, bool aligned, arm_reg Rm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         write_vldst1_lane(false, Size, Vd, Rn, lane, aligned, Rm);
     }
 
@@ -2991,7 +2991,7 @@ namespace eka2l1::common::armgen {
     }
 
     void armx_emitter::VMOV_imm(std::uint32_t Size, arm_reg Vd, VIMMMode type, int imm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         // Only let through the modes that apply.
         switch (type) {
         case VIMM___x___x:
@@ -3024,11 +3024,11 @@ namespace eka2l1::common::armgen {
         return;
 
     error:
-        LOG_ERROR_IF(false, "Bad Size or type specified in %s: Size %i Type %i", (int)Size, type);
+        LOG_ERROR("Bad Size or type specified in %s: Size %i Type %i", (int)Size, type);
     }
 
     void armx_emitter::VMOV_immf(arm_reg Vd, float value) {  // This only works with a select few values. I've hardcoded 1.0f.
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         std::uint8_t bits = 0;
 
         if (value == 0.0f) {
@@ -3044,13 +3044,13 @@ namespace eka2l1::common::armgen {
         } else if (value == -1.0f) {
             bits = 0xF0;
         } else {
-            LOG_ERROR_IF(false, "%s: Invalid floating point immediate");
+            LOG_ERROR_IF(!(false), "%s: Invalid floating point immediate");
         }
         write_vimm(Vd, VIMMf000f000, bits, 0);
     }
 
     void armx_emitter::VORR_imm(std::uint32_t Size, arm_reg Vd, VIMMMode type, int imm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         // Only let through the modes that apply.
         switch (type) {
         case VIMM___x___x:
@@ -3072,11 +3072,11 @@ namespace eka2l1::common::armgen {
         }
         return;
     error:
-        LOG_ERROR_IF(false, "Bad Size or type specified in VORR_imm");
+        LOG_ERROR_IF(!(false), "Bad Size or type specified in VORR_imm");
     }
 
     void armx_emitter::VBIC_imm(std::uint32_t Size, arm_reg Vd, VIMMMode type, int imm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         // Only let through the modes that apply.
         switch (type) {
         case VIMM___x___x:
@@ -3098,12 +3098,12 @@ namespace eka2l1::common::armgen {
         }
         return;
     error:
-        LOG_ERROR_IF(false, "Bad Size or type specified in VBIC_imm");
+        LOG_ERROR_IF(!(false), "Bad Size or type specified in VBIC_imm");
     }
 
 
     void armx_emitter::VMVN_imm(std::uint32_t Size, arm_reg Vd, VIMMMode type, int imm) {
-        LOG_ERROR_IF(context_info.bNEON, "Can't use %s when CPU doesn't support it");
+        LOG_ERROR_IF(!(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         // Only let through the modes that apply.
         switch (type) {
         case VIMM___x___x:
@@ -3125,7 +3125,7 @@ namespace eka2l1::common::armgen {
         }
         return;
     error:
-        LOG_ERROR_IF(false, "Bad Size or type specified in VMVN_imm");
+        LOG_ERROR_IF(!(false), "Bad Size or type specified in VMVN_imm");
     }
 
 
