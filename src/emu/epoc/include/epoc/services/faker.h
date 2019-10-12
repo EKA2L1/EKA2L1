@@ -85,22 +85,20 @@ namespace eka2l1::service {
                 raw_code,
                 hook
             };
-            
-            struct {
-                chain_type type_;
+        
+            chain_type type_;
 
-                union chain_data {
-                    struct {        
-                        chain_func  func_;
-                        void        *userdata_;
-                    };
+            union {
+                struct {        
+                    chain_func  func_;
+                    void        *userdata_;
+                };
 
-                    struct {
-                        std::uint32_t raw_func_addr_;
-                        std::uint32_t raw_func_args_[4];
-                    };
-                } data_;
-            };
+                struct {
+                    std::uint32_t raw_func_addr_;
+                    std::uint32_t raw_func_args_[4];
+                };
+            } data_;
 
             explicit chain(faker *daddy);
             chain *then(void *userdata, chain_func func);
