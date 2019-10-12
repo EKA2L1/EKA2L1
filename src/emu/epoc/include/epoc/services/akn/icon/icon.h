@@ -19,6 +19,9 @@
 
 #include <epoc/services/framework.h>
 #include <epoc/services/akn/icon/common.h>
+#include <epoc/services/faker.h>
+
+#include <memory>
 
 namespace eka2l1 {
     constexpr std::uint32_t MAX_CACHE_SIZE = 1024;
@@ -48,6 +51,8 @@ namespace eka2l1 {
 
         fbs_server *fbss;
         std::vector<icon_data_item> icons;
+
+        std::unique_ptr<service::faker> icon_process;
 
         void init_server();
         std::optional<epoc::akn_icon_srv_return_data> find_existing_icon(epoc::akn_icon_params &spec, std::size_t *idx = nullptr);

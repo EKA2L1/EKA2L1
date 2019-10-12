@@ -20,6 +20,7 @@
 #include <epoc/services/akn/icon/icon.h>
 #include <epoc/services/akn/icon/common.h>
 #include <epoc/services/fbs/fbs.h>
+#include <epoc/kernel/libmanager.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -119,5 +120,11 @@ namespace eka2l1 {
         // Done reading
         // Set the flags to inited.
         flags |= akn_icon_srv_flag_inited;
+
+        static constexpr std::uint32_t AKN_ICON_SRV_UID = 0x1020735B;
+
+        // Create icon process
+        icon_process = std::make_unique<service::faker>(sys->get_kernel_system(), sys->get_lib_manager(), 
+            "AknIconServerProcess", AKN_ICON_SRV_UID);
     }
 };
