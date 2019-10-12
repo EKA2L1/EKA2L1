@@ -2208,18 +2208,22 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
-    BRIDGE_FUNC(bool, VirtualReality) {
+    BRIDGE_FUNC(void, VirtualReality) {
         // Call host function. Hack.
         typedef bool (*reality_func)(void* data);
 
         const std::uint32_t current = sys->get_cpu()->get_pc();
         std::uint64_t *data = reinterpret_cast<std::uint64_t*>(sys->get_kernel_system()->
-            crr_process()->get_ptr_on_addr_space(current - 16));
+            crr_process()->get_ptr_on_addr_space(current - 20));
+
+        sys->get_cpu()->save_context(sys->get_kernel_system()->crr_thread()->get_thread_context());
 
         reality_func to_call = reinterpret_cast<reality_func>(*data++);
         void *userdata = reinterpret_cast<void*>(*data++);
 
-        return to_call(userdata);
+        if (!to_call(userdata)) {
+            sys->get_kernel_system()->crr_thread()->wait_for_any_request();
+        }
     }
 
     /*
