@@ -24,36 +24,45 @@
 #include <epoc/kernel/process.h>
 #include <epoc/services/faker.h>
 
+#include <common/allocator.h>
+
 static bool faker_next_hook(void *userdata) {
     return reinterpret_cast<eka2l1::service::faker*>(userdata)->walk();
 }
 
 namespace eka2l1::service {
-    faker::faker(kernel_system *kern, hle::lib_manager *libmngr, const std::string &name)
+    faker::faker(kernel_system *kern, hle::lib_manager *libmngr, const std::string &name, const std::uint32_t uid)
         : process_(nullptr)
-        , trampoline_(nullptr)
+        , control_(nullptr)
+        , lr_addr_(0)
+        , data_offset_(0)
         , initial_(nullptr) {
-        initialise(kern, libmngr, name);
+        initialise(kern, libmngr, name, uid);
     }
 
     eka2l1::address faker::trampoline_address() const {
         return lr_addr_;
     }
     
-    bool faker::initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name) {
+    static constexpr std::uint32_t TEMP_ARGS_REGION = 0x100;
+
+    bool faker::initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name, const std::uint32_t uid) {
         // Create the fake process first
         process_ = kern->create<kernel::process>(kern->get_memory_system(), name, u"Nowhere", u"").get();
-
+        
         if (!process_) {
             return false;
         }
 
-        // Create the trampoline allowing us to hook HLE callbacks.
-        const std::string trampoline_chunk_name = name + "_trampoline";
-        trampoline_ = kern->create<kernel::chunk>(kern->get_memory_system(), process_, trampoline_chunk_name, 0,
-            1000, 1000, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::code, kernel::chunk_attrib::none);
+        // Create control block
+        control_ = kern->create<kernel::chunk>(kern->get_memory_system(), process_, name + "_HLEControl",
+            0, 0x1000, 0x1000, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local,
+            kernel::chunk_attrib::none);
 
-        if (!trampoline_) {
+        allocator_ = std::make_unique<common::block_allocator>(reinterpret_cast<std::uint8_t*>(
+            control_->host_base()) + TEMP_ARGS_REGION, 0x1000 - TEMP_ARGS_REGION);
+
+        if (!control_) {
             return false;
         }
 
@@ -64,69 +73,134 @@ namespace eka2l1::service {
             return false;
         }
 
+        static const char *TRAMPOLINE_SEG_NAME = "JumpJupTrampoline";
+
+        codeseg_ptr seg = std::reinterpret_pointer_cast<kernel::codeseg>(kern->get_by_name<kernel::codeseg>
+            (TRAMPOLINE_SEG_NAME));
+            
+        data_offset_ = 200;
+            
         static constexpr std::uint32_t SETUP_THREAD_HEAP_EXPORT_ORD = 1360;
         static constexpr std::uint32_t NEW_TRAP_CLEANUP_EXPORT_ORD = 196;
 
-        common::cpu_info context_info;
-        context_info.bARMv7 = false;
+        if (!seg) {
+            kernel::codeseg_create_info create_info;
+            
+            create_info.code_base = 0;
+            create_info.data_base = 0;
+            create_info.data_size = 0;
+            create_info.constant_data = nullptr;
 
-        common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(trampoline_->host_base()), context_info);
+            create_info.uids[0] = 0x1000007A;
+            create_info.uids[1] = 0;
+            create_info.uids[2] = uid;
+
+            // Build trampoline code
+            // For each process we are just gonna rebuild the code for now.
+            // Not too expensive.
+            std::vector<std::uint8_t> trampoline_code;
+            trampoline_code.resize(280);
+
+            common::cpu_info context_info;
+            context_info.bARMv7 = false;
+
+            common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(&trampoline_code[0]), context_info);
+            int a = 5;
+
+            // Set up heap by jumping
+            // Relocate data:
+            // - 0: Control block address.
+            // - 4: CreateHeap
+            // - 8 : NewTrapCleanup.
+            emitter.MOV(common::armgen::R0, common::armgen::R4);        // R4 should contains whether the thread is first in process or not.
+            emitter.MOV(common::armgen::R1, common::armgen::R_SP);      // Stack pointer points to heap thread info.
+            emitter.ADD(common::armgen::R11, common::armgen::R_PC, data_offset_ - 16);
+            emitter.LDR(common::armgen::R12, common::armgen::R11, 4);     // Load export UserHeap::SetupThreadHeap
+            
+            emitter.PUSH(1, common::armgen::R11);
+            emitter.BL(common::armgen::R12);        // Jump to it.
+
+            // Don't have to call InitProcess SVC since we dont have anything actually, this process barely uses stuffs.
+            // Try to setup a trap cleanup
+            emitter.LDR(common::armgen::R12, common::armgen::R11, 8);
+            emitter.BL(common::armgen::R12);
+            emitter.POP(1, common::armgen::R11);
+
+            // Load control block address
+            emitter.LDR(common::armgen::R11, common::armgen::R11);
+            
+            // Let thread semaphore wait. Call WaitForAnyRequest.
+            emitter.SVC(0x800000);
+            emitter.B(emitter.get_code_pointer() + sizeof(std::uint64_t) * 2);
+
+            // Fiddle some trampoline SVC call that only available here.
+            // We are using thumb
+            // Reserve:
+            // - 1 qword for our callback pointer to do system call.
+            // - 1 qword pointing to this class.
+            // - The SVC call, which should be ARM. 0xEF0000FF in this case (DFFF - ARM GDB)
+            // TODO: This smells hacks. If there is an 128-bit OS in the future than I'm so sorry my lord.
+            std::uint64_t *trampoline_ptr = reinterpret_cast<std::uint64_t*>(emitter.get_writeable_code_ptr());
+
+            *trampoline_ptr++ = reinterpret_cast<std::uint64_t>(faker_next_hook);
+            *trampoline_ptr++ = reinterpret_cast<std::uint64_t>(this);
+            
+            lr_addr_ = static_cast<address>(reinterpret_cast<std::uint8_t*>(trampoline_ptr) - 
+                trampoline_code.data());
+
+            *reinterpret_cast<std::uint32_t*>(trampoline_ptr++) = 0xEF0000FF; // SVC #0xFF - HLE host call.
+
+            emitter.set_code_pointer(emitter.get_writeable_code_ptr() + 2 * sizeof(std::uint64_t) + 4);
+
+            // Jump to control LLE code. TODO to preserve R11
+            emitter.LDR(common::armgen::R12, common::armgen::R11);  // Jump address
+            emitter.LDR(common::armgen::R0, common::armgen::R11, 4);    // Arg0
+            emitter.LDR(common::armgen::R1, common::armgen::R11, 8);    // Arg1
+            emitter.LDR(common::armgen::R2, common::armgen::R11, 12);   // Arg2
+            emitter.LDR(common::armgen::R3, common::armgen::R11, 16);
+            emitter.PUSH(1, common::armgen::R11);  // Preserve control
+            emitter.BL(common::armgen::R12);
+            emitter.POP(1, common::armgen::R11);
+
+            // Jump to our HLE host dispatch now
+            emitter.B(trampoline_code.data() + lr_addr_);
+
+            create_info.code_load_addr = 0;
+            create_info.code_data = trampoline_code.data();
+            create_info.code_size = static_cast<std::uint32_t>(trampoline_code.size());
+
+            seg = kern->create<kernel::codeseg>(TRAMPOLINE_SEG_NAME, create_info);
+        }
+
+        seg->attach(process_);
+
+        std::uint8_t *trampoline = nullptr;
+
+        // Relocate some stuff
+        std::uint32_t addr = seg->get_code_run_addr(process_, &trampoline);
+        std::uint32_t *trampoline32 = reinterpret_cast<std::uint32_t*>(trampoline + data_offset_);
+
+        // Relocate export.
+        trampoline32[0] = control_->base().ptr_address();
+        trampoline32[1] = euser_lib->lookup(process_, SETUP_THREAD_HEAP_EXPORT_ORD);
+        trampoline32[2] = euser_lib->lookup(process_, NEW_TRAP_CLEANUP_EXPORT_ORD);
         
-        data_offset_ = 200;
-
-        // Set up heap by jumping
-        emitter.MOV(common::armgen::R0, common::armgen::R4);        // R4 should contains whether the thread is first in process or not.
-        emitter.MOV(common::armgen::R1, common::armgen::R_SP);      // Stack pointer points to heap thread info.
-        emitter.MOVI2R(common::armgen::R11, trampoline_->base().ptr_address() + data_offset_);
-        emitter.MOVI2R(common::armgen::R12, euser_lib->lookup(process_, SETUP_THREAD_HEAP_EXPORT_ORD));     // Load export UserHeap::SetupThreadHeap
-        emitter.BL(common::armgen::R12);        // Jump to it.
-
-        // Don't have to call InitProcess SVC since we dont have anything actually, this process barely uses stuffs.
-        // Try to setup a trap cleanup
-        emitter.MOVI2R(common::armgen::R12, euser_lib->lookup(process_, NEW_TRAP_CLEANUP_EXPORT_ORD));
-        emitter.BL(common::armgen::R12);      
-
-        // Let thread semaphore wait. Call WaitForAnyRequest.
-        emitter.SVC(0x800000);
-        emitter.B(reinterpret_cast<std::uint8_t*>(trampoline_->host_base()) + sizeof(std::uint64_t) * 2);
-
-        // Fiddle some trampoline SVC call that only available here.
-        // We are using thumb
-        // Reserve:
-        // - 1 qword for our callback pointer to do system call.
-        // - 1 qword pointing to this class.
-        // - The SVC call, which should be ARM. 0xEF0000FF in this case (DFFF - ARM GDB)
-        // TODO: This smells hacks. If there is an 128-bit OS in the future than I'm so sorry my lord.
-        std::uint64_t *trampoline_ptr = reinterpret_cast<std::uint64_t*>(emitter.get_writeable_code_ptr());
-
-        *trampoline_ptr++ = reinterpret_cast<std::uint64_t>(faker_next_hook);
-        *trampoline_ptr++ = reinterpret_cast<std::uint64_t>(this);
-        
-        lr_addr_ = static_cast<address>(reinterpret_cast<std::uint8_t*>(trampoline_ptr) - 
-            reinterpret_cast<std::uint8_t*>(trampoline_->host_base()));
-
-        *reinterpret_cast<std::uint32_t*>(trampoline_ptr++) = 0xEF0000FF; // SVC #0xFF - HLE host call.
-
-        // Jump to control LLE code. TODO to preserve R11
-        emitter.LDR(common::armgen::R12, common::armgen::R11);  // Jump address
-        emitter.LDR(common::armgen::R0, common::armgen::R11, 4);    // Arg0
-        emitter.LDR(common::armgen::R1, common::armgen::R11, 8);    // Arg1
-        emitter.LDR(common::armgen::R2, common::armgen::R11, 12);   // Arg2
-        emitter.LDR(common::armgen::R3, common::armgen::R11, 16);
-        emitter.BL(common::armgen::R12);
-
-        // Jump to our HLE host dispatch now
-        emitter.B(reinterpret_cast<std::uint8_t*>(trampoline_->host_base()) + lr_addr_);
-
         // Intialise the initial chain
         initial_ = new chain(this);
+
+        static constexpr std::uint32_t STACK_SIZE = 0x10000;
+
+        // Initialise our process and run
+        process_->construct_with_codeseg(seg, STACK_SIZE, 0x10000, 0xF0000, kernel::process_priority::high);
+        E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link)->rename(name + "_HLETHread");
+        process_->run();
 
         // Done now! Thanks everyone.
         return true;
     }
 
     bool faker::walk() {
-        if (initial_) {
+        if (!initial_ || initial_->type_ == chain::chain_type::unk) {
             return false;
         }
 
@@ -141,17 +215,25 @@ namespace eka2l1::service {
             // Run the callback while it's still hook
             while (initial_ && initial_->type_ == chain::chain_type::hook) {
                 // Run the hook
-                initial_->data_.func_(initial_->data_.userdata_);
+                initial_->data_.func_(this, initial_->data_.userdata_);
                 cycle_next();
             }
         } else {
+            for (const auto &to_free: free_lists_) {
+                allocator_->free(to_free);
+            }
+
+            free_lists_.clear();
+
             // Write control block
-            std::uint8_t *control_block = reinterpret_cast<std::uint8_t*>(trampoline_->host_base()) + data_offset_;
+            std::uint32_t *control_block = reinterpret_cast<std::uint32_t*>(control_->host_base());
             control_block[0] = initial_->data_.raw_func_addr_;
 
             for (std::uint32_t i = 0; i < sizeof(initial_->data_.raw_func_args_) / sizeof(std::uint32_t); i++) {
                 control_block[i + 1] = initial_->data_.raw_func_args_[i];
             }
+
+            free_lists_.insert(free_lists_.end(), initial_->free_lists_.begin(), initial_->free_lists_.end());
 
             // Run it native
             cycle_next();
@@ -170,6 +252,39 @@ namespace eka2l1::service {
         return my_end;
     }
 
+    eka2l1::address faker::new_temporary_argument_with_size(const std::uint32_t size, std::uint8_t **pointer) {
+        std::uint8_t *result = reinterpret_cast<std::uint8_t*>(allocator_->allocate(size));
+
+        if (!result) {
+            return 0;
+        }
+
+        if (pointer) {
+            *pointer = result;
+        }
+
+        eka2l1::address offset = static_cast<eka2l1::address>(result - reinterpret_cast<std::uint8_t*>(
+            control_->host_base()));
+
+        faker::chain *end = get_end_chain(initial_);
+
+        end->free_lists_.push_back(result);
+        return offset + control_->base().ptr_address();
+    }
+
+    std::uint8_t *faker::get_last_temporary_argument_impl(const int number) {
+        if (free_lists_.size() <= number) {
+            return nullptr;
+        }
+
+        return free_lists_[number];
+    }
+
+    std::uint32_t faker::get_native_return_value() const {
+        return E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link)->
+            get_thread_context().cpu_registers[0];
+    }
+
     faker::chain *faker::then(void *userdata, faker::chain::chain_func func) {
         return get_end_chain(initial_)->then(userdata, func);
     }
@@ -186,10 +301,27 @@ namespace eka2l1::service {
         return get_end_chain(initial_)->then(raw_func_addr, arg2);
     }
 
+    kernel::thread *faker::main_thread() {
+        return E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link);
+    }
+    
     faker::chain::chain(faker *daddy) 
         : daddy_(daddy)
-        , next_(nullptr) {
+        , next_(nullptr)
+        , type_(faker::chain::chain_type::unk) {
 
+    }
+
+    static void notify_native_execution(faker *daddy) {
+        faker::chain *first = daddy->initial();
+
+        while (first->next_ != nullptr && first->type_ != faker::chain::chain_type::raw_code) {
+            first = first->next_;
+        }
+
+        if (!first || first->type_ != faker::chain::chain_type::raw_code) {
+            daddy->main_thread()->signal_request();
+        }
     }
 
     faker::chain *faker::chain::then(void *userdata, faker::chain::chain_func func) {
@@ -202,6 +334,8 @@ namespace eka2l1::service {
     }
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr) {
+        notify_native_execution(daddy_);
+
         type_ = faker::chain::chain_type::raw_code;
         data_.raw_func_addr_ = raw_func_addr.ptr_address();
 
@@ -210,6 +344,8 @@ namespace eka2l1::service {
     }
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1) {
+        notify_native_execution(daddy_);
+        
         type_ = faker::chain::chain_type::raw_code;
         data_.raw_func_addr_ = raw_func_addr.ptr_address();
         data_.raw_func_args_[0] = arg1;
@@ -219,6 +355,8 @@ namespace eka2l1::service {
     }
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1, const std::uint32_t arg2) {
+        notify_native_execution(daddy_);
+        
         type_ = faker::chain::chain_type::raw_code;
         data_.raw_func_addr_ = raw_func_addr.ptr_address();
         data_.raw_func_args_[0] = arg1;

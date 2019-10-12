@@ -19,9 +19,12 @@
 
 #pragma once
 
+#include <common/allocator.h>
 #include <epoc/ptr.h>
+
 #include <memory>
 #include <string>
+#include <vector>
 
 // Foward declaration
 namespace eka2l1 {
@@ -30,6 +33,7 @@ namespace eka2l1 {
     namespace kernel {
         class process;
         class chunk;
+        class thread;
     }
 
     namespace hle {
@@ -59,19 +63,25 @@ namespace eka2l1::service {
     class faker {
     private:
         kernel::process *process_;
-        chunk_ptr        trampoline_;
+        chunk_ptr        control_;
 
         address lr_addr_;
         address data_offset_;
 
+        std::unique_ptr<common::block_allocator> allocator_;
+        std::vector<std::uint8_t*> free_lists_;
+
     public:
         struct chain {
-            typedef void (*chain_func)(void *userdata);
+            typedef void (*chain_func)(faker *self, void *userdata);
 
             chain       *next_;
             faker       *daddy_;
 
+            std::vector<std::uint8_t*> free_lists_;
+
             enum class chain_type {
+                unk,
                 raw_code,
                 hook
             };
@@ -132,10 +142,12 @@ namespace eka2l1::service {
          * 
          * \internal
          */
-        bool initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name);
+        bool initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name,
+            const std::uint32_t uid);
 
     public:
-        explicit faker(kernel_system *kern, hle::lib_manager *mngr, const std::string &name);
+        explicit faker(kernel_system *kern, hle::lib_manager *mngr, const std::string &name,
+            const std::uint32_t uid);
 
         // ==================== UTILITIES =======================
         chain *then(void *userdata, chain::chain_func func);
@@ -146,9 +158,44 @@ namespace eka2l1::service {
 
         bool walk();
 
+        std::uint32_t get_native_return_value() const;
+
+        /**
+         * \brief   Alloc a temporary space for an argument.
+         * 
+         * The argument will be freed on the next raw native call.
+         * 
+         * \param   size        Size of data to alloc.
+         * \param   pointer     Optional pointer to a variable which will contains host
+         *                      pointer to the variable.
+         * 
+         * \returns Guest address of the argument
+         */
+        eka2l1::address new_temporary_argument_with_size(const std::uint32_t size, std::uint8_t **pointer = nullptr);
+
+        template <typename T>
+        eka2l1::address new_temp_arg(T **pointer = nullptr) {
+            return new_temporary_argument_with_size(sizeof(T), reinterpret_cast<std::uint8_t**>(pointer));
+        }
+
+        // Use this function only in a hook
+        std::uint8_t *get_last_temporary_argument_impl(const int number);
+
+        // Use this function only in a hook
+        template <typename T>
+        T *last_temp_arg(const int number) {
+            return reinterpret_cast<T*>(get_last_temporary_argument_impl(number));
+        }
+
         // ==================== GETTER =========================
         kernel::process *process() {
             return process_;
         }
+        
+        chain *initial() {
+            return initial_;
+        }
+        
+        kernel::thread *main_thread();
     };
 }
