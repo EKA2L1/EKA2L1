@@ -78,7 +78,20 @@ namespace eka2l1::epoc {
         , driver_win_id(0)
         , shadow_height(0)
         , flags(0) {
-        // TODO: Inherit parent size and extent
+        if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
+            LOG_ERROR("Parent is not a window client type!");
+        } else {
+            if (parent->type == epoc::window_kind::client) {
+                epoc::window_user *user = reinterpret_cast<epoc::window_user*>(parent);
+
+                // Inherits parent's size
+                pos = user->pos;
+                size = user->size;
+            } else {
+                // Going fullscreen
+                size = scr->size();
+            }
+        }
     }
     
     eka2l1::vec2 window_user::get_origin() {
