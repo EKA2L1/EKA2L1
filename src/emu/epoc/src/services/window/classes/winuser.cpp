@@ -78,6 +78,7 @@ namespace eka2l1::epoc {
         , driver_win_id(0)
         , shadow_height(0)
         , flags(0) {
+        // TODO: Inherit parent size and extent
     }
     
     eka2l1::vec2 window_user::get_origin() {

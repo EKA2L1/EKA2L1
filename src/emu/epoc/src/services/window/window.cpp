@@ -246,22 +246,23 @@ namespace eka2l1::epoc {
     void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         epoc::window *parent = reinterpret_cast<epoc::window*>(get_object(header->parent));
-
+ 
         if (!parent) {
             LOG_WARN("Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
             ctx.set_request_status(KErrArgument);
             return;
         }
 
-        if (parent->type != window_kind::group) {
-            LOG_ERROR("The parent of window user must be a group!");
+        if (parent->type != window_kind::group && parent->type != window_kind::client) {
+            LOG_ERROR("The parent of window user must be a group or another user!");
             ctx.set_request_status(KErrArgument);
             return;
         }
 
         // We have to be child's parent child, which is top user.
         window_client_obj_ptr win = std::make_unique<epoc::window_user>(this, parent->scr,
-            parent->child, header->win_type, header->dmode);
+            (parent->type == window_kind::group) ? parent->child : parent, header->win_type,
+            header->dmode);
 
         ctx.set_request_status(add_object(win));
     }
