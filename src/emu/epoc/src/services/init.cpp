@@ -23,6 +23,7 @@
 #include <epoc/services/akn/icon/icon.h>
 #include <epoc/services/akn/skin/server.h>
 #include <epoc/services/applist/applist.h>
+#include <epoc/services/audio/keysound/keysound.h>
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/cdl/cdl.h>
 #include <epoc/services/centralrepo/centralrepo.h>
@@ -272,11 +273,14 @@ namespace eka2l1 {
             
             if (cfg->enable_srv_drm)
                 CREATE_SERVER(sys, drm_helper_server);
-            
+
             // These needed to be HLEd
             CREATE_SERVER(sys, applist_server);
             CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, hwrm_server);
+
+            // Not really sure about this one
+            CREATE_SERVER(sys, keysound_server);
 
             if (cfg->enable_srv_eikapp_ui)
                 CREATE_SERVER(sys, eikappui_server);
