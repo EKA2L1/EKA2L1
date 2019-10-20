@@ -38,7 +38,7 @@ namespace eka2l1 {
         cen_rep_set_string,
         cen_rep_find,
         cen_rep_find_eq_int,
-        cen_rep_find_rq_real,
+        cen_rep_find_eq_real,
         cen_rep_find_eq_string,
         cen_rep_find_neq_int,
         cen_rep_find_neq_real,
