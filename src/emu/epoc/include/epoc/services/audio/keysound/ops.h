@@ -19,20 +19,8 @@
 
 #pragma once
 
-#include <epoc/services/framework.h>
-
-namespace eka2l1 {
-    class keysound_session: public service::typical_session {
-        service::uid app_uid_;       ///< The UID3 of the app opening this session
-
-    public:
-        explicit keysound_session(service::typical_server *svr, service::uid client_ss_uid);
-        void fetch(service::ipc_context *ctx) override;
-    };
-
-    class keysound_server: public service::typical_server {
-    public:
-        explicit keysound_server(system *sys);
-        void connect(service::ipc_context &context) override;
+namespace eka2l1::epoc::keysound {
+    enum opcode {
+        opcode_init = 0
     };
 }

@@ -18,6 +18,12 @@
  */
 
 #include <epoc/services/audio/keysound/keysound.h>
+#include <epoc/services/audio/keysound/ops.h>
+
+#include <common/e32inc.h>
+#include <e32err.h>
+
+#include <epoc/kernel/process.h>
 
 namespace eka2l1 {
     keysound_session::keysound_session(service::typical_server *svr, service::uid client_ss_uid)
@@ -26,6 +32,20 @@ namespace eka2l1 {
 
     void keysound_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case epoc::keysound::opcode_init: {
+            std::int32_t *allow_load_sound_info_from_resource = reinterpret_cast<std::int32_t*>(
+                ctx->msg->own_thr->owning_process()->get_ptr_on_addr_space(*ctx->get_arg<kernel::uid>(0)));
+
+            // You're welcome.
+            *allow_load_sound_info_from_resource = true;
+
+            // Store app UID
+            app_uid_ = *ctx->get_arg<std::uint32_t>(1);
+            ctx->set_request_status(KErrNone);
+
+            break;
+        }
+
         default:
             LOG_ERROR("Unimplemented keysound server opcode: {}", ctx->msg->function);
             break;
