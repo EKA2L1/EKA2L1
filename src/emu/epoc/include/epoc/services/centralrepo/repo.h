@@ -185,14 +185,34 @@ namespace eka2l1 {
         eka2l1::central_repo *get_cached_repo(const std::uint32_t key);
     };
 
+    struct central_repo_key_filter {
+        std::uint32_t partial_key;
+        std::uint32_t id_mask;
+    };
+
     struct central_repo_client_subsession {
         central_repo_server *server;
 
         central_repo *attach_repo;
         central_repo_transactor transactor;
 
+        std::vector<std::uint32_t> key_found_result;
+
         int reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key);
         void write_changes(eka2l1::io_system *io);
+
+        void find_eq(service::ipc_context *ctx);
+
+        /**
+         * \brief Append new key to find equal list.
+         * 
+         * If the number of the array exceed the already defined border, than it will be appended
+         * to a temporary list in the subsession, which later IPC call can acquire the data.
+         * 
+         * \param array The target array to append. First element contains the count
+         * \param key   The key to append.
+         */
+        void append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key);
 
         void handle_message(service::ipc_context *ctx);
 

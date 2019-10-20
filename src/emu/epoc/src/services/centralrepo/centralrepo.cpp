@@ -194,6 +194,8 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_real, "CenRep::GetReal");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_string, "CenRep::GetString");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req_check, "CenRep::NofReqCheck");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_eq_int, "CenRep::FindEqInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_neq_int, "CenRep::FindNeqInt");
     }
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
@@ -680,6 +682,13 @@ namespace eka2l1 {
             break;
         }
 
+        case cen_rep_find_eq_int:
+        case cen_rep_find_eq_real:
+        case cen_rep_find_eq_string: {
+            find_eq(ctx);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unhandled message opcode for cenrep 0x{:X]", ctx->msg->function);
             break;
@@ -687,6 +696,96 @@ namespace eka2l1 {
         }
     }
 
+    void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key) {
+        // We have to push it to the temporary array, since this array can be retrieve anytime before another FindEq call
+        // Even if the provided array is not full
+        key_found_result.push_back(key);
+
+        if (array[0] < MAX_FOUND_UID_BUF_LENGTH) {
+            // Increase the length, than add the keey
+            array[++array[0]] = key;
+        }
+    }
+    
+    void central_repo_client_subsession::find_eq(service::ipc_context *ctx) {
+        // Clear found result
+        // TODO: Should we?
+        key_found_result.clear();
+
+        // Get the filter
+        std::optional<central_repo_key_filter> filter = ctx->get_arg_packed<central_repo_key_filter>(0);
+        std::uint32_t *found_uid_result_array = ptr<std::uint32_t>(*ctx->get_arg<kernel::address>(2)).get(
+            ctx->msg->own_thr->owning_process());
+        
+        if (!filter || !found_uid_result_array) {
+            LOG_ERROR("Trying to find equal value in cenrep, but arguments are invalid!");
+            ctx->set_request_status(KErrArgument);
+            return;
+        }
+
+        // Set found count to 0
+        found_uid_result_array[0] = 0;
+
+        for (auto &entry: attach_repo->entries) {
+            // Try to match the key first
+            if ((entry.key & filter->id_mask) != (filter->partial_key & filter->id_mask)) {
+                // Mask doesn't match, abadon this entry
+                continue;
+            }
+
+            std::uint32_t key_found = 0;
+            bool find_not_eq = false;
+
+            switch (ctx->msg->function) {
+            case cen_rep_find_neq_int:
+            case cen_rep_find_neq_real:
+            case cen_rep_find_neq_string:
+                find_not_eq = true;
+                break;
+
+            default:
+                break;
+            }
+
+            // Depends on the opcode, we try to match the value
+            switch (ctx->msg->function) {
+            case cen_rep_find_eq_int:
+            case cen_rep_find_neq_int: {
+                if (entry.data.etype != central_repo_entry_type::integer) {
+                    // It must be integer type
+                    break;
+                }
+
+                // Index 1 argument contains the value we should look for
+                // TODO: Signed/unsigned is dangerous
+                if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_arg<std::int32_t>(1)) {
+                    if (!find_not_eq) {
+                        key_found = entry.key;
+                    }
+                } else {
+                    if (find_not_eq) {
+                        key_found = entry.key;
+                    }
+                }
+
+                break;
+            }
+
+            default: {
+                LOG_ERROR("Unimplement Cenrep's find function for opcode {}", ctx->msg->function);
+                break;
+            }
+            }
+
+            // If we found the key, append it
+            if (key_found != 0) {
+                append_new_key_to_found_eq_list(found_uid_result_array, key_found);
+            }
+        }
+
+        ctx->set_request_status(KErrNone);
+    }
+    
     int central_repo_client_session::closerep(io_system *io, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
         auto &repo_subsession = repo_subsession_ite->second;
 

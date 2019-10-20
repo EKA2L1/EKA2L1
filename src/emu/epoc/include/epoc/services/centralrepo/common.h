@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace eka2l1 {
     enum central_repo_srv_request {
         cen_rep_init,
@@ -74,5 +76,6 @@ namespace eka2l1 {
         string
     };
 
-    constexpr int cenrep_pma_ver = 3;
+    static constexpr int cenrep_pma_ver = 3;
+    static constexpr std::uint32_t MAX_FOUND_UID_BUF_LENGTH = 16;
 }
