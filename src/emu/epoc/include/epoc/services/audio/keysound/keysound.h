@@ -19,15 +19,24 @@
 
 #pragma once
 
+#include <epoc/services/audio/keysound/context.h>
 #include <epoc/services/framework.h>
+
+#include <stack>
 
 namespace eka2l1 {
     class keysound_session: public service::typical_session {
-        service::uid app_uid_;       ///< The UID3 of the app opening this session
+    private:
+        service::uid app_uid_;                              ///< The UID3 of the app opening this session
+        std::stack<epoc::keysound::context> contexts_;      ///< Context stack describes sound to play when key action trigger.
 
     public:
         explicit keysound_session(service::typical_server *svr, service::uid client_ss_uid);
         void fetch(service::ipc_context *ctx) override;
+
+        void init(service::ipc_context *ctx);
+        void push_context(service::ipc_context *ctx);
+        void pop_context(service::ipc_context *ctx);
     };
 
     class keysound_server: public service::typical_server {
