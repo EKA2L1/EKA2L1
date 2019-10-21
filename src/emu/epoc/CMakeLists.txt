@@ -100,7 +100,9 @@ add_library(epocservs
     include/epoc/services/akn/skin/skn.h
     include/epoc/services/applist/op.h
     include/epoc/services/applist/applist.h
+    include/epoc/services/audio/keysound/context.h
     include/epoc/services/audio/keysound/keysound.h
+    include/epoc/services/audio/keysound/ops.h
     include/epoc/services/backup/backup.h
     include/epoc/services/cdl/cdl.h
     include/epoc/services/cdl/common.h
@@ -161,6 +163,7 @@ add_library(epocservs
     src/services/akn/skin/skn.cpp
     src/services/applist/applist.cpp
     src/services/applist/registeration.cpp
+    src/services/audio/keysound/context.cpp
     src/services/audio/keysound/keysound.cpp
     src/services/backup/backup.cpp
     src/services/cdl/cdl.cpp
