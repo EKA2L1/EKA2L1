@@ -125,6 +125,11 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsSdOpGetScreenNumber: {
+            ctx.set_request_status(scr->number);
+            break;
+        }
+
         case EWsSdOpSetScreenMode: {
             set_screen_mode(ctx, cmd);
             ctx.set_request_status(KErrNone);
