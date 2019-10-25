@@ -28,8 +28,7 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 
-#include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <drivers/graphics/graphics.h>
 #include <epoc/utils/des.h>
@@ -73,7 +72,7 @@ namespace eka2l1::epoc {
          */
         int page_size(int *a1, int *a2) {
             *a1 = static_cast<int>(sys->get_memory_system()->get_page_size());
-            return KErrNone;
+            return epoc::error_none;
         }
 
         int memory_info(int *a1, int *a2) {
@@ -94,7 +93,7 @@ namespace eka2l1::epoc {
 
             buf->assign(sys->get_kernel_system()->crr_process(), dat);
 
-            return KErrNone;
+            return epoc::error_none;
         }
 
         kern_hal(eka2l1::system *sys)
@@ -171,7 +170,7 @@ namespace eka2l1::epoc {
             LOG_TRACE("HAL cagetory not found or unimplemented: 0x{:x} (for function: 0x{:x})",
                 cage, func);
 
-            return KErrNotFound;
+            return epoc::error_not_found;
         }
 
         int ret = hal_com->do_hal(func, a1, a2);

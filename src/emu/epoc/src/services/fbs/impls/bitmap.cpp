@@ -35,7 +35,7 @@
 #include <epoc/vfs.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <cassert>
 
@@ -288,7 +288,7 @@ namespace eka2l1 {
         file *source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
 
         if (!source_file) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -298,7 +298,7 @@ namespace eka2l1 {
     void fbscli::duplicate_bitmap(service::ipc_context *ctx) {
         fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(static_cast<std::uint32_t>(*(ctx->get_arg<int>(0))));
         if (!bmp) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -310,13 +310,13 @@ namespace eka2l1 {
         handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg(1, handle_info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fbscli::load_bitmap_impl(service::ipc_context *ctx, file *source) {
         std::optional<load_bitmap_arg> load_options = ctx->get_arg_packed<load_bitmap_arg>(0);
         if (!load_options) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -352,7 +352,7 @@ namespace eka2l1 {
             // Let's do an insanity check. Is the bitmap index client given us is not valid ?
             // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 6.
             if (mbmf_.trailer.count < load_options->bitmap_id) {
-                ctx->set_request_status(KErrNotFound);
+                ctx->set_request_status(epoc::error_not_found);
                 return;
             }
 
@@ -369,21 +369,21 @@ namespace eka2l1 {
                 switch (err_code) {
                 case fbs_load_data_err_out_of_mem: {
                     LOG_ERROR("Can't allocate data for storing bitmap!");
-                    ctx->set_request_status(KErrNoMemory);
+                    ctx->set_request_status(epoc::error_no_memory);
 
                     return;
                 }
 
                 case fbs_load_data_err_read_decomp_fail: {
                     LOG_ERROR("Can't read or decompress bitmap data, possibly corrupted.");
-                    ctx->set_request_status(KErrCorrupt);
+                    ctx->set_request_status(epoc::error_corrupt);
 
                     return;
                 }
 
                 default: {
                     LOG_ERROR("Unknown error code from loading uncompressed bitmap!");
-                    ctx->set_request_status(KErrGeneral);
+                    ctx->set_request_status(epoc::error_general);
 
                     return;
                 }
@@ -421,7 +421,7 @@ namespace eka2l1 {
         handle_info.address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg<bmp_handles>(0, handle_info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     struct bmp_specs {
@@ -472,6 +472,11 @@ namespace eka2l1 {
         bws_bmp->construct(header, data, base_large_chunk, true);
 
         fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty);
+
+        if (bmp->id == 8) {
+            int a = 5;
+        }
+
         return bmp;
     }
 
@@ -497,7 +502,7 @@ namespace eka2l1 {
         std::optional<bmp_specs> specs = ctx->get_arg_packed<bmp_specs>(0);
 
         if (!specs) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -505,7 +510,7 @@ namespace eka2l1 {
         fbsbitmap *bmp = fbss->create_bitmap(specs->size, specs->bpp);
 
         if (!bmp) {
-            ctx->set_request_status(KErrNoMemory);
+            ctx->set_request_status(epoc::error_no_memory);
             return;
         }
 
@@ -514,7 +519,7 @@ namespace eka2l1 {
         specs->address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg(0, specs.value());
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fbscli::notify_dirty_bitmap(service::ipc_context *ctx) {
@@ -524,7 +529,7 @@ namespace eka2l1 {
         }
 
         if (nof_->dirty) {
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             return;
         }
 
@@ -539,13 +544,13 @@ namespace eka2l1 {
         for (std::size_t i = 0; i < notifies.size(); i++) {
             if (notifies[i].client == this) {
                 // Officially cancel the request
-                notifies[i].nof.complete(KErrCancel);
+                notifies[i].nof.complete(epoc::error_cancel);
                 notifies.erase(notifies.begin() + i);
             }
         }
 
         nof_ = nullptr;
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fbscli::get_clean_bitmap(service::ipc_context *ctx) {
@@ -553,7 +558,7 @@ namespace eka2l1 {
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
 
         if (!bmp) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -572,6 +577,6 @@ namespace eka2l1 {
         handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg(1, handle_info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 }

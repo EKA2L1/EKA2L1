@@ -26,8 +26,9 @@
 
 #include <common/log.h>
 #include <common/e32inc.h>
+#include <e32def.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 #include <featureinfo.h>
 #include <features.hrh>
 
@@ -152,6 +153,6 @@ namespace eka2l1 {
         }
 
         ctx.write_arg_pkg(1, result);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 }

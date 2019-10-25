@@ -21,7 +21,7 @@
 #include <epoc/services/sms/sa/sa.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     void sa_server::unk_op1(service::ipc_context &ctx) {
@@ -43,7 +43,7 @@ namespace eka2l1 {
         //
         // emitter.POP() -- delete all
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     sa_server::sa_server(eka2l1::system *sys)

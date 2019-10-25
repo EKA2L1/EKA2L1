@@ -31,7 +31,7 @@
 #include <epoc/epoc.h>
 #include <epoc/vfs.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
@@ -407,7 +407,7 @@ namespace eka2l1 {
         epoc::open_font_info *ofi_suit = serv->persistent_font_store.seek_the_open_font(spec);
 
         if (!ofi_suit) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
         }
 
         // Scale it
@@ -473,7 +473,7 @@ namespace eka2l1 {
         result_info.server_handle = static_cast<std::int32_t>(font->id);
 
         ctx->write_arg_pkg(1, result_info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fbscli::duplicate_font(service::ipc_context *ctx) {
@@ -481,7 +481,7 @@ namespace eka2l1 {
         fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
 
         if (!font) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -493,7 +493,7 @@ namespace eka2l1 {
         result_info.server_handle = static_cast<std::int32_t>(font->id);
 
         ctx->write_arg_pkg(1, result_info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     fbsfont *fbscli::get_font_object(service::ipc_context *ctx) {

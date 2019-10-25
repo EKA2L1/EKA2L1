@@ -34,7 +34,7 @@
 
 #include <epoc/vfs.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     fbs_chunk_allocator::fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *dat_ptr)
@@ -129,17 +129,17 @@ namespace eka2l1 {
 
         case fbs_close: {
             if (!obj_table_.remove(static_cast<epoc::handle>(*ctx->get_arg<int>(0)))) {
-                ctx->set_request_status(KErrBadHandle);
+                ctx->set_request_status(epoc::error_bad_handle);
                 break;
             }
 
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             break;
         }
 
         case fbs_bitmap_bg_compress: {
             LOG_WARN("BitmapBgCompress stubbed with 0");
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             break;
         }
 
@@ -187,7 +187,7 @@ namespace eka2l1 {
 
             if (!shared_chunk || !large_chunk) {
                 LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
-                context.set_request_status(KErrNoMemory);
+                context.set_request_status(epoc::error_no_memory);
 
                 return;
             }
@@ -227,7 +227,7 @@ namespace eka2l1 {
 
         // Create new server client
         create_session<fbscli>(&context);
-        context.set_request_status(KErrNone);
+        context.set_request_status(epoc::error_none);
     }
 
     service::uid fbs_server::init() {

@@ -25,7 +25,7 @@
 #include <epoc/services/window/window.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -72,12 +72,12 @@ namespace eka2l1 {
             if (blank_count == 0) {
                 // No way... This is impossible
                 LOG_ERROR("App session has blank count negative before called blank screen");
-                ctx->set_request_status(KErrAbort);
+                ctx->set_request_status(epoc::error_abort);
                 break;
             }
 
             LOG_TRACE("Blanking screen in AKNCAP session stubbed");
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             break;
         }
 
@@ -85,13 +85,13 @@ namespace eka2l1 {
             blank_count--;
 
             LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             break;
         }
 
         default: {
-            LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with KErrNone", ctx->msg->function);
-            ctx->set_request_status(KErrNone);
+            LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with epoc::error_none", ctx->msg->function);
+            ctx->set_request_status(epoc::error_none);
         }
         }
     }
@@ -143,7 +143,7 @@ namespace eka2l1 {
         int layout_buf_size = static_cast<int>(layout_buf.size());
 
         ctx.write_arg_pkg<int>(0, layout_buf_size);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void oom_ui_app_server::get_layout_config(service::ipc_context &ctx) {
@@ -152,20 +152,20 @@ namespace eka2l1 {
         ctx.write_arg_pkg(0, reinterpret_cast<std::uint8_t *>(&layout_buf[0]),
             static_cast<std::uint32_t>(layout_buf.size()));
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void oom_ui_app_server::set_sgc_params(service::ipc_context &ctx) {
         auto params_op = ctx.get_arg_packed<epoc::sgc_params>(0);
 
         if (!params_op) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
         params = std::move(*params_op);
-        LOG_TRACE("OOM UI app server: set sgc params stubbed, returns KErrNone");
+        LOG_TRACE("OOM UI app server: set sgc params stubbed, returns epoc::error_none");
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 }

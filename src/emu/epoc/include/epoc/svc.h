@@ -40,8 +40,8 @@
 #include <epoc/hal.h>
 #include <epoc/kernel/libmanager.h>
 
-#include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
+#include <epoc/utils/handle.h>
 
 #include <unordered_map>
 
@@ -283,7 +283,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code if problems. Else return the handle.
     */
-    BRIDGE_FUNC(TInt, ChunkCreate, TOwnerType aOwnerType, eka2l1::ptr<eka2l1::epoc::desc8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate);
+    BRIDGE_FUNC(TInt, ChunkCreate, epoc::owner_type aOwnerType, eka2l1::ptr<eka2l1::epoc::desc8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate);
 
     /*! \brief Get the max size of the chunk. 
      * 
@@ -320,7 +320,7 @@ namespace eka2l1::epoc {
      * \param aOwnerType Ownership of this handle.
      * \returns Error code or handle.
      */
-    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<eka2l1::epoc::desc8> aSemaName, TInt aInitCount, TOwnerType aOwnerType);
+    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<eka2l1::epoc::desc8> aSemaName, TInt aInitCount, epoc::owner_type aOwnerType);
 
     /*! \brief Wait for any request to finish. 
      *
@@ -337,7 +337,7 @@ namespace eka2l1::epoc {
      *
      * \returns KErrNone if success, else error code.
      */
-    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<TFindHandle> aHandleFind);
+    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<epoc::find_handle> aHandleFind);
 
     /*! \brief Close a handle. If there is no duplicate handle or another reference handle open, 
      *  call Destroy to destroy the kernel object 
@@ -352,7 +352,7 @@ namespace eka2l1::epoc {
       * 
       * \returns Error code or new handle.
     */
-    BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, TOwnerType aOwnerType, TInt aDupHandle);
+    BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, epoc::owner_type aOwnerType, TInt aDupHandle);
 
     /*! \brief Open a handle based on the name and object type.
      *
@@ -450,7 +450,7 @@ namespace eka2l1::epoc {
      * \param aOwner The owner of this object's handle.
      * \returns < 0 means an error, else the handle to this change notifier.
      */
-    BRIDGE_FUNC(TInt, ChangeNotifierCreate, TOwnerType aOwner);
+    BRIDGE_FUNC(TInt, ChangeNotifierCreate, epoc::owner_type aOwner);
 
     /**
      * \brief Logon an existing change notifier.

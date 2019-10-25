@@ -22,7 +22,7 @@
 
 #include <common/e32inc.h>
 #include <common/chunkyseri.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -36,14 +36,14 @@ namespace eka2l1 {
         std::optional<std::u16string> name = ctx->get_arg<std::u16string>(0);
 
         if (!name) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         const drive_number drv = server<cdl_server>()->watcher_->get_plugin_drive(name.value());
 
         if (drv == drive_invalid) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -58,7 +58,7 @@ namespace eka2l1 {
             auto name_op = ctx->get_arg<std::u16string>(2);
 
             if (!name_op) {
-                ctx->set_request_status(KErrArgument);
+                ctx->set_request_status(epoc::error_argument);
                 return;
             }
 
@@ -100,12 +100,12 @@ namespace eka2l1 {
         std::uint32_t temp_buf_size = static_cast<std::uint32_t>(temp_buf.size());
 
         ctx->write_arg_pkg<std::uint32_t>(0, temp_buf_size);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void cdl_server_session::do_get_temp_buf(service::ipc_context *ctx) {
         ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&temp_buf[0]), static_cast<std::uint32_t>(temp_buf.size()));
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void cdl_server_session::fetch(service::ipc_context *ctx) {
@@ -156,7 +156,7 @@ namespace eka2l1 {
         }
 
         create_session<cdl_server_session>(&ctx);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void cdl_server::add_refs(epoc::cdl_ref_collection &to_add_col_) {

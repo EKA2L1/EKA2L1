@@ -20,9 +20,6 @@
 
 #pragma once
 
-#include <common/e32inc.h>
-#include <e32const.h>
-
 #include <epoc/services/server.h>
 
 namespace eka2l1 {

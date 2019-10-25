@@ -30,7 +30,7 @@
 #include <common/e32inc.h>
 #include <common/log.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     static epoc::security_policy key_capture_policy({ epoc::cap_sw_event });
@@ -55,7 +55,7 @@ namespace eka2l1::epoc {
         }
 
         scr->update_focus(&client->get_ws(), nullptr);
-        context.set_request_status(KErrNone);
+        context.set_request_status(epoc::error_none);
     }
 
     window_group::window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent)
@@ -79,12 +79,12 @@ namespace eka2l1::epoc {
 
         if (!window_user_to_set || window_user_to_set->type == window_kind::client) {
             LOG_ERROR("Window not found or not client kind to set text cursor");
-            context.set_request_status(KErrNotFound);
+            context.set_request_status(epoc::error_not_found);
             return;
         }
 
         window_user_to_set->cursor_pos = cmd_set->pos + window_user_to_set->pos;
-        context.set_request_status(KErrNone);   
+        context.set_request_status(epoc::error_none);   
     }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -103,14 +103,14 @@ namespace eka2l1::epoc {
             evt.user = this;
 
             client->add_event_notifier<epoc::event_screen_change_user>(evt);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
 
         case EWsWinOpCaptureKey: case EWsWinOpCaptureKeyUpsAndDowns: {
             if (!ctx.satisfy(key_capture_policy)) {
-                ctx.set_request_status(KErrPermissionDenied);
+                ctx.set_request_status(epoc::error_permission_denied);
                 break;
             }
 
@@ -133,19 +133,19 @@ namespace eka2l1::epoc {
             auto name_re = ctx.get_arg<std::u16string>(remote_slot);
 
             if (!name_re) {
-                ctx.set_request_status(KErrArgument);
+                ctx.set_request_status(epoc::error_argument);
                 break;
             }
 
             name = std::move(*name_re);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
 
         case EWsWinOpEnableOnEvents: {
             LOG_TRACE("Currently not support lock/unlock event for window server");
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }

@@ -23,7 +23,7 @@
 #include <epoc/services/audio/keysound/ops.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <epoc/kernel/process.h>
 
@@ -44,7 +44,7 @@ namespace eka2l1 {
 
         // Store app UID
         app_uid_ = *ctx->get_arg<std::uint32_t>(1);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void keysound_session::push_context(service::ipc_context *ctx) {
@@ -55,7 +55,7 @@ namespace eka2l1 {
         std::uint8_t *item_def_ptr = ctx->get_arg_ptr(1);
 
         if (!item_count || !uid || !rsc_id || !item_def_ptr) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -66,7 +66,7 @@ namespace eka2l1 {
             common::SERI_MODE_READ);
 
         contexts_.emplace(seri, uid.value(), rsc_id.value(), item_count.value());
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void keysound_session::pop_context(service::ipc_context *ctx) {

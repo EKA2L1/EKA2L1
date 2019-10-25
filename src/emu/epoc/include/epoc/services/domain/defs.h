@@ -27,12 +27,12 @@ namespace eka2l1 {
     constexpr std::int32_t dm_init_key = 0x1;
 
     /* Error codes */
-    constexpr std::int32_t KErrBadHierarchyId = -263;
-    constexpr std::int32_t KDmErrOutstanding = -262;
-    constexpr std::int32_t KDmErrBadSequence = -261;
-    constexpr std::int32_t KDmErrBadDomainSpec = -260;
-    constexpr std::int32_t KDmErrBadDomainId = -256;
-    constexpr std::int32_t KDmErrNotJoin = -258;
+    constexpr std::int32_t dm_err_bad_hierachy_id = -263;
+    constexpr std::int32_t dm_err_outstanding = -262;
+    constexpr std::int32_t dm_err_bad_sequence = -261;
+    constexpr std::int32_t dm_err_bad_domain_spec = -260;
+    constexpr std::int32_t dm_err_bad_domain_id = -256;
+    constexpr std::int32_t dm_err_not_join = -258;
 
     struct TTransInfo {
         uint16_t id;

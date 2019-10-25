@@ -27,7 +27,7 @@
 #include <epoc/timing.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     void window::queue_event(const epoc::event &evt) {
@@ -239,13 +239,13 @@ namespace eka2l1::epoc {
         epoc::window *win = reinterpret_cast<epoc::window*>(client->get_object(handle));
 
         if (!win) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
         eka2l1::vec2 offset_dist = get_origin() - win->get_origin();
         ctx.write_arg_pkg(0, offset_dist);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -258,7 +258,7 @@ namespace eka2l1::epoc {
             nof.user = this;
 
             client->add_event_notifier<epoc::event_mod_notifier_user>(nof);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             return true;
         }
@@ -267,7 +267,7 @@ namespace eka2l1::epoc {
             const int position = *reinterpret_cast<int *>(cmd.data_ptr);
             set_position(position);
 
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             return true;
         }
@@ -278,7 +278,7 @@ namespace eka2l1::epoc {
             const int position = info->pri2;
 
             set_position(position);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             return true;
         }
@@ -295,7 +295,7 @@ namespace eka2l1::epoc {
             nof.user = this;
 
             client->add_event_notifier<epoc::event_error_msg_user>(nof);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             return true;
         }

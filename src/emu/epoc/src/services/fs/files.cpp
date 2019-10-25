@@ -31,7 +31,7 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/random.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     bool file_attrib::claim_exclusive(const kernel::uid pr_uid) {
@@ -83,14 +83,14 @@ namespace eka2l1 {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -103,27 +103,27 @@ namespace eka2l1 {
             ctx->write_arg_pkg<uint32_t>(0, fsize_u);
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_set_size(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
         if (!(node->open_mode & WRITE_MODE) && !(node->open_mode & APPEND_MODE)) {
             // Can't set file size if the file is not open for write
-            ctx->set_request_status(KErrPermissionDenied);
+            ctx->set_request_status(epoc::error_permission_denied);
             return;
         }
 
@@ -132,14 +132,14 @@ namespace eka2l1 {
         std::size_t fsize = f->size();
 
         if (size == fsize) {
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             return;
         }
 
         // This is trying to prevent from data corruption that will affect the host
         if (size >= common::GB(1)) {
             LOG_ERROR("File trying to resize to 1GB, operation not permitted");
-            ctx->set_request_status(KErrTooBig);
+            ctx->set_request_status(epoc::error_too_big);
 
             return;
         }
@@ -147,7 +147,7 @@ namespace eka2l1 {
         bool res = f->resize(size);
 
         if (!res) {
-            ctx->set_request_status(KErrGeneral);
+            ctx->set_request_status(epoc::error_general);
             return;
         }
 
@@ -156,63 +156,63 @@ namespace eka2l1 {
             f->seek(size, file_seek_mode::beg);
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_name(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
         file *f = reinterpret_cast<file*>(node->vfs_node.get());
 
         ctx->write_arg(0, eka2l1::filename(f->file_name(), true));
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_full_name(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
         file *f = reinterpret_cast<file*>(node->vfs_node.get());
 
         ctx->write_arg(0, f->file_name());
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_seek(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -222,7 +222,7 @@ namespace eka2l1 {
         std::optional<int> seek_off = ctx->get_arg<int>(0);
 
         if (!seek_mode || !seek_off) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -242,7 +242,7 @@ namespace eka2l1 {
         std::uint64_t seek_res = vfs_file->seek(*seek_off, vfs_seek_mode);
 
         if (seek_res == 0xFFFFFFFFFFFFFFFF) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -251,50 +251,50 @@ namespace eka2l1 {
         if ((int)ctx->sys->get_symbian_version_use() >= (int)epocver::epoc10) {
             ctx->write_arg_pkg(2, seek_res);
         } else {
-            int seek_result_i = static_cast<TInt>(seek_res);
+            int seek_result_i = static_cast<std::int32_t>(seek_res);
             ctx->write_arg_pkg(2, seek_result_i);
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_flush(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
 
         if (!vfs_file->flush()) {
-            ctx->set_request_status(KErrGeneral);
+            ctx->set_request_status(epoc::error_general);
             return;
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_rename(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -302,7 +302,7 @@ namespace eka2l1 {
         auto new_path = ctx->get_arg<std::u16string>(0);
 
         if (!new_path) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -310,7 +310,7 @@ namespace eka2l1 {
         bool res = ctx->sys->get_io_system()->rename(vfs_file->file_name(), new_path_abs);
 
         if (!res) {
-            ctx->set_request_status(KErrGeneral);
+            ctx->set_request_status(epoc::error_general);
             return;
         }
 
@@ -325,35 +325,35 @@ namespace eka2l1 {
 
         node->vfs_node = std::move(new_vfs_file);
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_write(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         std::optional<std::string> write_data = ctx->get_arg<std::string>(0);
 
         if (!write_data) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
 
         if (!(node->open_mode & WRITE_MODE)) {
-            ctx->set_request_status(KErrAccessDenied);
+            ctx->set_request_status(epoc::error_access_denied);
             return;
         }
 
@@ -378,28 +378,28 @@ namespace eka2l1 {
         // LOG_TRACE("File {} wroted with size: {}",
         //    common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_read(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
 
         if (!(node->open_mode & READ_MODE)) {
-            ctx->set_request_status(KErrAccessDenied);
+            ctx->set_request_status(epoc::error_access_denied);
             return;
         }
 
@@ -433,21 +433,21 @@ namespace eka2l1 {
         ctx->write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
 
         // LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_close(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -464,7 +464,7 @@ namespace eka2l1 {
         }
 
         obj_table_.remove(*handle_res);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
     
     void fs_server_client::file_open(service::ipc_context *ctx) {
@@ -472,7 +472,7 @@ namespace eka2l1 {
         std::optional<int> open_mode_res = ctx->get_arg<int>(1);
 
         if (!name_res || !open_mode_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -484,7 +484,7 @@ namespace eka2l1 {
         if (!ctx->sys->get_io_system()->exist(*name_res)) {
             LOG_TRACE("IO component not exists: {}", common::ucs2_to_utf8(*name_res));
 
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -499,7 +499,7 @@ namespace eka2l1 {
         auto dir_create = ctx->get_arg<std::u16string>(0);
 
         if (!dir_create) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -510,7 +510,7 @@ namespace eka2l1 {
         if (!io->exist(full_path)) {
             LOG_TRACE("Directory for temp file not exists", common::ucs2_to_utf8(full_path));
 
-            ctx->set_request_status(KErrPathNotFound);
+            ctx->set_request_status(epoc::error_path_not_found);
             return;
         }
 
@@ -539,7 +539,7 @@ namespace eka2l1 {
         // Arg2 take the temp path
         ctx->write_arg(2, full_path);
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_create(service::ipc_context *ctx) {
@@ -547,13 +547,13 @@ namespace eka2l1 {
         std::optional<int> open_mode_res = ctx->get_arg<int>(1);
 
         if (!name_res || !open_mode_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         // If the file already exist, stop
         if (ctx->sys->get_io_system()->exist(*name_res)) {
-            ctx->set_request_status(KErrAlreadyExists);
+            ctx->set_request_status(epoc::error_already_exists);
             return;
         }
 
@@ -565,21 +565,21 @@ namespace eka2l1 {
         fs_node *node = get_file_node(target_handle);
 
         if (!node) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
         int dup_handle = static_cast<int>(obj_table_.add(node));
 
         ctx->write_arg_pkg<int>(3, dup_handle);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::file_adopt(service::ipc_context *ctx) {
         LOG_TRACE("Fs::FileAdopt stubbed");
         // TODO (pent0) : Do an adopt implementation
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
     
     void fs_server_client::new_file_subsession(service::ipc_context *ctx, bool overwrite, bool temporary) {
@@ -587,7 +587,7 @@ namespace eka2l1 {
         std::optional<int> open_mode_res = ctx->get_arg<int>(1);
 
         if (!name_res || !open_mode_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -597,11 +597,11 @@ namespace eka2l1 {
         {
             auto file_dir = eka2l1::file_directory(*name_res);
 
-            // Do a check to return KErrPathNotFound
+            // Do a check to return epoc::error_path_not_found
             if (!ctx->sys->get_io_system()->exist(file_dir)) {
                 LOG_TRACE("Base directory of file {} not found", name_utf8);
 
-                ctx->set_request_status(KErrPathNotFound);
+                ctx->set_request_status(epoc::error_path_not_found);
                 return;
             }
         }
@@ -619,7 +619,7 @@ namespace eka2l1 {
         LOG_TRACE("Handle opended: {}", handle);
 
         ctx->write_arg_pkg<int>(3, handle);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
     
     int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {
@@ -645,14 +645,14 @@ namespace eka2l1 {
             // Check if we can open it
             if (node_attrib.exclusive != own_pr_uid) {
                 // Access denied
-                return KErrAccessDenied;
+                return epoc::error_access_denied;
             }
         }
 
         if (real_mode & epoc::fs::file_share_exclusive) {
             // Try to claim and return denied if we can't
             if (!node_attrib.claim_exclusive(own_pr_uid)) {
-                return KErrAccessDenied;
+                return epoc::error_access_denied;
             }
         }
 
@@ -661,13 +661,13 @@ namespace eka2l1 {
         if (node_attrib.is_readable_and_writeable() && !node_attrib.is_optional()) {
             if (real_mode & epoc::fs::file_share_readers_only) {
                 // Hell no.
-                return KErrAccessDenied;
+                return epoc::error_access_denied;
             }
         }
 
         if (node_attrib.is_readonly() && ((real_mode & epoc::fs::file_share_any) || 
             (real_mode & epoc::fs::file_share_readers_or_writers))) {
-            return KErrAccessDenied;
+            return epoc::error_access_denied;
         }
 
         //======================= PROMOTE MODE ==============================
@@ -687,14 +687,14 @@ namespace eka2l1 {
         }
 
         if (access_mode & WRITE_MODE && (real_mode & epoc::fs::file_share_readers_only)) {
-            return KErrAccessDenied;
+            return epoc::error_access_denied;
         }
 
         new_node->vfs_node = io->open_file(name, access_mode);
 
         if (!new_node->vfs_node) {
             LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
-            return KErrNotFound;
+            return epoc::error_not_found;
         }
 
         new_node->mix_mode = real_mode;

@@ -31,7 +31,7 @@
 #include <epoc/ptr.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 int after_timout_evt = -1;
 

@@ -28,7 +28,7 @@
 #include <epoc/services/window/opheader.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     screen_device::screen_device(window_server_client_ptr client, epoc::screen *scr)
@@ -44,13 +44,13 @@ namespace eka2l1::epoc {
             if (mode.size == info->pixel_size &&  number_to_orientation(mode.rotation) == info->orientation) {
                 // Eureka... Bắt được mày rồi....
                 scr->set_screen_mode(client->get_ws().get_graphics_driver(), mode.mode_number);
-                ctx.set_request_status(KErrNone);
+                ctx.set_request_status(epoc::error_none);
                 return;
             }
         }
 
         LOG_ERROR("Unable to set size and orientation: mode not found!");
-        ctx.set_request_status(KErrNotSupported);
+        ctx.set_request_status(epoc::error_not_supported);
     }
 
     void screen_device::set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -77,7 +77,7 @@ namespace eka2l1::epoc {
         const epoc::config::screen_mode *scr_mode = scr->mode_info(mode);
 
         if (!scr_mode) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -96,7 +96,7 @@ namespace eka2l1::epoc {
             ctx.write_arg_pkg(reply_slot, data);
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
             
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -132,7 +132,7 @@ namespace eka2l1::epoc {
 
         case EWsSdOpSetScreenMode: {
             set_screen_mode(ctx, cmd);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
@@ -163,7 +163,7 @@ namespace eka2l1::epoc {
             int mode = *reinterpret_cast<int *>(cmd.data_ptr);
 
             ctx.write_arg_pkg(reply_slot, scr->disp_mode);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
@@ -176,7 +176,7 @@ namespace eka2l1::epoc {
         }
 
         case EWsSdOpFree: {
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             client->delete_object(id);
             break;
         }

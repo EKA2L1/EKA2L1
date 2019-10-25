@@ -39,7 +39,7 @@
 #include <common/log.h>
 #include <common/rgb.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -190,7 +190,7 @@ namespace eka2l1::epoc {
 
         if (!target_screen) {
             LOG_ERROR("Can't find screen object with number {}", header->num_screen);
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -249,13 +249,13 @@ namespace eka2l1::epoc {
  
         if (!parent) {
             LOG_WARN("Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
         if (parent->type != window_kind::group && parent->type != window_kind::client) {
             LOG_ERROR("The parent of window user must be a group or another user!");
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -278,7 +278,7 @@ namespace eka2l1::epoc {
 
         if (!win) {
             LOG_WARN("Window handle is invalid! Abort");
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -338,7 +338,7 @@ namespace eka2l1::epoc {
         ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
         queue_event(evt->evt);
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -351,7 +351,7 @@ namespace eka2l1::epoc {
 
             if (!group) {
                 LOG_ERROR("Previous group sibling not found with id {}", find_info->previous_id);
-                ctx.set_request_status(KErrNotFound);
+                ctx.set_request_status(epoc::error_not_found);
                 return;
             }
 
@@ -370,18 +370,18 @@ namespace eka2l1::epoc {
             }
         }
 
-        ctx.set_request_status(KErrNotFound);
+        ctx.set_request_status(epoc::error_not_found);
     }
 
     void window_server_client::set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Check errors
         if (get_ws().get_focus() && get_ws().get_focus()->client == this) {
             get_ws().cursor_mode() = *reinterpret_cast<epoc::pointer_cursor_mode *>(cmd.data_ptr);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             return;
         }
 
-        ctx.set_request_status(KErrPermissionDenied);
+        ctx.set_request_status(epoc::error_permission_denied);
     }
 
     void window_server_client::get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -390,26 +390,26 @@ namespace eka2l1::epoc {
 
         if (!win || win->type != window_kind::group) {
             LOG_TRACE("Can't find group with id {}", group_id);
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
         const std::uint32_t thr_id = win->client->get_client()->unique_id();
 
         ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void window_server_client::get_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         auto evt = redraws.get_evt_opt();
 
         if (!evt) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
         ctx.write_arg_pkg<epoc::redraw_event>(reply_slot, *evt);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void window_server_client::get_event(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -418,7 +418,7 @@ namespace eka2l1::epoc {
         // Allow the context to shrink if needed, since the struct certainly got larger as Symbian
         // grows. S^3 has advance pointer struct which along takes 56 bytes buffer.
         ctx.write_arg_pkg<epoc::event>(reply_slot, evt, nullptr, true);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -433,7 +433,7 @@ namespace eka2l1::epoc {
 
         if (!scr) {
             LOG_ERROR("Invalid screen number {}", screen_num);
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -445,12 +445,12 @@ namespace eka2l1::epoc {
         epoc::window_group *group = get_ws().get_group_from_id(find_info->id);
 
         if (!group || group->type != window_kind::group) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
         if (group->name.length() == 0) {
-            ctx.set_request_status(KErrNotReady);
+            ctx.set_request_status(epoc::error_not_ready);
             return;
         }
 
@@ -460,7 +460,7 @@ namespace eka2l1::epoc {
         const std::u16string to_write = group->name.substr(0, len_to_write);
 
         ctx.write_arg(reply_slot, to_write);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     // This handle both sync and async
@@ -483,7 +483,7 @@ namespace eka2l1::epoc {
 
         case EWsClOpComputeMode: {
             LOG_TRACE("Setting compute mode not supported, instead stubbed");
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }

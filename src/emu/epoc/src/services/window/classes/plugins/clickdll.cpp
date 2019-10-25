@@ -22,10 +22,9 @@
 #include <epoc/services/window/op.h>
 
 #include <common/cvt.h>
-#include <common/e32inc.h>
 #include <common/log.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     void click_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -45,14 +44,14 @@ namespace eka2l1::epoc {
             std::u16string dll_click_name(dll_click_name_ptr, dll_click_name_length);
             LOG_TRACE("Stubbed EWsClickOpLoad (loading click DLL {})", common::ucs2_to_utf8(dll_click_name));
 
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
 
         case EWsClickOpCommandReply: {
             LOG_TRACE("ClickOpCommandReply stubbed with KErrNone");
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }

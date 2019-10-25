@@ -36,7 +36,7 @@
 #include <functional>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 #include <e32lang.h>
 
 namespace eka2l1 {
@@ -235,7 +235,7 @@ namespace eka2l1 {
         apa_app_registry *reg = get_registeration(app_uid);
 
         if (!reg) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -256,12 +256,12 @@ namespace eka2l1 {
         apa_app_registry *reg = get_registeration(app_uid);
 
         if (!reg) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
         ctx.write_arg_pkg<apa_app_info>(1, reg->mandatory_info);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void applist_server::get_capability(service::ipc_context &ctx) {
@@ -269,12 +269,12 @@ namespace eka2l1 {
         apa_app_registry *reg = get_registeration(app_uid);
 
         if (!reg) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
         ctx.write_arg_pkg<apa_capability>(0, reg->caps);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void applist_server::get_app_icon_file_name(service::ipc_context &ctx) {
@@ -283,13 +283,13 @@ namespace eka2l1 {
 
         // Either the registeration doesn't exist, or the icon file doesn't exist
         if (!reg || reg->icon_file_path.empty()) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
         epoc::filename fname_des(reg->icon_file_path);
 
         ctx.write_arg_pkg<epoc::filename>(1, fname_des);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 }

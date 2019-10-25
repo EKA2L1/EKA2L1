@@ -25,7 +25,7 @@
 #include <epoc/epoc.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <cwctype>
 
@@ -36,14 +36,14 @@ namespace eka2l1 {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -64,7 +64,7 @@ namespace eka2l1 {
         ctx->write_arg_pkg<drive_number>(0, drv);
         ctx->write_arg_pkg<epoc::fs::drive_info>(1, info);
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive) {
@@ -128,7 +128,7 @@ namespace eka2l1 {
         std::optional<epoc::fs::drive_info> info = ctx->get_arg_packed<epoc::fs::drive_info>(0);
 
         if (!info) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -142,14 +142,14 @@ namespace eka2l1 {
         }
 
         ctx->write_arg_pkg<epoc::fs::drive_info>(0, *info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server::drive_list(service::ipc_context *ctx) {
         std::optional<int> flags = ctx->get_arg<int>(1);
 
         if (!flags) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -210,18 +210,18 @@ namespace eka2l1 {
             static_cast<std::uint32_t>(dlist.size()));
 
         if (!success) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server::volume(service::ipc_context *ctx) {
         std::optional<epoc::fs::volume_info> info = ctx->get_arg_packed<epoc::fs::volume_info>(0);
 
         if (!info) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -243,16 +243,16 @@ namespace eka2l1 {
         info->free = common::GB(1);
 
         ctx->write_arg_pkg<epoc::fs::volume_info>(0, *info);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server::query_drive_info_ext(service::ipc_context *ctx) {
         drive_number drv = static_cast<drive_number>(*ctx->get_arg<int>(0));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(drv);
 
-        // If the drive hasn't been mounted yet, return KErrNotFound
+        // If the drive hasn't been mounted yet, return epoc::error_not_found
         if (!io_drive) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -303,6 +303,6 @@ namespace eka2l1 {
         }
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 }

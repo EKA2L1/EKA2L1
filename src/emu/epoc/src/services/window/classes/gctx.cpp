@@ -33,7 +33,7 @@
 #include <common/log.h>
 #include <common/rgb.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
@@ -73,7 +73,7 @@ namespace eka2l1::epoc {
         source_rect.size = dest_rect.size;
 
         cmd_builder->draw_bitmap(h, dest_rect.top, source_rect, false);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
@@ -84,7 +84,7 @@ namespace eka2l1::epoc {
 
         // TODO: Get text data from the font. Maybe upload them as atlas.
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void graphic_context::do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set) {
@@ -102,7 +102,7 @@ namespace eka2l1::epoc {
         }
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void graphic_context::flush_queue_to_driver() {
@@ -130,20 +130,20 @@ namespace eka2l1::epoc {
 
         case EWsGcOpSetBrushStyle: {
             LOG_ERROR("SetBrushStyle not supported, stub");
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
         case EWsGcOpSetPenStyle: {
             LOG_ERROR("Pen operation not supported yet");
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
 
         case EWsGcOpSetPenColor: {
             LOG_ERROR("Pen operation not supported yet");
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
@@ -205,7 +205,7 @@ namespace eka2l1::epoc {
             flush_queue_to_driver();
 
             attached_window = nullptr;
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
@@ -215,7 +215,7 @@ namespace eka2l1::epoc {
             epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
 
             if (!bw_bmp) {
-                ctx.set_request_status(KErrArgument);
+                ctx.set_request_status(epoc::error_argument);
                 break;
             }
 

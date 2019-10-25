@@ -22,7 +22,7 @@
 #include <epoc/services/ui/eikappui.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <cstring>
 

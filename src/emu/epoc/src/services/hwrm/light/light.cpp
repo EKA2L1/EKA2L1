@@ -22,7 +22,7 @@
 #include <epoc/services/context.h>
 
 #include <common/e32inc.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     static const char *light_op_to_string(const int op) {
@@ -68,7 +68,7 @@ namespace eka2l1::epoc {
         std::uint32_t support_mask = static_cast<std::uint32_t>(-1);
 
         ctx.write_arg_pkg(0, support_mask);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void light_resource::execute_command(service::ipc_context &ctx) {

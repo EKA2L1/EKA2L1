@@ -32,7 +32,7 @@
 #include <common/e32inc.h>
 #include <common/log.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     static constexpr std::uint8_t bits_per_ordpos = 4;
@@ -204,7 +204,7 @@ namespace eka2l1::epoc {
                 scr, client->get_ws().get_timing_system()->get_global_time_us());
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -230,7 +230,7 @@ namespace eka2l1::epoc {
             redraw_evt_id = 0;
         }
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -254,7 +254,7 @@ namespace eka2l1::epoc {
         // Fall through to get system display mode
         case EWsWinOpGetDisplayMode: {
             ctx.write_arg_pkg<epoc::display_mode>(reply_slot, scr->disp_mode);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
@@ -262,14 +262,14 @@ namespace eka2l1::epoc {
         case EWsWinOpSetExtent: {
             ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
             set_extent(extent->pos, extent->size);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
         // Get window size.
         case EWsWinOpSize: {
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, size);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
@@ -277,14 +277,14 @@ namespace eka2l1::epoc {
             const bool op = *reinterpret_cast<bool *>(cmd.data_ptr);
 
             set_visible(op);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
 
         case EWsWinOpSetShadowHeight: {
             shadow_height = *reinterpret_cast<int *>(cmd.data_ptr);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
@@ -296,7 +296,7 @@ namespace eka2l1::epoc {
                 flags |= shadow_disable;
             }
 
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
@@ -304,13 +304,13 @@ namespace eka2l1::epoc {
         case EWsWinOpSetBackgroundColor: {
             if (cmd.header.cmd_len == 0) {
                 clear_color = -1;
-                ctx.set_request_status(KErrNone);
+                ctx.set_request_status(epoc::error_none);
 
                 break;
             }
 
             clear_color = *reinterpret_cast<int *>(cmd.data_ptr);
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
@@ -321,7 +321,7 @@ namespace eka2l1::epoc {
             filter &= ~filter_info->mask;
             filter |= filter_info->flags;
 
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
@@ -332,7 +332,7 @@ namespace eka2l1::epoc {
                 flags |= allow_pointer_grab;
             }
 
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
@@ -350,7 +350,7 @@ namespace eka2l1::epoc {
 
             // Invalidate the whole window
             client->queue_redraw(this, rect(pos, pos + size));
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }
@@ -368,7 +368,7 @@ namespace eka2l1::epoc {
             // Invalidate needs redraw
             redraw_evt_id = client->queue_redraw(this, rect(irect.top, irect.size));
 
-            ctx.set_request_status(KErrNone);
+            ctx.set_request_status(epoc::error_none);
 
             break;
         }

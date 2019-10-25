@@ -40,7 +40,7 @@
 #include <epoc/kernel.h>
 #include <epoc/vfs.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
@@ -135,7 +135,7 @@ namespace eka2l1 {
         auto given_path_dest = ctx->get_arg<std::u16string>(1);
 
         if (!given_path_target || !given_path_dest) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -152,12 +152,12 @@ namespace eka2l1 {
         bool res = io->rename(target, dest);
 
         if (!res) {
-            ctx->set_request_status(KErrGeneral);
+            ctx->set_request_status(epoc::error_general);
             return;
         }
 
         // A new app list may be created
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::rename(service::ipc_context *ctx) {
@@ -165,7 +165,7 @@ namespace eka2l1 {
         auto given_path_dest = ctx->get_arg<std::u16string>(1);
 
         if (!given_path_target || !given_path_dest) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -175,26 +175,26 @@ namespace eka2l1 {
         io_system *io = ctx->sys->get_io_system();
 
         if (io->exist(dest)) {
-            ctx->set_request_status(KErrAlreadyExists);
+            ctx->set_request_status(epoc::error_already_exists);
             return;
         }
 
         bool res = io->rename(target, dest);
 
         if (!res) {
-            ctx->set_request_status(KErrGeneral);
+            ctx->set_request_status(epoc::error_general);
             return;
         }
 
         // A new app list may be created
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::delete_entry(service::ipc_context *ctx) {
         auto given_path = ctx->get_arg<std::u16string>(0);
 
         if (!given_path) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -204,15 +204,15 @@ namespace eka2l1 {
         bool success = io->delete_entry(path);
 
         if (!success) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server::synchronize_driver(service::ipc_context *ctx) {
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server::connect(service::ipc_context &ctx) {
@@ -226,26 +226,26 @@ namespace eka2l1 {
 
     void fs_server_client::session_path(service::ipc_context *ctx) {
         ctx->write_arg(0, ss_path);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::set_session_path(service::ipc_context *ctx) {
         auto new_path = ctx->get_arg<std::u16string>(0);
 
         if (!new_path) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         ss_path = std::move(new_path.value());
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::set_session_to_private(service::ipc_context *ctx) {
         auto drive_ordinal = ctx->get_arg<int>(0);
 
         if (!drive_ordinal) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -257,14 +257,14 @@ namespace eka2l1 {
         std::string hex_id = common::to_string(uid, std::hex);
 
         ss_path = drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::is_file_in_rom(service::ipc_context *ctx) {
         std::optional<utf16_str> path = ctx->get_arg<utf16_str>(0);
 
         if (!path) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -280,7 +280,7 @@ namespace eka2l1 {
         f->close();
 
         ctx->write_arg_pkg<address>(1, addr);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::notify_change(service::ipc_context *ctx) {
@@ -298,7 +298,7 @@ namespace eka2l1 {
         std::optional<utf16_str> wildcard_match = ctx->get_arg<utf16_str>(1);
 
         if (!wildcard_match) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -330,7 +330,7 @@ namespace eka2l1 {
         std::optional<std::u16string> dir = ctx->get_arg<std::u16string>(0);
 
         if (!dir) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -345,18 +345,18 @@ namespace eka2l1 {
         if (!res) {
             // The guide specified: if it's parent does not exist or the sub-directory
             // already created, this should returns
-            ctx->set_request_status(KErrAlreadyExists);
+            ctx->set_request_status(epoc::error_already_exists);
             return;
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::entry(service::ipc_context *ctx) {
         std::optional<std::u16string> fname_op = ctx->get_arg<std::u16string>(0);
 
         if (!fname_op) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -372,7 +372,7 @@ namespace eka2l1 {
         std::optional<entry_info> entry_hle = io->get_entry_info(fname);
 
         if (!entry_hle) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -402,7 +402,7 @@ namespace eka2l1 {
         entry.modified = epoc::time { entry_hle->last_write };
 
         ctx->write_arg_pkg<epoc::fs::entry>(1, entry);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server::private_path(service::ipc_context *ctx) {
@@ -411,11 +411,11 @@ namespace eka2l1 {
             + u"\\";
 
         ctx->write_arg(0, path);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::set_should_notify_failure(service::ipc_context *ctx) {
         should_notify_failures = static_cast<bool>(ctx->get_arg<int>(0));
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 }

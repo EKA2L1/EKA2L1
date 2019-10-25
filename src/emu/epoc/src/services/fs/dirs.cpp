@@ -31,7 +31,7 @@
 #include <common/log.h>
 #include <common/path.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     void fs_server_client::open_dir(service::ipc_context *ctx) {
@@ -40,7 +40,7 @@ namespace eka2l1 {
         LOG_TRACE("Opening directory: {}", common::ucs2_to_utf8(*dir));
 
         if (!dir) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -55,7 +55,7 @@ namespace eka2l1 {
         node->vfs_node = ctx->sys->get_io_system()->open_dir(*dir, attrib);
 
         if (!node->vfs_node) {
-            ctx->set_request_status(KErrPathNotFound);
+            ctx->set_request_status(epoc::error_path_not_found);
             server<fs_server>()->remove(node);
             return;
         }
@@ -73,40 +73,40 @@ namespace eka2l1 {
         int dir_handle_i = static_cast<int>(dir_handle);
 
         ctx->write_arg_pkg<int>(3, dir_handle_i);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::close_dir(service::ipc_context *ctx) {
         std::optional<int> handle_res = ctx->get_arg<int>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::dir) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
         obj_table_.remove(*handle_res);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::read_dir(service::ipc_context *ctx) {
         std::optional<int> handle = ctx->get_arg<int>(3);
 
         if (!handle) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *dir_node = obj_table_.get<fs_node>(*handle);
 
         if (!dir_node || dir_node->vfs_node->type != io_component_type::dir) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -116,7 +116,7 @@ namespace eka2l1 {
         std::optional<entry_info> info = dir->get_next_entry();
 
         if (!info) {
-            ctx->set_request_status(KErrEof);
+            ctx->set_request_status(epoc::error_eof);
             return;
         }
 
@@ -145,7 +145,7 @@ namespace eka2l1 {
         entry.modified = epoc::time { info->last_write };
 
         ctx->write_arg_pkg<epoc::fs::entry>(1, entry);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fs_server_client::read_dir_packed(service::ipc_context *ctx) {
@@ -153,14 +153,14 @@ namespace eka2l1 {
         std::optional<int> entry_arr_vir_ptr = ctx->get_arg<int>(0);
 
         if (!handle || !entry_arr_vir_ptr) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
         fs_node *dir_node = obj_table_.get<fs_node>(*handle);
 
         if (!dir_node || dir_node->vfs_node->type != io_component_type::dir) {
-            ctx->set_request_status(KErrBadHandle);
+            ctx->set_request_status(epoc::error_bad_handle);
             return;
         }
 
@@ -171,9 +171,9 @@ namespace eka2l1 {
         epoc::des8 *entry_arr = ptr<epoc::des8>(*entry_arr_vir_ptr).get(own_pr);
         epoc::buf_des<char> *entry_arr_buf = reinterpret_cast<epoc::buf_des<char> *>(entry_arr);
 
-        TUint8 *entry_buf = reinterpret_cast<TUint8 *>(entry_arr->get_pointer(own_pr));
-        TUint8 *entry_buf_end = entry_buf + entry_arr_buf->max_length;
-        TUint8 *entry_buf_org = entry_buf;
+        std::uint8_t *entry_buf = reinterpret_cast<std::uint8_t*>(entry_arr->get_pointer(own_pr));
+        std::uint8_t *entry_buf_end = entry_buf + entry_arr_buf->max_length;
+        std::uint8_t *entry_buf_org = entry_buf;
 
         size_t queried_entries = 0;
 
@@ -190,7 +190,7 @@ namespace eka2l1 {
             if (!info) {
                 entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
 
-                ctx->set_request_status(KErrEof);
+                ctx->set_request_status(epoc::error_eof);
 
                 return;
             }
@@ -245,6 +245,6 @@ namespace eka2l1 {
 
         LOG_TRACE("Queried entries: 0x{:x}", queried_entries);
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 }

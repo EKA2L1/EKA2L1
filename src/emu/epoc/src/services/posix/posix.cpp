@@ -30,7 +30,7 @@
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 /* These are in SDKS for ucrt on Windows SDK */
 #include <fcntl.h>
@@ -43,11 +43,11 @@
 
 #define POSIX_REQUEST_FINISH_WITH_ERR(ctx, err) \
     *errnoptr = err;                            \
-    ctx.set_request_status(KErrNone);           \
+    ctx.set_request_status(epoc::error_none);           \
     return
 
 #define POSIX_REQUEST_FINISH(ctx)     \
-    ctx.set_request_status(KErrNone); \
+    ctx.set_request_status(epoc::error_none); \
     return
 
 #define POSIX_REQUEST_INIT(ctx)                                                                               \
@@ -333,7 +333,7 @@ namespace eka2l1 {
             mode = eka2l1::file_seek_mode::end;
         }
 
-        params->ret = static_cast<TInt>(file_manager.seek(params->fid, params->pint[0], mode, *errnoptr));
+        params->ret = static_cast<std::int32_t>(file_manager.seek(params->fid, params->pint[0], mode, *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
@@ -355,7 +355,7 @@ namespace eka2l1 {
 
     void posix_server::read(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
-        params->ret = static_cast<TInt>(file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
+        params->ret = static_cast<std::int32_t>(file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
@@ -366,7 +366,7 @@ namespace eka2l1 {
 
     void posix_server::write(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
-        params->ret = static_cast<TInt>(
+        params->ret = static_cast<std::int32_t>(
             file_manager.write(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
 
         if (*errnoptr) {

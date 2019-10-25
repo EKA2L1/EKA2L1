@@ -10,7 +10,7 @@
 #include <epoc/services/centralrepo/cre.h>
 #include <epoc/vfs.h>
 
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <fstream>
 #include <sstream>
@@ -204,7 +204,7 @@ namespace eka2l1 {
         eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), repo_uid);
 
         if (!repo) {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -216,14 +216,14 @@ namespace eka2l1 {
         auto res = client_subsessions.emplace(++idcounter, std::move(clisubsession));
 
         if (!res.second) {
-            ctx->set_request_status(KErrNoMemory);
+            ctx->set_request_status(epoc::error_no_memory);
             return;
         }
 
         repo->attached.push_back(&res.first->second);
 
         bool result = ctx->write_arg_pkg<std::uint32_t>(3, idcounter);
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void central_repo_server::rescan_drives(eka2l1::io_system *io) {
@@ -272,7 +272,7 @@ namespace eka2l1 {
 
         if (session_ite == client_sessions.end()) {
             LOG_ERROR("Session ID passed not found 0x{:X}", session_uid);
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
 
             return;
         }
@@ -472,7 +472,7 @@ namespace eka2l1 {
 
             if (subsession_ite == client_subsessions.end()) {
                 LOG_ERROR("Subsession ID passed not found 0x{:X}", subsession_uid);
-                ctx->set_request_status(KErrArgument);
+                ctx->set_request_status(epoc::error_argument);
 
                 return;
             }
@@ -490,11 +490,11 @@ namespace eka2l1 {
             epoc::notify_info holder;
 
             if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_arg<int>(0)) == 0) {
-                ctx->set_request_status(KErrNone);
+                ctx->set_request_status(epoc::error_none);
                 break;
             }
 
-            ctx->set_request_status(KErrAlreadyExists);
+            ctx->set_request_status(epoc::error_already_exists);
             break;
         }
 
@@ -505,7 +505,7 @@ namespace eka2l1 {
 
             cancel_notify_request(partial_key, mask);
 
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             break;
         }
 
@@ -523,13 +523,13 @@ namespace eka2l1 {
             }
 
             case -1: {
-                ctx->set_request_status(KErrAlreadyExists);
+                ctx->set_request_status(epoc::error_already_exists);
                 break;
             }
 
             default: {
-                LOG_TRACE("Unknown returns code {} from add_notify_request, set status to KErrNone", err);
-                ctx->set_request_status(KErrNone);
+                LOG_TRACE("Unknown returns code {} from add_notify_request, set status to epoc::error_none", err);
+                ctx->set_request_status(epoc::error_none);
 
                 break;
             }
@@ -546,14 +546,14 @@ namespace eka2l1 {
             central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 0);
 
             if (!entry) {
-                ctx->set_request_status(KErrNotFound);
+                ctx->set_request_status(epoc::error_not_found);
                 break;
             }
 
             switch (ctx->msg->function) {
             case cen_rep_get_int: {
                 if (entry->data.etype != central_repo_entry_type::integer) {
-                    ctx->set_request_status(KErrArgument);
+                    ctx->set_request_status(epoc::error_argument);
                     return;
                 }
 
@@ -565,7 +565,7 @@ namespace eka2l1 {
 
             case cen_rep_get_real: {
                 if (entry->data.etype != central_repo_entry_type::real) {
-                    ctx->set_request_status(KErrArgument);
+                    ctx->set_request_status(epoc::error_argument);
                     return;
                 }
 
@@ -577,7 +577,7 @@ namespace eka2l1 {
 
             case cen_rep_get_string: {
                 if (entry->data.etype != central_repo_entry_type::string) {
-                    ctx->set_request_status(KErrArgument);
+                    ctx->set_request_status(epoc::error_argument);
                     return;
                 }
 
@@ -587,7 +587,7 @@ namespace eka2l1 {
             }
             }
 
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             break;
         }
 
@@ -601,7 +601,7 @@ namespace eka2l1 {
             // If it does not exist, or it is in different type, discard.
             // Depends on the invalid type, we set error code
             if (!entry) {
-                ctx->set_request_status(KErrNotFound);
+                ctx->set_request_status(epoc::error_not_found);
                 break;
             }
 
@@ -611,7 +611,7 @@ namespace eka2l1 {
             switch (ctx->msg->function) {
             case cen_rep_set_int: {
                 if (entry->data.etype != central_repo_entry_type::integer) {
-                    ctx->set_request_status(KErrArgument);
+                    ctx->set_request_status(epoc::error_argument);
                     break;
                 }
 
@@ -621,7 +621,7 @@ namespace eka2l1 {
 
             case cen_rep_set_real: {
                 if (entry->data.etype != central_repo_entry_type::real) {
-                    ctx->set_request_status(KErrArgument);
+                    ctx->set_request_status(epoc::error_argument);
                     break;
                 }
 
@@ -631,7 +631,7 @@ namespace eka2l1 {
 
             case cen_rep_set_string: {
                 if (entry->data.etype != central_repo_entry_type::string) {
-                    ctx->set_request_status(KErrArgument);
+                    ctx->set_request_status(epoc::error_argument);
                     break;
                 }
 
@@ -648,7 +648,7 @@ namespace eka2l1 {
             // Success in modifying
             modification_success(entry->key);
 
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
 
             break;
         }
@@ -664,12 +664,12 @@ namespace eka2l1 {
 
             // In transaction
             if (err == -1) {
-                ctx->set_request_status(KErrNotSupported);
+                ctx->set_request_status(epoc::error_not_supported);
                 break;
             }
 
             if (err == -2) {
-                ctx->set_request_status(KErrNotFound);
+                ctx->set_request_status(epoc::error_not_found);
                 break;
             }
 
@@ -677,7 +677,7 @@ namespace eka2l1 {
             write_changes(io);
             modification_success(key);
 
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
 
             break;
         }
@@ -719,7 +719,7 @@ namespace eka2l1 {
         
         if (!filter || !found_uid_result_array) {
             LOG_ERROR("Trying to find equal value in cenrep, but arguments are invalid!");
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -783,7 +783,7 @@ namespace eka2l1 {
             }
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
     
     int central_repo_client_session::closerep(io_system *io, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
@@ -835,17 +835,17 @@ namespace eka2l1 {
 
         switch (err) {
         case 0: {
-            ctx->set_request_status(KErrNone);
+            ctx->set_request_status(epoc::error_none);
             break;
         }
 
         case -1: {
-            ctx->set_request_status(KErrNotFound);
+            ctx->set_request_status(epoc::error_not_found);
             break;
         }
 
         case -2: {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             break;
         }
 
@@ -877,7 +877,7 @@ namespace eka2l1 {
         }
 
         // Ignore all errors
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void central_repo_server::connect(service::ipc_context &ctx) {
@@ -889,6 +889,6 @@ namespace eka2l1 {
         // Put all process code here
         client_sessions.insert(std::make_pair(static_cast<const std::uint32_t>(id), std::move(session)));
 
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 }

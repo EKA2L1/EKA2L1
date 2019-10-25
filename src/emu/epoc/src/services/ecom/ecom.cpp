@@ -38,7 +38,7 @@
 
 #include <common/e32inc.h>
 #include <common/wildcard.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     bool ecom_server::register_implementation(const std::uint32_t interface_uid,
@@ -253,7 +253,7 @@ namespace eka2l1 {
         }
 
         init = true;
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     bool ecom_server::get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
@@ -343,7 +343,7 @@ namespace eka2l1 {
         if (auto uids_result = ctx.get_arg_packed<epoc::uid_type>(0)) {
             uids = std::move(uids_result.value());
         } else {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -359,12 +359,12 @@ namespace eka2l1 {
             if (auto arg2_data_op = ctx.get_arg<std::string>(1)) {
                 arg2_data = std::move(arg2_data_op.value());
             } else {
-                ctx.set_request_status(KErrArgument);
+                ctx.set_request_status(epoc::error_argument);
                 return;
             }
 
             if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
-                ctx.set_request_status(KErrArgument);
+                ctx.set_request_status(epoc::error_argument);
                 return;
             }
         }
@@ -374,7 +374,7 @@ namespace eka2l1 {
         if (auto list_impl_param_op = ctx.get_arg_packed<ecom_list_impl_param>(2)) {
             list_impl_param = std::move(list_impl_param_op.value());
         } else {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -461,7 +461,7 @@ namespace eka2l1 {
         }
 
         // Compare the total buffer size we are going to write with the one guest provided
-        // If it's not sufficient enough, throw KErrOverflow
+        // If it's not sufficient enough, throw epoc::error_overflow
         const std::size_t total_buffer_size_require = seri.size();
         const std::size_t total_buffer_size_given = list_impl_param.buffer_size;
 
@@ -470,7 +470,7 @@ namespace eka2l1 {
         if (total_buffer_size_require > total_buffer_size_given) {
             // Write new list impl param, which contains the required new size
             ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param);
-            ctx.set_request_status(KErrOverflow);
+            ctx.set_request_status(epoc::error_overflow);
 
             return;
         }
@@ -478,7 +478,7 @@ namespace eka2l1 {
         // Write the buffer
         // This must not fail
         if (!get_implementation_buffer(ctx.get_arg_ptr(3), total_buffer_size_given, support_extended_interface)) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -489,7 +489,7 @@ namespace eka2l1 {
         ctx.set_arg_des_len(3, static_cast<const std::uint32_t>(total_buffer_size_require));
 
         // Finally, returns
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void ecom_server::get_implementation_creation_method(service::ipc_context &ctx) {

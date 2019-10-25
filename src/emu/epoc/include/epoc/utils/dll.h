@@ -20,10 +20,8 @@
 
 #pragma once
 
-#include <common/e32inc.h>
-#include <e32const.h>
-
 #include <common/types.h>
+#include <epoc/utils/handle.h>
 
 #include <cstdint>
 #include <optional>
@@ -42,7 +40,7 @@ namespace eka2l1::epoc {
         uint32_t uid1;
         uint32_t uid2;
         uint32_t uid3;
-        TOwnerType owner_type;
+        owner_type owner_type;
         int handle;
         uint32_t secure_id;
         uint32_t requested_version;

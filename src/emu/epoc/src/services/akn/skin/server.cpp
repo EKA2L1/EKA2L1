@@ -20,9 +20,8 @@
 #include <epoc/services/akn/skin/server.h>
 #include <epoc/services/akn/skin/ops.h>
 
-#include <common/e32inc.h>
 #include <common/log.h>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -36,14 +35,14 @@ namespace eka2l1 {
         // The notify handler does nothing rather than gurantee that the client already has a handle mechanic
         // to the request notification later.
         client_handler_ = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
 
     void akn_skin_server_session::check_icon_config(service::ipc_context *ctx) {
         const std::optional<epoc::uid> id = ctx->get_arg_packed<epoc::uid>(0);
 
         if (!id) {
-            ctx->set_request_status(KErrArgument);
+            ctx->set_request_status(epoc::error_argument);
             return;
         }
 
@@ -59,8 +58,8 @@ namespace eka2l1 {
             }
 
             // Set the notifier and both the next one getting the event to cancel
-            ctx->set_request_status(KErrCancel);
-            nof_info_.complete(KErrCancel);
+            ctx->set_request_status(epoc::error_cancel);
+            nof_info_.complete(epoc::error_cancel);
 
             return;
         }
@@ -84,10 +83,10 @@ namespace eka2l1 {
     void akn_skin_server_session::do_cancel(service::ipc_context *ctx) {
         // If a handler is set and no pending notifications
         if (client_handler_ && nof_list_.empty()) {
-            nof_info_.complete(KErrCancel);
+            nof_info_.complete(epoc::error_cancel);
         }
 
-        ctx->set_request_status(KErrNone);
+        ctx->set_request_status(epoc::error_none);
     }
     
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
@@ -132,7 +131,7 @@ namespace eka2l1 {
         }
 
         create_session<akn_skin_server_session>(&ctx);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     int akn_skin_server::is_icon_configured(const epoc::uid app_uid) {

@@ -39,14 +39,14 @@
 #include <common/algorithm.h>
 
 #include <cwctype>
-#include <e32err.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     void loader_server::load_process(eka2l1::service::ipc_context &ctx) {
         std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
 
         if (!info) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -54,7 +54,7 @@ namespace eka2l1 {
         std::optional<std::u16string> process_args = ctx.get_arg<std::u16string>(2);
 
         if (!process_name16 || !process_args) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -74,7 +74,7 @@ namespace eka2l1 {
 
         if (!pr) {
             LOG_DEBUG("Try spawning process {} failed", name_process);
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -82,21 +82,21 @@ namespace eka2l1 {
             static_cast<kernel::owner_type>(info->owner_type));
 
         ctx.write_arg_pkg(0, *info);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void loader_server::load_library(service::ipc_context &ctx) {
         std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
 
         if (!info) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
         std::optional<std::u16string> lib_path = ctx.get_arg<std::u16string>(1);
 
         if (!lib_path) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
@@ -115,7 +115,7 @@ namespace eka2l1 {
 
         if (!cs) {
             LOG_DEBUG("Try loading {} to {} failed", lib_name, ctx.msg->own_thr->owning_process()->name());
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -131,7 +131,7 @@ namespace eka2l1 {
         ctx.msg->own_thr->owning_process()->signal_dll_lock(ctx.msg->own_thr);
 
         ctx.write_arg_pkg(0, *info);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     void loader_server::get_info(service::ipc_context &ctx) {
@@ -139,13 +139,13 @@ namespace eka2l1 {
         epoc::des8 *buffer = eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 
         if (!lib_name || !buffer) {
-            ctx.set_request_status(KErrArgument);
+            ctx.set_request_status(epoc::error_argument);
             return;
         }
 
         // Check the buffer size
         if (buffer->max_length < sizeof(epoc::lib_info)) {
-            ctx.set_request_status(KErrNoMemory);
+            ctx.set_request_status(epoc::error_no_memory);
             return;
         }
 
@@ -153,7 +153,7 @@ namespace eka2l1 {
         epoc::lib_info linfo;
 
         if (!epoc::get_image_info(ctx.sys->get_lib_manager(), *lib_name, linfo)) {
-            ctx.set_request_status(KErrNotFound);
+            ctx.set_request_status(epoc::error_not_found);
             return;
         }
 
@@ -175,7 +175,7 @@ namespace eka2l1 {
         }
 
         ctx.write_arg_pkg<epoc::ldr_info>(0, load_info);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 
     loader_server::loader_server(system *sys)

@@ -20,6 +20,7 @@
 
 #include <common/log.h>
 #include <epoc/services/backup/backup.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1 {
     backup_server::backup_server(eka2l1::system *sys)
@@ -34,6 +35,6 @@ namespace eka2l1 {
         bool state = false;
 
         ctx.write_arg_pkg<bool>(0, state);
-        ctx.set_request_status(KErrNone);
+        ctx.set_request_status(epoc::error_none);
     }
 }
