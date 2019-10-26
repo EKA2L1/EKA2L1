@@ -19,8 +19,6 @@
  */
 
 #include <epoc/services/sms/sa/sa.h>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1 {

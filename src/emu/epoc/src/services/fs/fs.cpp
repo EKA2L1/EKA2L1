@@ -34,8 +34,6 @@
 #include <common/path.h>
 #include <common/wildcard.h>
 
-#include <common/e32inc.h>
-
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 #include <epoc/vfs.h>

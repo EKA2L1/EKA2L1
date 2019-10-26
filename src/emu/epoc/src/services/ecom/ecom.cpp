@@ -35,8 +35,6 @@
 #include <epoc/utils/uid.h>
 
 #include <epoc/services/ecom/common.h>
-
-#include <common/e32inc.h>
 #include <common/wildcard.h>
 #include <epoc/utils/err.h>
 

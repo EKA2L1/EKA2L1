@@ -26,8 +26,6 @@
 
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {

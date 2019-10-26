@@ -23,8 +23,6 @@
 
 #include <epoc/services/ui/oom_app.h>
 #include <epoc/services/window/window.h>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
 
 #include <epoc/epoc.h>

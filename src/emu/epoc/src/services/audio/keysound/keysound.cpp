@@ -21,8 +21,6 @@
 
 #include <epoc/services/audio/keysound/keysound.h>
 #include <epoc/services/audio/keysound/ops.h>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
 
 #include <epoc/kernel/process.h>

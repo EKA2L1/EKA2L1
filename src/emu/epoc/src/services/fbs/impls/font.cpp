@@ -24,7 +24,6 @@
 #include <epoc/services/fbs/fbs.h>
 
 #include <common/cvt.h>
-#include <common/e32inc.h>
 #include <common/log.h>
 #include <common/vecx.h>
 

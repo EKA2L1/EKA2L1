@@ -25,8 +25,6 @@
 #include <epoc/services/window/screen.h>
 
 #include <epoc/timing.h>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {

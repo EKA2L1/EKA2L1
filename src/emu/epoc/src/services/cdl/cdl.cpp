@@ -17,13 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/chunkyseri.h>
+
 #include <epoc/services/cdl/cdl.h>
 #include <epoc/services/cdl/ops.h>
-
-#include <common/e32inc.h>
-#include <common/chunkyseri.h>
 #include <epoc/utils/err.h>
-
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 

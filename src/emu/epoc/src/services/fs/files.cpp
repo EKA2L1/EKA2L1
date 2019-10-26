@@ -25,7 +25,6 @@
 #include <epoc/kernel.h>
 #include <epoc/vfs.h>
 
-#include <common/e32inc.h>
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>

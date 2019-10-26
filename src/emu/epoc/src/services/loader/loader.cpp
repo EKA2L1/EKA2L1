@@ -30,7 +30,6 @@
 #include <epoc/loader/romimage.h>
 
 #include <common/cvt.h>
-#include <common/e32inc.h>
 #include <common/log.h>
 #include <common/path.h>
 

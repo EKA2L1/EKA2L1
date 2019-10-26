@@ -27,7 +27,6 @@
 #include <epoc/utils/sec.h>
 
 #include <common/cvt.h>
-#include <common/e32inc.h>
 #include <common/log.h>
 
 #include <epoc/utils/err.h>

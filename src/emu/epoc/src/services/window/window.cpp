@@ -34,7 +34,6 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
-#include <common/e32inc.h>
 #include <common/ini.h>
 #include <common/log.h>
 #include <common/rgb.h>

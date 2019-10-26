@@ -25,6 +25,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/types.h>
 
 #include <epoc/common.h>
 #include <epoc/epoc.h>
@@ -34,10 +35,7 @@
 #include <epoc/utils/des.h>
 
 #include <functional>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
-#include <e32lang.h>
 
 namespace eka2l1 {
     applist_server::applist_server(system *sys)
@@ -245,9 +243,9 @@ namespace eka2l1 {
     void applist_server::app_language(service::ipc_context &ctx) {
         LOG_TRACE("AppList::AppLanguage stubbed to returns ELangEnglish");
 
-        TLanguage default_lang = ELangEnglish;
+        language default_lang = language::en;
 
-        ctx.write_arg_pkg<TLanguage>(1, default_lang);
+        ctx.write_arg_pkg<language>(1, default_lang);
         ctx.set_request_status(0);
     }
 

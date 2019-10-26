@@ -20,8 +20,6 @@
 #include <epoc/services/hwrm/light/light.h>
 #include <epoc/services/hwrm/op.h>
 #include <epoc/services/context.h>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
