@@ -1,50 +1,49 @@
 #pragma once
 
-#include <common/e32inc.h>
-#include <e32def.h>
+#include <cstdint>
 
 namespace eka2l1::epoc {
     /*! \brief Chunk create info.
      *
      * This struct is passed on creation of a chunk.
     */
-    struct TChunkCreate {
+    struct chunk_create {
         //! Attributes for chunk creation that are used by both euser and the kernel
         // by classes TChunkCreateInfo and SChunkCreateInfo, respectively.
-        enum TChunkCreateAtt {
-            ENormal = 0x00000000,
-            EDoubleEnded = 0x00000001,
-            EDisconnected = 0x00000002,
-            ECache = 0x00000003,
-            EMappingMask = 0x0000000f,
-            ELocal = 0x00000000,
-            EGlobal = 0x00000010,
-            EData = 0x00000000,
-            ECode = 0x00000020,
-            EMemoryNotOwned = 0x00000040,
+        enum chunk_create_att {
+            normal = 0x00000000,
+            double_ended = 0x00000001,
+            disconnected = 0x00000002,
+            cache = 0x00000003,
+            mapping_mask = 0x0000000f,
+            local = 0x00000000,
+            global = 0x00000010,
+            data = 0x00000000,
+            code = 0x00000020,
+            memory_not_owned = 0x00000040,
 
             // Force local chunk to be named.  Only required for thread heap
             // chunks, all other local chunks should be nameless.
-            ELocalNamed = 0x000000080,
+            local_named = 0x000000080,
 
             // Make global chunk read only to all processes but the controlling owner
-            EReadOnly = 0x000000100,
+            read_only = 0x000000100,
 
             // Paging attributes for chunks.
-            EPagingUnspec = 0x00000000,
-            EPaged = 0x80000000,
-            EUnpaged = 0x40000000,
-            EPagingMask = EPaged | EUnpaged,
+            paging_unspec = 0x00000000,
+            paged = 0x80000000,
+            unpaged = 0x40000000,
+            paging_mask = paged | unpaged,
 
-            EChunkCreateAttMask = EMappingMask | EGlobal | ECode | ELocalNamed | EReadOnly | EPagingMask,
+            chunk_create_att_mask = mapping_mask | global | code | local_named | read_only | paging_mask,
         };
 
     public:
-        TUint iAtt;
-        TBool iForceFixed;
-        TInt iInitialBottom;
-        TInt iInitialTop;
-        TInt iMaxSize;
-        TUint8 iClearByte;
+        std::uint32_t att;
+        std::uint8_t force_fixed;
+        std::int32_t initial_bottom;
+        std::int32_t initial_top;
+        std::int32_t max_size;
+        std::uint8_t clear_bytes;
     };
 }
