@@ -18,19 +18,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/log.h>
+
 #include <epoc/epoc.h>
 #include <epoc/services/featmgr/featmgr.h>
 #include <epoc/services/featmgr/op.h>
 #include <epoc/utils/des.h>
 #include <epoc/vfs.h>
-
-#include <common/log.h>
-#include <common/e32inc.h>
-#include <e32def.h>
-
 #include <epoc/utils/err.h>
-#include <featureinfo.h>
-#include <features.hrh>
 
 namespace eka2l1 {
     featmgr_server::featmgr_server(system *sys)
@@ -38,38 +33,47 @@ namespace eka2l1 {
         REGISTER_IPC(featmgr_server, feature_supported, EFeatMgrFeatureSupported, "FeatMgr::FeatureSupported");
     }
 
+    enum feature_id: epoc::uid {
+        feature_id_opengl_es_3d_api = 10,
+        feature_id_svgt = 77,
+        feature_id_korean = 180,
+        feature_id_japanese = 1080,
+        feature_id_thai = 1081,
+        feature_id_chinese = 1096,
+    };
+
     void featmgr_server::do_feature_scanning(system *sys) {
         // TODO: There is a lot of features.
         // See in here: https://github.com/SymbianSource/oss.FCL.sf.os.deviceplatformrelease/blob/master/foundation_system/sf_config/config/inc/publicruntimeids.hrh
         
         // 1. We always welcome rendering with OpenGL ES
-        enable_features.push_back(KFeatureIdOpenGLES3DApi);
+        enable_features.push_back(feature_id_opengl_es_3d_api);
 
         // 2. Are we welcoming SVG? Check for OpenVG, cause it should be there if this feature is available
         if (sys->get_io_system()->exist(u"z:\\sys\\bin\\libopenvg.dll")) {
-            enable_features.push_back(KFeatureIdSvgt);
+            enable_features.push_back(feature_id_svgt);
         }
 
         // 3. Check for system language. User have responsibility to be honest :D
         // I like automatic detection, but it's not really easy thogh
         switch (sys->get_system_language()) {
-        case language::zh: {
-            enable_features.push_back(KFeatureIdChinese);
+        case language::zh: {    
+            enable_features.push_back(feature_id_chinese);
             break;
         }
 
         case language::jp: {
-            enable_features.push_back(KFeatureIdJapanese);
+            enable_features.push_back(feature_id_japanese);
             break;
         }
 
         case language::ko: {
-            enable_features.push_back(KFeatureIdKorean);
+            enable_features.push_back(feature_id_korean);
             break;
         }
 
         case language::th: {
-            enable_features.push_back(KFeatureIdThai);
+            enable_features.push_back(feature_id_thai);
             break;
         }
 
