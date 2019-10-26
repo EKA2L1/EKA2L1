@@ -29,8 +29,6 @@
 #include <epoc/kernel/thread.h>
 #include <epoc/mem.h>
 #include <epoc/ptr.h>
-
-#include <common/e32inc.h>
 #include <epoc/utils/err.h>
 
 int after_timout_evt = -1;

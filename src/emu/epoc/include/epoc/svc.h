@@ -43,6 +43,7 @@
 #include <epoc/utils/err.h>
 #include <epoc/utils/handle.h>
 
+#include <cstdint>
 #include <unordered_map>
 
 namespace eka2l1::kernel {
@@ -82,22 +83,22 @@ namespace eka2l1::epoc {
         pending
     };
 
-    enum TPropertyType {
-        EInt,
-        EByteArray,
-        EText = EByteArray,
-        ELargeByteArray,
-        ELargeText = ELargeByteArray,
-        ETypeLimit,
-        ETypeMask = 0xff
+    enum property_type {
+        property_type_int,
+        property_type_byte_array,
+        property_type_text = property_type_byte_array,
+        property_type_large_byte_array,
+        property_type_large_text = property_type_large_byte_array,
+        property_type_limit,
+        property_type_mask = 0xff
     };
 
     struct TPropertyInfo {
-        TUint iAttrib;
-        TUint16 iSize;
-        TPropertyType iType;
-        epoc::security_policy iReadPolicy;
-        epoc::security_policy iWritePolicy;
+        std::uint32_t attrib;
+        std::uint16_t size;
+        property_type type;
+        epoc::security_policy read_policy;
+        epoc::security_policy write_policy;
     };
 
     /*! \brief Get the thread-local allocator. 
@@ -139,7 +140,7 @@ namespace eka2l1::epoc {
      * \param aProcessHandle The process handle. 0xFFFF8000 is the current process.
      * \param aDes Pointer to the name descriptor.
      */
-    BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<eka2l1::epoc::des8> aDes);
+    BRIDGE_FUNC(void, ProcessFilename, std::int32_t aProcessHandle, eka2l1::ptr<eka2l1::epoc::des8> aDes);
 
     /*! \brief Get the process triple uid. 
      *
@@ -156,7 +157,7 @@ namespace eka2l1::epoc {
      * \param aSlot The slot index. Range from 0-15.
      * \returns The slot data size. Error code if there is problem.
     */
-    BRIDGE_FUNC(TInt, ProcessDataParameterLength, TInt aSlot);
+    BRIDGE_FUNC(std::int32_t, ProcessDataParameterLength, std::int32_t aSlot);
 
     /*! \brief Get the environment data parameter. 
      *
@@ -166,7 +167,7 @@ namespace eka2l1::epoc {
      *
      * \returns The slot data size, else error code.
      */
-    BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength);
+    BRIDGE_FUNC(std::int32_t, ProcessGetDataParameter, std::int32_t aSlot, eka2l1::ptr<std::uint8_t> aData, std::int32_t aLength);
 
     /**
      * \brief Set a process's environment data parameter.
@@ -181,14 +182,14 @@ namespace eka2l1::epoc {
      * \returns KErrNone if success, KErrPermissionDenined if the caller is not the parent of given
      *          process, else other system related error.
      */
-    BRIDGE_FUNC(TInt, ProcessSetDataParameter, TInt aHandle, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aDataSize);
+    BRIDGE_FUNC(std::int32_t, ProcessSetDataParameter, std::int32_t aHandle, std::int32_t aSlot, eka2l1::ptr<std::uint8_t> aData, std::int32_t aDataSize);
 
     /*! \brief Set the process flags. 
      * \param aHandle The process handle.
      * \param aClearMask The flags to clear mask.
      * \param aSetMask The flags to set mask.
      */
-    BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask);
+    BRIDGE_FUNC(void, ProcessSetFlags, std::int32_t aHandle, std::uint32_t aClearMask, std::uint32_t aSetMask);
 
     /*! \brief Get the thread local storage of a DLL. 
      *
@@ -198,7 +199,7 @@ namespace eka2l1::epoc {
      *
      * \returns Thread local storage.
     */
-    BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid);
+    BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, std::int32_t aHandle, std::int32_t aDllUid);
 
     /*! \brief Set the thread local storage of a DLL. 
      *
@@ -209,7 +210,7 @@ namespace eka2l1::epoc {
      *
      * \returns 0 if success, else error code.
     */
-    BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr);
+    BRIDGE_FUNC(std::int32_t, DllSetTls, std::int32_t aHandle, std::int32_t aDllUid, eka2l1::ptr<void> aPtr);
 
     /*! \brief Free the thread local storage of a DLL. 
      *
@@ -217,13 +218,13 @@ namespace eka2l1::epoc {
      *
      * \returns 0 if success, else error code.
     */
-    BRIDGE_FUNC(void, DllFreeTLS, TInt iHandle);
+    BRIDGE_FUNC(void, DllFreeTLS, std::int32_t iHandle);
 
     /**
      * \brief Get the UTC offset in seconds. 
      * \returns The UTC offset, in seconds.
      */
-    BRIDGE_FUNC(TInt, UTCOffset);
+    BRIDGE_FUNC(std::int32_t, UTCOffset);
 
     /*! \brief Create a new session. 
      *
@@ -233,7 +234,7 @@ namespace eka2l1::epoc {
      * \param aMode Session mode. Ignored here.
      * \returns The session handle.
     */
-    BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<eka2l1::epoc::desc8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode);
+    BRIDGE_FUNC(std::int32_t, SessionCreate, eka2l1::ptr<eka2l1::epoc::desc8> aServerName, std::int32_t aMsgSlot, eka2l1::ptr<void> aSec, std::int32_t aMode);
 
     /*! \brief Share the session to local process or all process. 
      *
@@ -242,7 +243,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
      */
-    BRIDGE_FUNC(TInt, SessionShare, eka2l1::ptr<TInt> aHandle, TInt aShare);
+    BRIDGE_FUNC(std::int32_t, SessionShare, eka2l1::ptr<std::int32_t> aHandle, std::int32_t aShare);
 
     /*! \brief Send the IPC function and arguments using local thread sync message. 
      *
@@ -252,7 +253,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
      */
-    BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
+    BRIDGE_FUNC(std::int32_t, SessionSendSync, std::int32_t aHandle, std::int32_t aOrd, eka2l1::ptr<void> aIpcArgs,
         eka2l1::ptr<epoc::request_status> aStatus);
 
     /*! \brief Start the leave. 
@@ -262,7 +263,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(eka2l1::ptr<void>, LeaveStart);
 
     /*! \brief Get the debug mask. */
-    BRIDGE_FUNC(TInt, DebugMask);
+    BRIDGE_FUNC(std::int32_t, DebugMask);
 
     /*! \brief Execute an HAL function. 
      *
@@ -273,7 +274,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
      */
-    BRIDGE_FUNC(TInt, HalFunction, TInt aCagetory, TInt aFunc, eka2l1::ptr<TInt> a1, eka2l1::ptr<TInt> a2);
+    BRIDGE_FUNC(std::int32_t, HalFunction, std::int32_t aCagetory, std::int32_t aFunc, eka2l1::ptr<std::int32_t> a1, eka2l1::ptr<std::int32_t> a2);
 
     /*! \brief Create a new chunk.
      *
@@ -283,21 +284,21 @@ namespace eka2l1::epoc {
      *
      * \returns Error code if problems. Else return the handle.
     */
-    BRIDGE_FUNC(TInt, ChunkCreate, epoc::owner_type aOwnerType, eka2l1::ptr<eka2l1::epoc::desc8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate);
+    BRIDGE_FUNC(std::int32_t, ChunkCreate, epoc::owner_type aOwnerType, eka2l1::ptr<eka2l1::epoc::desc8> aName, eka2l1::ptr<epoc::chunk_create> aChunkCreate);
 
     /*! \brief Get the max size of the chunk. 
      * 
      * \param aChunkHandle The handle of the chunk.
      * \returns The chunk size or error code.
      */
-    BRIDGE_FUNC(TInt, ChunkMaxSize, TInt aChunkHandle);
+    BRIDGE_FUNC(std::int32_t, ChunkMaxSize, std::int32_t aChunkHandle);
 
     /*!\ brief Get the chunk base. 
      * 
      * \param aChunkHandle The handle of the chunk.
      * \returns The chunk base pointer.
     */
-    BRIDGE_FUNC(eka2l1::ptr<TUint8>, ChunkBase, TInt aChunkHandle);
+    BRIDGE_FUNC(eka2l1::ptr<std::uint8_t>, ChunkBase, std::int32_t aChunkHandle);
 
     /*! \brief Adjust the chunk based on the type. 
      *
@@ -311,7 +312,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
      */
-    BRIDGE_FUNC(TInt, ChunkAdjust, TInt aChunkHandle, TInt aType, TInt a1, TInt a2);
+    BRIDGE_FUNC(std::int32_t, ChunkAdjust, std::int32_t aChunkHandle, std::int32_t aType, std::int32_t a1, std::int32_t a2);
 
     /*! \brief Create new semaphore. 
      * 
@@ -320,7 +321,7 @@ namespace eka2l1::epoc {
      * \param aOwnerType Ownership of this handle.
      * \returns Error code or handle.
      */
-    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<eka2l1::epoc::desc8> aSemaName, TInt aInitCount, epoc::owner_type aOwnerType);
+    BRIDGE_FUNC(std::int32_t, SemaphoreCreate, eka2l1::ptr<eka2l1::epoc::desc8> aSemaName, std::int32_t aInitCount, epoc::owner_type aOwnerType);
 
     /*! \brief Wait for any request to finish. 
      *
@@ -337,13 +338,13 @@ namespace eka2l1::epoc {
      *
      * \returns KErrNone if success, else error code.
      */
-    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<epoc::find_handle> aHandleFind);
+    BRIDGE_FUNC(std::int32_t, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<epoc::find_handle> aHandleFind);
 
     /*! \brief Close a handle. If there is no duplicate handle or another reference handle open, 
      *  call Destroy to destroy the kernel object 
      * \param aHandle The handle 
      */
-    BRIDGE_FUNC(TInt, HandleClose, TInt aHandle);
+    BRIDGE_FUNC(std::int32_t, HandleClose, std::int32_t aHandle);
 
     /*! \brief Duplicate the handle. Create another reference to the real kernel object.
       * \param aThreadHandle The thread owns the handle. 0xFFFF8001 for current thread. Ignored.
@@ -352,7 +353,7 @@ namespace eka2l1::epoc {
       * 
       * \returns Error code or new handle.
     */
-    BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, epoc::owner_type aOwnerType, TInt aDupHandle);
+    BRIDGE_FUNC(std::int32_t, HandleDuplicate, std::int32_t aThreadHandle, epoc::owner_type aOwnerType, std::int32_t aDupHandle);
 
     /*! \brief Open a handle based on the name and object type.
      *
@@ -362,10 +363,10 @@ namespace eka2l1::epoc {
      *
      * \returns Error code or handle.
      */
-    BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<eka2l1::epoc::desc8> aName, TInt aOwnerType);
+    BRIDGE_FUNC(std::int32_t, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<eka2l1::epoc::desc8> aName, std::int32_t aOwnerType);
 
     /*! \brief Get the name of the object handle points to. */
-    BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<eka2l1::epoc::des8> aName);
+    BRIDGE_FUNC(void, HandleName, std::int32_t aHandle, eka2l1::ptr<eka2l1::epoc::des8> aName);
 
     /*! \brief Get all the first entry points of DLL the app loaded. 
      *
@@ -376,14 +377,14 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
      */
-    BRIDGE_FUNC(TInt, StaticCallList, eka2l1::ptr<TInt> aTotal, eka2l1::ptr<TUint32> aList);
+    BRIDGE_FUNC(std::int32_t, StaticCallList, eka2l1::ptr<std::int32_t> aTotal, eka2l1::ptr<std::uint32_t> aList);
 
     /*! \brief Get the ROM address. 
      * 
      * For EKA1 this is 0x50000000, and EKA2 is 0x80000000. More information on memory map,
      * see wiki.
      */
-    BRIDGE_FUNC(TInt, UserSvrRomHeaderAddress);
+    BRIDGE_FUNC(std::int32_t, UserSvrRomHeaderAddress);
 
     /*! \brief Rename the thread.
      * 
@@ -392,7 +393,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
     */
-    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<eka2l1::epoc::desc8> aName);
+    BRIDGE_FUNC(std::int32_t, ThreadRename, std::int32_t aHandle, eka2l1::ptr<eka2l1::epoc::desc8> aName);
 
     /*! \brief Get the integer data of the proeprty with the provided cagetory and key. 
      *
@@ -402,7 +403,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
      */
-    BRIDGE_FUNC(TInt, PropertyFindGetInt, TInt aCage, TInt aKey, eka2l1::ptr<TInt> aValue);
+    BRIDGE_FUNC(std::int32_t, PropertyFindGetInt, std::int32_t aCage, std::int32_t aKey, eka2l1::ptr<std::int32_t> aValue);
 
     /*! \brief Get the binary data of the proeprty with the provided cagetory and key. 
      *
@@ -412,7 +413,7 @@ namespace eka2l1::epoc {
      *
      * \returns Error code. KErrNone if success.
      */
-    BRIDGE_FUNC(TInt, PropertyFindGetBin, TInt aCage, TInt aKey, eka2l1::ptr<TUint8> aData, TInt aDataLength);
+    BRIDGE_FUNC(std::int32_t, PropertyFindGetBin, std::int32_t aCage, std::int32_t aKey, eka2l1::ptr<std::uint8_t> aData, std::int32_t aDataLength);
 
     /**
      * \brief Prints text to debug port or host debugger.
@@ -420,7 +421,7 @@ namespace eka2l1::epoc {
      * \param aDes Descriptor to prints.
      * \param aMode Undocumented.
      */
-    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, TInt aMode);
+    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, std::int32_t aMode);
 
     /**
      * \brief Get the current executable's exception descriptor.
@@ -439,7 +440,7 @@ namespace eka2l1::epoc {
      * \brief Increase value by 1 if it's positive (> 0)
      * \returns Original value
     */
-    BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal);
+    BRIDGE_FUNC(std::int32_t, SafeInc32, eka2l1::ptr<std::int32_t> aVal);
 
     /**
      * \brief Create a new change notifier object.
@@ -450,7 +451,7 @@ namespace eka2l1::epoc {
      * \param aOwner The owner of this object's handle.
      * \returns < 0 means an error, else the handle to this change notifier.
      */
-    BRIDGE_FUNC(TInt, ChangeNotifierCreate, epoc::owner_type aOwner);
+    BRIDGE_FUNC(std::int32_t, ChangeNotifierCreate, epoc::owner_type aOwner);
 
     /**
      * \brief Logon an existing change notifier.
@@ -466,13 +467,13 @@ namespace eka2l1::epoc {
      * \returns KErrNone if success, else other system's related error.
      * \see     ChangeNotifierLogonCancel
      */
-    BRIDGE_FUNC(TInt, ChangeNotifierLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus);
+    BRIDGE_FUNC(std::int32_t, ChangeNotifierLogon, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus);
 
     /**
      * \brief Cancel a timer currently running.
      * \param aHandle Handle to the timer. 
      */
-    BRIDGE_FUNC(void, TimerCancel, TInt aHandle);
+    BRIDGE_FUNC(void, TimerCancel, std::int32_t aHandle);
 
     /**
      * \brief Let a timer running and notify the client when the time is reached at UTC.
@@ -485,7 +486,7 @@ namespace eka2l1::epoc {
      * 
      * \see TimerAfter
      */
-    BRIDGE_FUNC(void, TimerAtUtc, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TUint64 aMicroSecondsAt);
+    BRIDGE_FUNC(void, TimerAtUtc, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, std::uint64_t aMicroSecondsAt);
 
     /**
      * \brief Let a timer running and notify the client when the time is reached.
@@ -498,7 +499,7 @@ namespace eka2l1::epoc {
      * 
      * \see TimerAtUtc
      */
-    BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds);
+    BRIDGE_FUNC(void, TimerAfter, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, std::int32_t aMicroSeconds);
 
     /**
      * \brief Create a timer.
@@ -511,7 +512,7 @@ namespace eka2l1::epoc {
      * 
      * \returns Handle to the timer if > 0, else error.
      */
-    BRIDGE_FUNC(TInt, TimerCreate);
+    BRIDGE_FUNC(std::int32_t, TimerCreate);
 
     /**
      * \brief Get exit type of process.
@@ -521,7 +522,7 @@ namespace eka2l1::epoc {
      * \param aHandle Handle to the target process.
      * \returns Exit type (> 0), else other system related error codes.
      */
-    BRIDGE_FUNC(TInt, ProcessExitType, TInt aHandle);
+    BRIDGE_FUNC(std::int32_t, ProcessExitType, std::int32_t aHandle);
     
     /**
      * \brief Notify rendezvous requests with a code.
@@ -532,7 +533,7 @@ namespace eka2l1::epoc {
      * \param aRendezvousCode The code to notify all waiting threads.
      * \see   ProcessLogon ProcessLogonCancel
      */
-    BRIDGE_FUNC(void, ProcessRendezvous, TInt aRendezvousCode);
+    BRIDGE_FUNC(void, ProcessRendezvous, std::int32_t aRendezvousCode);
 
     /**
      * \brief Get a process's memory info.
@@ -545,13 +546,13 @@ namespace eka2l1::epoc {
      * 
      * \returns KErrNone if success, else other system's related error.
      */
-    BRIDGE_FUNC(TInt, ProcessGetMemoryInfo, TInt aHandle, eka2l1::ptr<kernel::memory_info> aInfo);
+    BRIDGE_FUNC(std::int32_t, ProcessGetMemoryInfo, std::int32_t aHandle, eka2l1::ptr<kernel::memory_info> aInfo);
 
     /**
      * \brief Get ID of given process.
      * \param aHandle Handle to target process.
      */
-    BRIDGE_FUNC(TInt, ProcessGetId, TInt aHandle);
+    BRIDGE_FUNC(std::int32_t, ProcessGetId, std::int32_t aHandle);
     
     /**
      * \brief   Get length of command line string passed to a process.
@@ -559,7 +560,7 @@ namespace eka2l1::epoc {
      * \param   aHandle Handle to target process.
      * \returns The length of the command line string.
      */
-    BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle);
+    BRIDGE_FUNC(std::int32_t, ProcessCommandLineLength, std::int32_t aHandle);
 
     /**
      * \brief Get the command line string.
@@ -567,7 +568,7 @@ namespace eka2l1::epoc {
      * \param aHandle Handle to target process.
      * \param aData   Descriptor which will hold the cmd line string data.
      */
-    BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<epoc::des8> aData);
+    BRIDGE_FUNC(void, ProcessCommandLine, std::int32_t aHandle, eka2l1::ptr<epoc::des8> aData);
 
     /**
      * \brief Set mask for given process.
@@ -576,7 +577,7 @@ namespace eka2l1::epoc {
      * \param aClearMask The mask to be cleared for given process flags.
      * \param aSetMask   The mask to be set for given process flags.
      */
-    BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask);
+    BRIDGE_FUNC(void, ProcessSetFlags, std::int32_t aHandle, std::uint32_t aClearMask, std::uint32_t aSetMask);
 
     //! The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;

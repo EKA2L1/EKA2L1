@@ -65,24 +65,9 @@
 
 #include <chrono>
 #include <ctime>
-
-#include <common/e32inc.h>
-#include <e32def.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
-    /* Do a final static assert check */
-    static_assert(sizeof(TInt) == 4, "TInt Symbian size is not 4 bytes!");
-    static_assert(sizeof(TUint) == 4, "TUint Symbian size is not 4 bytes!");
-    static_assert(sizeof(TInt32) == 4, "TInt32 Symbian size is not 4 bytes!");
-    static_assert(sizeof(TUint32) == 4, "TUint32 Symbian size is not 4 bytes!");
-    static_assert(sizeof(TUint8) == 1, "TUint8 Symbian size is not 1 bytes!");
-    static_assert(sizeof(TInt8) == 1, "TInt8 Symbian size is not 1 bytes!");
-    static_assert(sizeof(TUint16) == 2, "TUint16 Symbian size is not 2 bytes!");
-    static_assert(sizeof(TInt16) == 2, "TInt16 Symbian size is not 2 bytes!");
-    static_assert(sizeof(TUint64) == 8, "TUint64 Symbian size is not 8 bytes!");
-    static_assert(sizeof(TInt64) == 8, "TInt64 Symbian size is not 8 bytes!");
-
     static security_policy server_exclamination_point_name_policy({ cap_prot_serv });
 
     /* TODO:                                       
@@ -139,7 +124,7 @@ namespace eka2l1::epoc {
         local_data.scheduler = aNewScheduler;
     }
 
-    BRIDGE_FUNC(void, After, TInt aMicroSecs, eka2l1::ptr<epoc::request_status> aStatus) {
+    BRIDGE_FUNC(void, After, std::int32_t aMicroSecs, eka2l1::ptr<epoc::request_status> aStatus) {
         sys->get_kernel_system()->crr_thread()->after(aStatus, aMicroSecs);
     }
 
@@ -147,7 +132,7 @@ namespace eka2l1::epoc {
     /* PROCESS */
     /***************************/
 
-    BRIDGE_FUNC(TInt, ProcessExitType, TInt aHandle) {
+    BRIDGE_FUNC(std::int32_t, ProcessExitType, std::int32_t aHandle) {
         eka2l1::memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -158,14 +143,14 @@ namespace eka2l1::epoc {
             return 0;
         }
 
-        return static_cast<TInt>(pr_real->get_exit_type());
+        return static_cast<std::int32_t>(pr_real->get_exit_type());
     }
 
-    BRIDGE_FUNC(void, ProcessRendezvous, TInt aRendezvousCode) {
+    BRIDGE_FUNC(void, ProcessRendezvous, std::int32_t aRendezvousCode) {
         sys->get_kernel_system()->crr_process()->rendezvous(aRendezvousCode);
     }
 
-    BRIDGE_FUNC(void, ProcessFilename, TInt aProcessHandle, eka2l1::ptr<des8> aDes) {
+    BRIDGE_FUNC(void, ProcessFilename, std::int32_t aProcessHandle, eka2l1::ptr<des8> aDes) {
         eka2l1::memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -180,7 +165,7 @@ namespace eka2l1::epoc {
         des->assign(kern->crr_process(), pr_real->name());
     }
 
-    BRIDGE_FUNC(TInt, ProcessGetMemoryInfo, TInt aHandle, eka2l1::ptr<kernel::memory_info> aInfo) {
+    BRIDGE_FUNC(std::int32_t, ProcessGetMemoryInfo, std::int32_t aHandle, eka2l1::ptr<kernel::memory_info> aInfo) {
         kernel::memory_info *info = aInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
@@ -194,7 +179,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, ProcessGetId, TInt aHandle) {
+    BRIDGE_FUNC(std::int32_t, ProcessGetId, std::int32_t aHandle) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -205,7 +190,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        return static_cast<TInt>(pr_real->unique_id());
+        return static_cast<std::int32_t>(pr_real->unique_id());
     }
 
     BRIDGE_FUNC(void, ProcessType, address pr, eka2l1::ptr<epoc::uid_type> uid_type) {
@@ -227,7 +212,7 @@ namespace eka2l1::epoc {
         type->uid3 = std::get<2>(tup);
     }
 
-    BRIDGE_FUNC(TInt, ProcessDataParameterLength, TInt aSlot) {
+    BRIDGE_FUNC(std::int32_t, ProcessDataParameterLength, std::int32_t aSlot) {
         kernel_system *kern = sys->get_kernel_system();
         kernel::process *crr_process = kern->crr_process();
 
@@ -243,10 +228,10 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        return static_cast<TInt>(slot->data.size());
+        return static_cast<std::int32_t>(slot->data.size());
     }
 
-    BRIDGE_FUNC(TInt, ProcessGetDataParameter, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aLength) {
+    BRIDGE_FUNC(std::int32_t, ProcessGetDataParameter, std::int32_t aSlot, eka2l1::ptr<std::uint8_t> aData, std::int32_t aLength) {
         kernel_system *kern = sys->get_kernel_system();
         kernel::process *pr = kern->crr_process();
 
@@ -268,16 +253,16 @@ namespace eka2l1::epoc {
             return epoc::error_no_memory;
         }
 
-        TUint8 *data = aData.get(sys->get_memory_system());
+        std::uint8_t *data = aData.get(sys->get_memory_system());
         std::copy(slot.data.begin(), slot.data.end(), data);
 
         std::size_t written_size = slot.data.size();
         pr->mark_slot_free(static_cast<std::uint8_t>(aSlot));
 
-        return static_cast<TInt>(written_size);
+        return static_cast<std::int32_t>(written_size);
     }
 
-    BRIDGE_FUNC(TInt, ProcessSetDataParameter, TInt aHandle, TInt aSlot, eka2l1::ptr<TUint8> aData, TInt aDataSize) {
+    BRIDGE_FUNC(std::int32_t, ProcessSetDataParameter, std::int32_t aHandle, std::int32_t aSlot, eka2l1::ptr<std::uint8_t> aData, std::int32_t aDataSize) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get<kernel::process>(aHandle);
 
@@ -301,7 +286,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, ProcessCommandLineLength, TInt aHandle) {
+    BRIDGE_FUNC(std::int32_t, ProcessCommandLineLength, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get<kernel::process>(aHandle);
 
@@ -309,10 +294,10 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        return static_cast<TInt>(pr->get_cmd_args().length());
+        return static_cast<std::int32_t>(pr->get_cmd_args().length());
     }
 
-    BRIDGE_FUNC(void, ProcessCommandLine, TInt aHandle, eka2l1::ptr<epoc::des8> aData) {
+    BRIDGE_FUNC(void, ProcessCommandLine, std::int32_t aHandle, eka2l1::ptr<epoc::des8> aData) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get<kernel::process>(aHandle);
 
@@ -333,10 +318,10 @@ namespace eka2l1::epoc {
         char *data_ptr = data->get_pointer(crr_process);
 
         memcpy(data_ptr, cmdline.data(), cmdline.length() << 1);
-        data->set_length(crr_process, static_cast<TUint32>(cmdline.length() << 1));
+        data->set_length(crr_process, static_cast<std::uint32_t>(cmdline.length() << 1));
     }
 
-    BRIDGE_FUNC(void, ProcessSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
+    BRIDGE_FUNC(void, ProcessSetFlags, std::int32_t aHandle, std::uint32_t aClearMask, std::uint32_t aSetMask) {
         kernel_system *kern = sys->get_kernel_system();
 
         process_ptr pr = kern->get<kernel::process>(aHandle);
@@ -348,7 +333,7 @@ namespace eka2l1::epoc {
         pr->set_flags(org_flags ^ new_flags);
     }
 
-    BRIDGE_FUNC(TInt, ProcessSetPriority, TInt aHandle, TInt aProcessPriority) {
+    BRIDGE_FUNC(std::int32_t, ProcessSetPriority, std::int32_t aHandle, std::int32_t aProcessPriority) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get<kernel::process>(aHandle);
 
@@ -361,7 +346,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, ProcessRename, TInt aHandle, eka2l1::ptr<des8> aNewName) {
+    BRIDGE_FUNC(std::int32_t, ProcessRename, std::int32_t aHandle, eka2l1::ptr<des8> aNewName) {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->get<kernel::process>(aHandle);
 
@@ -376,7 +361,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(void, ProcessResume, TInt aHandle) {
+    BRIDGE_FUNC(void, ProcessResume, std::int32_t aHandle) {
         process_ptr pr = sys->get_kernel_system()->get<kernel::process>(aHandle);
 
         if (!pr) {
@@ -386,7 +371,7 @@ namespace eka2l1::epoc {
         pr->run();
     }
 
-    BRIDGE_FUNC(void, ProcessLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(void, ProcessLogon, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, bool aRendezvous) {
         LOG_TRACE("Logon requested from thread {}", sys->get_kernel_system()->crr_thread()->name());
 
         process_ptr pr = sys->get_kernel_system()->get<kernel::process>(aHandle);
@@ -398,7 +383,7 @@ namespace eka2l1::epoc {
         pr->logon(aRequestSts, aRendezvous);
     }
 
-    BRIDGE_FUNC(TInt, ProcessLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(std::int32_t, ProcessLogonCancel, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, bool aRendezvous) {
         process_ptr pr = sys->get_kernel_system()->get<kernel::process>(aHandle);
 
         if (!pr) {
@@ -418,7 +403,7 @@ namespace eka2l1::epoc {
     /* TLS */
     /*******************/
 
-    BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, TInt aHandle, TInt aDllUid) {
+    BRIDGE_FUNC(eka2l1::ptr<void>, DllTls, std::int32_t aHandle, std::int32_t aDllUid) {
         eka2l1::kernel::thread_local_data dat = current_local_data(sys);
         kernel::thread *thr = sys->get_kernel_system()->crr_thread();
 
@@ -428,13 +413,13 @@ namespace eka2l1::epoc {
             }
         }
 
-        LOG_WARN("TLS for 0x{:x}, thread {} return 0, may results unexpected crash", static_cast<TUint>(aHandle),
+        LOG_WARN("TLS for 0x{:x}, thread {} return 0, may results unexpected crash", static_cast<std::uint32_t>(aHandle),
             thr->name());
 
         return eka2l1::ptr<void>(0);
     }
 
-    BRIDGE_FUNC(TInt, DllSetTls, TInt aHandle, TInt aDllUid, eka2l1::ptr<void> aPtr) {
+    BRIDGE_FUNC(std::int32_t, DllSetTls, std::int32_t aHandle, std::int32_t aDllUid, eka2l1::ptr<void> aPtr) {
         eka2l1::kernel::tls_slot *slot = get_tls_slot(sys, aHandle);
 
         if (!slot) {
@@ -445,20 +430,20 @@ namespace eka2l1::epoc {
 
         kernel::thread *thr = sys->get_kernel_system()->crr_thread();
 
-        LOG_TRACE("TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<TUint>(aHandle), aPtr.ptr_address(),
+        LOG_TRACE("TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<std::uint32_t>(aHandle), aPtr.ptr_address(),
             thr->name());
 
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(void, DllFreeTLS, TInt iHandle) {
+    BRIDGE_FUNC(void, DllFreeTLS, std::int32_t iHandle) {
         kernel::thread *thr = sys->get_kernel_system()->crr_thread();
         thr->close_tls_slot(*thr->get_tls_slot(iHandle, iHandle));
 
-        LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", static_cast<TUint>(iHandle), thr->name());
+        LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", static_cast<std::uint32_t>(iHandle), thr->name());
     }
 
-    BRIDGE_FUNC(void, DllFileName, TInt aEntryAddress, eka2l1::ptr<epoc::des8> aFullPathPtr) {
+    BRIDGE_FUNC(void, DllFileName, std::int32_t aEntryAddress, eka2l1::ptr<epoc::des8> aFullPathPtr) {
         std::optional<std::u16string> dll_full_path = get_dll_full_path(sys, aEntryAddress);
 
         if (!dll_full_path) {
@@ -467,7 +452,7 @@ namespace eka2l1::epoc {
         }
 
         std::string path_utf8 = common::ucs2_to_utf8(*dll_full_path);
-        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<TUint>(aEntryAddress),
+        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<std::uint32_t>(aEntryAddress),
             path_utf8);
 
         aFullPathPtr.get(sys->get_memory_system())->assign(sys->get_kernel_system()->crr_process(), path_utf8);
@@ -481,7 +466,7 @@ namespace eka2l1::epoc {
     * Warning: It's not possible to set the UTC time and offset in the emulator at the moment.
     */
    
-    BRIDGE_FUNC(TInt, UTCOffset) {
+    BRIDGE_FUNC(std::int32_t, UTCOffset) {
         // TODO: Users and apps can set this
         return common::get_current_utc_offset();
     }
@@ -491,9 +476,9 @@ namespace eka2l1::epoc {
         ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec
     };
 
-    BRIDGE_FUNC(TInt, TimeNow, eka2l1::ptr<TUint64> aTime, eka2l1::ptr<TInt> aUTCOffset) {
-        TUint64 *time = aTime.get(sys->get_memory_system());
-        TInt *offset = aUTCOffset.get(sys->get_memory_system());
+    BRIDGE_FUNC(std::int32_t, TimeNow, eka2l1::ptr<std::uint64_t> aTime, eka2l1::ptr<std::int32_t> aUTCOffset) {
+        std::uint64_t *time = aTime.get(sys->get_memory_system());
+        std::int32_t *offset = aUTCOffset.get(sys->get_memory_system());
 
         LOG_INFO("EKA2L1 may download timezone database to your Downloads folder if the database doesn't exist");
         LOG_INFO("Disable this info using core option: disableadd");
@@ -511,7 +496,7 @@ namespace eka2l1::epoc {
     /* IPC */
     /*******************************************/
 
-    BRIDGE_FUNC(void, SetSessionPtr, TInt aMsgHandle, TUint aSessionAddress) {
+    BRIDGE_FUNC(void, SetSessionPtr, std::int32_t aMsgHandle, std::uint32_t aSessionAddress) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -524,7 +509,7 @@ namespace eka2l1::epoc {
         msg->msg_session->set_cookie_address(aSessionAddress);
     }
 
-    BRIDGE_FUNC(TInt, MessageComplete, TInt aMsgHandle, TInt aVal) {
+    BRIDGE_FUNC(std::int32_t, MessageComplete, std::int32_t aMsgHandle, std::int32_t aVal) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -547,7 +532,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, MessageKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<desc8> aCage) {
+    BRIDGE_FUNC(std::int32_t, MessageKill, std::int32_t aHandle, TExitType aExitType, std::int32_t aReason, eka2l1::ptr<desc8> aCage) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -597,7 +582,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, MessageGetDesLength, TInt aHandle, TInt aParam) {
+    BRIDGE_FUNC(std::int32_t, MessageGetDesLength, std::int32_t aHandle, std::int32_t aParam) {
         if (aParam < 0) {
             return epoc::error_argument;
         }
@@ -620,7 +605,7 @@ namespace eka2l1::epoc {
         return epoc::error_bad_descriptor;
     }
 
-    BRIDGE_FUNC(TInt, MessageGetDesMaxLength, TInt aHandle, TInt aParam) {
+    BRIDGE_FUNC(std::int32_t, MessageGetDesMaxLength, std::int32_t aHandle, std::int32_t aParam) {
         if (aParam < 0) {
             return epoc::error_argument;
         }
@@ -645,24 +630,24 @@ namespace eka2l1::epoc {
     }
 
     struct TIpcCopyInfo {
-        eka2l1::ptr<TUint8> iTargetPtr;
+        eka2l1::ptr<std::uint8_t> iTargetPtr;
         int iTargetLength;
         int iFlags;
     };
 
     static_assert(sizeof(TIpcCopyInfo) == 12, "Size of IPCCopy struct is 12");
 
-    const TInt KChunkShiftBy0 = 0;
-    const TInt KChunkShiftBy1 = (TInt)0x80000000;
-    const TInt KIpcDirRead = 0;
-    const TInt KIpcDirWrite = 0x10000000;
+    const std::int32_t KChunkShiftBy0 = 0;
+    const std::int32_t KChunkShiftBy1 = (std::int32_t)0x80000000;
+    const std::int32_t KIpcDirRead = 0;
+    const std::int32_t KIpcDirWrite = 0x10000000;
 
     // In source code, the usage of this SVC call is like this:
     // - Read: Success returns the length readed, and set the target receive descriptor to that length.
     // - Write: returns epoc::error_none if success
     // This call can be much optimized more, but will results in ugly code.
     // TODO (pent0): Optimize this, since this is call frequently
-    BRIDGE_FUNC(TInt, MessageIpcCopy, TInt aHandle, TInt aParam, eka2l1::ptr<TIpcCopyInfo> aInfo, TInt aStartOffset) {
+    BRIDGE_FUNC(std::int32_t, MessageIpcCopy, std::int32_t aHandle, std::int32_t aParam, eka2l1::ptr<TIpcCopyInfo> aInfo, std::int32_t aStartOffset) {
         if (!aInfo || aParam < 0) {
             return epoc::error_argument;
         }
@@ -699,8 +684,8 @@ namespace eka2l1::epoc {
                     return epoc::error_bad_descriptor;
                 }
 
-                TInt lengthToRead = common::min(
-                    static_cast<TInt>(arg_request->length()) - aStartOffset, info->iTargetLength);
+                std::int32_t lengthToRead = common::min(
+                    static_cast<std::int32_t>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
                 memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, lengthToRead);
                 return lengthToRead;
@@ -712,10 +697,10 @@ namespace eka2l1::epoc {
                 return epoc::error_bad_descriptor;
             }
 
-            TInt lengthToRead = common::min(
-                static_cast<TInt>(arg_request->length()) - aStartOffset, info->iTargetLength);
+            std::int32_t lengthToRead = common::min(
+                static_cast<std::int32_t>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
-            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const TUint8 *>(arg_request->data()) + aStartOffset * 2,
+            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const std::uint8_t *>(arg_request->data()) + aStartOffset * 2,
                 lengthToRead * 2);
 
             return lengthToRead;
@@ -770,7 +755,7 @@ namespace eka2l1::epoc {
         *info = std::move(process->get_sec_info());
     }
 
-    BRIDGE_FUNC(void, ProcessSecurityInfo, TInt aProcessHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
+    BRIDGE_FUNC(void, ProcessSecurityInfo, std::int32_t aProcessHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
         epoc::security_info *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
@@ -778,7 +763,7 @@ namespace eka2l1::epoc {
         query_security_info(&(*pr), sec_info);
     }
 
-    BRIDGE_FUNC(void, ThreadSecurityInfo, TInt aThreadHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
+    BRIDGE_FUNC(void, ThreadSecurityInfo, std::int32_t aThreadHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
         epoc::security_info *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
@@ -792,7 +777,7 @@ namespace eka2l1::epoc {
         query_security_info(thr->owning_process(), sec_info);
     }
 
-    BRIDGE_FUNC(void, MessageSecurityInfo, TInt aMessageHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
+    BRIDGE_FUNC(void, MessageSecurityInfo, std::int32_t aMessageHandle, eka2l1::ptr<epoc::security_info> aSecInfo) {
         epoc::security_info *sec_info = aSecInfo.get(sys->get_memory_system());
         kernel_system *kern = sys->get_kernel_system();
 
@@ -806,7 +791,7 @@ namespace eka2l1::epoc {
         query_security_info(msg->own_thr->owning_process(), sec_info);
     }
 
-    BRIDGE_FUNC(TInt, ServerCreate, eka2l1::ptr<desc8> aServerName, TInt aMode) {
+    BRIDGE_FUNC(std::int32_t, ServerCreate, eka2l1::ptr<desc8> aServerName, std::int32_t aMode) {
         kernel_system *kern = sys->get_kernel_system();
         kernel::process *crr_pr = std::move(kern->crr_process());
 
@@ -834,7 +819,7 @@ namespace eka2l1::epoc {
         return handle;
     }
 
-    BRIDGE_FUNC(void, ServerReceive, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, eka2l1::ptr<TAny> aDataPtr) {
+    BRIDGE_FUNC(void, ServerReceive, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, eka2l1::ptr<void> aDataPtr) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -849,7 +834,7 @@ namespace eka2l1::epoc {
         server->receive_async_lle(aRequestStatus, aDataPtr.cast<service::message2>());
     }
 
-    BRIDGE_FUNC(void, ServerCancel, TInt aHandle) {
+    BRIDGE_FUNC(void, ServerCancel, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -862,7 +847,7 @@ namespace eka2l1::epoc {
         server->cancel_async_lle();
     }
 
-    BRIDGE_FUNC(TInt, SessionCreate, eka2l1::ptr<desc8> aServerName, TInt aMsgSlot, eka2l1::ptr<void> aSec, TInt aMode) {
+    BRIDGE_FUNC(std::int32_t, SessionCreate, eka2l1::ptr<desc8> aServerName, std::int32_t aMsgSlot, eka2l1::ptr<void> aSec, std::int32_t aMode) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -887,11 +872,11 @@ namespace eka2l1::epoc {
         return handle;
     }
 
-    BRIDGE_FUNC(TInt, SessionShare, eka2l1::ptr<TInt> aHandle, TInt aShare) {
+    BRIDGE_FUNC(std::int32_t, SessionShare, eka2l1::ptr<std::int32_t> aHandle, std::int32_t aShare) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        TInt *handle = aHandle.get(mem);
+        std::int32_t *handle = aHandle.get(mem);
 
         session_ptr ss = kern->get<service::session>(*handle);
 
@@ -916,7 +901,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, SessionSendSync, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
+    BRIDGE_FUNC(std::int32_t, SessionSendSync, std::int32_t aHandle, std::int32_t aOrd, eka2l1::ptr<void> aIpcArgs,
         eka2l1::ptr<epoc::request_status> aStatus) {
         //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
@@ -925,7 +910,7 @@ namespace eka2l1::epoc {
 
         // Dispatch the header
         ipc_arg arg;
-        TInt *arg_header = aIpcArgs.cast<TInt>().get(mem);
+        std::int32_t *arg_header = aIpcArgs.cast<std::int32_t>().get(mem);
 
         if (aIpcArgs) {
             for (uint8_t i = 0; i < 4; i++) {
@@ -959,14 +944,14 @@ namespace eka2l1::epoc {
         return result;
     }
 
-    BRIDGE_FUNC(TInt, SessionSend, TInt aHandle, TInt aOrd, eka2l1::ptr<TAny> aIpcArgs,
+    BRIDGE_FUNC(std::int32_t, SessionSend, std::int32_t aHandle, std::int32_t aOrd, eka2l1::ptr<void> aIpcArgs,
         eka2l1::ptr<epoc::request_status> aStatus) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
         // Dispatch the header
         ipc_arg arg;
-        TInt *arg_header = aIpcArgs.cast<TInt>().get(mem);
+        std::int32_t *arg_header = aIpcArgs.cast<std::int32_t>().get(mem);
 
         if (aIpcArgs) {
             for (uint8_t i = 0; i < 4; i++) {
@@ -1024,19 +1009,19 @@ namespace eka2l1::epoc {
         LOG_TRACE("Leave trapped by trap handler.");
     }
 
-    BRIDGE_FUNC(TInt, DebugMask) {
+    BRIDGE_FUNC(std::int32_t, DebugMask) {
         return 0;
     }
 
-    BRIDGE_FUNC(void, SetDebugMask, TInt aDebugMask) {
+    BRIDGE_FUNC(void, SetDebugMask, std::int32_t aDebugMask) {
         // Doing nothing here
     }
 
-    BRIDGE_FUNC(TInt, DebugMaskIndex, TInt aIdx) {
+    BRIDGE_FUNC(std::int32_t, DebugMaskIndex, std::int32_t aIdx) {
         return 0;
     }
 
-    BRIDGE_FUNC(TInt, HalFunction, TInt aCagetory, TInt aFunc, eka2l1::ptr<TInt> a1, eka2l1::ptr<TInt> a2) {
+    BRIDGE_FUNC(std::int32_t, HalFunction, std::int32_t aCagetory, std::int32_t aFunc, eka2l1::ptr<std::int32_t> a1, eka2l1::ptr<std::int32_t> a2) {
         memory_system *mem = sys->get_memory_system();
 
         int *arg1 = a1.get(mem);
@@ -1049,11 +1034,11 @@ namespace eka2l1::epoc {
     /* CHUNK */
     /*********************************/
 
-    BRIDGE_FUNC(TInt, ChunkCreate, epoc::owner_type aOwnerType, eka2l1::ptr<desc8> aName, eka2l1::ptr<TChunkCreate> aChunkCreate) {
+    BRIDGE_FUNC(std::int32_t, ChunkCreate, epoc::owner_type aOwnerType, eka2l1::ptr<desc8> aName, eka2l1::ptr<epoc::chunk_create> aChunkCreate) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        TChunkCreate createInfo = *aChunkCreate.get(mem);
+        epoc::chunk_create createInfo = *aChunkCreate.get(mem);
         desc8 *name = aName.get(mem);
 
         kernel::chunk_type type = kernel::chunk_type::normal;
@@ -1062,20 +1047,20 @@ namespace eka2l1::epoc {
         prot perm = prot::read_write;
 
         // Fetch chunk type
-        if (createInfo.iAtt & TChunkCreate::EDisconnected) {
+        if (createInfo.att & epoc::chunk_create::disconnected) {
             type = kernel::chunk_type::disconnected;
-        } else if (createInfo.iAtt & TChunkCreate::EDoubleEnded) {
+        } else if (createInfo.att & epoc::chunk_create::double_ended) {
             type = kernel::chunk_type::double_ended;
         }
 
         // Fetch chunk access
-        if (createInfo.iAtt & TChunkCreate::EGlobal) {
+        if (createInfo.att & epoc::chunk_create::global) {
             access = kernel::chunk_access::global;
         } else {
             access = kernel::chunk_access::local;
         }
 
-        if (createInfo.iAtt & TChunkCreate::ECode) {
+        if (createInfo.att & epoc::chunk_create::code) {
             perm = prot::read_write_exec;
         }
 
@@ -1085,8 +1070,8 @@ namespace eka2l1::epoc {
 
         const kernel::handle handle = kern->create_and_add<kernel::chunk>(
                                               aOwnerType == epoc::owner_process ? kernel::owner_type::process : kernel::owner_type::thread,
-                                              sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", createInfo.iInitialBottom,
-                                              createInfo.iInitialTop, createInfo.iMaxSize, perm, type, access, att)
+                                              sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", createInfo.initial_bottom,
+                                              createInfo.initial_top, createInfo.max_size, perm, type, access, att)
                                           .first;
 
         if (handle == INVALID_HANDLE) {
@@ -1096,16 +1081,16 @@ namespace eka2l1::epoc {
         return handle;
     }
 
-    BRIDGE_FUNC(TInt, ChunkMaxSize, TInt aChunkHandle) {
+    BRIDGE_FUNC(std::int32_t, ChunkMaxSize, std::int32_t aChunkHandle) {
         chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
         if (!chunk) {
             return epoc::error_bad_handle;
         }
 
-        return static_cast<TInt>(chunk->max_size());
+        return static_cast<std::int32_t>(chunk->max_size());
     }
 
-    BRIDGE_FUNC(eka2l1::ptr<TUint8>, ChunkBase, TInt aChunkHandle) {
+    BRIDGE_FUNC(eka2l1::ptr<std::uint8_t>, ChunkBase, std::int32_t aChunkHandle) {
         chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
         if (!chunk) {
             return 0;
@@ -1114,7 +1099,7 @@ namespace eka2l1::epoc {
         return chunk->base();
     }
 
-    BRIDGE_FUNC(TInt, ChunkAdjust, TInt aChunkHandle, TInt aType, TInt a1, TInt a2) {
+    BRIDGE_FUNC(std::int32_t, ChunkAdjust, std::int32_t aChunkHandle, std::int32_t aType, std::int32_t a1, std::int32_t a2) {
         chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
 
         if (!chunk) {
@@ -1155,7 +1140,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(void, IMB_Range, eka2l1::ptr<void> aAddress, TUint32 aSize) {
+    BRIDGE_FUNC(void, IMB_Range, eka2l1::ptr<void> aAddress, std::uint32_t aSize) {
         sys->get_cpu()->imb_range(aAddress.ptr_address(), aSize);
     }
 
@@ -1163,7 +1148,7 @@ namespace eka2l1::epoc {
     /* SYNC PRIMITIVES  */
     /********************/
 
-    BRIDGE_FUNC(TInt, SemaphoreCreate, eka2l1::ptr<desc8> aSemaName, TInt aInitCount, epoc::owner_type aOwnerType) {
+    BRIDGE_FUNC(std::int32_t, SemaphoreCreate, eka2l1::ptr<desc8> aSemaName, std::int32_t aInitCount, epoc::owner_type aOwnerType) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1181,7 +1166,7 @@ namespace eka2l1::epoc {
         return sema;
     }
 
-    BRIDGE_FUNC(TInt, SemaphoreWait, TInt aSemaHandle, TInt aTimeout) {
+    BRIDGE_FUNC(std::int32_t, SemaphoreWait, std::int32_t aSemaHandle, std::int32_t aTimeout) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1199,7 +1184,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(void, SemaphoreSignal, TInt aSemaHandle) {
+    BRIDGE_FUNC(void, SemaphoreSignal, std::int32_t aSemaHandle) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1212,7 +1197,7 @@ namespace eka2l1::epoc {
         sema->signal(1);
     }
 
-    BRIDGE_FUNC(void, SemaphoreSignalN, TInt aSemaHandle, TInt aSigCount) {
+    BRIDGE_FUNC(void, SemaphoreSignalN, std::int32_t aSemaHandle, std::int32_t aSigCount) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1225,7 +1210,7 @@ namespace eka2l1::epoc {
         sema->signal(aSigCount);
     }
 
-    BRIDGE_FUNC(TInt, MutexCreate, eka2l1::ptr<desc8> aMutexName, epoc::owner_type aOwnerType) {
+    BRIDGE_FUNC(std::int32_t, MutexCreate, eka2l1::ptr<desc8> aMutexName, epoc::owner_type aOwnerType) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1244,7 +1229,7 @@ namespace eka2l1::epoc {
         return mut;
     }
 
-    BRIDGE_FUNC(TInt, MutexWait, TInt aMutexHandle) {
+    BRIDGE_FUNC(std::int32_t, MutexWait, std::int32_t aMutexHandle) {
         kernel_system *kern = sys->get_kernel_system();
         mutex_ptr mut = kern->get<kernel::mutex>(aMutexHandle);
 
@@ -1256,7 +1241,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, MutexWaitVer2, TInt aMutexHandle, TInt aTimeout) {
+    BRIDGE_FUNC(std::int32_t, MutexWaitVer2, std::int32_t aMutexHandle, std::int32_t aTimeout) {
         kernel_system *kern = sys->get_kernel_system();
         mutex_ptr mut = kern->get<kernel::mutex>(aMutexHandle);
 
@@ -1279,7 +1264,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(void, MutexSignal, TInt aHandle) {
+    BRIDGE_FUNC(void, MutexSignal, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         mutex_ptr mut = kern->get<kernel::mutex>(aHandle);
 
@@ -1304,7 +1289,7 @@ namespace eka2l1::epoc {
     /* Thread independent */
     /**********************************************/
 
-    BRIDGE_FUNC(TInt, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<epoc::find_handle> aHandleFind) {
+    BRIDGE_FUNC(std::int32_t, ObjectNext, TObjectType aObjectType, eka2l1::ptr<des8> aName, eka2l1::ptr<epoc::find_handle> aHandleFind) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1329,7 +1314,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, HandleClose, TInt aHandle) {
+    BRIDGE_FUNC(std::int32_t, HandleClose, std::int32_t aHandle) {
         if (aHandle & 0x8000) {
             return epoc::error_general;
         }
@@ -1339,7 +1324,7 @@ namespace eka2l1::epoc {
         return res;
     }
 
-    BRIDGE_FUNC(TInt, HandleDuplicate, TInt aThreadHandle, epoc::owner_type aOwnerType, TInt aDupHandle) {
+    BRIDGE_FUNC(std::int32_t, HandleDuplicate, std::int32_t aThreadHandle, epoc::owner_type aOwnerType, std::int32_t aDupHandle) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1349,7 +1334,7 @@ namespace eka2l1::epoc {
         return res;
     }
 
-    BRIDGE_FUNC(TInt, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<epoc::desc8> aName, TInt aOwnerType) {
+    BRIDGE_FUNC(std::int32_t, HandleOpenObject, TObjectType aObjectType, eka2l1::ptr<epoc::desc8> aName, std::int32_t aOwnerType) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1374,7 +1359,7 @@ namespace eka2l1::epoc {
         return epoc::error_general;
     }
 
-    BRIDGE_FUNC(void, HandleName, TInt aHandle, eka2l1::ptr<des8> aName) {
+    BRIDGE_FUNC(void, HandleName, std::int32_t aHandle, eka2l1::ptr<des8> aName) {
         kernel_system *kern = sys->get_kernel_system();
         kernel_obj_ptr obj = kern->get_kernel_obj_raw(aHandle);
 
@@ -1386,7 +1371,7 @@ namespace eka2l1::epoc {
         desname->assign(kern->crr_process(), obj->name());
     }
 
-    BRIDGE_FUNC(void, HandleFullName, TInt aHandle, eka2l1::ptr<des8> aFullname) {
+    BRIDGE_FUNC(void, HandleFullName, std::int32_t aHandle, eka2l1::ptr<des8> aFullname) {
         kernel_system *kern = sys->get_kernel_system();
         kernel_obj_ptr obj = kern->get_kernel_obj_raw(aHandle);
 
@@ -1406,35 +1391,35 @@ namespace eka2l1::epoc {
     /* CODE SEGMENT */
     /*****************************/
 
-    BRIDGE_FUNC(TInt, StaticCallList, eka2l1::ptr<TInt> aTotal, eka2l1::ptr<TUint32> aList) {
+    BRIDGE_FUNC(std::int32_t, StaticCallList, eka2l1::ptr<std::int32_t> aTotal, eka2l1::ptr<std::uint32_t> aList) {
         memory_system *mem = sys->get_memory_system();
 
-        TUint32 *list_ptr = aList.get(mem);
-        TInt *total = aTotal.get(mem);
+        std::uint32_t *list_ptr = aList.get(mem);
+        std::int32_t *total = aTotal.get(mem);
 
         std::vector<uint32_t> list;
         sys->get_kernel_system()->crr_process()->get_codeseg()->queries_call_list(list);
 
-        *total = static_cast<TInt>(list.size());
-        memcpy(list_ptr, list.data(), sizeof(TUint32) * *total);
+        *total = static_cast<std::int32_t>(list.size());
+        memcpy(list_ptr, list.data(), sizeof(std::uint32_t) * *total);
 
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, WaitDllLock) {
+    BRIDGE_FUNC(std::int32_t, WaitDllLock) {
         sys->get_kernel_system()->crr_process()->wait_dll_lock();
 
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, ReleaseDllLock) {
+    BRIDGE_FUNC(std::int32_t, ReleaseDllLock) {
         sys->get_kernel_system()->crr_process()->signal_dll_lock(
             sys->get_kernel_system()->crr_thread());
 
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, LibraryAttach, TInt aHandle, eka2l1::ptr<TInt> aNumEps, eka2l1::ptr<TUint32> aEpList) {
+    BRIDGE_FUNC(std::int32_t, LibraryAttach, std::int32_t aHandle, eka2l1::ptr<std::int32_t> aNumEps, eka2l1::ptr<std::uint32_t> aEpList) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1446,7 +1431,7 @@ namespace eka2l1::epoc {
 
         std::vector<uint32_t> entries = lib->attach(kern->crr_process());
 
-        *aNumEps.get(mem) = static_cast<TInt>(entries.size());
+        *aNumEps.get(mem) = static_cast<std::int32_t>(entries.size());
 
         for (size_t i = 0; i < entries.size(); i++) {
             (aEpList.get(mem))[i] = entries[i];
@@ -1455,7 +1440,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, LibraryLookup, TInt aHandle, TInt aOrdinalIndex) {
+    BRIDGE_FUNC(std::int32_t, LibraryLookup, std::int32_t aHandle, std::int32_t aOrdinalIndex) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1475,7 +1460,7 @@ namespace eka2l1::epoc {
         return *func_addr;
     }
 
-    BRIDGE_FUNC(TInt, LibraryAttached, TInt aHandle) {
+    BRIDGE_FUNC(std::int32_t, LibraryAttached, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1498,7 +1483,7 @@ namespace eka2l1::epoc {
     /* USER SERVER */
     /***********************/
 
-    BRIDGE_FUNC(TInt, UserSvrRomHeaderAddress) {
+    BRIDGE_FUNC(std::int32_t, UserSvrRomHeaderAddress) {
         // EKA1
         if ((int)sys->get_kernel_system()->get_epoc_version() <= (int)epocver::epoc6) {
             return 0x50000000;
@@ -1508,7 +1493,7 @@ namespace eka2l1::epoc {
         return 0x80000000;
     }
 
-    BRIDGE_FUNC(TInt, UserSvrRomRootDirAddress) {
+    BRIDGE_FUNC(std::int32_t, UserSvrRomRootDirAddress) {
         return sys->get_rom_info()->header.rom_root_dir_list;
     }
 
@@ -1538,7 +1523,7 @@ namespace eka2l1::epoc {
     static_assert(sizeof(thread_create_info_expand) == 64,
         "Thread create info struct size invalid");
 
-    BRIDGE_FUNC(TInt, ThreadCreate, eka2l1::ptr<desc8> aThreadName, epoc::owner_type aOwnerType, eka2l1::ptr<thread_create_info_expand> aInfo) {
+    BRIDGE_FUNC(std::int32_t, ThreadCreate, eka2l1::ptr<desc8> aThreadName, epoc::owner_type aOwnerType, eka2l1::ptr<thread_create_info_expand> aInfo) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1562,11 +1547,11 @@ namespace eka2l1::epoc {
         return thr_handle;
     }
 
-    BRIDGE_FUNC(TInt, LastThreadHandle) {
+    BRIDGE_FUNC(std::int32_t, LastThreadHandle) {
         return sys->get_kernel_system()->crr_thread()->last_handle();
     }
 
-    BRIDGE_FUNC(TInt, ThreadID, TInt aHandle) {
+    BRIDGE_FUNC(std::int32_t, ThreadID, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
@@ -1574,10 +1559,10 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        return static_cast<TInt>(thr->unique_id());
+        return static_cast<std::int32_t>(thr->unique_id());
     }
 
-    BRIDGE_FUNC(TInt, ThreadKill, TInt aHandle, TExitType aExitType, TInt aReason, eka2l1::ptr<desc8> aReasonDes) {
+    BRIDGE_FUNC(std::int32_t, ThreadKill, std::int32_t aHandle, TExitType aExitType, std::int32_t aReason, eka2l1::ptr<desc8> aReasonDes) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1635,7 +1620,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(void, ThreadRequestSignal, TInt aHandle) {
+    BRIDGE_FUNC(void, ThreadRequestSignal, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1648,7 +1633,7 @@ namespace eka2l1::epoc {
         thr->signal_request();
     }
 
-    BRIDGE_FUNC(TInt, ThreadRename, TInt aHandle, eka2l1::ptr<desc8> aName) {
+    BRIDGE_FUNC(std::int32_t, ThreadRename, std::int32_t aHandle, eka2l1::ptr<desc8> aName) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1668,7 +1653,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, ThreadProcess, TInt aHandle) {
+    BRIDGE_FUNC(std::int32_t, ThreadProcess, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
@@ -1676,7 +1661,7 @@ namespace eka2l1::epoc {
             kernel::owner_type::thread);
     }
 
-    BRIDGE_FUNC(void, ThreadSetPriority, TInt aHandle, TInt aThreadPriority) {
+    BRIDGE_FUNC(void, ThreadSetPriority, std::int32_t aHandle, std::int32_t aThreadPriority) {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
@@ -1687,7 +1672,7 @@ namespace eka2l1::epoc {
         thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(aThreadPriority));
     }
 
-    BRIDGE_FUNC(void, ThreadResume, TInt aHandle) {
+    BRIDGE_FUNC(void, ThreadResume, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
@@ -1709,7 +1694,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    BRIDGE_FUNC(void, ThreadSuspend, TInt aHandle) {
+    BRIDGE_FUNC(void, ThreadSuspend, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
@@ -1739,7 +1724,7 @@ namespace eka2l1::epoc {
         std::uint32_t dacr;
     };
 
-    BRIDGE_FUNC(void, ThreadContext, TInt aHandle, eka2l1::ptr<des8> aContext) {
+    BRIDGE_FUNC(void, ThreadContext, std::int32_t aHandle, eka2l1::ptr<des8> aContext) {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
@@ -1767,11 +1752,11 @@ namespace eka2l1::epoc {
         ctx_epoc_des->assign(kern->crr_process(), ctx_epoc_str);
     }
 
-    BRIDGE_FUNC(void, ThreadRendezvous, TInt aReason) {
+    BRIDGE_FUNC(void, ThreadRendezvous, std::int32_t aReason) {
         sys->get_kernel_system()->crr_thread()->rendezvous(aReason);
     }
 
-    BRIDGE_FUNC(void, ThreadLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(void, ThreadLogon, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, bool aRendezvous) {
         thread_ptr thr = sys->get_kernel_system()->get<kernel::thread>(aHandle);
 
         if (!thr) {
@@ -1781,7 +1766,7 @@ namespace eka2l1::epoc {
         thr->logon(aRequestSts, aRendezvous);
     }
 
-    BRIDGE_FUNC(TInt, ThreadLogonCancel, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, TBool aRendezvous) {
+    BRIDGE_FUNC(std::int32_t, ThreadLogonCancel, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestSts, bool aRendezvous) {
         thread_ptr thr = sys->get_kernel_system()->get<kernel::thread>(aHandle);
 
         if (!thr) {
@@ -1797,7 +1782,7 @@ namespace eka2l1::epoc {
         return epoc::error_general;
     }
 
-    BRIDGE_FUNC(void, ThreadSetFlags, TInt aHandle, TUint aClearMask, TUint aSetMask) {
+    BRIDGE_FUNC(void, ThreadSetFlags, std::int32_t aHandle, std::uint32_t aClearMask, std::uint32_t aSetMask) {
         kernel_system *kern = sys->get_kernel_system();
 
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
@@ -1813,7 +1798,7 @@ namespace eka2l1::epoc {
     /* PROPERTY */
     /****************************/
 
-    BRIDGE_FUNC(TInt, PropertyFindGetInt, TInt aCage, TInt aKey, eka2l1::ptr<TInt> aValue) {
+    BRIDGE_FUNC(std::int32_t, PropertyFindGetInt, std::int32_t aCage, std::int32_t aKey, eka2l1::ptr<std::int32_t> aValue) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1824,13 +1809,13 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        TInt *val_ptr = aValue.get(mem);
+        std::int32_t *val_ptr = aValue.get(mem);
         *val_ptr = prop->get_int();
 
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, PropertyFindGetBin, TInt aCage, TInt aKey, eka2l1::ptr<TUint8> aData, TInt aDataLength) {
+    BRIDGE_FUNC(std::int32_t, PropertyFindGetBin, std::int32_t aCage, std::int32_t aKey, eka2l1::ptr<std::uint8_t> aData, std::int32_t aDataLength) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1841,11 +1826,11 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        TUint8 *data_ptr = aData.get(mem);
+        std::uint8_t *data_ptr = aData.get(mem);
         auto data_vec = prop->get_bin();
 
         const std::size_t size_to_copy = std::min<std::size_t>(data_vec.size(), aDataLength);
-        TInt return_code = epoc::error_none;
+        std::int32_t return_code = epoc::error_none;
 
         if (data_vec.size() > aDataLength) {
             // The given buffer can't hold ours.
@@ -1862,7 +1847,7 @@ namespace eka2l1::epoc {
         return aDataLength;
     }
 
-    BRIDGE_FUNC(TInt, PropertyAttach, TInt aCagetory, TInt aValue, epoc::owner_type aOwnerType) {
+    BRIDGE_FUNC(std::int32_t, PropertyAttach, std::int32_t aCagetory, std::int32_t aValue, epoc::owner_type aOwnerType) {
         kernel_system *kern = sys->get_kernel_system();
         property_ptr prop = kern->get_prop(aCagetory, aValue);
 
@@ -1884,7 +1869,7 @@ namespace eka2l1::epoc {
         return kern->mirror(prop, static_cast<kernel::owner_type>(aOwnerType));
     }
 
-    BRIDGE_FUNC(TInt, PropertyDefine, TInt aCagetory, TInt aKey, eka2l1::ptr<TPropertyInfo> aPropertyInfo) {
+    BRIDGE_FUNC(std::int32_t, PropertyDefine, std::int32_t aCagetory, std::int32_t aKey, eka2l1::ptr<TPropertyInfo> aPropertyInfo) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1892,13 +1877,13 @@ namespace eka2l1::epoc {
 
         service::property_type prop_type;
 
-        switch (info->iType) {
-        case EInt:
+        switch (info->type) {
+        case property_type_int:
             prop_type = service::property_type::int_data;
             break;
 
-        case ELargeByteArray:
-        case EByteArray:
+        case property_type_large_byte_array:
+        case property_type_byte_array:
             prop_type = service::property_type::bin_data;
             break;
 
@@ -1924,12 +1909,12 @@ namespace eka2l1::epoc {
             prop->second = aKey;
         }
 
-        prop->define(prop_type, info->iSize);
+        prop->define(prop_type, info->size);
 
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(void, PropertySubscribe, TInt aPropertyHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
+    BRIDGE_FUNC(void, PropertySubscribe, std::int32_t aPropertyHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
         kernel_system *kern = sys->get_kernel_system();
         property_ptr prop = kern->get<service::property>(aPropertyHandle);
 
@@ -1940,7 +1925,7 @@ namespace eka2l1::epoc {
         prop->subscribe(aRequestStatus);
     }
 
-    BRIDGE_FUNC(void, PropertyCancel, TInt aPropertyHandle) {
+    BRIDGE_FUNC(void, PropertyCancel, std::int32_t aPropertyHandle) {
         kernel_system *kern = sys->get_kernel_system();
         property_ptr prop = kern->get<service::property>(aPropertyHandle);
 
@@ -1953,7 +1938,7 @@ namespace eka2l1::epoc {
         return;
     }
 
-    BRIDGE_FUNC(TInt, PropertySetInt, TInt aHandle, TInt aValue) {
+    BRIDGE_FUNC(std::int32_t, PropertySetInt, std::int32_t aHandle, std::int32_t aValue) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1972,7 +1957,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, PropertySetBin, TInt aHandle, TInt aSize, eka2l1::ptr<TUint8> aDataPtr) {
+    BRIDGE_FUNC(std::int32_t, PropertySetBin, std::int32_t aHandle, std::int32_t aSize, eka2l1::ptr<std::uint8_t> aDataPtr) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -1991,7 +1976,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, PropertyGetInt, TInt aHandle, eka2l1::ptr<TInt> aValuePtr) {
+    BRIDGE_FUNC(std::int32_t, PropertyGetInt, std::int32_t aHandle, eka2l1::ptr<std::int32_t> aValuePtr) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -2010,7 +1995,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, PropertyGetBin, TInt aHandle, eka2l1::ptr<TUint8> aDataPtr, TInt aSize) {
+    BRIDGE_FUNC(std::int32_t, PropertyGetBin, std::int32_t aHandle, eka2l1::ptr<std::uint8_t> aDataPtr, std::int32_t aSize) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -2027,7 +2012,7 @@ namespace eka2l1::epoc {
         }
 
         const std::size_t size_to_copy = std::min<std::size_t>(dat.size(), aSize);
-        TInt return_code = epoc::error_none;
+        std::int32_t return_code = epoc::error_none;
 
         if (dat.size() > aSize) {
             // The given buffer can't hold ours.
@@ -2044,7 +2029,7 @@ namespace eka2l1::epoc {
         return aSize;
     }
 
-    BRIDGE_FUNC(TInt, PropertyFindSetInt, TInt aCage, TInt aKey, TInt aValue) {
+    BRIDGE_FUNC(std::int32_t, PropertyFindSetInt, std::int32_t aCage, std::int32_t aKey, std::int32_t aValue) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -2063,7 +2048,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(TInt, PropertyFindSetBin, TInt aCage, TInt aKey, eka2l1::ptr<TUint8> aDataPtr, TInt aSize) {
+    BRIDGE_FUNC(std::int32_t, PropertyFindSetBin, std::int32_t aCage, std::int32_t aKey, eka2l1::ptr<std::uint8_t> aDataPtr, std::int32_t aSize) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
@@ -2085,7 +2070,7 @@ namespace eka2l1::epoc {
     /**********************/
     /* TIMER */
     /*********************/
-    BRIDGE_FUNC(TInt, TimerCreate) {
+    BRIDGE_FUNC(std::int32_t, TimerCreate) {
         return sys->get_kernel_system()->create_and_add<kernel::timer>(
                                            kernel::owner_type::process, sys->get_timing_system(),
                                            "timer" + common::to_string(eka2l1::random()))
@@ -2098,7 +2083,7 @@ namespace eka2l1::epoc {
     * In emulator, it's the same, so i implement it as TimerAffter.
     */
 
-    BRIDGE_FUNC(void, TimerAfter, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TInt aMicroSeconds) {
+    BRIDGE_FUNC(void, TimerAfter, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, std::int32_t aMicroSeconds) {
         kernel_system *kern = sys->get_kernel_system();
         timer_ptr timer = kern->get<kernel::timer>(aHandle);
 
@@ -2109,7 +2094,7 @@ namespace eka2l1::epoc {
         timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSeconds);
     }
 
-    BRIDGE_FUNC(void, TimerAtUtc, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, TUint64 aMicroSecondsAt) {
+    BRIDGE_FUNC(void, TimerAtUtc, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, std::uint64_t aMicroSecondsAt) {
         kernel_system *kern = sys->get_kernel_system();
         timer_ptr timer = kern->get<kernel::timer>(aHandle);
 
@@ -2120,7 +2105,7 @@ namespace eka2l1::epoc {
         timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSecondsAt - std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - ad_epoc_dist_microsecs);
     }
 
-    BRIDGE_FUNC(void, TimerCancel, TInt aHandle) {
+    BRIDGE_FUNC(void, TimerCancel, std::int32_t aHandle) {
         kernel_system *kern = sys->get_kernel_system();
         timer_ptr timer = kern->get<kernel::timer>(aHandle);
 
@@ -2134,11 +2119,11 @@ namespace eka2l1::epoc {
     /**********************/
     /* CHANGE NOTIFIER */
     /**********************/
-    BRIDGE_FUNC(TInt, ChangeNotifierCreate, epoc::owner_type aOwner) {
+    BRIDGE_FUNC(std::int32_t, ChangeNotifierCreate, epoc::owner_type aOwner) {
         return sys->get_kernel_system()->create_and_add<kernel::change_notifier>(static_cast<kernel::owner_type>(aOwner)).first;
     }
 
-    BRIDGE_FUNC(TInt, ChangeNotifierLogon, TInt aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
+    BRIDGE_FUNC(std::int32_t, ChangeNotifierLogon, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -2159,13 +2144,13 @@ namespace eka2l1::epoc {
 
     /* DEBUG AND SECURITY */
 
-    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, TInt aMode) {
+    BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, std::int32_t aMode) {
         LOG_TRACE("{}",
             aDes.get(sys->get_memory_system())->to_std_string(sys->get_kernel_system()->crr_process()));
     }
 
     // Let all pass for now
-    BRIDGE_FUNC(TInt, PlatSecDiagnostic, eka2l1::ptr<TAny> aPlatSecInfo) {
+    BRIDGE_FUNC(std::int32_t, PlatSecDiagnostic, eka2l1::ptr<void> aPlatSecInfo) {
         return epoc::error_none;
     }
 
@@ -2183,27 +2168,27 @@ namespace eka2l1::epoc {
     /* ATOMIC OPERATION */
     /* TODO: Use host atomic function when multi-core available */
     struct SAtomicOpInfo32 {
-        TAny *iA;
+        void *iA;
         union {
-            TAny *iQ;
-            TUint32 i0;
+            void *iQ;
+            std::uint32_t i0;
         };
 
-        TUint32 i1;
-        TUint32 i2;
+        std::uint32_t i1;
+        std::uint32_t i2;
     };
 
-    BRIDGE_FUNC(TInt32, SafeInc32, eka2l1::ptr<TInt32> aVal) {
-        TInt32 *val = aVal.get(sys->get_memory_system());
-        TInt32 org_val = *val;
+    BRIDGE_FUNC(std::int32_t, SafeInc32, eka2l1::ptr<std::int32_t> aVal) {
+        std::int32_t *val = aVal.get(sys->get_memory_system());
+        std::int32_t org_val = *val;
         *val > 0 ? val++ : 0;
 
         return org_val;
     }
 
-    BRIDGE_FUNC(TInt32, SafeDec32, eka2l1::ptr<TInt32> aVal) {
-        TInt32 *val = aVal.get(sys->get_memory_system());
-        TInt32 org_val = *val;
+    BRIDGE_FUNC(std::int32_t, SafeDec32, eka2l1::ptr<std::int32_t> aVal) {
+        std::int32_t *val = aVal.get(sys->get_memory_system());
+        std::int32_t org_val = *val;
         *val > 0 ? val-- : 0;
 
         return org_val;
@@ -2228,11 +2213,11 @@ namespace eka2l1::epoc {
     }
 
     /*
-    BRIDGE_FUNC(TInt32, AtomicTas32, eka2l1::ptr<SAtomicOpInfo32> aAtomicInfo) {
+    BRIDGE_FUNC(std::int32_t, AtomicTas32, eka2l1::ptr<SAtomicOpInfo32> aAtomicInfo) {
         SAtomicOpInfo32 *info = aAtomicInfo.get(sys->get_memory_system());
 
-        TInt32 *A = reinterpret_cast<TInt32*>(info->iA);
-        TInt32 old = *A;
+        std::int32_t *A = reinterpret_cast<std::int32_t*>(info->iA);
+        std::int32_t old = *A;
 
         (*A >= info->i0) ? (*A += info->i1) : (*A += info->i2);
 
