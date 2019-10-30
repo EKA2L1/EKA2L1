@@ -40,6 +40,7 @@
 #include <epoc/services/sms/sa/sa.h>
 #include <epoc/services/ui/eikappui.h>
 #include <epoc/services/ui/oom_app.h>
+#include <epoc/services/ui/view.h>
 #include <epoc/services/window/window.h>
 
 #include <e32lang.h>
@@ -278,6 +279,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, applist_server);
             CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, hwrm_server);
+            CREATE_SERVER(sys, view_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);

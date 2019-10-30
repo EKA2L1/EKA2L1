@@ -141,6 +141,7 @@ add_library(epocservs
     include/epoc/services/sms/sa/sa.h
     include/epoc/services/ui/eikappui.h
     include/epoc/services/ui/oom_app.h
+    include/epoc/services/ui/view.h
     include/epoc/services/window/bitmap_cache.h
     include/epoc/services/window/scheduler.h
     include/epoc/services/window/screen.h
@@ -200,6 +201,7 @@ add_library(epocservs
     src/services/sms/sa/sa.cpp
     src/services/ui/eikappui.cpp
     src/services/ui/oom_app.cpp
+    src/services/ui/view.cpp
     src/services/window/classes/plugins/animdll.cpp
     src/services/window/classes/plugins/clickdll.cpp
     src/services/window/classes/plugins/sprite.cpp
