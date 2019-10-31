@@ -31,11 +31,22 @@ namespace eka2l1 {
     }
     
     view_session::view_session(service::typical_server *server, const service::uid session_uid) 
-        : service::typical_session(server, session_uid) {
+        : service::typical_session(server, session_uid)
+        , to_panic(nullptr) {
     }
 
+    void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
+        to_panic = ctx->msg;
+        ctx->auto_free = false;
+    }
+    
     void view_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case view_opcode_async_msg_for_client_to_panic: {
+            async_message_for_client_to_panic_with(ctx);
+            break;
+        }
+
         default:
             LOG_ERROR("Unimplemented view session opcode {}", ctx->msg->function);
             break;
