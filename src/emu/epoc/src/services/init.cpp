@@ -40,7 +40,7 @@
 #include <epoc/services/sms/sa/sa.h>
 #include <epoc/services/ui/eikappui.h>
 #include <epoc/services/ui/oom_app.h>
-#include <epoc/services/ui/view.h>
+#include <epoc/services/ui/view/view.h>
 #include <epoc/services/window/window.h>
 
 #include <e32lang.h>

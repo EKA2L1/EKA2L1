@@ -20,6 +20,10 @@
 #pragma once
 
 #include <epoc/services/framework.h>
+#include <epoc/services/ui/view/common.h>
+#include <epoc/services/ui/view/queue.h>
+
+#include <vector>
 
 namespace eka2l1 {
     class io_system;
@@ -53,13 +57,19 @@ namespace eka2l1 {
         view_opcode_set_background_color = 21,
         view_opcode_current_active_view_id = 22
     };
-
+   
     class view_session: public service::typical_session {
         ipc_msg_ptr to_panic_;
+        ui::view::event_queue queue_;
+        epoc::uid app_uid_;
+
+        std::vector<ui::view::view_id> ids_;
 
     public:
         void async_message_for_client_to_panic_with(service::ipc_context *ctx);
         void get_priority(service::ipc_context *ctx);
+        void add_view(service::ipc_context *ctx);
+        void request_view_event(service::ipc_context *ctx);
 
         explicit view_session(service::typical_server *server, const service::uid session_uid);
         void fetch(service::ipc_context *ctx) override;

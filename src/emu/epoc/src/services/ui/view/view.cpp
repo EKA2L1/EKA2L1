@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/ui/view.h>
+#include <epoc/services/ui/view/view.h>
 #include <epoc/loader/rsc.h>
 #include <common/log.h>
 
@@ -75,9 +75,31 @@ namespace eka2l1 {
     
     view_session::view_session(service::typical_server *server, const service::uid session_uid) 
         : service::typical_session(server, session_uid)
-        , to_panic_(nullptr) {
+        , to_panic_(nullptr)
+        , app_uid_(0) {
     }
 
+    void view_session::add_view(service::ipc_context *ctx) {
+        std::optional<ui::view::view_id> id = ctx->get_arg_packed<ui::view::view_id>(0);
+
+        if (!id) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        if (app_uid_ == 0) {
+            app_uid_ = id->app_uid;
+        } else {
+            if (app_uid_ != id->app_uid) {
+                ctx->set_request_status(epoc::error_argument);
+                return;
+            }
+        }
+
+        ids_.push_back(id.value());
+        ctx->set_request_status(epoc::error_none);
+    }
+    
     void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
         to_panic_ = ctx->msg;
         ctx->auto_free = false;
