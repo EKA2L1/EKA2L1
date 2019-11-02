@@ -20,6 +20,10 @@
 #include <epoc/services/ui/view/queue.h>
 
 namespace eka2l1::ui::view {
+    event_queue::event_queue()
+        : buffer_(nullptr) {
+    }
+    
     static void complete_write_and_notify_event(epoc::notify_info &info, std::uint8_t *dest_buffer,
         const view_event &evt) {
         // Just notify please
@@ -44,13 +48,9 @@ namespace eka2l1::ui::view {
     }
 
     bool event_queue::hear(epoc::notify_info info, std::uint8_t *buffer) {
-        if (!buffer || info.empty()) {
-            return false;
-        }
-
         const std::lock_guard<std::mutex> guard(lock_);
 
-        if (!nof_info_.empty()) {
+        if (!nof_info_.empty() || buffer_) {
             // Previous not finish, not allowed
             return false;
         }
@@ -65,5 +65,6 @@ namespace eka2l1::ui::view {
 
         // Queue this nof
         nof_info_ = info;
+        return true;
     }
 }

@@ -99,6 +99,24 @@ namespace eka2l1 {
         ids_.push_back(id.value());
         ctx->set_request_status(epoc::error_none);
     }
+
+    void view_session::request_view_event(service::ipc_context *ctx) {
+        const std::size_t event_buf_size = ctx->get_arg_size(0);
+
+        if (event_buf_size < sizeof(ui::view::view_event)) {
+            LOG_ERROR("Size of view event buffer is not sufficent enough!");
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        std::uint8_t *event_buf = ctx->get_arg_ptr(0);
+        epoc::notify_info nof_info(ctx->msg->request_sts, ctx->msg->own_thr);
+
+        if (!queue_.hear(nof_info, event_buf)) {
+            ctx->set_request_status(epoc::error_already_exists);
+            return;     // TODO: We can panic. It's allowed.
+        }
+    }
     
     void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
         to_panic_ = ctx->msg;
@@ -120,6 +138,16 @@ namespace eka2l1 {
 
         case view_opcode_priority: {
             get_priority(ctx);
+            break;
+        }
+
+        case view_opcode_request_view_event: {
+            request_view_event(ctx);
+            break;
+        }
+
+        case view_opcode_add_view: {
+            add_view(ctx);
             break;
         }
 
