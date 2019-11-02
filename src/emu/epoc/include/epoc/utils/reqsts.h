@@ -65,6 +65,10 @@ namespace eka2l1::epoc {
         void complete(int err_code);
         void do_state(common::chunkyseri &seri);
 
+        bool empty() const {
+            return !sts;
+        }
+
         const bool operator == (const notify_info &rhs) const {
             return (sts == rhs.sts) && (requester == rhs.requester);
         }
