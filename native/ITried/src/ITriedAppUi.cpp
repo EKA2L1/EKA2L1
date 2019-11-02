@@ -63,6 +63,8 @@ void CITriedAppUi::ConstructL() {
     outputFileStream << KText;
 
     CleanupStack::PopAndDestroy(2); // outputFileStream, file
+    
+    RDebug::Printf("CITriedAppUi constructed successfully");
 }
 // -----------------------------------------------------------------------------
 // CITriedAppUi::CITriedAppUi()
@@ -91,6 +93,8 @@ CITriedAppUi::~CITriedAppUi() {
 // -----------------------------------------------------------------------------
 //
 void CITriedAppUi::HandleCommandL(TInt aCommand) {
+    RDebug::Printf("Handling command %d for UI", aCommand);
+    
     switch (aCommand) {
     case EEikCmdExit:
     case EAknSoftkeyExit:
