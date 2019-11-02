@@ -40,7 +40,7 @@ namespace eka2l1::epoc {
         uint32_t uid1;
         uint32_t uid2;
         uint32_t uid3;
-        owner_type owner_type;
+        eka2l1::epoc::owner_type owner_type;
         int handle;
         uint32_t secure_id;
         uint32_t requested_version;
