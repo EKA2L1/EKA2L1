@@ -22,6 +22,8 @@
 #include <epoc/services/framework.h>
 
 namespace eka2l1 {
+    class io_system;
+
     namespace kernel {
         class thread;
     }
@@ -53,18 +55,32 @@ namespace eka2l1 {
     };
 
     class view_session: public service::typical_session {
-        ipc_msg_ptr to_panic;
+        ipc_msg_ptr to_panic_;
 
     public:
         void async_message_for_client_to_panic_with(service::ipc_context *ctx);
+        void get_priority(service::ipc_context *ctx);
 
         explicit view_session(service::typical_server *server, const service::uid session_uid);
         void fetch(service::ipc_context *ctx) override;
     };
 
     class view_server: public service::typical_server {
+        std::uint32_t priority_;
+        std::uint8_t flags_;
+
+        enum flags {
+            flag_inited = 1 << 0
+        };
+
     public:
         explicit view_server(system *sys);
         void connect(service::ipc_context &ctx) override;
+        
+        bool init(io_system *io);
+
+        const std::uint32_t priority() const {
+            return priority_;
+        }
     };
 };
