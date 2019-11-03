@@ -342,7 +342,9 @@ namespace eka2l1::epoc {
 
             // When a window actives, a redraw is needed
             // Redraw happens with all of the screen
-            [[fallthrough]];
+            // NOTE: This causes error. Let's not touch them.
+            //[[fallthrough]];
+            break;
         }
 
         case EWsWinOpInvalidateFull: {
