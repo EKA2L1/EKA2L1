@@ -65,6 +65,8 @@ namespace eka2l1::ui::view {
 
         // Queue this nof
         nof_info_ = info;
+        buffer_ = buffer;
+        
         return true;
     }
 }

@@ -57,19 +57,23 @@ namespace eka2l1 {
         view_opcode_set_background_color = 21,
         view_opcode_current_active_view_id = 22
     };
-   
+
+    using custom_message = std::vector<std::uint8_t>;
+
     class view_session: public service::typical_session {
         ipc_msg_ptr to_panic_;
         ui::view::event_queue queue_;
         epoc::uid app_uid_;
 
         std::vector<ui::view::view_id> ids_;
+        std::queue<custom_message> customs_;
 
     public:
         void async_message_for_client_to_panic_with(service::ipc_context *ctx);
         void get_priority(service::ipc_context *ctx);
         void add_view(service::ipc_context *ctx);
         void request_view_event(service::ipc_context *ctx);
+        void active_view(service::ipc_context *ctx, const bool /*should_complete*/);
 
         explicit view_session(service::typical_server *server, const service::uid session_uid);
         void fetch(service::ipc_context *ctx) override;
@@ -83,6 +87,8 @@ namespace eka2l1 {
             flag_inited = 1 << 0
         };
 
+        ui::view::view_id active_;
+
     public:
         explicit view_server(system *sys);
         void connect(service::ipc_context &ctx) override;
@@ -91,6 +97,14 @@ namespace eka2l1 {
 
         const std::uint32_t priority() const {
             return priority_;
+        }
+
+        ui::view::view_id active_view() const {
+            return active_;
+        }
+
+        void set_active(ui::view::view_id new_id) {
+            active_ = new_id;
         }
     };
 };

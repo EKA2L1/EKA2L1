@@ -28,7 +28,8 @@
 namespace eka2l1 {
     view_server::view_server(system *sys)
         : service::typical_server(sys, "!ViewServer")
-        , flags_(0) {
+        , flags_(0)
+        , active_{0, 0} {
     }
 
     void view_server::connect(service::ipc_context &ctx) {
@@ -117,6 +118,35 @@ namespace eka2l1 {
             return;     // TODO: We can panic. It's allowed.
         }
     }
+
+    void view_session::active_view(service::ipc_context *ctx, const bool /*should_complete*/) {
+        std::optional<epoc::uid> custom_message_uid = ctx->get_arg<epoc::uid>(1);
+        std::uint8_t *custom_message_buf = ctx->get_arg_ptr(2);
+        const std::size_t custom_message_size = ctx->get_arg_size(2);
+        std::optional<ui::view::view_id> id = ctx->get_arg_packed<ui::view::view_id>(0);
+
+        if (!id || !custom_message_uid) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        // TODO: More strict view switching.
+        // Currently views between apps can be switched freely, but that will cause chaos
+        std::vector<std::uint8_t> custom_message_buf_cop;
+        custom_message_buf_cop.resize(custom_message_size);
+
+        if (custom_message_buf && custom_message_size != 0) {
+            std::copy(custom_message_buf, custom_message_buf + custom_message_size, &custom_message_buf_cop[0]);
+        }
+
+        customs_.push(custom_message_buf_cop);
+
+        queue_.queue_event({ ui::view::view_event::event_active_view, id.value(), server<view_server>()->active_view(),
+            custom_message_uid.value(), static_cast<std::int32_t>(custom_message_size) });
+
+        server<view_server>()->set_active(id.value());
+        ctx->set_request_status(epoc::error_none);
+    }
     
     void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
         to_panic_ = ctx->msg;
@@ -148,6 +178,16 @@ namespace eka2l1 {
 
         case view_opcode_add_view: {
             add_view(ctx);
+            break;
+        }
+
+        case view_opcode_active_view: {
+            active_view(ctx, true);
+            break;
+        }
+
+        case view_opcode_create_activate_view_event: {
+            active_view(ctx, false);
             break;
         }
 

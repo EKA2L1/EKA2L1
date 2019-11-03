@@ -22,12 +22,14 @@
 #include <epoc/services/ui/view/common.h>
 #include <epoc/utils/reqsts.h>
 
-#include <queue>
 #include <mutex>
+#include <queue>
+#include <vector>
 
 namespace eka2l1::ui::view {
     class event_queue {
         std::queue<view_event> events_;
+
         epoc::notify_info nof_info_;
         std::uint8_t *buffer_;
 
