@@ -74,7 +74,8 @@ namespace eka2l1::epoc {
         std::uint32_t flags;
 
         explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
-            const epoc::window_type type_of_window, const epoc::display_mode dmode);
+            const epoc::window_type type_of_window, const epoc::display_mode dmode,
+            const std::uint32_t client_handle);
 
         eka2l1::vec2 get_origin() override;
         

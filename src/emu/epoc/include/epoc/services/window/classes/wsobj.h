@@ -38,7 +38,6 @@ namespace eka2l1::epoc {
 
     struct window_client_obj {
         ws::uid id;
-        ws::handle owner_handle;
 
         window_server_client *client;
         screen *scr;

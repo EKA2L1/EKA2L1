@@ -139,7 +139,7 @@ namespace eka2l1::epoc {
 
     std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &r) {
         // Calculate the priority
-        return redraws.queue_event(epoc::redraw_event{ user->id, r.top,
+        return redraws.queue_event(epoc::redraw_event{ user->get_client_handle(), r.top,
                                        vec2(r.top.x + r.size.x, r.top.y + r.size.y) },
             user->redraw_priority());
     }
@@ -231,10 +231,11 @@ namespace eka2l1::epoc {
             parent_group = device_ptr->scr->root.get();
         }
 
-        window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group);
+        window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group, header->client_handle);
+        epoc::window_group *group_casted = reinterpret_cast<epoc::window_group*>(group.get());
 
         if (header->focus) {
-            reinterpret_cast<epoc::window_group*>(group.get())->set_receive_focus(true);
+            group_casted->set_receive_focus(true);
             device_ptr->scr->update_focus(&get_ws(), nullptr);
         }
 
@@ -261,7 +262,7 @@ namespace eka2l1::epoc {
         // We have to be child's parent child, which is top user.
         window_client_obj_ptr win = std::make_unique<epoc::window_user>(this, parent->scr,
             (parent->type == window_kind::group) ? parent->child : parent, header->win_type,
-            header->dmode);
+            header->dmode, header->client_handle);
 
         ctx.set_request_status(add_object(win));
     }
@@ -769,8 +770,8 @@ namespace eka2l1 {
             }
 
             // Report to the focused window first
-            guest_event.handle = get_focus()->owner_handle;    // TODO: this should work
-            extra_key_evt.handle = get_focus()->owner_handle;    // TODO: this should work
+            guest_event.handle = get_focus()->get_client_handle();
+            extra_key_evt.handle = get_focus()->get_client_handle();
             get_focus()->queue_event(guest_event);
     
             // Send a key event also
@@ -800,14 +801,14 @@ namespace eka2l1 {
 
                     switch (ite->type_) {
                     case epoc::event_key_capture_type::normal: {
-                        extra_key_evt.handle = ite->user->owner_handle;    // TODO: this should work
+                        extra_key_evt.handle = ite->user->get_client_handle();
                         ite->user->queue_event(extra_key_evt);
 
                         break;
                     }
 
                     case epoc::event_key_capture_type::up_and_downs: {
-                        guest_event.handle = ite->user->owner_handle;    // TODO: this should work
+                        guest_event.handle = ite->user->get_client_handle();
                         ite->user->queue_event(guest_event);
 
                         break;

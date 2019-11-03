@@ -57,12 +57,14 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
     }
 
-    window_group::window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent)
+    window_group::window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent, const std::uint32_t client_handle)
         : window(client, scr, parent, window_kind::group)
         , flags(0) {
         // Create window group as child
         top = std::make_unique<window_top_user>(client, scr, this);
         child = top.get();
+
+        set_client_handle(client_handle);
     }
 
     eka2l1::vec2 window_group::get_origin() {

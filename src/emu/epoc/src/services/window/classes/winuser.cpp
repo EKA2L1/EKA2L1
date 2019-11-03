@@ -62,7 +62,7 @@ namespace eka2l1::epoc {
         return { 0, 0 };
     }
         
-    window_user::window_user(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode)
+    window_user::window_user(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle)
         : window_user_base(client, scr, parent, window_kind::client)
         , win_type(type_of_window)
         , pos(0, 0)
@@ -91,6 +91,8 @@ namespace eka2l1::epoc {
                 size = scr->size();
             }
         }
+
+        set_client_handle(client_handle);
     }
     
     eka2l1::vec2 window_user::get_origin() {

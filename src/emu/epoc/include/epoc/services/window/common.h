@@ -418,6 +418,8 @@ namespace eka2l1::epoc {
         vec2 bottom_right;
     };
 
+    static_assert(sizeof(redraw_event) == 20);
+
     constexpr TKeyCode keymap[] = {
         EKeyNull,
         EKeyBackspace,

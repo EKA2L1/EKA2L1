@@ -47,7 +47,8 @@ namespace eka2l1::epoc {
                 flags |= focus_receiveable;
         }
 
-        window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent);
+        explicit window_group(window_server_client_ptr client, screen *scr, epoc::window *parent,
+            const std::uint32_t client_handle);
 
         // ===================== COMMAND OPCODES =======================
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);

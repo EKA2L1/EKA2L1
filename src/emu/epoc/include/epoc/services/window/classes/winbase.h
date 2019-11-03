@@ -64,8 +64,17 @@ namespace eka2l1::epoc {
 
         // The priority of the window.
         std::uint16_t priority{ 0 };
+        std::uint32_t client_handle{ 0 };
 
         window_kind type;
+
+        std::uint32_t get_client_handle() const {
+            return client_handle;
+        }
+
+        void set_client_handle(const std::uint32_t new_handle) {
+            client_handle = new_handle;
+        }
 
         /***
          * \brief Get the root window.
