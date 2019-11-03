@@ -127,7 +127,7 @@ namespace eka2l1 {
         }
 
         case fbs_close: {
-            if (!obj_table_.remove(static_cast<epoc::handle>(*ctx->get_arg<int>(0)))) {
+            if (!obj_table_.remove(*ctx->get_arg<std::uint32_t>(0))) {
                 ctx->set_request_status(epoc::error_bad_handle);
                 break;
             }

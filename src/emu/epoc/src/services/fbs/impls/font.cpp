@@ -612,7 +612,7 @@ namespace eka2l1 {
             std::int32_t bitmap_offset;
         };
 
-        if (*ctx->get_arg<int>(2) != 0) {
+        if (*ctx->get_arg<std::int32_t>(2) != 0) {
             // We can write rasterize param in there.
             rasterize_param param;
             param.metrics_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_shared_offset(&cache_entry->metric));

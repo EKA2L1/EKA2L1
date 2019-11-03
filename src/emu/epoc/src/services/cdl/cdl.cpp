@@ -52,7 +52,7 @@ namespace eka2l1 {
         epoc::cdl_ref_collection filtered_col;
 
         // Subset by name
-        if (*ctx->get_arg<int>(1)) {
+        if (*ctx->get_arg<std::int32_t>(1)) {
             auto name_op = ctx->get_arg<std::u16string>(2);
 
             if (!name_op) {
@@ -70,7 +70,7 @@ namespace eka2l1 {
             }
         } else {
             // Get by UID
-            const epoc::uid ref_uid = static_cast<const epoc::uid>(*ctx->get_arg<int>(3));
+            const epoc::uid ref_uid = *ctx->get_arg<epoc::uid>(3);
 
             // Get by name
             for (auto &ref_: server<cdl_server>()->collection_) {

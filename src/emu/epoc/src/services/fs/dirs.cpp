@@ -43,7 +43,7 @@ namespace eka2l1 {
             return;
         }
 
-        const int attrib_raw = *ctx->get_arg<int>(1);
+        const std::int32_t attrib_raw = *ctx->get_arg<std::int32_t>(1);
         io_attrib attrib = io_attrib::none;
 
         if (attrib_raw & epoc::fs::entry_att_dir) {
@@ -76,7 +76,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::close_dir(service::ipc_context *ctx) {
-        std::optional<int> handle_res = ctx->get_arg<int>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
 
         if (!handle_res) {
             ctx->set_request_status(epoc::error_argument);
@@ -95,7 +95,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::read_dir(service::ipc_context *ctx) {
-        std::optional<int> handle = ctx->get_arg<int>(3);
+        std::optional<std::int32_t> handle = ctx->get_arg<std::int32_t>(3);
 
         if (!handle) {
             ctx->set_request_status(epoc::error_argument);
@@ -148,8 +148,8 @@ namespace eka2l1 {
     }
 
     void fs_server_client::read_dir_packed(service::ipc_context *ctx) {
-        std::optional<int> handle = ctx->get_arg<int>(3);
-        std::optional<int> entry_arr_vir_ptr = ctx->get_arg<int>(0);
+        std::optional<std::int32_t> handle = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> entry_arr_vir_ptr = ctx->get_arg<std::int32_t>(0);
 
         if (!handle || !entry_arr_vir_ptr) {
             ctx->set_request_status(epoc::error_argument);

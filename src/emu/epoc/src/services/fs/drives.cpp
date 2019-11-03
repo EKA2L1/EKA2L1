@@ -31,7 +31,7 @@ namespace eka2l1 {
     void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive);
 
     void fs_server_client::file_drive(service::ipc_context *ctx) {
-        std::optional<int> handle_res = ctx->get_arg<int>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
 
         if (!handle_res) {
             ctx->set_request_status(epoc::error_argument);
@@ -122,7 +122,7 @@ namespace eka2l1 {
 
     /* Simple for now only, in the future this should be more advance. */
     void fs_server::drive(service::ipc_context *ctx) {
-        drive_number drv = static_cast<drive_number>(*ctx->get_arg<int>(1));
+        drive_number drv = static_cast<drive_number>(*ctx->get_arg<std::int32_t>(1));
         std::optional<epoc::fs::drive_info> info = ctx->get_arg_packed<epoc::fs::drive_info>(0);
 
         if (!info) {
@@ -144,7 +144,7 @@ namespace eka2l1 {
     }
 
     void fs_server::drive_list(service::ipc_context *ctx) {
-        std::optional<int> flags = ctx->get_arg<int>(1);
+        std::optional<std::int32_t> flags = ctx->get_arg<std::int32_t>(1);
 
         if (!flags) {
             ctx->set_request_status(epoc::error_argument);
@@ -223,7 +223,7 @@ namespace eka2l1 {
             return;
         }
 
-        drive_number drv = static_cast<drive_number>(*ctx->get_arg<int>(1));
+        drive_number drv = static_cast<drive_number>(*ctx->get_arg<std::int32_t>(1));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
         if (!io_drive) {
@@ -245,7 +245,7 @@ namespace eka2l1 {
     }
 
     void fs_server::query_drive_info_ext(service::ipc_context *ctx) {
-        drive_number drv = static_cast<drive_number>(*ctx->get_arg<int>(0));
+        drive_number drv = static_cast<drive_number>(*ctx->get_arg<std::int32_t>(0));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(drv);
 
         // If the drive hasn't been mounted yet, return epoc::error_not_found
@@ -255,7 +255,7 @@ namespace eka2l1 {
         }
 
         epoc::fs::extended_fs_query_command query_cmd = 
-            static_cast<decltype(query_cmd)>(*ctx->get_arg<int>(1));
+            static_cast<decltype(query_cmd)>(*ctx->get_arg<std::int32_t>(1));
 
         switch (query_cmd) {
         case epoc::fs::extended_fs_query_command::file_system_sub_type: {

@@ -279,8 +279,8 @@ namespace eka2l1 {
 
     void fbscli::load_bitmap(service::ipc_context *ctx) {
         // Get the FS session
-        session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_arg<int>(2)));
-        const std::uint32_t fs_file_handle = static_cast<std::uint32_t>(*(ctx->get_arg<int>(3)));
+        session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_arg<std::int32_t>(2)));
+        const std::uint32_t fs_file_handle = *(ctx->get_arg<std::uint32_t>(3));
 
         auto fs_server = std::reinterpret_pointer_cast<eka2l1::fs_server>(server<fbs_server>()->fs_server);
         file *source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
@@ -294,7 +294,7 @@ namespace eka2l1 {
     }
 
     void fbscli::duplicate_bitmap(service::ipc_context *ctx) {
-        fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(static_cast<std::uint32_t>(*(ctx->get_arg<int>(0))));
+        fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(*(ctx->get_arg<std::uint32_t>(0)));
         if (!bmp) {
             ctx->set_request_status(epoc::error_bad_handle);
             return;
@@ -552,7 +552,7 @@ namespace eka2l1 {
     }
 
     void fbscli::get_clean_bitmap(service::ipc_context *ctx) {
-        const epoc::handle bmp_handle = static_cast<epoc::handle>(*(ctx->get_arg<int>(0)));
+        const epoc::handle bmp_handle = *ctx->get_arg<epoc::handle>(0);
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
 
         if (!bmp) {

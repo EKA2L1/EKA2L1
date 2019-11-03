@@ -240,7 +240,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::set_session_to_private(service::ipc_context *ctx) {
-        auto drive_ordinal = ctx->get_arg<int>(0);
+        auto drive_ordinal = ctx->get_arg<std::int32_t>(0);
 
         if (!drive_ordinal) {
             ctx->set_request_status(epoc::error_argument);
@@ -285,7 +285,7 @@ namespace eka2l1 {
         notify_entry entry;
 
         entry.match_pattern = ".*";
-        entry.type = static_cast<notify_type>(*ctx->get_arg<int>(0));
+        entry.type = static_cast<notify_type>(*ctx->get_arg<std::int32_t>(0));
         entry.request_status = ctx->msg->request_sts;
         entry.request_thread = ctx->msg->own_thr;
 
@@ -302,7 +302,7 @@ namespace eka2l1 {
 
         notify_entry entry;
         entry.match_pattern = common::wildcard_to_regex_string(common::ucs2_to_utf8(*wildcard_match));
-        entry.type = static_cast<notify_type>(*ctx->get_arg<int>(0));
+        entry.type = static_cast<notify_type>(*ctx->get_arg<std::int32_t>(0));
         entry.request_status = ctx->msg->request_sts;
         entry.request_thread = ctx->msg->own_thr;
 
@@ -334,7 +334,7 @@ namespace eka2l1 {
 
         bool res = false;
 
-        if (*ctx->get_arg<int>(1)) {
+        if (*ctx->get_arg<std::int32_t>(1)) {
             res = ctx->sys->get_io_system()->create_directories(eka2l1::file_directory(*dir));
         } else {
             res = ctx->sys->get_io_system()->create_directory(eka2l1::file_directory(*dir));
@@ -413,7 +413,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::set_should_notify_failure(service::ipc_context *ctx) {
-        should_notify_failures = static_cast<bool>(ctx->get_arg<int>(0));
+        should_notify_failures = static_cast<bool>(ctx->get_arg<std::int32_t>(0));
         ctx->set_request_status(epoc::error_none);
     }
 }

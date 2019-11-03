@@ -34,7 +34,7 @@ namespace eka2l1 {
     void akn_skin_server_session::do_set_notify_handler(service::ipc_context *ctx) {
         // The notify handler does nothing rather than gurantee that the client already has a handle mechanic
         // to the request notification later.
-        client_handler_ = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+        client_handler_ = *ctx->get_arg<std::uint32_t>(0);
         ctx->set_request_status(epoc::error_none);
     }
 

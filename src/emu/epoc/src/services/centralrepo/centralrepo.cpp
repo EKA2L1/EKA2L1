@@ -199,7 +199,7 @@ namespace eka2l1 {
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
         // The UID repo to load
-        const std::uint32_t repo_uid = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+        const std::uint32_t repo_uid = *ctx->get_arg<std::uint32_t>(0);
         eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), repo_uid);
 
         if (!repo) {
@@ -466,7 +466,7 @@ namespace eka2l1 {
 
         default: {
             // We find the repo subsession and redirect message to subsession
-            const std::uint32_t subsession_uid = static_cast<std::uint32_t>(*ctx->get_arg<int>(3));
+            const std::uint32_t subsession_uid = *ctx->get_arg<std::uint32_t>(3);
             auto subsession_ite = client_subsessions.find(subsession_uid);
 
             if (subsession_ite == client_subsessions.end()) {
@@ -488,7 +488,7 @@ namespace eka2l1 {
         case cen_rep_notify_req_check: {
             epoc::notify_info holder;
 
-            if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_arg<int>(0)) == 0) {
+            if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_arg<std::int32_t>(0)) == 0) {
                 ctx->set_request_status(epoc::error_none);
                 break;
             }
@@ -499,8 +499,8 @@ namespace eka2l1 {
 
         case cen_rep_group_nof_cancel:
         case cen_rep_notify_cancel: {
-            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
-            const std::uint32_t partial_key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
+            const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
 
             cancel_notify_request(partial_key, mask);
 
@@ -510,8 +510,8 @@ namespace eka2l1 {
 
         case cen_rep_group_nof_req:
         case cen_rep_notify_req: {
-            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : static_cast<std::uint32_t>(*ctx->get_arg<int>(1));
-            const std::uint32_t partial_key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
+            const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
 
             epoc::notify_info info{ ctx->msg->request_sts, ctx->msg->own_thr };
             const int err = add_notify_request(info, mask, partial_key);
@@ -542,7 +542,7 @@ namespace eka2l1 {
         case cen_rep_get_string: {
             // We get the entry.
             // Use mode 0 (write) to get the entry, since we are modifying data.
-            central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 0);
+            central_repo_entry *entry = get_entry(*ctx->get_arg<std::uint32_t>(0), 0);
 
             if (!entry) {
                 ctx->set_request_status(epoc::error_not_found);
@@ -595,7 +595,7 @@ namespace eka2l1 {
         case cen_rep_set_real: {
             // We get the entry.
             // Use mode 1 (write) to get the entry, since we are modifying data.
-            central_repo_entry *entry = get_entry(static_cast<std::uint32_t>(*ctx->get_arg<int>(0)), 1);
+            central_repo_entry *entry = get_entry(*ctx->get_arg<std::uint32_t>(0), 1);
 
             // If it does not exist, or it is in different type, discard.
             // Depends on the invalid type, we set error code
@@ -614,7 +614,7 @@ namespace eka2l1 {
                     break;
                 }
 
-                entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<int>(1));
+                entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<std::uint32_t>(1));
                 break;
             }
 
@@ -624,7 +624,7 @@ namespace eka2l1 {
                     break;
                 }
 
-                entry->data.reald = static_cast<float>(*ctx->get_arg<int>(1));
+                entry->data.reald = *ctx->get_arg<float>(1);
                 break;
             }
 
@@ -658,7 +658,7 @@ namespace eka2l1 {
             eka2l1::central_repo *init_repo = server->get_initial_repo(io, attach_repo->uid);
 
             // Reset the keys
-            const std::uint32_t key = static_cast<std::uint32_t>(*ctx->get_arg<int>(0));
+            const std::uint32_t key = *ctx->get_arg<std::uint32_t>(0);
             int err = reset_key(init_repo, key);
 
             // In transaction
@@ -830,7 +830,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_session::close(service::ipc_context *ctx) {
-        const int err = closerep(ctx->sys->get_io_system(), 0, static_cast<std::uint32_t>(*ctx->get_arg<int>(3)));
+        const int err = closerep(ctx->sys->get_io_system(), 0, *ctx->get_arg<std::uint32_t>(3));
 
         switch (err) {
         case 0: {
