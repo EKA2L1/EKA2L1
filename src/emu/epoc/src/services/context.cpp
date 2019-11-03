@@ -39,13 +39,13 @@ namespace eka2l1 {
         }
 
         template <typename T>
-        std::enable_if_t<std::is_integral_v<T>, std::optional<T>> get_integral_arg_from_msg(
-            ipc_msg_ptr &msg, const int idx) {
+        std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, std::optional<T>>
+            get_integral_arg_from_msg(ipc_msg_ptr &msg, const int idx) {
             if (idx >= 4) {
                 return std::nullopt;
             }
 
-            return static_cast<T>(msg->args.args[idx]);
+            return *reinterpret_cast<T*>(&msg->args.args[idx]);
         }
 
         template <>
@@ -76,6 +76,11 @@ namespace eka2l1 {
         template <>
         std::optional<std::int32_t> ipc_context::get_arg(const int idx) {
             return get_integral_arg_from_msg<std::int32_t>(msg, idx);
+        }
+
+        template <>
+        std::optional<float> ipc_context::get_arg(const int idx) {
+            return get_integral_arg_from_msg<float>(msg, idx);
         }
 
         template <>
