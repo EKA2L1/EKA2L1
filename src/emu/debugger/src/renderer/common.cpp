@@ -37,7 +37,7 @@ namespace eka2l1::renderer {
         unsigned char *dat = stbi_load(path.c_str(), &width, &height, &comp, STBI_rgb_alpha);
 
         if (dat == nullptr) {
-            return false;
+            return 0;
         }
 
         if (to_width) {
