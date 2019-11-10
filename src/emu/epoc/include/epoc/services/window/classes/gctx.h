@@ -52,6 +52,11 @@ namespace eka2l1::epoc {
         void do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set);
 
         void active(service::ipc_context &context, ws_cmd cmd);
+        void deactive(service::ipc_context &context, ws_cmd &cmd);
+        void draw_bitmap(service::ipc_context &context, ws_cmd &cmd);
+        void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
+        void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
+        void set_pen_style(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         explicit graphic_context(window_server_client_ptr client, epoc::window *attach_win = nullptr);

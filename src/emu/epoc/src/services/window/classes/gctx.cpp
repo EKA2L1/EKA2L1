@@ -112,10 +112,98 @@ namespace eka2l1::epoc {
         driver->submit_command_list(*cmd_list);
     }
 
-    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        TWsGcOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+    void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
+        do_command_set_color(context, cmd.data_ptr, set_color_type::brush);
+    }
 
-        switch (op) {
+    void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {        
+        context_attach_link.deque();
+
+        // Might have to flush sooner, since this window can be used with another
+        // TODO pent0: This may gone insane
+        flush_queue_to_driver();
+
+        attached_window = nullptr;
+        context.set_request_status(epoc::error_none);
+    }
+    
+    void graphic_context::draw_bitmap(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap *>(cmd.data_ptr);
+        epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
+
+        if (!bw_bmp) {
+            context.set_request_status(epoc::error_argument);
+            return;
+        }
+
+        drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
+        epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
+        drivers::handle bmp_driver_handle = cacher->add_or_get(driver, cmd_builder.get(), bw_bmp);
+
+        do_command_draw_bitmap(context, bmp_driver_handle, rect(bitmap_cmd->pos, bw_bmp->header_.size_pixels));
+    }
+    
+    void graphic_context::set_brush_style(service::ipc_context &context, ws_cmd &cmd) {
+        LOG_ERROR("SetBrushStyle not supported, stub");
+        context.set_request_status(epoc::error_none);
+    }
+    
+    void graphic_context::set_pen_style(service::ipc_context &context, ws_cmd &cmd) {
+        LOG_ERROR("SetPenStyle not supported, stub");
+        context.set_request_status(epoc::error_none);
+    }
+    
+    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
+
+        // General rules: Stub to err_none = nullptr, implement = function pointer
+        //                Do nothing = add nothing
+        using ws_graphics_context_op_handler = std::function<void(graphic_context*, 
+            service::ipc_context &ctx, ws_cmd &cmd)>;
+
+        using ws_graphics_context_table_op =  std::map<ws_graphics_context_opcode, ws_graphics_context_op_handler>;
+
+        static const ws_graphics_context_table_op v171u_opcode_handlers = {
+            { ws_gc_u171_active, &graphic_context::active },
+            { ws_gc_u171_set_brush_color, &graphic_context::set_brush_color },
+            { ws_gc_u171_set_brush_style, &graphic_context::set_brush_style },
+            { ws_gc_u171_set_pen_style, &graphic_context::set_pen_style },
+            { ws_gc_u171_deactive, &graphic_context::deactive },
+            { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap }
+        };
+        
+        static const ws_graphics_context_table_op curr_opcode_handlers = {
+            { ws_gc_curr_active, &graphic_context::active },
+            { ws_gc_curr_set_brush_color, &graphic_context::set_brush_color },
+            { ws_gc_curr_set_brush_style, &graphic_context::set_brush_style },
+            { ws_gc_curr_set_pen_style, &graphic_context::set_pen_style },
+            { ws_gc_curr_deactive, &graphic_context::deactive },
+            { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap }
+        };
+
+        epoc::version cli_ver = client->client_version();
+        ws_graphics_context_op_handler handler = nullptr;
+        
+        #define FIND_OPCODE(op, table)                                                  \
+            auto result = table.find(op);                                               \
+            if (result == table.end() || !result->second) {                             \
+                LOG_WARN("Unimplemented graphics context opcode {}", cmd.header.op);    \
+                return;                                                                 \
+            }                                                                           \
+            handler = result->second;
+
+        if (cli_ver.major == 1 && cli_ver.minor == 0) {
+            if (cli_ver.build <= 171) {
+                // Execute table 1
+                FIND_OPCODE(op, v171u_opcode_handlers) 
+            } else {
+                // Execute table 2
+                FIND_OPCODE(op, curr_opcode_handlers)
+            }
+        }
+
+        handler(this, ctx, cmd);
+            /*
         case EWsGcOpActivate: {
             active(ctx, cmd);
             break;
@@ -123,7 +211,6 @@ namespace eka2l1::epoc {
 
         // Brush is fill, pen is outline
         case EWsGcOpSetBrushColor: {
-            do_command_set_color(ctx, cmd.data_ptr, set_color_type::brush);
             break;
         }
 
@@ -151,8 +238,8 @@ namespace eka2l1::epoc {
 
             std::u16string draw_text;
 
-            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc93) && (cmd.header.cmd_len <= 8)) {
-                draw_text = *ctx.get_arg<std::u16string>(remote_slot);
+            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc94) && (cmd.header.cmd_len <= 8)) {
+                draw_text = *ctx.get_arg<std::u16string>(0);
             } else {
                 epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
                 std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
@@ -183,8 +270,8 @@ namespace eka2l1::epoc {
             std::u16string draw_text;
 
             // on EPOC <= 9, the struct only contains the bound
-            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc93) && (cmd.header.cmd_len <= 16)) {
-                draw_text = *ctx.get_arg<std::u16string>(remote_slot);
+            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc94) && (cmd.header.cmd_len <= 16)) {
+                draw_text = *ctx.get_arg<std::u16string>(0);
             } else {
                 epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
                 std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
@@ -197,41 +284,12 @@ namespace eka2l1::epoc {
         }
 
         case EWsGcOpDeactivate: {
-            context_attach_link.deque();
-
-            // Might have to flush sooner, since this window can be used with another
-            // TODO pent0: This may gone insane
-            flush_queue_to_driver();
-
-            attached_window = nullptr;
-            ctx.set_request_status(epoc::error_none);
-
             break;
         }
 
         case EWsGcOpDrawBitmap: {
-            ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap *>(cmd.data_ptr);
-            epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
-
-            if (!bw_bmp) {
-                ctx.set_request_status(epoc::error_argument);
-                break;
-            }
-
-            drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
-            epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
-            drivers::handle bmp_driver_handle = cacher->add_or_get(driver, cmd_builder.get(), bw_bmp);
-
-            do_command_draw_bitmap(ctx, bmp_driver_handle, rect(bitmap_cmd->pos, bw_bmp->header_.size_pixels));
-
-            break;
-        }
-
-        default: {
-            LOG_WARN("Unimplemented opcode for graphics context operation: 0x{:x}", cmd.header.op);
-            break;
-        }
-        }
+            
+        }*/
     }
 
     graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
