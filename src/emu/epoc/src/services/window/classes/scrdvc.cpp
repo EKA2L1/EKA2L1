@@ -98,10 +98,10 @@ namespace eka2l1::epoc {
     }
             
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        TWsScreenDeviceOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
-        case EWsSdOpPixelSize: {
+        case ws_sd_op_pixel_size: {
             // This doesn't take any arguments
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, scr->size());
             ctx.set_request_status(0);
@@ -109,7 +109,7 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsSdOpTwipsSize: {
+        case ws_sd_op_twips_size: {
             // This doesn't take any arguments
             eka2l1::vec2 screen_size = scr->size() * twips_mul;
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
@@ -118,46 +118,46 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsSdOpGetNumScreenModes: {
+        case ws_sd_op_get_num_screen_modes: {
             ctx.set_request_status(scr->total_screen_mode());
             break;
         }
 
-        case EWsSdOpGetScreenNumber: {
+        case ws_sd_op_get_screen_number: {
             ctx.set_request_status(scr->number);
             break;
         }
 
-        case EWsSdOpSetScreenMode: {
+        case ws_sd_op_set_screen_mode: {
             set_screen_mode(ctx, cmd);
             ctx.set_request_status(epoc::error_none);
 
             break;
         }
 
-        case EWsSdOpSetScreenSizeAndRotation: {
+        case ws_sd_op_set_screen_size_and_rotation: {
             set_screen_mode_and_rotation(ctx, cmd);
             break;
         }
 
-        case EWsSdOpGetScreenSizeModeList: {
+        case ws_sd_op_get_screen_size_mode_list: {
             get_screen_size_mode_list(ctx, cmd);
             break;
         }
 
         // This get the screen size in pixels + twips and orientation for the given mode
-        case EWsSdOpGetScreenModeSizeAndRotation: {
+        case ws_sd_op_get_screen_mode_size_and_rotation: {
             get_screen_size_mode_and_rotation(ctx, cmd, true);
             break;
         }
 
         // This get the screen size in pixels and orientation for the given mode
-        case EWsSdOpGetScreenModeSizeAndRotation2: {
+        case ws_sd_op_get_screen_mode_size_and_rotation2: {
             get_screen_size_mode_and_rotation(ctx, cmd, false);
             break;
         }
 
-        case EWsSdOpGetScreenModeDisplayMode: {
+        case ws_sd_op_get_screen_mode_display_mode: {
             int mode = *reinterpret_cast<int *>(cmd.data_ptr);
 
             ctx.write_arg_pkg(reply_slot, scr->disp_mode);
@@ -168,12 +168,12 @@ namespace eka2l1::epoc {
 
         // Get the current screen mode. AknCapServer uses this, compare with the saved screen mode
         // to trigger the layout change event for registered app.
-        case EWsSdOpGetScreenMode: {
+        case ws_sd_op_get_screen_mode: {
             ctx.set_request_status(scr->crr_mode);
             break;
         }
 
-        case EWsSdOpFree: {
+        case ws_sd_op_free: {
             ctx.set_request_status(epoc::error_none);
             client->delete_object(id);
             break;

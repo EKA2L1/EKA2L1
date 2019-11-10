@@ -29,17 +29,17 @@ namespace eka2l1::epoc {
     }
 
     void anim_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        TWsAnimDllOpcode op = static_cast<decltype(op)>(cmd.header.op);
+        ws_anim_dll_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
-        case EWsAnimDllOpCreateInstance: {
+        case ws_anim_dll_op_create_instance: {
             LOG_TRACE("AnimDll::CreateInstance stubbed with a anim handle (>= 0)");
             ctx.set_request_status(user_count++);
 
             break;
         }
 
-        case EWsAnimDllOpCommandReply: {
+        case ws_anim_dll_op_command_reply: {
             LOG_TRACE("AnimDll command reply stubbed!");
             ctx.set_request_status(epoc::error_none);
 
