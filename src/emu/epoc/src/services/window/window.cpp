@@ -118,9 +118,10 @@ namespace eka2l1::epoc {
         execute_commands(ctx, std::move(cmds));
     }
 
-    window_server_client::window_server_client(service::session *guest_session, kernel::thread *own_thread)
+    window_server_client::window_server_client(service::session *guest_session, kernel::thread *own_thread, epoc::version ver)
         : guest_session(guest_session)
         , client_thread(own_thread)
+        , cli_version(ver)
         , primary_device(nullptr)
         , uid_counter(0) {
     }
@@ -312,10 +313,10 @@ namespace eka2l1::epoc {
         std::uint32_t total = 0;
 
         const int screen = (cmd.header.cmd_len == 8) ? 0 : list_req->screen_num;
-        const int accept_priority = ((cmd.header.op == EWsClOpWindowGroupListAllPriorities) || 
-            (cmd.header.op == EWsClOpWindowGroupListAndChainAllPriorities)) ? -1 : list_req->priority;
+        const int accept_priority = ((cmd.header.op == ws_cl_op_window_group_list_all_priorities) || 
+            (cmd.header.op == ws_cl_op_window_group_list_and_chain_all_priorities)) ? -1 : list_req->priority;
 
-        if (cmd.header.op == EWsClOpWindowGroupList || cmd.header.op == EWsClOpWindowGroupListAllPriorities) {
+        if (cmd.header.op == ws_cl_op_window_group_list || cmd.header.op == ws_cl_op_window_group_list_all_priorities) {
             ids.resize(list_req->count * sizeof(std::uint32_t));
             total = get_ws().get_window_group_list(reinterpret_cast<std::uint32_t*>(&ids[0]), list_req->count,
                 accept_priority, screen);
@@ -331,7 +332,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
         ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups(
-            cmd.header.op == EWsClOpNumWindowGroups ? *static_cast<int *>(cmd.data_ptr) : -1)));
+            cmd.header.op == ws_cl_op_num_window_groups ? *static_cast<int *>(cmd.data_ptr) : -1)));
     }
 
     void window_server_client::send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -470,98 +471,98 @@ namespace eka2l1::epoc {
         switch (cmd.header.op) {
         // Gets the total number of window groups with specified priority currently running
         // in the window server.
-        case EWsClOpNumWindowGroups:
-        case EWsClOpNumWindowGroupsAllPriorities: {
+        case ws_cl_op_num_window_groups:
+        case ws_cl_op_num_groups_all_priorities: {
             get_number_of_window_groups(ctx, cmd);
             break;
         }
 
-        case EWsClOpSendEventToWindowGroup: {
+        case ws_cl_op_send_event_to_window_group: {
             send_event_to_window_group(ctx, cmd);
             break;
         }
 
-        case EWsClOpComputeMode: {
+        case ws_cl_op_compute_mode: {
             LOG_TRACE("Setting compute mode not supported, instead stubbed");
             ctx.set_request_status(epoc::error_none);
 
             break;
         }
 
-        case EWsClOpSetPointerCursorMode: {
+        case ws_cl_op_set_pointer_cursor_mode: {
             set_pointer_cursor_mode(ctx, cmd);
             break;
         }
 
-        case EWsClOpGetWindowGroupClientThreadId: {
+        case ws_cl_op_get_window_group_client_thread_id: {
             get_window_group_client_thread_id(ctx, cmd);
             break;
         }
 
-        case EWsClOpGetRedraw: {
+        case ws_cl_op_get_redraw: {
             get_redraw(ctx, cmd);
             break;
         }
 
-        case EWsClOpGetEvent: {
+        case ws_cl_op_get_event: {
             get_event(ctx, cmd);
             break;
         }
 
-        case EWsClOpCreateScreenDevice:
+        case ws_cl_op_create_screen_device:
             create_screen_device(ctx, cmd);
             break;
 
-        case EWsClOpCreateWindowGroup:
+        case ws_cl_op_create_window_group:
             create_window_group(ctx, cmd);
             break;
 
-        case EWsClOpCreateWindow:
+        case ws_cl_op_create_window:
             create_window_base(ctx, cmd);
             break;
 
-        case EWsClOpRestoreDefaultHotKey:
+        case ws_cl_op_restore_default_hotkey:
             restore_hotkey(ctx, cmd);
             break;
 
-        case EWsClOpCreateGc:
+        case ws_cl_op_create_gc:
             create_graphic_context(ctx, cmd);
             break;
 
-        case EWsClOpCreateSprite:
+        case ws_cl_op_create_sprite:
             create_sprite(ctx, cmd);
             break;
 
-        case EWsClOpCreateAnimDll:
+        case ws_cl_op_create_anim_dll:
             create_anim_dll(ctx, cmd);
             break;
 
-        case EWsClOpCreateClick:
+        case ws_cl_op_create_click:
             create_click_dll(ctx, cmd);
             break;
 
-        case EWsClOpEventReady:
+        case ws_cl_op_event_ready:
             break;
 
-        case EWsClOpGetFocusWindowGroup: {
+        case ws_cl_op_get_focus_window_group: {
             get_focus_window_group(ctx, cmd);
             break;
         }
 
-        case EWsClOpFindWindowGroupIdentifier: {
+        case ws_cl_op_find_window_group_identifier: {
             find_window_group_id(ctx, cmd);
             break;
         }
 
-        case EWsClOpGetWindowGroupNameFromIdentifier: {
+        case ws_cl_op_get_window_group_name_from_identifier: {
             get_window_group_name_from_id(ctx, cmd);
             break;
         }
 
-        case EWsClOpWindowGroupList:
-        case EWsClOpWindowGroupListAllPriorities:
-        case EWsClOpWindowGroupListAndChain:
-        case EWsClOpWindowGroupListAndChainAllPriorities: {
+        case ws_cl_op_window_group_list:
+        case ws_cl_op_window_group_list_all_priorities:
+        case ws_cl_op_window_group_list_and_chain:
+        case ws_cl_op_window_group_list_and_chain_all_priorities: {
             get_window_group_list(ctx, cmd);
             break;
         }
@@ -885,14 +886,26 @@ namespace eka2l1 {
         loaded = true;
     }
 
+    void window_server::connect(service::ipc_context &ctx) {
+        std::optional<std::uint32_t> version = ctx.get_arg<std::uint32_t>(0);
+        epoc::version v = *reinterpret_cast<epoc::version*>(&version.value());
+
+        clients.emplace(ctx.msg->msg_session->unique_id(),
+            std::make_unique<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr, v));
+
+        server::connect(ctx);
+    }
+    
+    void window_server::disconnect(service::ipc_context &ctx) {
+        clients.erase(ctx.msg->msg_session->unique_id());
+        server::disconnect(ctx);
+    }
+    
     void window_server::init(service::ipc_context &ctx) {
         if (!loaded) {
             do_base_init();
         }
-
-        clients.emplace(ctx.msg->msg_session->unique_id(),
-            std::make_unique<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr));
-
+        
         ctx.set_request_status(ctx.msg->msg_session->unique_id());
     }
 
@@ -917,7 +930,7 @@ namespace eka2l1 {
     void window_server::on_unhandled_opcode(service::ipc_context &ctx) {
         if (ctx.msg->function & EWservMessAsynchronousService) {
             switch (ctx.msg->function & ~EWservMessAsynchronousService) {
-            case EWsClOpRedrawReady: {
+            case ws_cl_op_redraw_ready: {
                 epoc::notify_info info;
                 info.requester = ctx.msg->own_thr;
                 info.sts = ctx.msg->request_sts;
@@ -931,7 +944,7 @@ namespace eka2l1 {
             // is occured within an object that belongs to a client that
             // created by the same thread as the requester, that requester
             // will be notify
-            case EWsClOpEventReady: {
+            case ws_cl_op_event_ready: {
                 epoc::notify_info info;
                 info.requester = ctx.msg->own_thr;
                 info.sts = ctx.msg->request_sts;

@@ -46,6 +46,7 @@
 #include <epoc/ptr.h>
 #include <epoc/services/server.h>
 #include <epoc/utils/des.h>
+#include <epoc/utils/version.h>
 
 #include <drivers/input/common.h>
 
@@ -152,6 +153,7 @@ namespace eka2l1::epoc {
         epoc::screen_device *primary_device;
 
         eka2l1::kernel::thread *client_thread;
+        epoc::version cli_version;
 
         epoc::redraw_fifo redraws;
         epoc::event_fifo events;
@@ -190,6 +192,10 @@ namespace eka2l1::epoc {
             events.set_listener(nof);
         }
 
+        epoc::version client_version() {
+            return cli_version;
+        }
+
         void execute_command(service::ipc_context &ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);
         void parse_command_buffer(service::ipc_context &ctx);
@@ -200,7 +206,7 @@ namespace eka2l1::epoc {
         bool delete_object(const std::uint32_t handle);
 
         explicit window_server_client(service::session *guest_session,
-            kernel::thread *own_thread);
+            kernel::thread *own_thread, epoc::version ver);
 
         eka2l1::window_server &get_ws() {
             return *(std::reinterpret_pointer_cast<window_server>(guest_session->get_server()));
@@ -285,6 +291,9 @@ namespace eka2l1 {
 
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);
+
+        void connect(service::ipc_context &ctx) override;
+        void disconnect(service::ipc_context &ctx) override;
 
         void on_unhandled_opcode(service::ipc_context &ctx) override;
 
