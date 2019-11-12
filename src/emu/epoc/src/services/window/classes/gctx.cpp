@@ -144,13 +144,26 @@ namespace eka2l1::epoc {
     }
     
     void graphic_context::set_brush_style(service::ipc_context &context, ws_cmd &cmd) {
-        LOG_ERROR("SetBrushStyle not supported, stub");
+        fill_mode = *reinterpret_cast<brush_style*>(cmd.data_ptr);
         context.set_request_status(epoc::error_none);
     }
     
     void graphic_context::set_pen_style(service::ipc_context &context, ws_cmd &cmd) {
-        LOG_ERROR("SetPenStyle not supported, stub");
+        line_mode = *reinterpret_cast<pen_style*>(cmd.data_ptr);
         context.set_request_status(epoc::error_none);
+    }
+    
+    void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
+        text_font = nullptr;
+        
+        fill_mode = brush_style::null;
+        line_mode = pen_style::null;
+
+        context.set_request_status(epoc::error_none);
+    }
+
+    void graphic_context::use_font(service::ipc_context &context, ws_cmd &cmd) {
+        std::uint32_t font_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
     }
     
     void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -169,6 +182,8 @@ namespace eka2l1::epoc {
             { ws_gc_u171_set_brush_style, &graphic_context::set_brush_style },
             { ws_gc_u171_set_pen_style, &graphic_context::set_pen_style },
             { ws_gc_u171_deactive, &graphic_context::deactive },
+            { ws_gc_u171_reset, &graphic_context::reset },
+            { ws_gc_u171_use_font, &graphic_context::use_font },
             { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap }
         };
         
@@ -178,6 +193,8 @@ namespace eka2l1::epoc {
             { ws_gc_curr_set_brush_style, &graphic_context::set_brush_style },
             { ws_gc_curr_set_pen_style, &graphic_context::set_pen_style },
             { ws_gc_curr_deactive, &graphic_context::deactive },
+            { ws_gc_curr_reset, &graphic_context::reset },
+            { ws_gc_curr_use_font, &graphic_context::use_font },
             { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap }
         };
 
