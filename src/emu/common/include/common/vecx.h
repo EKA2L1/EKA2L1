@@ -123,6 +123,11 @@ namespace eka2l1 {
             x += rhs.x;
             y += rhs.y;
         }
+        
+        void operator-=(const vec2 &rhs) {
+            x -= rhs.x;
+            y -= rhs.y;
+        }
 
         void operator=(const vec2 &rhs) {
             x = rhs.x;
