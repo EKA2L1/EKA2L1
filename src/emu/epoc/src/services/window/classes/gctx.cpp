@@ -86,12 +86,45 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
-    void graphic_context::do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set) {
-        const eka2l1::vecx<int, 4> color = common::rgb_to_vec(*reinterpret_cast<const common::rgb*>(data));
+    bool graphic_context::do_command_set_color(const set_color_type to_set) {
+        eka2l1::vecx<int, 4> color;
         
         switch (to_set) {
         case set_color_type::brush: {
-            cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+            // Don't bother even sending any draw command
+            switch (fill_mode) {
+            case brush_style::null:
+                return false;
+
+            case brush_style::solid:
+                color = common::rgb_to_vec(brush_color);
+                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+                break;
+
+            default:
+                LOG_WARN("Unhandled brush style {}", static_cast<std::int32_t>(fill_mode));
+                break;
+            }
+
+            break;
+        }
+
+        case set_color_type::pen: {
+            // Don't bother even sending any draw command
+            switch (line_mode) {
+            case pen_style::null:
+                return false;
+
+            case pen_style::solid:
+                color = common::rgb_to_vec(pen_color);
+                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+                break;
+
+            default:
+                LOG_WARN("Unhandled pen style {}", static_cast<std::int32_t>(fill_mode));
+                break;
+            }
+
             break;
         }
 
@@ -101,7 +134,7 @@ namespace eka2l1::epoc {
         }
         }
 
-        ctx.set_request_status(epoc::error_none);
+        return true;
     }
 
     void graphic_context::flush_queue_to_driver() {
@@ -113,7 +146,8 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
-        do_command_set_color(context, cmd.data_ptr, set_color_type::brush);
+        brush_color = *reinterpret_cast<const common::rgb*>(cmd.data_ptr);
+        context.set_request_status(epoc::error_none);
     }
 
     void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {        
@@ -153,12 +187,37 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
     }
     
-    void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
+    void graphic_context::draw_rect(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect area = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+
+        if (do_command_set_color(set_color_type::pen)) {
+            // We want to draw the rectangle that backup the real rectangle, to create borders.
+            eka2l1::rect backup_border = area;
+            backup_border.top -= pen_size;
+            backup_border.size += pen_size * 2;
+            
+            cmd_builder->draw_rectangle(backup_border);
+        }
+
+        // Draw the real rectangle! Hurray!
+        if (do_command_set_color(set_color_type::brush)) {
+            cmd_builder->draw_rectangle(area);
+        }
+
+        context.set_request_status(epoc::error_none);
+    }
+    
+    void graphic_context::reset_context() {
         text_font = nullptr;
         
         fill_mode = brush_style::null;
         line_mode = pen_style::null;
 
+        pen_size = { 1, 1 };
+    }
+    
+    void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
+        reset_context();
         context.set_request_status(epoc::error_none);
     }
 
@@ -184,6 +243,7 @@ namespace eka2l1::epoc {
             { ws_gc_u171_deactive, &graphic_context::deactive },
             { ws_gc_u171_reset, &graphic_context::reset },
             { ws_gc_u171_use_font, &graphic_context::use_font },
+            { ws_gc_u171_draw_rect, &graphic_context::draw_rect },
             { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap }
         };
         
@@ -195,6 +255,7 @@ namespace eka2l1::epoc {
             { ws_gc_curr_deactive, &graphic_context::deactive },
             { ws_gc_curr_reset, &graphic_context::reset },
             { ws_gc_curr_use_font, &graphic_context::use_font },
+            { ws_gc_curr_draw_rect, &graphic_context::draw_rect },
             { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap }
         };
 
@@ -311,6 +372,12 @@ namespace eka2l1::epoc {
 
     graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
         : window_client_obj(client, nullptr)
-        , attached_window(reinterpret_cast<epoc::window_user*>(attach_win)) {
+        , attached_window(reinterpret_cast<epoc::window_user*>(attach_win))
+        , text_font(nullptr)
+        , fill_mode(brush_style::null)
+        , line_mode(pen_style::null)
+        , brush_color(0)
+        , pen_color(0)
+        , pen_size(1, 1) {
     }
 }

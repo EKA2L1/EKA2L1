@@ -23,7 +23,9 @@
 #include <epoc/services/window/classes/winuser.h>
 #include <drivers/graphics/common.h>
 #include <drivers/graphics/graphics.h>
+
 #include <common/linked.h>
+#include <common/rgb.h>
 
 #include <queue>
 #include <string>
@@ -67,6 +69,11 @@ namespace eka2l1::epoc {
         brush_style fill_mode;
         pen_style line_mode;
 
+        common::rgb brush_color;
+        common::rgb pen_color;
+
+        eka2l1::vec2 pen_size;
+
         void flush_queue_to_driver();
 
         enum class set_color_type {
@@ -74,11 +81,13 @@ namespace eka2l1::epoc {
             pen
         };
 
+        void reset_context();
+
         void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
             eka2l1::vec2 bottom_right, std::u16string text);
         void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, 
             const eka2l1::rect &dest_rect);
-        void do_command_set_color(service::ipc_context &ctx, const void *data, const set_color_type to_set);
+        bool do_command_set_color(const set_color_type to_set);
 
         void active(service::ipc_context &context, ws_cmd cmd);
         void deactive(service::ipc_context &context, ws_cmd &cmd);
@@ -86,6 +95,7 @@ namespace eka2l1::epoc {
         void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_style(service::ipc_context &context, ws_cmd &cmd);
+        void draw_rect(service::ipc_context &context, ws_cmd &cmd);
 
         void reset(service::ipc_context &context, ws_cmd &cmd);
         void use_font(service::ipc_context &context, ws_cmd &cmd);
