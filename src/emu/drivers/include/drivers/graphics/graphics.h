@@ -50,6 +50,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_brush_color,
         graphics_driver_update_bitmap,
         graphics_driver_draw_bitmap,
+        graphics_driver_draw_rectangle,
         graphics_driver_resize_bitmap,
 
         // Mode 1: Advance - Lower access to functions

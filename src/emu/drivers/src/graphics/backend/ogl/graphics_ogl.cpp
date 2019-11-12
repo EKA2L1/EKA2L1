@@ -36,15 +36,19 @@ namespace eka2l1::drivers {
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
     static constexpr const char *sprite_norm_f_path = "resources//sprite_norm.frag";
+    static constexpr const char *fill_v_path = "resources//fill.frag";
+    static constexpr const char *fill_f_path = "resources//fill.frag";
 
     void ogl_graphics_driver::do_init() {
         sprite_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_norm_f_path);
+        fill_program = std::make_unique<ogl_shader>(fill_v_path, fill_f_path);
 
         static GLushort indices[] = {
             0, 1, 2,
             0, 3, 1
         };
 
+        // Make sprite VAO and VBO
         glGenVertexArrays(1, &sprite_vao);
         glGenBuffers(1, &sprite_vbo);
         glBindVertexArray(sprite_vao);
@@ -53,6 +57,15 @@ namespace eka2l1::drivers {
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
+        glBindVertexArray(0);
+
+        // Make fill VAO and VBO
+        glGenVertexArrays(1, &fill_vao);
+        glGenBuffers(1, &fill_vbo);
+        glBindVertexArray(fill_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, fill_vbo);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
         glBindVertexArray(0);
 
         glGenBuffers(1, &sprite_ibo);
@@ -69,6 +82,41 @@ namespace eka2l1::drivers {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    void ogl_graphics_driver::draw_rectangle(command_helper &helper) {
+        if (!fill_program) {
+            do_init();
+        }
+
+        eka2l1::rect fill_rect;
+        helper.pop(fill_rect);
+
+        fill_program->use(this);
+        
+        static GLfloat verts_default[] = {
+            0.0f, 1.0f,
+            1.0f, 0.0f,
+            0.0f, 0.0f,
+            1.0f, 1.0f,
+        };
+        
+        // Build model matrix
+        glm::mat4 model_matrix = glm::identity<glm::mat4>();
+        model_matrix = glm::translate(model_matrix, { fill_rect.top.x, fill_rect.top.y, 0.0f });
+        model_matrix = glm::scale(model_matrix, { fill_rect.size.x, fill_rect.size.y, 0.0f });
+        
+        glUniformMatrix4fv(model_loc, 1, false, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv(proj_loc, 1, false, glm::value_ptr(projection_matrix));
+
+        // Supply brush
+        glUniform4fv(color_loc, 1, brush_color.elements.data());
+
+        glBindVertexArray(fill_vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite_ibo);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+        glBindVertexArray(0);
+    }
+    
     void ogl_graphics_driver::draw_bitmap(command_helper &helper) {
         if (!sprite_program) {
             do_init();
@@ -522,6 +570,11 @@ namespace eka2l1::drivers {
 
         case graphics_driver_display: {
             display(helper);
+            break;
+        }
+
+        case graphics_driver_draw_rectangle: {
+            draw_rectangle(helper);
             break;
         }
 

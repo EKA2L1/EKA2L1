@@ -172,6 +172,11 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
+    void server_graphics_command_list_builder::draw_rectangle(const eka2l1::rect &target_rect) {
+        command *cmd = make_command(graphics_driver_draw_rectangle, nullptr, target_rect);
+        get_command_list().add(cmd);
+    }
+
     void server_graphics_command_list_builder::set_brush_color(const eka2l1::vec3 &color) {
         command *cmd = make_command(graphics_driver_set_brush_color, nullptr, static_cast<float>(color.x),
             static_cast<float>(color.y), static_cast<float>(color.z), 1.0f);

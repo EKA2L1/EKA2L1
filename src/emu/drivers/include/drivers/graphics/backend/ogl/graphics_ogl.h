@@ -53,10 +53,14 @@ namespace eka2l1::drivers {
     class ogl_graphics_driver : public shared_graphics_driver {
         eka2l1::request_queue<server_graphics_command_list> list_queue;
         std::unique_ptr<ogl_shader> sprite_program;
+        std::unique_ptr<ogl_shader> fill_program;
 
         GLuint sprite_vao;
         GLuint sprite_vbo;
         GLuint sprite_ibo;
+
+        GLuint fill_vao;
+        GLuint fill_vbo;
 
         GLint color_loc;
         GLint proj_loc;
@@ -69,6 +73,7 @@ namespace eka2l1::drivers {
 
         void clear(command_helper &helper);
         void draw_bitmap(command_helper &helper);
+        void draw_rectangle(command_helper &helper);
         void set_invalidate(command_helper &helper);
         void invalidate_rect(command_helper &helper);
         void draw_indexed(command_helper &helper);
