@@ -69,7 +69,7 @@ namespace eka2l1::drivers {
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
         : graphics_driver(gr_api)
         , binding(nullptr)
-        , brush_color({ 1.0f, 1.0f, 1.0f, 1.0f })
+        , brush_color({ 255.0f, 255.0f, 255.0f, 255.0f })
         , current_fb_height(0) {
     }
 

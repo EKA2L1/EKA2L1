@@ -36,7 +36,7 @@ namespace eka2l1::drivers {
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
     static constexpr const char *sprite_norm_f_path = "resources//sprite_norm.frag";
-    static constexpr const char *fill_v_path = "resources//fill.frag";
+    static constexpr const char *fill_v_path = "resources//fill.vert";
     static constexpr const char *fill_f_path = "resources//fill.frag";
 
     void ogl_graphics_driver::do_init() {
@@ -59,7 +59,7 @@ namespace eka2l1::drivers {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
         glBindVertexArray(0);
 
-        // Make fill VAO and VBO
+        // Make fill VAO and VBO        
         glGenVertexArrays(1, &fill_vao);
         glGenBuffers(1, &fill_vbo);
         glBindVertexArray(fill_vao);
@@ -76,6 +76,10 @@ namespace eka2l1::drivers {
         color_loc = sprite_program->get_uniform_location("u_color").value_or(-1);
         proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
+        
+        color_loc_fill = fill_program->get_uniform_location("u_color").value_or(-1);
+        proj_loc_fill = fill_program->get_uniform_location("u_proj").value_or(-1);
+        model_loc_fill = fill_program->get_uniform_location("u_model").value_or(-1);
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -91,26 +95,32 @@ namespace eka2l1::drivers {
         helper.pop(fill_rect);
 
         fill_program->use(this);
-        
-        static GLfloat verts_default[] = {
-            0.0f, 1.0f,
-            1.0f, 0.0f,
-            0.0f, 0.0f,
-            1.0f, 1.0f,
-        };
-        
+
         // Build model matrix
         glm::mat4 model_matrix = glm::identity<glm::mat4>();
         model_matrix = glm::translate(model_matrix, { fill_rect.top.x, fill_rect.top.y, 0.0f });
         model_matrix = glm::scale(model_matrix, { fill_rect.size.x, fill_rect.size.y, 0.0f });
         
-        glUniformMatrix4fv(model_loc, 1, false, glm::value_ptr(model_matrix));
-        glUniformMatrix4fv(proj_loc, 1, false, glm::value_ptr(projection_matrix));
+        glUniformMatrix4fv(model_loc_fill, 1, false, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv(proj_loc_fill, 1, false, glm::value_ptr(projection_matrix));
 
         // Supply brush
-        glUniform4fv(color_loc, 1, brush_color.elements.data());
+        glUniform4fv(color_loc_fill, 1, brush_color.elements.data());
+
+        static GLfloat fill_verts_default[] = {
+            0.0f, 1.0f,
+            1.0f, 0.0f,
+            0.0f, 0.0f,
+            1.0f, 1.0f,
+        };
 
         glBindVertexArray(fill_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, fill_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(fill_verts_default), nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(fill_verts_default), fill_verts_default, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite_ibo);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
@@ -229,7 +239,7 @@ namespace eka2l1::drivers {
         bool use_brush = false;
         helper.pop(use_brush);
 
-        const GLfloat color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        const GLfloat color[] = { 255.0f, 255.0f, 255.0f, 255.0f };
 
         if (use_brush) {
             glUniform4fv(color_loc, 1, brush_color.elements.data());

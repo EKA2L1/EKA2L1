@@ -179,7 +179,7 @@ namespace eka2l1::drivers {
 
     void server_graphics_command_list_builder::set_brush_color(const eka2l1::vec3 &color) {
         command *cmd = make_command(graphics_driver_set_brush_color, nullptr, static_cast<float>(color.x),
-            static_cast<float>(color.y), static_cast<float>(color.z), 1.0f);
+            static_cast<float>(color.y), static_cast<float>(color.z), 255.0f);
 
         get_command_list().add(cmd);
     }
