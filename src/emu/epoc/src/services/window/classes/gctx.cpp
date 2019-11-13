@@ -98,7 +98,7 @@ namespace eka2l1::epoc {
 
             case brush_style::solid:
                 color = common::rgb_to_vec(brush_color);
-                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+                cmd_builder->set_brush_color({ color[1], color[2], color[3] });
                 break;
 
             default:
@@ -117,7 +117,7 @@ namespace eka2l1::epoc {
 
             case pen_style::solid:
                 color = common::rgb_to_vec(pen_color);
-                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+                cmd_builder->set_brush_color({ color[1], color[2], color[3] });
                 break;
 
             default:
