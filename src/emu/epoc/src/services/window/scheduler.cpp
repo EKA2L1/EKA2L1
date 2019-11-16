@@ -31,7 +31,7 @@ namespace eka2l1::epoc {
 
     static void on_scan_callback(std::uint64_t userdata, const int cycles_late) {
         sched_scan_callback_data *callback = reinterpret_cast<sched_scan_callback_data*>(userdata);
-        callback->sched->idle_callback(callback->driver);        
+        callback->sched->idle_callback(callback->driver);  
     }
     
     animation_scheduler::animation_scheduler(timing_system *timing, const int total_screen)
@@ -173,6 +173,8 @@ namespace eka2l1::epoc {
     }
     
     void animation_scheduler::idle_callback(drivers::graphics_driver *driver) {
+        callback_scheduled_ = false;
+
         for (int screen_num = 0; screen_num < states_.size(); screen_num++) {
             scan_for_redraw(driver, screen_num, false);
         } 
