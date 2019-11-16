@@ -221,10 +221,8 @@ namespace eka2l1 {
         ws_sd_op_is_screen_mode_dynamic = 54,
         ws_sd_op_test_screen_capture_size = 55,
     };
-    
-    #define OPCODE_NAME_MAKER1(aprefix) aprefix
-    #define OPCODE_NAME_MAKER2(aprefix, aversion) OPCODE_NAME_MAKER1(aprefix)_##aversion
-    #define OPCODE_NAME(aprefix, aname, aversion) OPCODE_NAME_MAKER2(aprefix, aversion)_##aname
+
+    #define OPCODE_NAME(aaaprefix, aname, aversion) aaaprefix##_##aversion##_##aname
     #define OPCODE(aprefix, aname, aversion, val)    \
         OPCODE_NAME(aprefix, aname, aversion) = val,
 
