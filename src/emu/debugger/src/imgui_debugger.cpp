@@ -1057,7 +1057,7 @@ namespace eka2l1 {
         ImGui::Text("Client handle:  0x%08X", user->client_handle);
         ImGui::Text("Position:       { %d, %d }", user->pos.x, user->pos.y);
         ImGui::Text("Extent:         %dx%d", user->size.x, user->size.y);
-        
+
         switch (user->win_type) {
         case epoc::window_type::backed_up: {
             ImGui::Text("Client type:    Backed up");
@@ -1078,6 +1078,26 @@ namespace eka2l1 {
             break;
         }
         
+        std::string flags = "Flags:          ";
+
+        if (user->flags == 0) {
+            flags += "None";
+        } else {
+            if (user->flags & epoc::window_user::visible) {
+                flags += "Visible, ";
+            }
+
+            if (user->flags & epoc::window_user::active) {
+                flags += "Active, ";
+            }
+
+            flags.pop_back();
+            flags.pop_back();
+        }
+
+        ImGui::Text(flags.c_str());
+        ImGui::Separator();
+
         if (user->driver_win_id) {
             const eka2l1::vec2 size = user->size;
             ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(size.x, size.y)); 
