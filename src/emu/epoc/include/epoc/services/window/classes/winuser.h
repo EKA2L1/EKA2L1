@@ -90,7 +90,7 @@ namespace eka2l1::epoc {
         void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
 
         bool is_visible() const {
-            return flags & visible;
+            return ((flags & active) && (flags & visible));
         }
 
         /**
