@@ -37,6 +37,7 @@ namespace eka2l1 {
     class window_server;
 
     using app_launch_function = std::function<void(const std::u16string &path)>;
+    using selected_window_callback_function = std::function<void(void*)>;
 
     class imgui_debugger : public debugger_base {
         system *sys;
@@ -45,6 +46,7 @@ namespace eka2l1 {
         bool should_show_threads;
         bool should_show_mutexs;
         bool should_show_chunks;
+        bool should_show_window_tree;
 
         bool should_pause;
         bool should_stop;
@@ -82,6 +84,9 @@ namespace eka2l1 {
 
         std::mutex errors_mut;
         std::queue<std::string> error_queue;
+        
+        selected_window_callback_function selected_callback;
+        void *selected_callback_data;
 
         void show_app_launch();
 
@@ -104,6 +109,9 @@ namespace eka2l1 {
         void show_installer_choose_lang_popup();
         void show_errors();
         void show_screens();
+
+        // Server debugging
+        void show_windows_tree();
 
         std::unique_ptr<std::thread> install_thread;
         threadsafe_cn_queue<std::string> install_list;

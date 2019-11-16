@@ -33,6 +33,9 @@
 
 #include <epoc/services/applist/applist.h>
 #include <epoc/services/window/window.h>
+#include <epoc/services/window/classes/winbase.h>
+#include <epoc/services/window/classes/wingroup.h>
+#include <epoc/services/window/classes/winuser.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
@@ -65,6 +68,7 @@ namespace eka2l1 {
         , should_show_threads(false)
         , should_show_mutexs(false)
         , should_show_chunks(false)
+        , should_show_window_tree(false)
         , should_show_disassembler(false)
         , should_show_logger(true)
         , should_show_breakpoint_list(false)
@@ -78,7 +82,9 @@ namespace eka2l1 {
         , should_show_app_launch(false)
         , selected_package_index(0xFFFFFFFF)
         , debug_thread_id(0)
-        , app_launch(app_launch) {
+        , app_launch(app_launch)
+        , selected_callback(nullptr)
+        , selected_callback_data(nullptr) {
         // Setup hook
         manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
 
@@ -876,6 +882,11 @@ namespace eka2l1 {
                     ImGui::EndMenu();
                 }
 
+                if (ImGui::BeginMenu("Services")) {
+                    ImGui::MenuItem("Window tree", nullptr, &should_show_window_tree);
+                    ImGui::EndMenu();
+                }
+
                 ImGui::EndMenu();
             }
 
@@ -1033,7 +1044,153 @@ namespace eka2l1 {
             ImGui::End();
         }
     }
+        
+    static void ws_window_top_user_selected_callback(void *userdata) {
+        epoc::window_top_user *top = reinterpret_cast<epoc::window_top_user*>(userdata);
+        ImGui::Text("Type:           Top client");
+    }
 
+    static void ws_window_user_selected_callback(void *userdata) {
+        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(userdata);
+        
+        ImGui::Text("Type:           Client");
+        ImGui::Text("Client handle:  0x%08X", user->client_handle);
+        ImGui::Text("Position:       { %d, %d }", user->pos.x, user->pos.y);
+        ImGui::Text("Extent:         %dx%d", user->size.x, user->size.y);
+        
+        switch (user->win_type) {
+        case epoc::window_type::backed_up: {
+            ImGui::Text("Client type:    Backed up");
+            break;
+        }
+
+        case epoc::window_type::blank: {
+            ImGui::Text("Client type:    Blank");
+            break;
+        }
+
+        case epoc::window_type::redraw: {
+            ImGui::Text("Client type:    Redraw");
+            break;
+        }
+
+        default:
+            break;
+        }
+        
+        if (user->driver_win_id) {
+            const eka2l1::vec2 size = user->size;
+            ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(size.x, size.y)); 
+        }
+    }
+
+    static void ws_window_group_selected_callback(void *userdata) {
+        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(userdata);
+        const std::string name = common::ucs2_to_utf8(group->name);
+
+        ImGui::Text("Name:           %s", name.c_str());
+        ImGui::Text("Type:           Group");
+        ImGui::Text("Client handle:  0x%08X", group->client_handle);
+        ImGui::Text("Priority:       %d", group->priority);
+    }
+
+    static void iterate_through_layer(epoc::window *win, selected_window_callback_function *func, void **userdata) {
+        epoc::window *child = win->child;
+        selected_window_callback_function to_assign = nullptr;
+        std::string node_name = "";
+
+        while (child) {
+            switch (child->type) {
+            case epoc::window_kind::group: {
+                node_name = common::ucs2_to_utf8(reinterpret_cast<epoc::window_group*>(child)->name);
+                to_assign = ws_window_group_selected_callback;
+                break;
+            }
+
+            case epoc::window_kind::client: {
+                node_name = fmt::format("{}", reinterpret_cast<epoc::window_user*>(win)->id);
+                to_assign = ws_window_user_selected_callback;
+                break;                
+            }
+
+            case epoc::window_kind::top_client: {
+                node_name = "Top client";
+                to_assign = ws_window_top_user_selected_callback;
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            if (to_assign) {
+                const bool result = ImGui::TreeNode(node_name.c_str());
+
+                if (ImGui::IsItemClicked()) {                     
+                    *func = to_assign;
+                    *userdata = child;
+                }
+
+                if (result) {
+                    iterate_through_layer(child, func, userdata);
+                    ImGui::TreePop();
+                }
+            }
+
+            child = child->sibling;
+        }
+    }
+
+    static void ws_screen_selected_callback(void *userdata) {
+        epoc::screen *scr = reinterpret_cast<epoc::screen*>(userdata);
+        ImGui::Text("Screen number      %d", scr->number);
+
+        if (scr->screen_texture) {
+            eka2l1::vec2 size = scr->size();
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y)); 
+        }
+    }
+
+    void imgui_debugger::show_windows_tree() {
+        if (!winserv) {
+            return;
+        }
+
+        if (ImGui::Begin("Window tree")) {
+            ImGui::Columns(2);
+
+            epoc::screen *scr = winserv->get_screens();
+
+            for (int i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
+                const std::string screen_name = fmt::format("Screen {}", i);
+                
+                const bool result = ImGui::TreeNode(screen_name.c_str());
+
+                if (ImGui::IsItemClicked()) {                     
+                    selected_callback = ws_screen_selected_callback;
+                    selected_callback_data = scr;
+                }
+
+                if (result) {
+                    iterate_through_layer(scr->root.get(), &selected_callback, &selected_callback_data);
+                    ImGui::TreePop();
+                }
+            }
+
+            if (selected_callback) {
+                ImGui::NextColumn();
+                
+                if (ImGui::BeginChild("##EditMenu")) {    
+                    selected_callback(selected_callback_data);
+                    ImGui::EndChild();
+                }
+            }
+
+            ImGui::Columns(1);
+            ImGui::End();
+        }
+    }
+    
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
         handle_shortcuts();
@@ -1054,6 +1211,10 @@ namespace eka2l1 {
 
         if (should_show_chunks) {
             show_chunks();
+        }
+
+        if (should_show_window_tree) {
+            show_windows_tree();
         }
 
         if (should_show_disassembler) {
