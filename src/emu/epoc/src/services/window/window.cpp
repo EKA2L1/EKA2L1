@@ -240,6 +240,10 @@ namespace eka2l1::epoc {
             device_ptr->scr->update_focus(&get_ws(), nullptr);
         }
 
+        // Give it a nice name.
+        // We can give it name with id, but too much hassle
+        group_casted->name = common::utf8_to_ucs2(fmt::format("WindowGroup{:X}", header->client_handle));
+
         std::uint32_t id = add_object(group);
         ctx.set_request_status(id);
     }
