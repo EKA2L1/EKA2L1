@@ -61,7 +61,7 @@ namespace eka2l1::epoc {
     eka2l1::vec2 window_top_user::get_origin() {
         return { 0, 0 };
     }
-        
+
     window_user::window_user(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle)
         : window_user_base(client, scr, parent, window_kind::client)
         , win_type(type_of_window)
@@ -76,7 +76,7 @@ namespace eka2l1::epoc {
         , redraw_evt_id(0)
         , driver_win_id(0)
         , shadow_height(0)
-        , flags(0) {
+        , flags(visible) {
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
             LOG_ERROR("Parent is not a window client type!");
         } else {
