@@ -42,8 +42,14 @@ namespace eka2l1::epoc {
 
             window_user *winuser = reinterpret_cast<window_user*>(win);
 
-            if (!winuser && !winuser->driver_win_id) {
+            if (!winuser || !winuser->driver_win_id) {
                 // No need to redraw this window yet. It doesn't even have any content ready.
+                return false;
+            }
+
+            // Check if extent is just invalid
+            if (winuser->size.x == 0 || winuser->size.y == 0) {
+                // No one can see this. Leave it for now.
                 return false;
             }
 
