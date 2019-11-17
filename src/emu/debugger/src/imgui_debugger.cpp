@@ -1083,12 +1083,16 @@ namespace eka2l1 {
         if (user->flags == 0) {
             flags += "None";
         } else {
-            if (user->flags & epoc::window_user::visible) {
+            if (user->flags & epoc::window_user::flags_visible) {
                 flags += "Visible, ";
             }
 
-            if (user->flags & epoc::window_user::active) {
+            if (user->flags & epoc::window_user::flags_active) {
                 flags += "Active, ";
+            }
+
+            if (user->flags & epoc::window_user::flags_non_fading) {
+                flags += "Non-fading, ";
             }
 
             flags.pop_back();
@@ -1176,7 +1180,7 @@ namespace eka2l1 {
             return;
         }
 
-        if (ImGui::Begin("Window tree")) {
+        if (ImGui::Begin("Window tree", &should_show_window_tree)) {
             ImGui::Columns(2);
 
             epoc::screen *scr = winserv->get_screens();
