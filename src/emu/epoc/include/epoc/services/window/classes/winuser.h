@@ -65,10 +65,11 @@ namespace eka2l1::epoc {
         int shadow_height;
 
         enum {
-            shadow_disable = 1 << 0,
-            active = 1 << 1,
-            visible = 1 << 2,
-            allow_pointer_grab = 1 << 3
+            flags_shadow_disable = 1 << 0,
+            flags_active = 1 << 1,
+            flags_visible = 1 << 2,
+            flags_allow_pointer_grab = 1 << 3,
+            flags_non_fading = 1 << 4
         };
 
         std::uint32_t flags;
@@ -90,7 +91,7 @@ namespace eka2l1::epoc {
         void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
 
         bool is_visible() const {
-            return ((flags & active) && (flags & visible));
+            return ((flags & flags_active) && (flags & flags_visible));
         }
 
         /**
@@ -105,6 +106,7 @@ namespace eka2l1::epoc {
         // ===================== OPCODE IMPLEMENTATIONS ===========================
         void begin_redraw(service::ipc_context &context, ws_cmd &cmd);
         void end_redraw(service::ipc_context &context, ws_cmd &cmd);
+        void set_non_fading(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         epoc::window_group *get_group() {

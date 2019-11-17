@@ -222,6 +222,10 @@ namespace eka2l1::epoc {
             return events.queue_event(evt);
         }
 
+        void walk_event(epoc::event_fifo::walker_func walker, void *userdata) {
+            events.walk(walker, userdata);
+        }
+
         void deque_redraw(const std::uint32_t handle) {
             redraws.cancel_event_queue(handle);
         }

@@ -115,6 +115,31 @@ namespace eka2l1::epoc {
             }
         }
 
+        typedef bool (*walker_func)(void *userdata, T &evt);
+
+        /**
+         * \brief Walkthrough the event queue and purge requested events through
+         * callback result.
+         * 
+         * The function iterates all events pending in the queue, then let the callback
+         * decide to whether keep them or delete them.
+         * 
+         * If the callback returns true, the event is kept.
+         * 
+         * \param walker        The callback function.
+         * \param userdata      Userdata passed to callback.
+         */
+        void walk(walker_func walker, void *userdata) {
+            for (std::uint32_t i = 0; i < q_.size(); ) {
+                if (!walker(userdata, q_[i].evt)) {
+                    // Delete the element
+                    q_.erase(q_.begin() + i);
+                } else {
+                    i++;
+                }
+            }
+        }
+
         /*! \brief Get an event on the queue.
          *
          * \returns nullopt if nothing is on the queue.

@@ -76,7 +76,7 @@ namespace eka2l1::epoc {
         , redraw_evt_id(0)
         , driver_win_id(0)
         , shadow_height(0)
-        , flags(visible) {
+        , flags(flags_visible) {
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
             LOG_ERROR("Parent is not a window client type!");
         } else {
@@ -126,17 +126,29 @@ namespace eka2l1::epoc {
         size = new_size;
     }
 
+    static bool should_purge_window_user(void *win, epoc::event &evt) {
+        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+        if (user->client_handle == evt.handle) {
+            return false;
+        }
+
+        return true;
+    }
+
     void window_user::set_visible(const bool vis) {
         bool should_trigger_redraw = false;
 
-        if (static_cast<bool>(flags & visible) != vis) {
+        if (static_cast<bool>(flags & flags_visible) != vis) {
             should_trigger_redraw = true;
         }
 
-        flags &= ~visible;
+        flags &= ~flags_visible;
 
         if (vis) {
-            flags |= visible;
+            flags |= flags_visible;
+        } else {
+            // Purge all queued events now that the window is not visible anymore
+            client->walk_event(should_purge_window_user, this);
         }
 
         if (should_trigger_redraw) {
@@ -239,6 +251,16 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
+    void window_user::set_non_fading(service::ipc_context &context, ws_cmd &cmd) {
+        const bool non_fading = *reinterpret_cast<bool*>(cmd.data_ptr);
+
+        if (non_fading) {
+            flags |= flags_non_fading;
+        } else {
+            flags &= ~(flags_non_fading);
+        }
+    }
+
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
@@ -288,6 +310,11 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpSetNonFading: {
+            set_non_fading(ctx, cmd);
+            break;
+        }
+
         case EWsWinOpSetShadowHeight: {
             shadow_height = *reinterpret_cast<int *>(cmd.data_ptr);
             ctx.set_request_status(epoc::error_none);
@@ -296,10 +323,10 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpShadowDisabled: {
-            flags &= ~shadow_disable;
+            flags &= ~flags_shadow_disable;
 
             if (*reinterpret_cast<bool *>(cmd.data_ptr)) {
-                flags |= shadow_disable;
+                flags |= flags_shadow_disable;
             }
 
             ctx.set_request_status(epoc::error_none);
@@ -332,10 +359,10 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetPointerGrab: {
-            flags &= ~allow_pointer_grab;
+            flags &= ~flags_allow_pointer_grab;
 
             if (*reinterpret_cast<bool *>(cmd.data_ptr)) {
-                flags |= allow_pointer_grab;
+                flags |= flags_allow_pointer_grab;
             }
 
             ctx.set_request_status(epoc::error_none);
@@ -343,7 +370,7 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpActivate: {
-            flags |= active;
+            flags |= flags_active;
 
             // When a window actives, a redraw is needed
             // Redraw happens with all of the screen
