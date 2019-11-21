@@ -96,9 +96,10 @@ namespace eka2l1::epoc {
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_style(service::ipc_context &context, ws_cmd &cmd);
         void draw_rect(service::ipc_context &context, ws_cmd &cmd);
+        void clear_rect(service::ipc_context &context, ws_cmd &cmd);
 
-        void reset(service::ipc_context &context, ws_cmd &cmd);
         void use_font(service::ipc_context &context, ws_cmd &cmd);
+        void reset(service::ipc_context &context, ws_cmd &cmd);
 
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 

@@ -97,7 +97,6 @@ namespace eka2l1::epoc {
                 return false;
 
             case brush_style::solid:
-                color = common::rgb_to_vec(brush_color);
                 cmd_builder->set_brush_color({ color[1], color[2], color[3] });
                 break;
 
@@ -207,6 +206,18 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
     }
     
+    void graphic_context::clear_rect(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect area = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+
+        eka2l1::vecx<int, 4> color;
+        color = common::rgb_to_vec(brush_color);
+        cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+
+        // Draw rectangle
+        cmd_builder->draw_rectangle(area);
+        context.set_request_status(epoc::error_none);
+    }
+    
     void graphic_context::reset_context() {
         text_font = nullptr;
         
@@ -244,6 +255,7 @@ namespace eka2l1::epoc {
             { ws_gc_u171_reset, &graphic_context::reset },
             { ws_gc_u171_use_font, &graphic_context::use_font },
             { ws_gc_u171_draw_rect, &graphic_context::draw_rect },
+            { ws_gc_u171_clear_rect, &graphic_context::clear_rect },
             { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap }
         };
         
@@ -256,6 +268,7 @@ namespace eka2l1::epoc {
             { ws_gc_curr_reset, &graphic_context::reset },
             { ws_gc_curr_use_font, &graphic_context::use_font },
             { ws_gc_curr_draw_rect, &graphic_context::draw_rect },
+            { ws_gc_curr_clear_rect, &graphic_context::clear_rect },
             { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap }
         };
 
