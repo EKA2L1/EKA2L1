@@ -23,6 +23,7 @@
 
 #include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/font.h>
+#include <epoc/services/fbs/font_atlas.h>
 #include <epoc/services/fbs/font_store.h>
 #include <epoc/services/framework.h>
 #include <epoc/services/fbs/adapter/font_adapter.h>
@@ -30,6 +31,8 @@
 
 #include <common/allocator.h>
 #include <common/hash.h>
+
+#include <drivers/graphics/common.h>
 
 #include <atomic>
 #include <memory>
@@ -183,6 +186,8 @@ namespace eka2l1 {
         eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
         epoc::open_font_info of_info;
         fbs_server *serv;
+
+        epoc::font_atlas atlas;
 
         explicit fbsfont()
             : fbsobj(fbsobj_kind::font) {
@@ -388,6 +393,14 @@ namespace eka2l1 {
         T *allocate_general_data() {
             return reinterpret_cast<T *>(allocate_general_data_impl(sizeof(T)));
         }
+
+        /**
+         * \brief   Get a font by its ID.
+         * 
+         * \param   id The ID of the font.
+         * \returns Pointer to the font object if it exists.
+         */
+        fbsfont *get_font(const service::uid id);
 
         template <typename T>
         bool free_general_data(const T *dat) {
