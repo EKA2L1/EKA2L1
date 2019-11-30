@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/fbs/fbs.h>
 #include <epoc/services/window/classes/gctx.h>
 #include <epoc/services/window/classes/scrdvc.h>
 #include <epoc/services/window/classes/wingroup.h>
@@ -71,17 +72,31 @@ namespace eka2l1::epoc {
         source_rect.top = { 0, 0 };
         source_rect.size = dest_rect.size;
 
-        cmd_builder->draw_bitmap(h, dest_rect.top, source_rect, false);
+        cmd_builder->draw_bitmap(h, eka2l1::rect(dest_rect.top, { 0, 0 }), source_rect, false);
         ctx.set_request_status(epoc::error_none);
     }
 
-    void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, eka2l1::vec2 bottom_right, std::u16string text) {
-        if (attached_window->cursor_pos == vec2(-1, -1)) {
-            LOG_TRACE("Cursor position not set, not drawing the text");
-            return;
+    void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, 
+        eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
+        const int baseline_offset, const int margin) {
+        // TODO: Pen outline >_<
+        eka2l1::vecx<int, 4> color;
+        color = common::rgb_to_vec(brush_color);
+        cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+        
+        eka2l1::rect area(top_left, bottom_right - top_left);
+        
+        // Add the baseline offset. Where text will sit on.
+        area.top.y += baseline_offset;
+        
+        if (align == epoc::text_alignment::right) {
+            area.top.x -= margin;
+        } else {
+            area.top.x += margin;
         }
 
-        // TODO: Get text data from the font. Maybe upload them as atlas.
+        text_font->atlas.draw_text(text, area, align, client->get_ws().get_graphics_driver(),
+            cmd_builder.get());
 
         ctx.set_request_status(epoc::error_none);
     }
@@ -189,6 +204,9 @@ namespace eka2l1::epoc {
     void graphic_context::draw_rect(service::ipc_context &context, ws_cmd &cmd) {
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
 
+        // Symbian rectangle second vector is the bottom right, not the size
+        area.size = area.size - area.top;
+
         if (do_command_set_color(set_color_type::pen)) {
             // We want to draw the rectangle that backup the real rectangle, to create borders.
             eka2l1::rect backup_border = area;
@@ -208,6 +226,9 @@ namespace eka2l1::epoc {
     
     void graphic_context::clear_rect(service::ipc_context &context, ws_cmd &cmd) {
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+
+        // Symbian rectangle second vector is the bottom right, not the size
+        area.size = area.size - area.top;
 
         eka2l1::vecx<int, 4> color;
         color = common::rgb_to_vec(brush_color);
@@ -233,9 +254,45 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::use_font(service::ipc_context &context, ws_cmd &cmd) {
-        std::uint32_t font_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        service::uid font_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        fbs_server *fbs = client->get_ws().get_fbs_server();
+
+        fbsfont *font_object = fbs->get_font(font_handle);
+
+        if (!font_object) {
+            context.set_request_status(epoc::error_argument);
+            return;
+        }
+
+        text_font = font_object;
+        
+        if (text_font->atlas.atlas_handle_ == 0) {
+            // Initialize the atlas
+            text_font->atlas.init(font_object->of_info.adapter, 0x20, 0xFF - 0x20,
+                font_object->of_info.metrics.max_height);
+        }
+
+        context.set_request_status(epoc::error_none);
+    }
+
+    void graphic_context::draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_box_text_optimised1 *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
+        std::u16string text(reinterpret_cast<char16_t*>(reinterpret_cast<std::uint8_t*>
+            (cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised1)), info->length);
+        
+        do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
+            epoc::text_alignment::left, info->baseline_offset, 0);
     }
     
+    void graphic_context::draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_box_text_optimised2 *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
+        std::u16string text(reinterpret_cast<char16_t*>(reinterpret_cast<std::uint8_t*>
+            (cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised2)), info->length);
+
+        do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
+            info->horiz, info->baseline_offset, info->left_mgr);
+    }
+
     void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -256,7 +313,9 @@ namespace eka2l1::epoc {
             { ws_gc_u171_use_font, &graphic_context::use_font },
             { ws_gc_u171_draw_rect, &graphic_context::draw_rect },
             { ws_gc_u171_clear_rect, &graphic_context::clear_rect },
-            { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap }
+            { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap },
+            { ws_gc_u171_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
+            { ws_gc_u171_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 }
         };
         
         static const ws_graphics_context_table_op curr_opcode_handlers = {
@@ -269,7 +328,9 @@ namespace eka2l1::epoc {
             { ws_gc_curr_use_font, &graphic_context::use_font },
             { ws_gc_curr_draw_rect, &graphic_context::draw_rect },
             { ws_gc_curr_clear_rect, &graphic_context::clear_rect },
-            { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap }
+            { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap },
+            { ws_gc_curr_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
+            { ws_gc_curr_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 }
         };
 
         epoc::version cli_ver = client->client_version();
@@ -294,93 +355,6 @@ namespace eka2l1::epoc {
         }
 
         handler(this, ctx, cmd);
-            /*
-        case EWsGcOpActivate: {
-            active(ctx, cmd);
-            break;
-        }
-
-        // Brush is fill, pen is outline
-        case EWsGcOpSetBrushColor: {
-            break;
-        }
-
-        case EWsGcOpSetBrushStyle: {
-            LOG_ERROR("SetBrushStyle not supported, stub");
-            ctx.set_request_status(epoc::error_none);
-            break;
-        }
-
-        case EWsGcOpSetPenStyle: {
-            LOG_ERROR("Pen operation not supported yet");
-            ctx.set_request_status(epoc::error_none);
-
-            break;
-        }
-
-        case EWsGcOpSetPenColor: {
-            LOG_ERROR("Pen operation not supported yet");
-            ctx.set_request_status(epoc::error_none);
-            break;
-        }
-
-        case EWsGcOpDrawTextPtr: {
-            ws_cmd_draw_text_ptr *draw_text_info = reinterpret_cast<decltype(draw_text_info)>(cmd.data_ptr);
-
-            std::u16string draw_text;
-
-            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc94) && (cmd.header.cmd_len <= 8)) {
-                draw_text = *ctx.get_arg<std::u16string>(0);
-            } else {
-                epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
-                std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
-            }
-
-            do_command_draw_text(ctx, draw_text_info->pos, vec2(-1, -1), draw_text);
-
-            break;
-        }
-
-        case EWsGcOpDrawTextVertical: {
-            ws_cmd_draw_text_vertical_v94 *draw_text_info = reinterpret_cast<decltype(draw_text_info)>(cmd.data_ptr);
-
-            std::u16string text;
-            std::uint32_t text_len = draw_text_info->length;
-
-            char16_t *text_ptr = reinterpret_cast<char16_t *>(draw_text_info + 1);
-            text.assign(text_ptr, text_len);
-
-            do_command_draw_text(ctx, draw_text_info->pos, draw_text_info->bottom_right, text);
-
-            break;
-        }
-
-        case EWsGcOpDrawBoxTextPtr: {
-            ws_cmd_draw_box_text_ptr *draw_text_info = reinterpret_cast<decltype(draw_text_info)>(cmd.data_ptr);
-
-            std::u16string draw_text;
-
-            // on EPOC <= 9, the struct only contains the bound
-            if ((ctx.sys->get_symbian_version_use() <= epocver::epoc94) && (cmd.header.cmd_len <= 16)) {
-                draw_text = *ctx.get_arg<std::u16string>(0);
-            } else {
-                epoc::desc16 *text_des = draw_text_info->text.get(ctx.msg->own_thr->owning_process());
-                std::u16string draw_text = text_des->to_std_string(ctx.msg->own_thr->owning_process());
-            }
-
-            // TODO: align
-            do_command_draw_text(ctx, draw_text_info->left_top_pos, draw_text_info->right_bottom_pos, draw_text);
-
-            break;
-        }
-
-        case EWsGcOpDeactivate: {
-            break;
-        }
-
-        case EWsGcOpDrawBitmap: {
-            
-        }*/
     }
 
     graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)

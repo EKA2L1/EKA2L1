@@ -94,11 +94,27 @@ namespace eka2l1 {
     struct ws_cmd_draw_box_text_ptr {
         vec2 left_top_pos;
         vec2 right_bottom_pos;
-        int baseline_offset;
-        epoc::text_aligment horiz;
-        int left_mgr;
-        int width;
+        std::int32_t baseline_offset;
+        epoc::text_alignment horiz;
+        std::int32_t left_mgr;
+        std::int32_t width;
         eka2l1::ptr<epoc::desc16> text;
+    };
+
+    struct ws_cmd_draw_box_text_optimised1 {
+        vec2 left_top_pos;
+        vec2 right_bottom_pos;
+        std::int32_t baseline_offset;
+        std::int32_t length;
+    };
+
+    struct ws_cmd_draw_box_text_optimised2 {
+        vec2 left_top_pos;
+        vec2 right_bottom_pos;
+        std::int32_t baseline_offset;
+        epoc::text_alignment horiz;
+        std::int32_t left_mgr;
+        std::int32_t length;
     };
 
     struct ws_cmd_set_text_cursor {

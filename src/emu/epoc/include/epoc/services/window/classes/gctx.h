@@ -84,7 +84,9 @@ namespace eka2l1::epoc {
         void reset_context();
 
         void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
-            eka2l1::vec2 bottom_right, std::u16string text);
+            eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
+            const int baseline_offset, const int margin);
+
         void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, 
             const eka2l1::rect &dest_rect);
         bool do_command_set_color(const set_color_type to_set);
@@ -97,6 +99,8 @@ namespace eka2l1::epoc {
         void set_pen_style(service::ipc_context &context, ws_cmd &cmd);
         void draw_rect(service::ipc_context &context, ws_cmd &cmd);
         void clear_rect(service::ipc_context &context, ws_cmd &cmd);
+        void draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd);
+        void draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd);
 
         void use_font(service::ipc_context &context, ws_cmd &cmd);
         void reset(service::ipc_context &context, ws_cmd &cmd);
