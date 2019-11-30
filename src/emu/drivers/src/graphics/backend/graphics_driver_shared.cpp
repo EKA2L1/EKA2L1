@@ -135,7 +135,11 @@ namespace eka2l1::drivers {
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), data_format,
             texture_data_type::ubyte, data);
-        
+
+        if (data_format == texture_format::r) {
+            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red, 
+                channel_swizzle::red, channel_swizzle::one });
+        }
     }
 
     void shared_graphics_driver::update_bitmap(command_helper &helper) {
