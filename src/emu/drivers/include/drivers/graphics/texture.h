@@ -23,6 +23,7 @@
 #include <common/vecx.h>
 #include <drivers/graphics/common.h>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 
@@ -51,6 +52,17 @@ namespace eka2l1::drivers {
         linear
     };
 
+    enum class channel_swizzle {
+        red,
+        green,
+        blue,
+        alpha,
+        zero,
+        one
+    };
+
+    using channel_swizzles = std::array<channel_swizzle, 4>;
+
     /*! \brief Base class for backend texture.
     */
     class texture : public graphics_object {
@@ -70,6 +82,7 @@ namespace eka2l1::drivers {
         virtual void change_texture_format(const texture_format format) = 0;
 
         virtual void set_filter_minmag(const bool min, const filter_option op) = 0;
+        virtual void set_channel_swizzle(channel_swizzles swizz) = 0;
 
         virtual void bind(graphics_driver *driver, const int binding) = 0;
         virtual void unbind(graphics_driver *driver) = 0;

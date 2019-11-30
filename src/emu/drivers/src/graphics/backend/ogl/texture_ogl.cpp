@@ -21,6 +21,8 @@
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
 #include <glad/glad.h>
 
+#include <cassert>
+
 namespace eka2l1::drivers {
     static GLint to_gl_format(const texture_format format) {
         switch (format) {
@@ -182,6 +184,46 @@ namespace eka2l1::drivers {
         bind(nullptr, 0);
         glTexParameteri(GL_TEXTURE_2D, min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER, to_filter_option(op));
         unbind(nullptr);
+    }
+
+    static GLint translate_hal_swizzle_to_gl_swizzle(channel_swizzle swizz) {
+        switch (swizz) {
+        case channel_swizzle::red:
+            return GL_RED;
+
+        case channel_swizzle::blue:
+            return GL_BLUE;
+        
+        case channel_swizzle::green:
+            return GL_GREEN;
+
+        case channel_swizzle::alpha:
+            return GL_ALPHA;
+
+        case channel_swizzle::one:
+            return GL_ONE;
+        
+        case channel_swizzle::zero:
+            return GL_ZERO;
+
+        default:
+            break;
+        }
+
+        assert(false && "UNREACHABLE");
+        return GL_ONE;
+    }
+
+    void ogl_texture::set_channel_swizzle(channel_swizzles swizz) {
+        GLint swizz_gl[4];
+
+        for (int i = 0; i < 4; i++) {
+            swizz_gl[i] = translate_hal_swizzle_to_gl_swizzle(swizz[i]);
+        }
+
+        bind(nullptr, 0);
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizz_gl);
+        unbind(nullptr);        
     }
 
     static GLenum get_binding_enum_dim(const int dim) {
