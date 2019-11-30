@@ -415,7 +415,7 @@ namespace eka2l1::epoc {
 
         case EWsWinOpEndRedraw: {
             end_redraw(ctx, cmd);
-            break;  
+            break;
         }
 
         default: {
