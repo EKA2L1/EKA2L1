@@ -12,6 +12,7 @@ uniform vec4 u_color;
 
 void main() {
     gl_Position = u_proj * u_model * vec4(in_position, 0.0, 1.0);
+    gl_Position.y = -gl_Position.y;
     r_texcoord = in_texcoord;
     r_color = u_color;
 }
