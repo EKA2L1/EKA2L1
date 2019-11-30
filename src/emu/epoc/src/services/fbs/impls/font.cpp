@@ -630,6 +630,10 @@ namespace eka2l1 {
         epoc::ref_count_object::deref();
     }
 
+    fbsfont *fbs_server::get_font(const service::uid id) {
+        return font_obj_container.get<fbsfont>(id);
+    }
+
     void fbs_server::load_fonts(eka2l1::io_system *io) {
         // Search all drives
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
