@@ -33,6 +33,12 @@ namespace eka2l1::common {
     };
 
     /**
+     * @brief Get total seconds esclaped in microseconds since 1/1/1970.
+     * @returns A 64-bit number indicates the total microseconds.
+     */
+    std::uint64_t get_current_time_in_microseconds_since_epoch();
+
+    /**
      * @brief Get total seconds esclaped in microseconds since 1/1/1AD
      * @returns A 64-bit number indicates the total microseconds.
      */

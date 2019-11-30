@@ -31,6 +31,10 @@
 #endif
 
 namespace eka2l1::common {
+    std::uint64_t get_current_time_in_microseconds_since_epoch() {
+        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    }
+
     std::uint64_t get_current_time_in_microseconds_since_1ad() {
         return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;
