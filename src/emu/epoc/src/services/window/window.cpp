@@ -1075,12 +1075,16 @@ namespace eka2l1 {
         return walker.total;
     }
 
-    epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
+    fbs_server *window_server::get_fbs_server() {
         if (!fbss) {
             fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name
                 <service::server>("!Fontbitmapserver")));
         }
 
-        return fbss->get<fbsbitmap>(h)->bitmap_;
+        return fbss;
+    }
+
+    epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
+        return get_fbs_server()->get<fbsbitmap>(h)->bitmap_;
     }
 }

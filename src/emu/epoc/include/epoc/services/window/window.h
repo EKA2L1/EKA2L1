@@ -351,6 +351,8 @@ namespace eka2l1 {
             focus_screen_ = scr;
         }
 
+        fbs_server *get_fbs_server();
+        
         epoc::screen *get_screen(const int number);
         
         epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
