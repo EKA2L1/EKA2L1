@@ -139,7 +139,7 @@ namespace eka2l1::epoc {
             adapter::character_info &info = characters_[chr];
 
             source_rect.top = { info.x0, info.y0 };
-            source_rect.size = { info.x1 - info.x0, info.y1 - info.y0};
+            source_rect.size = eka2l1::object_size(info.x1 - info.x0, info.y1 - info.y0);
 
             eka2l1::rect dest_rect;
             dest_rect.top.x = cur_pos.x + static_cast<int>(info.xoff);
