@@ -374,7 +374,7 @@ namespace eka2l1::epoc {
         all = pointer_move | pointer_simulated_event
     };
 
-    enum class text_aligment {
+    enum class text_alignment {
         left,
         center,
         right
