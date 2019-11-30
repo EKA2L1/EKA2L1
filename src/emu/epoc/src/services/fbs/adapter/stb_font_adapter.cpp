@@ -25,7 +25,8 @@
 
 namespace eka2l1::epoc::adapter {
     stb_font_file_adapter::stb_font_file_adapter(std::vector<std::uint8_t> &data_)
-        : data_(data_) {
+        : data_(data_)
+        , flags_(0) {
         count_ = stbtt_GetNumberOfFonts(&data_[0]);
     }
 
@@ -253,5 +254,41 @@ namespace eka2l1::epoc::adapter {
 
     void stb_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
         stbtt_FreeBitmap(data, nullptr);
+    }
+
+    bool stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+        if (!stbtt_PackBegin(&context_, atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    void stb_font_file_adapter::end_get_atlas() {
+        stbtt_PackEnd(&context_);
+    }
+
+    bool stb_font_file_adapter::get_glyph_atlas(const char16_t start_code, int *unicode_point,
+        const char16_t num_code, const int font_size, character_info *info) {
+        auto character_infos = std::make_unique<stbtt_packedchar[]>(num_code);
+
+        stbtt_PackSetOversampling(&context_, 2, 2);
+
+        stbtt_pack_range range;
+        range.array_of_unicode_codepoints = unicode_point;
+        range.chardata_for_range = character_infos.get();
+        range.font_size = static_cast<float>(font_size);
+        range.num_chars = num_code;
+        range.first_unicode_codepoint_in_range = start_code;
+
+        if (!stbtt_PackFontRanges(&context_, data_.data(), 0, &range, 1)) {
+            return false;
+        }
+
+        if (info) {
+            std::memcpy(info, character_infos.get(), num_code * sizeof(character_info));
+        }
+
+        return true;
     }
 }

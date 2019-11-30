@@ -19,12 +19,26 @@
 
 #pragma once
 
-#include <epoc/services/fbs/font.h>
 #include <cstdint>
 #include <memory>
 #include <vector>
 
+#include <common/vecx.h>
+#include <epoc/services/fbs/font.h>
+
 namespace eka2l1::epoc::adapter {
+    struct character_info {
+        std::uint16_t x0;
+        std::uint16_t y0;
+        std::uint16_t x1;
+        std::uint16_t y1;
+        float xoff;
+        float yoff;
+        float xadv;
+        float xoff2;
+        float yoff2;
+    };
+
     /**
      * \brief Base class for adapter.
      */
@@ -41,6 +55,33 @@ namespace eka2l1::epoc::adapter {
         virtual void free_glyph_bitmap(std::uint8_t *data) = 0;
         virtual glyph_bitmap_type get_output_bitmap_type() const = 0;
         
+        /**
+         * \brief Initialize getting glyph atlas.
+         * 
+         * Each pixel is 8 bits.
+         * 
+         * \param atlas_ptr Pointer to destination data which glyph bitmap will be written to.
+         * \param atlas_size Size of the atlas.
+         */
+        virtual bool begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) = 0;
+
+        /**
+         * \brief Get an atlas contains glyphs bitmap.
+         * 
+         * \param start_code    First unicode point in a range to get glyph bitmap. 0 to use unicode array.
+         * \param unicode_point Pointer to an array of unicode point which we want to rasterize. NULL to ingore.
+         * \param num_code      Number of unicode point to rasterize.
+         * \param font_size     Size of the font to render.
+         * \param info          Pointer to array which will contains character info in the atlas. Can be NULL to ignore.
+         * 
+         * \returns True on success. 
+         */
+        virtual bool get_glyph_atlas(const char16_t start_code, int *unicode_point,
+            const char16_t num_code, const int font_size, character_info *info) = 0;
+
+        // End getting atlas.
+        virtual void end_get_atlas() = 0;
+
         /**
          * \brief Get total number of font this file consists of.
          * \returns Number of font in this file.

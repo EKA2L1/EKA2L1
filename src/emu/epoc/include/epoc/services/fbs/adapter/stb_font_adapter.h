@@ -32,7 +32,15 @@ namespace eka2l1::epoc::adapter {
         std::map<int, stbtt_fontinfo> cache_info;
 
         stbtt_fontinfo info_;
+        stbtt_pack_context context_;
+
         std::size_t count_;
+
+        std::uint8_t flags_;
+
+        enum {
+            FLAGS_CONTEXT_INITED = 1 << 0
+        };
     
     public:
         stbtt_fontinfo *get_or_create_info(const int idx, int *off);
@@ -49,7 +57,14 @@ namespace eka2l1::epoc::adapter {
             const float scale_y, int *rasterized_width, int *rasterized_height, epoc::glyph_bitmap_type *bmp_type) override;
 
         void free_glyph_bitmap(std::uint8_t *data) override;
+
+        bool begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
+
+        bool get_glyph_atlas(const char16_t start_code, int *unicode_point,
+            const char16_t num_code, const int font_size, character_info *info) override;
         
+        void end_get_atlas() override;
+
         glyph_bitmap_type get_output_bitmap_type() const override {
             return antialised_glyph_bitmap;
         }
