@@ -168,7 +168,7 @@ namespace eka2l1::drivers {
          * \param source_rect  The source rectangle to strip.
          * \param use_brush    Use brush color.
          */
-        virtual void draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const eka2l1::rect &source_rect, const bool use_brush) = 0;
+        virtual void draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const bool use_brush) = 0;
 
         /**
          * \brief Draw a rectangle with brush color.
@@ -355,7 +355,7 @@ namespace eka2l1::drivers {
         void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim) override;
 
-        void draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const eka2l1::rect &source_rect, const bool use_brush) override;
+        void draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const bool use_brush) override;
 
         void draw_rectangle(const eka2l1::rect &target_rect) override;
 

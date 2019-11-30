@@ -100,7 +100,7 @@ namespace eka2l1::drivers {
         glm::mat4 model_matrix = glm::identity<glm::mat4>();
         model_matrix = glm::translate(model_matrix, { fill_rect.top.x, fill_rect.top.y, 0.0f });
         model_matrix = glm::scale(model_matrix, { fill_rect.size.x, fill_rect.size.y, 0.0f });
-        
+
         glUniformMatrix4fv(model_loc_fill, 1, false, glm::value_ptr(model_matrix));
         glUniformMatrix4fv(proj_loc_fill, 1, false, glm::value_ptr(projection_matrix));
 
@@ -143,8 +143,8 @@ namespace eka2l1::drivers {
             return;
         }
 
-        eka2l1::vec2 position;
-        helper.pop(position);
+        eka2l1::rect dest_rect;
+        helper.pop(dest_rect);
 
         sprite_program->use(this);
 
@@ -220,7 +220,7 @@ namespace eka2l1::drivers {
 
         // Build model matrix
         glm::mat4 model_matrix = glm::identity<glm::mat4>();
-        model_matrix = glm::translate(model_matrix, { position.x, position.y, 0.0f });
+        model_matrix = glm::translate(model_matrix, { dest_rect.top.x, dest_rect.top.y, 0.0f });
 
         if (source_rect.size.x == 0) {
             source_rect.size.x = bmp->tex->get_size().x;
@@ -230,7 +230,15 @@ namespace eka2l1::drivers {
             source_rect.size.y = bmp->tex->get_size().y;
         }
 
-        model_matrix = glm::scale(model_matrix, glm::vec3(source_rect.size.x, source_rect.size.y, 0.0f));
+        if (dest_rect.size.x == 0) {
+            dest_rect.size.x = source_rect.size.x;
+        }
+        
+        if (dest_rect.size.y == 0) {
+            dest_rect.size.y = source_rect.size.y;
+        }
+
+        model_matrix = glm::scale(model_matrix, glm::vec3(dest_rect.size.x, dest_rect.size.y, 0.0f));
 
         glUniformMatrix4fv(model_loc, 1, false, glm::value_ptr(model_matrix));
         glUniformMatrix4fv(proj_loc, 1, false, glm::value_ptr(projection_matrix));

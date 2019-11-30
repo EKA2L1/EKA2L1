@@ -162,8 +162,8 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const eka2l1::rect &source_rect, const bool use_brush) {
-        command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, pos, source_rect, use_brush);
+    void server_graphics_command_list_builder::draw_bitmap(drivers::handle h, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const bool use_brush) {
+        command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, dest_rect, source_rect, use_brush);
         get_command_list().add(cmd);
     }
 
