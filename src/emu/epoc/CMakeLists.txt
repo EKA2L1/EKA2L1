@@ -123,6 +123,7 @@ add_library(epocservs
     include/epoc/services/fbs/bitmap.h
     include/epoc/services/fbs/fbs.h
     include/epoc/services/fbs/font.h
+    include/epoc/services/fbs/font_atlas.h
     include/epoc/services/fbs/font_store.h
     include/epoc/services/featmgr/featmgr.h
     include/epoc/services/fs/fs.h
@@ -185,6 +186,7 @@ add_library(epocservs
     src/services/fbs/adapter/font_adapter.cpp
     src/services/fbs/adapter/stb_font_adapter.cpp
     src/services/fbs/fbs.cpp
+    src/services/fbs/font_atlas.cpp
     src/services/fbs/impls/bitmap.cpp
     src/services/fbs/impls/font.cpp
     src/services/fbs/impls/font_store.cpp
