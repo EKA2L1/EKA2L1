@@ -20,13 +20,25 @@
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
 #include <drivers/graphics/graphics.h>
 
+#include <common/log.h>
 #include <glad/glad.h>
 
 namespace eka2l1::drivers {
+    static void gl_post_callback_for_error(const char *name, void *funcptr, int len_args, ...) {
+        GLenum error_code;
+        error_code = glad_glGetError();
+
+        if (error_code != GL_NO_ERROR) {
+            LOG_ERROR("{} encounters error {}", name, error_code);
+        }
+    }
+    
     bool init_graphics_library(graphic_api api) {
         switch (api) {
         case graphic_api::opengl: {
             gladLoadGL();
+            glad_set_post_callback(gl_post_callback_for_error);
+
             return true;
         }
 
