@@ -18,6 +18,7 @@
  */
 
 #include <epoc/services/akn/skin/common.h>
+#include <epoc/services/akn/skin/chunk_maintainer.h>
 #include <epoc/services/akn/skin/icon_cfg.h>
 #include <epoc/services/akn/skin/settings.h>
 #include <epoc/services/framework.h>
@@ -70,12 +71,19 @@ namespace eka2l1 {
     class akn_skin_server: public service::typical_server {
         std::unique_ptr<epoc::akn_ss_settings> settings_;
         std::unique_ptr<epoc::akn_skin_icon_config_map> icon_config_map_;
+        std::unique_ptr<epoc::akn_skin_chunk_maintainer> chunk_maintainer_;
 
         chunk_ptr skin_chunk_;
         sema_ptr skin_chunk_sema_;
         mutex_ptr skin_chunk_render_mut_;
 
         void do_initialisation();
+
+        /**
+         * \brief Merge active skin ID to the skin chunk.
+         * \param io Pointer to the IO system.
+         */
+        void merge_active_skin(eka2l1::io_system *io);
 
     public:
         explicit akn_skin_server(eka2l1::system *sys);

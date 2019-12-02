@@ -19,6 +19,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <tuple>
+
 namespace eka2l1::epoc {
     enum akn_skin_server_change_handler_notification {
         akn_ssch_content_changed = 1,
@@ -40,4 +43,6 @@ namespace eka2l1::epoc {
         THEMES_UID = 0x102818E8,
         ICON_CAPTION_UID = 0x1028583D
     };
+    
+    using pid = std::pair<std::uint32_t, std::uint32_t>;
 }

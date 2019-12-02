@@ -19,8 +19,12 @@
 
 #include <epoc/services/akn/skin/server.h>
 #include <epoc/services/akn/skin/ops.h>
+#include <epoc/services/akn/skin/skn.h>
+#include <epoc/services/akn/skin/utils.h>
+#include <epoc/vfs.h>
 
 #include <common/log.h>
+#include <common/cvt.h>
 #include <epoc/utils/err.h>
 
 #include <epoc/epoc.h>
@@ -138,6 +142,24 @@ namespace eka2l1 {
         return icon_config_map_->is_icon_configured(app_uid);
     }
 
+    void akn_skin_server::merge_active_skin(eka2l1::io_system *io) {
+        const epoc::pid skin_pid = settings_->active_skin_pid();
+        const std::optional<std::u16string> skin_path = epoc::find_skin_file(io, skin_pid);
+        const std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_pid);
+
+        if (!skin_path.has_value()) {
+            LOG_ERROR("Unable to find active skin file!");
+            return;
+        }
+
+        symfile skin_file_obj = io->open_file(skin_path.value(), READ_MODE | BIN_MODE);
+        eka2l1::ro_file_stream skin_file_stream(skin_file_obj.get());
+
+        epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream*>(&skin_file_stream));
+        
+        chunk_maintainer_->import(skin_parser, resource_path.value_or(u""));
+    }
+
     void akn_skin_server::do_initialisation() {
         kernel_system *kern = sys->get_kernel_system();
         server_ptr svr = kern->get_by_name<service::server>("!CentralRepository");
@@ -164,5 +186,12 @@ namespace eka2l1 {
         skin_chunk_render_mut_ = kern->create_and_add<kernel::mutex>(kernel::owner_type::kernel,
             sys->get_timing_system(), "AknsSrvRenderSemaphore", false, 
             kernel::access_type::global_access).second;
+
+        // Create chunk maintainer
+        chunk_maintainer_ = std::make_unique<epoc::akn_skin_chunk_maintainer>(skin_chunk_.get(),
+            4 * 1024);
+
+        // Merge the active skin as the first step
+        merge_active_skin(sys->get_io_system());
     }
 }
