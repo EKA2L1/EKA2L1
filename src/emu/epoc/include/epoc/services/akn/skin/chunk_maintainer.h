@@ -28,6 +28,8 @@ namespace eka2l1::kernel {
 }
 
 namespace eka2l1::epoc {
+    struct skn_file;
+
     enum class akn_skin_chunk_area_base_offset {
         item_def_area_base = 0,
         item_def_area_allocated_size = 1,
@@ -190,5 +192,14 @@ namespace eka2l1::epoc {
          * \returns True if success.
          */
         bool  update_filename(const std::uint32_t filename_id, const std::u16string &filename, const std::u16string &filename_base);
+
+        /**
+         * \brief   Import SKN parse results to the chunk.
+         * 
+         * \param   skn Reference to the SKN parser.
+         * 
+         * \returns True on success.
+         */
+        bool import(skn_file &skn, const std::u16string &filename_base);
     };
 }

@@ -1,4 +1,5 @@
 #include <epoc/services/akn/skin/chunk_maintainer.h>
+#include <epoc/services/akn/skin/skn.h>
 #include <epoc/kernel/chunk.h>
 #include <common/path.h>
 
@@ -22,6 +23,7 @@ namespace eka2l1::epoc {
         add_area(akn_skin_chunk_area_base_offset::item_def_area_base, AKNS_CHUNK_ITEM_DEF_AREA_BASE_SIZE_GRAN);
         add_area(akn_skin_chunk_area_base_offset::data_area_base, AKNS_CHUNK_DATA_AREA_BASE_SIZE_GRAN);
         add_area(akn_skin_chunk_area_base_offset::gfx_area_base, AKNS_CHUNK_SCALEABLE_GFX_AREA_BASE_SIZE_GRAN);
+        add_area(akn_skin_chunk_area_base_offset::filename_area_base, AKNS_CHUNK_FILENAME_AREA_BASE_SIZE_GRAN);
     }
 
     const std::uint32_t akn_skin_chunk_maintainer::maximum_filename() {
@@ -109,13 +111,15 @@ namespace eka2l1::epoc {
 
         // Check if the area exists before
         if (std::binary_search(areas_.begin(), areas_.end(), area, [](const akn_skin_chunk_area &lhs, const akn_skin_chunk_area &rhs) {
-            return lhs.base_ == rhs.base_; })) {
+            return lhs.base_ < rhs.base_; })) {
             // Cancel
             return false;
         }
 
+        std::size_t gran_to_increase_off = std::max<std::size_t>(1, allocated_size_gran);
+
         // Check if memory is sufficient enough for this area.
-        if (current_granularity_off_ + allocated_size_gran > max_size_gran_) {
+        if (current_granularity_off_ + gran_to_increase_off > max_size_gran_) {
             return false;
         }
 
@@ -149,13 +153,17 @@ namespace eka2l1::epoc {
             return static_cast<int>(lhs.base_) < static_cast<int>(rhs.base_);
         });
 
+        const std::uint32_t header_size = (static_cast<std::uint32_t>(areas_.back().base_) + 3) * 4;
+
         // We need to make offset align (for faster memory access)
         // Modify the first area offset to be after the header
         // Each area header contains 3 fields: offset, allocated size, current size, each field is 4 bytes
         // We also need to modify the size too.
-        base[static_cast<int>(areas_[0].base_)] = static_cast<std::uint32_t>(areas_.size() * 3 * 4);
-        base[static_cast<int>(areas_[0].base_) + 1] -= static_cast<std::uint32_t>(areas_.size() * 3 * 4);
+        base[static_cast<int>(areas_[0].base_)] = header_size;
+        base[static_cast<int>(areas_[0].base_) + 1] = static_cast<std::uint32_t>(areas_[0].gran_size_ * granularity_)
+            - header_size;
 
+        current_granularity_off_ += gran_to_increase_off;
         return true;
     }
 
@@ -235,6 +243,17 @@ namespace eka2l1::epoc {
         // Get chunk base
         std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
         base[static_cast<int>(area_type) + 2] = new_size;
+
+        return true;
+    }
+
+    bool akn_skin_chunk_maintainer::import(skn_file &skn, const std::u16string &filename_base) {
+        // First up import filenames
+        for (auto &filename: skn.filenames_) {
+            if (!update_filename(filename.first, filename.second, filename_base)) {
+                return false;
+            }
+        }
 
         return true;
     }
