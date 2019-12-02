@@ -87,6 +87,10 @@ enum drive_number {
     drive_invalid
 };
 
+inline drive_number operator --(drive_number &drv, int) {
+    return static_cast<drive_number>(static_cast<int>(drv) - 1);
+}
+
 enum class io_attrib {
     none,
     include_dir = 0x50,
