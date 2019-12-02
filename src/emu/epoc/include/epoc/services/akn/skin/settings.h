@@ -19,8 +19,8 @@
 
 #pragma once
 
+#include <epoc/services/akn/skin/common.h>
 #include <cstdint>
-#include <tuple>
 
 namespace eka2l1 {
     struct central_repo;
@@ -30,8 +30,6 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc {
-    using pid = std::pair<std::uint32_t, std::uint32_t>;
-
     class akn_ss_settings {
         central_repo *avkon_rep_ { nullptr };
         central_repo *skins_rep_ { nullptr };
@@ -52,5 +50,13 @@ namespace eka2l1::epoc {
 
     public:
         explicit akn_ss_settings(io_system *io, central_repo_server *svr);
+
+        pid active_skin_pid() const {
+            return active_skin_pid_;
+        }
+
+        pid default_skin_pid() const {
+            return default_skin_pid_;
+        }
     };
 }
