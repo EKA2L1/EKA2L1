@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <epoc/ptr.h>
+
 #include <cstdint>
 #include <tuple>
 
@@ -45,4 +47,30 @@ namespace eka2l1::epoc {
     };
     
     using pid = std::pair<std::uint32_t, std::uint32_t>;
+
+    /**
+     * \brief Multi-purpose pointer type for AKN server.
+     */
+    enum akns_mtptr_type {
+        akns_mtptr_type_absolute_ram = 2,       /** Pointer is absolute on RAM. */
+        akns_mtptr_type_relative_ram = 3,       /** Pointer is offset on a base. */
+        akns_mtptr_type_absolute_rom = 4        /** Pointer is on ROM. */
+    };
+
+    /**
+     * \brief Multi-purpose pointer for AKN server.
+     */
+    struct akns_mtptr {
+        akns_mtptr_type type_;
+        std::uint32_t address_or_offset_;
+
+        template <typename T>
+        eka2l1::ptr<T> get(const eka2l1::ptr<T> base) {
+            if (type_ == akns_mtptr_type_relative_ram) {
+                return base + address_or_offset_;
+            }
+
+            return eka2l1::ptr<T>(address_or_offset_);
+        }
+    };
 }
