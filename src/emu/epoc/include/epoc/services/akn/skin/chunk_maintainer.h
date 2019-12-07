@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <epoc/services/akn/skin/common.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -29,6 +31,7 @@ namespace eka2l1::kernel {
 
 namespace eka2l1::epoc {
     struct skn_file;
+    struct skn_bitmap_info;
 
     enum class akn_skin_chunk_area_base_offset {
         item_def_area_base = 0,
@@ -45,7 +48,8 @@ namespace eka2l1::epoc {
         gfx_area_current_size = 11,
         item_def_hash_base = 12,
         item_def_hash_allocated_size = 13,
-        item_def_hash_current_size = 14
+        item_def_hash_current_size = 14,
+        base_offset_end
     };
 
     /**
@@ -81,6 +85,8 @@ namespace eka2l1::epoc {
 
         // Remember to sort this
         std::vector<akn_skin_chunk_area> areas_;
+
+        std::uint32_t level_;
 
         /**
          * \brief    Get maximum number of filename that the filename area can hold.
@@ -121,18 +127,27 @@ namespace eka2l1::epoc {
          */
         akn_skin_chunk_area *get_area_info(const akn_skin_chunk_area_base_offset area_type);
 
+        /**
+         * \brief   Import bitmap definition.
+         * 
+         * \param   info Info of the bitmap.
+         * \returns True on success.
+         */
+        bool import_bitmap(const skn_bitmap_info &info);
+
     public:
         explicit akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity);
 
         /**
          * \brief   Get an area's max size
          * 
-         * \param   area_type   The kind of area. Must be from enum member "*_base".
+         * \param   area_type       The kind of area. Must be from enum member "*_base".
+         * \param   paper_calc      Calculate area max size based on info given to add_area before. Disable by default 
          * \returns size_t(-1) if an area doesn't exist, else returns the maximum size of area, in bytes.
          * 
          * \see     get_area_base
          */
-        const std::size_t get_area_size(const akn_skin_chunk_area_base_offset area_type);
+        const std::size_t get_area_size(const akn_skin_chunk_area_base_offset area_type, const bool paper_calc = false);
 
         /**
          * \brief   Get an area's current size
@@ -157,6 +172,18 @@ namespace eka2l1::epoc {
          * \see     get_area_current_size
          */
         bool set_area_current_size(const akn_skin_chunk_area_base_offset area_type, const std::uint32_t new_size);
+
+        /**
+         * \brief Update the data in data section.
+         * 
+         * \param new_data The data to be copied to data section.
+         * \param old_data The previous related data if available.
+         * \param new_size The new size of the data.
+         * \param old_size The old size of data if available, else 0.
+         * 
+         * \returns Offset of the data in the data section.
+         */
+        std::int32_t update_data(const std::uint8_t *new_data, std::uint8_t *old_data, const std::size_t new_size, const std::size_t old_size);
 
         /**
          * \brief   Get a pointer to an existing area's base.
@@ -190,8 +217,54 @@ namespace eka2l1::epoc {
          * \param filename_base  Base path to the filename.
          * 
          * \returns True if success.
+         * 
+         * \see     update_defintion
          */
         bool  update_filename(const std::uint32_t filename_id, const std::u16string &filename, const std::u16string &filename_base);
+
+        /**
+         * \brief Lookup filename and returns its data offset from filename area.
+         * 
+         * The function iterates through filename area trying to find a filename with given ID.
+         * In case the filename is found, the functions returns offset of the filename from filename area.
+         * 
+         * If failed, the function returns -1.
+         * 
+         * \param   filename_id The ID of the filename.
+         * \returns -1 on failure.
+         */
+        std::int32_t get_filename_offset_from_id(const std::uint32_t filename_id);
+
+        /**
+         * \brief   Update the hash of a definition.
+         * \param   def The defintion.
+         * 
+         * \returns True on success.
+         */
+        bool update_definition_hash(epoc::akns_item_def *def, const std::int32_t index);
+
+        /**
+         * \brief   Get item defintion index with its ID.
+         * 
+         * \param   id The ID of the defintion.
+         * \returns The index of the item in item def chunk if available, else -1.
+         */
+        std::int32_t get_item_definition_index(const epoc::pid &id);
+
+        /**
+         * \brief   Update defintion of an item.
+         * 
+         * \param   def               The definition struct.
+         * \param   data              Data that comes with the definition.
+         * \param   data_size         Size of the data.
+         * \param   old_data_size     Old size of the data.
+         * 
+         * \returns True on success.
+         * 
+         * \see     update_filename
+         */
+        bool  update_definition(const epoc::akns_item_def &def, const void *data, const std::size_t data_size,
+            const std::size_t old_data_size);
 
         /**
          * \brief   Import SKN parse results to the chunk.

@@ -46,7 +46,7 @@ namespace eka2l1::epoc {
         ICON_CAPTION_UID = 0x1028583D
     };
     
-    using pid = std::pair<std::uint32_t, std::uint32_t>;
+    using pid = std::pair<std::int32_t, std::int32_t>;
 
     /**
      * \brief Multi-purpose pointer type for AKN server.
@@ -72,5 +72,34 @@ namespace eka2l1::epoc {
 
             return eka2l1::ptr<T>(address_or_offset_);
         }
+
+        template <typename T>
+        T *get_relative(void *base) {
+            if (type_ != akns_mtptr_type_relative_ram) {
+                return nullptr;
+            }
+
+            return reinterpret_cast<T*>(reinterpret_cast<std::uint8_t*>(base) + address_or_offset_);
+        }
+    };
+
+    enum akns_item_type {
+        akns_item_type_unknown = 0,
+        akns_item_type_bitmap = 1,
+        akns_item_type_masked_bitmap = 2,
+        akns_item_type_color_table = 3,
+        akns_item_type_image_table = 4,
+        akns_item_type_image = 5,
+        akns_item_type_bmp_anim = 6,
+        akns_item_type_string = 7,
+        akns_item_type_effect_queue = 8,
+        akns_item_type_anim = 9
+    };
+
+    struct akns_item_def {
+        pid id_;
+        akns_item_type type_;
+        akns_mtptr data_;
+        std::int32_t next_hash_;
     };
 }

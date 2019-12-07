@@ -359,7 +359,7 @@ namespace eka2l1::epoc {
         stream_->read(base_offset + skn_desc_dfo_common_ver, &ver, 2);
 
         std::uint16_t attrib_and_align = 0;
-        stream_->read(base_offset + skn_desc_dfo_attribs_alignment, &attrib_and_align, 2);
+        stream_->read(base_offset + skn_desc_dfo_attribs_attrib_flags, &attrib_and_align, 2);
 
         attrib.attrib = attrib_and_align & 0xFF;
         attrib.align = (attrib_and_align & 0xFF00) >> 8;
