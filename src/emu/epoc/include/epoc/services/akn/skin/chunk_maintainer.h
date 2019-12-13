@@ -32,6 +32,7 @@ namespace eka2l1::kernel {
 namespace eka2l1::epoc {
     struct skn_file;
     struct skn_bitmap_info;
+    struct skn_color_table;
 
     enum class akn_skin_chunk_area_base_offset {
         item_def_area_base = 0,
@@ -134,6 +135,14 @@ namespace eka2l1::epoc {
          * \returns True on success.
          */
         bool import_bitmap(const skn_bitmap_info &info);
+
+        /**
+         * \brief   Import color table to skin definition chunk.
+         * 
+         * \param   table Info of the table.
+         * \returns True on success.
+         */
+        bool import_color_table(const skn_color_table &table);
 
     public:
         explicit akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity);
@@ -274,5 +283,13 @@ namespace eka2l1::epoc {
          * \returns True on success.
          */
         bool import(skn_file &skn, const std::u16string &filename_base);
+
+        /**
+         * \brief    Get an item's definition with given ID.
+         * 
+         * \param    id The ID to lookup item's definition.
+         * \returns  Pointer to the item definition if available, else nullptr.
+         */
+        akns_item_def *get_item_definition(const epoc::pid &id);
     };
 }

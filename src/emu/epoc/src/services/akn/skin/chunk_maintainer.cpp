@@ -34,6 +34,22 @@ namespace eka2l1::epoc {
         std::int32_t image_height_;     ///< Height of the image.
     };
 
+    struct akns_color_table_entry {
+        std::int32_t index_;            ///< Index of the color in the table.
+        std::uint32_t rgb_;             ///< Color data, in RGB.
+    };
+
+    struct akns_srv_color_table_def {
+        std::int32_t count_;            ///< Total of colors in the table.
+        akns_mtptr   entries_;          ///< All entries in the table.
+        std::int32_t image_attrib_;     ///< Attribute for the bitmap.
+        std::int32_t image_alignment_;  ///< Alignment for the bitmap.
+        std::int32_t image_x_coord_;    ///< X coordinate of the image.
+        std::int32_t image_y_coord_;    ///< Y coordinate of the image.
+        std::int32_t image_width_;      ///< Width of the image.
+        std::int32_t image_height_;     ///< Height of the image.
+    };
+
     static pid make_pid_from_id_hash(const std::uint64_t hash) {
         return { static_cast<std::int32_t>(hash >> 32), static_cast<std::int32_t>(hash) };
     }
@@ -194,13 +210,18 @@ namespace eka2l1::epoc {
             set_area_current_size(epoc::akn_skin_chunk_area_base_offset::data_area_base, 
                 static_cast<std::uint32_t>(offset + new_size));
 
-            std::copy(new_data, new_data + new_size, data_head);
-
+            if (new_data) {
+                std::copy(new_data, new_data + new_size, data_head);
+            }
+        
             return offset;
         }
 
         // Just replace old data
-        std::copy(new_data, new_data + new_size, old_data);
+        if (new_data) {
+            std::copy(new_data, new_data + new_size, old_data);
+        }
+
         return static_cast<std::int32_t>(old_data - reinterpret_cast<std::uint8_t*>(get_area_base(
             epoc::akn_skin_chunk_area_base_offset::data_area_base)));
     }
@@ -434,6 +455,83 @@ namespace eka2l1::epoc {
         return true;
     }
 
+    akns_item_def *akn_skin_chunk_maintainer::get_item_definition(const epoc::pid &id) {
+        const std::int32_t index = get_item_definition_index(id);
+
+        if (index < 0) {
+            return nullptr;
+        }
+
+        akns_item_def *defs = reinterpret_cast<akns_item_def*>(get_area_base(
+            akn_skin_chunk_area_base_offset::item_def_area_base));
+
+        if (!defs) {
+            return nullptr;
+        }
+
+        return defs + index;
+    }
+
+    bool akn_skin_chunk_maintainer::import_color_table(const skn_color_table &table) {
+        akns_item_def item;
+        item.type_ = akns_item_type_color_table;
+        item.id_ = make_pid_from_id_hash(table.id_hash);
+
+        akns_srv_color_table_def color_table;
+        color_table.count_ = static_cast<std::int32_t>(table.colors.size());
+        color_table.entries_.type_ = akns_mtptr_type::akns_mtptr_type_relative_ram;
+        
+        // Find the old table if available
+        akns_item_def *last_color_table_item = get_item_definition(item.id_);
+        std::uint8_t *data_area = reinterpret_cast<std::uint8_t*>(get_area_base(
+            akn_skin_chunk_area_base_offset::data_area_base));
+
+        std::uint8_t *old_color_entries_data = nullptr;
+        std::size_t old_size = 0;
+
+        if (last_color_table_item) {
+            akns_srv_color_table_def *last_color_table = last_color_table_item->data_.
+                get_relative<akns_srv_color_table_def>(data_area);
+
+            if (last_color_table) {
+                old_color_entries_data = last_color_table->entries_.get_relative<std::uint8_t>(data_area);
+
+                // No need to resize if old color entries data size is already larger than current
+                if (last_color_table->count_ > color_table.count_) {
+                    color_table.count_ = last_color_table->count_;
+                }
+
+                old_size = last_color_table->count_ * sizeof(akns_color_table_entry);
+            }
+        }
+
+        color_table.entries_.type_ = akns_mtptr_type_relative_ram;
+        color_table.entries_.address_or_offset_ = update_data(nullptr, old_color_entries_data, 
+            color_table.count_ * sizeof(akns_color_table_entry), old_size);
+
+        akns_color_table_entry *entries_to_fill = color_table.entries_.get_relative<akns_color_table_entry>(data_area);
+        std::size_t index_ite = 0;
+
+        for (const auto &entry: table.colors) {
+            entries_to_fill[index_ite].index_ = entry.first;
+            entries_to_fill[index_ite].rgb_ = entry.second;
+            index_ite++;
+        }
+
+        color_table.image_alignment_ = table.attrib.align;
+        color_table.image_attrib_ = table.attrib.attrib;
+        color_table.image_height_ = table.attrib.image_size_y;
+        color_table.image_width_ = table.attrib.image_size_x;
+        color_table.image_x_coord_ = table.attrib.image_coord_x;
+        color_table.image_y_coord_ = table.attrib.image_coord_y;
+
+        if (!update_definition(item, &color_table, sizeof(akns_srv_color_table_def), sizeof(akns_srv_color_table_def))) {
+            return false;
+        }
+
+        return true;
+    }
+    
     bool akn_skin_chunk_maintainer::import_bitmap(const skn_bitmap_info &info) {
         akns_item_def item;
         item.type_ = akns_item_type_bitmap;
