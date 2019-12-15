@@ -50,6 +50,8 @@ namespace eka2l1::epoc {
         std::int32_t image_height_;     ///< Height of the image.
     };
 
+    using akns_srv_image_table_def = akns_srv_color_table_def;
+
     static pid make_pid_from_id_hash(const std::uint64_t hash) {
         return { static_cast<std::int32_t>(hash >> 32), static_cast<std::int32_t>(hash) };
     }
@@ -471,7 +473,7 @@ namespace eka2l1::epoc {
 
         return defs + index;
     }
-
+        
     bool akn_skin_chunk_maintainer::import_color_table(const skn_color_table &table) {
         akns_item_def item;
         item.type_ = akns_item_type_color_table;
@@ -569,6 +571,65 @@ namespace eka2l1::epoc {
         return update_definition(item, &masked_bitmap_def, sizeof(masked_bitmap_def), sizeof(masked_bitmap_def));
     }
 
+    bool akn_skin_chunk_maintainer::import_image_table(const skn_image_table &table) {
+        akns_item_def item;
+        item.type_ = akns_item_type_image_table;
+        item.id_ = make_pid_from_id_hash(table.id_hash);
+
+        akns_srv_image_table_def image_table;
+        image_table.count_ = static_cast<std::int32_t>(table.images.size());
+        image_table.entries_.type_ = akns_mtptr_type::akns_mtptr_type_relative_ram;
+        
+        // Find the old table if available
+        akns_item_def *last_image_table_item = get_item_definition(item.id_);
+        std::uint8_t *data_area = reinterpret_cast<std::uint8_t*>(get_area_base(
+            akn_skin_chunk_area_base_offset::data_area_base));
+
+        std::uint8_t *old_image_entries_data = nullptr;
+        std::size_t old_size = 0;
+
+        if (last_image_table_item) {
+            akns_srv_color_table_def *last_image_table = last_image_table_item->data_.
+                get_relative<akns_srv_image_table_def>(data_area);
+
+            if (last_image_table) {
+                old_image_entries_data = last_image_table->entries_.get_relative<std::uint8_t>(data_area);
+
+                // No need to resize if old color entries data size is already larger than current
+                if (last_image_table->count_ > image_table.count_) {
+                    image_table.count_ = last_image_table->count_;
+                }
+
+                old_size = last_image_table->count_ * sizeof(pid);
+            }
+        }
+
+        image_table.entries_.type_ = akns_mtptr_type_relative_ram;
+        image_table.entries_.address_or_offset_ = update_data(nullptr, old_image_entries_data, 
+            image_table.count_ * sizeof(pid), old_size);
+
+        pid *entries_to_fill = image_table.entries_.get_relative<pid>(data_area);
+        std::size_t index_ite = 0;
+
+        for (const auto &entry: table.images) {
+            entries_to_fill[index_ite] = make_pid_from_id_hash(entry);
+            index_ite++;
+        }
+
+        image_table.image_alignment_ = table.attrib.align;
+        image_table.image_attrib_ = table.attrib.attrib;
+        image_table.image_height_ = table.attrib.image_size_y;
+        image_table.image_width_ = table.attrib.image_size_x;
+        image_table.image_x_coord_ = table.attrib.image_coord_x;
+        image_table.image_y_coord_ = table.attrib.image_coord_y;
+
+        if (!update_definition(item, &image_table, sizeof(akns_srv_image_table_def), sizeof(akns_srv_image_table_def))) {
+            return false;
+        }
+        
+        return true;
+    }
+    
     bool akn_skin_chunk_maintainer::import(skn_file &skn, const std::u16string &filename_base) {
         // First up import filenames
         for (auto &filename: skn.filenames_) {
@@ -580,6 +641,18 @@ namespace eka2l1::epoc {
         // Import bitmap
         for (auto &bmp: skn.bitmaps_) {
             if (!import_bitmap(bmp.second)) {
+                return false;
+            }
+        }
+
+        for (auto &table: skn.color_tabs_) {
+            if (!import_color_table(table.second)) {
+                return false;
+            }
+        }
+
+        for (auto &table: skn.img_tabs_) {
+            if (!import_image_table(table.second)) {
                 return false;
             }
         }
