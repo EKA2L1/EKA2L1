@@ -257,6 +257,32 @@ namespace eka2l1::epoc {
         std::int16_t posy;
     };
 
+    struct skn_effect_parameter {
+        std::uint8_t type;
+        std::string data;
+    };
+
+    struct skn_effect {
+        std::uint32_t uid;
+        std::uint8_t input_layer_a_index;
+        std::uint8_t input_layer_a_mode;
+        std::uint8_t input_layer_b_index;
+        std::uint8_t input_layer_b_mode;
+        std::uint8_t output_layer_index;
+        std::uint8_t output_layer_mode;
+        std::vector<skn_effect_parameter> parameters;
+    };
+
+    struct skn_effect_queue: public skn_def_base {
+        std::uint8_t input_layer_index;
+        std::uint8_t input_layer_mode;
+        std::uint8_t output_layer_index;
+        std::uint8_t output_layer_mode;
+        std::uint32_t ref_major;
+        std::uint32_t ref_minor;
+        std::vector<skn_effect> effects;
+    };
+
     struct skn_bitmap_animation: public skn_def_base {
         std::int16_t interval;
         std::int16_t play_mode;
@@ -290,6 +316,7 @@ namespace eka2l1::epoc {
         std::map<std::uint64_t, skn_image_table> img_tabs_;
         std::map<std::uint64_t, skn_color_table> color_tabs_;
         std::map<std::uint64_t, skn_bitmap_animation> bitmap_anims_;
+        std::vector<skn_effect_queue> effect_queues_;
 
         common::ro_stream *stream_;
         plat_ver ver_;
@@ -304,7 +331,10 @@ namespace eka2l1::epoc {
         void process_color_table_def_chunk(std::uint32_t base_offset);
         void process_bitmap_anim_def_chunk(std::uint32_t base_offset);
         void process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib);
-
+        void process_effect_queue_chunk(std::uint32_t base_offset);
+        void process_effects(std::uint32_t &base_offset, std::vector<skn_effect> &effects);
+        void process_effect_parameters(std::uint32_t &base_offset, std::vector<skn_effect_parameter> &parameters);
+        
         std::uint32_t handle_info_chunk(std::uint32_t base_offset, skn_file_info &info);
         std::uint32_t handle_name_chunk(std::uint32_t base_offset, skn_name &name);
         std::uint32_t handle_filename_chunk(std::uint32_t base_offset);
@@ -313,6 +343,8 @@ namespace eka2l1::epoc {
         std::uint32_t handle_release_generic_restriction_chunk(std::uint32_t base_offset);
         std::uint32_t handle_lang_restriction_chunk(std::uint32_t base_offset);
         
+        std::string process_string(std::uint32_t base_offset, const std::uint16_t size);
+
         explicit skn_file(common::ro_stream *stream, plat_ver platform_version = { 2, 8 },
             language lang = language::any);
     };

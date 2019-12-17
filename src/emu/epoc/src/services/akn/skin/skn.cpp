@@ -169,7 +169,7 @@ namespace eka2l1::epoc {
         id += crr_filename_id_;
 
         std::uint16_t strlen = 0;
-        stream_->read(base_offset + skn_desc_dfo_filename_len, &strlen, 4);
+        stream_->read(base_offset + skn_desc_dfo_filename_len, &strlen, 2);
 
         std::u16string name;
         name.resize(strlen);
@@ -219,6 +219,11 @@ namespace eka2l1::epoc {
 
             case as_desc_skin_desc_img_bmp_anim: {
                 process_bitmap_anim_def_chunk(base_offset);
+                break;
+            }
+
+            case as_desc_effect_queue: {
+                process_effect_queue_chunk(base_offset);
                 break;
             }
 
@@ -352,6 +357,94 @@ namespace eka2l1::epoc {
         }
 
         bitmap_anims_.emplace(anim_.id_hash, std::move(anim_));
+    }
+
+    std::string skn_file::process_string(std::uint32_t base_offset, const std::uint16_t size) {
+        std::string buf;
+        buf.resize(size);
+
+        stream_->read(base_offset, &buf[0], size);
+
+        return buf;
+    }
+
+    void skn_file::process_effect_parameters(std::uint32_t &base_offset, std::vector<skn_effect_parameter> &parameters) {
+        for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(parameters.size()); i++) {
+            std::uint16_t parameter_size = 0;
+            stream_->read(base_offset + skn_desc_dfo_param_len, &parameter_size, 2);
+            stream_->read(base_offset + skn_desc_dfo_param_type, &parameters[i].type, 1);
+
+            // Data layout:
+            // offset 0: is the parameter size (2 bytes)
+            // offset 2: reserved (1 bytes)
+            // offset 3: parameter type (1 bytes)
+            // The rest is parameter data
+            std::uint16_t real_parameter_size = parameter_size - 4;
+            parameters[i].data = process_string(base_offset + 4, real_parameter_size);
+
+            base_offset += parameter_size;
+        }
+    }
+
+    void skn_file::process_effects(std::uint32_t &base_offset, std::vector<skn_effect> &effects) {
+        for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(effects.size()); i++) {
+            stream_->read(base_offset + skn_desc_dfo_effect_uid, &effects[i].uid, 4);
+            stream_->read(base_offset + skn_desc_dfo_effect_input_layerA_idx, &effects[i].input_layer_a_index, 1);
+            stream_->read(base_offset + skn_desc_dfo_effect_input_layerA_mode, &effects[i].input_layer_a_mode, 1);
+            stream_->read(base_offset + skn_desc_dfo_effect_input_layerB_idx, &effects[i].input_layer_b_index, 1);
+            stream_->read(base_offset + skn_desc_dfo_effect_input_layerB_mode, &effects[i].input_layer_b_mode, 1);
+            stream_->read(base_offset + skn_desc_dfo_effect_output_layer_idx, &effects[i].output_layer_index, 1);
+            stream_->read(base_offset + skn_desc_dfo_effect_output_layer_mode, &effects[i].output_layer_mode, 1);
+
+            if (effects[i].input_layer_a_mode > 8 || effects[i].input_layer_b_index > 8 ||
+                effects[i].output_layer_index > 8) {
+                LOG_ERROR("Invalid effect input/output mode!");
+                return;
+            }
+
+            std::uint16_t param_count = 0;
+            stream_->read(base_offset + skn_desc_dfo_effect_param_count, &param_count, 2);
+
+            base_offset += skn_desc_dfo_effect_param_count + 2;
+
+            effects[i].parameters.resize(param_count);
+
+            // Let's read the parameters!
+            process_effect_parameters(base_offset, effects[i].parameters);
+        }
+    }
+
+    void skn_file::process_effect_queue_chunk(std::uint32_t base_offset) {
+        skn_effect_queue effect_queue;
+
+        stream_->read(base_offset + skn_desc_dfo_effect_queue_major, &effect_queue.id_hash, 8);
+        stream_->read(base_offset + skn_desc_dfo_effect_queue_ref_major, &effect_queue.ref_major, 4);
+        stream_->read(base_offset + skn_desc_dfo_effect_queue_ref_minor, &effect_queue.ref_minor, 4);
+        stream_->read(base_offset + skn_desc_dfo_effect_queue_input_layer_index, &effect_queue.input_layer_index, 1);
+        stream_->read(base_offset + skn_desc_dfo_anim_input_layer_mode, &effect_queue.input_layer_mode, 1);
+        stream_->read(base_offset + skn_desc_dfo_effect_queue_output_layer_index, &effect_queue.output_layer_index, 1);
+        stream_->read(base_offset + skn_desc_dfo_effect_queue_output_layer_mode, &effect_queue.output_layer_mode, 1);
+
+        std::uint16_t effect_count = 0;
+        stream_->read(base_offset + skn_desc_dfo_effect_queue_effect_count, &effect_count, 2);
+
+        if (effect_queue.input_layer_mode > 8 || effect_queue.output_layer_mode > 8 || effect_count > 64) {
+            LOG_ERROR("Corrupted effect queue chunk!");
+            return;
+        }
+
+        if (effect_queue.ref_major && effect_queue.ref_minor) {
+            // TODO: ????
+            return;
+        }
+
+        // Read each effect description
+        effect_queue.effects.resize(effect_count);
+        base_offset += skn_desc_dfo_effect_queue_effects;
+
+        process_effects(base_offset, effect_queue.effects);
+
+        effect_queues_.push_back(std::move(effect_queue));
     }
 
     void skn_file::process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib) {
