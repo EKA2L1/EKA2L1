@@ -446,8 +446,14 @@ namespace eka2l1 {
             io.remove_filesystem(*rom_fs_id);
         }
 
+        auto current_device = mngr.get_device_manager()->get_current();
+
+        if (!current_device) {
+            return false;
+        }
+
         file_system_inst rom_fs = create_rom_filesystem(&romf, &mem,
-            get_symbian_version_use(), mngr.get_device_manager()->get_current()->firmware_code);
+            get_symbian_version_use(), current_device->firmware_code);
 
         rom_fs_id = io.add_filesystem(rom_fs);
         bool res1 = mem.map_rom(romf.header.rom_base, path);

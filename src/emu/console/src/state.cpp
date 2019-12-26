@@ -70,6 +70,10 @@ namespace eka2l1::desktop {
         if (!stage_two_inited) {
             bool res = symsys->load_rom(conf.storage + conf.rom_path);
 
+            if (!res) {
+                return;
+            }
+
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
