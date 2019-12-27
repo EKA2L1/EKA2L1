@@ -56,7 +56,7 @@ namespace eka2l1::manager {
         int gdb_port { 24689 };
 
         std::string rom_path = "SYM.ROM";
-        std::string storage = "";
+        std::string storage = ".";      // Set this to dot, avoid making it absolute
 
         int display_size_x_pixs { 360 };
         int display_size_y_pixs { 640 };
