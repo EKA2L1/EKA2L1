@@ -427,7 +427,7 @@ namespace eka2l1 {
     bool system_impl::load_rom(const std::string &path) {
         symfile f = eka2l1::physical_file_proxy(path, READ_MODE | BIN_MODE);
 
-        if (!f) {
+        if (!f || !f->valid()) {
             LOG_ERROR("ROM file not present: {}", path);
             return false;
         }

@@ -269,7 +269,7 @@ namespace eka2l1 {
         }
 
         bool valid() override {
-            return !feof(file);
+            return file && !feof(file);
         }
 
         int file_mode() const override {
