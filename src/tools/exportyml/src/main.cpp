@@ -6,7 +6,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-#ifdef TRAVIS_CI
+#ifndef _MSC_VER
 #include <experimental/filesystem>
 #else
 #include <filesystem>
@@ -22,7 +22,7 @@
 using namespace eka2l1::log;
 using namespace eka2l1;
 
-#ifdef TRAVIS_CI
+#ifndef _MSC_VER
 namespace fs = std::experimental::filesystem;
 #else
 namespace fs = std::filesystem;
