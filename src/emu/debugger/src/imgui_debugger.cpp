@@ -449,7 +449,10 @@ namespace eka2l1 {
 
         ImGui::Text("UI Scale     ");
         ImGui::SameLine();
-        ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1);
+        bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1);
+        if (ret && conf->ui_scale <= 1e-6) {
+            conf->ui_scale = 0.5;
+        } 
 
         ImGui::NewLine();
         ImGui::Text("Font");
