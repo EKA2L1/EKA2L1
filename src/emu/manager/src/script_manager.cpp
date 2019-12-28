@@ -23,7 +23,7 @@
 #include <common/path.h>
 #include <common/platform.h>
 
-#include <experimental/filesystem>
+#include <filesystem>
 #include <manager/script_manager.h>
 
 #include <pybind11/embed.h>
@@ -33,7 +33,7 @@
 #include <scripting/symemu.inl>
 
 namespace py = pybind11;
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 namespace eka2l1::manager {
     script_manager::script_manager(system *sys)

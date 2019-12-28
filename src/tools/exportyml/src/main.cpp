@@ -6,7 +6,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <experimental/filesystem>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -16,7 +16,7 @@
 
 using namespace eka2l1::log;
 using namespace eka2l1;
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 std::vector<fs::path> libs;
 std::ofstream ostr("modules.h");
