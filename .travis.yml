@@ -47,7 +47,7 @@ matrix:
 script:
   - mkdir build
   - cd build
-  - ${CMAKE} -DCMAKE_BUILD_TYPE=Release ..
+  - ${CMAKE} -DCMAKE_BUILD_TYPE=Release -DTRAVIS_CI=1 ..
   - make -j4
   - make CTEST_OUTPUT_ON_FAILURE=1 test
   - cd ..

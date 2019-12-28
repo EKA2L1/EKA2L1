@@ -44,6 +44,10 @@ if (ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
     set(ENABLE_SEH_HANDLER 1)
 endif (ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
 
+if (TRAVIS_CI)
+    add_definitions(-DTRAVIS_CI)
+endif()
+
 add_subdirectory(src/external)
 add_subdirectory(src/emu)
 

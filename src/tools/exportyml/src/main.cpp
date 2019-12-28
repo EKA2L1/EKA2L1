@@ -6,7 +6,12 @@
 
 #include <yaml-cpp/yaml.h>
 
+#ifdef TRAVIS_CI
+#include <experimental/filesystem>
+#else
 #include <filesystem>
+#endif
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -16,7 +21,12 @@
 
 using namespace eka2l1::log;
 using namespace eka2l1;
+
+#ifdef TRAVIS_CI
+namespace fs = std::experimental::filesystem;
+#else
 namespace fs = std::filesystem;
+#endif
 
 std::vector<fs::path> libs;
 std::ofstream ostr("modules.h");
