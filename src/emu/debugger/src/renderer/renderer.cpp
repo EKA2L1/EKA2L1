@@ -73,7 +73,7 @@ namespace eka2l1 {
         const std::uint32_t width, const std::uint32_t height, const std::uint32_t fb_width,
         const std::uint32_t fb_height) {
 
-        std::uint32_t scaled_width = width / debugger_->get_config()->ui_scale,
+        const std::uint32_t scaled_width = width / debugger_->get_config()->ui_scale,
             scaled_height = height / debugger_->get_config()->ui_scale;
 
         if (!background_change_path_.empty()) {
