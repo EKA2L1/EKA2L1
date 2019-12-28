@@ -35,6 +35,7 @@ namespace eka2l1::manager {
     struct config_state {
         float menu_height = 0;
         int bkg_transparency { 129 };
+        float ui_scale { 1.0 };
         std::string bkg_path;
         std::string font_path;
 

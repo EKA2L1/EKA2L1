@@ -46,8 +46,10 @@ void set_mouse_down(void *userdata, const int button, const bool op) {
 }
 
 static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int button, int action) {
+    eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+    float scale = emu->symsys->get_config()->ui_scale;
     ImGuiIO &io = ImGui::GetIO();
-    io.MousePos = ImVec2(static_cast<float>(mouse_pos.x), static_cast<float>(mouse_pos.y));
+    io.MousePos = ImVec2(static_cast<float>(mouse_pos.x / scale), static_cast<float>(mouse_pos.y / scale));
 
     if (action == 0) {
         set_mouse_down(userdata, button, true);
@@ -312,7 +314,7 @@ namespace eka2l1::desktop {
             }
 
             const vec2d mouse_pos = state.window->get_mouse_pos();
-            io.MousePos = ImVec2(static_cast<float>(mouse_pos[0]), static_cast<float>(mouse_pos[1]));
+            io.MousePos = ImVec2(static_cast<float>(mouse_pos[0] / state.conf.ui_scale), static_cast<float>(mouse_pos[1] / state.conf.ui_scale));
 
             // Render the graphics
             state.deb_renderer->draw(state.graphics_driver.get(), cmd_builder.get(), nws.x, nws.y, nwsb.x, nwsb.y);
