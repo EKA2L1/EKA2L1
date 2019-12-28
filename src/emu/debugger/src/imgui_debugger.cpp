@@ -447,6 +447,13 @@ namespace eka2l1 {
         ImGui::SameLine();
         ImGui::SliderInt("##BackgroundTransparency", &conf->bkg_transparency, 0, 255);
 
+        ImGui::Text("UI Scale     ");
+        ImGui::SameLine();
+        const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1);
+        if (ret && conf->ui_scale <= 1e-6) {
+            conf->ui_scale = 0.5;
+        } 
+
         ImGui::NewLine();
         ImGui::Text("Font");
         ImGui::Separator();

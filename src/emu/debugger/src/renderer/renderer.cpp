@@ -72,6 +72,10 @@ namespace eka2l1 {
     void debugger_renderer::draw(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
         const std::uint32_t width, const std::uint32_t height, const std::uint32_t fb_width,
         const std::uint32_t fb_height) {
+
+        const std::uint32_t scaled_width = width / debugger_->get_config()->ui_scale,
+            scaled_height = height / debugger_->get_config()->ui_scale;
+
         if (!background_change_path_.empty()) {
             // Update the background
             change_background_internal(driver, builder, background_change_path_.c_str());
@@ -80,9 +84,9 @@ namespace eka2l1 {
 
         auto &io = ImGui::GetIO();
 
-        io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+        io.DisplaySize = ImVec2(static_cast<float>(scaled_width), static_cast<float>(scaled_height));
         io.DisplayFramebufferScale = ImVec2(
-            width > 0 ? ((float)fb_width / width) : 0, height > 0 ? ((float)fb_height / height) : 0);
+            scaled_width > 0 ? ((float)fb_width / scaled_width) : 0, scaled_height > 0 ? ((float)fb_height / scaled_height) : 0);
 
         ImGui::NewFrame();
 
@@ -97,7 +101,7 @@ namespace eka2l1 {
         error_sheet.get_current_frame_uv_coords(uv_min.x, uv_max.x, uv_min.y, uv_max.y);
 
         // Draw the imgui ui
-        debugger_->show_debugger(width, height, fb_width, fb_height);
+        debugger_->show_debugger(scaled_width, scaled_height, fb_width, fb_height);
 
         if (background_tex_) {
             manager::config_state *sstate = debugger_->get_config();
@@ -105,7 +109,7 @@ namespace eka2l1 {
             ImGui::GetBackgroundDrawList()->AddImage(
                 reinterpret_cast<ImTextureID>(background_tex_),
                 ImVec2(0.0f, sstate->menu_height),
-                ImVec2(static_cast<float>(width), static_cast<float>(height)),
+                ImVec2(static_cast<float>(scaled_width), static_cast<float>(scaled_height)),
                 ImVec2(0, 0),
                 ImVec2(1, 1),
                 IM_COL32(255, 255, 255, sstate->bkg_transparency));

@@ -23,7 +23,12 @@
 #include <common/path.h>
 #include <common/platform.h>
 
+#ifndef _MSC_VER
 #include <experimental/filesystem>
+#else
+#include <filesystem>
+#endif
+
 #include <manager/script_manager.h>
 
 #include <pybind11/embed.h>
@@ -33,7 +38,12 @@
 #include <scripting/symemu.inl>
 
 namespace py = pybind11;
+
+#ifndef _MSC_VER
 namespace fs = std::experimental::filesystem;
+#else
+namespace fs = std::filesystem;
+#endif
 
 namespace eka2l1::manager {
     script_manager::script_manager(system *sys)

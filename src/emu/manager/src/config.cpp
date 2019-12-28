@@ -54,6 +54,7 @@ namespace eka2l1::manager {
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
 
+        config_file_emit_single(emitter, "ui-scale", ui_scale);
         config_file_emit_single(emitter, "bkg-alpha", bkg_transparency);
         config_file_emit_single(emitter, "bkg-path", bkg_path);
         config_file_emit_single(emitter, "font", font_path);
@@ -103,6 +104,7 @@ namespace eka2l1::manager {
             return;
         }
 
+        get_yaml_value(node, "ui-scale", &ui_scale, 1.0);
         get_yaml_value(node, "bkg-alpha", &bkg_transparency, 129);
         get_yaml_value(node, "bkg-path", &bkg_path, "");
         get_yaml_value(node, "font", &font_path, "");
