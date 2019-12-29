@@ -104,7 +104,7 @@ namespace eka2l1::manager {
             return;
         }
 
-        get_yaml_value(node, "ui-scale", &ui_scale, 1.0);
+        get_yaml_value(node, "ui-scale", &ui_scale, 1.0f);
         get_yaml_value(node, "bkg-alpha", &bkg_transparency, 129);
         get_yaml_value(node, "bkg-path", &bkg_path, "");
         get_yaml_value(node, "font", &font_path, "");
