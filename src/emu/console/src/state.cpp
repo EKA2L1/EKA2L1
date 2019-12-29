@@ -19,7 +19,7 @@
 
 #include <common/log.h>
 #include <console/state.h>
-#include <common/log.h>
+#include <common/path.h>
 #include <gdbstub/gdbstub.h>
 
 #include <debugger/imgui_debugger.h>
@@ -51,8 +51,8 @@ namespace eka2l1::desktop {
 
         symsys->set_debugger(debugger.get());
         symsys->set_device(conf.device);
-        symsys->mount(drive_c, drive_media::physical, conf.storage + "/drives/c/", io_attrib::internal);
-        symsys->mount(drive_e, drive_media::physical, conf.storage + "/drives/e/", io_attrib::removeable);
+        symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib::internal);
+        symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib::removeable);
 
         if (conf.enable_gdbstub) {
             symsys->get_gdb_stub()->set_server_port(conf.gdb_port);
@@ -77,7 +77,7 @@ namespace eka2l1::desktop {
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
-                conf.storage + "/drives/z/", io_attrib::internal | io_attrib::write_protected);
+                eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib::internal | io_attrib::write_protected);
 
             stage_two_inited = true;
         }
