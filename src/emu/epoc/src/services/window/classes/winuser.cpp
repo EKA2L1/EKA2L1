@@ -376,6 +376,7 @@ namespace eka2l1::epoc {
             // Redraw happens with all of the screen
             // NOTE: This causes error. Let's not touch them.
             //[[fallthrough]];
+            ctx.set_request_status(epoc::error_none);
             break;
         }
 
