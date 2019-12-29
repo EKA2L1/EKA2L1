@@ -42,7 +42,7 @@ namespace eka2l1 {
             std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
                 ::tolower);
 
-            std::string real_path = devices_rom_path + "\\temp\\" + file_full_relative;
+            std::string real_path = add_path(add_path(devices_rom_path, "//temp//"), file_full_relative);
 
             std::string dir = eka2l1::file_directory(real_path);
             eka2l1::create_directories(dir);
