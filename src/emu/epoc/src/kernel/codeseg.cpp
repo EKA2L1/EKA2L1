@@ -236,7 +236,7 @@ namespace eka2l1::kernel {
         return attach_info->code_chunk->base().ptr_address() + lookup_res - code_base;
     }
 
-    void codeseg::queries_call_list(std::vector<std::uint32_t> &call_list) {
+    void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list) {
         if (mark) {
             return;
         }
@@ -245,13 +245,13 @@ namespace eka2l1::kernel {
         for (auto &dependency : dependencies) {
             if (!dependency->mark) {
                 dependency->mark = true;
-                dependency->queries_call_list(call_list);
+                dependency->queries_call_list(pr, call_list);
                 dependency->mark = false;
             }
         }
 
         // Add our last. Don't change order, this is how it supposed to be
-        call_list.push_back(ep);
+        call_list.push_back(get_entry_point(pr));
     }
 
     bool codeseg::add_dependency(codeseg_ptr codeseg) {

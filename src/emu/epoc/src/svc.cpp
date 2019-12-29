@@ -1398,7 +1398,8 @@ namespace eka2l1::epoc {
         std::int32_t *total = aTotal.get(mem);
 
         std::vector<uint32_t> list;
-        sys->get_kernel_system()->crr_process()->get_codeseg()->queries_call_list(list);
+        kernel::process *pr = sys->get_kernel_system()->crr_process();
+        pr->get_codeseg()->queries_call_list(pr, list);
 
         *total = static_cast<std::int32_t>(list.size());
         memcpy(list_ptr, list.data(), sizeof(std::uint32_t) * *total);

@@ -290,6 +290,8 @@ namespace eka2l1 {
     };
 
     void system_impl::load_scripts() {
+        sys_lang = static_cast<language>(159);
+
 #ifdef ENABLE_SCRIPTING
         common::dir_iterator scripts_dir("scripts");
         scripts_dir.detail = true;

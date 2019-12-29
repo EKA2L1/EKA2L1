@@ -51,7 +51,7 @@ namespace eka2l1 {
                 std::vector<std::uint32_t> call_list;
 
                 codeseg->attach(pr);
-                codeseg->queries_call_list(call_list);
+                codeseg->queries_call_list(pr, call_list);
 
                 return call_list;
             }
