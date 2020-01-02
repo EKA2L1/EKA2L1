@@ -50,6 +50,38 @@ namespace eka2l1::epoc {
         std::int32_t image_height_;     ///< Height of the image.
     };
 
+    struct akns_srv_effect_queue_def {
+        std::uint32_t size_;
+        std::uint32_t input_layer_index_;
+        std::uint32_t input_layer_mode_;
+        std::uint32_t output_layer_index_;
+        std::uint32_t output_layer_mode_;
+        std::uint32_t count_;
+        std::uint32_t ref_major_;
+        std::uint32_t ref_minor_;
+        // Data
+    };
+
+    struct akns_srv_effect_def {
+        std::uint32_t uid_;
+        std::uint32_t input_layer_a_index_;
+        std::uint32_t input_layer_a_mode_;
+        std::uint32_t input_layer_b_index_;
+        std::uint32_t input_layer_b_mode_;
+        std::uint32_t output_layer_index_;
+        std::uint32_t output_layer_mode_;
+        std::uint32_t effect_parameter_count_;
+        std::uint32_t effect_size_;
+        // Data
+    };
+
+    struct akns_srv_effect_parameter_def {
+        std::uint32_t param_length_;
+        std::uint32_t param_type_;
+    };
+
+    static constexpr std::size_t AKNS_OLD_DATA_SIZE_FIRST_WORD_OF_DATA = 0xFFFFFFFF;
+
     using akns_srv_image_table_def = akns_srv_color_table_def;
 
     static pid make_pid_from_id_hash(const std::uint64_t hash) {
@@ -133,7 +165,8 @@ namespace eka2l1::epoc {
             return -1;
         }
 
-        return static_cast<std::int32_t>((area_ptr - areabase) * sizeof(std::uint32_t));
+        // Plus for, skip the filename length
+        return static_cast<std::int32_t>((area_ptr - areabase) * sizeof(std::uint32_t)) + 4;
     }
     
     bool akn_skin_chunk_maintainer::update_filename(const std::uint32_t filename_id, const std::u16string &filename,
@@ -234,10 +267,6 @@ namespace eka2l1::epoc {
         std::int32_t head = calculate_item_hash(def->id_);
         std::int32_t *hash = reinterpret_cast<std::int32_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
 
-        if (head == 1) {
-            int a = 5;
-        }
-
         // Add the definition as the head
         def->next_hash_ = hash[head];
 
@@ -281,7 +310,7 @@ namespace eka2l1::epoc {
                 std::uint32_t *data_size = current_def->data_.get_relative<std::uint32_t>(
                     get_area_base(epoc::akn_skin_chunk_area_base_offset::data_area_base));
 
-                if (old_data_size == -1) {
+                if (old_data_size == AKNS_OLD_DATA_SIZE_FIRST_WORD_OF_DATA) {
                     old_data_size_to_update = *data_size;
                 } else {
                     old_data_size_to_update = old_data_size;
@@ -533,6 +562,100 @@ namespace eka2l1::epoc {
 
         return true;
     }
+
+    static bool import_effect(akn_skin_chunk_maintainer &maintainer, const skn_effect &effect, std::vector<std::uint8_t> &effects) {
+        effects.resize(sizeof(akns_srv_effect_def));
+
+        akns_srv_effect_def *srv_effect = reinterpret_cast<decltype(srv_effect)>(&effects[0]);
+        srv_effect->uid_ = effect.uid;
+        srv_effect->input_layer_a_index_ = effect.input_layer_a_index;
+        srv_effect->input_layer_b_index_ = effect.input_layer_b_index;
+        srv_effect->input_layer_a_mode_ = effect.input_layer_a_mode;
+        srv_effect->input_layer_b_mode_ = effect.input_layer_b_mode;
+        srv_effect->output_layer_index_ = effect.output_layer_index;
+        srv_effect->output_layer_mode_ = effect.output_layer_mode;
+        srv_effect->effect_parameter_count_ = static_cast<std::uint32_t>(effect.parameters.size());
+        
+        // Import parameters
+        for (std::size_t i = 0; i < effect.parameters.size(); i++) {
+            akns_srv_effect_parameter_def parameter;
+            parameter.param_type_ = effect.parameters[i].type;
+            parameter.param_length_ = static_cast<std::uint32_t>(effect.parameters[i].data.length());
+        
+            effects.insert(effects.end(), reinterpret_cast<std::uint8_t*>(&parameter), 
+                reinterpret_cast<std::uint8_t*>(&parameter) + sizeof(akns_srv_effect_parameter_def));   
+            
+            if (parameter.param_type_ == 2) {
+                // Graphics parameter
+                const std::uint32_t filename_id = maintainer.level() + *reinterpret_cast<const std::uint32_t*>
+                    (&effect.parameters[i].data[effect.parameters[i].data.length() - 4]);
+
+                const std::uint32_t offset = maintainer.get_filename_offset_from_id(filename_id);
+
+                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
+                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[effect.parameters[i].data.length() - 4]));
+
+                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&offset), 
+                    reinterpret_cast<const std::uint8_t*>(&offset + 1));
+
+                // Insert padding for filename cache i suppose?
+                // See aknssrvchunkmaintainer2.cpp
+                effects.insert(effects.end(), AKN_SKIN_SERVER_MAX_FILENAME_LENGTH - 8, 0);
+            } else {
+               effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
+                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data.back()));
+            }
+        }
+
+        return true;
+    }
+    
+    bool akn_skin_chunk_maintainer::import_effect_queue(const skn_effect_queue &queue) {
+        akns_item_def item;
+        item.type_ = akns_item_type_effect_queue;
+        item.id_ = make_pid_from_id_hash(queue.id_hash);
+
+        if (queue.ref_major && queue.ref_minor) {
+            akns_srv_effect_queue_def queue_def;
+            queue_def.size_ = sizeof(akns_srv_effect_queue_def);
+            queue_def.count_ = 0;
+            queue_def.ref_major_ = queue.ref_major;
+            queue_def.ref_minor_ = queue.ref_minor;
+
+            return update_definition(item, &queue_def, sizeof(akns_item_type_effect_queue), AKNS_OLD_DATA_SIZE_FIRST_WORD_OF_DATA);
+        }
+
+        using effect_def_data = std::vector<std::uint8_t>;
+
+        std::vector<std::uint8_t> buffer;
+        buffer.resize(sizeof(akns_srv_effect_queue_def));
+
+        akns_srv_effect_queue_def *queue_def = reinterpret_cast<akns_srv_effect_queue_def*>(&buffer[0]);
+        
+        queue_def->count_= static_cast<std::uint32_t>(queue.effects.size());
+        queue_def->ref_major_ = 0;
+        queue_def->ref_minor_ = 0;
+        
+        queue_def->input_layer_index_ = queue.input_layer_index;
+        queue_def->input_layer_mode_ = queue.input_layer_mode;
+        queue_def->output_layer_index_ = queue.output_layer_index;
+        queue_def->output_layer_mode_ = queue.output_layer_mode;
+
+        effect_def_data temp_effect_data;
+
+        for (std::size_t i = 0; i < queue.effects.size(); i++) {
+            if (!import_effect(*this, queue.effects[i], temp_effect_data)) {
+                return false;
+            }
+
+            queue_def->size_ += static_cast<std::uint32_t>(temp_effect_data.size());
+            buffer.insert(buffer.end(), temp_effect_data.begin(), temp_effect_data.end());
+
+            temp_effect_data.clear();
+        }
+
+        return update_definition(item, &buffer[0], buffer.size(), -1);
+    }
     
     bool akn_skin_chunk_maintainer::import_bitmap(const skn_bitmap_info &info) {
         akns_item_def item;
@@ -653,6 +776,12 @@ namespace eka2l1::epoc {
 
         for (auto &table: skn.img_tabs_) {
             if (!import_image_table(table.second)) {
+                return false;
+            }
+        }
+
+        for (auto &effect_queue: skn.effect_queues_) {
+            if (!import_effect_queue(effect_queue)) {
                 return false;
             }
         }

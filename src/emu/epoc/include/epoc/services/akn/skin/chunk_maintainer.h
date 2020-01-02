@@ -34,6 +34,9 @@ namespace eka2l1::epoc {
     struct skn_bitmap_info;
     struct skn_color_table;
     struct skn_image_table;
+    struct skn_effect_queue;
+    struct skn_effect;
+    struct skn_effect_parameter;
 
     enum class akn_skin_chunk_area_base_offset {
         item_def_area_base = 0,
@@ -57,7 +60,7 @@ namespace eka2l1::epoc {
     /**
      * Maximum length of a filename in shared chunk.
      */
-    constexpr std::uint32_t AKN_SKIN_SERVER_MAX_FILENAME_LENGTH = 256;
+    constexpr std::uint32_t AKN_SKIN_SERVER_MAX_FILENAME_LENGTH = 512;
     
     /**
      * Maximum bytes of a filename in shared chunk.
@@ -152,6 +155,14 @@ namespace eka2l1::epoc {
          * \returns True on success.
          */
         bool import_image_table(const skn_image_table &table);
+
+        /**
+         * \brief   Import effect queue into skin defintion chunk.
+         * 
+         * \param   queue The queue.
+         * \returns True on success.
+         */
+        bool import_effect_queue(const skn_effect_queue &queue);
 
     public:
         explicit akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity);
@@ -300,5 +311,9 @@ namespace eka2l1::epoc {
          * \returns  Pointer to the item definition if available, else nullptr.
          */
         akns_item_def *get_item_definition(const epoc::pid &id);
+
+        const std::uint32_t level() const {
+            return level_;
+        }
     };
 }
