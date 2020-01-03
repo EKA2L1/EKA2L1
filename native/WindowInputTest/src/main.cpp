@@ -88,6 +88,26 @@ public:
       break;
     }
     
+    case EEventPointerEnter:
+	{
+      RDebug::Printf("Pointer enters the chat");
+      break;
+	}
+
+    case EEventPointerExit:
+	{
+      RDebug::Printf("Pointer exits the chat");
+      break;
+	}
+	
+    case EEventPointer: {
+      TPointerEvent *pointerEvt = event.Pointer();
+      RDebug::Printf("Pointer event type: %d, position (%d, %d)", pointerEvt->iType, pointerEvt->iPosition.iX,
+        pointerEvt->iPosition.iY);
+      
+	  break;
+    }
+	
     default:
     {
       break;
@@ -132,13 +152,19 @@ void MainL()
   group->Construct(0, true);
   RDebug::Printf("Key capture OK handle: %d", group->CaptureKey(EKeyOK, 0, 0));
   
+  RBlankWindow *window = new (ELeave) RBlankWindow(winSession);
+  window->Construct(*group, 123);
+  TInt err = window->SetSizeErr(device->SizeInPixels());
+  window->SetPointerCapture(RWindowBase::TCaptureDragDrop);
+  window->Activate();
+  
   CActiveInputHandler *handler = new (ELeave) CActiveInputHandler(&winSession, group);
   CleanupStack::PushL(handler);
   
   handler->StartReceiveInput();
   CActiveScheduler::Start();
   
-  CleanupStack::PopAndDestroy(4);
+  CleanupStack::PopAndDestroy(5);
 }
 
 TInt E32Main()
