@@ -30,6 +30,7 @@
 #include <epoc/timing.h>
 
 #include <common/log.h>
+#include <common/vecx.h>
 
 #include <epoc/utils/err.h>
 
@@ -261,6 +262,19 @@ namespace eka2l1::epoc {
         }
     }
 
+    void window_user::set_size(service::ipc_context &context, ws_cmd &cmd) {
+        // refer to window_user::set_extent()
+        const object_size new_size = *reinterpret_cast<object_size*>(cmd.data_ptr);
+
+        if (new_size != size) {
+            resize_needed = true;
+            client->queue_redraw(this, rect({ 0, 0 }, new_size));
+        }
+
+        size = new_size;
+        context.set_request_status(epoc::error_none);
+    }
+
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
@@ -416,6 +430,11 @@ namespace eka2l1::epoc {
 
         case EWsWinOpEndRedraw: {
             end_redraw(ctx, cmd);
+            break;
+        }
+
+        case EWsWinOpSetSize: case EWsWinOpSetSizeErr: {
+            set_size(ctx, cmd);
             break;
         }
 
