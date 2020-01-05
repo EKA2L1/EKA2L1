@@ -833,11 +833,13 @@ namespace eka2l1 {
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0));
         epoc::screen *crr = screens;
+        crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
 
         // Create other available screens. Plugged in screen later will be created explicitly
         for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
             crr->next = new epoc::screen(1, get_screen_config(1));
             crr = crr->next;
+            crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
         }
 
         // Set default focus screen to be the first
