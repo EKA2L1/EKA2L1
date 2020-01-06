@@ -45,8 +45,8 @@ void set_mouse_down(void *userdata, const int button, const bool op) {
     emu->mouse_down[button] = op;
 }
 
-static eka2l1::drivers::input_event make_mouse_event_driver(float x, float y, int button, int action) {
-    eka2l1::drivers::input_event evt = *new eka2l1::drivers::input_event();
+static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const int button, const int action) {
+    eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::touch;
     evt.mouse_.pos_x_ = static_cast<int>(x);
     evt.mouse_.pos_y_ = static_cast<int>(y);
@@ -70,7 +70,7 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int 
 
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     if (emu->symsys) {
-        float scale = emu->symsys->get_config()->ui_scale;
+        const float scale = emu->symsys->get_config()->ui_scale;
         mouse_pos_x /= scale;
         mouse_pos_y /= scale;
 
