@@ -47,7 +47,6 @@
 
 #include <optional>
 #include <string>
-#include <array>
 
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
@@ -733,12 +732,11 @@ namespace eka2l1 {
         guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
         guest_evt_.key_evt_.repeats = 0;            // TODO?
     }
-    
-    static std::array<bool, 3> mouse_button_pressed {};
+
     /**
      * make a guest pointer event from host mouse event, return true if success.
      */
-    static bool make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr) {
+    bool window_server::make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr) {
         // drag not supported now
         if (driver_evt_.mouse_.action_ == drivers::mouse_action::repeat)
             return false;
@@ -746,31 +744,31 @@ namespace eka2l1 {
         guest_evt_.type = epoc::event_code::touch;
         switch (driver_evt_.mouse_.button_) {
         case drivers::mouse_button::left: {
-            if (mouse_button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
-            || !mouse_button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+            if (button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
+            || !button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
                 return false;
             }
-            mouse_button_pressed[0] = !mouse_button_pressed[0];
+            button_pressed[0] = !button_pressed[0];
             guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
                 epoc::event_type::button1down : epoc::event_type::button1up;
             break;
         }
         case drivers::mouse_button::middle: {
-            if (mouse_button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
-            || !mouse_button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+            if (button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
+            || !button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
                 return false;
             }
-            mouse_button_pressed[1] = !mouse_button_pressed[1];
+            button_pressed[1] = !button_pressed[1];
             guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
                 epoc::event_type::button2down : epoc::event_type::button2up;
             break;
         }
         case drivers::mouse_button::right: {
-            if (mouse_button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
-            || !mouse_button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+            if (button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
+            || !button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
                 return false;
             }
-            mouse_button_pressed[2] = !mouse_button_pressed[2];
+            button_pressed[2] = !button_pressed[2];
             guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
                 epoc::event_type::button3down : epoc::event_type::button3up;
             break;
