@@ -23,6 +23,7 @@
 #include <drivers/graphics/common.h>
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/classes/config.h>
+#include <mutex>
 
 #include <memory>
 
@@ -54,6 +55,11 @@ namespace eka2l1::epoc {
         epoc::window_group *focus;              ///< Current window group that is being focused
 
         screen *next;
+
+        // position of this screen in graphics driver
+        // update in graphics driver thread and read in os thread
+        std::mutex absolute_pos_mtx;
+        eka2l1::vec2 absolute_pos;
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
 

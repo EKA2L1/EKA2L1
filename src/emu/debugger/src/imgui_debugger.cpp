@@ -1047,6 +1047,12 @@ namespace eka2l1 {
 
             ImGui::SetNextWindowSize(ImVec2(size.x + 15.0f, size.y + 35.0f));
             ImGui::Begin(name.c_str());
+            const auto window_pos = ImGui::GetWindowPos();
+            const auto content_pos = ImGui::GetWindowContentRegionMin();
+            scr->absolute_pos_mtx.lock();
+            scr->absolute_pos.x = window_pos.x + content_pos.x;
+            scr->absolute_pos.y = window_pos.y + content_pos.y;
+            scr->absolute_pos_mtx.unlock();
             ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y));
             ImGui::End();
         }

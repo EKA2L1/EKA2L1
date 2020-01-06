@@ -732,6 +732,56 @@ namespace eka2l1 {
         guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
         guest_evt_.key_evt_.repeats = 0;            // TODO?
     }
+
+    /**
+     * make a guest pointer event from host mouse event, return true if success.
+     */
+    bool window_server::make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr) {
+        // drag not supported now
+        if (driver_evt_.mouse_.action_ == drivers::mouse_action::repeat)
+            return false;
+
+        guest_evt_.type = epoc::event_code::touch;
+        switch (driver_evt_.mouse_.button_) {
+        case drivers::mouse_button::left: {
+            if (button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
+            || !button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+                return false;
+            }
+            button_pressed[0] = !button_pressed[0];
+            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
+                epoc::event_type::button1down : epoc::event_type::button1up;
+            break;
+        }
+        case drivers::mouse_button::middle: {
+            if (button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
+            || !button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+                return false;
+            }
+            button_pressed[1] = !button_pressed[1];
+            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
+                epoc::event_type::button2down : epoc::event_type::button2up;
+            break;
+        }
+        case drivers::mouse_button::right: {
+            if (button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
+            || !button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+                return false;
+            }
+            button_pressed[2] = !button_pressed[2];
+            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
+                epoc::event_type::button3down : epoc::event_type::button3up;
+            break;
+        }
+        }
+
+        scr->absolute_pos_mtx.lock();
+        guest_evt_.adv_pointer_evt_.pos.x = driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x;
+        guest_evt_.adv_pointer_evt_.pos.y = driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y;
+        scr->absolute_pos_mtx.unlock();
+
+        return true;
+    }
     
     void window_server::queue_input_from_driver(drivers::input_event &evt) {
         if (!loaded) {
@@ -757,7 +807,10 @@ namespace eka2l1 {
             input_events.pop();
 
             epoc::event extra_key_evt;
-            
+
+            // Translate host event to guest event
+            // skip this host event if there is no corresponding guest event
+            bool skip_event = false;
             switch (input_event.type_) {
             case drivers::input_event_type::key: {
                 make_key_event(input_event, guest_event);
@@ -769,10 +822,15 @@ namespace eka2l1 {
 
                 break;
             }
+            case drivers::input_event_type::touch: {
+                skip_event = !make_mouse_event(input_event, guest_event, get_current_focus_screen());
+                break;
+            }
 
             default: 
                 break;
             }
+            if (skip_event) continue;
 
             // Report to the focused window first
             guest_event.handle = get_focus()->get_client_handle();

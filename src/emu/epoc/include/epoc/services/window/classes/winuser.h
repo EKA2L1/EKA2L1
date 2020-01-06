@@ -107,6 +107,7 @@ namespace eka2l1::epoc {
         void begin_redraw(service::ipc_context &context, ws_cmd &cmd);
         void end_redraw(service::ipc_context &context, ws_cmd &cmd);
         void set_non_fading(service::ipc_context &context, ws_cmd &cmd);
+        void set_size(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         epoc::window_group *get_group() {

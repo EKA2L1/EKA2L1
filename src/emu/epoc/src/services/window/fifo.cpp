@@ -72,6 +72,14 @@ namespace eka2l1::epoc {
                 break;
             }
 
+            case epoc::event_code::touch: {
+                // TODO: implement logics in 
+                // https://github.com/SymbianSource/oss.FCL.sf.os.graphics/blob/ff133bc50e6158bfb08cc093b0f0055321dcde99/windowing/windowserver/nga/SERVER/EVQUEUE.CPP#L630
+                // just purge it right now
+                q_.erase(q_.begin() + i);
+                break;
+            }
+
             case epoc::event_code::focus_gained:
             case epoc::event_code::focus_lost: {
                 if ((i + 1 < q_.size()) && ((q_[i + 1].evt.type == epoc::event_code::focus_gained) || (q_[i + 1].evt.type == epoc::event_code::focus_lost))) {
