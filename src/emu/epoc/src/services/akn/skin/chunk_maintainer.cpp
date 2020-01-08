@@ -85,7 +85,7 @@ namespace eka2l1::epoc {
     using akns_srv_image_table_def = akns_srv_color_table_def;
 
     static pid make_pid_from_id_hash(const std::uint64_t hash) {
-        return { static_cast<std::int32_t>(hash >> 32), static_cast<std::int32_t>(hash) };
+        return { static_cast<std::int32_t>(hash), static_cast<std::int32_t>(hash >> 32) };
     }
 
     akn_skin_chunk_maintainer::akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity)
