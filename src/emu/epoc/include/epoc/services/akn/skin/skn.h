@@ -246,7 +246,7 @@ namespace eka2l1::epoc {
     };
     
     struct skn_color_table: public skn_def_base {
-        std::unordered_map<std::int16_t, common::rgb> colors;
+        std::vector<std::pair<std::int16_t, common::rgb>> colors;
         skn_attrib_info attrib;
     };
 

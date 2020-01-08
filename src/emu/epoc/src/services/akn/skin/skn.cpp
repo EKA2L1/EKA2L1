@@ -313,7 +313,7 @@ namespace eka2l1::epoc {
             stream_->read(base_offset + skn_desc_dfo_color_tab_color_rgb0 + i * skn_desc_dfo_color_tab_color_size,
                 &color, 4);
 
-            tab_ref_.colors.emplace(idx, color);
+            tab_ref_.colors.push_back({ idx, color });
         }
     }
 
