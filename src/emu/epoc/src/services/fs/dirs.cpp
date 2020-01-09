@@ -188,7 +188,7 @@ namespace eka2l1 {
 
             if (!info) {
                 entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
-
+                LOG_TRACE("Queried entries: 0x{:x}", queried_entries);
                 ctx->set_request_status(epoc::error_eof);
 
                 return;

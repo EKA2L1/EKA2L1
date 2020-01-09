@@ -45,9 +45,10 @@ namespace eka2l1 {
         std::string opaque_data;
 
         enum {
-            FLAG_ROM = 1 << 0,
+            FLAG_ROM_ONLY = 1 << 0,
             FLAG_HINT_NO_EXTENDED_INTERFACE = 1 << 1,
-            FLAG_IMPL_CREATE_INFO_CACHED = 1 << 2
+            FLAG_IMPL_CREATE_INFO_CACHED = 1 << 2,
+            FLAG_ROM_BASED = 1 << 3
         };
 
         std::uint32_t flags;

@@ -422,7 +422,7 @@ namespace eka2l1 {
     public:
         physical_directory(abstract_file_system *inst, const std::string &phys_path,
             const std::string &vir_path, const std::string &filter, const io_attrib attrib)
-            : filter(common::wildcard_to_regex_string(filter))
+            : filter(common::wildcard_to_regex_string(common::lowercase_string(filter)))
             , iterator(phys_path)
             , vir_path(vir_path)
             , attrib(attrib)
