@@ -90,7 +90,7 @@ namespace eka2l1 {
         stream.read(&is_in_rom, 1);
 
         if (is_in_rom) {
-            info.flags |= ecom_implementation_info::FLAG_ROM;
+            info.flags |= ecom_implementation_info::FLAG_ROM_ONLY;
         }
 
         return true;
@@ -166,7 +166,7 @@ namespace eka2l1 {
         stream.read(&given_flags, 1);
 
         if (given_flags & 1) {
-            info.flags |= ecom_implementation_info::FLAG_ROM;
+            info.flags |= ecom_implementation_info::FLAG_ROM_ONLY;
         }
 
         return true;
@@ -302,14 +302,18 @@ namespace eka2l1 {
 
         // Bit 0: Rom only, bit 1: Rom based, bit 2: Disabled ?
         std::uint8_t absorb_flags = 0;
-        if (flags & FLAG_ROM) {
-            // TODO: What does ROM only and ROM based means ? Are they different
-            absorb_flags |= 0b11;
+        if (flags & FLAG_ROM_ONLY) {
+            absorb_flags |= 0b1;
+        }
+
+        // TODO: Hardcode is dangerous
+        if (drv == drive_z) {
+            absorb_flags |= 0b10;
         }
 
         seri.absorb(absorb_flags);
         if (seri.get_seri_mode() == common::SERI_MODE_READ || (absorb_flags & 0b10 || absorb_flags & 0b01)) {
-            flags |= FLAG_ROM;
+            flags |= FLAG_ROM_ONLY | FLAG_ROM_BASED;
         }
 
         // Absorb extended interfaces
