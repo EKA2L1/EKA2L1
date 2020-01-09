@@ -117,16 +117,36 @@ namespace eka2l1::epoc {
     };
 
     enum class event_type {
+        /**
+         * Button 1 or pen
+         */
         button1down,
         button1up,
+        /**
+         * Middle button of a 3 button mouse
+         */
         button2down,
         button2up,
+        button3down,
+        button3up,
+
+        /**
+         * Received when button 1 is down
+         */
         drag,
+
+        /**
+         * Received when button 1 is up and the XY input mode is not open
+         */
         move,
         button_repeat,
-        repeat,
         switch_on,
-        out_of_range
+        out_of_range,
+        enter_close_proximity,
+        exit_close_proximity,
+        enter_high_pressure,
+        exit_high_pressure,
+        null_type = -1
     };
 
     enum class event_code {

@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/vecx.h>
+
 namespace eka2l1::drivers {
     enum class input_event_type {
         key,
@@ -31,6 +33,18 @@ namespace eka2l1::drivers {
         repeat
     };
 
+    enum class mouse_button {
+        left,
+        middle,
+        right
+    };
+
+    enum class mouse_action {
+        press,
+        repeat,
+        release
+    };
+
     /**
      * Event for key press/key release.
      */
@@ -39,11 +53,21 @@ namespace eka2l1::drivers {
         key_state state_;
     };
 
+    /**
+     * Event for mouse 0/1/2 button press/move/release.
+     */
+    struct mouse_event {
+        int pos_x_, pos_y_;
+        mouse_button button_;
+        mouse_action action_;
+    };
+
     struct input_event {
         input_event_type type_;
 
         union {
             key_event key_;
+            mouse_event mouse_;
         };
     };
 }
