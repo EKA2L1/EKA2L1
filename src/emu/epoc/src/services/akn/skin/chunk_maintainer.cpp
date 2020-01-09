@@ -240,7 +240,8 @@ namespace eka2l1::epoc {
         if (old_data == nullptr || (old_size < new_size)) {
             // Just add the new data.
             offset = static_cast<std::int32_t>(get_area_current_size(epoc::akn_skin_chunk_area_base_offset::data_area_base));
-            std::uint8_t *data_head = reinterpret_cast<std::uint8_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::data_area_base));
+            std::uint8_t *data_head = reinterpret_cast<std::uint8_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::data_area_base))
+                + offset;
 
             set_area_current_size(epoc::akn_skin_chunk_area_base_offset::data_area_base, 
                 static_cast<std::uint32_t>(offset + new_size));
@@ -650,6 +651,9 @@ namespace eka2l1::epoc {
 
             queue_def->size_ += static_cast<std::uint32_t>(temp_effect_data.size());
             buffer.insert(buffer.end(), temp_effect_data.begin(), temp_effect_data.end());
+            
+            // Resize realloc the buffer pointer, so cast it again.
+            queue_def = reinterpret_cast<akns_srv_effect_queue_def*>(&buffer[0]);
 
             temp_effect_data.clear();
         }
