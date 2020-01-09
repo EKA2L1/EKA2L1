@@ -73,7 +73,7 @@ namespace eka2l1::manager {
         bool enable_srv_drm { true };
         bool enable_srv_eikapp_ui { true };
         bool enable_srv_akn_icon { true };
-        bool enable_srv_akn_skin { true };
+        bool enable_srv_akn_skin { false };
         bool enable_srv_cdl { true };
 
         void serialize();
