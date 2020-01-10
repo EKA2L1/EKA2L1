@@ -1098,6 +1098,15 @@ namespace eka2l1::epoc {
 
         return chunk->base();
     }
+    
+    BRIDGE_FUNC(std::int32_t, ChunkSize, std::int32_t aChunkHandle) {
+        chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
+        if (!chunk) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(chunk->committed());
+    }
 
     BRIDGE_FUNC(std::int32_t, ChunkAdjust, std::int32_t aChunkHandle, std::int32_t aType, std::int32_t a1, std::int32_t a2) {
         chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
@@ -2246,6 +2255,7 @@ namespace eka2l1::epoc {
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, ObjectNext),
         BRIDGE_REGISTER(0x01, ChunkBase),
+        BRIDGE_REGISTER(0x02, ChunkSize),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
         BRIDGE_REGISTER(0x0C, IMB_Range),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
