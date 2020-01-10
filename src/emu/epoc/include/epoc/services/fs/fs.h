@@ -124,6 +124,7 @@ namespace eka2l1 {
         void session_path(service::ipc_context *ctx);
         void set_session_path(service::ipc_context *ctx);
         void set_session_to_private(service::ipc_context *ctx);
+        void create_private_path(service::ipc_context *ctx);
         
         int new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, 
             bool overwrite = false, bool temporary = false);

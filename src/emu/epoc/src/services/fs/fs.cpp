@@ -105,6 +105,7 @@ namespace eka2l1 {
         HANDLE_CLIENT_IPC(session_path, EFsSessionPath, "Fs::SessionPath");
         HANDLE_CLIENT_IPC(set_session_path, EFsSetSessionPath, "Fs::SetSessionPath");
         HANDLE_CLIENT_IPC(set_session_to_private, EFsSessionToPrivate, "Fs::SetSessionToPrivate");
+        HANDLE_CLIENT_IPC(create_private_path, EFsCreatePrivatePath, "Fs::CreatePrivatePath");
         HANDLE_CLIENT_IPC(notify_change_ex, EFsNotifyChangeEx, "Fs::NotifyChangeEx");
         HANDLE_CLIENT_IPC(notify_change, EFsNotifyChange, "Fs::NotifyChange");
         HANDLE_CLIENT_IPC(mkdir, EFsMkDir, "Fs::MkDir");
@@ -239,6 +240,17 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
+        const char16_t drive_dos_char = char16_t(0x41 + static_cast<int>(drive));
+        const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
+
+        // Try to get the app uid
+        uint32_t uid = std::get<2>(pr->get_uid_type());
+        std::string hex_id = common::to_string(uid, std::hex);
+
+        return drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+    }
+
     void fs_server_client::set_session_to_private(service::ipc_context *ctx) {
         auto drive_ordinal = ctx->get_arg<std::int32_t>(0);
 
@@ -247,14 +259,26 @@ namespace eka2l1 {
             return;
         }
 
-        char16_t drive_dos_char = char16_t(0x41 + *drive_ordinal);
-        std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
+        ss_path = get_private_path(ctx->msg->own_thr->owning_process(), static_cast<drive_number>(drive_ordinal.value()));
+        ctx->set_request_status(epoc::error_none);
+    }
 
-        // Try to get the app uid
-        uint32_t uid = std::get<2>(ctx->msg->own_thr->owning_process()->get_uid_type());
-        std::string hex_id = common::to_string(uid, std::hex);
+    void fs_server_client::create_private_path(service::ipc_context *ctx) {
+        const std::u16string private_path = get_private_path(ctx->msg->own_thr->owning_process(),
+            static_cast<drive_number>(ctx->get_arg<std::int32_t>(0).value()));
 
-        ss_path = drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+        eka2l1::io_system *io = ctx->sys->get_io_system();
+
+        if (io->exist(private_path)) {
+            ctx->set_request_status(epoc::error_already_exists);
+            return;
+        }
+
+        if (!io->create_directory(private_path)) {
+            ctx->set_request_status(epoc::error_permission_denied);
+            return;
+        }
+
         ctx->set_request_status(epoc::error_none);
     }
 
