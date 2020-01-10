@@ -568,9 +568,9 @@ namespace eka2l1 {
             return;
         }
 
-        int dup_handle = static_cast<int>(obj_table_.add(node));
+        const epoc::handle dup_handle = obj_table_.add(node);
 
-        ctx->write_arg_pkg<int>(3, dup_handle);
+        ctx->write_arg_pkg<epoc::handle>(3, dup_handle);
         ctx->set_request_status(epoc::error_none);
     }
 
@@ -578,6 +578,7 @@ namespace eka2l1 {
         LOG_TRACE("Fs::FileAdopt stubbed");
         // TODO (pent0) : Do an adopt implementation
 
+        ctx->write_arg_pkg<std::uint32_t>(3, ctx->get_arg<std::uint32_t>(0).value());
         ctx->set_request_status(epoc::error_none);
     }
     
