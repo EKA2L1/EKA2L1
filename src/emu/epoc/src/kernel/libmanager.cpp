@@ -166,7 +166,7 @@ namespace eka2l1 {
             }
 
             // Add that codeseg as our dependency
-            assert(parent_cs->add_dependency(cs));
+            parent_cs->add_dependency(cs);
 
             std::uint32_t *imdir = &(import_block.ordinals[0]);
 
