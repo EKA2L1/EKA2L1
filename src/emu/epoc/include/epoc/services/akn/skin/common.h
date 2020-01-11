@@ -96,10 +96,15 @@ namespace eka2l1::epoc {
         akns_item_type_anim = 9
     };
 
-    struct akns_item_def {
+    struct akns_item_def_v1 {
         pid id_;
         akns_item_type type_;
         akns_mtptr data_;
+    };
+
+    struct akns_item_def_v2: public akns_item_def_v1 {
         std::int32_t next_hash_;
     };
+
+    using akns_item_def = akns_item_def_v2;
 }

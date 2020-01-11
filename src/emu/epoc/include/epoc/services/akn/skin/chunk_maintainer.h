@@ -57,6 +57,10 @@ namespace eka2l1::epoc {
         base_offset_end
     };
 
+    enum akn_skin_chunk_maintainer_flag {
+        akn_skin_chunk_maintainer_lookup_use_linked_list = 1 << 0       ///< Use linked list for lookup definition. Available on S^3.
+    };
+
     /**
      * Maximum length of a filename in shared chunk.
      */
@@ -92,6 +96,7 @@ namespace eka2l1::epoc {
         std::vector<akn_skin_chunk_area> areas_;
 
         std::uint32_t level_;
+        std::uint32_t flags_;
 
         /**
          * \brief    Get maximum number of filename that the filename area can hold.
@@ -165,7 +170,8 @@ namespace eka2l1::epoc {
         bool import_effect_queue(const skn_effect_queue &queue);
 
     public:
-        explicit akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity);
+        explicit akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity,
+            const std::uint32_t flags = 0);
 
         /**
          * \brief   Get an area's max size
