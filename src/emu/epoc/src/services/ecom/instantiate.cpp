@@ -45,7 +45,7 @@ namespace eka2l1 {
             auto result = std::lower_bound(implementations.begin(), implementations.end(), implementation_uid,
                 [=](const ecom_implementation_info_ptr &impl, const epoc::uid &rhs) { return impl->uid < rhs; });
 
-            if (result == implementations.end()) {
+            if (result == implementations.end() || (*result)->uid != implementation_uid) {
                 return false;
             }
 
@@ -60,7 +60,7 @@ namespace eka2l1 {
             auto result = std::lower_bound(interface->implementations.begin(), interface->implementations.end(), implementation_uid,
                 [](const ecom_implementation_info_ptr &impl, const epoc::uid &rhs) { return impl->uid < rhs; });
 
-            if (result == interface->implementations.end()) {
+            if (result == interface->implementations.end() || (*result)->uid != implementation_uid) {
                 return false;
             }
 
