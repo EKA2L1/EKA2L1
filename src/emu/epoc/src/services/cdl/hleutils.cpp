@@ -18,32 +18,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <epoc/services/faker.h>
-#include <epoc/utils/uid.h>
-#include <epoc/ptr.h>
-
-#include <cstdint>
-
-namespace eka2l1 {
-    class ecom_server;
-}
+#include <epoc/services/cdl/hleutils.h>
 
 namespace eka2l1::epoc {
-    struct implementation_proxy {
-        epoc::uid         implementation_uid;
-        eka2l1::ptr<void> factory_method;
-    };
+    cdl_customisation *get_customisation(kernel::process *pr, cdl_main *main, const std::int32_t cust_index) {
+        cdl_array *arr = main->data_.cast<cdl_array>().get(pr);
 
-    struct implementation_proxy_3 {
-        epoc::uid         implementation_uid;
-        eka2l1::ptr<void> factory_method;
-        eka2l1::ptr<void> interface_get_method;
-        eka2l1::ptr<void> interface_release_method;
-        std::int32_t      reserved_for_some_reason[4];
-    };
+        if (!arr) {
+            return nullptr;
+        }
 
-    service::faker::chain *get_implementation_proxy_table(service::faker *pr, eka2l1::ecom_server *serv,
-        const std::uint32_t impl_uid);
+        // Out of range, then die
+        if (cust_index >= arr->count_) {
+            return nullptr;
+        }
+
+        return arr->data_.cast<cdl_customisation>().get(pr) + cust_index;
+    }
+
+    void *get_data_from_customisation(kernel::process *pr, cdl_customisation *cust, const std::int32_t data_index) {
+        return reinterpret_cast<void**>(cust->impl_.get(pr))[data_index];
+    }
 }
