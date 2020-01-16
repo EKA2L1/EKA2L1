@@ -32,6 +32,7 @@ namespace eka2l1::drivers {
         : shared_graphics_driver(graphic_api::opengl)
         , should_stop(false) {
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
+        list_queue.max_pending_count_ = 128;
     }
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
