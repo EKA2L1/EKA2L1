@@ -112,13 +112,15 @@ namespace eka2l1 {
                 }
 
                 kernel::thread *crr_thread = parent.kern->crr_thread();
+                parent.stop();
 
                 crr_thread->stop();
                 parent.save_context(crr_thread->get_thread_context());
                 dump_context(crr_thread->get_thread_context());
 
-                parent.stop();
-                parent.debugger->wait_for_debugger();
+                if (parent.debugger) {
+                    parent.debugger->wait_for_debugger();
+                }
             }
 
             void invalid_memory_read(const Dynarmic::A32::VAddr addr) {
