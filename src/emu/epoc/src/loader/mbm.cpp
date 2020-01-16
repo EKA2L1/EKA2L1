@@ -43,7 +43,7 @@ namespace eka2l1::loader {
             return false;
         }
 
-        if (trailer.count > 99) {
+        if (trailer.count > 0xFFFF) {
             return false;
         }
 
