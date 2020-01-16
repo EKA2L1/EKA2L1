@@ -166,6 +166,7 @@ namespace eka2l1 {
 
         void get_nearest_font(service::ipc_context *ctx);
         void load_bitmap(service::ipc_context *ctx);
+        void load_bitmap_fast(service::ipc_context *ctx);
         void get_face_attrib(service::ipc_context *ctx);
         void duplicate_font(service::ipc_context *ctx);
         void duplicate_bitmap(service::ipc_context *ctx);

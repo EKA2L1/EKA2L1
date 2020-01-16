@@ -96,6 +96,11 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_bitmap_load_fast: {
+            load_bitmap_fast(ctx);
+            break;
+        }
+
         case fbs_font_dup: {
             duplicate_font(ctx);
             break;

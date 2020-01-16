@@ -293,6 +293,23 @@ namespace eka2l1 {
         load_bitmap_impl(ctx, source_file);
     }
 
+    void fbscli::load_bitmap_fast(service::ipc_context *ctx) {
+        std::optional<std::u16string> name = ctx->get_arg<std::u16string>(2);
+        if (!name.has_value()) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        symfile source_file = ctx->sys->get_io_system()->open_file(name.value(), READ_MODE | BIN_MODE);
+
+        if (!source_file) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        load_bitmap_impl(ctx, source_file.get());
+    }
+
     void fbscli::duplicate_bitmap(service::ipc_context *ctx) {
         fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(*(ctx->get_arg<std::uint32_t>(0)));
         if (!bmp) {
@@ -312,7 +329,7 @@ namespace eka2l1 {
     }
 
     void fbscli::load_bitmap_impl(service::ipc_context *ctx, file *source) {
-        std::optional<load_bitmap_arg> load_options = ctx->get_arg_packed<load_bitmap_arg>(0);
+        std::optional<load_bitmap_arg> load_options = ctx->get_arg_packed<load_bitmap_arg>(1);
         if (!load_options) {
             ctx->set_request_status(epoc::error_argument);
             return;
@@ -324,6 +341,7 @@ namespace eka2l1 {
         fbs_server *fbss = server<fbs_server>();
 
         fbsbitmap_cache_info cache_info_;
+        bool already_cache = false;
 
         // Check if it's shared first
         if (load_options->share) {
@@ -337,6 +355,7 @@ namespace eka2l1 {
 
             if (shared_bitmap_ite != fbss->shared_bitmaps.end()) {
                 bmp = shared_bitmap_ite->second;
+                already_cache = true;
             }
         }
 
@@ -345,7 +364,10 @@ namespace eka2l1 {
             eka2l1::ro_file_stream stream_(source);
             loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream *>(&stream_));
 
-            mbmf_.do_read_headers();
+            if (!mbmf_.do_read_headers()) {
+                ctx->set_request_status(epoc::error_corrupt);
+                return;
+            }
 
             // Let's do an insanity check. Is the bitmap index client given us is not valid ?
             // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 6.
@@ -406,8 +428,9 @@ namespace eka2l1 {
             bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share), support_dirty_bitmap);
         }
 
-        if (load_options->share) {
+        if (load_options->share && !already_cache) {
             fbss->shared_bitmaps.emplace(cache_info_, bmp);
+            bmp->ref();
         }
 
         // Now writes the bitmap info in
