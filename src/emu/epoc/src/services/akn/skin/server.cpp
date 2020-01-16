@@ -189,7 +189,8 @@ namespace eka2l1 {
 
         // Create chunk maintainer
         chunk_maintainer_ = std::make_unique<epoc::akn_skin_chunk_maintainer>(skin_chunk_.get(),
-            4 * 1024);
+            4 * 1024, (sys->get_symbian_version_use() <= epocver::epoc94) ?
+                0 : epoc::akn_skin_chunk_maintainer_lookup_use_linked_list);
 
         // Merge the active skin as the first step
         merge_active_skin(sys->get_io_system());

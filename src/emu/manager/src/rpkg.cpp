@@ -29,6 +29,7 @@
 #include <common/ini.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/pystr.h>
 
 #include <algorithm>
 #include <array>
@@ -154,7 +155,29 @@ namespace eka2l1 {
                 common::ini_file platform_ini;
 
                 if (platform_ini.load(platform_ini_path.c_str()) != 0) {
-                    LOG_ERROR("Can't load platform.txt in Z:\\Resources\\Versions, default to 9.4");
+                    LOG_ERROR("Can't load platform.txt in Z:\\Resources\\Versions, fall back to second method");
+                    const std::string sis_path = devices_rom_path + "temp\\resource\verions\\series60v*.sis";
+
+                    common::dir_iterator directory(sis_path);
+                    common::dir_entry entry;
+
+                    if (directory.next_entry(entry) != -1) {
+                        const common::pystr sis_filename = eka2l1::filename(sis_path);
+                        auto version_strings = sis_filename.split('.');
+
+                        if (version_strings.size() < 2) {
+                            LOG_ERROR("Unable to extract symbian version from second method! Default to v94");
+                        }
+
+                        const int major = version_strings[0].as_int<int>();
+                        const int minor = version_strings[1].as_int<int>();
+
+                        if (major == 5) {
+                            ver = epocver::epoc94;
+                        } else if (major == 3) {
+                            ver = epocver::epoc93;
+                        }
+                    }
                 } else {
                     std::uint8_t major = 9;
                     std::uint8_t minor = 4;

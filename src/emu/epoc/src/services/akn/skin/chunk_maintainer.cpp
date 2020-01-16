@@ -88,12 +88,14 @@ namespace eka2l1::epoc {
         return { static_cast<std::int32_t>(hash), static_cast<std::int32_t>(hash >> 32) };
     }
 
-    akn_skin_chunk_maintainer::akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity)
+    akn_skin_chunk_maintainer::akn_skin_chunk_maintainer(kernel::chunk *shared_chunk, const std::size_t granularity,
+        const std::uint32_t flags)
         : shared_chunk_(shared_chunk)
         , current_granularity_off_(0)
         , max_size_gran_(0)
         , granularity_(granularity)
-        , level_(0) {
+        , level_(0)
+        , flags_(flags) {
         // Calculate max size this chunk can hold (of course, in granularity meters)
         max_size_gran_ = shared_chunk_->max_size() / granularity;
 
@@ -216,22 +218,43 @@ namespace eka2l1::epoc {
     }
 
     std::int32_t akn_skin_chunk_maintainer::get_item_definition_index(const epoc::pid &id) {
-        std::int32_t *hash = reinterpret_cast<std::int32_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
+        if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
+            std::int32_t *hash = reinterpret_cast<std::int32_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
 
-        epoc::akns_item_def *defs = reinterpret_cast<decltype(defs)>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_area_base));
-        std::uint32_t hash_index = calculate_item_hash(id);
+            epoc::akns_item_def *defs = reinterpret_cast<decltype(defs)>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_area_base));
+            std::uint32_t hash_index = calculate_item_hash(id);
 
-        std::int32_t head = hash[hash_index];
+            std::int32_t head = hash[hash_index];
 
-        if (head < 0) {
+            if (head < 0) {
+                return -1;
+            }
+
+            while (head >= 0 && defs[head].id_ != id) {
+                head = defs[head].next_hash_;
+            }
+
+            return head;
+        }
+
+        // Lookup with the old method uses in old Symbian version: iterate through the definition
+        // data area and look for identical ID
+        epoc::akns_item_def_v1 *items = reinterpret_cast<epoc::akns_item_def_v1*>(
+            get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_area_base));
+
+        const std::size_t total_items = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::item_def_area_base)
+            / sizeof(epoc::akns_item_def_v1);
+
+        epoc::akns_item_def_v1 *target_item = std::find_if(items, items + total_items, [=](const akns_item_def_v1 &this_item) {
+            return this_item.id_ == id;
+        });
+
+        if (target_item == items + total_items) {
+            // The end. We can't find it.
             return -1;
         }
 
-        while (head >= 0 && defs[head].id_ != id) {
-            head = defs[head].next_hash_;
-        }
-
-        return head;
+        return static_cast<std::int32_t>(std::distance(items, target_item));
     }
     
     std::int32_t akn_skin_chunk_maintainer::update_data(const std::uint8_t *new_data, std::uint8_t *old_data, const std::size_t new_size, const std::size_t old_size) {
@@ -284,6 +307,12 @@ namespace eka2l1::epoc {
         void *old_data = nullptr;
         akns_item_def *current_def = nullptr;
 
+        std::uint32_t definition_size = sizeof(akns_item_def_v1);
+
+        if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
+            definition_size = sizeof(akns_item_def_v2);
+        }
+
         if (index < 0) {
             const std::size_t def_size = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::item_def_area_base);
 
@@ -293,13 +322,15 @@ namespace eka2l1::epoc {
                 def_size;
 
             set_area_current_size(epoc::akn_skin_chunk_area_base_offset::item_def_area_base,
-                static_cast<std::uint32_t>(def_size + sizeof(akns_item_def)));
+                static_cast<std::uint32_t>(def_size + definition_size));
 
-            std::memcpy(current_head, &def, sizeof(akns_item_def));
+            std::memcpy(current_head, &def, definition_size);
 
             // Update the hash
-            update_definition_hash(reinterpret_cast<akns_item_def*>(current_head),
-                static_cast<std::int32_t>(def_size / sizeof(akns_item_def)));
+            if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
+                update_definition_hash(reinterpret_cast<akns_item_def*>(current_head),
+                    static_cast<std::int32_t>(def_size / sizeof(akns_item_def)));
+            }
 
             current_def = reinterpret_cast<akns_item_def*>(current_head);
         } else {
@@ -320,9 +351,15 @@ namespace eka2l1::epoc {
                 old_data = data_size;
             }
             
-            std::int32_t head = current_def->next_hash_;
-            std::memcpy(current_def, &def, sizeof(akns_item_def));
-            current_def->next_hash_ = head;
+            std::int32_t head = 0;
+            if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
+                std::int32_t head = current_def->next_hash_;
+            }
+            std::memcpy(current_def, &def, definition_size);
+
+            if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
+                current_def->next_hash_ = head;
+            }
         }
 
         // Now we update data.
