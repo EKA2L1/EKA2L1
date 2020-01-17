@@ -613,12 +613,23 @@ namespace eka2l1::epoc {
         srv_effect->output_layer_index_ = effect.output_layer_index;
         srv_effect->output_layer_mode_ = effect.output_layer_mode;
         srv_effect->effect_parameter_count_ = static_cast<std::uint32_t>(effect.parameters.size());
+        srv_effect->effect_size_ = sizeof(akns_srv_effect_def);
         
         // Import parameters
         for (std::size_t i = 0; i < effect.parameters.size(); i++) {
             akns_srv_effect_parameter_def parameter;
             parameter.param_type_ = effect.parameters[i].type;
-            parameter.param_length_ = static_cast<std::uint32_t>(effect.parameters[i].data.length());
+            parameter.param_length_ = static_cast<std::uint32_t>(effect.parameters[i].data.length())
+                + sizeof(akns_srv_effect_parameter_def);
+
+            std::uint32_t to_pad = 0;
+            
+            if (parameter.param_length_ % 4 != 0) {
+                // Align it by 4
+                const std::uint32_t aligned = common::align(parameter.param_length_, 4);
+                to_pad = aligned - parameter.param_length_;
+                parameter.param_length_ = aligned;
+            }
         
             effects.insert(effects.end(), reinterpret_cast<std::uint8_t*>(&parameter), 
                 reinterpret_cast<std::uint8_t*>(&parameter) + sizeof(akns_srv_effect_parameter_def));   
@@ -635,14 +646,18 @@ namespace eka2l1::epoc {
 
                 effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&offset), 
                     reinterpret_cast<const std::uint8_t*>(&offset + 1));
-
-                // Insert padding for filename cache i suppose?
-                // See aknssrvchunkmaintainer2.cpp
-                effects.insert(effects.end(), AKN_SKIN_SERVER_MAX_FILENAME_LENGTH - 8, 0);
             } else {
-               effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
-                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data.back()));
+                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
+                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data.back()) + 1);
             }
+
+            if (to_pad != 0) {
+                const std::uint8_t padding_value = 0xE9;
+                effects.insert(effects.end(), to_pad, padding_value);
+            }
+
+            srv_effect = reinterpret_cast<decltype(srv_effect)>(&effects[0]);
+            srv_effect->effect_size_ += parameter.param_length_ + sizeof(akns_srv_effect_parameter_def);
         }
 
         return true;
@@ -678,6 +693,7 @@ namespace eka2l1::epoc {
         queue_def->input_layer_mode_ = queue.input_layer_mode;
         queue_def->output_layer_index_ = queue.output_layer_index;
         queue_def->output_layer_mode_ = queue.output_layer_mode;
+        queue_def->size_ = sizeof(akns_srv_effect_queue_def);
 
         effect_def_data temp_effect_data;
 
