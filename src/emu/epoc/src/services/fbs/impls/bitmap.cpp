@@ -370,8 +370,8 @@ namespace eka2l1 {
             }
 
             // Let's do an insanity check. Is the bitmap index client given us is not valid ?
-            // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 6.
-            if (mbmf_.trailer.count < load_options->bitmap_id) {
+            // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 5.
+            if (mbmf_.trailer.count <= load_options->bitmap_id) {
                 ctx->set_request_status(epoc::error_not_found);
                 return;
             }
@@ -379,11 +379,11 @@ namespace eka2l1 {
             // With doing that, we can now finally start loading to bitmap properly. So let's do it,
             // hesistate is bad.
             epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
-            bws_bmp->header_ = mbmf_.sbm_headers[load_options->bitmap_id - 1];
+            bws_bmp->header_ = mbmf_.sbm_headers[load_options->bitmap_id];
 
             // Load the bitmap data to large chunk
             int err_code = fbs_load_data_err_none;
-            auto bmp_data_offset = fbss->load_data_to_rom(mbmf_, load_options->bitmap_id - 1, &err_code);
+            auto bmp_data_offset = fbss->load_data_to_rom(mbmf_, load_options->bitmap_id , &err_code);
 
             if (!bmp_data_offset) {
                 switch (err_code) {
