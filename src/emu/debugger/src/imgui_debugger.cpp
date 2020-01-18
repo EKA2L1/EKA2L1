@@ -867,8 +867,12 @@ namespace eka2l1 {
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
                 ImGui::MenuItem("Launch apps", "CTRL+R", &should_show_app_launch);
-                ImGui::MenuItem("Packages", nullptr, &should_package_manager);
-                ImGui::MenuItem("Install package", nullptr, &should_install_package);
+
+                if (ImGui::BeginMenu("Packages")) {
+                    ImGui::MenuItem("Install", nullptr, &should_install_package);
+                    ImGui::MenuItem("List", nullptr, &should_package_manager);
+                    ImGui::EndMenu();
+                }
 
                 ImGui::EndMenu();
             }
