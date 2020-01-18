@@ -21,6 +21,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/font.h>
 #include <epoc/services/fbs/font_atlas.h>

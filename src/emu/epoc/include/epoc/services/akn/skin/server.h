@@ -18,6 +18,8 @@
  */
 
 #include <epoc/services/akn/skin/common.h>
+#include <epoc/services/akn/skin/bitmap_store.h>
+#include <epoc/services/akn/skin/skn.h>
 #include <epoc/services/akn/skin/chunk_maintainer.h>
 #include <epoc/services/akn/skin/icon_cfg.h>
 #include <epoc/services/akn/skin/settings.h>
@@ -25,6 +27,7 @@
 #include <epoc/ptr.h>
 
 #include <queue>
+
 #include <memory>
 
 namespace eka2l1 {
@@ -63,6 +66,8 @@ namespace eka2l1 {
          */
         void do_cancel(service::ipc_context *ctx);
 
+        void store_scaleable_gfx(service::ipc_context *ctx);
+
     public:
         explicit akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid);
         void fetch(service::ipc_context *ctx) override;
@@ -72,10 +77,13 @@ namespace eka2l1 {
         std::unique_ptr<epoc::akn_ss_settings> settings_;
         std::unique_ptr<epoc::akn_skin_icon_config_map> icon_config_map_;
         std::unique_ptr<epoc::akn_skin_chunk_maintainer> chunk_maintainer_;
+        std::unique_ptr<epoc::akn_skin_bitmap_store> bitmap_store_;
 
         chunk_ptr skin_chunk_;
         sema_ptr skin_chunk_sema_;
         mutex_ptr skin_chunk_render_mut_;
+
+        fbs_server *fbss;
 
         void do_initialisation();
 
@@ -89,6 +97,14 @@ namespace eka2l1 {
         explicit akn_skin_server(eka2l1::system *sys);
 
         int is_icon_configured(const epoc::uid app_uid);
+
+        void store_scaleable_gfx(
+            const epoc::pid item_id,
+            const epoc::skn_layout_info layout_info,
+            const std::uint32_t bmp_handle,
+            const std::uint32_t msk_handle
+        );
+
         void connect(service::ipc_context &ctx) override;
     };
 }
