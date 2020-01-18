@@ -25,6 +25,7 @@
 
 #include <manager/sis.h>
 
+#include <manager/config.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 #include <manager/sis_v1_installer.h>
@@ -36,17 +37,23 @@
 
 namespace eka2l1 {
     namespace manager {
+        static constexpr const char *APP_REGISTRY_FILENAME = "apps_registry.yml";
+        static constexpr const char *PACKAGE_FOLDER_PATH = "\\packages\\";
+
         package_manager::package_manager(io_system *io, config_state *conf)
             : io(io) 
             , conf(conf)
         { 
-            load_sdb_yaml("apps_registry.yml");
-            eka2l1::create_directory("packages");
+            load_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
+            eka2l1::create_directory(add_path(conf->storage, PACKAGE_FOLDER_PATH));
+        }
+
+        static std::string get_bucket_stream_path(config_state *state, const uid package_uid) {
+            return add_path(state->storage, add_path(PACKAGE_FOLDER_PATH, common::to_string(package_uid, std::hex) + ".txt"));
         }
             
         bool package_manager::add_to_file_bucket(const uid package_uid, const std::string &path) {
-            std::fstream bucket_stream("packages\\" + common::to_string(package_uid, std::hex) + ".txt",
-                std::ios::out | std::ios::app);
+            std::fstream bucket_stream(get_bucket_stream_path(conf, package_uid), std::ios::out | std::ios::app);
 
             if (!bucket_stream) {
                 return false;
@@ -57,8 +64,7 @@ namespace eka2l1 {
         }
     
         void package_manager::get_file_bucket(const manager::uid pkg_uid, std::vector<std::string> &paths) {
-            std::fstream bucket_stream("packages\\" + common::to_string(pkg_uid, std::hex) + ".txt",
-                std::ios::in);
+            std::fstream bucket_stream(get_bucket_stream_path(conf, pkg_uid), std::ios::in);
 
             if (!bucket_stream) {
                 return;
@@ -254,7 +260,7 @@ namespace eka2l1 {
                 add_package(de_info);
             }
 
-            write_sdb_yaml("apps_registry.yml");
+            write_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
 
             if (show_text) {
                 show_text("Installation done!");
@@ -266,9 +272,8 @@ namespace eka2l1 {
         }
 
         void package_manager::delete_files_and_bucket(const uid pkg_uid) {
-            const std::string pkg_file = "packages\\" + common::to_string(pkg_uid, std::hex) + ".txt";
-
             // Get the package file, delete all related files
+            const std::string pkg_file = get_bucket_stream_path(conf, pkg_uid);
             std::ifstream bucket_stream(pkg_file);
 
             if (bucket_stream) {    
@@ -302,7 +307,7 @@ namespace eka2l1 {
 
             delete_files_and_bucket(pkg_uid);
 
-            write_sdb_yaml("apps_registry.yml");
+            write_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
 
             return true;
         }
