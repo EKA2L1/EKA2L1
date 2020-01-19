@@ -20,6 +20,9 @@
 #pragma once
 
 #include <epoc/services/akn/skin/common.h>
+#include <epoc/services/akn/skin/skn.h>
+#include <epoc/services/fbs/fbs.h>
+#include <epoc/services/akn/skin/bitmap_store.h>
 
 #include <cstdint>
 #include <string>
@@ -97,6 +100,8 @@ namespace eka2l1::epoc {
 
         std::uint32_t level_;
         std::uint32_t flags_;
+
+        std::unique_ptr<akn_skin_bitmap_store> bitmap_store_;
 
         /**
          * \brief    Get maximum number of filename that the filename area can hold.
@@ -317,6 +322,8 @@ namespace eka2l1::epoc {
          * \returns  Pointer to the item definition if available, else nullptr.
          */
         akns_item_def *get_item_definition(const epoc::pid &id);
+
+        bool store_scalable_gfx(const pid item_id, const skn_layout_info layout_info, fbsbitmap *bmp, fbsbitmap *mask);
 
         const std::uint32_t level() const {
             return level_;

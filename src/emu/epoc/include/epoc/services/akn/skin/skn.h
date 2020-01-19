@@ -246,20 +246,6 @@ namespace eka2l1::epoc {
         vec2 layout_size;
     };
 
-    struct skn_scalable_item_def {
-        epoc::pid item_id;
-        std::uint32_t bitmap_handle;
-        std::uint32_t mask_handle;
-        std::int32_t layout_type;
-        bool is_morphing;
-        /**
-         * The original code uses [TTime](http://devlib.symbian.slions.net/belle/GUID-C6E5F800-0637-419E-8FE5-1EBB40E725AA/GUID-A2D3BA72-9B27-3BFF-950A-D7E3B2004821.html)
-         * class, guess they use int64 internally.
-         */
-        std::uint64_t item_timestamp;
-        vec2 layout_size;
-    };
-
     struct skn_image_table: public skn_def_base {
         std::vector<std::uint64_t> images;
         skn_attrib_info attrib;

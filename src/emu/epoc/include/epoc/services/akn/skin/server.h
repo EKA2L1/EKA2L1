@@ -18,7 +18,6 @@
  */
 
 #include <epoc/services/akn/skin/common.h>
-#include <epoc/services/akn/skin/bitmap_store.h>
 #include <epoc/services/akn/skin/skn.h>
 #include <epoc/services/akn/skin/chunk_maintainer.h>
 #include <epoc/services/akn/skin/icon_cfg.h>
@@ -77,7 +76,6 @@ namespace eka2l1 {
         std::unique_ptr<epoc::akn_ss_settings> settings_;
         std::unique_ptr<epoc::akn_skin_icon_config_map> icon_config_map_;
         std::unique_ptr<epoc::akn_skin_chunk_maintainer> chunk_maintainer_;
-        std::unique_ptr<epoc::akn_skin_bitmap_store> bitmap_store_;
 
         chunk_ptr skin_chunk_;
         sema_ptr skin_chunk_sema_;
