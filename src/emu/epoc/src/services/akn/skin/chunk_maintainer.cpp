@@ -2,6 +2,7 @@
 #include <epoc/services/akn/skin/skn.h>
 #include <epoc/kernel/chunk.h>
 #include <common/path.h>
+#include <common/time.h>
 #include <common/vecx.h>
 
 namespace eka2l1::epoc {
@@ -872,7 +873,7 @@ namespace eka2l1::epoc {
             msk ? msk->id : 0,
             layout_info.layout_type,
             false,
-            static_cast<std::uint64_t>(time(0)),
+            common::get_current_time_in_microseconds_since_1ad(),
             layout_info.layout_size
         };
         const std::uint8_t *new_data = reinterpret_cast<const std::uint8_t*>(&def);
@@ -883,6 +884,7 @@ namespace eka2l1::epoc {
         const std::size_t gfx_area_size = get_area_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
         const std::size_t gfx_current_size = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
         const std::size_t def_count = gfx_current_size / sizeof(def);
+
         // update if exist
         for (std::size_t i = 0; i < def_count; i++) {
             if (table[i].item_id == item_id
@@ -895,6 +897,7 @@ namespace eka2l1::epoc {
                 return true;
             }
         }
+
         if (def_count >= gfx_area_size / sizeof(def)) {
             // replace the oldest one if the chunk is full
             std::uint64_t oldest_timestamp = table[0].item_timestamp;
