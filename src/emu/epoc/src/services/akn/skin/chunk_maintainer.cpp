@@ -82,7 +82,7 @@ namespace eka2l1::epoc {
         std::uint32_t param_type_;
     };
 
-    struct skn_scalable_item_def {
+    struct akns_srv_scalable_item_def {
         epoc::pid item_id;
         std::uint32_t bitmap_handle;
         std::uint32_t mask_handle;
@@ -867,7 +867,7 @@ namespace eka2l1::epoc {
             bitmap_store_->store_bitmap(msk);
         }
 
-        const skn_scalable_item_def def {
+        const akns_srv_scalable_item_def def {
             item_id,
             bmp->id,
             msk ? msk->id : 0,
@@ -879,7 +879,7 @@ namespace eka2l1::epoc {
         const std::uint8_t *new_data = reinterpret_cast<const std::uint8_t*>(&def);
 
         // store into shared chunk
-        skn_scalable_item_def *table = reinterpret_cast<skn_scalable_item_def*>(
+        akns_srv_scalable_item_def *table = reinterpret_cast<akns_srv_scalable_item_def*>(
             get_area_base(epoc::akn_skin_chunk_area_base_offset::gfx_area_base));
         const std::size_t gfx_area_size = get_area_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
         const std::size_t gfx_current_size = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
