@@ -116,7 +116,6 @@ namespace eka2l1::manager {
         }
 
         devices.push_back({ ver, firmcode, manufacturer, model });
-
         return true;
     }
 
@@ -128,6 +127,7 @@ namespace eka2l1::manager {
 
         if (result != devices.end()) {
             devices.erase(result);
+            save_devices();
             return true;
         }
 
