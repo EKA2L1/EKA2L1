@@ -81,7 +81,7 @@ namespace eka2l1 {
         }
 
         bool install_rpkg(manager::device_manager *dvcmngr, const std::string &path,
-            const std::string &devices_rom_path, std::atomic<int> &res) {
+            const std::string &devices_rom_path, std::string &firmware_code_ret, std::atomic<int> &res) {
             FILE *f = fopen(path.data(), "rb");
 
             if (!f) {
@@ -259,6 +259,7 @@ namespace eka2l1 {
             }
 
             firmcode = common::lowercase_string(firmcode);
+            firmware_code_ret = firmcode;
 
             // Rename temp folder to its product code
             eka2l1::common::move_file(devices_rom_path + "temp\\", devices_rom_path + firmcode + "\\");

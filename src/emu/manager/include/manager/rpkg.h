@@ -33,6 +33,6 @@ namespace eka2l1 {
         };
 
         bool install_rpkg(manager::device_manager *dvc, const std::string &path,
-            const std::string &devices_rom_path, std::atomic<int> &res);
+            const std::string &devices_rom_path, std::string &firmware_code, std::atomic<int> &res);
     }
 }
