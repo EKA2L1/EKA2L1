@@ -17,8 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <manager/config.h>
 #include <manager/device_manager.h>
 #include <yaml-cpp/yaml.h>
+
+#include <common/path.h>
 
 #include <algorithm>
 #include <fstream>
@@ -28,7 +31,7 @@ namespace eka2l1::manager {
         YAML::Node devices_node{};
 
         try {
-            devices_node = std::move(YAML::LoadFile("devices.yml"));
+            devices_node = std::move(YAML::LoadFile(add_path(conf->storage, "devices.yml")));
         } catch (YAML::Exception exception) {
             return;
         }
@@ -60,14 +63,15 @@ namespace eka2l1::manager {
         }
 
         emitter << YAML::EndMap;
-        std::ofstream outdevicefile("devices.yml");
+        std::ofstream outdevicefile(add_path(conf->storage, "devices.yml"));
 
         outdevicefile << emitter.c_str();
 
         return;
     }
 
-    device_manager::device_manager() {
+    device_manager::device_manager(config_state *conf)
+        : conf(conf) {
         load_devices();
     }
 

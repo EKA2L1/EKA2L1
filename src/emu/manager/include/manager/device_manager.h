@@ -33,16 +33,19 @@ namespace eka2l1::manager {
         std::string model;
     };
 
+    struct config_state;
+
     /*! \brief A manager for all installed devices on this emulator
     */
     class device_manager {
         std::vector<device> devices;
         device *current;
+        config_state *conf;
 
     public:
         std::mutex lock;
 
-        explicit device_manager();
+        explicit device_manager(config_state *conf);
         ~device_manager();
 
         std::vector<device> &get_devices() {

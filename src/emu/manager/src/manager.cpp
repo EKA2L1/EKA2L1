@@ -49,6 +49,6 @@ namespace eka2l1 {
 #ifdef ENABLE_SCRIPTING
         scrmngr = std::make_unique<manager::script_manager>(sys);
 #endif
-        dvmngr = std::make_unique<manager::device_manager>();
+        dvmngr = std::make_unique<manager::device_manager>(conf);
     }
 }
