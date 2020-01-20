@@ -172,8 +172,9 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userda
     }
     
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    std::string firmware_code;
     
-    bool install_result = emu->symsys->install_rpkg(emu->conf.storage + "/drives/z/", path);
+    bool install_result = emu->symsys->install_rpkg(emu->conf.storage + "/drives/z/", path, firmware_code);
     if (!install_result) {
         *err = "RPKG installation failed. Something is wrong, see log";
         return false;
