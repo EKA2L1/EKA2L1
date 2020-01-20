@@ -891,6 +891,7 @@ namespace eka2l1 {
         static ImVec2 BUTTON_SIZE = ImVec2(50, 20);
 
         if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
+            device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
             should_show_install_device_wizard = false;
             return;
         } 
