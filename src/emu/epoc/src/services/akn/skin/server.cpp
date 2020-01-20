@@ -17,10 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/akn/skin/common.h>
 #include <epoc/services/akn/skin/server.h>
 #include <epoc/services/akn/skin/ops.h>
 #include <epoc/services/akn/skin/skn.h>
 #include <epoc/services/akn/skin/utils.h>
+#include <epoc/services/fbs/fbs.h>
 #include <epoc/vfs.h>
 
 #include <common/log.h>
@@ -52,6 +54,31 @@ namespace eka2l1 {
 
         // Check if icon is configured
         ctx->set_request_status(server<akn_skin_server>()->is_icon_configured(id.value()));
+    }
+
+    void akn_skin_server_session::store_scaleable_gfx(service::ipc_context *ctx) {
+        // Message parameters
+        // 0. ItemID
+        // 1. LayoutType & size
+        // 2. bitmap handle
+        // 3. mask handle
+        const std::optional<epoc::pid> item_id = ctx->get_arg_packed<epoc::pid>(0);
+        const std::optional<epoc::skn_layout_info> layout_info = ctx->get_arg_packed<epoc::skn_layout_info>(1);
+        const std::optional<std::int32_t> bmp_handle = ctx->get_arg<std::int32_t>(2);
+        const std::optional<std::int32_t> msk_handle = ctx->get_arg<std::int32_t>(3);
+
+        if (! (item_id && layout_info && bmp_handle && msk_handle)) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+        server<akn_skin_server>()->store_scaleable_gfx(
+            *item_id,
+            *layout_info,
+            *bmp_handle,
+            *msk_handle
+        );
+
+        ctx->set_request_status(epoc::error_none);
     }
 
     void akn_skin_server_session::do_next_event(service::ipc_context *ctx) {
@@ -107,6 +134,11 @@ namespace eka2l1 {
 
         case epoc::akn_skin_server_cancel: {
             do_cancel(ctx);
+            break;
+        }
+
+        case epoc::akn_skin_server_store_scaleable_gfx: {
+            store_scaleable_gfx(ctx);
             break;
         }
 
@@ -172,6 +204,8 @@ namespace eka2l1 {
             reinterpret_cast<central_repo_server*>(&(*svr)), sys->get_io_system(),
             sys->get_system_language());
 
+        fbss = reinterpret_cast<fbs_server*>(&(*kern->get_by_name<service::server>("!Fontbitmapserver")));
+
         // Create skin chunk
         skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,
             sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
@@ -194,5 +228,17 @@ namespace eka2l1 {
 
         // Merge the active skin as the first step
         merge_active_skin(sys->get_io_system());
+    }
+
+    void akn_skin_server::store_scaleable_gfx(
+        const epoc::pid item_id,
+        const epoc::skn_layout_info layout_info,
+        const std::uint32_t bmp_handle,
+        const std::uint32_t msk_handle
+    ) {
+        fbsbitmap *bmp = fbss->get<fbsbitmap>(bmp_handle);
+        fbsbitmap *msk = msk_handle ? fbss->get<fbsbitmap>(msk_handle) : nullptr;
+
+        chunk_maintainer_->store_scalable_gfx(item_id, layout_info, bmp, msk);
     }
 }

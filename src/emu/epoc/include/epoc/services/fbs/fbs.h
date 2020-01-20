@@ -21,6 +21,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/font.h>
 #include <epoc/services/fbs/font_atlas.h>
@@ -166,6 +168,7 @@ namespace eka2l1 {
 
         void get_nearest_font(service::ipc_context *ctx);
         void load_bitmap(service::ipc_context *ctx);
+        void load_bitmap_fast(service::ipc_context *ctx);
         void get_face_attrib(service::ipc_context *ctx);
         void duplicate_font(service::ipc_context *ctx);
         void duplicate_bitmap(service::ipc_context *ctx);

@@ -480,9 +480,6 @@ namespace eka2l1::epoc {
         std::uint64_t *time = aTime.get(sys->get_memory_system());
         std::int32_t *offset = aUTCOffset.get(sys->get_memory_system());
 
-        LOG_INFO("EKA2L1 may download timezone database to your Downloads folder if the database doesn't exist");
-        LOG_INFO("Disable this info using core option: disableadd");
-
         // The time is since EPOC, we need to convert it to first of AD
         *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;

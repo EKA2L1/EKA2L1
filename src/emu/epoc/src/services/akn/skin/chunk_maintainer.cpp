@@ -2,6 +2,8 @@
 #include <epoc/services/akn/skin/skn.h>
 #include <epoc/kernel/chunk.h>
 #include <common/path.h>
+#include <common/time.h>
+#include <common/vecx.h>
 
 namespace eka2l1::epoc {
     constexpr std::int64_t AKNS_CHUNK_ITEM_DEF_HASH_BASE_SIZE_GRAN = -4;
@@ -80,6 +82,16 @@ namespace eka2l1::epoc {
         std::uint32_t param_type_;
     };
 
+    struct akns_srv_scalable_item_def {
+        epoc::pid item_id;
+        std::uint32_t bitmap_handle;
+        std::uint32_t mask_handle;
+        std::int32_t layout_type;
+        bool is_morphing;
+        std::uint64_t item_timestamp;
+        vec2 layout_size;
+    };
+
     static constexpr std::size_t AKNS_OLD_DATA_SIZE_FIRST_WORD_OF_DATA = 0xFFFFFFFF;
 
     using akns_srv_image_table_def = akns_srv_color_table_def;
@@ -109,6 +121,9 @@ namespace eka2l1::epoc {
         // Fill hash area with negaitve
         std::uint8_t *area = reinterpret_cast<std::uint8_t*>(get_area_base(akn_skin_chunk_area_base_offset::item_def_hash_base));
         std::fill(area, area + get_area_size(akn_skin_chunk_area_base_offset::item_def_hash_base), 0xFF);
+
+        // Init container for bitmaps
+        bitmap_store_ = std::make_unique<epoc::akn_skin_bitmap_store>();
     }
 
     const std::uint32_t akn_skin_chunk_maintainer::maximum_filename() {
@@ -613,12 +628,23 @@ namespace eka2l1::epoc {
         srv_effect->output_layer_index_ = effect.output_layer_index;
         srv_effect->output_layer_mode_ = effect.output_layer_mode;
         srv_effect->effect_parameter_count_ = static_cast<std::uint32_t>(effect.parameters.size());
+        srv_effect->effect_size_ = sizeof(akns_srv_effect_def);
         
         // Import parameters
         for (std::size_t i = 0; i < effect.parameters.size(); i++) {
             akns_srv_effect_parameter_def parameter;
             parameter.param_type_ = effect.parameters[i].type;
-            parameter.param_length_ = static_cast<std::uint32_t>(effect.parameters[i].data.length());
+            parameter.param_length_ = static_cast<std::uint32_t>(effect.parameters[i].data.length())
+                + sizeof(akns_srv_effect_parameter_def);
+
+            std::uint32_t to_pad = 0;
+            
+            if (parameter.param_length_ % 4 != 0) {
+                // Align it by 4
+                const std::uint32_t aligned = common::align(parameter.param_length_, 4);
+                to_pad = aligned - parameter.param_length_;
+                parameter.param_length_ = aligned;
+            }
         
             effects.insert(effects.end(), reinterpret_cast<std::uint8_t*>(&parameter), 
                 reinterpret_cast<std::uint8_t*>(&parameter) + sizeof(akns_srv_effect_parameter_def));   
@@ -635,14 +661,18 @@ namespace eka2l1::epoc {
 
                 effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&offset), 
                     reinterpret_cast<const std::uint8_t*>(&offset + 1));
-
-                // Insert padding for filename cache i suppose?
-                // See aknssrvchunkmaintainer2.cpp
-                effects.insert(effects.end(), AKN_SKIN_SERVER_MAX_FILENAME_LENGTH - 8, 0);
             } else {
-               effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
-                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data.back()));
+                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
+                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data.back()) + 1);
             }
+
+            if (to_pad != 0) {
+                const std::uint8_t padding_value = 0xE9;
+                effects.insert(effects.end(), to_pad, padding_value);
+            }
+
+            srv_effect = reinterpret_cast<decltype(srv_effect)>(&effects[0]);
+            srv_effect->effect_size_ += parameter.param_length_ + sizeof(akns_srv_effect_parameter_def);
         }
 
         return true;
@@ -678,6 +708,7 @@ namespace eka2l1::epoc {
         queue_def->input_layer_mode_ = queue.input_layer_mode;
         queue_def->output_layer_index_ = queue.output_layer_index;
         queue_def->output_layer_mode_ = queue.output_layer_mode;
+        queue_def->size_ = sizeof(akns_srv_effect_queue_def);
 
         effect_def_data temp_effect_data;
 
@@ -827,6 +858,69 @@ namespace eka2l1::epoc {
             }
         }
 
+        return true;
+    }
+
+    bool akn_skin_chunk_maintainer::store_scalable_gfx(const pid item_id, const skn_layout_info layout_info, fbsbitmap *bmp, fbsbitmap *msk) {
+        bitmap_store_->store_bitmap(bmp);
+        if (msk) {
+            bitmap_store_->store_bitmap(msk);
+        }
+
+        const akns_srv_scalable_item_def def {
+            item_id,
+            bmp->id,
+            msk ? msk->id : 0,
+            layout_info.layout_type,
+            false,
+            common::get_current_time_in_microseconds_since_1ad(),
+            layout_info.layout_size
+        };
+        const std::uint8_t *new_data = reinterpret_cast<const std::uint8_t*>(&def);
+
+        // store into shared chunk
+        akns_srv_scalable_item_def *table = reinterpret_cast<akns_srv_scalable_item_def*>(
+            get_area_base(epoc::akn_skin_chunk_area_base_offset::gfx_area_base));
+        const std::size_t gfx_area_size = get_area_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
+        const std::size_t gfx_current_size = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
+        const std::size_t def_count = gfx_current_size / sizeof(def);
+
+        // update if exist
+        for (std::size_t i = 0; i < def_count; i++) {
+            if (table[i].item_id == item_id
+            && table[i].layout_type == layout_info.layout_type
+            && table[i].layout_size == layout_info.layout_size) {
+                bitmap_store_->remove_stored_bitmap(table[i].bitmap_handle);
+                bitmap_store_->remove_stored_bitmap(table[i].mask_handle);
+                std::uint8_t *dest = reinterpret_cast<std::uint8_t*>(table + i);
+                std::copy(new_data, new_data + sizeof(def), dest);
+                return true;
+            }
+        }
+
+        if (def_count >= gfx_area_size / sizeof(def)) {
+            // replace the oldest one if the chunk is full
+            std::uint64_t oldest_timestamp = table[0].item_timestamp;
+            std::size_t oldest_index = 0;
+            for (std::size_t i = 0; i < def_count; i++) {
+                if (table[i].item_timestamp < oldest_timestamp) {
+                    oldest_timestamp = table[i].item_timestamp;
+                    oldest_index = i;
+                }
+            }
+            bitmap_store_->remove_stored_bitmap(table[oldest_index].bitmap_handle);
+            bitmap_store_->remove_stored_bitmap(table[oldest_index].mask_handle);
+            std::uint8_t *dest = reinterpret_cast<std::uint8_t*>(table + oldest_index);
+            std::copy(new_data, new_data + sizeof(def), dest);
+        } else {
+            // add a new one
+            std::uint8_t *dest = reinterpret_cast<std::uint8_t*>(table + def_count);
+            set_area_current_size(
+                epoc::akn_skin_chunk_area_base_offset::gfx_area_base,
+                gfx_current_size + sizeof(def)
+            );
+            std::copy(new_data, new_data + sizeof(def), dest);
+        }
         return true;
     }
 }

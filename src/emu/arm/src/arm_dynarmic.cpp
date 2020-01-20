@@ -57,20 +57,20 @@ namespace eka2l1 {
 
             CallbackOrAccessOneWord CompileSendOneWord(bool two, unsigned opc1, coproc_reg CRn,
                 coproc_reg CRm, unsigned opc2) override {
-                return boost::blank{};
+                return CallbackOrAccessOneWord{};
             }
 
             CallbackOrAccessTwoWords CompileSendTwoWords(bool two, unsigned opc, coproc_reg CRm) override {
-                return boost::blank{};
+                return CallbackOrAccessTwoWords{};
             }
 
             CallbackOrAccessOneWord CompileGetOneWord(bool two, unsigned opc1, coproc_reg CRn, coproc_reg CRm,
                 unsigned opc2) override {
-                return boost::blank{};
+                return CallbackOrAccessOneWord{};
             }
 
             CallbackOrAccessTwoWords CompileGetTwoWords(bool two, unsigned opc, coproc_reg CRm) override {
-                return boost::blank{};
+                return CallbackOrAccessTwoWords{};
             }
 
             std::optional<Callback> CompileLoadWords(bool two, bool long_transfer, coproc_reg CRd,
@@ -112,13 +112,15 @@ namespace eka2l1 {
                 }
 
                 kernel::thread *crr_thread = parent.kern->crr_thread();
+                parent.stop();
 
                 crr_thread->stop();
                 parent.save_context(crr_thread->get_thread_context());
                 dump_context(crr_thread->get_thread_context());
 
-                parent.stop();
-                parent.debugger->wait_for_debugger();
+                if (parent.debugger) {
+                    parent.debugger->wait_for_debugger();
+                }
             }
 
             void invalid_memory_read(const Dynarmic::A32::VAddr addr) {
