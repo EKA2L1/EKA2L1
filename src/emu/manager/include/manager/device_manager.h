@@ -39,10 +39,6 @@ namespace eka2l1::manager {
         std::vector<device> devices;
         device *current;
 
-    protected:
-        void save_devices();
-        void load_devices();
-
     public:
         std::mutex lock;
 
@@ -61,6 +57,9 @@ namespace eka2l1::manager {
             return current;
         }
 
+        void save_devices();
+        void load_devices();
+        
         bool set_current(const std::string &firmcode);
         bool set_current(const std::uint8_t idx);
 
