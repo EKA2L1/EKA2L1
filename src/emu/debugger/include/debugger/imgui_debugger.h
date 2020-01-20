@@ -77,6 +77,36 @@ namespace eka2l1 {
         bool should_package_manager_display_language_choose;
 
         bool should_show_app_launch;
+        bool should_show_install_device_wizard;
+
+        struct device_wizard {
+            enum device_wizard_stage {
+                WELCOME_MESSAGE = 0,
+                SPECIFY_RPKG = 1,
+                SPECIFY_ROM = 2,
+                INSTALL = 3,
+                ENDING = 4,
+                FINAL_FOR_REAL = 5
+            } stage;
+                
+            std::string current_rom_path;
+            std::string current_rpkg_path;
+
+            bool should_continue;
+
+            std::atomic<bool> extract_rpkg_done;
+            std::atomic<bool> copy_rom_done;
+            std::atomic<bool> failure;
+
+            std::unique_ptr<std::thread> install_thread;
+
+            explicit device_wizard()
+                : stage(WELCOME_MESSAGE)
+                , extract_rpkg_done(false)
+                , copy_rom_done(false)
+                , failure(false) {
+            }
+        } device_wizard_state;
 
         applist_server *alserv;
         window_server  *winserv;
@@ -99,6 +129,7 @@ namespace eka2l1 {
         void show_breakpoint_list();
         void show_preferences();
         void show_package_manager();
+        void show_install_device();
 
         void show_pref_personalisation();
         void show_pref_general();
