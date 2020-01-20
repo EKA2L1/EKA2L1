@@ -24,6 +24,7 @@
 #include <common/buffer.h>
 #include <common/rgb.h>
 #include <common/types.h>
+#include <common/vecx.h>
 
 #include <map>
 #include <unordered_map>
@@ -238,6 +239,11 @@ namespace eka2l1::epoc {
         std::uint32_t mask_bitmap_idx;
 
         skn_attrib_info attrib;
+    };
+
+    struct skn_layout_info {
+        std::int32_t layout_type;
+        vec2 layout_size;
     };
 
     struct skn_image_table: public skn_def_base {
