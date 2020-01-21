@@ -1033,7 +1033,7 @@ namespace eka2l1 {
 
             ImGui::SameLine();
 
-            if (ImGui::Button("No", BUTTON_SIZE)) {
+            if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button("No", BUTTON_SIZE)) {
                 should_show_install_device_wizard = false;
                 device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
             }
