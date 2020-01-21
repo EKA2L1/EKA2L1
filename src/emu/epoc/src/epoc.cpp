@@ -271,7 +271,7 @@ namespace eka2l1 {
          *
          * \returns True on success.
          */
-        bool install_rpkg(const std::string &devices_rom_path, const std::string &path);
+        bool install_rpkg(const std::string &devices_rom_path, const std::string &path, std::string &firmware_code);
         void load_scripts();
 
         void do_state(common::chunkyseri &seri);
@@ -492,11 +492,11 @@ namespace eka2l1 {
         hlelibmngr.reset();
     }
 
-    bool system_impl::install_rpkg(const std::string &devices_rom_path, const std::string &path) {
+    bool system_impl::install_rpkg(const std::string &devices_rom_path, const std::string &path, std::string &firmware_code) {
         // TODO: Progress bar
         std::atomic_int holder;
         bool res = eka2l1::loader::install_rpkg(mngr.get_device_manager(), path, devices_rom_path,
-            holder);
+            firmware_code, holder);
 
         if (!res) {
             return false;
@@ -630,8 +630,8 @@ namespace eka2l1 {
         return impl->reset();
     }
 
-    bool system::install_rpkg(const std::string &devices_rom_path, const std::string &path) {
-        return impl->install_rpkg(devices_rom_path, path);
+    bool system::install_rpkg(const std::string &devices_rom_path, const std::string &path, std::string &firmware_code) {
+        return impl->install_rpkg(devices_rom_path, path, firmware_code);
     }
 
     void system::load_scripts() {

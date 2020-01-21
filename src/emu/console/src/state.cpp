@@ -26,6 +26,9 @@
 #include <drivers/graphics/graphics.h>
 #include <debugger/logger.h>
 
+#include <manager/manager.h>
+#include <manager/device_manager.h>
+
 #include <epoc/kernel.h>
 
 namespace eka2l1::desktop {
@@ -68,7 +71,16 @@ namespace eka2l1::desktop {
 
     void emulator::stage_two() {
         if (!stage_two_inited) {
-            bool res = symsys->load_rom(conf.storage + conf.rom_path);
+            manager::device_manager *dvcmngr = symsys->get_manager_system()->get_device_manager();
+            manager::device *dvc = dvcmngr->get_current();
+
+            if (!dvc) {
+                LOG_ERROR("No current device is available. Stage two initialisation abort");
+                return;
+            }
+
+            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", 
+                add_path(dvc->firmware_code, "SYM.ROM"))));
 
             if (!res) {
                 return;

@@ -54,6 +54,18 @@ namespace eka2l1::common {
 
     bool move_file(const std::string &path, const std::string &new_path);
 
+    /**
+     * \brief Copy a file to target destination.
+     * 
+     * \param target_file               The file to be copied.
+     * \param dest                      The destination.
+     * \param overwrite_if_dest_exists  If this is true and the destination already exists, than the destination will be
+     *                                  overwritten. Else, this function returns false.
+     * 
+     * \returns True on success.
+     */
+    bool copy_file(const std::string &target_file, const std::string &dest, const bool overwrite_if_dest_exists);
+
     bool is_system_case_insensitive();
 
     struct dir_entry {

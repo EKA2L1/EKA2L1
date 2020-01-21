@@ -22,6 +22,9 @@
 #include <common/cvt.h>
 #include <common/platform.h>
 #include <common/time.h>
+#include <common/path.h>
+
+#include <fstream>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -307,6 +310,30 @@ namespace eka2l1::common {
 #endif
     }
     
+    bool copy_file(const std::string &target_file, const std::string &dest, const bool overwrite_if_dest_exists) {
+#if EKA2L1_PLATFORM(WIN32)
+        return CopyFile(target_file.c_str(), dest.c_str(), !overwrite_if_dest_exists);
+#else
+        if (!eka2l1::exists(target_file)) {
+            return false;
+        }
+
+        if (eka2l1::exists(dest) && !overwrite_if_dest_exists) {
+            return false;
+        }
+            
+        std::ifstream src(target_file, std::ios::binary);
+        std::ofstream dst(dest, std::ios::binary | std::ios::trunc);
+
+        if (src.fail() || dst.fail()) {
+            return false;
+        }
+
+        dst << src.rdbuf();
+        return true;
+#endif
+    }
+
     std::uint64_t get_last_modifiy_since_ad(const std::u16string &path) {
 #if EKA2L1_PLATFORM(WIN32)
         WIN32_FILE_ATTRIBUTE_DATA attrib_data;

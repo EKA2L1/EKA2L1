@@ -23,6 +23,7 @@
 #include <debugger/renderer/renderer.h>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <disasm/disasm.h>
 #include <epoc/epoc.h>
@@ -42,8 +43,11 @@
 #include <manager/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
+#include <manager/rpkg.h>
 
 #include <common/cvt.h>
+#include <common/fileutils.h>
+#include <common/path.h>
 #include <common/platform.h>
 
 #include <nfd.h>
@@ -142,7 +146,14 @@ namespace eka2l1 {
     imgui_debugger::~imgui_debugger() {
         install_thread_should_stop = true;
         install_thread_cond.notify_one();
-        install_thread->join();
+
+        if (install_thread) {
+            install_thread->join();
+        }
+
+        if (device_wizard_state.install_thread) {
+            device_wizard_state.install_thread->join();
+        }
     }
 
     manager::config_state *imgui_debugger::get_config() {
@@ -860,6 +871,177 @@ namespace eka2l1 {
         }
     }
 
+    static bool ImGuiButtonToggle(const char *text, ImVec2 size, const bool enable) {
+        if (!enable) {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        }
+
+        const bool button_result = ImGui::Button(text, size);
+
+        if (!enable) {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
+
+        return (!enable) ? false : button_result;
+    }
+
+    void imgui_debugger::show_install_device() {
+        static ImVec2 BUTTON_SIZE = ImVec2(50, 20);
+
+        if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
+            device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
+            should_show_install_device_wizard = false;
+            return;
+        } 
+
+        ImGui::OpenPopup("Install device wizard");
+        ImGui::SetNextWindowSize(ImVec2(640, 140), ImGuiCond_Once);
+        
+        if (ImGui::BeginPopupModal("Install device wizard")) {
+            switch (device_wizard_state.stage) {
+            case device_wizard::WELCOME_MESSAGE:
+                ImGui::TextWrapped("Welcome to install device wizard. Me, En will guide you through this!");
+                device_wizard_state.should_continue = true;
+                break;
+
+            case device_wizard::SPECIFY_RPKG: {
+                ImGui::TextWrapped("Please specify the repackage file (RPKG):");
+                ImGui::InputText("##RPKGPath", device_wizard_state.current_rpkg_path.data(), 
+                    device_wizard_state.current_rpkg_path.size(), ImGuiInputTextFlags_ReadOnly);
+                
+                ImGui::SameLine();
+
+                if (ImGui::Button("Change")) {
+                    on_pause_toogle(true);
+
+                    file_dialog("rpkg", [&](const char *result) {
+                        device_wizard_state.current_rpkg_path = result;
+                        device_wizard_state.should_continue = eka2l1::exists(result);
+                    });
+
+                    should_pause = false;
+                    on_pause_toogle(false);
+                }
+
+                break;
+            }
+
+            case device_wizard::SPECIFY_ROM: {
+                ImGui::TextWrapped("Please specify the ROM file:");
+                ImGui::InputText("##ROMPath", device_wizard_state.current_rom_path.data(), 
+                    device_wizard_state.current_rom_path.size(), ImGuiInputTextFlags_ReadOnly);
+                
+                ImGui::SameLine();
+
+                if (ImGui::Button("Change")) {
+                    on_pause_toogle(true);
+
+                    file_dialog("rom", [&](const char *result) {
+                        device_wizard_state.current_rom_path = result;
+                        device_wizard_state.should_continue = eka2l1::exists(result);
+                    });
+
+                    should_pause = false;
+                    on_pause_toogle(false);
+                }
+
+                break;
+            }
+
+            case device_wizard::INSTALL: {
+                ImGui::TextWrapped("Please wait while we install the device!");
+
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                
+                bool extract_rpkg_state = device_wizard_state.extract_rpkg_done.load();
+                bool copy_rom_state = device_wizard_state.copy_rom_done.load();
+
+                ImGui::Checkbox("Extract the RPKG", &extract_rpkg_state);
+                ImGui::Checkbox("Copy the ROM", &copy_rom_state);
+
+                if (device_wizard_state.failure) {
+                    ImGui::TextWrapped("Something wrong happens during the install! Please check the log!");
+                    device_wizard_state.should_continue = true;
+                }
+
+                ImGui::PopItemFlag();
+
+                break;
+            }
+
+            case device_wizard::ENDING: {
+                ImGui::TextWrapped("Thank you for checking by. En hopes you have a good time!");
+                ImGui::TextWrapped("For any problem, please report to the developers by opening issues!");
+                device_wizard_state.should_continue = true;
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            ImGui::NewLine();
+            ImGui::NewLine();
+
+            // Align to center!
+            ImGui::SameLine((ImGui::GetWindowSize().x - (BUTTON_SIZE.x * 2)) / 2);
+
+            if (ImGuiButtonToggle("Yes", BUTTON_SIZE, device_wizard_state.should_continue)) {
+                device_wizard_state.stage = static_cast<device_wizard::device_wizard_stage>
+                    (static_cast<int>(device_wizard_state.stage) + 1);
+                device_wizard_state.should_continue = false;
+
+                if (device_wizard_state.stage == device_wizard::INSTALL) {
+                    manager::device_manager *manager = sys->get_manager_system()->get_device_manager();
+    
+                    device_wizard_state.install_thread = std::make_unique<std::thread>([](
+                        manager::device_manager *mngr, device_wizard *wizard, manager::config_state *conf) {
+                        std::atomic<int> progress;
+                        std::string firmware_code;
+
+                        bool result = eka2l1::loader::install_rpkg(mngr, wizard->current_rpkg_path,
+                            add_path(conf->storage, "drives//z//"), firmware_code, progress);
+
+                        if (!result) {
+                            wizard->failure = true;
+                            return;
+                        }
+
+                        mngr->save_devices();
+
+                        wizard->extract_rpkg_done = true;
+
+                        const std::string rom_directory = add_path(conf->storage, add_path("roms", 
+                            firmware_code + "\\"));
+
+                        eka2l1::create_directories(rom_directory);
+                        result = common::copy_file(wizard->current_rom_path, add_path(rom_directory, "SYM.ROM"), true);
+
+                        if (!result) {
+                            LOG_ERROR("Unable to copy ROM to target ROM directory!");
+                            wizard->copy_rom_done = false;
+                            return;
+                        }
+
+                        wizard->copy_rom_done = true;
+                        wizard->should_continue = true;
+                    }, manager, &device_wizard_state, conf);
+                }
+            }
+
+            ImGui::SameLine();
+
+            if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button("No", BUTTON_SIZE)) {
+                should_show_install_device_wizard = false;
+                device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+    
     void imgui_debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
             conf->menu_height = ImGui::GetWindowSize().y;
@@ -867,8 +1049,18 @@ namespace eka2l1 {
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
                 ImGui::MenuItem("Launch apps", "CTRL+R", &should_show_app_launch);
-                ImGui::MenuItem("Packages", nullptr, &should_package_manager);
-                ImGui::MenuItem("Install package", nullptr, &should_install_package);
+
+                if (ImGui::BeginMenu("Packages")) {
+                    ImGui::MenuItem("Install", nullptr, &should_install_package);
+                    ImGui::MenuItem("List", nullptr, &should_package_manager);
+                    ImGui::EndMenu();
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Install device", nullptr, nullptr)) {
+                    should_show_install_device_wizard = true;
+                }
 
                 ImGui::EndMenu();
             }
@@ -1281,6 +1473,10 @@ namespace eka2l1 {
 
         if (should_show_app_launch) {
             show_app_launch();
+        }
+
+        if (should_show_install_device_wizard) {
+            show_install_device();
         }
 
         on_pause_toogle(should_pause);
