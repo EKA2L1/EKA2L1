@@ -158,4 +158,13 @@ namespace eka2l1 {
         std::int32_t count;
         std::int32_t screen_num;
     };
+
+    struct ws_cmd_gdi_blt2 {
+        std::uint32_t handle;
+        eka2l1::vec2 pos;
+    };
+
+    struct ws_cmd_gdi_blt3: public ws_cmd_gdi_blt2 {
+        eka2l1::rect source_rect;
+    };
 }

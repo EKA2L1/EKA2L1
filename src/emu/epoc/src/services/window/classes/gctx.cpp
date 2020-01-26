@@ -67,12 +67,8 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
-        const eka2l1::rect &dest_rect) {
-        eka2l1::rect source_rect;
-        source_rect.top = { 0, 0 };
-        source_rect.size = dest_rect.size;
-
-        cmd_builder->draw_bitmap(h, eka2l1::rect(dest_rect.top, { 0, 0 }), source_rect, false);
+        const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
+        cmd_builder->draw_bitmap(h, dest_rect, source_rect, false);
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -175,6 +171,12 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
     }
     
+    drivers::handle graphic_context::handle_from_bitwise_bitmap(epoc::bitwise_bitmap *bmp) {
+        drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
+        epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
+        return cacher->add_or_get(driver, cmd_builder.get(), bmp);
+    }
+    
     void graphic_context::draw_bitmap(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap *>(cmd.data_ptr);
         epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
@@ -184,13 +186,60 @@ namespace eka2l1::epoc {
             return;
         }
 
-        drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
-        epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
-        drivers::handle bmp_driver_handle = cacher->add_or_get(driver, cmd_builder.get(), bw_bmp);
-
-        do_command_draw_bitmap(context, bmp_driver_handle, rect(bitmap_cmd->pos, bw_bmp->header_.size_pixels));
+        drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bw_bmp);
+        do_command_draw_bitmap(context, bmp_driver_handle, rect({ 0, 0 }, bw_bmp->header_.size_pixels),
+            rect(bitmap_cmd->pos, { 0, 0 }));
     }
     
+    void graphic_context::gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver) {
+        ws_cmd_gdi_blt3 *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt3*>(cmd.data_ptr);
+
+        // Try to get the bitmap
+        epoc::bitwise_bitmap *bmp = client->get_ws().get_bitmap(blt_cmd->handle);
+
+        if (!bmp) {
+            context.set_request_status(epoc::error_bad_handle);
+            return;
+        }
+
+        save_bwbmp_to_file("test.bmp", bmp, (const char*)client->get_ws().get_fbs_server()->get_large_chunk_base());
+
+        eka2l1::rect source_rect;
+
+        if (ver == 2) {
+            source_rect.top = { 0, 0 };
+            source_rect.size = bmp->header_.size_pixels;
+        } else {
+            source_rect = blt_cmd->source_rect;
+        }
+
+        eka2l1::rect dest_rect;
+        dest_rect.top = blt_cmd->pos;
+        dest_rect.size = source_rect.size;
+
+        if ((ver > 2) && (blt_cmd->source_rect.top.y + blt_cmd->source_rect.size.y > bmp->header_.size_pixels.y)) {
+            // The source rect given by the command is too large.
+            // By default, the extra space should be filled with white. We will do that by drawing
+            // a white rectangle
+            cmd_builder->set_brush_color({ 255, 255, 255 });
+            cmd_builder->draw_rectangle(dest_rect);
+
+            source_rect.size.y = bmp->header_.size_pixels.y - blt_cmd->source_rect.top.y;
+            dest_rect.size.y = source_rect.size.y;
+        }
+        
+        drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bmp);
+        do_command_draw_bitmap(context, bmp_driver_handle, source_rect, dest_rect);
+    }
+
+    void graphic_context::gdi_blt2(service::ipc_context &context, ws_cmd &cmd) {
+        gdi_blt_impl(context, cmd, 2);
+    }
+    
+    void graphic_context::gdi_blt3(service::ipc_context &context, ws_cmd &cmd) {
+        gdi_blt_impl(context, cmd, 3);
+    }
+
     void graphic_context::set_brush_style(service::ipc_context &context, ws_cmd &cmd) {
         fill_mode = *reinterpret_cast<brush_style*>(cmd.data_ptr);
         context.set_request_status(epoc::error_none);
@@ -315,7 +364,9 @@ namespace eka2l1::epoc {
             { ws_gc_u171_clear_rect, &graphic_context::clear_rect },
             { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap },
             { ws_gc_u171_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
-            { ws_gc_u171_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 }
+            { ws_gc_u171_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
+            { ws_gc_u171_gdi_blt2, &graphic_context::gdi_blt2 },
+            { ws_gc_u171_gdi_blt3, &graphic_context::gdi_blt3 }
         };
         
         static const ws_graphics_context_table_op curr_opcode_handlers = {
@@ -330,7 +381,9 @@ namespace eka2l1::epoc {
             { ws_gc_curr_clear_rect, &graphic_context::clear_rect },
             { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap },
             { ws_gc_curr_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
-            { ws_gc_curr_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 }
+            { ws_gc_curr_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
+            { ws_gc_curr_gdi_blt2, &graphic_context::gdi_blt2 },
+            { ws_gc_curr_gdi_blt3, &graphic_context::gdi_blt3 }
         };
 
         epoc::version cli_ver = client->client_version();
