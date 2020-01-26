@@ -75,4 +75,12 @@ namespace eka2l1::common {
     };
 
     static_assert(sizeof(dib_header_v1) == 40);
+
+    struct dib_header_v2: public dib_header_v1 {
+        std::uint32_t red_mask;
+        std::uint32_t green_mask;
+        std::uint32_t blue_mask;
+    };
+
+    static_assert(sizeof(dib_header_v2) == 52);
 }

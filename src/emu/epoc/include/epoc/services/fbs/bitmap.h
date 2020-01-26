@@ -82,4 +82,6 @@ namespace eka2l1::epoc {
         color_bitmap_with_alpha = 2,
         color_bitmap_with_alpha_pm = 3
     };
+    
+    bool save_bwbmp_to_file(const std::string &destination, bitwise_bitmap *bitmap, const char *base);
 }

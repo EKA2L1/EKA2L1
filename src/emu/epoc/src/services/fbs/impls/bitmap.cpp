@@ -22,6 +22,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/bitmap.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/log.h>
@@ -203,7 +204,7 @@ namespace eka2l1 {
         static void do_white_fill(std::uint8_t *dest, const std::size_t size, epoc::display_mode mode) {
             std::fill(dest, dest + size, 0xFF);
         }
-
+        
         void bitwise_bitmap::construct(loader::sbm_header &info, void *data, const void *base, const bool white_fill) {
             uid_ = epoc::BITWISE_BITMAP_UID;
             allocator_ = MAGIC_FBS_HEAP_PTR;
@@ -598,6 +599,116 @@ namespace eka2l1 {
         handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg(1, handle_info);
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    namespace epoc {
+        bool save_bwbmp_to_file(const std::string &destination, epoc::bitwise_bitmap *bitmap, const char *base) {
+            if (bitmap->header_.compression != epoc::bitmap_file_no_compression) {
+                return false;
+            }
+            
+            bool need_process = false;
+
+            common::dib_header_v2 dib_header;
+
+            dib_header.uncompressed_size = static_cast<std::uint32_t>(calculate_aligned_bitmap_bytes
+                (bitmap->header_.size_pixels, bitmap->settings_.current_display_mode()));
+            dib_header.bit_per_pixels = bitmap->header_.bit_per_pixels;
+            dib_header.color_plane_count = 1;
+            dib_header.important_color_count = 0;
+            dib_header.palette_count = 0;
+            dib_header.size = bitmap->header_.size_pixels;
+
+            switch (dib_header.bit_per_pixels) {
+            case 16: {
+                dib_header.header_size = sizeof(common::dib_header_v1);
+                dib_header.comp = 0;
+                dib_header.bit_per_pixels = 24;
+                need_process = true;
+
+                break;
+            }
+
+            default: {
+                dib_header.header_size = sizeof(common::dib_header_v1);
+                dib_header.comp = 0;
+
+                break;
+            }
+            }
+
+            dib_header.size.y = -dib_header.size.y;
+            dib_header.print_res = bitmap->header_.size_twips;
+
+            common::bmp_header header;
+            header.file_size = static_cast<std::uint32_t>(sizeof(common::bmp_header) + dib_header.header_size +
+                dib_header.uncompressed_size);
+            header.pixel_array_offset = static_cast<std::uint32_t>(sizeof(common::bmp_header) + dib_header.header_size);
+
+            std::ofstream file(destination);
+
+            if (file.fail()) {
+                return false;
+            }
+
+            file.write(reinterpret_cast<const char*>(&header), sizeof(common::bmp_header));
+            file.write(reinterpret_cast<const char*>(&dib_header), dib_header.header_size);
+
+            if (need_process) {
+                const std::uint32_t byte_width = get_byte_width(bitmap->header_.size_pixels.x, 
+                    bitmap->header_.bit_per_pixels);
+
+                const std::uint8_t *packed_data = reinterpret_cast<const std::uint8_t*>(bitmap->data_offset_ + base);
+
+                if (bitmap->settings_.current_display_mode() == epoc::display_mode::color64k) {
+                    for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
+                        for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
+                            const std::uint16_t pixel = *reinterpret_cast<const std::uint16_t*>(packed_data + y * byte_width + x * 2);
+                            std::uint8_t r = static_cast<std::uint8_t>((pixel & 0xF800) >> 8);
+                            r += r >> 5;
+
+                            std::uint8_t g = static_cast<std::uint8_t>((pixel & 0x07E0) >> 3);
+                            g += g >> 6;
+
+                            std::uint8_t b = static_cast<std::uint8_t>((pixel & 0x001F) << 3);
+                            b += b >> 5;
+
+                            file.write(reinterpret_cast<const char*>(&r), 1);
+                            file.write(reinterpret_cast<const char*>(&g), 1);
+                            file.write(reinterpret_cast<const char*>(&b), 1);
+                        }
+
+                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
+                            - bitmap->header_.size_pixels.x * 3;
+                        
+                        const char fill_char = 0;
+
+                        for (std::size_t i = 0; i < fill_align; i++) {
+                            file.write(&fill_char, 1);
+                        }
+                    }
+                }
+            } else {
+                file.write(bitmap->data_offset_ + base, dib_header.uncompressed_size);
+            }
+
+            return true;
+        }
+    }
+
+    void fbscli::background_compress_bitmap(service::ipc_context *ctx) {
+        const epoc::handle bmp_handle = *ctx->get_arg<epoc::handle>(0);
+        fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
+
+        if (!bmp) {
+            ctx->set_request_status(epoc::error_bad_handle);
+            return;
+        }
+
+        //save_bwbmp_to_file("test.bmp", bmp, reinterpret_cast<const char*>(server<fbs_server>()
+        //    ->base_large_chunk));
+
         ctx->set_request_status(epoc::error_none);
     }
 }
