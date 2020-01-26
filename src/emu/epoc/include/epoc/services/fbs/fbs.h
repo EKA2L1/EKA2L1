@@ -177,6 +177,7 @@ namespace eka2l1 {
         void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
         void get_clean_bitmap(service::ipc_context *ctx);
         void rasterize_glyph(service::ipc_context *ctx);
+        void background_compress_bitmap(service::ipc_context *ctx);
         
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
         
@@ -333,6 +334,10 @@ namespace eka2l1 {
 
         std::uint8_t *get_shared_chunk_base() {
             return base_shared_chunk;
+        }
+
+        std::uint8_t *get_large_chunk_base() {
+            return base_large_chunk;
         }
 
         std::uint8_t *get_large_chunk_pointer(const std::uint64_t start_offset) {

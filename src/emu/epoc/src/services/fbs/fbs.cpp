@@ -142,8 +142,9 @@ namespace eka2l1 {
         }
 
         case fbs_bitmap_bg_compress: {
-            LOG_WARN("BitmapBgCompress stubbed with 0");
-            ctx->set_request_status(epoc::error_none);
+            //LOG_WARN("BitmapBgCompress stubbed with 0");
+            //ctx->set_request_status(epoc::error_none);
+            background_compress_bitmap(ctx);
             break;
         }
 
