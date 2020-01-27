@@ -336,7 +336,8 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Loading bitmap from: {}", common::ucs2_to_utf8(source->file_name()));
+        LOG_TRACE("Loading bitmap from: {}, id: {}", common::ucs2_to_utf8(source->file_name()),
+            load_options->bitmap_id);
 
         fbsbitmap *bmp = nullptr;
         fbs_server *fbss = server<fbs_server>();
@@ -349,7 +350,6 @@ namespace eka2l1 {
             // Shared bitmaps are stored on server's map, because it's means to be accessed by
             // other fbs clients. Let's lookup our bitmap on there
             cache_info_.bitmap_idx = load_options->bitmap_id;
-            cache_info_.last_access_time_since_ad = source->last_modify_since_1ad();
             cache_info_.path = source->file_name();
 
             auto shared_bitmap_ite = fbss->shared_bitmaps.find(cache_info_);

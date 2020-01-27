@@ -222,13 +222,10 @@ namespace eka2l1 {
     struct fbsbitmap_cache_info {
         std::u16string path;
         int bitmap_idx;
-
-        std::uint64_t last_access_time_since_ad;
     };
 
     inline bool operator == (const fbsbitmap_cache_info &lhs, const fbsbitmap_cache_info &rhs) {
-        return (lhs.path == rhs.path) && (lhs.bitmap_idx == rhs.bitmap_idx) &&
-            (lhs.last_access_time_since_ad == rhs.last_access_time_since_ad);
+        return (lhs.path == rhs.path) && (lhs.bitmap_idx == rhs.bitmap_idx);
     }
 }
 
@@ -239,7 +236,6 @@ namespace std {
 
             eka2l1::common::hash_combine(seed, info.path);
             eka2l1::common::hash_combine(seed, info.bitmap_idx);
-            eka2l1::common::hash_combine(seed, info.last_access_time_since_ad);
             
             return seed;
         }
