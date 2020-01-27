@@ -1337,7 +1337,7 @@ namespace eka2l1 {
             }
 
             case epoc::window_kind::client: {
-                node_name = fmt::format("{}", reinterpret_cast<epoc::window_user*>(win)->id);
+                node_name = fmt::format("{}", reinterpret_cast<epoc::window_user*>(child)->id);
                 to_assign = ws_window_user_selected_callback;
                 break;                
             }
