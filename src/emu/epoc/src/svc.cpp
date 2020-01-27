@@ -987,9 +987,9 @@ namespace eka2l1::epoc {
     /*********************************/
 
     BRIDGE_FUNC(eka2l1::ptr<void>, LeaveStart) {
-        LOG_CRITICAL("Leave started!");
-
         kernel::thread *thr = sys->get_kernel_system()->crr_thread();
+        LOG_CRITICAL("Leave started! Guess leave code: {}", static_cast<std::int32_t>(sys->get_cpu()->get_reg(0)));
+
         thr->increase_leave_depth();
 
         return current_local_data(sys).trap_handler;
