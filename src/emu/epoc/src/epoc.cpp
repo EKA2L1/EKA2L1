@@ -290,9 +290,10 @@ namespace eka2l1 {
     };
 
     void system_impl::load_scripts() {
-        sys_lang = static_cast<language>(159);
-
 #ifdef ENABLE_SCRIPTING
+        std::string cur_dir;
+        get_current_directory(cur_dir);
+
         common::dir_iterator scripts_dir("scripts");
         scripts_dir.detail = true;
 
@@ -304,6 +305,8 @@ namespace eka2l1 {
                 mngr.get_script_manager()->import_module("scripts/" + module_name);
             }
         }
+
+        set_current_directory(cur_dir);
 #endif
     }
 
