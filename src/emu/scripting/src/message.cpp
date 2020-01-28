@@ -44,6 +44,10 @@ namespace eka2l1::scripting {
         return msg_->args.args[idx];
     }
 
+    std::uint32_t ipc_message_wrapper::flags() const {
+        return static_cast<std::uint32_t>(msg_->args.flag);
+    }
+
     std::unique_ptr<scripting::thread> ipc_message_wrapper::sender() {
         return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(msg_->own_thr));
     }

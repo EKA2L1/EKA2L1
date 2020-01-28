@@ -38,6 +38,8 @@ namespace eka2l1::scripting {
         std::unique_ptr<scripting::thread> sender();
 
         std::uint32_t arg(const int idx);
+        std::uint32_t flags() const;
+        
         std::unique_ptr<scripting::session_wrapper> session();
     };
 
