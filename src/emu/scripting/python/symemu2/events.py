@@ -18,7 +18,10 @@
 
 # Decorator for event register
 
+from enum import IntEnum
+
 import symemu
+from symemu2.ipc.context import Context
 
 # The function registed with this decorator will be invoked when
 # a panic happens to a thread. A panic code going to be passed
@@ -83,3 +86,23 @@ def emulatorRescheduleInvoke(func):
     symemu.registerRescheduleInvokement(func)
 
     return funcWrapper
+
+class IpcInvokementType(IntEnum):
+    SEND = 0
+    MODIFY = 1
+
+# The function registered with this decorator will be invoked when a specific
+# message (with requested opcode) is sent (a)sync/modified to specified server
+def emulatorIpcInvoke(serverName, opcode, invokeType = IpcInvokementType.SEND):
+    def invokeDecorator(funcToInvoke):
+        def funcWrapper(context):
+            return funcToInvoke
+
+        def assemble(arg0, arg1, arg2, arg3, flags, process):
+            funcToInvoke(Context(arg0, arg1, arg2, arg3, flags, process))
+
+        symemu.registerIpcInvokement(serverName, opcode, int(invokeType), assemble)
+
+        return funcWrapper
+
+    return invokeDecorator

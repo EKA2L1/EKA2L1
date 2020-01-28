@@ -13,6 +13,7 @@ is different way to do it.
        - **emulatorRescheduleInvoke**
        - **emulatorBreakpointInvoke**
        - **emulatorEpocFunctionInvoke**
+       - **emulatorIpcInvoke**
    - See examples (*hello* files), for more information.
    - Scripts should be in the scripts folder. The *scripts* folder must be in the same directory as executable.
 
