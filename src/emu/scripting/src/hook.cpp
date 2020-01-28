@@ -46,4 +46,8 @@ namespace eka2l1::scripting {
     void register_breakpoint_invokement(const uint32_t addr, pybind11::function func) {
         get_current_instance()->get_manager_system()->get_script_manager()->register_breakpoint(addr, func);
     }
+    
+    void register_ipc_invokement(const std::string &server_name, const int opcode, const int when, pybind11::function func) {
+        get_current_instance()->get_manager_system()->get_script_manager()->register_ipc(server_name, opcode, when, func);
+    }
 }

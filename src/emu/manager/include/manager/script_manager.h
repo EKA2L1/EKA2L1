@@ -5,12 +5,17 @@
 
 #include <common/types.h>
 
+#include <map>
 #include <mutex>
 #include <tuple>
 #include <unordered_map>
 
 namespace eka2l1 {
     class system;
+
+    namespace kernel {
+        class thread;
+    }
 }
 
 namespace eka2l1::manager {
@@ -31,6 +36,7 @@ namespace eka2l1::manager {
 
         std::unordered_map<uint32_t, func_list> breakpoints;
         std::unordered_map<std::string, std::unordered_map<std::uint32_t, func_list>> breakpoints_patch;
+        std::unordered_map<std::string, std::map<std::uint64_t, func_list>> ipc_functions;
 
         std::vector<panic_func> panic_functions;
         std::vector<svc_func> svc_functions;
@@ -45,7 +51,7 @@ namespace eka2l1::manager {
         bool call_module_entry(const std::string &module);
 
     public:
-        script_manager() {}
+        script_manager() {}    
         script_manager(system *sys);
 
         bool import_module(const std::string &path);
@@ -53,6 +59,9 @@ namespace eka2l1::manager {
         void call_panics(const std::string &panic_cage, int err_code);
         void call_svcs(int svc_num, int time);
         void call_breakpoints(const uint32_t addr);
+        void call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0,
+            const std::uint32_t arg1, const std::uint32_t arg2, const std::uint32_t arg3,
+            const std::uint32_t flags, kernel::thread *callee);
 
         void call_reschedules();
 
@@ -61,6 +70,7 @@ namespace eka2l1::manager {
         void register_reschedule(pybind11::function &func);
         void register_library_hook(const std::string &name, const uint32_t ord, pybind11::function &func);
         void register_breakpoint(const uint32_t addr, pybind11::function &func);
+        void register_ipc(const std::string &server_name, const int opcode, const int invoke_when, pybind11::function &func);
 
         void patch_library_hook(const std::string &name, const std::vector<vaddress> exports);
     };

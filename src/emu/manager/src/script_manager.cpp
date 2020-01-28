@@ -35,6 +35,7 @@
 #include <pybind11/pybind11.h>
 
 #include <scripting/instance.h>
+#include <scripting/thread.h>
 #include <scripting/symemu.inl>
 
 namespace py = pybind11;
@@ -151,6 +152,11 @@ namespace eka2l1::manager {
         reschedule_functions.push_back(func);
     }
 
+    void script_manager::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, pybind11::function &func) {
+        ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | 
+            (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
+    }
+
     void script_manager::register_library_hook(const std::string &name, const uint32_t ord, pybind11::function &func) {
         std::string lib_name_lower = common::lowercase_string(name);
         breakpoints_patch[lib_name_lower][ord].push_back(func);
@@ -171,6 +177,27 @@ namespace eka2l1::manager {
         breakpoints_patch.erase(lib_name_lower);
     }
 
+    void script_manager::call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0, const std::uint32_t arg1,
+        const std::uint32_t arg2, const std::uint32_t arg3, const std::uint32_t flags,
+        kernel::thread *callee) {
+        std::lock_guard<std::mutex> guard(smutex);
+
+        eka2l1::system *crr_instance = scripting::get_current_instance();
+        eka2l1::scripting::set_current_instance(sys);
+
+        for (const auto &ipc_func: ipc_functions[server_name][opcode]) {
+            try {
+                ipc_func(arg0, arg1, arg2, arg3, flags, std::make_unique<scripting::thread>(
+                    reinterpret_cast<std::uint64_t>(callee)
+                ));
+            } catch (py::error_already_set &exec) {
+                LOG_WARN("Script interpreted error: {}", exec.what());
+            }
+        }
+        
+        scripting::set_current_instance(crr_instance);
+    }
+    
     void script_manager::call_reschedules() {
         std::lock_guard<std::mutex> guard(smutex);
 
