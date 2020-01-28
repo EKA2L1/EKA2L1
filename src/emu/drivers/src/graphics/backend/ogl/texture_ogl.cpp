@@ -68,6 +68,9 @@ namespace eka2l1::drivers {
         case texture_data_type::uint_24_8:
             return GL_UNSIGNED_INT_24_8;
 
+        case texture_data_type::ushort_5_6_5:
+            return GL_UNSIGNED_SHORT_5_6_5;
+
         default:
             break;
         }

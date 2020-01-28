@@ -45,6 +45,7 @@ namespace eka2l1::drivers {
     enum class texture_data_type : std::uint16_t {
         ubyte,
         ushort,
+        ushort_5_6_5,
         uint_24_8
     };
 

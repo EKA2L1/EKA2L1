@@ -25,9 +25,11 @@
 #include <glad/glad.h>
 
 namespace eka2l1::drivers {
-    static void translate_bpp_to_format(const int bpp, texture_format &internal_format, texture_format &format) {
+    static void translate_bpp_to_format(const int bpp, texture_format &internal_format, texture_format &format,
+        texture_data_type &data_type) {
         // Hope the driver likes this, it always does.
         internal_format = texture_format::rgba;
+        data_type = texture_data_type::ubyte;
 
         switch (bpp) {
         case 8:
@@ -35,7 +37,8 @@ namespace eka2l1::drivers {
             break;
 
         case 16:
-            format = texture_format::rg;
+            format = texture_format::rgb;
+            data_type = texture_data_type::ushort_5_6_5;
             break;
 
         case 24:
@@ -58,10 +61,11 @@ namespace eka2l1::drivers {
 
         texture_format internal_format = texture_format::none;
         texture_format data_format = texture_format::none;
+        texture_data_type data_type = texture_data_type::ubyte;
 
-        translate_bpp_to_format(bpp, internal_format, data_format);
+        translate_bpp_to_format(bpp, internal_format, data_format, data_type);
 
-        tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, texture_data_type::ubyte, nullptr);
+        tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, data_type, nullptr);
         tex->set_filter_minmag(false, drivers::filter_option::linear);
         tex->set_filter_minmag(true, drivers::filter_option::linear);
     }
@@ -130,11 +134,12 @@ namespace eka2l1::drivers {
 
         texture_format internal_format = texture_format::none;
         texture_format data_format = texture_format::none;
+        texture_data_type data_type = texture_data_type::ubyte;
 
-        translate_bpp_to_format(bpp, internal_format, data_format);
+        translate_bpp_to_format(bpp, internal_format, data_format, data_type);
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), data_format,
-            texture_data_type::ubyte, data);
+            data_type, data);
 
         if (data_format == texture_format::r) {
             bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red, 
