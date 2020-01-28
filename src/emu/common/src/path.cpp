@@ -456,4 +456,22 @@ namespace eka2l1 {
         return (chdir(path.c_str()) == 0);
 #endif
     }
+    
+    bool get_current_directory(std::string &path) {
+        path.resize(512);
+
+#if EKA2L1_PLATFORM(WIN32)
+        if (GetCurrentDirectoryA(static_cast<DWORD>(path.size()), &path[0]) == 0) {
+            return false;
+        }
+
+        return true;
+#else
+        if (getcwd(&path[0], path.size()) == nullptr) {
+            return false;
+        }
+
+        return true;
+#endif
+    }
 }
