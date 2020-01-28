@@ -43,6 +43,12 @@ namespace eka2l1::scripting {
         pybind11::bytes read_process_memory(const std::uint32_t addr, const size_t size);
         void write_process_memory(const std::uint32_t addr, const std::string &buffer);
 
+        // Quick quick quick
+        std::uint8_t read_byte(const std::uint32_t addr);
+        std::uint16_t read_word(const std::uint32_t addr);
+        std::uint32_t read_dword(const std::uint32_t addr);
+        std::uint64_t read_qword(const std::uint32_t addr);
+
         std::string get_executable_path();
         std::string get_name();
 

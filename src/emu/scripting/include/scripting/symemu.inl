@@ -79,6 +79,18 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             dat: str
                   The data to write to that memory address in the process's address space.
         )pbdoc")
+        .def("readByte", &scripting::process::read_byte, R"pbdoc(
+            "Read a byte from process memory at given address.
+        )pbdoc")
+        .def("readWord", &scripting::process::read_word, R"pbdoc(
+            "Read a word from process memory at given address.
+        )pbdoc")
+        .def("readDword", &scripting::process::read_dword, R"pbdoc(
+            "Read a double word from process memory at given address.
+        )pbdoc")
+        .def("readQword", &scripting::process::read_qword, R"pbdoc(
+            "Read a quad word from process memory at given address.
+        )pbdoc")
         .def("getExecutablePath", &scripting::process::get_executable_path, R"pbdoc(
             Get the executable path in Symbian filesystem.
         )pbdoc")
@@ -205,6 +217,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             ------------------------
             int
                  An integer, which is the value of argument at the given index.
+        )pbdoc")
+        .def("flags", &scripting::ipc_message_wrapper::flags, R"pbdoc(
+            Get IPC message flags, containing information about argument types.
         )pbdoc");
 
     py::class_<scripting::session_wrapper>(m, "Session")
@@ -257,6 +272,10 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
 
     m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement, R"pbdoc(
         Register a function to be called right before a reschedule is started
+    )pbdoc");
+    
+    m.def("registerIpcInvokement", &scripting::register_ipc_invokement, R"pbdoc(
+        Register a function to be called around IPC event.
     )pbdoc");
 
     m.def("getProcessesList", &scripting::get_process_list, R"pbdoc(

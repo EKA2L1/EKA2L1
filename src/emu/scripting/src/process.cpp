@@ -61,6 +61,29 @@ namespace eka2l1::scripting {
         memcpy(ptr, buffer.data(), buffer.size());
     }
 
+    #define READ_TEMPLATE(ret_type)         \
+        void *ptr = process_handle->get_ptr_on_addr_space(addr);    \
+        if (!ptr) {                                                 \
+            throw std::runtime_error("The memory at specified address hasn't been mapped yet!");        \
+        }                                                                                               \
+        return *reinterpret_cast<ret_type*>(ptr)
+
+    std::uint8_t process::read_byte(const std::uint32_t addr) {
+        READ_TEMPLATE(std::uint8_t);
+    }
+
+    std::uint16_t process::read_word(const std::uint32_t addr) {
+        READ_TEMPLATE(std::uint16_t);
+    }
+
+    std::uint32_t process::read_dword(const std::uint32_t addr) {
+        READ_TEMPLATE(std::uint32_t);
+    }
+
+    std::uint64_t process::read_qword(const std::uint32_t addr) {
+        READ_TEMPLATE(std::uint64_t);
+    }
+
     std::string process::get_executable_path() {
         return common::ucs2_to_utf8(process_handle->get_exe_path());
     }
