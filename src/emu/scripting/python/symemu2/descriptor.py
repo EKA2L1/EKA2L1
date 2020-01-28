@@ -32,58 +32,65 @@ class DescriptorType(Enum):
 
 # Provide read access to a in-memory descriptor
 class DescriptorBase(object):
-    def __init__(self, address):
-        def get_ptr_buf_const():
+    def __init__(self, address, process):
+        def getPtrBufConst():
             return address + 4
             
-        def get_ptr_ptr_const():
-            return symemu.readDword(address + 4)
+        def getPtrPtrConst():
+            return self.process.readDword(address + 4)
             
-        def get_ptr_buf():
+        def getPtrBuf():
             return address + 8
             
-        def get_ptr_ptr():
-            return symemu.readWord(address + 8)
+        def getPtrPtr():
+            return self.process.readDword(address + 8)
             
-        def get_ptr_buf_const_ptr():
-            real_buf_addr = symemu.readWord(address + 8)
+        def getPtrBufConstPtr():
+            real_buf_addr = process.readDword(address + 8)
             return real_buf_addr + 4
         
         ptr_switcher = {
-            DescriptorType.BUF_CONST: get_ptr_buf_const,
-            DescriptorType.PTR_CONST: get_ptr_ptr_const,
-            DescriptorType.PTR: get_ptr_ptr,
-            DescriptorType.BUF: get_ptr_buf,
-            DescriptorType.BUF_CONST_PTR: get_ptr_buf_const_ptr
+            DescriptorType.BUF_CONST: getPtrBufConst,
+            DescriptorType.PTR_CONST: getPtrPtrConst,
+            DescriptorType.PTR: getPtrPtr,
+            DescriptorType.BUF: getPtrBuf,
+            DescriptorType.BUF_CONST_PTR: getPtrBufConstPtr
         }
         
         lengthAndType = symemu.readDword(address)
         self.length = lengthAndType & 0xFFFFFF
         self.type = DescriptorType(lengthAndType >> 28)
+        self.process = process
         self.ptr = ptr_switcher.get(self.type, lambda: 'Invalid descriptor type')()
-        
+
 class Descriptor8(DescriptorBase):
-    def __init__(self, address):
-        DescriptorBase.__init__(self, address)
+    def __init__(self, address, process):
+        DescriptorBase.__init__(self, address, process)
+
+    def rawData(self):
+        return self.process.readProcessMemory(self.ptr, self.length)
 
     def __str__(self):
         retstr = ''
     
         for i in range(0, self.length - 1):
-            c = symemu.readByte(self.ptr + i * 1)
+            c = self.process.readByte(self.ptr + i * 1)
             retstr += struct.pack('<C', c).decode('utf-8')
 
         return retstr                    
         
 class Descriptor16(DescriptorBase):
-    def __init__(self, address):
-        DescriptorBase.__init__(self, address)
+    def __init__(self, address, process):
+        DescriptorBase.__init__(self, address, process)
+
+    def rawData(self):
+        return self.process.readProcessMemory(self.ptr, self.length * 2)
 
     def __str__(self):
         retstr = u''
         
         for i in range(0, self.length - 1):
-            uc = symemu.readWord(self.ptr + i * 2)
+            uc = self.process.readWord(self.ptr + i * 2)
             retstr += struct.pack('<H', uc).decode('utf-16')
 
         return retstr
