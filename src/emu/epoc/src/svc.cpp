@@ -931,6 +931,12 @@ namespace eka2l1::epoc {
             LOG_TRACE("Sending {} sync to {}", aOrd, ss->get_server()->name());
         }
 
+#ifdef ENABLE_SCRIPTING
+        sys->get_manager_system()->get_script_manager()->call_ipc_send(ss->get_server()->name(),
+            aOrd, arg.args[0], arg.args[1], arg.args[2], arg.args[3], arg.flag,
+            sys->get_kernel_system()->crr_thread());
+#endif
+
         const int result = ss->send_receive_sync(aOrd, arg, aStatus);
 
         if (ss->get_server()->is_hle()) {
@@ -971,6 +977,12 @@ namespace eka2l1::epoc {
         if (sys->get_config()->log_ipc) {
             LOG_TRACE("Sending {} to {}", aOrd, ss->get_server()->name());
         }
+
+#ifdef ENABLE_SCRIPTING
+        sys->get_manager_system()->get_script_manager()->call_ipc_send(ss->get_server()->name(),
+            aOrd, arg.args[0], arg.args[1], arg.args[2], arg.args[3], arg.flag,
+            sys->get_kernel_system()->crr_thread());
+#endif
 
         const int result = ss->send_receive(aOrd, arg, aStatus);
         
