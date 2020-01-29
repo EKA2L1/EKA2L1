@@ -522,7 +522,13 @@ namespace eka2l1::epoc {
         }
 
         LOG_TRACE("Message completed with code: {}, thread to signal: {}", aVal, msg->own_thr->name());
-        
+
+#ifdef ENABLE_SCRIPTING
+        // Invoke hook
+        sys->get_manager_system()->get_script_manager()->call_ipc_complete(msg->msg_session->get_server()->name(),
+            msg->function, msg.get());
+#endif
+
         // Free the message
         msg->free = true;
 
