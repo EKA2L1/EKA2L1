@@ -12,6 +12,7 @@
 
 namespace eka2l1 {
     class system;
+    struct ipc_msg;
 
     namespace kernel {
         class thread;
@@ -62,6 +63,9 @@ namespace eka2l1::manager {
         void call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0,
             const std::uint32_t arg1, const std::uint32_t arg2, const std::uint32_t arg3,
             const std::uint32_t flags, kernel::thread *callee);
+
+        void call_ipc_complete(const std::string &server_name, const int opcode,
+            ipc_msg *msg);
 
         void call_reschedules();
 

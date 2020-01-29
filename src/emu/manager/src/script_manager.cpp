@@ -35,6 +35,7 @@
 #include <pybind11/pybind11.h>
 
 #include <scripting/instance.h>
+#include <scripting/message.h>
 #include <scripting/thread.h>
 #include <scripting/symemu.inl>
 
@@ -189,6 +190,26 @@ namespace eka2l1::manager {
             try {
                 ipc_func(arg0, arg1, arg2, arg3, flags, std::make_unique<scripting::thread>(
                     reinterpret_cast<std::uint64_t>(callee)
+                ));
+            } catch (py::error_already_set &exec) {
+                LOG_WARN("Script interpreted error: {}", exec.what());
+            }
+        }
+        
+        scripting::set_current_instance(crr_instance);
+    }
+
+    void script_manager::call_ipc_complete(const std::string &server_name,
+        const int opcode, ipc_msg *msg) {
+        std::lock_guard<std::mutex> guard(smutex);
+
+        eka2l1::system *crr_instance = scripting::get_current_instance();
+        eka2l1::scripting::set_current_instance(sys);
+
+        for (const auto &ipc_func: ipc_functions[server_name][(2ULL << 32) | opcode]) {
+            try {
+                ipc_func(std::make_unique<scripting::ipc_message_wrapper>(
+                    reinterpret_cast<std::uint64_t>(msg)
                 ));
             } catch (py::error_already_set &exec) {
                 LOG_WARN("Script interpreted error: {}", exec.what());
