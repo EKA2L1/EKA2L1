@@ -48,14 +48,14 @@ class Arguments(object):
         return self.args[idx]
 
 class Context(object):
-    def __init__(self, msg):
-        self.args = Arguments(msg.arg(0), msg.arg(1), msg.arg(2), msg.arg(3), msg.flags())
-        self.sender = msg.sender()
-    
     def __init__(self, arg0, arg1, arg2, arg3, flags, sender):
         self.args = Arguments(arg0, arg1, arg2, arg3, flags)
         self.sender = sender
 
+    @classmethod
+    def makeFromMessage(cls, msg):
+        return Context(msg.arg(0), msg.arg(1), msg.arg(2), msg.arg(3), msg.flags(), msg.sender())
+    
     def getArguments(self):
         return self.args
 

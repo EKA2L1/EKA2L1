@@ -89,19 +89,27 @@ def emulatorRescheduleInvoke(func):
 
 class IpcInvokementType(IntEnum):
     SEND = 0
-    MODIFY = 1
+    COMPLETE = 2
 
 # The function registered with this decorator will be invoked when a specific
-# message (with requested opcode) is sent (a)sync/modified to specified server
+# message (with requested opcode) is sent (a)sync/complete to specified server
 def emulatorIpcInvoke(serverName, opcode, invokeType = IpcInvokementType.SEND):
     def invokeDecorator(funcToInvoke):
         def funcWrapper(context):
             return funcToInvoke
 
-        def assemble(arg0, arg1, arg2, arg3, flags, process):
+        def assembleSend(arg0, arg1, arg2, arg3, flags, process):
             funcToInvoke(Context(arg0, arg1, arg2, arg3, flags, process))
 
-        symemu.registerIpcInvokement(serverName, opcode, int(invokeType), assemble)
+        def assembleComplete(msg):
+            funcToInvoke(Context.makeFromMessage(msg))
+            
+        if invokeType == IpcInvokementType.SEND:
+            wrapperToSend = assembleSend
+        else:
+            wrapperToSend = assembleComplete
+
+        symemu.registerIpcInvokement(serverName, opcode, int(invokeType), wrapperToSend)
 
         return funcWrapper
 
