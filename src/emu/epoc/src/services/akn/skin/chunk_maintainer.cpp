@@ -750,6 +750,8 @@ namespace eka2l1::epoc {
             return update_definition(item, &bitmap_def, sizeof(bitmap_def), sizeof(bitmap_def));
         }
 
+        item.type_ = akns_item_type_masked_bitmap;
+
         akns_srv_masked_bitmap_def masked_bitmap_def;
         masked_bitmap_def.filename_.type_ = akns_mtptr_type_relative_ram;
         masked_bitmap_def.filename_.address_or_offset_ = get_filename_offset_from_id(info.filename_id);
