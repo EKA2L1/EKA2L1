@@ -46,7 +46,7 @@ class DescriptorBase(object):
             return self.process.readDword(address + 8)
             
         def getPtrBufConstPtr():
-            real_buf_addr = process.readDword(address + 8)
+            real_buf_addr = self.process.readDword(address + 8)
             return real_buf_addr + 4
         
         ptr_switcher = {
@@ -57,10 +57,11 @@ class DescriptorBase(object):
             DescriptorType.BUF_CONST_PTR: getPtrBufConstPtr
         }
         
-        lengthAndType = symemu.readDword(address)
+        self.process = process
+
+        lengthAndType = self.process.readDword(address)
         self.length = lengthAndType & 0xFFFFFF
         self.type = DescriptorType(lengthAndType >> 28)
-        self.process = process
         self.ptr = ptr_switcher.get(self.type, lambda: 'Invalid descriptor type')()
 
 class Descriptor8(DescriptorBase):
