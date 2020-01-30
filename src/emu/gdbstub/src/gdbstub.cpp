@@ -751,12 +751,13 @@ namespace eka2l1 {
             send_reply("E01");
         }
 
-        std::vector<std::uint8_t> data(len);
-        if (!sys->get_memory_system()->read(addr, &data[0], len)) {
+        void *ptr = current_thread->owning_process()->get_ptr_on_addr_space(addr);
+        
+        if (!ptr) {
             return send_reply("E00");
         }
 
-        mem_to_gdb_hex(reply, data.data(), len);
+        mem_to_gdb_hex(reply, reinterpret_cast<std::uint8_t*>(ptr), len);
         reply[len * 2] = '\0';
         send_reply(reinterpret_cast<char *>(reply));
     }
@@ -780,7 +781,9 @@ namespace eka2l1 {
 
         gdb_hex_to_mem(data.data(), len_pos + 1, len);
 
-        if (!sys->get_memory_system()->write(addr, &data[0], len)) {
+        void *ptr = current_thread->owning_process()->get_ptr_on_addr_space(addr);
+        
+        if (!std::memcpy(ptr, data.data(), len)) {
             return send_reply("E00");
         }
 
