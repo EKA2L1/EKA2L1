@@ -62,8 +62,8 @@ namespace eka2l1::epoc {
             }
 
             // Draw it onto current binding buffer
-            builder_->draw_bitmap(winuser->driver_win_id, eka2l1::rect(winuser->pos, { 0, 0 }),
-                eka2l1::rect({0, 0}, winuser->size), false);
+            builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(winuser->pos, { 0, 0 }),
+                eka2l1::rect({0, 0}, winuser->size), 0);
 
             total_redrawed_++;
 

@@ -107,6 +107,7 @@ namespace eka2l1::epoc {
         void draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd);
 
         void gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver);
+        void gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd);
         void gdi_blt2(service::ipc_context &context, ws_cmd &cmd);
         void gdi_blt3(service::ipc_context &context, ws_cmd &cmd);
 

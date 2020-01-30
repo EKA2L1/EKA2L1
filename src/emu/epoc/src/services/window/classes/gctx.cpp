@@ -68,7 +68,7 @@ namespace eka2l1::epoc {
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
         const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
-        cmd_builder->draw_bitmap(h, dest_rect, source_rect, false);
+        cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, 0);
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -191,6 +191,33 @@ namespace eka2l1::epoc {
             rect(bitmap_cmd->pos, { 0, 0 }));
     }
     
+    void graphic_context::gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked*>(cmd.data_ptr);
+        epoc::bitwise_bitmap *bmp = client->get_ws().get_bitmap(blt_cmd->source_handle);
+        epoc::bitwise_bitmap *masked = client->get_ws().get_bitmap(blt_cmd->mask_handle);
+
+        if (!bmp || !masked) {
+            context.set_request_status(epoc::error_bad_handle);
+            return;
+        }
+
+        eka2l1::rect dest_rect;
+        dest_rect.size = blt_cmd->source_rect.size;
+        dest_rect.top = blt_cmd->pos;
+
+        drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bmp);
+        drivers::handle bmp_mask_driver_handle = handle_from_bitwise_bitmap(masked);
+
+        std::uint32_t flags = 0;
+
+        if (blt_cmd->invert_mask) {
+            flags |= drivers::bitmap_draw_flag_invert_mask;
+        }
+
+        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, blt_cmd->source_rect, flags);
+        context.set_request_status(epoc::error_none);
+    }
+
     void graphic_context::gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver) {
         ws_cmd_gdi_blt3 *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt3*>(cmd.data_ptr);
 
@@ -201,8 +228,6 @@ namespace eka2l1::epoc {
             context.set_request_status(epoc::error_bad_handle);
             return;
         }
-
-        save_bwbmp_to_file("test.bmp", bmp, (const char*)client->get_ws().get_fbs_server()->get_large_chunk_base());
 
         eka2l1::rect source_rect;
 
@@ -366,7 +391,8 @@ namespace eka2l1::epoc {
             { ws_gc_u171_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
             { ws_gc_u171_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
             { ws_gc_u171_gdi_blt2, &graphic_context::gdi_blt2 },
-            { ws_gc_u171_gdi_blt3, &graphic_context::gdi_blt3 }
+            { ws_gc_u171_gdi_blt3, &graphic_context::gdi_blt3 },
+            { ws_gc_u171_gdi_blt_masked, &graphic_context::gdi_blt_masked }
         };
         
         static const ws_graphics_context_table_op curr_opcode_handlers = {
@@ -383,7 +409,8 @@ namespace eka2l1::epoc {
             { ws_gc_curr_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
             { ws_gc_curr_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
             { ws_gc_curr_gdi_blt2, &graphic_context::gdi_blt2 },
-            { ws_gc_curr_gdi_blt3, &graphic_context::gdi_blt3 }
+            { ws_gc_curr_gdi_blt3, &graphic_context::gdi_blt3 },
+            { ws_gc_curr_gdi_blt_masked, &graphic_context::gdi_blt_masked }
         };
 
         epoc::version cli_ver = client->client_version();

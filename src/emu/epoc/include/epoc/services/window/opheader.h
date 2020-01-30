@@ -167,4 +167,12 @@ namespace eka2l1 {
     struct ws_cmd_gdi_blt3: public ws_cmd_gdi_blt2 {
         eka2l1::rect source_rect;
     };
+
+    struct ws_cmd_gdi_blt_masked {
+        eka2l1::vec2 pos;
+        std::uint32_t source_handle;
+        eka2l1::rect source_rect;
+        std::uint32_t mask_handle;
+        bool invert_mask;
+    };
 }
