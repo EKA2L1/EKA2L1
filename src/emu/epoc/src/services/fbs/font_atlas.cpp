@@ -41,7 +41,17 @@ namespace eka2l1::epoc {
         size_ = font_size;
         initial_range_ = { initial_start, initial_char_count };
     }
-        
+    
+    void font_atlas::free(drivers::graphics_driver *driver) {
+        if (atlas_handle_) {
+            auto cmd_list = driver->new_command_list();
+            auto cmd_builder = driver->new_command_builder(cmd_list.get());
+
+            cmd_builder->destroy_bitmap(atlas_handle_);
+            driver->submit_command_list(*cmd_list);
+        }
+    }
+    
     int font_atlas::get_atlas_width() const {
         return common::align(ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH * size_, 1024);
     }

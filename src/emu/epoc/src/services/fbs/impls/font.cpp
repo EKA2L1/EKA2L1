@@ -627,6 +627,10 @@ namespace eka2l1 {
     }
 
     void fbsfont::deref() {
+        if (count == 1) {
+            atlas.free(serv->get_graphics_driver());
+        }
+
         epoc::ref_count_object::deref();
     }
 

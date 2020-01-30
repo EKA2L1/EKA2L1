@@ -275,6 +275,10 @@ namespace eka2l1 {
         return large_chunk_allocator->free(ptr);
     }
     
+    drivers::graphics_driver *fbs_server::get_graphics_driver() {
+        return sys->get_graphics_driver();
+    }
+    
     fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id)
         : service::typical_session(serv, ss_id)
         , nof_(nullptr) {

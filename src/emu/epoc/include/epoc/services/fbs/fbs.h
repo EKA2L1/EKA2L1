@@ -45,6 +45,10 @@ namespace eka2l1 {
     struct file;
     using symfile = std::unique_ptr<file>;
 
+    namespace drivers {
+        class graphics_driver;
+    }
+
     namespace epoc {    
         // Before and in build 94, the multiple memory model still make it possible to directly return pointer, since
         // chunk address don't change with each process.
@@ -326,6 +330,8 @@ namespace eka2l1 {
          */
         bool free_bitmap(fbsbitmap *bmp);
 
+        drivers::graphics_driver *get_graphics_driver();
+        
         fbsfont *look_for_font_with_address(const eka2l1::address addr);
 
         std::uint8_t *get_shared_chunk_base() {
