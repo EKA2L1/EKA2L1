@@ -56,7 +56,7 @@ namespace eka2l1::manager {
         bool enable_gdbstub { false };
         int gdb_port { 24689 };
 
-        std::string storage = "";      // Set this to dot, avoid making it absolute
+        std::string storage = "data";      // Set this to dot, avoid making it absolute
 
         int display_size_x_pixs { 360 };
         int display_size_y_pixs { 640 };
@@ -71,8 +71,8 @@ namespace eka2l1::manager {
         bool enable_srv_sa { true };
         bool enable_srv_drm { true };
         bool enable_srv_eikapp_ui { true };
-        bool enable_srv_akn_icon { true };
-        bool enable_srv_akn_skin { false };
+        bool enable_srv_akn_icon { false };
+        bool enable_srv_akn_skin { true };
         bool enable_srv_cdl { true };
 
         void serialize();
