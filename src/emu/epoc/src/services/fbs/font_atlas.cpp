@@ -147,7 +147,7 @@ namespace eka2l1::epoc {
             dest_rect.size.x = static_cast<int>(info.xoff2 - info.xoff);
             dest_rect.size.y = static_cast<int>(info.yoff2 - info.yoff);
 
-            builder->draw_bitmap(atlas_handle_, dest_rect, source_rect, true);
+            builder->draw_bitmap(atlas_handle_, 0, dest_rect, source_rect, drivers::bitmap_draw_flag_use_brush);
 
             // TODO: Newline
             cur_pos.x += static_cast<int>(std::round(info.xadv));
