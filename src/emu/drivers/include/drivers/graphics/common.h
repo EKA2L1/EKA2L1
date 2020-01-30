@@ -72,4 +72,9 @@ namespace eka2l1::drivers {
         clear_bit_color_buffer = 1 << 0,
         clear_bit_depth_buffer = 1 << 1
     };
+
+    enum bitmap_draw_flags {
+        bitmap_draw_flag_use_brush = 1 << 0,
+        bitmap_draw_flag_invert_mask = 1 << 1
+    };
 }

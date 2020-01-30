@@ -37,11 +37,13 @@ namespace eka2l1::drivers {
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
     static constexpr const char *sprite_norm_f_path = "resources//sprite_norm.frag";
+    static constexpr const char *sprite_mask_f_path = "resources//sprite_mask.frag";
     static constexpr const char *fill_v_path = "resources//fill.vert";
     static constexpr const char *fill_f_path = "resources//fill.frag";
 
     void ogl_graphics_driver::do_init() {
         sprite_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_norm_f_path);
+        mask_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_mask_f_path);
         fill_program = std::make_unique<ogl_shader>(fill_v_path, fill_f_path);
 
         static GLushort indices[] = {
@@ -81,6 +83,11 @@ namespace eka2l1::drivers {
         color_loc_fill = fill_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_fill = fill_program->get_uniform_location("u_proj").value_or(-1);
         model_loc_fill = fill_program->get_uniform_location("u_model").value_or(-1);
+        
+        color_loc_mask = mask_program->get_uniform_location("u_color").value_or(-1);
+        proj_loc_mask = mask_program->get_uniform_location("u_proj").value_or(-1);
+        model_loc_mask = mask_program->get_uniform_location("u_model").value_or(-1);
+        invert_loc_mask = mask_program->get_uniform_location("u_invert").value_or(-1);
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -144,10 +151,28 @@ namespace eka2l1::drivers {
             return;
         }
 
+        drivers::handle mask_to_use = 0;
+        helper.pop(mask_to_use);
+
+        bitmap *mask_bmp = nullptr;
+
+        if (mask_to_use) {
+            mask_bmp = get_bitmap(mask_to_use);
+
+            if (!mask_bmp) {
+                LOG_ERROR("Mask handle was provided but invalid!");
+                return;
+            }
+        }
+
         eka2l1::rect dest_rect;
         helper.pop(dest_rect);
 
-        sprite_program->use(this);
+        if (mask_bmp) {
+            mask_program->use(this);
+        } else {
+            sprite_program->use(this);
+        }
 
         // Build texcoords
         eka2l1::rect source_rect;
@@ -214,6 +239,11 @@ namespace eka2l1::drivers {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(bmp->tex->texture_handle()));
 
+        if (mask_bmp) {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(mask_bmp->tex->texture_handle()));
+        }
+
         // For unknown reason my intel driver go out for an all out attack and garbage the filter...
         // so i have to set it here...
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);    
@@ -241,19 +271,23 @@ namespace eka2l1::drivers {
 
         model_matrix = glm::scale(model_matrix, glm::vec3(dest_rect.size.x, dest_rect.size.y, 0.0f));
 
-        glUniformMatrix4fv(model_loc, 1, false, glm::value_ptr(model_matrix));
-        glUniformMatrix4fv(proj_loc, 1, false, glm::value_ptr(projection_matrix));
+        glUniformMatrix4fv((mask_bmp ? model_loc_mask : model_loc), 1, false, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv((mask_bmp ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));
 
         // Supply brush
-        bool use_brush = false;
-        helper.pop(use_brush);
+        std::uint32_t flags = 0;
+        helper.pop(flags);
 
         const GLfloat color[] = { 255.0f, 255.0f, 255.0f, 255.0f };
 
-        if (use_brush) {
-            glUniform4fv(color_loc, 1, brush_color.elements.data());
+        if (flags & bitmap_draw_flag_use_brush) {
+            glUniform4fv((mask_bmp ? color_loc_mask : color_loc), 1, brush_color.elements.data());
         } else {
-            glUniform4fv(color_loc, 1, color);
+            glUniform4fv((mask_bmp ? color_loc_mask : color_loc), 1, color);
+        }
+
+        if (mask_bmp) {
+            glUniform1f(invert_loc_mask, (flags & bitmap_draw_flag_invert_mask) ? 1.0f : 0.0f);
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite_ibo);

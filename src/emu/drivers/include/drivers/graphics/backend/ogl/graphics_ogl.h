@@ -54,6 +54,7 @@ namespace eka2l1::drivers {
         eka2l1::request_queue<server_graphics_command_list> list_queue;
         std::unique_ptr<ogl_shader> sprite_program;
         std::unique_ptr<ogl_shader> fill_program;
+        std::unique_ptr<ogl_shader> mask_program;
 
         GLuint sprite_vao;
         GLuint sprite_vbo;
@@ -69,6 +70,11 @@ namespace eka2l1::drivers {
         GLint color_loc_fill;
         GLint proj_loc_fill;
         GLint model_loc_fill;
+
+        GLint color_loc_mask;
+        GLint proj_loc_mask;
+        GLint model_loc_mask;
+        GLint invert_loc_mask;
 
         ogl_state backup;
         std::atomic_bool should_stop;
