@@ -923,7 +923,7 @@ namespace eka2l1::epoc {
             std::uint8_t *dest = reinterpret_cast<std::uint8_t*>(table + def_count);
             set_area_current_size(
                 epoc::akn_skin_chunk_area_base_offset::gfx_area_base,
-                gfx_current_size + sizeof(def)
+                static_cast<std::uint32_t>(gfx_current_size + sizeof(def))
             );
             std::copy(new_data, new_data + sizeof(def), dest);
         }
