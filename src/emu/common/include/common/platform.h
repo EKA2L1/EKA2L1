@@ -78,6 +78,8 @@
 #endif
 
 #ifdef __APPLE__
+#define EKA2L1_PLATFORM_DARWIN 1
+
 #include <TargetConditionals.h>
 
 #if TARGET_OS_MAC
