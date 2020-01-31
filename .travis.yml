@@ -8,6 +8,13 @@ env:
 
 matrix:
   include:
+    - os: osx
+      osx_image: xcode9.3
+      install:
+      - HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache
+      - export PATH="/usr/local/opt/ccache/libexec:$PATH"
+      before_script:
+      - export CMAKE=cmake
     - os: linux
       dist: trusty
       addons:
