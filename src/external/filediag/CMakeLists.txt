@@ -3,14 +3,10 @@
 if (WIN32)
     set (NATIVEFILEDIAG_PLATFORM_SOURCE
         src/nfd_win.cpp)
-endif (WIN32)
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set (NATIVEFILEDIAG_PLATFORM_SOURCE
         src/nfd_cocoa.m)
-endif ()
-
-if (UNIX)
+else()
     set(NATIVEFILEDIAG_PLATFORM_SOURCE
         src/nfd_gtk.c)
 endif()
@@ -22,7 +18,7 @@ add_library(nativefilediag
 
 target_include_directories(nativefilediag PUBLIC src/include)
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
     # Need GTK3
     find_package(GTK3 REQUIRED)
 
