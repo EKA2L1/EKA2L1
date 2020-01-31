@@ -88,7 +88,7 @@ namespace eka2l1::common {
     }
 #else
     void set_thread_name(std::uint64_t thread_id, const char* thread_name) {
-        pthread_setname_np(static_cast<pthread_t>(thread_id), thread_name);
+        pthread_setname_np((pthread_t)(thread_id), thread_name);
     }
 #endif
 }
