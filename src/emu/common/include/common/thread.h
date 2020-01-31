@@ -23,10 +23,9 @@
 
 namespace eka2l1::common {
     /**
-     * \brief Rename a thread.
+     * \brief Rename caller thread.
      * 
-     * \param thread_id         The native handle to the thread.
      * \param thread_name       New name of the thread.
      */
-    void set_thread_name(std::uint64_t thread_id, const char* thread_name);
+    void set_thread_name(const char* thread_name);
 }
