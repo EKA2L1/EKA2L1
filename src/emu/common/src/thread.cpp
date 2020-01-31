@@ -22,7 +22,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <sys/prctl.h>
+#include <pthread.h>
 #endif
 
 #include <common/thread.h>
