@@ -17,9 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/platform.h>
 #include <cstdint>
 
-#ifdef _WIN32
+#if EKA2L1_PLATFORM(WIN32)
 #include <windows.h>
 #else
 #include <pthread.h>
