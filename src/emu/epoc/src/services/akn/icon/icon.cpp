@@ -28,8 +28,8 @@
 #include <epoc/utils/err.h>
 
 namespace eka2l1 {
-    akn_icon_server_session::akn_icon_server_session(service::typical_server *svr, service::uid client_ss_uid) 
-        : service::typical_session(svr, client_ss_uid) {
+    akn_icon_server_session::akn_icon_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version version) 
+        : service::typical_session(svr, client_ss_uid, version) {
     }
 
     void akn_icon_server_session::fetch(service::ipc_context *ctx) {

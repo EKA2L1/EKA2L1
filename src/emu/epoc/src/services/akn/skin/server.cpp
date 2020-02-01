@@ -33,8 +33,8 @@
 #include <epoc/kernel.h>
 
 namespace eka2l1 {
-    akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid) 
-        : service::typical_session(svr, client_ss_uid) {
+    akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version) 
+        : service::typical_session(svr, client_ss_uid, client_version) {
     }
 
     void akn_skin_server_session::do_set_notify_handler(service::ipc_context *ctx) {

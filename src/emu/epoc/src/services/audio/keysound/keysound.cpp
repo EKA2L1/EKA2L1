@@ -29,8 +29,8 @@ namespace eka2l1 {
     // sf_mw_classicui document
     // Reference from GUID-1A9B515C-C20F-4EC7-B62A-223B219BBC4E, Belle devlib
     // Implementation based of original S^3 open source code and documentation.
-    keysound_session::keysound_session(service::typical_server *svr, service::uid client_ss_uid)
-        : service::typical_session(svr, client_ss_uid) {
+    keysound_session::keysound_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+        : service::typical_session(svr, client_ss_uid, client_version) {
     }
 
     void keysound_session::init(service::ipc_context *ctx) {

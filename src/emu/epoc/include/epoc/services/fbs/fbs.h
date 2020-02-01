@@ -166,7 +166,7 @@ namespace eka2l1 {
         fbs_dirty_notify_request *nof_;
         bool support_dirty_bitmap { true };
 
-        explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id);
+        explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
 
         ~fbscli();
 

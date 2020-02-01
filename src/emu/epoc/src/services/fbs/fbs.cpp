@@ -279,8 +279,8 @@ namespace eka2l1 {
         return sys->get_graphics_driver();
     }
     
-    fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id)
-        : service::typical_session(serv, ss_id)
+    fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version)
+        : service::typical_session(serv, ss_id, client_version)
         , nof_(nullptr) {
     }
 }

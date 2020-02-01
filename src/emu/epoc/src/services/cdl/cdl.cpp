@@ -26,8 +26,8 @@
 #include <epoc/kernel.h>
 
 namespace eka2l1 {
-    cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid)
-        : service::typical_session(svr, client_ss_uid) {
+    cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+        : service::typical_session(svr, client_ss_uid, client_version) {
     }
 
     void cdl_server_session::do_get_plugin_drive(service::ipc_context *ctx) {

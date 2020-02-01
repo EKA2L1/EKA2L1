@@ -75,7 +75,7 @@ namespace eka2l1 {
         void request_view_event(service::ipc_context *ctx);
         void active_view(service::ipc_context *ctx, const bool /*should_complete*/);
 
-        explicit view_session(service::typical_server *server, const service::uid session_uid);
+        explicit view_session(service::typical_server *server, const service::uid session_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;
     };
 

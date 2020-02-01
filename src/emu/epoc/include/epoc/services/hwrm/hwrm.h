@@ -30,7 +30,7 @@ namespace eka2l1 {
         std::unique_ptr<epoc::resource_interface> resource_;
 
     public:
-        explicit hwrm_session(service::typical_server *serv, service::uid client_ss_uid);
+        explicit hwrm_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
     };

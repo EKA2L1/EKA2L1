@@ -105,12 +105,13 @@ namespace eka2l1::service {
         template <typename T, typename ...Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
             const service::uid suid = ctx->msg->msg_session->unique_id();
+            epoc::version client_version;
+            client_version.u32 = ctx->get_arg<std::uint32_t>(0).value();
+
             sessions.emplace(suid, std::make_unique<T>(
-                reinterpret_cast<typical_server*>(this), suid, arguments...));
+                reinterpret_cast<typical_server*>(this), suid, client_version, arguments...));
 
             auto &target_session = sessions[suid];
-            target_session->client_version().u32 = *ctx->get_arg<std::uint32_t>(0);
-
             return reinterpret_cast<T*>(target_session.get());
         }
 
@@ -139,8 +140,8 @@ namespace eka2l1::service {
         epoc::version ver_;
 
     public:
-        explicit typical_session(typical_server *svr, service::uid client_ss_uid)
-            : svr_(svr), client_ss_uid_(client_ss_uid) {
+        explicit typical_session(typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
+            : svr_(svr), client_ss_uid_(client_ss_uid), ver_(client_ver) {
         }
 
         template <typename T, typename ...Args>

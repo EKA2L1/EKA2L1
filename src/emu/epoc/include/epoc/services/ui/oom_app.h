@@ -120,7 +120,7 @@ namespace eka2l1 {
         std::int32_t blank_count;
 
     public:
-        explicit oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid);
+        explicit oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;
     };
 
