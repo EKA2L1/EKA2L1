@@ -399,7 +399,7 @@ namespace eka2l1 {
 
     void kernel_system::setup_new_process(process_ptr pr) {
         std::unique_ptr<service::server> ps_srv = std::make_unique<eka2l1::posix_server>(sys, pr);
-        add_custom_server(std::move(ps_srv));
+        add_custom_server(ps_srv);
     }
 
     codeseg_ptr kernel_system::pull_codeseg_by_ep(const address ep) {
