@@ -375,7 +375,7 @@ namespace eka2l1 {
                 std::vector<int> langs;
 
                 for (auto &lang_field: controller->langs.langs.fields) {
-                    langs.push_back(static_cast<int>(std::reinterpret_pointer_cast<sis_language>(lang_field)->language));
+                    langs.push_back(static_cast<int>(reinterpret_cast<sis_language*>(lang_field.get())->language));
                 }
 
                 controller->choosen_lang = static_cast<sis_lang>(choose_lang(&langs[0], static_cast<int>(langs.size())));
@@ -394,7 +394,7 @@ namespace eka2l1 {
                 }
             } else {
                 controller->choosen_lang =
-                    std::reinterpret_pointer_cast<sis_language>(controller->langs.langs.fields[0])->language;
+                    reinterpret_cast<sis_language*>(controller->langs.langs.fields[0].get())->language;
             }
 
             // TODO: Choose options
