@@ -43,6 +43,9 @@ namespace eka2l1::mem {
             : mmu_(mmu) {
         }
 
+        virtual ~mem_model_process() {
+        }
+
         virtual const asid address_space_id() const = 0;
 
         virtual int create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) = 0;
