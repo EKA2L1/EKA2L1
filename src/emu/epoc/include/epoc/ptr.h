@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <memory>
 
+#include <common/chunkyseri.h>
 #include <epoc/mem.h>
 
 namespace eka2l1 {
