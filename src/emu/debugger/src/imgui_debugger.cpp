@@ -132,15 +132,11 @@ namespace eka2l1 {
                 install_thread_cond.wait(ul);
             }
         });
-        
-        auto applist_svr_ptr = std::reinterpret_pointer_cast<eka2l1::applist_server>(sys->get_kernel_system()
-            ->get_by_name<service::server>("!AppListServer"));
 
-        auto winserv_ptr = std::reinterpret_pointer_cast<eka2l1::window_server>(sys->get_kernel_system()
-            ->get_by_name<service::server>("!Windowserver"));
-
-        alserv = applist_svr_ptr.get();
-        winserv = winserv_ptr.get();
+        alserv = reinterpret_cast<eka2l1::applist_server*>(sys->get_kernel_system()->get_by_name
+            <service::server>("!AppListServer"));
+        winserv = reinterpret_cast<eka2l1::window_server*>(sys->get_kernel_system()->get_by_name
+            <service::server>("!Windowserver"));
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -197,7 +193,8 @@ namespace eka2l1 {
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-            for (const auto &thr : sys->get_kernel_system()->threads) {
+            for (const auto &thr_obj : sys->get_kernel_system()->threads) {
+                kernel::thread *thr = reinterpret_cast<kernel::thread*>(thr_obj.get());
                 chunk_ptr chnk = thr->get_stack_chunk();
 
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", thr->unique_id(),
@@ -231,7 +228,8 @@ namespace eka2l1 {
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-            for (const auto &chnk : sys->get_kernel_system()->chunks) {
+            for (const auto &chnk_obj : sys->get_kernel_system()->chunks) {
+                kernel::chunk *chnk = reinterpret_cast<kernel::chunk*>(chnk_obj.get());
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08lX    0x%08lX      %-32s",
@@ -259,7 +257,7 @@ namespace eka2l1 {
                     return;
                 }
 
-                debug_thread = *kern->threads.begin();
+                debug_thread = reinterpret_cast<kernel::thread*>(kern->threads.begin()->get());
                 debug_thread_id = debug_thread->unique_id();
             } else {
                 debug_thread = kern->get_by_id<kernel::thread>(debug_thread_id);
@@ -273,7 +271,7 @@ namespace eka2l1 {
 
                     if (ImGui::Selectable(cr_thrname.c_str(), kern->threads[i]->unique_id() == debug_thread_id)) {
                         debug_thread_id = kern->threads[i]->unique_id();
-                        debug_thread = kern->threads[i];
+                        debug_thread = reinterpret_cast<kernel::thread*>(kern->threads[i].get());
                     }
                 }
 

@@ -33,7 +33,7 @@ namespace eka2l1 {
         class thread;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
+    using thread_ptr = kernel::thread*;
 
     namespace service {
         enum class property_type {

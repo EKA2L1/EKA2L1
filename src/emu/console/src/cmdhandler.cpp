@@ -107,8 +107,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
     emu->stage_two();
 
     // Get app list server
-    std::shared_ptr<eka2l1::applist_server> svr = 
-        std::reinterpret_pointer_cast<eka2l1::applist_server>(emu->symsys->get_kernel_system()
+    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server*>(emu->symsys->get_kernel_system()
         ->get_by_name<service::server>("!AppListServer"));
 
     if (!svr) {
@@ -187,8 +186,7 @@ bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata,
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
     
     // Get app list server
-    std::shared_ptr<eka2l1::applist_server> svr = 
-        std::reinterpret_pointer_cast<eka2l1::applist_server>(emu->symsys->get_kernel_system()
+    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server*>(emu->symsys->get_kernel_system()
         ->get_by_name<service::server>("!AppListServer"));
 
     if (!svr) {

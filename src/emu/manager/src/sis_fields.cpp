@@ -64,9 +64,9 @@ namespace eka2l1 {
             #define PARSE_ELEMENT_TYPE(element_case, handler_result_type, handler)                                                          \
                 case sis_field_type::element_case:                                                                                          \
                     while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) {            \
-                        auto elem = std::make_shared<handler_result_type>(handler(true));                                                   \
+                        auto elem = std::make_shared<sis_field>(handler(true));                                                   \
                         elem->type = arr.element_type;                                                                                      \
-                        arr.fields.push_back(std::reinterpret_pointer_cast<sis_field>(elem));                                               \
+                        arr.fields.push_back(elem);                                               \
                         valid_offset();                                                                                                     \
                     }                                                                                                                       \
                     break;

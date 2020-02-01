@@ -34,8 +34,8 @@ namespace eka2l1 {
         class codeseg;
     }
 
-    using codeseg_ptr = std::shared_ptr<kernel::codeseg>;
-    using chunk_ptr = std::shared_ptr<kernel::chunk>;
+    using codeseg_ptr = kernel::codeseg*;
+    using chunk_ptr = kernel::chunk*;
 }
 
 namespace eka2l1::kernel {

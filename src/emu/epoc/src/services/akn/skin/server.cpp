@@ -222,7 +222,7 @@ namespace eka2l1 {
             kernel::access_type::global_access).second;
 
         // Create chunk maintainer
-        chunk_maintainer_ = std::make_unique<epoc::akn_skin_chunk_maintainer>(skin_chunk_.get(),
+        chunk_maintainer_ = std::make_unique<epoc::akn_skin_chunk_maintainer>(skin_chunk_,
             4 * 1024, (sys->get_symbian_version_use() <= epocver::epoc94) ?
                 0 : epoc::akn_skin_chunk_maintainer_lookup_use_linked_list);
 

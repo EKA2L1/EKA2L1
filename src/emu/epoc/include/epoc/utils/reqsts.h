@@ -12,7 +12,7 @@ namespace eka2l1 {
         class chunkyseri;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
+    using thread_ptr = kernel::thread*;
 }
 
 /* Header only request status */

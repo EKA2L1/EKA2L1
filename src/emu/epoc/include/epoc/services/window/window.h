@@ -210,7 +210,7 @@ namespace eka2l1::epoc {
             kernel::thread *own_thread, epoc::version ver);
 
         eka2l1::window_server &get_ws() {
-            return *(std::reinterpret_pointer_cast<window_server>(guest_session->get_server()));
+            return *reinterpret_cast<window_server*>(guest_session->get_server());
         }
 
         kernel::thread *get_client() {

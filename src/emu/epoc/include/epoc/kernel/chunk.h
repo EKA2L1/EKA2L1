@@ -45,7 +45,7 @@ namespace eka2l1 {
         struct mem_model_chunk;
     }
 
-    using process_ptr = std::shared_ptr<kernel::process>;
+    using process_ptr = kernel::process*;
 
     /*! \brief Contains kernel objects implementation. */
     namespace kernel {

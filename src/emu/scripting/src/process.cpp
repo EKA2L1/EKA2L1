@@ -94,13 +94,13 @@ namespace eka2l1::scripting {
 
     std::vector<std::unique_ptr<eka2l1::scripting::thread>> process::get_thread_list() {
         system *sys = get_current_instance();
-        std::vector<thread_ptr> &threads = sys->get_kernel_system()->get_thread_list();
+        std::vector<kernel_obj_unq_ptr> &threads = sys->get_kernel_system()->get_thread_list();
 
         std::vector<std::unique_ptr<scripting::thread>> script_threads;
 
         for (const auto &thr : threads) {
-            if (thr->owning_process() == &(*process_handle)) {
-                script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(&(*thr))));
+            if (reinterpret_cast<kernel::thread*>(thr.get())->owning_process() == process_handle) {
+                script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(thr.get())));
             }
         }
 
@@ -109,12 +109,12 @@ namespace eka2l1::scripting {
 
     std::vector<std::unique_ptr<scripting::process>> get_process_list() {
         system *sys = get_current_instance();
-        std::vector<process_ptr> processes = sys->get_kernel_system()->get_process_list();
+        std::vector<kernel_obj_unq_ptr> &processes = sys->get_kernel_system()->get_process_list();
 
         std::vector<std::unique_ptr<scripting::process>> script_processes;
 
         for (const auto &pr : processes) {
-            script_processes.push_back(std::make_unique<scripting::process>((uint64_t)(&(*pr))));
+            script_processes.push_back(std::make_unique<scripting::process>((uint64_t)(pr.get())));
         }
 
         return script_processes;

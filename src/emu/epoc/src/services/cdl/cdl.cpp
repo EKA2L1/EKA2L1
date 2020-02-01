@@ -144,7 +144,7 @@ namespace eka2l1 {
     void cdl_server::init() {
         observer_ = std::make_unique<epoc::cdl_ecom_generic_observer>(this);
         watcher_ = std::make_unique<epoc::cdl_ecom_watcher>(
-            &(*std::reinterpret_pointer_cast<ecom_server>(sys->get_kernel_system()->get_by_name<service::server>("!ecomserver"))),
+            reinterpret_cast<ecom_server*>(sys->get_kernel_system()->get_by_name<service::server>("!ecomserver")),
             reinterpret_cast<epoc::cdl_ecom_watcher_observer*>(observer_.get()));
     }
 

@@ -40,7 +40,7 @@
 namespace eka2l1 {
     class system;
 
-    using session_ptr = std::shared_ptr<service::session>;
+    using session_ptr = service::session*;
 
     /*! \brief IPC implementation. */
     namespace service {

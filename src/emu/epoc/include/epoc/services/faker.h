@@ -40,7 +40,7 @@ namespace eka2l1 {
         class lib_manager;
     }
 
-    using chunk_ptr = std::shared_ptr<kernel::chunk>;
+    using chunk_ptr = kernel::chunk*;
 }
 
 namespace eka2l1::service {

@@ -30,7 +30,7 @@ namespace eka2l1 {
         class property;
     }
 
-    using property_ptr = std::shared_ptr<service::property>;
+    using property_ptr = service::property*;
 
     class kernel_system;
 
