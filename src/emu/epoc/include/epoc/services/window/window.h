@@ -235,7 +235,7 @@ namespace eka2l1::epoc {
         
         // We have been blessed with so much reflection that it's actually seems evil now.
         template <typename T>
-        constexpr ws::uid add_event_notifier(T &evt) {
+        ws::uid add_event_notifier(T &evt) {
             const std::lock_guard guard_(ws_client_lock);
 
             if constexpr (std::is_same_v<T, epoc::event_mod_notifier_user>) {
