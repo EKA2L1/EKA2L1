@@ -20,6 +20,7 @@
 #pragma once
 
 #include <epoc/services/server.h>
+#include <epoc/services/session.h>
 #include <epoc/services/context.h>
 #include <epoc/utils/obj.h>
 #include <epoc/utils/version.h>
