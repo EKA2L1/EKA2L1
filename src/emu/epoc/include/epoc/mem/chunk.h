@@ -40,6 +40,9 @@ namespace eka2l1::mem {
             : mmu_(mmu)
             , addr_space_id_(id) {
         }
+
+        virtual ~mem_model_chunk() {
+        }
         
         virtual int do_create(const mem_model_chunk_creation_info &create_info) = 0;
 
