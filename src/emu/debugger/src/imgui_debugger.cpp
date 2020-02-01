@@ -458,7 +458,7 @@ namespace eka2l1 {
 
         ImGui::Text("UI Scale     ");
         ImGui::SameLine();
-        const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1);
+        const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1f);
         if (ret && conf->ui_scale <= 1e-6) {
             conf->ui_scale = 0.5;
         } 
@@ -1240,10 +1240,11 @@ namespace eka2l1 {
             const auto window_pos = ImGui::GetWindowPos();
             const auto content_pos = ImGui::GetWindowContentRegionMin();
             scr->absolute_pos_mtx.lock();
-            scr->absolute_pos.x = window_pos.x + content_pos.x;
-            scr->absolute_pos.y = window_pos.y + content_pos.y;
+            scr->absolute_pos.x = static_cast<int>(window_pos.x + content_pos.x);
+            scr->absolute_pos.y = static_cast<int>(window_pos.y + content_pos.y);
             scr->absolute_pos_mtx.unlock();
-            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y));
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x),
+                static_cast<float>(size.y)));
             ImGui::End();
         }
     }
@@ -1307,7 +1308,8 @@ namespace eka2l1 {
 
         if (user->driver_win_id) {
             const eka2l1::vec2 size = user->size;
-            ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(size.x, size.y)); 
+            ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(static_cast<float>(size.x),
+                static_cast<float>(size.y))); 
         }
     }
 
@@ -1374,7 +1376,8 @@ namespace eka2l1 {
 
         if (scr->screen_texture) {
             eka2l1::vec2 size = scr->size();
-            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y)); 
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x),
+                static_cast<float>(size.y)));
         }
     }
 
