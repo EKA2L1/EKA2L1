@@ -288,7 +288,7 @@ namespace eka2l1::common {
 
         unicode_mode = false;
 
-        for (; source_size >= 0, dest_size >= 0;) {
+        for (; dest_size >= 0;) {
             std::uint8_t b;
 
             if (read_byte(&b)) {
