@@ -42,13 +42,7 @@
 
 namespace eka2l1 {
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
-        utf16_str copy(key);
-
-        std::locale loc("");
-        for (auto &wc : copy) {
-            wc = std::tolower(wc, loc);
-        }
-
+        utf16_str copy = common::lowercase_ucs2_string(key);
         return std::hash<utf16_str>()(copy);
     }
 
