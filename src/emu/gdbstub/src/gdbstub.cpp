@@ -78,7 +78,7 @@ namespace eka2l1 {
 )";
 
     static kernel::thread *find_thread_by_id(kernel_system *kern, const std::uint32_t id) {
-        return &(*kern->get_by_id<kernel::thread>(id));
+        return kern->get_by_id<kernel::thread>(id);
     }
 
     static std::uint32_t reg_read(std::size_t id, kernel::thread *thread = nullptr) {
