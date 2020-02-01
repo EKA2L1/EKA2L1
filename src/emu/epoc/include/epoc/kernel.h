@@ -294,7 +294,7 @@ namespace eka2l1 {
         }
 
         template <typename T>
-        constexpr T *get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
+        T *get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
             switch (obj_type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                               \
     case kernel::object_type::obj_type: {                                              \
@@ -331,20 +331,20 @@ namespace eka2l1 {
         /*! \brief Get kernel object by name
         */
         template <typename T>
-        constexpr T *get_by_name(const std::string &name) {
+        T *get_by_name(const std::string &name) {
             SYNCHRONIZE_ACCESS;
 
-            constexpr kernel::object_type obj_type = get_object_type<T>();
+            const kernel::object_type obj_type = get_object_type<T>();
             return get_by_name_and_type<T>(name, obj_type);
         }
 
         /*! \brief Get kernel object by ID
         */
         template <typename T>
-        constexpr T *get_by_id(const kernel::uid uid) {
+        T *get_by_id(const kernel::uid uid) {
             SYNCHRONIZE_ACCESS;
 
-            constexpr kernel::object_type obj_type = get_object_type<T>();
+            const kernel::object_type obj_type = get_object_type<T>();
 
             switch (obj_type) {
                 // It's gurantee that object are sorted by unique id, by just adding it
@@ -385,7 +385,7 @@ namespace eka2l1 {
         /*! \brief Create and add to object array.
         */
         template <typename T, typename... args>
-        constexpr T *create(args... creation_arg) {
+        T *create(args... creation_arg) {
             constexpr kernel::object_type obj_type = get_object_type<T>();
             std::unique_ptr<T> obj;
 

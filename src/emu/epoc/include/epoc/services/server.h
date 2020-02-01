@@ -142,7 +142,7 @@ namespace eka2l1 {
                 sessions.push_back(svse);
             }
 
-            virtual void destroy();
+            virtual void destroy() override;
 
             /*! Receive the message */
             int receive(ipc_msg_ptr &msg);
