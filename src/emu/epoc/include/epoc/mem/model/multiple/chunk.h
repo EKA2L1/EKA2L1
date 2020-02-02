@@ -58,6 +58,9 @@ namespace eka2l1::mem {
             : mem_model_chunk(mmu, id) {
         }
 
+        ~multiple_mem_model_chunk() override {
+        }
+
         const vm_address base() override {
             return base_;
         }

@@ -30,7 +30,7 @@ namespace eka2l1::common {
     template <>
     std::uint32_t byte_swap(std::uint32_t val) {
         //        AA             BB00                   CC0000                  DD000000
-        return (val >> 24) | (val >> 8) & 0xFF00 | (val << 8) & 0xFF0000 | (val << 24) & 0xFF000000;
+        return (val >> 24) | ((val >> 8) & 0xFF00) | ((val << 8) & 0xFF0000) | ((val << 24) & 0xFF000000);
     }
 
     template <>

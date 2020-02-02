@@ -157,7 +157,9 @@ namespace eka2l1 {
 
     fbs_server::fbs_server(eka2l1::system *sys)
         : service::typical_server(sys, "!Fontbitmapserver")
-        , persistent_font_store(sys->get_io_system()) {
+        , persistent_font_store(sys->get_io_system())
+        , shared_chunk(nullptr)
+        , large_chunk(nullptr) {
     }
 
     void fbs_server::connect(service::ipc_context &context) {
@@ -279,8 +281,8 @@ namespace eka2l1 {
         return sys->get_graphics_driver();
     }
     
-    fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id)
-        : service::typical_session(serv, ss_id)
+    fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version)
+        : service::typical_session(serv, ss_id, client_version)
         , nof_(nullptr) {
     }
 }

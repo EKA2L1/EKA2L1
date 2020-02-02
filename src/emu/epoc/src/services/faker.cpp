@@ -48,7 +48,7 @@ namespace eka2l1::service {
 
     bool faker::initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name, const std::uint32_t uid) {
         // Create the fake process first
-        process_ = kern->create<kernel::process>(kern->get_memory_system(), name, u"Nowhere", u"").get();
+        process_ = kern->create<kernel::process>(kern->get_memory_system(), name, u"Nowhere", u"");
         
         if (!process_) {
             return false;
@@ -75,8 +75,7 @@ namespace eka2l1::service {
 
         static const char *TRAMPOLINE_SEG_NAME = "JumpJupTrampoline";
 
-        codeseg_ptr seg = std::reinterpret_pointer_cast<kernel::codeseg>(kern->get_by_name<kernel::codeseg>
-            (TRAMPOLINE_SEG_NAME));
+        codeseg_ptr seg = kern->get_by_name<kernel::codeseg>(TRAMPOLINE_SEG_NAME);
             
         data_offset_ = 200;
             

@@ -283,7 +283,7 @@ namespace eka2l1 {
         session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_arg<std::int32_t>(2)));
         const std::uint32_t fs_file_handle = *(ctx->get_arg<std::uint32_t>(3));
 
-        auto fs_server = std::reinterpret_pointer_cast<eka2l1::fs_server>(server<fbs_server>()->fs_server);
+        auto fs_server = reinterpret_cast<eka2l1::fs_server*>(server<fbs_server>()->fs_server);
         file *source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
 
         if (!source_file) {

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/buffer.h>
 #include <common/bytepair.h>
 #include <vector>
 #include <memory>
@@ -30,7 +31,7 @@ namespace eka2l1::common {
 namespace eka2l1::scripting {
     struct ibytepair_stream_wrapper {
         common::ibytepair_stream bytepair_stream;
-        std::shared_ptr<common::ro_stream> raw_fstream;
+        std::unique_ptr<common::ro_stream> raw_fstream;
 
     public:
         ibytepair_stream_wrapper(const std::string &path);

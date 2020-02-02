@@ -74,8 +74,8 @@ namespace eka2l1 {
         return true;
     }
     
-    view_session::view_session(service::typical_server *server, const service::uid session_uid) 
-        : service::typical_session(server, session_uid)
+    view_session::view_session(service::typical_server *server, const service::uid session_uid, epoc::version client_version) 
+        : service::typical_session(server, session_uid, client_version)
         , to_panic_(nullptr)
         , app_uid_(0) {
     }

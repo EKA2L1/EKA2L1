@@ -744,8 +744,8 @@ namespace eka2l1 {
         guest_evt_.type = epoc::event_code::touch;
         switch (driver_evt_.mouse_.button_) {
         case drivers::mouse_button::left: {
-            if (button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
-            || !button_pressed[0] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+            if ((button_pressed[0] && (driver_evt_.mouse_.action_ == drivers::mouse_action::press))
+            || (!button_pressed[0] && (driver_evt_.mouse_.action_ == drivers::mouse_action::release))) {
                 return false;
             }
             button_pressed[0] = !button_pressed[0];
@@ -754,8 +754,8 @@ namespace eka2l1 {
             break;
         }
         case drivers::mouse_button::middle: {
-            if (button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
-            || !button_pressed[1] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+            if ((button_pressed[1] && (driver_evt_.mouse_.action_ == drivers::mouse_action::press))
+            || (!button_pressed[1] && (driver_evt_.mouse_.action_ == drivers::mouse_action::release))) {
                 return false;
             }
             button_pressed[1] = !button_pressed[1];
@@ -764,8 +764,8 @@ namespace eka2l1 {
             break;
         }
         case drivers::mouse_button::right: {
-            if (button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::press
-            || !button_pressed[2] && driver_evt_.mouse_.action_ == drivers::mouse_action::release) {
+            if ((button_pressed[2] && (driver_evt_.mouse_.action_ == drivers::mouse_action::press))
+            || (!button_pressed[2] && (driver_evt_.mouse_.action_ == drivers::mouse_action::release))) {
                 return false;
             }
             button_pressed[2] = !button_pressed[2];

@@ -340,7 +340,8 @@ namespace eka2l1::drivers {
         helper.pop(index_off);
         helper.pop(vert_off);
 
-        glDrawElementsBaseVertex(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off), vert_off);
+        std::uint64_t index_off_64 = index_off;
+        glDrawElementsBaseVertex(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off_64), vert_off);
     }
 
     void ogl_graphics_driver::set_viewport(const eka2l1::rect &viewport) {

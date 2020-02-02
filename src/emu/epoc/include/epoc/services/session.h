@@ -32,13 +32,13 @@
 #include <vector>
 
 namespace eka2l1 {
-    using thread_ptr = std::shared_ptr<kernel::thread>;
+    using thread_ptr = kernel::thread*;
 
     namespace service {
         class server;
     }
 
-    using server_ptr = std::shared_ptr<service::server>;
+    using server_ptr = service::server*;
 
     namespace service {
         /*! \brief An IPC session 

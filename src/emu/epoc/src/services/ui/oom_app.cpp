@@ -42,8 +42,8 @@ namespace eka2l1 {
         typical_server::connect(ctx);
     }
 
-    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid)
-        : service::typical_session(svr, client_ss_uid)
+    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+        : service::typical_session(svr, client_ss_uid, client_version)
         , blank_count(0) {
     }
 

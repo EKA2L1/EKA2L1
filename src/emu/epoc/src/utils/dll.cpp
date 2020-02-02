@@ -35,7 +35,9 @@ namespace eka2l1::epoc {
         hle::lib_manager &mngr = *sys->get_lib_manager();
         kernel::process *crr_process = sys->get_kernel_system()->crr_process();
 
-        for (const auto &seg : sys->get_kernel_system()->get_codeseg_list()) {
+        for (const auto &seg_obj : sys->get_kernel_system()->get_codeseg_list()) {
+            codeseg_ptr seg = reinterpret_cast<codeseg_ptr>(seg_obj.get());
+
             if (seg && seg->get_entry_point(crr_process) == addr) {
                 return seg->get_full_path();
             }
@@ -48,7 +50,8 @@ namespace eka2l1::epoc {
         hle::lib_manager *manager = sys->get_lib_manager();
         kernel::process *crr_process = sys->get_kernel_system()->crr_process();
 
-        for (const auto &seg : sys->get_kernel_system()->get_codeseg_list()) {
+        for (const auto &seg_obj : sys->get_kernel_system()->get_codeseg_list()) {
+            codeseg_ptr seg = reinterpret_cast<codeseg_ptr>(seg_obj.get());
             const address seg_code_addr = seg->get_code_run_addr(crr_process);
 
             if (seg_code_addr <= runtime_addr && seg_code_addr + seg->get_code_size() >= runtime_addr) {

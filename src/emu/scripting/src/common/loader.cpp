@@ -33,8 +33,8 @@ namespace eka2l1::scripting {
             throw std::runtime_error("File doesn't exists!");
         }
 
-        stream_ = std::reinterpret_pointer_cast<common::ro_stream>(std::make_shared<eka2l1::ro_file_stream>(f.get()));
-        mbm_ = std::make_unique<loader::mbm_file>(reinterpret_cast<common::ro_stream*>(&(*stream_)));
+        stream_ = std::make_unique<eka2l1::ro_file_stream>(f.get());
+        mbm_ = std::make_unique<loader::mbm_file>(stream_.get());
 
         if (!mbm_->do_read_headers()) {
             throw std::runtime_error("Reading MBM headers failed!");
@@ -74,8 +74,8 @@ namespace eka2l1::scripting {
             throw std::runtime_error("File doesn't exists!");
         }
 
-        stream_ = std::reinterpret_pointer_cast<common::ro_stream>(std::make_shared<eka2l1::ro_file_stream>(f.get()));
-        mif_ = std::make_unique<loader::mif_file>(reinterpret_cast<common::ro_stream*>(&(*stream_)));
+        stream_ = std::make_unique<eka2l1::ro_file_stream>(f.get());
+        mif_ = std::make_unique<loader::mif_file>(stream_.get());
 
         if (!mif_->do_parse()) {
             throw std::runtime_error("Reading MIF headers failed!");

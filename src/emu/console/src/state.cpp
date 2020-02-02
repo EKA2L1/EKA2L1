@@ -64,7 +64,7 @@ namespace eka2l1::desktop {
         }
         
         winserv = reinterpret_cast<eka2l1::window_server*>(symsys->get_kernel_system()->get_by_name
-            <eka2l1::service::server>("!Windowserver").get());
+            <eka2l1::service::server>("!Windowserver"));
 
         stage_two_inited = false;
     }

@@ -54,10 +54,9 @@ namespace eka2l1 {
         class codeseg;
     }
 
-    using chunk_ptr = std::shared_ptr<kernel::chunk>;
-    using process_ptr = std::shared_ptr<kernel::process>;
-    using process_ptr = std::shared_ptr<kernel::process>;
-    using codeseg_ptr = std::shared_ptr<kernel::codeseg>;
+    using chunk_ptr = kernel::chunk*;
+    using process_ptr = kernel::process*;
+    using codeseg_ptr = kernel::codeseg*;
 
     // Technically, loader is an user application, but here we treat it as kernel
 

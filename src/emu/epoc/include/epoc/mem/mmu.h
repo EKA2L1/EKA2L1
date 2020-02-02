@@ -60,6 +60,8 @@ namespace eka2l1::mem {
         explicit mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10
             , const bool mem_map_old = false);
 
+        virtual ~mmu_base() {}
+
         void map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm);
         void unmap_from_cpu(const vm_address addr, const std::size_t size);
 

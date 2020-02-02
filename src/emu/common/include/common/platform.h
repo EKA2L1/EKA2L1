@@ -78,6 +78,10 @@
 #endif
 
 #ifdef __APPLE__
+#define EKA2L1_PLATFORM_DARWIN 1
+
+#include <TargetConditionals.h>
+
 #if TARGET_OS_MAC
 #define EKA2L1_PLATFORM_MACOS 1
 #else
@@ -101,7 +105,7 @@
 #endif
 #endif
 
-#if EKA2L1_PLATFORM(ANDROID) || EKA2L1_PLATFORM(UNIX)
+#if EKA2L1_PLATFORM(ANDROID) || EKA2L1_PLATFORM(UNIX) || EKA2L1_PLATFORM(MACOS) || EKA2L1_PLATFORM(IOS)
 #define EKA2L1_PLATFORM_POSIX 1
 #endif
 

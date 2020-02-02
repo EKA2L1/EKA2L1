@@ -18,6 +18,7 @@
  */
 
 #include <common/configure.h>
+#include <common/version.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/vecx.h>
@@ -148,6 +149,9 @@ namespace eka2l1::desktop {
     static constexpr const char *hli_thread_name = "High level interface thread";
 
     static int graphics_driver_thread_initialization(emulator &state) {
+        // Halloween decoration breath of the graphics
+        eka2l1::common::set_thread_name(graphics_driver_thread_name);
+
         if (!drivers::init_window_library(drivers::window_type::glfw)) {
             return -1;
         }
@@ -245,6 +249,9 @@ namespace eka2l1::desktop {
     }
 
     static int ui_thread_initialization(emulator &state) {
+        // Breath of the UI
+        eka2l1::common::set_thread_name(ui_thread_name);
+
         ImGui::CreateContext();
 
         ImGuiIO &io = ImGui::GetIO();
@@ -373,6 +380,9 @@ namespace eka2l1::desktop {
     }
 
     void high_level_interface_thread(emulator &state) {
+        // Breath of the ???
+        eka2l1::common::set_thread_name(hli_thread_name);
+
         std::unique_ptr<std::thread> os_thread_obj;
 
         while (true) {
@@ -392,10 +402,6 @@ namespace eka2l1::desktop {
                 
                 // Launch the OS thread now
                 os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
-                
-                // Breath of the dead (jk please dont overreact)
-                eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(os_thread_obj->native_handle()),
-                    os_thread_name);
             }
         }
 
@@ -407,6 +413,8 @@ namespace eka2l1::desktop {
     }
 
     void os_thread(emulator &state) {
+        eka2l1::common::set_thread_name(os_thread_name);
+
         // Register SEH handler for this thread
 #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER && defined(NDEBUG)
         _set_se_translator(seh_handler_translator_func);
@@ -438,20 +446,7 @@ namespace eka2l1::desktop {
         // First, initialize the graphics driver. This is needed for all graphics operations on the emulator.
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
         std::thread ui_thread_obj(ui_thread, std::ref(state));
-
         std::thread hli_thread_obj(high_level_interface_thread, std::ref(state));
-
-        // Halloween decoration breath of the graphics
-        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(graphics_thread_obj.native_handle()),
-            graphics_driver_thread_name);
-
-        // Breath of the UI
-        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(ui_thread_obj.native_handle()),
-            ui_thread_name);
-
-        // Breath of the ???
-        eka2l1::common::set_thread_name(reinterpret_cast<std::uint64_t>(hli_thread_obj.native_handle()),
-            hli_thread_name);
 
         // Wait for interface thread to be killed.
         hli_thread_obj.join();

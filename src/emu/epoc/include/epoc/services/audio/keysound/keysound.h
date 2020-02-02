@@ -31,7 +31,9 @@ namespace eka2l1 {
         std::stack<epoc::keysound::context> contexts_;      ///< Context stack describes sound to play when key action trigger.
 
     public:
-        explicit keysound_session(service::typical_server *svr, service::uid client_ss_uid);
+        explicit keysound_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
+        ~keysound_session() override {}
+
         void fetch(service::ipc_context *ctx) override;
 
         void init(service::ipc_context *ctx);

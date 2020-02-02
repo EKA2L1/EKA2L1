@@ -133,6 +133,8 @@ namespace eka2l1::mem {
 
     struct page_table_allocator {
     public:
+        virtual ~page_table_allocator() {}
+
         virtual page_table *create_new(const std::size_t psize) = 0;
         virtual page_table *get_page_table_by_id(const std::uint32_t id) = 0;
 

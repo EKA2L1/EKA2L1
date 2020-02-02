@@ -39,7 +39,7 @@
 namespace eka2l1 {
     class kernel_system;
 
-    using mutex_ptr = std::shared_ptr<kernel::mutex>;
+    using mutex_ptr = kernel::mutex*;
 
     namespace common {
         class chunkyseri;
@@ -96,7 +96,7 @@ namespace eka2l1::kernel {
     };
 
     class codeseg;
-    using codeseg_ptr = std::shared_ptr<codeseg>;
+    using codeseg_ptr = kernel::codeseg*;
 
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;

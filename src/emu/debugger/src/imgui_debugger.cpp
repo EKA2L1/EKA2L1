@@ -132,15 +132,11 @@ namespace eka2l1 {
                 install_thread_cond.wait(ul);
             }
         });
-        
-        auto applist_svr_ptr = std::reinterpret_pointer_cast<eka2l1::applist_server>(sys->get_kernel_system()
-            ->get_by_name<service::server>("!AppListServer"));
 
-        auto winserv_ptr = std::reinterpret_pointer_cast<eka2l1::window_server>(sys->get_kernel_system()
-            ->get_by_name<service::server>("!Windowserver"));
-
-        alserv = applist_svr_ptr.get();
-        winserv = winserv_ptr.get();
+        alserv = reinterpret_cast<eka2l1::applist_server*>(sys->get_kernel_system()->get_by_name
+            <service::server>("!AppListServer"));
+        winserv = reinterpret_cast<eka2l1::window_server*>(sys->get_kernel_system()->get_by_name
+            <service::server>("!Windowserver"));
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -197,7 +193,8 @@ namespace eka2l1 {
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-            for (const auto &thr : sys->get_kernel_system()->threads) {
+            for (const auto &thr_obj : sys->get_kernel_system()->threads) {
+                kernel::thread *thr = reinterpret_cast<kernel::thread*>(thr_obj.get());
                 chunk_ptr chnk = thr->get_stack_chunk();
 
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", thr->unique_id(),
@@ -231,7 +228,8 @@ namespace eka2l1 {
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
-            for (const auto &chnk : sys->get_kernel_system()->chunks) {
+            for (const auto &chnk_obj : sys->get_kernel_system()->chunks) {
+                kernel::chunk *chnk = reinterpret_cast<kernel::chunk*>(chnk_obj.get());
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08lX    0x%08lX      %-32s",
@@ -259,7 +257,7 @@ namespace eka2l1 {
                     return;
                 }
 
-                debug_thread = *kern->threads.begin();
+                debug_thread = reinterpret_cast<kernel::thread*>(kern->threads.begin()->get());
                 debug_thread_id = debug_thread->unique_id();
             } else {
                 debug_thread = kern->get_by_id<kernel::thread>(debug_thread_id);
@@ -273,7 +271,7 @@ namespace eka2l1 {
 
                     if (ImGui::Selectable(cr_thrname.c_str(), kern->threads[i]->unique_id() == debug_thread_id)) {
                         debug_thread_id = kern->threads[i]->unique_id();
-                        debug_thread = kern->threads[i];
+                        debug_thread = reinterpret_cast<kernel::thread*>(kern->threads[i].get());
                     }
                 }
 
@@ -460,7 +458,7 @@ namespace eka2l1 {
 
         ImGui::Text("UI Scale     ");
         ImGui::SameLine();
-        const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1);
+        const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1f);
         if (ret && conf->ui_scale <= 1e-6) {
             conf->ui_scale = 0.5;
         } 
@@ -1166,10 +1164,10 @@ namespace eka2l1 {
                     const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
 
                     if (app_search_box.PassFilter(name.c_str())) {
-                        ImGui::Text(uid_name.c_str());
+                        ImGui::Text("%s", uid_name.c_str());
                         ImGui::NextColumn();
 
-                        ImGui::Text(name.c_str());
+                        ImGui::Text("%s", name.c_str());
                         ImGui::NextColumn();
 
                         if (ImGui::IsItemClicked()) {
@@ -1213,7 +1211,7 @@ namespace eka2l1 {
         ImGui::OpenPopup("A wild error appears!");
 
         if (ImGui::BeginPopupModal("A wild error appears!")) {
-            ImGui::Text(first_error.c_str());
+            ImGui::Text("%s", first_error.c_str());
             ImGui::Text("Please attach the log and report this to a developer!");
 
             if (ImGui::Button("OK")) {
@@ -1242,10 +1240,11 @@ namespace eka2l1 {
             const auto window_pos = ImGui::GetWindowPos();
             const auto content_pos = ImGui::GetWindowContentRegionMin();
             scr->absolute_pos_mtx.lock();
-            scr->absolute_pos.x = window_pos.x + content_pos.x;
-            scr->absolute_pos.y = window_pos.y + content_pos.y;
+            scr->absolute_pos.x = static_cast<int>(window_pos.x + content_pos.x);
+            scr->absolute_pos.y = static_cast<int>(window_pos.y + content_pos.y);
             scr->absolute_pos_mtx.unlock();
-            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y));
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x),
+                static_cast<float>(size.y)));
             ImGui::End();
         }
     }
@@ -1304,12 +1303,13 @@ namespace eka2l1 {
             flags.pop_back();
         }
 
-        ImGui::Text(flags.c_str());
+        ImGui::Text("%s", flags.c_str());
         ImGui::Separator();
 
         if (user->driver_win_id) {
             const eka2l1::vec2 size = user->size;
-            ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(size.x, size.y)); 
+            ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(static_cast<float>(size.x),
+                static_cast<float>(size.y))); 
         }
     }
 
@@ -1376,7 +1376,8 @@ namespace eka2l1 {
 
         if (scr->screen_texture) {
             eka2l1::vec2 size = scr->size();
-            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(size.x, size.y)); 
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x),
+                static_cast<float>(size.y)));
         }
     }
 

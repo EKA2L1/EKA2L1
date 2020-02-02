@@ -40,6 +40,8 @@
 #include <unistd.h>
 #endif
 
+#define O_SYM_TMPFILE 0x10000000
+
 #define POSIX_REQUEST_FINISH_WITH_ERR(ctx, err) \
     *errnoptr = err;                            \
     ctx.set_request_status(epoc::error_none);           \
@@ -153,7 +155,7 @@ namespace eka2l1 {
             }
         }
 
-        files[newid - 1] = io->open_file(files[oldid - 1]->file_name(), files[oldid - 1]->file_mode());files[oldid - 1];
+        files[newid - 1] = io->open_file(files[oldid - 1]->file_name(), files[oldid - 1]->file_mode());
         return 0;
     }
 
@@ -263,11 +265,7 @@ namespace eka2l1 {
         const int posix_open_mode = params->pint[0];
         const int posix_open_perms = params->pint[1];
 
-#if EKA2L1_PLATFORM(WIN32)
-        if (posix_open_mode & O_TEMPORARY) {
-#else
-        if (posix_open_mode & O_TMPFILE) {
-#endif
+        if (posix_open_mode & O_SYM_TMPFILE) {
             // Put the temporary file in tmp folder of the correspond private space of process in C drive
             base_dir = std::u16string(u"C:\\private\\") + common::utf8_to_ucs2(common::to_string(associated_process->get_uid(), std::hex)) + u"\\tmp\\";
         }
@@ -282,13 +280,7 @@ namespace eka2l1 {
         // If the file is temporary, override or create new one. Else
         // If the file exists and the flag is O_CREAT, also override existing file or create new one
         if ((!io->exist(path_u16) && (posix_open_mode & O_CREAT))
-            || (posix_open_mode &
-#if EKA2L1_PLATFORM(WIN32)
-                O_TEMPORARY
-#else
-                O_TMPFILE
-#endif
-                )) {
+            || (posix_open_mode & O_SYM_TMPFILE)) {
             write_flag_emu = WRITE_MODE;
         }
 

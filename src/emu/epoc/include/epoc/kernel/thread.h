@@ -55,10 +55,10 @@ namespace eka2l1 {
         class faker;
     }
 
-    using chunk_ptr = std::shared_ptr<kernel::chunk>;
-    using mutex_ptr = std::shared_ptr<kernel::mutex>;
-    using sema_ptr = std::shared_ptr<kernel::semaphore>;
-    using process_ptr = std::shared_ptr<kernel::process>;
+    using chunk_ptr = kernel::chunk*;
+    using mutex_ptr = kernel::mutex*;
+    using sema_ptr = kernel::semaphore*;
+    using process_ptr = kernel::process*;
 
     namespace kernel {
         using address = std::uint32_t;
@@ -340,6 +340,6 @@ namespace eka2l1 {
             }
         };
 
-        using thread_ptr = std::shared_ptr<kernel::thread>;
+        using thread_ptr = kernel::thread*;
     }
 }

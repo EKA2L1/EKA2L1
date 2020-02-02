@@ -57,6 +57,9 @@ namespace eka2l1::drivers {
 
     class shader : public graphics_object {
     public:
+        virtual ~shader() {
+        }
+        
         virtual bool create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
             const char *frag_data, const std::size_t frag_size)
             = 0;

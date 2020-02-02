@@ -244,10 +244,10 @@ namespace eka2l1 {
 
     kernel_obj_ptr kernel_system::get_kernel_obj_raw(uint32_t handle) {
         if (handle == 0xFFFF8000) {
-            return std::reinterpret_pointer_cast<kernel::kernel_obj>(get_by_id<kernel::process>(
+            return reinterpret_cast<kernel::kernel_obj*>(get_by_id<kernel::process>(
                 crr_process()->unique_id()));
         } else if (handle == 0xFFFF8001) {
-            return std::reinterpret_pointer_cast<kernel::kernel_obj>(get_by_id<kernel::thread>(
+            return reinterpret_cast<kernel::kernel_obj*>(get_by_id<kernel::thread>(
                 crr_thread()->unique_id()));
         }
 
@@ -281,7 +281,8 @@ namespace eka2l1 {
         SYNCHRONIZE_ACCESS;
 
         auto prop_res = std::find_if(props.begin(), props.end(),
-            [=](const auto &prop) {
+            [=](const auto &prop_obj) {
+                property_ptr prop = reinterpret_cast<property_ptr>(prop_obj.get());
                 if (prop->first == cagetory && prop->second == key) {
                     return true;
                 }
@@ -293,7 +294,7 @@ namespace eka2l1 {
             return property_ptr(nullptr);
         }
 
-        return *prop_res;
+        return reinterpret_cast<property_ptr>(prop_res->get());
     }
 
     kernel::handle kernel_system::mirror(kernel::thread *own_thread, kernel::handle handle, kernel::owner_type owner) {
@@ -397,33 +398,33 @@ namespace eka2l1 {
     }
 
     void kernel_system::setup_new_process(process_ptr pr) {
-        std::shared_ptr<eka2l1::posix_server> ps_srv = std::make_shared<eka2l1::posix_server>(sys, pr);
-        add_custom_server(std::move(std::reinterpret_pointer_cast<service::server>(ps_srv)));
+        std::unique_ptr<service::server> ps_srv = std::make_unique<eka2l1::posix_server>(sys, pr);
+        add_custom_server(ps_srv);
     }
 
     codeseg_ptr kernel_system::pull_codeseg_by_ep(const address ep) {
         auto res = std::find_if(codesegs.begin(), codesegs.end(), [=](const auto &cs) -> bool {
-            return cs->get_entry_point(nullptr) == ep;
+            return reinterpret_cast<codeseg_ptr>(cs.get())->get_entry_point(nullptr) == ep;
         });
 
         if (res == codesegs.end()) {
             return nullptr;
         }
 
-        return *res;
+        return reinterpret_cast<codeseg_ptr>(res->get());
     }
 
     codeseg_ptr kernel_system::pull_codeseg_by_uids(const kernel::uid uid0, const kernel::uid uid1,
         const kernel::uid uid2) {
         auto res = std::find_if(codesegs.begin(), codesegs.end(), [=](const auto &cs) -> bool {
-            return cs->get_uids() == std::make_tuple(uid0, uid1, uid2);
+            return reinterpret_cast<codeseg_ptr>(cs.get())->get_uids() == std::make_tuple(uid0, uid1, uid2);
         });
 
         if (res == codesegs.end()) {
             return nullptr;
         }
 
-        return *res;
+        return reinterpret_cast<codeseg_ptr>(res->get());
     }
 
     std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name) {

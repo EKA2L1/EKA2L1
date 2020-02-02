@@ -210,7 +210,7 @@ namespace eka2l1::epoc {
             kernel::thread *own_thread, epoc::version ver);
 
         eka2l1::window_server &get_ws() {
-            return *(std::reinterpret_pointer_cast<window_server>(guest_session->get_server()));
+            return *reinterpret_cast<window_server*>(guest_session->get_server());
         }
 
         kernel::thread *get_client() {
@@ -235,7 +235,7 @@ namespace eka2l1::epoc {
         
         // We have been blessed with so much reflection that it's actually seems evil now.
         template <typename T>
-        constexpr ws::uid add_event_notifier(T &evt) {
+        ws::uid add_event_notifier(T &evt) {
             const std::lock_guard guard_(ws_client_lock);
 
             if constexpr (std::is_same_v<T, epoc::event_mod_notifier_user>) {

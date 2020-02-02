@@ -99,6 +99,7 @@ namespace eka2l1::drivers {
 
     public:
         explicit ogl_graphics_driver();
+        ~ogl_graphics_driver() override {}
 
         void set_viewport(const eka2l1::rect &viewport) override;
         std::unique_ptr<graphics_command_list> new_command_list() override;

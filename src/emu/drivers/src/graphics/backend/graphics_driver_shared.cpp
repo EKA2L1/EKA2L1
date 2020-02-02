@@ -149,7 +149,7 @@ namespace eka2l1::drivers {
 
     void shared_graphics_driver::update_bitmap(command_helper &helper) {
         drivers::handle handle = 0;
-        void *data = nullptr;
+        std::uint8_t *data = nullptr;
         int bpp = 0;
         std::size_t size = 0;
         eka2l1::vec2 offset;
@@ -398,7 +398,7 @@ namespace eka2l1::drivers {
     void shared_graphics_driver::set_uniform(command_helper &helper) {
         drivers::handle num;
         drivers::shader_set_var_type var_type;
-        void *data = nullptr;
+        std::uint8_t *data = nullptr;
         int binding = 0;
 
         helper.pop(num);
@@ -461,7 +461,7 @@ namespace eka2l1::drivers {
 
     void shared_graphics_driver::update_buffer(command_helper &helper) {
         drivers::handle num = 0;
-        void *data = nullptr;
+        std::uint8_t *data = nullptr;
         std::size_t offset = 0;
         std::size_t size = 0;
 

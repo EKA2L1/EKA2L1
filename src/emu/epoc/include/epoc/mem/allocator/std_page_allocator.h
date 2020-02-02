@@ -34,6 +34,8 @@ namespace eka2l1::mem {
         std::vector<std::unique_ptr<page_table>> page_tabs_;
 
     public:
+        ~basic_page_table_allocator() override {}
+
         page_table *create_new(const std::size_t psize) override;
         page_table *get_page_table_by_id(const std::uint32_t id) override;
 

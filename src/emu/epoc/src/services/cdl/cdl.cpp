@@ -26,8 +26,8 @@
 #include <epoc/kernel.h>
 
 namespace eka2l1 {
-    cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid)
-        : service::typical_session(svr, client_ss_uid) {
+    cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+        : service::typical_session(svr, client_ss_uid, client_version) {
     }
 
     void cdl_server_session::do_get_plugin_drive(service::ipc_context *ctx) {
@@ -144,7 +144,7 @@ namespace eka2l1 {
     void cdl_server::init() {
         observer_ = std::make_unique<epoc::cdl_ecom_generic_observer>(this);
         watcher_ = std::make_unique<epoc::cdl_ecom_watcher>(
-            &(*std::reinterpret_pointer_cast<ecom_server>(sys->get_kernel_system()->get_by_name<service::server>("!ecomserver"))),
+            reinterpret_cast<ecom_server*>(sys->get_kernel_system()->get_by_name<service::server>("!ecomserver")),
             reinterpret_cast<epoc::cdl_ecom_watcher_observer*>(observer_.get()));
     }
 

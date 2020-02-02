@@ -119,7 +119,8 @@ namespace eka2l1::loader {
 
         bool success = true;
 
-        std::size_t compressed_size = common::min(stream->left(), static_cast<std::size_t>(single_bm_header.bitmap_size));
+        std::size_t compressed_size = common::min<std::size_t>(static_cast<std::size_t>(stream->left()),
+            static_cast<std::size_t>(single_bm_header.bitmap_size));
 
         common::wo_buf_stream dest_stream(dest, !dest ? 0xFFFFFFFF : dest_max);
 

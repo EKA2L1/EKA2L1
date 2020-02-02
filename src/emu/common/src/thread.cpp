@@ -17,12 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/platform.h>
 #include <cstdint>
 
-#ifdef _WIN32
+#if EKA2L1_PLATFORM(WIN32)
 #include <windows.h>
 #else
-#include <sys/prctl.h>
+#include <pthread.h>
 #endif
 
 #include <common/thread.h>
@@ -57,13 +58,13 @@ namespace eka2l1::common {
         thread_funcs_loaded = true;
     }
 
-    static void convert_and_set_thread_name_win10(std::uint64_t thread_id, const char* thread_name) {
+    static void convert_and_set_thread_name_win10(const char* thread_name) {
         const std::string thread_name_s(thread_name);
         const std::u16string thread_name_sw = utf8_to_ucs2(thread_name_s);
-        set_thread_description(reinterpret_cast<HANDLE>(thread_id), reinterpret_cast<PCWSTR>(thread_name_sw.c_str()));
+        set_thread_description(GetCurrentThread(), reinterpret_cast<PCWSTR>(thread_name_sw.c_str()));
     }
 
-    void set_thread_name(std::uint64_t thread_id, const char* thread_name) {
+    void set_thread_name(const char* thread_name) {
         if (!thread_funcs_loaded) {
             load_thread_funcs();
         }
@@ -71,13 +72,13 @@ namespace eka2l1::common {
         // For Windows 10, there is SetThreadDescription... Like it.
         // Urosh is still using windows 7, so are many people.. Better keep it safe
         if (set_thread_description) {
-            convert_and_set_thread_name_win10(thread_id, thread_name);
+            convert_and_set_thread_name_win10(thread_name);
         }
 
         THREADNAME_INFO info;
         info.dwType = 0x1000;
         info.szName = thread_name;
-        info.dwThreadID = static_cast<DWORD>(thread_id);
+        info.dwThreadID = GetCurrentThreadId();
         info.dwFlags = 0;
 
 
@@ -87,8 +88,12 @@ namespace eka2l1::common {
         }
     }
 #else
-    void set_thread_name(std::uint64_t thread_id, const char* thread_name) {
-        pthread_setname_np(static_cast<pthread_t>(thread_id), thread_name);
+    void set_thread_name(const char* thread_name) {
+#if EKA2L1_PLATFORM(DARWIN)
+        pthread_setname_np(thread_name);
+#else
+        pthread_setname_np(pthread_self(), thread_name);
+#endif
     }
 #endif
 }

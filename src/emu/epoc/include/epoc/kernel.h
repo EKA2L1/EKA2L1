@@ -63,18 +63,19 @@ namespace eka2l1 {
         using uid = std::uint32_t;
     }
 
-    using thread_ptr = std::shared_ptr<kernel::thread>;
-    using process_ptr = std::shared_ptr<kernel::process>;
-    using chunk_ptr = std::shared_ptr<kernel::chunk>;
-    using mutex_ptr = std::shared_ptr<kernel::mutex>;
-    using sema_ptr = std::shared_ptr<kernel::semaphore>;
-    using timer_ptr = std::shared_ptr<kernel::timer>;
-    using kernel_obj_ptr = std::shared_ptr<kernel::kernel_obj>;
-    using change_notifier_ptr = std::shared_ptr<kernel::change_notifier>;
-    using property_ptr = std::shared_ptr<service::property>;
-    using library_ptr = std::shared_ptr<kernel::library>;
-    using codeseg_ptr = std::shared_ptr<kernel::codeseg>;
+    using thread_ptr = kernel::thread*;
+    using process_ptr = kernel::process*;
+    using chunk_ptr = kernel::chunk*;
+    using mutex_ptr = kernel::mutex*;
+    using sema_ptr = kernel::semaphore*;
+    using timer_ptr = kernel::timer*;
+    using kernel_obj_ptr = kernel::kernel_obj*;
+    using change_notifier_ptr = kernel::change_notifier*;
+    using property_ptr = service::property*;
+    using library_ptr = kernel::library*;
+    using codeseg_ptr = kernel::codeseg*;
 
+    using kernel_obj_unq_ptr = std::unique_ptr<kernel::kernel_obj>;
     using prop_ident_pair = std::pair<int, int>;
 
     /*! \brief Check for template type and returns the right kernel::object_type value
@@ -115,7 +116,7 @@ namespace eka2l1 {
         int index;
         uint32_t object_id;
     };
-
+    
     namespace arm {
         class arm_interface;
     }
@@ -137,18 +138,18 @@ namespace eka2l1 {
         std::mutex kern_lock;
         std::shared_ptr<kernel::thread_scheduler> thr_sch;
 
-        std::vector<thread_ptr> threads;
-        std::vector<process_ptr> processes;
-        std::vector<server_ptr> servers;
-        std::vector<session_ptr> sessions;
-        std::vector<property_ptr> props;
-        std::vector<chunk_ptr> chunks;
-        std::vector<mutex_ptr> mutexes;
-        std::vector<sema_ptr> semas;
-        std::vector<change_notifier_ptr> change_notifiers;
-        std::vector<library_ptr> libraries;
-        std::vector<codeseg_ptr> codesegs;
-        std::vector<timer_ptr> timers;
+        std::vector<kernel_obj_unq_ptr> threads;
+        std::vector<kernel_obj_unq_ptr> processes;
+        std::vector<kernel_obj_unq_ptr> servers;
+        std::vector<kernel_obj_unq_ptr> sessions;
+        std::vector<kernel_obj_unq_ptr> props;
+        std::vector<kernel_obj_unq_ptr> chunks;
+        std::vector<kernel_obj_unq_ptr> mutexes;
+        std::vector<kernel_obj_unq_ptr> semas;
+        std::vector<kernel_obj_unq_ptr> change_notifiers;
+        std::vector<kernel_obj_unq_ptr> libraries;
+        std::vector<kernel_obj_unq_ptr> codesegs;
+        std::vector<kernel_obj_unq_ptr> timers;
 
         timing_system *timing;
         manager_system *mngr;
@@ -241,7 +242,11 @@ namespace eka2l1 {
 
         std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name = false);
 
-        void add_custom_server(server_ptr svr) {
+        void add_custom_server(std::unique_ptr<service::server> &svr) {
+            if (!svr.get()) {
+                return;
+            }
+
             SYNCHRONIZE_ACCESS;
             servers.push_back(std::move(svr));
         }
@@ -273,27 +278,27 @@ namespace eka2l1 {
         codeseg_ptr pull_codeseg_by_ep(const address ep);
 
         // Expose for scripting, indeed very dirty
-        std::vector<process_ptr> &get_process_list() {
+        std::vector<kernel_obj_unq_ptr> &get_process_list() {
             return processes;
         }
 
-        std::vector<thread_ptr> &get_thread_list() {
+        std::vector<kernel_obj_unq_ptr> &get_thread_list() {
             return threads;
         }
 
-        std::vector<codeseg_ptr> &get_codeseg_list() {
+        std::vector<kernel_obj_unq_ptr> &get_codeseg_list() {
             return codesegs;
         }
 
         /*! \brief Get kernel object by handle
         */
         template <typename T>
-        std::shared_ptr<T> get(const kernel::handle handle) {
-            return std::reinterpret_pointer_cast<T>(get_kernel_obj_raw(handle));
+        T *get(const kernel::handle handle) {
+            return reinterpret_cast<T*>(get_kernel_obj_raw(handle));
         }
 
         template <typename T>
-        constexpr std::shared_ptr<T> get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
+        T *get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
             switch (obj_type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                               \
     case kernel::object_type::obj_type: {                                              \
@@ -302,7 +307,7 @@ namespace eka2l1 {
         });                                                                            \
         if (res == obj_map.end())                                                      \
             return nullptr;                                                            \
-        return std::reinterpret_pointer_cast<T>(*res);                                 \
+        return reinterpret_cast<T*>(res->get());                                       \
     }
 
                 OBJECT_SEARCH(mutex, mutexes)
@@ -330,20 +335,20 @@ namespace eka2l1 {
         /*! \brief Get kernel object by name
         */
         template <typename T>
-        constexpr std::shared_ptr<T> get_by_name(const std::string &name) {
+        T *get_by_name(const std::string &name) {
             SYNCHRONIZE_ACCESS;
 
-            constexpr kernel::object_type obj_type = get_object_type<T>();
+            const kernel::object_type obj_type = get_object_type<T>();
             return get_by_name_and_type<T>(name, obj_type);
         }
 
         /*! \brief Get kernel object by ID
         */
         template <typename T>
-        constexpr std::shared_ptr<T> get_by_id(const kernel::uid uid) {
+        T *get_by_id(const kernel::uid uid) {
             SYNCHRONIZE_ACCESS;
 
-            constexpr kernel::object_type obj_type = get_object_type<T>();
+            const kernel::object_type obj_type = get_object_type<T>();
 
             switch (obj_type) {
                 // It's gurantee that object are sorted by unique id, by just adding it
@@ -354,7 +359,7 @@ namespace eka2l1 {
             return lhs->unique_id() < uid;                                                                           \
         });                                                                                                          \
         if (res != obj_map.end()) {                                                                                  \
-            return std::reinterpret_pointer_cast<T>(*res);                                                           \
+            return reinterpret_cast<T*>(res->get());                                                           \
         }                                                                                                            \
         return nullptr;                                                                                              \
     }
@@ -384,80 +389,38 @@ namespace eka2l1 {
         /*! \brief Create and add to object array.
         */
         template <typename T, typename... args>
-        constexpr std::shared_ptr<T> create(args... creation_arg) {
+        T *create(args... creation_arg) {
             constexpr kernel::object_type obj_type = get_object_type<T>();
-            std::shared_ptr<T> obj;
+            std::unique_ptr<T> obj;
 
             if constexpr (obj_type == kernel::object_type::server) {
-                obj = std::make_shared<T>(sys, creation_arg...);
+                obj = std::make_unique<T>(sys, creation_arg...);
             } else {
-                obj = std::make_shared<T>(this, creation_arg...);
+                obj = std::make_unique<T>(this, creation_arg...);
             }
 
             const kernel::uid obj_uid = obj->unique_id();
 
+            #define ADD_OBJECT_TO_CONTAINER(type, container, additional_setup)           \
+            case type:                                                                   \
+                additional_setup;                                                        \
+                container.push_back(std::move(obj));                                     \
+                return reinterpret_cast<T*>(container.back().get());
+
             switch (obj_type) {
-            case kernel::object_type::thread: {
-                threads.push_back(std::move(std::reinterpret_pointer_cast<kernel::thread>(obj)));
-                return std::reinterpret_pointer_cast<T>(threads.back());
-            }
-
-            case kernel::object_type::process: {
-                setup_new_process(std::reinterpret_pointer_cast<kernel::process>(obj));
-
-                processes.push_back(std::move(std::reinterpret_pointer_cast<kernel::process>(obj)));
-                return std::reinterpret_pointer_cast<T>(processes.back());
-            }
-
-            case kernel::object_type::chunk: {
-                chunks.push_back(std::move(std::reinterpret_pointer_cast<kernel::chunk>(obj)));
-                return std::reinterpret_pointer_cast<T>(chunks.back());
-            }
-
-            case kernel::object_type::server: {
-                servers.push_back(std::move(std::reinterpret_pointer_cast<service::server>(obj)));
-                return std::reinterpret_pointer_cast<T>(servers.back());
-            }
-
-            case kernel::object_type::prop: {
-                props.push_back(std::move(std::reinterpret_pointer_cast<service::property>(obj)));
-                return std::reinterpret_pointer_cast<T>(props.back());
-            }
-
-            case kernel::object_type::session: {
-                sessions.push_back(std::move(std::reinterpret_pointer_cast<service::session>(obj)));
-                return std::reinterpret_pointer_cast<T>(sessions.back());
-            }
-
-            case kernel::object_type::library: {
-                libraries.push_back(std::move(std::reinterpret_pointer_cast<kernel::library>(obj)));
-                return std::reinterpret_pointer_cast<T>(libraries.back());
-            }
-
-            case kernel::object_type::timer: {
-                timers.push_back(std::move(std::reinterpret_pointer_cast<kernel::timer>(obj)));
-                return std::reinterpret_pointer_cast<T>(timers.back());
-            }
-
-            case kernel::object_type::mutex: {
-                mutexes.push_back(std::move(std::reinterpret_pointer_cast<kernel::mutex>(obj)));
-                return std::reinterpret_pointer_cast<T>(mutexes.back());
-            }
-
-            case kernel::object_type::sema: {
-                semas.push_back(std::move(std::reinterpret_pointer_cast<kernel::semaphore>(obj)));
-                return std::reinterpret_pointer_cast<T>(semas.back());
-            }
-
-            case kernel::object_type::change_notifier: {
-                change_notifiers.push_back(std::move(std::reinterpret_pointer_cast<kernel::change_notifier>(obj)));
-                return std::reinterpret_pointer_cast<T>(change_notifiers.back());
-            }
-
-            case kernel::object_type::codeseg: {
-                codesegs.push_back(std::move(std::reinterpret_pointer_cast<kernel::codeseg>(obj)));
-                return std::reinterpret_pointer_cast<T>(codesegs.back());
-            }
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::thread, threads, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::process, processes, setup_new_process(
+                reinterpret_cast<process_ptr>(obj.get())));
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::chunk, chunks, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::server, servers, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop, props, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::session, sessions, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::library, libraries, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::timer, timers, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::mutex, mutexes, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::sema, semas, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs, )
 
             default:
                 break;
@@ -467,16 +430,16 @@ namespace eka2l1 {
         }
 
         template <typename T, typename... args>
-        std::pair<kernel::handle, std::shared_ptr<T>> create_and_add(kernel::owner_type owner,
+        std::pair<kernel::handle, T*> create_and_add(kernel::owner_type owner,
             args... creation_args) {
-            std::shared_ptr<T> obj = create<T>(creation_args...);
+            T *obj = create<T>(creation_args...);
             return std::make_pair(open_handle(obj, owner), obj);
         }
 
         template <typename T, typename... args>
-        std::pair<kernel::handle, std::shared_ptr<T>> create_and_add_thread(kernel::owner_type owner,
+        std::pair<kernel::handle, T*> create_and_add_thread(kernel::owner_type owner,
             kernel::thread *thr, args... creation_args) {
-            std::shared_ptr<T> obj = create<T>(creation_args...);
+            T *obj = create<T>(creation_args...);
             return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
         }
     };
