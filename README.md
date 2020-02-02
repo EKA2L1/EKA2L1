@@ -9,7 +9,7 @@ The emulator *emulates* Symbian OS's EKA1 and EKA2 behavior, and *reimplement* m
 
 ### Artifacts:
   * Artifacts for Windows is provided through CI. Click the status badge to get to EKA2L1's Appveyor CI
-  * Linux artifacts are also available on EKA2L1 Project's [Google Drive](https://drive.google.com/open?id=1btue5M4wxeSBe_i3w8HH9EuCxhf8knsK)
+  * Linux artifacts are also available on EKA2L1 Project's [Google Drive](https://drive.google.com/open?id=1nXNL1n7hKX05JzF25u6pHAXP-VrV2EX9)
 
 ### Support:
   * pent0 through [**Paypal**](https://www.paypal.me/thi573) or **Momo** (please contact me for information).
