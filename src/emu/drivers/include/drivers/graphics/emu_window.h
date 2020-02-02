@@ -84,6 +84,8 @@ namespace eka2l1 {
 		*/
         class emu_window {
         public:
+            virtual ~emu_window() {}
+
             /**
              * \brief Intialize the emulator window.
 			 *
