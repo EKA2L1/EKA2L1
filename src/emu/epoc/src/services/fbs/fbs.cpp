@@ -157,7 +157,9 @@ namespace eka2l1 {
 
     fbs_server::fbs_server(eka2l1::system *sys)
         : service::typical_server(sys, "!Fontbitmapserver")
-        , persistent_font_store(sys->get_io_system()) {
+        , persistent_font_store(sys->get_io_system())
+        , shared_chunk(nullptr)
+        , large_chunk(nullptr) {
     }
 
     void fbs_server::connect(service::ipc_context &context) {

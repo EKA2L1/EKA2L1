@@ -297,11 +297,13 @@ namespace eka2l1 {
                 CREATE_SERVER(sys, akn_skin_server);
 
             // Don't change order
-            CREATE_SERVER(sys, domainmngr_server);
+            temp = std::make_unique<domainmngr_server>(sys);
 
             auto &dmmngr = reinterpret_cast<domainmngr_server*>(temp.get())->get_domain_manager();
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);
+
+            sys->get_kernel_system()->add_custom_server(temp);
 
             // Create the domain server
             temp = std::make_unique<domain_server>(sys, dmmngr);
