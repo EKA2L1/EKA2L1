@@ -155,7 +155,7 @@ namespace eka2l1 {
             }
         }
 
-        files[newid - 1] = io->open_file(files[oldid - 1]->file_name(), files[oldid - 1]->file_mode());files[oldid - 1];
+        files[newid - 1] = io->open_file(files[oldid - 1]->file_name(), files[oldid - 1]->file_mode());
         return 0;
     }
 
