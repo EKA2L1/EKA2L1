@@ -110,6 +110,8 @@ namespace eka2l1::drivers {
             : list_(list) {
         }
 
+        virtual ~graphics_command_list_builder() {}
+
         virtual void set_brush_color(const eka2l1::vec3 &color) = 0;
 
         /**

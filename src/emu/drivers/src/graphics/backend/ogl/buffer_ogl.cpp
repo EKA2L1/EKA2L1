@@ -208,7 +208,9 @@ namespace eka2l1::drivers {
             data_format_to_gl_comp_count_and_data_type(descriptor.format, comp_count, data_type);
 
             glEnableVertexAttribArray(descriptor.location);
-            glVertexAttribPointer(descriptor.location, comp_count, data_type, false, stride, (GLvoid *)descriptor.offset);
+
+            std::uint64_t offset_descriptor = descriptor.offset;
+            glVertexAttribPointer(descriptor.location, comp_count, data_type, false, stride, (GLvoid *)offset_descriptor);
         }
 
         unbind(driver);

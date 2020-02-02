@@ -41,6 +41,7 @@ namespace eka2l1::mem {
 
     public:
         explicit mmu_multiple(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
+        ~mmu_multiple() override {}
 
         void *get_host_pointer(const asid id, const vm_address addr) override;
 

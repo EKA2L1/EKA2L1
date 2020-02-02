@@ -14,7 +14,7 @@ namespace eka2l1::drivers {
         ogl_shader()
             : program(0) {}
 
-        ~ogl_shader();
+        ~ogl_shader() override;
 
         explicit ogl_shader(const std::string &vert_path,
             const std::string &frag_path);

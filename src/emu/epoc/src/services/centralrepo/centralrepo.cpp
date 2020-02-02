@@ -384,7 +384,7 @@ namespace eka2l1 {
     /* It should be like follow:
      *
      * - The ROM INI are for rollback
-     * - And repo initialsation file resides outside private/1020be9/*
+     * - And repo initialsation file resides outside private/1020be9/
      * 
      * That's for rollback when calling reset. Any changes in repo will be saved in persists folder
      * of preferable drive (usually internal).

@@ -144,6 +144,8 @@ namespace eka2l1::service {
             : svr_(svr), client_ss_uid_(client_ss_uid), ver_(client_ver) {
         }
 
+        virtual ~typical_session() {}
+
         template <typename T, typename ...Args>
         T *make_new(Args... arguments) {
             return svr_->make_new<T, Args...>(arguments...);

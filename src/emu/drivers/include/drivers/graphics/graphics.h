@@ -84,6 +84,9 @@ namespace eka2l1::drivers {
         explicit graphics_driver(graphic_api api)
             : api_(api) {}
 
+        virtual ~graphics_driver() {
+        }
+
         const graphic_api get_current_api() const {
             return api_;
         }

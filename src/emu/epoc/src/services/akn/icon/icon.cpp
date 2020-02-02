@@ -65,7 +65,7 @@ namespace eka2l1 {
     }
     
     void akn_icon_server::connect(service::ipc_context &context) {
-        if (!flags & akn_icon_srv_flag_inited) {
+        if (!(flags & akn_icon_srv_flag_inited)) {
             init_server();
         }
         
