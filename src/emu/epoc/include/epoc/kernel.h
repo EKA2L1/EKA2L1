@@ -243,6 +243,10 @@ namespace eka2l1 {
         std::optional<find_handle> find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name = false);
 
         void add_custom_server(std::unique_ptr<service::server> &svr) {
+            if (!svr.get()) {
+                return;
+            }
+
             SYNCHRONIZE_ACCESS;
             servers.push_back(std::move(svr));
         }
