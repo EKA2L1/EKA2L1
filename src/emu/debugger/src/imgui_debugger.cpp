@@ -1164,10 +1164,10 @@ namespace eka2l1 {
                     const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
 
                     if (app_search_box.PassFilter(name.c_str())) {
-                        ImGui::Text(uid_name.c_str());
+                        ImGui::Text("%s", uid_name.c_str());
                         ImGui::NextColumn();
 
-                        ImGui::Text(name.c_str());
+                        ImGui::Text("%s", name.c_str());
                         ImGui::NextColumn();
 
                         if (ImGui::IsItemClicked()) {
@@ -1211,7 +1211,7 @@ namespace eka2l1 {
         ImGui::OpenPopup("A wild error appears!");
 
         if (ImGui::BeginPopupModal("A wild error appears!")) {
-            ImGui::Text(first_error.c_str());
+            ImGui::Text("%s", first_error.c_str());
             ImGui::Text("Please attach the log and report this to a developer!");
 
             if (ImGui::Button("OK")) {
@@ -1303,7 +1303,7 @@ namespace eka2l1 {
             flags.pop_back();
         }
 
-        ImGui::Text(flags.c_str());
+        ImGui::Text("%s", flags.c_str());
         ImGui::Separator();
 
         if (user->driver_win_id) {
