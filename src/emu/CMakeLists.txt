@@ -9,6 +9,12 @@ if (WIN32)
     endif()
 endif()
 
+# Many of our code are optimized to utilize offsetof.
+# But it complains a lot with non-POD type, that's not what we want, so disable the warn flag.
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
+endif()
+
 add_subdirectory(arm)
 add_subdirectory(common)
 add_subdirectory(console)
