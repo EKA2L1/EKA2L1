@@ -18,6 +18,7 @@
  */
 
 #include <common/configure.h>
+#include <common/version.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/vecx.h>
