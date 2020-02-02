@@ -98,3 +98,6 @@ execute_process(
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/common/configure.h.in
     ${CMAKE_CURRENT_SOURCE_DIR}/include/common/configure.h)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/common/version.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/common/version.h)
