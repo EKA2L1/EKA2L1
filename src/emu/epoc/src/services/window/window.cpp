@@ -792,6 +792,60 @@ namespace eka2l1 {
         input_events.push(std::move(evt));
     }
 
+    struct window_pointer_focus_walker: public epoc::window_tree_walker {
+        epoc::event evt_;
+        eka2l1::vec2 scr_coord_;
+        bool sended_to_highest_z_;
+
+        void process_event_to_target_window(epoc::window *win) {
+            assert(win->type == epoc::window_kind::client);
+
+            epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+            // Stop, we found it!
+            // Send it right now
+            evt_.adv_pointer_evt_.pos = scr_coord_ - user->pos;
+
+            if (user->parent->type == epoc::window_kind::top_client) {
+                evt_.adv_pointer_evt_.parent_pos = scr_coord_;
+            } else {
+                // It must be client kind
+                assert(user->parent->type == epoc::window_kind::client);
+                evt_.adv_pointer_evt_.parent_pos = scr_coord_ - reinterpret_cast<epoc::window_user*>(user->parent)->pos;
+            }
+
+            evt_.handle = win->get_client_handle();
+            win->queue_event(evt_);
+        }
+
+        bool do_it(epoc::window *win) override {
+            if (win->type != epoc::window_kind::client) {
+                return false;
+            }
+
+            epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+            eka2l1::rect window_rect { user->pos, user->size };
+
+            if (!sended_to_highest_z_) {
+                if (window_rect.contains(evt_.adv_pointer_evt_.pos - user->pos)) {
+                    process_event_to_target_window(win);
+                    sended_to_highest_z_ = true;
+                }
+
+                return false;
+            } else {
+                // Check to see if capture flag is enabled
+            }
+
+            return false;
+        }
+
+        explicit window_pointer_focus_walker(const epoc::event &evt)
+            : evt_(evt)
+            , scr_coord_(evt.adv_pointer_evt_.pos)
+            , sended_to_highest_z_(false) {
+        }
+    };
+
     void window_server::handle_inputs_from_driver(std::uint64_t userdata, int cycles_late) {
         if (!focus_screen_ || !focus_screen_->focus) {
             sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
@@ -830,12 +884,19 @@ namespace eka2l1 {
             default: 
                 break;
             }
+
             if (skip_event) continue;
 
-            // Report to the focused window first
-            guest_event.handle = get_focus()->get_client_handle();
-            extra_key_evt.handle = get_focus()->get_client_handle();
-            get_focus()->queue_event(guest_event);
+            if (input_event.type_ == drivers::input_event_type::key) {   
+                // Report to the focused window first 
+                guest_event.handle = get_focus()->get_client_handle();
+                extra_key_evt.handle = get_focus()->get_client_handle();
+                get_focus()->queue_event(guest_event);
+            } else {
+                // Send the pointer event to the highest-z order window contains the pointer
+                window_pointer_focus_walker walker(guest_event);
+                get_current_focus_screen()->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+            }
     
             // Send a key event also
             if (guest_event.type == epoc::event_code::key_down) {

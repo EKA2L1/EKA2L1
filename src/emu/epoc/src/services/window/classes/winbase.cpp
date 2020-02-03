@@ -83,7 +83,7 @@ namespace eka2l1::epoc {
             parent = cur->parent;
             sibling = cur->sibling;
 
-            if (cur->type == window_kind::group && walker->do_it(cur)) {
+            if (walker->do_it(cur)) {
                 return;
             }
         } while (cur != end);
@@ -201,7 +201,7 @@ namespace eka2l1::epoc {
         while (start != nullptr) {
             walk_tree_back_to_front(start->child, walker);
     
-            if (start->type != window_kind::group && walker->do_it(start)) {
+            if (walker->do_it(start)) {
                 return;
             }
             
