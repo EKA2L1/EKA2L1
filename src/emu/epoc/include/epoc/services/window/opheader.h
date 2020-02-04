@@ -175,4 +175,9 @@ namespace eka2l1 {
         std::uint32_t mask_handle;
         bool invert_mask;
     };
+    
+    struct ws_cmd_set_window_group_ordinal_position {
+        std::uint32_t identifier;
+        std::int32_t ord_pos;
+    };
 }

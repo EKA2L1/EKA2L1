@@ -495,6 +495,19 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
+    void window_server_client::set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_set_window_group_ordinal_position *set = reinterpret_cast<decltype(set)>(cmd.data_ptr);
+        epoc::window_group *group = get_ws().get_group_from_id(set->identifier);
+
+        if (!group || group->type != window_kind::group) {
+            ctx.set_request_status(epoc::error_argument);
+            return;
+        }
+
+        group->set_position(set->ord_pos);
+        ctx.set_request_status(epoc::error_none);
+    }
+
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
@@ -600,6 +613,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_clear_all_redraw_stores: {
             clear_all_redraw_stores(ctx, cmd);
+            break;
+        }
+
+        case ws_cl_op_set_window_group_ordinal_position: {
+            set_window_group_ordinal_position(ctx, cmd);
             break;
         }
 
