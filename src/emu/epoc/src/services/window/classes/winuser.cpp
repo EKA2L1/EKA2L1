@@ -275,6 +275,10 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
     }
 
+    bool window_user::clear_redraw_store() {
+        return true;
+    }
+
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
@@ -400,6 +404,8 @@ namespace eka2l1::epoc {
 
             // Invalidate the whole window
             client->queue_redraw(this, rect(pos, pos + size));
+            client->trigger_redraw();
+
             ctx.set_request_status(epoc::error_none);
 
             break;
@@ -417,6 +423,7 @@ namespace eka2l1::epoc {
 
             // Invalidate needs redraw
             redraw_evt_id = client->queue_redraw(this, rect(irect.top, irect.size));
+            client->trigger_redraw();
 
             ctx.set_request_status(epoc::error_none);
 
