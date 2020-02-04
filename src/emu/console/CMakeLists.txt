@@ -1,3 +1,7 @@
+if (WIN32)
+    set (CONSOLE_RESOURCE console.rc)
+endif()
+
 add_executable(console 
 	include/console/cmdhandler.h
 	include/console/global.h
@@ -7,7 +11,8 @@ add_executable(console
     src/state.cpp
 	src/thread.cpp
     src/main.cpp
-	src/seh_handler.cpp)
+	src/seh_handler.cpp
+    ${CONSOLE_RESOURCE})
 
 target_link_libraries(console PRIVATE 
 	arm
