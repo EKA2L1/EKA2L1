@@ -63,6 +63,14 @@ namespace eka2l1::epoc {
 
         epoc::notify_info nof;
 
+    public:
+        void trigger_notification() {
+            if (q_.size() > 0)
+                nof.complete(0);
+        }
+
+    protected:
+
         /*! \brief Queue an event. This doesn't care about whenther the queue has reached maximum size
          *         yet
          * 

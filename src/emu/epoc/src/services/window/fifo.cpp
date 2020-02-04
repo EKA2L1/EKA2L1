@@ -46,7 +46,10 @@ namespace eka2l1::epoc {
             do_purge();
         }
 
-        return queue_event_dont_care(evt);
+        std::uint32_t result = queue_event_dont_care(evt);
+        trigger_notification();
+
+        return result;
     }
 
     // Symbian purges:
@@ -129,6 +132,8 @@ namespace eka2l1::epoc {
                 return e1.pri < e2.pri;
             });
 
+        
+        // Queue a redraw won't directly trigger a notification.
         return id;
     }
 }
