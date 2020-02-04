@@ -468,6 +468,33 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
+    struct window_clear_store_walker: public epoc::window_tree_walker {
+        bool do_it(epoc::window *win) {
+            if (win->type == window_kind::group) {
+                win->client->trigger_redraw();
+            }
+
+            if (win->type == window_kind::client) {
+                epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+                user->clear_redraw_store();
+            }
+
+            return false;
+        }
+    };
+
+    void window_server_client::clear_all_redraw_stores(service::ipc_context &ctx, ws_cmd &cmd) {
+        // Clear all stored drawing commands. We have none, but keep this here if we ever did.
+        // Send redraws commands to all client window
+        window_clear_store_walker walker;
+        
+        for (epoc::screen *scr = get_ws().screens; scr; scr = scr->next) {
+            scr->root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+        }
+
+        ctx.set_request_status(epoc::error_none);
+    }
+
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
@@ -568,6 +595,11 @@ namespace eka2l1::epoc {
         case ws_cl_op_window_group_list_and_chain:
         case ws_cl_op_window_group_list_and_chain_all_priorities: {
             get_window_group_list(ctx, cmd);
+            break;
+        }
+
+        case ws_cl_op_clear_all_redraw_stores: {
+            clear_all_redraw_stores(ctx, cmd);
             break;
         }
 

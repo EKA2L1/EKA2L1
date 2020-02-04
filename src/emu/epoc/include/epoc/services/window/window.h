@@ -183,6 +183,7 @@ namespace eka2l1::epoc {
         void get_event(service::ipc_context &ctx, ws_cmd &cmd);
         void get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd);
+        void clear_all_redraw_stores(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         void add_redraw_listener(notify_info nof) {
@@ -191,6 +192,10 @@ namespace eka2l1::epoc {
 
         void add_event_listener(notify_info nof) {
             events.set_listener(nof);
+        }
+
+        void trigger_redraw() {
+            redraws.trigger_notification();
         }
 
         epoc::version client_version() {

@@ -109,6 +109,7 @@ namespace eka2l1::epoc {
         void set_non_fading(service::ipc_context &context, ws_cmd &cmd);
         void set_size(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        bool clear_redraw_store();
 
         epoc::window_group *get_group() {
             return reinterpret_cast<epoc::window_group*>(parent);
