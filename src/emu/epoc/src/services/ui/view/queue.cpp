@@ -40,6 +40,8 @@ namespace eka2l1::ui::view {
 
         if (!nof_info_.empty()) {
             complete_write_and_notify_event(nof_info_, buffer_, evt);
+            buffer_ = nullptr;
+
             return;
         }
 
