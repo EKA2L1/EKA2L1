@@ -39,7 +39,7 @@
 #include <epoc/services/loader/loader.h>
 #include <epoc/services/sms/sa/sa.h>
 #include <epoc/services/ui/eikappui.h>
-#include <epoc/services/ui/oom_app.h>
+#include <epoc/services/ui/cap/oom_app.h>
 #include <epoc/services/ui/view/view.h>
 #include <epoc/services/window/window.h>
 
