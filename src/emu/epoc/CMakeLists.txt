@@ -143,8 +143,9 @@ add_library(epocservs
     include/epoc/services/posix/posix.h
     include/epoc/services/posix/op.h
     include/epoc/services/sms/sa/sa.h
+    include/epoc/services/ui/cap/oom_app.h
+    include/epoc/services/ui/cap/sgc.h
     include/epoc/services/ui/eikappui.h
-    include/epoc/services/ui/oom_app.h
     include/epoc/services/ui/view/common.h
     include/epoc/services/ui/view/queue.h
     include/epoc/services/ui/view/view.h
@@ -209,8 +210,9 @@ add_library(epocservs
     src/services/loader/loader.cpp
     src/services/posix/posix.cpp
     src/services/sms/sa/sa.cpp
+    src/services/ui/cap/oom_app.cpp
+    src/services/ui/cap/sgc.cpp
     src/services/ui/eikappui.cpp
-    src/services/ui/oom_app.cpp
     src/services/ui/view/queue.cpp
     src/services/ui/view/view.cpp
     src/services/window/classes/plugins/animdll.cpp

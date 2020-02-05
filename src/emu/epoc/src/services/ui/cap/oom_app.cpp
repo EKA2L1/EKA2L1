@@ -21,7 +21,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 
-#include <epoc/services/ui/oom_app.h>
+#include <epoc/services/ui/cap/oom_app.h>
 #include <epoc/services/window/window.h>
 #include <epoc/utils/err.h>
 
@@ -34,11 +34,15 @@ namespace eka2l1 {
         : service::typical_server(sys, "101fdfae_10207218_AppServer") {
         REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
         REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
-        REGISTER_IPC(oom_ui_app_server, set_sgc_params, EAknEikAppUiSetSgcParams, "OOM::SetSgcParams");
     }
 
     void oom_ui_app_server::connect(service::ipc_context &ctx) {
         create_session<oom_ui_app_session>(&ctx);
+
+        if (!sgc) {
+            init(ctx.sys->get_kernel_system());
+        }
+
         typical_server::connect(ctx);
     }
 
@@ -154,16 +158,19 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::set_sgc_params(service::ipc_context &ctx) {
-        auto params_op = ctx.get_arg_packed<epoc::sgc_params>(0);
+        std::optional<epoc::sgc_params> params = ctx.get_arg_packed<epoc::sgc_params>(0);
 
-        if (!params_op) {
+        if (!params.has_value()) {
             ctx.set_request_status(epoc::error_argument);
-            return;
         }
 
-        params = std::move(*params_op);
-        LOG_TRACE("OOM UI app server: set sgc params stubbed, returns epoc::error_none");
-
+        sgc->change_wg_param(params->window_group_id, *reinterpret_cast<epoc::cap::sgc_server::wg_state::wg_state_flags*>(
+            &(params->bit_flags)), params->sp_layout, params->sp_flag, params->app_screen_mode);
         ctx.set_request_status(epoc::error_none);
+    }
+
+    void oom_ui_app_server::init(kernel_system *kern) {
+        sgc = std::make_unique<epoc::cap::sgc_server>();
+        sgc->init(kern);
     }
 }

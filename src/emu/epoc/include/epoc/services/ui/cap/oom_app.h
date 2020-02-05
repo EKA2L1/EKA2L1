@@ -22,6 +22,7 @@
 #include <epoc/services/framework.h>
 #include <epoc/services/server.h>
 #include <epoc/services/window/window.h>
+#include <epoc/services/ui/cap/sgc.h>
 
 namespace eka2l1 {
     class window_server;
@@ -138,7 +139,7 @@ namespace eka2l1 {
         void get_layout_config(service::ipc_context &ctx);
 
         std::string layout_buf;
-        epoc::sgc_params params;
+        std::unique_ptr<epoc::cap::sgc_server> sgc;
 
         window_server *winsrv{ nullptr };
 
@@ -149,6 +150,8 @@ namespace eka2l1 {
         void load_screen_mode();
         std::string get_layout_buf();
         void set_sgc_params(service::ipc_context &ctx);
+
+        void init(kernel_system *kern);
 
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);
