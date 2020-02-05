@@ -218,7 +218,7 @@ namespace eka2l1::common {
             return result;
         }
 
-        bool get(const std::size_t idx) {
+        bool get(const std::size_t idx) const {
             std::size_t bytes_idx = idx >> 3;
             return (bytes_[bytes_idx] >> (idx & 7)) & 1;
         }
