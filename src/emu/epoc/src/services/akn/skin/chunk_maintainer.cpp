@@ -733,10 +733,6 @@ namespace eka2l1::epoc {
         akns_item_def item;
         item.type_ = akns_item_type_bitmap;
         item.id_ = make_pid_from_id_hash(info.id_hash);
-        
-        if (info.bmp_idx == 17016) {
-            LOG_TRACE("HELP");
-        }
 
         if (info.mask_bitmap_idx == -1) {
             akns_srv_bitmap_def bitmap_def;
