@@ -312,6 +312,13 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case EWsWinOpSetPos: {
+            eka2l1::vec2 *pos_to_set = reinterpret_cast<eka2l1::vec2*>(cmd.data_ptr);
+            pos = *pos_to_set;
+            ctx.set_request_status(epoc::error_none);
+            break;
+        }
+
         // Get window size.
         case EWsWinOpSize: {
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, size);
