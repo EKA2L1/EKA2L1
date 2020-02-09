@@ -786,39 +786,26 @@ namespace eka2l1 {
     /**
      * make a guest pointer event from host mouse event, return true if success.
      */
-    bool window_server::make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr) {
-        // drag not supported now
-        if (driver_evt_.mouse_.action_ == drivers::mouse_action::repeat)
-            return false;
-
+    void window_server::make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr) {
         guest_evt_.type = epoc::event_code::touch;
+
         switch (driver_evt_.mouse_.button_) {
         case drivers::mouse_button::left: {
-            if ((button_pressed[0] && (driver_evt_.mouse_.action_ == drivers::mouse_action::press))
-            || (!button_pressed[0] && (driver_evt_.mouse_.action_ == drivers::mouse_action::release))) {
-                return false;
+            if (driver_evt_.mouse_.action_ == drivers::mouse_action::repeat) {
+                guest_evt_.adv_pointer_evt_.evtype = epoc::event_type::drag;
+            } else {
+                guest_evt_.adv_pointer_evt_.evtype = (driver_evt_.mouse_.action_ == drivers::mouse_action::press) ?
+                    epoc::event_type::button1down : epoc::event_type::button1up;
             }
-            button_pressed[0] = !button_pressed[0];
-            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
-                epoc::event_type::button1down : epoc::event_type::button1up;
+
             break;
         }
         case drivers::mouse_button::middle: {
-            if ((button_pressed[1] && (driver_evt_.mouse_.action_ == drivers::mouse_action::press))
-            || (!button_pressed[1] && (driver_evt_.mouse_.action_ == drivers::mouse_action::release))) {
-                return false;
-            }
-            button_pressed[1] = !button_pressed[1];
             guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
                 epoc::event_type::button2down : epoc::event_type::button2up;
             break;
         }
         case drivers::mouse_button::right: {
-            if ((button_pressed[2] && (driver_evt_.mouse_.action_ == drivers::mouse_action::press))
-            || (!button_pressed[2] && (driver_evt_.mouse_.action_ == drivers::mouse_action::release))) {
-                return false;
-            }
-            button_pressed[2] = !button_pressed[2];
             guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
                 epoc::event_type::button3down : epoc::event_type::button3up;
             break;
@@ -829,8 +816,6 @@ namespace eka2l1 {
         guest_evt_.adv_pointer_evt_.pos.x = driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x;
         guest_evt_.adv_pointer_evt_.pos.y = driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y;
         scr->absolute_pos_mtx.unlock();
-
-        return true;
     }
     
     void window_server::queue_input_from_driver(drivers::input_event &evt) {
@@ -873,6 +858,18 @@ namespace eka2l1 {
             }
 
             epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+
+            const bool filter_enter_exit = ((evt_.type == epoc::event_code::touch_enter) || (evt_.type == epoc::event_code::touch_exit))
+                && (user->filter & epoc::pointer_filter_type::pointer_enter);
+
+            const bool filter_drag = evt_.adv_pointer_evt_.evtype == epoc::event_type::drag && (user->filter & epoc::pointer_filter_type::pointer_drag);
+
+            // Filter out events, assuming move event never exist (phone)
+            // When you use touch on your phone, you drag your finger. Move your mouse simply doesn't exist.
+            if (filter_enter_exit || filter_drag) {
+                return false;
+            }
+
             eka2l1::rect window_rect { user->pos, user->size };
 
             if (!sended_to_highest_z_) {
@@ -884,6 +881,7 @@ namespace eka2l1 {
                 return false;
             } else {
                 // Check to see if capture flag is enabled
+                // TODO:
             }
 
             return false;
@@ -926,8 +924,9 @@ namespace eka2l1 {
 
                 break;
             }
+
             case drivers::input_event_type::touch: {
-                skip_event = !make_mouse_event(input_event, guest_event, get_current_focus_screen());
+                make_mouse_event(input_event, guest_event, get_current_focus_screen());
                 break;
             }
 

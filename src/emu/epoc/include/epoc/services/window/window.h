@@ -314,8 +314,7 @@ namespace eka2l1 {
         void handle_inputs_from_driver(std::uint64_t userdata, int cycles_late);
         void init_screens();
 
-        std::array<bool, 3> button_pressed {};
-        bool make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
+        void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
 
         std::mutex input_queue_mut;
         std::queue<drivers::input_event> input_events;
