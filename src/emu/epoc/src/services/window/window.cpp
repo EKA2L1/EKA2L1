@@ -876,7 +876,7 @@ namespace eka2l1 {
             eka2l1::rect window_rect { user->pos, user->size };
 
             if (!sended_to_highest_z_) {
-                if (window_rect.contains(evt_.adv_pointer_evt_.pos - user->pos)) {
+                if (window_rect.contains(evt_.adv_pointer_evt_.pos)) {
                     process_event_to_target_window(win);
                     sended_to_highest_z_ = true;
                 }
