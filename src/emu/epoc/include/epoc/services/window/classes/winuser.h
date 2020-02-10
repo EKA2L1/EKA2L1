@@ -69,7 +69,8 @@ namespace eka2l1::epoc {
             flags_active = 1 << 1,
             flags_visible = 1 << 2,
             flags_allow_pointer_grab = 1 << 3,
-            flags_non_fading = 1 << 4
+            flags_non_fading = 1 << 4,
+            flags_enable_alpha = 1 << 5
         };
 
         std::uint32_t flags;
@@ -110,6 +111,7 @@ namespace eka2l1::epoc {
         void set_size(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
         void set_fade(service::ipc_context &context, ws_cmd &cmd);
+        void set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd);
         bool clear_redraw_store();
 
         epoc::window_group *get_group() {
