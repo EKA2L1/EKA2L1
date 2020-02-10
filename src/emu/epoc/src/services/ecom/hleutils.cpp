@@ -11,7 +11,9 @@ namespace eka2l1::epoc {
         epoc::fs::entry dll_entry;
         epoc::uid dtor_key = 0;
 
-        if (serv->get_implementation_dll_info(pr->main_thread(), 0, impl_uid, dll_entry, dtor_key, false)) {
+        std::int32_t err_code = 0;
+
+        if (serv->get_implementation_dll_info(pr->main_thread(), 0, impl_uid, dll_entry, dtor_key, &err_code, false)) {
             return nullptr;
         }
 
