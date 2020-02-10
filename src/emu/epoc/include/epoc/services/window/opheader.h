@@ -180,4 +180,11 @@ namespace eka2l1 {
         std::uint32_t identifier;
         std::int32_t ord_pos;
     };
+
+    struct ws_cmd_set_fade {
+        std::uint8_t black_map;
+        std::uint8_t white_map;
+        std::uint8_t flags;
+        std::uint8_t imheretoalignthestruct;            ///< Yes.
+    };
 }

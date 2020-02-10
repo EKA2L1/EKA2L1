@@ -279,6 +279,12 @@ namespace eka2l1::epoc {
         return true;
     }
 
+    void window_user::set_fade(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_set_fade *fade_param = reinterpret_cast<ws_cmd_set_fade*>(cmd.data_ptr);
+        LOG_TRACE("Set fade stubbed with black map: {}, white map: {}", fade_param->black_map, fade_param->white_map);
+        context.set_request_status(epoc::error_none);
+    }
+    
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
 
@@ -451,6 +457,10 @@ namespace eka2l1::epoc {
             set_size(ctx, cmd);
             break;
         }
+
+        case EWsWinOpSetFade:
+            set_fade(ctx, cmd);
+            break;
 
         default: {
             LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
