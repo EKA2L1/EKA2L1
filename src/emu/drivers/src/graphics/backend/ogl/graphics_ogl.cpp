@@ -88,6 +88,8 @@ namespace eka2l1::drivers {
         proj_loc_mask = mask_program->get_uniform_location("u_proj").value_or(-1);
         model_loc_mask = mask_program->get_uniform_location("u_model").value_or(-1);
         invert_loc_mask = mask_program->get_uniform_location("u_invert").value_or(-1);
+        source_loc_mask = mask_program->get_uniform_location("u_tex").value_or(-1);
+        mask_loc_mask = mask_program->get_uniform_location("u_mask").value_or(-1);
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -235,6 +237,11 @@ namespace eka2l1::drivers {
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
+
+        if (mask_bmp) {
+            glUniform1i(source_loc_mask, 0);
+            glUniform1i(mask_loc_mask, 1);
+        }
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(bmp->tex->texture_handle()));
