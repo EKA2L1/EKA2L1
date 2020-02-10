@@ -69,10 +69,20 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
+    void light_resource::cleanup(service::ipc_context &ctx) {
+        // Don't have anything to cleanup right now. TODO.
+        ctx.set_request_status(epoc::error_none);
+    }
+
     void light_resource::execute_command(service::ipc_context &ctx) {
         switch (ctx.msg->function) {
         case hwrm_light_op_supported_targets: {
             get_supported_targets(ctx);
+            break;
+        }
+
+        case hwrm_light_op_cleanup_lights: {
+            cleanup(ctx);
             break;
         }
 

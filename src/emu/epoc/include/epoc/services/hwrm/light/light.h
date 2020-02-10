@@ -34,6 +34,7 @@ namespace eka2l1::epoc {
 
         explicit light_resource(kernel_system *kern);
         void get_supported_targets(service::ipc_context &ctx);
+        void cleanup(service::ipc_context &ctx);
         void execute_command(service::ipc_context &ctx) override;
     };
 }
