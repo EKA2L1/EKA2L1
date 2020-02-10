@@ -23,14 +23,17 @@
 namespace eka2l1::epoc {
     /**
      * \brief Error codes used by the ECOM server to report to its client.
-     * 
-     * This includes panic and leave codes. EKA2L1 only uses these as leave codes.
      */
     enum ecom_error_code {
         /**
-         * No registeration found on the server for the given interface.
+         * Given interface UID was not found on the server.
          */
-        ecom_no_interface_identified = -17004
+        ecom_no_interface_identified = -17004,
+
+        /**
+         * No implementation found on the server.
+         */
+        ecom_no_registeration_identified = -17007
     };
 
     enum {

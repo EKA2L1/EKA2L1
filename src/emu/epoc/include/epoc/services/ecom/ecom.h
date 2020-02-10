@@ -115,6 +115,7 @@ namespace eka2l1 {
         ecom_interface_info *get_interface(const epoc::uid interface_uid);
 
         bool get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid, 
-            const epoc::uid impl_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, const bool check_cap_comp = true);
+            const epoc::uid impl_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err,
+            const bool check_cap_comp = true);
     };
 }

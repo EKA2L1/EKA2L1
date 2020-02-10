@@ -30,7 +30,7 @@
 
 namespace eka2l1 {
     bool ecom_server::get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid, 
-        const epoc::uid implementation_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, const bool check_cap_comp) {
+        const epoc::uid implementation_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp) {
         if (implementation_uid == 0) {
             return false;
         }
@@ -46,6 +46,10 @@ namespace eka2l1 {
                 [=](const ecom_implementation_info_ptr &impl, const epoc::uid &rhs) { return impl->uid < rhs; });
 
             if (result == implementations.end() || (*result)->uid != implementation_uid) {
+                if (err) {
+                    *err = epoc::ecom_no_registeration_identified;
+                }
+                
                 return false;
             }
 
@@ -54,6 +58,10 @@ namespace eka2l1 {
             auto interface = get_interface(interface_uid);
 
             if (!interface) {
+                if (err) {
+                    *err = epoc::ecom_no_interface_identified;
+                }
+
                 return false;
             }
 
@@ -61,6 +69,10 @@ namespace eka2l1 {
                 [](const ecom_implementation_info_ptr &impl, const epoc::uid &rhs) { return impl->uid < rhs; });
 
             if (result == interface->implementations.end() || (*result)->uid != implementation_uid) {
+                if (err) {
+                    *err = epoc::ecom_no_registeration_identified;
+                }
+
                 return false;
             }
 
@@ -72,6 +84,10 @@ namespace eka2l1 {
 
         if (!(impl_info->flags & ecom_implementation_info::FLAG_IMPL_CREATE_INFO_CACHED)) {
             if (!epoc::get_image_info(sys->get_lib_manager(), name, impl_info->plugin_dll_info)) {
+                if (err) {
+                    *err = epoc::error_not_found;
+                }
+
                 return false;
             }
 
@@ -81,6 +97,10 @@ namespace eka2l1 {
         
         // Must satisfy the capabilities
         if (check_cap_comp && !requester->owning_process()->has(*reinterpret_cast<epoc::capability_set*>(impl_info->plugin_dll_info.caps))) {
+            if (err) {
+                *err = epoc::error_permission_denied;
+            }
+
             return false;
         }   
 
@@ -126,9 +146,11 @@ namespace eka2l1 {
 
         switch (ctx->msg->function) {
         case ecom_get_implementation_creation_method: {
+            std::int32_t error_code = 0;
+
             if (!get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index], 
-                lib_entry, dtor_key, true)) {
-                ctx->set_request_status(epoc::error_permission_denied);
+                lib_entry, dtor_key, &error_code, true)) {
+                ctx->set_request_status(error_code);
                 return;
             }
 
