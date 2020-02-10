@@ -128,6 +128,7 @@ add_library(epocservs
     include/epoc/services/fbs/font.h
     include/epoc/services/fbs/font_atlas.h
     include/epoc/services/fbs/font_store.h
+    include/epoc/services/fbs/palette.h
     include/epoc/services/featmgr/featmgr.h
     include/epoc/services/fs/fs.h
     include/epoc/services/hwrm/def.h
