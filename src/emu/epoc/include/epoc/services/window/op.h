@@ -364,7 +364,7 @@ enum TWsWindowOpcodes {
     EWsWinOpSetTransparencyBitmap,
     EWsWinOpAllowChildWindowGroup,
     EWsWinOpSetTransparencyBitmapCWs,
-    EWsWinOpEnableVisibilityChangeEvents,
+    EWsWinOpEnableVisibilityChangeEvents,       // Is 0x74 on S60^5
     EWsWinOpDisableVisibilityChangeEvents,
     EWsWinOpSetTransparencyAlphaChannel,
     EWsWinOpWindowGroupId,

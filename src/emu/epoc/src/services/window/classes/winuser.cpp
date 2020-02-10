@@ -286,6 +286,18 @@ namespace eka2l1::epoc {
     }
     
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        epoc::version cli_ver = client->client_version();
+
+        // Patching out user opcode.
+        if (cli_ver.major == 1 && cli_ver.minor == 0) {
+            if (cli_ver.build <= 171) {
+                if (cmd.header.op >= EWsWinOpSendAdvancedPointerEvent) {
+                    // Send advanced pointer event opcode does not exist in the version.
+                    cmd.header.op += 1;
+                }
+            }
+        }
+
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
