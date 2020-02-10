@@ -28,6 +28,7 @@
 #include <common/log.h>
 
 #include <epoc/services/fbs/fbs.h>
+#include <epoc/services/fbs/palette.h>
 #include <epoc/services/fs/fs.h>
 #include <epoc/services/window/common.h>
 
@@ -621,7 +622,7 @@ namespace eka2l1 {
             dib_header.size = bitmap->header_.size_pixels;
 
             switch (dib_header.bit_per_pixels) {
-            case 16: {
+            case 8: case 16: {
                 dib_header.header_size = sizeof(common::dib_header_v1);
                 dib_header.comp = 0;
                 dib_header.bit_per_pixels = 24;
@@ -674,9 +675,29 @@ namespace eka2l1 {
                             std::uint8_t b = static_cast<std::uint8_t>((pixel & 0x001F) << 3);
                             b += b >> 5;
 
-                            file.write(reinterpret_cast<const char*>(&r), 1);
-                            file.write(reinterpret_cast<const char*>(&g), 1);
                             file.write(reinterpret_cast<const char*>(&b), 1);
+                            file.write(reinterpret_cast<const char*>(&g), 1);
+                            file.write(reinterpret_cast<const char*>(&r), 1);
+                        }
+
+                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
+                            - bitmap->header_.size_pixels.x * 3;
+                        
+                        const char fill_char = 0;
+
+                        for (std::size_t i = 0; i < fill_align; i++) {
+                            file.write(&fill_char, 1);
+                        }
+                    }
+                } else if (bitmap->settings_.current_display_mode() == epoc::display_mode::color256) {
+                    for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
+                        for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
+                            const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t*>(packed_data + y * byte_width + x);
+                            std::uint32_t palette_color = epoc::color_256_palette[pixel];
+
+                            file.write(reinterpret_cast<const char*>(&palette_color) + 3, 1);
+                            file.write(reinterpret_cast<const char*>(&palette_color) + 2, 1);
+                            file.write(reinterpret_cast<const char*>(&palette_color) + 1, 1);
                         }
 
                         const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
