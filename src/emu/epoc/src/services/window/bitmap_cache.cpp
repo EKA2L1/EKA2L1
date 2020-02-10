@@ -53,7 +53,7 @@ namespace eka2l1::epoc {
     }
 
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
-        const char *original_ptr, std::vector<char> &converted_pool) {
+        const std::uint8_t *original_ptr, std::vector<char> &converted_pool) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
 
@@ -66,7 +66,7 @@ namespace eka2l1::epoc {
                     const std::uint8_t palette_index = original_ptr[y * bw_bmp->byte_width_ + x];
                     const std::uint32_t palette_color = epoc::color_256_palette[palette_index];
 
-                    std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char*>(&palette_color) + 1, 3);
+                    std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char*>(&palette_color), 3);
 
                     break;
                 }
@@ -204,7 +204,8 @@ namespace eka2l1::epoc {
 
             // GPU don't support them. Convert them on CPU
             if (is_palette_bitmap(bmp)) {
-                data_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, data_pointer, converted);
+                data_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t*>(data_pointer),
+                    converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());
             }

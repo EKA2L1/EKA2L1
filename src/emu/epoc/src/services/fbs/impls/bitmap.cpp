@@ -695,9 +695,9 @@ namespace eka2l1 {
                             const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t*>(packed_data + y * byte_width + x);
                             std::uint32_t palette_color = epoc::color_256_palette[pixel];
 
-                            file.write(reinterpret_cast<const char*>(&palette_color) + 3, 1);
                             file.write(reinterpret_cast<const char*>(&palette_color) + 2, 1);
                             file.write(reinterpret_cast<const char*>(&palette_color) + 1, 1);
+                            file.write(reinterpret_cast<const char*>(&palette_color) + 0, 1);
                         }
 
                         const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
