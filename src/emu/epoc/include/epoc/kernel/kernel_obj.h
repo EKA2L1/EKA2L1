@@ -71,8 +71,10 @@ namespace eka2l1 {
             change_notifier,
             undertaker,
             msg_queue,
-            prop,
+            prop_ref,
+            // Nonstandard
             codeseg,
+            prop,
             unk
         };
 

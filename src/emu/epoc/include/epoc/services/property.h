@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <common/queue.h>
+
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/ptr.h>
 #include <epoc/utils/reqsts.h>
@@ -61,23 +63,25 @@ namespace eka2l1 {
 
             service::property_type data_type;
 
-            epoc::notify_info subscribe_request;
+            threadsafe_cn_queue<epoc::notify_info*> subscription_queue;
 
         public:
-            property(kernel_system *kern);
+            explicit property(kernel_system *kern);
 
             void define(service::property_type pt, uint32_t pre_allocated);
 
-            /*! \brief Set the property value (integer).
+            /**
+             * \brief Set the property value (integer).
              *
              * If the property type is not integer, this return false, else
              * it will set the value and notify the request.		
              *
-             * \param val The value to set.		 
+             * \param val The value to set.
 			*/
             bool set_int(int val);
 
-            /*! \brief Set the property value (bin).
+            /**
+             * \brief Set the property value (bin).
              *
              * If the property type is not binary, this return false, else
              * it will set the value and notify the request.	
@@ -111,12 +115,41 @@ namespace eka2l1 {
                 return ret;
             }
 
-            void subscribe(eka2l1::ptr<epoc::request_status> sts);
-
-            void cancel();
+            void subscribe(epoc::notify_info &info);
+            bool cancel(const epoc::notify_info &info);
 
             /*! \brief Notify the request that there is data change */
-            void notify_request();
+            void notify_request(const std::int32_t err);
+        };
+
+        struct property_reference: public kernel::kernel_obj {
+            property *prop_;
+            epoc::notify_info nof_;
+
+        public:
+            explicit property_reference(kernel_system *kern, property *prop);
+
+            /**
+             * \brief       Get the property kernel object.
+             * \returns     The property object.
+             */
+            property *get_property_object() {
+                return prop_;
+            }
+
+            /**
+             * \brief   Subscribe to property change.
+             * \param   info The info of the subscribe request.
+             * 
+             * \returns True if no pending notify request is attached to this reference.
+             */
+            bool subscribe(const epoc::notify_info &info);
+
+            /**
+             * \brief    Cancel a subscription.
+             * \returns  True on success and pending notify request is not empty.
+             */
+            bool cancel();
         };
     }
 }

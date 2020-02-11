@@ -21,6 +21,7 @@
 #include <epoc/kernel.h>
 #include <epoc/kernel/thread.h>
 #include <epoc/services/property.h>
+#include <epoc/utils/err.h>
 
 #include <common/log.h>
 
@@ -47,7 +48,7 @@ namespace eka2l1 {
         bool property::set_int(int val) {
             if (data_type == service::property_type::int_data) {
                 data.ndata = val;
-                notify_request();
+                notify_request(epoc::error_none);
 
                 return true;
             }
@@ -63,7 +64,7 @@ namespace eka2l1 {
             memcpy(data.bindata.data(), bdata, arr_length);
             bin_data_len = arr_length;
 
-            notify_request();
+            notify_request(epoc::error_none);
 
             return true;
         }
@@ -85,21 +86,48 @@ namespace eka2l1 {
             return local;
         }
 
-        void property::subscribe(eka2l1::ptr<epoc::request_status> sts) {
-            if (subscribe_request.sts) {
-                return;
+        void property::subscribe(epoc::notify_info &info) {
+            subscription_queue.push(&info);
+        }
+
+        bool property::cancel(const epoc::notify_info &info) {
+            // Find the subscription
+            auto subscription_iterator = std::find(subscription_queue.begin(), subscription_queue.end(),
+                &info);
+
+            if (subscription_iterator == subscription_queue.end()) {
+                return false;
             }
 
-            subscribe_request.requester = kern->crr_thread();
-            subscribe_request.sts = sts;
+            (*subscription_iterator)->complete(epoc::error_cancel);
+            return true;
         }
 
-        void property::cancel() {
-            subscribe_request.complete(-3);
+        void property::notify_request(const std::int32_t err) {
+            while (auto subscription = subscription_queue.pop()) {
+                subscription.value()->complete(err);
+            }
         }
 
-        void property::notify_request() {
-            subscribe_request.complete(0);
+        property_reference::property_reference(kernel_system *kern, property *prop)
+            : kernel::kernel_obj(kern)
+            , prop_(prop) {
+            obj_type = kernel::object_type::prop;
+        }
+
+        bool property_reference::subscribe(const epoc::notify_info &info) {
+            if (!nof_.empty()) {
+                return false;
+            }
+
+            nof_ = info;
+            prop_->subscribe(nof_);
+
+            return true;
+        }
+
+        bool property_reference::cancel() {
+            return prop_->cancel(nof_);
         }
     }
 }

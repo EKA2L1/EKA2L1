@@ -74,6 +74,7 @@ namespace eka2l1 {
     using property_ptr = service::property*;
     using library_ptr = kernel::library*;
     using codeseg_ptr = kernel::codeseg*;
+    using property_ref_ptr = service::property_reference*;
 
     using kernel_obj_unq_ptr = std::unique_ptr<kernel::kernel_obj>;
     using prop_ident_pair = std::pair<int, int>;
@@ -106,6 +107,8 @@ namespace eka2l1 {
             return kernel::object_type::codeseg;
         } else if constexpr (std::is_same_v<T, kernel::change_notifier>) {
             return kernel::object_type::change_notifier;
+        } else if constexpr (std::is_same_v<T, service::property_reference>) {
+            return kernel::object_type::prop_ref;
         } else {
             throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
             return kernel::object_type::unk;
@@ -143,6 +146,7 @@ namespace eka2l1 {
         std::vector<kernel_obj_unq_ptr> servers;
         std::vector<kernel_obj_unq_ptr> sessions;
         std::vector<kernel_obj_unq_ptr> props;
+        std::vector<kernel_obj_unq_ptr> prop_refs;
         std::vector<kernel_obj_unq_ptr> chunks;
         std::vector<kernel_obj_unq_ptr> mutexes;
         std::vector<kernel_obj_unq_ptr> semas;
@@ -320,6 +324,7 @@ namespace eka2l1 {
                 OBJECT_SEARCH(codeseg, codesegs)
                 OBJECT_SEARCH(server, servers)
                 OBJECT_SEARCH(prop, props)
+                OBJECT_SEARCH(prop_ref, prop_refs)
                 OBJECT_SEARCH(session, sessions)
                 OBJECT_SEARCH(timer, timers)
 
@@ -374,6 +379,7 @@ namespace eka2l1 {
                 OBJECT_SEARCH(codeseg, codesegs)
                 OBJECT_SEARCH(server, servers)
                 OBJECT_SEARCH(prop, props)
+                OBJECT_SEARCH(prop_ref, prop_refs)
                 OBJECT_SEARCH(session, sessions)
                 OBJECT_SEARCH(timer, timers)
 
@@ -414,6 +420,7 @@ namespace eka2l1 {
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::chunk, chunks, )
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::server, servers, )
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop, props, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop_ref, prop_refs, )
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::session, sessions, )
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::library, libraries, )
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::timer, timers, )

@@ -1879,19 +1879,24 @@ namespace eka2l1::epoc {
         LOG_TRACE("Attach to property with cagetory: 0x{:x}, key: 0x{:x}", aCagetory, aValue);
 
         if (!prop) {
-            auto prop_handle_and_obj = kern->create_and_add<service::property>(static_cast<kernel::owner_type>(aOwnerType));
+            prop = kern->create<service::property>();
 
-            if (prop_handle_and_obj.first == INVALID_HANDLE) {
+            if (!prop) {
                 return epoc::error_general;
             }
 
-            prop_handle_and_obj.second->first = aCagetory;
-            prop_handle_and_obj.second->second = aValue;
-
-            return prop_handle_and_obj.first;
+            prop->first = aCagetory;
+            prop->second = aValue;
         }
 
-        return kern->mirror(prop, static_cast<kernel::owner_type>(aOwnerType));
+        auto property_ref_handle_and_obj = kern->create_and_add<service::property_reference>(
+            static_cast<kernel::owner_type>(aOwnerType), prop);
+        
+        if (property_ref_handle_and_obj.first == INVALID_HANDLE) {
+            return epoc::error_general;
+        }
+
+        return property_ref_handle_and_obj.first;
     }
 
     BRIDGE_FUNC(std::int32_t, PropertyDefine, std::int32_t aCagetory, std::int32_t aKey, eka2l1::ptr<TPropertyInfo> aPropertyInfo) {
@@ -1941,18 +1946,19 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, PropertySubscribe, std::int32_t aPropertyHandle, eka2l1::ptr<epoc::request_status> aRequestStatus) {
         kernel_system *kern = sys->get_kernel_system();
-        property_ptr prop = kern->get<service::property>(aPropertyHandle);
+        property_ref_ptr prop = kern->get<service::property_reference>(aPropertyHandle);
 
         if (!prop) {
             return;
         }
 
-        prop->subscribe(aRequestStatus);
+        epoc::notify_info info(aRequestStatus, kern->crr_thread());
+        prop->subscribe(info);
     }
 
     BRIDGE_FUNC(void, PropertyCancel, std::int32_t aPropertyHandle) {
         kernel_system *kern = sys->get_kernel_system();
-        property_ptr prop = kern->get<service::property>(aPropertyHandle);
+        property_ref_ptr prop = kern->get<service::property_reference>(aPropertyHandle);
 
         if (!prop) {
             return;
@@ -1967,13 +1973,13 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get<service::property>(aHandle);
+        property_ref_ptr prop = kern->get<service::property_reference>(aHandle);
 
         if (!prop) {
             return epoc::error_bad_handle;
         }
 
-        bool res = prop->set_int(aValue);
+        bool res = prop->get_property_object()->set_int(aValue);
 
         if (!res) {
             return epoc::error_argument;
@@ -1986,13 +1992,13 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get<service::property>(aHandle);
+        property_ref_ptr prop = kern->get<service::property_reference>(aHandle);
 
         if (!prop) {
             return epoc::error_bad_handle;
         }
 
-        bool res = prop->set(aDataPtr.get(mem), aSize);
+        bool res = prop->get_property_object()->set(aDataPtr.get(mem), aSize);
 
         if (!res) {
             return epoc::error_argument;
@@ -2005,15 +2011,15 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get<service::property>(aHandle);
+        property_ref_ptr prop = kern->get<service::property_reference>(aHandle);
 
         if (!prop) {
             return epoc::error_bad_handle;
         }
 
-        *aValuePtr.get(mem) = prop->get_int();
+        *aValuePtr.get(mem) = prop->get_property_object()->get_int();
 
-        if (prop->get_int() == -1) {
+        if (prop->get_property_object()->get_int() == -1) {
             return epoc::error_argument;
         }
 
@@ -2024,13 +2030,13 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr prop = kern->get<service::property>(aHandle);
+        property_ref_ptr prop = kern->get<service::property_reference>(aHandle);
 
         if (!prop) {
             return epoc::error_bad_handle;
         }
 
-        std::vector<uint8_t> dat = prop->get_bin();
+        std::vector<uint8_t> dat = prop->get_property_object()->get_bin();
 
         if (dat.size() == 0) {
             return epoc::error_argument;

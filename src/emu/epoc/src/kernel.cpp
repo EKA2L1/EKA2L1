@@ -135,6 +135,7 @@ namespace eka2l1 {
             OBJECT_SEARCH(codeseg, codesegs)
             OBJECT_SEARCH(server, servers)
             OBJECT_SEARCH(prop, props)
+            OBJECT_SEARCH(prop_ref, prop_refs)
             OBJECT_SEARCH(session, sessions)
             OBJECT_SEARCH(timer, timers)
 
@@ -460,6 +461,7 @@ namespace eka2l1 {
             OBJECT_SEARCH(codeseg, codesegs)
             OBJECT_SEARCH(server, servers)
             OBJECT_SEARCH(prop, props)
+            OBJECT_SEARCH(prop_ref, prop_refs)
             OBJECT_SEARCH(session, sessions)
             OBJECT_SEARCH(timer, timers)
 
