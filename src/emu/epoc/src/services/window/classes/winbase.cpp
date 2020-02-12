@@ -198,14 +198,11 @@ namespace eka2l1::epoc {
 
         // Gone through all siblings, walk on their childs
         // TODO: Is this correct? Older guy, children of older guy, then newer guy, children of newer guy.
-        while (start != nullptr) {
-            walk_tree_back_to_front(start->child, walker);
-    
-            if (walker->do_it(start)) {
-                return;
-            }
-            
-            start = start->sibling;
+        walk_tree_back_to_front(start->sibling, walker);
+        walk_tree_back_to_front(start->child, walker);
+
+        if (walker->do_it(start)) {
+            return;
         }
     }
 
