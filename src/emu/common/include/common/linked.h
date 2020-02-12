@@ -94,6 +94,10 @@ namespace eka2l1::common {
             return empty() ? nullptr : elem_.previous;
         }
 
+        double_linked_queue_element *end() {
+            return empty() ? nullptr : &elem_;
+        }
+
         void push(double_linked_queue_element *new_elem) {
             new_elem->previous = elem_.previous;
             new_elem->next = &elem_;
