@@ -20,6 +20,7 @@
 
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
+#include <debugger/renderer/common.h>
 #include <debugger/renderer/renderer.h>
 
 #include <imgui.h>
@@ -84,11 +85,14 @@ namespace eka2l1 {
         , should_package_manager_display_language_choose(false)
         , should_install_package(false)
         , should_show_app_launch(false)
+        , should_show_install_device_wizard(false)
+        , should_show_about(false)
         , selected_package_index(0xFFFFFFFF)
         , debug_thread_id(0)
         , app_launch(app_launch)
         , selected_callback(nullptr)
-        , selected_callback_data(nullptr) {
+        , selected_callback_data(nullptr) 
+        , phony_icon(0) {
         // Setup hook
         manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
 
@@ -1056,9 +1060,11 @@ namespace eka2l1 {
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Install device", nullptr, nullptr)) {
-                    should_show_install_device_wizard = true;
-                }
+                ImGui::MenuItem("Install device", nullptr, &should_show_install_device_wizard);
+
+                ImGui::Separator();
+
+                ImGui::MenuItem("Preferences", nullptr, &should_show_preferences);
 
                 ImGui::EndMenu();
             }
@@ -1087,8 +1093,8 @@ namespace eka2l1 {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Settings")) {
-                ImGui::MenuItem("Preferences", nullptr, &should_show_preferences);
+            if (ImGui::BeginMenu("Help")) {
+                ImGui::MenuItem("About", nullptr, &should_show_about);
                 ImGui::EndMenu();
             }
 
@@ -1420,6 +1426,40 @@ namespace eka2l1 {
             ImGui::End();
         }
     }
+
+    void imgui_debugger::show_about() {
+        if (!phony_icon) {
+            static constexpr const char *PHONY_PATH = "resources\\phony.png";
+            phony_icon = renderer::load_texture_from_file_standalone(sys->get_graphics_driver(),
+                PHONY_PATH, false, &phony_size.x, &phony_size.y);
+        }
+
+        if (ImGui::Begin("About!", &should_show_about)) {
+            ImGui::Columns(2);
+
+            if (phony_icon) {
+                ImGui::Image(reinterpret_cast<ImTextureID>(phony_icon), ImVec2(static_cast<float>(phony_size.x),
+                    static_cast<float>(phony_size.y)));
+            }
+
+            ImGui::NextColumn();
+
+            if (ImGui::BeginChild("##EKA2L1CreditsText")) {
+                ImGui::Text("EKA2L1 - SYMBIAN OS EMULATOR");
+                ImGui::Separator();
+                ImGui::Text("(C) 2018- EKA2L1 Team.");
+                ImGui::Text("Thank you for using!");
+                ImGui::Separator();
+                ImGui::Text("Honors:");
+                ImGui::Text("- florastamine");
+                ImGui::EndChild();
+            }
+
+            ImGui::Columns(1);
+
+            ImGui::End();
+        }
+    }
     
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
@@ -1478,6 +1518,10 @@ namespace eka2l1 {
 
         if (should_show_install_device_wizard) {
             show_install_device();
+        }
+
+        if (should_show_about) {
+            show_about();
         }
 
         on_pause_toogle(should_pause);

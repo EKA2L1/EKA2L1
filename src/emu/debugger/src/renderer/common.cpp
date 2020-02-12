@@ -63,5 +63,15 @@ namespace eka2l1::renderer {
         stbi_image_free(dat);
 
         return tex;
-    }    
+    }
+    
+    drivers::handle load_texture_from_file_standalone(drivers::graphics_driver *driver, const std::string &path, const bool as_bitmap, int *width, int *height) {
+        auto cmd_list = driver->new_command_list();
+        auto cmd_builder = driver->new_command_builder(cmd_list.get());
+
+        drivers::handle result = load_texture_from_file(driver, cmd_builder.get(), path, as_bitmap, width, height);
+        driver->submit_command_list(*cmd_list);
+
+        return result;
+    }
 }

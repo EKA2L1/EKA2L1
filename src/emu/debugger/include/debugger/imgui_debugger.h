@@ -26,9 +26,9 @@
 #include <thread>
 
 #include <common/queue.h>
+#include <common/vecx.h>
 #include <debugger/debugger.h>
-
-struct MemoryEditor;
+#include <drivers/graphics/common.h>
 
 namespace eka2l1 {
     class system;
@@ -78,6 +78,7 @@ namespace eka2l1 {
 
         bool should_show_app_launch;
         bool should_show_install_device_wizard;
+        bool should_show_about;
 
         struct device_wizard {
             enum device_wizard_stage {
@@ -143,6 +144,7 @@ namespace eka2l1 {
 
         // Server debugging
         void show_windows_tree();
+        void show_about();
 
         std::unique_ptr<std::thread> install_thread;
         threadsafe_cn_queue<std::string> install_list;
@@ -154,7 +156,6 @@ namespace eka2l1 {
         std::size_t cur_pref_tab{ 0 };
         std::atomic<std::uint32_t> debug_thread_id;
 
-        std::shared_ptr<MemoryEditor> mem_editor;
         imgui_logger *logger;
 
         std::uint32_t addr = 0;
@@ -163,6 +164,9 @@ namespace eka2l1 {
 
         std::mutex debug_lock;
         std::condition_variable debug_cv;
+
+        drivers::handle phony_icon;
+        eka2l1::vec2 phony_size;
 
     protected:
         void do_install_package();
