@@ -45,7 +45,7 @@ namespace eka2l1 {
 
         class basic_stream {
         public:
-            virtual void seek(const std::uint64_t amount, seek_where wh) = 0;
+            virtual void seek(const std::int64_t amount, seek_where wh) = 0;
             virtual bool valid() = 0;
             virtual std::uint64_t left() = 0;
             virtual uint64_t tell() const = 0;
@@ -136,7 +136,7 @@ namespace eka2l1 {
                 return end - beg - crr_pos;
             }
 
-            void seek(const std::uint64_t amount, seek_where wh) override {
+            void seek(const std::int64_t amount, seek_where wh) override {
                 if (wh == seek_where::beg) {
                     crr_pos = amount;
                     return;
@@ -182,7 +182,7 @@ namespace eka2l1 {
                 return end - beg - crr_pos;
             }
             
-            void seek(const std::uint64_t amount, seek_where wh) override {
+            void seek(const std::int64_t amount, seek_where wh) override {
                 if (wh == seek_where::beg) {
                     crr_pos = amount;
                     return;
@@ -225,7 +225,7 @@ namespace eka2l1 {
                 return fread(buf, read_size, 1, fi_);
             }
 
-            void seek(const std::uint64_t amount, common::seek_where wh) override {
+            void seek(const std::int64_t amount, common::seek_where wh) override {
                 int flags = 0;
                 switch (wh) {
                 case common::seek_where::beg: {
@@ -277,7 +277,7 @@ namespace eka2l1 {
                 fo_.write(reinterpret_cast<const char*>(buf), size);
             }
             
-            void seek(const std::uint64_t amount, common::seek_where wh) override{
+            void seek(const std::int64_t amount, common::seek_where wh) override{
                 fo_.seekp(amount, common::beg ? std::ios::beg : (common::cur ? std::ios::cur : std::ios::end));
             }
 

@@ -405,7 +405,7 @@ namespace eka2l1 {
         explicit ro_file_stream(file *f): f_(f) {
         }
 
-        void seek(const std::uint64_t amount, common::seek_where wh) override;
+        void seek(const std::int64_t amount, common::seek_where wh) override;
         bool valid() override;
         std::uint64_t left() override;
         uint64_t tell() const override;

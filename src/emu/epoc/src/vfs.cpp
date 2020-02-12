@@ -1158,7 +1158,7 @@ namespace eka2l1 {
         return std::make_unique<physical_file>(common::utf8_to_ucs2(path), common::utf8_to_ucs2(path), mode);
     }
 
-    void ro_file_stream::seek(const std::uint64_t amount, common::seek_where wh) {
+    void ro_file_stream::seek(const std::int64_t amount, common::seek_where wh) {
         f_->seek(amount, static_cast<file_seek_mode>(wh));
     }
     
