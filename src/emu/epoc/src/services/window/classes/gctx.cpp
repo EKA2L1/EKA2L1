@@ -50,8 +50,10 @@ namespace eka2l1::epoc {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
         // Make new command list
-        cmd_list = drv->new_command_list();
-        cmd_builder = drv->new_command_builder(cmd_list.get());
+        if (!cmd_list) {
+            cmd_list = drv->new_command_list();
+            cmd_builder = drv->new_command_builder(cmd_list.get());
+        }
 
         // Add first command list, binding our window bitmap
         if (attached_window->driver_win_id == 0) {
@@ -63,6 +65,7 @@ namespace eka2l1::epoc {
             cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size);
         }
 
+        recording = true;
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
     }
 
@@ -153,6 +156,10 @@ namespace eka2l1::epoc {
         // Unbind current bitmap
         cmd_builder->bind_bitmap(0);
         driver->submit_command_list(*cmd_list);
+
+        // Renew this so that the graphic context can continue
+        cmd_list = driver->new_command_list();
+        cmd_builder = driver->new_command_builder(cmd_list.get());
     }
 
     void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
@@ -168,6 +175,7 @@ namespace eka2l1::epoc {
         flush_queue_to_driver();
 
         attached_window = nullptr;
+        recording = false;
         context.set_request_status(epoc::error_none);
     }
     
@@ -445,6 +453,8 @@ namespace eka2l1::epoc {
         , line_mode(pen_style::null)
         , brush_color(0)
         , pen_color(0)
-        , pen_size(1, 1) {
+        , pen_size(1, 1)
+        , cmd_list(nullptr)
+        , cmd_builder(nullptr) {
     }
 }

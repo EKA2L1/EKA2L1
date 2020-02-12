@@ -199,7 +199,7 @@ namespace eka2l1::epoc {
         }
 
         common::double_linked_queue_element *ite = attached_contexts.first();
-        common::double_linked_queue_element *end = ite;
+        common::double_linked_queue_element *end = attached_contexts.end();
 
         // Set all contexts to be in recording
         do {
@@ -209,9 +209,8 @@ namespace eka2l1::epoc {
 
             epoc::graphic_context *ctx = E_LOFF(ite, epoc::graphic_context, context_attach_link);
 
-            ctx->recording = false;
+            // Flush the queue one time.
             ctx->flush_queue_to_driver();
-
             ite = ite->next;
         } while (ite != end);
 
@@ -227,19 +226,6 @@ namespace eka2l1::epoc {
     }
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
-        common::double_linked_queue_element *ite = attached_contexts.first();
-        common::double_linked_queue_element *end = ite;
-
-        // Set all contexts to be in recording
-        do {
-            if (!ite) {
-                break;
-            }
-
-            E_LOFF(ite, epoc::graphic_context, context_attach_link)->recording = true;
-            ite = ite->next;
-        } while (ite != end);
-
         LOG_TRACE("Begin redraw to window 0x{:X}!", id);
 
         // Cancel pending redraw event, since by using this,
