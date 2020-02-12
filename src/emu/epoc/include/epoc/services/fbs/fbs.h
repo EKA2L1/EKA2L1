@@ -298,6 +298,8 @@ namespace eka2l1 {
 
     public:
         explicit fbs_server(eka2l1::system *sys);
+        ~fbs_server() override;
+        
         service::uid init();
 
         void connect(service::ipc_context &context) override;

@@ -42,6 +42,10 @@ namespace eka2l1::service {
         : server(sys, name, true, false) {
     }
 
+    typical_server::~typical_server() {
+        sessions.clear();
+    }
+
     void typical_server::disconnect(service::ipc_context &ctx) {
         sessions.erase(ctx.msg->msg_session->unique_id());
         ctx.set_request_status(0);

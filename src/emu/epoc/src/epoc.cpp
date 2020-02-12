@@ -346,7 +346,8 @@ namespace eka2l1 {
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, manager::config_state *conf)
         : parent(parent)
-        , conf(conf) {
+        , conf(conf)
+        , debugger(nullptr) {
         if (conf->cpu_backend == unicorn_jit_backend_name) {
             jit_type = arm_emulator_type::unicorn;
         } else if (conf->cpu_backend == dynarmic_jit_backend_name) {

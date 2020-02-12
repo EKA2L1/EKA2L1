@@ -67,6 +67,21 @@ namespace eka2l1 {
 
     void kernel_system::shutdown() {
         thr_sch.reset();
+
+        // Delete one by one in order. Do not change the order
+        servers.clear();
+        sessions.clear();
+        timers.clear();
+        mutexes.clear();
+        semas.clear();
+        change_notifiers.clear();
+        props.clear();
+        prop_refs.clear();
+        chunks.clear();
+        threads.clear();
+        processes.clear();
+        libraries.clear();
+        codesegs.clear();
     }
 
     kernel::thread *kernel_system::crr_thread() {

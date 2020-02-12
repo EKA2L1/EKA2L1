@@ -88,6 +88,12 @@ namespace eka2l1::service {
         normal_object_container obj_con;
 
     public:
+        ~typical_server() override;
+
+        void clear_all_sessions() {
+            sessions.clear();
+        }
+
         template <typename T>
         T *get(const service::uid handle) {
             return obj_con.get<T>(handle);

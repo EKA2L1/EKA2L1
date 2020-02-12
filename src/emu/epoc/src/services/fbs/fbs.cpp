@@ -276,6 +276,17 @@ namespace eka2l1 {
 
         return large_chunk_allocator->free(ptr);
     }
+
+    fbs_server::~fbs_server() {
+        clear_all_sessions();
+
+        // Destroy chunks.
+        if (shared_chunk)
+            kern->destroy(shared_chunk);
+        
+        if (large_chunk)
+            kern->destroy(large_chunk);
+    }
     
     drivers::graphics_driver *fbs_server::get_graphics_driver() {
         return sys->get_graphics_driver();
