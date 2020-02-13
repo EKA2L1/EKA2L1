@@ -185,6 +185,7 @@ namespace eka2l1::epoc {
         void get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd);
         void clear_all_redraw_stores(service::ipc_context &ctx, ws_cmd &cmd);
         void set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_def_mode_max_num_colors(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         void add_redraw_listener(notify_info nof) {

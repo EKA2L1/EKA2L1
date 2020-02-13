@@ -82,6 +82,8 @@ namespace eka2l1::epoc {
 
         const epoc::config::screen_mode *mode_info(const int number) const;
 
+        const void get_max_num_colors(int& colors, int& greys) const;
+
         /**
          * \brief Set screen mode.
          */

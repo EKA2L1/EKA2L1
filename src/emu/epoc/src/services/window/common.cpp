@@ -31,7 +31,38 @@ namespace eka2l1::epoc {
         , type(evt_code)
         , time(common::get_current_time_in_microseconds_since_1ad()) {
     }
-    
+
+    bool is_display_mode_color(const epoc::display_mode disp_mode) {
+        return disp_mode >= epoc::display_mode::color16;
+    }
+
+    int get_num_colors_from_display_mode(const epoc::display_mode disp_mode) {
+        switch (disp_mode) {
+        case epoc::display_mode::gray2:
+            return 2;
+        case epoc::display_mode::gray4:
+            return 4;
+        case epoc::display_mode::gray16:
+        case epoc::display_mode::color16:
+            return 16;
+        case epoc::display_mode::gray256:
+        case epoc::display_mode::color256:
+            return 256;
+        case epoc::display_mode::color4k:
+            return 4096;
+        case epoc::display_mode::color64k:
+            return 65536;
+        case epoc::display_mode::color16m:
+        case epoc::display_mode::color16mu:
+        case epoc::display_mode::color16ma:
+        case epoc::display_mode::color16map:
+            return 16777216;
+        default:
+            return 0;
+        }
+    }
+
+
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code) {
         if (scan_code < EStdKeyF1) {
             return keymap[scan_code];

@@ -75,6 +75,7 @@ namespace eka2l1::epoc {
     screen::screen(const int number, epoc::config::screen &scr_conf) 
         : number(number)
         , screen_texture(0)
+        , disp_mode(display_mode::color16ma)
         , scr_config(scr_conf)
         , crr_mode(1)
         , next(nullptr)
@@ -117,6 +118,15 @@ namespace eka2l1::epoc {
         }
 
         driver->submit_command_list(*cmd_list);
+    }
+
+    const void screen::get_max_num_colors(int& colors, int& greys) const {
+        greys = 0;
+        colors = get_num_colors_from_display_mode(disp_mode);
+        if (! is_display_mode_color(disp_mode)) {
+            greys = colors;
+            colors = 0;
+        }
     }
 
     void screen::resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size) {
