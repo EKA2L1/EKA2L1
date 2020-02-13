@@ -147,3 +147,28 @@ TEST_CASE("eight_bit_compression_big", "rle_compression") {
 
     REQUIRE(std::equal(expected.begin(), expected.end(), dest_buf.begin()));
 }
+
+TEST_CASE("sixteen_bits_compression_small", "rle_compression") {
+    static std::array<std::int8_t, 28> source = {
+        0x00, 0x05, 0x00, 0x05, 0x00, 0x05, 0x00, 0x05, 0x00, 0x05,
+        0x00, 0x05, 0x00, 0x05, 0x00, 0x05, 0x00, 0x05,               // 9 pairs
+
+        0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14    // Non-consecutive sequence
+    };
+
+    static std::array<std::int8_t, 14> expected = {
+        9, 0x00, 0x05,
+        -5, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14
+    };
+    
+    common::ro_buf_stream source_stream(reinterpret_cast<std::uint8_t*>(&source[0]), source.size());
+
+    std::vector<std::int8_t> dest_buf;
+    dest_buf.resize(20);
+
+    common::wo_buf_stream dest_stream(reinterpret_cast<std::uint8_t*>(&dest_buf[0]), dest_buf.size());
+
+    compress_rle<16>(&source_stream, &dest_stream);
+
+    REQUIRE(std::equal(expected.begin(), expected.end(), dest_buf.begin()));
+}
