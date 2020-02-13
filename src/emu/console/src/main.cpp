@@ -57,9 +57,16 @@
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
 
-#if EKA2L1_PLATFORM(WIN32)
-extern "C" _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+#if defined(_MSC_VER)
+#define EKA2L1_EXPORT __declspec(dllexport)
+#else
+#define EKA2L1_EXPORT __attribute__((dllexport))
 #endif
+
+extern "C" {
+    EKA2L1_EXPORT uint32_t NvOptimusEnablement = 0x00000001;
+    EKA2L1_EXPORT uint32_t AmdPowerXpressRequestHighPerformance = 0x00000001;
+}
 
 using namespace eka2l1;
 

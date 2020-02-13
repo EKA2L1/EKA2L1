@@ -184,7 +184,7 @@ namespace eka2l1::common {
             NULL, open_type, NULL, NULL);
 
         if (file_handle == INVALID_HANDLE_VALUE) {
-            return false;
+            return nullptr;
         }
 
         std::size_t map_size = size;
@@ -199,7 +199,7 @@ namespace eka2l1::common {
             map_size >> 32, static_cast<DWORD>(map_size), NULL);
 
         if (!map_file_handle || map_file_handle == INVALID_HANDLE_VALUE) {
-            return false;
+            return nullptr;
         }
 
         auto map_ptr = MapViewOfFile(map_file_handle, map_type, 0, 0, 0);
