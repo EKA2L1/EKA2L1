@@ -527,8 +527,6 @@ namespace eka2l1::epoc {
         scr->get_max_num_colors(result.num_color, result.num_grey);
         result.disp_mode = scr->disp_mode;
 
-        LOG_INFO("color: {}, grey: {}, mode: {}", result.num_color, result.num_grey, static_cast<int>(result.disp_mode));
-
         ctx.write_arg_pkg<def_mode_max_num_colors>(reply_slot, result);
         ctx.set_request_status(epoc::error_none);
     }
