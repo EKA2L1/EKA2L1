@@ -64,8 +64,8 @@
 #endif
 
 extern "C" {
-    EKA2L1_EXPORT DWORD NvOptimusEnablement = 0x00000001;
-    EKA2L1_EXPORT DWORD AmdPowerXpressRequestHighPerformance = 0x00000001;
+    EKA2L1_EXPORT uint32_t NvOptimusEnablement = 0x00000001;
+    EKA2L1_EXPORT uint32_t AmdPowerXpressRequestHighPerformance = 0x00000001;
 }
 
 using namespace eka2l1;
