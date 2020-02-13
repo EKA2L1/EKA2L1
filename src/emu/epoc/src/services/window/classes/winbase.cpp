@@ -260,14 +260,12 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpOrdinalPosition: {
-            ctx.write_arg(reply_slot, ordinal_position(false));
-            ctx.set_request_status(epoc::error_none);
+            ctx.set_request_status(ordinal_position(false));
             break;
         }
 
         case EWsWinOpFullOrdinalPosition: {
-            ctx.write_arg(reply_slot, ordinal_position(true));
-            ctx.set_request_status(epoc::error_none);
+            ctx.set_request_status(ordinal_position(true));
             break;
         }
 
