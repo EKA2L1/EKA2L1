@@ -259,6 +259,18 @@ namespace eka2l1::epoc {
             return true;
         }
 
+        case EWsWinOpOrdinalPosition: {
+            ctx.write_arg(reply_slot, ordinal_position(false));
+            ctx.set_request_status(epoc::error_none);
+            break;
+        }
+
+        case EWsWinOpFullOrdinalPosition: {
+            ctx.write_arg(reply_slot, ordinal_position(true));
+            ctx.set_request_status(epoc::error_none);
+            break;
+        }
+
         case EWsWinOpSetOrdinalPosition: {
             const int position = *reinterpret_cast<int *>(cmd.data_ptr);
             set_position(position);
