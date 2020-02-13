@@ -310,9 +310,7 @@ namespace eka2l1::epoc {
 
         // Fall through to get system display mode
         case EWsWinOpGetDisplayMode: {
-            ctx.write_arg_pkg<epoc::display_mode>(reply_slot, scr->disp_mode);
-            ctx.set_request_status(epoc::error_none);
-
+            ctx.set_request_status(static_cast<int>(scr->disp_mode));
             break;
         }
         
