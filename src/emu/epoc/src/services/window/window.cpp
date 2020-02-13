@@ -508,6 +508,29 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
+    struct def_mode_max_num_colors {
+        std::int32_t num_color;
+        std::int32_t num_grey;
+        epoc::display_mode disp_mode;
+    };
+
+    void window_server_client::get_def_mode_max_num_colors(service::ipc_context &ctx, ws_cmd &cmd) {
+        const int screen_num = *reinterpret_cast<int *>(cmd.data_ptr);
+        epoc::screen *scr = get_ws().get_screen(screen_num);
+
+        if (!scr) {
+            LOG_INFO("Can't find screen object with number {}, using the default screen", screen_num);
+            scr = get_ws().get_current_focus_screen();
+        }
+
+        def_mode_max_num_colors result;
+        scr->get_max_num_colors(result.num_color, result.num_grey);
+        result.disp_mode = scr->disp_mode;
+
+        ctx.write_arg_pkg<def_mode_max_num_colors>(reply_slot, result);
+        ctx.set_request_status(epoc::error_none);
+    }
+
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
@@ -618,6 +641,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_set_window_group_ordinal_position: {
             set_window_group_ordinal_position(ctx, cmd);
+            break;
+        }
+
+        case ws_cl_op_get_def_mode_max_num_colors: {
+            get_def_mode_max_num_colors(ctx, cmd);
             break;
         }
 
