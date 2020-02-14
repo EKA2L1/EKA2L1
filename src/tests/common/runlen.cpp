@@ -33,7 +33,7 @@ TEST_CASE("eight_bit_compression_small", "rle_compression") {
     };
 
     static std::array<std::int8_t, 12> expected = {
-        18, 0x00,
+        17, 0x00,
         -9, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13
     };
 
@@ -44,8 +44,10 @@ TEST_CASE("eight_bit_compression_small", "rle_compression") {
 
     common::wo_buf_stream dest_stream(reinterpret_cast<std::uint8_t*>(&dest_buf[0]), dest_buf.size());
 
-    compress_rle<8>(&source_stream, &dest_stream);
+    std::size_t compressed_size = 0;
+    compress_rle<8>(&source_stream, &dest_stream, compressed_size);
 
+    REQUIRE(compressed_size == expected.size());
     REQUIRE(std::equal(expected.begin(), expected.end(), dest_buf.begin()));
 }
 
@@ -114,11 +116,11 @@ TEST_CASE("eight_bit_compression_big", "rle_compression") {
     static std::array<std::int8_t, 155> expected = {
         127, static_cast<std::int8_t>(0x12),
         127, static_cast<std::int8_t>(0x12),
-        24, static_cast<std::int8_t>(0x12),
+        21, static_cast<std::int8_t>(0x12),
         -7, 1, 2, 3, 4, 5, 6, static_cast<std::int8_t>(0x56),
-        7, static_cast<std::int8_t>(0x56),
+        6, static_cast<std::int8_t>(0x56),
         127, static_cast<std::int8_t>(0xF2),
-        93, static_cast<std::int8_t>(0xF2),
+        91, static_cast<std::int8_t>(0xF2),
         -128, 1,2,3,4,5,6,7,8,9,10,
         11,12,13,14,15,16,17,18,19,20,
         21,22,23,24,25,26,27,28,29,30,
@@ -143,8 +145,10 @@ TEST_CASE("eight_bit_compression_big", "rle_compression") {
 
     common::wo_buf_stream dest_stream(reinterpret_cast<std::uint8_t*>(&dest_buf[0]), dest_buf.size());
 
-    compress_rle<8>(&source_stream, &dest_stream);
+    std::size_t compressed_size = 0;
+    compress_rle<8>(&source_stream, &dest_stream, compressed_size);
 
+    REQUIRE(compressed_size == expected.size());
     REQUIRE(std::equal(expected.begin(), expected.end(), dest_buf.begin()));
 }
 
@@ -157,7 +161,7 @@ TEST_CASE("sixteen_bits_compression_small", "rle_compression") {
     };
 
     static std::array<std::int8_t, 14> expected = {
-        9, 0x00, 0x05,
+        8, 0x00, 0x05,
         -5, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14
     };
     
@@ -168,7 +172,9 @@ TEST_CASE("sixteen_bits_compression_small", "rle_compression") {
 
     common::wo_buf_stream dest_stream(reinterpret_cast<std::uint8_t*>(&dest_buf[0]), dest_buf.size());
 
-    compress_rle<16>(&source_stream, &dest_stream);
+    std::size_t compressed_size = 0;
+    compress_rle<16>(&source_stream, &dest_stream, compressed_size);
 
+    REQUIRE(compressed_size == expected.size());
     REQUIRE(std::equal(expected.begin(), expected.end(), dest_buf.begin()));
 }
