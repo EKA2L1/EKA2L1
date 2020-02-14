@@ -32,14 +32,16 @@ namespace eka2l1 {
      * 
      * Support only 8-bit aligned compression.
      * 
-     * \param source Read-only source stream of binary data.
-     * \param dest   Write-only destination stream.
+     * \param source        Read-only source stream of binary data.
+     * \param dest          Write-only destination stream. Can be null for size estimation.
+     * \param dest_size     Size of the destination will be written here.
      */
     template <size_t BIT>
-    bool compress_rle(common::ro_stream *source, common::wo_stream *dest) {
+    bool compress_rle(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size) {
         static_assert(BIT % 8 == 0, "This RLE compress function don't support unaligned bit decompress!");
+        dest_size = 0;
 
-        while (source->valid() && dest->valid()) {
+        while (source->valid() && (!dest || dest->valid())) {
             // Read 3 bytes
             static constexpr std::int32_t BYTE_COUNT = BIT / 8;
 
@@ -71,12 +73,15 @@ namespace eka2l1 {
                 std::int64_t total_pair = static_cast<std::int64_t>(total_bytes_repeated / BYTE_COUNT);
 
                 while (total_pair > 0) {
-                    std::uint8_t total_this_session = (total_pair > 127) ? 127 : static_cast<std::uint8_t>(total_pair);
+                    std::uint8_t total_this_session = (total_pair > 128) ? 127 : static_cast<std::uint8_t>(total_pair - 1);
                     
-                    dest->write(&total_this_session, 1);
-                    dest->write(bytes, BYTE_COUNT);
+                    if (dest) {
+                        dest->write(&total_this_session, 1);
+                        dest->write(bytes, BYTE_COUNT);
+                    }
 
-                    total_pair -= total_this_session;
+                    dest_size += BYTE_COUNT + 1;
+                    total_pair -= (total_this_session + 1);
                 }
             } else {
                 // Seek back BYTE_COUNT in prepare of the do while loop
@@ -99,20 +104,25 @@ namespace eka2l1 {
                 const std::uint64_t total_bytes_repeated = source->tell() - last_position;
                 std::int64_t total_pair = static_cast<std::int64_t>(total_bytes_repeated / BYTE_COUNT);
 
-                source->seek(last_position, common::seek_where::beg);
+                if (dest) {
+                    source->seek(last_position, common::seek_where::beg);
+                }
 
                 std::vector<std::uint8_t> temp_data;
                 
                 while (total_pair > 0) {
                     std::int8_t total_this_session = (total_pair > 128) ? -128 : static_cast<std::int8_t>(-total_pair);
-                    
-                    dest->write(&total_this_session, 1);
 
-                    // Read the source
-                    temp_data.resize(total_this_session * -BYTE_COUNT);
+                    if (dest) {
+                        dest->write(&total_this_session, 1);
 
-                    source->read(&temp_data[0], temp_data.size());
-                    dest->write(&temp_data[0], static_cast<std::uint32_t>(temp_data.size()));
+                        // Read the source
+                        temp_data.resize(total_this_session * -BYTE_COUNT);
+                        source->read(&temp_data[0], temp_data.size());
+                        dest->write(&temp_data[0], static_cast<std::uint32_t>(temp_data.size()));
+                    }
+
+                    dest_size += 1 + static_cast<std::size_t>(total_this_session * -BYTE_COUNT);
 
                     // Negative already!
                     total_pair += total_this_session;
