@@ -44,6 +44,8 @@ namespace eka2l1::common {
         std::size_t rounded_size = common::next_power_of_two(bytes);
         std::uint64_t farest_end_offset = 0;
 
+        const std::lock_guard<std::mutex> guard(lock);
+
         for (auto &block : blocks) {
             farest_end_offset = common::max(farest_end_offset, block.offset + block.size);
 
@@ -94,6 +96,8 @@ namespace eka2l1::common {
 
     bool block_allocator::free(const void *tptr) {
         const std::uint64_t to_free_offset = reinterpret_cast<const std::uint8_t *>(tptr) - ptr;
+
+        const std::lock_guard<std::mutex> guard(lock);
 
         auto ite = std::find_if(blocks.begin(), blocks.end(),
             [to_free_offset](const block_info &info) {

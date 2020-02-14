@@ -25,7 +25,7 @@
 
 #include <cstddef>
 #include <cstdint>
-
+#include <mutex>
 #include <vector>
 
 namespace eka2l1::common {
@@ -66,6 +66,7 @@ namespace eka2l1::common {
         };
 
         std::vector<block_info> blocks;
+        std::mutex lock;
 
     public:
         explicit block_allocator(std::uint8_t *sptr, const std::size_t initial_max_size);
