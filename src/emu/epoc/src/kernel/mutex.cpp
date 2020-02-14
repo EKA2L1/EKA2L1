@@ -59,6 +59,8 @@ namespace eka2l1 {
         }
 
         void mutex::wait() {
+            kern->lock();
+
             if (!holding) {
                 holding = kern->crr_thread();
 
@@ -81,9 +83,13 @@ namespace eka2l1 {
 
                 holding->wait_obj = this;
             }
+
+            kern->unlock();
         }
 
         void mutex::try_wait() {
+            kern->lock();
+
             if (!holding) {
                 holding = kern->crr_thread();
 
@@ -98,6 +104,8 @@ namespace eka2l1 {
             if (holding == kern->crr_thread()) {
                 lock_count++;
             }
+
+            kern->unlock();
         }
 
         void mutex::waking_up_from_suspension(std::uint64_t userdata, int cycles_late) {
@@ -150,14 +158,17 @@ namespace eka2l1 {
         }
 
         bool mutex::signal(kernel::thread *callee) {
+            kern->lock();
+
             if (!holding) {
                 LOG_ERROR("Signal a mutex that's not held by any thread");
-
+                kern->unlock();
                 return false;
             }
 
             if (holding != callee) {
                 LOG_ERROR("Calling signal with the caller not being the holder");
+                kern->unlock();
                 return false;
             }
 
@@ -166,6 +177,7 @@ namespace eka2l1 {
             if (!lock_count) {
                 if (waits.empty()) {
                     holding = nullptr;
+                    kern->unlock();
                     return true;
                 }
 
@@ -184,6 +196,7 @@ namespace eka2l1 {
                 holding = nullptr;
             }
 
+            kern->unlock();
             return true;
         }
 

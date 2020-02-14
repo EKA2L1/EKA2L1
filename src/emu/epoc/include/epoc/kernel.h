@@ -449,5 +449,15 @@ namespace eka2l1 {
             T *obj = create<T>(creation_args...);
             return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
         }
+
+        // Lock the kernel
+        void lock() {
+            kern_lock.lock();
+        }
+
+        // Unlock the kernel
+        void unlock() {
+            kern_lock.unlock();
+        }
     };
 }

@@ -37,6 +37,8 @@ namespace eka2l1 {
         }
 
         void semaphore::signal(int32_t signal_count) {
+            kern->lock();
+
             int32_t prev_count = avail_count;
             signaling = true;
 
@@ -56,9 +58,12 @@ namespace eka2l1 {
             }
 
             signaling = false;
+            kern->unlock();
         }
 
         void semaphore::wait() {
+            kern->lock();
+
             kernel::thread *calling_thr = kern->crr_thread();
             --avail_count;
 
@@ -71,6 +76,8 @@ namespace eka2l1 {
                 calling_thr->state = thread_state::wait_fast_sema;
                 calling_thr->wait_obj = this;
             }
+
+            kern->unlock();
         }
 
         void semaphore::priority_change() {
