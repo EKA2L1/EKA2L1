@@ -90,6 +90,7 @@ namespace eka2l1::drivers {
         invert_loc_mask = mask_program->get_uniform_location("u_invert").value_or(-1);
         source_loc_mask = mask_program->get_uniform_location("u_tex").value_or(-1);
         mask_loc_mask = mask_program->get_uniform_location("u_mask").value_or(-1);
+        alphablending_loc_mask = mask_program->get_uniform_location("u_alphablend").value_or(-1);
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -295,6 +296,7 @@ namespace eka2l1::drivers {
 
         if (mask_bmp) {
             glUniform1f(invert_loc_mask, (flags & bitmap_draw_flag_invert_mask) ? 1.0f : 0.0f);
+            glUniform1f(alphablending_loc_mask, (flags & bitmap_draw_flag_alpha_blending) ? 1.0f : 0.0f);
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite_ibo);
