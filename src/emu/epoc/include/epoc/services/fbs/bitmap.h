@@ -73,7 +73,8 @@ namespace eka2l1::epoc {
         bitmap_file_twenty_four_bit_rle_compression = 4,
         bitmap_file_twenty_four_u_bit_rle_compression = 5,
         bitmap_file_thirty_two_u_bit_rle_compression = 6,
-        bitmap_file_thirty_two_a_bit_rle_compression = 7
+        bitmap_file_thirty_two_a_bit_rle_compression = 7,
+        bitmap_file_palette_compression = 8
     };
 
     enum bitmap_color {

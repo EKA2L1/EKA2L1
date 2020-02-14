@@ -186,7 +186,7 @@ namespace eka2l1 {
 
         void bitwise_bitmap::settings::dirty_bitmap(const bool is_it) {
             if (is_it)
-                flags_ &= settings_flag::dirty_bitmap;
+                flags_ |= settings_flag::dirty_bitmap;
             else
                 flags_ &= ~(settings_flag::dirty_bitmap);
         }
@@ -197,7 +197,7 @@ namespace eka2l1 {
 
         void bitwise_bitmap::settings::violate_bitmap(const bool is_it) {
             if (is_it)
-                flags_ &= settings_flag::violate_bitmap;
+                flags_ |= settings_flag::violate_bitmap;
             else
                 flags_ &= ~(settings_flag::violate_bitmap);
         }
@@ -220,7 +220,11 @@ namespace eka2l1 {
                 compressed_in_ram_ = true;
             }
 
-            data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) - reinterpret_cast<const std::uint8_t *>(base));
+            if (data) {
+                data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) - reinterpret_cast<const std::uint8_t *>(base));
+            } else {
+                data_offset_ = 0;
+            }
 
             const epoc::display_mode disp_pixel_mode = get_display_mode_from_bpp(info.bit_per_pixels);
             settings_.current_display_mode(disp_pixel_mode);
@@ -228,7 +232,7 @@ namespace eka2l1 {
 
             byte_width_ = get_byte_width(info.size_pixels.width(), static_cast<std::uint8_t>(info.bit_per_pixels));
 
-            if (white_fill) {
+            if (white_fill && (data_offset_ != 0)) {
                 do_white_fill(reinterpret_cast<std::uint8_t *>(data), info.bitmap_size - sizeof(loader::sbm_header), settings_.current_display_mode());
             }
         }
@@ -463,14 +467,14 @@ namespace eka2l1 {
         return get_byte_width(size.x, get_bpp_from_display_mode(bpp)) * size.y;
     }
 
-    fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool support_dirty) {
+    fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool alloc_data, const bool support_dirty) {
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
 
         // Calculate the size
         std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(size, dpm);
         void *data = nullptr;
 
-        if (alloc_bytes > 0) {
+        if ((alloc_bytes > 0) && alloc_data) {
             // Allocates from the large chunk
             // Align them with 4 bytes
             std::size_t avail_dest_size = common::align(alloc_bytes, 4);
@@ -495,10 +499,6 @@ namespace eka2l1 {
         bws_bmp->construct(header, data, base_large_chunk, true);
 
         fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty);
-
-        if (bmp->id == 8) {
-            int a = 5;
-        }
 
         return bmp;
     }
@@ -546,33 +546,21 @@ namespace eka2l1 {
     }
 
     void fbscli::notify_dirty_bitmap(service::ipc_context *ctx) {
-        if (!nof_) {
-            server<fbs_server>()->dirty_nofs.push_back({ this, epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr) });
-            nof_ = &server<fbs_server>()->dirty_nofs.back();
-        }
+        if (dirty_nof_.empty()) {
+            dirty_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
 
-        if (nof_->dirty) {
-            ctx->set_request_status(epoc::error_none);
-            return;
+            if (server<fbs_server>()->compressor) {
+                server<fbs_server>()->compressor->notify(dirty_nof_);
+            }
         }
-
-        nof_->dirty = false;
-        nof_->nof.sts = ctx->msg->request_sts;
-        nof_->nof.requester = ctx->msg->own_thr;
     }
 
     void fbscli::cancel_notify_dirty_bitmap(service::ipc_context *ctx) {
-        std::vector<fbs_dirty_notify_request> &notifies = server<fbs_server>()->dirty_nofs;
+        if (server<fbs_server>()->compressor)
+            server<fbs_server>()->compressor->cancel(dirty_nof_);
+        else
+            dirty_nof_.complete(epoc::error_cancel);
 
-        for (std::size_t i = 0; i < notifies.size(); i++) {
-            if (notifies[i].client == this) {
-                // Officially cancel the request
-                notifies[i].nof.complete(epoc::error_cancel);
-                notifies.erase(notifies.begin() + i);
-            }
-        }
-
-        nof_ = nullptr;
         ctx->set_request_status(epoc::error_none);
     }
 
@@ -589,15 +577,16 @@ namespace eka2l1 {
             bmp = bmp->clean_bitmap;
         }
 
-        // Close the old handle
-        obj_table_.remove(bmp_handle);
-
         bmp_handles handle_info;
 
         // Get the clean bitmap handle!
         handle_info.handle = obj_table_.add(bmp);
         handle_info.server_handle = bmp->id;
         handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+
+        // Close the old handle. To prevent this object from being destroyed.
+        // In case no clean bitmap at all!
+        obj_table_.remove(bmp_handle);
 
         ctx->write_arg_pkg(1, handle_info);
         ctx->set_request_status(epoc::error_none);
@@ -727,9 +716,21 @@ namespace eka2l1 {
             return;
         }
 
-        //save_bwbmp_to_file("test.bmp", bmp, reinterpret_cast<const char*>(server<fbs_server>()
-        //    ->base_large_chunk));
+        compress_queue *compressor = server<fbs_server>()->compressor.get();
 
-        ctx->set_request_status(epoc::error_none);
+        if (!compressor) {
+            ctx->set_request_status(epoc::error_none);
+            return;
+        }
+
+        epoc::notify_info notify_for_me;
+        notify_for_me.requester = ctx->msg->own_thr;
+        notify_for_me.sts = ctx->msg->request_sts;
+
+        // Queue notification
+        bmp->compress_done_nof = notify_for_me;
+
+        // Done async. Please kernel dont freak out.
+        compressor->compress(bmp);
     }
 }

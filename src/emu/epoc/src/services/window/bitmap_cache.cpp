@@ -161,6 +161,9 @@ namespace eka2l1::epoc {
         }
 
         if (should_upload) {
+            if (driver_textures[idx])
+                builder->destroy_bitmap(driver_textures[idx]);
+
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels);
             char *data_pointer = reinterpret_cast<char*>(base_large_chunk + bmp->data_offset_);
             
@@ -173,7 +176,7 @@ namespace eka2l1::epoc {
 
                 const std::uint32_t compressed_size = bmp->header_.bitmap_size - bmp->header_.header_len;
 
-                common::wo_buf_stream dest_stream(&decompressed[0]);
+                common::wo_buf_stream dest_stream(&decompressed[0], raw_size);
                 common::ro_buf_stream source_stream(reinterpret_cast<std::uint8_t*>(data_pointer), compressed_size);
 
                 switch (bmp->header_.compression) {

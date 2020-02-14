@@ -22,12 +22,14 @@
 
 namespace eka2l1::service {
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
+        const std::lock_guard<std::mutex> guard(obj_lock);
+
         auto res = std::lower_bound(objs.begin(), objs.end(), obj,
             [](const ref_count_object_heap_ptr &lhs, const epoc::ref_count_object *rhs) {
                 return lhs->id < rhs->id;
             });
 
-        if (res == objs.end()) {
+        if (res == objs.end() || (res->get()->id != obj->id)) {
             return false;
         }
 

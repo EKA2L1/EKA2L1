@@ -124,6 +124,7 @@ add_library(epocservs
     include/epoc/services/fbs/adapter/font_adapter.h
     include/epoc/services/fbs/adapter/stb_font_adapter.h
     include/epoc/services/fbs/bitmap.h
+    include/epoc/services/fbs/compress_queue.h
     include/epoc/services/fbs/fbs.h
     include/epoc/services/fbs/font.h
     include/epoc/services/fbs/font_atlas.h
@@ -193,6 +194,7 @@ add_library(epocservs
     src/services/ecom/plugin.cpp
     src/services/fbs/adapter/font_adapter.cpp
     src/services/fbs/adapter/stb_font_adapter.cpp
+    src/services/fbs/compress_queue.cpp
     src/services/fbs/fbs.cpp
     src/services/fbs/font_atlas.cpp
     src/services/fbs/impls/bitmap.cpp

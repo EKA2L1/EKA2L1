@@ -29,11 +29,13 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/thread.h>
 #include <common/vecx.h>
 
 #include <epoc/vfs.h>
-
 #include <epoc/utils/err.h>
+
+#include <manager/config.h>
 
 namespace eka2l1 {
     fbs_chunk_allocator::fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *dat_ptr)
@@ -47,14 +49,8 @@ namespace eka2l1 {
 
     fbscli::~fbscli() {
         // Remove notification if there is
-        if (nof_) {  
-            std::vector<fbs_dirty_notify_request> &notifies = server<fbs_server>()->dirty_nofs;
-
-            for (std::size_t i = 0; i < notifies.size(); i++) {
-                if (notifies[i].client == this) {
-                    notifies.erase(notifies.begin() + i);
-                }
-            }
+        if (server<fbs_server>()->compressor && !dirty_nof_.empty()) {
+            server<fbs_server>()->compressor->cancel(dirty_nof_);
         }
 
         // Try to remove the session cache if it exists
@@ -162,6 +158,11 @@ namespace eka2l1 {
         , large_chunk(nullptr) {
     }
 
+    static void compressor_thread_func(compress_queue *queue) {
+        common::set_thread_name("FBS Server compressor thread");
+        queue->run();
+    }
+
     void fbs_server::connect(service::ipc_context &context) {
         if (!shared_chunk && !large_chunk) {
             // Initialize those chunks
@@ -230,6 +231,12 @@ namespace eka2l1 {
             // is available.
             large_chunk_allocator->allocate(4);
             shared_chunk_allocator->allocate(4);
+
+            // Create compressor thread
+            if (sys->get_config()->fbs_enable_compression_queue) {
+                compressor = std::make_unique<compress_queue>(this);
+                compressor_thread = std::make_unique<std::thread>(compressor_thread_func, compressor.get());
+            }
         }
 
         // Create new server client
@@ -278,6 +285,9 @@ namespace eka2l1 {
     }
 
     fbs_server::~fbs_server() {
+        compressor->abort();
+        compressor_thread->join();
+
         clear_all_sessions();
 
         // Destroy chunks.
@@ -293,7 +303,6 @@ namespace eka2l1 {
     }
     
     fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version)
-        : service::typical_session(serv, ss_id, client_version)
-        , nof_(nullptr) {
+        : service::typical_session(serv, ss_id, client_version) {
     }
 }

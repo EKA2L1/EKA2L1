@@ -24,6 +24,7 @@
 #pragma once
 
 #include <epoc/services/fbs/bitmap.h>
+#include <epoc/services/fbs/compress_queue.h>
 #include <epoc/services/fbs/font.h>
 #include <epoc/services/fbs/font_atlas.h>
 #include <epoc/services/fbs/font_store.h>
@@ -39,6 +40,7 @@
 #include <atomic>
 #include <memory>
 #include <optional>
+#include <thread>
 #include <unordered_map>
 
 namespace eka2l1 {
@@ -147,23 +149,19 @@ namespace eka2l1 {
         explicit fbsobj(const fbsobj_kind kind)
             : kind(kind) {
         }
+
+        ~fbsobj() override {
+        }
     };
 
     class fbs_server;
     struct fbscli;
 
-    struct fbs_dirty_notify_request {
-        fbscli *client;
-        epoc::notify_info nof;
-
-        bool dirty { false };
-    };
-
     struct fbsfont;
 
     struct fbscli : public service::typical_session {
         service::uid connection_id_ {0};
-        fbs_dirty_notify_request *nof_;
+        epoc::notify_info dirty_nof_;
         bool support_dirty_bitmap { true };
 
         explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
@@ -210,6 +208,7 @@ namespace eka2l1 {
         bool shared_ { false };
         fbsbitmap *clean_bitmap;
         bool support_dirty_bitmap;
+        epoc::notify_info compress_done_nof;
 
         explicit fbsbitmap(fbs_server *srv, epoc::bitwise_bitmap *bitmap, const bool shared, const bool support_dirty_bitmap)
             : fbsobj(fbsobj_kind::bitmap)
@@ -220,7 +219,7 @@ namespace eka2l1 {
             , support_dirty_bitmap(support_dirty_bitmap) {
         }
 
-        ~fbsbitmap();
+        ~fbsbitmap() override;
     };
 
     struct fbsbitmap_cache_info {
@@ -278,12 +277,14 @@ namespace eka2l1 {
         eka2l1::ptr<void> bmp_font_vtab;
 
         std::u16string default_system_font;
-        std::vector<fbs_dirty_notify_request> dirty_nofs;
 
         std::unordered_map<fbsbitmap_cache_info, fbsbitmap*> shared_bitmaps;
 
         std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
+
+        std::unique_ptr<compress_queue> compressor;
+        std::unique_ptr<std::thread> compressor_thread;
         
         epoc::open_font_session_cache_list *session_cache_list;
         epoc::open_font_session_cache_link *session_cache_link;
@@ -309,13 +310,15 @@ namespace eka2l1 {
          * 
          * \param  size           Size of the bitmap, in pixels.
          * \param  dpm            Bit per pixels as display mode.
+         * \param  alloc_data     If true, bitmap data will be allocated right away.
          * \param  support_dirty  True if this bitmap supports clean variant. For backwards compability.
          * 
          * \returns Bitmap object. The ID of bitmap is the server handle.
          * 
          * \see    free_bitmap
          */
-        fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool support_dirty = true);
+        fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool alloc_data = true,
+            const bool support_dirty = true);
         
         /**
          * \brief   Free a bitmap object.

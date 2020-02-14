@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 
 namespace eka2l1::service {
@@ -37,12 +38,14 @@ namespace eka2l1::service {
     class normal_object_container: public epoc::object_container {        
         using ref_count_object_heap_ptr = std::unique_ptr<epoc::ref_count_object>;
         std::vector<ref_count_object_heap_ptr> objs;
-
+        std::mutex obj_lock;
         std::atomic<uid> uid_counter {1};
 
     public:
         template <typename T>
         T *get(const service::uid id) {
+            const std::lock_guard<std::mutex> guard(obj_lock);
+
             auto result = std::lower_bound(objs.begin(), objs.end(), id, 
                 [](const ref_count_object_heap_ptr &lhs, const service::uid &rhs) {
                     return lhs->id < rhs;
@@ -61,6 +64,7 @@ namespace eka2l1::service {
             obj->id = uid_counter++;
             obj->owner = this;
 
+            const std::lock_guard<std::mutex> guard(obj_lock);
             objs.push_back(std::move(obj));
 
             return reinterpret_cast<T*>(objs.back().get());
