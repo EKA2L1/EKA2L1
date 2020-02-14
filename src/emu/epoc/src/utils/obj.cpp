@@ -19,6 +19,7 @@
 
 #include <epoc/utils/obj.h>
 #include <cassert>
+#include <common/log.h>
 
 namespace eka2l1::epoc {
     object_table::object_table(): 
@@ -76,5 +77,8 @@ namespace eka2l1::epoc {
         if (count == 0) {
             owner->remove(this);
         }
+    }
+
+    ref_count_object::~ref_count_object() {
     }
 }
