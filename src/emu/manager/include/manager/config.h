@@ -75,6 +75,8 @@ namespace eka2l1::manager {
         bool enable_srv_akn_skin { true };
         bool enable_srv_cdl { true };
 
+        bool fbs_enable_compression_queue { true };
+
         void serialize();
         void deserialize();
 
