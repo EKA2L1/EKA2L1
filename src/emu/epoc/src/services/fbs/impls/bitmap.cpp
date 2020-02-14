@@ -206,7 +206,7 @@ namespace eka2l1 {
             std::fill(dest, dest + size, 0xFF);
         }
         
-        void bitwise_bitmap::construct(loader::sbm_header &info, void *data, const void *base, const bool white_fill) {
+        void bitwise_bitmap::construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool white_fill) {
             uid_ = epoc::BITWISE_BITMAP_UID;
             allocator_ = MAGIC_FBS_HEAP_PTR;
             pile_ = MAGIC_FBS_PILE_PTR;
@@ -226,9 +226,8 @@ namespace eka2l1 {
                 data_offset_ = 0;
             }
 
-            const epoc::display_mode disp_pixel_mode = get_display_mode_from_bpp(info.bit_per_pixels);
-            settings_.current_display_mode(disp_pixel_mode);
-            settings_.initial_display_mode(disp_pixel_mode);
+            settings_.current_display_mode(disp_mode);
+            settings_.initial_display_mode(disp_mode);
 
             byte_width_ = get_byte_width(info.size_pixels.width(), static_cast<std::uint8_t>(info.bit_per_pixels));
 
@@ -496,7 +495,7 @@ namespace eka2l1 {
         header.size_twips = size * twips_mul;
         header.bit_per_pixels = get_bpp_from_display_mode(dpm);
 
-        bws_bmp->construct(header, data, base_large_chunk, true);
+        bws_bmp->construct(header, dpm, data, base_large_chunk, true);
 
         fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty);
 
@@ -651,7 +650,8 @@ namespace eka2l1 {
 
                 const std::uint8_t *packed_data = reinterpret_cast<const std::uint8_t*>(bitmap->data_offset_ + base);
 
-                if (bitmap->settings_.current_display_mode() == epoc::display_mode::color64k) {
+                switch (bitmap->settings_.current_display_mode()) {
+                case epoc::display_mode::color64k:
                     for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
                         for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
                             const std::uint16_t pixel = *reinterpret_cast<const std::uint16_t*>(packed_data + y * byte_width + x * 2);
@@ -678,7 +678,10 @@ namespace eka2l1 {
                             file.write(&fill_char, 1);
                         }
                     }
-                } else if (bitmap->settings_.current_display_mode() == epoc::display_mode::color256) {
+
+                    break;
+
+                case epoc::display_mode::color256:
                     for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
                         for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
                             const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t*>(packed_data + y * byte_width + x);
@@ -698,9 +701,35 @@ namespace eka2l1 {
                             file.write(&fill_char, 1);
                         }
                     }
+
+                    break;
+
+                case epoc::display_mode::gray256:
+                    for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
+                        for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {   
+                            const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t*>(packed_data + y * byte_width + x);
+
+                            file.write(reinterpret_cast<const char*>(&pixel), 1);
+                            file.write(reinterpret_cast<const char*>(&pixel), 1);
+                            file.write(reinterpret_cast<const char*>(&pixel), 1);
+                        }
+
+                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
+                            - bitmap->header_.size_pixels.x * 3;
+                        
+                        const char fill_char = 0;
+
+                        for (std::size_t i = 0; i < fill_align; i++) {
+                            file.write(&fill_char, 1);
+                        }
+                    }
+
+                    break;
+
+                default:    
+                    file.write(bitmap->data_offset_ + base, dib_header.uncompressed_size);
+                    break;
                 }
-            } else {
-                file.write(bitmap->data_offset_ + base, dib_header.uncompressed_size);
             }
 
             return true;
