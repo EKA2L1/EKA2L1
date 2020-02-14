@@ -217,9 +217,17 @@ namespace eka2l1::epoc {
         drivers::handle bmp_mask_driver_handle = handle_from_bitwise_bitmap(masked);
 
         std::uint32_t flags = 0;
+        const bool alpha_blending = (masked->settings_.current_display_mode() == epoc::display_mode::gray256);
 
-        if (blt_cmd->invert_mask) {
+        if (blt_cmd->invert_mask && !alpha_blending) {
             flags |= drivers::bitmap_draw_flag_invert_mask;
+        }
+
+        if (alpha_blending) {
+            flags |= drivers::bitmap_draw_flag_alpha_blending;
+            cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+                drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
+                drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha);
         }
 
         cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, blt_cmd->source_rect, flags);
