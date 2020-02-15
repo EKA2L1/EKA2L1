@@ -68,7 +68,8 @@ namespace eka2l1 {
     }
 
     void keysound_session::pop_context(service::ipc_context *ctx) {
-
+        contexts_.pop();
+        ctx->set_request_status(epoc::error_none);
     }
     
     void keysound_session::fetch(service::ipc_context *ctx) {
@@ -80,6 +81,11 @@ namespace eka2l1 {
 
         case epoc::keysound::opcode_push_context: {
             push_context(ctx);
+            break;
+        }
+
+        case epoc::keysound::opcode_pop_context: {
+            pop_context(ctx);
             break;
         }
 
