@@ -70,10 +70,16 @@ namespace eka2l1::epoc {
             flags_visible = 1 << 2,
             flags_allow_pointer_grab = 1 << 3,
             flags_non_fading = 1 << 4,
-            flags_enable_alpha = 1 << 5
+            flags_enable_alpha = 1 << 5,
+            flags_faded = 1 << 6,
+            flags_faded_default_param = 1 << 7,
+            flags_faded_also_children = 1 << 8
         };
 
         std::uint32_t flags;
+
+        std::uint8_t black_map = 128;
+        std::uint8_t white_map = 255;
 
         explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::window_type type_of_window, const epoc::display_mode dmode,
@@ -93,6 +99,10 @@ namespace eka2l1::epoc {
 
         bool is_visible() const {
             return ((flags & flags_active) && (flags & flags_visible));
+        }
+
+        bool is_faded() const {
+            return (flags & flags_faded);
         }
 
         /**

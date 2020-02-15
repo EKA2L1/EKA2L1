@@ -267,8 +267,25 @@ namespace eka2l1::epoc {
 
     void window_user::set_fade(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_set_fade *fade_param = reinterpret_cast<ws_cmd_set_fade*>(cmd.data_ptr);
-        LOG_TRACE("Set fade stubbed with black map: {}, white map: {}, enabled: {}", fade_param->black_map, fade_param->white_map,
-            static_cast<bool>(fade_param->flags & 1));
+
+        flags &= ~flags_faded;
+        flags &= ~flags_faded_also_children;
+        flags &= ~flags_faded_default_param;
+        
+        if (fade_param->flags & 1) {
+            flags |= flags_faded;
+        }
+
+        if (fade_param->flags & 2) {
+            flags |= flags_faded_also_children;
+        }
+
+        if (fade_param->flags & 4) {
+            flags |= flags_faded_default_param;
+
+            black_map = fade_param->black_map;
+            white_map = fade_param->white_map;
+        }
 
         context.set_request_status(epoc::error_none);
     }
@@ -463,6 +480,10 @@ namespace eka2l1::epoc {
 
         case EWsWinOpSetFade:
             set_fade(ctx, cmd);
+            break;
+
+        case EWsWinOpGetIsFaded:
+            ctx.set_request_status(static_cast<bool>(flags & flags_faded));
             break;
 
         case EWsWinOpSetTransparencyAlphaChannel:
