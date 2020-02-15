@@ -38,6 +38,8 @@
 #include <epoc/services/window/classes/winbase.h>
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
+#include <epoc/services/ui/cap/eiksrv.h>
+#include <epoc/services/ui/cap/oom_app.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
@@ -141,6 +143,8 @@ namespace eka2l1 {
             <service::server>("!AppListServer"));
         winserv = reinterpret_cast<eka2l1::window_server*>(sys->get_kernel_system()->get_by_name
             <service::server>("!Windowserver"));
+        oom = reinterpret_cast<eka2l1::oom_ui_app_server*>(sys->get_kernel_system()->get_by_name
+            <service::server>("101fdfae_10207218_AppServer"));
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -613,6 +617,55 @@ namespace eka2l1 {
         ImGui::SliderInt("MB", &mb_initial, 64, 512);
         ImGui::PopItemWidth();
         conf->maximum_ram = static_cast<std::uint32_t>(mb_initial * common::MB(1));
+
+        ImGui::Separator();
+        const float col6 = ImGui::GetWindowSize().x / 6;
+
+        static const char *BATTERY_LEVEL_STRS[] = {
+            "0", "1", "2", "3", 
+            "4", "5", "6", "7"
+        };
+
+        if (!oom->get_eik_server()) {
+            oom->init(sys->get_kernel_system());
+        }
+
+        epoc::cap::eik_server *eik = oom->get_eik_server();
+
+        ImGui::Text("Battery level");
+        ImGui::SameLine(col6 + 10);
+
+        ImGui::PushItemWidth(col6 * 2 - 10);
+
+        if (ImGui::BeginCombo("##BatteryLevel", BATTERY_LEVEL_STRS[eik->get_pane_maintainer()->get_battery_level()])) {
+            for (std::uint32_t i = epoc::cap::BATTERY_LEVEL_MIN; i <= epoc::cap::BATTERY_LEVEL_MAX; i++) {
+                if (ImGui::Selectable(BATTERY_LEVEL_STRS[i])) {
+                    eik->get_pane_maintainer()->set_battery_level(i);
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine(col6 * 3 + 10);
+        ImGui::Text("Signal level");
+
+        ImGui::SameLine(col6 * 4 + 10);
+        ImGui::PushItemWidth(col6 * 2 - 10);
+
+        if (ImGui::BeginCombo("##SignalLevel", BATTERY_LEVEL_STRS[eik->get_pane_maintainer()->get_signal_level()])) {
+            for (std::uint32_t i = epoc::cap::BATTERY_LEVEL_MIN; i <= epoc::cap::BATTERY_LEVEL_MAX; i++) {
+                if (ImGui::Selectable(BATTERY_LEVEL_STRS[i])) {
+                    eik->get_pane_maintainer()->set_signal_level(i);
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
     }
 
     void imgui_debugger::show_preferences() {

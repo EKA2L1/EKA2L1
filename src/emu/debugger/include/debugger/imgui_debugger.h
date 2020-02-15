@@ -35,6 +35,7 @@ namespace eka2l1 {
     struct imgui_logger;
     class applist_server;
     class window_server;
+    class oom_ui_app_server;
 
     using app_launch_function = std::function<void(const std::u16string &path)>;
     using selected_window_callback_function = std::function<void(void*)>;
@@ -111,6 +112,8 @@ namespace eka2l1 {
 
         applist_server *alserv;
         window_server  *winserv;
+        oom_ui_app_server *oom;
+
         app_launch_function app_launch;
 
         std::mutex errors_mut;
