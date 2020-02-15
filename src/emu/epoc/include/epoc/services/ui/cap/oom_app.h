@@ -22,7 +22,10 @@
 #include <epoc/services/framework.h>
 #include <epoc/services/server.h>
 #include <epoc/services/window/window.h>
+#include <epoc/services/ui/cap/eiksrv.h>
 #include <epoc/services/ui/cap/sgc.h>
+
+#include <mutex>
 
 namespace eka2l1 {
     class window_server;
@@ -140,8 +143,11 @@ namespace eka2l1 {
 
         std::string layout_buf;
         std::unique_ptr<epoc::cap::sgc_server> sgc;
+        std::unique_ptr<epoc::cap::eik_server> eik;
 
         window_server *winsrv{ nullptr };
+
+        std::mutex lock;
 
         void connect(service::ipc_context &ctx) override;
 
@@ -151,9 +157,13 @@ namespace eka2l1 {
         std::string get_layout_buf();
         void set_sgc_params(service::ipc_context &ctx);
 
-        void init(kernel_system *kern);
-
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);
+
+        void init(kernel_system *kern);
+
+        epoc::cap::eik_server *get_eik_server() {
+            return eik.get();
+        }
     };
 }

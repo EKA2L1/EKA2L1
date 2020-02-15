@@ -170,7 +170,11 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::init(kernel_system *kern) {
+        const std::lock_guard<std::mutex> guard(lock);
+
         sgc = std::make_unique<epoc::cap::sgc_server>();
+        eik = std::make_unique<epoc::cap::eik_server>(kern);
+
         sgc->init(kern);
     }
 }
