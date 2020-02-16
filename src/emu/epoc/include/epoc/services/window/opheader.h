@@ -173,7 +173,7 @@ namespace eka2l1 {
         std::uint32_t source_handle;
         eka2l1::rect source_rect;
         std::uint32_t mask_handle;
-        bool invert_mask;
+        std::uint32_t invert_mask;
     };
     
     struct ws_cmd_set_window_group_ordinal_position {

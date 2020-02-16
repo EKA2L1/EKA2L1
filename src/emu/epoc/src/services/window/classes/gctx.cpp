@@ -224,13 +224,18 @@ namespace eka2l1::epoc {
         }
 
         if (alpha_blending) {
-            flags |= drivers::bitmap_draw_flag_alpha_blending;
+            cmd_builder->set_blend_mode(true);
             cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
                 drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
-                drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha);
+                drivers::blend_factor::one, drivers::blend_factor::zero);
         }
 
         cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, blt_cmd->source_rect, flags);
+        
+        if (alpha_blending) {    
+            cmd_builder->set_blend_mode(false);
+        }
+        
         context.set_request_status(epoc::error_none);
     }
 

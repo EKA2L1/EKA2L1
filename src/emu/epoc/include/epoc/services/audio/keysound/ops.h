@@ -22,6 +22,7 @@
 namespace eka2l1::epoc::keysound {
     enum opcode {
         opcode_init = 0,
-        opcode_push_context = 5
+        opcode_push_context = 5,
+        opcode_pop_context = 6
     };
 }

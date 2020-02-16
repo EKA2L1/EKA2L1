@@ -143,6 +143,11 @@ namespace eka2l1::epoc {
             }
         }
 
+        builder->set_blend_mode(true);
+        builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+            drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
+            drivers::blend_factor::zero, drivers::blend_factor::one);
+
         // Start to render these texts.
         for (auto &chr: text) {
             eka2l1::rect source_rect;
@@ -162,6 +167,8 @@ namespace eka2l1::epoc {
             // TODO: Newline
             cur_pos.x += static_cast<int>(std::round(info.xadv));
         }
+
+        builder->set_blend_mode(false);
 
         return true;
     }

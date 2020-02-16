@@ -49,8 +49,7 @@ namespace eka2l1::epoc {
         const epoc::display_mode dsp = bw_bmp->settings_.current_display_mode();
         return (dsp == epoc::display_mode::color16) || (dsp == epoc::display_mode::color16m)
             || (dsp == epoc::display_mode::color16ma) || (dsp == epoc::display_mode::color16map)
-            || (dsp == epoc::display_mode::color16mu) || (dsp == epoc::display_mode::color256)
-            || (dsp == epoc::display_mode::gray256);
+            || (dsp == epoc::display_mode::color16mu) || (dsp == epoc::display_mode::color256);
     }
 
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
@@ -68,15 +67,6 @@ namespace eka2l1::epoc {
                     const std::uint32_t palette_color = epoc::color_256_palette[palette_index];
 
                     std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char*>(&palette_color), 3);
-
-                    break;
-                }
-
-                case epoc::display_mode::gray256: {
-                    const std::uint8_t simple_color = original_ptr[y * bw_bmp->byte_width_ + x];
-                    return_ptr[byte_width_converted * y + x * 3] = simple_color;
-                    return_ptr[byte_width_converted * y + x * 3 + 1] = simple_color;
-                    return_ptr[byte_width_converted * y + x * 3 + 2] = simple_color;
 
                     break;
                 }

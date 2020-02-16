@@ -141,9 +141,19 @@ namespace eka2l1::drivers {
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), data_format,
             data_type, data);
 
-        if (data_format == texture_format::r) {
+        switch (data_format) {
+        case texture_format::r:
             bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red, 
-                channel_swizzle::red, channel_swizzle::one });
+                channel_swizzle::red, channel_swizzle::red });
+            break;
+
+        case texture_format::rgb:
+            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green, 
+                channel_swizzle::blue, channel_swizzle::one });
+            break;
+
+        default:
+            break;
         }
     }
 
