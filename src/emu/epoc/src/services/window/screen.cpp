@@ -42,7 +42,7 @@ namespace eka2l1::epoc {
 
             window_user *winuser = reinterpret_cast<window_user*>(win);
 
-            if (!winuser || !winuser->driver_win_id) {
+            if (!winuser || !winuser->driver_win_id || !winuser->is_visible()) {
                 // No need to redraw this window yet. It doesn't even have any content ready.
                 return false;
             }
