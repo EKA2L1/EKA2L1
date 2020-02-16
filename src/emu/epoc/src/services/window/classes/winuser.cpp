@@ -136,6 +136,15 @@ namespace eka2l1::epoc {
         return true;
     }
 
+    static bool should_purge_window_user_redraw(void *win, epoc::redraw_event &evt) {
+        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+        if (user->client_handle == evt.handle) {
+            return false;
+        }
+
+        return true;
+    }
+
     void window_user::set_visible(const bool vis) {
         bool should_trigger_redraw = false;
 
@@ -150,6 +159,7 @@ namespace eka2l1::epoc {
         } else {
             // Purge all queued events now that the window is not visible anymore
             client->walk_event(should_purge_window_user, this);
+            client->walk_redraw(should_purge_window_user_redraw, this);
         }
 
         if (should_trigger_redraw) {
@@ -295,6 +305,15 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
     }
     
+    void window_user::free(service::ipc_context &context, ws_cmd &cmd) {
+        // Try to redraw the screen
+        set_visible(false);
+        remove_from_sibling_list();
+        context.set_request_status(epoc::error_none);
+
+        client->delete_object(cmd.obj_handle);
+    }
+    
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
 
@@ -308,6 +327,8 @@ namespace eka2l1::epoc {
             }
         }
 
+        //LOG_TRACE("Window user op: {}", (int)cmd.header.op);
+        
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
@@ -435,9 +456,10 @@ namespace eka2l1::epoc {
             irect.top = pos;
             irect.size = size;
 
-            // Invalidate the whole window
-            client->queue_redraw(this, rect(pos, pos + size));
-            client->trigger_redraw();
+            if (is_visible()) {
+                client->queue_redraw(this, rect(pos, pos + size));
+                client->trigger_redraw();
+            }
 
             ctx.set_request_status(epoc::error_none);
 
@@ -454,9 +476,10 @@ namespace eka2l1::epoc {
             irect.top = prototype_irect.in_top_left;
             irect.size = prototype_irect.in_bottom_right - prototype_irect.in_top_left;
 
-            // Invalidate needs redraw
-            redraw_evt_id = client->queue_redraw(this, rect(irect.top, irect.size));
-            client->trigger_redraw();
+            if (is_visible()) {
+                redraw_evt_id = client->queue_redraw(this, rect(irect.top, irect.size));
+                client->trigger_redraw();
+            }
 
             ctx.set_request_status(epoc::error_none);
 
@@ -488,6 +511,10 @@ namespace eka2l1::epoc {
 
         case EWsWinOpSetTransparencyAlphaChannel:
             set_transparency_alpha_channel(ctx, cmd);
+            break;
+
+        case EWsWinOpFree:
+            free(ctx, cmd);
             break;
 
         default: {

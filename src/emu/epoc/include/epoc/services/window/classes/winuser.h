@@ -123,6 +123,7 @@ namespace eka2l1::epoc {
         void set_fade(service::ipc_context &context, ws_cmd &cmd);
         void set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd);
         bool clear_redraw_store();
+        void free(service::ipc_context &context, ws_cmd &cmd);
 
         epoc::window_group *get_group() {
             return reinterpret_cast<epoc::window_group*>(parent);
