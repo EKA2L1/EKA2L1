@@ -113,6 +113,7 @@ namespace eka2l1::epoc {
 
         void use_font(service::ipc_context &context, ws_cmd &cmd);
         void reset(service::ipc_context &context, ws_cmd &cmd);
+        void free(service::ipc_context &context, ws_cmd &cmd);
 
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 

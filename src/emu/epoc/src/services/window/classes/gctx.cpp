@@ -388,6 +388,11 @@ namespace eka2l1::epoc {
             info->horiz, info->baseline_offset, info->left_mgr);
     }
 
+    void graphic_context::free(service::ipc_context &context, ws_cmd &cmd) {
+        context.set_request_status(epoc::error_none);
+        client->delete_object(cmd.obj_handle);
+    }
+    
     void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -413,7 +418,8 @@ namespace eka2l1::epoc {
             { ws_gc_u171_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
             { ws_gc_u171_gdi_blt2, &graphic_context::gdi_blt2 },
             { ws_gc_u171_gdi_blt3, &graphic_context::gdi_blt3 },
-            { ws_gc_u171_gdi_blt_masked, &graphic_context::gdi_blt_masked }
+            { ws_gc_u171_gdi_blt_masked, &graphic_context::gdi_blt_masked },
+            { ws_gc_u171_free, &graphic_context::free }
         };
         
         static const ws_graphics_context_table_op curr_opcode_handlers = {
@@ -431,7 +437,8 @@ namespace eka2l1::epoc {
             { ws_gc_curr_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
             { ws_gc_curr_gdi_blt2, &graphic_context::gdi_blt2 },
             { ws_gc_curr_gdi_blt3, &graphic_context::gdi_blt3 },
-            { ws_gc_curr_gdi_blt_masked, &graphic_context::gdi_blt_masked }
+            { ws_gc_curr_gdi_blt_masked, &graphic_context::gdi_blt_masked },
+            { ws_gc_curr_free, &graphic_context::free }
         };
 
         epoc::version cli_ver = client->client_version();
