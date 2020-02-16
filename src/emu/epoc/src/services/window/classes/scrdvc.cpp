@@ -175,7 +175,7 @@ namespace eka2l1::epoc {
 
         case ws_sd_op_free: {
             ctx.set_request_status(epoc::error_none);
-            client->delete_object(id);
+            client->delete_object(cmd.obj_handle);
             break;
         }
 
