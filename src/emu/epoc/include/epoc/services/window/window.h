@@ -234,6 +234,10 @@ namespace eka2l1::epoc {
             events.walk(walker, userdata);
         }
 
+        void walk_redraw(epoc::redraw_fifo::walker_func walker, void *userdata) {
+            redraws.walk(walker, userdata);
+        }
+
         void deque_redraw(const std::uint32_t handle) {
             redraws.cancel_event_queue(handle);
         }
