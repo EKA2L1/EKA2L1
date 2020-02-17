@@ -309,6 +309,21 @@ namespace eka2l1::epoc {
         // Try to redraw the screen
         set_visible(false);
         remove_from_sibling_list();
+
+        // Remove driver bitmap
+        if (driver_win_id) {
+            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+            // Queue a resize command
+            auto cmd_list = drv->new_command_list();
+            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+            
+            cmd_builder->destroy_bitmap(driver_win_id);
+            drv->submit_command_list(*cmd_list);
+
+            driver_win_id = 0;
+        }
+
         context.set_request_status(epoc::error_none);
 
         client->delete_object(cmd.obj_handle);
