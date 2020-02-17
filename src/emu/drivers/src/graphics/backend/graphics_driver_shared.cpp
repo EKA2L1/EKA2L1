@@ -70,6 +70,11 @@ namespace eka2l1::drivers {
         tex->set_filter_minmag(true, drivers::filter_option::linear);
     }
 
+    bitmap::~bitmap() {
+        tex.reset();
+        fb.reset();
+    }
+    
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
         : graphics_driver(gr_api)
         , binding(nullptr)
@@ -244,12 +249,12 @@ namespace eka2l1::drivers {
         drivers::handle h = 0;
         helper.pop(h);
 
-        if (h > bmp_textures.size()) {
+        if ((h & ~HANDLE_BITMAP) > bmp_textures.size()) {
             LOG_ERROR("Invalid bitmap handle to destroy");
             return;
         }
 
-        bmp_textures[h - 1].reset();
+        bmp_textures[(h & ~HANDLE_BITMAP) - 1].reset();
     }
 
     void shared_graphics_driver::resize_bitmap(command_helper &helper) {
@@ -516,6 +521,8 @@ namespace eka2l1::drivers {
         helper.pop(descriptor_count);
 
         attach_descriptors(h, stride, instance_move, descriptors, descriptor_count);
+
+        delete descriptors;
     }
 
     void shared_graphics_driver::destroy_object(command_helper &helper) {

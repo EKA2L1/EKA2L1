@@ -41,6 +41,7 @@ namespace eka2l1::drivers {
         int bpp;
 
         explicit bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp);
+        virtual ~bitmap();
     };
 
     using bitmap_ptr = std::unique_ptr<bitmap>;
