@@ -152,6 +152,16 @@ namespace eka2l1 {
         const std::size_t estimated_size = estimate_compress_size(bmp, data_base);
         const std::size_t org_size = bmp->bitmap_->header_.bitmap_size - sizeof(loader::sbm_header);
 
+        if (estimated_size >= org_size) {
+            // Stop compress
+            if (bmp->support_dirty_bitmap) {
+                serv_->free_bitmap(clean_bitmap);
+            }
+            
+            bmp->compress_done_nof.complete(epoc::error_none);
+            return;
+        }
+
         std::uint8_t *new_data = reinterpret_cast<std::uint8_t*>(serv_->allocate_large_data(estimated_size));
         const bool compress_result = compress_data(bmp, data_base, new_data, estimated_size);
 
