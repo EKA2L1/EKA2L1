@@ -285,8 +285,10 @@ namespace eka2l1 {
     }
 
     fbs_server::~fbs_server() {
-        compressor->abort();
-        compressor_thread->join();
+        if (compressor) {
+            compressor->abort();
+            compressor_thread->join();
+        }
 
         clear_all_sessions();
 
