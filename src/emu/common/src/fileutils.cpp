@@ -141,8 +141,9 @@ namespace eka2l1::common {
 
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
-        while ((strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0) && is_valid()) {
+        while (d && (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0) && is_valid()) {
             cycles_to_next_entry();
+            d = reinterpret_cast<decltype(d)>(find_data);
         };
 #elif EKA2L1_PLATFORM(WIN32)
         find_data = new WIN32_FIND_DATA;
@@ -158,9 +159,10 @@ namespace eka2l1::common {
 
         LPWIN32_FIND_DATA fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
 
-        while ((strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0)
+        while (fdata_win32 && (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0)
             && is_valid()) {
             cycles_to_next_entry();
+            fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
         }
 #endif
     }
@@ -225,9 +227,10 @@ namespace eka2l1::common {
 
         do {
             cycles_to_next_entry();
-        } while (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0);
+            fdata_win32 = reinterpret_cast<LPWIN32_FIND_DATA>(find_data);
+        } while (fdata_win32 && (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0));
 #elif EKA2L1_PLATFORM(POSIX)
-        struct dirent *d = reinterpret_cast<decltype(d)>(handle);
+        struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
         entry.name = d->d_name;
 
         if (detail) {
@@ -237,7 +240,8 @@ namespace eka2l1::common {
 
         do {
             cycles_to_next_entry();
-        } while (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0);
+            d = reinterpret_cast<struct dirent*>(find_data);
+        } while (d && (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0));
 #endif
 
         return 0;
