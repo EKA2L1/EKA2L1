@@ -74,7 +74,7 @@ namespace eka2l1::desktop {
         manager::config_state conf;
         window_server *winserv;
 
-        bool mouse_down[3];
+        bool mouse_down[5];
         std::mutex input_mutex;
 
         void stage_one();
