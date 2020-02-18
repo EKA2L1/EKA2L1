@@ -155,6 +155,12 @@ namespace eka2l1 {
                 return *this;
             }
 
+            if (crr_pos == 0 && (is_separator(path[crr_pos]))) {
+                crr_pos++;
+                comp = "";
+                return *this;
+            }
+            
             if (crr_pos < path.length()) {
                 comp = "";
             } else {

@@ -95,6 +95,23 @@ namespace eka2l1 {
     }
 
     template <typename T>
+    std::basic_string<T> transform_separators(std::basic_string<T> path,
+        bool symbian_use, std::function<T(bool)> separator_func) {
+        size_t crr_point = 0;
+        T dsep = separator_func(symbian_use);
+
+        while (crr_point < path.size()) {
+            if (is_separator(path[crr_point])) {
+                path[crr_point] = dsep;
+            }
+
+            crr_point += 1;
+        }
+
+        return path;
+    }
+
+    template <typename T>
     std::basic_string<T> add_path_impl(const std::basic_string<T> &path1, const std::basic_string<T> &path2,
         bool symbian_use, std::function<T(bool)> separator_func) {
         using generic_string = std::basic_string<T>;
@@ -116,7 +133,7 @@ namespace eka2l1 {
                 auto pos_sub = path2.find_first_not_of(path2[0]);
 
                 if (pos_sub == std::string::npos) {
-                    return path1;
+                    return transform_separators(path1, symbian_use, separator_func);
                 }
 
                 nstring = path2.substr(pos_sub);
@@ -130,19 +147,7 @@ namespace eka2l1 {
         }
 
         // Turn all slash into / (quick hack)
-
-        size_t crr_point = 0;
-        T dsep = separator_func(symbian_use);
-
-        while (crr_point < merge.size() - 1) {
-            if (is_separator(merge[crr_point])) {
-                merge[crr_point] = dsep;
-            }
-
-            crr_point += 1;
-        }
-
-        return merge;
+        return transform_separators(merge, symbian_use, separator_func);
     }
 
     template <typename T>
@@ -421,7 +426,7 @@ namespace eka2l1 {
         struct stat st;
         auto res = stat(path.c_str(), &st);
 
-        if (res == -1) {
+        if (res < 0) {
             return false;
         }
 
@@ -439,12 +444,10 @@ namespace eka2l1 {
 
         for (ite = path_iterator(path);
              ite; ite++) {
-            if ((*ite).length() != 0) {
-                crr_path = add_path(crr_path, add_path(*ite, "/"));
+            crr_path = add_path(crr_path, add_path(*ite, "/"));
 
-                if (!is_dir(crr_path)) {
-                    create_directory(crr_path);
-                }
+            if (!is_dir(crr_path)) {
+                create_directory(crr_path);
             }
         }
     }
