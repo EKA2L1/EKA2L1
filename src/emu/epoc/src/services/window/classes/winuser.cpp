@@ -532,6 +532,10 @@ namespace eka2l1::epoc {
             free(ctx, cmd);
             break;
 
+        case EWsWinOpWindowGroupId:
+            ctx.set_request_status(get_group()->id);
+            break;
+
         default: {
             LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
             break;
