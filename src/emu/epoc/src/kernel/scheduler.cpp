@@ -105,16 +105,16 @@ namespace eka2l1::kernel {
 #endif
     kernel::thread *thread_scheduler::next_ready_thread() {
         // Check the most significant bit and get the non-empty read queue
-        int non_empty = common::count_leading_zero(ready_mask[0]);
+        int non_empty = common::find_most_significant_bit_one(ready_mask[0]);
 
         if (non_empty != 0) {
-            return readys[non_empty];
+            return readys[non_empty - 1];
         }
 
-        non_empty = common::count_leading_zero(ready_mask[1]);
+        non_empty = common::find_most_significant_bit_one(ready_mask[1]);
 
         if (non_empty != 0) {
-            return readys[non_empty + 32];
+            return readys[non_empty + 31];
         }
 
         return nullptr;
