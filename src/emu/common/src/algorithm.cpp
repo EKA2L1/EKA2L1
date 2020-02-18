@@ -171,7 +171,10 @@ namespace eka2l1 {
             DWORD lz = 0;
             _BitScanReverse(&lz, v);
 
-            return static_cast<int>(lz);
+            if (lz != 0)
+                return static_cast<int>(31 - lz);
+
+            return 32;
         #endif 
         }
 
