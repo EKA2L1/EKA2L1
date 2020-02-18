@@ -228,7 +228,7 @@ namespace eka2l1::common {
         }
         }
 
-        int file_handle = open(file_name.c_str(), open_mode);
+        int file_handle = open(file_name.c_str(), open_mode, 0);
 
         if (file_handle == -1) {
             return nullptr;
