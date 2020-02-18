@@ -556,7 +556,7 @@ namespace eka2l1 {
                     return u"";
                 }
 
-                map_path += common::utf8_to_ucs2(firmcode);
+                map_path += common::utf8_to_ucs2(common::lowercase_string(firmcode));
             }
             
             if (static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
