@@ -227,12 +227,17 @@ namespace eka2l1 {
 
     void central_repo_server::rescan_drives(eka2l1::io_system *io) {
         for (drive_number d = drive_z; d >= drive_a; d = static_cast<drive_number>(static_cast<int>(d) - 1)) {
-            eka2l1::drive drv = std::move(*io->get_drive_entry(d));
-            if (drv.media_type == drive_media::rom) {
+            std::optional<eka2l1::drive> drv = io->get_drive_entry(d);
+
+            if (!drv) {
+                continue;
+            }
+
+            if (drv->media_type == drive_media::rom) {
                 rom_drv = d;
             }
 
-            if (static_cast<bool>(drv.attribute & io_attrib::internal) && !static_cast<bool>(drv.attribute & io_attrib::write_protected)) {
+            if (static_cast<bool>(drv->attribute & io_attrib::internal) && !static_cast<bool>(drv->attribute & io_attrib::write_protected)) {
                 avail_drives.push_back(d);
             }
         }
