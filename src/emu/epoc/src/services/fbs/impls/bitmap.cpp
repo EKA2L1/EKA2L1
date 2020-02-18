@@ -38,6 +38,7 @@
 #include <epoc/utils/err.h>
 
 #include <cassert>
+#include <algorithm>
 
 namespace eka2l1 {
     static epoc::display_mode get_display_mode_from_bpp(const int bpp) {
@@ -234,6 +235,49 @@ namespace eka2l1 {
             if (white_fill && (data_offset_ != 0)) {
                 do_white_fill(reinterpret_cast<std::uint8_t *>(data), info.bitmap_size - sizeof(loader::sbm_header), settings_.current_display_mode());
             }
+        }
+
+        int bitwise_bitmap::copy_data(const bitwise_bitmap& source, uint8_t *base) {
+            const auto disp_mode = source.settings_.current_display_mode();
+            assert(disp_mode == settings_.current_display_mode());
+            if (source.header_.size_pixels.width() > 0) {
+                header_.size_twips.x = source.header_.size_twips.width() * header_.size_pixels.width() / source.header_.size_pixels.width();
+            }
+            if (source.header_.size_pixels.height() > 0) {
+                header_.size_twips.y = source.header_.size_twips.height() * header_.size_pixels.height() / source.header_.size_pixels.height();
+            }
+
+            uint8_t *dest_base = base + data_offset_;
+            uint8_t *src_base = base + source.data_offset_;
+            const int min_pixel_height = std::min(header_.size_pixels.height(), source.header_.size_pixels.height());
+
+            // copy with compressed data not supported yet
+            assert(source.compressed_in_ram_ == false);
+
+            uint8_t *dest = dest_base;
+            uint8_t *src = src_base;
+            const int min_byte_width = std::min(byte_width_, source.byte_width_);
+            for (int row = 0; row < min_pixel_height; row++) {
+                std::memcpy(dest, src, min_byte_width);
+                dest += byte_width_;
+                src += source.byte_width_;
+            }
+
+            if (header_.size_pixels.width() > source.header_.size_pixels.width()) {
+                const int extra_bits = (source.header_.size_pixels.width() * source.header_.bit_per_pixels) & 31;
+                if (extra_bits > 0) {
+                    uint32_t mask = 0xFFFFFFFF;
+                    mask <<= extra_bits;
+                    const int dest_word_width = byte_width_ >> 2;
+                    const int src_word_width = source.byte_width_ >> 2;
+                    uint32_t *mask_addr = reinterpret_cast<uint32_t*>(dest_base) + src_word_width - 1;
+                    for (int row = 0; row < min_pixel_height; row ++) {
+                        *mask_addr |= mask;
+                        mask_addr += dest_word_width;
+                    }
+                }
+            }
+            return epoc::error_none;
         }
     }
 
@@ -541,6 +585,45 @@ namespace eka2l1 {
         specs->address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         ctx->write_arg_pkg(0, specs.value());
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void fbscli::resize_bitmap(service::ipc_context *ctx) {
+        const auto fbss = server<fbs_server>();
+        const epoc::handle handle = *(ctx->get_arg<std::uint32_t>(0));
+        fbsbitmap *bmp = fbss->get<fbsbitmap>(handle);
+        if (!bmp) {
+            ctx->set_request_status(epoc::error_bad_handle);
+            return;
+        }
+
+        while (bmp->clean_bitmap != nullptr) {
+            bmp = bmp->clean_bitmap;
+        }
+
+        const vec2 new_size = {*(ctx->get_arg<int>(1)), *(ctx->get_arg<int>(2))};
+        const bool compressed_in_ram = bmp->bitmap_->compressed_in_ram_;
+
+        // not working with compressed bitmaps right now
+        assert(compressed_in_ram == false);
+
+        const epoc::display_mode disp_mode = bmp->bitmap_->settings_.current_display_mode();
+        const auto new_bmp = fbss->create_bitmap(new_size, disp_mode);
+
+        new_bmp->bitmap_->copy_data(*(bmp->bitmap_), fbss->base_large_chunk);
+        bmp->clean_bitmap = new_bmp;
+
+        // notify dirty bitmap on ref count >= 2
+
+        obj_table_.remove(handle);
+        bmp_handles handle_info;
+
+        // Add this object to the object table!
+        handle_info.handle = obj_table_.add(new_bmp);
+        handle_info.server_handle = new_bmp->id;
+        handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
+
+        ctx->write_arg_pkg(3, handle_info);
         ctx->set_request_status(epoc::error_none);
     }
 

@@ -112,6 +112,11 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_bitmap_resize: {
+            resize_bitmap(ctx);
+            break;
+        }
+
         case fbs_bitmap_notify_dirty: {
             notify_dirty_bitmap(ctx);
             break;

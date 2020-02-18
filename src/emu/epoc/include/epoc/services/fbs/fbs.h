@@ -175,6 +175,7 @@ namespace eka2l1 {
         void duplicate_font(service::ipc_context *ctx);
         void duplicate_bitmap(service::ipc_context *ctx);
         void create_bitmap(service::ipc_context *ctx);
+        void resize_bitmap(service::ipc_context *ctx);
         void notify_dirty_bitmap(service::ipc_context *ctx);
         void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
         void get_clean_bitmap(service::ipc_context *ctx);
