@@ -173,6 +173,11 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case ws_sd_op_display_mode: {
+            ctx.set_request_status(static_cast<int>(scr->disp_mode));
+            break;
+        }
+
         case ws_sd_op_free: {
             ctx.set_request_status(epoc::error_none);
             client->delete_object(cmd.obj_handle);
