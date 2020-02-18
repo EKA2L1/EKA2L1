@@ -38,7 +38,7 @@
 namespace eka2l1 {
     namespace manager {
         static constexpr const char *APP_REGISTRY_FILENAME = "apps_registry.yml";
-        static constexpr const char *PACKAGE_FOLDER_PATH = "\\packages\\";
+        static constexpr const char *PACKAGE_FOLDER_PATH = "packages";
 
         package_manager::package_manager(io_system *io, config_state *conf)
             : io(io) 

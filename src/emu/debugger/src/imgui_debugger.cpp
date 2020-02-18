@@ -1057,7 +1057,7 @@ namespace eka2l1 {
                         std::string firmware_code;
 
                         bool result = eka2l1::loader::install_rpkg(mngr, wizard->current_rpkg_path,
-                            add_path(conf->storage, "drives//z//"), firmware_code, progress);
+                            add_path(conf->storage, "drives/z/"), firmware_code, progress);
 
                         if (!result) {
                             wizard->failure = true;

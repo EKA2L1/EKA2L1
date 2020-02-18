@@ -43,7 +43,7 @@ namespace eka2l1 {
             std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
                 ::tolower);
 
-            std::string real_path = add_path(add_path(devices_rom_path, "//temp//"), file_full_relative);
+            std::string real_path = add_path(add_path(devices_rom_path, "/temp/"), file_full_relative);
 
             std::string dir = eka2l1::file_directory(real_path);
             eka2l1::create_directories(dir);
@@ -150,13 +150,13 @@ namespace eka2l1 {
 
             {
                 // We are done extracting, but we need to get the rom info, also
-                std::string platform_ini_path = devices_rom_path + "temp\\resource\\versions\\platform.txt";
+                std::string platform_ini_path = add_path(devices_rom_path, "temp\\resource\\versions\\platform.txt");
 
                 common::ini_file platform_ini;
 
                 if (platform_ini.load(platform_ini_path.c_str()) != 0) {
                     LOG_ERROR("Can't load platform.txt in Z:\\Resources\\Versions, fall back to second method");
-                    const std::string sis_path = devices_rom_path + "temp\\resource\verions\\series60v*.sis";
+                    const std::string sis_path = add_path(devices_rom_path, "temp\resource\verions\\series60v*.sis");
 
                     common::dir_iterator directory(sis_path);
                     common::dir_entry entry;
@@ -235,12 +235,12 @@ namespace eka2l1 {
                 }
             }
 
-            std::string product_ini_path = devices_rom_path + "temp\\resource\\versions\\product.txt";
+            std::string product_ini_path = add_path(devices_rom_path, "temp\\resource\\versions\\product.txt");
             common::ini_file product_ini;
 
             if (product_ini.load(product_ini_path.c_str(), false) != 0) {
                 LOG_ERROR("Can't load product.txt in Z:\\Resource\\Versions, revert all changes");
-                eka2l1::common::remove(devices_rom_path + "temp\\");
+                eka2l1::common::remove(add_path(devices_rom_path, "\\temp\\"));
 
                 return false;
             }
@@ -253,7 +253,7 @@ namespace eka2l1 {
 
             if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver)) {
                 LOG_ERROR("This device ({}) already installed, revert all changes", firmcode);
-                eka2l1::common::remove(devices_rom_path + "temp\\");
+                eka2l1::common::remove(add_path(devices_rom_path, "\\temp\\"));
 
                 return false;
             }
@@ -262,7 +262,7 @@ namespace eka2l1 {
             firmware_code_ret = firmcode;
 
             // Rename temp folder to its product code
-            eka2l1::common::move_file(devices_rom_path + "temp\\", devices_rom_path + firmcode + "\\");
+            eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode + "\\"));
 
             return true;
         }
