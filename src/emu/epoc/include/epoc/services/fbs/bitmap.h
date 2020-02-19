@@ -61,6 +61,7 @@ namespace eka2l1::epoc {
         bool               compressed_in_ram_;
 
         void construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool white_fill = false);
+        int copy_data(const bitwise_bitmap& source, uint8_t *base);
     };
 
     constexpr epoc::uid bitwise_bitmap_uid = 0x10000040;

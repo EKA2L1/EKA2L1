@@ -175,12 +175,14 @@ namespace eka2l1 {
         void duplicate_font(service::ipc_context *ctx);
         void duplicate_bitmap(service::ipc_context *ctx);
         void create_bitmap(service::ipc_context *ctx);
+        void resize_bitmap(service::ipc_context *ctx);
         void notify_dirty_bitmap(service::ipc_context *ctx);
         void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
         void get_clean_bitmap(service::ipc_context *ctx);
         void rasterize_glyph(service::ipc_context *ctx);
         void background_compress_bitmap(service::ipc_context *ctx);
         
+        fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
         
         void fetch(service::ipc_context *ctx) override;

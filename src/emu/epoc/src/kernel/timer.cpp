@@ -63,7 +63,7 @@ namespace eka2l1 {
             info.own_thread = requester;
             info.own_timer = this;
 
-            const int64_t invoke_time = timing->us_to_cycles(ms_signal);
+            const int64_t invoke_time = timing->us_to_cycles(ms_signal * 1000);
             timing->schedule_event(invoke_time, callback_type, (uint64_t)(&info));
 
             return false;
