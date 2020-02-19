@@ -588,6 +588,13 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    fbsbitmap *fbscli::get_clean_bitmap(fbsbitmap *bmp) {
+        while (bmp->clean_bitmap != nullptr) {
+            bmp = bmp->clean_bitmap;
+        }
+        return bmp;
+    }
+
     void fbscli::resize_bitmap(service::ipc_context *ctx) {
         const auto fbss = server<fbs_server>();
         const epoc::handle handle = *(ctx->get_arg<std::uint32_t>(0));
@@ -597,9 +604,7 @@ namespace eka2l1 {
             return;
         }
 
-        while (bmp->clean_bitmap != nullptr) {
-            bmp = bmp->clean_bitmap;
-        }
+        bmp = get_clean_bitmap(bmp);
 
         const vec2 new_size = {*(ctx->get_arg<int>(1)), *(ctx->get_arg<int>(2))};
         const bool compressed_in_ram = bmp->bitmap_->compressed_in_ram_;
@@ -655,9 +660,7 @@ namespace eka2l1 {
             return;
         }
 
-        while (bmp->clean_bitmap != nullptr) {
-            bmp = bmp->clean_bitmap;
-        }
+        bmp = get_clean_bitmap(bmp);
 
         bmp_handles handle_info;
 
