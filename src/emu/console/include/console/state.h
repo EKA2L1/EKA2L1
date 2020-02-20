@@ -42,6 +42,7 @@ namespace eka2l1 {
 
     namespace drivers {
         class graphics_driver;
+        class audio_driver;
     }
 
     class window_server;
@@ -55,6 +56,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<system> symsys;
         std::unique_ptr<std::thread> graphics_driver_thread;
         std::unique_ptr<drivers::graphics_driver> graphics_driver;
+        std::unique_ptr<drivers::audio_driver> audio_driver;
         std::unique_ptr<debugger_renderer> deb_renderer;
         std::unique_ptr<imgui_debugger> debugger;
         std::shared_ptr<imgui_logger> logger;

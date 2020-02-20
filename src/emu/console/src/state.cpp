@@ -23,6 +23,7 @@
 #include <gdbstub/gdbstub.h>
 
 #include <debugger/imgui_debugger.h>
+#include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
 #include <debugger/logger.h>
 
@@ -41,7 +42,7 @@ namespace eka2l1::desktop {
         conf.deserialize();
 
         // Initialize an empty root.
-        symsys = std::make_unique<eka2l1::system>(nullptr, &conf);
+        symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
         symsys->init();
 
         first_time = true;
@@ -90,6 +91,10 @@ namespace eka2l1::desktop {
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
                 eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib::internal | io_attrib::write_protected);
+
+            // Create audio driver
+            audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb);
+            symsys->set_audio_driver(audio_driver.get());
 
             stage_two_inited = true;
         }

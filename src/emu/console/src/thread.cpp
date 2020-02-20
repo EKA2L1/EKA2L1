@@ -417,7 +417,7 @@ namespace eka2l1::desktop {
 
         // Register SEH handler for this thread
 #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER && defined(NDEBUG)
-        _set_se_translator(seh_handler_translator_func);
+        //_set_se_translator(seh_handler_translator_func);
 #endif
 
         // TODO: Multi core. Currently it's single core.

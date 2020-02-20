@@ -40,6 +40,7 @@
 #include <console/state.h>
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
+#include <drivers/audio/audio.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>          // Declaration for graphics driver. Happy!
 #include <epoc/epoc.h>
@@ -126,5 +127,6 @@ int main(int argc, char **argv) {
     }
 
     // We can do memory leak check here. If anyone ever wants
+    //_CrtDumpMemoryLeaks();
     return result;
 }
