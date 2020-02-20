@@ -144,6 +144,10 @@ add_library(Vulkan INTERFACE)
 target_include_directories(Vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(Vulkan INTERFACE ${Vulkan_LIBRARIES})
 
+# Cubeb
+set (BUILD_TESTS OFF)
+add_subdirectory(cubeb)
+
 option(CAPSTONE_BUILD_SHARED "Build shared library" OFF)
 option(CAPSTONE_BUILD_TESTS "Build tests" OFF)
 option(CAPSTONE_ARM_SUPPORT "ARM support" ON)
