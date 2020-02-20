@@ -105,6 +105,7 @@ add_library(epocservs
     include/epoc/services/audio/keysound/context.h
     include/epoc/services/audio/keysound/keysound.h
     include/epoc/services/audio/keysound/ops.h
+    include/epoc/services/audio/keysound/ringtab.h
     include/epoc/services/backup/backup.h
     include/epoc/services/cdl/cdl.h
     include/epoc/services/cdl/common.h

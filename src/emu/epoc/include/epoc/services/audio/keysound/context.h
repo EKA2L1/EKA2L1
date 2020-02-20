@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 
 namespace eka2l1::common {
     class chunkyseri;
@@ -35,12 +36,35 @@ namespace eka2l1::epoc::keysound {
         std::uint8_t type;
     };
 
+    enum sound_type {
+        sound_type_file = 0,
+        sound_type_sequence = 1,
+        sound_type_tone = 2
+    };
+
+    struct sound_info {
+        std::uint32_t id_;
+        std::uint16_t priority_;
+        std::uint32_t preference_;
+
+        sound_type type_;        
+
+        std::u16string filename_;
+        std::vector<std::uint8_t> sequences_;
+
+        std::uint16_t freq_;
+        std::uint32_t duration_;
+
+        std::uint8_t volume_;
+    };
+
     /**
      * A key sound context contains list of description for which key and which type of action
      * will trigger a sound registered in the server to be played.
      */
     struct context {
         std::vector<sound_trigger_info> infos_;
+
         std::uint32_t uid_;
         std::int32_t rsc_id_;
 

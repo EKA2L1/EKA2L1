@@ -22,28 +22,70 @@
 #include <epoc/services/audio/keysound/context.h>
 #include <epoc/services/framework.h>
 
+#include <drivers/audio/stream.h>
+
+#include <memory>
 #include <stack>
+#include <string>
+#include <vector>
 
 namespace eka2l1 {
     class keysound_session: public service::typical_session {
     private:
         service::uid app_uid_;                              ///< The UID3 of the app opening this session
-        std::stack<epoc::keysound::context> contexts_;      ///< Context stack describes sound to play when key action trigger.
+        std::vector<epoc::keysound::context> contexts_;      ///< Context stack describes sound to play when key action trigger.
+        
+        std::unique_ptr<drivers::audio_output_stream> aud_out_;
+
+        struct parser_state {
+            std::uint32_t frames_;
+            std::uint32_t target_freq_;
+
+            std::uint32_t frequency_;
+            std::uint32_t ms_;
+            std::uint32_t duration_unit_;
+
+            std::size_t parser_pos_;
+            epoc::keysound::sound_info sound_;
+
+            explicit parser_state();
+        } state_;
 
     public:
         explicit keysound_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
         ~keysound_session() override {}
+
+        std::size_t play_sounds(std::int16_t *buffer, std::size_t frames);
 
         void fetch(service::ipc_context *ctx) override;
 
         void init(service::ipc_context *ctx);
         void push_context(service::ipc_context *ctx);
         void pop_context(service::ipc_context *ctx);
+        void play_sid(service::ipc_context *ctx);
+        void add_sids(service::ipc_context *ctx);
     };
 
     class keysound_server: public service::typical_server {
+        bool inited_;
+        std::vector<epoc::keysound::sound_info> sounds_;
+
     public:
         explicit keysound_server(system *sys);
         void connect(service::ipc_context &context) override;
+
+        void add_sound(epoc::keysound::sound_info &info) {
+            sounds_.push_back(std::move(info));
+        }
+
+        epoc::keysound::sound_info *get_sound(const std::uint32_t sid);
+
+        bool initialized() const {
+            return inited_;
+        }
+
+        void initialized(const bool is_it) {
+            inited_ = is_it;
+        }
     };
 }
