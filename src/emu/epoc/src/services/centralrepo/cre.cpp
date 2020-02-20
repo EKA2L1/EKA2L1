@@ -60,7 +60,6 @@ namespace eka2l1 {
             }
 
             len = static_cast<std::uint32_t>(str.length());
-            ;
         } else {
             std::uint8_t b1 = 0;
             seri.absorb(b1);
