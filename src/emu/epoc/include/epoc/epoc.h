@@ -52,6 +52,7 @@ namespace eka2l1 {
 
     namespace drivers {
         class graphics_driver;
+        class audio_driver;
     }
 
     namespace arm {
@@ -87,11 +88,13 @@ namespace eka2l1 {
         system(system &&) = delete;
         system &operator=(system &&) = delete;
 
-        system(drivers::graphics_driver *graphics_driver, manager::config_state *conf);
+        system(drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver,
+            manager::config_state *conf);
 
         ~system();
 
         void set_graphics_driver(drivers::graphics_driver *driver);
+        void set_audio_driver(drivers::audio_driver *driver);
         void set_debugger(debugger_base *new_debugger);
         void set_symbian_version_use(const epocver ever);
         void set_jit_type(const arm_emulator_type type);
@@ -118,6 +121,7 @@ namespace eka2l1 {
         disasm *get_disasm();
         gdbstub *get_gdb_stub();
         drivers::graphics_driver *get_graphics_driver();
+        drivers::audio_driver *get_audio_driver();
         arm::jitter &get_cpu();
         manager::config_state *get_config();
 

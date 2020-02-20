@@ -81,6 +81,7 @@ namespace eka2l1 {
         arm_emulator_type jit_type;
 
         drivers::graphics_driver *gdriver;
+        drivers::audio_driver *adriver;
 
         memory_system mem;
         kernel_system kern;
@@ -125,12 +126,14 @@ namespace eka2l1 {
         language sys_lang = language::en;
 
     public:
-        system_impl(system *parent, drivers::graphics_driver *graphics_driver, manager::config_state *conf);
+        system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, 
+            manager::config_state *conf);
 
         ~system_impl() {   
         };
 
         void set_graphics_driver(drivers::graphics_driver *graphics_driver);
+        void set_audio_driver(drivers::audio_driver *audio_driver);
 
         void set_debugger(debugger_base *new_debugger) {
             debugger = new_debugger;
@@ -258,6 +261,10 @@ namespace eka2l1 {
             return gdriver;
         }
 
+        drivers::audio_driver *get_audio_driver() {
+            return adriver;
+        }
+
         arm::jitter &get_cpu() {
             return cpu;
         }
@@ -344,10 +351,12 @@ namespace eka2l1 {
         epoc::init_panic_descriptions();
     }
 
-    system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, manager::config_state *conf)
+    system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, manager::config_state *conf)
         : parent(parent)
         , conf(conf)
-        , debugger(nullptr) {
+        , debugger(nullptr)
+        , gdriver(graphics_driver)
+        , adriver(audio_driver) {
         if (conf->cpu_backend == unicorn_jit_backend_name) {
             jit_type = arm_emulator_type::unicorn;
         } else if (conf->cpu_backend == dynarmic_jit_backend_name) {
@@ -359,6 +368,10 @@ namespace eka2l1 {
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
         gdriver = graphics_driver;
+    }
+    
+    void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) {
+        adriver = aud_driver;
     }
 
     bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
@@ -522,8 +535,8 @@ namespace eka2l1 {
         return true;
     }
 
-    system::system(drivers::graphics_driver *gdriver, manager::config_state *conf)
-        : impl(new system_impl(this, gdriver, conf)) {
+    system::system(drivers::graphics_driver *gdriver, drivers::audio_driver *adriver, manager::config_state *conf)
+        : impl(new system_impl(this, gdriver, adriver, conf)) {
     }
 
     system::~system() {
@@ -540,6 +553,10 @@ namespace eka2l1 {
     
     void system::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
         return impl->set_graphics_driver(graphics_driver);
+    }
+
+    void system::set_audio_driver(drivers::audio_driver *adriver) {
+        return impl->set_audio_driver(adriver);
     }
 
     void system::set_debugger(debugger_base *new_debugger) {
@@ -619,6 +636,10 @@ namespace eka2l1 {
 
     drivers::graphics_driver *system::get_graphics_driver() {
         return impl->get_graphic_driver();
+    }
+
+    drivers::audio_driver *system::get_audio_driver() {
+        return impl->get_audio_driver();
     }
 
     arm::jitter &system::get_cpu() {
