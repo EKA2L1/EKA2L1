@@ -166,6 +166,7 @@ namespace eka2l1::epoc {
         nof_container<epoc::event_error_msg_user> error_notifies;
         
         void create_screen_device(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_dsa(service::ipc_context &ctx, ws_cmd &cmd);
         void create_window_group(service::ipc_context &ctx, ws_cmd &cmd);
         void create_window_base(service::ipc_context &ctx, ws_cmd &cmd);
         void create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd);

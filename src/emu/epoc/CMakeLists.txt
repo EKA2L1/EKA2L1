@@ -224,6 +224,7 @@ add_library(epocservs
     src/services/window/classes/plugins/animdll.cpp
     src/services/window/classes/plugins/clickdll.cpp
     src/services/window/classes/plugins/sprite.cpp
+    src/services/window/classes/dsa.cpp
     src/services/window/classes/gctx.cpp
     src/services/window/classes/scrdvc.cpp
     src/services/window/classes/winbase.cpp

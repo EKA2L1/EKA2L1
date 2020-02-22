@@ -22,6 +22,7 @@
 #include <epoc/services/window/window.h>
 
 #include <epoc/services/fbs/fbs.h>
+#include <epoc/services/window/classes/dsa.h>
 #include <epoc/services/window/classes/gctx.h>
 #include <epoc/services/window/classes/plugins/animdll.h>
 #include <epoc/services/window/classes/plugins/clickdll.h>
@@ -203,6 +204,16 @@ namespace eka2l1::epoc {
         ctx.set_request_status(add_object(device));
     }
 
+    void window_server_client::create_dsa(service::ipc_context &ctx, ws_cmd &cmd) {
+        window_client_obj_ptr dsa_inst = std::make_unique<epoc::dsa>(this);
+        if (!dsa_inst) {
+            ctx.set_request_status(epoc::error_general);
+            return;
+        }
+
+        ctx.set_request_status(add_object(dsa_inst));
+    }
+    
     void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd) {
         THotKey key = *reinterpret_cast<THotKey *>(cmd.data_ptr);
 
@@ -646,6 +657,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_get_def_mode_max_num_colors: {
             get_def_mode_max_num_colors(ctx, cmd);
+            break;
+        }
+
+        case ws_cl_op_create_direct_screen_access: {
+            create_dsa(ctx, cmd);
             break;
         }
 
