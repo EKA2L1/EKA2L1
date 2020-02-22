@@ -222,6 +222,16 @@ namespace eka2l1 {
         ws_sd_op_test_screen_capture_size = 55,
     };
 
+    enum ws_dsa_op {
+        ws_dsa_free = 0,
+        ws_dsa_request = 1,
+        ws_dsa_init_failed = 2,
+        ws_dsa_get_region = 3,
+        ws_dsa_cancel = 4,
+        ws_dsa_get_send_queue = 5,
+        ws_dsa_get_rec_queue = 6
+    };
+
     #define OPCODE_NAME(aaaprefix, aname, aversion) aaaprefix##_##aversion##_##aname
     #define OPCODE(aprefix, aname, aversion, val)    \
         OPCODE_NAME(aprefix, aname, aversion) = val,
