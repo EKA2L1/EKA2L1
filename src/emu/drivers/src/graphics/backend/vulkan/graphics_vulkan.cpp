@@ -278,7 +278,8 @@ namespace eka2l1::drivers {
             return false;
         }
 #else
-        vk::XcbSurfaceCreateInfoKHR surface_create_info(vk::XcbSurfaceCreateFlagsKHR {}, nullptr, reinterpret_cast<xcb_window_t>(native_win_handle_));
+        std::uint64_t surface_handle_64 = reinterpret_cast<std::uint64_t>(native_win_handle_);
+        vk::XcbSurfaceCreateInfoKHR surface_create_info(vk::XcbSurfaceCreateFlagsKHR {}, nullptr, reinterpret_cast<xcb_window_t>(surface_handle_64));
         try {
             surface_ = inst_->createXcbSurfaceKHRUnique(surface_create_info);
         } catch (std::exception &ex) {
