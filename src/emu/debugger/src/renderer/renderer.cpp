@@ -90,6 +90,7 @@ namespace eka2l1 {
 
         ImGui::NewFrame();
 
+        /*
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - prev_time).count();
 
@@ -99,6 +100,7 @@ namespace eka2l1 {
         ImVec2 uv_min, uv_max;
 
         error_sheet.get_current_frame_uv_coords(uv_min.x, uv_max.x, uv_min.y, uv_max.y);
+        */
 
         // Draw the imgui ui
         debugger_->show_debugger(scaled_width, scaled_height, fb_width, fb_height);
@@ -115,6 +117,7 @@ namespace eka2l1 {
                 IM_COL32(255, 255, 255, sstate->bkg_transparency));
         }
         
+        /*
         ImGui::GetBackgroundDrawList()->AddImage(
             reinterpret_cast<ImTextureID>(error_sheet.sheet_),
             ImVec2(120.0f, 120.0f),
@@ -122,6 +125,7 @@ namespace eka2l1 {
             uv_min,
             uv_max
         );
+        */
 
         ImGui::EndFrame();
         ImGui::Render();
