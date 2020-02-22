@@ -29,6 +29,9 @@ matrix:
            - python3.6-venv
            - xorg-dev
            - libglu1-mesa-dev
+           - libpulse-dev
+           - libasound2-dev
+           - pulseaudio
            - g++-7
            - gcc-7
            - binutils-2.26
