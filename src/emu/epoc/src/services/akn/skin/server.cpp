@@ -221,10 +221,23 @@ namespace eka2l1 {
             sys->get_timing_system(), "AknsSrvRenderSemaphore", false, 
             kernel::access_type::global_access).second;
 
+        std::uint32_t flags = 0;
+
+        if (sys->get_symbian_version_use() > epocver::epoc94) {
+            flags |= epoc::akn_skin_chunk_maintainer_lookup_use_linked_list;
+        } else if (sys->get_symbian_version_use() == epocver::epoc94) {
+            // Some Symbian version changes some binary struct.
+            // It should be the new one if ... it is not in rom
+            const std::u16string exe_path = u"z:\\sys\\bin\\aknskinsrv.exe";
+
+            if (!sys->get_io_system()->is_entry_in_rom(exe_path)) {
+                flags |= epoc::akn_skin_chunk_maintainer_lookup_use_linked_list;
+            }
+        }
+
         // Create chunk maintainer
         chunk_maintainer_ = std::make_unique<epoc::akn_skin_chunk_maintainer>(skin_chunk_,
-            4 * 1024, (sys->get_symbian_version_use() <= epocver::epoc94) ?
-                0 : epoc::akn_skin_chunk_maintainer_lookup_use_linked_list);
+            4 * 1024, flags);
 
         // Merge the active skin as the first step
         merge_active_skin(sys->get_io_system());
