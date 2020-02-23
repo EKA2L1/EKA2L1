@@ -530,7 +530,7 @@ namespace eka2l1::epoc {
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
         if (!scr) {
-            LOG_INFO("Can't find screen object with number {}, using the default screen", screen_num);
+            LOG_ERROR("Can't find screen object with number {}, using the default screen", screen_num);
             scr = get_ws().get_current_focus_screen();
         }
 
@@ -540,6 +540,18 @@ namespace eka2l1::epoc {
 
         ctx.write_arg_pkg<def_mode_max_num_colors>(reply_slot, result);
         ctx.set_request_status(epoc::error_none);
+    }
+
+    void window_server_client::get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd) {
+        std::int32_t screen_num = *reinterpret_cast<std::int32_t*>(cmd.data_ptr);
+        epoc::screen *scr = get_ws().get_screen(screen_num);
+
+        if (!scr) {
+            LOG_ERROR("Can't find requested screen {}, use focus one", screen_num);
+            scr = get_ws().get_current_focus_screen();
+        }
+        
+        ctx.set_request_status(1 << (static_cast<std::uint8_t>(scr->disp_mode) - 1));
     }
 
     // This handle both sync and async
@@ -662,6 +674,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_create_direct_screen_access: {
             create_dsa(ctx, cmd);
+            break;
+        }
+
+        case ws_cl_op_get_color_mode_list: {
+            get_color_mode_list(ctx, cmd);
             break;
         }
 
