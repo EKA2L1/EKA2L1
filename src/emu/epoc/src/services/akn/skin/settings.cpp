@@ -22,6 +22,9 @@
 #include <epoc/services/centralrepo/centralrepo.h>
 
 #include <common/log.h>
+#include <manager/manager.h>
+
+#include <epoc/epoc.h>
 
 namespace eka2l1::epoc {
     enum {
@@ -34,10 +37,12 @@ namespace eka2l1::epoc {
 
     akn_ss_settings::akn_ss_settings(io_system *io, central_repo_server *svr)
         : io_(io) {
-        if (svr) {   
-            avkon_rep_ = svr->load_repo_with_lookup(io, AVKON_UID);
-            skins_rep_ = svr->load_repo_with_lookup(io, PERSONALISATION_UID);
-            theme_rep_ = svr->load_repo_with_lookup(io, THEMES_UID);
+        if (svr) {
+            manager::device_manager *mngr = svr->get_system()->get_manager_system()->get_device_manager();
+
+            avkon_rep_ = svr->load_repo_with_lookup(io, mngr, AVKON_UID);
+            skins_rep_ = svr->load_repo_with_lookup(io, mngr, PERSONALISATION_UID);
+            theme_rep_ = svr->load_repo_with_lookup(io, mngr, THEMES_UID);
 
             if (read_default_skin_id()) {
                 LOG_INFO("Default skin UID: 0x{:X}, timestamp: {}", default_skin_pid_.first, default_skin_pid_.second);

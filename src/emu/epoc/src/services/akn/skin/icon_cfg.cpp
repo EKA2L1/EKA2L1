@@ -25,15 +25,16 @@
 
 namespace eka2l1::epoc {
     akn_skin_icon_config_map::akn_skin_icon_config_map(central_repo_server *cenrep_,
-        io_system *io_, const language lang_)
+        manager::device_manager *mngr, io_system *io_, const language lang_)
         : cenrep_serv_(cenrep_)
         , io_(io_)
+        , mngr_(mngr)
         , inited_(false)
         , sys_lang_(lang_) {
     }
 
     void akn_skin_icon_config_map::read_and_parse_repo() {
-        eka2l1::central_repo *repo = cenrep_serv_->load_repo_with_lookup(io_, ICON_CAPTION_UID);
+        eka2l1::central_repo *repo = cenrep_serv_->load_repo_with_lookup(io_, mngr_, ICON_CAPTION_UID);
 
         if (!repo) {
             // It's ok, sometimes this doesn't exist

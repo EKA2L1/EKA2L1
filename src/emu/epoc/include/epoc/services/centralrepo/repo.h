@@ -39,6 +39,10 @@ namespace eka2l1 {
         struct ipc_context;
     }
 
+    namespace manager {
+        class device_manager;
+    }
+
     class central_repo_server;
     class io_system;
 
@@ -199,7 +203,7 @@ namespace eka2l1 {
         std::vector<std::uint32_t> key_found_result;
 
         int reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key);
-        void write_changes(eka2l1::io_system *io);
+        void write_changes(eka2l1::io_system *io, manager::device_manager *mngr);
 
         void find_eq(service::ipc_context *ctx);
 

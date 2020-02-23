@@ -32,6 +32,10 @@
 namespace eka2l1 {
     class io_system;
 
+    namespace manager {
+        class device_manager;
+    }
+
     /*! \brief Parse a new centrep ini file.
 	 *
 	 * \returns False if IO error or invalid centrep configs.
@@ -53,8 +57,8 @@ namespace eka2l1 {
         void init(service::ipc_context *ctx);
         void close(service::ipc_context *ctx);
 
-        int closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t id);
-        int closerep(io_system *io, const std::uint32_t repo_id, decltype(client_subsessions)::iterator clisub);
+        int closerep(io_system *io, manager::device_manager *mngr, const std::uint32_t repo_id, const std::uint32_t id);
+        int closerep(io_system *io, manager::device_manager *mngr, const std::uint32_t repo_id, decltype(client_subsessions)::iterator clisub);
     };
 
     // TODO for this server:
@@ -81,10 +85,10 @@ namespace eka2l1 {
     protected:
         void rescan_drives(eka2l1::io_system *io);
 
-        int load_repo_adv(eka2l1::io_system *io, central_repo *repo, const std::uint32_t key,
+        int load_repo_adv(eka2l1::io_system *io, manager::device_manager *mngr, central_repo *repo, const std::uint32_t key,
             bool scan_org_only = false);
 
-        eka2l1::central_repo *load_repo(eka2l1::io_system *io, const std::uint32_t key);
+        eka2l1::central_repo *load_repo(eka2l1::io_system *io, manager::device_manager *mngr, const std::uint32_t key);
         void callback_on_drive_change(eka2l1::io_system *io, const drive_number drv, int act);
 
         int closerep(io_system *io, const std::uint32_t repo_id, const std::uint32_t ss_id);
@@ -93,14 +97,14 @@ namespace eka2l1 {
         void redirect_msg_to_session(service::ipc_context &ctx);
 
         explicit central_repo_server(eka2l1::system *sys);
-        eka2l1::central_repo *get_initial_repo(eka2l1::io_system *io, const std::uint32_t key);
+        eka2l1::central_repo *get_initial_repo(eka2l1::io_system *io, manager::device_manager *mngr, const std::uint32_t key);
 
         /**
          * \brief Load a repo, looking up from the cache first.
          * 
          * The function lookups in already-loaded repo list. If it's not available, load new one.
          */
-        eka2l1::central_repo *load_repo_with_lookup(eka2l1::io_system *io, const std::uint32_t key);
+        eka2l1::central_repo *load_repo_with_lookup(eka2l1::io_system *io, manager::device_manager *mngr, const std::uint32_t key);
 
         void connect(service::ipc_context &ctx) override;
         void disconnect(service::ipc_context &ctx) override;

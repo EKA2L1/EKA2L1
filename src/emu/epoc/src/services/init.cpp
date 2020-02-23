@@ -309,7 +309,7 @@ namespace eka2l1 {
             temp = std::make_unique<domain_server>(sys, dmmngr);
             sys->get_kernel_system()->add_custom_server(temp);
 
-            auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish, 0, 0, 0, 0, 0, 0, 0 };
+            auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
 
             // Unknown key, testing show that this prop return 65535 most of times

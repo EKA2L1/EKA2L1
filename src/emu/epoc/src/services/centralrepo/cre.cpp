@@ -21,12 +21,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/centralrepo/cre.h>
-#include <epoc/vfs.h>
-
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
+
+#include <epoc/services/centralrepo/cre.h>
+#include <epoc/vfs.h>
+
+#include <manager/device_manager.h>
 
 namespace eka2l1 {
     /* 
@@ -301,7 +303,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    void central_repo_client_subsession::write_changes(eka2l1::io_system *io) {
+    void central_repo_client_subsession::write_changes(eka2l1::io_system *io, manager::device_manager *mngr) {
         std::vector<std::uint8_t> bufs;
 
         {
@@ -315,7 +317,9 @@ namespace eka2l1 {
         do_state_for_cre(seri, *attach_repo);
 
         std::u16string p{ drive_to_char16(attach_repo->reside_place) };
-        p += u":\\Private\\10202BE9\\persists\\" + common::utf8_to_ucs2(common::to_string(attach_repo->uid, std::hex)) + u".cre";
+        std::u16string firm_code = common::utf8_to_ucs2(common::lowercase_string(mngr->get_current()->firmware_code));
+
+        p += u":\\Private\\10202BE9\\persists\\" + firm_code + u"\\" + common::utf8_to_ucs2(common::to_string(attach_repo->uid, std::hex)) + u".cre";
 
         symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
 

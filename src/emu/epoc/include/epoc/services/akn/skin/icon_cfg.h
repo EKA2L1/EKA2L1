@@ -29,12 +29,17 @@ namespace eka2l1 {
     struct central_repo;
 
     class io_system;
+
+    namespace manager {
+        class device_manager;
+    }
 }
 
 namespace eka2l1::epoc {
     class akn_skin_icon_config_map {
         eka2l1::central_repo_server *cenrep_serv_;
         io_system *io_;
+        manager::device_manager *mngr_;
         
         std::vector<epoc::uid> cfgs_;
         bool inited_ = false;
@@ -49,7 +54,7 @@ namespace eka2l1::epoc {
 
     public:
         explicit akn_skin_icon_config_map(central_repo_server *cenrep_,
-            io_system *io_, const language lang_);
+            manager::device_manager *mngr, io_system *io_, const language lang_);
 
         /**
          * \brief Check if an icon is already configured (?)
