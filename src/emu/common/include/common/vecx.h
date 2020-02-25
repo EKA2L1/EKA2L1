@@ -200,7 +200,10 @@ namespace eka2l1 {
         vec2 top;           ///< Top left of the rectangle.
         object_size size;   ///< Size of the rectangle.
 
-        rect() = default;
+        rect() 
+            : top(0, 0)
+            , size(0, 0) {
+        }
 
         explicit rect(const vec2 &top_, const vec2 &obj_size_)
             : top(top_), size(obj_size_) { 
@@ -220,6 +223,25 @@ namespace eka2l1 {
                 return true;
 
             return false;
+        }
+
+        bool contains(const eka2l1::rect rect) {
+            return (size.x >= rect.size.x) && (size.y >= rect.size.y)
+                && (top.y >= rect.top.x) && (top.y >= rect.top.y);
+        }
+
+        void merge(eka2l1::rect other) {
+            if (contains(other)) {
+                return;
+            }
+
+            const int newx = std::min<int>(top.x, other.top.x);
+            const int newy = std::min<int>(top.y, other.top.y);
+
+            size.x = std::max<int>(top.x + size.x, other.top.x + other.size.x) - newx;
+            size.y = std::max<int>(top.y + size.y, other.top.y + other.size.y) - newy;
+            top.x = newx;
+            top.y = newy;
         }
     };
 }
