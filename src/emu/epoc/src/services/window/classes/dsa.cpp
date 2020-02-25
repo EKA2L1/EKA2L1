@@ -31,9 +31,6 @@ namespace eka2l1::epoc {
         , state_(state_none) {
     };
 
-#ifdef _MSC_VER
-#pragma optimize("", off)
-#endif
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         if (state_ != state_none) {
             if (state_ != state_completed) {
@@ -76,9 +73,6 @@ namespace eka2l1::epoc {
 
         ctx.set_request_status(1);
     }
-#ifdef _MSC_VER
-#pragma optimize("", on)
-#endif
 
     void dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
