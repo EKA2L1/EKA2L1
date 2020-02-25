@@ -56,6 +56,8 @@ namespace eka2l1::epoc {
 
         screen *next;
 
+        eka2l1::rect dsa_rect;
+
         // position of this screen in graphics driver
         // update in graphics driver thread and read in os thread
         std::mutex absolute_pos_mtx;

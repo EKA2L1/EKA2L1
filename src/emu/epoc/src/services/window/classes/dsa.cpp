@@ -18,17 +18,81 @@
  */
 
 #include <epoc/services/window/classes/dsa.h>
+#include <epoc/services/window/classes/winuser.h>
 #include <epoc/services/window/op.h>
+#include <epoc/services/window/window.h>
+
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
     dsa::dsa(window_server_client_ptr client)
-        : window_client_obj(client, nullptr) {
+        : window_client_obj(client, nullptr)
+        , husband_(nullptr) 
+        , state_(state_none) {
     };
-    
+
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
+    void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        if (state_ != state_none) {
+            if (state_ != state_completed) {
+                LOG_ERROR("Requesting access on a DSA in progress");
+                ctx.set_request_status(epoc::error_argument);
+                return;
+            }
+        }
+
+        std::uint32_t window_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(client->get_object(window_handle));
+
+        // what the fuck msvc
+        if ((!user) || (user->type != epoc::window_kind::client)) {
+            LOG_ERROR("Invalid window handle given 0x{:X}", window_handle);
+            ctx.set_request_status(epoc::error_argument);
+            return;
+        }
+
+        husband_ = user;
+
+        // We allow the whole window region to be DSAed!
+        // But what is the point... To override a DSA? Should that be possible...
+        // TODO: Verify...
+        if (husband_->is_dsa_active()) {
+            ctx.set_request_status(0);
+            return;
+        }
+
+        LOG_TRACE("DSA requested for window {}", user->id);
+
+        state_ = state_in_progress;
+        husband_->set_dsa_active(true);
+
+        eka2l1::rect extent;
+        extent.top = husband_->pos;
+        extent.size = husband_->size;
+
+        husband_->scr->dsa_rect.merge(extent);
+
+        ctx.set_request_status(1);
+    }
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
+
     void dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
+        case ws_dsa_get_send_queue:
+        case ws_dsa_get_rec_queue:
+            ctx.set_request_status(0);
+            break;
+
+        case ws_dsa_request:
+            request_access(ctx, cmd);
+            break;
+
         default: {
             LOG_ERROR("Unimplemented DSA opcode {}", cmd.header.op);
             break;

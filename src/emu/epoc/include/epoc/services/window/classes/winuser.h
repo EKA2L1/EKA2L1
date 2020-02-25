@@ -73,7 +73,8 @@ namespace eka2l1::epoc {
             flags_enable_alpha = 1 << 5,
             flags_faded = 1 << 6,
             flags_faded_default_param = 1 << 7,
-            flags_faded_also_children = 1 << 8
+            flags_faded_also_children = 1 << 8,
+            flags_dsa = 1 << 9
         };
 
         std::uint32_t flags;
@@ -103,6 +104,17 @@ namespace eka2l1::epoc {
 
         bool is_faded() const {
             return (flags & flags_faded);
+        }
+
+        bool is_dsa_active() const {
+            return (flags & flags_dsa);
+        }
+
+        void set_dsa_active(const bool yes) {
+            flags &= ~flags_dsa;
+            if (yes) {
+                flags |= flags_dsa;
+            }
         }
 
         /**
