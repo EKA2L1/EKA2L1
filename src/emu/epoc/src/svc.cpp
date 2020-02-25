@@ -2318,7 +2318,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x4F, HalFunction),
         BRIDGE_REGISTER(0x52, ProcessCommandLineLength),
         BRIDGE_REGISTER(0x56, DebugPrint),
-        BRIDGE_REGISTER(0x5E, ThreadContext),
+        // This call actually is IsExceptionHandled.
+        // BRIDGE_REGISTER(0x5E, ThreadContext),
         BRIDGE_REGISTER(0x5F, ProcessGetMemoryInfo),
         BRIDGE_REGISTER(0x6A, HandleClose),
         BRIDGE_REGISTER(0x64, ProcessType),
