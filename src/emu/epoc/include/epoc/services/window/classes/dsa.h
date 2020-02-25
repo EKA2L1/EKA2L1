@@ -33,13 +33,16 @@ namespace eka2l1::epoc {
         
         enum state {
             state_none,
-            state_in_progress,
+            state_prepare,
+            state_running,
             state_completed
         } state_;
 
         explicit dsa(window_server_client_ptr client);
 
         void request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+
         void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) override;
     };
 }

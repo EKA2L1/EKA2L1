@@ -22,6 +22,7 @@
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/window.h>
 
+#include <epoc/utils/consts.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
@@ -37,6 +38,8 @@ namespace eka2l1::epoc {
                 LOG_ERROR("Requesting access on a DSA in progress");
                 ctx.set_request_status(epoc::error_argument);
                 return;
+            } else {
+                state_ = state_none;
             }
         }
 
@@ -62,7 +65,7 @@ namespace eka2l1::epoc {
 
         LOG_TRACE("DSA requested for window {}", user->id);
 
-        state_ = state_in_progress;
+        state_ = state_prepare;
         husband_->set_dsa_active(true);
 
         eka2l1::rect extent;
@@ -71,6 +74,26 @@ namespace eka2l1::epoc {
 
         husband_->scr->dsa_rect.merge(extent);
 
+        ctx.set_request_status(1);
+    }
+
+    void dsa::get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        std::uint32_t max_rects = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+
+        if ((max_rects == 0) || (state_ != state_prepare)) {
+            // What? Nothing?
+            ctx.set_request_status(epoc::CINT32_MAX);
+            return;
+        }
+
+        // The whole window for you!
+        eka2l1::rect extent;
+        extent.top = husband_->pos;
+        extent.size = husband_->size;
+
+        state_ = state_running;
+
+        ctx.write_arg_pkg<eka2l1::rect>(reply_slot, extent);
         ctx.set_request_status(1);
     }
 
@@ -85,6 +108,10 @@ namespace eka2l1::epoc {
 
         case ws_dsa_request:
             request_access(ctx, cmd);
+            break;
+
+        case ws_dsa_get_region:
+            get_region(ctx, cmd);
             break;
 
         default: {
