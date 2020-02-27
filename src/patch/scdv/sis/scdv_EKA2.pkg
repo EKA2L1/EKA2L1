@@ -1,0 +1,21 @@
+; Installation file for scdv dll
+;
+; This is an auto-generated PKG file by Carbide.
+; This file uses variables specific to Carbide builds that will not work
+; on command-line builds. If you want to use this generated PKG file from the
+; command-line tools you will need to modify the variables with the appropriate
+; values: $(EPOCROOT), $(PLATFORM), $(TARGET)
+
+;
+; UID is the dll's UID
+;
+#{"scdv DLL"},(0xed8dfe98),1,0,0
+
+
+;Localised Vendor name
+%{"Vendor-EN"}
+
+;Unique Vendor name
+:"Vendor"
+
+"$(EPOCROOT)epoc32\release\$(PLATFORM)\$(TARGET)\scdv.dll"		  -"!:\sys\bin\scdv.dll"
