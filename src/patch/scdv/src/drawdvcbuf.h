@@ -17,6 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SCDV_DVC_BUF_H_
+#define SCDV_DVC_BUF_H_
+
 #include <scdv/draw.h>
 #include <scdv/log.h>
 
@@ -26,8 +29,11 @@ protected:
     TPoint iDitherOrigin;
     TUint8 iBlackMap;
     TUint8 iWhiteMap;
+    TSize iSize;
     
 public:
+    virtual TSize SizeInPixels();
+    
     virtual TInt InitScreen();
     virtual void SetBits(TAny* aBits);
     
@@ -46,3 +52,5 @@ public:
     virtual void Update(const TRegion&);
     virtual void UpdateRegion(const TRect&);
 };
+
+#endif

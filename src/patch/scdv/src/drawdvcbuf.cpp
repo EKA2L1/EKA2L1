@@ -17,16 +17,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <scdv/log.h>
 #include "drawdvcbuf.h"
 
 TInt CFbsDrawDeviceBuffer::InitScreen() {
-    scdv::Log("Init screen called on unsupported draw device!");
+    Scdv::Log("Init screen called on unsupported draw device!");
     return KErrNotSupported;
 }
 
 void CFbsDrawDeviceBuffer::SetBits(TAny* aBits) {
     if (aBits == NULL) {
-        scdv::Log("Try to set data pointer but it's invalid!");
+        Scdv::Log("Try to set data pointer but it's invalid!");
         return;
     }
 
@@ -37,7 +38,7 @@ void CFbsDrawDeviceBuffer::SetAutoUpdate(TBool aValue) {
 }
 
 void CFbsDrawDeviceBuffer::SetDisplayMode(CFbsDrawDevice* aDrawDevice) {
-    scdv::Log("Set display mode on draw device base has no effect");
+    Scdv::Log("Set display mode on draw device base has no effect");
 }
 
 void CFbsDrawDeviceBuffer::SetDitherOrigin(const TPoint& aDitherOrigin) {
@@ -75,4 +76,16 @@ void CFbsDrawDeviceBuffer::Update(const TRegion&) {
 
 void CFbsDrawDeviceBuffer::UpdateRegion(const TRect&) {
     
+}
+
+TInt CFbsDrawDeviceBuffer::SetCustomPalette(const CPalette*) {
+	return KErrNotSupported;
+}
+
+TInt CFbsDrawDeviceBuffer::GetCustomPalette(CPalette*&) {
+	return KErrNotSupported;
+}
+
+TSize CFbsDrawDeviceBuffer::SizeInPixels() {
+	return iSize;
 }

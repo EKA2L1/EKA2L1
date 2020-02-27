@@ -17,26 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <e32std.h>
+#ifndef SCDV_DVC_ALGO_H_
+#define SCDV_DVC_ALGO_H_
+
+#include <scdv/draw.h>
 #include <scdv/log.h>
-#include <scdv/panic.h>
 
-namespace Scdv {
-    class TDesOverflowHandler: public TDes8Overflow {
-        virtual void Overflow(TDes8 &) {
-            User::Panic(_L("HLE_SCDV"), scdv::EPanicLogFailure);
-        }
-    };
-
-    void Log(const char *aFormat, ...) {
-        TPtrC8 baseFormat(reinterpret_cast<const TUint8*>(aFormat));
-        HBufC8 *newString = HBufC8::NewL(baseFormat.Length() * 2);
-        
-        VA_LIST list;
-        va_start(list, aFormat);
-        
-        TDesOverflowHandler handler;
-        
-        newString->Des().AppendFormatList(baseFormat, list, &handler);
-    }
+class CFbsDrawDeviceAlgorithm: public CFbsDrawDevice {
+public:
+	virtual TInt ScanLineBytes() const;
+	virtual void MapColors(const TRect& aRect,const TRgb* aColors,TInt aNumPairs,TBool aMapForwards);
 };
+
+#endif
