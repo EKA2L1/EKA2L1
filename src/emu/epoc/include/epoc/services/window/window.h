@@ -277,6 +277,8 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
+    static constexpr const char *WINDOW_SERVER_NAME = "!Windowserver";
+
     class window_server : public service::server {
     public:
         using key_capture_request_queue = cp_queue<epoc::event_capture_key_notifier>;

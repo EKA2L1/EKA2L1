@@ -800,7 +800,7 @@ namespace eka2l1 {
 
     // TODO: Anim scheduler currently has no way to resize number of screens after construction.
     window_server::window_server(system *sys)
-        : service::server(sys, "!Windowserver", true, true)
+        : service::server(sys, WINDOW_SERVER_NAME, true, true)
         , bmp_cache(sys->get_kernel_system())
         , anim_sched(sys->get_timing_system(), 1) 
         , screens(nullptr)
