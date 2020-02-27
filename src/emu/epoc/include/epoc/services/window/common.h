@@ -75,6 +75,8 @@ namespace eka2l1::epoc {
 
     int get_num_colors_from_display_mode(const display_mode disp_mode);
     bool is_display_mode_color(const display_mode disp_mode);
+    bool is_display_mode_mono(const display_mode disp_mode);
+    int get_bpp_from_display_mode(const epoc::display_mode bpp);
 
     enum class pointer_cursor_mode {
         none, ///< The device don't have a pointer (touch)

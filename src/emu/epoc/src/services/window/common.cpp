@@ -36,6 +36,36 @@ namespace eka2l1::epoc {
         return disp_mode >= epoc::display_mode::color16;
     }
 
+    bool is_display_mode_mono(const epoc::display_mode disp_mode) {
+        return disp_mode <= epoc::display_mode::gray256;
+    }
+
+    int get_bpp_from_display_mode(const epoc::display_mode bpp) {
+        switch (bpp) {
+        case epoc::display_mode::gray2:
+            return 1;
+        case epoc::display_mode::gray4:
+            return 2;
+        case epoc::display_mode::gray16:
+        case epoc::display_mode::color16:
+            return 4;
+        case epoc::display_mode::gray256:
+        case epoc::display_mode::color256:
+            return 8;
+        case epoc::display_mode::color4k:
+            return 12;
+        case epoc::display_mode::color64k:
+            return 16;
+        case epoc::display_mode::color16m:
+            return 24;
+        case epoc::display_mode::color16mu:
+        case epoc::display_mode::color16ma:
+            return 32;
+        }
+
+        return 24;
+    }
+
     int get_num_colors_from_display_mode(const epoc::display_mode disp_mode) {
         switch (disp_mode) {
         case epoc::display_mode::gray2:

@@ -66,32 +66,6 @@ namespace eka2l1 {
         return epoc::display_mode::color16m;
     }
 
-    static int get_bpp_from_display_mode(const epoc::display_mode bpp) {
-        switch (bpp) {
-        case epoc::display_mode::gray2:
-            return 1;
-        case epoc::display_mode::gray4:
-            return 2;
-        case epoc::display_mode::gray16:
-        case epoc::display_mode::color16:
-            return 4;
-        case epoc::display_mode::gray256:
-        case epoc::display_mode::color256:
-            return 8;
-        case epoc::display_mode::color4k:
-            return 12;
-        case epoc::display_mode::color64k:
-            return 16;
-        case epoc::display_mode::color16m:
-            return 24;
-        case epoc::display_mode::color16mu:
-        case epoc::display_mode::color16ma:
-            return 32;
-        }
-
-        return 24;
-    }
-
     static epoc::bitmap_color get_bitmap_color_type_from_display_mode(const epoc::display_mode bpp) {
         switch (bpp) {
         case epoc::display_mode::gray2:
@@ -507,7 +481,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        return get_byte_width(size.x, get_bpp_from_display_mode(bpp)) * size.y;
+        return get_byte_width(size.x, epoc::get_bpp_from_display_mode(bpp)) * size.y;
     }
 
     fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool alloc_data, const bool support_dirty) {
@@ -537,7 +511,7 @@ namespace eka2l1 {
         header.header_len = sizeof(loader::sbm_header);
         header.palette_size = 0;
         header.size_twips = size * twips_mul;
-        header.bit_per_pixels = get_bpp_from_display_mode(dpm);
+        header.bit_per_pixels = epoc::get_bpp_from_display_mode(dpm);
 
         bws_bmp->construct(header, dpm, data, base_large_chunk, true);
 
