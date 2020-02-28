@@ -48,6 +48,8 @@
 #include <epoc/services/init.h>
 
 #include <manager/config.h>
+#include <manager/manager.h>
+#include <manager/device_manager.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -311,6 +313,15 @@ namespace eka2l1 {
 
             auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
+            auto& dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
+            if (dvcs.size() > cfg->device) {
+                auto& dvc = dvcs[cfg->device];
+                if (cfg->language == -1) {
+                    lang = epoc::SLocaleLanguage{ (TLanguage)dvc.default_language_code, 0, 0, 0, 0, 0, 0, 0 };
+                } else {
+                    lang = epoc::SLocaleLanguage{ (TLanguage)cfg->language, 0, 0, 0, 0, 0, 0, 0 };
+                }
+            }
 
             // Unknown key, testing show that this prop return 65535 most of times
             // The prop belongs to HAL server, but the key usuage is unknown. (TODO)
