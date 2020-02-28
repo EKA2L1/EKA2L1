@@ -52,6 +52,10 @@ namespace eka2l1::common {
     */
     bool remove(const std::string &path);
 
+    /* !\brief Get the content of a UTF-16 LE encoded file as UTF8 string.
+    */
+    std::string get_file_content_u16(const std::string &path);
+
     bool move_file(const std::string &path, const std::string &new_path);
 
     /**
