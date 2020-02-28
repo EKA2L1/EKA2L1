@@ -31,6 +31,8 @@ namespace eka2l1::manager {
         std::string firmware_code;
         std::string manufacturer;
         std::string model;
+        std::vector<int> languages;
+        int default_language_code;
     };
 
     struct config_state;
