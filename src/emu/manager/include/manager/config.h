@@ -52,6 +52,7 @@ namespace eka2l1::manager {
         std::vector<std::string> force_load_modules;
         std::string cpu_backend { "unicorn" };
         int device { 0 };
+        int language { -1 };
         
         bool enable_gdbstub { false };
         int gdb_port { 24689 };
