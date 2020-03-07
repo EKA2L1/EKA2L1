@@ -475,7 +475,7 @@ namespace eka2l1 {
             get_symbian_version_use(), current_device->firmware_code);
 
         rom_fs_id = io.add_filesystem(rom_fs);
-        bool res1 = mem.map_rom(romf.header.rom_base, path);
+        bool res1 = kern.map_rom(romf.header.rom_base, path);
 
         if (!res1) {
             return false;

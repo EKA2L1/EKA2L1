@@ -28,8 +28,10 @@
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/virtualmem.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -60,12 +62,18 @@ namespace eka2l1 {
         sys = esys;
 
         thr_sch = std::make_shared<kernel::thread_scheduler>(this, timing, *cpu);
+        rom_map = nullptr;
 
         kernel_handles = kernel::object_ix(this, kernel::handle_array_owner::kernel);
         service::init_services(sys);
     }
 
     void kernel_system::shutdown() {
+        if (rom_map) {
+            common::unmap_file(rom_map);
+        }
+
+        rom_map = nullptr;
         thr_sch.reset();
 
         // Delete one by one in order. Do not change the order
@@ -491,6 +499,31 @@ namespace eka2l1 {
 
     bool kernel_system::should_terminate() {
         return thr_sch->should_terminate();
+    }
+
+    bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
+        rom_map = common::map_file(path, prot::read_write, 0, true);
+        const std::size_t rom_size = common::file_size(path);
+
+        if (!rom_map) {
+            return false;
+        }
+
+        LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map));
+
+        // Don't care about the result as long as it's not null.
+        kernel::chunk *rom_chunk = create<kernel::chunk>(mem, nullptr, "ROM", 0, rom_size,
+            rom_size, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            kernel::chunk_attrib::none, false, addr, rom_map);
+
+        if (!rom_chunk) {
+            LOG_ERROR("Can't create ROM chunk!");
+
+            common::unmap_file(rom_map);
+            return false;
+        }
+
+        return true;
     }
 
     struct kernel_info {

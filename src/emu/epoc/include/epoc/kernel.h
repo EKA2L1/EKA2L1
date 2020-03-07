@@ -162,6 +162,8 @@ namespace eka2l1 {
         io_system *io;
         system *sys;
 
+        void *rom_map;
+
         /* Contains the EPOC version */
         epocver kern_ver = epocver::epoc94;
 
@@ -459,5 +461,7 @@ namespace eka2l1 {
         void unlock() {
             kern_lock.unlock();
         }
+        
+        bool map_rom(const mem::vm_address addr, const std::string &path);
     };
 }
