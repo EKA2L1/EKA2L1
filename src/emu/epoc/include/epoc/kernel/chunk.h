@@ -60,7 +60,8 @@ namespace eka2l1 {
         enum class chunk_access {
             global,
             local,
-            code
+            code,
+            rom
         };
 
         enum class chunk_attrib {
@@ -92,7 +93,7 @@ namespace eka2l1 {
 
             explicit chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name, address bottom,
                 const address top, const size_t max_grow_size, prot protection, chunk_type type, chunk_access access,
-                chunk_attrib attrib, const bool is_heap = false, const address force_addr = 0);
+                chunk_attrib attrib, const bool is_heap = false, const address force_addr = 0, void *force_host_map = 0);
 
             ~chunk() = default;
 
