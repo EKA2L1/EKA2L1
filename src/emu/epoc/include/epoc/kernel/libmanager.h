@@ -54,7 +54,6 @@ namespace eka2l1 {
         class codeseg;
     }
 
-    using chunk_ptr = kernel::chunk*;
     using process_ptr = kernel::process*;
     using codeseg_ptr = kernel::codeseg*;
 
@@ -89,13 +88,13 @@ namespace eka2l1 {
             kernel_system *kern;
             system *sys;
 
-            chunk_ptr custom_stub;
-            chunk_ptr stub;
-
             std::unordered_map<address, std::string> addr_symbols;
             std::unordered_map<std::string, symbols> lib_symbols;
 
             bool log_svc{ false };
+
+        protected:
+            void load_patch_libraries(const std::string &patch_folder);
 
         public:
             std::unordered_map<sid, epoc_import_func> svc_funcs;
