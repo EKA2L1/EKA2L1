@@ -46,42 +46,6 @@ namespace eka2l1 {
             common::unmap_file(rom_map_);
         }
     }
-
-    bool memory_system::map_rom(mem::vm_address addr, const std::string &path) {
-        rom_addr_ = addr;
-        rom_map_ = common::map_file(path, prot::read_write, 0, true);
-        rom_size_ = common::file_size(path);
-
-        LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map_));
-
-        // Calculate total page table
-        std::uint32_t pte_count = static_cast<std::uint32_t>(rom_size_ + impl_->chunk_mask_) >> impl_->chunk_shift_;
-        std::uint32_t pe_count = static_cast<std::uint32_t>((rom_size_ + impl_->page_size() - 1)) 
-            >> impl_->page_size_bits_;
-
-        // Create and assign page tables
-        for (std::uint32_t i = 0; i < pte_count; i++) {
-            mem::page_table *pt = impl_->create_new_page_table();
-            std::uint32_t page_fill = common::min(pt->count(), pe_count);
-            mem::vm_address pt_base_addr = addr + (i << impl_->chunk_shift_);
-            std::uint8_t *pt_base_addr_host = reinterpret_cast<std::uint8_t*>(rom_map_)
-                + (i << impl_->chunk_shift_);
-
-            for (std::uint32_t j = 0; j < page_fill; j++) {
-                pt->pages_[j].host_addr = pt_base_addr_host + (j << impl_->page_size_bits_);
-                pt->pages_[j].perm = prot::read_write_exec;
-            }
-
-            impl_->assign_page_table(pt, pt_base_addr, mem::MMU_ASSIGN_GLOBAL);
-
-            pe_count -= page_fill;
-        }
-
-        // Map to CPU
-        cpu_->map_backing_mem(addr, rom_size_, reinterpret_cast<std::uint8_t*>(rom_map_), prot::read_write_exec);
-
-        return true;
-    }
     
     void *memory_system::get_real_pointer(const address addr, const mem::asid optional_asid) {
         if (addr == 0) {

@@ -67,8 +67,6 @@ namespace eka2l1 {
 
         const int get_page_size() const;
 
-        bool map_rom(const mem::vm_address addr, const std::string &path);
-
         void *get_real_pointer(const address addr, const mem::asid optional_asid = -1);
 
         bool read(const address addr, void *data, uint32_t size);
