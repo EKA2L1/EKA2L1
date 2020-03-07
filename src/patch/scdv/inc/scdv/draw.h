@@ -49,14 +49,28 @@ public:
     };
 
 public:
-    IMPORT_C static CFbsDrawDevice* NewScreenDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode);
-    IMPORT_C static CFbsDrawDevice* NewScreenDeviceL(TInt aScreenNo, TDisplayMode aDispMode);
-    IMPORT_C static CFbsDrawDevice* NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode, TInt aDataStride);
-    IMPORT_C static CFbsDrawDevice* NewBitmapDeviceL(const TSize& aSize, TDisplayMode aDispMode, TInt aDataStride);
-    IMPORT_C static TDisplayMode DisplayMode16M();
+    EXPORT_C static CFbsDrawDevice* NewScreenDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode);
+    EXPORT_C static CFbsDrawDevice* NewScreenDeviceL(TInt aScreenNo, TDisplayMode aDispMode);
+    EXPORT_C static CFbsDrawDevice* NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode, TInt aDataStride);
+    EXPORT_C static CFbsDrawDevice* NewBitmapDeviceL(const TSize& aSize, TDisplayMode aDispMode, TInt aDataStride);
+    EXPORT_C static TDisplayMode DisplayMode16M();
 
     virtual TDisplayMode DisplayMode() const = 0;
     virtual TInt LongWidth() const = 0;
+
+    /**
+     * \brief Replace target colors with other specified colors.
+     * 
+     * For example, you can replace a green color and replace them with yellow. Use this algorithm
+     * to do that to multiple pixels and multiple colors.
+     * 
+     * \param aRect 		The target rectangle to map colors.
+     * \param aColors		The color pairs. 2 colors create one pair, one is the color to be replaced,
+     * 						one is the color to get replaced.
+     * 	
+     * \param aNumPairs 	Number of color pairs.
+     * \param aMapForward	True if the color to be replaced is the first one.
+     */
     virtual void MapColors(const TRect& aRect,const TRgb* aColors,TInt aNumPairs,TBool aMapForwards) = 0;
     virtual void ReadLine(TInt aX,TInt aY,TInt aLength,TAny* aBuffer,TDisplayMode aDispMode) const = 0;
     virtual TRgb ReadPixel(TInt aX,TInt aY) const = 0;
