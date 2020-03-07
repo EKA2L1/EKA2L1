@@ -1,4 +1,13 @@
 EXPORTS
-	_ZTI20CFbsDrawDeviceBuffer @ 1 NONAME
-	_ZTV20CFbsDrawDeviceBuffer @ 2 NONAME
+	_ZN14CFbsDrawDevice14DisplayMode16MEv @ 1 NONAME
+	_ZN14CFbsDrawDevice16NewBitmapDeviceLE11TScreenInfo12TDisplayModei @ 2 NONAME
+	_ZN14CFbsDrawDevice16NewScreenDeviceLE11TScreenInfo12TDisplayMode @ 3 NONAME
+	_ZTI20CFbsDrawDeviceBuffer @ 4 NONAME
+	_ZTV20CFbsDrawDeviceBuffer @ 5 NONAME
+	_ZTI23CFbsDrawDeviceAlgorithm @ 6 NONAME
+	_ZTI27CFbsTwentyfourBitDrawDevice @ 7 NONAME
+	_ZTV23CFbsDrawDeviceAlgorithm @ 8 NONAME
+	_ZTV27CFbsTwentyfourBitDrawDevice @ 9 NONAME
+	_ZN14CFbsDrawDevice16NewBitmapDeviceLERK5TSize12TDisplayModei @ 10 NONAME
+	_ZN14CFbsDrawDevice16NewScreenDeviceLEi12TDisplayMode @ 11 NONAME
 
