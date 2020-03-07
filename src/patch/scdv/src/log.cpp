@@ -24,7 +24,7 @@
 namespace Scdv {
     class TDesOverflowHandler: public TDes8Overflow {
         virtual void Overflow(TDes8 &) {
-            User::Panic(_L("HLE_SCDV"), scdv::EPanicLogFailure);
+            Panic(Scdv::EPanicLogFailure);
         }
     };
 
