@@ -21,12 +21,49 @@
 #define SCDV_DVC_ALGO_H_
 
 #include <scdv/draw.h>
-#include <scdv/log.h>
+#include <e32std.h>
+
+void PanicAtTheEndOfTheWorld();
 
 class CFbsDrawDeviceAlgorithm: public CFbsDrawDevice {
+protected:
+	TInt iScanLineWords;
+	TInt iLongWidth;
+	
 public:
+	explicit CFbsDrawDeviceAlgorithm();
+
+	virtual TInt LongWidth() const;
 	virtual TInt ScanLineBytes() const;
+	virtual TInt HorzTwipsPerThousandPixels() const;
+	virtual TInt VertTwipsPerThousandPixels() const;
+	virtual void OrientationsAvailable(TBool aOrientation[4]);
+	virtual void ReadLine(TInt aX,TInt aY,TInt aLength,TAny* aBuffer,TDisplayMode aDispMode) const;
+    virtual void WriteBinaryLine(TInt aX,TInt aY,TUint32* aBuffer,TInt aLength,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode);
+    
+    // NOTE TODO
+    virtual void WriteBinaryLineVertical(TInt aX,TInt aY,TUint32* aBuffer,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode,TBool aUp);
+    virtual void WriteRgbAlphaLine(TInt aX,TInt aY,TInt aLength,TUint8* aRgbBuffer,TUint8* aMaskBuffer, CGraphicsContext::TDrawMode aDrawMode);
+    virtual void WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLength,TRgb aColor,const TUint8* aMaskBuffer);
+    virtual void WriteRgbAlphaLine(TInt aX,TInt aY,TInt aLength,
+                                       const TUint8* aRgbBuffer1,
+                                       const TUint8* aBuffer2,
+                                       const TUint8* aMaskBuffer,
+                                       CGraphicsContext::TDrawMode aDrawMode);
+    virtual TInt GetInterface(TInt aInterfaceId, TAny*& aInterface);
+    virtual void GetDrawRect(TRect& aDrawRect) const;
+    virtual void SwapWidthAndHeight();
+    // END TODO
+   
 	virtual void MapColors(const TRect& aRect,const TRgb* aColors,TInt aNumPairs,TBool aMapForwards);
+
+    TInt GetPixelIncrementUnit() const;
+    TInt PhysicalScanLineBytes() const;
+    
+    void TransformCoordinateToPhysical(TInt aX, TInt aY, TInt &aNewX, TInt &aNewY) const;
+    
+    virtual TOrientation GetOrientation() const = 0;
+    virtual void ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const = 0;
 };
 
 #endif
