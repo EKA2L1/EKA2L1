@@ -38,6 +38,7 @@ namespace eka2l1::mem {
 
         linear_section user_global_sec_;
         linear_section user_code_sec_;
+        linear_section user_rom_sec_;
 
     public:
         explicit mmu_multiple(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
