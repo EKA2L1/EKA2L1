@@ -36,9 +36,10 @@ namespace eka2l1::mem {
         MEM_MODEL_CHUNK_REGION_USER_GLOBAL = 1 << 0,
         MEM_MODEL_CHUNK_REGION_USER_LOCAL = 1 << 1,
         MEM_MODEL_CHUNK_REGION_USER_CODE = 1 << 2,
-        MEM_MODEL_CHUNK_TYPE_DISCONNECT = 1 << 3,
-        MEM_MODEL_CHUNK_TYPE_NORMAL = 1 << 4,
-        MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED = 1 << 5
+        MEM_MODEL_CHUNK_REGION_USER_ROM = 1 << 3,
+        MEM_MODEL_CHUNK_TYPE_DISCONNECT = 1 << 4,
+        MEM_MODEL_CHUNK_TYPE_NORMAL = 1 << 5,
+        MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED = 1 << 6
     };
 
     enum {
@@ -54,6 +55,7 @@ namespace eka2l1::mem {
         prot perm;
         
         // Use non-zero value to force the address. Use at your own risk, since this is not checked for overlapping.
-        vm_address addr { 0 };      
+        vm_address addr { 0 };
+        void *host_map { nullptr };        ///< Allow custom host memory mapping to guest.
     };
 }

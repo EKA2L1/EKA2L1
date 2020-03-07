@@ -39,6 +39,7 @@ namespace eka2l1::mem {
         umem = 0xC8000000,
         kernel_mapping = 0xC9200000,
         rom_eka1 = 0x50000000,
+        rom_eka1_end = 0x58000000,
         ram_code_addr_eka1 = 0xE0000000,
         ram_code_addr_eka1_end = 0xF0000000,
         shared_data_eka1 = 0x10000000,
