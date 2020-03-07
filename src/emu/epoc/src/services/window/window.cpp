@@ -1076,6 +1076,10 @@ namespace eka2l1 {
     }
 
     epoc::screen *window_server::get_screen(const int number) {
+        if (!screens) {
+            do_base_init();
+        }
+
         epoc::screen *crr = screens;
 
         while (crr && crr->number != number) {
