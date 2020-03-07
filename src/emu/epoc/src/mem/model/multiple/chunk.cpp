@@ -71,7 +71,7 @@ namespace eka2l1::mem {
             const auto pt_base = (running_offset >> mmu_->chunk_shift_) << mmu_->chunk_shift_;
 
             // Commit the memory to the host
-            if (!common::commit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_)
+            if (!is_external_host && !common::commit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_)
                 + pt_base, page_num << mmu_->page_size_bits_, permission_)) {
                 return running_offset - offset;
             }
@@ -193,9 +193,11 @@ namespace eka2l1::mem {
             }
             
             // Decommit the memory from the host
-            if (!common::decommit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base,
-                page_num << mmu_->page_size_bits_)) {
-                continue;
+            if (!is_external_host) {
+                if (!common::decommit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base,
+                    page_num << mmu_->page_size_bits_)) {
+                    LOG_ERROR("Can't decommit a page from host memory");
+                }
             }
             
             // Dealloc in-house bits
@@ -279,6 +281,10 @@ namespace eka2l1::mem {
             return &own_process_->user_local_sec_;
         }
 
+        if (flags & MEM_MODEL_CHUNK_REGION_USER_ROM) {
+            return &mul_mmu->user_rom_sec_;
+        }
+
         return nullptr;
     }
 
@@ -330,7 +336,13 @@ namespace eka2l1::mem {
         committed_ = 0;
 
         // Map host base memory
-        host_base_ = common::map_memory(max_size_);
+        if (create_info.host_map) {
+            host_base_ = create_info.host_map;
+            is_external_host = true;
+        } else {
+            host_base_ = common::map_memory(max_size_);
+            is_external_host = false;
+        }
 
         if (!host_base_) {
             return MEM_MODEL_CHUNK_ERR_NO_MEM;

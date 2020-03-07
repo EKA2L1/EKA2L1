@@ -25,6 +25,8 @@
 #include <common/algorithm.h>
 #include <common/virtualmem.h>
 
+#include <arm/arm_interface.h>
+
 namespace eka2l1::mem {
     multiple_mem_model_process::multiple_mem_model_process(mmu_base *mmu) 
         : mem_model_process(mmu)
@@ -84,7 +86,8 @@ namespace eka2l1::mem {
         mul_chunk->decommit(0, mul_chunk->max_size_);
 
         // Ignore the result, just unmap things
-        common::unmap_memory(mul_chunk->host_base_, mul_chunk->max_size_);
+        if (!mul_chunk->is_external_host)
+            common::unmap_memory(mul_chunk->host_base_, mul_chunk->max_size_);
 
         for (std::size_t i = 0; i < chunks_.size(); i++) {
             if (chunks_[i].get() == mul_chunk) {
@@ -153,6 +156,10 @@ namespace eka2l1::mem {
     }
     
     void multiple_mem_model_process::unmap_locals_from_cpu() {
+        if (!mmu_->cpu_->should_clear_old_memory_map()) {
+            return;
+        }
+
         for (auto &c: chunks_) {
             if (c && c->is_local) {
                 // Local

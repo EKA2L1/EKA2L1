@@ -26,7 +26,8 @@ namespace eka2l1::mem {
         , cur_dir_(nullptr)
         , global_dir_(page_size_bits_, 0)
         , user_global_sec_(mem_map_old ? shared_data_eka1 : shared_data, mem_map_old ? shared_data_end_eka1 : ram_drive, page_size())
-        , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : rom, page_size()) {
+        , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : rom, page_size())
+        , user_rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? rom_eka1_end : global_data, page_size()) {
         cur_dir_ = &global_dir_;
     }
     
