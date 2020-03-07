@@ -140,6 +140,11 @@ namespace eka2l1::kernel {
     
     address codeseg::get_code_run_addr(kernel::process *pr, std::uint8_t **base) {
         if (code_addr != 0) {
+            if (base) {
+                *base = reinterpret_cast<std::uint8_t*>(kern->get_memory_system()->
+                    get_real_pointer(code_addr));
+            }
+
             return code_addr;
         }
 
@@ -160,8 +165,17 @@ namespace eka2l1::kernel {
     }
     
     address codeseg::get_data_run_addr(kernel::process *pr, std::uint8_t **base) {
+        if (data_size == 0) {
+            return 0;
+        }
+
         if (data_addr != 0) {
-            return data_base;
+            if (base) {
+                *base = reinterpret_cast<std::uint8_t*>(kern->get_memory_system()->
+                    get_real_pointer(data_addr));
+            }
+
+            return data_addr;
         }
 
         // Find our stuffs

@@ -164,7 +164,7 @@ namespace eka2l1::kernel {
         }
 
         bool is_rom() const {
-            return data_addr != 0;
+            return code_addr != 0;
         }
 
         std::uint32_t get_exception_descriptor(kernel::process *pr);
