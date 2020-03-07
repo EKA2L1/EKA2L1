@@ -23,16 +23,27 @@
 #include <scdv/draw.h>
 #include <scdv/log.h>
 
-class CFbsDrawDeviceBuffer: public CFbsDrawDevice {
+#include "drawdvcalgo.h"
+
+class CFbsDrawDeviceBuffer: public CFbsDrawDeviceAlgorithm {
 protected:
     TAny *iBuffer;
+    TAny *iScanLineBuffer;
     TPoint iDitherOrigin;
     TUint8 iBlackMap;
     TUint8 iWhiteMap;
     TSize iSize;
+    TDisplayMode iDisplayMode;
+    TOrientation iOrientation;
     
 public:
-    virtual TSize SizeInPixels();
+    explicit CFbsDrawDeviceBuffer();
+    virtual ~CFbsDrawDeviceBuffer();
+    
+    virtual TDisplayMode DisplayMode() const;
+    virtual TSize SizeInPixels() const;
+    virtual TUint32* ScanLineBuffer() const;
+    virtual TDisplayMode ScanLineDisplayMode() const;
     
     virtual TInt InitScreen();
     virtual void SetBits(TAny* aBits);
@@ -51,6 +62,14 @@ public:
     virtual void Update();
     virtual void Update(const TRegion&);
     virtual void UpdateRegion(const TRect&);
+    virtual TBool SetOrientation(TOrientation aOri);
+
+	// Additional functions
+	virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const = 0;
+
+    virtual TOrientation GetOrientation() const {
+    	return iOrientation;
+    }
 };
 
 #endif

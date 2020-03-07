@@ -20,6 +20,35 @@
 #include <scdv/log.h>
 #include "drawdvcbuf.h"
 
+CFbsDrawDeviceBuffer::CFbsDrawDeviceBuffer()
+	: iBuffer(NULL)
+	, iScanLineBuffer(NULL)
+	, iBlackMap(128)
+	, iWhiteMap(255)
+	, iSize(0, 0)
+	, iDisplayMode(ERgb)
+	, iOrientation(EOrientationNormal) {
+	
+}
+
+CFbsDrawDeviceBuffer::~CFbsDrawDeviceBuffer() {
+	if (iScanLineBuffer) {
+		User::Free(iScanLineBuffer);
+	}
+}
+
+TDisplayMode CFbsDrawDeviceBuffer::DisplayMode() const {
+	return iDisplayMode;
+}
+
+TUint32* CFbsDrawDeviceBuffer::ScanLineBuffer() const {
+	return reinterpret_cast<TUint32*>(iScanLineBuffer);
+}
+
+TDisplayMode CFbsDrawDeviceBuffer::ScanLineDisplayMode() const {
+	return iDisplayMode;
+}
+
 TInt CFbsDrawDeviceBuffer::InitScreen() {
     Scdv::Log("Init screen called on unsupported draw device!");
     return KErrNotSupported;
@@ -86,6 +115,14 @@ TInt CFbsDrawDeviceBuffer::GetCustomPalette(CPalette*&) {
 	return KErrNotSupported;
 }
 
-TSize CFbsDrawDeviceBuffer::SizeInPixels() {
+TSize CFbsDrawDeviceBuffer::SizeInPixels() const {
 	return iSize;
+}
+
+TBool CFbsDrawDeviceBuffer::SetOrientation(TOrientation aOri) {
+	if (aOri > EOrientationRotate270 || aOri < EOrientationNormal)
+		return EFalse;
+
+	iOrientation = aOri;
+	return ETrue;
 }
