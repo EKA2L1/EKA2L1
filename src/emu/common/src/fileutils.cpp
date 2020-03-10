@@ -306,24 +306,6 @@ namespace eka2l1::common {
 #endif
     }
 
-    std::string get_file_content_u16(const std::string &path) {
-        std::ifstream fin(path, std::ios::binary);
-        fin.seekg(0, std::ios::end);
-        size_t size = static_cast<size_t>(fin.tellg());
-        if (size <= 2) return "";
-
-        //skip BOM
-        fin.seekg(2, std::ios::beg);
-        size -= 2;
-
-        std::u16string u16((size / 2) + 1, '\0');
-        fin.read(reinterpret_cast<char*>(&u16[0]), size);
-
-        std::string utf8 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(u16);
-
-        return utf8;
-    }
-
     bool move_file(const std::string &path, const std::string &new_path) {
 #if EKA2L1_PLATFORM(WIN32)
         return MoveFileA(path.c_str(), new_path.c_str());
