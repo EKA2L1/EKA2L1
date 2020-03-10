@@ -567,7 +567,7 @@ namespace eka2l1 {
 
             const auto& dvc = dvcs[conf->device];
             const auto& lang_prop = sys->get_kernel_system()->get_prop(0x101f75b6, 0x10208903);
-            auto& current_lang = lang_prop->get_pkg<epoc::SLocaleLanguage>();
+            auto current_lang = lang_prop->get_pkg<epoc::SLocaleLanguage>();
             const std::string lang_preview = common::get_language_name_by_code(current_lang->iLanguage);
 
             if (ImGui::BeginCombo("##Languagesscombo", lang_preview.c_str())) {
