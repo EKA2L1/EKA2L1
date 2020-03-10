@@ -43,8 +43,8 @@
 #include <epoc/services/ui/view/view.h>
 #include <epoc/services/window/window.h>
 
-#include <e32lang.h>
 #include <epoc/epoc.h>
+#include <epoc/utils/locale.h>
 #include <epoc/services/init.h>
 
 #include <manager/config.h>
@@ -212,17 +212,6 @@ namespace eka2l1::epoc {
         int iSpare[0x1E];
     };
 
-    struct SLocaleLanguage {
-        TLanguage iLanguage;
-        eka2l1::ptr<char> iDateSuffixTable;
-        eka2l1::ptr<char> iDayTable;
-        eka2l1::ptr<char> iDayAbbTable;
-        eka2l1::ptr<char> iMonthTable;
-        eka2l1::ptr<char> iMonthAbbTable;
-        eka2l1::ptr<char> iAmPmTable;
-        eka2l1::ptr<uint16_t> iMsgTable;
-    };
-
     TLocale GetEpocLocaleInfo() {
         TLocale locale;
 
@@ -311,15 +300,15 @@ namespace eka2l1 {
             temp = std::make_unique<domain_server>(sys, dmmngr);
             sys->get_kernel_system()->add_custom_server(temp);
 
-            auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
+            auto lang = epoc::SLocaleLanguage{ epoc::TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
             auto& dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
             if (dvcs.size() > cfg->device) {
                 auto& dvc = dvcs[cfg->device];
                 if (cfg->language == -1) {
-                    lang = epoc::SLocaleLanguage{ (TLanguage)dvc.default_language_code, 0, 0, 0, 0, 0, 0, 0 };
+                    lang = epoc::SLocaleLanguage{ (epoc::TLanguage)dvc.default_language_code, 0, 0, 0, 0, 0, 0, 0 };
                 } else {
-                    lang = epoc::SLocaleLanguage{ (TLanguage)cfg->language, 0, 0, 0, 0, 0, 0, 0 };
+                    lang = epoc::SLocaleLanguage{ (epoc::TLanguage)cfg->language, 0, 0, 0, 0, 0, 0, 0 };
                 }
             }
 

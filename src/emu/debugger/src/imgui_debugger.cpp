@@ -28,7 +28,7 @@
 
 #include <disasm/disasm.h>
 #include <epoc/epoc.h>
-#include <e32lang.h>
+#include <epoc/utils/locale.h>
 
 #include <epoc/kernel.h>
 #include <epoc/kernel/libmanager.h>
@@ -497,17 +497,6 @@ namespace eka2l1 {
         ImGui::Separator();
     }
 
-    struct SLocaleLanguage {
-        TLanguage iLanguage;
-        eka2l1::ptr<char> iDateSuffixTable;
-        eka2l1::ptr<char> iDayTable;
-        eka2l1::ptr<char> iDayAbbTable;
-        eka2l1::ptr<char> iMonthTable;
-        eka2l1::ptr<char> iMonthAbbTable;
-        eka2l1::ptr<char> iAmPmTable;
-        eka2l1::ptr<uint16_t> iMsgTable;
-    };
-
     void imgui_debugger::show_pref_general() {
         ImGui::Text("Logging");
         ImGui::Separator();
@@ -578,15 +567,15 @@ namespace eka2l1 {
 
             const auto& dvc = dvcs[conf->device];
             const auto& lang_prop = sys->get_kernel_system()->get_prop(0x101f75b6, 0x10208903);
-            auto& current_lang = lang_prop->get_pkg<SLocaleLanguage>();
+            auto& current_lang = lang_prop->get_pkg<epoc::SLocaleLanguage>();
             const std::string lang_preview = common::get_language_name_by_code(current_lang->iLanguage);
 
             if (ImGui::BeginCombo("##Languagesscombo", lang_preview.c_str())) {
                 for (std::size_t i = 0; i < dvc.languages.size(); i++) {
                     const std::string lang_name = common::get_language_name_by_code(dvc.languages[i]);
                     if (ImGui::Selectable(lang_name.c_str())) {
-                        current_lang->iLanguage = static_cast<TLanguage>(dvc.languages[i]);
-                        lang_prop->set<SLocaleLanguage>(*current_lang);
+                        current_lang->iLanguage = static_cast<epoc::TLanguage>(dvc.languages[i]);
+                        lang_prop->set<epoc::SLocaleLanguage>(*current_lang);
                         conf->language = dvc.languages[i];
                         conf->serialize();
                     }
