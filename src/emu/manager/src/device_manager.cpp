@@ -23,7 +23,7 @@
 
 #include <common/algorithm.h>
 #include <common/path.h>
-#include <common/fileutils.h>
+#include <common/dynamicfile.h>
 
 #include <algorithm>
 #include <fstream>
@@ -125,10 +125,12 @@ namespace eka2l1::manager {
         std::vector<int> languages;
         int default_language = -1;
         const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + "/resource/bootdata/languages.txt");
-        const std::string content = common::get_file_content_u16(lang_path);
-        std::stringstream ss(common::trim_spaces(content));
+        common::dynamic_ifile ifile(lang_path);
+        if (ifile.fail()) {
+            return false;
+        }
         std::string line;
-        while (std::getline(ss, line)) {
+        while (ifile.getline(line)) {
             if (line == "" || line[0] == '\0') break;
             const int lang_code = std::stoi(line);
             if (line.find_first_of(",d") != std::string::npos) {
