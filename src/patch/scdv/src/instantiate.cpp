@@ -20,6 +20,9 @@
 #include <scdv/draw.h>
 #include <scdv/panic.h>
 #include "drawdvc24.h"
+#include "drawdvc32.h"
+
+#include <hal.h>
 
 CFbsDrawDevice* CFbsDrawDevice::NewBitmapDeviceL(const TSize& aSize, TDisplayMode aDispMode, TInt aDataStride) {
 	CFbsDrawDevice *newDevice = NULL;
@@ -29,7 +32,30 @@ CFbsDrawDevice* CFbsDrawDevice::NewBitmapDeviceL(const TSize& aSize, TDisplayMod
 			newDevice = new (ELeave) CFbsTwentyfourBitDrawDevice;
 			CleanupStack::PushL(newDevice);
 			User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitDrawDevice*>(newDevice)->Construct(aSize, aDataStride));
+			
+			Scdv::Log("INFO:: A new 24 bit bitmap device has been instantiated!");
+			
 			break;
+			
+		case EColor16MA:
+			newDevice = new (ELeave) CFbsTwentyfourBitAlphaDrawDevice;
+			CleanupStack::PushL(newDevice);
+			User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaDrawDevice*>(newDevice)->Construct(aSize, aDataStride));
+			
+			Scdv::Log("INFO:: A new 24 bit alpha bitmap device has been instantiated!");
+			
+			break;
+			
+
+		case EColor16MU:
+			newDevice = new (ELeave) CFbsThirtyTwoBitsDrawDevice;
+			CleanupStack::PushL(newDevice);
+			User::LeaveIfError(reinterpret_cast<CFbsThirtyTwoBitsDrawDevice*>(newDevice)->Construct(aSize, aDataStride));
+			
+			Scdv::Log("INFO:: A new 32 bit bitmap device has been instantiated!");
+			
+			break;
+			
 		
 		default:
 			Scdv::Log("ERR:: Unsupported or unimplemented format for bitmap device %d", aDispMode);
@@ -44,14 +70,47 @@ CFbsDrawDevice* CFbsDrawDevice::NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode
 	return NewBitmapDeviceL(aInfo.iScreenSize, aDispMode, aDataStride);
 }
 
+static CFbsDrawDevice *InstantiateNewScreenDevice(TAny *aAddress, const TSize aSize, const TDisplayMode aMode) {
+	CFbsDrawDevice *device = NULL;
+	
+	switch (aMode) {
+		case EColor16MA:
+			device = new (ELeave) CFbsTwentyfourBitAlphaScreenDrawDevice;
+			CleanupStack::PushL(device);
+			User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice*>(device)->Construct(aSize, -1));
+			
+			Scdv::Log("INFO:: A new 24 bit alpha screen device has been instantiated!");
+
+			break;
+
+		default:
+			Scdv::Log("ERROR:: Unsupported display mode for screen device %d", (TInt)aMode);
+			Scdv::Panic(Scdv::EPanicUnsupported);
+			
+			return NULL;
+	}
+	
+	if (!device) {
+		Scdv::Panic(Scdv::EPanicLogFailure);
+		return NULL;
+	}
+	
+	device->SetBits(aAddress);
+	CleanupStack::Pop(device);
+	return device;
+}
+
 CFbsDrawDevice* CFbsDrawDevice::NewScreenDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode) {
-	Scdv::Log("ERR:: Unsupported creating screen device, TODO!");
-	Scdv::Panic(Scdv::EPanicUnsupported);
-	return NULL;
+	return InstantiateNewScreenDevice(aInfo.iScreenAddress, aInfo.iScreenSize, aDispMode);
 }
 
 CFbsDrawDevice* CFbsDrawDevice::NewScreenDeviceL(TInt aScreenNo, TDisplayMode aDispMode) {
-	Scdv::Log("ERR:: Unsupported creating screen device, TODO!");
-	Scdv::Panic(Scdv::EPanicUnsupported);
-	return NULL;
+	TUint32 *videoAddress = NULL;
+	HAL::Get(aScreenNo, HAL::EDisplayMemoryAddress, (TInt&)(videoAddress));
+	
+	TInt width, height = 0;
+	HAL::Get(aScreenNo, HAL::EDisplayXPixels, width);
+	HAL::Get(aScreenNo, HAL::EDisplayYPixels, height);
+	
+	return InstantiateNewScreenDevice(videoAddress, TSize(width, height), aDispMode);
 }
