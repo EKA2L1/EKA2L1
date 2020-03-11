@@ -300,15 +300,15 @@ namespace eka2l1 {
             temp = std::make_unique<domain_server>(sys, dmmngr);
             sys->get_kernel_system()->add_custom_server(temp);
 
-            auto lang = epoc::SLocaleLanguage{ epoc::TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
+            auto lang = epoc::locale_language{ epoc::TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
             auto& dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
             if (dvcs.size() > cfg->device) {
                 auto& dvc = dvcs[cfg->device];
                 if (cfg->language == -1) {
-                    lang = epoc::SLocaleLanguage{ (epoc::TLanguage)dvc.default_language_code, 0, 0, 0, 0, 0, 0, 0 };
+                    lang = epoc::locale_language{ (epoc::TLanguage)dvc.default_language_code, 0, 0, 0, 0, 0, 0, 0 };
                 } else {
-                    lang = epoc::SLocaleLanguage{ (epoc::TLanguage)cfg->language, 0, 0, 0, 0, 0, 0, 0 };
+                    lang = epoc::locale_language{ (epoc::TLanguage)cfg->language, 0, 0, 0, 0, 0, 0, 0 };
                 }
             }
 
@@ -319,7 +319,7 @@ namespace eka2l1 {
             // From Domain Server request
             DEFINE_INT_PROP(sys, 0x1020e406, 0x250, 0);
 
-            DEFINE_BIN_PROP(sys, sys_category, locale_lang_key, sizeof(epoc::SLocaleLanguage), lang);
+            DEFINE_BIN_PROP(sys, sys_category, locale_lang_key, sizeof(epoc::locale_language), lang);
             DEFINE_BIN_PROP(sys, sys_category, locale_data_key, sizeof(epoc::TLocale), locale);
         }
     }

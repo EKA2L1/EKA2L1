@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2020 EKA2L1 Team.
- * 
+ *
  * This file is part of EKA2L1 project.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -322,7 +322,7 @@ namespace eka2l1::epoc {
 
         /**
         @deprecated
-	
+
         Use of this value is deprecated.
         */
         ELangOther = 99,
@@ -332,7 +332,7 @@ namespace eka2l1::epoc {
         ELangManufacturerEnglish = 100,
 
         /** South Sotho.
-	
+
         A language of Lesotho also called Sesotho. SIL code sot. */
         ELangSouthSotho = 101,
 
@@ -650,7 +650,7 @@ namespace eka2l1::epoc {
 
         /**
         Indicates the final language in the language downgrade path.
-        
+
         @see BaflUtils::NearestLanguageFile
         @see BaflUtils::GetDowngradePath
         */
@@ -658,14 +658,14 @@ namespace eka2l1::epoc {
         ELangMaximum = ELangNone // This must always be equal to the last (largest) TLanguage enum.
     };
 
-    struct SLocaleLanguage {
-        TLanguage iLanguage;
-        eka2l1::ptr<char> iDateSuffixTable;
-        eka2l1::ptr<char> iDayTable;
-        eka2l1::ptr<char> iDayAbbTable;
-        eka2l1::ptr<char> iMonthTable;
-        eka2l1::ptr<char> iMonthAbbTable;
-        eka2l1::ptr<char> iAmPmTable;
-        eka2l1::ptr<uint16_t> iMsgTable;
+    struct locale_language {
+        TLanguage language;
+        eka2l1::ptr<char> date_suffix_table;
+        eka2l1::ptr<char> day_table;
+        eka2l1::ptr<char> day_abb_table;
+        eka2l1::ptr<char> month_table;
+        eka2l1::ptr<char> month_abb_table;
+        eka2l1::ptr<char> am_pm_table;
+        eka2l1::ptr<uint16_t> msg_table;
     };
 }
