@@ -356,10 +356,6 @@ TInt CFbsDrawDeviceAlgorithm::GetInterface(TInt aInterfaceId, TAny*& aInterface)
 	return KErrNotSupported;
 }
 
-void CFbsDrawDeviceAlgorithm::GetDrawRect(TRect& aDrawRect) const {
-	Scdv::Log("Get draw rectangle not supported! TODO!");
-}
-
 void CFbsDrawDeviceAlgorithm::SwapWidthAndHeight() {
 	Scdv::Log("Swap width and height not supported! TODO!");
 }

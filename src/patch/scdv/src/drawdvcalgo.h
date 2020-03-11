@@ -51,7 +51,6 @@ public:
                                        const TUint8* aMaskBuffer,
                                        CGraphicsContext::TDrawMode aDrawMode);
     virtual TInt GetInterface(TInt aInterfaceId, TAny*& aInterface);
-    virtual void GetDrawRect(TRect& aDrawRect) const;
     virtual void SwapWidthAndHeight();
     // END TODO
    

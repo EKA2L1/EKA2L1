@@ -63,7 +63,8 @@ public:
     virtual void Update(const TRegion&);
     virtual void UpdateRegion(const TRect&);
     virtual TBool SetOrientation(TOrientation aOri);
-
+    virtual void GetDrawRect(TRect& aDrawRect) const;
+    
 	// Additional functions
 	virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const = 0;
 

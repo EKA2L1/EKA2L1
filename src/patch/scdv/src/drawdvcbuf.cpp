@@ -55,15 +55,11 @@ TInt CFbsDrawDeviceBuffer::InitScreen() {
 }
 
 void CFbsDrawDeviceBuffer::SetBits(TAny* aBits) {
-    if (aBits == NULL) {
-        Scdv::Log("Try to set data pointer but it's invalid!");
-        return;
-    }
-
     iBuffer = aBits;
 }
 
 void CFbsDrawDeviceBuffer::SetAutoUpdate(TBool aValue) {
+	Scdv::Log("Auto update not supported!");
 }
 
 void CFbsDrawDeviceBuffer::SetDisplayMode(CFbsDrawDevice* aDrawDevice) {
@@ -125,4 +121,9 @@ TBool CFbsDrawDeviceBuffer::SetOrientation(TOrientation aOri) {
 
 	iOrientation = aOri;
 	return ETrue;
+}
+
+void CFbsDrawDeviceBuffer::GetDrawRect(TRect& aDrawRect) const {
+	aDrawRect.iTl = TPoint(0, 0);
+	aDrawRect.iBr = aDrawRect.iTl + iSize;
 }
