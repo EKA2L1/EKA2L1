@@ -20,5 +20,5 @@
 #include <scdv/draw.h>
 
 TDisplayMode CFbsDrawDevice::DisplayMode16M() {
-	return EColor16MU;
+	return EColor16MA;
 }
