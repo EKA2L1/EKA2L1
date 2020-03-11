@@ -16,7 +16,7 @@ SYSTEMINCLUDE   \epoc32\include
 
 SOURCEPATH	  ..\src
 
-SOURCE		  scdv.cpp log.cpp drawdvcbuf.cpp drawdvcalgo.cpp drawdvc24.cpp panic.cpp instantiate.cpp
+SOURCE		  scdv.cpp log.cpp drawdvcbuf.cpp drawdvcalgo.cpp drawdvc24.cpp panic.cpp instantiate.cpp drawdvc32.cpp cdsb.cpp
 
 // In order to use .def files to freeze code you must use one or more DEFFILE lines;
 // see the ones commented out below for examples.
@@ -40,8 +40,10 @@ SOURCE		  scdv.cpp log.cpp drawdvcbuf.cpp drawdvcalgo.cpp drawdvc24.cpp panic.cp
 
 nostrictdef
 
-LIBRARY		 euser.lib gdi.lib
+LIBRARY		 euser.lib gdi.lib hal.lib
 
 DEBUGGABLE_UDEBONLY
 
 DEFFILE scdv.def
+
+CAPABILITY SwEvent
