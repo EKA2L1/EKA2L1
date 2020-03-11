@@ -20,6 +20,7 @@
 #include <e32std.h>
 #include <scdv/log.h>
 #include <scdv/panic.h>
+#include <e32debug.h>
 
 namespace Scdv {
     class TDesOverflowHandler: public TDes8Overflow {
@@ -37,6 +38,10 @@ namespace Scdv {
         
         TDesOverflowHandler handler;
         
-        newString->Des().AppendFormatList(baseFormat, list, &handler);
+        TPtr8 stringDes = newString->Des();
+        stringDes.AppendFormatList(baseFormat, list, &handler);
+
+        RDebug::Printf("%S", &stringDes);
+        User::Free(newString);
     }
 };
