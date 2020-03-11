@@ -60,27 +60,28 @@ void CFbsTwentyfourBitDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
 void CFbsTwentyfourBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, CGraphicsContext::TDrawMode aDrawMode) {
 	switch (aDrawMode) {
 		case CGraphicsContext::EDrawModePEN:
-			aAddress[0] = aRed;
+		case CGraphicsContext::EDrawModeWriteAlpha:
+			aAddress[0] = aBlue;
 			aAddress[1] = aGreen;
-			aAddress[2] = aBlue;
+			aAddress[2] = aRed;
 			break;
 			
 		case CGraphicsContext::EDrawModeAND:
-			aAddress[0] &= aRed;
+			aAddress[0] &= aBlue;
 			aAddress[1] &= aGreen;
-			aAddress[2] &= aBlue;
+			aAddress[2] &= aRed;
 			break;
 
 		case CGraphicsContext::EDrawModeOR:
-			aAddress[0] |= aRed;
+			aAddress[0] |= aBlue;
 			aAddress[1] |= aGreen;
-			aAddress[2] |= aBlue;
+			aAddress[2] |= aRed;
 			break;
 
 		case CGraphicsContext::EDrawModeXOR:
-			aAddress[0] ^= aRed;
+			aAddress[0] ^= aBlue;
 			aAddress[1] ^= aGreen;
-			aAddress[2] ^= aBlue;
+			aAddress[2] ^= aRed;
 			break;
 			
 		case CGraphicsContext::EDrawModeNOTSCREEN:
@@ -90,9 +91,9 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 aRe
 			break;
 
 		case CGraphicsContext::EDrawModeANDNOT:
-			aAddress[0] = (~aAddress[0]) & aRed;
+			aAddress[0] = (~aAddress[0]) & aBlue;
 			aAddress[1] = (~aAddress[1]) & aGreen;
-			aAddress[2] = (~aAddress[2]) & aBlue;
+			aAddress[2] = (~aAddress[2]) & aRed;
 			break;
 		
 		default:
@@ -111,6 +112,7 @@ void CFbsTwentyfourBitDrawDevice::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraph
 }
 
 void CFbsTwentyfourBitDrawDevice::WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) {
+	Scdv::Log("Writing binary!");
 	TUint8 *pixelAddress = NULL;
 	TInt increment = GetPixelIncrementUnit() * 3;
 
@@ -151,19 +153,49 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbMulti(TInt aX,TInt aY,TInt aLength,TIn
 	}
 }
 
+void CFbsTwentyfourBitDrawDevice::WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLength,TRgb aColor,const TUint8* aMaskBuffer) {
+	TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
+	TInt increment = GetPixelIncrementUnit() * 3;
+	
+	TUint32 color24 = aColor.Color16M();
+	
+	if (aX + aLength >= LongWidth())
+		PanicAtTheEndOfTheWorld();
+
+	for (TInt x = aX; x < aX + aLength; x++) {
+		const TUint8 maskBit = *aMaskBuffer;
+		TUint32 *colorWord = reinterpret_cast<TUint32*>(pixelAddress);
+		
+		// Can this consider to be fast? Geez i unalign stuffs
+		TUint32 rb = (*colorWord & 0xFF00FF);
+		TUint32 g = (*colorWord & 0x00FF00);
+		
+		rb += ((color24 & 0xff00ff) - rb) * maskBit >> 8;
+		g  += ((color24 & 0x00ff00) -  g) * maskBit >> 8;
+		
+		*colorWord &= ~0xFFFFFF;
+		*colorWord |= (rb & 0xff00ff) | (g & 0xff00);
+		
+		pixelAddress += increment;
+		aMaskBuffer++;
+	}	
+}
+
 void CFbsTwentyfourBitDrawDevice::WriteLine(TInt aX,TInt aY,TInt aLength,TUint32* aBuffer,CGraphicsContext::TDrawMode aDrawMode) {
 	TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
 	TInt increment = GetPixelIncrementUnit() * 3;
 
+	TUint8 *buffer8 = reinterpret_cast<TUint8*>(aBuffer);
+	
 	if (aX + aLength >= LongWidth())
 		PanicAtTheEndOfTheWorld();
 
 	for (TInt x = aX; x < aX + aLength; x++) {
 		// Try to reduce if calls pls
-		WriteRgbToAddress(pixelAddress, aBuffer[0], aBuffer[1], aBuffer[2], aDrawMode);
+		WriteRgbToAddress(pixelAddress, buffer8[0], buffer8[1], buffer8[2], aDrawMode);
 
 		pixelAddress += increment;
-		aBuffer += 3;
+		buffer8 += 3;
 	}
 }
 
@@ -190,7 +222,7 @@ TInt CFbsTwentyfourBitDrawDevice::Construct(TSize aSize, TInt aDataStride) {
 	iScanLineWords = aDataStride >> 2;
 	iLongWidth = aDataStride / 3;
 
-	TInt scanLineBufferSize = (((Max(iSize.iHeight, iSize.iHeight) * 3) + 11) / 12) * 12;
+	TInt scanLineBufferSize = (((Max(iSize.iHeight, iSize.iWidth) * 3) + 11) / 12) * 12;
 	iScanLineBuffer = User::Alloc(scanLineBufferSize);
 	
 	if (iScanLineBuffer == NULL) {
