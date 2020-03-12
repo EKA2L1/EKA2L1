@@ -23,6 +23,7 @@ add_library(common
     include/common/hash.h
     include/common/ini.h
     include/common/linked.h
+    include/common/language.h
     include/common/log.h
     include/common/map.h
     include/common/paint.h
@@ -58,6 +59,7 @@ add_library(common
     src/flate.cpp
     src/hash.cpp
     src/ini.cpp
+    src/language.cpp
     src/log.cpp
     src/paint.cpp
     src/path.cpp

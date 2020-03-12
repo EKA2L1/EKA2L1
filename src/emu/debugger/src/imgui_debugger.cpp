@@ -28,6 +28,7 @@
 
 #include <disasm/disasm.h>
 #include <epoc/epoc.h>
+#include <epoc/utils/locale.h>
 
 #include <epoc/kernel.h>
 #include <epoc/kernel/libmanager.h>
@@ -52,6 +53,7 @@
 #include <common/fileutils.h>
 #include <common/path.h>
 #include <common/platform.h>
+#include <common/language.h>
 
 #include <nfd.h>
 
@@ -556,7 +558,34 @@ namespace eka2l1 {
             ImGui::EndCombo();
         }
 
-        ImGui::PopItemWidth();
+        if (!dvcs.empty()) {
+            ImGui::PopItemWidth();
+
+            ImGui::Text("Language");
+            ImGui::SameLine(col2);
+            ImGui::PushItemWidth(col2 - 10);
+
+            const auto& dvc = dvcs[conf->device];
+            const auto& lang_prop = sys->get_kernel_system()->get_prop(0x101f75b6, 0x10208903);
+            auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
+            const std::string lang_preview = common::get_language_name_by_code(current_lang->language);
+
+            if (ImGui::BeginCombo("##Languagesscombo", lang_preview.c_str())) {
+                for (std::size_t i = 0; i < dvc.languages.size(); i++) {
+                    const std::string lang_name = common::get_language_name_by_code(dvc.languages[i]);
+                    if (ImGui::Selectable(lang_name.c_str())) {
+                        current_lang->language = static_cast<epoc::TLanguage>(dvc.languages[i]);
+                        lang_prop->set<epoc::locale_language>(*current_lang);
+                        conf->language = dvc.languages[i];
+                        conf->serialize();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::PopItemWidth();
+        }
     }
 
     void imgui_debugger::show_pref_mounting() {

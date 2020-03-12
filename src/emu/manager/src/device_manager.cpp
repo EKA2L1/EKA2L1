@@ -21,10 +21,13 @@
 #include <manager/device_manager.h>
 #include <yaml-cpp/yaml.h>
 
+#include <common/algorithm.h>
 #include <common/path.h>
+#include <common/dynamicfile.h>
 
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 
 namespace eka2l1::manager {
     void device_manager::load_devices() {
@@ -119,7 +122,30 @@ namespace eka2l1::manager {
             return false;
         }
 
-        devices.push_back({ ver, firmcode, manufacturer, model });
+        std::vector<int> languages;
+        int default_language = -1;
+        const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + "/resource/bootdata/languages.txt");
+        common::dynamic_ifile ifile(lang_path);
+        if (ifile.fail()) {
+            return false;
+        }
+        std::string line;
+        while (ifile.getline(line)) {
+            if (line == "" || line[0] == '\0') break;
+            const int lang_code = std::stoi(line);
+            if (line.find_first_of(",d") != std::string::npos) {
+                default_language = lang_code;
+            }
+            languages.push_back(lang_code);
+        }
+        if (default_language == -1)
+            default_language = languages[0];
+
+        device dvc = { ver, firmcode, manufacturer, model };
+        dvc.languages = languages;
+        dvc.default_language_code = default_language;
+
+        devices.push_back(dvc);
         return true;
     }
 
@@ -137,5 +163,4 @@ namespace eka2l1::manager {
 
         return false;
     }
-
 }

@@ -69,6 +69,7 @@ namespace eka2l1::manager {
         config_file_emit_vector(emitter, "force-load", force_load_modules);
         config_file_emit_single(emitter, "cpu", cpu_backend);
         config_file_emit_single(emitter, "device", device);
+        config_file_emit_single(emitter, "language", language);
         config_file_emit_single(emitter, "enable-gdb-stub", enable_gdbstub);
         config_file_emit_single(emitter, "data-storage", storage);
         config_file_emit_single(emitter, "display-size-x", display_size_x_pixs);
@@ -118,6 +119,7 @@ namespace eka2l1::manager {
         get_yaml_value(node, "enable-breakpoint-script", &enable_breakpoint_script, false);
         get_yaml_value(node, "cpu", &cpu_backend, 0);
         get_yaml_value(node, "device", &device, 0);
+        get_yaml_value(node, "language", &language, -1);
         get_yaml_value(node, "enable-gdb-stub", &enable_gdbstub, false);
         get_yaml_value(node, "data-storage", &storage, "");
         get_yaml_value(node, "display_size_x", &display_size_x_pixs, 360);

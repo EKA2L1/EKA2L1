@@ -251,18 +251,18 @@ namespace eka2l1 {
 
             std::string model = product_ini.find("Model")->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value();
 
+            auto firmcode_low = common::lowercase_string(firmcode);
+            firmware_code_ret = firmcode_low;
+
+            // Rename temp folder to its product code
+            eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode_low + "\\"));
+
             if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver)) {
                 LOG_ERROR("This device ({}) already installed, revert all changes", firmcode);
-                eka2l1::common::remove(add_path(devices_rom_path, "\\temp\\"));
+                eka2l1::common::remove(add_path(devices_rom_path, firmcode_low + "\\"));
 
                 return false;
             }
-
-            firmcode = common::lowercase_string(firmcode);
-            firmware_code_ret = firmcode;
-
-            // Rename temp folder to its product code
-            eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode + "\\"));
 
             return true;
         }

@@ -240,7 +240,7 @@ namespace eka2l1::common {
 
         do {
             cycles_to_next_entry();
-            d = reinterpret_cast<struct dirent*>(find_data);
+            d = reinterpret_cast<struct dirent *>(find_data);
         } while (d && (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0));
 #endif
 
@@ -313,7 +313,7 @@ namespace eka2l1::common {
         return (rename(path.c_str(), new_path.c_str()) == 0);
 #endif
     }
-    
+
     bool copy_file(const std::string &target_file, const std::string &dest, const bool overwrite_if_dest_exists) {
 #if EKA2L1_PLATFORM(WIN32)
         return CopyFile(target_file.c_str(), dest.c_str(), !overwrite_if_dest_exists);
@@ -325,7 +325,7 @@ namespace eka2l1::common {
         if (eka2l1::exists(dest) && !overwrite_if_dest_exists) {
             return false;
         }
-            
+
         std::ifstream src(target_file, std::ios::binary);
         std::ofstream dst(dest, std::ios::binary | std::ios::trunc);
 
@@ -344,13 +344,12 @@ namespace eka2l1::common {
         if (GetFileAttributesExW(reinterpret_cast<const LPCWSTR>(path.c_str()), GetFileExInfoStandard, &attrib_data) == false) {
             return 0xFFFFFFFFFFFFFFFF;
         }
-                
+
         FILETIME last_modify_time = attrib_data.ftLastWriteTime;
 
         // 100 nanoseconds = 0.1 microseconds
         return convert_microsecs_win32_1601_epoch_to_1ad(
-            static_cast<std::uint64_t>(last_modify_time.dwLowDateTime) | 
-            (static_cast<std::uint64_t>(last_modify_time.dwHighDateTime) << 32));
+            static_cast<std::uint64_t>(last_modify_time.dwLowDateTime) | (static_cast<std::uint64_t>(last_modify_time.dwHighDateTime) << 32));
 #else
         const std::string name_utf8 = common::ucs2_to_utf8(path);
         struct stat st;
@@ -363,7 +362,7 @@ namespace eka2l1::common {
         return convert_microsecs_epoch_to_1ad(static_cast<std::uint64_t>(st.st_mtime));
 #endif
     }
-    
+
     bool is_system_case_insensitive() {
 #if EKA2L1_PLATFORM(WIN32)
         return true;

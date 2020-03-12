@@ -43,11 +43,13 @@
 #include <epoc/services/ui/view/view.h>
 #include <epoc/services/window/window.h>
 
-#include <e32lang.h>
 #include <epoc/epoc.h>
+#include <epoc/utils/locale.h>
 #include <epoc/services/init.h>
 
 #include <manager/config.h>
+#include <manager/manager.h>
+#include <manager/device_manager.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -210,17 +212,6 @@ namespace eka2l1::epoc {
         int iSpare[0x1E];
     };
 
-    struct SLocaleLanguage {
-        TLanguage iLanguage;
-        eka2l1::ptr<char> iDateSuffixTable;
-        eka2l1::ptr<char> iDayTable;
-        eka2l1::ptr<char> iDayAbbTable;
-        eka2l1::ptr<char> iMonthTable;
-        eka2l1::ptr<char> iMonthAbbTable;
-        eka2l1::ptr<char> iAmPmTable;
-        eka2l1::ptr<uint16_t> iMsgTable;
-    };
-
     TLocale GetEpocLocaleInfo() {
         TLocale locale;
 
@@ -309,8 +300,17 @@ namespace eka2l1 {
             temp = std::make_unique<domain_server>(sys, dmmngr);
             sys->get_kernel_system()->add_custom_server(temp);
 
-            auto lang = epoc::SLocaleLanguage{ TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
+            auto lang = epoc::locale_language{ epoc::TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
+            auto& dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
+            if (dvcs.size() > cfg->device) {
+                auto& dvc = dvcs[cfg->device];
+                if (cfg->language == -1) {
+                    lang = epoc::locale_language{ (epoc::TLanguage)dvc.default_language_code, 0, 0, 0, 0, 0, 0, 0 };
+                } else {
+                    lang = epoc::locale_language{ (epoc::TLanguage)cfg->language, 0, 0, 0, 0, 0, 0, 0 };
+                }
+            }
 
             // Unknown key, testing show that this prop return 65535 most of times
             // The prop belongs to HAL server, but the key usuage is unknown. (TODO)
@@ -319,7 +319,7 @@ namespace eka2l1 {
             // From Domain Server request
             DEFINE_INT_PROP(sys, 0x1020e406, 0x250, 0);
 
-            DEFINE_BIN_PROP(sys, sys_category, locale_lang_key, sizeof(epoc::SLocaleLanguage), lang);
+            DEFINE_BIN_PROP(sys, sys_category, locale_lang_key, sizeof(epoc::locale_language), lang);
             DEFINE_BIN_PROP(sys, sys_category, locale_data_key, sizeof(epoc::TLocale), locale);
         }
     }
