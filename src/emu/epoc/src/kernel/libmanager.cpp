@@ -365,6 +365,11 @@ namespace eka2l1::hle {
                 // Read and patch ROM
                 while (!map_file_stream.fail()) {
                     std::getline(map_file_stream, route_line);
+
+                    if (!route_line.empty() && route_line[0] == '#') {
+                        continue;
+                    }
+
                     common::pystr route_line_parse(route_line);
 
                     auto routes = route_line_parse.split(',');
