@@ -1,0 +1,688 @@
+Archive member included because of file (symbol)
+
+\Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+                              (_E32Dll)
+\Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll.o)
+                              \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o) (_E32Dll_Body)
+\Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(ucppinit_aeabi.o)
+                              \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll.o) (__cpp_initialize__aeabi_)
+\Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(dllexp.o)
+                              \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll.o) (__DLL_Export_Table__)
+E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/../../../../arm-none-symbianelf/lib\libsupc++.a(eh_personality.o)
+                              \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o (__gxx_personality_v0)
+E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/\libgcc.a(pr-support.o)
+                              E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/../../../../arm-none-symbianelf/lib\libsupc++.a(eh_personality.o) (__gnu_unwind_frame)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+Address of section .text set to 0x8000
+Address of section .data set to 0x400000
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\scdv.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\panic.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\cdsb.o
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLLSTUB.lib
+START GROUP
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib
+END GROUP
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\euser.dso
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\gdi.dso
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\hal.dso
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\dfpaeabi.dso
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\dfprvct2_2.dso
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\drtaeabi.dso
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\scppnwdl.dso
+LOAD \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\armv5\LIB\drtrvct2_2.dso
+LOAD E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/../../../../arm-none-symbianelf/lib\libsupc++.a
+LOAD E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/\libgcc.a
+                0x00008000                . = 0x8000
+                0x00008000                PROVIDE (Image$$ER_RO$$Base, .)
+
+.init
+ *(.init)
+
+.text           0x00008000     0x2270
+ *(.text .stub .text.* .gnu.linkonce.t.*)
+ .text          0x00008000       0x28 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll.o)
+                0x00008000                _E32Dll_Body
+ .text          0x00008028        0x4 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\scdv.o
+                0x00008028                CFbsDrawDevice::DisplayMode16M()
+ .text          0x0000802c       0x68 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                0x0000802c                Scdv::Log(char const*, ...)
+ .text._ZN4Scdv19TDesOverflowHandler8OverflowER5TDes8
+                0x00008094       0x10 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                0x00008094                Scdv::TDesOverflowHandler::Overflow(TDes8&)
+ .text          0x000080a4      0x210 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x00008254                CFbsDrawDeviceBuffer::Update()
+                0x000080a4                CFbsDrawDeviceBuffer::CFbsDrawDeviceBuffer()
+                0x00008260                CFbsDrawDeviceBuffer::SetCustomPalette(CPalette const*)
+                0x0000828c                CFbsDrawDeviceBuffer::GetDrawRect(TRect&) const
+                0x00008230                CFbsDrawDeviceBuffer::SetDitherOrigin(TPoint const&)
+                0x00008268                CFbsDrawDeviceBuffer::GetCustomPalette(CPalette*&)
+                0x0000827c                CFbsDrawDeviceBuffer::SetOrientation(CFbsDrawDevice::TOrientation)
+                0x0000825c                CFbsDrawDeviceBuffer::UpdateRegion(TRect const&)
+                0x000081e4                CFbsDrawDeviceBuffer::ScanLineBuffer() const
+                0x0000821c                CFbsDrawDeviceBuffer::SetDisplayMode(CFbsDrawDevice*)
+                0x00008250                CFbsDrawDeviceBuffer::ShadowBuffer(int, unsigned long*)
+                0x00008208                CFbsDrawDeviceBuffer::SetAutoUpdate(int)
+                0x0000811c                CFbsDrawDeviceBuffer::~CFbsDrawDeviceBuffer()
+                0x000080e0                CFbsDrawDeviceBuffer::CFbsDrawDeviceBuffer()
+                0x00008258                CFbsDrawDeviceBuffer::Update(TRegion const&)
+                0x00008204                CFbsDrawDeviceBuffer::SetBits(void*)
+                0x0000823c                CFbsDrawDeviceBuffer::SetUserDisplayMode(TDisplayMode)
+                0x00008244                CFbsDrawDeviceBuffer::SetFadingParameters(unsigned char, unsigned char)
+                0x0000815c                CFbsDrawDeviceBuffer::~CFbsDrawDeviceBuffer()
+                0x00008270                CFbsDrawDeviceBuffer::SizeInPixels() const
+                0x00008240                CFbsDrawDeviceBuffer::SetShadowMode(CFbsDrawDevice::TShadowMode)
+                0x000081e8                CFbsDrawDeviceBuffer::ScanLineDisplayMode() const
+                0x0000824c                CFbsDrawDeviceBuffer::ShadowArea(TRect const&)
+                0x000081ec                CFbsDrawDeviceBuffer::InitScreen()
+                0x0000819c                CFbsDrawDeviceBuffer::~CFbsDrawDeviceBuffer()
+                0x000081e0                CFbsDrawDeviceBuffer::DisplayMode() const
+ .text._ZN14CFbsDrawDeviceD0Ev
+                0x000082b4       0x1c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x000082b4                CFbsDrawDevice::~CFbsDrawDevice()
+ .text._ZN14CFbsDrawDeviceD1Ev
+                0x000082d0       0x14 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x000082d0                CFbsDrawDevice::~CFbsDrawDevice()
+ .text._ZNK20CFbsDrawDeviceBuffer14GetOrientationEv
+                0x000082e4        0x4 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x000082e4                CFbsDrawDeviceBuffer::GetOrientation() const
+ .text          0x000082e8      0x560 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+                0x00008428                CFbsDrawDeviceAlgorithm::PhysicalScanLineBytes() const
+                0x0000853c                PanicAtTheEndOfTheWorld()
+                0x0000831c                CFbsDrawDeviceAlgorithm::CFbsDrawDeviceAlgorithm()
+                0x00008808                CFbsDrawDeviceAlgorithm::WriteRgbAlphaLine(int, int, int, unsigned char const*, unsigned char const*, unsigned char const*, CGraphicsContext::TDrawMode)
+                0x0000846c                CFbsDrawDeviceAlgorithm::HorzTwipsPerThousandPixels() const
+                0x0000832c                CFbsDrawDeviceAlgorithm::CFbsDrawDeviceAlgorithm()
+                0x00008474                CFbsDrawDeviceAlgorithm::OrientationsAvailable(int*)
+                0x000084bc                CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(int, int, int&, int&) const
+                0x00008430                CFbsDrawDeviceAlgorithm::LongWidth() const
+                0x00008554                CFbsDrawDeviceAlgorithm::ReadLine(int, int, int, void*, TDisplayMode) const
+                0x000087f4                CFbsDrawDeviceAlgorithm::WriteRgbAlphaMulti(int, int, int, TRgb, unsigned char const*)
+                0x000087e0                CFbsDrawDeviceAlgorithm::WriteRgbAlphaLine(int, int, int, unsigned char*, unsigned char*, CGraphicsContext::TDrawMode)
+                0x00008834                CFbsDrawDeviceAlgorithm::SwapWidthAndHeight()
+                0x00008470                CFbsDrawDeviceAlgorithm::VertTwipsPerThousandPixels() const
+                0x000087cc                CFbsDrawDeviceAlgorithm::WriteBinaryLineVertical(int, int, unsigned long*, int, TRgb, CGraphicsContext::TDrawMode, int)
+                0x000083ec                CFbsDrawDeviceAlgorithm::ScanLineBytes() const
+                0x0000881c                CFbsDrawDeviceAlgorithm::GetInterface(int, void*&)
+                0x0000833c                CFbsDrawDeviceAlgorithm::MapColors(TRect const&, TRgb const*, int, int)
+                0x00008480                CFbsDrawDeviceAlgorithm::GetPixelIncrementUnit() const
+                0x00008750                CFbsDrawDeviceAlgorithm::WriteBinaryLine(int, int, unsigned long*, int, TRgb, CGraphicsContext::TDrawMode)
+ .text._ZN23CFbsDrawDeviceAlgorithmD1Ev
+                0x00008848       0x14 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+                0x00008848                CFbsDrawDeviceAlgorithm::~CFbsDrawDeviceAlgorithm()
+ .text._ZN23CFbsDrawDeviceAlgorithmD0Ev
+                0x0000885c       0x1c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+                0x0000885c                CFbsDrawDeviceAlgorithm::~CFbsDrawDeviceAlgorithm()
+ .text          0x00008878      0x4f4 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+                0x00008878                CFbsTwentyfourBitDrawDevice::GetPixelStartAddress(int, int) const
+                0x00008b78                CFbsTwentyfourBitDrawDevice::WriteRgbAlphaMulti(int, int, int, TRgb, unsigned char const*)
+                0x00008ae0                CFbsTwentyfourBitDrawDevice::WriteRgbMulti(int, int, int, int, TRgb, CGraphicsContext::TDrawMode)
+                0x00008a04                CFbsTwentyfourBitDrawDevice::WriteRgb(int, int, TRgb, CGraphicsContext::TDrawMode)
+                0x00008cf4                CFbsTwentyfourBitDrawDevice::Construct(TSize, int)
+                0x00008cbc                CFbsTwentyfourBitDrawDevice::SetSize(TSize)
+                0x00008c3c                CFbsTwentyfourBitDrawDevice::WriteLine(int, int, int, unsigned long*, CGraphicsContext::TDrawMode)
+                0x000088a8                CFbsTwentyfourBitDrawDevice::ReadPixel(int, int) const
+                0x0000894c                CFbsTwentyfourBitDrawDevice::WriteRgbToAddress(unsigned char*, unsigned char, unsigned char, unsigned char, CGraphicsContext::TDrawMode)
+                0x000088f0                CFbsTwentyfourBitDrawDevice::ReadLineRaw(int, int, int, void*) const
+                0x00008a24                CFbsTwentyfourBitDrawDevice::WriteBinary(int, int, unsigned long*, int, int, TRgb, CGraphicsContext::TDrawMode)
+                0x000089e4                CFbsTwentyfourBitDrawDevice::WriteRgbToAddress(unsigned char*, TRgb, CGraphicsContext::TDrawMode)
+ .text._ZN27CFbsTwentyfourBitDrawDeviceD1Ev
+                0x00008d6c       0x14 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+                0x00008d6c                CFbsTwentyfourBitDrawDevice::~CFbsTwentyfourBitDrawDevice()
+ .text._ZN27CFbsTwentyfourBitDrawDeviceD0Ev
+                0x00008d80       0x1c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+                0x00008d80                CFbsTwentyfourBitDrawDevice::~CFbsTwentyfourBitDrawDevice()
+ .text          0x00008d9c       0x20 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\panic.o
+                0x00008d9c                Scdv::Panic(Scdv::TPanicReason)
+ .text          0x00008dbc      0x208 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+                0x00008f50                CFbsDrawDevice::NewScreenDeviceL(TScreenInfo, TDisplayMode)
+                0x00008f84                CFbsDrawDevice::NewScreenDeviceL(int, TDisplayMode)
+                0x00008eb0                CFbsDrawDevice::NewBitmapDeviceL(TScreenInfo, TDisplayMode, int)
+                0x00008dbc                CFbsDrawDevice::NewBitmapDeviceL(TSize const&, TDisplayMode, int)
+ .text._ZN32CFbsTwentyfourBitAlphaDrawDeviceD0Ev
+                0x00008fc4       0x1c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+                0x00008fc4                CFbsTwentyfourBitAlphaDrawDevice::~CFbsTwentyfourBitAlphaDrawDevice()
+ .text._ZN32CFbsTwentyfourBitAlphaDrawDeviceD1Ev
+                0x00008fe0       0x14 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+                0x00008fe0                CFbsTwentyfourBitAlphaDrawDevice::~CFbsTwentyfourBitAlphaDrawDevice()
+ .text          0x00008ff4      0x4ac \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                0x00009430                CFbsTwentyfourBitAlphaScreenDrawDevice::Update()
+                0x000093c8                CFbsThirtyTwoBitsDrawDevice::Construct(TSize, int)
+                0x0000906c                CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(int, int, int, void*) const
+                0x00008ffc                CFbsThirtyTwoBitsDrawDevice::GetPixelStartAddress(int, int) const
+                0x00009478                CFbsTwentyfourBitAlphaScreenDrawDevice::Update(TRegion const&)
+                0x00009028                CFbsThirtyTwoBitsDrawDevice::ReadPixel(int, int) const
+                0x000091b0                CFbsThirtyTwoBitsDrawDevice::WriteRgb(int, int, TRgb, CGraphicsContext::TDrawMode)
+                0x00009280                CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(int, int, int, int, TRgb, CGraphicsContext::TDrawMode)
+                0x00009318                CFbsThirtyTwoBitsDrawDevice::WriteRgbAlphaMulti(int, int, int, TRgb, unsigned char const*)
+                0x0000932c                CFbsThirtyTwoBitsDrawDevice::WriteLine(int, int, int, unsigned long*, CGraphicsContext::TDrawMode)
+                0x0000918c                CFbsThirtyTwoBitsDrawDevice::WriteRgbToAddress(unsigned char*, TRgb, CGraphicsContext::TDrawMode)
+                0x000091d0                CFbsThirtyTwoBitsDrawDevice::WriteBinary(int, int, unsigned long*, int, int, TRgb, CGraphicsContext::TDrawMode)
+                0x000090c8                CFbsThirtyTwoBitsDrawDevice::WriteRgbToAddress(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char, CGraphicsContext::TDrawMode)
+                0x00009490                CFbsTwentyfourBitAlphaScreenDrawDevice::UpdateRegion(TRect const&)
+                0x00008ff4                UpdateScreen(unsigned long, TRect const*)
+                0x000093ac                CFbsThirtyTwoBitsDrawDevice::SetSize(TSize)
+ .text._ZN27CFbsThirtyTwoBitsDrawDeviceD1Ev
+                0x000094a0       0x14 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                0x000094a0                CFbsThirtyTwoBitsDrawDevice::~CFbsThirtyTwoBitsDrawDevice()
+ .text._ZN27CFbsThirtyTwoBitsDrawDeviceD0Ev
+                0x000094b4       0x1c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                0x000094b4                CFbsThirtyTwoBitsDrawDevice::~CFbsThirtyTwoBitsDrawDevice()
+ .text._ZN38CFbsTwentyfourBitAlphaScreenDrawDeviceD1Ev
+                0x000094d0       0x14 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                0x000094d0                CFbsTwentyfourBitAlphaScreenDrawDevice::~CFbsTwentyfourBitAlphaScreenDrawDevice()
+ .text._ZN38CFbsTwentyfourBitAlphaScreenDrawDeviceD0Ev
+                0x000094e4       0x1c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                0x000094e4                CFbsTwentyfourBitAlphaScreenDrawDevice::~CFbsTwentyfourBitAlphaScreenDrawDevice()
+ .text          0x00009500       0x2c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\cdsb.o
+                0x00009510                CDirectScreenBitmap::NewL(int)
+                0x00009500                CDirectScreenBitmap::NewL()
+ .text          0x0000952c        0x4 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(dllexp.o)
+                0x0000952c                __DLL_Export_Table__
+ .text          0x00009530      0x82c E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/../../../../arm-none-symbianelf/lib\libsupc++.a(eh_personality.o)
+                0x00009850                __gxx_personality_v0
+ .text          0x00009d5c      0x4fc E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/\libgcc.a(pr-support.o)
+                0x0000a218                _Unwind_GetRegionStart
+                0x00009de0                __gnu_unwind_execute
+                0x0000a230                _Unwind_GetLanguageSpecificData
+                0x0000a1c8                __gnu_unwind_frame
+ *(.text.*personality*)
+ *(.gnu.warning)
+ *(.glue_7t)
+ .glue_7t       0x0000a258       0x18 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(ucppinit_aeabi.o)
+                0x0000a25c                ____DLL_Export_Table___change_to_arm
+                0x0000a268                __run_static_dtors_from_thumb
+                0x0000a258                ____DLL_Export_Table___from_thumb
+                0x0000a26c                __run_static_dtors_change_to_arm
+                0x0000a260                ____cpp_initialize__aeabi__from_thumb
+                0x0000a264                ____cpp_initialize__aeabi__change_to_arm
+ *(.glue_7)
+
+.emb_text       0x0000a270       0x70
+ .emb_text      0x0000a270       0x28 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+                0x0000a284                Symbian$$CPP$$Exception$$Descriptor
+                0x0000a270                _E32Dll
+ .emb_text      0x0000a298       0x48 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(ucppinit_aeabi.o)
+                0x0000a2e0                std::nothrow
+                0x0000a298                __cpp_initialize__aeabi_
+
+.fini
+ *(.fini)
+
+.plt            0x0000a2e0      0x188
+ *(.plt)
+ .plt           0x0000a2e0      0x188 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+                0x0000a468                PROVIDE (__etext, .)
+                0x0000a468                PROVIDE (_etext, .)
+                0x0000a468                PROVIDE (etext, .)
+                0x0000a468                PROVIDE (Image$$ER_RO$$Limit, .)
+
+.rodata         0x0000a468      0xcdf
+ *(.rodata .rodata.* .gnu.linkonce.r.*)
+ .rodata.str1.4
+                0x0000a468        0x3 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                                  0x4 (size before relaxing)
+ *fill*         0x0000a46b        0x5 00
+ .rodata._ZTVN4Scdv19TDesOverflowHandlerE
+                0x0000a470       0x10 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                0x0000a470                vtable for Scdv::TDesOverflowHandler
+ .rodata._ZTIN4Scdv19TDesOverflowHandlerE
+                0x0000a480        0xc \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                0x0000a480                typeinfo for Scdv::TDesOverflowHandler
+ .rodata._ZTSN4Scdv19TDesOverflowHandlerE
+                0x0000a48c       0x20 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                0x0000a48c                typeinfo name for Scdv::TDesOverflowHandler
+ .rodata._ZTI13TDes8Overflow
+                0x0000a4ac        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                0x0000a4ac                typeinfo for TDes8Overflow
+ .rodata._ZTS13TDes8Overflow
+                0x0000a4b4       0x10 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+                0x0000a4b4                typeinfo name for TDes8Overflow
+ .rodata.str1.4
+                0x0000a4c4       0x7f \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                                 0x80 (size before relaxing)
+ *fill*         0x0000a543        0x5 00
+ .rodata        0x0000a548       0xe8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x0000a620                typeinfo for CFbsDrawDeviceBuffer
+                0x0000a548                vtable for CFbsDrawDeviceBuffer
+                0x0000a608                typeinfo name for CFbsDrawDeviceBuffer
+ .rodata._ZTV14CFbsDrawDevice
+                0x0000a630       0xb8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x0000a630                vtable for CFbsDrawDevice
+ .rodata._ZTI14CFbsDrawDevice
+                0x0000a6e8        0xc \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x0000a6e8                typeinfo for CFbsDrawDevice
+ .rodata._ZTS14CFbsDrawDevice
+                0x0000a6f4       0x14 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+                0x0000a6f4                typeinfo name for CFbsDrawDevice
+ .rodata        0x0000a708      0x190 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+                0x0000a86c                typeinfo name for CFbsDrawDeviceAlgorithm
+                0x0000a7b0                vtable for CFbsDrawDeviceAlgorithm
+                0x0000a888                typeinfo for CFbsDrawDeviceAlgorithm
+ .rodata.str1.4
+                0x0000a898      0x1ab \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+                                0x1ac (size before relaxing)
+ *fill*         0x0000aa43        0x1 00
+ .rodata.str1.4
+                0x0000aa44       0x40 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+ *fill*         0x0000aa84        0x4 00
+ .rodata        0x0000aa88      0x1f8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+                0x0000ac50                typeinfo name for CFbsTwentyfourBitDrawDevice
+                0x0000ac70                typeinfo for CFbsTwentyfourBitDrawDevice
+                0x0000ab90                vtable for CFbsTwentyfourBitDrawDevice
+ .rodata.str2.4
+                0x0000ac80       0x12 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\panic.o
+                                 0x14 (size before relaxing)
+ *fill*         0x0000ac92        0x2 00
+ .rodata.str1.4
+                0x0000ac94      0x16e \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+                                0x170 (size before relaxing)
+ *fill*         0x0000ae02        0x6 00
+ .rodata._ZTV32CFbsTwentyfourBitAlphaDrawDevice
+                0x0000ae08       0xc0 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+                0x0000ae08                vtable for CFbsTwentyfourBitAlphaDrawDevice
+ .rodata._ZTI32CFbsTwentyfourBitAlphaDrawDevice
+                0x0000aec8        0xc \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+                0x0000aec8                typeinfo for CFbsTwentyfourBitAlphaDrawDevice
+ .rodata._ZTS32CFbsTwentyfourBitAlphaDrawDevice
+                0x0000aed4       0x24 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+                0x0000aed4                typeinfo name for CFbsTwentyfourBitAlphaDrawDevice
+ .rodata.str1.4
+                0x0000aef8       0x2b \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                                 0x5c (size before relaxing)
+ *fill*         0x0000af23        0x5 00
+ .rodata        0x0000af28      0x1e8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                0x0000b0c8                typeinfo for CFbsThirtyTwoBitsDrawDevice
+                0x0000b0a8                typeinfo name for CFbsThirtyTwoBitsDrawDevice
+                0x0000b100                typeinfo for CFbsTwentyfourBitAlphaScreenDrawDevice
+                0x0000afe8                vtable for CFbsThirtyTwoBitsDrawDevice
+                0x0000b0d4                typeinfo name for CFbsTwentyfourBitAlphaScreenDrawDevice
+                0x0000af28                vtable for CFbsTwentyfourBitAlphaScreenDrawDevice
+ .rodata.str1.4
+                0x0000b110       0x37 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\cdsb.o
+                                 0x38 (size before relaxing)
+
+.rodata1
+ *(.rodata1)
+                0x0000b148                . = ALIGN (0x4)
+
+.preinit_array
+ *(.preinit_array)
+                0x0000b148                PROVIDE (SHT$$INIT_ARRAY$$Base, .)
+
+.init_array
+ *(.init_array)
+                0x0000b148                PROVIDE (SHT$$INIT_ARRAY$$Limit, .)
+
+.fini_array
+ *(.fini_array)
+
+.ARM.extab      0x0000b148      0x108
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+ .ARM.extab     0x0000b148        0xc \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+ .ARM.extab     0x0000b154       0x48 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+ .ARM.extab     0x0000b19c       0x30 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+ .ARM.extab     0x0000b1cc       0x3c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+ .ARM.extab     0x0000b208        0xc \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+ .ARM.extab     0x0000b214       0x3c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+                0x0000b250                .ARM.exidx$$Base = .
+                0x0000b250                __exidx_start = .
+
+.ARM.exidx      0x0000b250      0x398
+ *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+ .ARM.exidx     0x0000b250        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll.o)
+ .ARM.exidx     0x0000b258        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\scdv.o
+ .ARM.exidx     0x0000b260        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+ .ARM.exidx.text._ZN4Scdv19TDesOverflowHandler8OverflowER5TDes8
+                0x0000b268        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+ .ARM.exidx     0x0000b270       0xd0 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+ .ARM.exidx.text._ZN14CFbsDrawDeviceD0Ev
+                0x0000b340        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+ .ARM.exidx.text._ZN14CFbsDrawDeviceD1Ev
+                0x0000b348        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+ .ARM.exidx.text._ZNK20CFbsDrawDeviceBuffer14GetOrientationEv
+                0x0000b350        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+ .ARM.exidx     0x0000b358       0xa8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+ .ARM.exidx.text._ZN23CFbsDrawDeviceAlgorithmD1Ev
+                0x0000b400        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+ .ARM.exidx.text._ZN23CFbsDrawDeviceAlgorithmD0Ev
+                0x0000b408        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+ .ARM.exidx     0x0000b410       0x60 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+ .ARM.exidx.text._ZN27CFbsTwentyfourBitDrawDeviceD1Ev
+                0x0000b470        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+ .ARM.exidx.text._ZN27CFbsTwentyfourBitDrawDeviceD0Ev
+                0x0000b478        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+ .ARM.exidx     0x0000b480        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\panic.o
+ .ARM.exidx     0x0000b488       0x28 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+ .ARM.exidx.text._ZN32CFbsTwentyfourBitAlphaDrawDeviceD0Ev
+                0x0000b4b0        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+ .ARM.exidx.text._ZN32CFbsTwentyfourBitAlphaDrawDeviceD1Ev
+                0x0000b4b8        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+ .ARM.exidx     0x0000b4c0       0x80 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+ .ARM.exidx.text._ZN27CFbsThirtyTwoBitsDrawDeviceD1Ev
+                0x0000b540        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+ .ARM.exidx.text._ZN27CFbsThirtyTwoBitsDrawDeviceD0Ev
+                0x0000b548        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+ .ARM.exidx.text._ZN38CFbsTwentyfourBitAlphaScreenDrawDeviceD1Ev
+                0x0000b550        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+ .ARM.exidx.text._ZN38CFbsTwentyfourBitAlphaScreenDrawDeviceD0Ev
+                0x0000b558        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+ .ARM.exidx     0x0000b560       0x10 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\cdsb.o
+ .ARM.exidx     0x0000b5e0        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(ucppinit_aeabi.o)
+ .ARM.exidx     0x0000b570        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(dllexp.o)
+ .ARM.exidx     0x0000b578       0x30 E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/../../../../arm-none-symbianelf/lib\libsupc++.a(eh_personality.o)
+ .ARM.exidx     0x0000b5a8       0x38 E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/\libgcc.a(pr-support.o)
+                0x0000b5e0                __exidx_end = .
+                0x0000b5e0                .ARM.exidx$$Limit = .
+
+.eh_frame_hdr
+ *(.eh_frame_hdr)
+
+.eh_frame
+ *(.eh_frame)
+
+.gcc_except_table
+ *(.gcc_except_table)
+ *(.gcc_except_table.*)
+                0x00400000                . = ((ALIGN (0x8000) + (. & 0x7fff)) SEGMENT_START data)
+
+.eh_frame
+ *(.eh_frame)
+
+.gcc_except_table
+ *(.gcc_except_table)
+ *(.gcc_except_table.*)
+
+.tdata
+ *(.tdata .tdata.* .gnu.linkonce.td.*)
+
+.tbss
+ *(.tbss .tbss.* .gnu.linkonce.tb.*)
+ *(.tcommon)
+
+.ctors
+ *crtbegin*.o(.ctors)
+ *(EXCLUDE_FILE(*crtend*.o) .ctors)
+ *(SORT(.ctors.*))
+ *(.ctors)
+
+.dtors
+ *crtbegin*.o(.dtors)
+ *(EXCLUDE_FILE(*crtend*.o) .dtors)
+ *(SORT(.dtors.*))
+ *(.dtors)
+
+.jcr
+ *(.jcr)
+
+.data.rel.ro
+ *(.data.rel.ro.local)
+ *(.data.rel.ro*)
+
+.data           0x00400000        0x0
+                0x00400000                __data_start = .
+ *(.data .data.* .gnu.linkonce.d.*)
+ *(.gnu.linkonce.d.*personality*)
+
+.data1
+ *(.data1)
+                0x00400000                _edata = .
+                0x00400000                PROVIDE (edata, .)
+                0x00400000                . = DEFINED (__bss_segment_start)?__bss_segment_start:.
+                0x00400000                __bss_start = .
+                0x00400000                __bss_start__ = .
+
+.bss            0x00400000        0x0
+ *(.dynbss)
+ *(.bss .bss.* .gnu.linkonce.b.*)
+ *(COMMON)
+                0x00400000                . = ALIGN (0x4)
+                0x00400000                . = ALIGN (0x4)
+                0x00400000                _end = .
+                0x00400000                _bss_end__ = .
+                0x00400000                __bss_end__ = .
+                0x00400000                __end__ = .
+                0x00400000                PROVIDE (end, .)
+
+.dynamic        0x00000000      0x108
+ *(.dynamic)
+ .dynamic       0x00000000      0x108 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+                0x00000000                _DYNAMIC
+
+.hash           0x00000000      0x464
+ *(.hash)
+ .hash          0x00000000      0x464 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.dynsym         0x00000000      0x940
+ *(.dynsym)
+ .dynsym        0x00000000      0x940 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.dynstr         0x00000000     0x1307
+ *(.dynstr)
+ .dynstr        0x00000000     0x1307 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.gnu.version    0x00000000      0x128
+ *(.gnu.version)
+ .gnu.version   0x00000000      0x128 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.gnu.version_d  0x00000000       0x4c
+ *(.gnu.version_d)
+ .gnu.version_d
+                0x00000000       0x4c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.gnu.version_r  0x00000000       0xa0
+ *(.gnu.version_r)
+ .gnu.version_r
+                0x00000000       0xa0 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x00000000     0x1328
+ *(.comment)
+ .comment       0x00000000      0x4b8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .comment       0x000004b8      0x36e \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll.o)
+ .comment       0x00000826       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\scdv.o
+ .comment       0x0000085e       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\log.o
+ .comment       0x00000896       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcbuf.o
+ .comment       0x000008ce       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvcalgo.o
+ .comment       0x00000906       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc24.o
+ .comment       0x0000093e       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\panic.o
+ .comment       0x00000976       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\instantiate.o
+ .comment       0x000009ae       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\drawdvc32.o
+ .comment       0x000009e6       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\cdsb.o
+ .comment       0x00000a1e      0x50c \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(ucppinit_aeabi.o)
+ .comment       0x00000f2a      0x38e \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(dllexp.o)
+ .comment       0x000012b8       0x38 E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/../../../../arm-none-symbianelf/lib\libsupc++.a(eh_personality.o)
+ .comment       0x000012f0       0x38 E:/Dev/CSLARM/bin/../lib/gcc/arm-none-symbianelf/3.4.3/\libgcc.a(pr-support.o)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges
+ *(.debug_aranges)
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_info
+ *(.debug_info .gnu.linkonce.wi.*)
+
+.debug_abbrev
+ *(.debug_abbrev)
+
+.debug_line
+ *(.debug_line)
+
+.debug_frame
+ *(.debug_frame)
+
+.debug_str
+ *(.debug_str)
+
+.debug_loc
+ *(.debug_loc)
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.stack          0x00080000        0x0
+                0x00080000                _stack = .
+ *(.stack)
+
+.note.gnu.arm.ident
+ *(.note.gnu.arm.ident)
+
+/DISCARD/
+ *(.note.GNU-stack)
+
+.rel.dyn        0x00000000     0x1088
+ *(.rel.init)
+ *(.rel.text .rel.text.* .rel.gnu.linkonce.t.*)
+ .rel.text      0x00000000      0x1c8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN14CFbsDrawDeviceD0Ev
+                0x000001c8        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN14CFbsDrawDeviceD1Ev
+                0x000001d0        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN23CFbsDrawDeviceAlgorithmD1Ev
+                0x000001d8        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN23CFbsDrawDeviceAlgorithmD0Ev
+                0x000001e0        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN27CFbsTwentyfourBitDrawDeviceD1Ev
+                0x000001e8        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN27CFbsTwentyfourBitDrawDeviceD0Ev
+                0x000001f0        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN32CFbsTwentyfourBitAlphaDrawDeviceD0Ev
+                0x000001f8        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN32CFbsTwentyfourBitAlphaDrawDeviceD1Ev
+                0x00000200        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN27CFbsThirtyTwoBitsDrawDeviceD1Ev
+                0x00000208        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN27CFbsThirtyTwoBitsDrawDeviceD0Ev
+                0x00000210        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN38CFbsTwentyfourBitAlphaScreenDrawDeviceD1Ev
+                0x00000218        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.text._ZN38CFbsTwentyfourBitAlphaScreenDrawDeviceD0Ev
+                0x00000220        0x8 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ *(.rel.fini)
+ *(.rel.rodata .rel.rodata.* .rel.gnu.linkonce.r.*)
+ .rel.rodata._ZTVN4Scdv19TDesOverflowHandlerE
+                0x00000228       0x10 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.rodata._ZTIN4Scdv19TDesOverflowHandlerE
+                0x00000238       0x18 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.rodata._ZTI13TDes8Overflow
+                0x00000250       0x10 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.rodata    0x00000260      0xb20 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.rodata._ZTV14CFbsDrawDevice
+                0x00000d80      0x160 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.rodata._ZTI14CFbsDrawDevice
+                0x00000ee0       0x18 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.rodata._ZTV32CFbsTwentyfourBitAlphaDrawDevice
+                0x00000ef8      0x178 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ .rel.rodata._ZTI32CFbsTwentyfourBitAlphaDrawDevice
+                0x00001070       0x18 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+ *(.rel.data.rel.ro*)
+ *(.rel.data .rel.data.* .rel.gnu.linkonce.d.*)
+ *(.rel.tdata .rel.tdata.* .rel.gnu.linkonce.td.*)
+ *(.rel.tbss .rel.tbss.* .rel.gnu.linkonce.tb.*)
+ *(.rel.ctors)
+ *(.rel.dtors)
+ *(.rel.bss .rel.bss.* .rel.gnu.linkonce.b.*)
+ *(.rel.init_array)
+ *(.rel.fini_array)
+
+.rela.dyn
+ *(.rela.init)
+ *(.rela.text .rela.text.* .rela.gnu.linkonce.t.*)
+ *(.rela.fini)
+ *(.rela.rodata .rela.rodata.* .rela.gnu.linkonce.r.*)
+ *(.rela.data .rela.data.* .rela.gnu.linkonce.d.*)
+ *(.rela.tdata .rela.tdata.* .rela.gnu.linkonce.td.*)
+ *(.rela.tbss .rela.tbss.* .rela.gnu.linkonce.tb.*)
+ *(.rela.ctors)
+ *(.rela.dtors)
+ *(.rela.bss .rela.bss.* .rela.gnu.linkonce.b.*)
+ *(.rela.init_array)
+ *(.rela.fini_array)
+
+.rel.plt        0x00000000      0x188
+ *(.rel.plt)
+ .rel.plt       0x00000000      0x188 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.rela.plt
+ *(.rela.plt)
+
+.rel.other      0x00000000       0x38
+ *(.rel.*)
+ .rel.emb_text  0x00000000       0x38 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\EDLL.LIB(uc_dll_.o)
+
+.rela.other
+ *(.rela.*)
+
+.reli.other
+ *(.reli.*)
+OUTPUT(\Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\EPOC32\BUILD\Dev\projects\eka2l1\src\patch\scdv\group\SCDV\GCCE\urel\scdv.dll elf32-littlearm-symbian)
+
+.debug_frame$$$.emb_text
+
+.got            0x00000000        0x0
+
+.debug_frame$$$.text
+
+.arm_vfe_header
+                0x00000000        0x8
+ .arm_vfe_header
+                0x00000000        0x4 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(ucppinit_aeabi.o)
+ .arm_vfe_header
+                0x00000004        0x4 \Dev\Symbian\S60\devices\S60_5th_Edition_SDK_v1.0\epoc32\release\ARMV5\urel\usrt2_2.lib(dllexp.o)
+
+.debug_ranges
