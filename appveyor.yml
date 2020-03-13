@@ -22,7 +22,7 @@ install:
 build_script:
   - appveyor AddMessage -Cagetory Information "Building EKA2L1 Core..."
   - msbuild build\EKA2L1.sln /target:console /maxcpucount:4 /p:Configuration=Release /p:Platform=x64
-  - 7z a -m0=LZMA2 -mx9 EKA2L1.7z .\build\bin\Release\*
+  - 7z a -m0=LZMA2 -mx9 EKA2L1.7z .\build\bin\*
   - appveyor AddMessage -Category Information "Done." 
 
 artifacts:
