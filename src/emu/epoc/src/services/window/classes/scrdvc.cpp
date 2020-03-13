@@ -29,6 +29,28 @@
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
+    static epoc::graphics_orientation get_orientation_from_rotation(const int rotate) {
+        switch (rotate) {
+        case 0:
+            return epoc::graphics_orientation::normal;
+
+        case 90:
+            return epoc::graphics_orientation::rotated90;
+
+        case 180:
+            return epoc::graphics_orientation::rotated180;
+
+        case 270:
+            return epoc::graphics_orientation::rotated270;
+
+        default:
+            break;
+        }
+
+        LOG_ERROR("Cannot translate rotation {} to an orientation, returns default", rotate);
+        return epoc::graphics_orientation::normal;
+    }
+
     screen_device::screen_device(window_server_client_ptr client, epoc::screen *scr)
         : window_client_obj(client, scr) {
     }
@@ -97,6 +119,26 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
             
+    void screen_device::get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
+        const bool twips) {
+        pixel_and_rot result;
+        result.pixel_size = scr->size();
+        result.orientation = get_orientation_from_rotation(scr->current_mode().rotation);
+
+        if (twips) {
+            result.pixel_size = result.pixel_size * 15;
+        }
+
+        ctx.write_arg_pkg<pixel_and_rot>(reply_slot, result);
+        ctx.set_request_status(0);
+    }
+
+    void screen_device::get_current_screen_mode_scale(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        // On emulator there is no physical scale nor coordinate
+        ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, eka2l1::vec2(1, 1));
+        ctx.set_request_status(0);
+    }
+
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -117,6 +159,19 @@ namespace eka2l1::epoc {
 
             break;
         }
+
+        case ws_sd_op_get_default_screen_size_and_rotation:
+            get_default_screen_size_and_rotation(ctx, cmd, true);
+            break;
+
+        case ws_sd_op_get_default_screen_size_and_rotation2:
+            get_default_screen_size_and_rotation(ctx, cmd, false);
+            break;
+
+        case ws_sd_op_get_screen_mode_scale:
+        case ws_sd_op_get_current_screen_mode_scale:
+            get_current_screen_mode_scale(ctx, cmd);
+            break;
 
         case ws_sd_op_get_num_screen_modes: {
             ctx.set_request_status(scr->total_screen_mode());
