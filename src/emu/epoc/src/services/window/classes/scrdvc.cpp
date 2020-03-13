@@ -133,6 +133,12 @@ namespace eka2l1::epoc {
         ctx.set_request_status(0);
     }
 
+    void screen_device::get_default_screen_mode_origin(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        // On emulator there is no physical scale nor coordinate
+        ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, eka2l1::vec2(0, 0));
+        ctx.set_request_status(0);
+    }
+    
     void screen_device::get_current_screen_mode_scale(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         // On emulator there is no physical scale nor coordinate
         ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, eka2l1::vec2(1, 1));
@@ -171,6 +177,10 @@ namespace eka2l1::epoc {
         case ws_sd_op_get_screen_mode_scale:
         case ws_sd_op_get_current_screen_mode_scale:
             get_current_screen_mode_scale(ctx, cmd);
+            break;
+
+        case ws_sd_op_get_default_screen_mode_origin:
+            get_default_screen_mode_origin(ctx, cmd);
             break;
 
         case ws_sd_op_get_num_screen_modes: {

@@ -43,6 +43,7 @@ namespace eka2l1::epoc {
         void get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
             const bool twips);
         void get_current_screen_mode_scale(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void get_default_screen_mode_origin(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         explicit screen_device(window_server_client_ptr client, epoc::screen *scr);
     };
