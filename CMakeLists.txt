@@ -44,6 +44,7 @@ if (ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
     set(ENABLE_SEH_HANDLER 1)
 endif (ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
 
+add_subdirectory(src/patch)
 add_subdirectory(src/external)
 add_subdirectory(src/emu)
 

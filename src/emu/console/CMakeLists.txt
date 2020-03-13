@@ -32,6 +32,8 @@ set_target_properties(console PROPERTIES OUTPUT_NAME eka2l1
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+add_dependencies(console scdv)
+
 if (WIN32)
 	add_custom_command(
 			TARGET console
