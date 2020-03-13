@@ -2,8 +2,7 @@ platform:
   - x64
 
 environment:
-  NewPascalVersion: v1.0.84
-  PYTHON: 27-x64
+  PYTHON: "C:\\Python36-x64"
   VCPKG_DEFAULT_TRIPLET: x64-windows
   
 image:
@@ -11,7 +10,8 @@ image:
 
 install:
   - ps: |
-      $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
+      $env:PATH = "$env:PYTHON;$env:PYTHON\Scripts\;$env:PATH"
+  - python --version
   - cd c:\projects\eka2l1-mjiuq
   - git submodule update --init --recursive
   - mkdir build
