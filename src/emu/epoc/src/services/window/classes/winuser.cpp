@@ -63,6 +63,10 @@ namespace eka2l1::epoc {
         return { 0, 0 };
     }
 
+    eka2l1::vec2 window_top_user::absolute_position() const {
+        return { 0, 0 };
+    }
+
     window_user::window_user(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle)
         : window_user_base(client, scr, parent, window_kind::client)
         , win_type(type_of_window)
@@ -187,6 +191,10 @@ namespace eka2l1::epoc {
         }
 
         return (parent_pri + (ordpos << (bits_per_ordpos * shift)));
+    }
+
+    eka2l1::vec2 window_user::absolute_position() const {
+        return reinterpret_cast<window_user_base*>(parent)->absolute_position() + pos;
     }
 
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -534,6 +542,16 @@ namespace eka2l1::epoc {
 
         case EWsWinOpWindowGroupId:
             ctx.set_request_status(get_group()->id);
+            break;
+
+        case EWsWinOpPosition:
+            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, pos);
+            ctx.set_request_status(epoc::error_none);
+            break;
+
+        case EWsWinOpAbsPosition:
+            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, absolute_position());
+            ctx.set_request_status(epoc::error_none);
             break;
 
         default: {
