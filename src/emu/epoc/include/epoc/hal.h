@@ -163,16 +163,18 @@ namespace eka2l1::epoc {
     public:
         vec2 size_in_pixels_;
         vec2 size_in_twips_;
-        bool is_mono_;
-        bool is_palettelized_;
+        std::int32_t is_mono_;
+        std::int32_t is_palettelized_;
         std::int32_t bits_per_pixel_;
         std::uint32_t video_address_;
         std::int32_t offset_to_first_pixel_;
         std::int32_t offset_between_lines_;
-        bool is_pixel_order_rgb_;
-        bool is_pixel_order_landspace_;
+        std::int32_t is_pixel_order_rgb_;
+        std::int32_t is_pixel_order_landspace_;
         std::int32_t display_mode_;
     };
+    
+    static_assert(sizeof(video_info_v1) == 52);
 
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */
     using hal_func = std::function<int(int *, int *, std::uint16_t)>;
