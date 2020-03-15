@@ -19,6 +19,10 @@
 
 #pragma once
 
+namespace eka2l1::service {
+    struct ipc_context;
+}
+
 namespace eka2l1::epoc::remcon {
     enum player_type {
         player_type_audio = 1 << 0,
@@ -34,7 +38,8 @@ namespace eka2l1::epoc::remcon {
     };
     
     enum remcon_message {
-        remcon_message_set_player_type = 4
+        remcon_message_set_player_type = 4,
+        remcon_message_register_interested_api = 19
     };
 
     enum client_type {
@@ -52,6 +57,11 @@ namespace eka2l1::epoc::remcon {
             subtype_(player_subtype_none) {
         }
             
+    };
+
+    class base_detail_session {
+    public:
+        virtual void register_interested_apis(service::ipc_context *ctx) = 0;
     };
 
     const char *client_type_to_string(const client_type type);

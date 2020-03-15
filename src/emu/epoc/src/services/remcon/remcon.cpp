@@ -18,6 +18,8 @@
  */
 
 #include <epoc/services/remcon/remcon.h>
+#include <epoc/services/remcon/target.h>
+#include <epoc/services/remcon/controller.h>
 #include <epoc/utils/err.h>
 #include <common/log.h>
 
@@ -44,6 +46,10 @@ namespace eka2l1 {
             set_player_type(ctx);
             break;
 
+        case epoc::remcon::remcon_message_register_interested_api:
+            detail_->register_interested_apis(ctx);
+            break;
+
         default:
             LOG_ERROR("Unimplemented remcon opcode {}", ctx->msg->function);
         }
@@ -59,6 +65,19 @@ namespace eka2l1 {
             // On older version of remcon (reversed, it's set client type)
             // First argument is the client type, and that's it
             type_ = static_cast<epoc::remcon::client_type>(*ctx->get_arg<std::int32_t>(0));
+        
+            switch (type_) {
+            case epoc::remcon::client_type_controller:
+                detail_ = std::make_unique<epoc::remcon::controller_session>();
+                break;
+            
+            case epoc::remcon::client_type_target:
+                detail_ = std::make_unique<epoc::remcon::target_session>();
+                break;
+
+            default:
+                break;
+            }
         }
 
         if (information)
@@ -67,7 +86,7 @@ namespace eka2l1 {
         if (name)
             name_ = std::move(name.value());
         else
-            name = "Empty";
+            name_ = "Empty";
 
         LOG_INFO("Remcon session set player type with name: {}, client type: {},"
             " player type: {}, player subtype: {}",

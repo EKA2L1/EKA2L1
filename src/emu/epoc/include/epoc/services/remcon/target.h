@@ -20,29 +20,14 @@
 #pragma once
 
 #include <epoc/services/remcon/common.h>
-#include <epoc/services/framework.h>
 
-#include <memory>
+namespace eka2l1::service {
+    struct ipc_context;
+}
 
-namespace eka2l1 {
-    class remcon_server: public service::typical_server {
+namespace eka2l1::epoc::remcon {
+    class target_session: public base_detail_session {
     public:
-        explicit remcon_server(eka2l1::system *sys);
-
-        void connect(service::ipc_context &ctx) override;
-    };
-
-    class remcon_session: public service::typical_session {
-        epoc::remcon::player_type_information information_;
-        epoc::remcon::client_type type_;
-        std::string name_;
-
-        std::unique_ptr<epoc::remcon::base_detail_session> detail_;
-
-    public:
-        explicit remcon_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver);
-        
-        void fetch(service::ipc_context *ctx) override;
-        void set_player_type(service::ipc_context *ctx);
+        void register_interested_apis(service::ipc_context *ctx) override;
     };
 }
