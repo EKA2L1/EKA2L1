@@ -42,6 +42,7 @@
 #include <epoc/services/ui/cap/oom_app.h>
 #include <epoc/services/ui/view/view.h>
 #include <epoc/services/window/window.h>
+#include <epoc/services/remcon/remcon.h>
 
 #include <epoc/epoc.h>
 #include <epoc/utils/locale.h>
@@ -271,6 +272,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, hwrm_server);
             CREATE_SERVER(sys, view_server);
+            CREATE_SERVER(sys, remcon_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
@@ -303,12 +305,16 @@ namespace eka2l1 {
             auto lang = epoc::locale_language{ epoc::TLanguage::ELangEnglish_Prc, 0, 0, 0, 0, 0, 0, 0 };
             auto locale = epoc::GetEpocLocaleInfo();
             auto& dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
+    
             if (dvcs.size() > cfg->device) {
                 auto& dvc = dvcs[cfg->device];
+
                 if (cfg->language == -1) {
-                    lang = epoc::locale_language{ (epoc::TLanguage)dvc.default_language_code, 0, 0, 0, 0, 0, 0, 0 };
+                    lang = epoc::locale_language { 
+                        static_cast<epoc::TLanguage>(dvc.default_language_code), 0, 0, 0, 0, 0, 0, 0 };
                 } else {
-                    lang = epoc::locale_language{ (epoc::TLanguage)cfg->language, 0, 0, 0, 0, 0, 0, 0 };
+                    lang = epoc::locale_language { 
+                        static_cast<epoc::TLanguage>(cfg->language), 0, 0, 0, 0, 0, 0, 0 };
                 }
             }
 
