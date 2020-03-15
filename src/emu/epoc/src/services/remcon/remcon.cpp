@@ -33,11 +33,48 @@ namespace eka2l1 {
     }
     
     remcon_session::remcon_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
-        : service::typical_session(svr, client_ss_uid, client_ver) {
+        : service::typical_session(svr, client_ss_uid, client_ver)
+        , type_(epoc::remcon::client_type_undefined) {
 
     }
 
     void remcon_session::fetch(service::ipc_context *ctx) {
-        LOG_ERROR("Unimplemented remcon opcode {}", ctx->msg->function);
+        switch (ctx->msg->function) {
+        case epoc::remcon::remcon_message_set_player_type:
+            set_player_type(ctx);
+            break;
+
+        default:
+            LOG_ERROR("Unimplemented remcon opcode {}", ctx->msg->function);
+        }
+    }
+
+    void remcon_session::set_player_type(service::ipc_context *ctx) {
+        std::optional<epoc::remcon::player_type_information> information = ctx->get_arg_packed
+            <epoc::remcon::player_type_information>(1);
+        
+        std::optional<std::string> name = ctx->get_arg<std::string>(2);
+
+        if (!information || !name) {
+            // On older version of remcon (reversed, it's set client type)
+            // First argument is the client type, and that's it
+            type_ = static_cast<epoc::remcon::client_type>(*ctx->get_arg<std::int32_t>(0));
+        }
+
+        if (information)
+            information_ = std::move(information.value());
+
+        if (name)
+            name_ = std::move(name.value());
+        else
+            name = "Empty";
+
+        LOG_INFO("Remcon session set player type with name: {}, client type: {},"
+            " player type: {}, player subtype: {}",
+            name_, epoc::remcon::client_type_to_string(type_), 
+            epoc::remcon::player_type_to_string(information_.type_), 
+            epoc::remcon::player_subtype_to_string(information_.subtype_));
+
+        ctx->set_request_status(epoc::error_none);
     }
 }

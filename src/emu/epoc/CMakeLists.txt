@@ -145,6 +145,7 @@ add_library(epocservs
     include/epoc/services/loader/op.h
     include/epoc/services/posix/posix.h
     include/epoc/services/posix/op.h
+    include/epoc/services/remcon/common.h
     include/epoc/services/remcon/remcon.h
     include/epoc/services/sms/sa/sa.h
     include/epoc/services/ui/cap/eiksrv.h
@@ -215,6 +216,7 @@ add_library(epocservs
     src/services/install/install.cpp
     src/services/loader/loader.cpp
     src/services/posix/posix.cpp
+    src/services/remcon/common.cpp
     src/services/remcon/remcon.cpp
     src/services/sms/sa/sa.cpp
     src/services/ui/cap/eiksrv.cpp
