@@ -33,8 +33,9 @@ public:
 	virtual void WriteLine(TInt aX,TInt aY,TInt aLength,TUint32* aBuffer,CGraphicsContext::TDrawMode aDrawMode);
 	virtual void WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLength,TRgb aColor,const TUint8* aMaskBuffer);
 
-	void WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
-	void WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha, CGraphicsContext::TDrawMode aDrawMode);
+	typedef void (*PWriteRgbToAddressFunc)(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha);
+
+	PWriteRgbToAddressFunc GetRgbWriteFunc(CGraphicsContext::TDrawMode aDrawMode);
 
 	virtual TRgb ReadPixel(TInt aX, TInt aY) const;
 	virtual void WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);

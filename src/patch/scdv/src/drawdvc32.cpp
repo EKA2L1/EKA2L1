@@ -54,75 +54,126 @@ void CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
 	
 	while (iterator < aLength) {
 		Mem::Copy(reinterpret_cast<TUint8*>(aBuffer) + iterator * 4, pixelStart, 4);
-		pixelStart += increment;
+	    pixelStart += increment;
 	}
 }
 
-void CFbsThirtyTwoBitsDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha, CGraphicsContext::TDrawMode aDrawMode) {
-	switch (aDrawMode) {
-		case CGraphicsContext::EDrawModeWriteAlpha:
-			aAddress[0] = aBlue;
-			aAddress[1] = aGreen;
-			aAddress[2] = aRed;
-			aAddress[3] = aAlpha;
-			break;
-			
-		case CGraphicsContext::EDrawModeAND:
-			aAddress[0] &= aBlue;
-			aAddress[1] &= aGreen;
-			aAddress[2] &= aRed;
-			aAddress[3] &= aAlpha;
-			break;
-
-		case CGraphicsContext::EDrawModeOR:
-			aAddress[0] |= aBlue;
-			aAddress[1] |= aGreen;
-			aAddress[2] |= aRed;
-			aAddress[3] |= aAlpha;
-			break;
-
-		case CGraphicsContext::EDrawModeXOR:
-			aAddress[0] ^= aBlue;
-			aAddress[1] ^= aGreen;
-			aAddress[2] ^= aRed;
-			aAddress[3] ^= aAlpha;
-			break;
-			
-		case CGraphicsContext::EDrawModeNOTSCREEN:
-			aAddress[0] = ~(aAddress[0]);
-			aAddress[1] = ~(aAddress[1]);
-			aAddress[2] = ~(aAddress[2]);
-			aAddress[3] = ~(aAddress[3]);
-			break;
-
-		case CGraphicsContext::EDrawModeANDNOT:
-			aAddress[0] = (~aAddress[0]) & aBlue;
-			aAddress[1] = (~aAddress[1]) & aGreen;
-			aAddress[2] = (~aAddress[2]) & aRed;
-			aAddress[3] = (~aAddress[3]) & aAlpha;
-			break;
-		
-		default:
-			Scdv::Log("ERR: Unsupported graphics context draw mode %d", aDrawMode);
-			break;
-	}	
+// Write functions
+static void WriteRgb32ToAddressAlpha(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	aAddress[0] = aBlue;
+	aAddress[1] = aGreen;
+	aAddress[2] = aRed;
+	aAddress[3] = aAlpha;
 }
 
-void CFbsThirtyTwoBitsDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
-	WriteRgbToAddress(aAddress, (TUint8)aColor.Red(), (TUint8)aColor.Green(), (TUint8)aColor.Blue(), (TUint8)aColor.Alpha(), aDrawMode);
+static void WriteRgb32ToAddressAND(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	aAddress[0] &= aBlue;
+	aAddress[1] &= aGreen;
+	aAddress[2] &= aRed;
+	aAddress[3] &= aAlpha;
+}
+
+static void WriteRgb32ToAddressOR(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	aAddress[0] |= aBlue;
+	aAddress[1] |= aGreen;
+	aAddress[2] |= aRed;
+	aAddress[3] |= aAlpha;
+}
+
+static void WriteRgb32ToAddressXOR(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	aAddress[0] ^= aBlue;
+	aAddress[1] ^= aGreen;
+	aAddress[2] ^= aRed;
+	aAddress[3] ^= aAlpha;
+}
+
+static void WriteRgb32ToAddressNOTSC(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	aAddress[0] = ~(aAddress[0]);
+	aAddress[1] = ~(aAddress[1]);
+	aAddress[2] = ~(aAddress[2]);
+	aAddress[3] = ~(aAddress[3]);
+}
+
+static void WriteRgb32ToAddressANDNOT(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	aAddress[0] = (~aAddress[0]) & aBlue;
+	aAddress[1] = (~aAddress[1]) & aGreen;
+	aAddress[2] = (~aAddress[2]) & aRed;
+	aAddress[3] = (~aAddress[3]) & aAlpha;
+}
+
+static void WriteRgb32ToAddressBlend(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	if (aAlpha == 255) {
+		WriteRgb32ToAddressAlpha(aAddress, aRed, aGreen, aBlue, 255);
+		return;
+	}
+
+	TUint32 *colorWord = reinterpret_cast<TUint32*>(aAddress);
+	TUint32 color24 = aRed | (aGreen << 8) | (aBlue << 16);
+
+	TUint32 rb = (*colorWord & 0xFF00FF);
+	TUint32 g = (*colorWord & 0x00FF00);
+	
+	rb += ((color24 & 0xff00ff) - rb) * aAlpha >> 8;
+	g  += ((color24 & 0x00ff00) -  g) * aAlpha >> 8;
+	
+	*colorWord &= ~0xFFFFFF;
+	*colorWord |= ((rb & 0xff00ff) | (g & 0xff00)) | (0x01000000);
+}
+
+static void WriteRgb32ToAddressUNIMPL(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
+	// Empty
+}
+
+CFbsThirtyTwoBitsDrawDevice::PWriteRgbToAddressFunc CFbsThirtyTwoBitsDrawDevice::GetRgbWriteFunc(CGraphicsContext::TDrawMode aDrawMode) {
+	switch (aDrawMode) {
+	case CGraphicsContext::EDrawModeWriteAlpha:
+		return WriteRgb32ToAddressAlpha;
+
+	case CGraphicsContext::EDrawModeAND:
+		return WriteRgb32ToAddressAND;
+
+	case CGraphicsContext::EDrawModeOR:
+		return WriteRgb32ToAddressOR;
+
+	case CGraphicsContext::EDrawModeXOR:
+		return WriteRgb32ToAddressXOR;
+
+	case CGraphicsContext::EDrawModeNOTSCREEN:
+		return WriteRgb32ToAddressNOTSC;
+
+	case CGraphicsContext::EDrawModeANDNOT:
+		return WriteRgb32ToAddressANDNOT;
+
+	case CGraphicsContext::EDrawModePEN:
+		return WriteRgb32ToAddressBlend;
+
+	default:
+		Scdv::Log("Unimplemented graphics drawing mode: %d", (TInt)aDrawMode);
+		break;
+	}
+
+	return WriteRgb32ToAddressUNIMPL;
 }
 
 void CFbsThirtyTwoBitsDrawDevice::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
 	TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-	WriteRgbToAddress(pixelStart, aColor, aDrawMode);
+	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
+
+	writeFunc(pixelStart, (TUint8)aColor.Red(), (TUint8)aColor.Green(), (TUint8)aColor.Blue(),  (TUint8)aColor.Alpha());
 }
 
-void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) {
+void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY,TUint32* aBuffer,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) {
 	TUint8 *pixelAddress = NULL;
+	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
 	TInt increment = GetPixelIncrementUnit() * 4;
 
 	if (aLength > 32 || aX + aLength >= LongWidth())
 		PanicAtTheEndOfTheWorld();
+
+	const TUint8 red = (TUint8)aColor.Red();
+	const TUint8 green = (TUint8)aColor.Green();
+	const TUint8 blue = (TUint8)aColor.Blue();
+	const TUint8 alpha = (TUint8)aColor.Alpha();
 
 	for (TInt y = aY; y < aY + aHeight; y++) {	
 		pixelAddress = GetPixelStartAddress(aX, y);
@@ -130,7 +181,7 @@ void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,T
 		for (TInt x = aX; x < aX + aLength; x++) {
 			if (*aBuffer & (1 << (x - aX))) {
 				// Try to reduce if calls pls
-				WriteRgbToAddress(pixelAddress, aColor, aDrawMode);
+				writeFunc(pixelAddress, red, green, blue, alpha);
 			}
 		
 			pixelAddress += increment;
@@ -142,17 +193,23 @@ void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,T
 
 void CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(TInt aX,TInt aY,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) {
 	TUint8 *pixelAddress = NULL;
+	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
 	TInt increment = GetPixelIncrementUnit() * 4;
 
 	if (aX + aLength >= LongWidth())
 		PanicAtTheEndOfTheWorld();
+
+	const TUint8 red = (TUint8)aColor.Red();
+	const TUint8 green = (TUint8)aColor.Green();
+	const TUint8 blue = (TUint8)aColor.Blue();
+	const TUint8 alpha = (TUint8)aColor.Alpha();
 
 	for (TInt y = aY; y < aY + aHeight; y++) {	
 		pixelAddress = GetPixelStartAddress(aX, y);
 
 		for (TInt x = aX; x < aX + aLength; x++) {
 			// Try to reduce if calls pls
-			WriteRgbToAddress(pixelAddress, aColor, aDrawMode);
+			writeFunc(pixelAddress, red, green, blue, alpha);
 			pixelAddress += increment;
 		}
 	}
@@ -164,6 +221,7 @@ void CFbsThirtyTwoBitsDrawDevice::WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLengt
 
 void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX,TInt aY,TInt aLength,TUint32* aBuffer,CGraphicsContext::TDrawMode aDrawMode) {
 	TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
+	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
 	TInt increment = GetPixelIncrementUnit() * 4;
 
 	TUint8 *buffer8 = reinterpret_cast<TUint8*>(aBuffer);
@@ -173,7 +231,7 @@ void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX,TInt aY,TInt aLength,TUint32
 
 	for (TInt x = aX; x < aX + aLength; x++) {
 		// Try to reduce if calls pls
-		WriteRgbToAddress(pixelAddress, buffer8[0], buffer8[1], buffer8[2], buffer8[3], aDrawMode);
+		writeFunc(pixelAddress, buffer8[0], buffer8[1], buffer8[2], buffer8[3]);
 
 		pixelAddress += increment;
 		buffer8 += 4;
