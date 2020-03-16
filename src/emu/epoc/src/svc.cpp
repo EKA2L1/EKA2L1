@@ -2173,6 +2173,30 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    /* MESSAGE QUEUE */
+    BRIDGE_FUNC(std::int32_t, MessageQueueNotifyDataAvailable, const std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aStatus) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel::thread *request_thread = kern->crr_thread();
+
+        epoc::notify_info info;
+        info.requester = request_thread;
+        info.sts = aStatus;
+
+        kernel::msg_queue *queue = kern->get<kernel::msg_queue>(aHandle);
+
+        if (!queue) {
+            return epoc::error_bad_handle;
+        }
+
+        const bool result = queue->notify_available(info);
+
+        if (!result) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_none;
+    }
+
     /* DEBUG AND SECURITY */
 
     BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, std::int32_t aMode) {
@@ -2359,6 +2383,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xAE, ProcessSecurityInfo),
         BRIDGE_REGISTER(0xAF, ThreadSecurityInfo),
         BRIDGE_REGISTER(0xB0, MessageSecurityInfo),
+        BRIDGE_REGISTER(0xB9, MessageQueueNotifyDataAvailable),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
         BRIDGE_REGISTER(0xBF, PropertySubscribe),
