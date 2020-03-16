@@ -26,6 +26,7 @@ add_library(epockern
     include/epoc/kernel/libmanager.h
     include/epoc/kernel/library.h
     include/epoc/kernel/kernel_obj.h
+    include/epoc/kernel/msgqueue.h
     include/epoc/kernel/mutex.h
     include/epoc/kernel/object_ix.h
     include/epoc/kernel/process.h
@@ -46,6 +47,7 @@ add_library(epockern
     src/kernel/libmanager.cpp
     src/kernel/library.cpp
     src/kernel/kernel_obj.cpp
+    src/kernel/msgqueue.cpp
     src/kernel/mutex.cpp
     src/kernel/object_ix.cpp
     src/kernel/process.cpp

@@ -24,6 +24,7 @@
 #include <epoc/kernel/codeseg.h>
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/kernel/library.h>
+#include <epoc/kernel/msgqueue.h>
 #include <epoc/kernel/mutex.h>
 #include <epoc/kernel/object_ix.h>
 #include <epoc/kernel/process.h>
@@ -109,6 +110,8 @@ namespace eka2l1 {
             return kernel::object_type::change_notifier;
         } else if constexpr (std::is_same_v<T, service::property_reference>) {
             return kernel::object_type::prop_ref;
+        } else if constexpr (std::is_same_v<T, kernel::msg_queue>) {
+            return kernel::object_type::msg_queue;
         } else {
             throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
             return kernel::object_type::unk;
@@ -154,6 +157,7 @@ namespace eka2l1 {
         std::vector<kernel_obj_unq_ptr> libraries;
         std::vector<kernel_obj_unq_ptr> codesegs;
         std::vector<kernel_obj_unq_ptr> timers;
+        std::vector<kernel_obj_unq_ptr> message_queues;
 
         timing_system *timing;
         manager_system *mngr;
@@ -329,6 +333,7 @@ namespace eka2l1 {
                 OBJECT_SEARCH(prop_ref, prop_refs)
                 OBJECT_SEARCH(session, sessions)
                 OBJECT_SEARCH(timer, timers)
+                OBJECT_SEARCH(msg_queue, message_queues)
 
 #undef OBJECT_SEARCH
 
@@ -384,6 +389,7 @@ namespace eka2l1 {
                 OBJECT_SEARCH(prop_ref, prop_refs)
                 OBJECT_SEARCH(session, sessions)
                 OBJECT_SEARCH(timer, timers)
+                OBJECT_SEARCH(msg_queue, message_queues)
 
 #undef OBJECT_SEARCH
 
@@ -430,6 +436,7 @@ namespace eka2l1 {
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::sema, semas, )
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers, )
             ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs, )
+            ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues, )
 
             default:
                 break;

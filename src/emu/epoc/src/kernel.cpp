@@ -90,6 +90,7 @@ namespace eka2l1 {
         processes.clear();
         libraries.clear();
         codesegs.clear();
+        message_queues.clear();
     }
 
     kernel::thread *kernel_system::crr_thread() {
@@ -161,6 +162,7 @@ namespace eka2l1 {
             OBJECT_SEARCH(prop_ref, prop_refs)
             OBJECT_SEARCH(session, sessions)
             OBJECT_SEARCH(timer, timers)
+            OBJECT_SEARCH(msg_queue, message_queues)
 
 #undef OBJECT_SEARCH
 
@@ -487,6 +489,7 @@ namespace eka2l1 {
             OBJECT_SEARCH(prop_ref, prop_refs)
             OBJECT_SEARCH(session, sessions)
             OBJECT_SEARCH(timer, timers)
+            OBJECT_SEARCH(msg_queue, message_queues)
 
 #undef OBJECT_SEARCH
 
