@@ -24,12 +24,18 @@
 #include <queue>
 #include <string>
 
+namespace eka2l1::kernel {
+    class msg_queue;
+}
+
 namespace eka2l1::epoc {
     struct screen;
     struct window_user;
 
     struct dsa : public window_client_obj {
         window_user *husband_;              ///< Mmmhhh
+        kernel::msg_queue *dsa_ready_queue_;        ///< Queue to notify clients that DSA operation is permitted.
+        kernel::msg_queue *dsa_complete_queue_;      ///< Queue for client to report completion of a DSA operation.
         
         enum state {
             state_none,

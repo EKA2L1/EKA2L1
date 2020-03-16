@@ -25,11 +25,18 @@
 #include <epoc/utils/consts.h>
 #include <epoc/utils/err.h>
 
+#include <epoc/kernel.h>
+
 namespace eka2l1::epoc {
     dsa::dsa(window_server_client_ptr client)
         : window_client_obj(client, nullptr)
         , husband_(nullptr) 
         , state_(state_none) {
+        kernel_system *kern = client->get_ws().get_kernel_system();
+
+        // Each message is an integer. Allow maximum of 10 messages
+        dsa_ready_queue_ = kern->create<kernel::msg_queue>("DsaReadyQueue", 4, 10);
+        dsa_complete_queue_ = kern->create<kernel::msg_queue>("DsaCompleteQueue", 4, 10);
     };
 
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -102,9 +109,16 @@ namespace eka2l1::epoc {
 
         switch (op) {
         case ws_dsa_get_send_queue:
-        case ws_dsa_get_rec_queue:
-            ctx.set_request_status(0);
+        case ws_dsa_get_rec_queue: {    
+            kernel_system *kern = client->get_ws().get_kernel_system();
+            std::int32_t target_handle = 0;
+
+            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue)
+                ? dsa_ready_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+
+            ctx.set_request_status(target_handle);
             break;
+        }
 
         case ws_dsa_request:
             request_access(ctx, cmd);

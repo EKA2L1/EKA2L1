@@ -392,6 +392,7 @@ namespace eka2l1 {
 
         drivers::graphics_driver *get_graphics_driver();
         timing_system *get_timing_system();
+        kernel_system *get_kernel_system();
 
         void queue_input_from_driver(drivers::input_event &evt);
         void do_base_init();

@@ -833,6 +833,10 @@ namespace eka2l1 {
         return get_system()->get_timing_system();
     }
 
+    kernel_system *window_server::get_kernel_system() {
+        return get_system()->get_kernel_system();
+    }
+    
     constexpr std::int64_t input_update_ticks = 10000;
     
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
