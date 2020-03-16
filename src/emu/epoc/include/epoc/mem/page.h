@@ -38,6 +38,7 @@ namespace eka2l1::mem {
         page_tables = 0xC4000000,
         umem = 0xC8000000,
         kernel_mapping = 0xC9200000,
+        kernel_mapping_end = 0xFFFF0000,
         rom_eka1 = 0x50000000,
         rom_eka1_end = 0x58000000,
         ram_code_addr_eka1 = 0xE0000000,

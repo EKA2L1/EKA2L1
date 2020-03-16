@@ -285,6 +285,10 @@ namespace eka2l1::mem {
             return &mul_mmu->user_rom_sec_;
         }
 
+        if (flags & MEM_MODEL_CHUNK_REGION_KERNEL_MAPPING) {
+            return &mul_mmu->kernel_mapping_sec_;
+        }
+
         return nullptr;
     }
 
