@@ -154,7 +154,7 @@ namespace eka2l1::epoc {
             info_ptr->is_palettelized_ = !info_ptr->is_mono_ && (scr->disp_mode < epoc::display_mode::color4k);
             
             // Intentional
-            info_ptr->video_address_ = 0x200000;
+            info_ptr->video_address_ = scr->screen_buffer_chunk->base().ptr_address();
             info_ptr->offset_to_first_pixel_ = 0;
             info_ptr->display_mode_ = static_cast<std::int32_t>(scr->disp_mode);
 

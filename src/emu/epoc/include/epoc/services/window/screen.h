@@ -28,6 +28,10 @@
 #include <memory>
 
 namespace eka2l1 {
+    namespace kernel {
+        class chunk;
+    }
+
     class window_server;
 }
 
@@ -57,6 +61,7 @@ namespace eka2l1::epoc {
         screen *next;
 
         eka2l1::rect dsa_rect;
+        kernel::chunk *screen_buffer_chunk;
 
         // position of this screen in graphics driver
         // update in graphics driver thread and read in os thread

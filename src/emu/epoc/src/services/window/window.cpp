@@ -1061,18 +1061,37 @@ namespace eka2l1 {
 
         sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
     }
+    
+    static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
+        // Try to create memory chunk at kernel mapping, for DSA
+        const std::string chunk_name = fmt::format("ScreenBuffer{}", scr->number);
+        const std::size_t max_chunk_size =  scr->size().x * scr->size().y * 4;
+
+        // Create chunk with maximum size (32-bit)
+        kernel::chunk *buffer = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, chunk_name, 0,
+           static_cast<address>(max_chunk_size), max_chunk_size, prot::read_write,
+           kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
+           kernel::chunk_attrib::none);
+
+        scr->screen_buffer_chunk = buffer;
+    }
 
     void window_server::init_screens() {
+        kernel_system *kern = get_kernel_system();
+
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0));
         epoc::screen *crr = screens;
         crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
+
+        create_screen_buffer_for_dsa(kern, crr);
 
         // Create other available screens. Plugged in screen later will be created explicitly
         for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
             crr->next = new epoc::screen(1, get_screen_config(1));
             crr = crr->next;
             crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
+            create_screen_buffer_for_dsa(kern, crr);
         }
 
         // Set default focus screen to be the first
