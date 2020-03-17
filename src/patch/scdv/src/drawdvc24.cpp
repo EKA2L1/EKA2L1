@@ -44,7 +44,7 @@ TRgb CFbsTwentyfourBitDrawDevice::ReadPixel(TInt aX, TInt aY) const {
 
 void CFbsTwentyfourBitDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const {
 	// Do safety check, out of bounds
-	if (aX + aLength >= LongWidth())
+	if (aX + aLength > LongWidth())
 		PanicAtTheEndOfTheWorld();
 
 	TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
@@ -116,7 +116,7 @@ void CFbsTwentyfourBitDrawDevice::WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,T
 	TUint8 *pixelAddress = NULL;
 	TInt increment = GetPixelIncrementUnit() * 3;
 
-	if (aLength > 32 || aX + aLength >= LongWidth())
+	if (aLength > 32 || aX + aLength > LongWidth())
 		PanicAtTheEndOfTheWorld();
 
 	for (TInt y = aY; y < aY + aHeight; y++) {	
@@ -139,7 +139,7 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbMulti(TInt aX,TInt aY,TInt aLength,TIn
 	TUint8 *pixelAddress = NULL;
 	TInt increment = GetPixelIncrementUnit() * 3;
 
-	if (aX + aLength >= LongWidth())
+	if (aX + aLength > LongWidth())
 		PanicAtTheEndOfTheWorld();
 
 	for (TInt y = aY; y < aY + aHeight; y++) {	
@@ -159,7 +159,7 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLengt
 	
 	TUint32 color24 = aColor.Color16M();
 	
-	if (aX + aLength >= LongWidth())
+	if (aX + aLength > LongWidth())
 		PanicAtTheEndOfTheWorld();
 
 	for (TInt x = aX; x < aX + aLength; x++) {
@@ -187,7 +187,7 @@ void CFbsTwentyfourBitDrawDevice::WriteLine(TInt aX,TInt aY,TInt aLength,TUint32
 
 	TUint8 *buffer8 = reinterpret_cast<TUint8*>(aBuffer);
 	
-	if (aX + aLength >= LongWidth())
+	if (aX + aLength > LongWidth())
 		PanicAtTheEndOfTheWorld();
 
 	for (TInt x = aX; x < aX + aLength; x++) {

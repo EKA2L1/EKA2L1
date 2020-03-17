@@ -171,7 +171,7 @@ void CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(TInt aX, TInt aY, TI
 }
 
 void PanicAtTheEndOfTheWorld() {
-	Scdv::Log("Trying to read a line but out of bounds");
+	Scdv::Log("Trying to read/write a line but out of bounds");
 	Scdv::Panic(Scdv::EPanicOutOfBounds);
 }
 
@@ -183,7 +183,7 @@ void CFbsDrawDeviceAlgorithm::ReadLine(TInt aX,TInt aY,TInt aLength,TAny* aBuffe
 	}
 	
 	// Read each pixel one by one oh my god...
-	if (aX + aLength >= LongWidth()) {
+	if (aX + aLength > LongWidth()) {
 		PanicAtTheEndOfTheWorld();
 		return;
 	}
