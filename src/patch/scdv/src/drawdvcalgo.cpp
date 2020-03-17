@@ -161,8 +161,8 @@ void CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(TInt aX, TInt aY, TI
 			break;
 			
 		case EOrientationRotate270:
-			aY = aX;
-			aX = SizeInPixels().iWidth - aY;
+			aNewY = aX;
+			aNewX = SizeInPixels().iWidth - aY;
 			break;
 			
 		default:
