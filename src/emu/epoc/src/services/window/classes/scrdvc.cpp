@@ -122,7 +122,7 @@ namespace eka2l1::epoc {
     void screen_device::get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
         const bool twips) {
         pixel_and_rot result;
-        result.pixel_size = scr->size();
+        result.pixel_size = scr->current_mode().size;
         result.orientation = get_orientation_from_rotation(scr->current_mode().rotation);
 
         if (twips) {
