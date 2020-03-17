@@ -61,7 +61,8 @@ namespace eka2l1 {
             global,
             local,
             code,
-            rom
+            rom,
+            kernel_mapping
         };
 
         enum class chunk_attrib {

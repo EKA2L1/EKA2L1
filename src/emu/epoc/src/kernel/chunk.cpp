@@ -73,6 +73,10 @@ namespace eka2l1 {
                 create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_ROM;
             }
 
+            if (chnk_access == chunk_access::kernel_mapping) {
+                create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_KERNEL_MAPPING;
+            }
+
             switch (type) {
             case chunk_type::disconnected: {
                 create_info.flags |= mem::MEM_MODEL_CHUNK_TYPE_DISCONNECT;
