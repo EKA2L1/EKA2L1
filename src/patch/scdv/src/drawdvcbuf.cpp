@@ -125,5 +125,11 @@ TBool CFbsDrawDeviceBuffer::SetOrientation(TOrientation aOri) {
 
 void CFbsDrawDeviceBuffer::GetDrawRect(TRect& aDrawRect) const {
 	aDrawRect.iTl = TPoint(0, 0);
-	aDrawRect.iBr = aDrawRect.iTl + iSize;
+
+	if (GetOrientation() & 1) {
+		aDrawRect.iBr.iX = aDrawRect.iTl.iX + iSize.iHeight;
+		aDrawRect.iBr.iY = aDrawRect.iTl.iY + iSize.iWidth;
+	} else {
+		aDrawRect.iBr = aDrawRect.iTl + iSize;
+	}
 }
