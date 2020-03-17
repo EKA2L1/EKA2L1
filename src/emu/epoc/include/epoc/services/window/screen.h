@@ -54,7 +54,8 @@ namespace eka2l1::epoc {
         epoc::display_mode disp_mode;
 
         epoc::config::screen scr_config;        ///< All mode of this screen
-        std::uint8_t crr_mode;    ///< The current mode being used by the screen.
+        std::uint8_t crr_mode;                  ///< The current mode being used by the screen.
+        std::uint8_t physical_mode;             ///< Mode that orientation is normal.
 
         epoc::window_group *focus;              ///< Current window group that is being focused
 

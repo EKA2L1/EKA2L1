@@ -81,6 +81,12 @@ namespace eka2l1::epoc {
         , next(nullptr)
         , focus(nullptr) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
+
+        for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
+            if (scr_config.modes[i].rotation == 0) {
+                physical_mode = i + 1;
+            }
+        }
     }
 
     void screen::redraw(drivers::graphics_command_list_builder *cmd_builder) {
@@ -229,7 +235,7 @@ namespace eka2l1::epoc {
     }
 
     eka2l1::vec2 screen::size() const {
-        return current_mode().size;
+        return mode_info(physical_mode)->size;
     }
 
     const int screen::total_screen_mode() const {
