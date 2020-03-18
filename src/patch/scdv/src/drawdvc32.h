@@ -46,7 +46,11 @@ class CFbsTwentyfourBitAlphaDrawDevice: public CFbsThirtyTwoBitsDrawDevice {
 };
 
 class CFbsTwentyfourBitAlphaScreenDrawDevice: public CFbsTwentyfourBitAlphaDrawDevice {
+	TUint32 iScreenNumber;
+
 public:
+	TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);
+
     virtual void Update();
     virtual void Update(const TRegion& aRegion);
     virtual void UpdateRegion(const TRect& aRect);

@@ -49,7 +49,7 @@ void CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
 		PanicAtTheEndOfTheWorld();
 
 	TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-	TInt increment = GetPixelIncrementUnit() * 3;
+	TInt increment = GetPixelIncrementUnit() * 4;
 	TInt iterator = 0;
 	
 	while (iterator < aLength) {
@@ -276,18 +276,23 @@ TInt CFbsThirtyTwoBitsDrawDevice::Construct(TSize aSize, TInt aDataStride) {
 //
 //////////////////////////////////////////////
 
+TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {
+	iScreenNumber = aScreenNumber;
+	return CFbsThirtyTwoBitsDrawDevice::Construct(aSize, aDataStride);
+}
+
 void CFbsTwentyfourBitAlphaScreenDrawDevice::Update() {
 	TRect updateRect;
 	updateRect.iTl = TPoint(0, 0);
 	updateRect.iBr = updateRect.iTl + iSize;
 
-	UpdateScreen(1, &updateRect);
+	UpdateScreen(iScreenNumber, 1, &updateRect);
 }
 
 void CFbsTwentyfourBitAlphaScreenDrawDevice::Update(const TRegion& aRegion) {
-	UpdateScreen(aRegion.Count(), aRegion.RectangleList());
+	UpdateScreen(iScreenNumber, aRegion.Count(), aRegion.RectangleList());
 }
 
 void CFbsTwentyfourBitAlphaScreenDrawDevice::UpdateRegion(const TRect& aRect) {
-	UpdateScreen(1, &aRect);
+	UpdateScreen(iScreenNumber, 1, &aRect);
 }

@@ -26,7 +26,7 @@
 	asm volatile("mov r0, #" #FUNCID);		\
 	asm volatile("swi #0xFE");
 
-volatile void UpdateScreen(const TUint32 aNumber, const TRect *aRectangles) {
+volatile void UpdateScreen(const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles) {
 	CALL_HLE_DISPATCH(1);
 }
 
