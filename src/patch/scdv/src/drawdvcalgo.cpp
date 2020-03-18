@@ -136,10 +136,10 @@ TInt CFbsDrawDeviceAlgorithm::GetPixelIncrementUnit() const {
 			return -1;
 			
 		case EOrientationRotate90:
-			return -LongWidth();
+			return -iLongWidth;
 			
 		case EOrientationRotate270:
-			return LongWidth();
+			return iLongWidth;
 			
 		default:
 			break;
@@ -151,18 +151,18 @@ TInt CFbsDrawDeviceAlgorithm::GetPixelIncrementUnit() const {
 void CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(TInt aX, TInt aY, TInt &aNewX, TInt &aNewY) const {
 	switch (GetOrientation()) {
 		case EOrientationRotate90:
-			aNewY = SizeInPixels().iHeight - aX;
+			aNewY = SizeInPixels().iHeight - aX - 1;
 			aNewX = aY;
 			break;
 			
 		case EOrientationRotate180:
-			aNewX = SizeInPixels().iWidth - aX;
-			aNewY = SizeInPixels().iHeight - aY;
+			aNewX = SizeInPixels().iWidth - aX - 1;
+			aNewY = SizeInPixels().iHeight - aY - 1;
 			break;
 			
 		case EOrientationRotate270:
 			aNewY = aX;
-			aNewX = SizeInPixels().iWidth - aY;
+			aNewX = SizeInPixels().iWidth - aY - 1;
 			break;
 			
 		default:

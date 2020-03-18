@@ -70,14 +70,14 @@ CFbsDrawDevice* CFbsDrawDevice::NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode
 	return NewBitmapDeviceL(aInfo.iScreenSize, aDispMode, aDataStride);
 }
 
-static CFbsDrawDevice *InstantiateNewScreenDevice(TAny *aAddress, const TSize aSize, const TDisplayMode aMode) {
+static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny *aAddress, const TSize aSize, const TDisplayMode aMode) {
 	CFbsDrawDevice *device = NULL;
 	
 	switch (aMode) {
 		case EColor16MA:
 			device = new (ELeave) CFbsTwentyfourBitAlphaScreenDrawDevice;
 			CleanupStack::PushL(device);
-			User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice*>(device)->Construct(aSize, -1));
+			User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice*>(device)->Construct(aScreenNo, aSize, -1));
 			
 			Scdv::Log("INFO:: A new 24 bit alpha screen device has been instantiated!");
 
@@ -101,7 +101,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(TAny *aAddress, const TSize aS
 }
 
 CFbsDrawDevice* CFbsDrawDevice::NewScreenDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode) {
-	return InstantiateNewScreenDevice(aInfo.iScreenAddress, aInfo.iScreenSize, aDispMode);
+	return InstantiateNewScreenDevice(0, aInfo.iScreenAddress, aInfo.iScreenSize, aDispMode);
 }
 
 CFbsDrawDevice* CFbsDrawDevice::NewScreenDeviceL(TInt aScreenNo, TDisplayMode aDispMode) {
@@ -112,5 +112,5 @@ CFbsDrawDevice* CFbsDrawDevice::NewScreenDeviceL(TInt aScreenNo, TDisplayMode aD
 	HAL::Get(aScreenNo, HAL::EDisplayXPixels, width);
 	HAL::Get(aScreenNo, HAL::EDisplayYPixels, height);
 	
-	return InstantiateNewScreenDevice(videoAddress, TSize(width, height), aDispMode);
+	return InstantiateNewScreenDevice(aScreenNo, videoAddress, TSize(width, height), aDispMode);
 }
