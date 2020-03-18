@@ -121,9 +121,11 @@ namespace eka2l1::epoc {
             
     void screen_device::get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
         const bool twips) {
+        const epoc::config::screen_mode *mode = scr->mode_info(1);
+
         pixel_and_rot result;
-        result.pixel_size = scr->current_mode().size;
-        result.orientation = get_orientation_from_rotation(scr->current_mode().rotation);
+        result.pixel_size = mode->size;
+        result.orientation = get_orientation_from_rotation(mode->rotation);
 
         if (twips) {
             result.pixel_size = result.pixel_size * 15;
@@ -151,7 +153,7 @@ namespace eka2l1::epoc {
         switch (op) {
         case ws_sd_op_pixel_size: {
             // This doesn't take any arguments
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, scr->size());
+            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, scr->current_mode().size);
             ctx.set_request_status(0);
 
             break;
@@ -159,7 +161,7 @@ namespace eka2l1::epoc {
 
         case ws_sd_op_twips_size: {
             // This doesn't take any arguments
-            eka2l1::vec2 screen_size = scr->size() * twips_mul;
+            eka2l1::vec2 screen_size = scr->current_mode().size * twips_mul;
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
             ctx.set_request_status(0);
 
