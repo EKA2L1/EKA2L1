@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <epoc/kernel/common.h>
 
 #include <epoc/ptr.h>
 #include <functional>
@@ -68,12 +69,6 @@ namespace eka2l1 {
     }
 
     namespace hle {
-        struct epoc_import_func {
-            std::function<void(system *)> func;
-            std::string name;
-        };
-
-        using func_map = std::unordered_map<uint32_t, eka2l1::hle::epoc_import_func>;
         using export_table = std::vector<std::uint32_t>;
         using symbols = std::vector<std::string>;
 

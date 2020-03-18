@@ -30,6 +30,7 @@
 #include <common/configure.h>
 #include <epoc/hal.h>
 #include <epoc/svc.h>
+#include <epoc/dispatch/register.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -2249,6 +2250,17 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
+    /// HLE
+    BRIDGE_FUNC(void, HleDispatch, const std::uint32_t ordinal) {
+        auto dispatch_find_result = dispatch::dispatch_funcs.find(ordinal);
+
+        if (dispatch_find_result == dispatch::dispatch_funcs.end()) {
+            return;
+        }
+
+        dispatch_find_result->second.func(sys);
+    }
+
     BRIDGE_FUNC(void, VirtualReality) {
         // Call host function. Hack.
         typedef bool (*reality_func)(void* data);
@@ -2404,6 +2416,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd),
+        BRIDGE_REGISTER(0xFE, HleDispatch),
         BRIDGE_REGISTER(0xFF, VirtualReality)
     };
 

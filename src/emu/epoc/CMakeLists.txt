@@ -23,6 +23,7 @@ add_library(epockern
     include/epoc/kernel/change_notifier.h
     include/epoc/kernel/chunk.h
     include/epoc/kernel/codeseg.h
+    include/epoc/kernel/common.h
     include/epoc/kernel/libmanager.h
     include/epoc/kernel/library.h
     include/epoc/kernel/kernel_obj.h
@@ -276,12 +277,20 @@ add_library(epocutils
     src/utils/obj.cpp
 )
 
+add_library(epocdispatch
+    include/epoc/dispatch/def.h
+    include/epoc/dispatch/register.h
+    include/epoc/dispatch/screen.h
+    src/dispatch/register.cpp
+    src/dispatch/screen.cpp)
+
 target_include_directories(epocloader PUBLIC include)
 target_include_directories(epocmem PUBLIC include)
 target_include_directories(epockern PUBLIC include)
 target_include_directories(epocservs PUBLIC include)
 target_include_directories(epocutils PUBLIC include)
 target_include_directories(epocio PUBLIC include)
+target_include_directories(epocdispatch PUBLIC include)
 
 target_link_libraries(epocio PUBLIC common)
 target_link_libraries(epocio PRIVATE
@@ -326,6 +335,7 @@ target_link_libraries(epockern PUBLIC
     arm common)
 
 target_link_libraries(epockern PRIVATE
+    epocdispatch
     epocloader
     epocmem
     epocservs
@@ -337,6 +347,15 @@ target_link_libraries(epockern PRIVATE
 if (ENABLE_SCRIPTING_ABILITY)
     target_link_libraries(epockern PRIVATE manager)
 endif()
+
+target_link_libraries(epocdispatch PUBLIC
+    common
+    hle)
+
+target_link_libraries(epocdispatch PRIVATE
+    drivers
+    epockern
+    epocservs)
 
 add_library(epoc
     include/epoc/epoc.h
