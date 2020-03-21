@@ -55,6 +55,7 @@
 #include <epoc/mem.h>
 #include <epoc/ptr.h>
 
+#include <epoc/dispatch/dispatcher.h>
 #include <epoc/kernel/libmanager.h>
 #include <epoc/loader/rom.h>
 #include <epoc/timing.h>
@@ -95,6 +96,8 @@ namespace eka2l1 {
         disasm asmdis;
 
         gdbstub gdb_stub;
+
+        dispatch::dispatcher dispatcher;
 
         debugger_base *debugger;
 
@@ -269,6 +272,10 @@ namespace eka2l1 {
             return cpu;
         }
 
+        dispatch::dispatcher *get_dispatcher() {
+            return &dispatcher;
+        }
+
         void mount(drive_number drv, const drive_media media, std::string path,
             const io_attrib attrib = io_attrib::none);
 
@@ -349,6 +356,9 @@ namespace eka2l1 {
 
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
+
+        // Initialize HLE finally
+        dispatcher.init(&kern);
     }
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, manager::config_state *conf)
@@ -644,6 +654,10 @@ namespace eka2l1 {
 
     arm::jitter &system::get_cpu() {
         return impl->get_cpu();
+    }
+
+    dispatch::dispatcher *system::get_dispatcher() {
+        return impl->get_dispatcher();
     }
 
     void system::mount(drive_number drv, const drive_media media, std::string path,

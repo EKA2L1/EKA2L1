@@ -30,7 +30,7 @@
 #include <common/configure.h>
 #include <epoc/hal.h>
 #include <epoc/svc.h>
-#include <epoc/dispatch/register.h>
+#include <epoc/dispatch/dispatcher.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -2252,13 +2252,7 @@ namespace eka2l1::epoc {
 
     /// HLE
     BRIDGE_FUNC(void, HleDispatch, const std::uint32_t ordinal) {
-        auto dispatch_find_result = dispatch::dispatch_funcs.find(ordinal);
-
-        if (dispatch_find_result == dispatch::dispatch_funcs.end()) {
-            return;
-        }
-
-        dispatch_find_result->second.func(sys);
+        sys->get_dispatcher()->resolve(sys, ordinal);
     }
 
     BRIDGE_FUNC(void, VirtualReality) {

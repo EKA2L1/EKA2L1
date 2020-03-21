@@ -17,9 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/dispatch/dispatcher.h>
 #include <epoc/dispatch/screen.h>
 #include <common/log.h>
 
+#include <drivers/graphics/graphics.h>
+#include <epoc/services/window/common.h>
 #include <epoc/services/window/window.h>
 #include <epoc/kernel.h>
 #include <epoc/epoc.h>
@@ -27,18 +30,22 @@
 
 namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
-        auto winserv = reinterpret_cast<eka2l1::window_server*>(sys->get_kernel_system()->get_by_name
-            <service::server>("!Windowserver"));
-
-        epoc::screen *scr = winserv->get_screens();
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::graphics_driver *driver = sys->get_graphics_driver();
+        epoc::screen *scr = dispatcher->winserv_->get_screens();
 
         while (scr != nullptr) {
             if (scr->number == screen_number - 1) {
-                std::ofstream test("test.bin", std::ios::binary);
-                test.write(reinterpret_cast<const char*>(scr->screen_buffer_chunk->host_base()),
-                    scr->size().x * scr->size().y * 4);
+                // Update the DSA screen texture
+                const eka2l1::vec2 screen_size = scr->size();
+                const std::size_t buffer_size = scr->size().x * scr->size().y * 4;
 
-                LOG_TRACE("Screen dumped");
+                if (!scr->dsa_texture) {
+                    scr->dsa_texture = drivers::create_bitmap(driver, screen_size);
+                }
+
+                driver->update_bitmap(scr->dsa_texture, buffer_size, 0, screen_size,
+                    epoc::get_bpp_from_display_mode(scr->disp_mode), scr->screen_buffer_chunk->host_base());
             }
 
             scr = scr->next;

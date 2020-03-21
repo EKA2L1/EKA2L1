@@ -71,6 +71,10 @@ namespace eka2l1 {
         struct config_state;
     }
 
+    namespace dispatch {
+        struct dispatcher;
+    }
+
     class system_impl;
 
     /*! A system instance, where all the magic happens. 
@@ -124,6 +128,7 @@ namespace eka2l1 {
         drivers::audio_driver *get_audio_driver();
         arm::jitter &get_cpu();
         manager::config_state *get_config();
+        dispatch::dispatcher *get_dispatcher();
 
         void set_config(manager::config_state *conf);
 

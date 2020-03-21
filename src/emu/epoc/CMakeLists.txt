@@ -279,8 +279,10 @@ add_library(epocutils
 
 add_library(epocdispatch
     include/epoc/dispatch/def.h
+    include/epoc/dispatch/dispatcher.h
     include/epoc/dispatch/register.h
     include/epoc/dispatch/screen.h
+    src/dispatch/dispatcher.cpp
     src/dispatch/register.cpp
     src/dispatch/screen.cpp)
 
