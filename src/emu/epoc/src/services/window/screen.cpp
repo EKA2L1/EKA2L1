@@ -75,6 +75,7 @@ namespace eka2l1::epoc {
     screen::screen(const int number, epoc::config::screen &scr_conf) 
         : number(number)
         , screen_texture(0)
+        , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
         , scr_config(scr_conf)
         , crr_mode(1)
@@ -84,7 +85,7 @@ namespace eka2l1::epoc {
 
         for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
             if (scr_config.modes[i].rotation == 0) {
-                physical_mode = i + 1;
+                physical_mode = static_cast<std::uint8_t>(i + 1);
             }
         }
     }
@@ -207,12 +208,29 @@ namespace eka2l1::epoc {
             if (new_focus_screen) {
                 serv->set_focus_screen(new_focus_screen);
                 alternative_focus->gain_focus();
+                new_focus_screen->fire_focus_change_callbacks();
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
+                fire_focus_change_callbacks();
             }
         }
 
         return (new_focus_screen ? alternative_focus : focus);
+    }
+
+    void screen::fire_focus_change_callbacks() {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+
+        for (auto &callback: focus_callbacks) {
+            callback.second(callback.first, focus);
+        }
+
+        focus_callbacks.clear();
+    }
+
+    void screen::add_focus_change_callback(void *userdata, focus_change_callback_handler handler) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+        focus_callbacks.push_back({ userdata, handler });
     }
 
     void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {

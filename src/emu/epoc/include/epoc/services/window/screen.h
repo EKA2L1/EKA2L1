@@ -26,6 +26,7 @@
 #include <mutex>
 
 #include <memory>
+#include <vector>
 
 namespace eka2l1 {
     namespace kernel {
@@ -67,8 +68,16 @@ namespace eka2l1::epoc {
 
         // position of this screen in graphics driver
         // update in graphics driver thread and read in os thread
-        std::mutex absolute_pos_mtx;
+        std::mutex screen_mutex;
         eka2l1::vec2 absolute_pos;
+
+        typedef void (*focus_change_callback_handler)(void *userdata, epoc::window_group *focus);
+        using focus_change_callback = std::pair<void*, focus_change_callback_handler>;
+
+        std::vector<focus_change_callback> focus_callbacks;
+
+        void fire_focus_change_callbacks();
+        void add_focus_change_callback(void *userdata, focus_change_callback_handler handler);
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
 
