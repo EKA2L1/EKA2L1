@@ -22,6 +22,19 @@
 #include <epoc/dispatch/def.h>
 #include <common/vecx.h>
 
+#include <epoc/ptr.h>
+
 namespace eka2l1::dispatch {
+    struct fast_blit_info {
+        eka2l1::ptr<std::uint8_t> dest_base;
+        eka2l1::ptr<const std::uint8_t> src_base;
+        eka2l1::vec2 dest_point;
+        std::uint32_t dest_stride;
+        std::uint32_t src_stride;
+        eka2l1::vec2 src_size;
+        eka2l1::rect src_blit_rect;
+    };
+
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list);
+    BRIDGE_FUNC_DISPATCHER(void, fast_blit, fast_blit_info *info);
 }

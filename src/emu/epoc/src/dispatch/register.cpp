@@ -22,6 +22,7 @@
 
 namespace eka2l1::dispatch {
     const eka2l1::hle::func_map dispatch_funcs = {
-        BRIDGE_REGISTER(1, update_screen)
+        BRIDGE_REGISTER(1, update_screen),
+        BRIDGE_REGISTER(2, fast_blit)
     };
 }
