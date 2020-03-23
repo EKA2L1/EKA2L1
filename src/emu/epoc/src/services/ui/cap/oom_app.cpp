@@ -31,7 +31,7 @@
 
 namespace eka2l1 {
     oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys)
-        : service::typical_server(sys, "101fdfae_10207218_AppServer") {
+        : service::typical_server(sys, OOM_APP_UI_SERVER_NAME) {
         REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
         REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
     }
@@ -175,6 +175,6 @@ namespace eka2l1 {
         sgc = std::make_unique<epoc::cap::sgc_server>();
         eik = std::make_unique<epoc::cap::eik_server>(kern);
 
-        sgc->init(kern);
+        sgc->init(kern, sys->get_graphics_driver());
     }
 }

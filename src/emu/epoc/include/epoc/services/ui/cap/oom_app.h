@@ -128,6 +128,8 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
+    static const char* OOM_APP_UI_SERVER_NAME = "101fdfae_10207218_AppServer";
+
     /*! \brief OOM App Server Memebers can receive notification when memory ran out and can't be
        freed. This is basiclly AknCapServer but loaded with this plugin.
       
@@ -164,6 +166,10 @@ namespace eka2l1 {
 
         epoc::cap::eik_server *get_eik_server() {
             return eik.get();
+        }
+
+        epoc::cap::sgc_server *get_sgc_server() {
+            return sgc.get();
         }
     };
 }
