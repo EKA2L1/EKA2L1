@@ -42,6 +42,11 @@ namespace eka2l1 {
             return true;
         }
 
+        if (tok == "binary") {
+            t = central_repo_entry_type::string;
+            return true;
+        }
+
         return false;
     }
 
@@ -203,7 +208,6 @@ namespace eka2l1 {
         // The UID repo to load
         const std::uint32_t repo_uid = *ctx->get_arg<std::uint32_t>(0);
         manager::device_manager *mngr = ctx->sys->get_manager_system()->get_device_manager();
-
         eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), mngr, repo_uid);
 
         if (!repo) {
@@ -323,52 +327,44 @@ namespace eka2l1 {
 
         // Internal should only contains CRE
         for (auto &drv : avail_drives) {
+            if (drv == rom_drv)
+                continue;
+
             std::u16string repo_dir{ drive_to_char16(drv) };
-            std::u16string privates[2];
+            std::u16string repo_folder = repo_dir + private_dir_persists;
 
-            if (scan_org_only) {
-                privates[0] = private_dir;
+            if (is_first_repo && !io->exist(repo_folder)) {
+                // Create one if it doesn't exist, for the future
+                io->create_directories(repo_folder);
             } else {
-                privates[0] = private_dir_persists;
-                privates[1] = private_dir;
-            }
+                // We can continue already
+                std::u16string repo_path = repo_folder + repocre;
 
-            for (int i = 0; i < ((one_on_rom) ? 1 : 2); i++) {
-                std::u16string repo_folder = repo_dir + privates[i];
+                if (io->exist(repo_path)) {
+                    // Load and check for success
+                    symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
 
-                if (is_first_repo && !io->exist(repo_folder)) {
-                    // Create one if it doesn't exist, for the future
-                    io->create_directories(repo_folder);
-                } else {
-                    // We can continue already
-                    std::u16string repo_path = repo_folder + repocre;
-
-                    if (io->exist(repo_path)) {
-                        // Load and check for success
-                        symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
-
-                        if (!repofile) {
-                            LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
-                            return -1;
-                        }
-
-                        std::vector<std::uint8_t> buf;
-                        buf.resize(repofile->size());
-
-                        repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
-                        repofile->close();
-
-                        common::chunkyseri seri(&buf[0], buf.size(), common::SERI_MODE_READ);
-                        if (int err = do_state_for_cre(seri, *repo)) {
-                            LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
-                            return -1;
-                        }
-
-                        repo->reside_place = drv;
-                        repo->access_count = 1;
-
-                        return 0;
+                    if (!repofile) {
+                        LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
+                        return -1;
                     }
+
+                    std::vector<std::uint8_t> buf;
+                    buf.resize(repofile->size());
+
+                    repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+                    repofile->close();
+
+                    common::chunkyseri seri(&buf[0], buf.size(), common::SERI_MODE_READ);
+                    if (int err = do_state_for_cre(seri, *repo)) {
+                        LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
+                        return -1;
+                    }
+
+                    repo->reside_place = drv;
+                    repo->access_count = 1;
+
+                    return 0;
                 }
             }
         }
