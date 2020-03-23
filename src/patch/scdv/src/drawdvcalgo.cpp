@@ -90,7 +90,7 @@ void CFbsDrawDeviceAlgorithm::MapColors(const TRect& aRect,const TRgb* aColors,T
 TInt CFbsDrawDeviceAlgorithm::ScanLineBytes() const {
 	const TInt scanLineBytes = iScanLineWords << 2;
 	
-	if (GetOrientation() & 1) {
+	if (iOrientation & 1) {
 		const TSize size = SizeInPixels();
 		return (size.iWidth == 0) ? 0 : scanLineBytes * size.iHeight / size.iWidth;
 	}
@@ -103,7 +103,7 @@ TInt CFbsDrawDeviceAlgorithm::PhysicalScanLineBytes() const {
 }
 
 TInt CFbsDrawDeviceAlgorithm::LongWidth() const {
-	if (GetOrientation() & 1) {
+	if (iOrientation & 1) {
 		const TSize size = SizeInPixels();
 		return (size.iWidth == 0) ? 0 : iLongWidth * size.iHeight / size.iWidth;
 	}
@@ -128,7 +128,7 @@ void CFbsDrawDeviceAlgorithm::OrientationsAvailable(TBool aOrientation[4]) {
 
 
 TInt CFbsDrawDeviceAlgorithm::GetPixelIncrementUnit() const {
-	switch (GetOrientation()) {
+	switch (iOrientation) {
 		case EOrientationNormal:
 			return 1;
 		
@@ -149,7 +149,7 @@ TInt CFbsDrawDeviceAlgorithm::GetPixelIncrementUnit() const {
 }
 
 void CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(TInt aX, TInt aY, TInt &aNewX, TInt &aNewY) const {
-	switch (GetOrientation()) {
+	switch (iOrientation) {
 		case EOrientationRotate90:
 			aNewY = SizeInPixels().iHeight - aX - 1;
 			aNewX = aY;

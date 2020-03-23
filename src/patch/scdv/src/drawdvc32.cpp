@@ -60,30 +60,30 @@ void CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
 
 // Write functions
 static void WriteRgb32ToAddressAlpha(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] = aBlue;
+	aAddress[0] = aRed;
 	aAddress[1] = aGreen;
-	aAddress[2] = aRed;
+	aAddress[2] = aBlue;
 	aAddress[3] = aAlpha;
 }
 
 static void WriteRgb32ToAddressAND(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] &= aBlue;
+	aAddress[0] &= aRed;
 	aAddress[1] &= aGreen;
-	aAddress[2] &= aRed;
+	aAddress[2] &= aBlue;
 	aAddress[3] &= aAlpha;
 }
 
 static void WriteRgb32ToAddressOR(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] |= aBlue;
+	aAddress[0] |= aRed;
 	aAddress[1] |= aGreen;
-	aAddress[2] |= aRed;
+	aAddress[2] |= aBlue;
 	aAddress[3] |= aAlpha;
 }
 
 static void WriteRgb32ToAddressXOR(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] ^= aBlue;
+	aAddress[0] ^= aRed;
 	aAddress[1] ^= aGreen;
-	aAddress[2] ^= aRed;
+	aAddress[2] ^= aBlue;
 	aAddress[3] ^= aAlpha;
 }
 
@@ -95,9 +95,9 @@ static void WriteRgb32ToAddressNOTSC(TUint8 *aAddress, TUint8 aRed, TUint8 aGree
 }
 
 static void WriteRgb32ToAddressANDNOT(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] = (~aAddress[0]) & aBlue;
+	aAddress[0] = (~aAddress[0]) & aRed;
 	aAddress[1] = (~aAddress[1]) & aGreen;
-	aAddress[2] = (~aAddress[2]) & aRed;
+	aAddress[2] = (~aAddress[2]) & aBlue;
 	aAddress[3] = (~aAddress[3]) & aAlpha;
 }
 
@@ -108,7 +108,7 @@ static void WriteRgb32ToAddressBlend(TUint8 *aAddress, TUint8 aRed, TUint8 aGree
 	}
 
 	TUint32 *colorWord = reinterpret_cast<TUint32*>(aAddress);
-	TUint32 color24 = aRed | (aGreen << 8) | (aBlue << 16);
+	TUint32 color24 = aBlue | (aGreen << 8) | (aRed << 16);
 
 	TUint32 rb = (*colorWord & 0xFF00FF);
 	TUint32 g = (*colorWord & 0x00FF00);
@@ -275,6 +275,40 @@ TInt CFbsThirtyTwoBitsDrawDevice::Construct(TSize aSize, TInt aDataStride) {
 //	RGBA screen draw device
 //
 //////////////////////////////////////////////
+TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY) {
+	Scdv::Log("Set called with %d %d, unimplemented", aFactorX, aFactorY);
+	return KErrNone;
+}
+
+void CFbsTwentyfourBitAlphaScreenDrawDevice::Get(TInt& aFactorX, TInt& aFactorY, TInt& aDivisorX, TInt& aDivisorY) {
+
+}
+
+TBool CFbsTwentyfourBitAlphaScreenDrawDevice::IsScalingOff() {
+	return ETrue;
+}
+
+TInt CFbsTwentyfourBitAlphaScreenDrawDevice::GetInterface(TInt aInterfaceId, TAny*& aInterface) {
+	switch (aInterfaceId) {
+		case KScalingInterfaceID:
+			aInterface = static_cast<Scdv::MScalingSettings*>(this);
+			return KErrNone;
+			
+		case KFastBlit2InterfaceID:
+			aInterface = static_cast<Scdv::MFastBlitBlock*>(this);
+			return KErrNone;
+		
+		case KOrientationInterfaceID:
+			aInterface = static_cast<Scdv::MOrientation*>(this);
+			return KErrNone;
+
+		default:
+			break;
+	}
+
+	//Scdv::Log("ERR:: Interface not supported %d", aInterfaceId);
+	return KErrNotSupported;
+}
 
 TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {
 	iScreenNumber = aScreenNumber;
@@ -286,13 +320,13 @@ void CFbsTwentyfourBitAlphaScreenDrawDevice::Update() {
 	updateRect.iTl = TPoint(0, 0);
 	updateRect.iBr = updateRect.iTl + iSize;
 
-	UpdateScreen(iScreenNumber, 1, &updateRect);
+	UpdateScreen(1, iScreenNumber, 1, &updateRect);
 }
 
 void CFbsTwentyfourBitAlphaScreenDrawDevice::Update(const TRegion& aRegion) {
-	UpdateScreen(iScreenNumber, aRegion.Count(), aRegion.RectangleList());
+	UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());
 }
 
 void CFbsTwentyfourBitAlphaScreenDrawDevice::UpdateRegion(const TRect& aRect) {
-	UpdateScreen(iScreenNumber, 1, &aRect);
+	UpdateScreen(1, iScreenNumber, 1, &aRect);
 }

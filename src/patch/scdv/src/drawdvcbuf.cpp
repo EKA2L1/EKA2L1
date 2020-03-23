@@ -18,6 +18,7 @@
  */
 
 #include <scdv/log.h>
+#include <scdv/sv.h>
 #include "drawdvcbuf.h"
 
 CFbsDrawDeviceBuffer::CFbsDrawDeviceBuffer()
@@ -119,6 +120,7 @@ TBool CFbsDrawDeviceBuffer::SetOrientation(TOrientation aOri) {
 	if (aOri > EOrientationRotate270 || aOri < EOrientationNormal)
 		return EFalse;
 
+	Scdv::Log("Orientation set to %d", aOri);
 	iOrientation = aOri;
 	return ETrue;
 }
@@ -126,10 +128,63 @@ TBool CFbsDrawDeviceBuffer::SetOrientation(TOrientation aOri) {
 void CFbsDrawDeviceBuffer::GetDrawRect(TRect& aDrawRect) const {
 	aDrawRect.iTl = TPoint(0, 0);
 
-	if (GetOrientation() & 1) {
+	if (iOrientation & 1) {
 		aDrawRect.iBr.iX = aDrawRect.iTl.iX + iSize.iHeight;
 		aDrawRect.iBr.iY = aDrawRect.iTl.iY + iSize.iWidth;
 	} else {
 		aDrawRect.iBr = aDrawRect.iTl + iSize;
 	}
+}
+
+TInt CFbsDrawDeviceBuffer::WriteBitmapBlock(const TPoint& aDest,
+	const TUint32* aSrcBase, TInt aSrcStride, const TSize& aSrcSize,
+	const TRect& aSrcRect) {
+	if (Orientation() != EOrientationNormal) {
+		return KErrNotSupported;
+	}
+	
+	TFastBlitInfo info;
+	info.iDestBase = reinterpret_cast<TUint8*>(iBuffer);
+	info.iSrcBase = reinterpret_cast<const TUint8*>(aSrcBase);
+	info.iDestPoint = aDest;
+	info.iDestStride = ScanLineBytes();
+	info.iSourceStride = aSrcStride;
+	info.iSrcSize = aSrcSize;
+	info.iSrcRect = aSrcRect;
+
+	FastBlit(2, &info);
+
+	return KErrNone;
+}
+
+TInt CFbsDrawDeviceBuffer::WriteBitmapBlock(const TPoint& aDest, CFbsDrawDevice* aSrcDrawDevice,
+	const TRect& aSrcRect) {
+	TAny *blitBlock = NULL;
+	TInt result = aSrcDrawDevice->GetInterface(KFastBlit2InterfaceID, blitBlock);
+
+	if (result != KErrNone) {
+		return result;
+	}
+
+	TAny *orientation = NULL;
+	result = aSrcDrawDevice->GetInterface(KOrientationInterfaceID, orientation);
+
+	if (result != KErrNone) {
+		return result;
+	}
+
+	if (((MOrientation*)orientation)->Orientation() != EOrientationNormal) {
+		return KErrNotSupported;
+	}
+
+	if (aSrcDrawDevice->DisplayMode() != DisplayMode()) {
+		return KErrNotSupported;
+	}
+
+	return WriteBitmapBlock(aDest, ((MFastBlitBlock*)blitBlock)->Bits(), aSrcDrawDevice->ScanLineBytes(), aSrcDrawDevice->SizeInPixels(),
+		aSrcRect);
+}
+
+const TUint32* CFbsDrawDeviceBuffer::Bits() const {
+	return reinterpret_cast<const TUint32*>(iBuffer);
 }

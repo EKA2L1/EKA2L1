@@ -21,12 +21,14 @@
 #define SCDVC_DRAW_DVC_32_H_
 
 #include "drawdvcbuf.h"
+#include <scdv/blit.h>
+#include <scdv/scale.h>
 
 class CFbsThirtyTwoBitsDrawDevice: public CFbsDrawDeviceBuffer {
 public:
 	TInt Construct(TSize aSize, TInt aDataStride);
 	void SetSize(TSize aSize);
-	
+
 	virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const;
 	virtual void ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const;
 	virtual void WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode);
@@ -45,7 +47,7 @@ public:
 class CFbsTwentyfourBitAlphaDrawDevice: public CFbsThirtyTwoBitsDrawDevice {
 };
 
-class CFbsTwentyfourBitAlphaScreenDrawDevice: public CFbsTwentyfourBitAlphaDrawDevice {
+class CFbsTwentyfourBitAlphaScreenDrawDevice: public CFbsTwentyfourBitAlphaDrawDevice, public Scdv::MScalingSettings {
 	TUint32 iScreenNumber;
 
 public:
@@ -54,6 +56,12 @@ public:
     virtual void Update();
     virtual void Update(const TRegion& aRegion);
     virtual void UpdateRegion(const TRect& aRect);
+	
+	virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY);
+	virtual void Get(TInt& aFactorX, TInt& aFactorY, TInt& aDivisorX, TInt& aDivisorY);
+	virtual TBool IsScalingOff();
+	
+    virtual TInt GetInterface(TInt aInterfaceId, TAny*& aInterface);
 };;
 
 #endif

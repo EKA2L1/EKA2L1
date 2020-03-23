@@ -20,15 +20,18 @@
 #ifndef SCDV_DVC_ALGO_H_
 #define SCDV_DVC_ALGO_H_
 
+#include <scdv/blit.h>
 #include <scdv/draw.h>
 #include <e32std.h>
 
 void PanicAtTheEndOfTheWorld();
 
-class CFbsDrawDeviceAlgorithm: public CFbsDrawDevice {
+class CFbsDrawDeviceAlgorithm: public CFbsDrawDevice,
+                                public Scdv::MOrientation {
 protected:
 	TInt iScanLineWords;
 	TInt iLongWidth;
+    TOrientation iOrientation;
 	
 public:
 	explicit CFbsDrawDeviceAlgorithm();
@@ -61,8 +64,11 @@ public:
     
     void TransformCoordinateToPhysical(TInt aX, TInt aY, TInt &aNewX, TInt &aNewY) const;
     
-    virtual TOrientation GetOrientation() const = 0;
     virtual void ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const = 0;
+
+    virtual TOrientation Orientation() {
+    	return iOrientation;
+    }
 };
 
 #endif

@@ -20,12 +20,14 @@
 #ifndef SCDV_DVC_BUF_H_
 #define SCDV_DVC_BUF_H_
 
+#include <scdv/blit.h>
 #include <scdv/draw.h>
 #include <scdv/log.h>
 
 #include "drawdvcalgo.h"
 
-class CFbsDrawDeviceBuffer: public CFbsDrawDeviceAlgorithm {
+class CFbsDrawDeviceBuffer: public CFbsDrawDeviceAlgorithm,
+                            public Scdv::MFastBlitBlock {
 protected:
     TAny *iBuffer;
     TAny *iScanLineBuffer;
@@ -68,9 +70,18 @@ public:
 	// Additional functions
 	virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const = 0;
 
-    virtual TOrientation GetOrientation() const {
-    	return iOrientation;
-    }
+    virtual TInt WriteBitmapBlock(const TPoint& aDest,
+            CFbsDrawDevice* aSrcDrawDevice,
+            const TRect& aSrcRect);
+
+	virtual TInt WriteBitmapBlock(const TPoint& aDest,
+									const TUint32* aSrcBase,
+									TInt aSrcStride,
+									const TSize& aSrcSize,
+									const TRect& aSrcRect);
+
+	virtual const TUint32* Bits() const;
+
 };
 
 #endif
