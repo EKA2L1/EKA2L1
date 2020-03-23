@@ -877,10 +877,10 @@ namespace eka2l1 {
         }
         }
 
-        scr->absolute_pos_mtx.lock();
+        scr->screen_mutex.lock();
         guest_evt_.adv_pointer_evt_.pos.x = driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x;
         guest_evt_.adv_pointer_evt_.pos.y = driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y;
-        scr->absolute_pos_mtx.unlock();
+        scr->screen_mutex.unlock();
     }
     
     void window_server::queue_input_from_driver(drivers::input_event &evt) {
