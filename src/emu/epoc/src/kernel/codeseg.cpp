@@ -255,17 +255,18 @@ namespace eka2l1::kernel {
             return;
         }
 
+        mark = true;
+
         // Iterate through dependency first
         for (auto &dependency : dependencies) {
             if (!dependency->mark) {
-                dependency->mark = true;
                 dependency->queries_call_list(pr, call_list);
-                dependency->mark = false;
             }
         }
 
         // Add our last. Don't change order, this is how it supposed to be
         call_list.push_back(get_entry_point(pr));
+        mark = false;
     }
 
     bool codeseg::add_dependency(codeseg_ptr codeseg) {
