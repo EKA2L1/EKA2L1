@@ -50,6 +50,7 @@
 #include <epoc/services/init.h>
 
 #include <manager/manager.h>
+#include <common/time.h>
 
 namespace eka2l1 {
     void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
@@ -60,6 +61,8 @@ namespace eka2l1 {
         libmngr = lib_sys;
         io = io_sys;
         sys = esys;
+
+        base_time = common::get_current_time_in_microseconds_since_1ad();
 
         thr_sch = std::make_shared<kernel::thread_scheduler>(this, timing, *cpu);
         rom_map = nullptr;
@@ -547,5 +550,9 @@ namespace eka2l1 {
         if (!s) {
             return;
         }
+    }
+
+    std::uint64_t kernel_system::home_time() {
+        return base_time + timing->get_global_time_us();
     }
 }

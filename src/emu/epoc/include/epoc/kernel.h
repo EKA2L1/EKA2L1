@@ -176,6 +176,8 @@ namespace eka2l1 {
 
         mutable std::atomic<uint32_t> uid_counter;
 
+        std::uint64_t base_time;
+
         void setup_new_process(process_ptr pr);
 
     public:
@@ -206,6 +208,8 @@ namespace eka2l1 {
         system *get_system() {
             return sys;
         }
+
+        std::uint64_t home_time();
 
         void init(system *esys, timing_system *sys, manager_system *mngrsys,
             memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::arm_interface *cpu);
