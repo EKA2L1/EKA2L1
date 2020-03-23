@@ -25,12 +25,17 @@
 #include <mutex>
 #include <thread>
 
+#include <common/types.h>
 #include <common/queue.h>
 #include <common/vecx.h>
 #include <debugger/debugger.h>
 #include <drivers/graphics/common.h>
 
 namespace eka2l1 {
+    namespace service {
+        class property;
+    }
+
     class system;
     struct imgui_logger;
     class applist_server;
@@ -149,6 +154,8 @@ namespace eka2l1 {
         void show_windows_tree();
         void show_about();
 
+        void set_language_to_property(const ::language new_one);
+
         std::unique_ptr<std::thread> install_thread;
         threadsafe_cn_queue<std::string> install_list;
         std::mutex install_thread_mut;
@@ -177,6 +184,8 @@ namespace eka2l1 {
     public:
         explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger, app_launch_function app_launch);
         ~imgui_debugger();
+
+        ::language get_language_from_property(service::property *prop);
 
         bool should_emulate_stop() override {
             return should_stop;

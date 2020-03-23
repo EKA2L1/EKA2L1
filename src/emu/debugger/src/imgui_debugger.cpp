@@ -68,6 +68,16 @@ const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
 const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255.0f);
 
 namespace eka2l1 {
+    static void language_property_change_handler(void *userdata, service::property *prop) {
+        imgui_debugger *debugger = reinterpret_cast<imgui_debugger*>(userdata);
+        manager::config_state *conf = debugger->get_config();
+
+        conf->language = static_cast<int>(debugger->get_language_from_property(prop));
+        conf->serialize();
+
+        prop->add_data_change_callback(userdata, language_property_change_handler);
+    }
+
     imgui_debugger::imgui_debugger(eka2l1::system *sys, imgui_logger *logger, app_launch_function app_launch)
         : sys(sys)
         , conf(sys->get_config())
@@ -147,6 +157,9 @@ namespace eka2l1 {
             <service::server>("!Windowserver"));
         oom = reinterpret_cast<eka2l1::oom_ui_app_server*>(sys->get_kernel_system()->get_by_name
             <service::server>("101fdfae_10207218_AppServer"));
+
+        property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+        lang_prop->add_data_change_callback(this, language_property_change_handler);
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -497,6 +510,28 @@ namespace eka2l1 {
         ImGui::Separator();
     }
 
+    language imgui_debugger::get_language_from_property(service::property *lang_prop) {
+        auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
+
+        if (!current_lang) {
+            return language::en;
+        }
+
+        return static_cast<language>(current_lang->language);
+    }
+    
+    void imgui_debugger::set_language_to_property(const language new_one) {
+        property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+        auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
+
+        if (!current_lang) {
+            return;
+        }
+
+        current_lang->language = static_cast<epoc::language>(new_one);
+        lang_prop->set<epoc::locale_language>(current_lang.value());
+    }
+    
     void imgui_debugger::show_pref_general() {
         ImGui::Text("Logging");
         ImGui::Separator();
@@ -565,18 +600,20 @@ namespace eka2l1 {
             ImGui::SameLine(col2);
             ImGui::PushItemWidth(col2 - 10);
 
-            const auto& dvc = dvcs[conf->device];
-            const auto& lang_prop = sys->get_kernel_system()->get_prop(0x101f75b6, 0x10208903);
-            auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
-            const std::string lang_preview = common::get_language_name_by_code(current_lang->language);
+            auto& dvc = dvcs[conf->device];
+
+            if (conf->language == -1) {
+                conf->language = dvc.default_language_code;
+            }
+
+            const std::string lang_preview = common::get_language_name_by_code(conf->language);
 
             if (ImGui::BeginCombo("##Languagesscombo", lang_preview.c_str())) {
                 for (std::size_t i = 0; i < dvc.languages.size(); i++) {
                     const std::string lang_name = common::get_language_name_by_code(dvc.languages[i]);
                     if (ImGui::Selectable(lang_name.c_str())) {
-                        current_lang->language = static_cast<epoc::TLanguage>(dvc.languages[i]);
-                        lang_prop->set<epoc::locale_language>(*current_lang);
                         conf->language = dvc.languages[i];
+                        set_language_to_property(static_cast<language>(dvc.languages[i]));
                         conf->serialize();
                     }
                 }
@@ -1284,6 +1321,38 @@ namespace eka2l1 {
         error_queue.push(error);
     }
 
+    static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)  { 
+        return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); 
+    }
+
+    // Taken from https://github.com/ocornut/imgui/issues/1982    
+    void imgui_image_rotate(ImTextureID tex_id, ImVec2 center, ImVec2 size, float angle)
+    {
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+        float cos_a = cosf(angle);
+        float sin_a = sinf(angle);
+        
+        center = center + ImGui::GetWindowPos();
+        center = center + ImGui::GetWindowContentRegionMin();
+
+        ImVec2 pos[4] = {
+            center + ImRotate(ImVec2(-size.x * 0.5f, -size.y * 0.5f), cos_a, sin_a),
+            center + ImRotate(ImVec2(+size.x * 0.5f, -size.y * 0.5f), cos_a, sin_a),
+            center + ImRotate(ImVec2(+size.x * 0.5f, +size.y * 0.5f), cos_a, sin_a),
+            center + ImRotate(ImVec2(-size.x * 0.5f, +size.y * 0.5f), cos_a, sin_a)
+        };
+
+        ImVec2 uvs[4] = { 
+            ImVec2(0.0f, 0.0f), 
+            ImVec2(1.0f, 0.0f), 
+            ImVec2(1.0f, 1.0f), 
+            ImVec2(0.0f, 1.0f) 
+        };
+
+        draw_list->AddImageQuad(tex_id, pos[0], pos[1], pos[2], pos[3], uvs[0], uvs[1], uvs[2], uvs[3], IM_COL32_WHITE);
+    }
+
     void imgui_debugger::show_errors() {
         std::string first_error = "";
 
@@ -1327,12 +1396,22 @@ namespace eka2l1 {
             ImGui::Begin(name.c_str());
             const auto window_pos = ImGui::GetWindowPos();
             const auto content_pos = ImGui::GetWindowContentRegionMin();
-            scr->absolute_pos_mtx.lock();
+            scr->screen_mutex.lock();
             scr->absolute_pos.x = static_cast<int>(window_pos.x + content_pos.x);
             scr->absolute_pos.y = static_cast<int>(window_pos.y + content_pos.y);
-            scr->absolute_pos_mtx.unlock();
             ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x),
                 static_cast<float>(size.y)));
+
+            if (scr->dsa_texture) {
+                const eka2l1::vec2 size_dsa = scr->size();
+
+                imgui_image_rotate(reinterpret_cast<ImTextureID>(scr->dsa_texture),
+                    ImVec2(static_cast<float>(size_dsa.x / 2), static_cast<float>(size_dsa.y / 2)),
+                    ImVec2(static_cast<float>(size_dsa.x), static_cast<float>(size_dsa.y)),
+                    static_cast<float>(scr->current_mode().rotation));
+            }
+    
+            scr->screen_mutex.unlock();
             ImGui::End();
         }
     }
