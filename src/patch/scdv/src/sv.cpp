@@ -17,29 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCDV_SV_H_
-#define SCDV_SV_H_
+#include <scdv/sv.h>
 
-#include <e32std.h>
+HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles) {
+    (void)aScreenNumber;
+    (void)aNumberOfRect;
+    (void)aRectangles;
+    CALL_HLE_DISPATCH(1)
+}
 
-#define CALL_HLE_DISPATCH(FUNCID)			\
-	asm volatile("mov r0, #" #FUNCID);		\
-	asm volatile("swi #0xFE");
-
-#define HLE_DISPATCH_FUNC(ret, name, id, ...) 	\
-	ret name(const TUint32 func_id, __VA_ARGS__)
-
-struct TFastBlitInfo {
-	TUint8 *iDestBase;
-	const TUint8* iSrcBase;
-	TPoint iDestPoint;
-	TUint32 iDestStride;
-	TUint32 iSourceStride;
-	TSize iSrcSize;
-	TRect iSrcRect;
-};
-
-HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles);
-HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo);
-
-#endif
+HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo) {
+    (void)aInfo;
+    CALL_HLE_DISPATCH(2)
+}
