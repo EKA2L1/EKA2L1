@@ -149,6 +149,20 @@ namespace eka2l1 {
             std::size_t get_arg_size(int idx);
 
             /**
+             * \brief   Get the max size of data stored in the IPC argument.
+             * 
+             * - If the data is an unspecified or integer, the size will be 4.
+             * - If the data is an descriptor, the size will be the max size of character data.
+             * 
+             * \param   idx The index of argument.
+             * \returns Size of the IPC argument in the specified index.
+             *          Return size_t(-1) if index is out of range.
+             * 
+             * \sa      get_arg_ptr
+             */
+            std::size_t get_arg_max_size(int idx);
+
+            /**
              * \brief   Set length of a descriptor passed as IPC argument in given index.
              * 
              * \param   idx The index of the argument. Must be in range of [0, 3].

@@ -239,6 +239,29 @@ namespace eka2l1 {
             return nullptr;
         }
     
+        std::size_t ipc_context::get_arg_max_size(int idx) {
+            if (idx >= 4 || idx < 0) {
+                return static_cast<std::size_t>(-1);
+            }
+
+            const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+
+            if ((static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::unspecified))
+                || (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::handle))) {
+                return 4;
+            }
+
+            // Cast it to descriptor
+            kernel::process *own_pr = msg->own_thr->owning_process();
+            epoc::des8 *descriptor = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
+
+            if (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::flag_16b)) {
+                return descriptor->get_max_length(own_pr) * 2;
+            }
+
+            return descriptor->get_max_length(own_pr);
+        }
+        
         std::size_t ipc_context::get_arg_size(int idx) {
             if (idx >= 4 || idx < 0) {
                 return static_cast<std::size_t>(-1);
