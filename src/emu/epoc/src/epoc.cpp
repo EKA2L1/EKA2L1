@@ -385,12 +385,12 @@ namespace eka2l1 {
     }
 
     bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
-        hlelibmngr.reset();
-        hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
-
         #if ENABLE_SCRIPTING == 1
             load_scripts();
         #endif
+
+        hlelibmngr.reset();
+        hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
 
         process_ptr pr = kern.spawn_new_process(path, cmd_arg);
         if (!pr) {
