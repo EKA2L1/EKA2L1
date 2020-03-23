@@ -581,6 +581,64 @@ namespace eka2l1 {
         ctx->write_arg_pkg<std::uint32_t>(3, ctx->get_arg<std::uint32_t>(0).value());
         ctx->set_request_status(epoc::error_none);
     }
+
+    void fs_server_client::read_file_section(service::ipc_context *ctx) {
+        std::uint64_t position = 0;
+
+        if (ctx->msg->function & 0x00040000) {
+            // The position is in a package
+            auto position_package = ctx->get_arg_packed<std::uint64_t>(2);
+
+            if (!position_package) {
+                ctx->set_request_status(epoc::error_argument);
+                return;
+            }
+
+            position = position_package.value();
+        } else {
+            position = ctx->get_arg<std::uint32_t>(2).value();
+        }
+
+        std::optional<std::u16string> target_file_path = ctx->get_arg<std::u16string>(1);
+
+        if (!target_file_path) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        target_file_path.value() = eka2l1::absolute_path(target_file_path.value(), ss_path, true);
+
+        // Get the buffer length
+        const std::uint32_t buffer_length = ctx->get_arg<std::uint32_t>(3).value();
+
+        // Open the file, one time only, from VFS
+        io_system *io = ctx->sys->get_io_system();
+        symfile target_file = io->open_file(target_file_path.value(), READ_MODE | BIN_MODE);
+
+        if (!target_file) {
+            ctx->set_request_status(epoc::error_path_not_found);
+            return;
+        }
+
+        std::uint8_t *buffer = ctx->get_arg_ptr(0);
+
+        if (!buffer) {
+            ctx->set_request_status(epoc::error_argument);
+            target_file->close();
+            return;
+        }
+
+        target_file->seek(position, eka2l1::file_seek_mode::beg);
+        const std::size_t readed_size = target_file->read_file(buffer, buffer_length, 1);
+        target_file->close();
+
+        if (!ctx->set_arg_des_len(0, static_cast<std::uint32_t>(readed_size))) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        ctx->set_request_status(epoc::error_none);
+    }
     
     void fs_server_client::new_file_subsession(service::ipc_context *ctx, bool overwrite, bool temporary) {
         std::optional<std::u16string> name_res = ctx->get_arg<std::u16string>(0);

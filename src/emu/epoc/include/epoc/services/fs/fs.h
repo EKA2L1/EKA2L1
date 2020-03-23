@@ -142,6 +142,8 @@ namespace eka2l1 {
         void delete_entry(service::ipc_context *ctx);
         void set_should_notify_failure(service::ipc_context *ctx);
 
+        void read_file_section(service::ipc_context *ctx);
+
         enum class notify_type {
             entry = 1,
             all = 2,
