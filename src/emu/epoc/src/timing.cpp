@@ -98,7 +98,7 @@ namespace eka2l1 {
         last_global_time_us = 0;
         idle_ticks = 0;
 
-        CPU_HZ = 250000000;
+        CPU_HZ = 48400000000;
     }
 
     void timing_system::restore_register_event(int evt_type, const std::string &name, timed_callback callback) {
@@ -202,6 +202,9 @@ namespace eka2l1 {
 
     void timing_system::advance() {
         move_events();
+
+        auto org_slice = slice_len;
+        auto org_timer = global_timer;
 
         const std::int64_t cycles_executed = slice_len - downcount;
         global_timer += cycles_executed;
