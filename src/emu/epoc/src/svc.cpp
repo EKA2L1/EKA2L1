@@ -156,6 +156,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
 
         process_ptr pr_real = kern->get<kernel::process>(aProcessHandle);
+        process_ptr cr_process = kern->crr_process();
 
         if (!pr_real) {
             LOG_ERROR("SvcProcessFileName: Invalid process");
@@ -163,7 +164,12 @@ namespace eka2l1::epoc {
         }
 
         epoc::des8 *des = aDes.get(mem);
-        des->assign(kern->crr_process(), pr_real->name());
+        const std::u16string full_path_u16 = pr_real->get_exe_path();
+
+        // Why???...
+        const std::string full_path = common::ucs2_to_utf8(full_path_u16);
+
+        des->assign(cr_process, full_path);
     }
 
     BRIDGE_FUNC(std::int32_t, ProcessGetMemoryInfo, std::int32_t aHandle, eka2l1::ptr<kernel::memory_info> aInfo) {
@@ -482,9 +488,7 @@ namespace eka2l1::epoc {
         std::int32_t *offset = aUTCOffset.get(sys->get_memory_system());
 
         // The time is since EPOC, we need to convert it to first of AD
-        *time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
-            + ad_epoc_dist_microsecs;
-
+        *time = sys->get_kernel_system()->home_time();
         *offset = common::get_current_utc_offset();
 
         return epoc::error_none;
@@ -1091,6 +1095,7 @@ namespace eka2l1::epoc {
                                           .first;
 
         if (handle == INVALID_HANDLE) {
+            LOG_TRACE("AAAAAAAAAAAa");
             return epoc::error_no_memory;
         }
 
@@ -1417,13 +1422,13 @@ namespace eka2l1::epoc {
     /*****************************/
 
     BRIDGE_FUNC(std::int32_t, StaticCallList, eka2l1::ptr<std::int32_t> aTotal, eka2l1::ptr<std::uint32_t> aList) {
-        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+        kernel::process *pr = kern->crr_process();
 
-        std::uint32_t *list_ptr = aList.get(mem);
-        std::int32_t *total = aTotal.get(mem);
+        std::uint32_t *list_ptr = aList.get(pr);
+        std::int32_t *total = aTotal.get(pr);
 
         std::vector<uint32_t> list;
-        kernel::process *pr = sys->get_kernel_system()->crr_process();
         pr->get_codeseg()->queries_call_list(pr, list);
 
         *total = static_cast<std::int32_t>(list.size());
@@ -2134,7 +2139,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSecondsAt - std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - ad_epoc_dist_microsecs);
+        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSecondsAt - kern->home_time());
     }
 
     BRIDGE_FUNC(void, TimerCancel, std::int32_t aHandle) {
