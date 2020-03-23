@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team / 2009 Nokia
+ * Copyright (c) 2020 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project / Symbian Open Source Project
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,149 +19,151 @@
 
 #pragma once
 
-enum TFsMessage {
-    EFsAddFileSystem, ///< Adds a file system
-    EFsRemoveFileSystem, ///< Removes a file system
-    EFsMountFileSystem, ///< Mounts a file system
-    EFsNotifyChange, ///< Notifies file and/or directory change
-    EFsNotifyChangeCancel, ///< Cancels change notification
-    EFsDriveList, ///< Gets a list of the available drive
-    EFsDrive, ///< Gets information about a drive and the medium mounted on it
-    EFsVolume, ///< Gets volume information for a formatted device
-    EFsSetVolume, ///< Sets the label for a volume
-    EFsSubst, ///< Gets the path assigned to a drive letter
-    EFsSetSubst, ///< -- 10, Assigns a path to a drive letter
-    EFsRealName, ///< Gets the real name of a file
-    EFsDefaultPath, ///< Gets the system default path
-    EFsSetDefaultPath, ///< Sets the system default path
-    EFsSessionPath, ///< Gets the session path
-    EFsSetSessionPath, ///< Sets the session path for the current file server client
-    EFsMkDir, ///< Makes directory
-    EFsRmDir, ///< Removes a directory
-    EFsParse, ///< Parses a filename specification
-    EFsDelete, ///< Deletes file
-    EFsRename, ///< -- 20 Renames a single file or directory
-    EFsReplace, ///< Replaces a single file with another
-    EFsEntry, ///< Gets a file's attributes
-    EFsSetEntry, ///< Sets both the attributes and the last modified date and time for a file or directory
-    EFsGetDriveName, ///<  Gets the name of a drive
-    EFsSetDriveName, ///< Sets the name of a drive
-    EFsFormatSubClose, ///< Closes the Format subsession
-    EFsDirSubClose, ///< Closes the directory.
-    EFsFileSubClose, ///< Closes the file
-    EFsRawSubClose, ///< Closes the direct access channel to the disk
-    EFsFileOpen, ///< -- 30 Opens file
-    EFsFileCreate, ///< Creates and opens a new file
-    EFsFileReplace, ///< Replaces a file of the same name or creates a new file
-    EFsFileTemp, ///< Creates and opens a temporary file
-    EFsFileRead, ///< Reads from the file
-    EFsFileWrite, ///< Writes to the file
-    EFsFileLock, ///< Locks a region within the file
-    EFsFileUnLock, ///< Unlocks a region within the file
-    EFsFileSeek, ///< Sets the the current file position
-    EFsFileFlush, ///< Commits data to the storage device
-    EFsFileSize, ///< -- 40 Gets the current file size
-    EFsFileSetSize, ///< Sets the file size
-    EFsFileAtt, ///< Gets the file's attributes
-    EFsFileSetAtt, ///< Sets or clears file attributes
-    EFsFileModified, ///< Gets local date and time the file was last modified
-    EFsFileSetModified, ///< Sets the date and time the file was last modified
-    EFsFileSet, ///< Sets the file�s attributes, last modification date/time
-    EFsFileChangeMode, ///< Switches an open file's access mode
-    EFsFileRename, ///< Renames a file
-    EFsDirOpen, ///< Opens a directory
-    EFsDirReadOne, ///< -- 50 Reads a single directory entry
-    EFsDirReadPacked, ///< Reads all filtered directory entries
-    EFsFormatOpen, ///< Opens a device for formatting
-    EFsFormatNext, ///< Executes the next format step
-    EFsRawDiskOpen, ///< Opens a direct access channel to the disk */
-    EFsRawDiskRead, ///< Reads directly from the disk
-    EFsRawDiskWrite, ///< Writes directly to the disk
-    EFsResourceCountMarkStart, ///< Marks the start of resource count checking
-    EFsResourceCountMarkEnd, ///< Ends resource count checking
-    EFsResourceCount, ///< Gets the number of currently open resources
-    EFsCheckDisk, ///< -- 60 Checks the integrity of the disk on the specified drive
-    EFsGetShortName, ///< Gets the short filename
-    EFsGetLongName, ///< Gets the long filename
-    EFsIsFileOpen, ///< Tests whether a file is open
-    EFsListOpenFiles, ///< get a list of open files */
-    EFsGetNotifyUser, ///< Tests user notification of file access failure is in effect
-    EFsSetNotifyUser, ///< Sets if the user should be notified of file access failure
-    EFsIsFileInRom, ///< Gets a pointer to the specified file, if it is in ROM
-    EFsIsValidName, ///< Tests whether a filename and path are syntactically correct
-    EFsDebugFunction, ///< Different debugging info
-    EFsReadFileSection, ///< -- 70 Reads data from a file without opening it
-    EFsNotifyChangeEx, ///< Requests a notification of change to files or directories
-    EFsNotifyChangeCancelEx, ///< Cancels all outstanding requests for notification of change
-    EFsDismountFileSystem, ///< Dismounts the file system from the specified drive
-    EFsFileSystemName, ///< Gets the name of the file system mounted on the specified drive
-    EFsScanDrive, ///< Checks the specified drive for specific errors and corrects them
-    EFsControlIo, ///< General purpose test interface
-    EFsLockDrive, ///< Locks a MultiMedia card in the specified drive
-    EFsUnlockDrive, ///< Unlocks the MultiMedia card in the specified drive
-    EFsClearPassword, ///< Clears the password from the locked MultiMedia card
-    EFsNotifyDiskSpace, ///< -- 80 Disk space change notification
-    EFsNotifyDiskSpaceCancel, ///< Cancels a specific outstanding notification
-    EFsFileDrive, ///< Gets drive information on which this file resides
-    EFsRemountDrive, ///< Forces a remount of the specified drive
-    EFsMountFileSystemScan, ///< Mounts a file system and performs a scan on a drive
-    EFsSessionToPrivate, ///< Sets the session path to point to the private path
-    EFsPrivatePath, ///< Creates the text defining the private path
-    EFsCreatePrivatePath, ///< Creates the private path for a process
-    EFsAddExtension, ///< Adds the specified extension
-    EFsMountExtension, ///< Mounts the the specified extension
-    EFsDismountExtension, ///< -- 90 Dismounts the specified extension
-    EFsRemoveExtension, ///< Removes the specified extension
-    EFsExtensionName, ///< Gets the name of the extension on the specified drive
-    EFsStartupInitComplete, ///< Noifies the file server of startup initialisation completion
-    EFsSetLocalDriveMapping, ///< Set the local drive mapping
-    EFsFinaliseDrive, ///< Finalise a specific drive
-    EFsFileDuplicate, ///< Makes a duplicate of this file handle
-    EFsFileAdopt, ///< Adopts an already open file
-    EFsSwapFileSystem, ///< Swaps file systems
-    EFsErasePassword, ///< Erase the password from the locked MultiMedia card
-    EFsReserveDriveSpace, ///< -- 100 Reserves an area of a drive
-    EFsGetReserveAccess, ///< Get exclusive access to reserved area
-    EFsReleaseReserveAccess, ///< Release exclusive access to reserved area
-    EFsFileName, ///< Gets the final part of a filename
-    EFsGetMediaSerialNumber, ///<  Gets the serial number of media
-    EFsFileFullName, ///< Gets the full filename
-    EFsAddPlugin, ///< Adds the specified plugin
-    EFsRemovePlugin, ///< Removes the specified plugin
-    EFsMountPlugin, ///< Mounts the specified plugin
-    EFsDismountPlugin, ///< Dismounts the specified plugin
-    EFsPluginName, ///<-- 110 Gets a plugin's name in specific position and drive
-    EFsPluginOpen, ///< Opens the plugin
-    EFsPluginSubClose, ///< Closes the plugin
-    EFsPluginDoRequest, ///< Issues an asynchronous plugin request
-    EFsPluginDoControl, ///< Issues a synchronous plugin request
-    EFsPluginDoCancel, ///< Cancels an synchronous plugin request
-    EFsNotifyDismount, ///< Issues a request to asynchronously dismount the file system
-    EFsNotifyDismountCancel, ///< Cancels a request to asynchronously dismount the file system
-    EFsAllowDismount, ///< Notifies that it is safe to dismount the file system
-    EFsSetStartupConfiguration, ///< Configures file server at startup
-    EFsFileReadCancel, ///< -- 120 Cancels an outstanding asynchronous read request
-    EFsAddCompositeMount, ///< Add a mount to the composite file system
-    EFsSetSessionFlags, ///< Set/Clear session specific flags
-    EFsSetSystemDrive, ///< Set SystemDrive
-    EFsBlockMap, ///< Fetches the BlockMap of a file
-    EFsUnclamp, ///< Re-enable modification of a specified file in storage media
-    EFsFileClamp, ///< Disable modification of a specified file in storage media
-    EFsQueryVolumeInfoExt, ///< Query interface to retrieve extended volume information
-    EFsInitialisePropertiesFile, ///< Read in the F32 properties file provided by ESTART
-    EFsFileWriteDirty, ///< Writes dirty data to disk. Used when write caching enabled
-    EFsSynchroniseDriveThread, ///< -- 130 Synchronises the asynchronous operation which executes in driver thread
-    EFsAddProxyDrive, ///< Loads  a proxy drive
-    EFsRemoveProxyDrive, ///< Unloads a proxy drive
-    EFsMountProxyDrive, ///< Mounts a proxy drive
-    EFsDismountProxyDrive, ///< Dismounts a proxy drive
-    EFsNotificationOpen, ///< Opens the notification
-    EFsNotificationBuffer, ///< Communicates buffer to file server
-    EFsNotificationRequest, ///< Sends the notification request
-    EFsNotificationCancel, ///< Cancels the notification request
-    EFsNotificationSubClose, ///< Closes the notification
-    EFsNotificationAdd, ///< -- 140 Adds filter to the server, comprising a path and notification type
-    EFsNotificationRemove, ///< Removes filters from Server-Side
-    EFsLoadCodePage, ///< Loads a code page library
-    EMaxClientOperations ///< This must always be the last operation insert above
-};
+namespace eka2l1::epoc {
+    enum fs_message {
+        fs_msg_add_filesystem = 0,
+        fs_msg_remove_filesystem = 1,
+        fs_msg_mount_filesystem = 2,
+        fs_msg_notify_change = 3,
+        fs_msg_notify_change_cancel = 4,
+        fs_msg_drive_list = 5,
+        fs_msg_drive = 6,
+        fs_msg_volume = 7,
+        fs_msg_set_volume = 8,
+        fs_msg_subst = 9,
+        fs_msg_set_subst = 10,
+        fs_msg_real_name = 11,
+        fs_msg_default_path = 12,
+        fs_msg_set_default_path = 13,
+        fs_msg_session_path = 14,
+        fs_msg_set_session_path = 15,
+        fs_msg_mkdir = 16,
+        fs_msg_rmdir = 17,
+        fs_msg_parse = 18,
+        fs_msg_delete = 19,
+        fs_msg_rename = 20,
+        fs_msg_replace = 21,
+        fs_msg_entry = 22,
+        fs_msg_set_entry = 23,
+        fs_msg_get_drive_name = 24,
+        fs_msg_set_drive_name = 25,
+        fs_msg_format_subclose = 26,
+        fs_msg_dir_subclose = 27,
+        fs_msg_file_subclose = 28,
+        fs_msg_raw_subclose = 29,
+        fs_msg_file_open = 30,
+        fs_msg_file_create = 31,
+        fs_msg_file_replace = 32,
+        fs_msg_file_temp = 33,
+        fs_msg_file_read = 34,
+        fs_msg_file_write = 35,
+        fs_msg_file_lock = 36,
+        fs_msg_file_unlock = 37,
+        fs_msg_file_seek = 38,
+        fs_msg_file_flush = 39,
+        fs_msg_file_size = 40,
+        fs_msg_file_set_size = 41,
+        fs_msg_file_att = 42,
+        fs_msg_file_set_att = 43,
+        fs_msg_file_modified = 44,
+        fs_msg_file_set_modified = 45,
+        fs_msg_file_set = 46,
+        fs_msg_file_changemode = 47,
+        fs_msg_file_rename = 48,
+        fs_msg_dir_open = 49,
+        fs_msg_dir_read_one = 50,
+        fs_msg_dir_read_packed = 51,
+        fs_msg_format_open = 52,
+        fs_msg_format_next = 53,
+        fs_msg_raw_disk_open = 54,
+        fs_msg_raw_disk_read = 55,
+        fs_msg_raw_disk_write = 56,
+        fs_msg_resouce_count_mark_start = 57,
+        fs_msg_resouce_count_mark_end = 58,
+        fs_msg_resource_count = 59,
+        fs_msg_check_disk = 60,
+        fs_msg_get_shortname = 61,
+        fs_msg_get_longname = 62,
+        fs_msg_is_file_open = 63,
+        fs_msg_list_open_files = 64,
+        fs_msg_get_notify_user = 65,
+        fs_msg_set_notify_user = 66,
+        fs_msg_is_file_in_rom = 67,
+        fs_msg_is_valid_name = 68,
+        fs_msg_debug_function = 69,
+        fs_msg_read_file_section = 70,
+        fs_msg_notify_change_ex = 71,
+        fs_msg_notify_change_cancel_ex = 72,
+        fs_msg_dismount_filesystem = 73,
+        fs_msg_filesystem_name = 74,
+        fs_msg_scan_drive = 75,
+        fs_msg_control_io = 76,
+        fs_msg_lock_drive = 77,
+        fs_msg_unlock_drive = 78,
+        fs_msg_clear_password = 79,
+        fs_msg_notify_disk_space = 80,
+        fs_msg_notify_disk_space_cancel = 81,
+        fs_msg_file_drive = 82,
+        fs_msg_remount_drive = 83,
+        fs_msg_mount_filesystem_scan = 84,
+        fs_msg_session_to_private = 85,
+        fs_msg_private_path = 86,
+        fs_msg_create_private_path = 87,
+        fs_msg_add_ext = 88,
+        fs_msg_mount_ext = 89,
+        fs_msg_dismount_ext = 90,
+        fs_msg_remove_ext = 91,
+        fs_msg_ext_name = 92,
+        fs_msg_startup_init_complete = 93,
+        fs_msg_set_local_drive_mapping = 94,
+        fs_msg_finalise_drive = 95,
+        fs_msg_file_duplicate = 96,
+        fs_msg_file_adopt = 97,
+        fs_msg_swap_filesystem = 98,
+        fs_msg_erase_password = 99,
+        fs_msg_reserve_drive_space = 100,
+        fs_msg_get_reserve_access = 101,
+        fs_msg_release_reserve_access = 102,
+        fs_msg_filename = 103,
+        fs_msg_get_media_serial_number = 104,
+        fs_msg_file_fullname = 105,
+        fs_msg_add_plugin = 106,
+        fs_msg_remove_plugin = 107,
+        fs_msg_mount_plugin = 108,
+        fs_msg_dismount_plugin = 109,
+        fs_msg_plugin_name = 110,
+        fs_msg_plugin_open = 111,
+        fs_msg_plugin_subclose = 112,
+        fs_msg_plugin_do_request = 113,
+        fs_msg_plugin_do_control = 114,
+        fs_msg_plugin_do_cancel = 115,
+        fs_msg_notify_dismount = 116,
+        fs_msg_notify_dismount_cancel = 117,
+        fs_msg_allow_dismount = 118,
+        fs_msg_set_startup_config = 119,
+        fs_msg_file_read_canel = 120,
+        fs_msg_add_composite_mount = 121,
+        fs_msg_set_session_flags = 122,
+        fs_msg_set_system_drive = 123,
+        fs_msg_block_map = 124,
+        fs_msg_unclamp = 125,
+        fs_msg_file_clamp = 126,
+        fs_msg_query_volume_info_ext = 127,
+        fs_msg_init_properties_file = 128,
+        fs_msg_file_write_dirty = 129,
+        fs_msg_sync_drive_thread = 130,
+        fs_msg_add_proxy_drive = 131,
+        fs_msg_remove_proxy_drive = 132,
+        fs_msg_mount_proxy_drive = 133,
+        fs_msg_dismount_proxy_drive = 134,
+        fs_msg_notification_open = 135,
+        fs_msg_notification_buffer = 136,
+        fs_msg_notification_request = 137,
+        fs_msg_notifcation_cancel = 138,
+        fs_msg_notifcation_subclose = 139,
+        fs_msg_notification_add = 140,
+        fs_msg_notification_remove = 141,
+        fs_msg_load_code_page = 142,
+        fs_msg_max_client_operations
+    };
+}
