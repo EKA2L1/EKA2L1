@@ -21,6 +21,10 @@
 #include <epoc/services/property.h>
 #include <epoc/services/ui/cap/sgc.h>
 
+#include <epoc/services/window/classes/wingroup.h>
+#include <epoc/services/window/screen.h>
+#include <epoc/services/window/window.h>
+
 namespace eka2l1::epoc::cap {
     void sgc_server::wg_state::set_fullscreen(bool set) {
         if (set)
@@ -91,53 +95,109 @@ namespace eka2l1::epoc::cap {
         : orientation_prop_(nullptr) {
     }
 
-    bool sgc_server::init(kernel_system *kern) {
+    static void update_screen_state_from_wg_callback(void *userdata, epoc::window_group *group) {
+        reinterpret_cast<sgc_server*>(userdata)->update_screen_state_from_wg(group);
+        group->scr->add_focus_change_callback(userdata, update_screen_state_from_wg_callback);
+    }
+
+    bool sgc_server::init(kernel_system *kern, drivers::graphics_driver *driver) {
         orientation_prop_ = kern->create<service::property>();
 
         if (!orientation_prop_) {
             return false;
         }
+
+        graphics_driver_ = driver;
         
         orientation_prop_->define(service::property_type::int_data, 0);
         orientation_prop_->first = UIKON_UID;
         orientation_prop_->second = UIK_PREFERRED_ORIENTATION_KEY;
         orientation_prop_->set_int(UIK_ORIENTATION_NORMAL);
 
+        winserv_ = reinterpret_cast<window_server*>(kern->get_by_name<service::server>(WINDOW_SERVER_NAME));
+
+        // Add initial callback
+        epoc::screen *screens = winserv_->get_screens();
+
+        while (screens) {
+            screens->add_focus_change_callback(this, update_screen_state_from_wg_callback);
+            screens = screens->next;
+        }
+
         return true;
     }
 
-    sgc_server::wg_state &sgc_server::get_wg_state(const std::uint32_t wg_id) {
+    sgc_server::wg_state *sgc_server::get_wg_state(const std::uint32_t wg_id, const bool new_one_if_not_exist) {
         auto result = std::find_if(states_.begin(), states_.end(), [=](const wg_state &state) {
             return state.id_ == wg_id;
         });
 
         if (result != states_.end()) {
             // Found it
-            return states_[std::distance(states_.begin(), result)];
+            return &states_[std::distance(states_.begin(), result)];
         }
 
-        // Create new one
-        states_.push_back(wg_state());
-        states_.back().id_ = wg_id;
+        if (new_one_if_not_exist) {
+            // Create new one
+            states_.push_back(wg_state());
+            states_.back().id_ = wg_id;
 
-        return states_.back();
+            return &states_.back();
+        }
+
+        return nullptr;
     }
 
+    void sgc_server::update_screen_state_from_wg(epoc::window_group *group) {
+        if (!group) {
+            return;
+        }
+
+        wg_state *state = get_wg_state(group->id, false);
+
+        if (!state) {
+            return;
+        }
+
+        if (state->orientation_specified()) {
+            // We can change orientation based on what is specified
+            const std::uint8_t landspace_bit = state->orientation_landscape();
+
+            // Iterate through all window modes
+            for (int mode = 1; mode <= group->scr->total_screen_mode(); mode++) {
+                auto screen_mode = group->scr->mode_info(mode);
+
+                if (((screen_mode->size.x > screen_mode->size.y) && landspace_bit)
+                    || ((screen_mode->size.x < screen_mode->size.y) && !landspace_bit)) {
+                    group->scr->set_screen_mode(graphics_driver_, mode);
+                }
+            }
+        }
+    }
+    
     void sgc_server::change_wg_param(const std::uint32_t id, wg_state::wg_state_flags &flags, const std::int32_t sp_layout,
         const std::int32_t sp_flags, const std::int32_t app_screen_mode) {
-        wg_state &state = get_wg_state(id);
+        wg_state *state = get_wg_state(id, true);
 
-        const bool was_fullscreen = state.is_fullscreen();
-        state.set_fullscreen(flags.get(SGC_APP_FLAG_FULLSCREEN));
+        const bool was_fullscreen = state->is_fullscreen();
+        state->set_fullscreen(flags.get(SGC_APP_FLAG_FULLSCREEN));
 
-        state.set_legacy_layout(flags.get(SGC_APP_FLAG_LEGACY_LAYOUT));
-        state.sp_layout_ = sp_layout;
-        state.sp_flags_ = sp_flags;
+        state->set_legacy_layout(flags.get(SGC_APP_FLAG_LEGACY_LAYOUT));
+        state->sp_layout_ = sp_layout;
+        state->sp_flags_ = sp_flags;
 
-        state.set_understand_partial_foreground(true);
-        state.set_orientation_specified(flags.get(SGC_APP_FLAG_ORIENTATION_SPECIFIED));
-        state.set_orientation_landspace(flags.get(SGC_APP_FLAG_ORIENTATION_LANDSCAPE));
+        state->set_understand_partial_foreground(true);
+        state->set_orientation_specified(flags.get(SGC_APP_FLAG_ORIENTATION_SPECIFIED));
+        state->set_orientation_landspace(flags.get(SGC_APP_FLAG_ORIENTATION_LANDSCAPE));
 
-        state.app_screen_mode_ = app_screen_mode;
+        state->app_screen_mode_ = app_screen_mode;
+
+        // Try to change this in every screen
+        epoc::screen *screens = winserv_->get_screens();
+
+        while (screens) {
+            update_screen_state_from_wg(screens->focus);
+            screens = screens->next;
+        }
     }
 }

@@ -29,6 +29,16 @@ namespace eka2l1 {
     namespace service {
         class property;
     }
+
+    namespace epoc {
+        struct window_group;
+    }
+
+    namespace drivers {
+        class graphics_driver;
+    }
+
+    class window_server;
 }
 
 namespace eka2l1::epoc::cap {
@@ -77,14 +87,19 @@ namespace eka2l1::epoc::cap {
 
         // Properties
         service::property *orientation_prop_;
+        drivers::graphics_driver *graphics_driver_;
+
+        window_server *winserv_;
 
     public:
         explicit sgc_server();
 
-        bool init(kernel_system *kern);
+        bool init(kernel_system *kern, drivers::graphics_driver *driver);
         void change_wg_param(const std::uint32_t id, wg_state::wg_state_flags &flags, const std::int32_t sp_layout,
             const std::int32_t sp_flags, const std::int32_t app_screen_mode);
 
-        wg_state &get_wg_state(const std::uint32_t wg_id);
+        void update_screen_state_from_wg(epoc::window_group *group);
+
+        wg_state *get_wg_state(const std::uint32_t wg_id, const bool new_one_if_not_exist);
     };
 }
