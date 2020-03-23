@@ -766,7 +766,7 @@ namespace eka2l1::epoc {
     };
 
     struct locale_language {
-        language language;
+        epoc::language language;
         eka2l1::ptr<char> date_suffix_table;
         eka2l1::ptr<char> day_table;
         eka2l1::ptr<char> day_abb_table;
