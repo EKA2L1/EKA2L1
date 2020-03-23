@@ -22,644 +22,751 @@
 #include <epoc/ptr.h>
 
 namespace eka2l1::epoc {
-
-    enum TLanguage {
-        ELangTest = 0,
+    enum language {
+        lang_test =  0,
 
         /** UK English. */
-        ELangEnglish = 1,
+        lang_english =  1,
 
         /** French. */
-        ELangFrench = 2,
+        lang_french =  2,
 
         /** German. */
-        ELangGerman = 3,
+        lang_german =  3,
 
         /** Spanish. */
-        ELangSpanish = 4,
+        lang_spanish =  4,
 
         /** Italian. */
-        ELangItalian = 5,
+        lang_italian =  5,
 
         /** Swedish. */
-        ELangSwedish = 6,
+        lang_swedish =  6,
 
         /** Danish. */
-        ELangDanish = 7,
+        lang_danish =  7,
 
         /** Norwegian. */
-        ELangNorwegian = 8,
+        lang_norwegian =  8,
 
         /** Finnish. */
-        ELangFinnish = 9,
+        lang_finnish =  9,
 
         /** American. */
-        ELangAmerican = 10,
+        lang_american =  10,
 
         /** Swiss French. */
-        ELangSwissFrench = 11,
+        lang_swissFrench =  11,
 
         /** Swiss German. */
-        ELangSwissGerman = 12,
+        lang_swissGerman =  12,
 
         /** Portuguese. */
-        ELangPortuguese = 13,
+        lang_portuguese =  13,
 
         /** Turkish. */
-        ELangTurkish = 14,
+        lang_turkish =  14,
 
         /** Icelandic. */
-        ELangIcelandic = 15,
+        lang_icelandic =  15,
 
         /** Russian. */
-        ELangRussian = 16,
+        lang_russian =  16,
 
         /** Hungarian. */
-        ELangHungarian = 17,
+        lang_hungarian =  17,
 
         /** Dutch. */
-        ELangDutch = 18,
+        lang_dutch =  18,
 
         /** Belgian Flemish. */
-        ELangBelgianFlemish = 19,
+        lang_belgianFlemish =  19,
 
         /** Australian English. */
-        ELangAustralian = 20,
+        lang_australian =  20,
 
         /** Belgian French. */
-        ELangBelgianFrench = 21,
+        lang_belgianFrench =  21,
 
         /** Austrian German. */
-        ELangAustrian = 22,
+        lang_austrian =  22,
 
         /** New Zealand English. */
-        ELangNewZealand = 23,
+        lang_newZealand =  23,
 
         /** International French. */
-        ELangInternationalFrench = 24,
+        lang_internationalFrench =  24,
 
         /** Czech. */
-        ELangCzech = 25,
+        lang_czech =  25,
 
         /** Slovak. */
-        ELangSlovak = 26,
+        lang_slovak =  26,
 
         /** Polish. */
-        ELangPolish = 27,
+        lang_polish =  27,
 
         /** Slovenian. */
-        ELangSlovenian = 28,
+        lang_slovenian =  28,
 
         /** Taiwanese Chinese. */
-        ELangTaiwanChinese = 29,
+        lang_taiwanChinese =  29,
 
         /** Hong Kong Chinese. */
-        ELangHongKongChinese = 30,
+        lang_hongKongChinese =  30,
 
         /** Peoples Republic of China's Chinese. */
-        ELangPrcChinese = 31,
+        lang_prcChinese =  31,
 
         /** Japanese. */
-        ELangJapanese = 32,
+        lang_japanese =  32,
 
         /** Thai. */
-        ELangThai = 33,
+        lang_thai =  33,
 
         /** Afrikaans. */
-        ELangAfrikaans = 34,
+        lang_afrikaans =  34,
 
         /** Albanian. */
-        ELangAlbanian = 35,
+        lang_albanian =  35,
 
         /** Amharic. */
-        ELangAmharic = 36,
+        lang_amharic =  36,
 
         /** Arabic. */
-        ELangArabic = 37,
+        lang_arabic =  37,
 
         /** Armenian. */
-        ELangArmenian = 38,
+        lang_armenian =  38,
 
         /** Tagalog. */
-        ELangTagalog = 39,
+        lang_tagalog =  39,
 
         /** Belarussian. */
-        ELangBelarussian = 40,
+        lang_belarussian =  40,
 
         /** Bengali. */
-        ELangBengali = 41,
+        lang_bengali =  41,
 
         /** Bulgarian. */
-        ELangBulgarian = 42,
+        lang_bulgarian =  42,
 
         /** Burmese. */
-        ELangBurmese = 43,
+        lang_burmese =  43,
 
         /** Catalan. */
-        ELangCatalan = 44,
+        lang_catalan =  44,
 
         /** Croatian. */
-        ELangCroatian = 45,
+        lang_croatian =  45,
 
         /** Canadian English. */
-        ELangCanadianEnglish = 46,
+        lang_canadianEnglish =  46,
 
         /** International English. */
-        ELangInternationalEnglish = 47,
+        lang_internationalEnglish =  47,
 
         /** South African English. */
-        ELangSouthAfricanEnglish = 48,
+        lang_southAfricanEnglish =  48,
 
         /** Estonian. */
-        ELangEstonian = 49,
+        lang_estonian =  49,
 
         /** Farsi. */
-        ELangFarsi = 50,
+        lang_farsi =  50,
 
         /** Canadian French. */
-        ELangCanadianFrench = 51,
+        lang_canadianFrench =  51,
 
         /** Gaelic. */
-        ELangScotsGaelic = 52,
+        lang_scotsGaelic =  52,
 
         /** Georgian. */
-        ELangGeorgian = 53,
+        lang_georgian =  53,
 
         /** Greek. */
-        ELangGreek = 54,
+        lang_greek =  54,
 
         /** Cyprus Greek. */
-        ELangCyprusGreek = 55,
+        lang_cyprusGreek =  55,
 
         /** Gujarati. */
-        ELangGujarati = 56,
+        lang_gujarati =  56,
 
         /** Hebrew. */
-        ELangHebrew = 57,
+        lang_hebrew =  57,
 
         /** Hindi. */
-        ELangHindi = 58,
+        lang_hindi =  58,
 
         /** Indonesian. */
-        ELangIndonesian = 59,
+        lang_indonesian =  59,
 
         /** Irish. */
-        ELangIrish = 60,
+        lang_irish =  60,
 
         /** Swiss Italian. */
-        ELangSwissItalian = 61,
+        lang_swissItalian =  61,
 
         /** Kannada. */
-        ELangKannada = 62,
+        lang_kannada =  62,
 
         /** Kazakh. */
-        ELangKazakh = 63,
+        lang_kazakh =  63,
 
         /** Khmer. */
-        ELangKhmer = 64,
+        lang_khmer =  64,
 
         /** Korean. */
-        ELangKorean = 65,
+        lang_korean =  65,
 
         /** Lao. */
-        ELangLao = 66,
+        lang_lao =  66,
 
         /** Latvian. */
-        ELangLatvian = 67,
+        lang_latvian =  67,
 
         /** Lithuanian. */
-        ELangLithuanian = 68,
+        lang_lithuanian =  68,
 
         /** Macedonian. */
-        ELangMacedonian = 69,
+        lang_macedonian =  69,
 
         /** Malay. */
-        ELangMalay = 70,
+        lang_malay =  70,
 
         /** Malayalam. */
-        ELangMalayalam = 71,
+        lang_malayalam =  71,
 
         /** Marathi. */
-        ELangMarathi = 72,
+        lang_marathi =  72,
 
         /** Moldavian. */
-        ELangMoldavian = 73,
+        lang_moldavian =  73,
 
         /** Mongolian. */
-        ELangMongolian = 74,
+        lang_mongolian =  74,
 
         /** Norwegian Nynorsk. */
-        ELangNorwegianNynorsk = 75,
+        lang_norwegianNynorsk =  75,
 
         /** Brazilian Portuguese. */
-        ELangBrazilianPortuguese = 76,
+        lang_brazilianPortuguese =  76,
 
         /** Punjabi. */
-        ELangPunjabi = 77,
+        lang_punjabi =  77,
 
         /** Romanian. */
-        ELangRomanian = 78,
+        lang_romanian =  78,
 
         /** Serbian. */
-        ELangSerbian = 79,
+        lang_serbian =  79,
 
         /** Sinhalese. */
-        ELangSinhalese = 80,
+        lang_sinhalese =  80,
 
         /** Somali. */
-        ELangSomali = 81,
+        lang_somali =  81,
 
         /** International Spanish. */
-        ELangInternationalSpanish = 82,
+        lang_internationalSpanish =  82,
 
         /** American Spanish. */
-        ELangLatinAmericanSpanish = 83,
+        lang_latinAmericanSpanish =  83,
 
         /** Swahili. */
-        ELangSwahili = 84,
+        lang_swahili =  84,
 
         /** Finland Swedish. */
-        ELangFinlandSwedish = 85,
+        lang_finlandSwedish =  85,
 
         /** Reserved, not in use. */
-        ELangReserved1 = 86, // This enum should not be used for new languages, see INC110543
+        lang_reserved1 =  86, // This enum should not be used for new languages, see INC110543
 
         /** Tamil. */
-        ELangTamil = 87,
+        lang_tamil =  87,
 
         /** Telugu. */
-        ELangTelugu = 88,
+        lang_telugu =  88,
 
         /** Tibetan. */
-        ELangTibetan = 89,
+        lang_tibetan =  89,
 
         /** Tigrinya. */
-        ELangTigrinya = 90,
+        lang_tigrinya =  90,
 
         /** Cyprus Turkish. */
-        ELangCyprusTurkish = 91,
+        lang_cyprusTurkish =  91,
 
         /** Turkmen. */
-        ELangTurkmen = 92,
+        lang_turkmen =  92,
 
         /** Ukrainian. */
-        ELangUkrainian = 93,
+        lang_ukrainian =  93,
 
         /** Urdu. */
-        ELangUrdu = 94,
+        lang_urdu =  94,
 
         /** Reserved, not in use. */
-        ELangReserved2 = 95, // This enum should not be used for new languages, see INC110543
+        lang_reserved2 =  95, // This enum should not be used for new languages, see INC110543
 
         /** Vietnamese. */
-        ELangVietnamese = 96,
+        lang_vietnamese =  96,
 
         /** Welsh. */
-        ELangWelsh = 97,
+        lang_welsh =  97,
 
         /** Zulu. */
-        ELangZulu = 98,
+        lang_zulu =  98,
 
         /**
         @deprecated
 
         Use of this value is deprecated.
         */
-        ELangOther = 99,
+        lang_other =  99,
 
         /** English with terms as used by the device manufacturer, if this needs to
         be distinct from the English used by the UI vendor. */
-        ELangManufacturerEnglish = 100,
+        lang_manufacturerEnglish =  100,
 
         /** South Sotho.
 
         A language of Lesotho also called Sesotho. SIL code sot. */
-        ELangSouthSotho = 101,
+        lang_southSotho =  101,
 
         /** Basque. */
-        ELangBasque = 102,
+        lang_basque =  102,
 
         /** Galician. */
-        ELangGalician = 103,
+        lang_galician =  103,
 
         /** Javanese. */
-        ELangJavanese = 104,
+        lang_javanese =  104,
 
         /** Maithili. */
-        ELangMaithili = 105,
+        lang_maithili =  105,
 
         /** Azerbaijani(Latin alphabet). */
-        ELangAzerbaijani_Latin = 106,
+        lang_azerbaijani_latin =  106,
 
         /** Azerbaijani(Cyrillic alphabet). */
-        ELangAzerbaijani_Cyrillic = 107,
+        lang_azerbaijani_cyrillic =  107,
 
         /** Oriya. */
-        ELangOriya = 108,
+        lang_oriya =  108,
 
         /** Bhojpuri. */
-        ELangBhojpuri = 109,
+        lang_bhojpuri =  109,
 
         /** Sundanese. */
-        ELangSundanese = 110,
+        lang_sundanese =  110,
 
         /** Kurdish(Latin alphabet). */
-        ELangKurdish_Latin = 111,
+        lang_kurdish_latin =  111,
 
         /** Kurdish(Arabic alphabet). */
-        ELangKurdish_Arabic = 112,
+        lang_kurdish_arabic =  112,
 
         /** Pashto. */
-        ELangPashto = 113,
+        lang_pashto =  113,
 
         /** Hausa. */
-        ELangHausa = 114,
+        lang_hausa =  114,
 
         /** Oromo. */
-        ELangOromo = 115,
+        lang_oromo =  115,
 
         /** Uzbek(Latin alphabet). */
-        ELangUzbek_Latin = 116,
+        lang_uzbek_latin =  116,
 
         /** Uzbek(Cyrillic alphabet). */
-        ELangUzbek_Cyrillic = 117,
+        lang_uzbek_cyrillic =  117,
 
         /** Sindhi(Arabic alphabet). */
-        ELangSindhi_Arabic = 118,
+        lang_sindhi_arabic =  118,
 
         /** Sindhi(using Devanagari script). */
-        ELangSindhi_Devanagari = 119,
+        lang_sindhi_devanagari =  119,
 
         /** Yoruba. */
-        ELangYoruba = 120,
+        lang_yoruba =  120,
 
         /** Cebuano. */
-        ELangCebuano = 121,
+        lang_cebuano =  121,
 
         /** Igbo. */
-        ELangIgbo = 122,
+        lang_igbo =  122,
 
         /** Malagasy. */
-        ELangMalagasy = 123,
+        lang_malagasy =  123,
 
         /** Nepali. */
-        ELangNepali = 124,
+        lang_nepali =  124,
 
         /** Assamese. */
-        ELangAssamese = 125,
+        lang_assamese =  125,
 
         /** Shona. */
-        ELangShona = 126,
+        lang_shona =  126,
 
         /** Zhuang. */
-        ELangZhuang = 127,
+        lang_zhuang =  127,
 
         /** Madurese. */
-        ELangMadurese = 128,
+        lang_madurese =  128,
 
         /** English as appropriate for use in Asia-Pacific regions. */
-        ELangEnglish_Apac = 129,
+        lang_english_apac =  129,
 
         /** English as appropriate for use in Taiwan. */
-        ELangEnglish_Taiwan = 157,
+        lang_english_taiwan =  157,
 
         /** English as appropriate for use in Hong Kong. */
-        ELangEnglish_HongKong = 158,
+        lang_english_hongKong =  158,
 
         /** English as appropriate for use in the Peoples Republic of China. */
-        ELangEnglish_Prc = 159,
+        lang_english_prc =  159,
 
         /** English as appropriate for use in Japan. */
-        ELangEnglish_Japan = 160,
+        lang_english_japan =  160,
 
         /** English as appropriate for use in Thailand. */
-        ELangEnglish_Thailand = 161,
+        lang_english_thailand =  161,
 
         /** Fulfulde, also known as Fula */
-        ELangFulfulde = 162,
+        lang_fulfulde =  162,
 
         /** Tamazight. */
-        ELangTamazight = 163,
+        lang_tamazight =  163,
 
         /** Bolivian Quechua. */
-        ELangBolivianQuechua = 164,
+        lang_bolivianQuechua =  164,
 
         /** Peru Quechua. */
-        ELangPeruQuechua = 165,
+        lang_peruQuechua =  165,
 
         /** Ecuador Quechua. */
-        ELangEcuadorQuechua = 166,
+        lang_ecuadorQuechua =  166,
 
         /** Tajik(Cyrillic alphabet). */
-        ELangTajik_Cyrillic = 167,
+        lang_tajik_cyrillic =  167,
 
         /** Tajik(using Perso-Arabic script). */
-        ELangTajik_PersoArabic = 168,
+        lang_tajik_persoArabic =  168,
 
         /** Nyanja, also known as Chichewa or Chewa. */
-        ELangNyanja = 169,
+        lang_nyanja =  169,
 
         /** Haitian Creole. */
-        ELangHaitianCreole = 170,
+        lang_haitianCreole =  170,
 
         /** Lombard. */
-        ELangLombard = 171,
+        lang_lombard =  171,
 
         /** Koongo, also known as Kongo or KiKongo. */
-        ELangKoongo = 172,
+        lang_koongo =  172,
 
         /** Akan. */
-        ELangAkan = 173,
+        lang_akan =  173,
 
         /** Hmong. */
-        ELangHmong = 174,
+        lang_hmong =  174,
 
         /** Yi. */
-        ELangYi = 175,
+        lang_yi =  175,
 
         /** Tshiluba, also known as Luba-Kasai */
-        ELangTshiluba = 176,
+        lang_tshiluba =  176,
 
         /** Ilocano, also know as Ilokano or Iloko. */
-        ELangIlocano = 177,
+        lang_ilocano =  177,
 
         /** Uyghur. */
-        ELangUyghur = 178,
+        lang_uyghur =  178,
 
         /** Neapolitan. */
-        ELangNeapolitan = 179,
+        lang_neapolitan =  179,
 
         /** Rwanda, also known as Kinyarwanda */
-        ELangRwanda = 180,
+        lang_rwanda =  180,
 
         /** Xhosa. */
-        ELangXhosa = 181,
+        lang_xhosa =  181,
 
         /** Balochi, also known as Baluchi */
-        ELangBalochi = 182,
+        lang_balochi =  182,
 
         /** Hiligaynon. */
-        ElangHiligaynon = 183,
+        lang_hiligaynon =  183,
 
         /** Minangkabau. */
-        ELangMinangkabau = 184,
+        lang_minangkabau =  184,
 
         /** Makhuwa. */
-        ELangMakhuwa = 185,
+        lang_makhuwa =  185,
 
         /** Santali. */
-        ELangSantali = 186,
+        lang_santali =  186,
 
         /** Gikuyu, sometimes written Kikuyu. */
-        ELangGikuyu = 187,
+        lang_gikuyu =  187,
 
         /** M�or�, also known as Mossi or More. */
-        ELangMoore = 188,
+        lang_moore =  188,
 
         /** Guaran�. */
-        ELangGuarani = 189,
+        lang_guarani =  189,
 
         /** Rundi, also known as Kirundi. */
-        ELangRundi = 190,
+        lang_rundi =  190,
 
         /** Romani(Latin alphabet). */
-        ELangRomani_Latin = 191,
+        lang_romani_latin =  191,
 
         /** Romani(Cyrillic alphabet). */
-        ELangRomani_Cyrillic = 192,
+        lang_romani_cyrillic =  192,
 
         /** Tswana. */
-        ELangTswana = 193,
+        lang_tswana =  193,
 
         /** Kanuri. */
-        ELangKanuri = 194,
+        lang_kanuri =  194,
 
         /** Kashmiri(using Devanagari script). */
-        ELangKashmiri_Devanagari = 195,
+        lang_kashmiri_devanagari =  195,
 
         /** Kashmiri(using Perso-Arabic script). */
-        ELangKashmiri_PersoArabic = 196,
+        lang_kashmiri_persoArabic =  196,
 
         /** Umbundu. */
-        ELangUmbundu = 197,
+        lang_umbundu =  197,
 
         /** Konkani. */
-        ELangKonkani = 198,
+        lang_konkani =  198,
 
         /** Balinese, a language used in Indonesia (Java and Bali). */
-        ELangBalinese = 199,
+        lang_balinese =  199,
 
         /** Northern Sotho. */
-        ELangNorthernSotho = 200,
+        lang_northernSotho =  200,
 
         /** Wolof. */
-        ELangWolof = 201,
+        lang_wolof =  201,
 
         /** Bemba. */
-        ELangBemba = 202,
+        lang_bemba =  202,
 
         /** Tsonga. */
-        ELangTsonga = 203,
+        lang_tsonga =  203,
 
         /** Yiddish. */
-        ELangYiddish = 204,
+        lang_yiddish =  204,
 
         /** Kirghiz, also known as Kyrgyz. */
-        ELangKirghiz = 205,
+        lang_kirghiz =  205,
 
         /** Ganda, also known as Luganda. */
-        ELangGanda = 206,
+        lang_ganda =  206,
 
         /** Soga, also known as Lusoga. */
-        ELangSoga = 207,
+        lang_soga =  207,
 
         /** Mbundu, also known as Kimbundu. */
-        ELangMbundu = 208,
+        lang_mbundu =  208,
 
         /** Bambara. */
-        ELangBambara = 209,
+        lang_bambara =  209,
 
         /** Central Aymara. */
-        ELangCentralAymara = 210,
+        lang_centralAymara =  210,
 
         /** Zarma. */
-        ELangZarma = 211,
+        lang_zarma =  211,
 
         /** Lingala. */
-        ELangLingala = 212,
+        lang_lingala =  212,
 
         /** Bashkir. */
-        ELangBashkir = 213,
+        lang_bashkir =  213,
 
         /** Chuvash. */
-        ELangChuvash = 214,
+        lang_chuvash =  214,
 
         /** Swati. */
-        ELangSwati = 215,
+        lang_swati =  215,
 
         /** Tatar. */
-        ELangTatar = 216,
+        lang_tatar =  216,
 
         /** Southern Ndebele. */
-        ELangSouthernNdebele = 217,
+        lang_southernNdebele =  217,
 
         /** Sardinian. */
-        ELangSardinian = 218,
+        lang_sardinian =  218,
 
         /** Scots. */
-        ELangScots = 219,
+        lang_scots =  219,
 
         /** Meitei, also known as Meithei or Manipuri */
-        ELangMeitei = 220,
+        lang_meitei =  220,
 
         /** Walloon. */
-        ELangWalloon = 221,
+        lang_walloon =  221,
 
         /** Kabardian. */
-        ELangKabardian = 222,
+        lang_kabardian =  222,
 
         /** Mazanderani, also know as Mazandarani or Tabri. */
-        ELangMazanderani = 223,
+        lang_mazanderani =  223,
 
         /** Gilaki. */
-        ELangGilaki = 224,
+        lang_gilaki =  224,
 
         /** Shan. */
-        ELangShan = 225,
+        lang_shan =  225,
 
         /** Luyia. */
-        ELangLuyia = 226,
+        lang_luyia =  226,
 
         /** Luo, also known as Dholuo, a language of Kenya. */
-        ELanguageLuo = 227,
+        lang_uageLuo =  227,
 
         /** Sukuma, also known as Kisukuma. */
-        ELangSukuma = 228,
+        lang_sukuma =  228,
 
         /** Aceh, also known as Achinese. */
-        ELangAceh = 229,
+        lang_aceh =  229,
 
         /** English used in India. */
-        ELangEnglish_India = 230,
+        lang_english_india =  230,
 
         /** Malay as appropriate for use in Asia-Pacific regions. */
-        ELangMalay_Apac = 326,
+        lang_malay_apac =  326,
 
         /** Indonesian as appropriate for use in Asia-Pacific regions. */
-        ELangIndonesian_Apac = 327,
+        lang_indonesian_apac =  327,
 
         /**
         Indicates the final language in the language downgrade path.
-
-        @see BaflUtils::NearestLanguageFile
-        @see BaflUtils::GetDowngradePath
         */
-        ELangNone = 0xFFFF, // up to 1023 languages * 16 dialects, in 16 bits
-        ELangMaximum = ELangNone // This must always be equal to the last (largest) TLanguage enum.
+        lang_none =  0xFFFF, // up to 1023 languages * 16 dialects, in 16 bits
+        lang_maximum = lang_none // This must always be equal to the last (largest) language enum.
+    };
+
+    enum date_format {
+        date_format_america,
+        date_format_european,
+        date_format_japan
+    };
+
+    enum time_format {
+        time_format_twelve_hours,
+        time_format_twenty_four_hours
+    };
+
+    enum locale_pos {
+        locale_before,
+        locale_after,
+    };
+
+    enum negative_currency_format {
+        negative_currency_leading_minus_sign,
+        negative_currency_in_brackets,
+        negative_currency_invervening_minus_sign_with_spaces,
+        negative_currency_invervening_minus_sign_without_spaces,
+        negative_currency_trailing_minus_sign,
+    };
+
+    enum daylight_saving_zone {
+        daylight_saving_zone_dst_home = 0x40000000,
+        daylight_saving_zone_none = 0,
+        daylight_saving_zone_european = 1,
+        daylight_saving_zone_northern = 2,
+        daylight_saving_zone_southern = 4
+    };
+
+    enum day {
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+        saturday,
+        sunday
+    };
+
+    enum clock_format {
+        clock_analog,
+        clock_digital
+    };
+
+    enum units_format {
+        units_imperal,
+        units_metric
+    };
+
+    enum digit_type {
+        digit_type_unknown = 0x0000,
+        digit_type_western = 0x0030,
+        digit_type_arabic_indic = 0x0660,
+        digit_type_eastern_arabic_indic = 0x6F0,
+        digit_type_devanagari = 0x0966,
+        digit_type_bengali = 0x09E6,
+        digit_type_gurmukhi = 0x0A66,
+        digit_type_gujarati = 0x0AE6,
+        digit_type_oriya = 0x0B66,
+        digit_type_tamil = 0x0BE6,
+        digit_type_telugu = 0x0C66,
+        digit_type_kannada = 0x0CE6,
+        digit_type_malayalam = 0x0D66,
+        digit_type_thai = 0x0E50,
+        digit_type_lao = 0x0ED0,
+        digit_type_tibetan = 0x0F20,
+        digit_type_mayanmar = 0x1040,
+        digit_type_khmer = 0x17E0,
+        digit_type_all_types = 0xFFFF
+    };
+
+    enum device_time_state {
+        device_user_time,
+        nitz_network_time_sync
+    };
+
+    struct locale {
+        std::int32_t country_code_;
+        std::int32_t universal_time_offset_;
+        date_format date_format_;
+        time_format time_format_;
+        locale_pos currency_symbol_position_;
+        std::int32_t currency_space_between_;
+        std::int32_t currency_decimal_places;
+        negative_currency_format negative_currency_format_;
+        std::int32_t currency_triads_allowed_;
+        std::int32_t thousands_separator_;
+        std::int32_t decimal_separator_;
+        std::int32_t date_separator_[4];
+        std::int32_t time_separator_[4];
+        locale_pos am_pm_symbol_position_;
+        std::int32_t am_pm_space_between_;
+        std::uint32_t daylight_saving_;
+        daylight_saving_zone home_daylight_saving_zone_;
+        std::uint32_t work_days_;
+        day start_of_week_;
+        clock_format clock_format_;
+        units_format units_general_;
+        units_format units_dist_short_;
+        units_format units_dist_long_;
+        std::uint32_t extra_negative_currency_format_flags_;
+        std::uint16_t language_downgrades_[3];
+        std::uint16_t region_code_;
+        digit_type digit_type_;
+        device_time_state device_time_state_;
+        std::int32_t spare_[0x1E];
     };
 
     struct locale_language {
-        TLanguage language;
+        language language;
         eka2l1::ptr<char> date_suffix_table;
         eka2l1::ptr<char> day_table;
         eka2l1::ptr<char> day_abb_table;
@@ -668,4 +775,12 @@ namespace eka2l1::epoc {
         eka2l1::ptr<char> am_pm_table;
         eka2l1::ptr<uint16_t> msg_table;
     };
+
+    const std::uint32_t SYS_CATEGORY = 0x101f75b6;
+
+    const std::uint32_t HAL_KEY_BASE = 0x1020e306;
+    const std::uint32_t UNK_KEY1 = 0x1020e34e;
+
+    const std::uint32_t LOCALE_DATA_KEY = 0x10208904;
+    const std::uint32_t LOCALE_LANG_KEY = 0x10208903;
 }
