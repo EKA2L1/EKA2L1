@@ -52,6 +52,9 @@ namespace eka2l1 {
  		 *
 		*/
         class property : public kernel::kernel_obj, public std::pair<int, int> {
+        public:
+            typedef void (*data_change_callback_handler)(void *userdata, service::property *prop);
+
         protected:
             union {
                 int ndata;
@@ -65,8 +68,15 @@ namespace eka2l1 {
 
             threadsafe_cn_queue<epoc::notify_info*> subscription_queue;
 
+            using data_change_callback = std::pair<void*, data_change_callback_handler>;
+            std::vector<data_change_callback> data_change_callbacks;
+
+            void fire_data_change_callbacks();
+
         public:
             explicit property(kernel_system *kern);
+
+            void add_data_change_callback(void *userdata, data_change_callback_handler handler);
 
             void define(service::property_type pt, uint32_t pre_allocated);
 

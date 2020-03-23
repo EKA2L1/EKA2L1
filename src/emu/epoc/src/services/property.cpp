@@ -35,6 +35,20 @@ namespace eka2l1 {
             obj_type = kernel::object_type::prop;
         }
 
+        void property::add_data_change_callback(void *userdata, data_change_callback_handler handler) {
+            kern->lock();
+            data_change_callbacks.push_back({ userdata, handler });
+            kern->unlock();
+        }
+        
+        void property::fire_data_change_callbacks() {
+            for (auto &callback: data_change_callbacks) {
+                callback.second(callback.first, this);
+            }
+
+            data_change_callbacks.clear();
+        }
+        
         void property::define(service::property_type pt, uint32_t pre_allocated) {
             data_type = pt;
             data_len = pre_allocated;
@@ -46,18 +60,27 @@ namespace eka2l1 {
         }
 
         bool property::set_int(int val) {
+            kern->lock();
+
             if (data_type == service::property_type::int_data) {
                 data.ndata = val;
                 notify_request(epoc::error_none);
 
+                fire_data_change_callbacks();
+
+                kern->unlock();
                 return true;
             }
 
+            kern->unlock();
             return false;
         }
 
         bool property::set(uint8_t *bdata, uint32_t arr_length) {
+            kern->lock();
+
             if (arr_length > data_len) {
+                kern->unlock();
                 return false;
             }
 
@@ -65,7 +88,9 @@ namespace eka2l1 {
             bin_data_len = arr_length;
 
             notify_request(epoc::error_none);
+            fire_data_change_callbacks();
 
+            kern->unlock();
             return true;
         }
 
