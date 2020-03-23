@@ -362,6 +362,7 @@ namespace eka2l1 {
             }
 
             if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
+                // TODO: This is some mysterious here.
                 ctx.set_request_status(epoc::error_argument);
                 return;
             }
@@ -467,7 +468,7 @@ namespace eka2l1 {
 
         if (total_buffer_size_require > total_buffer_size_given) {
             // Write new list impl param, which contains the required new size
-            ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param);
+            ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param, nullptr, true);
             ctx.set_request_status(epoc::error_overflow);
 
             return;
@@ -481,7 +482,7 @@ namespace eka2l1 {
         }
 
         // Write list implementation param to tell the client how much bytes we actually write
-        ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param);
+        ctx.write_arg_pkg<ecom_list_impl_param>(2, list_impl_param, nullptr, true);
 
         // Set the buffer length. It's not I like it or anything, baka
         ctx.set_arg_des_len(3, static_cast<const std::uint32_t>(total_buffer_size_require));
@@ -493,6 +494,23 @@ namespace eka2l1 {
     void ecom_server::get_implementation_creation_method(service::ipc_context &ctx) {
         do_get_resolved_impl_creation_method(&ctx);
     }
+
+    void ecom_server::collect_implementation_list(service::ipc_context &ctx) {
+        const bool support_extended_interface = 
+            ctx.sys->get_symbian_version_use() > epocver::epoc94;
+
+        const std::size_t total_buffer_size_given = ctx.get_arg_max_size(0);
+
+        if (!get_implementation_buffer(ctx.get_arg_ptr(0), total_buffer_size_given, support_extended_interface)) {
+            ctx.set_request_status(epoc::error_overflow);
+            return;
+        }
+
+        ctx.set_arg_des_len(0, static_cast<std::uint32_t>(total_buffer_size_given));
+
+        collected_impls.clear();
+        ctx.set_request_status(epoc::error_none);
+    }
         
     ecom_server::ecom_server(eka2l1::system *sys)
         : service::server(sys, "!ecomserver", true) {
@@ -500,5 +518,6 @@ namespace eka2l1 {
         REGISTER_IPC(ecom_server, list_implementations, ecom_list_resolved_implementations, "ECom::ListResolvedImpls");
         REGISTER_IPC(ecom_server, list_implementations, ecom_list_custom_resolved_implementations, "ECom::ListCustomResolvedImpls");
         REGISTER_IPC(ecom_server, get_implementation_creation_method, ecom_get_implementation_creation_method, "ECom::GetImplCreationMethod");
+        REGISTER_IPC(ecom_server, collect_implementation_list, ecom_collect_implementations_list, "ECom::CollectImplsList");
     }
 }

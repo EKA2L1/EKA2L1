@@ -51,9 +51,9 @@ namespace eka2l1 {
     };
 
     struct ecom_list_impl_param {
-        int match_type;
-        int buffer_size;
-        bool cap_check;
+        std::int32_t match_type;
+        std::int32_t buffer_size;
+        std::int32_t cap_check;
     };
 
     class ecom_server : public service::server {
@@ -74,6 +74,7 @@ namespace eka2l1 {
     protected:
         void list_implementations(service::ipc_context &ctx);
         void get_implementation_creation_method(service::ipc_context &ctx);
+        void collect_implementation_list(service::ipc_context &ctx);
 
         bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
             const bool support_extended_interface);
