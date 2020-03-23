@@ -19,6 +19,7 @@
  */
 
 #include <common/cvt.h>
+#include <common/log.h>
 
 #include <epoc/kernel/thread.h>
 #include <epoc/kernel/timer.h>
@@ -63,7 +64,7 @@ namespace eka2l1 {
             info.own_thread = requester;
             info.own_timer = this;
 
-            const int64_t invoke_time = timing->us_to_cycles(ms_signal * 1000);
+            const int64_t invoke_time = timing->us_to_cycles(ms_signal);
             timing->schedule_event(invoke_time, callback_type, (uint64_t)(&info));
 
             return false;
