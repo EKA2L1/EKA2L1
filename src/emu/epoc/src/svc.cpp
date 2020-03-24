@@ -855,11 +855,28 @@ namespace eka2l1::epoc {
         server->cancel_async_lle();
     }
 
+    static std::int32_t do_create_session_from_server(system *sys, server_ptr server, std::int32_t msg_slot_count, eka2l1::ptr<void> sec, std::int32_t mode) {
+        kernel_system *kern = sys->get_kernel_system();
+        const kernel::handle handle = kern->create_and_add<service::session>(
+                                              kernel::owner_type::process, server, msg_slot_count)
+                                          .first;
+
+        if (handle == INVALID_HANDLE) {
+            return epoc::error_general;
+        }
+
+        LOG_TRACE("New session connected to {} with handle {}", server->name(), handle);
+
+        return handle;
+    }
+
     BRIDGE_FUNC(std::int32_t, SessionCreate, eka2l1::ptr<desc8> aServerName, std::int32_t aMsgSlot, eka2l1::ptr<void> aSec, std::int32_t aMode) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        std::string server_name = aServerName.get(mem)->to_std_string(kern->crr_process());
+        process_ptr pr = kern->crr_process();
+
+        std::string server_name = aServerName.get(pr)->to_std_string(pr);
         server_ptr server = kern->get_by_name<service::server>(server_name);
 
         if (!server) {
@@ -867,17 +884,22 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        const kernel::handle handle = kern->create_and_add<service::session>(
-                                              kernel::owner_type::process, server, aMsgSlot)
-                                          .first;
+        return do_create_session_from_server(sys, server, aMsgSlot, aSec, aMode);
+    }
 
-        if (handle == INVALID_HANDLE) {
-            return epoc::error_general;
+    BRIDGE_FUNC(std::int32_t, SessionCreateFromHandle, std::uint32_t aServerHandle, std::int32_t aMsgSlot, eka2l1::ptr<void> aSec, std::int32_t aMode) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr = kern->crr_process();
+        server_ptr server = kern->get<service::server>(aServerHandle);
+
+        if (!server) {
+            LOG_TRACE("Create session to unexist server handle: {}", aServerHandle);
+            return epoc::error_not_found;
         }
 
-        LOG_TRACE("New session connected to {} with handle {}", server_name, handle);
-
-        return handle;
+        return do_create_session_from_server(sys, server, aMsgSlot, aSec, aMode);
     }
 
     BRIDGE_FUNC(std::int32_t, SessionShare, eka2l1::ptr<std::int32_t> aHandle, std::int32_t aShare) {
@@ -911,7 +933,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, SessionSendSync, std::int32_t aHandle, std::int32_t aOrd, eka2l1::ptr<void> aIpcArgs,
         eka2l1::ptr<epoc::request_status> aStatus) {
-        //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
+        // LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -1558,9 +1580,15 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
+        process_ptr pr = kern->crr_process();
+
         // Get rid of null terminator
-        std::string thr_name = aThreadName.get(mem)->to_std_string(kern->crr_process()).c_str();
-        thread_create_info_expand *info = aInfo.get(mem);
+        std::string thr_name = aThreadName.get(pr)->to_std_string(pr).c_str();
+        thread_create_info_expand *info = aInfo.get(pr);
+
+        if (thr_name.empty()) {
+            thr_name = "AnonymousThread";
+        }
 
         const kernel::handle thr_handle = kern->create_and_add<kernel::thread>(static_cast<kernel::owner_type>(aOwnerType),
                                                   mem, kern->get_timing_system(), kern->crr_process(),
@@ -2377,6 +2405,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7D, ThreadProcess),
         BRIDGE_REGISTER(0x7E, ServerCreate),
         BRIDGE_REGISTER(0x7F, SessionCreate),
+        BRIDGE_REGISTER(0x80, SessionCreateFromHandle),
         BRIDGE_REGISTER(0x84, TimerCreate),
         BRIDGE_REGISTER(0x87, ChangeNotifierCreate),
         BRIDGE_REGISTER(0x9C, WaitDllLock),
