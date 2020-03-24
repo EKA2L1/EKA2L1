@@ -24,6 +24,8 @@
 #include <epoc/services/akn/skin/server.h>
 #include <epoc/services/applist/applist.h>
 #include <epoc/services/audio/keysound/keysound.h>
+#include <epoc/services/audio/mmf/audio.h>
+#include <epoc/services/audio/mmf/dev.h>
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/cdl/cdl.h>
 #include <epoc/services/centralrepo/centralrepo.h>
@@ -56,12 +58,12 @@
 #include <Windows.h>
 #endif
 
-#define CREATE_SERVER_D(sys, svr)                                       \
-    std::unique_ptr<service::server> temp = std::make_unique<svr>(sys); \
+#define CREATE_SERVER_D(sys, svr, ...)                                                    \
+    std::unique_ptr<service::server> temp = std::make_unique<svr>(sys, __VA_ARGS__);      \
     sys->get_kernel_system()->add_custom_server(temp)
 
-#define CREATE_SERVER(sys, svr)        \
-    temp = std::make_unique<svr>(sys); \
+#define CREATE_SERVER(sys, svr, ...)                                \
+    temp = std::make_unique<svr>(sys, __VA_ARGS__);                  \
     sys->get_kernel_system()->add_custom_server(temp)
 
 #define DEFINE_INT_PROP_D(sys, category, key, data)                            \
@@ -198,16 +200,24 @@ namespace eka2l1 {
 
             // Don't change order
             temp = std::make_unique<domainmngr_server>(sys);
+            kernel_system *kern = sys->get_kernel_system();
 
             auto &dmmngr = reinterpret_cast<domainmngr_server*>(temp.get())->get_domain_manager();
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);
 
-            sys->get_kernel_system()->add_custom_server(temp);
+            kern->add_custom_server(temp);
 
             // Create the domain server
             temp = std::make_unique<domain_server>(sys, dmmngr);
-            sys->get_kernel_system()->add_custom_server(temp);
+            kern->add_custom_server(temp);
+
+            std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
+            std::unique_ptr<service::server> audio_serv = std::make_unique<mmf_audio_server>(sys, 
+                reinterpret_cast<mmf_dev_server*>(dev_serv.get()));
+
+            kern->add_custom_server(dev_serv);
+            kern->add_custom_server(audio_serv);
             
             epoc::initialize_system_properties(sys, cfg);
         }

@@ -74,6 +74,9 @@ namespace eka2l1::service {
         auto ss_ite = sessions.find(process_msg->msg_session->unique_id());
 
         if (ss_ite == sessions.end()) {
+            LOG_TRACE("Can't find responsible server-side session to client session with ID {}",
+                process_msg->msg_session->unique_id());
+
             return;
         }
 
