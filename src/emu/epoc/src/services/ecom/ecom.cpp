@@ -361,10 +361,14 @@ namespace eka2l1 {
                 return;
             }
 
-            if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
-                // TODO: This is some mysterious here.
-                ctx.set_request_status(epoc::error_argument);
-                return;
+            if (!support_extended_interface) {
+                match_str = arg2_data;
+            } else {
+                if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
+                    // TODO: This is some mysterious here.
+                    ctx.set_request_status(epoc::error_argument);
+                    return;
+                }
             }
         }
 
@@ -442,11 +446,11 @@ namespace eka2l1 {
             // We still need to see if the name is match
             // Generic match ? Wildcard check
             if (list_impl_param.match_type) {
-                if (std::regex_match(common::ucs2_to_utf8(implementation->display_name), wildcard_matcher)) {
+                if (std::regex_match(implementation->default_data, wildcard_matcher)) {
                     sastify = true;
                 }
             } else {
-                if (match_str == common::ucs2_to_utf8(implementation->display_name)) {
+                if (implementation->default_data.find(match_str) != std::string::npos) {
                     sastify = true;
                 }
             }
