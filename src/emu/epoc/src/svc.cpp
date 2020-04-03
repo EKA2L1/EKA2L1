@@ -663,7 +663,9 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        TIpcCopyInfo *info = aInfo.get(mem);
+        process_ptr crr_process = kern->crr_process();
+
+        TIpcCopyInfo *info = aInfo.get(crr_process);
         ipc_msg_ptr msg = kern->get_msg(aHandle);
 
         if (!msg) {
@@ -695,7 +697,7 @@ namespace eka2l1::epoc {
                 std::int32_t lengthToRead = common::min(
                     static_cast<std::int32_t>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
-                memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, lengthToRead);
+                memcpy(info->iTargetPtr.get(crr_process), arg_request->data() + aStartOffset, lengthToRead);
                 return lengthToRead;
             }
 
@@ -708,7 +710,7 @@ namespace eka2l1::epoc {
             std::int32_t lengthToRead = common::min(
                 static_cast<std::int32_t>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
-            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const std::uint8_t *>(arg_request->data()) + aStartOffset * 2,
+            memcpy(info->iTargetPtr.get(crr_process), reinterpret_cast<const std::uint8_t *>(arg_request->data()) + aStartOffset * 2,
                 lengthToRead * 2);
 
             return lengthToRead;
