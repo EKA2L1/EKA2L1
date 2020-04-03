@@ -209,6 +209,11 @@ namespace eka2l1 {
             return val <= 0 ? -1 : 1;
         }
 
+        template <typename T>
+        constexpr T clamp(T min, T max, T val) {
+            return (min > val) ? min : ((val > max) ? max : val);
+        }
+
         /*! Convert KB to bytes */
         constexpr size_t KB(size_t kb) {
             return kb * 1024;
