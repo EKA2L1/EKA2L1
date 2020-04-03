@@ -519,7 +519,7 @@ namespace eka2l1 {
 
         // Don't care about the result as long as it's not null.
         kernel::chunk *rom_chunk = create<kernel::chunk>(mem, nullptr, "ROM", 0, rom_size,
-            rom_size, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            static_cast<address>(rom_size), prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
             kernel::chunk_attrib::none, false, addr, rom_map);
 
         if (!rom_chunk) {
