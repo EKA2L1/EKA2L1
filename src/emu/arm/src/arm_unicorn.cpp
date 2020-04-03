@@ -83,7 +83,7 @@ static void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int siz
 
         LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);   
     }
-    
+
     break_for(jit, uc, address, eka2l1::breakpoint_type::Read);
 }
 
