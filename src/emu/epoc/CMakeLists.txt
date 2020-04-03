@@ -283,10 +283,13 @@ add_library(epocutils
 )
 
 add_library(epocdispatch
+    include/epoc/dispatch/audio.h
     include/epoc/dispatch/def.h
     include/epoc/dispatch/dispatcher.h
+    include/epoc/dispatch/management.h
     include/epoc/dispatch/register.h
     include/epoc/dispatch/screen.h
+    src/dispatch/audio.cpp
     src/dispatch/dispatcher.cpp
     src/dispatch/register.cpp
     src/dispatch/screen.cpp)

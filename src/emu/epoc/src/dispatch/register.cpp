@@ -18,11 +18,22 @@
  */
 
 #include <epoc/dispatch/register.h>
+#include <epoc/dispatch/audio.h>
 #include <epoc/dispatch/screen.h>
 
 namespace eka2l1::dispatch {
     const eka2l1::hle::func_map dispatch_funcs = {
         BRIDGE_REGISTER(1, update_screen),
-        BRIDGE_REGISTER(2, fast_blit)
+        BRIDGE_REGISTER(2, fast_blit),
+        BRIDGE_REGISTER(0x20, eaudio_player_inst),
+        BRIDGE_REGISTER(0x21, eaudio_player_notify_any_done),
+        BRIDGE_REGISTER(0x22, eaudio_player_supply_url),
+        BRIDGE_REGISTER(0x24, eaudio_player_set_volume),
+        BRIDGE_REGISTER(0x25, eaudio_player_get_volume),
+        BRIDGE_REGISTER(0x26, eaudio_player_max_volume),
+        BRIDGE_REGISTER(0x27, eaudio_player_play),
+        BRIDGE_REGISTER(0x28, eaudio_player_stop),
+        BRIDGE_REGISTER(0x2A, eaudio_player_cancel_notify_done),
+        BRIDGE_REGISTER(0x30, eaudio_player_set_repeats)
     };
 }
