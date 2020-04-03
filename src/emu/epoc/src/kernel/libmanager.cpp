@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +22,7 @@
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <common/pystr.h>
+#include <common/ini.h>
 #include <common/random.h>
 
 #include <epoc/kernel/libmanager.h>
@@ -292,7 +291,7 @@ namespace eka2l1::hle {
         0x4E01,  // 2: ldr r6, [pc, #4]
         0x47B0,  // 4: blx r6
         0xBD40,  // 6: pop { r6, pc }
-        0x0000   // 8: nop
+        0x0000,  // 8: nop
         // constant here, offset 10: makes that total of 14 bytes
         // Hope some function are big enough!!!
     };
@@ -302,6 +301,50 @@ namespace eka2l1::hle {
         // constant here
         // 8 bytes in total
     };
+
+    static void patch_rom_export(memory_system *mem, codeseg_ptr source_seg,
+        codeseg_ptr dest_seg, const std::uint32_t source_export,
+        const std::uint32_t dest_export) {
+        const address source_ptr = source_seg->lookup(nullptr, source_export);
+        const address dest_ptr = dest_seg->lookup(nullptr, dest_export);
+
+        std::uint8_t *source_ptr_host = reinterpret_cast<std::uint8_t*>(mem->
+            get_real_pointer(source_ptr & ~1));
+        
+        if (source_ptr & 1) {
+            std::memcpy(source_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
+            
+            // It's thumb
+            // Hope it's big enough
+            if (((source_ptr & ~1) & 3) == 0) {
+                source_ptr_host -= 2;
+            }
+
+            *reinterpret_cast<std::uint32_t*>(source_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = dest_ptr;
+        } else {
+            // ARM!!!!!!!!!
+            std::memcpy(source_ptr_host, ARM_TRAMPOLINE_ASM, sizeof(ARM_TRAMPOLINE_ASM));
+            *reinterpret_cast<std::uint32_t*>(source_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = dest_ptr;
+        }
+    }
+
+    static void patch_original_codeseg(common::ini_section &section, memory_system *mem, codeseg_ptr source_seg,
+        codeseg_ptr dest_seg) {
+
+        for (auto &pair_node: section) {
+            common::ini_pair *pair = pair_node->get_as<common::ini_pair>();
+            const std::uint32_t source_export = pair->key_as<std::uint32_t>();
+            
+            std::uint32_t dest_export = 0;
+            pair->get(&dest_export, 1, 0);
+
+            if (source_seg->is_rom()) {
+                patch_rom_export(mem, source_seg, dest_seg, source_export, dest_export);
+            } else {
+                source_seg->set_export(source_export, dest_seg->lookup(nullptr, dest_export));
+            }
+        }
+    }
     
     void lib_manager::load_patch_libraries(const std::string &patch_folder) {
         common::dir_iterator iterator(patch_folder);
@@ -312,10 +355,6 @@ namespace eka2l1::hle {
                 // Try loading original ROM segment
                 codeseg_ptr original_sec = load(common::utf8_to_ucs2(eka2l1::filename(entry.name)),
                     nullptr);
-
-                if (!original_sec || !original_sec->is_rom()) {
-                    continue;
-                }
 
                 const std::string patch_dll_path = eka2l1::add_path(patch_folder, entry.name);
 
@@ -360,48 +399,50 @@ namespace eka2l1::hle {
                 // Look for map file. These describes the export maps.
                 // This function will replace original ROM subroutines with route to these functions.
                 const std::string map_path = eka2l1::replace_extension(patch_dll_path, ".map");
-                std::ifstream map_file_stream(map_path);
+                common::ini_file map_file_parser;
+                map_file_parser.load(map_path.c_str());
 
-                std::string route_line;
+                // Patch out the shared segment first
+                common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
+                
+                if (shared_section) {
+                    patch_original_codeseg(*shared_section, mem, original_sec, patch_seg);
+                } else {
+                    LOG_TRACE("Shared section not found for patch DLL {}", entry.name);
+                }
 
-                // Read and patch ROM
-                while (!map_file_stream.fail()) {
-                    std::getline(map_file_stream, route_line);
+                const char *alone_section_name = nullptr;
 
-                    if (!route_line.empty() && route_line[0] == '#') {
-                        continue;
-                    }
+                switch (sys->get_symbian_version_use()) {
+                case epocver::epoc94:
+                    alone_section_name = "epoc9v4";
+                    break;
 
-                    common::pystr route_line_parse(route_line);
+                case epocver::epoc6:
+                    alone_section_name = "epoc6";
+                    break;
 
-                    auto routes = route_line_parse.split(',');
+                case epocver::epoc93:
+                    alone_section_name = "epoc9v3";
+                    break;
 
-                    if (routes.size() != 2) {
-                        LOG_ERROR("Error parsing route line {}, not two arguments presented", route_line);
-                        continue;
-                    }
+                case epocver::epoc10:
+                    alone_section_name = "epoc10";
+                    break;
 
-                    const std::uint32_t source = routes[0].as_int<std::uint32_t>();
-                    const std::uint32_t dest = routes[1].as_int<std::uint32_t>();
+                default:
+                    break;
+                }
 
-                    const address source_ptr = original_sec->lookup(nullptr, source);
-                    const address dest_ptr = patch_seg->lookup(nullptr, dest);
-
-                    std::uint8_t *source_ptr_host = reinterpret_cast<std::uint8_t*>(mem->
-                        get_real_pointer(source_ptr & ~1));
+                if (alone_section_name) {
+                    common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
                     
-                    if (source_ptr & 1) {
-                        // It's thumb
-                        // Hope it's big enough
-                        std::memcpy(source_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
-                        *reinterpret_cast<std::uint32_t*>(source_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = dest_ptr;
+                    if (indi_section) {
+                        patch_original_codeseg(*indi_section, mem, original_sec, patch_seg);
                     } else {
-                        // ARM!!!!!!!!!
-                        std::memcpy(source_ptr_host, ARM_TRAMPOLINE_ASM, sizeof(ARM_TRAMPOLINE_ASM));
-                        *reinterpret_cast<std::uint32_t*>(source_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = dest_ptr;
+                        LOG_TRACE("Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(sys->get_symbian_version_use()),
+                            entry.name);
                     }
-
-                    // Should be done....
                 }
             }
         }
