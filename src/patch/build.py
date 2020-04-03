@@ -24,7 +24,7 @@ import timeit
 import subprocess
 import sys
 
-from distutils.dir_util import copy_tree
+from shutil import copyfile
 
 
 # Check if the OS is 64-bit
@@ -201,7 +201,7 @@ def should_generate_abld_makefile(mmp_full_path, plat):
 
 
 def invoke_abld_command(command):
-    print('Invoke ABLD command')
+    print('Invoke ABLD command {}'.format(command))
     result = subprocess.call(['abld.bat'] + command, stdout=subprocess.PIPE)
 
     if result != 0:
@@ -310,7 +310,7 @@ def copy_build_result(group_folder, configuration, folder):
         (drive, group_folder_abs) = os.path.splitdrive(group_folder)
         binary_folder = os.path.join(drive, os.environ['EPOCROOT'], 'epoc32\\release\\')
 
-        inside_folder_name = '{}\\{}'.format(build_platform.upper(), configuration)
+        inside_folder_name = '{}\\{}\\'.format(build_platform.upper(), configuration)
 
         original_build_folder = os.path.join(binary_folder, inside_folder_name)
         target_build_folder = os.path.join(folder, "{}\\{}".format(mmp_name, inside_folder_name))
@@ -321,7 +321,11 @@ def copy_build_result(group_folder, configuration, folder):
         except OSError:
             pass
 
-        copy_tree(original_build_folder, target_build_folder)
+        mmp_name = '{}.dll'.format(mmp_name)
+        source_mmp_name = os.path.join(original_build_folder, mmp_name)
+        target_mmp_name = os.path.join(target_build_folder, mmp_name)
+
+        copyfile(source_mmp_name, target_mmp_name)
 
 
 def main():
@@ -361,7 +365,10 @@ def main():
         print('Copy build results to {}'.format(os.path.abspath(result_folder)))
         copy_build_result(group_folder, configuration, result_folder)
 
+    return 0
+
 
 # Main body
 if __name__ == '__main__':
     main()
+    sys.exit(0)
