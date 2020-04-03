@@ -8,9 +8,11 @@ add_library(drivers
     include/drivers/itc.h
     include/drivers/driver.h
     include/drivers/audio/audio.h
+    include/drivers/audio/player.h
     include/drivers/audio/stream.h
     include/drivers/audio/backend/cubeb/audio_cubeb.h
     include/drivers/audio/backend/cubeb/stream_cubeb.h
+    include/drivers/audio/backend/wmf/player_wmf.h
     include/drivers/graphics/buffer.h
     include/drivers/graphics/emu_window.h
     include/drivers/graphics/fb.h
@@ -29,8 +31,10 @@ add_library(drivers
     src/driver.cpp
     src/itc.cpp
     src/audio/audio.cpp
+    src/audio/player.cpp
     src/audio/backend/cubeb/audio_cubeb.cpp
     src/audio/backend/cubeb/stream_cubeb.cpp
+    src/audio/backend/wmf/player_wmf.cpp
     src/graphics/buffer.cpp
     src/graphics/fb.cpp
     src/graphics/emu_window.cpp
