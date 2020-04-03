@@ -183,5 +183,8 @@ namespace eka2l1::kernel {
         }
 
         std::vector<std::uint32_t> get_export_table(kernel::process *pr);
+
+        // Use for patching
+        void set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address);
     };
 }

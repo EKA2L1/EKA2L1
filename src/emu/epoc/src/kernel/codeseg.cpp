@@ -305,4 +305,12 @@ namespace eka2l1::kernel {
 
         return new_table;
     }
+
+    void codeseg::set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address) {
+        if (export_table.size() < ordinal) {
+            return;
+        }
+
+        export_table[ordinal - 1] = address.ptr_address();
+    }
 }
