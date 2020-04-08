@@ -12,7 +12,9 @@ add_library(drivers
     include/drivers/audio/stream.h
     include/drivers/audio/backend/cubeb/audio_cubeb.h
     include/drivers/audio/backend/cubeb/stream_cubeb.h
+    include/drivers/audio/backend/ffmpeg/player_ffmpeg.h
     include/drivers/audio/backend/wmf/player_wmf.h
+    include/drivers/audio/backend/player_shared.h
     include/drivers/graphics/buffer.h
     include/drivers/graphics/emu_window.h
     include/drivers/graphics/fb.h
@@ -34,7 +36,9 @@ add_library(drivers
     src/audio/player.cpp
     src/audio/backend/cubeb/audio_cubeb.cpp
     src/audio/backend/cubeb/stream_cubeb.cpp
+    src/audio/backend/ffmpeg/player_ffmpeg.cpp
     src/audio/backend/wmf/player_wmf.cpp
+    src/audio/backend/player_shared.cpp
     src/graphics/buffer.cpp
     src/graphics/fb.cpp
     src/graphics/emu_window.cpp
@@ -52,7 +56,7 @@ add_library(drivers
     src/graphics/backend/ogl/shader_ogl.cpp
     ${DRIVERS_VULKAN_SRC})
 
-target_link_libraries(drivers PRIVATE common cubeb imgui glad glm glfw)
+target_link_libraries(drivers PRIVATE common cubeb imgui ffmpeg glad glm glfw)
 target_include_directories(drivers PUBLIC include)
 
 if (BUILD_WITH_VULKAN)
