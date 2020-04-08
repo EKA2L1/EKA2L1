@@ -23,8 +23,7 @@
 
 #if EKA2L1_PLATFORM(WIN32)
 
-#include <drivers/audio/player.h>
-#include <drivers/audio/stream.h>
+#include <drivers/audio/backend/player_shared.h>
 
 #include <functional>
 #include <memory>
@@ -40,72 +39,26 @@
 namespace eka2l1::drivers {
     class audio_driver;
 
-    enum player_wmf_request_type {
-        player_wmf_request_raw_pcm = 0,
-        player_wmf_request_format = 1
-    };
-
-    struct player_wmf_metadata {
-        std::string key_;
-        std::string value_;
-    };
-
-    struct player_wmf_request {
+    struct player_wmf_request: public player_request_base {
         IMFSourceReader *reader_;
-        player_wmf_request_type type_;
-        std::string url_;
-
-        std::vector<std::uint8_t> data_;
-
-        std::uint32_t freq_;
-        std::uint32_t encoding_;
-        std::uint32_t channels_;
-
-        std::size_t data_pointer_;
-        std::uint32_t flags_;
-
-        std::int32_t repeat_left_;
-        std::uint64_t silence_micros_;
-
-        bool use_push_new_data_;
 
         explicit player_wmf_request()
-            : data_pointer_(0)
-            , flags_(0)
-            , repeat_left_(0)
-            , silence_micros_(0)
-            , use_push_new_data_(false) {
+            : reader_(nullptr) {
         }
+
+        ~player_wmf_request();
     };
 
-    struct player_wmf: public player {
-        audio_driver *aud_;
-
-        std::unique_ptr<audio_output_stream> output_stream_;
-        std::queue<player_wmf_request> requests_;
-        std::mutex request_queue_lock_;
-
-        std::vector<player_wmf_metadata> metadatas_;
-
-    public:
+    struct player_wmf: public player_shared {
         explicit player_wmf(audio_driver *driver);
 
-        void get_more_data(player_wmf_request &request);
-        std::size_t data_supply_callback(std::int16_t *data, std::size_t size);
-        
-        bool play() override;
-        bool stop() override;
+        void reset_request(player_request_instance &request) override;
+        void get_more_data(player_request_instance &request) override;
 
         bool queue_url(const std::string &url) override;
-
         bool queue_data(const char *raw_data, const std::size_t data_size,
             const std::uint32_t encoding_type, const std::uint32_t frequency,
             const std::uint32_t channels) override;
-
-        bool notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) override;
-        void clear_notify_done() override;
-        
-        void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
     };
 }
 

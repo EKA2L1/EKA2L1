@@ -27,7 +27,6 @@
 #pragma comment(lib, "Propsys.lib")
 
 #include <drivers/audio/backend/wmf/player_wmf.h>
-#include <drivers/audio/audio.h>
 
 #include <common/log.h>
 #include <common/cvt.h>
@@ -43,18 +42,26 @@ namespace eka2l1::drivers {
         }
     }
 
+    player_wmf_request::~player_wmf_request() {
+        if (type_ == player_request_format) {
+            SafeRelease(&reader_);
+        }
+    }
+
     player_wmf::player_wmf(audio_driver *driver)
-        : aud_(driver) {
+        : player_shared(driver) {
         HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
         // Startup media foundation!
         hr = MFStartup(MF_VERSION);
     }
 
-    void player_wmf::get_more_data(player_wmf_request &request) {
+    void player_wmf::get_more_data(player_request_instance &request) {
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+
         // Data drain, try to get more
-        if (request.type_ == player_wmf_request_format) {
-            if (request.flags_ & 1) {
+        if (request_wmf->type_ == player_request_format) {
+            if (request_wmf->flags_ & 1) {
                 output_stream_->stop();
                 return;
             }
@@ -63,11 +70,11 @@ namespace eka2l1::drivers {
             IMFSample *samples = nullptr;
 
             // Read from wmf source reader
-            HRESULT hr = request.reader_->ReadSample(static_cast<DWORD>(MF_SOURCE_READER_FIRST_AUDIO_STREAM), 0,
+            HRESULT hr = request_wmf->reader_->ReadSample(static_cast<DWORD>(MF_SOURCE_READER_FIRST_AUDIO_STREAM), 0,
                 nullptr, &stream_flags, nullptr, &samples);
 
             if ((!samples) || (stream_flags & MF_SOURCE_READERF_ENDOFSTREAM)) {
-                request.flags_ |= 1;
+                request_wmf->flags_ |= 1;
             }
 
             if (samples && SUCCEEDED(hr)) {
@@ -82,13 +89,13 @@ namespace eka2l1::drivers {
 
                     std::size_t start_to_copy = 0;
 
-                    if (request.use_push_new_data_) {
-                        start_to_copy = request.data_.size();
-                        request.use_push_new_data_ = false;
+                    if (request_wmf->use_push_new_data_) {
+                        start_to_copy = request_wmf->data_.size();
+                        request_wmf->use_push_new_data_ = false;
                     }
 
-                    request.data_.resize(start_to_copy + buffer_length);
-                    std::memcpy(request.data_.data() + start_to_copy, buffer_pointer, buffer_length);
+                    request_wmf->data_.resize(start_to_copy + buffer_length);
+                    std::memcpy(request_wmf->data_.data() + start_to_copy, buffer_pointer, buffer_length);
 
                     hr = media_buffer->Unlock();
                     SafeRelease(&media_buffer);
@@ -98,86 +105,17 @@ namespace eka2l1::drivers {
             }
         }
 
-        request.data_pointer_ = 0;
+        request_wmf->data_pointer_ = 0;
     }
     
-    std::size_t player_wmf::data_supply_callback(std::int16_t *data, std::size_t size) {
-        // Get the oldest request
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
-        player_wmf_request &request = requests_.front();
+    void player_wmf::reset_request(player_request_instance &request) {
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
 
-        std::size_t frame_copied = 0;
-
-        auto supply_stuff = [&]() {
-            while ((frame_copied < size) && (!(request.flags_ & 1))) {
-                if (request.data_.size() == request.data_pointer_)
-                    get_more_data(request);
-
-                const std::size_t total_frame_left = (request.data_.size() - request.data_pointer_) / request.channels_ / sizeof(std::uint16_t);
-                const std::size_t frame_to_copy = std::min<std::size_t>(total_frame_left, size);
-
-                // Copy the frames first
-                if (request.channels_ == 1) {
-                    const std::uint16_t *original_data_u16 = reinterpret_cast<std::uint16_t*>(request.data_.data() + request.data_pointer_);
-
-                    // We have to do something!
-                    for (std::size_t frame_ite = 0; frame_ite < frame_to_copy; frame_ite++) {
-                        data[2 * frame_ite] = original_data_u16[frame_ite];
-                        data[2 * frame_ite + 1] = original_data_u16[frame_ite];
-                    }
-                } else {
-                    // Well, just copy straight up
-                    std::memcpy(data, request.data_.data() + request.data_pointer_, frame_to_copy * 2 * sizeof(std::uint16_t));
-                }
-
-                request.data_pointer_ += frame_to_copy * request.channels_ * sizeof(std::uint16_t);
-                frame_copied = frame_to_copy;
-            }
-        };
-
-        supply_stuff();
-        
-        if ((frame_copied < size) || (request.flags_ & 1)) {
-            bool no_more_way = false;
-
-            // There is no more data for us! Either repeat or kill
-            if (request.repeat_left_ == 0) {
-                no_more_way = true;
-            } else {
-                // Seek back to do a loop. Intentionally left this so that negative repeat can do infinite loop
-                if (request.repeat_left_ > 0) {
-                    request.repeat_left_ -= 1;
-                }
-
-                // Reset the stream if we are the custom format guy!
-                if (request.type_ == player_wmf_request_format) {
-                    PROPVARIANT var = { 0 };
-                    var.vt = VT_I8;
-                    request.reader_->SetCurrentPosition(GUID_NULL, var);
-                }
-
-                request.data_pointer_ = 0;
-                request.flags_ = 0;
-
-                // We want to supply silence samples
-                // 1s = 1ms
-                const std::size_t silence_samples = request.freq_ * request.silence_micros_ / 1000000;
-                request.data_.resize(silence_samples * sizeof(std::uint16_t) * request.channels_);
-                std::fill(request.data_.begin(), request.data_.end(), 0);
-
-                request.use_push_new_data_ = true;
-                supply_stuff();
-            }
-
-            // We are drained (out of frame)
-            // Call the finish callback
-            if (no_more_way && callback_)
-                callback_(userdata_.data());
-        }
-
-        return frame_copied;
+        PROPVARIANT var = { 0 };
+        var.vt = VT_I8;
+        request_wmf->reader_->SetCurrentPosition(GUID_NULL, var);
     }
-
+    
     static bool configure_stream_for_pcm(player_wmf_request &request) {
         IMFMediaType *partial_type = nullptr;
 
@@ -219,7 +157,7 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    static bool query_wmf_reader_metadata(IMFSourceReader *reader, std::vector<player_wmf_metadata> &meta_arr) {
+    static bool query_wmf_reader_metadata(IMFSourceReader *reader, std::vector<player_metadata> &meta_arr) {
         IMFMetadataProvider *meta_provider = nullptr;
         HRESULT hr = reader->GetServiceForStream(MF_SOURCE_READER_MEDIASOURCE, GUID_NULL,
             __uuidof(meta_provider), reinterpret_cast<LPVOID*>(&meta_provider));
@@ -271,7 +209,7 @@ namespace eka2l1::drivers {
                 PropVariantToStringAlloc(metadata_value, &metadata_value_string);
 
                 if (metadata_value_string) {
-                    player_wmf_metadata meta;
+                    player_metadata meta;
                     meta.key_ = common::ucs2_to_utf8(std::u16string(reinterpret_cast<const char16_t*>(metadata_key_string)));
                     meta.value_ = common::ucs2_to_utf8(std::u16string(reinterpret_cast<const char16_t*>(metadata_value_string)));
 
@@ -290,31 +228,33 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::queue_url(const std::string &url) {
-        player_wmf_request request;
-        request.type_ = player_wmf_request_format;
-        request.data_pointer_ = 0;
-        request.url_ = url;
+        player_request_instance request = std::make_unique<player_wmf_request>();
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+
+        request_wmf->type_ = player_request_format;
+        request_wmf->data_pointer_ = 0;
+        request_wmf->url_ = url;
 
         const std::u16string url_16 = common::utf8_to_ucs2(url);
 
         HRESULT hr = MFCreateSourceReaderFromURL(
-            reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &request.reader_);
+            reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &request_wmf->reader_);
 
         if (!SUCCEEDED(hr)) {
             LOG_ERROR("Unable to queue new play URL {} (can't open source reader)", url);
             return false;
         }
         
-        if (!configure_stream_for_pcm(request)) {
+        if (!configure_stream_for_pcm(*request_wmf)) {
             LOG_ERROR("Error while configure WMF stream!");
-            SafeRelease(&request.reader_);
+            SafeRelease(&request_wmf->reader_);
             return false;
         }
 
-        query_wmf_reader_metadata(request.reader_, metadatas_);
+        query_wmf_reader_metadata(request_wmf->reader_, metadatas_);
         
         const std::lock_guard<std::mutex> guard(request_queue_lock_);
-        requests_.push(request);
+        requests_.push(std::move(request));
 
         return true;
     }
@@ -322,12 +262,14 @@ namespace eka2l1::drivers {
     bool player_wmf::queue_data(const char *raw_data, const std::size_t data_size,
         const std::uint32_t encoding_type, const std::uint32_t frequency,
         const std::uint32_t channels) {
-        player_wmf_request request;
-        request.type_ = player_wmf_request_raw_pcm;
-        request.data_pointer_ = 0;
+        player_request_instance request = std::make_unique<player_wmf_request>();
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+
+        request_wmf->type_ = player_request_raw_pcm;
+        request_wmf->data_pointer_ = 0;
 
         if (encoding_type == player_audio_encoding_custom) {
-            request.type_ = player_wmf_request_format;
+            request_wmf->type_ = player_request_format;
 
             IMFByteStream *stream = NULL;
             
@@ -340,93 +282,38 @@ namespace eka2l1::drivers {
 
             stream->SetCurrentPosition(0);
 
-            hr = MFCreateSourceReaderFromByteStream(stream, nullptr, &request.reader_);
+            hr = MFCreateSourceReaderFromByteStream(stream, nullptr, &request_wmf->reader_);
 
             if (!SUCCEEDED(hr)) {
                 LOG_ERROR("Unable to queue new custom data {} (can't open source reader)");
                 return false;
             }
             
-            if (!configure_stream_for_pcm(request)) {
+            if (!configure_stream_for_pcm(*request_wmf)) {
                 LOG_ERROR("Error while configure WMF stream!");
-                SafeRelease(&request.reader_);
+                SafeRelease(&request_wmf->reader_);
                 return false;
             }
 
             SafeRelease(&stream);    
-            query_wmf_reader_metadata(request.reader_, metadatas_);
+            query_wmf_reader_metadata(request_wmf->reader_, metadatas_);
         }
 
         const std::lock_guard<std::mutex> guard(request_queue_lock_);
-        requests_.push(request);
+        requests_.push(std::move(request));
 
         if (encoding_type != player_audio_encoding_custom) {
-            player_wmf_request &request_ref = requests_.back();
-            request_ref.channels_ = channels;
-            request_ref.encoding_ = encoding_type;
-            request_ref.freq_ = frequency;
-            request_ref.reader_ = nullptr;
+            player_request_instance &request_ref = requests_.back();
+            request_ref->channels_ = channels;
+            request_ref->encoding_ = encoding_type;
+            request_ref->freq_ = frequency;
 
-            request_ref.data_.resize(data_size);
+            request_ref->data_.resize(data_size);
 
-            std::memcpy(request_ref.data_.data(), raw_data, data_size);
+            std::memcpy(request_ref->data_.data(), raw_data, data_size);
         }
 
         return true;
-    }
-
-    bool player_wmf::play() {
-        // Stop previous session
-        if (output_stream_)
-            output_stream_->stop();
-
-        // Reset the request
-        {
-            const std::lock_guard<std::mutex> guard(request_queue_lock_);
-            player_wmf_request &request = requests_.front();
-
-            PROPVARIANT var = { 0 };
-            var.vt = VT_I8;
-            request.reader_->SetCurrentPosition(GUID_NULL, var);
-
-            request.data_pointer_ = 0;
-            request.flags_ = 0;
-            request.data_.clear();
-            
-            // New stream to restart everything     
-            output_stream_ = aud_->new_output_stream(request.freq_, [this](std::int16_t *u1, std::size_t u2) {
-                return data_supply_callback(u1, u2);
-            });
-
-            output_stream_->set_volume(static_cast<float>(volume_) / 100.0f);
-        }
-
-        return output_stream_->start();
-    }
-
-    bool player_wmf::stop() {
-        if (output_stream_)
-            return output_stream_->stop();
-
-        return true;
-    }
-
-    bool player_wmf::notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) {
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
-        return player::notify_any_done(callback, data, data_size);
-    }
-    
-    void player_wmf::clear_notify_done() {
-        std::unique_lock<std::mutex> guard(request_queue_lock_, std::try_to_lock);
-        return player::clear_notify_done();
-    }
-
-    void player_wmf::set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) {
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
-        player_wmf_request &request = requests_.front();
-
-        request.repeat_left_ = repeat_times;
-        request.silence_micros_ = silence_intervals_micros;
     }
 }
 

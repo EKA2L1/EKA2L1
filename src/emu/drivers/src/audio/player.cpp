@@ -18,8 +18,11 @@
  */
 
 #include <drivers/audio/player.h>
+#include <drivers/audio/backend/ffmpeg/player_ffmpeg.h>
 #include <drivers/audio/backend/wmf/player_wmf.h>
 #include <common/platform.h>
+
+#include <cstring>
 
 namespace eka2l1::drivers {
     bool player::notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) {
@@ -49,6 +52,9 @@ namespace eka2l1::drivers {
             case player_type_wmf:
                 return std::make_unique<player_wmf>(aud);
 #endif
+            case player_type_ffmpeg:
+                return std::make_unique<player_ffmpeg>(aud);
+
             default:
                 break;
         }

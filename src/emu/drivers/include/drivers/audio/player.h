@@ -105,7 +105,8 @@ namespace eka2l1::drivers {
     };
     
     enum player_type {
-        player_type_wmf = 0
+        player_type_wmf = 0,
+        player_type_ffmpeg = 1
     };
 
     std::unique_ptr<player> new_audio_player(audio_driver *aud, const player_type type);
