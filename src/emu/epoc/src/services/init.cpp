@@ -59,11 +59,11 @@
 #endif
 
 #define CREATE_SERVER_D(sys, svr, ...)                                                    \
-    std::unique_ptr<service::server> temp = std::make_unique<svr>(sys, __VA_ARGS__);      \
+    std::unique_ptr<service::server> temp = std::make_unique<svr>(sys, ##__VA_ARGS__);      \
     sys->get_kernel_system()->add_custom_server(temp)
 
 #define CREATE_SERVER(sys, svr, ...)                                \
-    temp = std::make_unique<svr>(sys, __VA_ARGS__);                  \
+    temp = std::make_unique<svr>(sys, ##__VA_ARGS__);                  \
     sys->get_kernel_system()->add_custom_server(temp)
 
 #define DEFINE_INT_PROP_D(sys, category, key, data)                            \
