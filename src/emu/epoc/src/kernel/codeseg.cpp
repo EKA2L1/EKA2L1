@@ -251,22 +251,25 @@ namespace eka2l1::kernel {
     }
 
     void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list) {
-        if (mark) {
-            return;
-        }
-
-        mark = true;
-
         // Iterate through dependency first
         for (auto &dependency : dependencies) {
             if (!dependency->mark) {
+                dependency->mark = true;
                 dependency->queries_call_list(pr, call_list);
             }
         }
 
         // Add our last. Don't change order, this is how it supposed to be
         call_list.push_back(get_entry_point(pr));
-        mark = false;
+    }
+
+    void codeseg::unmark() {
+        for (auto &dependency : dependencies) {
+            if (dependency->mark) {
+                dependency->mark = false;
+                dependency->unmark();
+            }
+        }
     }
 
     bool codeseg::add_dependency(codeseg_ptr codeseg) {

@@ -1454,6 +1454,7 @@ namespace eka2l1::epoc {
 
         std::vector<uint32_t> list;
         pr->get_codeseg()->queries_call_list(pr, list);
+        pr->get_codeseg()->unmark();
 
         *total = static_cast<std::int32_t>(list.size());
         memcpy(list_ptr, list.data(), sizeof(std::uint32_t) * *total);

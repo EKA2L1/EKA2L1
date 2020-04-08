@@ -120,6 +120,8 @@ namespace eka2l1::kernel {
         virtual ~codeseg() {}
 
         void queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list);
+        void unmark();
+
         bool attach(kernel::process *new_foe);
         bool detatch(kernel::process *de_foe);
 
