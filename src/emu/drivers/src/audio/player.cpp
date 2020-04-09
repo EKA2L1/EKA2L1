@@ -61,4 +61,12 @@ namespace eka2l1::drivers {
 
         return nullptr;
     }
+    
+    player_type get_suitable_player_type() {
+#if EKA2L1_PLATFORM(WIN32)
+        return player_type_wmf;
+#else
+        return player_type_ffmpeg;
+#endif
+    }
 }

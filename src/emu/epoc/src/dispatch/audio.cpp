@@ -34,8 +34,7 @@ namespace eka2l1::dispatch {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::audio_driver *aud_driver = sys->get_audio_driver();
 
-        // TODO NON HARDCODE
-        auto player_new = drivers::new_audio_player(aud_driver, drivers::player_type_wmf);
+        auto player_new = drivers::new_audio_player(aud_driver, drivers::get_suitable_player_type());
 
         if (!player_new) {
             LOG_ERROR("Unable to instantiate new audio player!");

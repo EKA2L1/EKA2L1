@@ -110,4 +110,5 @@ namespace eka2l1::drivers {
     };
 
     std::unique_ptr<player> new_audio_player(audio_driver *aud, const player_type type);
+    player_type get_suitable_player_type();
 }
