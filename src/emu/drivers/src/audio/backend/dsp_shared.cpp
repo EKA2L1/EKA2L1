@@ -18,15 +18,13 @@
  */
 
 #include <drivers/audio/backend/dsp_shared.h>
+#include <common/log.h>
 
 namespace eka2l1::drivers {
     dsp_output_stream_shared::dsp_output_stream_shared(drivers::audio_driver *aud)
         : aud_(aud) {
-        
-    }
-
-    std::size_t dsp_output_stream_shared::data_callback(std::int16_t *buffer, const std::size_t frame_count) {
-        return 0;
+        last_frame_[0] = 0;
+        last_frame_[1] = 0;
     }
     
     bool dsp_output_stream_shared::set_properties(const std::uint32_t freq, const std::uint8_t channels) {
@@ -36,7 +34,7 @@ namespace eka2l1::drivers {
 
         channels_ = channels;
 
-        stream_ = aud_->new_output_stream(freq, [this](std::int16_t *buffer, const std::size_t nb_frames) {
+        stream_ = aud_->new_output_stream(freq, channels, [this](std::int16_t *buffer, const std::size_t nb_frames) {
             return data_callback(buffer, nb_frames);
         });
 
@@ -64,6 +62,84 @@ namespace eka2l1::drivers {
         if (!stream_)
             return true;
 
+        // Call the finish callback
+        complete_callback_(complete_userdata_);
         return stream_->stop();
+    }
+
+    void dsp_output_stream_shared::register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback &callback,
+        void *userdata) {
+        switch (nof_type) {
+        case dsp_stream_notification_done:
+            complete_callback_ = callback;
+            complete_userdata_ = userdata;
+            break;
+
+        case dsp_stream_notification_buffer_copied:
+            buffer_copied_userdata_ = userdata;
+            buffer_copied_callback_ = callback;
+            break;
+
+        default:
+            LOG_ERROR("Unsupport notification type!");
+            break;
+        }
+    }
+
+    bool dsp_output_stream_shared::write(const std::uint8_t *data, const std::uint32_t data_size) {
+        // Copy buffer to queue
+        dsp_buffer buffer;
+        buffer.resize(data_size);
+
+        std::memcpy(&buffer[0], data, data_size);
+
+        // Push it to the queue
+        buffers_.push(buffer);
+
+        return true;
+    }
+
+    std::size_t dsp_output_stream_shared::data_callback(std::int16_t *buffer, const std::size_t frame_count) {
+        std::size_t frame_wrote = 0;
+
+        while (frame_wrote < frame_count) {
+            std::optional<dsp_buffer> encoded;
+    
+            if ((decoded_.size() == 0) || (decoded_.size() == pointer_)) {
+                encoded = buffers_.pop();
+
+                if (!encoded) {
+                    break;
+                }
+
+                pointer_ = 0;
+                decode_data(encoded.value(), decoded_);
+            }
+
+            // We want to decode more
+            std::size_t frame_to_wrote = ((decoded_.size() - pointer_) / channels_ / sizeof(std::int16_t));
+            frame_to_wrote = std::min<std::size_t>(frame_to_wrote, frame_count);
+
+            std::memcpy(&buffer[frame_wrote * channels_], &decoded_[pointer_], frame_to_wrote * channels_ * sizeof(std::int16_t));
+
+            // Set last frame
+            std::memcpy(last_frame_, &decoded_[(pointer_ + frame_to_wrote - 1) * channels_], channels_ * sizeof(std::int16_t));
+
+            pointer_ += (frame_to_wrote * channels_ * sizeof(std::int16_t));
+            frame_wrote += frame_to_wrote;
+        }
+
+        for (; frame_wrote < frame_count; frame_wrote++) {
+            // We dont want to drain the audio driver, so fill it with last frame
+            std::memcpy(&buffer[frame_wrote * channels_], last_frame_, channels_ * sizeof(std::int16_t));
+        }
+
+        // TODO: What? Is this right
+        samples_played_ = frame_count * channels_;
+
+        // Callback that internal buffer has been copied
+        buffer_copied_callback_(buffer_copied_userdata_);
+
+        return frame_count;
     }
 }

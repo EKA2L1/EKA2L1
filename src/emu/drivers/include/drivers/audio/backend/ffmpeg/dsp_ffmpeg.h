@@ -21,8 +21,19 @@
 
 #include <drivers/audio/backend/dsp_shared.h>
 
+extern "C" {
+    #include <libavcodec/avcodec.h>
+}
+
 namespace eka2l1::drivers {
     struct dsp_output_stream_ffmpeg: public dsp_output_stream_shared {
     protected:
+        AVCodecContext *codec_;
+
+    public:
+        bool format(const four_cc fmt) override;
+
+        void get_supported_formats(std::vector<four_cc> &cc_list) override;
+        void decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) override;
     };
 }

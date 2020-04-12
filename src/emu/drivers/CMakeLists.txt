@@ -13,6 +13,7 @@ add_library(drivers
     include/drivers/audio/stream.h
     include/drivers/audio/backend/cubeb/audio_cubeb.h
     include/drivers/audio/backend/cubeb/stream_cubeb.h
+    include/drivers/audio/backend/ffmpeg/dsp_ffmpeg.h
     include/drivers/audio/backend/ffmpeg/player_ffmpeg.h
     include/drivers/audio/backend/wmf/player_wmf.h
     include/drivers/audio/backend/dsp_shared.h
@@ -38,6 +39,7 @@ add_library(drivers
     src/audio/player.cpp
     src/audio/backend/cubeb/audio_cubeb.cpp
     src/audio/backend/cubeb/stream_cubeb.cpp
+    src/audio/backend/ffmpeg/dsp_ffmpeg.cpp
     src/audio/backend/ffmpeg/player_ffmpeg.cpp
     src/audio/backend/wmf/player_wmf.cpp
     src/audio/backend/dsp_shared.cpp

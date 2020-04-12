@@ -27,8 +27,13 @@ namespace eka2l1::drivers {
     using four_cc = std::uint32_t;
 
     constexpr four_cc make_four_cc(const char c1, const char c2, const char c3, const char c4) {
-        return ((c1 << 24) | (c2 << 16) << (c3 << 8) | c4);
+        return ((c1 << 24) | (c2 << 16) | (c3 << 8) | c4);
     }
+
+    static constexpr four_cc AMR_FOUR_CC_CODE = make_four_cc(' ', 'A', 'M', 'R');
+    static constexpr four_cc MP3_FOUR_CC_CODE = make_four_cc(' ', 'M', 'P', '3');
+    static constexpr four_cc PCM16_FOUR_CC_CODE = make_four_cc(' ', 'P', '1', '6');
+    static constexpr four_cc PCM8_FOUR_CC_CODE = make_four_cc(' ', ' ', 'P', '8');
 
     enum dsp_stream_notification_type {
         dsp_stream_notification_buffer_copied = 0,
@@ -39,7 +44,7 @@ namespace eka2l1::drivers {
 
     struct dsp_stream {
     protected:
-        std::uint32_t samples_played_;
+        std::size_t samples_played_;
         std::uint32_t freq_;
         std::uint32_t channels_;
 
@@ -56,7 +61,7 @@ namespace eka2l1::drivers {
             return samples_played_;
         }
 
-        const std::uint64_t position() const {
+        const std::size_t position() const {
             // Divide the played samples with frequency and we get position in seconds.
             // Gotta multiply it with 1 000 000 us = 1s too
             return samples_played_ * 1000000 / freq_;
@@ -66,8 +71,9 @@ namespace eka2l1::drivers {
             return format_;
         }
 
-        virtual void format(const four_cc fmt) {
+        virtual bool format(const four_cc fmt) {
             format_ = fmt;
+            return true;
         }
 
         virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels);
@@ -80,7 +86,7 @@ namespace eka2l1::drivers {
             void *userdata);
     };
 
-    struct dsp_output_stream {
+    struct dsp_output_stream: public dsp_stream {
     protected:
         std::uint32_t volume_;
 
