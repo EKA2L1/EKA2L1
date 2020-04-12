@@ -66,11 +66,11 @@ namespace eka2l1::drivers {
     }
 
     std::unique_ptr<audio_output_stream> cubeb_audio_driver::new_output_stream(const std::uint32_t sample_rate,
-        data_callback callback) {
+        const std::uint8_t channels, data_callback callback) {
         if (!init_) {
             return nullptr;
         }
 
-        return std::make_unique<cubeb_audio_output_stream>(context_, sample_rate, callback);
+        return std::make_unique<cubeb_audio_output_stream>(context_, sample_rate, channels, callback);
     }
 };

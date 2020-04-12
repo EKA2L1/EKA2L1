@@ -34,15 +34,15 @@ namespace eka2l1::drivers {
     }
 
     cubeb_audio_output_stream::cubeb_audio_output_stream(cubeb *context_, const std::uint32_t sample_rate,
-        data_callback callback) 
+        const std::uint8_t channels, data_callback callback) 
         : stream_(nullptr)
         , callback_(callback)
         , playing_(false) {
         cubeb_stream_params params;
         params.format = CUBEB_SAMPLE_S16LE;
         params.rate = sample_rate;
-        params.channels = 2;
-        params.layout = CUBEB_LAYOUT_STEREO;
+        params.channels = channels;
+        params.layout = (channels == 1) ? CUBEB_LAYOUT_MONO : CUBEB_LAYOUT_STEREO;
         params.prefs = CUBEB_STREAM_PREF_NONE;
 
         std::uint32_t minimum_latency = 100 * sample_rate / 1000; // Firefox default

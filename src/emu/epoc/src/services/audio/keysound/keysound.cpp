@@ -40,7 +40,7 @@ namespace eka2l1 {
         drivers::audio_driver *aud_driver = svr->get_system()->get_audio_driver();
 
         if (aud_driver) {
-            aud_out_ = aud_driver->new_output_stream(aud_driver->native_sample_rate(),
+            aud_out_ = aud_driver->new_output_stream(aud_driver->native_sample_rate(), 2,
                 [this](std::int16_t *dest, std::size_t frames) {
                     return play_sounds(dest, frames);
                 });

@@ -33,7 +33,7 @@ namespace eka2l1::drivers {
 
         ~cubeb_audio_driver() override;
         std::unique_ptr<audio_output_stream> new_output_stream(const std::uint32_t sample_rate,
-            data_callback callback) override;
+            const std::uint8_t channels, data_callback callback) override;
         std::uint32_t native_sample_rate() override;
     };
 }

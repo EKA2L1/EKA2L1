@@ -36,6 +36,7 @@ namespace eka2l1::drivers {
          * \brief Create a signed 16-bit LE audio output stream.
          * 
          * \param sample_rate       The target sample rate of output stream.
+         * \param channels          The number of channels of the stream.
          * \param callback          The callback that the stream will use to retrive data.
          * 
          * \returns Instance to the stream on success.
@@ -43,7 +44,7 @@ namespace eka2l1::drivers {
          * \see     native_sample_rate
          */
         virtual std::unique_ptr<audio_output_stream> new_output_stream(const std::uint32_t sample_rate,
-            data_callback callback) = 0;
+            const std::uint8_t channels, data_callback callback) = 0;
 
         virtual std::uint32_t native_sample_rate() = 0;
     };

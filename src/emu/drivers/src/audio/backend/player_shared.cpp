@@ -116,7 +116,7 @@ namespace eka2l1::drivers {
             request->data_.clear();
             
             // New stream to restart everything     
-            output_stream_ = aud_->new_output_stream(request->freq_, [this](std::int16_t *u1, std::size_t u2) {
+            output_stream_ = aud_->new_output_stream(request->freq_, 2, [this](std::int16_t *u1, std::size_t u2) {
                 return data_supply_callback(u1, u2);
             });
 
