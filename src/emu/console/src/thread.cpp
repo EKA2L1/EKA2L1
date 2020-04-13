@@ -418,15 +418,15 @@ namespace eka2l1::desktop {
 
         // TODO: Multi core. Currently it's single core.
         while (!state.should_emu_quit) {
-            //try {
-            state.symsys->loop();
-            //} catch (std::exception &exc) {
-            //    std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
-            //    state.debugger->queue_error(exc.what());
-            //    state.should_emu_quit = true;
+            try {
+                state.symsys->loop();
+            } catch (std::exception &exc) {
+                std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
+                state.debugger->queue_error(exc.what());
+                state.should_emu_quit = true;
 
-            //    break;
-            //}
+                break;
+            }
 
             if (state.should_emu_pause && !state.should_emu_quit) {
                 state.debugger->wait_for_debugger();
