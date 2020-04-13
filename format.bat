@@ -4,6 +4,7 @@ call :DoFormatOn emu
 call :DoFormatOn tests
 call :DoFormatOn tools
 call :DoFormatOn intests
+call :DoFormatOn patch
 
 EXIT /B %ERRORLEVEL%
 
