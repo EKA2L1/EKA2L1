@@ -3,7 +3,7 @@
 REM Bldmake-generated batch file - ABLD.BAT
 REM ** DO NOT EDIT **
 
-perl -S ABLD.PL "\bent\eka2l1\src\patch\scdv\group\\" %1 %2 %3 %4 %5 %6 %7 %8 %9
+perl -S ABLD.PL "\Dev\projects\eka2l1\src\patch\scdv\group\\" %1 %2 %3 %4 %5 %6 %7 %8 %9
 if errorlevel==1 goto CheckPerl
 goto End
 

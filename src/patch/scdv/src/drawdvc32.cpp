@@ -24,250 +24,250 @@
 #include "drawdvc32.h"
 
 TUint8 *CFbsThirtyTwoBitsDrawDevice::GetPixelStartAddress(TInt aX, TInt aY) const {
-	TInt originalX = aX;
-	TInt originalY = aY;
+    TInt originalX = aX;
+    TInt originalY = aY;
 
-	TransformCoordinateToPhysical(originalX, originalY, aX, aY);
-	return reinterpret_cast<TUint8*>(iBuffer) + (aX * 4 + aY * PhysicalScanLineBytes());
+    TransformCoordinateToPhysical(originalX, originalY, aX, aY);
+    return reinterpret_cast<TUint8 *>(iBuffer) + (aX * 4 + aY * PhysicalScanLineBytes());
 }
 
 TRgb CFbsThirtyTwoBitsDrawDevice::ReadPixel(TInt aX, TInt aY) const {
-	if ((aX < 0) || (aY < 0) || (aX >= iSize.iWidth) || (aY >= iSize.iHeight)) {
-		// oops, out of bounds
-		Panic(Scdv::EPanicOutOfBounds);
-		return TRgb(0);
-	}
-	
-	// Try to access that pixel
-	TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-	return TRgb(pixelStart[0], pixelStart[1], pixelStart[2], pixelStart[3]);
+    if ((aX < 0) || (aY < 0) || (aX >= iSize.iWidth) || (aY >= iSize.iHeight)) {
+        // oops, out of bounds
+        Panic(Scdv::EPanicOutOfBounds);
+        return TRgb(0);
+    }
+
+    // Try to access that pixel
+    TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
+    return TRgb(pixelStart[0], pixelStart[1], pixelStart[2], pixelStart[3]);
 }
 
 void CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const {
-	// Do safety check, out of bounds
-	if (aX + aLength > LongWidth())
-		PanicAtTheEndOfTheWorld();
+    // Do safety check, out of bounds
+    if (aX + aLength > LongWidth())
+        PanicAtTheEndOfTheWorld();
 
-	TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-	TInt increment = GetPixelIncrementUnit() * 4;
-	TInt iterator = 0;
-	
-	while (iterator < aLength) {
-		Mem::Copy(reinterpret_cast<TUint8*>(aBuffer) + iterator * 4, pixelStart, 4);
-	    pixelStart += increment;
-	}
+    TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
+    TInt increment = GetPixelIncrementUnit() * 4;
+    TInt iterator = 0;
+
+    while (iterator < aLength) {
+        Mem::Copy(reinterpret_cast<TUint8 *>(aBuffer) + iterator * 4, pixelStart, 4);
+        pixelStart += increment;
+    }
 }
 
 // Write functions
 static void WriteRgb32ToAddressAlpha(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] = aRed;
-	aAddress[1] = aGreen;
-	aAddress[2] = aBlue;
-	aAddress[3] = aAlpha;
+    aAddress[0] = aRed;
+    aAddress[1] = aGreen;
+    aAddress[2] = aBlue;
+    aAddress[3] = aAlpha;
 }
 
 static void WriteRgb32ToAddressAND(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] &= aRed;
-	aAddress[1] &= aGreen;
-	aAddress[2] &= aBlue;
-	aAddress[3] &= aAlpha;
+    aAddress[0] &= aRed;
+    aAddress[1] &= aGreen;
+    aAddress[2] &= aBlue;
+    aAddress[3] &= aAlpha;
 }
 
 static void WriteRgb32ToAddressOR(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] |= aRed;
-	aAddress[1] |= aGreen;
-	aAddress[2] |= aBlue;
-	aAddress[3] |= aAlpha;
+    aAddress[0] |= aRed;
+    aAddress[1] |= aGreen;
+    aAddress[2] |= aBlue;
+    aAddress[3] |= aAlpha;
 }
 
 static void WriteRgb32ToAddressXOR(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] ^= aRed;
-	aAddress[1] ^= aGreen;
-	aAddress[2] ^= aBlue;
-	aAddress[3] ^= aAlpha;
+    aAddress[0] ^= aRed;
+    aAddress[1] ^= aGreen;
+    aAddress[2] ^= aBlue;
+    aAddress[3] ^= aAlpha;
 }
 
 static void WriteRgb32ToAddressNOTSC(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] = ~(aAddress[0]);
-	aAddress[1] = ~(aAddress[1]);
-	aAddress[2] = ~(aAddress[2]);
-	aAddress[3] = ~(aAddress[3]);
+    aAddress[0] = ~(aAddress[0]);
+    aAddress[1] = ~(aAddress[1]);
+    aAddress[2] = ~(aAddress[2]);
+    aAddress[3] = ~(aAddress[3]);
 }
 
 static void WriteRgb32ToAddressANDNOT(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	aAddress[0] = (~aAddress[0]) & aRed;
-	aAddress[1] = (~aAddress[1]) & aGreen;
-	aAddress[2] = (~aAddress[2]) & aBlue;
-	aAddress[3] = (~aAddress[3]) & aAlpha;
+    aAddress[0] = (~aAddress[0]) & aRed;
+    aAddress[1] = (~aAddress[1]) & aGreen;
+    aAddress[2] = (~aAddress[2]) & aBlue;
+    aAddress[3] = (~aAddress[3]) & aAlpha;
 }
 
 static void WriteRgb32ToAddressBlend(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	if (aAlpha == 255) {
-		WriteRgb32ToAddressAlpha(aAddress, aRed, aGreen, aBlue, 255);
-		return;
-	}
+    if (aAlpha == 255) {
+        WriteRgb32ToAddressAlpha(aAddress, aRed, aGreen, aBlue, 255);
+        return;
+    }
 
-	TUint32 *colorWord = reinterpret_cast<TUint32*>(aAddress);
-	TUint32 color24 = aBlue | (aGreen << 8) | (aRed << 16);
+    TUint32 *colorWord = reinterpret_cast<TUint32 *>(aAddress);
+    TUint32 color24 = aBlue | (aGreen << 8) | (aRed << 16);
 
-	TUint32 rb = (*colorWord & 0xFF00FF);
-	TUint32 g = (*colorWord & 0x00FF00);
-	
-	rb += ((color24 & 0xff00ff) - rb) * aAlpha >> 8;
-	g  += ((color24 & 0x00ff00) -  g) * aAlpha >> 8;
-	
-	*colorWord &= ~0xFFFFFF;
-	*colorWord |= ((rb & 0xff00ff) | (g & 0xff00)) | (0x01000000);
+    TUint32 rb = (*colorWord & 0xFF00FF);
+    TUint32 g = (*colorWord & 0x00FF00);
+
+    rb += ((color24 & 0xff00ff) - rb) * aAlpha >> 8;
+    g += ((color24 & 0x00ff00) - g) * aAlpha >> 8;
+
+    *colorWord &= ~0xFFFFFF;
+    *colorWord |= ((rb & 0xff00ff) | (g & 0xff00)) | (0x01000000);
 }
 
 static void WriteRgb32ToAddressUNIMPL(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-	// Empty
+    // Empty
 }
 
 CFbsThirtyTwoBitsDrawDevice::PWriteRgbToAddressFunc CFbsThirtyTwoBitsDrawDevice::GetRgbWriteFunc(CGraphicsContext::TDrawMode aDrawMode) {
-	switch (aDrawMode) {
-	case CGraphicsContext::EDrawModeWriteAlpha:
-		return WriteRgb32ToAddressAlpha;
+    switch (aDrawMode) {
+    case CGraphicsContext::EDrawModeWriteAlpha:
+        return WriteRgb32ToAddressAlpha;
 
-	case CGraphicsContext::EDrawModeAND:
-		return WriteRgb32ToAddressAND;
+    case CGraphicsContext::EDrawModeAND:
+        return WriteRgb32ToAddressAND;
 
-	case CGraphicsContext::EDrawModeOR:
-		return WriteRgb32ToAddressOR;
+    case CGraphicsContext::EDrawModeOR:
+        return WriteRgb32ToAddressOR;
 
-	case CGraphicsContext::EDrawModeXOR:
-		return WriteRgb32ToAddressXOR;
+    case CGraphicsContext::EDrawModeXOR:
+        return WriteRgb32ToAddressXOR;
 
-	case CGraphicsContext::EDrawModeNOTSCREEN:
-		return WriteRgb32ToAddressNOTSC;
+    case CGraphicsContext::EDrawModeNOTSCREEN:
+        return WriteRgb32ToAddressNOTSC;
 
-	case CGraphicsContext::EDrawModeANDNOT:
-		return WriteRgb32ToAddressANDNOT;
+    case CGraphicsContext::EDrawModeANDNOT:
+        return WriteRgb32ToAddressANDNOT;
 
-	case CGraphicsContext::EDrawModePEN:
-		return WriteRgb32ToAddressBlend;
+    case CGraphicsContext::EDrawModePEN:
+        return WriteRgb32ToAddressBlend;
 
-	default:
-		Scdv::Log("Unimplemented graphics drawing mode: %d", (TInt)aDrawMode);
-		break;
-	}
+    default:
+        Scdv::Log("Unimplemented graphics drawing mode: %d", (TInt)aDrawMode);
+        break;
+    }
 
-	return WriteRgb32ToAddressUNIMPL;
+    return WriteRgb32ToAddressUNIMPL;
 }
 
 void CFbsThirtyTwoBitsDrawDevice::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
-	TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
+    TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
+    PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
 
-	writeFunc(pixelStart, (TUint8)aColor.Red(), (TUint8)aColor.Green(), (TUint8)aColor.Blue(),  (TUint8)aColor.Alpha());
+    writeFunc(pixelStart, (TUint8)aColor.Red(), (TUint8)aColor.Green(), (TUint8)aColor.Blue(), (TUint8)aColor.Alpha());
 }
 
-void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY,TUint32* aBuffer,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) {
-	TUint8 *pixelAddress = NULL;
-	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
-	TInt increment = GetPixelIncrementUnit() * 4;
+void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
+    TUint8 *pixelAddress = NULL;
+    PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
+    TInt increment = GetPixelIncrementUnit() * 4;
 
-	if (aLength > 32 || aX + aLength > LongWidth())
-		PanicAtTheEndOfTheWorld();
+    if (aLength > 32 || aX + aLength > LongWidth())
+        PanicAtTheEndOfTheWorld();
 
-	const TUint8 red = (TUint8)aColor.Red();
-	const TUint8 green = (TUint8)aColor.Green();
-	const TUint8 blue = (TUint8)aColor.Blue();
-	const TUint8 alpha = (TUint8)aColor.Alpha();
+    const TUint8 red = (TUint8)aColor.Red();
+    const TUint8 green = (TUint8)aColor.Green();
+    const TUint8 blue = (TUint8)aColor.Blue();
+    const TUint8 alpha = (TUint8)aColor.Alpha();
 
-	for (TInt y = aY; y < aY + aHeight; y++) {	
-		pixelAddress = GetPixelStartAddress(aX, y);
+    for (TInt y = aY; y < aY + aHeight; y++) {
+        pixelAddress = GetPixelStartAddress(aX, y);
 
-		for (TInt x = aX; x < aX + aLength; x++) {
-			if (*aBuffer & (1 << (x - aX))) {
-				// Try to reduce if calls pls
-				writeFunc(pixelAddress, red, green, blue, alpha);
-			}
-		
-			pixelAddress += increment;
-		}
-		
-		aBuffer++;
-	}
+        for (TInt x = aX; x < aX + aLength; x++) {
+            if (*aBuffer & (1 << (x - aX))) {
+                // Try to reduce if calls pls
+                writeFunc(pixelAddress, red, green, blue, alpha);
+            }
+
+            pixelAddress += increment;
+        }
+
+        aBuffer++;
+    }
 }
 
-void CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(TInt aX,TInt aY,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) {
-	TUint8 *pixelAddress = NULL;
-	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
-	TInt increment = GetPixelIncrementUnit() * 4;
+void CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
+    TUint8 *pixelAddress = NULL;
+    PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
+    TInt increment = GetPixelIncrementUnit() * 4;
 
-	if (aX + aLength > LongWidth())
-		PanicAtTheEndOfTheWorld();
+    if (aX + aLength > LongWidth())
+        PanicAtTheEndOfTheWorld();
 
-	const TUint8 red = (TUint8)aColor.Red();
-	const TUint8 green = (TUint8)aColor.Green();
-	const TUint8 blue = (TUint8)aColor.Blue();
-	const TUint8 alpha = (TUint8)aColor.Alpha();
+    const TUint8 red = (TUint8)aColor.Red();
+    const TUint8 green = (TUint8)aColor.Green();
+    const TUint8 blue = (TUint8)aColor.Blue();
+    const TUint8 alpha = (TUint8)aColor.Alpha();
 
-	for (TInt y = aY; y < aY + aHeight; y++) {	
-		pixelAddress = GetPixelStartAddress(aX, y);
+    for (TInt y = aY; y < aY + aHeight; y++) {
+        pixelAddress = GetPixelStartAddress(aX, y);
 
-		for (TInt x = aX; x < aX + aLength; x++) {
-			// Try to reduce if calls pls
-			writeFunc(pixelAddress, red, green, blue, alpha);
-			pixelAddress += increment;
-		}
-	}
+        for (TInt x = aX; x < aX + aLength; x++) {
+            // Try to reduce if calls pls
+            writeFunc(pixelAddress, red, green, blue, alpha);
+            pixelAddress += increment;
+        }
+    }
 }
 
-void CFbsThirtyTwoBitsDrawDevice::WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLength,TRgb aColor,const TUint8* aMaskBuffer) {
-	Scdv::Log("Write rgb alpha multi for 16bit mode todo!");
+void CFbsThirtyTwoBitsDrawDevice::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer) {
+    Scdv::Log("Write rgb alpha multi for 16bit mode todo!");
 }
 
-void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX,TInt aY,TInt aLength,TUint32* aBuffer,CGraphicsContext::TDrawMode aDrawMode) {
-	TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
-	PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
-	TInt increment = GetPixelIncrementUnit() * 4;
+void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode) {
+    TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
+    PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
+    TInt increment = GetPixelIncrementUnit() * 4;
 
-	TUint8 *buffer8 = reinterpret_cast<TUint8*>(aBuffer);
-	
-	if (aX + aLength > LongWidth())
-		PanicAtTheEndOfTheWorld();
+    TUint8 *buffer8 = reinterpret_cast<TUint8 *>(aBuffer);
 
-	for (TInt x = aX; x < aX + aLength; x++) {
-		// Try to reduce if calls pls
-		writeFunc(pixelAddress, buffer8[0], buffer8[1], buffer8[2], buffer8[3]);
+    if (aX + aLength > LongWidth())
+        PanicAtTheEndOfTheWorld();
 
-		pixelAddress += increment;
-		buffer8 += 4;
-	}
+    for (TInt x = aX; x < aX + aLength; x++) {
+        // Try to reduce if calls pls
+        writeFunc(pixelAddress, buffer8[0], buffer8[1], buffer8[2], buffer8[3]);
+
+        pixelAddress += increment;
+        buffer8 += 4;
+    }
 }
 
 void CFbsThirtyTwoBitsDrawDevice::SetSize(TSize aSize) {
-	iSize = aSize;
+    iSize = aSize;
 
-	iScanLineWords = iSize.iWidth;
-	iLongWidth = iSize.iWidth;
+    iScanLineWords = iSize.iWidth;
+    iLongWidth = iSize.iWidth;
 }
 
 TInt CFbsThirtyTwoBitsDrawDevice::Construct(TSize aSize, TInt aDataStride) {
-	iDisplayMode = EColor16MA;
-	SetSize(aSize);
-	
-	if (aDataStride == -1) {
-		return KErrNone;
-	}
-	
-	if (aDataStride % 4 != 0) {
-		return KErrArgument;
-	}
-	
-	iScanLineWords = aDataStride >> 2;
-	iLongWidth = aDataStride >> 2;
+    iDisplayMode = EColor16MA;
+    SetSize(aSize);
 
-	TInt scanLineBufferSize = Max(iSize.iHeight, iSize.iWidth) * 4;
-	iScanLineBuffer = User::Alloc(scanLineBufferSize);
-	
-	if (iScanLineBuffer == NULL) {
-		return KErrNoMemory;
-	}
-	
-	return KErrNone;
+    if (aDataStride == -1) {
+        return KErrNone;
+    }
+
+    if (aDataStride % 4 != 0) {
+        return KErrArgument;
+    }
+
+    iScanLineWords = aDataStride >> 2;
+    iLongWidth = aDataStride >> 2;
+
+    TInt scanLineBufferSize = Max(iSize.iHeight, iSize.iWidth) * 4;
+    iScanLineBuffer = User::Alloc(scanLineBufferSize);
+
+    if (iScanLineBuffer == NULL) {
+        return KErrNoMemory;
+    }
+
+    return KErrNone;
 }
 
 ///////////////////////////////////////////////
@@ -276,57 +276,56 @@ TInt CFbsThirtyTwoBitsDrawDevice::Construct(TSize aSize, TInt aDataStride) {
 //
 //////////////////////////////////////////////
 TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY) {
-	Scdv::Log("Set called with %d %d, unimplemented", aFactorX, aFactorY);
-	return KErrNone;
+    Scdv::Log("Set called with %d %d, unimplemented", aFactorX, aFactorY);
+    return KErrNone;
 }
 
-void CFbsTwentyfourBitAlphaScreenDrawDevice::Get(TInt& aFactorX, TInt& aFactorY, TInt& aDivisorX, TInt& aDivisorY) {
-
+void CFbsTwentyfourBitAlphaScreenDrawDevice::Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY) {
 }
 
 TBool CFbsTwentyfourBitAlphaScreenDrawDevice::IsScalingOff() {
-	return ETrue;
+    return ETrue;
 }
 
-TInt CFbsTwentyfourBitAlphaScreenDrawDevice::GetInterface(TInt aInterfaceId, TAny*& aInterface) {
-	switch (aInterfaceId) {
-		case KScalingInterfaceID:
-			aInterface = static_cast<Scdv::MScalingSettings*>(this);
-			return KErrNone;
-			
-		case KFastBlit2InterfaceID:
-			aInterface = static_cast<Scdv::MFastBlitBlock*>(this);
-			return KErrNone;
-		
-		case KOrientationInterfaceID:
-			aInterface = static_cast<Scdv::MOrientation*>(this);
-			return KErrNone;
+TInt CFbsTwentyfourBitAlphaScreenDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterface) {
+    switch (aInterfaceId) {
+    case KScalingInterfaceID:
+        aInterface = static_cast<Scdv::MScalingSettings *>(this);
+        return KErrNone;
 
-		default:
-			break;
-	}
+    case KFastBlit2InterfaceID:
+        aInterface = static_cast<Scdv::MFastBlitBlock *>(this);
+        return KErrNone;
 
-	//Scdv::Log("ERR:: Interface not supported %d", aInterfaceId);
-	return KErrNotSupported;
+    case KOrientationInterfaceID:
+        aInterface = static_cast<Scdv::MOrientation *>(this);
+        return KErrNone;
+
+    default:
+        break;
+    }
+
+    //Scdv::Log("ERR:: Interface not supported %d", aInterfaceId);
+    return KErrNotSupported;
 }
 
 TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {
-	iScreenNumber = aScreenNumber;
-	return CFbsThirtyTwoBitsDrawDevice::Construct(aSize, aDataStride);
+    iScreenNumber = aScreenNumber;
+    return CFbsThirtyTwoBitsDrawDevice::Construct(aSize, aDataStride);
 }
 
 void CFbsTwentyfourBitAlphaScreenDrawDevice::Update() {
-	TRect updateRect;
-	updateRect.iTl = TPoint(0, 0);
-	updateRect.iBr = updateRect.iTl + iSize;
+    TRect updateRect;
+    updateRect.iTl = TPoint(0, 0);
+    updateRect.iBr = updateRect.iTl + iSize;
 
-	UpdateScreen(1, iScreenNumber, 1, &updateRect);
+    UpdateScreen(1, iScreenNumber, 1, &updateRect);
 }
 
-void CFbsTwentyfourBitAlphaScreenDrawDevice::Update(const TRegion& aRegion) {
-	UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());
+void CFbsTwentyfourBitAlphaScreenDrawDevice::Update(const TRegion &aRegion) {
+    UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());
 }
 
-void CFbsTwentyfourBitAlphaScreenDrawDevice::UpdateRegion(const TRect& aRect) {
-	UpdateScreen(1, iScreenNumber, 1, &aRect);
+void CFbsTwentyfourBitAlphaScreenDrawDevice::UpdateRegion(const TRect &aRect) {
+    UpdateScreen(1, iScreenNumber, 1, &aRect);
 }

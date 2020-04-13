@@ -24,44 +24,45 @@
 #include <scdv/blit.h>
 #include <scdv/scale.h>
 
-class CFbsThirtyTwoBitsDrawDevice: public CFbsDrawDeviceBuffer {
+class CFbsThirtyTwoBitsDrawDevice : public CFbsDrawDeviceBuffer {
 public:
-	TInt Construct(TSize aSize, TInt aDataStride);
-	void SetSize(TSize aSize);
+    TInt Construct(TSize aSize, TInt aDataStride);
+    void SetSize(TSize aSize);
 
-	virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const;
-	virtual void ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const;
-	virtual void WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode);
-	virtual void WriteLine(TInt aX,TInt aY,TInt aLength,TUint32* aBuffer,CGraphicsContext::TDrawMode aDrawMode);
-	virtual void WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLength,TRgb aColor,const TUint8* aMaskBuffer);
+    virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const;
+    virtual void ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const;
+    virtual void WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
+    virtual void WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode);
+    virtual void WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer);
 
-	typedef void (*PWriteRgbToAddressFunc)(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha);
+    typedef void (*PWriteRgbToAddressFunc)(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha);
 
-	PWriteRgbToAddressFunc GetRgbWriteFunc(CGraphicsContext::TDrawMode aDrawMode);
+    PWriteRgbToAddressFunc GetRgbWriteFunc(CGraphicsContext::TDrawMode aDrawMode);
 
-	virtual TRgb ReadPixel(TInt aX, TInt aY) const;
-	virtual void WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
-	virtual void WriteRgbMulti(TInt aX,TInt aY,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode);
+    virtual TRgb ReadPixel(TInt aX, TInt aY) const;
+    virtual void WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
+    virtual void WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
 };
 
-class CFbsTwentyfourBitAlphaDrawDevice: public CFbsThirtyTwoBitsDrawDevice {
+class CFbsTwentyfourBitAlphaDrawDevice : public CFbsThirtyTwoBitsDrawDevice {
 };
 
-class CFbsTwentyfourBitAlphaScreenDrawDevice: public CFbsTwentyfourBitAlphaDrawDevice, public Scdv::MScalingSettings {
-	TUint32 iScreenNumber;
+class CFbsTwentyfourBitAlphaScreenDrawDevice : public CFbsTwentyfourBitAlphaDrawDevice, public Scdv::MScalingSettings {
+    TUint32 iScreenNumber;
 
 public:
-	TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);
+    TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);
 
     virtual void Update();
-    virtual void Update(const TRegion& aRegion);
-    virtual void UpdateRegion(const TRect& aRect);
-	
-	virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY);
-	virtual void Get(TInt& aFactorX, TInt& aFactorY, TInt& aDivisorX, TInt& aDivisorY);
-	virtual TBool IsScalingOff();
-	
-    virtual TInt GetInterface(TInt aInterfaceId, TAny*& aInterface);
-};;
+    virtual void Update(const TRegion &aRegion);
+    virtual void UpdateRegion(const TRect &aRect);
+
+    virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY);
+    virtual void Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY);
+    virtual TBool IsScalingOff();
+
+    virtual TInt GetInterface(TInt aInterfaceId, TAny *&aInterface);
+};
+;
 
 #endif

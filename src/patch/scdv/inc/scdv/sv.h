@@ -22,21 +22,21 @@
 
 #include <e32std.h>
 
-#define CALL_HLE_DISPATCH(FUNCID)			\
-	asm volatile("mov r0, #" #FUNCID);		\
-	asm volatile("swi #0xFE");
+#define CALL_HLE_DISPATCH(FUNCID)      \
+    asm volatile("mov r0, #" #FUNCID); \
+    asm volatile("swi #0xFE");
 
-#define HLE_DISPATCH_FUNC(ret, name, id, ...) 	\
-	ret name(const TUint32 func_id, __VA_ARGS__)
+#define HLE_DISPATCH_FUNC(ret, name, id, ...) \
+    ret name(const TUint32 func_id, __VA_ARGS__)
 
 struct TFastBlitInfo {
-	TUint8 *iDestBase;
-	const TUint8* iSrcBase;
-	TPoint iDestPoint;
-	TUint32 iDestStride;
-	TUint32 iSourceStride;
-	TSize iSrcSize;
-	TRect iSrcRect;
+    TUint8 *iDestBase;
+    const TUint8 *iSrcBase;
+    TPoint iDestPoint;
+    TUint32 iDestStride;
+    TUint32 iSourceStride;
+    TSize iSrcSize;
+    TRect iSrcRect;
 };
 
 HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles);

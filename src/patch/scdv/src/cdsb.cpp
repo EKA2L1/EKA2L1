@@ -24,11 +24,11 @@
 #include <scdv/panic.h>
 
 CDirectScreenBitmap *CDirectScreenBitmap::NewL() {
-	return CDirectScreenBitmap::NewL(0);
+    return CDirectScreenBitmap::NewL(0);
 }
 
 CDirectScreenBitmap *CDirectScreenBitmap::NewL(const TInt aScreenNum) {
-	Scdv::Log("ERR:: Unsupported creating direct screen bitmap, TODO!");
-	Scdv::Panic(Scdv::EPanicUnsupported);
-	return NULL;
+    Scdv::Log("ERR:: Unsupported creating direct screen bitmap, TODO!");
+    Scdv::Panic(Scdv::EPanicUnsupported);
+    return NULL;
 }

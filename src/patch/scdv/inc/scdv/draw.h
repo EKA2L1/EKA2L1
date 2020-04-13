@@ -44,7 +44,7 @@ public:
         EFade = 0x2,
         EShadowFade = 0x3
     };
- 
+
     enum TOrientation {
         EOrientationNormal,
         EOrientationRotate90,
@@ -53,10 +53,10 @@ public:
     };
 
 public:
-    EXPORT_C static CFbsDrawDevice* NewScreenDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode);
-    EXPORT_C static CFbsDrawDevice* NewScreenDeviceL(TInt aScreenNo, TDisplayMode aDispMode);
-    EXPORT_C static CFbsDrawDevice* NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode, TInt aDataStride);
-    EXPORT_C static CFbsDrawDevice* NewBitmapDeviceL(const TSize& aSize, TDisplayMode aDispMode, TInt aDataStride);
+    EXPORT_C static CFbsDrawDevice *NewScreenDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode);
+    EXPORT_C static CFbsDrawDevice *NewScreenDeviceL(TInt aScreenNo, TDisplayMode aDispMode);
+    EXPORT_C static CFbsDrawDevice *NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode aDispMode, TInt aDataStride);
+    EXPORT_C static CFbsDrawDevice *NewBitmapDeviceL(const TSize &aSize, TDisplayMode aDispMode, TInt aDataStride);
     EXPORT_C static TDisplayMode DisplayMode16M();
 
     virtual TDisplayMode DisplayMode() const = 0;
@@ -75,11 +75,11 @@ public:
      * \param aNumPairs 	Number of color pairs.
      * \param aMapForward	True if the color to be replaced is the first one.
      */
-    virtual void MapColors(const TRect& aRect,const TRgb* aColors,TInt aNumPairs,TBool aMapForwards) = 0;
-    virtual void ReadLine(TInt aX,TInt aY,TInt aLength,TAny* aBuffer,TDisplayMode aDispMode) const = 0;
-    virtual TRgb ReadPixel(TInt aX,TInt aY) const = 0;
-    virtual TUint32* ScanLineBuffer() const = 0;
-    
+    virtual void MapColors(const TRect &aRect, const TRgb *aColors, TInt aNumPairs, TBool aMapForwards) = 0;
+    virtual void ReadLine(TInt aX, TInt aY, TInt aLength, TAny *aBuffer, TDisplayMode aDispMode) const = 0;
+    virtual TRgb ReadPixel(TInt aX, TInt aY) const = 0;
+    virtual TUint32 *ScanLineBuffer() const = 0;
+
     /**
      * \brief       Get byte width of the device.
      * \returns     Byte width.
@@ -91,40 +91,41 @@ public:
     virtual TInt VertTwipsPerThousandPixels() const = 0;
     virtual void OrientationsAvailable(TBool aOrientation[4]) = 0;
     virtual TBool SetOrientation(TOrientation aOrientation) = 0;
-    virtual void WriteBinary(TInt aX,TInt aY,TUint32* aBuffer,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) = 0;
-    virtual void WriteBinaryLine(TInt aX,TInt aY,TUint32* aBuffer,TInt aLength,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) = 0;
-    virtual void WriteBinaryLineVertical(TInt aX,TInt aY,TUint32* aBuffer,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode,TBool aUp) = 0;
-    virtual void WriteRgb(TInt aX,TInt aY,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) = 0;
-    virtual void WriteRgbMulti(TInt aX,TInt aY,TInt aLength,TInt aHeight,TRgb aColor,CGraphicsContext::TDrawMode aDrawMode) = 0;
-    virtual void WriteRgbAlphaLine(TInt aX,TInt aY,TInt aLength,TUint8* aRgbBuffer,TUint8* aMaskBuffer, CGraphicsContext::TDrawMode aDrawMode) = 0;
-    virtual void WriteLine(TInt aX,TInt aY,TInt aLength,TUint32* aBuffer,CGraphicsContext::TDrawMode aDrawMode) = 0;
+    virtual void WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) = 0;
+    virtual void WriteBinaryLine(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) = 0;
+    virtual void WriteBinaryLineVertical(TInt aX, TInt aY, TUint32 *aBuffer, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode, TBool aUp) = 0;
+    virtual void WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) = 0;
+    virtual void WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) = 0;
+    virtual void WriteRgbAlphaLine(TInt aX, TInt aY, TInt aLength, TUint8 *aRgbBuffer, TUint8 *aMaskBuffer, CGraphicsContext::TDrawMode aDrawMode) = 0;
+    virtual void WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode) = 0;
 
 public:
     virtual TInt InitScreen() = 0;
     virtual void SetAutoUpdate(TBool aValue) = 0;
-    virtual void SetBits(TAny* aBits) = 0;
-    virtual TInt SetCustomPalette(const CPalette*) = 0;
-    virtual TInt GetCustomPalette(CPalette*&) = 0;
-    virtual void SetDisplayMode(CFbsDrawDevice* aDrawDevice) = 0;
-    virtual void SetDitherOrigin(const TPoint&) = 0;
+    virtual void SetBits(TAny *aBits) = 0;
+    virtual TInt SetCustomPalette(const CPalette *) = 0;
+    virtual TInt GetCustomPalette(CPalette *&) = 0;
+    virtual void SetDisplayMode(CFbsDrawDevice *aDrawDevice) = 0;
+    virtual void SetDitherOrigin(const TPoint &) = 0;
     virtual void SetUserDisplayMode(TDisplayMode) = 0;
     virtual void SetShadowMode(TShadowMode) = 0;
-    virtual void SetFadingParameters(TUint8 /*aBlackMap*/,TUint8 /*aWhiteMap*/) = 0;
-    virtual void ShadowArea(const TRect&) = 0;
-    virtual void ShadowBuffer(TInt,TUint32*) = 0;
+    virtual void SetFadingParameters(TUint8 /*aBlackMap*/, TUint8 /*aWhiteMap*/) = 0;
+    virtual void ShadowArea(const TRect &) = 0;
+    virtual void ShadowBuffer(TInt, TUint32 *) = 0;
     virtual void Update() = 0;
-    virtual void Update(const TRegion&) = 0;
-    virtual void UpdateRegion(const TRect&) = 0;
+    virtual void Update(const TRegion &) = 0;
+    virtual void UpdateRegion(const TRect &) = 0;
 
 public:
-    virtual void WriteRgbAlphaMulti(TInt aX,TInt aY,TInt aLength,TRgb aColor,const TUint8* aMaskBuffer) = 0;
-    virtual void WriteRgbAlphaLine(TInt aX,TInt aY,TInt aLength,
-                                   const TUint8* aRgbBuffer1,
-                                   const TUint8* aBuffer2,
-                                   const TUint8* aMaskBuffer,
-                                   CGraphicsContext::TDrawMode aDrawMode) = 0;
-    virtual TInt GetInterface(TInt aInterfaceId, TAny*& aInterface) = 0;
-    virtual void GetDrawRect(TRect& aDrawRect) const = 0;
+    virtual void WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer) = 0;
+    virtual void WriteRgbAlphaLine(TInt aX, TInt aY, TInt aLength,
+        const TUint8 *aRgbBuffer1,
+        const TUint8 *aBuffer2,
+        const TUint8 *aMaskBuffer,
+        CGraphicsContext::TDrawMode aDrawMode)
+        = 0;
+    virtual TInt GetInterface(TInt aInterfaceId, TAny *&aInterface) = 0;
+    virtual void GetDrawRect(TRect &aDrawRect) const = 0;
     virtual void SwapWidthAndHeight() = 0;
 };
 

@@ -26,7 +26,7 @@ namespace Scdv {
         EPanicOutOfBounds = 1,
         EPanicUnsupported = 2
     };
-    
+
     void Panic(TPanicReason reason);
 }
 

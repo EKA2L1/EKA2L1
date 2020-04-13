@@ -26,8 +26,8 @@
 
 #include "drawdvcalgo.h"
 
-class CFbsDrawDeviceBuffer: public CFbsDrawDeviceAlgorithm,
-                            public Scdv::MFastBlitBlock {
+class CFbsDrawDeviceBuffer : public CFbsDrawDeviceAlgorithm,
+                             public Scdv::MFastBlitBlock {
 protected:
     TAny *iBuffer;
     TAny *iScanLineBuffer;
@@ -37,51 +37,50 @@ protected:
     TSize iSize;
     TDisplayMode iDisplayMode;
     TOrientation iOrientation;
-    
+
 public:
     explicit CFbsDrawDeviceBuffer();
     virtual ~CFbsDrawDeviceBuffer();
-    
+
     virtual TDisplayMode DisplayMode() const;
     virtual TSize SizeInPixels() const;
-    virtual TUint32* ScanLineBuffer() const;
+    virtual TUint32 *ScanLineBuffer() const;
     virtual TDisplayMode ScanLineDisplayMode() const;
-    
+
     virtual TInt InitScreen();
-    virtual void SetBits(TAny* aBits);
-    
+    virtual void SetBits(TAny *aBits);
+
     virtual void SetAutoUpdate(TBool aValue);
-    
-    virtual TInt SetCustomPalette(const CPalette*);
-    virtual TInt GetCustomPalette(CPalette*&);
-    virtual void SetDisplayMode(CFbsDrawDevice* aDrawDevice);
-    virtual void SetDitherOrigin(const TPoint&);
+
+    virtual TInt SetCustomPalette(const CPalette *);
+    virtual TInt GetCustomPalette(CPalette *&);
+    virtual void SetDisplayMode(CFbsDrawDevice *aDrawDevice);
+    virtual void SetDitherOrigin(const TPoint &);
     virtual void SetUserDisplayMode(TDisplayMode);
     virtual void SetShadowMode(TShadowMode);
-    virtual void SetFadingParameters(TUint8 /*aBlackMap*/,TUint8 /*aWhiteMap*/);
-    virtual void ShadowArea(const TRect&);
-    virtual void ShadowBuffer(TInt,TUint32*);
+    virtual void SetFadingParameters(TUint8 /*aBlackMap*/, TUint8 /*aWhiteMap*/);
+    virtual void ShadowArea(const TRect &);
+    virtual void ShadowBuffer(TInt, TUint32 *);
     virtual void Update();
-    virtual void Update(const TRegion&);
-    virtual void UpdateRegion(const TRect&);
+    virtual void Update(const TRegion &);
+    virtual void UpdateRegion(const TRect &);
     virtual TBool SetOrientation(TOrientation aOri);
-    virtual void GetDrawRect(TRect& aDrawRect) const;
-    
-	// Additional functions
-	virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const = 0;
+    virtual void GetDrawRect(TRect &aDrawRect) const;
 
-    virtual TInt WriteBitmapBlock(const TPoint& aDest,
-            CFbsDrawDevice* aSrcDrawDevice,
-            const TRect& aSrcRect);
+    // Additional functions
+    virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const = 0;
 
-	virtual TInt WriteBitmapBlock(const TPoint& aDest,
-									const TUint32* aSrcBase,
-									TInt aSrcStride,
-									const TSize& aSrcSize,
-									const TRect& aSrcRect);
+    virtual TInt WriteBitmapBlock(const TPoint &aDest,
+        CFbsDrawDevice *aSrcDrawDevice,
+        const TRect &aSrcRect);
 
-	virtual const TUint32* Bits() const;
+    virtual TInt WriteBitmapBlock(const TPoint &aDest,
+        const TUint32 *aSrcBase,
+        TInt aSrcStride,
+        const TSize &aSrcSize,
+        const TRect &aSrcRect);
 
+    virtual const TUint32 *Bits() const;
 };
 
 #endif

@@ -17,11 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scdv/panic.h>
 #include <e32std.h>
+#include <scdv/panic.h>
 
 namespace Scdv {
-	void Panic(TPanicReason reason) {
-		User::Panic(_L("HLE_SCDV"), reason);
-	}
+    void Panic(TPanicReason reason) {
+        User::Panic(_L("HLE_SCDV"), reason);
+    }
 }
