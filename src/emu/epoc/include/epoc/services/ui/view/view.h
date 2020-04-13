@@ -60,7 +60,7 @@ namespace eka2l1 {
 
     using custom_message = std::vector<std::uint8_t>;
 
-    class view_session: public service::typical_session {
+    class view_session : public service::typical_session {
         ipc_msg_ptr to_panic_;
         ui::view::event_queue queue_;
         epoc::uid app_uid_;
@@ -79,7 +79,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
-    class view_server: public service::typical_server {
+    class view_server : public service::typical_server {
         std::uint32_t priority_;
         std::uint8_t flags_;
 
@@ -92,7 +92,7 @@ namespace eka2l1 {
     public:
         explicit view_server(system *sys);
         void connect(service::ipc_context &ctx) override;
-        
+
         bool init(io_system *io);
 
         const std::uint32_t priority() const {

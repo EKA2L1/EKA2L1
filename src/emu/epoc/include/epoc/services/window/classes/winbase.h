@@ -30,7 +30,7 @@
 
 namespace eka2l1::epoc {
     struct window;
-    
+
     enum class window_kind {
         normal,
         group,
@@ -43,7 +43,7 @@ namespace eka2l1::epoc {
         bonjour_children,
         bonjour_children_and_previous_siblings
     };
-    
+
     /**
      * \brief Class to hook for tree walking.
      */
@@ -58,9 +58,9 @@ namespace eka2l1::epoc {
 
     /** \brief Base class for all window. */
     struct window : public window_client_obj {
-        window *parent{ nullptr };          ///< Pointer to the parent
-        window *sibling{ nullptr };         ///< Pointer to oldest sibling
-        window *child{ nullptr  };          ///< Pointer to the oldest child
+        window *parent{ nullptr }; ///< Pointer to the parent
+        window *sibling{ nullptr }; ///< Pointer to oldest sibling
+        window *child{ nullptr }; ///< Pointer to the oldest child
 
         // The priority of the window.
         std::uint16_t priority{ 0 };
@@ -148,7 +148,7 @@ namespace eka2l1::epoc {
          * \returns True if the window needs to be reordered.
          */
         bool check_order_change(const int new_pos);
-        
+
         /**
          * \brief Remove the window from the sibling list.
          */

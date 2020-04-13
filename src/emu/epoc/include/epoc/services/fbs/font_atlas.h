@@ -34,7 +34,7 @@ namespace eka2l1::drivers {
 }
 
 namespace eka2l1::epoc {
-    #define ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH 50
+#define ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH 50
 
     /**
      * \brief Font atlas is a texture contains glyph bitmaps.

@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/utils/uid.h>
 #include <cstdint>
+#include <epoc/utils/uid.h>
 #include <string>
 #include <vector>
 

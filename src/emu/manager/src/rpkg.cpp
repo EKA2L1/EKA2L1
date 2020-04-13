@@ -63,7 +63,7 @@ namespace eka2l1 {
 
             while (left) {
                 int64_t take = left < take_def ? left : take_def;
-                
+
                 if (fread(temp.data(), 1, take, parent) != take) {
                     return false;
                 }

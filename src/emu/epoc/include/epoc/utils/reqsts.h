@@ -12,7 +12,7 @@ namespace eka2l1 {
         class chunkyseri;
     }
 
-    using thread_ptr = kernel::thread*;
+    using thread_ptr = kernel::thread *;
 }
 
 /* Header only request status */
@@ -56,12 +56,12 @@ namespace eka2l1::epoc {
         eka2l1::kernel::thread *requester;
 
         explicit notify_info() = default;
-        
+
         explicit notify_info(eka2l1::ptr<epoc::request_status> &sts, eka2l1::kernel::thread *requester)
             : sts(sts)
             , requester(requester) {
         }
-        
+
         void complete(int err_code);
         void do_state(common::chunkyseri &seri);
 
@@ -69,7 +69,7 @@ namespace eka2l1::epoc {
             return !sts;
         }
 
-        const bool operator == (const notify_info &rhs) const {
+        const bool operator==(const notify_info &rhs) const {
             return (sts == rhs.sts) && (requester == rhs.requester);
         }
     };

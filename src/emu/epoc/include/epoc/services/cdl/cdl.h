@@ -21,14 +21,14 @@
 
 #include <epoc/utils/reqsts.h>
 
-#include <epoc/services/framework.h>
 #include <epoc/services/cdl/common.h>
 #include <epoc/services/cdl/observer.h>
+#include <epoc/services/framework.h>
 
 #include <memory>
 
 namespace eka2l1 {
-    class cdl_server_session: public service::typical_session {
+    class cdl_server_session : public service::typical_session {
         epoc::notify_info notifier;
         std::string temp_buf;
 
@@ -56,11 +56,11 @@ namespace eka2l1 {
      * 
      * \see akn_icon_server akn_skin_server
      */
-    class cdl_server: public service::typical_server {
+    class cdl_server : public service::typical_server {
         friend class cdl_server_session;
 
         epoc::cdl_ref_collection collection_;
-        
+
         std::unique_ptr<epoc::cdl_ecom_generic_observer> observer_;
         std::unique_ptr<epoc::cdl_ecom_watcher> watcher_;
 

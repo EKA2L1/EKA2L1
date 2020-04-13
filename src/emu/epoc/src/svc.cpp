@@ -28,17 +28,17 @@
 #include <epoc/utils/uid.h>
 
 #include <common/configure.h>
+#include <epoc/dispatch/dispatcher.h>
 #include <epoc/hal.h>
 #include <epoc/svc.h>
-#include <epoc/dispatch/dispatcher.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
 #include <epoc/loader/rom.h>
 
-#include <manager/manager.h>
 #include <manager/config.h>
+#include <manager/manager.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
@@ -472,7 +472,7 @@ namespace eka2l1::epoc {
     /*
     * Warning: It's not possible to set the UTC time and offset in the emulator at the moment.
     */
-   
+
     BRIDGE_FUNC(std::int32_t, UTCOffset) {
         // TODO: Users and apps can set this
         return common::get_current_utc_offset();
@@ -721,7 +721,7 @@ namespace eka2l1::epoc {
         context.msg = msg;
 
         std::string content;
-        
+
         // We must keep the other part behind the offset
         if (des8) {
             content = std::move(*context.get_arg<std::string>(aParam));
@@ -812,7 +812,8 @@ namespace eka2l1::epoc {
         if (!server_name.empty() && server_name[0] == '!') {
             if (!crr_pr->satisfy(server_exclamination_point_name_policy)) {
                 LOG_ERROR("Process {} try to create a server with exclamination point at the beginning of name ({}),"
-                          " but doesn't have ProtServ", crr_pr->name(), server_name);
+                          " but doesn't have ProtServ",
+                    crr_pr->name(), server_name);
 
                 return epoc::error_permission_denied;
             }
@@ -1020,7 +1021,7 @@ namespace eka2l1::epoc {
 #endif
 
         const int result = ss->send_receive(aOrd, arg, aStatus);
-        
+
         if (ss->get_server()->is_hle()) {
             // Process it right away.
             ss->get_server()->process_accepted_msg();
@@ -1143,7 +1144,7 @@ namespace eka2l1::epoc {
 
         return chunk->base();
     }
-    
+
     BRIDGE_FUNC(std::int32_t, ChunkSize, std::int32_t aChunkHandle) {
         chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
         if (!chunk) {
@@ -1719,7 +1720,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
-        return kern->mirror(kern->get_by_id<kernel::process>(thr->owning_process()->unique_id()), 
+        return kern->mirror(kern->get_by_id<kernel::process>(thr->owning_process()->unique_id()),
             kernel::owner_type::thread);
     }
 
@@ -1905,7 +1906,7 @@ namespace eka2l1::epoc {
         if (return_code != epoc::error_none) {
             return return_code;
         }
-        
+
         return aDataLength;
     }
 
@@ -1928,7 +1929,7 @@ namespace eka2l1::epoc {
 
         auto property_ref_handle_and_obj = kern->create_and_add<service::property_reference>(
             static_cast<kernel::owner_type>(aOwnerType), prop);
-        
+
         if (property_ref_handle_and_obj.first == INVALID_HANDLE) {
             return epoc::error_general;
         }
@@ -2293,16 +2294,15 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, VirtualReality) {
         // Call host function. Hack.
-        typedef bool (*reality_func)(void* data);
+        typedef bool (*reality_func)(void *data);
 
         const std::uint32_t current = sys->get_cpu()->get_pc();
-        std::uint64_t *data = reinterpret_cast<std::uint64_t*>(sys->get_kernel_system()->
-            crr_process()->get_ptr_on_addr_space(current - 20));
+        std::uint64_t *data = reinterpret_cast<std::uint64_t *>(sys->get_kernel_system()->crr_process()->get_ptr_on_addr_space(current - 20));
 
         sys->get_cpu()->save_context(sys->get_kernel_system()->crr_thread()->get_thread_context());
 
         reality_func to_call = reinterpret_cast<reality_func>(*data++);
-        void *userdata = reinterpret_cast<void*>(*data++);
+        void *userdata = reinterpret_cast<void *>(*data++);
 
         if (!to_call(userdata)) {
             sys->get_kernel_system()->crr_thread()->wait_for_any_request();

@@ -51,7 +51,7 @@ namespace eka2l1::epoc {
             if (read_active_skin_id()) {
                 LOG_INFO("Active skin UID: 0x{:X}, timestamp: {}", active_skin_pid_.first, active_skin_pid_.second);
             }
-            
+
             read_ah_mirroring_active();
             read_highlight_anim_enabled();
 

@@ -39,22 +39,22 @@ namespace eka2l1::epoc {
     class bitmap_cache {
     public:
         using driver_texture_handle_array = std::array<drivers::handle, MAX_CACHE_SIZE>;
-        using bitmap_array = std::array<epoc::bitwise_bitmap*, MAX_CACHE_SIZE>;
+        using bitmap_array = std::array<epoc::bitwise_bitmap *, MAX_CACHE_SIZE>;
         using timestamps_array = std::array<std::uint64_t, MAX_CACHE_SIZE>;
         using hashes_array = timestamps_array;
 
     private:
         driver_texture_handle_array driver_textures;
-        bitmap_array                bitmaps;
-        timestamps_array            timestamps;
-        hashes_array                hashes;
+        bitmap_array bitmaps;
+        timestamps_array timestamps;
+        hashes_array hashes;
 
         std::uint8_t *base_large_chunk;
 
         kernel_system *kern;
         drivers::graphics_driver *driver;
 
-        std::int64_t last_free { 0 };
+        std::int64_t last_free{ 0 };
 
     protected:
         std::uint64_t hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp);

@@ -15,8 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/fbs/font_atlas.h>
 #include <drivers/graphics/graphics.h>
+#include <epoc/services/fbs/font_atlas.h>
 
 #include <common/algorithm.h>
 #include <common/time.h>
@@ -41,7 +41,7 @@ namespace eka2l1::epoc {
         size_ = font_size;
         initial_range_ = { initial_start, initial_char_count };
     }
-    
+
     void font_atlas::free(drivers::graphics_driver *driver) {
         if (atlas_handle_) {
             auto cmd_list = driver->new_command_list();
@@ -51,11 +51,11 @@ namespace eka2l1::epoc {
             driver->submit_command_list(*cmd_list);
         }
     }
-    
+
     int font_atlas::get_atlas_width() const {
         return common::align(ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH * size_, 1024);
     }
-    
+
     bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder) {
         const int width = get_atlas_width();
 
@@ -68,7 +68,7 @@ namespace eka2l1::epoc {
             }
 
             if (!adapter_->get_glyph_atlas(initial_range_.first, nullptr, initial_range_.second,
-                size_, cinfos.get())) {
+                    size_, cinfos.get())) {
                 return false;
             }
 
@@ -79,7 +79,7 @@ namespace eka2l1::epoc {
             }
 
             atlas_handle_ = drivers::create_bitmap(driver, { width, width });
-            builder->update_bitmap(atlas_handle_, 8, reinterpret_cast<const char*>(atlas_data_.get()),
+            builder->update_bitmap(atlas_handle_, 8, reinterpret_cast<const char *>(atlas_data_.get()),
                 width * width, { 0, 0 }, { width, width });
         }
 
@@ -88,7 +88,7 @@ namespace eka2l1::epoc {
 
         // Iterate through characters, and filter out characters which is not available in the atlas.
         // Add character to last used, too.
-        for (auto &chr: text) {
+        for (auto &chr : text) {
             if (characters_.find(chr) == characters_.end()) {
                 if (!std::binary_search(to_rast.begin(), to_rast.end(), chr)) {
                     to_rast.push_back(chr);
@@ -109,13 +109,13 @@ namespace eka2l1::epoc {
             auto cinfos = std::make_unique<adapter::character_info[]>(to_rast.size());
 
             if (!adapter_->get_glyph_atlas(0, to_rast.data(), static_cast<char16_t>(to_rast.size()), size_,
-                cinfos.get())) {
+                    cinfos.get())) {
                 // Try to redo the atlas, getting lastest use characters.
                 adapter_->end_get_atlas();
                 adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
-                
+
                 if (!adapter_->get_glyph_atlas(0, &last_use_[0], static_cast<char16_t>(characters_.size() - 5),
-                    size_, cinfos.get())) {
+                        size_, cinfos.get())) {
                     return false;
                 }
 
@@ -132,7 +132,7 @@ namespace eka2l1::epoc {
         if (alignment != epoc::text_alignment::left) {
             float size_length = 0;
 
-            for (auto &chr: text) {
+            for (auto &chr : text) {
                 size_length += characters_[chr].xoff2 - characters_[chr].xoff;
             }
 
@@ -149,7 +149,7 @@ namespace eka2l1::epoc {
             drivers::blend_factor::zero, drivers::blend_factor::one);
 
         // Start to render these texts.
-        for (auto &chr: text) {
+        for (auto &chr : text) {
             eka2l1::rect source_rect;
             adapter::character_info &info = characters_[chr];
 

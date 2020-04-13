@@ -37,7 +37,7 @@ namespace eka2l1::scripting {
     class mbm_reader {
         std::unique_ptr<loader::mbm_file> mbm_;
         std::unique_ptr<common::ro_stream> stream_;
-    
+
     public:
         explicit mbm_reader(const std::string &path);
 
@@ -51,7 +51,7 @@ namespace eka2l1::scripting {
     class mif_reader {
         std::unique_ptr<loader::mif_file> mif_;
         std::unique_ptr<common::ro_stream> stream_;
-    
+
     public:
         explicit mif_reader(const std::string &path);
 

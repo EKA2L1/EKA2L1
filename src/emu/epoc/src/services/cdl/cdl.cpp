@@ -19,11 +19,11 @@
 
 #include <common/chunkyseri.h>
 
+#include <epoc/epoc.h>
+#include <epoc/kernel.h>
 #include <epoc/services/cdl/cdl.h>
 #include <epoc/services/cdl/ops.h>
 #include <epoc/utils/err.h>
-#include <epoc/epoc.h>
-#include <epoc/kernel.h>
 
 namespace eka2l1 {
     cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
@@ -48,7 +48,7 @@ namespace eka2l1 {
         ctx->set_request_status(static_cast<int>(drv));
     }
 
-    void cdl_server_session::do_get_refs_size(service::ipc_context *ctx) {    
+    void cdl_server_session::do_get_refs_size(service::ipc_context *ctx) {
         epoc::cdl_ref_collection filtered_col;
 
         // Subset by name
@@ -63,7 +63,7 @@ namespace eka2l1 {
             const std::u16string name = std::move(*name_op);
 
             // Get by name
-            for (auto &ref_: server<cdl_server>()->collection_) {
+            for (auto &ref_ : server<cdl_server>()->collection_) {
                 if (ref_.name_ == name) {
                     filtered_col.push_back(ref_);
                 }
@@ -73,7 +73,7 @@ namespace eka2l1 {
             const epoc::uid ref_uid = *ctx->get_arg<epoc::uid>(3);
 
             // Get by name
-            for (auto &ref_: server<cdl_server>()->collection_) {
+            for (auto &ref_ : server<cdl_server>()->collection_) {
                 if (ref_.uid_ == ref_uid) {
                     filtered_col.push_back(ref_);
                 }
@@ -89,7 +89,7 @@ namespace eka2l1 {
         }
 
         {
-            common::chunkyseri seri(reinterpret_cast<std::uint8_t*>(&temp_buf[0]), temp_buf.size(),
+            common::chunkyseri seri(reinterpret_cast<std::uint8_t *>(&temp_buf[0]), temp_buf.size(),
                 common::SERI_MODE_WRITE);
 
             epoc::do_refs_state(seri, filtered_col);
@@ -102,7 +102,7 @@ namespace eka2l1 {
     }
 
     void cdl_server_session::do_get_temp_buf(service::ipc_context *ctx) {
-        ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&temp_buf[0]), static_cast<std::uint32_t>(temp_buf.size()));
+        ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t *>(&temp_buf[0]), static_cast<std::uint32_t>(temp_buf.size()));
         ctx->set_request_status(epoc::error_none);
     }
 
@@ -144,8 +144,8 @@ namespace eka2l1 {
     void cdl_server::init() {
         observer_ = std::make_unique<epoc::cdl_ecom_generic_observer>(this);
         watcher_ = std::make_unique<epoc::cdl_ecom_watcher>(
-            reinterpret_cast<ecom_server*>(sys->get_kernel_system()->get_by_name<service::server>("!ecomserver")),
-            reinterpret_cast<epoc::cdl_ecom_watcher_observer*>(observer_.get()));
+            reinterpret_cast<ecom_server *>(sys->get_kernel_system()->get_by_name<service::server>("!ecomserver")),
+            reinterpret_cast<epoc::cdl_ecom_watcher_observer *>(observer_.get()));
     }
 
     void cdl_server::connect(service::ipc_context &ctx) {

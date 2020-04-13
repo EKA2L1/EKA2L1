@@ -18,17 +18,17 @@
  */
 
 #include <common/log.h>
-#include <console/state.h>
 #include <common/path.h>
+#include <console/state.h>
 #include <gdbstub/gdbstub.h>
 
 #include <debugger/imgui_debugger.h>
+#include <debugger/logger.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
-#include <debugger/logger.h>
 
-#include <manager/manager.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 
 #include <epoc/kernel.h>
 
@@ -37,7 +37,7 @@ namespace eka2l1::desktop {
         // Initialize the logger
         logger = std::make_shared<imgui_logger>();
         log::setup_log(logger);
-    
+
         // Start to read the configs
         conf.deserialize();
 
@@ -63,9 +63,8 @@ namespace eka2l1::desktop {
             symsys->get_gdb_stub()->init(symsys.get());
             symsys->get_gdb_stub()->toggle_server(true);
         }
-        
-        winserv = reinterpret_cast<eka2l1::window_server*>(symsys->get_kernel_system()->get_by_name
-            <eka2l1::service::server>("!Windowserver"));
+
+        winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>("!Windowserver"));
 
         stage_two_inited = false;
     }
@@ -80,8 +79,7 @@ namespace eka2l1::desktop {
                 return;
             }
 
-            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", 
-                add_path(dvc->firmware_code, "SYM.ROM"))));
+            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(dvc->firmware_code, "SYM.ROM"))));
 
             if (!res) {
                 return;

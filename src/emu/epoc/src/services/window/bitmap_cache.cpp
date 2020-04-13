@@ -58,7 +58,7 @@ namespace eka2l1::epoc {
         converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
 
         char *return_ptr = &converted_pool[0];
-        
+
         for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
             for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
                 switch (bw_bmp->settings_.current_display_mode()) {
@@ -66,7 +66,7 @@ namespace eka2l1::epoc {
                     const std::uint8_t palette_index = original_ptr[y * bw_bmp->byte_width_ + x];
                     const std::uint32_t palette_color = epoc::color_256_palette[palette_index];
 
-                    std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char*>(&palette_color), 3);
+                    std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char *>(&palette_color), 3);
 
                     break;
                 }
@@ -165,8 +165,8 @@ namespace eka2l1::epoc {
                 builder->destroy_bitmap(driver_textures[idx]);
 
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels);
-            char *data_pointer = reinterpret_cast<char*>(base_large_chunk + bmp->data_offset_);
-            
+            char *data_pointer = reinterpret_cast<char *>(base_large_chunk + bmp->data_offset_);
+
             std::vector<std::uint8_t> decompressed;
             std::uint32_t raw_size = 0;
 
@@ -177,7 +177,7 @@ namespace eka2l1::epoc {
                 const std::uint32_t compressed_size = bmp->header_.bitmap_size - bmp->header_.header_len;
 
                 common::wo_buf_stream dest_stream(&decompressed[0], raw_size);
-                common::ro_buf_stream source_stream(reinterpret_cast<std::uint8_t*>(data_pointer), compressed_size);
+                common::ro_buf_stream source_stream(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size);
 
                 switch (bmp->header_.compression) {
                 case bitmap_file_byte_rle_compression:
@@ -197,7 +197,7 @@ namespace eka2l1::epoc {
                     break;
                 }
 
-                data_pointer = reinterpret_cast<char*>(&decompressed[0]);
+                data_pointer = reinterpret_cast<char *>(&decompressed[0]);
             } else {
                 raw_size = bmp->header_.bitmap_size - bmp->header_.header_len;
             }
@@ -207,7 +207,7 @@ namespace eka2l1::epoc {
 
             // GPU don't support them. Convert them on CPU
             if (is_palette_bitmap(bmp)) {
-                data_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t*>(data_pointer),
+                data_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
                     converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());

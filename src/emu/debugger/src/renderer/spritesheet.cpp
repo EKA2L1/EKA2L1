@@ -43,7 +43,7 @@ namespace eka2l1::renderer {
             return false;
         }
 
-        for (auto &sprite_meta: sprite_metadatas.children("sprite")) {
+        for (auto &sprite_meta : sprite_metadatas.children("sprite")) {
             // New meta
             frame_metadata meta;
             meta.frame_name_ = sprite_meta.attribute("n").as_string();
@@ -75,7 +75,7 @@ namespace eka2l1::renderer {
         // Divide the frame time to each frame
         const float milli_per_frame = 1000.0f / fps;
 
-        for (auto &meta: metas_) {
+        for (auto &meta : metas_) {
             meta.frame_time_ = milli_per_frame;
         }
 
@@ -87,18 +87,18 @@ namespace eka2l1::renderer {
 
         if (remaining_ <= 0) {
             // Switch frame
-            current_  = (current_ + 1) % static_cast<int>(metas_.size());
+            current_ = (current_ + 1) % static_cast<int>(metas_.size());
             remaining_ = metas_[current_].frame_time_;
         }
     }
 
     void spritesheet::get_current_frame_uv_coords(float &uv_x_min, float &uv_x_max, float &uv_y_min, float &uv_y_max) {
         const float texel_width = 1.0f / width_;
-        const float texel_height = 1.0f/ height_;
+        const float texel_height = 1.0f / height_;
 
         uv_x_min = metas_[current_].position_.x * texel_width;
         uv_x_max = (metas_[current_].position_.x + metas_[current_].size_.x) * texel_width;
-        
+
         uv_y_min = metas_[current_].position_.y * texel_height;
         uv_y_max = (metas_[current_].position_.y + metas_[current_].size_.y) * texel_height;
     }

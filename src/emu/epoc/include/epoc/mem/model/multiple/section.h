@@ -32,7 +32,10 @@ namespace eka2l1::mem {
         common::bitmap_allocator alloc_;
 
         explicit linear_section(const vm_address start, const vm_address end, const std::size_t psize)
-            : beg_(start), end_(end), psize_(psize), alloc_((end - start) / psize) {
+            : beg_(start)
+            , end_(end)
+            , psize_(psize)
+            , alloc_((end - start) / psize) {
         }
     };
 }

@@ -32,8 +32,8 @@
 #include <common/thread.h>
 #include <common/vecx.h>
 
-#include <epoc/vfs.h>
 #include <epoc/utils/err.h>
+#include <epoc/vfs.h>
 
 #include <manager/config.h>
 
@@ -67,7 +67,7 @@ namespace eka2l1 {
         case fbs_init: {
             connection_id_ = server<fbs_server>()->init();
             ctx->set_request_status(connection_id_);
-            
+
             break;
         }
 
@@ -76,7 +76,7 @@ namespace eka2l1 {
             get_nearest_font(ctx);
             break;
         }
-    
+
         case fbs_face_attrib: {
             get_face_attrib(ctx);
             break;
@@ -173,30 +173,32 @@ namespace eka2l1 {
             // Initialize those chunks
             kernel_system *kern = context.sys->get_kernel_system();
             shared_chunk = kern->create_and_add<kernel::chunk>(
-                kernel::owner_type::kernel,
-                kern->get_memory_system(),
-                nullptr,
-                "FbsSharedChunk",
-                0,
-                0x10000,
-                0x200000,
-                prot::read_write,
-                kernel::chunk_type::normal,
-                kernel::chunk_access::global,
-                kernel::chunk_attrib::none).second;
+                                   kernel::owner_type::kernel,
+                                   kern->get_memory_system(),
+                                   nullptr,
+                                   "FbsSharedChunk",
+                                   0,
+                                   0x10000,
+                                   0x200000,
+                                   prot::read_write,
+                                   kernel::chunk_type::normal,
+                                   kernel::chunk_access::global,
+                                   kernel::chunk_attrib::none)
+                               .second;
 
             large_chunk = kern->create_and_add<kernel::chunk>(
-                kernel::owner_type::kernel,
-                kern->get_memory_system(),
-                nullptr,
-                "FbsLargeChunk",
-                0,
-                0,
-                0x2000000,
-                prot::read_write,
-                kernel::chunk_type::normal,
-                kernel::chunk_access::global,
-                kernel::chunk_attrib::none).second;
+                                  kernel::owner_type::kernel,
+                                  kern->get_memory_system(),
+                                  nullptr,
+                                  "FbsLargeChunk",
+                                  0,
+                                  0,
+                                  0x2000000,
+                                  prot::read_write,
+                                  kernel::chunk_type::normal,
+                                  kernel::chunk_access::global,
+                                  kernel::chunk_attrib::none)
+                              .second;
 
             if (!shared_chunk || !large_chunk) {
                 LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
@@ -207,8 +209,8 @@ namespace eka2l1 {
 
             memory_system *mem = sys->get_memory_system();
 
-            base_shared_chunk = reinterpret_cast<std::uint8_t*>(shared_chunk->host_base());
-            base_large_chunk = reinterpret_cast<std::uint8_t*>(large_chunk->host_base());
+            base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
+            base_large_chunk = reinterpret_cast<std::uint8_t *>(large_chunk->host_base());
 
             shared_chunk_allocator = std::make_unique<fbs_chunk_allocator>(shared_chunk,
                 base_shared_chunk);
@@ -300,15 +302,15 @@ namespace eka2l1 {
         // Destroy chunks.
         if (shared_chunk)
             kern->destroy(shared_chunk);
-        
+
         if (large_chunk)
             kern->destroy(large_chunk);
     }
-    
+
     drivers::graphics_driver *fbs_server::get_graphics_driver() {
         return sys->get_graphics_driver();
     }
-    
+
     fbscli::fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
     }

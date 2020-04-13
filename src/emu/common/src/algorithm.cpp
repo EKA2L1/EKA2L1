@@ -162,11 +162,11 @@ namespace eka2l1 {
             }
             return str;
         }
-        
+
         int count_leading_zero(const std::uint32_t v) {
-        #if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
             return __builtin_clz(v);
-        #elif defined(_MSC_VER)
+#elif defined(_MSC_VER)
             DWORD lz = 0;
             _BitScanReverse(&lz, v);
 
@@ -174,7 +174,7 @@ namespace eka2l1 {
                 return static_cast<int>(31 - lz);
 
             return 32;
-        #endif 
+#endif
         }
 
         int find_most_significant_bit_one(const std::uint32_t v) {

@@ -6,7 +6,7 @@
 
 namespace eka2l1::epoc {
     using uid = uint32_t;
-    
+
     /*! \brief Triple unique ID. */
     struct uid_type {
         //! The first UID.
@@ -22,7 +22,7 @@ namespace eka2l1::epoc {
         /*! This contains unique ID for process. */
         uid uid3;
 
-        uid operator [] (const std::size_t idx) {
+        uid operator[](const std::size_t idx) {
             switch (idx) {
             case 0: {
                 return uid1;

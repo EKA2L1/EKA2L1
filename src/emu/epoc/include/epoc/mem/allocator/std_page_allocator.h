@@ -30,7 +30,7 @@ namespace eka2l1::mem {
      * 
      * Page table will be automatically free once the allocator is destroyed.
      */
-    struct basic_page_table_allocator: public page_table_allocator {
+    struct basic_page_table_allocator : public page_table_allocator {
         std::vector<std::unique_ptr<page_table>> page_tabs_;
 
     public:

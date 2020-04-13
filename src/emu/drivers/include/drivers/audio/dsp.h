@@ -40,7 +40,7 @@ namespace eka2l1::drivers {
         dsp_stream_notification_done = 1
     };
 
-    using dsp_stream_notification_callback = std::function<void(void*)>;
+    using dsp_stream_notification_callback = std::function<void(void *)>;
 
     struct dsp_stream {
     protected:
@@ -49,7 +49,7 @@ namespace eka2l1::drivers {
         std::uint32_t channels_;
 
         four_cc format_;
-        
+
         dsp_stream_notification_callback complete_callback_;
         dsp_stream_notification_callback buffer_copied_callback_;
 
@@ -86,7 +86,7 @@ namespace eka2l1::drivers {
             void *userdata);
     };
 
-    struct dsp_output_stream: public dsp_stream {
+    struct dsp_output_stream : public dsp_stream {
     protected:
         std::uint32_t volume_;
 

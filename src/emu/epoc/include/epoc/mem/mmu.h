@@ -40,10 +40,10 @@ namespace eka2l1::mem {
      */
     class mmu_base {
     protected:
-        page_table_allocator *alloc_;        ///< Page table allocator.
+        page_table_allocator *alloc_; ///< Page table allocator.
 
     public:
-        std::size_t page_size_bits_;         ///< The number of bits of page size.
+        std::size_t page_size_bits_; ///< The number of bits of page size.
         std::uint32_t offset_mask_;
         std::uint32_t page_index_mask_;
         std::uint32_t page_index_shift_;
@@ -53,12 +53,11 @@ namespace eka2l1::mem {
         std::uint32_t chunk_mask_;
         std::uint32_t page_per_tab_shift_;
 
-        bool mem_map_old_;          ///< Should we use EKA1 mem map model?
+        bool mem_map_old_; ///< Should we use EKA1 mem map model?
         arm::arm_interface *cpu_;
 
     public:
-        explicit mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10
-            , const bool mem_map_old = false);
+        explicit mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
 
         virtual ~mmu_base() {}
 
@@ -118,8 +117,7 @@ namespace eka2l1::mem {
         /**
          * \brief Assign page tables at linear base address to page directories.
          */
-        virtual void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags
-            , asid *id_list = nullptr, const std::uint32_t id_list_size = 0) = 0;
+        virtual void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags, asid *id_list = nullptr, const std::uint32_t id_list_size = 0) = 0;
     };
 
     using mmu_impl = std::unique_ptr<mmu_base>;

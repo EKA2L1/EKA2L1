@@ -46,7 +46,7 @@ namespace eka2l1::epoc::hwrm::light {
         }
 
         // Publish the default value of the property
-        if (!infos_prop_->set(reinterpret_cast<std::uint8_t*>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
+        if (!infos_prop_->set(reinterpret_cast<std::uint8_t *>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
             LOG_ERROR("Failed to publish default value of light infos to created property. Abort.");
             return false;
         }
@@ -70,7 +70,7 @@ namespace eka2l1::epoc::hwrm::light {
         find_result->status_ = sts;
 
         // Publish the resource to property.
-        if (!infos_prop_->set(reinterpret_cast<std::uint8_t*>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
+        if (!infos_prop_->set(reinterpret_cast<std::uint8_t *>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
             LOG_ERROR("Failed to publish updated value of light infos to light status property. Abort.");
             return false;
         }
@@ -78,7 +78,7 @@ namespace eka2l1::epoc::hwrm::light {
         // We done all things good now. Return. Again.
         return true;
     }
-    
+
     resource_data::resource_data(kernel_system *sys) {
         if (!initialise_components(sys)) {
             LOG_ERROR("Unable to initialise light resource data!");

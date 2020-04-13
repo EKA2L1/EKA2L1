@@ -27,7 +27,7 @@
 
 namespace eka2l1::drivers {
     using handle = std::uint64_t;
-    
+
     enum class graphic_api {
         opengl,
         vulkan
@@ -52,7 +52,7 @@ namespace eka2l1::drivers {
         uint = 5,
         sint = 6
     };
-    
+
     enum class blend_equation {
         add,
         sub,
@@ -68,7 +68,7 @@ namespace eka2l1::drivers {
         one_minus_current_alpha = 5
     };
 
-    enum clear_bits: std::uint8_t {
+    enum clear_bits : std::uint8_t {
         clear_bit_color_buffer = 1 << 0,
         clear_bit_depth_buffer = 1 << 1
     };

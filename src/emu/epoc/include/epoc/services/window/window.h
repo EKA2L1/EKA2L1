@@ -20,29 +20,28 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <cstdint>
 #include <memory>
 #include <queue>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
-#include <type_traits>
 #include <vector>
-#include <array>
 
 #include <common/ini.h>
 #include <common/queue.h>
 #include <common/vecx.h>
 
 #include <epoc/services/window/bitmap_cache.h>
-#include <epoc/services/window/screen.h>
-#include <epoc/services/window/scheduler.h>
 #include <epoc/services/window/classes/config.h>
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/fifo.h>
-#include <epoc/services/window/screen.h>
 #include <epoc/services/window/opheader.h>
+#include <epoc/services/window/scheduler.h>
+#include <epoc/services/window/screen.h>
 
 #include <epoc/ptr.h>
 #include <epoc/services/server.h>
@@ -88,7 +87,7 @@ namespace eka2l1::epoc {
         up_and_downs
     };
 
-    struct event_capture_key_notifier: public event_notifier_base  {
+    struct event_capture_key_notifier : public event_notifier_base {
         event_key_capture_type type_;
         std::uint32_t keycode_;
         std::uint32_t modifiers_mask_;
@@ -98,8 +97,8 @@ namespace eka2l1::epoc {
         std::uint32_t id;
     };
 
-    bool operator < (const event_capture_key_notifier &lhs, const event_capture_key_notifier &rhs);
-    
+    bool operator<(const event_capture_key_notifier &lhs, const event_capture_key_notifier &rhs);
+
     struct pixel_twips_and_rot {
         eka2l1::vec2 pixel_size;
         eka2l1::vec2 twips_size;
@@ -126,14 +125,14 @@ namespace eka2l1::epoc {
     public:
         template <typename T>
         struct event_nof_hasher {
-            std::size_t operator() (const T &evt_nof) const {
+            std::size_t operator()(const T &evt_nof) const {
                 return evt_nof.user->id;
             }
         };
 
         template <typename T>
         struct event_nof_comparer {
-            bool operator() (const T &lhs, const T &rhs) const {
+            bool operator()(const T &lhs, const T &rhs) const {
                 return lhs.user == rhs.user;
             }
         };
@@ -164,7 +163,7 @@ namespace eka2l1::epoc {
         nof_container<epoc::event_mod_notifier_user> mod_notifies;
         nof_container<epoc::event_screen_change_user> screen_changes;
         nof_container<epoc::event_error_msg_user> error_notifies;
-        
+
         void create_screen_device(service::ipc_context &ctx, ws_cmd &cmd);
         void create_dsa(service::ipc_context &ctx, ws_cmd &cmd);
         void create_window_group(service::ipc_context &ctx, ws_cmd &cmd);
@@ -219,7 +218,7 @@ namespace eka2l1::epoc {
             kernel::thread *own_thread, epoc::version ver);
 
         eka2l1::window_server &get_ws() {
-            return *reinterpret_cast<window_server*>(guest_session->get_server());
+            return *reinterpret_cast<window_server *>(guest_session->get_server());
         }
 
         kernel::thread *get_client() {
@@ -245,7 +244,7 @@ namespace eka2l1::epoc {
         }
 
         ws::uid add_capture_key_notifier_to_server(epoc::event_capture_key_notifier &notifier);
-        
+
         // We have been blessed with so much reflection that it's actually seems evil now.
         template <typename T>
         ws::uid add_event_notifier(T &evt) {
@@ -292,21 +291,21 @@ namespace eka2l1 {
         common::ini_file ws_config;
         bool loaded{ false };
 
-        std::atomic<epoc::ws::uid> key_capture_uid_counter {0};
-        std::atomic<epoc::ws::uid> obj_uid {0};
+        std::atomic<epoc::ws::uid> key_capture_uid_counter{ 0 };
+        std::atomic<epoc::ws::uid> obj_uid{ 0 };
 
         std::vector<epoc::config::screen> screen_configs;
-        epoc::screen *screens;          ///< Linked list of all screens.
+        epoc::screen *screens; ///< Linked list of all screens.
 
         std::unordered_map<epoc::ws::uid, key_capture_request_queue> key_capture_requests;
 
-        epoc::screen *focus_screen_ { nullptr };
+        epoc::screen *focus_screen_{ nullptr };
         epoc::pointer_cursor_mode cursor_mode_;
-        
+
         epoc::bitmap_cache bmp_cache;
         epoc::animation_scheduler anim_sched;
 
-        fbs_server *fbss { nullptr };
+        fbs_server *fbss{ nullptr };
         int input_handler_evt_;
 
         void init(service::ipc_context &ctx);
@@ -343,7 +342,7 @@ namespace eka2l1 {
         epoc::animation_scheduler *get_anim_scheduler() {
             return &anim_sched;
         }
-        
+
         epoc::pointer_cursor_mode &cursor_mode() {
             return cursor_mode_;
         }
@@ -370,9 +369,9 @@ namespace eka2l1 {
         }
 
         fbs_server *get_fbs_server();
-        
+
         epoc::screen *get_screen(const int number);
-        
+
         epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
 
         epoc::window_group *get_group_from_id(const epoc::ws::uid id);

@@ -22,12 +22,12 @@
 #include <drivers/audio/backend/player_shared.h>
 
 extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 }
 
 namespace eka2l1::drivers {
-    struct player_ffmpeg_request: public player_request_base {
+    struct player_ffmpeg_request : public player_request_base {
         AVCodecContext *codec_;
         AVFormatContext *format_;
         AVPacket packet_;
@@ -42,7 +42,7 @@ namespace eka2l1::drivers {
         void deinit();
     };
 
-    struct player_ffmpeg: public player_shared {
+    struct player_ffmpeg : public player_shared {
     public:
         explicit player_ffmpeg(audio_driver *driver);
 

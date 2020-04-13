@@ -8,7 +8,7 @@
 
 namespace eka2l1::kernel {
     class codeseg;
-    using codeseg_ptr = kernel::codeseg*;
+    using codeseg_ptr = kernel::codeseg *;
 
     class library : public kernel_obj {
         codeseg_ptr codeseg;

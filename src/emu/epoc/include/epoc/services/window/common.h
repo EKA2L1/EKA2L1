@@ -426,7 +426,7 @@ namespace eka2l1::epoc {
         event() {}
         event(const std::uint32_t handle, event_code evt_code);
 
-        void operator =(const event &rhs) {
+        void operator=(const event &rhs) {
             type = rhs.type;
             handle = rhs.handle;
             time = rhs.time;

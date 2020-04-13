@@ -63,7 +63,7 @@ namespace eka2l1::epoc {
         uint8_t debug_attrib;
         uint8_t spare[6];
     };
-    
+
     /*! \brief Given the entry point of an dll, get the full path */
     std::optional<std::u16string> get_dll_full_path(eka2l1::system *sys, const std::uint32_t addr);
 

@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace eka2l1 {
-    using kernel_obj_ptr = kernel::kernel_obj*;
+    using kernel_obj_ptr = kernel::kernel_obj *;
     class kernel_system;
 
     namespace kernel {

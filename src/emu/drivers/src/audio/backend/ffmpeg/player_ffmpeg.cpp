@@ -17,11 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/backend/ffmpeg/player_ffmpeg.h>
 #include <common/log.h>
+#include <drivers/audio/backend/ffmpeg/player_ffmpeg.h>
 
 extern "C" {
-    #include <libswresample/swresample.h>
+#include <libswresample/swresample.h>
 }
 
 namespace eka2l1::drivers {
@@ -37,7 +37,7 @@ namespace eka2l1::drivers {
     player_ffmpeg_request::~player_ffmpeg_request() {
         deinit();
     }
-    
+
     static bool open_ffmpeg_stream(player_ffmpeg_request &request) {
         if (avformat_find_stream_info(request.format_, nullptr) < 0) {
             LOG_ERROR("Error while finding stream info of input {}", request.url_);
@@ -55,7 +55,7 @@ namespace eka2l1::drivers {
 
             if (!request.format_->audio_codec) {
                 AVOutputFormat *format = av_guess_format(nullptr, request.url_.c_str(), nullptr);
-                
+
                 if (!format) {
                     LOG_ERROR("Error while finding responsible audio decoder of input {}", request.url_);
                     avformat_free_context(request.format_);
@@ -86,7 +86,7 @@ namespace eka2l1::drivers {
 
         if (avcodec_open2(request.codec_, request.format_->audio_codec, nullptr) < 0) {
             LOG_ERROR("Unable to open codec of stream url {}", request.url_);
-            
+
             avformat_free_context(request.format_);
             av_free_packet(&request.packet_);
 
@@ -101,7 +101,7 @@ namespace eka2l1::drivers {
 
     bool player_ffmpeg::queue_url(const std::string &url) {
         player_request_instance request = std::make_unique<player_ffmpeg_request>();
-        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request*>(request.get());
+        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
 
         request_ff->url_ = url;
         request_ff->format_ = avformat_alloc_context();
@@ -124,7 +124,7 @@ namespace eka2l1::drivers {
     }
 
     void player_ffmpeg::reset_request(player_request_instance &request) {
-        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request*>(request.get());
+        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
 
         avformat_flush(request_ff->format_);
 
@@ -132,9 +132,9 @@ namespace eka2l1::drivers {
             LOG_ERROR("Error seeking the stream!");
         }
     }
-    
+
     void player_ffmpeg::get_more_data(player_request_instance &request) {
-        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request*>(request.get());
+        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
 
         // Data drain, try to get more
         if (request_ff->type_ == player_request_format) {
@@ -173,7 +173,7 @@ namespace eka2l1::drivers {
                     // Resample it
                     const int dest_channel_type = (request_ff->channels_ == 2) ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
 
-                    SwrContext *swr = swr_alloc_set_opts(nullptr, 
+                    SwrContext *swr = swr_alloc_set_opts(nullptr,
                         dest_channel_type, AV_SAMPLE_FMT_S16, request_ff->freq_,
                         frame->channel_layout, static_cast<AVSampleFormat>(frame->format), frame->sample_rate,
                         0, nullptr);
@@ -207,7 +207,7 @@ namespace eka2l1::drivers {
 
         request_ff->data_pointer_ = 0;
     }
-    
+
     bool player_ffmpeg::queue_data(const char *raw_data, const std::size_t data_size,
         const std::uint32_t encoding_type, const std::uint32_t frequency,
         const std::uint32_t channels) {
@@ -216,6 +216,5 @@ namespace eka2l1::drivers {
 
     player_ffmpeg::player_ffmpeg(audio_driver *driver)
         : player_shared(driver) {
-
     }
 }

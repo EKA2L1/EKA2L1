@@ -39,7 +39,7 @@
 namespace eka2l1::drivers {
     class audio_driver;
 
-    struct player_wmf_request: public player_request_base {
+    struct player_wmf_request : public player_request_base {
         IMFSourceReader *reader_;
 
         explicit player_wmf_request()
@@ -49,7 +49,7 @@ namespace eka2l1::drivers {
         ~player_wmf_request();
     };
 
-    struct player_wmf: public player_shared {
+    struct player_wmf : public player_shared {
         explicit player_wmf(audio_driver *driver);
 
         void reset_request(player_request_instance &request) override;

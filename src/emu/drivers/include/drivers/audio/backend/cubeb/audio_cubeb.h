@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include <drivers/audio/audio.h>
 #include <cubeb/cubeb.h>
+#include <drivers/audio/audio.h>
 
 namespace eka2l1::drivers {
-    struct cubeb_audio_driver: public audio_driver {
+    struct cubeb_audio_driver : public audio_driver {
     private:
         cubeb *context_;
         bool init_;

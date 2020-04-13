@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scripting/message.h>
 #include <scripting/instance.h>
+#include <scripting/message.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -27,8 +27,8 @@
 #include <pybind11/pybind11.h>
 
 namespace eka2l1::scripting {
-    ipc_message_wrapper::ipc_message_wrapper(std::uint64_t handle) 
-        : msg_(reinterpret_cast<ipc_msg*>(handle)) {
+    ipc_message_wrapper::ipc_message_wrapper(std::uint64_t handle)
+        : msg_(reinterpret_cast<ipc_msg *>(handle)) {
     }
 
     int ipc_message_wrapper::function() {

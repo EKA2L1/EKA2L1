@@ -108,14 +108,14 @@ namespace eka2l1 {
 
     public:
         explicit ecom_server(eka2l1::system *sys);
-        
+
         /**
          * \brief Get interface info of a given UID.
          * \returns The pointer to the interface info, null means not found.
          */
         ecom_interface_info *get_interface(const epoc::uid interface_uid);
 
-        bool get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid, 
+        bool get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid,
             const epoc::uid impl_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err,
             const bool check_cap_comp = true);
     };

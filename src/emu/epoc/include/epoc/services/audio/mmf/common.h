@@ -22,7 +22,7 @@
 #include <cstdint>
 
 namespace eka2l1::epoc {
-    enum mmf_state: std::uint32_t {
+    enum mmf_state : std::uint32_t {
         mmf_state_idle = 0,
         mmf_state_playing = 1,
         mmf_state_tone_playing = 2,
@@ -33,15 +33,15 @@ namespace eka2l1::epoc {
         mmf_state_ready = 7
     };
 
-    enum mmf_encoding: std::uint32_t {
+    enum mmf_encoding : std::uint32_t {
         mmf_encoding_8bit_pcm = 1 << 0,
         mmf_encoding_16bit_pcm = 1 << 1,
         mmf_encoding_8bit_alaw = 1 << 2,
         mmf_encoding_8bit_mulaw = 1 << 3
     };
 
-    enum mmf_sample_rate: std::uint32_t {
-        mmf_sample_rate_8000hz  = 1 << 0,
+    enum mmf_sample_rate : std::uint32_t {
+        mmf_sample_rate_8000hz = 1 << 0,
         mmf_sample_rate_11025hz = 1 << 1,
         mmf_sample_rate_16000hz = 1 << 2,
         mmf_sample_rate_22050hz = 1 << 3,
@@ -121,7 +121,7 @@ namespace eka2l1::epoc {
         std::uint32_t reserved[3];
     };
 
-    enum mmf_dev_chunk_op: std::uint32_t {
+    enum mmf_dev_chunk_op : std::uint32_t {
         mmf_dev_chunk_op_none = 0,
         mmf_dev_chunk_op_open = 1
     };

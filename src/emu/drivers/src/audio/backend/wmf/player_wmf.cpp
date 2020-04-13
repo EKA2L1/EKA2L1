@@ -28,8 +28,8 @@
 
 #include <drivers/audio/backend/wmf/player_wmf.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 #include <propvarutil.h>
 
@@ -57,7 +57,7 @@ namespace eka2l1::drivers {
     }
 
     void player_wmf::get_more_data(player_request_instance &request) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
         // Data drain, try to get more
         if (request_wmf->type_ == player_request_format) {
@@ -107,15 +107,15 @@ namespace eka2l1::drivers {
 
         request_wmf->data_pointer_ = 0;
     }
-    
+
     void player_wmf::reset_request(player_request_instance &request) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
         PROPVARIANT var = { 0 };
         var.vt = VT_I8;
         request_wmf->reader_->SetCurrentPosition(GUID_NULL, var);
     }
-    
+
     static bool configure_stream_for_pcm(player_wmf_request &request) {
         IMFMediaType *partial_type = nullptr;
 
@@ -160,7 +160,7 @@ namespace eka2l1::drivers {
     static bool query_wmf_reader_metadata(IMFSourceReader *reader, std::vector<player_metadata> &meta_arr) {
         IMFMetadataProvider *meta_provider = nullptr;
         HRESULT hr = reader->GetServiceForStream(MF_SOURCE_READER_MEDIASOURCE, GUID_NULL,
-            __uuidof(meta_provider), reinterpret_cast<LPVOID*>(&meta_provider));
+            __uuidof(meta_provider), reinterpret_cast<LPVOID *>(&meta_provider));
 
         if (!SUCCEEDED(hr)) {
             LOG_ERROR("Unable to get meta provider service for reader stream!");
@@ -210,8 +210,8 @@ namespace eka2l1::drivers {
 
                 if (metadata_value_string) {
                     player_metadata meta;
-                    meta.key_ = common::ucs2_to_utf8(std::u16string(reinterpret_cast<const char16_t*>(metadata_key_string)));
-                    meta.value_ = common::ucs2_to_utf8(std::u16string(reinterpret_cast<const char16_t*>(metadata_value_string)));
+                    meta.key_ = common::ucs2_to_utf8(std::u16string(reinterpret_cast<const char16_t *>(metadata_key_string)));
+                    meta.value_ = common::ucs2_to_utf8(std::u16string(reinterpret_cast<const char16_t *>(metadata_value_string)));
 
                     meta_arr.push_back(meta);
                 }
@@ -229,7 +229,7 @@ namespace eka2l1::drivers {
 
     bool player_wmf::queue_url(const std::string &url) {
         player_request_instance request = std::make_unique<player_wmf_request>();
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
         request_wmf->type_ = player_request_format;
         request_wmf->data_pointer_ = 0;
@@ -244,7 +244,7 @@ namespace eka2l1::drivers {
             LOG_ERROR("Unable to queue new play URL {} (can't open source reader)", url);
             return false;
         }
-        
+
         if (!configure_stream_for_pcm(*request_wmf)) {
             LOG_ERROR("Error while configure WMF stream!");
             SafeRelease(&request_wmf->reader_);
@@ -252,7 +252,7 @@ namespace eka2l1::drivers {
         }
 
         query_wmf_reader_metadata(request_wmf->reader_, metadatas_);
-        
+
         const std::lock_guard<std::mutex> guard(request_queue_lock_);
         requests_.push(std::move(request));
 
@@ -263,7 +263,7 @@ namespace eka2l1::drivers {
         const std::uint32_t encoding_type, const std::uint32_t frequency,
         const std::uint32_t channels) {
         player_request_instance request = std::make_unique<player_wmf_request>();
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
         request_wmf->type_ = player_request_raw_pcm;
         request_wmf->data_pointer_ = 0;
@@ -272,12 +272,12 @@ namespace eka2l1::drivers {
             request_wmf->type_ = player_request_format;
 
             IMFByteStream *stream = NULL;
-            
+
             HRESULT hr = MFCreateTempFile(MF_ACCESSMODE_READWRITE, MF_OPENMODE_DELETE_IF_EXIST,
                 MF_FILEFLAGS_NONE, &stream);
 
             ULONG bytes_written = 0;
-            stream->Write(reinterpret_cast<const BYTE*>(raw_data), static_cast<ULONG>(data_size),
+            stream->Write(reinterpret_cast<const BYTE *>(raw_data), static_cast<ULONG>(data_size),
                 &bytes_written);
 
             stream->SetCurrentPosition(0);
@@ -288,14 +288,14 @@ namespace eka2l1::drivers {
                 LOG_ERROR("Unable to queue new custom data {} (can't open source reader)");
                 return false;
             }
-            
+
             if (!configure_stream_for_pcm(*request_wmf)) {
                 LOG_ERROR("Error while configure WMF stream!");
                 SafeRelease(&request_wmf->reader_);
                 return false;
             }
 
-            SafeRelease(&stream);    
+            SafeRelease(&stream);
             query_wmf_reader_metadata(request_wmf->reader_, metadatas_);
         }
 

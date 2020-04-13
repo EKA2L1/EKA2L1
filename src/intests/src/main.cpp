@@ -30,10 +30,10 @@ void MainWrapperL() {
 #else
     TAbsorberMode mode = EAbsorbVerify;
 #endif
-    
+
     // Connect!
     RFbsSession::Connect();
-    
+
     instance = CTestManager::NewLC(mode);
 
     // Add all tests back

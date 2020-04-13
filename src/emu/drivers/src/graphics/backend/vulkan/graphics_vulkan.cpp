@@ -21,26 +21,26 @@
 
 #ifdef BUILD_WITH_VULKAN
 
-#include <drivers/graphics/backend/vulkan/graphics_vulkan.h>
 #include <common/log.h>
 #include <common/platform.h>
+#include <drivers/graphics/backend/vulkan/graphics_vulkan.h>
 #include <vector>
 
 PFN_vkCreateDebugReportCallbackEXT create_debug_report_callback_ext_;
 PFN_vkDestroyDebugReportCallbackEXT destroy_debug_report_callback_ext_;
 
-VkResult vkCreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, 
-    VkDebugReportCallbackEXT* pCallback) {
+VkResult vkCreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator,
+    VkDebugReportCallbackEXT *pCallback) {
     return create_debug_report_callback_ext_(instance, pCreateInfo, pAllocator, pCallback);
 }
 
-void vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) {
+void vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks *pAllocator) {
     destroy_debug_report_callback_ext_(instance, callback, pAllocator);
 }
 
 namespace eka2l1::drivers {
     static VkBool32 vulkan_reporter(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*objectType*/, uint64_t /*object*/, size_t /*location*/,
-        int32_t /*messageCode*/, const char* /*pLayerPrefix*/, const char* pMessage, void* /*pUserData*/) {
+        int32_t /*messageCode*/, const char * /*pLayerPrefix*/, const char *pMessage, void * /*pUserData*/) {
         switch (flags) {
         case VK_DEBUG_REPORT_INFORMATION_BIT_EXT: {
             LOG_INFO("{}", pMessage);
@@ -79,10 +79,10 @@ namespace eka2l1::drivers {
     bool vulkan_graphics_driver::create_instance() {
         auto avail_layers = vk::enumerateInstanceLayerProperties();
 
-        std::vector<const char*> enabled_layers;
+        std::vector<const char *> enabled_layers;
 
         auto add_layer_if_avail = [&](const char *name) -> bool {
-            for (auto &avail_layer: avail_layers) {
+            for (auto &avail_layer : avail_layers) {
                 if (strncmp(avail_layer.layerName, name, strlen(name)) == 0) {
                     enabled_layers.push_back(name);
                     return true;
@@ -109,11 +109,11 @@ namespace eka2l1::drivers {
         }
 
         // Enable surface extensions
-        std::vector<const char*> enabled_extensions;
+        std::vector<const char *> enabled_extensions;
         enabled_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
         enabled_extensions.push_back("VK_EXT_debug_report");
         enabled_extensions.push_back("VK_EXT_debug_utils");
-        
+
 #if EKA2L1_PLATFORM(WIN32)
         enabled_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif EKA2L1_PLATFORM(ANDROID)
@@ -125,7 +125,7 @@ namespace eka2l1::drivers {
         vk::ApplicationInfo app_info("EKA2L1", 1, "EDriver", 1, VK_API_VERSION_1_1);
         vk::InstanceCreateInfo instance_create_info({}, &app_info, static_cast<std::uint32_t>(enabled_layers.size()),
             enabled_layers.data(), static_cast<std::uint32_t>(enabled_extensions.size()), enabled_extensions.data());
-        
+
         try {
             inst_ = vk::createInstanceUnique(instance_create_info);
         } catch (std::exception &e) {
@@ -149,8 +149,7 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        vk::DebugReportFlagsEXT report_callback_flags(vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::ePerformanceWarning | 
-            vk::DebugReportFlagBitsEXT::eError);
+        vk::DebugReportFlagsEXT report_callback_flags(vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::ePerformanceWarning | vk::DebugReportFlagBitsEXT::eError);
         vk::DebugReportCallbackCreateInfoEXT report_callback_create_info(report_callback_flags, vulkan_reporter);
 
         reporter_ = inst_->createDebugReportCallbackEXTUnique(report_callback_create_info);
@@ -161,12 +160,12 @@ namespace eka2l1::drivers {
 
         return true;
     }
-    
+
     static std::uint64_t score_for_me_the_gpu(const vk::PhysicalDevice &dvc) {
         std::uint64_t scr = 0;
 
         auto prop = dvc.getProperties();
-        
+
         switch (prop.deviceType) {
         // Prefer discrete GPU, not integrated.
         case vk::PhysicalDeviceType::eDiscreteGpu: {
@@ -245,7 +244,7 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        float queue_pris[1] = {0.0f};
+        float queue_pris[1] = { 0.0f };
         vk::DeviceQueueCreateInfo queue_create_info(vk::DeviceQueueCreateFlags{}, queue_index, 1, queue_pris);
         vk::DeviceCreateInfo device_create_info(vk::DeviceCreateFlags{}, 1, &queue_create_info);
 
@@ -260,7 +259,7 @@ namespace eka2l1::drivers {
 
     bool vulkan_graphics_driver::create_surface() {
 #if EKA2L1_PLATFORM(WIN32)
-        vk::Win32SurfaceCreateInfoKHR surface_create_info(vk::Win32SurfaceCreateFlagsKHR {}, nullptr, reinterpret_cast<HWND>(native_win_handle_));
+        vk::Win32SurfaceCreateInfoKHR surface_create_info(vk::Win32SurfaceCreateFlagsKHR{}, nullptr, reinterpret_cast<HWND>(native_win_handle_));
         try {
             surface_ = inst_->createWin32SurfaceKHRUnique(surface_create_info);
         } catch (std::exception &ex) {
@@ -270,7 +269,7 @@ namespace eka2l1::drivers {
 
         return true;
 #elif EKA2L1_PLATFORM(ANDROID)
-        vk::AndroidSurfaceCreateInfoKHR surface_create_info(vk::AndroidSurfaceCreateFlagsKHR{}, reinterpret_cast<struct ANativeWindow*>(native_win_handle_));
+        vk::AndroidSurfaceCreateInfoKHR surface_create_info(vk::AndroidSurfaceCreateFlagsKHR{}, reinterpret_cast<struct ANativeWindow *>(native_win_handle_));
         try {
             surface_ = inst_->createAndroidSurfaceKHRUnique(surface_create_info);
         } catch (std::exception &ex) {
@@ -279,7 +278,7 @@ namespace eka2l1::drivers {
         }
 #else
         std::uint64_t surface_handle_64 = reinterpret_cast<std::uint64_t>(native_win_handle_);
-        vk::XcbSurfaceCreateInfoKHR surface_create_info(vk::XcbSurfaceCreateFlagsKHR {}, nullptr, reinterpret_cast<xcb_window_t>(surface_handle_64));
+        vk::XcbSurfaceCreateInfoKHR surface_create_info(vk::XcbSurfaceCreateFlagsKHR{}, nullptr, reinterpret_cast<xcb_window_t>(surface_handle_64));
         try {
             surface_ = inst_->createXcbSurfaceKHRUnique(surface_create_info);
         } catch (std::exception &ex) {
@@ -295,7 +294,7 @@ namespace eka2l1::drivers {
         // Get supported format by surface
         return true;
     }
-    
+
     vulkan_graphics_driver::vulkan_graphics_driver(const vec2 &scr, void *native_win_handle)
         : shared_graphics_driver(graphic_api::vulkan)
         , native_win_handle_(native_win_handle) {

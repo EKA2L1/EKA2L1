@@ -459,7 +459,7 @@ namespace eka2l1 {
         return (chdir(path.c_str()) == 0);
 #endif
     }
-    
+
     bool get_current_directory(std::string &path) {
         path.resize(512);
 

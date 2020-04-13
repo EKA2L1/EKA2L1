@@ -25,15 +25,15 @@
 
 namespace eka2l1::epoc {
     static void on_anim_due(std::uint64_t userdata, const int cycles_late) {
-        anim_due_callback_data *callback = reinterpret_cast<anim_due_callback_data*>(userdata);
+        anim_due_callback_data *callback = reinterpret_cast<anim_due_callback_data *>(userdata);
         callback->sched->invoke_due_animation(callback->driver, callback->screen_number);
     }
 
     static void on_scan_callback(std::uint64_t userdata, const int cycles_late) {
-        sched_scan_callback_data *callback = reinterpret_cast<sched_scan_callback_data*>(userdata);
-        callback->sched->idle_callback(callback->driver);  
+        sched_scan_callback_data *callback = reinterpret_cast<sched_scan_callback_data *>(userdata);
+        callback->sched->idle_callback(callback->driver);
     }
-    
+
     animation_scheduler::animation_scheduler(timing_system *timing, const int total_screen)
         : timing_(timing)
         , callback_scheduled_(false) {
@@ -127,15 +127,14 @@ namespace eka2l1::epoc {
                 if (scr_state.flags == screen_state::scheduled) {
                     // The screen update has been scheduled before. In that case, we need to check the time
                     // the redraw was supposed to be trigger.
-                    // 
+                    //
                     // If the due of this schedule is sooner, cancel the existing screen redraw schedule
                     // and replace with our due.
                     //
                     // Else, wait for the existing update to finish, then do redraw.
                     if (until_due < static_cast<std::int64_t>(scr_state.time_expected_redraw) - static_cast<std::int64_t>(now)) {
                         // Cancel the schedule
-                        timing_->unschedule_event(anim_due_evt_, reinterpret_cast<std::uint64_t>(
-                            &callback_datas_[screen_number]));
+                        timing_->unschedule_event(anim_due_evt_, reinterpret_cast<std::uint64_t>(&callback_datas_[screen_number]));
                     } else {
                         should_update = false;
                     }
@@ -151,8 +150,7 @@ namespace eka2l1::epoc {
                     } else {
                         scr_state.time_expected_redraw = now + until_due;
                         scr_state.flags = screen_state::scheduled;
-                        timing_->schedule_event(static_cast<int64_t>(until_due), anim_due_evt_, reinterpret_cast<std::uint64_t>(
-                            &callback_datas_[screen_number]));
+                        timing_->schedule_event(static_cast<int64_t>(until_due), anim_due_evt_, reinterpret_cast<std::uint64_t>(&callback_datas_[screen_number]));
                     }
                 }
             }
@@ -167,17 +165,17 @@ namespace eka2l1::epoc {
 
         // Do redraw, now!
         sched->scr->redraw(driver);
-        
+
         // Transtition the state to inactive.
         states_[screen_number].flags = screen_state::inactive;
     }
-    
+
     void animation_scheduler::idle_callback(drivers::graphics_driver *driver) {
         callback_scheduled_ = false;
 
         for (int screen_num = 0; screen_num < states_.size(); screen_num++) {
             scan_for_redraw(driver, screen_num, false);
-        } 
+        }
     }
 
     void animation_scheduler::schedule_scans(drivers::graphics_driver *driver) {

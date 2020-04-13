@@ -87,7 +87,7 @@ enum drive_number {
     drive_invalid
 };
 
-inline drive_number operator --(drive_number &drv, int) {
+inline drive_number operator--(drive_number &drv, int) {
     return static_cast<drive_number>(static_cast<int>(drv) - 1);
 }
 
@@ -130,7 +130,7 @@ drive_number char16_to_drive(const char16_t c);
 
 enum class language {
 #define LANG_DECL(x, y) x,
-    #include <common/lang.def>
+#include <common/lang.def>
 #undef LANG_DECL
 };
 

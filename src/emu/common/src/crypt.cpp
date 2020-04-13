@@ -56,7 +56,7 @@ namespace eka2l1::crypt {
             crc = (crc << 8) ^ (crc_tab[((crc >> 8) ^ *cur++) & 0xff]);
         }
     }
-    
+
     static const std::string base64_ascii_map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::size_t base64_encode(const std::uint8_t *source, const std::size_t source_size, char *dest,
@@ -72,7 +72,7 @@ namespace eka2l1::crypt {
                 if (dest_written == dest_max_size) {
                     return dest_written;
                 }
-                
+
                 dest[dest_written] = base64_ascii_map[(b1 & 0b11111100) >> 2];
             }
 
@@ -82,7 +82,7 @@ namespace eka2l1::crypt {
                 if (dest_written == dest_max_size) {
                     return dest_written;
                 }
-                    
+
                 dest[dest_written] = base64_ascii_map[((b1 & 0b11) << 4) | (b2 & 0b11110000) >> 4];
             }
 
@@ -92,32 +92,32 @@ namespace eka2l1::crypt {
                 if (dest_written == dest_max_size) {
                     return dest_written;
                 }
-                
+
                 dest[dest_written] = base64_ascii_map[((b2 & 0b1111) << 2) | (b3 & 0b11000000) >> 6];
             }
 
             dest_written++;
-            
+
             if (dest) {
                 if (dest_written == dest_max_size) {
                     return dest_written;
                 }
-                
+
                 dest[dest_written] = base64_ascii_map[(b3 & 0b111111)];
             }
-            
+
             dest_written++;
         }
 
         if (dest && source_size % 3 != 0) {
             for (std::size_t i = 0; i < 3 - source_size % 3; i++) {
-                dest[dest_written - i - 1] = '='; 
+                dest[dest_written - i - 1] = '=';
             }
         }
 
         return dest_written;
     }
-    
+
     std::size_t base64_decode(const std::uint8_t *source, const std::size_t source_size, char *dest,
         const std::size_t dest_max_size) {
         std::size_t dest_written = 0;
@@ -134,15 +134,12 @@ namespace eka2l1::crypt {
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4309)
+#pragma warning(disable : 4309)
 #endif
-            if (b0 == static_cast<std::uint8_t>(std::string::npos) || 
-                b1 == static_cast<std::uint8_t>(std::string::npos) ||
-                b2 == static_cast<std::uint8_t>(std::string::npos) ||
-                b3 == static_cast<std::uint8_t>(std::string::npos)) {
+            if (b0 == static_cast<std::uint8_t>(std::string::npos) || b1 == static_cast<std::uint8_t>(std::string::npos) || b2 == static_cast<std::uint8_t>(std::string::npos) || b3 == static_cast<std::uint8_t>(std::string::npos)) {
                 return dest_written;
             }
-    
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

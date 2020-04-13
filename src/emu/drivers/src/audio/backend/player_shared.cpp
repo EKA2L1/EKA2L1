@@ -17,11 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/backend/player_shared.h>
 #include <drivers/audio/audio.h>
+#include <drivers/audio/backend/player_shared.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 namespace eka2l1::drivers {
     std::size_t player_shared::data_supply_callback(std::int16_t *data, std::size_t size) {
@@ -41,7 +41,7 @@ namespace eka2l1::drivers {
 
                 // Copy the frames first
                 if (request->channels_ == 1) {
-                    const std::uint16_t *original_data_u16 = reinterpret_cast<std::uint16_t*>(request->data_.data() + request->data_pointer_);
+                    const std::uint16_t *original_data_u16 = reinterpret_cast<std::uint16_t *>(request->data_.data() + request->data_pointer_);
 
                     // We have to do something!
                     for (std::size_t frame_ite = 0; frame_ite < frame_to_copy; frame_ite++) {
@@ -59,7 +59,7 @@ namespace eka2l1::drivers {
         };
 
         supply_stuff();
-        
+
         if ((frame_copied < size) || (request->flags_ & 1)) {
             bool no_more_way = false;
 
@@ -114,8 +114,8 @@ namespace eka2l1::drivers {
             request->data_pointer_ = 0;
             request->flags_ = 0;
             request->data_.clear();
-            
-            // New stream to restart everything     
+
+            // New stream to restart everything
             output_stream_ = aud_->new_output_stream(request->freq_, 2, [this](std::int16_t *u1, std::size_t u2) {
                 return data_supply_callback(u1, u2);
             });
@@ -142,7 +142,7 @@ namespace eka2l1::drivers {
         const std::lock_guard<std::mutex> guard(request_queue_lock_);
         return player::notify_any_done(callback, data, data_size);
     }
-    
+
     void player_shared::clear_notify_done() {
         std::unique_lock<std::mutex> guard(request_queue_lock_, std::try_to_lock);
         return player::clear_notify_done();
@@ -158,6 +158,5 @@ namespace eka2l1::drivers {
 
     player_shared::player_shared(audio_driver *driver)
         : aud_(driver) {
-
     }
 }

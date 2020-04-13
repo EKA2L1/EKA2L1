@@ -18,11 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/fileutils.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
+#include <common/path.h>
 #include <common/platform.h>
 #include <common/time.h>
-#include <common/path.h>
 
 #include <fstream>
 

@@ -30,11 +30,11 @@
 #include <vector>
 
 namespace eka2l1 {
-    class keysound_session: public service::typical_session {
+    class keysound_session : public service::typical_session {
     private:
-        service::uid app_uid_;                              ///< The UID3 of the app opening this session
-        std::vector<epoc::keysound::context> contexts_;      ///< Context stack describes sound to play when key action trigger.
-        
+        service::uid app_uid_; ///< The UID3 of the app opening this session
+        std::vector<epoc::keysound::context> contexts_; ///< Context stack describes sound to play when key action trigger.
+
         std::unique_ptr<drivers::audio_output_stream> aud_out_;
 
         struct parser_state {
@@ -66,7 +66,7 @@ namespace eka2l1 {
         void add_sids(service::ipc_context *ctx);
     };
 
-    class keysound_server: public service::typical_server {
+    class keysound_server : public service::typical_server {
         bool inited_;
         std::vector<epoc::keysound::sound_info> sounds_;
 

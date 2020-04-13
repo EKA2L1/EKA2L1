@@ -42,7 +42,7 @@ namespace eka2l1::drivers {
                                                      "uniform sampler2D Texture;\n"
                                                      "in vec2 Frag_UV;\n"
                                                      "in vec4 Frag_Color;\n"
-                                                     "out vec4 Out_Color;\n"    
+                                                     "out vec4 Out_Color;\n"
                                                      "void main()\n"
                                                      "{\n"
                                                      "	Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
@@ -141,12 +141,11 @@ namespace eka2l1::drivers {
         float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
         float T = draw_data->DisplayPos.y;
         float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
-        const float ortho_projection[4][4] =
-        {
-            { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
-            { 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
-            { 0.0f,         0.0f,        -1.0f,   0.0f },
-            { (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
+        const float ortho_projection[4][4] = {
+            { 2.0f / (R - L), 0.0f, 0.0f, 0.0f },
+            { 0.0f, 2.0f / (T - B), 0.0f, 0.0f },
+            { 0.0f, 0.0f, -1.0f, 0.0f },
+            { (R + L) / (L - R), (T + B) / (B - T), 0.0f, 1.0f },
         };
 
         cmd_builder->use_program(shader);
@@ -198,7 +197,7 @@ namespace eka2l1::drivers {
                     eka2l1::rect inv_rect(
                         eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.y) },
                         eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
-                    
+
                     cmd_builder->invalidate_rect(inv_rect);
 
                     cmd_builder->draw_indexed(drivers::graphics_primitive_mode::triangles, pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? drivers::data_format::word : drivers::data_format::uint,

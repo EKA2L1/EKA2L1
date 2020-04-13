@@ -21,7 +21,7 @@ namespace eka2l1 {
     class debugger_base {
     protected:
         friend class debugger_renderer;
-        
+
         debugger_renderer *renderer;
 
         std::vector<debug_breakpoint> breakpoints;

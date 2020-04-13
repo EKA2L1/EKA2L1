@@ -37,7 +37,7 @@ TInt CTestManager::Run() {
 
         _LIT(KTestExt, ".expected");
         _LIT(KTestFolder, "expected\\");
-        
+
         HBufC *testPathBuf;
         TRAPD(err, testPathBuf = HBufC::NewL(test.iCategory->Length() + test.iName->Length() + KTestExt.iTypeLength + 2 + iSessionPath.Length() + KTestFolder.iTypeLength));
 

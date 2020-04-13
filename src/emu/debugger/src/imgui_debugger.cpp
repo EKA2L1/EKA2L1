@@ -35,12 +35,12 @@
 #include <epoc/kernel/thread.h>
 
 #include <epoc/services/applist/applist.h>
-#include <epoc/services/window/window.h>
+#include <epoc/services/ui/cap/eiksrv.h>
+#include <epoc/services/ui/cap/oom_app.h>
 #include <epoc/services/window/classes/winbase.h>
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
-#include <epoc/services/ui/cap/eiksrv.h>
-#include <epoc/services/ui/cap/oom_app.h>
+#include <epoc/services/window/window.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
@@ -51,9 +51,9 @@
 
 #include <common/cvt.h>
 #include <common/fileutils.h>
+#include <common/language.h>
 #include <common/path.h>
 #include <common/platform.h>
-#include <common/language.h>
 
 #include <nfd.h>
 
@@ -69,7 +69,7 @@ const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255
 
 namespace eka2l1 {
     static void language_property_change_handler(void *userdata, service::property *prop) {
-        imgui_debugger *debugger = reinterpret_cast<imgui_debugger*>(userdata);
+        imgui_debugger *debugger = reinterpret_cast<imgui_debugger *>(userdata);
         manager::config_state *conf = debugger->get_config();
 
         conf->language = static_cast<int>(debugger->get_language_from_property(prop));
@@ -105,7 +105,7 @@ namespace eka2l1 {
         , debug_thread_id(0)
         , app_launch(app_launch)
         , selected_callback(nullptr)
-        , selected_callback_data(nullptr) 
+        , selected_callback_data(nullptr)
         , phony_icon(0) {
         // Setup hook
         manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
@@ -151,12 +151,9 @@ namespace eka2l1 {
             }
         });
 
-        alserv = reinterpret_cast<eka2l1::applist_server*>(sys->get_kernel_system()->get_by_name
-            <service::server>("!AppListServer"));
-        winserv = reinterpret_cast<eka2l1::window_server*>(sys->get_kernel_system()->get_by_name
-            <service::server>("!Windowserver"));
-        oom = reinterpret_cast<eka2l1::oom_ui_app_server*>(sys->get_kernel_system()->get_by_name
-            <service::server>("101fdfae_10207218_AppServer"));
+        alserv = reinterpret_cast<eka2l1::applist_server *>(sys->get_kernel_system()->get_by_name<service::server>("!AppListServer"));
+        winserv = reinterpret_cast<eka2l1::window_server *>(sys->get_kernel_system()->get_by_name<service::server>("!Windowserver"));
+        oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(sys->get_kernel_system()->get_by_name<service::server>("101fdfae_10207218_AppServer"));
 
         property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
         lang_prop->add_data_change_callback(this, language_property_change_handler);
@@ -217,7 +214,7 @@ namespace eka2l1 {
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
             for (const auto &thr_obj : sys->get_kernel_system()->threads) {
-                kernel::thread *thr = reinterpret_cast<kernel::thread*>(thr_obj.get());
+                kernel::thread *thr = reinterpret_cast<kernel::thread *>(thr_obj.get());
                 chunk_ptr chnk = thr->get_stack_chunk();
 
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", thr->unique_id(),
@@ -252,7 +249,7 @@ namespace eka2l1 {
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
             for (const auto &chnk_obj : sys->get_kernel_system()->chunks) {
-                kernel::chunk *chnk = reinterpret_cast<kernel::chunk*>(chnk_obj.get());
+                kernel::chunk *chnk = reinterpret_cast<kernel::chunk *>(chnk_obj.get());
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08lX    0x%08lX      %-32s",
@@ -280,7 +277,7 @@ namespace eka2l1 {
                     return;
                 }
 
-                debug_thread = reinterpret_cast<kernel::thread*>(kern->threads.begin()->get());
+                debug_thread = reinterpret_cast<kernel::thread *>(kern->threads.begin()->get());
                 debug_thread_id = debug_thread->unique_id();
             } else {
                 debug_thread = kern->get_by_id<kernel::thread>(debug_thread_id);
@@ -294,7 +291,7 @@ namespace eka2l1 {
 
                     if (ImGui::Selectable(cr_thrname.c_str(), kern->threads[i]->unique_id() == debug_thread_id)) {
                         debug_thread_id = kern->threads[i]->unique_id();
-                        debug_thread = reinterpret_cast<kernel::thread*>(kern->threads[i].get());
+                        debug_thread = reinterpret_cast<kernel::thread *>(kern->threads[i].get());
                     }
                 }
 
@@ -484,7 +481,7 @@ namespace eka2l1 {
         const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1f);
         if (ret && conf->ui_scale <= 1e-6) {
             conf->ui_scale = 0.5;
-        } 
+        }
 
         ImGui::NewLine();
         ImGui::Text("Font");
@@ -519,7 +516,7 @@ namespace eka2l1 {
 
         return static_cast<language>(current_lang->language);
     }
-    
+
     void imgui_debugger::set_language_to_property(const language new_one) {
         property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
         auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
@@ -531,7 +528,7 @@ namespace eka2l1 {
         current_lang->language = static_cast<epoc::language>(new_one);
         lang_prop->set<epoc::locale_language>(current_lang.value());
     }
-    
+
     void imgui_debugger::show_pref_general() {
         ImGui::Text("Logging");
         ImGui::Separator();
@@ -600,7 +597,7 @@ namespace eka2l1 {
             ImGui::SameLine(col2);
             ImGui::PushItemWidth(col2 - 10);
 
-            auto& dvc = dvcs[conf->device];
+            auto &dvc = dvcs[conf->device];
 
             if (conf->language == -1) {
                 conf->language = dvc.default_language_code;
@@ -642,9 +639,10 @@ namespace eka2l1 {
             if (ImGui::Button(button)) {
                 on_pause_toogle(true);
 
-                file_dialog("", [&](const char *res) {
-                    dat = res;
-                },
+                file_dialog(
+                    "", [&](const char *res) {
+                        dat = res;
+                    },
                     true);
 
                 should_pause = false;
@@ -688,7 +686,7 @@ namespace eka2l1 {
         const float col6 = ImGui::GetWindowSize().x / 6;
 
         static const char *BATTERY_LEVEL_STRS[] = {
-            "0", "1", "2", "3", 
+            "0", "1", "2", "3",
             "4", "5", "6", "7"
         };
 
@@ -779,9 +777,10 @@ namespace eka2l1 {
 
         on_pause_toogle(true);
 
-        file_dialog("sis,sisx", [&](const char *res) {
-            path = res;
-        },
+        file_dialog(
+            "sis,sisx", [&](const char *res) {
+                path = res;
+            },
             false);
 
         should_pause = false;
@@ -1015,11 +1014,11 @@ namespace eka2l1 {
             device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
             should_show_install_device_wizard = false;
             return;
-        } 
+        }
 
         ImGui::OpenPopup("Install device wizard");
         ImGui::SetNextWindowSize(ImVec2(640, 140), ImGuiCond_Once);
-        
+
         if (ImGui::BeginPopupModal("Install device wizard")) {
             switch (device_wizard_state.stage) {
             case device_wizard::WELCOME_MESSAGE:
@@ -1029,9 +1028,9 @@ namespace eka2l1 {
 
             case device_wizard::SPECIFY_RPKG: {
                 ImGui::TextWrapped("Please specify the repackage file (RPKG):");
-                ImGui::InputText("##RPKGPath", device_wizard_state.current_rpkg_path.data(), 
+                ImGui::InputText("##RPKGPath", device_wizard_state.current_rpkg_path.data(),
                     device_wizard_state.current_rpkg_path.size(), ImGuiInputTextFlags_ReadOnly);
-                
+
                 ImGui::SameLine();
 
                 if (ImGui::Button("Change")) {
@@ -1051,9 +1050,9 @@ namespace eka2l1 {
 
             case device_wizard::SPECIFY_ROM: {
                 ImGui::TextWrapped("Please specify the ROM file:");
-                ImGui::InputText("##ROMPath", device_wizard_state.current_rom_path.data(), 
+                ImGui::InputText("##ROMPath", device_wizard_state.current_rom_path.data(),
                     device_wizard_state.current_rom_path.size(), ImGuiInputTextFlags_ReadOnly);
-                
+
                 ImGui::SameLine();
 
                 if (ImGui::Button("Change")) {
@@ -1075,7 +1074,7 @@ namespace eka2l1 {
                 ImGui::TextWrapped("Please wait while we install the device!");
 
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-                
+
                 bool extract_rpkg_state = device_wizard_state.extract_rpkg_done.load();
                 bool copy_rom_state = device_wizard_state.copy_rom_done.load();
 
@@ -1110,15 +1109,14 @@ namespace eka2l1 {
             ImGui::SameLine((ImGui::GetWindowSize().x - (BUTTON_SIZE.x * 2)) / 2);
 
             if (ImGuiButtonToggle("Yes", BUTTON_SIZE, device_wizard_state.should_continue)) {
-                device_wizard_state.stage = static_cast<device_wizard::device_wizard_stage>
-                    (static_cast<int>(device_wizard_state.stage) + 1);
+                device_wizard_state.stage = static_cast<device_wizard::device_wizard_stage>(static_cast<int>(device_wizard_state.stage) + 1);
                 device_wizard_state.should_continue = false;
 
                 if (device_wizard_state.stage == device_wizard::INSTALL) {
                     manager::device_manager *manager = sys->get_manager_system()->get_device_manager();
-    
+
                     device_wizard_state.install_thread = std::make_unique<std::thread>([](
-                        manager::device_manager *mngr, device_wizard *wizard, manager::config_state *conf) {
+                                                                                           manager::device_manager *mngr, device_wizard *wizard, manager::config_state *conf) {
                         std::atomic<int> progress;
                         std::string firmware_code;
 
@@ -1134,8 +1132,7 @@ namespace eka2l1 {
 
                         wizard->extract_rpkg_done = true;
 
-                        const std::string rom_directory = add_path(conf->storage, add_path("roms", 
-                            firmware_code + "\\"));
+                        const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
 
                         eka2l1::create_directories(rom_directory);
                         result = common::copy_file(wizard->current_rom_path, add_path(rom_directory, "SYM.ROM"), true);
@@ -1148,7 +1145,8 @@ namespace eka2l1 {
 
                         wizard->copy_rom_done = true;
                         wizard->should_continue = true;
-                    }, manager, &device_wizard_state, conf);
+                    },
+                        manager, &device_wizard_state, conf);
                 }
             }
 
@@ -1162,7 +1160,7 @@ namespace eka2l1 {
             ImGui::EndPopup();
         }
     }
-    
+
     void imgui_debugger::show_menu() {
         if (ImGui::BeginMainMenuBar()) {
             conf->menu_height = ImGui::GetWindowSize().y;
@@ -1269,7 +1267,7 @@ namespace eka2l1 {
                 ImGui::Separator();
                 ImGui::Columns(1);
             }
-            
+
             ImGui::BeginChild("##AppListScroll");
             {
                 ImGui::Columns(2);
@@ -1321,18 +1319,17 @@ namespace eka2l1 {
         error_queue.push(error);
     }
 
-    static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)  { 
-        return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); 
+    static inline ImVec2 operator+(const ImVec2 &lhs, const ImVec2 &rhs) {
+        return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
     }
 
-    // Taken from https://github.com/ocornut/imgui/issues/1982    
-    void imgui_image_rotate(ImTextureID tex_id, ImVec2 center, ImVec2 size, float angle)
-    {
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    // Taken from https://github.com/ocornut/imgui/issues/1982
+    void imgui_image_rotate(ImTextureID tex_id, ImVec2 center, ImVec2 size, float angle) {
+        ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
         float cos_a = cosf(angle);
         float sin_a = sinf(angle);
-        
+
         center = center + ImGui::GetWindowPos();
         center = center + ImGui::GetWindowContentRegionMin();
 
@@ -1343,11 +1340,11 @@ namespace eka2l1 {
             center + ImRotate(ImVec2(-size.x * 0.5f, +size.y * 0.5f), cos_a, sin_a)
         };
 
-        ImVec2 uvs[4] = { 
-            ImVec2(0.0f, 0.0f), 
-            ImVec2(1.0f, 0.0f), 
-            ImVec2(1.0f, 1.0f), 
-            ImVec2(0.0f, 1.0f) 
+        ImVec2 uvs[4] = {
+            ImVec2(0.0f, 0.0f),
+            ImVec2(1.0f, 0.0f),
+            ImVec2(1.0f, 1.0f),
+            ImVec2(0.0f, 1.0f)
         };
 
         draw_list->AddImageQuad(tex_id, pos[0], pos[1], pos[2], pos[3], uvs[0], uvs[1], uvs[2], uvs[3], IM_COL32_WHITE);
@@ -1399,8 +1396,7 @@ namespace eka2l1 {
             scr->screen_mutex.lock();
             scr->absolute_pos.x = static_cast<int>(window_pos.x + content_pos.x);
             scr->absolute_pos.y = static_cast<int>(window_pos.y + content_pos.y);
-            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x),
-                static_cast<float>(size.y)));
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)));
 
             if (scr->dsa_texture) {
                 const eka2l1::vec2 size_dsa = scr->size();
@@ -1410,20 +1406,20 @@ namespace eka2l1 {
                     ImVec2(static_cast<float>(size_dsa.x), static_cast<float>(size_dsa.y)),
                     static_cast<float>(scr->current_mode().rotation));
             }
-    
+
             scr->screen_mutex.unlock();
             ImGui::End();
         }
     }
-        
+
     static void ws_window_top_user_selected_callback(void *userdata) {
-        epoc::window_top_user *top = reinterpret_cast<epoc::window_top_user*>(userdata);
+        epoc::window_top_user *top = reinterpret_cast<epoc::window_top_user *>(userdata);
         ImGui::Text("Type:           Top client");
     }
 
     static void ws_window_user_selected_callback(void *userdata) {
-        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(userdata);
-        
+        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(userdata);
+
         ImGui::Text("Type:           Client");
         ImGui::Text("Client handle:  0x%08X", user->client_handle);
         ImGui::Text("Position:       { %d, %d }", user->pos.x, user->pos.y);
@@ -1448,7 +1444,7 @@ namespace eka2l1 {
         default:
             break;
         }
-        
+
         std::string flags = "Flags:          ";
 
         if (user->flags == 0) {
@@ -1475,13 +1471,12 @@ namespace eka2l1 {
 
         if (user->driver_win_id) {
             const eka2l1::vec2 size = user->size;
-            ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(static_cast<float>(size.x),
-                static_cast<float>(size.y))); 
+            ImGui::Image(reinterpret_cast<ImTextureID>(user->driver_win_id), ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)));
         }
     }
 
     static void ws_window_group_selected_callback(void *userdata) {
-        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(userdata);
+        epoc::window_group *group = reinterpret_cast<epoc::window_group *>(userdata);
         const std::string name = common::ucs2_to_utf8(group->name);
 
         ImGui::Text("Name:           %s", name.c_str());
@@ -1498,15 +1493,15 @@ namespace eka2l1 {
         while (child) {
             switch (child->type) {
             case epoc::window_kind::group: {
-                node_name = common::ucs2_to_utf8(reinterpret_cast<epoc::window_group*>(child)->name);
+                node_name = common::ucs2_to_utf8(reinterpret_cast<epoc::window_group *>(child)->name);
                 to_assign = ws_window_group_selected_callback;
                 break;
             }
 
             case epoc::window_kind::client: {
-                node_name = fmt::format("{}", reinterpret_cast<epoc::window_user*>(child)->id);
+                node_name = fmt::format("{}", reinterpret_cast<epoc::window_user *>(child)->id);
                 to_assign = ws_window_user_selected_callback;
-                break;                
+                break;
             }
 
             case epoc::window_kind::top_client: {
@@ -1522,7 +1517,7 @@ namespace eka2l1 {
             if (to_assign) {
                 const bool result = ImGui::TreeNode(node_name.c_str());
 
-                if (ImGui::IsItemClicked()) {                     
+                if (ImGui::IsItemClicked()) {
                     *func = to_assign;
                     *userdata = child;
                 }
@@ -1538,13 +1533,12 @@ namespace eka2l1 {
     }
 
     static void ws_screen_selected_callback(void *userdata) {
-        epoc::screen *scr = reinterpret_cast<epoc::screen*>(userdata);
+        epoc::screen *scr = reinterpret_cast<epoc::screen *>(userdata);
         ImGui::Text("Screen number      %d", scr->number);
 
         if (scr->screen_texture) {
             eka2l1::vec2 size = scr->size();
-            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x),
-                static_cast<float>(size.y)));
+            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)));
         }
     }
 
@@ -1560,10 +1554,10 @@ namespace eka2l1 {
 
             for (int i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
                 const std::string screen_name = fmt::format("Screen {}", i);
-                
+
                 const bool result = ImGui::TreeNode(screen_name.c_str());
 
-                if (ImGui::IsItemClicked()) {                     
+                if (ImGui::IsItemClicked()) {
                     selected_callback = ws_screen_selected_callback;
                     selected_callback_data = scr;
                 }
@@ -1576,8 +1570,8 @@ namespace eka2l1 {
 
             if (selected_callback) {
                 ImGui::NextColumn();
-                
-                if (ImGui::BeginChild("##EditMenu")) {    
+
+                if (ImGui::BeginChild("##EditMenu")) {
                     selected_callback(selected_callback_data);
                     ImGui::EndChild();
                 }
@@ -1599,8 +1593,7 @@ namespace eka2l1 {
             ImGui::Columns(2);
 
             if (phony_icon) {
-                ImGui::Image(reinterpret_cast<ImTextureID>(phony_icon), ImVec2(static_cast<float>(phony_size.x),
-                    static_cast<float>(phony_size.y)));
+                ImGui::Image(reinterpret_cast<ImTextureID>(phony_icon), ImVec2(static_cast<float>(phony_size.x), static_cast<float>(phony_size.y)));
             }
 
             ImGui::NextColumn();
@@ -1621,7 +1614,7 @@ namespace eka2l1 {
             ImGui::End();
         }
     }
-    
+
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
         handle_shortcuts();

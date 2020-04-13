@@ -58,7 +58,7 @@ namespace eka2l1 {
 
             return std::vector<uint32_t>{};
         }
-        
+
         void library::detach(kernel::process *pr) {
             codeseg->detatch(pr);
         }

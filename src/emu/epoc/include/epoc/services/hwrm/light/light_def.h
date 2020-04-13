@@ -67,13 +67,13 @@ namespace eka2l1::epoc::hwrm::light {
      * \brief The status of a light.
      */
     enum status {
-        light_status_unk = 0,       ///< Unknown status.
-        light_status_on = 1,        ///< The light is on.
-        light_status_off = 2,       ///< The light is off
-        light_status_blink = 3      ///< The light is blinking.
+        light_status_unk = 0, ///< Unknown status.
+        light_status_on = 1, ///< The light is on.
+        light_status_off = 2, ///< The light is off
+        light_status_blink = 3 ///< The light is blinking.
     };
 
     // The phone is not a power supply you can't just have a festival on it.
-    static constexpr std::uint32_t MAXIMUM_LIGHT = 31;      ///< Maximum light a device can have.
-    static constexpr std::uint32_t LIGHT_STATUS_PROP_KEY = 0x2001;      ///< Property key of the light status.
+    static constexpr std::uint32_t MAXIMUM_LIGHT = 31; ///< Maximum light a device can have.
+    static constexpr std::uint32_t LIGHT_STATUS_PROP_KEY = 0x2001; ///< Property key of the light status.
 }

@@ -35,7 +35,7 @@ namespace eka2l1 {
         ws_mess_finish = 3,
         ws_mess_sync_msg_buf = 4,
         ws_mess_async_service = 0x010000,
-        ws_mess_anim_dll_async_cmd = 0x100000 
+        ws_mess_anim_dll_async_cmd = 0x100000
     };
 
     enum ws_client_opcodes {
@@ -66,7 +66,7 @@ namespace eka2l1 {
         ws_cl_op_create_anim_dll = 24,
         ws_cl_op_create_screen_device = 25,
         ws_cl_op_create_sprite = 26,
-        ws_cl_op_create_pointer_cursor = 27,      
+        ws_cl_op_create_pointer_cursor = 27,
         ws_cl_op_start_custom_text_cursor = 28,
         ws_cl_op_complete_custom_text_cursor = 29,
         ws_cl_op_create_bitmap = 30,
@@ -206,7 +206,7 @@ namespace eka2l1 {
         ws_sd_op_get_screen_number = 39,
         ws_sd_op_get_screen_size_mode_list = 40,
         ws_sd_op_get_screen_mode_display_mode = 41,
-        ws_cl_op_set_backlight = 42,    // Duh what
+        ws_cl_op_set_backlight = 42, // Duh what
         ws_sd_op_extension_supported = 43,
         ws_sd_op_XDc_get_number_resolutions = 44,
         ws_sd_op_XDc_get_resolution_list = 45,
@@ -232,21 +232,21 @@ namespace eka2l1 {
         ws_dsa_get_rec_queue = 6
     };
 
-    #define OPCODE_NAME(aaaprefix, aname, aversion) aaaprefix##_##aversion##_##aname
-    #define OPCODE(aprefix, aname, aversion, val)    \
-        OPCODE_NAME(aprefix, aname, aversion) = val,
+#define OPCODE_NAME(aaaprefix, aname, aversion) aaaprefix##_##aversion##_##aname
+#define OPCODE(aprefix, aname, aversion, val) \
+    OPCODE_NAME(aprefix, aname, aversion) = val,
 
-    #define OPCODE2(aprefix, aname, version1, val1, version2, val2)    \
-        OPCODE(aprefix, aname, version1, val1)    \
-        OPCODE(aprefix, aname, version2, val2)    \
+#define OPCODE2(aprefix, aname, version1, val1, version2, val2) \
+    OPCODE(aprefix, aname, version1, val1)                      \
+    OPCODE(aprefix, aname, version2, val2)
 
     enum ws_graphics_context_opcode {
-        #include <epoc/services/window/gcop.def>
+#include <epoc/services/window/gcop.def>
     };
 
-    #undef OPCODE_NAME
-    #undef OPCODE
-    #undef OPCODE2
+#undef OPCODE_NAME
+#undef OPCODE
+#undef OPCODE2
 
     enum ws_anim_dll_opcode {
         ws_anim_dll_op_create_instance = 0,
@@ -374,7 +374,7 @@ enum TWsWindowOpcodes {
     EWsWinOpSetTransparencyBitmap,
     EWsWinOpAllowChildWindowGroup,
     EWsWinOpSetTransparencyBitmapCWs,
-    EWsWinOpEnableVisibilityChangeEvents,       // Is 0x74 on S60^5
+    EWsWinOpEnableVisibilityChangeEvents, // Is 0x74 on S60^5
     EWsWinOpDisableVisibilityChangeEvents,
     EWsWinOpSetTransparencyAlphaChannel,
     EWsWinOpWindowGroupId,

@@ -24,11 +24,11 @@
 
 namespace eka2l1::common::color {
     using vec_rgb = vecx<int, 3>;
-    #define COLOR_DECL(name, r, g, b) const vec_rgb name = vec_rgb({ r, g, b });
+#define COLOR_DECL(name, r, g, b) const vec_rgb name = vec_rgb({ r, g, b });
 
-    #include <common/color.def>
+#include <common/color.def>
 
-    #undef COLOR_DECL
+#undef COLOR_DECL
 
     const vec_rgb get_color(const char *name);
 }

@@ -17,25 +17,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/akn/skin/common.h>
-#include <epoc/services/akn/skin/skn.h>
+#include <epoc/ptr.h>
 #include <epoc/services/akn/skin/chunk_maintainer.h>
+#include <epoc/services/akn/skin/common.h>
 #include <epoc/services/akn/skin/icon_cfg.h>
 #include <epoc/services/akn/skin/settings.h>
+#include <epoc/services/akn/skin/skn.h>
 #include <epoc/services/framework.h>
-#include <epoc/ptr.h>
 
 #include <queue>
 
 #include <memory>
 
 namespace eka2l1 {
-    class akn_skin_server_session: public service::typical_session {
+    class akn_skin_server_session : public service::typical_session {
         eka2l1::ptr<void> client_handler_;
-        epoc::notify_info nof_info_;        ///< Notify info
+        epoc::notify_info nof_info_; ///< Notify info
         std::queue<epoc::akn_skin_server_change_handler_notification> nof_list_;
 
-        std::uint32_t flags { 0 };
+        std::uint32_t flags{ 0 };
 
         enum {
             ASS_FLAG_CANCELED = 0x1
@@ -74,7 +74,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
-    class akn_skin_server: public service::typical_server {
+    class akn_skin_server : public service::typical_server {
         std::unique_ptr<epoc::akn_ss_settings> settings_;
         std::unique_ptr<epoc::akn_skin_icon_config_map> icon_config_map_;
         std::unique_ptr<epoc::akn_skin_chunk_maintainer> chunk_maintainer_;
@@ -102,8 +102,7 @@ namespace eka2l1 {
             const epoc::pid item_id,
             const epoc::skn_layout_info layout_info,
             const std::uint32_t bmp_handle,
-            const std::uint32_t msk_handle
-        );
+            const std::uint32_t msk_handle);
 
         void connect(service::ipc_context &ctx) override;
     };

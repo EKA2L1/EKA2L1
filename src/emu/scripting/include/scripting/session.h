@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include <scripting/server.h>
 

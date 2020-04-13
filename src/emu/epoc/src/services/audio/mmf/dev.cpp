@@ -33,12 +33,12 @@ namespace eka2l1 {
     mmf_dev_server::mmf_dev_server(eka2l1::system *sys)
         : service::typical_server(sys, MMF_DEV_SERVER_NAME) {
     }
-    
+
     void mmf_dev_server::connect(service::ipc_context &context) {
         create_session<mmf_dev_server_session>(&context);
         context.set_request_status(epoc::error_none);
     }
-    
+
     mmf_dev_server_session::mmf_dev_server_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version)
         , volume_(0)
@@ -68,7 +68,7 @@ namespace eka2l1 {
         ctx->write_arg_pkg<epoc::mmf_dev_sound_proxy_settings>(2, settings.value());
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void mmf_dev_server_session::volume(service::ipc_context *ctx) {
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_arg_packed<epoc::mmf_dev_sound_proxy_settings>(2);
@@ -84,9 +84,8 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
-    void mmf_dev_server_session::set_priority_settings(service::ipc_context *ctx)  {
-        std::optional<epoc::mmf_priority_settings> pri_settings = 
-            ctx->get_arg_packed<epoc::mmf_priority_settings>(1);
+    void mmf_dev_server_session::set_priority_settings(service::ipc_context *ctx) {
+        std::optional<epoc::mmf_priority_settings> pri_settings = ctx->get_arg_packed<epoc::mmf_priority_settings>(1);
 
         if (!pri_settings) {
             ctx->set_request_status(epoc::error_argument);
@@ -96,7 +95,7 @@ namespace eka2l1 {
         pri_ = std::move(pri_settings.value());
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void mmf_dev_server_session::set_volume(service::ipc_context *ctx) {
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_arg_packed<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -113,10 +112,10 @@ namespace eka2l1 {
     void mmf_dev_server_session::init3(service::ipc_context *ctx) {
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     epoc::mmf_capabilities mmf_dev_server_session::get_caps() {
         epoc::mmf_capabilities caps;
-        
+
         // Fill our preferred settings
         caps.channels_ = 2;
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
@@ -125,7 +124,7 @@ namespace eka2l1 {
 
         return caps;
     }
-    
+
     void mmf_dev_server_session::capabilities(service::ipc_context *ctx) {
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_arg_packed<epoc::mmf_dev_sound_proxy_settings>(2);
@@ -175,7 +174,7 @@ namespace eka2l1 {
         four_ccs_.push_back(PCM8_CC);
         four_ccs_.push_back(PCM16_CC);
     }
-    
+
     void mmf_dev_server_session::get_supported_input_data_types(service::ipc_context *ctx) {
         get_supported_input_data_types();
         ctx->write_arg_pkg<int>(2, static_cast<int>(four_ccs_.size()));
@@ -183,7 +182,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::copy_fourcc_array(service::ipc_context *ctx) {
-        ctx->write_arg_pkg(2, reinterpret_cast<const std::uint8_t*>(four_ccs_.data()),
+        ctx->write_arg_pkg(2, reinterpret_cast<const std::uint8_t *>(four_ccs_.data()),
             static_cast<std::uint32_t>(four_ccs_.size() * sizeof(std::uint32_t)));
 
         ctx->set_request_status(epoc::error_none);
@@ -230,8 +229,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::uint32_t buf_handle = server<mmf_dev_server>()->get_system()->get_kernel_system()
-            ->open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
+        std::uint32_t buf_handle = server<mmf_dev_server>()->get_system()->get_kernel_system()->open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
 
         if (buf_handle == INVALID_HANDLE) {
             buffer_fill_info_.complete(epoc::error_general);
@@ -241,7 +239,7 @@ namespace eka2l1 {
         buffer_fill_buf_->chunk_op_ = epoc::mmf_dev_chunk_op_open;
         buffer_fill_info_.complete(buf_handle);
     }
-    
+
     void mmf_dev_server_session::get_buffer_to_be_filled(service::ipc_context *ctx) {
         if (!buffer_fill_info_.empty()) {
             // A pending PlayError is here.
@@ -250,7 +248,7 @@ namespace eka2l1 {
         }
 
         buffer_fill_info_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
-        buffer_fill_buf_ = reinterpret_cast<epoc::mmf_dev_hw_buf*>(ctx->get_arg_ptr(2));
+        buffer_fill_buf_ = reinterpret_cast<epoc::mmf_dev_hw_buf *>(ctx->get_arg_ptr(2));
 
         if (!buffer_fill_buf_) {
             buffer_fill_info_.complete(epoc::error_argument);
@@ -260,11 +258,10 @@ namespace eka2l1 {
     void mmf_dev_server_session::play_error(service::ipc_context *ctx) {
         finish_info_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
-    
+
     void mmf_dev_server_session::fetch(service::ipc_context *ctx) {
         if (ctx->msg->function >= epoc::mmf_dev_init4) {
-            if ((ctx->msg->function < epoc::mmf_dev_buffer_to_be_filled) ||
-                (ctx->msg->function >= epoc::mmf_dev_play_dtmf_string_length)) {
+            if ((ctx->msg->function < epoc::mmf_dev_buffer_to_be_filled) || (ctx->msg->function >= epoc::mmf_dev_play_dtmf_string_length)) {
                 ctx->msg->function += 1;
             }
         }

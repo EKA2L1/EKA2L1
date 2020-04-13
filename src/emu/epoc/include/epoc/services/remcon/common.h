@@ -36,7 +36,7 @@ namespace eka2l1::epoc::remcon {
         player_subtype_audio_book = 1 << 0,
         player_subtype_podcast = 1 << 1
     };
-    
+
     enum remcon_message {
         remcon_message_set_player_type = 4,
         remcon_message_register_interested_api = 19
@@ -52,11 +52,10 @@ namespace eka2l1::epoc::remcon {
         player_type type_;
         player_subtype subtype_;
 
-        explicit player_type_information():
-            type_(player_type_audio),
-            subtype_(player_subtype_none) {
+        explicit player_type_information()
+            : type_(player_type_audio)
+            , subtype_(player_subtype_none) {
         }
-            
     };
 
     class base_detail_session {

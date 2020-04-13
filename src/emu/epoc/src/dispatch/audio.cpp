@@ -25,8 +25,8 @@
 #include <epoc/utils/err.h>
 #include <epoc/utils/reqsts.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 #include <common/path.h>
 
 namespace eka2l1::dispatch {
@@ -46,7 +46,7 @@ namespace eka2l1::dispatch {
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_url, eka2l1::ptr<void> handle,
         const std::uint16_t *url, const std::uint32_t url_length) {
-        std::u16string url_str(reinterpret_cast<const char16_t*>(url), url_length);
+        std::u16string url_str(reinterpret_cast<const char16_t *>(url), url_length);
 
         // Check if the URL references to a local path (drive)
         const std::u16string root = eka2l1::root_path(url_str, true);
@@ -74,7 +74,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_play, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::player *eplayer = dispatcher->audio_players_.get_object(handle.ptr_address());
@@ -82,14 +82,14 @@ namespace eka2l1::dispatch {
         if (!eplayer) {
             return epoc::error_bad_handle;
         }
-        
+
         if (!eplayer->play()) {
             return epoc::error_general;
         }
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_stop, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::player *eplayer = dispatcher->audio_players_.get_object(handle.ptr_address());
@@ -97,14 +97,14 @@ namespace eka2l1::dispatch {
         if (!eplayer) {
             return epoc::error_bad_handle;
         }
-        
+
         if (!eplayer->stop()) {
             return epoc::error_general;
         }
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_max_volume, eka2l1::ptr<void> handle) {
         return 100;
     }
@@ -134,7 +134,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_notify_any_done, eka2l1::ptr<void> handle, eka2l1::ptr<epoc::request_status> sts) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::player *eplayer = dispatcher->audio_players_.get_object(handle.ptr_address());
@@ -149,15 +149,16 @@ namespace eka2l1::dispatch {
         info.sts = sts;
 
         if (!eplayer->notify_any_done([eplayer](std::uint8_t *data) {
-                reinterpret_cast<epoc::notify_info*>(data)->complete(epoc::error_none);
+                reinterpret_cast<epoc::notify_info *>(data)->complete(epoc::error_none);
                 eplayer->clear_notify_done();
-            }, reinterpret_cast<std::uint8_t*>(&info), sizeof(epoc::notify_info))) {
+            },
+                reinterpret_cast<std::uint8_t *>(&info), sizeof(epoc::notify_info))) {
             return epoc::error_general;
         }
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_cancel_notify_done, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::player *eplayer = dispatcher->audio_players_.get_object(handle.ptr_address());
@@ -172,12 +173,12 @@ namespace eka2l1::dispatch {
             return epoc::error_none;
         }
 
-        reinterpret_cast<epoc::notify_info*>(notify)->complete(epoc::error_cancel);
+        reinterpret_cast<epoc::notify_info *>(notify)->complete(epoc::error_cancel);
         eplayer->clear_notify_done();
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_repeats, eka2l1::ptr<void> handle, const std::int32_t times, const std::uint64_t silence_interval_micros) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::player *eplayer = dispatcher->audio_players_.get_object(handle.ptr_address());

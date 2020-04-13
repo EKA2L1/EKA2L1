@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/services/framework.h>
 #include <epoc/services/audio/mmf/common.h>
+#include <epoc/services/framework.h>
 
 #include <vector>
 
@@ -39,7 +39,7 @@ namespace eka2l1 {
     constexpr std::uint32_t PCMU8_CC = make_four_cc(' ', 'P', 'U', '8');
     constexpr std::uint32_t PCMU16_CC = make_four_cc('P', 'U', '1', '6');
 
-    class mmf_dev_server_session: public service::typical_session {
+    class mmf_dev_server_session : public service::typical_session {
         epoc::mmf_priority_settings pri_;
         std::uint32_t volume_;
         std::uint32_t samples_played_;
@@ -63,7 +63,7 @@ namespace eka2l1 {
 
     public:
         explicit mmf_dev_server_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version);
-        
+
         void fetch(service::ipc_context *ctx) override;
 
         void init3(service::ipc_context *ctx);
@@ -88,7 +88,7 @@ namespace eka2l1 {
         void play_error(service::ipc_context *ctx);
     };
 
-    class mmf_dev_server: public service::typical_server {
+    class mmf_dev_server : public service::typical_server {
     public:
         explicit mmf_dev_server(eka2l1::system *sys);
         void connect(service::ipc_context &context) override;

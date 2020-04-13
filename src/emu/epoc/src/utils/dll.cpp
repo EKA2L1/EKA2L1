@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -61,7 +61,7 @@ namespace eka2l1::epoc {
 
         return 0;
     }
-    
+
     bool get_image_info(hle::lib_manager *mngr, const std::u16string &name, epoc::lib_info &linfo) {
         auto imgs = mngr->try_search_and_parse(name);
 

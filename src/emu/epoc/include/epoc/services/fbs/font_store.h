@@ -22,8 +22,8 @@
 #include <epoc/services/fbs/adapter/font_adapter.h>
 #include <epoc/services/fbs/font.h>
 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace eka2l1 {
     class io_system;
@@ -47,7 +47,7 @@ namespace eka2l1::epoc {
 
         eka2l1::io_system *io;
 
-    protected:    
+    protected:
         void folder_change_callback(const std::u16string &path, int action);
 
     public:

@@ -24,8 +24,8 @@
 
 #include <cstdint>
 #include <cstring>
-#include <memory>
 #include <fstream>
+#include <memory>
 #include <string>
 
 namespace eka2l1 {
@@ -52,10 +52,10 @@ namespace eka2l1 {
             virtual uint64_t size() = 0;
         };
 
-        class wo_stream: public basic_stream {
+        class wo_stream : public basic_stream {
         public:
             virtual void write(const void *buf, uint32_t size) = 0;
-            
+
             void write_string(const std::string &str) {
                 const std::size_t len = str.length();
 
@@ -67,7 +67,7 @@ namespace eka2l1 {
         class ro_stream : public basic_stream {
         public:
             virtual std::uint64_t read(void *buf, const std::uint64_t read_size) = 0;
-            
+
             std::string read_string() {
                 std::string str;
                 std::size_t len;
@@ -79,14 +79,14 @@ namespace eka2l1 {
 
                 return str;
             }
-            
+
             std::uint64_t read(const std::uint64_t pos, void *buf, const std::uint64_t size) {
                 seek(pos, seek_where::beg);
                 return read(buf, size);
             }
         };
 
-        class rw_stream: public ro_stream, public wo_stream {
+        class rw_stream : public ro_stream, public wo_stream {
         };
 
         /*! \brief Another buffer stream, base on LLVM's Buffer 
@@ -127,11 +127,11 @@ namespace eka2l1 {
             std::uint64_t size() override {
                 return end - beg;
             }
-            
+
             uint64_t tell() const override {
                 return crr_pos;
             }
-            
+
             uint64_t left() override {
                 return end - beg - crr_pos;
             }
@@ -173,15 +173,15 @@ namespace eka2l1 {
             std::uint64_t size() override {
                 return end - beg;
             }
-            
+
             uint64_t tell() const override {
                 return crr_pos;
             }
-            
+
             uint64_t left() override {
                 return end - beg - crr_pos;
             }
-            
+
             void seek(const std::int64_t amount, seek_where wh) override {
                 if (wh == seek_where::beg) {
                     crr_pos = amount;
@@ -209,7 +209,7 @@ namespace eka2l1 {
             }
         };
 
-        class ro_std_file_stream: public common::ro_stream {
+        class ro_std_file_stream : public common::ro_stream {
             mutable FILE *fi_;
 
         public:
@@ -220,7 +220,7 @@ namespace eka2l1 {
             bool valid() override {
                 return fi_;
             }
-            
+
             std::uint64_t read(void *buf, const std::uint64_t read_size) override {
                 return fread(buf, read_size, 1, fi_);
             }
@@ -246,7 +246,7 @@ namespace eka2l1 {
 
                 fseek(fi_, static_cast<long>(amount), flags);
             }
-            
+
             std::uint64_t left() override {
                 return size() - tell();
             }
@@ -264,20 +264,20 @@ namespace eka2l1 {
                 return s;
             }
         };
-        
-        class wo_std_file_stream: public common::wo_stream {
+
+        class wo_std_file_stream : public common::wo_stream {
             mutable std::ofstream fo_;
 
         public:
             explicit wo_std_file_stream(const std::string &path)
                 : fo_(path) {
             }
-            
+
             void write(const void *buf, uint32_t size) override {
-                fo_.write(reinterpret_cast<const char*>(buf), size);
+                fo_.write(reinterpret_cast<const char *>(buf), size);
             }
-            
-            void seek(const std::int64_t amount, common::seek_where wh) override{
+
+            void seek(const std::int64_t amount, common::seek_where wh) override {
                 fo_.seekp(amount, common::beg ? std::ios::beg : (common::cur ? std::ios::cur : std::ios::end));
             }
 

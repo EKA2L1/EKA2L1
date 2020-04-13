@@ -50,7 +50,7 @@ namespace eka2l1::epoc::cap {
     public:
         struct wg_state {
             using wg_state_flags = common::ba_t<32>;
-            std::uint32_t id_;          ///< Id of this window group.
+            std::uint32_t id_; ///< Id of this window group.
 
             wg_state_flags flags_;
             std::int32_t sp_layout_;

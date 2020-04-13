@@ -173,7 +173,7 @@ namespace eka2l1::epoc {
         std::int32_t is_pixel_order_landspace_;
         std::int32_t display_mode_;
     };
-    
+
     static_assert(sizeof(video_info_v1) == 52);
 
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */

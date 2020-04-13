@@ -24,10 +24,11 @@
 namespace eka2l1::epoc {
     class akn_skin_bitmap_store {
     private:
-        std::vector<fbsbitmap*> bitmap_vector;
+        std::vector<fbsbitmap *> bitmap_vector;
+
     public:
         explicit akn_skin_bitmap_store() = default;
-        void store_bitmap(fbsbitmap* bitmap);
+        void store_bitmap(fbsbitmap *bitmap);
         void remove_stored_bitmap(const std::uint32_t bmp_handle);
         void destroy_bitmaps();
     };

@@ -29,13 +29,13 @@ namespace eka2l1::epoc {
     struct graphic_context;
     struct window_group;
 
-    struct window_user_base: public epoc::window {
+    struct window_user_base : public epoc::window {
         explicit window_user_base(window_server_client_ptr client, screen *scr, window *parent, const window_kind kind);
         virtual std::uint32_t redraw_priority(int *shift = nullptr) = 0;
         virtual eka2l1::vec2 absolute_position() const = 0;
     };
 
-    struct window_top_user: public window_user_base {
+    struct window_top_user : public window_user_base {
         explicit window_top_user(window_server_client_ptr client, screen *scr, window *parent);
         std::uint32_t redraw_priority(int *shift = nullptr) override;
 
@@ -91,7 +91,7 @@ namespace eka2l1::epoc {
         eka2l1::vec2 absolute_position() const override;
 
         eka2l1::vec2 get_origin() override;
-        
+
         std::uint32_t redraw_priority(int *shift = nullptr) override;
 
         /**
@@ -142,7 +142,7 @@ namespace eka2l1::epoc {
         void free(service::ipc_context &context, ws_cmd &cmd);
 
         epoc::window_group *get_group() {
-            return reinterpret_cast<epoc::window_group*>(parent);
+            return reinterpret_cast<epoc::window_group *>(parent);
         }
     };
 }

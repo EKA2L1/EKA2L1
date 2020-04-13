@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/backend/dsp_shared.h>
 #include <common/log.h>
+#include <drivers/audio/backend/dsp_shared.h>
 
 namespace eka2l1::drivers {
     dsp_output_stream_shared::dsp_output_stream_shared(drivers::audio_driver *aud)
@@ -26,7 +26,7 @@ namespace eka2l1::drivers {
         last_frame_[0] = 0;
         last_frame_[1] = 0;
     }
-    
+
     bool dsp_output_stream_shared::set_properties(const std::uint32_t freq, const std::uint8_t channels) {
         if (stream_ && stream_->is_playing()) {
             return false;
@@ -104,7 +104,7 @@ namespace eka2l1::drivers {
 
         while (frame_wrote < frame_count) {
             std::optional<dsp_buffer> encoded;
-    
+
             if ((decoded_.size() == 0) || (decoded_.size() == pointer_)) {
                 encoded = buffers_.pop();
 

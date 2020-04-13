@@ -18,15 +18,15 @@
  */
 
 #include <common/configure.h>
-#include <common/version.h>
 #include <common/cvt.h>
 #include <common/log.h>
-#include <common/vecx.h>
-#include <common/thread.h>
 #include <common/random.h>
+#include <common/thread.h>
+#include <common/vecx.h>
+#include <common/version.h>
+#include <console/seh_handler.h>
 #include <console/state.h>
 #include <console/thread.h>
-#include <console/seh_handler.h>
 
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
@@ -36,8 +36,8 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/common.h>
 
-#include <epoc/services/window/window.h>
 #include <e32keys.h>
+#include <epoc/services/window/window.h>
 
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
@@ -51,12 +51,8 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
     evt.type_ = eka2l1::drivers::input_event_type::touch;
     evt.mouse_.pos_x_ = static_cast<int>(x);
     evt.mouse_.pos_y_ = static_cast<int>(y);
-    evt.mouse_.button_ = button == 0 ? eka2l1::drivers::mouse_button::left :
-                        (button == 1 ? eka2l1::drivers::mouse_button::right :
-                        eka2l1::drivers::mouse_button::middle);
-    evt.mouse_.action_ = action == 0 ? eka2l1::drivers::mouse_action::press :
-                        (action == 1 ? eka2l1::drivers::mouse_action::repeat :
-                        eka2l1::drivers::mouse_action::release);
+    evt.mouse_.button_ = button == 0 ? eka2l1::drivers::mouse_button::left : (button == 1 ? eka2l1::drivers::mouse_button::right : eka2l1::drivers::mouse_button::middle);
+    evt.mouse_.action_ = action == 0 ? eka2l1::drivers::mouse_action::press : (action == 1 ? eka2l1::drivers::mouse_action::repeat : eka2l1::drivers::mouse_action::release);
     return evt;
 }
 
@@ -96,7 +92,7 @@ static eka2l1::drivers::input_event make_key_event_driver(const int key, const e
     eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::key;
     evt.key_.state_ = key_state;
-    evt.key_.code_ = EStdKeyApplication0;       // TODO: Flexible .-.
+    evt.key_.code_ = EStdKeyApplication0; // TODO: Flexible .-.
 
     return evt;
 }
@@ -109,10 +105,10 @@ static void on_ui_window_key_release(void *userdata, const int key) {
     io.KeyShift = io.KeysDown[KEY_LEFT_SHIFT] || io.KeysDown[KEY_RIGHT_SHIFT];
     io.KeyAlt = io.KeysDown[KEY_LEFT_ALT] || io.KeysDown[KEY_RIGHT_ALT];
     io.KeySuper = io.KeysDown[KEY_LEFT_SUPER] || io.KeysDown[KEY_RIGHT_SUPER];
-    
+
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::released);
-    
+
     if (emu->symsys)
         emu->winserv->queue_input_from_driver(key_evt);
 }
@@ -176,8 +172,8 @@ namespace eka2l1::desktop {
             "Having a cyborg as my wife doing dishes and writing the emulator brb"
             // You can add more, but probably when the emulator becomes more functional
         };
-        
-        constexpr const int random_references_count = sizeof(random_references) / sizeof(const char*);
+
+        constexpr const int random_references_count = sizeof(random_references) / sizeof(const char *);
 
         window_title += std::string(" - ") + random_references[eka2l1::random_range(0, random_references_count - 1)];
 
@@ -305,7 +301,7 @@ namespace eka2l1::desktop {
 
         // Make the graphics driver abort
         state.graphics_driver->abort();
-        
+
         state.launch_requests.abort();
 
         return 0;
@@ -365,7 +361,7 @@ namespace eka2l1::desktop {
             state.graphics_driver->wait_for(&wait_status);
 
             io.MouseWheel = 0;
-            
+
             // Recreate the list and builder
             cmd_list = state.graphics_driver->new_command_list();
             cmd_builder = state.graphics_driver->new_command_builder(cmd_list.get());
@@ -396,10 +392,10 @@ namespace eka2l1::desktop {
 
             if (state.first_time) {
                 state.first_time = false;
-                
+
                 // Try to wait for graphics to correctly initialize
                 state.graphics_sema.wait();
-                
+
                 // Launch the OS thread now
                 os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
             }
@@ -422,15 +418,15 @@ namespace eka2l1::desktop {
 
         // TODO: Multi core. Currently it's single core.
         while (!state.should_emu_quit) {
-            try {
-                state.symsys->loop();
-            } catch (std::exception &exc) {
-                std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
-                state.debugger->queue_error(exc.what());
-                state.should_emu_quit = true;
+            //try {
+            state.symsys->loop();
+            //} catch (std::exception &exc) {
+            //    std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
+            //    state.debugger->queue_error(exc.what());
+            //    state.should_emu_quit = true;
 
-                break;
-            }
+            //    break;
+            //}
 
             if (state.should_emu_pause && !state.should_emu_quit) {
                 state.debugger->wait_for_debugger();

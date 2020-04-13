@@ -41,7 +41,7 @@ namespace eka2l1 {
             , is_heap(is_heap)
             , type(type) {
             obj_type = object_type::chunk;
-            mem::mem_model_chunk_creation_info create_info {};
+            mem::mem_model_chunk_creation_info create_info{};
 
             create_info.perm = protection;
             create_info.size = max_size;
@@ -123,7 +123,7 @@ namespace eka2l1 {
             if (!mmc_impl_unq_)
                 get_own_process()->get_mem_model()->delete_chunk(mmc_impl_);
         }
-    
+
         void chunk::open_to(process *own) {
             own->get_mem_model()->attach_chunk(mmc_impl_);
         }
@@ -156,7 +156,7 @@ namespace eka2l1 {
             if (type != kernel::chunk_type::disconnected) {
                 return false;
             }
-            
+
             mmc_impl_->decommit(offset, size);
             return true;
         }

@@ -61,7 +61,7 @@ namespace eka2l1::drivers {
 
     using player_request_instance = std::unique_ptr<player_request_base>;
 
-    struct player_shared: public player {
+    struct player_shared : public player {
         audio_driver *aud_;
 
         std::unique_ptr<audio_output_stream> output_stream_;
@@ -76,13 +76,13 @@ namespace eka2l1::drivers {
         virtual void reset_request(player_request_instance &request) = 0;
         virtual void get_more_data(player_request_instance &request) = 0;
         std::size_t data_supply_callback(std::int16_t *data, std::size_t size);
-        
+
         bool play() override;
         bool stop() override;
 
         bool notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) override;
         void clear_notify_done() override;
-        
+
         void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
     };
 }

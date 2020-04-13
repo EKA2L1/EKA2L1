@@ -19,20 +19,18 @@
 
 #include <epoc/dispatch/dispatcher.h>
 #include <epoc/dispatch/register.h>
-#include <epoc/services/window/window.h>
 #include <epoc/kernel.h>
+#include <epoc/services/window/window.h>
 
 #include <common/log.h>
 
 namespace eka2l1::dispatch {
     dispatcher::dispatcher()
         : winserv_(nullptr) {
-
     }
 
     void dispatcher::init(kernel_system *kern) {
-        winserv_ = reinterpret_cast<eka2l1::window_server*>(kern->get_by_name
-            <service::server>(eka2l1::WINDOW_SERVER_NAME));
+        winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
     }
 
     void dispatcher::resolve(eka2l1::system *sys, const std::uint32_t function_ord) {

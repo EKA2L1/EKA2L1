@@ -21,8 +21,8 @@
 #pragma once
 
 #include <common/vecx.h>
-#include <epoc/utils/uid.h>
 #include <cstdint>
+#include <epoc/utils/uid.h>
 #include <vector>
 
 namespace eka2l1::common {
@@ -33,16 +33,16 @@ namespace eka2l1::loader {
     struct sbm_header {
         std::uint32_t bitmap_size;
         std::uint32_t header_len;
-        eka2l1::object_size  size_pixels;
-        eka2l1::object_size  size_twips;
-        std::uint32_t        bit_per_pixels;
-        std::uint32_t        color;
-        std::uint32_t        palette_size;
-        std::uint32_t        compression;
+        eka2l1::object_size size_pixels;
+        eka2l1::object_size size_twips;
+        std::uint32_t bit_per_pixels;
+        std::uint32_t color;
+        std::uint32_t palette_size;
+        std::uint32_t compression;
     };
 
     struct mbm_trailer {
-        std::uint32_t              count;
+        std::uint32_t count;
         std::vector<std::uint32_t> sbm_offsets;
     };
 
@@ -76,7 +76,7 @@ namespace eka2l1::loader {
          *          of bytes written in.
          *          On failure, dest_max should contains the uncompress size of the bitmap data. 
          */
-        bool read_single_bitmap(const std::size_t index, std::uint8_t *dest, 
+        bool read_single_bitmap(const std::size_t index, std::uint8_t *dest,
             std::size_t &dest_max);
 
         /**

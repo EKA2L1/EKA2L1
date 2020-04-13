@@ -28,7 +28,7 @@
 namespace eka2l1::drivers {
     class audio_driver;
     using finish_callback = std::function<void(std::uint8_t *)>;
-    
+
     enum player_audio_encoding {
         player_audio_encoding_pcm8 = 0,
         player_audio_encoding_pcm16 = 1,
@@ -57,7 +57,8 @@ namespace eka2l1::drivers {
 
         virtual bool queue_data(const char *raw_data, const std::size_t data_size,
             const std::uint32_t encoding_type, const std::uint32_t frequency,
-            const std::uint32_t channels) = 0;
+            const std::uint32_t channels)
+            = 0;
 
         virtual std::uint32_t max_volume() const {
             return 100;
@@ -103,7 +104,7 @@ namespace eka2l1::drivers {
 
         virtual void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) = 0;
     };
-    
+
     enum player_type {
         player_type_wmf = 0,
         player_type_ffmpeg = 1

@@ -26,8 +26,8 @@
 #include <epoc/services/audio/keysound/ringtab.h>
 #include <epoc/utils/err.h>
 
-#include <epoc/kernel/process.h>
 #include <epoc/epoc.h>
+#include <epoc/kernel/process.h>
 
 #include <cmath>
 
@@ -73,13 +73,13 @@ namespace eka2l1 {
 
                 state_.frames_ = 0;
                 state_.ms_ = 0;
-                
+
                 return false;
             }
 
             state_.frames_ = 0;
             state_.ms_ = 0;
-            
+
             // New parse
             while (state_.parser_pos_ < state_.sound_.sequences_.size()) {
                 switch (state_.sound_.sequences_[state_.parser_pos_]) {
@@ -122,21 +122,18 @@ namespace eka2l1 {
             return false;
         };
 
-
         const float amplitude = 0.8f;
 
         // Generate samples
         for (std::size_t t = 0; t < frames; t++) {
-            if ((static_cast<double>(state_.frames_) / static_cast<double>(state_.target_freq_) * 1000.0) >=
-                static_cast<double>(state_.ms_)) {
+            if ((static_cast<double>(state_.frames_) / static_cast<double>(state_.target_freq_) * 1000.0) >= static_cast<double>(state_.ms_)) {
                 if (!parse_to_get_freq()) {
                     aud_out_->stop();
                     return t;
                 }
             }
 
-            const double sample = amplitude * std::sin(2 * 3.14 * (static_cast<double>(state_.frequency_) /
-                static_cast<double>(state_.target_freq_)) * (state_.frames_ + 1));
+            const double sample = amplitude * std::sin(2 * 3.14 * (static_cast<double>(state_.frequency_) / static_cast<double>(state_.target_freq_)) * (state_.frames_ + 1));
             const std::int16_t sample_i16 = static_cast<std::int16_t>(sample * 0x7FFF);
 
             buffer[2 * t] = sample_i16;
@@ -147,7 +144,7 @@ namespace eka2l1 {
 
         return frames;
     }
-    
+
     void keysound_session::init(service::ipc_context *ctx) {
         const bool inited = server<keysound_server>()->initialized();
         ctx->write_arg_pkg<std::int32_t>(0, inited);
@@ -224,7 +221,7 @@ namespace eka2l1 {
         }
 
         common::ro_buf_stream stream(sound_descriptor, sound_descriptor_size.value());
-        
+
         std::uint16_t count = 0;
         stream.read(&count, 2);
 
@@ -241,7 +238,7 @@ namespace eka2l1 {
             switch (type) {
             case 0: {
                 info.type_ = epoc::keysound::sound_type::sound_type_file;
-                
+
                 // Filename
                 LOG_TRACE("Load filename sound TODO. Please notice this");
                 break;
@@ -249,7 +246,7 @@ namespace eka2l1 {
 
             case 1: {
                 info.type_ = epoc::keysound::sound_type::sound_type_tone;
-                
+
                 // Simple tone
                 std::uint16_t freq = 0;
                 std::uint32_t duration = 0;
@@ -279,10 +276,10 @@ namespace eka2l1 {
             stream.read(&info.volume_, 1);
             server<keysound_server>()->add_sound(info);
         }
-        
+
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void keysound_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::keysound::opcode_init: {
@@ -322,7 +319,7 @@ namespace eka2l1 {
         : service::typical_server(sys, KEYSOUND_SERVER_NAME)
         , inited_(false) {
     }
-    
+
     void keysound_server::connect(service::ipc_context &context) {
         create_session<keysound_session>(&context);
         context.set_request_status(0);

@@ -21,8 +21,8 @@
 #include <epoc/services/window/classes/winbase.h>
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
-#include <epoc/services/window/window.h>
 #include <epoc/services/window/screen.h>
+#include <epoc/services/window/window.h>
 
 #include <epoc/timing.h>
 #include <epoc/utils/err.h>
@@ -45,7 +45,7 @@ namespace eka2l1::epoc {
     window *window::root_window() {
         return scr->root.get();
     }
-    
+
     void window::walk_tree(window_tree_walker *walker, const window_tree_walk_style style) {
         window *end = root_window();
         window *cur = this;
@@ -88,7 +88,7 @@ namespace eka2l1::epoc {
             }
         } while (cur != end);
     }
-    
+
     window::~window() {
     }
 
@@ -157,14 +157,14 @@ namespace eka2l1::epoc {
 
         // Traverse and find our current window, and see if we need to change order
         int pos = new_pos;
-        
+
         while (pos-- != 0 && cur->sibling != nullptr && priority == cur->sibling->priority) {
             cur = cur->sibling;
         }
 
         return (cur != this);
     }
-    
+
     void window::remove_from_sibling_list() {
         if (!parent) {
             return;
@@ -228,11 +228,11 @@ namespace eka2l1::epoc {
         return count;
     }
 
-    void window::inquire_offset(service::ipc_context &ctx, ws_cmd &cmd) {        
+    void window::inquire_offset(service::ipc_context &ctx, ws_cmd &cmd) {
         // The data given is a 32 bit handle.
         // We are suppose to write back the offset distance between the given window and this.
-        const std::uint32_t handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
-        epoc::window *win = reinterpret_cast<epoc::window*>(client->get_object(handle));
+        const std::uint32_t handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+        epoc::window *win = reinterpret_cast<epoc::window *>(client->get_object(handle));
 
         if (!win) {
             ctx.set_request_status(epoc::error_not_found);

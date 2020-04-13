@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/backend/cubeb/audio_cubeb.h>
-#include <drivers/audio/backend/cubeb/stream_cubeb.h>
 #include <common/log.h>
 #include <common/platform.h>
+#include <drivers/audio/backend/cubeb/audio_cubeb.h>
+#include <drivers/audio/backend/cubeb/stream_cubeb.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <objbase.h>
@@ -33,7 +33,7 @@ namespace eka2l1::drivers {
 #if EKA2L1_PLATFORM(WIN32)
         HRESULT hr = S_OK;
         hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        
+
         if (hr != S_OK) {
             LOG_CRITICAL("Failed to initialize COM");
             return;

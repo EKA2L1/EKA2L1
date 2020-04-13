@@ -31,8 +31,8 @@
 #include <epoc/utils/dll.h>
 #include <epoc/utils/handle.h>
 #include <epoc/utils/reqsts.h>
-#include <epoc/utils/tl.h>
 #include <epoc/utils/sec.h>
+#include <epoc/utils/tl.h>
 #include <epoc/utils/uid.h>
 
 #include <hle/bridge.h>
@@ -523,7 +523,7 @@ namespace eka2l1::epoc {
      * \returns Exit type (> 0), else other system related error codes.
      */
     BRIDGE_FUNC(std::int32_t, ProcessExitType, std::int32_t aHandle);
-    
+
     /**
      * \brief Notify rendezvous requests with a code.
      * 
@@ -553,7 +553,7 @@ namespace eka2l1::epoc {
      * \param aHandle Handle to target process.
      */
     BRIDGE_FUNC(std::int32_t, ProcessGetId, std::int32_t aHandle);
-    
+
     /**
      * \brief   Get length of command line string passed to a process.
      * 

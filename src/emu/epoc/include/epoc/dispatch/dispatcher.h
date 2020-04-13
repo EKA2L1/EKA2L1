@@ -19,9 +19,9 @@
 
 #pragma once
 
+#include <cstdint>
 #include <drivers/audio/player.h>
 #include <epoc/dispatch/management.h>
-#include <cstdint>
 
 // Foward declarations
 namespace eka2l1 {

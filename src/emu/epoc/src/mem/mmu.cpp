@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/mem/mmu.h>
 #include <arm/arm_interface.h>
+#include <epoc/mem/mmu.h>
 
 #include <epoc/mem/model/multiple/mmu.h>
 
@@ -54,13 +54,13 @@ namespace eka2l1::mem {
     }
 
     void mmu_base::map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm) {
-        cpu_->map_backing_mem(addr, size, reinterpret_cast<std::uint8_t*>(ptr), perm);
+        cpu_->map_backing_mem(addr, size, reinterpret_cast<std::uint8_t *>(ptr), perm);
     }
 
     void mmu_base::unmap_from_cpu(const vm_address addr, const std::size_t size) {
         cpu_->unmap_memory(addr, size);
     }
-    
+
     mmu_impl make_new_mmu(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model) {
         switch (model) {

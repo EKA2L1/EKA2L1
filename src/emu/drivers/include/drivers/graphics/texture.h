@@ -30,7 +30,7 @@
 namespace eka2l1::drivers {
     class graphics_driver;
 
-    enum class texture_format: std::uint16_t {
+    enum class texture_format : std::uint16_t {
         none,
         r,
         rg,
@@ -71,7 +71,8 @@ namespace eka2l1::drivers {
         texture() {}
 
         virtual bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data) = 0;
+            const texture_format format, const texture_data_type data_type, void *data)
+            = 0;
 
         virtual ~texture(){};
         virtual std::uint64_t texture_handle() = 0;
@@ -96,7 +97,8 @@ namespace eka2l1::drivers {
         virtual int get_mip_level() const = 0;
 
         virtual void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
-            const texture_data_type data_type, const void *data) = 0;
+            const texture_data_type data_type, const void *data)
+            = 0;
     };
 
     using texture_ptr = std::unique_ptr<texture>;

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/kernel/msgqueue.h>
 #include <epoc/kernel.h>
+#include <epoc/kernel/msgqueue.h>
 
 namespace eka2l1::kernel {
     msg_queue::msg_queue(eka2l1::kernel_system *kern, const std::string &name,
@@ -30,7 +30,7 @@ namespace eka2l1::kernel {
 
     bool msg_queue::notify_available(epoc::notify_info &info) {
         kern->lock();
-        
+
         if (!msgs_.empty()) {
             // Complete the request right away
             info.complete(0);
@@ -58,7 +58,7 @@ namespace eka2l1::kernel {
 
     bool msg_queue::notify_full(epoc::notify_info &info) {
         kern->lock();
-        
+
         if (msgs_.size() == max_length_) {
             // Complete the request right away
             info.complete(0);
@@ -97,7 +97,7 @@ namespace eka2l1::kernel {
         }
 
         msg_data &data = msgs_.front();
-        std::copy(data.begin(), data.end(), reinterpret_cast<std::uint8_t*>(target_buffer));
+        std::copy(data.begin(), data.end(), reinterpret_cast<std::uint8_t *>(target_buffer));
         msgs_.pop();
 
         kern->unlock();
@@ -119,7 +119,7 @@ namespace eka2l1::kernel {
 
         if (msgs_.empty()) {
             // Notify all available data
-            for (auto &notify: avail_notifies_) {
+            for (auto &notify : avail_notifies_) {
                 notify.complete(0);
             }
         }
@@ -128,7 +128,7 @@ namespace eka2l1::kernel {
         msg_data new_data;
         new_data.resize(max_msg_length_);
 
-        const std::uint8_t *target_data_to_copy = reinterpret_cast<const std::uint8_t*>(target_data);
+        const std::uint8_t *target_data_to_copy = reinterpret_cast<const std::uint8_t *>(target_data);
         std::copy(target_data_to_copy, target_data_to_copy + buffer_size, &new_data[0]);
 
         // Push it
@@ -137,11 +137,10 @@ namespace eka2l1::kernel {
         // Check if full, then notify
         if (msgs_.size() == max_length_) {
             // Notify all available data
-            for (auto &notify: full_notifies_) {
+            for (auto &notify : full_notifies_) {
                 notify.complete(0);
             }
         }
-
 
         kern->unlock();
 

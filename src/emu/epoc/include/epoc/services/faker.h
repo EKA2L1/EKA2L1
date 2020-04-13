@@ -29,7 +29,7 @@
 // Foward declaration
 namespace eka2l1 {
     class kernel_system;
-    
+
     namespace kernel {
         class process;
         class chunk;
@@ -40,7 +40,7 @@ namespace eka2l1 {
         class lib_manager;
     }
 
-    using chunk_ptr = kernel::chunk*;
+    using chunk_ptr = kernel::chunk *;
 }
 
 namespace eka2l1::service {
@@ -63,35 +63,35 @@ namespace eka2l1::service {
     class faker {
     private:
         kernel::process *process_;
-        chunk_ptr        control_;
+        chunk_ptr control_;
 
         address lr_addr_;
         address data_offset_;
 
         std::unique_ptr<common::block_allocator> allocator_;
-        std::vector<std::uint8_t*> free_lists_;
+        std::vector<std::uint8_t *> free_lists_;
 
     public:
         struct chain {
             typedef void (*chain_func)(faker *self, void *userdata);
 
-            chain       *next_;
-            faker       *daddy_;
+            chain *next_;
+            faker *daddy_;
 
-            std::vector<std::uint8_t*> free_lists_;
+            std::vector<std::uint8_t *> free_lists_;
 
             enum class chain_type {
                 unk,
                 raw_code,
                 hook
             };
-        
+
             chain_type type_;
 
             union {
-                struct {        
-                    chain_func  func_;
-                    void        *userdata_;
+                struct {
+                    chain_func func_;
+                    void *userdata_;
                 };
 
                 struct {
@@ -149,7 +149,7 @@ namespace eka2l1::service {
 
         // ==================== UTILITIES =======================
         chain *then(void *userdata, chain::chain_func func);
-        
+
         chain *then(eka2l1::ptr<void> raw_func_addr);
         chain *then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1);
         chain *then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1, const std::uint32_t arg2);
@@ -173,7 +173,7 @@ namespace eka2l1::service {
 
         template <typename T>
         eka2l1::address new_temp_arg(T **pointer = nullptr) {
-            return new_temporary_argument_with_size(sizeof(T), reinterpret_cast<std::uint8_t**>(pointer));
+            return new_temporary_argument_with_size(sizeof(T), reinterpret_cast<std::uint8_t **>(pointer));
         }
 
         // Use this function only in a hook
@@ -182,18 +182,18 @@ namespace eka2l1::service {
         // Use this function only in a hook
         template <typename T>
         T *last_temp_arg(const int number) {
-            return reinterpret_cast<T*>(get_last_temporary_argument_impl(number));
+            return reinterpret_cast<T *>(get_last_temporary_argument_impl(number));
         }
 
         // ==================== GETTER =========================
         kernel::process *process() {
             return process_;
         }
-        
+
         chain *initial() {
             return initial_;
         }
-        
+
         kernel::thread *main_thread();
     };
 }

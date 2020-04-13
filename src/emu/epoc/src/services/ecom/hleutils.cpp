@@ -1,9 +1,9 @@
-#include <epoc/services/ecom/hleutils.h>
-#include <epoc/services/ecom/ecom.h>
-#include <epoc/services/fs/std.h>
 #include <epoc/epoc.h>
-#include <epoc/kernel/libmanager.h>
 #include <epoc/kernel/codeseg.h>
+#include <epoc/kernel/libmanager.h>
+#include <epoc/services/ecom/ecom.h>
+#include <epoc/services/ecom/hleutils.h>
+#include <epoc/services/fs/std.h>
 
 namespace eka2l1::epoc {
     service::faker::chain *get_implementation_proxy_table(service::faker *pr, eka2l1::ecom_server *serv,
@@ -20,7 +20,7 @@ namespace eka2l1::epoc {
         // Get the entry of the implementation library
         codeseg_ptr seg = serv->get_system()->get_lib_manager()->load(dll_entry.name.to_std_string(pr->process()),
             pr->process());
-        
+
         if (!seg) {
             return nullptr;
         }

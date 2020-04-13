@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/services/framework.h>
 #include <cstdint>
+#include <epoc/services/framework.h>
 
 namespace eka2l1 {
     class mmf_dev_server;
@@ -35,7 +35,7 @@ namespace eka2l1 {
         mmf_audio_server_get_dev_session
     };
 
-    class mmf_audio_server_session: public service::typical_session {
+    class mmf_audio_server_session : public service::typical_session {
     private:
         service::session *dev_session_;
 
@@ -49,7 +49,7 @@ namespace eka2l1 {
         void get_dev_session(service::ipc_context *ctx);
     };
 
-    class mmf_audio_server: public service::typical_server {
+    class mmf_audio_server : public service::typical_server {
     private:
         mmf_dev_server *dev_;
         std::uint8_t flags_;

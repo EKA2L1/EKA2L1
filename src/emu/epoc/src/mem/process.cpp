@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/mem/process.h>
 #include <epoc/mem/model/multiple/process.h>
+#include <epoc/mem/process.h>
 
 namespace eka2l1::mem {
     mem_model_process_impl make_new_mem_model_process(mmu_base *mmu, const mem_model_type model) {

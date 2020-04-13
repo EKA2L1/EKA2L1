@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/akn/icon/icon.h>
-#include <epoc/services/akn/icon/common.h>
-#include <epoc/services/fbs/fbs.h>
 #include <epoc/kernel/libmanager.h>
+#include <epoc/services/akn/icon/common.h>
+#include <epoc/services/akn/icon/icon.h>
+#include <epoc/services/fbs/fbs.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -31,8 +31,8 @@
 
 namespace eka2l1 {
     void akn_icon_server::init_server() {
-        fbss = reinterpret_cast<fbs_server*>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
-        
+        fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
+
         // Get the ROM device, and read the rsc
         eka2l1::io_system *io = sys->get_io_system();
         std::u16string path;
@@ -56,11 +56,11 @@ namespace eka2l1 {
 
         // Read the file
         eka2l1::ro_file_stream config_file_stream(config_file.get());
-        loader::rsc_file config_rsc(reinterpret_cast<common::ro_stream*>(&config_file_stream));
+        loader::rsc_file config_rsc(reinterpret_cast<common::ro_stream *>(&config_file_stream));
 
         // Read the initialisation data
         // The RSC data are layout as follow:
-        // ---------------------------------------------------------------------------------------------       
+        // ---------------------------------------------------------------------------------------------
         //    Index   | Size  |       Usage                   |       Note                             |
         //      1     |  1    |    Compression type           |  0 = No, 1 = RLE, 2 = Palette          |
         //      2     |  4    |    Preferred icon depth       |  0 = 64K color, 2 = 16K MU, else 16KM  |
@@ -78,7 +78,7 @@ namespace eka2l1 {
             if (data.size() != 4) {
                 LOG_ERROR("Try reading config depth, but size of resource is not equal to 4");
             } else {
-                switch (*reinterpret_cast<std::uint32_t*>(&data[0])) {
+                switch (*reinterpret_cast<std::uint32_t *>(&data[0])) {
                 case 0: {
                     return epoc::display_mode::color64k;
                 }
@@ -97,11 +97,11 @@ namespace eka2l1 {
 
         auto read_config_mask_depth_to_display_mode = [&](const int idx) -> epoc::display_mode {
             auto data = config_rsc.read(idx);
-            
+
             if (data.size() != 4) {
                 LOG_ERROR("Try reading config mask depth, but size of resource is not equal to 4");
             } else {
-                if (*reinterpret_cast<std::uint32_t*>(&data[0]) == 0) {
+                if (*reinterpret_cast<std::uint32_t *>(&data[0]) == 0) {
                     return epoc::display_mode::gray2;
                 }
             }
@@ -115,7 +115,7 @@ namespace eka2l1 {
         init_data.photo_mode = read_config_depth_to_display_mode(4);
         init_data.video_mode = read_config_depth_to_display_mode(5);
         init_data.offscreen_mode = read_config_depth_to_display_mode(6);
-        init_data.offscreen_mask_mode = read_config_mask_depth_to_display_mode(7);  
+        init_data.offscreen_mask_mode = read_config_mask_depth_to_display_mode(7);
 
         // Done reading
         // Set the flags to inited.
@@ -124,7 +124,7 @@ namespace eka2l1 {
         static constexpr std::uint32_t AKN_ICON_SRV_UID = 0x1020735B;
 
         // Create icon process
-        icon_process = std::make_unique<service::faker>(sys->get_kernel_system(), sys->get_lib_manager(), 
+        icon_process = std::make_unique<service::faker>(sys->get_kernel_system(), sys->get_lib_manager(),
             "AknIconServerProcess", AKN_ICON_SRV_UID);
     }
 };

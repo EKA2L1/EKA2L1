@@ -62,7 +62,7 @@ namespace eka2l1::dispatch {
          * 
          * \returns     False if handle is invalid or object can not be removed.
          */
-        bool   remove_object(const handle h) {
+        bool remove_object(const handle h) {
             const std::lock_guard<std::mutex> guard(lock_);
 
             if (h == 0 || (h > objs_.size())) {
@@ -79,7 +79,7 @@ namespace eka2l1::dispatch {
          * 
          * \returns     Pointer to the object if handle is valid, else nullptr.
          */
-        T*     get_object(const handle h) {
+        T *get_object(const handle h) {
             const std::lock_guard<std::mutex> guard(lock_);
 
             if (h == 0 || (h > objs_.size())) {

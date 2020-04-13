@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/log.h>
 #include <chrono>
+#include <common/log.h>
 
 namespace eka2l1::common {
     struct benchmarker {
@@ -30,11 +30,9 @@ namespace eka2l1::common {
             start = std::chrono::steady_clock::now();
         };
 
-        ~benchmarker() {        
+        ~benchmarker() {
             auto end = std::chrono::steady_clock::now();
-            LOG_TRACE("Function {} runned in {} ms ({} s)", bench_func, std::chrono::duration_cast
-                <std::chrono::milliseconds>(end-start).count(), std::chrono::duration_cast
-                <std::chrono::seconds>(end-start).count());
+            LOG_TRACE("Function {} runned in {} ms ({} s)", bench_func, std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), std::chrono::duration_cast<std::chrono::seconds>(end - start).count());
         }
     };
 }

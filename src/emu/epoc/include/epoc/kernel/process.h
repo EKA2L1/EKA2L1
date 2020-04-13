@@ -26,8 +26,8 @@
 #include <epoc/kernel/object_ix.h>
 #include <epoc/kernel/thread.h>
 #include <epoc/mem/process.h>
-#include <epoc/utils/sec.h>
 #include <epoc/utils/reqsts.h>
+#include <epoc/utils/sec.h>
 
 #include <cassert>
 #include <cstdint>
@@ -39,7 +39,7 @@
 namespace eka2l1 {
     class kernel_system;
 
-    using mutex_ptr = kernel::mutex*;
+    using mutex_ptr = kernel::mutex *;
 
     namespace common {
         class chunkyseri;
@@ -96,7 +96,7 @@ namespace eka2l1::kernel {
     };
 
     class codeseg;
-    using codeseg_ptr = kernel::codeseg*;
+    using codeseg_ptr = kernel::codeseg *;
 
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;

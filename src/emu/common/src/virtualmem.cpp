@@ -179,7 +179,6 @@ namespace eka2l1::common {
             map_type = FILE_MAP_COPY;
         }
 
-
         HANDLE file_handle = CreateFileA(file_name.c_str(), desired_access, share_mode,
             NULL, open_type, NULL, NULL);
 
@@ -206,7 +205,7 @@ namespace eka2l1::common {
 #else
         int open_mode = 0;
         const int prot_mode = translate_protection(perm);
-        
+
         switch (perm) {
         case prot::read: {
             open_mode = O_RDONLY;

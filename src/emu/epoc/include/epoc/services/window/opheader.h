@@ -164,7 +164,7 @@ namespace eka2l1 {
         eka2l1::vec2 pos;
     };
 
-    struct ws_cmd_gdi_blt3: public ws_cmd_gdi_blt2 {
+    struct ws_cmd_gdi_blt3 : public ws_cmd_gdi_blt2 {
         eka2l1::rect source_rect;
     };
 
@@ -175,7 +175,7 @@ namespace eka2l1 {
         std::uint32_t mask_handle;
         std::uint32_t invert_mask;
     };
-    
+
     struct ws_cmd_set_window_group_ordinal_position {
         std::uint32_t identifier;
         std::int32_t ord_pos;
@@ -185,6 +185,6 @@ namespace eka2l1 {
         std::uint8_t black_map;
         std::uint8_t white_map;
         std::uint8_t flags;
-        std::uint8_t imheretoalignthestruct;            ///< Yes.
+        std::uint8_t imheretoalignthestruct; ///< Yes.
     };
 }

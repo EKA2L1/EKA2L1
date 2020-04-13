@@ -23,13 +23,13 @@
 
 #pragma once
 
+#include <epoc/services/fbs/adapter/font_adapter.h>
 #include <epoc/services/fbs/bitmap.h>
 #include <epoc/services/fbs/compress_queue.h>
 #include <epoc/services/fbs/font.h>
 #include <epoc/services/fbs/font_atlas.h>
 #include <epoc/services/fbs/font_store.h>
 #include <epoc/services/framework.h>
-#include <epoc/services/fbs/adapter/font_adapter.h>
 #include <epoc/services/window/common.h>
 
 #include <common/allocator.h>
@@ -51,17 +51,17 @@ namespace eka2l1 {
         class graphics_driver;
     }
 
-    namespace epoc {    
+    namespace epoc {
         // Before and in build 94, the multiple memory model still make it possible to directly return pointer, since
         // chunk address don't change with each process.
         // But since build 95, the flexible memory model comes in with multi-core, and chunk address may be different
         // with each process, so they use offset instead. This makes a huge change in FBS.
         // They should probably use offset from the beginning.
         constexpr std::uint16_t RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT = 94;
-        
+
         bool does_client_use_pointer_instead_of_offset(fbscli *cli);
     }
-    
+
     enum fbs_opcode {
         fbs_init,
         fbs_shutdown,
@@ -160,9 +160,9 @@ namespace eka2l1 {
     struct fbsfont;
 
     struct fbscli : public service::typical_session {
-        service::uid connection_id_ {0};
+        service::uid connection_id_{ 0 };
         epoc::notify_info dirty_nof_;
-        bool support_dirty_bitmap { true };
+        bool support_dirty_bitmap{ true };
 
         explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
 
@@ -181,10 +181,10 @@ namespace eka2l1 {
         void get_clean_bitmap(service::ipc_context *ctx);
         void rasterize_glyph(service::ipc_context *ctx);
         void background_compress_bitmap(service::ipc_context *ctx);
-        
+
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
-        
+
         void fetch(service::ipc_context *ctx) override;
 
         fbsfont *get_font_object(service::ipc_context *ctx);
@@ -204,10 +204,10 @@ namespace eka2l1 {
         void deref() override;
     };
 
-    struct fbsbitmap: public fbsobj {
+    struct fbsbitmap : public fbsobj {
         epoc::bitwise_bitmap *bitmap_;
         fbs_server *serv_;
-        bool shared_ { false };
+        bool shared_{ false };
         fbsbitmap *clean_bitmap;
         bool support_dirty_bitmap;
         epoc::notify_info compress_done_nof;
@@ -229,19 +229,20 @@ namespace eka2l1 {
         int bitmap_idx;
     };
 
-    inline bool operator == (const fbsbitmap_cache_info &lhs, const fbsbitmap_cache_info &rhs) {
+    inline bool operator==(const fbsbitmap_cache_info &lhs, const fbsbitmap_cache_info &rhs) {
         return (lhs.path == rhs.path) && (lhs.bitmap_idx == rhs.bitmap_idx);
     }
 }
 
 namespace std {
-    template <> struct hash<eka2l1::fbsbitmap_cache_info> {
-        std::size_t operator()(eka2l1::fbsbitmap_cache_info const& info) const noexcept {
+    template <>
+    struct hash<eka2l1::fbsbitmap_cache_info> {
+        std::size_t operator()(eka2l1::fbsbitmap_cache_info const &info) const noexcept {
             std::size_t seed = 0x151A5151;
 
             eka2l1::common::hash_combine(seed, info.path);
             eka2l1::common::hash_combine(seed, info.bitmap_idx);
-            
+
             return seed;
         }
     };
@@ -280,14 +281,14 @@ namespace eka2l1 {
 
         std::u16string default_system_font;
 
-        std::unordered_map<fbsbitmap_cache_info, fbsbitmap*> shared_bitmaps;
+        std::unordered_map<fbsbitmap_cache_info, fbsbitmap *> shared_bitmaps;
 
         std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
 
         std::unique_ptr<compress_queue> compressor;
         std::unique_ptr<std::thread> compressor_thread;
-        
+
         epoc::open_font_session_cache_list *session_cache_list;
         epoc::open_font_session_cache_link *session_cache_link;
 
@@ -295,14 +296,14 @@ namespace eka2l1 {
 
         void load_fonts(eka2l1::io_system *io);
 
-        std::atomic<service::uid> connection_id_counter { 0x1234 }; // Easier to debug
+        std::atomic<service::uid> connection_id_counter{ 0x1234 }; // Easier to debug
 
-        service::normal_object_container font_obj_container;    ///< Specifically storing fonts
+        service::normal_object_container font_obj_container; ///< Specifically storing fonts
 
     public:
         explicit fbs_server(eka2l1::system *sys);
         ~fbs_server() override;
-        
+
         service::uid init();
 
         void connect(service::ipc_context &context) override;
@@ -321,7 +322,7 @@ namespace eka2l1 {
          */
         fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool alloc_data = true,
             const bool support_dirty = true);
-        
+
         /**
          * \brief   Free a bitmap object.
          * 
@@ -338,7 +339,7 @@ namespace eka2l1 {
         bool free_bitmap(fbsbitmap *bmp);
 
         drivers::graphics_driver *get_graphics_driver();
-        
+
         fbsfont *look_for_font_with_address(const eka2l1::address addr);
 
         std::uint8_t *get_shared_chunk_base() {
@@ -370,7 +371,7 @@ namespace eka2l1 {
          * 
          * \return Starting offset from the large chunk.
          */
-        std::optional<std::size_t> load_data_to_rom(loader::mbm_file &mbmf_, 
+        std::optional<std::size_t> load_data_to_rom(loader::mbm_file &mbmf_,
             const std::size_t idx_, int *err_code);
 
         /*! \brief Use to Allocate structure from server side.

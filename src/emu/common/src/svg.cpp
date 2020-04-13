@@ -48,7 +48,7 @@ namespace eka2l1::common {
      * \param height   Reference to the height variable.
      * \param diag     Pointer to diag string.
      */
-    static int svg_get_canavas_size(pugi::xml_document &doc, pugi::xml_node &svg_tag, int &width, int &height, 
+    static int svg_get_canavas_size(pugi::xml_document &doc, pugi::xml_node &svg_tag, int &width, int &height,
         std::string *diag) {
         // Looking for a <svg> tag first
         svg_tag = doc.child("svg");
@@ -86,7 +86,7 @@ namespace eka2l1::common {
             svg_set_diag(diag, "Width and height attribute is invalid (size of 0 or not integer).");
             return svg_err_invalid;
         }
-        
+
         return svg_err_ok;
     }
 
@@ -116,7 +116,7 @@ namespace eka2l1::common {
             start_div_pos = 4;
         } else if (strncmp(func.data(), "rgb", 3) == 0) {
             start_div_pos = 3;
-        } 
+        }
 
         if (start_div_pos != -1) {
             if (color_str[start_div_pos] != '(' || color_str.back() != ')') {
@@ -126,7 +126,7 @@ namespace eka2l1::common {
 
             auto tokens = color_str.substr(start_div_pos + 1, static_cast<int>(color_str.length()) - start_div_pos - 2).split(',');
 
-            for (auto &token: tokens) {
+            for (auto &token : tokens) {
                 token = token.strip();
             }
 
@@ -153,7 +153,7 @@ namespace eka2l1::common {
      */
     static int svg_cmd_circle(pugi::xml_node &command, common::painter *painter, std::string *diag) {
         // Get the origin
-        eka2l1::vec2 origin { 0, 0 };
+        eka2l1::vec2 origin{ 0, 0 };
         origin.x = command.attribute("cx").as_int();
         origin.y = command.attribute("cy").as_int();
 
@@ -171,7 +171,7 @@ namespace eka2l1::common {
         return svg_err_ok;
     }
 
-    typedef int (*svg_cmd_func)(pugi::xml_node&,common::painter*,std::string*);
+    typedef int (*svg_cmd_func)(pugi::xml_node &, common::painter *, std::string *);
     static const std::unordered_map<std::string, svg_cmd_func> svg_cmd_funcs = {
         { "circle", svg_cmd_circle }
     };
@@ -210,7 +210,7 @@ namespace eka2l1::common {
      * \returns svg_err_ok on success.
      */
     static int svg_process_commands(pugi::xml_node &svg_tag, common::painter *painter, std::string *diag) {
-        for (pugi::xml_node command: svg_tag) {
+        for (pugi::xml_node command : svg_tag) {
             const int err = svg_process_command(command, painter, diag);
 
             if (err != svg_err_ok) {

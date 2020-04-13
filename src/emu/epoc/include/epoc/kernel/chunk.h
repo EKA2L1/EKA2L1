@@ -21,8 +21,8 @@
 #pragma once
 
 #include <epoc/kernel/kernel_obj.h>
-#include <epoc/mem/chunk.h>
 #include <epoc/mem.h>
+#include <epoc/mem/chunk.h>
 #include <epoc/ptr.h>
 
 #include <common/types.h>
@@ -45,7 +45,7 @@ namespace eka2l1 {
         struct mem_model_chunk;
     }
 
-    using process_ptr = kernel::process*;
+    using process_ptr = kernel::process *;
 
     /*! \brief Contains kernel objects implementation. */
     namespace kernel {
@@ -144,7 +144,7 @@ namespace eka2l1 {
             bool allocate(size_t size);
 
             kernel::process *get_own_process() {
-                return reinterpret_cast<kernel::process*>(owner);
+                return reinterpret_cast<kernel::process *>(owner);
             }
 
             bool is_chunk_heap() const {

@@ -23,7 +23,7 @@
 #include <common/log.h>
 
 extern "C" {
-    #include <libswresample/swresample.h>
+#include <libswresample/swresample.h>
 }
 
 namespace eka2l1::drivers {
@@ -35,11 +35,11 @@ namespace eka2l1::drivers {
     };
 
     void dsp_output_stream_ffmpeg::get_supported_formats(std::vector<four_cc> &cc_list) {
-        for (auto &map_pair: FOUR_CC_TO_FFMPEG_CODEC_MAP) {
+        for (auto &map_pair : FOUR_CC_TO_FFMPEG_CODEC_MAP) {
             cc_list.push_back(map_pair.first);
         }
-    } 
-    
+    }
+
     bool dsp_output_stream_ffmpeg::format(const four_cc fmt) {
         auto find_result = FOUR_CC_TO_FFMPEG_CODEC_MAP.find(fmt);
 
@@ -69,7 +69,7 @@ namespace eka2l1::drivers {
     void dsp_output_stream_ffmpeg::decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) {
         AVPacket packet;
         av_init_packet(&packet);
-        
+
         packet.size = original.size();
         packet.data = original.data();
 
@@ -84,7 +84,7 @@ namespace eka2l1::drivers {
             dest.resize(2 * frame->nb_samples * sizeof(std::uint16_t));
 
             if ((channels_ != codec_->channels) || (frame->format != AV_SAMPLE_FMT_S16)) {
-                SwrContext *swr = swr_alloc_set_opts(nullptr, 
+                SwrContext *swr = swr_alloc_set_opts(nullptr,
                     AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16, freq_,
                     frame->channel_layout, static_cast<AVSampleFormat>(frame->format), frame->sample_rate,
                     0, nullptr);

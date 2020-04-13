@@ -57,7 +57,7 @@ namespace eka2l1 {
             void sink_it_(const spdlog::details::log_msg &msg) override {
                 fmt::memory_buffer formatted;
                 sink::formatter_->format(msg, formatted);
-                
+
                 std::string real_msg = fmt::to_string(formatted);
 
                 logger->log(real_msg.c_str());

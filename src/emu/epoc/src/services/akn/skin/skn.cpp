@@ -17,17 +17,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/akn/skin/skn.h>
 #include <common/log.h>
+#include <epoc/services/akn/skin/skn.h>
 
 namespace eka2l1::epoc {
     skn_file::skn_file(common::ro_stream *stream, plat_ver platform_version, language lang)
-        : master_chunk_size_(0),
-          master_chunk_count_(0),
-          crr_filename_id_(0),
-          stream_(stream),
-          ver_(std::move(platform_version)),
-          importer_lang_(lang) {
+        : master_chunk_size_(0)
+        , master_chunk_count_(0)
+        , crr_filename_id_(0)
+        , stream_(stream)
+        , ver_(std::move(platform_version))
+        , importer_lang_(lang) {
         if (!read_master_chunk()) {
             LOG_ERROR("Reading master chunk failed!");
         }
@@ -132,7 +132,7 @@ namespace eka2l1::epoc {
 
         author_str_len *= 2;
         stream_->read(base_offset + skn_desc_dfo_info_author_str, &info.author[0], author_str_len);
-        
+
         std::uint16_t copyright_str_len = 0;
         stream_->read(base_offset + skn_desc_dfo_info_author_str + author_str_len, &copyright_str_len, 2);
 
@@ -149,7 +149,7 @@ namespace eka2l1::epoc {
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
         stream_->read(base_offset + skn_desc_dfo_name_lang, &name.lang, 2);
-        
+
         std::uint16_t name_len = 0;
         stream_->read(base_offset + skn_desc_dfo_name_name_Len, &name_len, 2);
 
@@ -162,7 +162,7 @@ namespace eka2l1::epoc {
     std::uint32_t skn_file::handle_filename_chunk(std::uint32_t base_offset) {
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
-        
+
         std::int32_t id = 0;
         stream_->read(base_offset + skn_desc_dfo_filename_filename_id, &id, 4);
 
@@ -192,7 +192,7 @@ namespace eka2l1::epoc {
 
         return chunk_size;
     }
-    
+
     void skn_file::process_class_def_chunks(std::uint32_t base_offset, std::int32_t chunk_count) {
         for (std::int32_t i = 0; i < chunk_count; i++) {
             std::uint32_t chunk_size = 0;
@@ -232,15 +232,15 @@ namespace eka2l1::epoc {
                 break;
             }
             }
-        
+
             base_offset += chunk_size;
         }
     }
 
     void skn_file::process_bitmap_def_chunk(std::uint32_t base_offset) {
-        skn_bitmap_info bmp_info_ {};
+        skn_bitmap_info bmp_info_{};
         bmp_info_.type = skn_def_type::bitmap;
-        
+
         stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &bmp_info_.id_hash, 8);
         stream_->read(base_offset + skn_desc_dfo_bitmap_filename_id, &bmp_info_.filename_id, 4);
         stream_->read(base_offset + skn_desc_dfo_bitmap_bitmap_idx, &bmp_info_.bmp_idx, 4);
@@ -252,9 +252,9 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_image_table_def_chunk(std::uint32_t base_offset) {
-        skn_image_table tab_ {};    
+        skn_image_table tab_{};
         tab_.type = skn_def_type::img_tbl;
-        
+
         stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &tab_.id_hash, 8);
 
         // Read count
@@ -282,9 +282,9 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_color_table_def_chunk(std::uint32_t base_offset) {
-        skn_color_table tab_ {};
+        skn_color_table tab_{};
         tab_.type = skn_def_type::color_tbl;
-        
+
         stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &tab_.id_hash, 8);
 
         // Read count
@@ -318,9 +318,9 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_bitmap_anim_def_chunk(std::uint32_t base_offset) {
-        skn_bitmap_animation anim_ {};
+        skn_bitmap_animation anim_{};
         anim_.type = skn_def_type::color_tbl;
-        
+
         stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &anim_.id_hash, 8);
 
         // Read count
@@ -340,18 +340,22 @@ namespace eka2l1::epoc {
 
         for (std::int16_t i = 0; i < count; i++) {
             skn_anim_frame frame{};
-            
+
             stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_major0
-                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.frame_bmp_hash, 8);
+                    + i * skn_desc_dfo_bmp_anim_frame_size,
+                &frame.frame_bmp_hash, 8);
 
             stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_time0
-                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.time, 2);
+                    + i * skn_desc_dfo_bmp_anim_frame_size,
+                &frame.time, 2);
 
             stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_posx0
-                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.posx, 2);
-                
+                    + i * skn_desc_dfo_bmp_anim_frame_size,
+                &frame.posx, 2);
+
             stream_->read(base_offset + skn_desc_dfo_bmp_anim_frame_posy0
-                + i * skn_desc_dfo_bmp_anim_frame_size, &frame.posy, 2);
+                    + i * skn_desc_dfo_bmp_anim_frame_size,
+                &frame.posy, 2);
 
             anim_.frames.push_back(frame);
         }
@@ -396,8 +400,7 @@ namespace eka2l1::epoc {
             stream_->read(base_offset + skn_desc_dfo_effect_output_layer_idx, &effects[i].output_layer_index, 1);
             stream_->read(base_offset + skn_desc_dfo_effect_output_layer_mode, &effects[i].output_layer_mode, 1);
 
-            if (effects[i].input_layer_a_mode > 8 || effects[i].input_layer_b_index > 8 ||
-                effects[i].output_layer_index > 8) {
+            if (effects[i].input_layer_a_mode > 8 || effects[i].input_layer_b_index > 8 || effects[i].output_layer_index > 8) {
                 LOG_ERROR("Invalid effect input/output mode!");
                 return;
             }
@@ -478,17 +481,17 @@ namespace eka2l1::epoc {
 
         [[maybe_unused]] std::int8_t plat_major = 0;
         [[maybe_unused]] std::int8_t plat_minor = 0;
-        
+
         stream_->read(base_offset + skn_desc_dfo_release26_plat_major, &plat_major, 1);
         stream_->read(base_offset + skn_desc_dfo_release26_plat_minor, &plat_minor, 1);
 
-        if (ver_ >= plat_ver { 2, 6 }) {
+        if (ver_ >= plat_ver{ 2, 6 }) {
             process_chunks(base_offset + skn_desc_dfo_release26_content, count);
         }
 
         return chunk_size;
     }
-    
+
     std::uint32_t skn_file::handle_release_generic_restriction_chunk(std::uint32_t base_offset) {
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
@@ -498,17 +501,17 @@ namespace eka2l1::epoc {
 
         [[maybe_unused]] std::int8_t plat_major = 0;
         [[maybe_unused]] std::int8_t plat_minor = 0;
-        
+
         stream_->read(base_offset + skn_desc_dfo_release_generic_plat_major, &plat_major, 1);
         stream_->read(base_offset + skn_desc_dfo_release_generic_plat_minor, &plat_minor, 1);
 
-        if (ver_ >= plat_ver { plat_major, plat_minor }) {
+        if (ver_ >= plat_ver{ plat_major, plat_minor }) {
             process_chunks(base_offset + skn_desc_dfo_release_generic_content, count);
         }
-        
+
         return chunk_size;
     }
-    
+
     std::uint32_t skn_file::handle_lang_restriction_chunk(std::uint32_t base_offset) {
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
@@ -522,11 +525,10 @@ namespace eka2l1::epoc {
         [[maybe_unused]] std::uint16_t general_restr = 0;
         stream_->read(base_offset + skn_desc_dfo_lang_gen_restr, &general_restr, 2);
 
-        if (general_restr == 0 || lang_restr == 0 || importer_lang_ == language::any || 
-            (static_cast<language>(lang_restr) == importer_lang_)) {
+        if (general_restr == 0 || lang_restr == 0 || importer_lang_ == language::any || (static_cast<language>(lang_restr) == importer_lang_)) {
             process_chunks(base_offset + skn_desc_dfo_lang_content, count);
         }
-        
+
         return chunk_size;
     }
 }

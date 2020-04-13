@@ -20,21 +20,20 @@ static CFont *FbsGetNearestFont(CFbsTypefaceStore *store, TPtrC name, TInt *err)
     return font;
 }
 
-#define BEGIN_FONT_TEST(name)                                       \
-    CFbsTypefaceStore *store = CFbsTypefaceStore::NewL(NULL);       \
-    CleanupStack::PushL(store);                                     \
-    CFont *font = NULL;                                             \
-    TInt err = 0;                                                   \
-    font = FbsGetNearestFont(store, name, &err);                    \
-    TBuf8<512> text;                                                \
-    if (err != KErrNone) {                                          \
-        text.Format(_L8("Can't find sans font, error %d"), err);    \
-    } else {                                            
-
-#define END_FONT_TEST                                               \
-    }                                                               \
-    EXPECT_INPUT_EQUAL_L(text);                                     \
-    store->ReleaseFont(font);                                       \
+#define BEGIN_FONT_TEST(name)                                    \
+    CFbsTypefaceStore *store = CFbsTypefaceStore::NewL(NULL);    \
+    CleanupStack::PushL(store);                                  \
+    CFont *font = NULL;                                          \
+    TInt err = 0;                                                \
+    font = FbsGetNearestFont(store, name, &err);                 \
+    TBuf8<512> text;                                             \
+    if (err != KErrNone) {                                       \
+        text.Format(_L8("Can't find sans font, error %d"), err); \
+    } else {
+#define END_FONT_TEST           \
+    }                           \
+    EXPECT_INPUT_EQUAL_L(text); \
+    store->ReleaseFont(font);   \
     CleanupStack::Pop(store);
 
 void FbsFontstoreGetCharacterDataL() {
@@ -42,10 +41,10 @@ void FbsFontstoreGetCharacterDataL() {
     TOpenFontCharMetrics metrics;
     const TUint8 *bitmap;
     TSize size;
-    
+
     CFont::TCharacterDataAvailability avail = font->GetCharacterData('A', metrics, bitmap, size);
     text.Format(_L8("Character A status: %d"), static_cast<int>(avail));
-    
+
     END_FONT_TEST
 }
 
@@ -69,7 +68,7 @@ void FbsFontstoreNearestToDesignWithNameL() {
                     " max width: %d"),
         &fontFullName8, &fontFamName8, metrics.Ascent(), metrics.Descent(),
         metrics.MaxDepth(), metrics.MaxHeight(), metrics.MaxWidth());
-    
+
     END_FONT_TEST
 }
 

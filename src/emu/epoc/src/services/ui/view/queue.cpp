@@ -23,7 +23,7 @@ namespace eka2l1::ui::view {
     event_queue::event_queue()
         : buffer_(nullptr) {
     }
-    
+
     static void complete_write_and_notify_event(epoc::notify_info &info, std::uint8_t *dest_buffer,
         const view_event &evt) {
         // Just notify please
@@ -31,7 +31,7 @@ namespace eka2l1::ui::view {
 
         if (dest_buffer) {
             // Write the buffer. A step should have been done to verify buffer is sufficent
-            *reinterpret_cast<view_event*>(dest_buffer) = evt;
+            *reinterpret_cast<view_event *>(dest_buffer) = evt;
         }
     }
 
@@ -56,7 +56,7 @@ namespace eka2l1::ui::view {
             // Previous not finish, not allowed
             return false;
         }
-        
+
         if (!events_.empty()) {
             auto evt = std::move(events_.front());
             events_.pop();
@@ -68,7 +68,7 @@ namespace eka2l1::ui::view {
         // Queue this nof
         nof_info_ = info;
         buffer_ = buffer;
-        
+
         return true;
     }
 }

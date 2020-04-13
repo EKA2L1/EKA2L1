@@ -25,7 +25,7 @@
 namespace eka2l1::epoc {
     struct window;
     struct screen;
-    
+
     // Is this a 2D game engine ?
     struct sprite : public window_client_obj {
         window *attached_window;

@@ -52,7 +52,7 @@ namespace eka2l1::manager {
         bool call_module_entry(const std::string &module);
 
     public:
-        script_manager() {}    
+        script_manager() {}
         script_manager(system *sys);
 
         bool import_module(const std::string &path);

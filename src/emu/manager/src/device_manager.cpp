@@ -22,8 +22,8 @@
 #include <yaml-cpp/yaml.h>
 
 #include <common/algorithm.h>
-#include <common/path.h>
 #include <common/dynamicfile.h>
+#include <common/path.h>
 
 #include <algorithm>
 #include <fstream>
@@ -131,7 +131,8 @@ namespace eka2l1::manager {
         }
         std::string line;
         while (ifile.getline(line)) {
-            if (line == "" || line[0] == '\0') break;
+            if (line == "" || line[0] == '\0')
+                break;
             const int lang_code = std::stoi(line);
             if (line.find_first_of(",d") != std::string::npos) {
                 default_language = lang_code;

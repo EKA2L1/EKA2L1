@@ -35,7 +35,7 @@ namespace eka2l1 {
     struct ecom_implementation_info {
         std::u16string original_name;
         epoc::lib_info plugin_dll_info;
-        
+
         std::uint32_t uid;
         std::uint8_t version;
         std::uint8_t format;

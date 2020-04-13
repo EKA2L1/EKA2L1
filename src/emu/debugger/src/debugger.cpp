@@ -20,8 +20,8 @@
 
 #include <algorithm>
 #include <debugger/debugger.h>
-#include <yaml-cpp/yaml.h>
 #include <fstream>
+#include <yaml-cpp/yaml.h>
 
 namespace eka2l1 {
     void debugger_base::set_breakpoint(const std::uint32_t bkpt_addr, const bool hit,

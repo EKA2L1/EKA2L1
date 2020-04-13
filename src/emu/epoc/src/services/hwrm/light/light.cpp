@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/context.h>
 #include <epoc/services/hwrm/light/light.h>
 #include <epoc/services/hwrm/op.h>
-#include <epoc/services/context.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
@@ -40,7 +40,7 @@ namespace eka2l1::epoc {
         case hwrm_light_op_reserve_lights:
             return "Reserve lights";
 
-        case hwrm_light_op_release_lights: 
+        case hwrm_light_op_release_lights:
             return "Release lights";
 
         case hwrm_light_op_set_light_color:

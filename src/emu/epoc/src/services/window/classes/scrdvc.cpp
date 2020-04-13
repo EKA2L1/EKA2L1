@@ -59,9 +59,9 @@ namespace eka2l1::epoc {
         pixel_twips_and_rot *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
 
         for (int i = 0; i < scr->scr_config.modes.size(); i++) {
-            epoc::config::screen_mode &mode =  scr->scr_config.modes[i];
+            epoc::config::screen_mode &mode = scr->scr_config.modes[i];
 
-            if (mode.size == info->pixel_size &&  number_to_orientation(mode.rotation) == info->orientation) {
+            if (mode.size == info->pixel_size && number_to_orientation(mode.rotation) == info->orientation) {
                 // Eureka... Bắt được mày rồi....
                 scr->set_screen_mode(client->get_ws().get_graphics_driver(), mode.mode_number);
                 ctx.set_request_status(epoc::error_none);
@@ -112,13 +112,13 @@ namespace eka2l1::epoc {
             pixel_and_rot data;
             data.pixel_size = scr_mode->size;
             data.orientation = number_to_orientation(scr_mode->rotation);
-            
+
             ctx.write_arg_pkg(reply_slot, data);
         }
 
         ctx.set_request_status(epoc::error_none);
     }
-            
+
     void screen_device::get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
         const bool twips) {
         const epoc::config::screen_mode &mode = scr->current_mode();
@@ -140,7 +140,7 @@ namespace eka2l1::epoc {
         ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, eka2l1::vec2(0, 0));
         ctx.set_request_status(0);
     }
-    
+
     void screen_device::get_current_screen_mode_scale(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         // On emulator there is no physical scale nor coordinate
         ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, eka2l1::vec2(1, 1));

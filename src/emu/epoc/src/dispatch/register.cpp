@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/dispatch/register.h>
 #include <epoc/dispatch/audio.h>
+#include <epoc/dispatch/register.h>
 #include <epoc/dispatch/screen.h>
 
 namespace eka2l1::dispatch {

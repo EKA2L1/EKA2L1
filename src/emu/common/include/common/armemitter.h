@@ -21,8 +21,8 @@
 #include <vector>
 
 #include <common/armcommon.h>
-#include <common/cpudetect.h>
 #include <common/codeblock.h>
+#include <common/cpudetect.h>
 #include <common/log.h>
 
 // VCVT flags

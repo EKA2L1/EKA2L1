@@ -32,7 +32,7 @@ namespace eka2l1::drivers {
             LOG_ERROR("{} encounters error {}", name, error_code);
         }
     }
-    
+
     bool init_graphics_library(graphic_api api) {
         switch (api) {
         case graphic_api::opengl: {

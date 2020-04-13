@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/dispatch/def.h>
 #include <common/vecx.h>
+#include <epoc/dispatch/def.h>
 
 #include <epoc/ptr.h>
 

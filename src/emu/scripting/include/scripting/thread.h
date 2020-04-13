@@ -58,6 +58,6 @@ namespace eka2l1::scripting {
 
         std::unique_ptr<scripting::process> get_owning_process();
     };
-    
+
     std::unique_ptr<eka2l1::scripting::thread> get_current_thread();
 }

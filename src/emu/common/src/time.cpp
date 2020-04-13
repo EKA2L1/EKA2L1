@@ -22,8 +22,8 @@
  */
 
 #include <chrono>
-#include <common/time.h>
 #include <common/platform.h>
+#include <common/time.h>
 #include <ctime>
 
 #if EKA2L1_PLATFORM(WIN32)
@@ -43,11 +43,11 @@ namespace eka2l1::common {
     std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t micsecs) {
         return micsecs * microsecs_per_sec + ad_epoc_dist_microsecs;
     }
-    
+
     std::uint64_t convert_microsecs_win32_1601_epoch_to_1ad(const std::uint64_t micsecs) {
         return micsecs / 10 + ad_win32_epoch_dist_microsecs;
     }
-    
+
     int get_current_utc_offset() {
 #if EKA2L1_PLATFORM(WIN32)
         TIME_ZONE_INFORMATION tz_info{};

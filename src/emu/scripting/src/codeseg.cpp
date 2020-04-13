@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scripting/instance.h>
 #include <scripting/codeseg.h>
+#include <scripting/instance.h>
 #include <scripting/process.h>
 
 #include <epoc/epoc.h>
@@ -29,9 +29,9 @@
 #include <common/cvt.h>
 #include <pybind11/embed.h>
 
-namespace eka2l1::scripting {    
+namespace eka2l1::scripting {
     codeseg::codeseg(std::uint64_t handle)
-        : real_seg_(reinterpret_cast<kernel::codeseg*>(handle)) {
+        : real_seg_(reinterpret_cast<kernel::codeseg *>(handle)) {
     }
 
     std::uint32_t codeseg::lookup(process_inst pr, const std::uint32_t ord) {
@@ -67,7 +67,7 @@ namespace eka2l1::scripting {
     }
 
     std::unique_ptr<scripting::codeseg> load_codeseg(process_inst pr, const std::string &virt_path) {
-        eka2l1::system *sys =  get_current_instance();
+        eka2l1::system *sys = get_current_instance();
         hle::lib_manager *libmngr = sys->get_lib_manager();
 
         codeseg_ptr seg = libmngr->load(common::utf8_to_ucs2(virt_path), pr ? pr->get_process_handle() : nullptr);

@@ -43,7 +43,7 @@ namespace eka2l1::drivers {
     public:
         explicit shader_metadata() = default;
         explicit shader_metadata(const std::uint8_t *metadata);
-        
+
         const bool is_available() const {
             return metadata_;
         }
@@ -59,7 +59,7 @@ namespace eka2l1::drivers {
     public:
         virtual ~shader() {
         }
-        
+
         virtual bool create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
             const char *frag_data, const std::size_t frag_size)
             = 0;

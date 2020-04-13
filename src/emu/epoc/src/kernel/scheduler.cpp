@@ -151,7 +151,7 @@ namespace eka2l1::kernel {
         if (readys[thr->real_priority] == nullptr) {
             readys[thr->real_priority] = thr;
             ready_mask[thr->real_priority >> 5] |= (1 << (thr->real_priority & 31));
-            
+
             thr->scheduler_link.next = thr;
             thr->scheduler_link.previous = thr;
 
@@ -205,14 +205,13 @@ namespace eka2l1::kernel {
 
     // Put the thread into the ready queue to run in the next core timing yeid
     bool thread_scheduler::schedule(kernel::thread *thr) {
-        if (thr->state == thread_state::run || thr->state == thread_state::ready || 
-            thr->state == thread_state::hold_mutex_pending) {
+        if (thr->state == thread_state::run || thr->state == thread_state::ready || thr->state == thread_state::hold_mutex_pending) {
             return false;
         }
 
         thr->state = thread_state::ready;
         queue_thread_ready(thr);
-        
+
         return true;
     }
 
@@ -308,4 +307,3 @@ namespace eka2l1::kernel {
         return true;
     }
 }
-

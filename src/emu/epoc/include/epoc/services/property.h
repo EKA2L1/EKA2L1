@@ -35,7 +35,7 @@ namespace eka2l1 {
         class thread;
     }
 
-    using thread_ptr = kernel::thread*;
+    using thread_ptr = kernel::thread *;
 
     namespace service {
         enum class property_type {
@@ -66,9 +66,9 @@ namespace eka2l1 {
 
             service::property_type data_type;
 
-            threadsafe_cn_queue<epoc::notify_info*> subscription_queue;
+            threadsafe_cn_queue<epoc::notify_info *> subscription_queue;
 
-            using data_change_callback = std::pair<void*, data_change_callback_handler>;
+            using data_change_callback = std::pair<void *, data_change_callback_handler>;
             std::vector<data_change_callback> data_change_callbacks;
 
             void fire_data_change_callbacks();
@@ -132,7 +132,7 @@ namespace eka2l1 {
             void notify_request(const std::int32_t err);
         };
 
-        struct property_reference: public kernel::kernel_obj {
+        struct property_reference : public kernel::kernel_obj {
             property *prop_;
             epoc::notify_info nof_;
 

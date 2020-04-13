@@ -57,7 +57,7 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
     }
 
-    window_group::window_group(window_server_client_ptr client,  screen *scr, epoc::window *parent, const std::uint32_t client_handle)
+    window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
         : window(client, scr, parent, window_kind::group)
         , flags(0) {
         // Create window group as child
@@ -70,13 +70,13 @@ namespace eka2l1::epoc {
     eka2l1::vec2 window_group::get_origin() {
         return { 0, 0 };
     }
-    
+
     void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
         // Warn myself in the future!
         LOG_WARN("Set cursor text is mostly a stubbed now");
 
         ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
-        auto window_user_to_set = reinterpret_cast<window_user*>(client->get_object(cmd_set->win));
+        auto window_user_to_set = reinterpret_cast<window_user *>(client->get_object(cmd_set->win));
 
         if (!window_user_to_set || window_user_to_set->type == window_kind::client) {
             LOG_ERROR("Window not found or not client kind to set text cursor");
@@ -85,7 +85,7 @@ namespace eka2l1::epoc {
         }
 
         window_user_to_set->cursor_pos = cmd_set->pos + window_user_to_set->pos;
-        context.set_request_status(epoc::error_none);   
+        context.set_request_status(epoc::error_none);
     }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -109,7 +109,8 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpCaptureKey: case EWsWinOpCaptureKeyUpsAndDowns: {
+        case EWsWinOpCaptureKey:
+        case EWsWinOpCaptureKeyUpsAndDowns: {
             if (!ctx.satisfy(key_capture_policy)) {
                 ctx.set_request_status(epoc::error_permission_denied);
                 break;
@@ -121,8 +122,7 @@ namespace eka2l1::epoc {
             capture_key_notify.keycode_ = capture_key_cmd->key;
             capture_key_notify.modifiers_ = capture_key_cmd->modifiers;
             capture_key_notify.modifiers_mask_ = capture_key_cmd->modifier_mask;
-            capture_key_notify.type_ = (op == EWsWinOpCaptureKeyUpsAndDowns) ? epoc::event_key_capture_type::up_and_downs : 
-                epoc::event_key_capture_type::normal;
+            capture_key_notify.type_ = (op == EWsWinOpCaptureKeyUpsAndDowns) ? epoc::event_key_capture_type::up_and_downs : epoc::event_key_capture_type::normal;
             capture_key_notify.pri_ = capture_key_cmd->priority;
 
             ctx.set_request_status(client->add_event_notifier(capture_key_notify));

@@ -24,8 +24,8 @@
 #include <epoc/services/window/classes/winuser.h>
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/opheader.h>
-#include <epoc/services/window/window.h>
 #include <epoc/services/window/screen.h>
+#include <epoc/services/window/window.h>
 
 #include <epoc/timing.h>
 
@@ -41,13 +41,12 @@ namespace eka2l1::epoc {
 
     // ======================= WINDOW USER BASE ======================================
     window_user_base::window_user_base(window_server_client_ptr client, screen *scr, window *parent, const window_kind kind)
-         : window(client, scr, parent, kind) {
+        : window(client, scr, parent, kind) {
     }
-    
+
     // ======================= WINDOW TOP USER (CLIENT) ===============================
     window_top_user::window_top_user(window_server_client_ptr client, screen *scr, window *parent)
         : window_user_base(client, scr, parent, window_kind::top_client) {
-
     }
 
     std::uint32_t window_top_user::redraw_priority(int *shift) {
@@ -72,7 +71,7 @@ namespace eka2l1::epoc {
         , win_type(type_of_window)
         , pos(0, 0)
         , size(0, 0)
-        , resize_needed(false) 
+        , resize_needed(false)
         , clear_color(0xFFFFFFFF)
         , filter(pointer_filter_type::all)
         , cursor_pos(-1, -1)
@@ -86,7 +85,7 @@ namespace eka2l1::epoc {
             LOG_ERROR("Parent is not a window client type!");
         } else {
             if (parent->type == epoc::window_kind::client) {
-                epoc::window_user *user = reinterpret_cast<epoc::window_user*>(parent);
+                epoc::window_user *user = reinterpret_cast<epoc::window_user *>(parent);
 
                 // Inherits parent's size
                 pos = user->pos;
@@ -99,11 +98,11 @@ namespace eka2l1::epoc {
 
         set_client_handle(client_handle);
     }
-    
+
     eka2l1::vec2 window_user::get_origin() {
         return pos;
     }
-    
+
     void window_user::queue_event(const epoc::event &evt) {
         if (!is_visible()) {
             // TODO: Im not sure... I think it can certainly receive
@@ -114,7 +113,7 @@ namespace eka2l1::epoc {
         window::queue_event(evt);
     }
 
-    void window_user::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {        
+    void window_user::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {
         pos = top;
 
         // TODO (pent0): Currently our implementation differs from Symbian, that we invalidates the whole
@@ -132,7 +131,7 @@ namespace eka2l1::epoc {
     }
 
     static bool should_purge_window_user(void *win, epoc::event &evt) {
-        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
         if (user->client_handle == evt.handle) {
             return false;
         }
@@ -141,7 +140,7 @@ namespace eka2l1::epoc {
     }
 
     static bool should_purge_window_user_redraw(void *win, epoc::redraw_event &evt) {
-        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
         if (user->client_handle == evt.handle) {
             return false;
         }
@@ -180,7 +179,7 @@ namespace eka2l1::epoc {
         }
 
         int shift = 0;
-        int parent_pri = reinterpret_cast<window_user_base*>(parent)->redraw_priority(&shift);
+        int parent_pri = reinterpret_cast<window_user_base *>(parent)->redraw_priority(&shift);
 
         if (shift > 0) {
             shift--;
@@ -194,7 +193,7 @@ namespace eka2l1::epoc {
     }
 
     eka2l1::vec2 window_user::absolute_position() const {
-        return reinterpret_cast<window_user_base*>(parent)->absolute_position() + pos;
+        return reinterpret_cast<window_user_base *>(parent)->absolute_position() + pos;
     }
 
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -257,7 +256,7 @@ namespace eka2l1::epoc {
     }
 
     void window_user::set_non_fading(service::ipc_context &context, ws_cmd &cmd) {
-        const bool non_fading = *reinterpret_cast<bool*>(cmd.data_ptr);
+        const bool non_fading = *reinterpret_cast<bool *>(cmd.data_ptr);
 
         if (non_fading) {
             flags |= flags_non_fading;
@@ -268,7 +267,7 @@ namespace eka2l1::epoc {
 
     void window_user::set_size(service::ipc_context &context, ws_cmd &cmd) {
         // refer to window_user::set_extent()
-        const object_size new_size = *reinterpret_cast<object_size*>(cmd.data_ptr);
+        const object_size new_size = *reinterpret_cast<object_size *>(cmd.data_ptr);
 
         if (new_size != size) {
             resize_needed = true;
@@ -284,12 +283,12 @@ namespace eka2l1::epoc {
     }
 
     void window_user::set_fade(service::ipc_context &context, ws_cmd &cmd) {
-        ws_cmd_set_fade *fade_param = reinterpret_cast<ws_cmd_set_fade*>(cmd.data_ptr);
+        ws_cmd_set_fade *fade_param = reinterpret_cast<ws_cmd_set_fade *>(cmd.data_ptr);
 
         flags &= ~flags_faded;
         flags &= ~flags_faded_also_children;
         flags &= ~flags_faded_default_param;
-        
+
         if (fade_param->flags & 1) {
             flags |= flags_faded;
         }
@@ -312,7 +311,7 @@ namespace eka2l1::epoc {
         flags |= flags_enable_alpha;
         context.set_request_status(epoc::error_none);
     }
-    
+
     void window_user::free(service::ipc_context &context, ws_cmd &cmd) {
         // Try to redraw the screen
         set_visible(false);
@@ -325,7 +324,7 @@ namespace eka2l1::epoc {
             // Queue a resize command
             auto cmd_list = drv->new_command_list();
             auto cmd_builder = drv->new_command_builder(cmd_list.get());
-            
+
             cmd_builder->destroy_bitmap(driver_win_id);
             drv->submit_command_list(*cmd_list);
 
@@ -336,7 +335,7 @@ namespace eka2l1::epoc {
 
         client->delete_object(cmd.obj_handle);
     }
-    
+
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
 
@@ -351,7 +350,7 @@ namespace eka2l1::epoc {
         }
 
         //LOG_TRACE("Window user op: {}", (int)cmd.header.op);
-        
+
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
@@ -374,7 +373,7 @@ namespace eka2l1::epoc {
             ctx.set_request_status(static_cast<int>(scr->disp_mode));
             break;
         }
-        
+
         case EWsWinOpSetExtent: {
             ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
             set_extent(extent->pos, extent->size);
@@ -383,7 +382,7 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetPos: {
-            eka2l1::vec2 *pos_to_set = reinterpret_cast<eka2l1::vec2*>(cmd.data_ptr);
+            eka2l1::vec2 *pos_to_set = reinterpret_cast<eka2l1::vec2 *>(cmd.data_ptr);
             pos = *pos_to_set;
             ctx.set_request_status(epoc::error_none);
             break;
@@ -509,7 +508,8 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpBeginRedraw: case EWsWinOpBeginRedrawFull: {
+        case EWsWinOpBeginRedraw:
+        case EWsWinOpBeginRedrawFull: {
             begin_redraw(ctx, cmd);
             break;
         }
@@ -519,7 +519,8 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpSetSize: case EWsWinOpSetSizeErr: {
+        case EWsWinOpSetSize:
+        case EWsWinOpSetSizeErr: {
             set_size(ctx, cmd);
             break;
         }

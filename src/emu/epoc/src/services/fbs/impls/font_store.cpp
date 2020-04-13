@@ -22,10 +22,10 @@
 namespace eka2l1::epoc {
     void font_store::add_fonts(std::vector<std::uint8_t> &buf) {
         auto adapter = epoc::adapter::make_font_file_adapter(epoc::adapter::font_file_adapter_kind::stb, buf);
-        
+
         for (std::size_t i = 0; i < adapter->count(); i++) {
             epoc::open_font_face_attrib attrib;
-            
+
             if (!adapter->get_face_attrib(i, attrib)) {
                 continue;
             }
@@ -43,7 +43,7 @@ namespace eka2l1::epoc {
                     break;
                 }
             }
-            
+
             // No duplicate font
             if (!found) {
                 // Get the metrics and make new open font
@@ -67,11 +67,11 @@ namespace eka2l1::epoc {
 
         const std::u16string my_name = spec.tf.name.to_std_string(nullptr);
 
-        for (auto &[fam_name, collection]: open_font_store) {
+        for (auto &[fam_name, collection] : open_font_store) {
             bool maybe_same_family = (my_name.find(fam_name) != std::string::npos);
 
             // Seek the way out! Seek the one that contains my name first!
-            for (auto &info: collection) {
+            for (auto &info : collection) {
                 int score = 0;
 
                 // Better returns me!
@@ -86,7 +86,7 @@ namespace eka2l1::epoc {
                 if ((spec.style.flags & epoc::font_style::italic) == (info.face_attrib.style & epoc::open_font_face_attrib::italic)) {
                     score += 50;
                 }
-                
+
                 if ((spec.style.flags & epoc::font_style::bold) == (info.face_attrib.style & epoc::open_font_face_attrib::bold)) {
                     score += 50;
                 }

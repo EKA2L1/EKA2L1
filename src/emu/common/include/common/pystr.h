@@ -59,43 +59,43 @@ namespace eka2l1::common {
             return str_.empty();
         }
 
-        T &operator [] (const std::size_t index) const {
+        T &operator[](const std::size_t index) const {
             return str_[index];
         }
 
-        void operator = (const basic_pystr<T> &rhs) const {
+        void operator=(const basic_pystr<T> &rhs) const {
             str_ = rhs.str_;
         }
 
-        bool operator > (const basic_pystr<T> &rhs) const {
+        bool operator>(const basic_pystr<T> &rhs) const {
             return str_ > rhs.str_;
         }
-        
-        bool operator >= (const basic_pystr<T> &rhs) const {
+
+        bool operator>=(const basic_pystr<T> &rhs) const {
             return str_ >= rhs.str_;
         }
-        
-        bool operator < (const basic_pystr<T> &rhs) const {
+
+        bool operator<(const basic_pystr<T> &rhs) const {
             return str_ < rhs.str_;
         }
 
-        bool operator <= (const basic_pystr<T> &rhs) const {
+        bool operator<=(const basic_pystr<T> &rhs) const {
             return str_ <= rhs.str_;
         }
-        
-        bool operator == (const basic_pystr<T> &rhs) const {
+
+        bool operator==(const basic_pystr<T> &rhs) const {
             return str_ == rhs.str_;
         }
-        
-        bool operator != (const basic_pystr<T> &rhs) const {
+
+        bool operator!=(const basic_pystr<T> &rhs) const {
             return str_ != rhs.str_;
         }
-        
-        basic_pystr<T> operator + (const basic_pystr<T> &rhs) const {
-            return rhs.str_ + str_; 
+
+        basic_pystr<T> operator+(const basic_pystr<T> &rhs) const {
+            return rhs.str_ + str_;
         }
 
-        void operator += (const basic_pystr<T> &rhs) {
+        void operator+=(const basic_pystr<T> &rhs) {
             str_ += rhs.str_;
         }
 
@@ -104,7 +104,7 @@ namespace eka2l1::common {
         }
 
         template <typename I>
-        basic_pystr<T> operator *(const I times) const {
+        basic_pystr<T> operator*(const I times) const {
             if (times == 0) {
                 return basic_pystr<T>{};
             }
@@ -116,14 +116,14 @@ namespace eka2l1::common {
             std::basic_string<T> news;
 
             for (I i = 0; i < times; i++) {
-                news += str_;     
+                news += str_;
             }
 
             return news;
         }
 
         template <typename I>
-        void operator *= (const I times) {
+        void operator*=(const I times) {
             if (times == 0) {
                 str_ = std::basic_string<T>{};
                 return;
@@ -136,7 +136,7 @@ namespace eka2l1::common {
             const std::basic_string<T> org_ = str_;
 
             for (I i = 0; i < times - 1; i++) {
-                str_ += org_;     
+                str_ += org_;
             }
         }
 
@@ -169,7 +169,7 @@ namespace eka2l1::common {
             std::basic_string<T> org_ = str_;
 
             std::size_t pos = org_.find(separator.str_);
-            
+
             while (pos != decltype(org_)::npos) {
                 if (pos > 0) {
                     strs.push_back(org_.substr(0, pos));
@@ -237,7 +237,7 @@ namespace eka2l1::common {
 
             I num_ = 0;
             I factor = 1;
-            
+
             if (num_str_[0] == static_cast<T>('-')) {
                 factor *= -1;
                 num_str_.erase(num_str_.begin(), num_str_.begin() + 1);
@@ -252,7 +252,7 @@ namespace eka2l1::common {
                     ene_ = (static_cast<I>(num_str_[i]) - static_cast<I>('0'));
                 } else if (base > 10) {
                     if (num_str_[i] >= static_cast<T>('a') && num_str_[i] <= (base - 11) + static_cast<T>('a')) {
-                        ene_ =  (static_cast<I>(num_str_[i]) - static_cast<I>('a')) + 10;
+                        ene_ = (static_cast<I>(num_str_[i]) - static_cast<I>('a')) + 10;
                     } else if (num_str_[i] >= static_cast<T>('A') && num_str_[i] <= (base - 11) + static_cast<T>('A')) {
                         ene_ = (static_cast<I>(num_str_[i]) - static_cast<I>('A')) + 10;
                     } else {

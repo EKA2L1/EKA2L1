@@ -23,8 +23,8 @@
 #include <epoc/services/server.h>
 #include <epoc/utils/des.h>
 
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace eka2l1 {
     class io_system;
@@ -141,7 +141,7 @@ namespace eka2l1 {
 
         bool load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
             const language ideal_lang = language::en);
-        
+
         void rescan_registries(eka2l1::io_system *io);
 
         /*! \brief Get the number of screen shared for an app. 
@@ -205,7 +205,7 @@ namespace eka2l1 {
          * \returns Nullptr if the registeration does not exist. Else the pointer to it.
          */
         apa_app_registry *get_registeration(const std::uint32_t uid);
-        
+
         /**
          * \brief Get all app registerations.
          */

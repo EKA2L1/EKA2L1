@@ -75,7 +75,7 @@ namespace eka2l1 {
          * \param compare_       Function comparing two element of the iterable object.
          */
         template <typename T, typename H = typename T::value_type>
-        void detect_changes(const T &old_, const T &new_, addition_callback_func add_callback_, 
+        void detect_changes(const T &old_, const T &new_, addition_callback_func add_callback_,
             remove_callback_func rev_callback_, compare_func<H> compare_ = default_compare_func<H>) {
             std::size_t index_new = 0;
             std::size_t index_old = 0;

@@ -64,7 +64,7 @@ namespace eka2l1::manager {
 
         void save_devices();
         void load_devices();
-        
+
         bool set_current(const std::string &firmcode);
         bool set_current(const std::uint8_t idx);
 

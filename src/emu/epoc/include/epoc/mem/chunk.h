@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/mem/common.h>
 #include <common/types.h>
+#include <epoc/mem/common.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -31,6 +31,7 @@ namespace eka2l1::mem {
 
     struct mem_model_chunk {
         prot permission_;
+
     protected:
         mmu_base *mmu_;
         asid addr_space_id_;
@@ -43,7 +44,7 @@ namespace eka2l1::mem {
 
         virtual ~mem_model_chunk() {
         }
-        
+
         virtual int do_create(const mem_model_chunk_creation_info &create_info) = 0;
 
         /**

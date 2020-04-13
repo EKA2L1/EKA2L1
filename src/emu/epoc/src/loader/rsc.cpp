@@ -507,7 +507,7 @@ namespace eka2l1::loader {
             return false;
         }
 
-        signature = *reinterpret_cast<sig_record*>(&dat[0]);
+        signature = *reinterpret_cast<sig_record *>(&dat[0]);
         signature.offset &= 0xFFFFF000;
 
         return true;

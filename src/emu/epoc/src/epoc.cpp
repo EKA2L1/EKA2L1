@@ -28,8 +28,8 @@
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <common/random.h>
 #include <common/platform.h>
+#include <common/random.h>
 
 #include <disasm/disasm.h>
 
@@ -62,9 +62,9 @@
 #include <epoc/vfs.h>
 
 #include <arm/arm_factory.h>
+#include <manager/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
-#include <manager/config.h>
 
 namespace eka2l1 {
     /* A system instance, where all the magic happens.
@@ -129,11 +129,10 @@ namespace eka2l1 {
         language sys_lang = language::en;
 
     public:
-        system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, 
+        system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver,
             manager::config_state *conf);
 
-        ~system_impl() {   
-        };
+        ~system_impl(){};
 
         void set_graphics_driver(drivers::graphics_driver *graphics_driver);
         void set_audio_driver(drivers::audio_driver *audio_driver);
@@ -379,15 +378,15 @@ namespace eka2l1 {
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
         gdriver = graphics_driver;
     }
-    
+
     void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) {
         adriver = aud_driver;
     }
 
     bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
-        #if ENABLE_SCRIPTING == 1
-            load_scripts();
-        #endif
+#if ENABLE_SCRIPTING == 1
+        load_scripts();
+#endif
 
         hlelibmngr.reset();
         hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
@@ -462,7 +461,7 @@ namespace eka2l1 {
         }
 
         eka2l1::ro_file_stream rom_fstream(f.get());
-        std::optional<loader::rom> romf_res = loader::load_rom(reinterpret_cast<common::ro_stream*>(
+        std::optional<loader::rom> romf_res = loader::load_rom(reinterpret_cast<common::ro_stream *>(
             &rom_fstream));
 
         if (!romf_res) {
@@ -560,7 +559,7 @@ namespace eka2l1 {
     void system::set_config(manager::config_state *conf) {
         impl->set_config(conf);
     }
-    
+
     void system::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
         return impl->set_graphics_driver(graphics_driver);
     }
@@ -705,7 +704,7 @@ namespace eka2l1 {
     void system::do_state(common::chunkyseri &seri) {
         return impl->do_state(seri);
     }
-    
+
     const language system::get_system_language() const {
         return impl->get_system_language();
     }

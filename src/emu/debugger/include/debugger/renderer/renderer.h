@@ -1,14 +1,14 @@
 #pragma once
 
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string>
 
-#include <drivers/graphics/common.h>
-#include <drivers/graphics/imgui_renderer.h>
 #include <debugger/debugger.h>
 #include <debugger/renderer/spritesheet.h>
+#include <drivers/graphics/common.h>
+#include <drivers/graphics/imgui_renderer.h>
 
 namespace eka2l1 {
     namespace drivers {

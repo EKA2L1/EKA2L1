@@ -37,7 +37,7 @@ namespace eka2l1::ui::view {
 
     public:
         explicit event_queue();
-        
+
         void queue_event(const view_event &evt);
         bool hear(epoc::notify_info info, std::uint8_t *complete_buffer);
     };

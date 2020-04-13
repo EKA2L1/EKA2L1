@@ -22,9 +22,9 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <algorithm>
 #include <functional>
 #include <type_traits>
 
@@ -46,8 +46,8 @@ namespace eka2l1::common {
         K keys[LEN];
         V values[LEN];
 
-        std::function<bool(const K&)> is_empty_func;
-        std::function<void(K&)> mark_empty_func;
+        std::function<bool(const K &)> is_empty_func;
+        std::function<void(K &)> mark_empty_func;
 
     public:
         explicit vector_static_map(IS_EMPTY_FUNC_TYPE is_empty_func = is_vector_static_map_entry_empty<K>,
@@ -97,7 +97,7 @@ namespace eka2l1::common {
 
             return false;
         }
-        
+
         V *find(const K &key) {
             for (std::size_t i = 0; i < LEN; i++) {
                 if (keys[i] == key) {

@@ -20,9 +20,9 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
+#include <common/ini.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <common/ini.h>
 #include <common/random.h>
 
 #include <epoc/kernel/libmanager.h>
@@ -143,8 +143,8 @@ namespace eka2l1::hle {
         uint32_t *imdir = &(import_block.ordinals[0]);
 
         for (uint32_t i = crr_idx, j = 0;
-                i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
-                i++, j++) {
+             i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
+             i++, j++) {
             *iat_pointer = cs->lookup(pr, import_block.ordinals[j]);
         }
 
@@ -174,7 +174,7 @@ namespace eka2l1::hle {
 
         for (uint32_t i = 0; i < import_block.ordinals.size(); i++) {
             uint32_t off = imdir[i];
-            uint32_t *code_ptr = reinterpret_cast<std::uint32_t*>(code_addr + off);
+            uint32_t *code_ptr = reinterpret_cast<std::uint32_t *>(code_addr + off);
 
             uint32_t import_inf = *code_ptr;
             uint32_t ord = import_inf & 0xffff;
@@ -225,7 +225,7 @@ namespace eka2l1::hle {
             uint32_t track = 0;
 
             for (auto &ib : img->import_section.imports) {
-                pe_fix_up_iat(mem, mngr, reinterpret_cast<std::uint32_t*>(code_base + img->header.code_size),
+                pe_fix_up_iat(mem, mngr, reinterpret_cast<std::uint32_t *>(code_base + img->header.code_size),
                     pr, ib, track, cs);
             }
         }
@@ -267,8 +267,8 @@ namespace eka2l1::hle {
             }
         }
 
-        info.constant_data = reinterpret_cast<std::uint8_t*>(&img->data[img->header.data_offset]);
-        info.code_data = reinterpret_cast<std::uint8_t*>(&img->data[img->header.code_offset]);
+        info.constant_data = reinterpret_cast<std::uint8_t *>(&img->data[img->header.data_offset]);
+        info.code_data = reinterpret_cast<std::uint8_t *>(&img->data[img->header.code_offset]);
 
         if (force_code_addr != 0) {
             info.code_load_addr = force_code_addr;
@@ -276,7 +276,7 @@ namespace eka2l1::hle {
 
         codeseg_ptr cs = kern->create<kernel::codeseg>("codeseg", info);
         cs->attach(pr);
-        
+
         mngr.register_exports(
             common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
             cs->get_export_table(pr));
@@ -287,17 +287,17 @@ namespace eka2l1::hle {
     }
 
     static std::uint16_t THUMB_TRAMPOLINE_ASM[] = {
-        0xB540,  // 0: push { r6, lr }
-        0x4E01,  // 2: ldr r6, [pc, #4]
-        0x47B0,  // 4: blx r6
-        0xBD40,  // 6: pop { r6, pc }
-        0x0000,  // 8: nop
+        0xB540, // 0: push { r6, lr }
+        0x4E01, // 2: ldr r6, [pc, #4]
+        0x47B0, // 4: blx r6
+        0xBD40, // 6: pop { r6, pc }
+        0x0000, // 8: nop
         // constant here, offset 10: makes that total of 14 bytes
         // Hope some function are big enough!!!
     };
 
     static std::uint32_t ARM_TRAMPOLINE_ASM[] = {
-        0xE51FF004,         // 0: ldr pc, [pc, #-4]
+        0xE51FF004, // 0: ldr pc, [pc, #-4]
         // constant here
         // 8 bytes in total
     };
@@ -308,33 +308,31 @@ namespace eka2l1::hle {
         const address source_ptr = source_seg->lookup(nullptr, source_export);
         const address dest_ptr = dest_seg->lookup(nullptr, dest_export);
 
-        std::uint8_t *source_ptr_host = reinterpret_cast<std::uint8_t*>(mem->
-            get_real_pointer(source_ptr & ~1));
-        
+        std::uint8_t *source_ptr_host = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(source_ptr & ~1));
+
         if (source_ptr & 1) {
             std::memcpy(source_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
-            
+
             // It's thumb
             // Hope it's big enough
             if (((source_ptr & ~1) & 3) == 0) {
                 source_ptr_host -= 2;
             }
 
-            *reinterpret_cast<std::uint32_t*>(source_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = dest_ptr;
+            *reinterpret_cast<std::uint32_t *>(source_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = dest_ptr;
         } else {
             // ARM!!!!!!!!!
             std::memcpy(source_ptr_host, ARM_TRAMPOLINE_ASM, sizeof(ARM_TRAMPOLINE_ASM));
-            *reinterpret_cast<std::uint32_t*>(source_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = dest_ptr;
+            *reinterpret_cast<std::uint32_t *>(source_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = dest_ptr;
         }
     }
 
     static void patch_original_codeseg(common::ini_section &section, memory_system *mem, codeseg_ptr source_seg,
         codeseg_ptr dest_seg) {
-
-        for (auto &pair_node: section) {
+        for (auto &pair_node : section) {
             common::ini_pair *pair = pair_node->get_as<common::ini_pair>();
             const std::uint32_t source_export = pair->key_as<std::uint32_t>();
-            
+
             std::uint32_t dest_export = 0;
             pair->get(&dest_export, 1, 0);
 
@@ -345,7 +343,7 @@ namespace eka2l1::hle {
             }
         }
     }
-    
+
     void lib_manager::load_patch_libraries(const std::string &patch_folder) {
         common::dir_iterator iterator(patch_folder);
         common::dir_entry entry;
@@ -363,7 +361,7 @@ namespace eka2l1::hle {
                 eka2l1::ro_file_stream image_data_stream(e32imgfile.get());
 
                 // Try to load them to ROM section
-                auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
+                auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
 
                 if (!e32img) {
                     // Ignore.
@@ -381,8 +379,8 @@ namespace eka2l1::hle {
 
                 // Relocate imports (yes we want to make codeseg object think this is a ROM image)
                 const std::uint32_t code_delta = code_chunk->base().ptr_address() - e32img->header.code_base;
-                
-                for (auto &export_entry: e32img->ed.syms) {
+
+                for (auto &export_entry : e32img->ed.syms) {
                     export_entry += code_delta;
                 }
 
@@ -404,7 +402,7 @@ namespace eka2l1::hle {
 
                 // Patch out the shared segment first
                 common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
-                
+
                 if (shared_section) {
                     patch_original_codeseg(*shared_section, mem, original_sec, patch_seg);
                 } else {
@@ -436,7 +434,7 @@ namespace eka2l1::hle {
 
                 if (alone_section_name) {
                     common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
-                    
+
                     if (indi_section) {
                         patch_original_codeseg(*indi_section, mem, original_sec, patch_seg);
                     } else {
@@ -460,11 +458,11 @@ namespace eka2l1::hle {
         std::string lib_name;
 
 #define LIB(x) lib_name = #x;
-#define EXPORT(x, y)   \
-sb.push_back(x);
-#define ENDLIB()                                                                        \
-lib_symbols.emplace(lib_name, sb);                                                  \
-sb.clear();
+#define EXPORT(x, y) \
+    sb.push_back(x);
+#define ENDLIB()                       \
+    lib_symbols.emplace(lib_name, sb); \
+    sb.clear();
 
         if (ver == epocver::epoc6) {
             //  #include <hle/epoc6_n.def>
@@ -523,7 +521,7 @@ sb.clear();
         info.sinfo.vendor_id = romimg.header.sec_info.vendor_id;
         info.sinfo.secure_id = romimg.header.sec_info.secure_id;
         info.exception_descriptor = romimg.header.exception_des;
-        info.constant_data = reinterpret_cast<std::uint8_t*>(mem->get_real_pointer(romimg.header.data_address));
+        info.constant_data = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(romimg.header.data_address));
 
         auto cs = kern->create<kernel::codeseg>("codeseg", info);
         cs->attach(pr);
@@ -547,18 +545,18 @@ sb.clear();
                 for (uint16_t i = 0; i < ref_table->num_entries; i++) {
                     // Dig UID
                     loader::rom_image_header *ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
-                                                                .get(mem);
+                                                               .get(mem);
 
                     if (auto ref_seg = kern->pull_codeseg_by_ep(ref_header->entry_point)) {
                         // Add ref
                         acs->add_dependency(ref_seg);
                     } else {
                         // TODO: Supply right size. The loader doesn't care about size right now
-                        common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem), 
+                        common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem),
                             0xFFFF);
 
                         // Load new romimage and add dependency
-                        loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&buf_stream), mem);
+                        loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem);
                         acs->add_dependency(load_as_romimg(rimg, pr));
                     }
                 }
@@ -586,7 +584,7 @@ sb.clear();
 
                 eka2l1::ro_file_stream image_data_stream(f.get());
 
-                auto parse_result = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
+                auto parse_result = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
                 if (parse_result != std::nullopt) {
                     f->close();
                     result.first = std::move(parse_result);
@@ -595,7 +593,7 @@ sb.clear();
                 }
 
                 image_data_stream.seek(0, common::seek_where::beg);
-                auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&image_data_stream), mem);
+                auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem);
                 if (parse_result_2 != std::nullopt) {
                     f->close();
                     result.second = std::move(parse_result_2);
@@ -637,18 +635,18 @@ sb.clear();
                 if (!f) {
                     return nullptr;
                 }
-            
+
                 eka2l1::ro_file_stream image_data_stream(f.get());
 
                 if (entry->media_type == drive_media::rom && io->is_entry_in_rom(lib_path)) {
-                    auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream*>(&image_data_stream), mem);
+                    auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem);
                     if (!romimg) {
                         return nullptr;
                     }
 
                     return load_as_romimg(*romimg, pr, lib_path);
                 } else {
-                    auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream*>(&image_data_stream));
+                    auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
                     if (!e32img) {
                         return nullptr;
                     }

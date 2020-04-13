@@ -17,16 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/screen.h>
-#include <epoc/services/window/window.h>
 #include <epoc/services/window/classes/winbase.h>
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
+#include <epoc/services/window/screen.h>
+#include <epoc/services/window/window.h>
 
 #include <drivers/itc.h>
 
 namespace eka2l1::epoc {
-    struct window_drawer_walker: public window_tree_walker {
+    struct window_drawer_walker : public window_tree_walker {
         drivers::graphics_command_list_builder *builder_;
         std::uint32_t total_redrawed_;
 
@@ -40,7 +40,7 @@ namespace eka2l1::epoc {
                 return false;
             }
 
-            window_user *winuser = reinterpret_cast<window_user*>(win);
+            window_user *winuser = reinterpret_cast<window_user *>(win);
 
             if (!winuser || !winuser->driver_win_id || !winuser->is_visible()) {
                 // No need to redraw this window yet. It doesn't even have any content ready.
@@ -64,7 +64,7 @@ namespace eka2l1::epoc {
 
             // Draw it onto current binding buffer
             builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(winuser->pos, { 0, 0 }),
-                eka2l1::rect({0, 0}, winuser->size), 0);
+                eka2l1::rect({ 0, 0 }, winuser->size), 0);
 
             total_redrawed_++;
 
@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
         }
     };
 
-    screen::screen(const int number, epoc::config::screen &scr_conf) 
+    screen::screen(const int number, epoc::config::screen &scr_conf)
         : number(number)
         , screen_texture(0)
         , dsa_texture(0)
@@ -102,12 +102,12 @@ namespace eka2l1::epoc {
         // Done! Unbind and submit this to the driver
         cmd_builder->bind_bitmap(0);
     }
-    
+
     void screen::redraw(drivers::graphics_driver *driver) {
         if (!screen_texture) {
             set_screen_mode(driver, crr_mode);
         }
-    
+
         // Make command list first, and bind our screen bitmap
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
@@ -127,10 +127,10 @@ namespace eka2l1::epoc {
         driver->submit_command_list(*cmd_list);
     }
 
-    const void screen::get_max_num_colors(int& colors, int& greys) const {
+    const void screen::get_max_num_colors(int &colors, int &greys) const {
         greys = 0;
         colors = get_num_colors_from_display_mode(disp_mode);
-        if (! is_display_mode_color(disp_mode)) {
+        if (!is_display_mode_color(disp_mode)) {
             greys = colors;
             colors = 0;
         }
@@ -144,7 +144,7 @@ namespace eka2l1::epoc {
         if (!screen_texture) {
             // Create new one!
             screen_texture = drivers::create_bitmap(driver, new_size);
-        } else {    
+        } else {
             cmd_builder->resize_bitmap(screen_texture, new_size);
         }
 
@@ -153,14 +153,14 @@ namespace eka2l1::epoc {
     }
 
     static epoc::window_group *find_group_to_focus(epoc::window *root) {
-        epoc::window_group *next_to_focus = reinterpret_cast<epoc::window_group*>(root->child);
+        epoc::window_group *next_to_focus = reinterpret_cast<epoc::window_group *>(root->child);
 
         while (next_to_focus != nullptr) {
             assert(next_to_focus->type == window_kind::group && "The window kind of lvl1 root's child must be window group");
             if (next_to_focus->can_receive_focus())
                 break;
-            
-            next_to_focus = reinterpret_cast<epoc::window_group*>(next_to_focus->sibling);
+
+            next_to_focus = reinterpret_cast<epoc::window_group *>(next_to_focus->sibling);
         }
 
         return next_to_focus;
@@ -221,7 +221,7 @@ namespace eka2l1::epoc {
     void screen::fire_focus_change_callbacks() {
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
-        for (auto &callback: focus_callbacks) {
+        for (auto &callback : focus_callbacks) {
             callback.second(callback.first, focus);
         }
 
@@ -247,7 +247,7 @@ namespace eka2l1::epoc {
 
         return nullptr;
     }
-    
+
     const epoc::config::screen_mode &screen::current_mode() const {
         return *mode_info(crr_mode);
     }

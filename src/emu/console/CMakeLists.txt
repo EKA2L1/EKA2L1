@@ -34,7 +34,7 @@ set_target_properties(console PROPERTIES OUTPUT_NAME eka2l1
 	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin"
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin")
 
-add_dependencies(console scdv mediaclientaudio)
+add_dependencies(console scdv mediaclientaudio mediaclientaudiostream)
 
 if (WIN32)
 	add_custom_command(

@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/player.h>
+#include <common/platform.h>
 #include <drivers/audio/backend/ffmpeg/player_ffmpeg.h>
 #include <drivers/audio/backend/wmf/player_wmf.h>
-#include <common/platform.h>
+#include <drivers/audio/player.h>
 
 #include <cstring>
 
@@ -45,23 +45,23 @@ namespace eka2l1::drivers {
 
         return userdata_.data();
     }
-    
+
     std::unique_ptr<player> new_audio_player(audio_driver *aud, const player_type type) {
         switch (type) {
 #if EKA2L1_PLATFORM(WIN32)
-            case player_type_wmf:
-                return std::make_unique<player_wmf>(aud);
+        case player_type_wmf:
+            return std::make_unique<player_wmf>(aud);
 #endif
-            case player_type_ffmpeg:
-                return std::make_unique<player_ffmpeg>(aud);
+        case player_type_ffmpeg:
+            return std::make_unique<player_ffmpeg>(aud);
 
-            default:
-                break;
+        default:
+            break;
         }
 
         return nullptr;
     }
-    
+
     player_type get_suitable_player_type() {
 #if EKA2L1_PLATFORM(WIN32)
         return player_type_wmf;

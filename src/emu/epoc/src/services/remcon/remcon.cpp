@@ -17,27 +17,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/log.h>
+#include <epoc/services/remcon/controller.h>
 #include <epoc/services/remcon/remcon.h>
 #include <epoc/services/remcon/target.h>
-#include <epoc/services/remcon/controller.h>
 #include <epoc/utils/err.h>
-#include <common/log.h>
 
 namespace eka2l1 {
     remcon_server::remcon_server(eka2l1::system *sys)
         : service::typical_server(sys, "!RemConSrv") {
-
     }
 
     void remcon_server::connect(service::ipc_context &ctx) {
         create_session<remcon_session>(&ctx);
         ctx.set_request_status(epoc::error_none);
     }
-    
+
     remcon_session::remcon_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(svr, client_ss_uid, client_ver)
         , type_(epoc::remcon::client_type_undefined) {
-
     }
 
     void remcon_session::fetch(service::ipc_context *ctx) {
@@ -56,21 +54,20 @@ namespace eka2l1 {
     }
 
     void remcon_session::set_player_type(service::ipc_context *ctx) {
-        std::optional<epoc::remcon::player_type_information> information = ctx->get_arg_packed
-            <epoc::remcon::player_type_information>(1);
-        
+        std::optional<epoc::remcon::player_type_information> information = ctx->get_arg_packed<epoc::remcon::player_type_information>(1);
+
         std::optional<std::string> name = ctx->get_arg<std::string>(2);
 
         if (!information || !name) {
             // On older version of remcon (reversed, it's set client type)
             // First argument is the client type, and that's it
             type_ = static_cast<epoc::remcon::client_type>(*ctx->get_arg<std::int32_t>(0));
-        
+
             switch (type_) {
             case epoc::remcon::client_type_controller:
                 detail_ = std::make_unique<epoc::remcon::controller_session>();
                 break;
-            
+
             case epoc::remcon::client_type_target:
                 detail_ = std::make_unique<epoc::remcon::target_session>();
                 break;
@@ -89,9 +86,9 @@ namespace eka2l1 {
             name_ = "Empty";
 
         LOG_INFO("Remcon session set player type with name: {}, client type: {},"
-            " player type: {}, player subtype: {}",
-            name_, epoc::remcon::client_type_to_string(type_), 
-            epoc::remcon::player_type_to_string(information_.type_), 
+                 " player type: {}, player subtype: {}",
+            name_, epoc::remcon::client_type_to_string(type_),
+            epoc::remcon::player_type_to_string(information_.type_),
             epoc::remcon::player_subtype_to_string(information_.subtype_));
 
         ctx->set_request_status(epoc::error_none);

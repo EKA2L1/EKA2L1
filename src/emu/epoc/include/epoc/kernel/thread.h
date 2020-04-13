@@ -55,10 +55,10 @@ namespace eka2l1 {
         class faker;
     }
 
-    using chunk_ptr = kernel::chunk*;
-    using mutex_ptr = kernel::mutex*;
-    using sema_ptr = kernel::semaphore*;
-    using process_ptr = kernel::process*;
+    using chunk_ptr = kernel::chunk *;
+    using mutex_ptr = kernel::mutex *;
+    using sema_ptr = kernel::semaphore *;
+    using process_ptr = kernel::process *;
 
     namespace kernel {
         using address = std::uint32_t;
@@ -168,7 +168,7 @@ namespace eka2l1 {
             ipc_msg_ptr sync_msg;
 
             void reset_thread_ctx(std::uint32_t entry_point, std::uint32_t stack_top, bool inital);
-            void create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator_ptr, 
+            void create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator_ptr,
                 std::uint32_t name_len, address name_ptr, address epa);
 
             int leave_depth = -1;
@@ -294,7 +294,7 @@ namespace eka2l1 {
             }
 
             kernel::process *owning_process() {
-                return reinterpret_cast<kernel::process*>(owner);
+                return reinterpret_cast<kernel::process *>(owner);
             }
 
             arm::arm_interface::thread_context &get_thread_context() {
@@ -340,6 +340,6 @@ namespace eka2l1 {
             }
         };
 
-        using thread_ptr = kernel::thread*;
+        using thread_ptr = kernel::thread *;
     }
 }

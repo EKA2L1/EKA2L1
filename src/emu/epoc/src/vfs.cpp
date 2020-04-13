@@ -97,7 +97,7 @@ namespace eka2l1 {
         uint64_t size() const override {
             return file.size;
         }
-        
+
         bool valid() override {
             return crr_pos < file.size;
         }
@@ -152,7 +152,7 @@ namespace eka2l1 {
         }
 
         std::uint64_t last_modify_since_1ad() override {
-            return parent->header.time;    
+            return parent->header.time;
         }
 
         std::string get_error_descriptor() override {
@@ -386,7 +386,7 @@ namespace eka2l1 {
             int err_code = common::resize(common::ucs2_to_utf8(physical_path), new_size);
             return (err_code != 0) ? false : true;
         }
-        
+
         std::uint64_t last_modify_since_1ad() override {
             return common::get_last_modifiy_since_ad(physical_path);
         }
@@ -558,7 +558,7 @@ namespace eka2l1 {
 
                 map_path += common::utf8_to_ucs2(common::lowercase_string(firmcode));
             }
-            
+
             if (static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
                 if (common::compare_ignore_case(u"\\system\\libs", vert_path_copy.substr(2, 12)) == 0) {
                     vert_path_copy.replace(2, 12, u"\\sys\\bin");
@@ -1161,7 +1161,7 @@ namespace eka2l1 {
     void ro_file_stream::seek(const std::int64_t amount, common::seek_where wh) {
         f_->seek(amount, static_cast<file_seek_mode>(wh));
     }
-    
+
     bool ro_file_stream::valid() {
         return f_->valid();
     }
@@ -1177,7 +1177,7 @@ namespace eka2l1 {
     std::uint64_t ro_file_stream::size() {
         return f_->size();
     }
-    
+
     std::uint64_t ro_file_stream::read(void *buf, const std::uint64_t read_size) {
         std::size_t result = f_->read_file(buf, static_cast<std::uint32_t>(read_size), 1);
         if (result == static_cast<std::size_t>(-1)) {

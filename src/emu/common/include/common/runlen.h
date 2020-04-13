@@ -74,7 +74,7 @@ namespace eka2l1 {
 
                 while (total_pair > 0) {
                     std::uint8_t total_this_session = (total_pair > 128) ? 127 : static_cast<std::uint8_t>(total_pair - 1);
-                    
+
                     if (dest) {
                         dest->write(&total_this_session, 1);
                         dest->write(bytes, BYTE_COUNT);
@@ -100,7 +100,7 @@ namespace eka2l1 {
                 if (source->valid()) {
                     source->seek(-BYTE_COUNT, common::seek_where::cur);
                 }
-                
+
                 const std::uint64_t total_bytes_repeated = source->tell() - last_position;
                 std::int64_t total_pair = static_cast<std::int64_t>(total_bytes_repeated / BYTE_COUNT);
 
@@ -109,7 +109,7 @@ namespace eka2l1 {
                 }
 
                 std::vector<std::uint8_t> temp_data;
-                
+
                 while (total_pair > 0) {
                     std::int8_t total_this_session = (total_pair > 128) ? -128 : static_cast<std::int8_t>(-total_pair);
 
@@ -171,12 +171,12 @@ namespace eka2l1 {
             } else {
                 std::uint32_t num_bytes_to_copy = static_cast<std::uint32_t>(count * -BYTE_COUNT);
                 num_bytes_to_copy = common::min(num_bytes_to_copy, static_cast<const std::uint32_t>(dest->left()));
-                
+
                 std::vector<std::uint8_t> temp_buf_holder;
                 temp_buf_holder.resize(num_bytes_to_copy);
 
                 source->read(&temp_buf_holder[0], num_bytes_to_copy);
-                dest->write(temp_buf_holder.data(), num_bytes_to_copy);   
+                dest->write(temp_buf_holder.data(), num_bytes_to_copy);
             }
         }
     }

@@ -25,7 +25,7 @@ namespace eka2l1::epoc {
      * 
      * The class manages Symbian's vibration high-levely by mapping vibration to the host.
      */
-    struct vibration_resource: public resource_interface {
+    struct vibration_resource : public resource_interface {
         void execute_command(service::ipc_context &ctx) override;
     };
 }

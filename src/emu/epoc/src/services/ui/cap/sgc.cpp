@@ -47,18 +47,18 @@ namespace eka2l1::epoc::cap {
     bool sgc_server::wg_state::is_legacy_layout() const {
         return flags_.get(FLAG_LEGACY_LAYOUT);
     }
-    
+
     void sgc_server::wg_state::set_understand_partial_foreground(const bool set) {
         if (set)
             flags_.set(FLAG_UNDERSTAND_PARTIAL_FOREGROUND);
         else
             flags_.unset(FLAG_UNDERSTAND_PARTIAL_FOREGROUND);
     }
-    
+
     bool sgc_server::wg_state::understands_partial_foreground() const {
         return flags_.get(FLAG_UNDERSTAND_PARTIAL_FOREGROUND);
     }
-    
+
     void sgc_server::wg_state::set_orientation_specified(const bool set) {
         if (set)
             flags_.set(FLAG_ORIENTATION_SPECIFIED);
@@ -80,7 +80,7 @@ namespace eka2l1::epoc::cap {
     bool sgc_server::wg_state::orientation_landscape() const {
         return flags_.get(FLAG_ORIENTATION_LANDSCAPE);
     }
-    
+
     enum sgc_app_flags {
         SGC_APP_FLAG_FULLSCREEN = 0,
         SGC_APP_FLAG_LEGACY_LAYOUT = 1,
@@ -96,7 +96,7 @@ namespace eka2l1::epoc::cap {
     }
 
     static void update_screen_state_from_wg_callback(void *userdata, epoc::window_group *group) {
-        reinterpret_cast<sgc_server*>(userdata)->update_screen_state_from_wg(group);
+        reinterpret_cast<sgc_server *>(userdata)->update_screen_state_from_wg(group);
         group->scr->add_focus_change_callback(userdata, update_screen_state_from_wg_callback);
     }
 
@@ -108,13 +108,13 @@ namespace eka2l1::epoc::cap {
         }
 
         graphics_driver_ = driver;
-        
+
         orientation_prop_->define(service::property_type::int_data, 0);
         orientation_prop_->first = UIKON_UID;
         orientation_prop_->second = UIK_PREFERRED_ORIENTATION_KEY;
         orientation_prop_->set_int(UIK_ORIENTATION_NORMAL);
 
-        winserv_ = reinterpret_cast<window_server*>(kern->get_by_name<service::server>(WINDOW_SERVER_NAME));
+        winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(WINDOW_SERVER_NAME));
 
         // Add initial callback
         epoc::screen *screens = winserv_->get_screens();
@@ -174,7 +174,7 @@ namespace eka2l1::epoc::cap {
             }
         }
     }
-    
+
     void sgc_server::change_wg_param(const std::uint32_t id, wg_state::wg_state_flags &flags, const std::int32_t sp_layout,
         const std::int32_t sp_flags, const std::int32_t app_screen_mode) {
         wg_state *state = get_wg_state(id, true);

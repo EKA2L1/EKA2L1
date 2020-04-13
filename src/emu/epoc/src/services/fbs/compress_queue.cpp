@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/utils/err.h>
 #include <epoc/services/fbs/compress_queue.h>
 #include <epoc/services/fbs/fbs.h>
+#include <epoc/utils/err.h>
 
 #include <common/log.h>
 #include <common/runlen.h>
@@ -50,10 +50,10 @@ namespace eka2l1 {
         case 8:
             return epoc::bitmap_file_byte_rle_compression;
 
-        // For now, don't support 12
-        //case 12:
-        //    return epoc::bitmap_file_twelve_bit_rle_compression;
-        
+            // For now, don't support 12
+            //case 12:
+            //    return epoc::bitmap_file_twelve_bit_rle_compression;
+
         case 16:
             return epoc::bitmap_file_sixteen_bit_rle_compression;
 
@@ -157,12 +157,12 @@ namespace eka2l1 {
             if (bmp->support_dirty_bitmap) {
                 serv_->free_bitmap(clean_bitmap);
             }
-            
+
             bmp->compress_done_nof.complete(epoc::error_none);
             return;
         }
 
-        std::uint8_t *new_data = reinterpret_cast<std::uint8_t*>(serv_->allocate_large_data(estimated_size));
+        std::uint8_t *new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_large_data(estimated_size));
         const bool compress_result = compress_data(bmp, data_base, new_data, estimated_size);
 
         if (!compress_result) {
@@ -170,7 +170,7 @@ namespace eka2l1 {
 
             // Cleanup
             serv_->free_large_data(new_data);
-            
+
             if (bmp->support_dirty_bitmap) {
                 serv_->free_bitmap(clean_bitmap);
             }
@@ -179,13 +179,12 @@ namespace eka2l1 {
         }
 
         clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - data_base);
-        clean_bitmap->bitmap_->header_.bitmap_size = static_cast<std::uint32_t>(estimated_size +
-            sizeof(loader::sbm_header));
+        clean_bitmap->bitmap_->header_.bitmap_size = static_cast<std::uint32_t>(estimated_size + sizeof(loader::sbm_header));
 
         // Notify dirty bitmaps
         {
             const std::lock_guard<std::mutex> guard(notify_mutex_);
-            for (auto notify: notifies_) {
+            for (auto notify : notifies_) {
                 notify.complete(0);
             }
 
@@ -199,8 +198,7 @@ namespace eka2l1 {
         // Mark old bitmap as dirty
         bmp->bitmap_->settings_.dirty_bitmap(true);
 
-        LOG_TRACE("Bitmap ID {} compressed with ratio {}%, clean bitmap ID {}", bmp->id, static_cast<int>(static_cast<double>(estimated_size) /
-            static_cast<double>(org_size) * 100.0), clean_bitmap->id);
+        LOG_TRACE("Bitmap ID {} compressed with ratio {}%, clean bitmap ID {}", bmp->id, static_cast<int>(static_cast<double>(estimated_size) / static_cast<double>(org_size) * 100.0), clean_bitmap->id);
     }
 
     void compress_queue::run() {

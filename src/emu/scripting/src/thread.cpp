@@ -25,24 +25,24 @@
 #include <scripting/thread.h>
 
 #include <epoc/epoc.h>
-#include <epoc/kernel/thread.h>
 #include <epoc/kernel.h>
+#include <epoc/kernel/thread.h>
 
 namespace scripting = eka2l1::scripting;
 
 namespace eka2l1::scripting {
     thread::thread(uint64_t handle)
-        : thread_handle(reinterpret_cast<eka2l1::kernel::thread*>(handle)) {
+        : thread_handle(reinterpret_cast<eka2l1::kernel::thread *>(handle)) {
     }
 
     std::string thread::get_name() {
         return thread_handle->name();
     }
-    
+
     std::uint32_t thread::get_stack_base() {
         return thread_handle->get_stack_chunk()->base().ptr_address();
     }
-    
+
     std::uint32_t thread::get_heap_base() {
         return thread_handle->get_local_data().heap.ptr_address();
     }
@@ -91,12 +91,12 @@ namespace eka2l1::scripting {
         kernel::process *pr = thread_handle->owning_process();
         return std::make_unique<scripting::process>(reinterpret_cast<uint64_t>(pr));
     }
-    
+
     std::unique_ptr<eka2l1::scripting::thread> get_current_thread() {
         if (get_current_instance()->get_kernel_system()->crr_thread() == nullptr) {
             return nullptr;
         }
-        
+
         return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(
             get_current_instance()->get_kernel_system()->crr_thread()));
     }

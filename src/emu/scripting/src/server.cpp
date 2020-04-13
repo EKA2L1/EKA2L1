@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scripting/server.h>
 #include <epoc/services/server.h>
+#include <scripting/server.h>
 
 namespace eka2l1::scripting {
-    server_wrapper::server_wrapper(std::uint64_t handle) 
-        : srv_(reinterpret_cast<service::server*>(handle)) {
+    server_wrapper::server_wrapper(std::uint64_t handle)
+        : srv_(reinterpret_cast<service::server *>(handle)) {
     }
-    
+
     std::string server_wrapper::get_name() {
         return srv_->name();
     }

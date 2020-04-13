@@ -26,19 +26,19 @@
 #include <pthread.h>
 #endif
 
-#include <common/thread.h>
 #include <common/cvt.h>
+#include <common/thread.h>
 
 namespace eka2l1::common {
 #if (defined(_WIN32) && defined(_MSC_VER))
     static constexpr const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
-#pragma pack(push,8)
+#pragma pack(push, 8)
     typedef struct tagTHREADNAME_INFO {
-        DWORD dwType;       // Must be 0x1000.
-        LPCSTR szName;      // Pointer to name (in user addr space).
-        DWORD dwThreadID;   // Thread ID (-1=caller thread).
-        DWORD dwFlags;      // Reserved for future use, must be zero.
+        DWORD dwType; // Must be 0x1000.
+        LPCSTR szName; // Pointer to name (in user addr space).
+        DWORD dwThreadID; // Thread ID (-1=caller thread).
+        DWORD dwFlags; // Reserved for future use, must be zero.
     } THREADNAME_INFO;
 #pragma pack(pop)
 
@@ -58,13 +58,13 @@ namespace eka2l1::common {
         thread_funcs_loaded = true;
     }
 
-    static void convert_and_set_thread_name_win10(const char* thread_name) {
+    static void convert_and_set_thread_name_win10(const char *thread_name) {
         const std::string thread_name_s(thread_name);
         const std::u16string thread_name_sw = utf8_to_ucs2(thread_name_s);
         set_thread_description(GetCurrentThread(), reinterpret_cast<PCWSTR>(thread_name_sw.c_str()));
     }
 
-    void set_thread_name(const char* thread_name) {
+    void set_thread_name(const char *thread_name) {
         if (!thread_funcs_loaded) {
             load_thread_funcs();
         }
@@ -81,14 +81,13 @@ namespace eka2l1::common {
         info.dwThreadID = GetCurrentThreadId();
         info.dwFlags = 0;
 
-
         __try {
-            RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
-        } __except(EXCEPTION_EXECUTE_HANDLER) {
+            RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR *)&info);
+        } __except (EXCEPTION_EXECUTE_HANDLER) {
         }
     }
 #else
-    void set_thread_name(const char* thread_name) {
+    void set_thread_name(const char *thread_name) {
 #if EKA2L1_PLATFORM(DARWIN)
         pthread_setname_np(thread_name);
 #else

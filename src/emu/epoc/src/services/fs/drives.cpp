@@ -21,9 +21,9 @@
 #include <epoc/services/fs/fs.h>
 #include <epoc/services/fs/std.h>
 
-#include <epoc/vfs.h>
 #include <epoc/epoc.h>
 #include <epoc/utils/err.h>
+#include <epoc/vfs.h>
 
 #include <cwctype>
 
@@ -45,7 +45,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *f = reinterpret_cast<file*>(node->vfs_node.get());
+        file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         drive_number drv = static_cast<drive_number>(std::towlower(f->file_name()[0]) - 'a');
         epoc::fs::drive_info info;
@@ -70,7 +70,7 @@ namespace eka2l1 {
         info->media_att = 0;
 
         if (io_drive.media_type == drive_media::none) {
-            info->type= epoc::fs::media_unknown;
+            info->type = epoc::fs::media_unknown;
             return;
         }
 
@@ -130,8 +130,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<eka2l1::drive> io_drive = 
-            ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+        std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
         if (!io_drive) {
             info->type = epoc::fs::media_unknown;
@@ -254,8 +253,7 @@ namespace eka2l1 {
             return;
         }
 
-        epoc::fs::extended_fs_query_command query_cmd = 
-            static_cast<decltype(query_cmd)>(*ctx->get_arg<std::int32_t>(1));
+        epoc::fs::extended_fs_query_command query_cmd = static_cast<decltype(query_cmd)>(*ctx->get_arg<std::int32_t>(1));
 
         switch (query_cmd) {
         case epoc::fs::extended_fs_query_command::file_system_sub_type: {

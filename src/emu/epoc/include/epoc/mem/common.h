@@ -31,7 +31,7 @@ namespace eka2l1::mem {
         moving,
         multiple
     };
-    
+
     enum {
         MEM_MODEL_CHUNK_REGION_USER_GLOBAL = 1 << 0,
         MEM_MODEL_CHUNK_REGION_USER_LOCAL = 1 << 1,
@@ -54,9 +54,9 @@ namespace eka2l1::mem {
         std::size_t size;
         std::uint32_t flags;
         prot perm;
-        
+
         // Use non-zero value to force the address. Use at your own risk, since this is not checked for overlapping.
-        vm_address addr { 0 };
-        void *host_map { nullptr };        ///< Allow custom host memory mapping to guest.
+        vm_address addr{ 0 };
+        void *host_map{ nullptr }; ///< Allow custom host memory mapping to guest.
     };
 }

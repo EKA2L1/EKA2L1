@@ -37,6 +37,6 @@ namespace eka2l1::epoc {
     }
 
     void *get_data_from_customisation(kernel::process *pr, cdl_customisation *cust, const std::int32_t data_index) {
-        return reinterpret_cast<void**>(cust->impl_.get(pr))[data_index];
+        return reinterpret_cast<void **>(cust->impl_.get(pr))[data_index];
     }
 }

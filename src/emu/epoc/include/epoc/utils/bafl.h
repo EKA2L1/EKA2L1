@@ -28,7 +28,7 @@ namespace eka2l1 {
         /**
          * \brief Get nearest existed language file.
          */
-        std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path, 
+        std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path,
             const language prefered_lang, const drive_number on_drive);
     }
 }

@@ -21,8 +21,8 @@
 
 #include <common/vecx.h>
 #include <drivers/graphics/common.h>
-#include <epoc/services/window/common.h>
 #include <epoc/services/window/classes/config.h>
+#include <epoc/services/window/common.h>
 #include <mutex>
 
 #include <memory>
@@ -52,14 +52,14 @@ namespace eka2l1::epoc {
         // Draw order will be child in front of parent, newer in front of older.
         std::unique_ptr<epoc::window> root;
         drivers::handle screen_texture; ///< Server handle to texture of the screen
-        drivers::handle dsa_texture;    ///< Server handle to the DSA modified part of the screen.
+        drivers::handle dsa_texture; ///< Server handle to the DSA modified part of the screen.
         epoc::display_mode disp_mode;
 
-        epoc::config::screen scr_config;        ///< All mode of this screen
-        std::uint8_t crr_mode;                  ///< The current mode being used by the screen.
-        std::uint8_t physical_mode;             ///< Mode that orientation is normal.
+        epoc::config::screen scr_config; ///< All mode of this screen
+        std::uint8_t crr_mode; ///< The current mode being used by the screen.
+        std::uint8_t physical_mode; ///< Mode that orientation is normal.
 
-        epoc::window_group *focus;              ///< Current window group that is being focused
+        epoc::window_group *focus; ///< Current window group that is being focused
 
         screen *next;
 
@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
         eka2l1::vec2 absolute_pos;
 
         typedef void (*focus_change_callback_handler)(void *userdata, epoc::window_group *focus);
-        using focus_change_callback = std::pair<void*, focus_change_callback_handler>;
+        using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
 
         std::vector<focus_change_callback> focus_callbacks;
 
@@ -86,7 +86,7 @@ namespace eka2l1::epoc {
          * \brief Get the size of this screen, in pixels.
          */
         eka2l1::vec2 size() const;
-        
+
         /**
          * \brief   Retrieve info of current screen mode.
          * \returns Info of current screen mode
@@ -100,7 +100,7 @@ namespace eka2l1::epoc {
 
         const epoc::config::screen_mode *mode_info(const int number) const;
 
-        const void get_max_num_colors(int& colors, int& greys) const;
+        const void get_max_num_colors(int &colors, int &greys) const;
 
         /**
          * \brief Set screen mode.

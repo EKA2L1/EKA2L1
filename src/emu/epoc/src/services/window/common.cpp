@@ -92,7 +92,6 @@ namespace eka2l1::epoc {
         }
     }
 
-
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code) {
         if (scan_code < EStdKeyF1) {
             return keymap[scan_code];

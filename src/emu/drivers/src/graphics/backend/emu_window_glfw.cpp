@@ -33,7 +33,7 @@ void char_callback(GLFWwindow *window, unsigned int c) {
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
-    
+
     if (action == GLFW_PRESS) {
         CALL_IF_VALID(win->button_pressed, win->get_userdata(), key);
     } else if (action == GLFW_RELEASE) {
@@ -81,7 +81,7 @@ void fb_resize_callback(GLFWwindow *window, int width, int height) {
 
 void close_callback(GLFWwindow *window) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
-    CALL_IF_VALID(win->close_hook,  win->get_userdata());
+    CALL_IF_VALID(win->close_hook, win->get_userdata());
 }
 
 namespace eka2l1 {
@@ -171,7 +171,7 @@ namespace eka2l1 {
         void emu_window_glfw3::set_userdata(void *new_userdata) {
             userdata = new_userdata;
         }
-    
+
         void *emu_window_glfw3::get_userdata() {
             return userdata;
         }

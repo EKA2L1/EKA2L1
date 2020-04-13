@@ -31,19 +31,19 @@ namespace eka2l1::epoc {
         ecom_interface_info *interface_info = ecom_->get_interface(cdl_uid);
         std::vector<ecom_implementation_info_ptr> *curr = &interface_info->implementations;
 
-        common::addition_callback_func add_callback = 
-            [&](const std::size_t idx) { 
-                observer_->entry_added(std::u16string(1, drive_to_char16(curr->at(idx)->drv)) 
+        common::addition_callback_func add_callback =
+            [&](const std::size_t idx) {
+                observer_->entry_added(std::u16string(1, drive_to_char16(curr->at(idx)->drv))
                     + u":\\" + common::utf8_to_ucs2(common::to_string(curr->at(idx)->uid, std::hex)) + u".dll");
             };
 
-        common::remove_callback_func rev_callback = 
-            [&](const std::size_t idx) { 
-                observer_->entry_removed(std::u16string(1, drive_to_char16(last[idx]->drv)) 
+        common::remove_callback_func rev_callback =
+            [&](const std::size_t idx) {
+                observer_->entry_removed(std::u16string(1, drive_to_char16(last[idx]->drv))
                     + u":\\" + common::utf8_to_ucs2(common::to_string(last[idx]->uid, std::hex)) + u".dll");
             };
 
-        common::compare_func<ecom_implementation_info_ptr> comp = 
+        common::compare_func<ecom_implementation_info_ptr> comp =
             [](const ecom_implementation_info_ptr &lhs, const ecom_implementation_info_ptr &rhs) {
                 if (lhs->uid < rhs->uid) {
                     return -1;
@@ -61,7 +61,7 @@ namespace eka2l1::epoc {
     }
 
     drive_number cdl_ecom_watcher::get_plugin_drive(const std::u16string &name) {
-        for (auto &plugin: last) {
+        for (auto &plugin : last) {
             if (common::compare_ignore_case(plugin->original_name + u".dll", name) == 0) {
                 return plugin->drv;
             }

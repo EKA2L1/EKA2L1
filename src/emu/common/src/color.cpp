@@ -22,9 +22,11 @@
 
 namespace eka2l1::common::color {
     const vec_rgb get_color(const char *name) {
-        #define COLOR_DECL(declname, r, g, b) if (strcmp(name, #declname) == 0) return declname;
-        #include <common/color.def>
-        #undef COLOR_DECL
+#define COLOR_DECL(declname, r, g, b) \
+    if (strcmp(name, #declname) == 0) \
+        return declname;
+#include <common/color.def>
+#undef COLOR_DECL
 
         return vec_rgb({ 0, 0, 0 });
     }

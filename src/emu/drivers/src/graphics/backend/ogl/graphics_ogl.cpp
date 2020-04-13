@@ -62,7 +62,7 @@ namespace eka2l1::drivers {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
         glBindVertexArray(0);
 
-        // Make fill VAO and VBO        
+        // Make fill VAO and VBO
         glGenVertexArrays(1, &fill_vao);
         glGenBuffers(1, &fill_vbo);
         glBindVertexArray(fill_vao);
@@ -79,11 +79,11 @@ namespace eka2l1::drivers {
         color_loc = sprite_program->get_uniform_location("u_color").value_or(-1);
         proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
-        
+
         color_loc_fill = fill_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_fill = fill_program->get_uniform_location("u_proj").value_or(-1);
         model_loc_fill = fill_program->get_uniform_location("u_model").value_or(-1);
-        
+
         color_loc_mask = mask_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_mask = mask_program->get_uniform_location("u_proj").value_or(-1);
         model_loc_mask = mask_program->get_uniform_location("u_model").value_or(-1);
@@ -118,10 +118,14 @@ namespace eka2l1::drivers {
         glUniform4fv(color_loc_fill, 1, brush_color.elements.data());
 
         static GLfloat fill_verts_default[] = {
-            0.0f, 1.0f,
-            1.0f, 0.0f,
-            0.0f, 0.0f,
-            1.0f, 1.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f,
         };
 
         glBindVertexArray(fill_vao);
@@ -136,7 +140,7 @@ namespace eka2l1::drivers {
 
         glBindVertexArray(0);
     }
-    
+
     void ogl_graphics_driver::draw_bitmap(command_helper &helper) {
         if (!sprite_program) {
             do_init();
@@ -186,10 +190,22 @@ namespace eka2l1::drivers {
         } verts[4];
 
         static GLfloat verts_default[] = {
-            0.0f, 1.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, 1.0f, 1.0f, 1.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
         };
 
         void *vert_pointer = verts_default;
@@ -204,7 +220,7 @@ namespace eka2l1::drivers {
 
             verts[0].coord[0] = source_rect.top.x * texel_width;
             verts[0].coord[1] = (source_rect.top.y + source_rect.size.y) * texel_height;
-            
+
             // Top right
             verts[1].top[0] = 1.0f;
             verts[1].top[1] = 0.0f;
@@ -253,7 +269,7 @@ namespace eka2l1::drivers {
 
         // For unknown reason my intel driver go out for an all out attack and garbage the filter...
         // so i have to set it here...
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);    
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         // Build model matrix
@@ -271,7 +287,7 @@ namespace eka2l1::drivers {
         if (dest_rect.size.x == 0) {
             dest_rect.size.x = source_rect.size.x;
         }
-        
+
         if (dest_rect.size.y == 0) {
             dest_rect.size.y = source_rect.size.y;
         }

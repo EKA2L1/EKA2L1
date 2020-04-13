@@ -19,15 +19,15 @@
 
 #pragma once
 
+#include <epoc/services/context.h>
 #include <epoc/services/server.h>
 #include <epoc/services/session.h>
-#include <epoc/services/context.h>
 #include <epoc/utils/obj.h>
 #include <epoc/utils/version.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -35,18 +35,18 @@
 namespace eka2l1::service {
     using uid = std::uint32_t;
 
-    class normal_object_container: public epoc::object_container {        
+    class normal_object_container : public epoc::object_container {
         using ref_count_object_heap_ptr = std::unique_ptr<epoc::ref_count_object>;
         std::vector<ref_count_object_heap_ptr> objs;
         std::mutex obj_lock;
-        std::atomic<uid> uid_counter {1};
+        std::atomic<uid> uid_counter{ 1 };
 
     public:
         template <typename T>
         T *get(const service::uid id) {
             const std::lock_guard<std::mutex> guard(obj_lock);
 
-            auto result = std::lower_bound(objs.begin(), objs.end(), id, 
+            auto result = std::lower_bound(objs.begin(), objs.end(), id,
                 [](const ref_count_object_heap_ptr &lhs, const service::uid &rhs) {
                     return lhs->id < rhs;
                 });
@@ -55,10 +55,10 @@ namespace eka2l1::service {
                 return nullptr;
             }
 
-            return reinterpret_cast<T*>((*result).get());
+            return reinterpret_cast<T *>((*result).get());
         }
 
-        template <typename T, typename ...Args>
+        template <typename T, typename... Args>
         T *make_new(Args... arguments) {
             ref_count_object_heap_ptr obj = std::make_unique<T>(arguments...);
             obj->id = uid_counter++;
@@ -67,9 +67,9 @@ namespace eka2l1::service {
             const std::lock_guard<std::mutex> guard(obj_lock);
             objs.push_back(std::move(obj));
 
-            return reinterpret_cast<T*>(objs.back().get());
+            return reinterpret_cast<T *>(objs.back().get());
         }
-        
+
         decltype(objs)::iterator begin() {
             return objs.begin();
         }
@@ -84,7 +84,7 @@ namespace eka2l1::service {
     class typical_session;
     using typical_session_ptr = std::unique_ptr<typical_session>;
 
-    class typical_server: public server {
+    class typical_server : public server {
         friend class typical_session;
         std::unordered_map<service::uid, typical_session_ptr> sessions;
 
@@ -108,31 +108,30 @@ namespace eka2l1::service {
             if (sessions.find(session_uid) == sessions.end()) {
                 return nullptr;
             }
-            
-            return reinterpret_cast<T*>(&*sessions[session_uid]);
+
+            return reinterpret_cast<T *>(&*sessions[session_uid]);
         }
 
-        template <typename T, typename ...Args>
+        template <typename T, typename... Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
             const service::uid suid = ctx->msg->msg_session->unique_id();
             epoc::version client_version;
             client_version.u32 = ctx->get_arg<std::uint32_t>(0).value();
 
-            sessions.emplace(suid, std::make_unique<T>(
-                reinterpret_cast<typical_server*>(this), suid, client_version, arguments...));
+            sessions.emplace(suid, std::make_unique<T>(reinterpret_cast<typical_server *>(this), suid, client_version, arguments...));
 
             auto &target_session = sessions[suid];
-            return reinterpret_cast<T*>(target_session.get());
+            return reinterpret_cast<T *>(target_session.get());
         }
 
-        template <typename T, typename ...Args>
+        template <typename T, typename... Args>
         T *make_new(Args... arguments) {
             return obj_con.make_new<T, Args...>(arguments...);
         }
 
         template <typename T>
         bool remove(T *obj) {
-            return obj_con.remove(reinterpret_cast<epoc::ref_count_object*>(obj));
+            return obj_con.remove(reinterpret_cast<epoc::ref_count_object *>(obj));
         }
 
         explicit typical_server(system *sys, const std::string name);
@@ -140,7 +139,7 @@ namespace eka2l1::service {
 
         void disconnect(service::ipc_context &ctx) override;
     };
-    
+
     class typical_session {
         typical_server *svr_;
 
@@ -151,19 +150,21 @@ namespace eka2l1::service {
 
     public:
         explicit typical_session(typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
-            : svr_(svr), client_ss_uid_(client_ss_uid), ver_(client_ver) {
+            : svr_(svr)
+            , client_ss_uid_(client_ss_uid)
+            , ver_(client_ver) {
         }
 
         virtual ~typical_session() {}
 
-        template <typename T, typename ...Args>
+        template <typename T, typename... Args>
         T *make_new(Args... arguments) {
             return svr_->make_new<T, Args...>(arguments...);
         }
 
         template <typename T>
         T *server() {
-            return reinterpret_cast<T*>(svr_);
+            return reinterpret_cast<T *>(svr_);
         }
 
         epoc::version &client_version() {

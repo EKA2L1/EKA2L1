@@ -29,7 +29,7 @@ namespace eka2l1::epoc {
     /**
      * \brief Class manages emulated device's lighting.
      */
-    struct light_resource: public resource_interface {
+    struct light_resource : public resource_interface {
         kernel_system *kern_;
 
         explicit light_resource(kernel_system *kern);

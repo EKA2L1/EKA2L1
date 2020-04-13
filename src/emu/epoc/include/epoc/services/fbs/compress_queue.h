@@ -35,7 +35,7 @@ namespace eka2l1 {
      * This queue runs on separate thread.
      */
     class compress_queue {
-        request_queue<fbsbitmap*> queue_;
+        request_queue<fbsbitmap *> queue_;
         fbs_server *serv_;
 
         std::vector<epoc::notify_info> notifies_;

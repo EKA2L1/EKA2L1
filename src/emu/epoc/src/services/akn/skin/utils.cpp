@@ -62,13 +62,12 @@ namespace eka2l1::epoc {
                         return common::utf8_to_ucs2(entry->full_path);
                     }
                 }
-
             }
         }
 
         return std::nullopt;
     }
-    
+
     std::optional<std::u16string> get_resource_path_of_skin(eka2l1::io_system *io, const epoc::pid skin_pid) {
         std::u16string formal_path = u"\\resource\\skins\\";
         formal_path += pid_to_string(skin_pid);

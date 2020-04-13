@@ -21,8 +21,8 @@
 #pragma once
 
 #include <epoc/services/context.h>
-#include <epoc/services/server.h>
 #include <epoc/services/framework.h>
+#include <epoc/services/server.h>
 #include <epoc/utils/des.h>
 
 #include <epoc/ptr.h>
@@ -44,7 +44,7 @@ namespace eka2l1::service {
 namespace eka2l1 {
     static constexpr std::uint32_t FS_UID = 0x100039E3;
     static constexpr std::uint32_t SYSTEM_DRIVE_KEY = 0x10283049;
-    
+
     class io_system;
 
     struct file;
@@ -62,7 +62,7 @@ namespace eka2l1 {
 
     struct file_attrib;
 
-    struct fs_node: public epoc::ref_count_object {
+    struct fs_node : public epoc::ref_count_object {
         io_component_ptr vfs_node;
         file_attrib *attrib;
 
@@ -70,8 +70,8 @@ namespace eka2l1 {
         int open_mode;
         bool temporary = false;
 
-        bool exclusive { false };
-        kernel::uid process { 0 };
+        bool exclusive{ false };
+        kernel::uid process{ 0 };
     };
 
     struct fs_path_case_insensitive_hasher {
@@ -81,8 +81,8 @@ namespace eka2l1 {
     struct fs_path_case_insensitive_comparer {
         bool operator()(const utf16_str &x, const utf16_str &y) const;
     };
-    
-    struct fs_server_client: public service::typical_session {
+
+    struct fs_server_client : public service::typical_session {
         std::u16string ss_path;
 
         fs_node *get_file_node(const int handle) {
@@ -103,10 +103,10 @@ namespace eka2l1 {
         void file_drive(service::ipc_context *ctx);
         void file_name(service::ipc_context *ctx);
         void file_full_name(service::ipc_context *ctx);
-        
-        void new_file_subsession(service::ipc_context *ctx, bool overwrite = false, 
+
+        void new_file_subsession(service::ipc_context *ctx, bool overwrite = false,
             bool temporary = false);
-        
+
         void file_size(service::ipc_context *ctx);
         void file_set_size(service::ipc_context *ctx);
 
@@ -120,15 +120,15 @@ namespace eka2l1 {
         void read_dir_packed(service::ipc_context *ctx);
         void read_dir(service::ipc_context *ctx);
         void close_dir(service::ipc_context *ctx);
-        
+
         void session_path(service::ipc_context *ctx);
         void set_session_path(service::ipc_context *ctx);
         void set_session_to_private(service::ipc_context *ctx);
         void create_private_path(service::ipc_context *ctx);
-        
-        int new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, 
+
+        int new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode,
             bool overwrite = false, bool temporary = false);
-                
+
         void entry(service::ipc_context *ctx);
         void is_file_in_rom(service::ipc_context *ctx);
 
@@ -168,14 +168,14 @@ namespace eka2l1 {
     };
 
     struct file_attrib {
-        std::uint32_t flags { 0 };
-        kernel::uid exclusive { 0 };
-        std::uint32_t exclusive_count { 0 };
+        std::uint32_t flags{ 0 };
+        kernel::uid exclusive{ 0 };
+        std::uint32_t exclusive_count{ 0 };
 
         bool is_exlusive() const {
             return flags & static_cast<std::uint32_t>(fs_file_attrib_flag::exclusive);
         }
-        
+
         bool is_readable() const {
             return flags & static_cast<std::uint32_t>(fs_file_attrib_flag::share_read);
         }

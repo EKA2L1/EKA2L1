@@ -160,7 +160,7 @@ namespace eka2l1 {
                 comp = "";
                 return *this;
             }
-            
+
             if (crr_pos < path.length()) {
                 comp = "";
             } else {

@@ -55,8 +55,8 @@ namespace eka2l1 {
         class codeseg;
     }
 
-    using process_ptr = kernel::process*;
-    using codeseg_ptr = kernel::codeseg*;
+    using process_ptr = kernel::process *;
+    using codeseg_ptr = kernel::codeseg *;
 
     // Technically, loader is an user application, but here we treat it as kernel
 

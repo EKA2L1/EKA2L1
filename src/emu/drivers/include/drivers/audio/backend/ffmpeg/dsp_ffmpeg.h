@@ -22,11 +22,11 @@
 #include <drivers/audio/backend/dsp_shared.h>
 
 extern "C" {
-    #include <libavcodec/avcodec.h>
+#include <libavcodec/avcodec.h>
 }
 
 namespace eka2l1::drivers {
-    struct dsp_output_stream_ffmpeg: public dsp_output_stream_shared {
+    struct dsp_output_stream_ffmpeg : public dsp_output_stream_shared {
     protected:
         AVCodecContext *codec_;
 

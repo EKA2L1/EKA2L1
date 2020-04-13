@@ -37,7 +37,7 @@ namespace eka2l1 {
         if (exclusive == 0) {
             exclusive = pr_uid;
             exclusive_count++;
-        
+
             flags |= static_cast<std::uint32_t>(fs_file_attrib_flag::exclusive);
 
             return true;
@@ -51,7 +51,7 @@ namespace eka2l1 {
         exclusive_count++;
         return true;
     }
-    
+
     void file_attrib::decrement_exclusive(const kernel::uid pr_uid) {
         if (exclusive_count == 0) {
             return;
@@ -75,9 +75,9 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return reinterpret_cast<eka2l1::file*>(ss->get_file_node(static_cast<int>(handle))->vfs_node.get());
+        return reinterpret_cast<eka2l1::file *>(ss->get_file_node(static_cast<int>(handle))->vfs_node.get());
     }
-    
+
     void fs_server_client::file_size(service::ipc_context *ctx) {
         std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
 
@@ -95,10 +95,10 @@ namespace eka2l1 {
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
         if (ctx->sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
-            std::uint64_t fsize_u = reinterpret_cast<file*>(node->vfs_node.get())->size();
+            std::uint64_t fsize_u = reinterpret_cast<file *>(node->vfs_node.get())->size();
             ctx->write_arg_pkg<uint64_t>(0, fsize_u);
         } else {
-            std::uint32_t fsize_u = static_cast<std::uint32_t>(reinterpret_cast<file*>(node->vfs_node.get())->size());
+            std::uint32_t fsize_u = static_cast<std::uint32_t>(reinterpret_cast<file *>(node->vfs_node.get())->size());
             ctx->write_arg_pkg<uint32_t>(0, fsize_u);
         }
 
@@ -127,7 +127,7 @@ namespace eka2l1 {
         }
 
         int size = *ctx->get_arg<std::int32_t>(0);
-        file *f = reinterpret_cast<file*>(node->vfs_node.get());
+        file *f = reinterpret_cast<file *>(node->vfs_node.get());
         std::size_t fsize = f->size();
 
         if (size == fsize) {
@@ -173,7 +173,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *f = reinterpret_cast<file*>(node->vfs_node.get());
+        file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         ctx->write_arg(0, eka2l1::filename(f->file_name(), true));
         ctx->set_request_status(epoc::error_none);
@@ -194,7 +194,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *f = reinterpret_cast<file*>(node->vfs_node.get());
+        file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         ctx->write_arg(0, f->file_name());
         ctx->set_request_status(epoc::error_none);
@@ -215,7 +215,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
+        file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         std::optional<std::int32_t> seek_mode = ctx->get_arg<std::int32_t>(1);
         std::optional<std::int32_t> seek_off = ctx->get_arg<std::int32_t>(0);
@@ -272,7 +272,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
+        file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         if (!vfs_file->flush()) {
             ctx->set_request_status(epoc::error_general);
@@ -297,7 +297,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
+        file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
         auto new_path = ctx->get_arg<std::u16string>(0);
 
         if (!new_path) {
@@ -349,7 +349,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
+        file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         if (!(node->open_mode & WRITE_MODE)) {
             ctx->set_request_status(epoc::error_access_denied);
@@ -395,7 +395,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
+        file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         if (!(node->open_mode & READ_MODE)) {
             ctx->set_request_status(epoc::error_access_denied);
@@ -450,7 +450,7 @@ namespace eka2l1 {
             return;
         }
 
-        file *vfs_file = reinterpret_cast<file*>(node->vfs_node.get());
+        file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         // TODO: Let RAII do the work
         // Vtable so buggy
@@ -465,7 +465,7 @@ namespace eka2l1 {
         obj_table_.remove(*handle_res);
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void fs_server_client::file_open(service::ipc_context *ctx) {
         std::optional<std::u16string> name_res = ctx->get_arg<std::u16string>(0);
         std::optional<int> open_mode_res = ctx->get_arg<std::int32_t>(1);
@@ -639,7 +639,7 @@ namespace eka2l1 {
 
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void fs_server_client::new_file_subsession(service::ipc_context *ctx, bool overwrite, bool temporary) {
         std::optional<std::u16string> name_res = ctx->get_arg<std::u16string>(0);
         std::optional<std::int32_t> open_mode_res = ctx->get_arg<std::int32_t>(1);
@@ -679,10 +679,9 @@ namespace eka2l1 {
         ctx->write_arg_pkg<int>(3, handle);
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {
-        int real_mode = org_mode & ~(epoc::fs::file_stream_text | epoc::fs::file_read_async_all | 
-            epoc::fs::file_big_size);
+        int real_mode = org_mode & ~(epoc::fs::file_stream_text | epoc::fs::file_read_async_all | epoc::fs::file_big_size);
 
         // Fetch open mode
         int access_mode = -1;
@@ -698,7 +697,7 @@ namespace eka2l1 {
         auto &node_attrib = server<fs_server>()->attribs[name];
 
         kernel::uid own_pr_uid = sender->owning_process()->unique_id();
-        
+
         if (node_attrib.is_exlusive()) {
             // Check if we can open it
             if (node_attrib.exclusive != own_pr_uid) {
@@ -723,8 +722,7 @@ namespace eka2l1 {
             }
         }
 
-        if (node_attrib.is_readonly() && ((real_mode & epoc::fs::file_share_any) || 
-            (real_mode & epoc::fs::file_share_readers_or_writers))) {
+        if (node_attrib.is_readonly() && ((real_mode & epoc::fs::file_share_any) || (real_mode & epoc::fs::file_share_readers_or_writers))) {
             return epoc::error_access_denied;
         }
 

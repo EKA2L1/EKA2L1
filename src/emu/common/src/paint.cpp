@@ -35,7 +35,7 @@ namespace eka2l1::common {
         buf_.resize(aligned_row_size_in_bytes * size.y);
         size_ = size;
     }
-    
+
     void buffer_24bmp_pixel_plotter::plot_pixel(const eka2l1::vec2 &pos, const eka2l1::vecx<int, 4> &color) {
         if (pos.x < 0 || pos.x >= size_.x || pos.y < 0 || pos.y >= size_.y) {
             return;
@@ -49,16 +49,16 @@ namespace eka2l1::common {
 
     eka2l1::vecx<int, 4> buffer_24bmp_pixel_plotter::get_pixel(const eka2l1::vec2 &pos) {
         return { buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3 + 2],
-                 buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3 + 1],
-                 buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3],
-                 255 };
+            buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3 + 1],
+            buf_[(aligned_row_size_in_bytes * pos.y) + pos.x * 3],
+            255 };
     }
 
     void buffer_24bmp_pixel_plotter::save_to_bmp(wo_stream *stream) {
         common::bmp_header header;
         header.file_size = static_cast<std::uint32_t>(sizeof(common::bmp_header) + sizeof(common::dib_header_v1) + buf_.size());
         header.pixel_array_offset = header.file_size - static_cast<std::uint32_t>(buf_.size());
-    
+
         common::dib_header_v1 dib_header;
         dib_header.bit_per_pixels = 24;
         dib_header.color_plane_count = 1;
@@ -75,7 +75,7 @@ namespace eka2l1::common {
         stream->write(&dib_header, dib_header.header_size);
         stream->write(&buf_[0], static_cast<std::uint32_t>(buf_.size()));
     }
-    
+
     painter::painter(pixel_plotter *plotter)
         : plotter_(plotter) {
     }
@@ -87,7 +87,7 @@ namespace eka2l1::common {
         for (int i = 0; i < size.x; i++) {
             for (int j = 0; j < size.y; j++) {
                 // Plot empty white transparent pixel
-                plotter_->plot_pixel({i, j}, { 255, 255, 255, 255 });
+                plotter_->plot_pixel({ i, j }, { 255, 255, 255, 255 });
             }
         }
     }
@@ -113,8 +113,7 @@ namespace eka2l1::common {
             floody.pop();
 
             // Scan for the beginning of our pixels sequence
-            while (ant_pos.x >= 0 && fill_mode ? (plotter_->get_pixel(ant_pos) != brush_col_) :
-                (plotter_->get_pixel(ant_pos) == old_color)) {
+            while (ant_pos.x >= 0 && fill_mode ? (plotter_->get_pixel(ant_pos) != brush_col_) : (plotter_->get_pixel(ant_pos) == old_color)) {
                 ant_pos.x--;
             }
 
@@ -124,8 +123,7 @@ namespace eka2l1::common {
                 span_above = false;
                 span_below = false;
 
-                while (ant_pos.x < psize.x && fill_mode ? (plotter_->get_pixel(ant_pos) != brush_col_) :
-                    (plotter_->get_pixel(ant_pos) == old_color)) {
+                while (ant_pos.x < psize.x && fill_mode ? (plotter_->get_pixel(ant_pos) != brush_col_) : (plotter_->get_pixel(ant_pos) == old_color)) {
                     // Plot our pixel
                     plotter_->plot_pixel(ant_pos, brush_col_);
 
@@ -137,7 +135,7 @@ namespace eka2l1::common {
                         floody.push(ant_pos + vec2(0, -1));
                         span_above = true;
                     } else if (span_above && ant_pos.y > 0 && (fill_mode ? pix == brush_col_ : pix != old_color)) {
-                        // End of sequeuce, disable span above, check for new sequence to push 
+                        // End of sequeuce, disable span above, check for new sequence to push
                         span_above = false;
                     }
 
@@ -159,7 +157,7 @@ namespace eka2l1::common {
             }
         }
     }
-       
+
     void painter::circle_one_pix(const eka2l1::vec2 &pos, const int radius) {
         int x = 0;
         int y = radius;
@@ -178,7 +176,7 @@ namespace eka2l1::common {
 
         circular_plot();
 
-        int d = 3 - 2 * radius; 
+        int d = 3 - 2 * radius;
 
         while (y >= x) {
             x++;
@@ -193,7 +191,7 @@ namespace eka2l1::common {
             circular_plot();
         }
     }
-    
+
     void painter::circle(const eka2l1::vec2 &pos, const int radius) {
         if (flags & PAINTER_FLAG_FILL_WHEN_DRAW) {
             // Hehe
@@ -222,7 +220,7 @@ namespace eka2l1::common {
 
             ellipse_one_pix(pos, rad + brush_thick_);
             flood(pos, true);
-            
+
             set_brush_color(old_color);
         }
 
@@ -233,7 +231,7 @@ namespace eka2l1::common {
             flood({ pos.x + rad.x + 1, pos.y }, true);
         }
     }
-    
+
     void painter::ellipse_one_pix(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad) {
         float p = (rad.y * rad.y) - (rad.x * rad.x) * (0.25f - rad.y);
         int x = 0;
@@ -256,8 +254,8 @@ namespace eka2l1::common {
         } while (2 * rad.y * rad.y * x < 2 * rad.x * rad.x * y);
 
         // Upper region
-        p = (rad.y * rad.y * (x + 0.5f)  * (x + 0.5f)) + (((y - 1) * (y - 1) - rad.y * rad.y) * rad.x * rad.x);
-        
+        p = (rad.y * rad.y * (x + 0.5f) * (x + 0.5f)) + (((y - 1) * (y - 1) - rad.y * rad.y) * rad.x * rad.x);
+
         do {
             plotter_->plot_pixel({ pos.x + x, pos.y + y }, brush_col_);
             plotter_->plot_pixel({ pos.x + x, pos.y - y }, brush_col_);
@@ -294,8 +292,7 @@ namespace eka2l1::common {
         const vec2 delta = (end - start).abs();
         const int derr = delta.x - delta.y;
 
-        float dlen = (delta.x + delta.y == 0) ? 1 : std::sqrt(static_cast<float>(delta.x * delta.x + 
-            delta.y * delta.y));
+        float dlen = (delta.x + delta.y == 0) ? 1 : std::sqrt(static_cast<float>(delta.x * delta.x + delta.y * delta.y));
 
         int err = derr;
 
@@ -312,16 +309,15 @@ namespace eka2l1::common {
         int e2 = 0;
 
         // Keep drawing between
-        for (width = (width + 1) / 2 ; ; ) {
+        for (width = (width + 1) / 2;;) {
             // Plot base pixel first
-            plotter_->plot_pixel({ base_x, base_y }, brush_col_/* * static_cast<int>(static_cast<float>(err - derr) / dlen - width + 1)*/);
+            plotter_->plot_pixel({ base_x, base_y }, brush_col_ /* * static_cast<int>(static_cast<float>(err - derr) / dlen - width + 1)*/);
 
             e2 = err;
             base_x_2 = base_x;
 
             if (2 * e2 >= -delta.x) {
-                for (e2 += delta.y, base_y_2 = base_y; e2 < dlen * width && (end.y != base_y_2 || delta.x > delta.y)
-                    ; e2 += delta.x) {
+                for (e2 += delta.y, base_y_2 = base_y; e2 < dlen * width && (end.y != base_y_2 || delta.x > delta.y); e2 += delta.x) {
                     plotter_->plot_pixel({ base_x, base_y_2 += sy }, brush_col_ /** static_cast<int>(static_cast<float>(e2) / dlen - width + 1)*/);
                 }
 
@@ -329,15 +325,15 @@ namespace eka2l1::common {
                     break;
                 }
 
-                e2 = err; 
-                err -= delta.y; 
+                e2 = err;
+                err -= delta.y;
                 base_x += sx;
             }
 
             if (2 * e2 <= delta.y) {
-                for (e2 = delta.x - e2; e2 < dlen * width && (end.x != base_x_2 || delta.x < delta.y); 
-                    e2 += delta.y) {
-                    plotter_->plot_pixel({ base_x_2 += sx, base_y }, brush_col_/* * static_cast<int>(static_cast<float>(e2) / dlen - width + 1)*/);
+                for (e2 = delta.x - e2; e2 < dlen * width && (end.x != base_x_2 || delta.x < delta.y);
+                     e2 += delta.y) {
+                    plotter_->plot_pixel({ base_x_2 += sx, base_y }, brush_col_ /* * static_cast<int>(static_cast<float>(e2) / dlen - width + 1)*/);
                 }
 
                 if (base_y == end.y) {
@@ -347,6 +343,6 @@ namespace eka2l1::common {
                 err += delta.x;
                 base_y += sy;
             }
-        } 
+        }
     }
 }

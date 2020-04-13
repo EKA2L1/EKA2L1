@@ -20,10 +20,10 @@
 
 #include <arm/arm_interface.h>
 #include <epoc/epoc.h>
-#include <epoc/kernel/process.h>
-#include <gdbstub/gdbstub.h>
 #include <epoc/kernel.h>
+#include <epoc/kernel/process.h>
 #include <epoc/mem.h>
+#include <gdbstub/gdbstub.h>
 
 namespace eka2l1 {
     // For sample XML files see the GDB source /gdb/features
@@ -319,8 +319,7 @@ namespace eka2l1 {
             bp->second.len, bp->second.addr, static_cast<int>(type));
 
         if (type == breakpoint_type::Execute) {
-            sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), static_cast<std::uint32_t>(
-                bp->second.len));
+            sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), static_cast<std::uint32_t>(bp->second.len));
             sys->get_cpu()->clear_instruction_cache();
         }
 
@@ -450,7 +449,7 @@ namespace eka2l1 {
         } else if (strncmp(query, "fThreadInfo", strlen("fThreadInfo")) == 0) {
             std::string val = "m";
             // TODO: Get list of threads
-            
+
             const auto &threads = sys->get_kernel_system()->threads;
             for (const auto &thread : threads) {
                 val += fmt::format("{:x},", thread->unique_id());
@@ -464,7 +463,7 @@ namespace eka2l1 {
             std::string buffer;
             buffer += "l<?xml version=\"1.0\"?>";
             buffer += "<threads>";
-            
+
             const auto &threads = sys->get_kernel_system()->threads;
             for (const auto &thread : threads) {
                 buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
@@ -528,7 +527,6 @@ namespace eka2l1 {
         }
 
         std::string buffer = fmt::format("T{:02x}", latest_signal);
-
 
         if (full) {
             buffer += fmt::format("{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", PC_REGISTER,
@@ -752,12 +750,12 @@ namespace eka2l1 {
         }
 
         void *ptr = current_thread->owning_process()->get_ptr_on_addr_space(addr);
-        
+
         if (!ptr) {
             return send_reply("E00");
         }
 
-        mem_to_gdb_hex(reply, reinterpret_cast<std::uint8_t*>(ptr), len);
+        mem_to_gdb_hex(reply, reinterpret_cast<std::uint8_t *>(ptr), len);
         reply[len * 2] = '\0';
         send_reply(reinterpret_cast<char *>(reply));
     }
@@ -782,7 +780,7 @@ namespace eka2l1 {
         gdb_hex_to_mem(data.data(), len_pos + 1, len);
 
         void *ptr = current_thread->owning_process()->get_ptr_on_addr_space(addr);
-        
+
         if (!std::memcpy(ptr, data.data(), len)) {
             return send_reply("E00");
         }

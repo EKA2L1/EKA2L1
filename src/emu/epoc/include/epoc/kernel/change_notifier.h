@@ -10,7 +10,7 @@
 
 namespace eka2l1::kernel {
     class thread;
-    
+
     class change_notifier : public eka2l1::kernel::kernel_obj {
         epoc::notify_info req_info_;
 
