@@ -36,9 +36,7 @@ TEST_CASE("get_physical", "vfs") {
     REQUIRE(actual_path_a);
     REQUIRE(actual_path_b);
 
-    REQUIRE(eka2l1::common::compare_ignore_case(*actual_path_a, std::u16string(u"drive_a") + static_cast<char16_t>(eka2l1::get_separator()) 
-        + u"despacito2leak") == 0);
+    REQUIRE(eka2l1::common::compare_ignore_case(*actual_path_a, std::u16string(u"drive_a") + static_cast<char16_t>(eka2l1::get_separator()) + u"despacito2leak") == 0);
 
-    REQUIRE(eka2l1::common::compare_ignore_case(*actual_path_b, std::u16string(u"drive_b") + static_cast<char16_t>(eka2l1::get_separator()) 
-        + u"despacito3leak") == 0);
+    REQUIRE(eka2l1::common::compare_ignore_case(*actual_path_b, std::u16string(u"drive_b") + static_cast<char16_t>(eka2l1::get_separator()) + u"despacito3leak") == 0);
 }

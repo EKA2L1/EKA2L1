@@ -30,7 +30,7 @@ TEST_CASE("base64_encode_unaligned_1", "base64") {
 
     const char *source = "A";
 
-    const std::size_t written = crypt::base64_encode(reinterpret_cast<const std::uint8_t*>(source), 1,
+    const std::size_t written = crypt::base64_encode(reinterpret_cast<const std::uint8_t *>(source), 1,
         &results[0], 4);
 
     REQUIRE(written == 4);
@@ -43,7 +43,7 @@ TEST_CASE("base64_encode_unaligned_2", "base64") {
 
     const char *source = "AcE00012";
 
-    const std::size_t written = crypt::base64_encode(reinterpret_cast<const std::uint8_t*>(source), 8,
+    const std::size_t written = crypt::base64_encode(reinterpret_cast<const std::uint8_t *>(source), 8,
         &results[0], 12);
 
     REQUIRE(written == 12);
@@ -56,7 +56,7 @@ TEST_CASE("base64_encode_good", "base64") {
 
     const char *source = "degad1asb920123";
 
-    const std::size_t written = crypt::base64_encode(reinterpret_cast<const std::uint8_t*>(source), 15,
+    const std::size_t written = crypt::base64_encode(reinterpret_cast<const std::uint8_t *>(source), 15,
         &results[0], 20);
 
     REQUIRE(written == 20);
@@ -69,7 +69,7 @@ TEST_CASE("base64_decode_1", "base64") {
 
     const char *source = "QQ==";
 
-    const std::size_t written = crypt::base64_decode(reinterpret_cast<const std::uint8_t*>(source), 4,
+    const std::size_t written = crypt::base64_decode(reinterpret_cast<const std::uint8_t *>(source), 4,
         &results[0], 3);
 
     REQUIRE(written == 1);
@@ -82,7 +82,7 @@ TEST_CASE("base64_decode_2", "base64") {
 
     const char *source = "QWNFMDAwMTI=";
 
-    const std::size_t written = crypt::base64_decode(reinterpret_cast<const std::uint8_t*>(source), 12,
+    const std::size_t written = crypt::base64_decode(reinterpret_cast<const std::uint8_t *>(source), 12,
         &results[0], 10);
 
     REQUIRE(written == 8);
@@ -95,7 +95,7 @@ TEST_CASE("base64_decode_3", "base64") {
 
     const char *source = "ZGVnYWQxYXNiOTIwMTIz";
 
-    const std::size_t written = crypt::base64_decode(reinterpret_cast<const std::uint8_t*>(source), 20,
+    const std::size_t written = crypt::base64_decode(reinterpret_cast<const std::uint8_t *>(source), 20,
         &results[0], 37);
 
     REQUIRE(written == 15);

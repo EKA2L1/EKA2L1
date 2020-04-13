@@ -20,8 +20,8 @@
 #include <catch2/catch.hpp>
 #include <common/allocator.h>
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
 using namespace eka2l1;
 

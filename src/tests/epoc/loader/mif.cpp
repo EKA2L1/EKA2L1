@@ -33,7 +33,7 @@ TEST_CASE("simple_icon_handler", "mif_file") {
     REQUIRE(f);
 
     eka2l1::ro_file_stream stream(f.get());
-    loader::mif_file miff(reinterpret_cast<common::ro_stream*>(&stream));
+    loader::mif_file miff(reinterpret_cast<common::ro_stream *>(&stream));
 
     miff.do_parse();
 
