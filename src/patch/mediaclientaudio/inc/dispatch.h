@@ -22,17 +22,17 @@
 
 #include <e32std.h>
 
-#define CALL_HLE_DISPATCH(FUNCID)			\
-	asm volatile("mov r0, #" #FUNCID);		\
-	asm volatile("swi #0xFE");
+#define CALL_HLE_DISPATCH(FUNCID)      \
+    asm volatile("mov r0, #" #FUNCID); \
+    asm volatile("swi #0xFE");
 
-#define HLE_DISPATCH_FUNC(ret, name, ...) 	\
-	ret name(const TUint32 func_id, __VA_ARGS__)
+#define HLE_DISPATCH_FUNC(ret, name, ...) \
+    ret name(const TUint32 func_id, __VA_ARGS__)
 
 /// AUDIO PLAYER DISPATCH API
 
 // Create new audio player instance
-HLE_DISPATCH_FUNC(TAny*, EAudioPlayerNewInstance, void*);
+HLE_DISPATCH_FUNC(TAny *, EAudioPlayerNewInstance, void *);
 
 // Notify when a queued audio segment done playing.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus);
@@ -53,7 +53,7 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetBalance, TAny *aInstance);
 
 // Supply raw audio data to media player queue.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC &aAudioData, const TUint32 aEncoding, const TUint32 aFreq,
-	const TUint32 aChannels);
+    const TUint32 aChannels);
 
 // Set volume of the play instance.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetVolume, TAny *aInstance, const TInt aVolume);
@@ -69,5 +69,6 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerStop, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerPause, TAny *aInstance);
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetRepeats, TAny *aInstance, const TInt aTimes, TUint64 aSilenceIntervalMicros);
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerDestroy, TAny *aInstance);
 
 #endif

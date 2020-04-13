@@ -20,8 +20,8 @@
 #ifndef MEDIA_CLIENT_AUDIO_LOG_H_
 #define MEDIA_CLIENT_AUDIO_LOG_H_
 
-#include <e32std.h>
 #include <e32cmn.h>
+#include <e32std.h>
 
 _LIT(MCA_CAT, "MediaClientAudio");
 

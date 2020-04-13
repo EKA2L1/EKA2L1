@@ -21,143 +21,145 @@
 #include <impl.h>
 #include <log.h>
 
+#include <e32cmn.h>
+
 CMMFMdaAudioPlayerUtility::CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
-		: CActive(EPriorityNormal)
-		, iCallback(aCallback)
-		, iPriority(aPriority)
-		, iPref(aPref)
-		, iState(EMdaStateIdle)
-		, iDuration(0) {
-	
+    : CActive(EPriorityNormal)
+    , iCallback(aCallback)
+    , iPriority(aPriority)
+    , iPref(aPref)
+    , iState(EMdaStateIdle)
+    , iDuration(0) {
 }
 
 CMMFMdaAudioPlayerUtility *CMMFMdaAudioPlayerUtility::NewL(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref) {
-	CMMFMdaAudioPlayerUtility *newUtil = new (ELeave) CMMFMdaAudioPlayerUtility(aCallback, aPriority, aPref);
-	CleanupStack::PushL(newUtil);
-	newUtil->ConstructL();
-	CleanupStack::Pop(newUtil);
-	
-	return newUtil;
+    CMMFMdaAudioPlayerUtility *newUtil = new (ELeave) CMMFMdaAudioPlayerUtility(aCallback, aPriority, aPref);
+    CleanupStack::PushL(newUtil);
+    newUtil->ConstructL();
+    CleanupStack::Pop(newUtil);
+
+    return newUtil;
 }
 
 void CMMFMdaAudioPlayerUtility::ConstructL() {
-	iDispatchInstance = EAudioPlayerNewInstance(0, NULL);
-	
-	if (!iDispatchInstance) {
-		User::Leave(KErrGeneral);
-	}
-	
-	CActiveScheduler::Add(this);
+    iDispatchInstance = EAudioPlayerNewInstance(0, NULL);
+
+    if (!iDispatchInstance) {
+        User::Leave(KErrGeneral);
+    }
+
+    CActiveScheduler::Add(this);
 }
 
 CMMFMdaAudioPlayerUtility::~CMMFMdaAudioPlayerUtility() {
-	Deque();
+    Deque();
+    EAudioPlayerDestroy(0, iDispatchInstance);
 }
 
 void CMMFMdaAudioPlayerUtility::RunL() {
-	iCallback.MapcPlayComplete(iStatus.Int());
-	iState = EMdaStateIdle;
+    iCallback.MapcPlayComplete(iStatus.Int());
+    iState = EMdaStateIdle;
 }
 
 void CMMFMdaAudioPlayerUtility::DoCancel() {
-	EAudioPlayerCancelNotifyAnyDone(0, iDispatchInstance);
+    EAudioPlayerCancelNotifyAnyDone(0, iDispatchInstance);
 }
 
 void CMMFMdaAudioPlayerUtility::StartListeningForCompletion() {
-	EAudioPlayerNotifyAnyDone(0, iDispatchInstance, iStatus);
-	SetActive();
+    EAudioPlayerNotifyAnyDone(0, iDispatchInstance, iStatus);
+    SetActive();
 }
 
 void CMMFMdaAudioPlayerUtility::SupplyUrl(const TDesC &aFilename) {
-	if (iState == EMdaStateReady) {
-		User::Leave(KErrInUse);
-	}
+    if (iState == EMdaStateReady) {
+        User::Leave(KErrInUse);
+    }
 
-	TInt duration = EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length());
-	TTimeIntervalMicroSeconds durationObj = TTimeIntervalMicroSeconds(duration);
-	
-	if (duration < KErrNone) {
-		iCallback.MapcInitComplete(duration, TTimeIntervalMicroSeconds(0));
-		return;
-	} else {
-		iCallback.MapcInitComplete(KErrNone, durationObj);
-	}
+    TInt duration = EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length());
+    TTimeIntervalMicroSeconds durationObj = TTimeIntervalMicroSeconds(duration);
 
-	iDuration = durationObj;
+    if (duration < KErrNone) {
+        iCallback.MapcInitComplete(duration, TTimeIntervalMicroSeconds(0));
+        return;
+    } else {
+        iCallback.MapcInitComplete(KErrNone, durationObj);
+    }
+
+    iDuration = durationObj;
 }
 
 void CMMFMdaAudioPlayerUtility::Play() {
-	if (iState == EMdaStateIdle) {	
-		StartListeningForCompletion();
-	}
+    if (iState == EMdaStateIdle) {
+        StartListeningForCompletion();
+    }
 
-	iState = EMdaStatePlay;
-	TInt err = EAudioPlayerPlay(0, iDispatchInstance);
-	
-	if (err != KErrNone) {
-		// An error occured when trying to play. Returns immidiately
-		iCallback.MapcPlayComplete(err);
-	}
+    iState = EMdaStatePlay;
+    TInt err = EAudioPlayerPlay(0, iDispatchInstance);
+
+    if (err != KErrNone) {
+        // An error occured when trying to play. Returns immidiately
+        iCallback.MapcPlayComplete(err);
+    }
 }
 
 void CMMFMdaAudioPlayerUtility::Stop() {
-	iState = EMdaStateIdle;
-	EAudioPlayerStop(0, iDispatchInstance);
-	
-	// Do cancel
-	Cancel();
+    iState = EMdaStateIdle;
+    EAudioPlayerStop(0, iDispatchInstance);
+
+    // Do cancel
+    Cancel();
 }
 
 TInt CMMFMdaAudioPlayerUtility::Pause() {
-	const TInt result = EAudioPlayerPause(0, iDispatchInstance);
-	
-	if (result != KErrNone) {
-		return result;
-	}
-	
-	iState = EMdaStatePause;
-	return KErrNone;
+    const TInt result = EAudioPlayerPause(0, iDispatchInstance);
+
+    if (result != KErrNone) {
+        return result;
+    }
+
+    iState = EMdaStatePause;
+    return KErrNone;
 }
 
 TInt CMMFMdaAudioPlayerUtility::SetVolume(const TInt aNewVolume) {
-	return EAudioPlayerSetVolume(0, iDispatchInstance, aNewVolume);
+    return EAudioPlayerSetVolume(0, iDispatchInstance, aNewVolume);
 }
 
 TInt CMMFMdaAudioPlayerUtility::MaxVolume() {
-	return EAudioPlayerMaxVolume(0, iDispatchInstance);
+    return EAudioPlayerMaxVolume(0, iDispatchInstance);
 }
 
 TInt CMMFMdaAudioPlayerUtility::GetVolume() {
-	return EAudioPlayerGetVolume(0, iDispatchInstance);
+    return EAudioPlayerGetVolume(0, iDispatchInstance);
 }
 
 TTimeIntervalMicroSeconds CMMFMdaAudioPlayerUtility::CurrentPosition() {
-	return EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance);
+    return EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance);
 }
 
 void CMMFMdaAudioPlayerUtility::SetCurrentPosition(const TTimeIntervalMicroSeconds &aPos) {
-	EAudioPlayerSetCurrentPlayPos(0, iDispatchInstance, aPos.Int64());
+    EAudioPlayerSetCurrentPlayPos(0, iDispatchInstance, aPos.Int64());
 }
 
 TInt CMMFMdaAudioPlayerUtility::BitRate(TUint &aBitRate) {
-	TInt bitrate = EAudioPlayerGetCurrentBitRate(0, iDispatchInstance);
-	
-	if (bitrate < KErrNone) {
-		return bitrate;
-	}
-	
-	aBitRate = bitrate;
-	return KErrNone;
+    TInt bitrate = EAudioPlayerGetCurrentBitRate(0, iDispatchInstance);
+
+    if (bitrate < KErrNone) {
+        return bitrate;
+    }
+
+    aBitRate = bitrate;
+    return KErrNone;
 }
 
 TInt CMMFMdaAudioPlayerUtility::GetBalance() {
-	return EAudioPlayerGetBalance(0, iDispatchInstance);
+    return EAudioPlayerGetBalance(0, iDispatchInstance);
 }
 
 TInt CMMFMdaAudioPlayerUtility::SetBalance(const TInt aBalance) {
-	return EAudioPlayerSetBalance(0, iDispatchInstance, aBalance);
+    return EAudioPlayerSetBalance(0, iDispatchInstance, aBalance);
 }
 
 void CMMFMdaAudioPlayerUtility::SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval) {
-	EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64());
+    EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64());
 }

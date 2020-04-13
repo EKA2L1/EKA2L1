@@ -22,60 +22,60 @@
 
 #include <mdaaudiosampleplayer.h>
 
-#include <e32std.h>
 #include <e32base.h>
+#include <e32std.h>
 
 enum TMdaState {
-	EMdaStateIdle = 0,
-	EMdaStatePlay = 1,
-	EMdaStatePause = 2,
-	EMdaStateReady = 3
+    EMdaStateIdle = 0,
+    EMdaStatePlay = 1,
+    EMdaStatePause = 2,
+    EMdaStateReady = 3
 };
 
-class CMMFMdaAudioPlayerUtility: public CActive {
-	TAny *iDispatchInstance;
-	MMdaAudioPlayerCallback &iCallback;
-	TInt iPriority;
-	TMdaPriorityPreference iPref;
-	TMdaState iState;
-	TTimeIntervalMicroSeconds iDuration;
-	
+class CMMFMdaAudioPlayerUtility : public CActive {
+    TAny *iDispatchInstance;
+    MMdaAudioPlayerCallback &iCallback;
+    TInt iPriority;
+    TMdaPriorityPreference iPref;
+    TMdaState iState;
+    TTimeIntervalMicroSeconds iDuration;
+
 public:
-	CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
-	~CMMFMdaAudioPlayerUtility();
+    CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+    ~CMMFMdaAudioPlayerUtility();
 
-	static CMMFMdaAudioPlayerUtility *NewL(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
-	
-	void ConstructL();
+    static CMMFMdaAudioPlayerUtility *NewL(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
 
-	virtual void RunL();
-	virtual void DoCancel();
-	
-	void StartListeningForCompletion();
-	void SupplyUrl(const TDesC &aUrl);
-	
-	void Play();
-	void Stop();
-	
-	TInt Pause();
-	
-	TTimeIntervalMicroSeconds CurrentPosition();
-	void SetCurrentPosition(const TTimeIntervalMicroSeconds &aPos);
-	
-	TInt SetVolume(const TInt aNewVolume);
-	TInt GetVolume();
-	TInt MaxVolume();
-	
-	TInt BitRate(TUint &aBitRate);
-	
-	TInt GetBalance();
-	TInt SetBalance(const TInt aBalance);
-	
-	const TTimeIntervalMicroSeconds &Duration() {
-		return iDuration;
-	}
+    void ConstructL();
 
-	void SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval);
+    virtual void RunL();
+    virtual void DoCancel();
+
+    void StartListeningForCompletion();
+    void SupplyUrl(const TDesC &aUrl);
+
+    void Play();
+    void Stop();
+
+    TInt Pause();
+
+    TTimeIntervalMicroSeconds CurrentPosition();
+    void SetCurrentPosition(const TTimeIntervalMicroSeconds &aPos);
+
+    TInt SetVolume(const TInt aNewVolume);
+    TInt GetVolume();
+    TInt MaxVolume();
+
+    TInt BitRate(TUint &aBitRate);
+
+    TInt GetBalance();
+    TInt SetBalance(const TInt aBalance);
+
+    const TTimeIntervalMicroSeconds &Duration() {
+        return iDuration;
+    }
+
+    void SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval);
 };
 
 #endif

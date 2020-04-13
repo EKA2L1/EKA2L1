@@ -19,114 +19,119 @@
 
 #include <dispatch.h>
 
-HLE_DISPATCH_FUNC(TAny*, EAudioPlayerNewInstance, void*) {
-	CALL_HLE_DISPATCH(0x20)
+HLE_DISPATCH_FUNC(TAny *, EAudioPlayerNewInstance, void *){
+    CALL_HLE_DISPATCH(0x20)
 }
 
 // Notify when a queued audio segment done playing.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus) {
-	(void)aInstance;
-	(void)aStatus;
-	
-	CALL_HLE_DISPATCH(0x21)
+    (void)aInstance;
+    (void)aStatus;
+
+    CALL_HLE_DISPATCH(0x21)
 }
 
 // Supply a media file to the media player queue.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyUrl, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength) {
-	(void)aInstance;
-	(void)aUrl;
-	(void)aUrlLength;
-	
-	CALL_HLE_DISPATCH(0x22);
+    (void)aInstance;
+    (void)aUrl;
+    (void)aUrlLength;
+
+    CALL_HLE_DISPATCH(0x22);
 }
 
 // Supply raw audio data to media player queue.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC &aAudioData, const TUint32 aEncoding, const TUint32 aFreq,
-	const TUint32 aChannels) {
-	(void)aInstance;
-	(void)aAudioData;
-	(void)aEncoding;
-	(void)aFreq;
-	(void)aChannels;
-	
-	CALL_HLE_DISPATCH(0x23)
+    const TUint32 aChannels) {
+    (void)aInstance;
+    (void)aAudioData;
+    (void)aEncoding;
+    (void)aFreq;
+    (void)aChannels;
+
+    CALL_HLE_DISPATCH(0x23)
 }
 
 // Set volume of the play instance.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetVolume, TAny *aInstance, const TInt aVolume) {
-	(void)aInstance;
-	(void)aVolume;
-	
-	CALL_HLE_DISPATCH(0x24)
+    (void)aInstance;
+    (void)aVolume;
+
+    CALL_HLE_DISPATCH(0x24)
 }
 
 // Get current volume of the play instance.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetVolume, TAny *aInstance) {
-	(void)aInstance;
-	CALL_HLE_DISPATCH(0x25)
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x25)
 }
 
 // Get the maximum volume this instance allowed.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerMaxVolume, TAny *aInstance) {
-	(void)aInstance;
-	CALL_HLE_DISPATCH(0x26)
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x26)
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerPlay, TAny *aInstance) {
-	(void)aInstance;
-	CALL_HLE_DISPATCH(0x27)
-	
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x27)
 }
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerStop, TAny *aInstance) {
-	(void)aInstance;
-	CALL_HLE_DISPATCH(0x28)
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x28)
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerPause, TAny *aInstance) {
-	(void)aInstance;
-	CALL_HLE_DISPATCH(0x29)
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x29)
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerCancelNotifyAnyDone, TAny *aInstance) {
-	(void)aInstance;
-	CALL_HLE_DISPATCH(0x2A)
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x2A)
 }
 
 HLE_DISPATCH_FUNC(TUint64, EAudioPlayerGetCurrentPlayPos, TAny *aInstance) {
-	(void)aInstance;
-	CALL_HLE_DISPATCH(0x2B)
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x2B)
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetCurrentPlayPos, TAny *aInstance, TInt64 aMicroseconds) {
-	(void)aInstance;
-	(void)aMicroseconds;
-	
-	CALL_HLE_DISPATCH(0x2C)
+    (void)aInstance;
+    (void)aMicroseconds;
+
+    CALL_HLE_DISPATCH(0x2C)
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetCurrentBitRate, TAny *aInstance) {
-	(void)aInstance;
-	
-	CALL_HLE_DISPATCH(0x2D)
+    (void)aInstance;
+
+    CALL_HLE_DISPATCH(0x2D)
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetBalance, TAny *aInstance, TInt aBalance) {
-	(void)aInstance;
-	(void)aBalance;
-	
-	CALL_HLE_DISPATCH(0x2E);
+    (void)aInstance;
+    (void)aBalance;
+
+    CALL_HLE_DISPATCH(0x2E);
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetBalance, TAny *aInstance) {
-	(void)aInstance;
-	
-	CALL_HLE_DISPATCH(0x2F);
+    (void)aInstance;
+
+    CALL_HLE_DISPATCH(0x2F);
 }
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetRepeats, TAny *aInstance, const TInt aTimes, TUint64 aSilenceIntervalMicros) {
-	(void)aInstance;
-	(void)aTimes;
-	(void)aSilenceIntervalMicros;
+    (void)aInstance;
+    (void)aTimes;
+    (void)aSilenceIntervalMicros;
 
-	CALL_HLE_DISPATCH(0x30);
+    CALL_HLE_DISPATCH(0x30);
+}
+
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerDestroy, TAny *aInstance) {
+    (void)aInstance;
+
+    CALL_HLE_DISPATCH(0x31);
 }
