@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/applist/applist.h>
 #include <epoc/loader/rsc.h>
+#include <epoc/services/applist/applist.h>
 #include <epoc/vfs.h>
 
 #include <common/algorithm.h>
@@ -41,7 +41,7 @@ static bool read_resource_from_file(const char *name, const int id, std::vector<
         return false;
     }
 
-    loader::rsc_file std_rsc(reinterpret_cast<common::ro_stream*>(&std_rsc_raw));
+    loader::rsc_file std_rsc(reinterpret_cast<common::ro_stream *>(&std_rsc_raw));
 
     if (confirm_sig) {
         std_rsc.confirm_signature();
@@ -59,12 +59,13 @@ TEST_CASE("mandatory_check_non_localise", "applist_registeration") {
     common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
     apa_app_registry reg;
 
-    bool result = read_registeration_info(reinterpret_cast<common::ro_stream*>(&app_info_resource_stream),
+    bool result = read_registeration_info(reinterpret_cast<common::ro_stream *>(&app_info_resource_stream),
         reg, drive_c);
 
     REQUIRE(result);
-    REQUIRE(common::compare_ignore_case(reg.mandatory_info.app_path.to_std_string(nullptr), 
-        u"C:\\System\\Programs\\ITried_0xed3e09d5.exe") == 0);
+    REQUIRE(common::compare_ignore_case(reg.mandatory_info.app_path.to_std_string(nullptr),
+                u"C:\\System\\Programs\\ITried_0xed3e09d5.exe")
+        == 0);
     REQUIRE(reg.caps.flags == 0);
     REQUIRE(reg.caps.ability == apa_capability::embeddability::not_embeddable);
     REQUIRE(reg.default_screen_number == 0);
@@ -78,7 +79,7 @@ TEST_CASE("mandatory_check_localise", "applist_registeration") {
     apa_app_registry reg;
 
     bool result = read_localised_registeration_info(
-        reinterpret_cast<common::ro_stream*>(&app_info_resource_stream), reg, drive_c);
+        reinterpret_cast<common::ro_stream *>(&app_info_resource_stream), reg, drive_c);
 
     REQUIRE(result);
     REQUIRE(reg.mandatory_info.short_caption.to_std_string(nullptr) == u"ITried");
