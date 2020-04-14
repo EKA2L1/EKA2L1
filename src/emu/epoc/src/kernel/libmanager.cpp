@@ -310,6 +310,11 @@ namespace eka2l1::hle {
 
         std::uint8_t *source_ptr_host = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(source_ptr & ~1));
 
+        if (!source_ptr_host) {
+            LOG_WARN("Unable to patch export {} of {} due to export not exist", source_export, source_seg->name());
+            return;
+        }
+
         if (source_ptr & 1) {
             std::memcpy(source_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
 
