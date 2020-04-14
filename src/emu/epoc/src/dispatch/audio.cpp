@@ -44,6 +44,17 @@ namespace eka2l1::dispatch {
         return dispatcher->audio_players_.add_object(player_new);
     }
 
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_destroy, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::audio_driver *aud_driver = sys->get_audio_driver();
+
+        if (!dispatcher->audio_players_.remove_object(handle.ptr_address())) {
+            return epoc::error_not_found;
+        }
+
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_url, eka2l1::ptr<void> handle,
         const std::uint16_t *url, const std::uint32_t url_length) {
         std::u16string url_str(reinterpret_cast<const char16_t *>(url), url_length);
@@ -188,6 +199,144 @@ namespace eka2l1::dispatch {
         }
 
         eplayer->set_repeat(times, silence_interval_micros);
+        return epoc::error_none;
+    }
+
+    // DSP streams
+    BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_dsp_out_stream_create, void*) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::audio_driver *aud_driver = sys->get_audio_driver();
+
+        auto stream_new = drivers::new_dsp_out_stream(aud_driver, drivers::dsp_stream_backend_ffmpeg);
+
+        if (!stream_new) {
+            LOG_ERROR("Unable to create new DSP out stream!");
+            return 0;
+        }
+
+        return dispatcher->dsp_streams_.add_object(stream_new);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_destroy, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::audio_driver *aud_driver = sys->get_audio_driver();
+
+        if (!dispatcher->dsp_streams_.remove_object(handle.ptr_address())) {
+            return epoc::error_not_found;
+        }
+
+        return epoc::error_none;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_set_properties, eka2l1::ptr<void> handle, const std::uint32_t freq, const std::uint32_t channels) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!stream->set_properties(freq, channels)) {
+            return epoc::error_not_supported;
+        }
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_start, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!stream->start()) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_none;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_write, eka2l1::ptr<void> handle, const std::uint8_t *data, const std::uint32_t data_size) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream);
+        
+        if (!out_stream.write(data, data_size)) {
+            return epoc::error_not_ready;
+        }
+
+        return epoc::error_none;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_notify_buffer_ready, eka2l1::ptr<void> handle, eka2l1::ptr<epoc::request_status> req) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream);
+
+        epoc::notify_info info;
+
+        info.requester = sys->get_kernel_system()->crr_thread();
+        info.sts = req;
+
+        out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, [](void *userdata) {
+                epoc::notify_info *info = reinterpret_cast<epoc::notify_info*>(userdata);
+                info->complete(epoc::error_none);
+            }, &info, sizeof(epoc::notify_info));
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_max_volume, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream);
+        return static_cast<std::int32_t>(out_stream.max_volume());
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_volume, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream);
+        return static_cast<std::int32_t>(out_stream.volume());
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_set_volume, eka2l1::ptr<void> handle, std::uint32_t vol) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream);
+        
+        if (vol > out_stream.max_volume()) {
+            return epoc::error_argument;
+        }
+
+        out_stream.volume(vol);
         return epoc::error_none;
     }
 }
