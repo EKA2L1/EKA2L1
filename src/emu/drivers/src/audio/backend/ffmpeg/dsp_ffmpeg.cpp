@@ -34,6 +34,11 @@ namespace eka2l1::drivers {
         { PCM8_FOUR_CC_CODE, AV_CODEC_ID_PCM_S8 }
     };
 
+    dsp_output_stream_ffmpeg::dsp_output_stream_ffmpeg(drivers::audio_driver *aud)
+        : dsp_output_stream_shared(aud) {
+        format(PCM16_FOUR_CC_CODE);
+    }
+
     void dsp_output_stream_ffmpeg::get_supported_formats(std::vector<four_cc> &cc_list) {
         for (auto &map_pair : FOUR_CC_TO_FFMPEG_CODEC_MAP) {
             cc_list.push_back(map_pair.first);

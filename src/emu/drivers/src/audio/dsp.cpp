@@ -17,25 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <drivers/audio/backend/dsp_shared.h>
-
-extern "C" {
-#include <libavcodec/avcodec.h>
-}
+#include <drivers/audio/dsp.h>
+#include <drivers/audio/backend/ffmpeg/dsp_ffmpeg.h>
 
 namespace eka2l1::drivers {
-    struct dsp_output_stream_ffmpeg : public dsp_output_stream_shared {
-    protected:
-        AVCodecContext *codec_;
+    std::unique_ptr<dsp_stream> new_dsp_out_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend) {
+        switch (dsp_backend) {
+        case dsp_stream_backend_ffmpeg:
+            return std::make_unique<dsp_output_stream_ffmpeg>(aud);
 
-    public:
-        explicit dsp_output_stream_ffmpeg(drivers::audio_driver *aud);
+        default:
+            break;
+        }
 
-        bool format(const four_cc fmt) override;
-
-        void get_supported_formats(std::vector<four_cc> &cc_list) override;
-        void decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) override;
-    };
+        return nullptr;
+    }
 }

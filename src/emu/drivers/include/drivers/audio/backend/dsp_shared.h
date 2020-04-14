@@ -25,6 +25,7 @@
 #include <common/queue.h>
 
 #include <vector>
+#include <mutex>
 
 namespace eka2l1::drivers {
     using dsp_buffer = std::vector<std::uint8_t>;
@@ -41,6 +42,7 @@ namespace eka2l1::drivers {
         std::size_t pointer_;
 
         std::int16_t last_frame_[2];
+        std::mutex callback_lock_;
 
     public:
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);
@@ -53,8 +55,8 @@ namespace eka2l1::drivers {
         virtual void volume(const std::uint32_t new_volume);
         virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels);
 
-        void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback &callback,
-            void *userdata) override;
+        void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
+            void *userdata, const std::size_t userdata_size) override;
 
         virtual bool start();
         virtual bool stop();

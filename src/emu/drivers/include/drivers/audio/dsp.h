@@ -24,6 +24,8 @@
 #include <vector>
 
 namespace eka2l1::drivers {
+    class audio_driver;
+
     using four_cc = std::uint32_t;
 
     constexpr four_cc make_four_cc(const char c1, const char c2, const char c3, const char c4) {
@@ -41,6 +43,7 @@ namespace eka2l1::drivers {
     };
 
     using dsp_stream_notification_callback = std::function<void(void *)>;
+    using dsp_stream_userdata = std::vector<std::uint8_t>;
 
     struct dsp_stream {
     protected:
@@ -53,12 +56,12 @@ namespace eka2l1::drivers {
         dsp_stream_notification_callback complete_callback_;
         dsp_stream_notification_callback buffer_copied_callback_;
 
-        void *complete_userdata_;
-        void *buffer_copied_userdata_;
+        dsp_stream_userdata complete_userdata_;
+        dsp_stream_userdata buffer_copied_userdata_;
 
     public:
         virtual const std::uint32_t samples_played() const {
-            return samples_played_;
+            return static_cast<std::uint32_t>(samples_played_);
         }
 
         const std::size_t position() const {
@@ -76,14 +79,14 @@ namespace eka2l1::drivers {
             return true;
         }
 
-        virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels);
+        virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels) = 0;
         virtual void get_supported_formats(std::vector<four_cc> &cc_list) = 0;
 
         virtual bool start() = 0;
         virtual bool stop() = 0;
 
-        virtual void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback &callback,
-            void *userdata);
+        virtual void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
+            void *userdata, const std::size_t userdata_size) = 0;
     };
 
     struct dsp_output_stream : public dsp_stream {
@@ -105,4 +108,10 @@ namespace eka2l1::drivers {
             return 100;
         }
     };
+
+    enum dsp_stream_backend {
+        dsp_stream_backend_ffmpeg = 0
+    };
+
+    std::unique_ptr<dsp_stream> new_dsp_out_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend);
 }
