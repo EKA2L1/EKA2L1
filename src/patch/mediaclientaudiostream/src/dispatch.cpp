@@ -18,6 +18,7 @@
  */
 
 #include <dispatch.h>
+#include <log.h>
 
 HLE_DISPATCH_FUNC(TAny *, EAudioDspOutStreamCreate, void *aNot) {
     (void)aNot;

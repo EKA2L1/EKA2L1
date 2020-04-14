@@ -17,18 +17,59 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mda/common/audio.h>
+
 #include <dispatch.h>
 #include <impl.h>
 #include <log.h>
 
 #include <e32cmn.h>
 
+CMMFMdaOutputBufferCopied::CMMFMdaOutputBufferCopied(CMMFMdaAudioOutputStream *aStream)
+    : CActive(EPriorityNormal)
+    , iStream(aStream) {
+
+}
+
+void CMMFMdaOutputBufferCopied::WriteAndWait(TMMFMdaBufferNode *aNode) {
+    if (!aNode) {
+        return;
+    }
+
+    TMMFMdaBufferNode *node = iBufferNodes.First();
+    iStream->WriteL(*node->iBuffer);
+
+    // Register the notifcation for the buffer we just sent
+    iStream->RegisterNotifyBufferSent(iStatus);
+    SetActive();
+}
+
+CMMFMdaOutputBufferCopied::~CMMFMdaOutputBufferCopied() {
+    Deque();
+}
+
+void CMMFMdaOutputBufferCopied::RunL() {
+    // Notify that last buffer has been copied
+    TMMFMdaBufferNode *beforeNode = iBufferNodes.First();
+    iStream->iCallback.MaoscBufferCopied(KErrNone, *beforeNode->iBuffer);
+
+    beforeNode->Deque();
+    delete beforeNode;
+
+    WriteAndWait(iBufferNodes.First());
+}
+
+void CMMFMdaOutputBufferCopied::DoCancel() {
+    iStream->CancelRegisterNotifyBufferSent();
+}
+
 /// AUDIO OUTPUT STREAM
 CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
     : iCallback(aCallback)
     , iPriority(aPriority)
     , iPref(aPref)
-    , iState(EMdaStateReady) {
+    , iState(EMdaStateReady)
+    , iBufferCopied(this) {
 }
 
 CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
@@ -50,6 +91,8 @@ void CMMFMdaAudioOutputStream::ConstructL() {
     if (!iDispatchInstance) {
         User::Leave(KErrGeneral);
     }
+
+    CActiveScheduler::Add(&iBufferCopied);
 }
 
 void CMMFMdaAudioOutputStream::Play() {
@@ -58,9 +101,6 @@ void CMMFMdaAudioOutputStream::Play() {
     } else {
         // Simulates that buffer has been written to server
         iState = EMdaStatePlay;
-
-        // TODO: Should we give it a null des 8?
-        iCallback.MaoscBufferCopied(KErrNone, KNullDesC8);
     }
 }
 
@@ -77,10 +117,21 @@ void CMMFMdaAudioOutputStream::WriteL(const TDesC8 &aData) {
         LogOut(MCA_CAT, _L("Error sending buffer!"));
         return;
     }
+}
 
-    // Notify that the buffer has been copied to our queue
-    if (iState == EMdaStatePlay)
-        iCallback.MaoscBufferCopied(KErrNone, aData);
+void CMMFMdaAudioOutputStream::WriteWithQueueL(const TDesC8 &aData) {
+    TMMFMdaBufferNode *node = new (ELeave) TMMFMdaBufferNode;
+    node->iBuffer = &aData;
+
+    const TBool isFirst = (iBufferCopied.iBufferNodes.IsEmpty());
+
+    iBufferCopied.iBufferNodes.AddLast(*node);
+    
+    if (isFirst) {
+        // We do want a kickstart. Write and wait.
+        // But we still need to push it to the queue so the callback can happens
+        iBufferCopied.WriteAndWait(node);
+    }
 }
 
 TInt CMMFMdaAudioOutputStream::MaxVolume() const {
@@ -109,8 +160,72 @@ TInt CMMFMdaAudioOutputStream::GetVolume() const {
     return result;
 }
 
+static TInt ConvertFreqEnumToNumber(const TInt caps) {
+    switch (caps) {
+    case TMdaAudioDataSettings::ESampleRate8000Hz:
+        return 8000;
+    
+    case TMdaAudioDataSettings::ESampleRate11025Hz:
+        return 11025;
+
+    case TMdaAudioDataSettings::ESampleRate12000Hz:
+        return 12000;
+
+    case TMdaAudioDataSettings::ESampleRate16000Hz:
+        return 16000;
+
+    case TMdaAudioDataSettings::ESampleRate22050Hz:
+        return 22050;
+
+    case TMdaAudioDataSettings::ESampleRate24000Hz:
+        return 24000;
+
+    case TMdaAudioDataSettings::ESampleRate32000Hz:
+        return 32000;
+
+    case TMdaAudioDataSettings::ESampleRate44100Hz:
+        return 44100;
+
+    case TMdaAudioDataSettings::ESampleRate48000Hz:
+        return 48000;
+
+    case TMdaAudioDataSettings::ESampleRate96000Hz:
+        return 96000;
+
+    case TMdaAudioDataSettings::ESampleRate64000Hz:
+        return 64000;
+
+    default:
+        break;
+    }
+
+    return -1;
+}
+
+static TInt ConvertChannelEnumToNum(const TInt caps) {
+    switch (caps) {
+    case TMdaAudioDataSettings::EChannelsMono:
+        return 1;
+
+    case TMdaAudioDataSettings::EChannelsStereo:
+        return 2;
+
+    default:
+        break;
+    }
+
+    return -1;
+}
+
 TInt CMMFMdaAudioOutputStream::SetAudioProperties(const TInt aFreq, const TInt aChannels) {
-    return EAudioDspStreamSetProperties(0, iDispatchInstance, aFreq, aChannels);
+    const TInt realFreq = ConvertFreqEnumToNumber(aFreq);
+    const TInt numChannels = ConvertChannelEnumToNum(aChannels);
+
+    if ((realFreq == -1) || (numChannels == -1)) {
+        return KErrNotSupported;
+    }
+
+    return EAudioDspStreamSetProperties(0, iDispatchInstance, realFreq, numChannels);
 }
 
 TInt CMMFMdaAudioOutputStream::SetBalance(const TInt aBalance) {
@@ -180,4 +295,12 @@ TInt CMMFMdaAudioOutputStream::DataType(TFourCC &aFormat) {
 
     aFormat.Set(cc);
     return KErrNone;
+}
+
+void CMMFMdaAudioOutputStream::RegisterNotifyBufferSent(TRequestStatus &aStatus) {
+    EAudioDspStreamNotifyBufferSentToDriver(0, iDispatchInstance, aStatus);
+}
+
+void CMMFMdaAudioOutputStream::CancelRegisterNotifyBufferSent() {
+    LogOut(MCA_CAT, _L("INFO:: Cancel buffer sent notifcation todo"));
 }

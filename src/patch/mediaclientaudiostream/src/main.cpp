@@ -58,8 +58,12 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
 
     if (result != KErrNone) {
         LogOut(MCA_CAT, _L("ERR:: Unable to set audio properties on stream opening!"));
-        return;
     }
+
+    iProperties->iCallback.MaoscOpenComplete(result);
+
+    if (result != KErrNone)
+        return;
 
     iProperties->Play();
 }
@@ -90,7 +94,7 @@ void CMdaAudioOutputStream::SetPriority(TInt aPriority, TMdaPriorityPreference a
 }
 
 void CMdaAudioOutputStream::WriteL(const TDesC8 &aData) {
-    iProperties->WriteL(aData);
+    iProperties->WriteWithQueueL(aData);
 }
 
 void CMdaAudioOutputStream::Stop() {

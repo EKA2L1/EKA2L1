@@ -32,15 +32,35 @@ enum TMdaState {
     EMdaStateReady = 3
 };
 
+struct TMMFMdaBufferNode: public TDblQueLink {
+    const TDesC8 *iBuffer;
+};
+
+struct CMMFMdaOutputBufferCopied: public CActive {
+    CMMFMdaAudioOutputStream *iStream;
+    TDblQue<TMMFMdaBufferNode> iBufferNodes;
+
+    explicit CMMFMdaOutputBufferCopied(CMMFMdaAudioOutputStream *aStream);
+
+    void WriteAndWait(TMMFMdaBufferNode *aNode);
+    ~CMMFMdaOutputBufferCopied();
+
+    virtual void RunL();
+    virtual void DoCancel();
+};
+
 class CMMFMdaAudioOutputStream {
     TAny *iDispatchInstance;
-    MMdaAudioOutputStreamCallback &iCallback;
     TInt iPriority;
     TMdaPriorityPreference iPref;
     TMdaState iState;
     TTimeIntervalMicroSeconds iPosition;
 
+    CMMFMdaOutputBufferCopied iBufferCopied;
+
 public:
+    MMdaAudioOutputStreamCallback &iCallback;
+
     CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
     ~CMMFMdaAudioOutputStream();
 
@@ -54,6 +74,7 @@ public:
     TInt Resume();
 
     void WriteL(const TDesC8 &aData);
+    void WriteWithQueueL(const TDesC8 &aData);
 
     TInt MaxVolume() const;
     TInt SetVolume(const TInt aNewVolume);
@@ -69,6 +90,9 @@ public:
 
     TInt SetDataType(const TFourCC aFormat);
     TInt DataType(TFourCC &aFormat);
+
+    void RegisterNotifyBufferSent(TRequestStatus &aStatus);
+    void CancelRegisterNotifyBufferSent();
 };
 
 #endif
