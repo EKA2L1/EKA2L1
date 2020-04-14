@@ -66,7 +66,7 @@ namespace eka2l1 {
                 page_dyn;
 
             manager::config_state *conf;
-            std::uint32_t ticks_executed { 0 };
+            std::uint32_t ticks_executed{ 0 };
 
         public:
             timing_system *get_timing_sys() {
@@ -85,7 +85,7 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf, 
+            arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr,
                 gdbstub *stub, debugger_base *debugger);
 

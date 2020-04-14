@@ -18,15 +18,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/cvt.h>
 #include <common/buffer.h>
+#include <common/cvt.h>
 
 #include <epoc/loader/e32img.h>
 
 #include <common/algorithm.h>
-#include <common/bytes.h>
 #include <common/buffer.h>
 #include <common/bytepair.h>
+#include <common/bytes.h>
 #include <common/flate.h>
 #include <common/log.h>
 
@@ -228,7 +228,7 @@ namespace eka2l1::loader {
                 stream->read(&img.header_extended.export_desc_size, 2);
                 stream->read(&img.header_extended.export_desc_type, 1);
                 stream->read(&img.header_extended.export_desc, 1);
-                
+
                 if (common::get_system_endian_type() == common::big_endian) {
                     img.header_extended.exception_des = common::byte_swap(img.header_extended.exception_des);
                     img.header_extended.spare2 = common::byte_swap(img.header_extended.spare2);
@@ -276,8 +276,8 @@ namespace eka2l1::loader {
                 stream->seek(img.header.code_offset, common::seek_where::beg);
                 stream->read(temp.data(), static_cast<uint32_t>(temp.size()));
 
-                common::ro_buf_stream raw_bp_stream(reinterpret_cast<std::uint8_t*>(&temp[0]), temp.size());
-                common::ibytepair_stream bpstream(reinterpret_cast<common::ro_stream*>(&raw_bp_stream));
+                common::ro_buf_stream raw_bp_stream(reinterpret_cast<std::uint8_t *>(&temp[0]), temp.size());
+                common::ibytepair_stream bpstream(reinterpret_cast<common::ro_stream *>(&raw_bp_stream));
 
                 auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
                 auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
@@ -311,7 +311,7 @@ namespace eka2l1::loader {
         parse_export_dir(img);
         parse_iat(img);
 
-        common::ro_buf_stream decompressed_stream(reinterpret_cast<std::uint8_t*>(&img.data[0]), 
+        common::ro_buf_stream decompressed_stream(reinterpret_cast<std::uint8_t *>(&img.data[0]),
             img.data.size());
 
         decompressed_stream.seek(img.header.import_offset, common::seek_where::beg);
@@ -357,10 +357,10 @@ namespace eka2l1::loader {
         }
 
         if (read_reloc) {
-            read_relocations(reinterpret_cast<common::ro_stream*>(&decompressed_stream),
+            read_relocations(reinterpret_cast<common::ro_stream *>(&decompressed_stream),
                 img.code_reloc_section, img.header.code_reloc_offset);
 
-            read_relocations(reinterpret_cast<common::ro_stream*>(&decompressed_stream),
+            read_relocations(reinterpret_cast<common::ro_stream *>(&decompressed_stream),
                 img.data_reloc_section, img.header.data_reloc_offset);
         }
 

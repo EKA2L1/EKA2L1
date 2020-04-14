@@ -45,10 +45,10 @@ TEST_CASE("mbm_header_trailer_and_single_headers", "mbm_file") {
     data.resize(fsize);
     fi.seekg(0, std::ios::beg);
 
-    fi.read(reinterpret_cast<char*>(&data[0]), data.size());
+    fi.read(reinterpret_cast<char *>(&data[0]), data.size());
 
     common::ro_buf_stream stream(&data[0], data.size());
-    loader::mbm_file mbmf(reinterpret_cast<common::ro_stream*>(&stream));
+    loader::mbm_file mbmf(reinterpret_cast<common::ro_stream *>(&stream));
 
     REQUIRE(mbmf.do_read_headers());
     REQUIRE(mbmf.trailer.count == 1);

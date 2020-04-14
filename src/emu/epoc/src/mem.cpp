@@ -25,9 +25,9 @@
 
 #include <arm/arm_interface.h>
 
-#include <epoc/mem/mmu.h>
-#include <epoc/mem/allocator/std_page_allocator.h>
 #include <epoc/mem.h>
+#include <epoc/mem/allocator/std_page_allocator.h>
+#include <epoc/mem/mmu.h>
 #include <epoc/ptr.h>
 
 #include <algorithm>
@@ -46,12 +46,12 @@ namespace eka2l1 {
             common::unmap_file(rom_map_);
         }
     }
-    
+
     void *memory_system::get_real_pointer(const address addr, const mem::asid optional_asid) {
         if (addr == 0) {
             return nullptr;
         }
-        
+
         return impl_->get_host_pointer(optional_asid, addr);
     }
 

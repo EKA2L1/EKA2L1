@@ -98,20 +98,19 @@ namespace eka2l1 {
                 return -2;
             }
 #else
-            if (s1.size() == s2.size()) {
-                for (size_t i = 0; i < s1.size(); i++) {
-                    const wchar_t t1 = towlower(s1[i]);
-                    const wchar_t t2 = towlower(s2[i]);
+            for (size_t i = 0; i < common::min<std::size_t>(s1.size(), s2.size()); i++) {
+                const wchar_t t1 = towlower(s1[i]);
+                const wchar_t t2 = towlower(s2[i]);
 
-                    if (t1 > t2) {
-                        return 1;
-                    } else if (t1 < t2) {
-                        return -1;
-                    }
+                if (t1 > t2) {
+                    return 1;
+                } else if (t1 < t2) {
+                    return -1;
                 }
-
-                return 0;
             }
+
+            if (s1.size() == s2.size())
+                return 0;
 
             if (s1.size() > s2.size()) {
                 return 1;
@@ -163,11 +162,11 @@ namespace eka2l1 {
             }
             return str;
         }
-        
+
         int count_leading_zero(const std::uint32_t v) {
-        #if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
             return __builtin_clz(v);
-        #elif defined(_MSC_VER)
+#elif defined(_MSC_VER)
             DWORD lz = 0;
             _BitScanReverse(&lz, v);
 
@@ -175,7 +174,7 @@ namespace eka2l1 {
                 return static_cast<int>(31 - lz);
 
             return 32;
-        #endif 
+#endif
         }
 
         int find_most_significant_bit_one(const std::uint32_t v) {

@@ -18,15 +18,15 @@
  */
 
 #include <epoc/services/akn/skin/common.h>
-#include <epoc/services/akn/skin/server.h>
 #include <epoc/services/akn/skin/ops.h>
+#include <epoc/services/akn/skin/server.h>
 #include <epoc/services/akn/skin/skn.h>
 #include <epoc/services/akn/skin/utils.h>
 #include <epoc/services/fbs/fbs.h>
 #include <epoc/vfs.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 #include <epoc/utils/err.h>
 
 #include <epoc/epoc.h>
@@ -35,7 +35,7 @@
 #include <manager/manager.h>
 
 namespace eka2l1 {
-    akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version) 
+    akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version) {
     }
 
@@ -69,7 +69,7 @@ namespace eka2l1 {
         const std::optional<std::int32_t> bmp_handle = ctx->get_arg<std::int32_t>(2);
         const std::optional<std::int32_t> msk_handle = ctx->get_arg<std::int32_t>(3);
 
-        if (! (item_id && layout_info && bmp_handle && msk_handle)) {
+        if (!(item_id && layout_info && bmp_handle && msk_handle)) {
             ctx->set_request_status(epoc::error_argument);
             return;
         }
@@ -77,8 +77,7 @@ namespace eka2l1 {
             *item_id,
             *layout_info,
             *bmp_handle,
-            *msk_handle
-        );
+            *msk_handle);
 
         ctx->set_request_status(epoc::error_none);
     }
@@ -121,7 +120,7 @@ namespace eka2l1 {
 
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::akn_skin_server_set_notify_handler: {
@@ -148,17 +147,16 @@ namespace eka2l1 {
             check_icon_config(ctx);
             break;
         }
-        
+
         default: {
-            LOG_ERROR("Unimplemented opcode: {}", epoc::akn_skin_server_opcode_to_str(
-                static_cast<const epoc::akn_skin_server_opcode>(ctx->msg->function)));
+            LOG_ERROR("Unimplemented opcode: {}", epoc::akn_skin_server_opcode_to_str(static_cast<const epoc::akn_skin_server_opcode>(ctx->msg->function)));
 
             break;
         }
         }
     }
 
-    akn_skin_server::akn_skin_server(eka2l1::system *sys) 
+    akn_skin_server::akn_skin_server(eka2l1::system *sys)
         : service::typical_server(sys, "!AknSkinServer")
         , settings_(nullptr) {
     }
@@ -189,39 +187,40 @@ namespace eka2l1 {
         symfile skin_file_obj = io->open_file(skin_path.value(), READ_MODE | BIN_MODE);
         eka2l1::ro_file_stream skin_file_stream(skin_file_obj.get());
 
-        epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream*>(&skin_file_stream));
-        
+        epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream *>(&skin_file_stream));
+
         chunk_maintainer_->import(skin_parser, resource_path.value_or(u""));
     }
 
     void akn_skin_server::do_initialisation() {
         kernel_system *kern = sys->get_kernel_system();
         server_ptr svr = kern->get_by_name<service::server>("!CentralRepository");
-        
-        // Older versions dont use cenrep.
-        settings_ = std::make_unique<epoc::akn_ss_settings>(sys->get_io_system(), !svr ? nullptr :
-            reinterpret_cast<central_repo_server*>(&(*svr)));
 
-        icon_config_map_ = std::make_unique<epoc::akn_skin_icon_config_map>(!svr ? nullptr :
-            reinterpret_cast<central_repo_server*>(&(*svr)), sys->get_manager_system()->get_device_manager(),
+        // Older versions dont use cenrep.
+        settings_ = std::make_unique<epoc::akn_ss_settings>(sys->get_io_system(), !svr ? nullptr : reinterpret_cast<central_repo_server *>(&(*svr)));
+
+        icon_config_map_ = std::make_unique<epoc::akn_skin_icon_config_map>(!svr ? nullptr : reinterpret_cast<central_repo_server *>(&(*svr)), sys->get_manager_system()->get_device_manager(),
             sys->get_io_system(), sys->get_system_language());
 
-        fbss = reinterpret_cast<fbs_server*>(&(*kern->get_by_name<service::server>("!Fontbitmapserver")));
+        fbss = reinterpret_cast<fbs_server *>(&(*kern->get_by_name<service::server>("!Fontbitmapserver")));
 
         // Create skin chunk
         skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,
-            sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
-            0, 160 * 1024, 384 * 1024, prot::read_write, kernel::chunk_type::normal, 
-            kernel::chunk_access::global, kernel::chunk_attrib::none).second;
+                              sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
+                              0, 160 * 1024, 384 * 1024, prot::read_write, kernel::chunk_type::normal,
+                              kernel::chunk_access::global, kernel::chunk_attrib::none)
+                          .second;
 
         // Create semaphores and mutexes
-        skin_chunk_sema_ = kern->create_and_add<kernel::semaphore>(kernel::owner_type::kernel, 
-            "AknsSrvWaitSemaphore", 127, kernel::access_type::global_access).second;
+        skin_chunk_sema_ = kern->create_and_add<kernel::semaphore>(kernel::owner_type::kernel,
+                                   "AknsSrvWaitSemaphore", 127, kernel::access_type::global_access)
+                               .second;
 
         // Render mutex. Use when render skins
         skin_chunk_render_mut_ = kern->create_and_add<kernel::mutex>(kernel::owner_type::kernel,
-            sys->get_timing_system(), "AknsSrvRenderSemaphore", false, 
-            kernel::access_type::global_access).second;
+                                         sys->get_timing_system(), "AknsSrvRenderSemaphore", false,
+                                         kernel::access_type::global_access)
+                                     .second;
 
         std::uint32_t flags = 0;
 
@@ -249,8 +248,7 @@ namespace eka2l1 {
         const epoc::pid item_id,
         const epoc::skn_layout_info layout_info,
         const std::uint32_t bmp_handle,
-        const std::uint32_t msk_handle
-    ) {
+        const std::uint32_t msk_handle) {
         fbsbitmap *bmp = fbss->get<fbsbitmap>(bmp_handle);
         fbsbitmap *msk = msk_handle ? fbss->get<fbsbitmap>(msk_handle) : nullptr;
 

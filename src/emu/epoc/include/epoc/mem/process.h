@@ -37,7 +37,7 @@ namespace eka2l1::mem {
      */
     struct mem_model_process {
         mmu_base *mmu_;
-        
+
     public:
         explicit mem_model_process(mmu_base *mmu)
             : mmu_(mmu) {

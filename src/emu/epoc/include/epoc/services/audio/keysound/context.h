@@ -20,8 +20,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace eka2l1::common {
     class chunkyseri;
@@ -47,7 +47,7 @@ namespace eka2l1::epoc::keysound {
         std::uint16_t priority_;
         std::uint32_t preference_;
 
-        sound_type type_;        
+        sound_type type_;
 
         std::u16string filename_;
         std::vector<std::uint8_t> sequences_;

@@ -36,14 +36,14 @@ int main(int argc, char **argv) {
     if (argc <= 1) {
         LOG_ERROR("No file provided!");
         LOG_INFO("Usage: mbm2bmp [filename].");
-        
+
         return -1;
     }
 
     const char *target_mbm = argv[1];
 
     // Map the file into memory as read-only
-    std::uint8_t *mbm_ptr = reinterpret_cast<std::uint8_t*>(eka2l1::common::map_file(target_mbm));
+    std::uint8_t *mbm_ptr = reinterpret_cast<std::uint8_t *>(eka2l1::common::map_file(target_mbm));
 
     if (!mbm_ptr) {
         LOG_ERROR("Try to map MBM file to memory but failed, exiting...");
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     }
 
     eka2l1::common::ro_buf_stream stream(mbm_ptr, eka2l1::common::file_size(target_mbm));
-    eka2l1::loader::mbm_file mbmf(reinterpret_cast<eka2l1::common::ro_stream*>(&stream));
+    eka2l1::loader::mbm_file mbmf(reinterpret_cast<eka2l1::common::ro_stream *>(&stream));
 
     if (!mbmf.do_read_headers()) {
         LOG_ERROR("Reading MBM header failed! At least one magic value doesn't match!");

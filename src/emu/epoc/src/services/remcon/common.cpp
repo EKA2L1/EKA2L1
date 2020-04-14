@@ -58,7 +58,7 @@ namespace eka2l1::epoc::remcon {
 
         return "Unknown";
     }
-    
+
     const char *client_type_to_string(const client_type type) {
         switch (type) {
         case client_type_undefined:

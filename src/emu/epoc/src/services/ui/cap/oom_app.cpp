@@ -164,8 +164,7 @@ namespace eka2l1 {
             ctx.set_request_status(epoc::error_argument);
         }
 
-        sgc->change_wg_param(params->window_group_id, *reinterpret_cast<epoc::cap::sgc_server::wg_state::wg_state_flags*>(
-            &(params->bit_flags)), params->sp_layout, params->sp_flag, params->app_screen_mode);
+        sgc->change_wg_param(params->window_group_id, *reinterpret_cast<epoc::cap::sgc_server::wg_state::wg_state_flags *>(&(params->bit_flags)), params->sp_layout, params->sp_flag, params->app_screen_mode);
         ctx.set_request_status(epoc::error_none);
     }
 

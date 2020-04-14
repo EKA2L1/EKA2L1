@@ -21,8 +21,8 @@
 
 #include <common/buffer.h>
 #include <common/bytepair.h>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace eka2l1::common {
     class ro_stream;

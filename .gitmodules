@@ -52,3 +52,6 @@
 [submodule "src/external/cubeb"]
 	path = src/external/cubeb
 	url = https://github.com/kinetiknz/cubeb
+[submodule "src/external/ffmpeg"]
+	path = src/external/ffmpeg
+	url = https://github.com/eka2l1/ffmpeg

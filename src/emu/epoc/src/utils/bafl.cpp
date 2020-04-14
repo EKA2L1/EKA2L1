@@ -22,18 +22,18 @@
 #include <epoc/vfs.h>
 
 #include <common/benchmark.h>
-#include <common/path.h>
 #include <common/cvt.h>
+#include <common/path.h>
 
 namespace eka2l1::utils {
-    std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path, 
+    std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path,
         const language prefered_lang, const drive_number on_drive) {
         //common::benchmarker marker(__FUNCTION__);
 
         std::u16string cur_dr_dir = std::u16string(1, drive_to_char16(on_drive)) + u":";
         std::u16string new_path = path;
 
-        if (!eka2l1::is_absolute(new_path, cur_dr_dir, true)) { 
+        if (!eka2l1::is_absolute(new_path, cur_dr_dir, true)) {
             new_path = eka2l1::absolute_path(new_path, cur_dr_dir, true);
         } else {
             const std::u16string root = eka2l1::root_name(new_path, true);

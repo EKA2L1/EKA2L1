@@ -26,17 +26,17 @@
 #include <cstdint>
 
 namespace eka2l1::common {
-    #pragma pack (push, 1)
+#pragma pack(push, 1)
 
     struct bmp_header {
-        std::uint16_t magic { 0x4D42 };
+        std::uint16_t magic{ 0x4D42 };
         std::uint32_t file_size;
         std::uint16_t reserved1;
         std::uint16_t reserved2;
         std::uint32_t pixel_array_offset;
     };
 
-    #pragma pack (pop)
+#pragma pack(pop)
 
     static_assert(sizeof(bmp_header) == 14);
 
@@ -52,7 +52,7 @@ namespace eka2l1::common {
             , bit_per_pixels(0) {
         }
 
-        dib_header_core() 
+        dib_header_core()
             : header_size(sizeof(dib_header_core))
             , color_plane_count(0)
             , bit_per_pixels(0) {
@@ -66,7 +66,7 @@ namespace eka2l1::common {
         std::uint32_t palette_count;
         std::uint32_t important_color_count;
 
-        dib_header_v1() 
+        dib_header_v1()
             : dib_header_core(sizeof(dib_header_v1))
             , uncompressed_size(0)
             , palette_count(0)
@@ -76,7 +76,7 @@ namespace eka2l1::common {
 
     static_assert(sizeof(dib_header_v1) == 40);
 
-    struct dib_header_v2: public dib_header_v1 {
+    struct dib_header_v2 : public dib_header_v1 {
         std::uint32_t red_mask;
         std::uint32_t green_mask;
         std::uint32_t blue_mask;

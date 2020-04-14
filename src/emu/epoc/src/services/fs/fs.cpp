@@ -56,7 +56,8 @@ namespace eka2l1 {
         ss_path = eka2l1::root_name(ctx->msg->own_thr->owning_process()->get_exe_path(), true) + u'\\';
     }
 
-    fs_server::fs_server(system *sys) : service::typical_server(sys, "!FileServer") {
+    fs_server::fs_server(system *sys)
+        : service::typical_server(sys, "!FileServer") {
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());
@@ -69,58 +70,61 @@ namespace eka2l1 {
 
     void fs_server_client::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function & 0xFF) {
-        // For debug purpose, uncomment the log
-        #define HANDLE_CLIENT_IPC(name, op, debug_func_str)                                         \
-            case (op): { name(ctx); /*LOG_TRACE("{}", debug_func_str);*/ break; }
+// For debug purpose, uncomment the log
+#define HANDLE_CLIENT_IPC(name, op, debug_func_str)     \
+    case (op): {                                        \
+        name(ctx); /*LOG_TRACE("{}", debug_func_str);*/ \
+        break;                                          \
+    }
 
-        HANDLE_CLIENT_IPC(entry, epoc::fs_msg_entry, "Fs::Entry");
-        HANDLE_CLIENT_IPC(file_open, epoc::fs_msg_file_open, "Fs::FileOpen");
-        HANDLE_CLIENT_IPC(file_size, epoc::fs_msg_file_size, "Fs::FileSize");
-        HANDLE_CLIENT_IPC(file_set_size, epoc::fs_msg_file_set_size, "Fs::FileSetSize");
-        HANDLE_CLIENT_IPC(file_seek, epoc::fs_msg_file_seek, "Fs::FileSeek");
-        HANDLE_CLIENT_IPC(file_read, epoc::fs_msg_file_read, "Fs::FileRead");
-        HANDLE_CLIENT_IPC(file_write, epoc::fs_msg_file_write, "Fs::FileWrite");
-        HANDLE_CLIENT_IPC(file_flush, epoc::fs_msg_file_flush, "Fs::FileFlush");
-        HANDLE_CLIENT_IPC(file_temp, epoc::fs_msg_file_temp, "Fs::FileTemp");
-        HANDLE_CLIENT_IPC(file_duplicate, epoc::fs_msg_file_duplicate, "Fs::FileDuplicate");
-        HANDLE_CLIENT_IPC(file_adopt, epoc::fs_msg_file_adopt, "Fs::FileAdopt");
-        HANDLE_CLIENT_IPC(file_rename, epoc::fs_msg_file_rename, "Fs::FileRename(Move)");
-        HANDLE_CLIENT_IPC(file_replace, epoc::fs_msg_file_replace, "Fs::FileReplace");
-        HANDLE_CLIENT_IPC(file_create, epoc::fs_msg_file_create, "Fs::FileCreate");
-        HANDLE_CLIENT_IPC(file_close, epoc::fs_msg_file_subclose, "Fs::FileSubClose");
-        HANDLE_CLIENT_IPC(file_drive, epoc::fs_msg_file_drive, "Fs::FileDrive");
-        HANDLE_CLIENT_IPC(file_name, epoc::fs_msg_filename, "Fs::FileName");
-        HANDLE_CLIENT_IPC(file_full_name, epoc::fs_msg_file_fullname, "Fs::FileFullName");
-        HANDLE_CLIENT_IPC(is_file_in_rom, epoc::fs_msg_is_file_in_rom, "Fs::IsFileInRom");
-        HANDLE_CLIENT_IPC(open_dir, epoc::fs_msg_dir_open, "Fs::OpenDir");
-        HANDLE_CLIENT_IPC(close_dir, epoc::fs_msg_dir_subclose, "Fs::CloseDir");
-        HANDLE_CLIENT_IPC(read_dir, epoc::fs_msg_dir_read_one, "Fs::ReadDir");
-        HANDLE_CLIENT_IPC(read_dir_packed, epoc::fs_msg_dir_read_packed, "Fs::ReadDirPacked");
-        HANDLE_CLIENT_IPC(session_path, epoc::fs_msg_session_path, "Fs::SessionPath");
-        HANDLE_CLIENT_IPC(set_session_path, epoc::fs_msg_set_session_path, "Fs::SetSessionPath");
-        HANDLE_CLIENT_IPC(set_session_to_private, epoc::fs_msg_session_to_private, "Fs::SetSessionToPrivate");
-        HANDLE_CLIENT_IPC(create_private_path, epoc::fs_msg_create_private_path, "Fs::CreatePrivatePath");
-        HANDLE_CLIENT_IPC(notify_change_ex, epoc::fs_msg_notify_change_ex, "Fs::NotifyChangeEx");
-        HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
-        HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
-        HANDLE_CLIENT_IPC(delete_entry, epoc::fs_msg_delete, "Fs::Delete");
-        HANDLE_CLIENT_IPC(rename, epoc::fs_msg_rename, "Fs::Rename(Move)");
-        HANDLE_CLIENT_IPC(replace, epoc::fs_msg_replace, "Fs::Replace");
-        HANDLE_CLIENT_IPC(read_file_section, epoc::fs_msg_read_file_section, "Fs::ReadFileSection");
-        HANDLE_CLIENT_IPC(set_should_notify_failure, epoc::fs_msg_set_notify_user, "Fs::SetShouldNotifyFailure");
-        HANDLE_CLIENT_IPC(server<fs_server>()->drive_list, epoc::fs_msg_drive_list, "Fs::DriveList");
-        HANDLE_CLIENT_IPC(server<fs_server>()->drive, epoc::fs_msg_drive, "Fs::Drive");
-        HANDLE_CLIENT_IPC(server<fs_server>()->synchronize_driver, epoc::fs_msg_sync_drive_thread, "Fs::SyncDriveThread");
-        HANDLE_CLIENT_IPC(server<fs_server>()->private_path, epoc::fs_msg_private_path, "Fs::PrivatePath");
-        HANDLE_CLIENT_IPC(server<fs_server>()->volume, epoc::fs_msg_volume, "Fs::Volume");
-        HANDLE_CLIENT_IPC(server<fs_server>()->query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
+            HANDLE_CLIENT_IPC(entry, epoc::fs_msg_entry, "Fs::Entry");
+            HANDLE_CLIENT_IPC(file_open, epoc::fs_msg_file_open, "Fs::FileOpen");
+            HANDLE_CLIENT_IPC(file_size, epoc::fs_msg_file_size, "Fs::FileSize");
+            HANDLE_CLIENT_IPC(file_set_size, epoc::fs_msg_file_set_size, "Fs::FileSetSize");
+            HANDLE_CLIENT_IPC(file_seek, epoc::fs_msg_file_seek, "Fs::FileSeek");
+            HANDLE_CLIENT_IPC(file_read, epoc::fs_msg_file_read, "Fs::FileRead");
+            HANDLE_CLIENT_IPC(file_write, epoc::fs_msg_file_write, "Fs::FileWrite");
+            HANDLE_CLIENT_IPC(file_flush, epoc::fs_msg_file_flush, "Fs::FileFlush");
+            HANDLE_CLIENT_IPC(file_temp, epoc::fs_msg_file_temp, "Fs::FileTemp");
+            HANDLE_CLIENT_IPC(file_duplicate, epoc::fs_msg_file_duplicate, "Fs::FileDuplicate");
+            HANDLE_CLIENT_IPC(file_adopt, epoc::fs_msg_file_adopt, "Fs::FileAdopt");
+            HANDLE_CLIENT_IPC(file_rename, epoc::fs_msg_file_rename, "Fs::FileRename(Move)");
+            HANDLE_CLIENT_IPC(file_replace, epoc::fs_msg_file_replace, "Fs::FileReplace");
+            HANDLE_CLIENT_IPC(file_create, epoc::fs_msg_file_create, "Fs::FileCreate");
+            HANDLE_CLIENT_IPC(file_close, epoc::fs_msg_file_subclose, "Fs::FileSubClose");
+            HANDLE_CLIENT_IPC(file_drive, epoc::fs_msg_file_drive, "Fs::FileDrive");
+            HANDLE_CLIENT_IPC(file_name, epoc::fs_msg_filename, "Fs::FileName");
+            HANDLE_CLIENT_IPC(file_full_name, epoc::fs_msg_file_fullname, "Fs::FileFullName");
+            HANDLE_CLIENT_IPC(is_file_in_rom, epoc::fs_msg_is_file_in_rom, "Fs::IsFileInRom");
+            HANDLE_CLIENT_IPC(open_dir, epoc::fs_msg_dir_open, "Fs::OpenDir");
+            HANDLE_CLIENT_IPC(close_dir, epoc::fs_msg_dir_subclose, "Fs::CloseDir");
+            HANDLE_CLIENT_IPC(read_dir, epoc::fs_msg_dir_read_one, "Fs::ReadDir");
+            HANDLE_CLIENT_IPC(read_dir_packed, epoc::fs_msg_dir_read_packed, "Fs::ReadDirPacked");
+            HANDLE_CLIENT_IPC(session_path, epoc::fs_msg_session_path, "Fs::SessionPath");
+            HANDLE_CLIENT_IPC(set_session_path, epoc::fs_msg_set_session_path, "Fs::SetSessionPath");
+            HANDLE_CLIENT_IPC(set_session_to_private, epoc::fs_msg_session_to_private, "Fs::SetSessionToPrivate");
+            HANDLE_CLIENT_IPC(create_private_path, epoc::fs_msg_create_private_path, "Fs::CreatePrivatePath");
+            HANDLE_CLIENT_IPC(notify_change_ex, epoc::fs_msg_notify_change_ex, "Fs::NotifyChangeEx");
+            HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
+            HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
+            HANDLE_CLIENT_IPC(delete_entry, epoc::fs_msg_delete, "Fs::Delete");
+            HANDLE_CLIENT_IPC(rename, epoc::fs_msg_rename, "Fs::Rename(Move)");
+            HANDLE_CLIENT_IPC(replace, epoc::fs_msg_replace, "Fs::Replace");
+            HANDLE_CLIENT_IPC(read_file_section, epoc::fs_msg_read_file_section, "Fs::ReadFileSection");
+            HANDLE_CLIENT_IPC(set_should_notify_failure, epoc::fs_msg_set_notify_user, "Fs::SetShouldNotifyFailure");
+            HANDLE_CLIENT_IPC(server<fs_server>()->drive_list, epoc::fs_msg_drive_list, "Fs::DriveList");
+            HANDLE_CLIENT_IPC(server<fs_server>()->drive, epoc::fs_msg_drive, "Fs::Drive");
+            HANDLE_CLIENT_IPC(server<fs_server>()->synchronize_driver, epoc::fs_msg_sync_drive_thread, "Fs::SyncDriveThread");
+            HANDLE_CLIENT_IPC(server<fs_server>()->private_path, epoc::fs_msg_private_path, "Fs::PrivatePath");
+            HANDLE_CLIENT_IPC(server<fs_server>()->volume, epoc::fs_msg_volume, "Fs::Volume");
+            HANDLE_CLIENT_IPC(server<fs_server>()->query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
 
         default: {
             LOG_ERROR("Unknown FSServer client opcode {}!", ctx->msg->function);
             break;
         }
 
-        #undef HANDLE_CLIENT_IPC           
+#undef HANDLE_CLIENT_IPC
         }
     }
 
@@ -416,7 +420,7 @@ namespace eka2l1 {
 
         entry.size_high = 0;
         entry.name = fname;
-        entry.modified = epoc::time { entry_hle->last_write };
+        entry.modified = epoc::time{ entry_hle->last_write };
 
         ctx->write_arg_pkg<epoc::fs::entry>(1, entry);
         ctx->set_request_status(epoc::error_none);

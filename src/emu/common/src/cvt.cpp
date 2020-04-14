@@ -50,7 +50,14 @@ namespace eka2l1 {
             std::wstring_convert<std::codecvt_utf8_utf16<char_ucs2>, char_ucs2> converter;
             auto wstr = converter.from_bytes(str);
 
-            return std::u16string(wstr.begin(), wstr.end());
+            std::u16string new_string(wstr.begin(), wstr.end());
+
+            if (new_string.back() == u'\0') {
+                // Try to remove the null bit
+                new_string.pop_back();
+            }
+
+            return new_string;
         }
     }
 }

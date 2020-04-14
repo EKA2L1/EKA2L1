@@ -17,15 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/log.h>
 #include <epoc/dispatch/dispatcher.h>
 #include <epoc/dispatch/screen.h>
-#include <common/log.h>
 
 #include <drivers/graphics/graphics.h>
+#include <epoc/epoc.h>
+#include <epoc/kernel.h>
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/window.h>
-#include <epoc/kernel.h>
-#include <epoc/epoc.h>
 #include <fstream>
 
 namespace eka2l1::dispatch {
@@ -50,7 +50,7 @@ namespace eka2l1::dispatch {
                 auto command_builder = driver->new_command_builder(command_list.get());
 
                 command_builder->update_bitmap(scr->dsa_texture, epoc::get_bpp_from_display_mode(scr->disp_mode),
-                    reinterpret_cast<const char*>(scr->screen_buffer_chunk->host_base()), buffer_size,
+                    reinterpret_cast<const char *>(scr->screen_buffer_chunk->host_base()), buffer_size,
                     { 0, 0 }, screen_size);
 
                 driver->submit_command_list(*command_list);
@@ -59,7 +59,7 @@ namespace eka2l1::dispatch {
             scr = scr->next;
         }
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(void, fast_blit, fast_blit_info *info) {
         kernel::process *crr_process = sys->get_kernel_system()->crr_process();
         info->src_blit_rect.transform_from_symbian_rectangle();
@@ -80,7 +80,7 @@ namespace eka2l1::dispatch {
 
         for (int y = 0; y < info->src_blit_rect.size.y; y++) {
             std::memcpy(dest_blt + (info->dest_point.y + y) * info->dest_stride + info->dest_point.x * bytes_per_pixel,
-                src_blt + + (info->src_blit_rect.top.y + y) * info->src_stride + info->src_blit_rect.top.x * bytes_per_pixel,
+                src_blt + +(info->src_blit_rect.top.y + y) * info->src_stride + info->src_blit_rect.top.x * bytes_per_pixel,
                 bytes_to_copy_per_line);
         }
     }

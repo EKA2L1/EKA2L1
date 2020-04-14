@@ -23,8 +23,8 @@
 #include <common/vecx.h>
 
 #include <drivers/driver.h>
-#include <drivers/itc.h>
 #include <drivers/graphics/common.h>
+#include <drivers/itc.h>
 
 #include <functional>
 #include <memory>

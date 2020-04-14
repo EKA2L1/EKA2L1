@@ -36,13 +36,13 @@
 #include <common/platform.h>
 #include <common/types.h>
 #include <console/cmdhandler.h>
-#include <console/thread.h>
 #include <console/state.h>
+#include <console/thread.h>
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/emu_window.h>
-#include <drivers/graphics/graphics.h>          // Declaration for graphics driver. Happy!
+#include <drivers/graphics/graphics.h> // Declaration for graphics driver. Happy!
 #include <epoc/epoc.h>
 #include <epoc/loader/rom.h>
 #include <manager/config.h>
@@ -65,8 +65,8 @@
 #endif
 
 extern "C" {
-    EKA2L1_EXPORT uint32_t NvOptimusEnablement = 0x00000001;
-    EKA2L1_EXPORT uint32_t AmdPowerXpressRequestHighPerformance = 0x00000001;
+EKA2L1_EXPORT uint32_t NvOptimusEnablement = 0x00000001;
+EKA2L1_EXPORT uint32_t AmdPowerXpressRequestHighPerformance = 0x00000001;
 }
 
 using namespace eka2l1;

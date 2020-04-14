@@ -39,7 +39,7 @@ namespace eka2l1::mem {
         return &pages_.at(idx);
     }
 
-    page_directory::page_directory(const std::size_t page_size, const asid id) 
+    page_directory::page_directory(const std::size_t page_size, const asid id)
         : page_size_(page_size)
         , id_(id) {
         if (page_size == 20) {
@@ -54,7 +54,7 @@ namespace eka2l1::mem {
             page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_12B;
             page_index_mask_ = PAGE_INDEX_MASK_12B;
             page_index_shift_ = PAGE_INDEX_SHIFT_12B;
-            
+
             page_tabs_.resize(TABLE_PER_DIR_12B);
         }
     }
@@ -65,17 +65,17 @@ namespace eka2l1::mem {
         if (!pt) {
             return nullptr;
         }
-        
+
         page_info *pi = pt->get_page_info((addr >> page_index_shift_) & page_index_mask_);
 
         if (!pi || !pi->host_addr) {
             return nullptr;
         }
 
-        return reinterpret_cast<std::uint8_t*>(pi->host_addr) + (addr & offset_mask_);
+        return reinterpret_cast<std::uint8_t *>(pi->host_addr) + (addr & offset_mask_);
     }
 
-    page_info  *page_directory::get_page_info(const vm_address addr) {
+    page_info *page_directory::get_page_info(const vm_address addr) {
         return page_tabs_[addr >> page_table_index_shift_]->get_page_info((addr >> page_index_shift_) & page_index_mask_);
     }
 
@@ -87,7 +87,7 @@ namespace eka2l1::mem {
         if (off == 0xFFFFFFFF) {
             return;
         }
-        
+
         if (off >= offset_mask_) {
             return;
         }

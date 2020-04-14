@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/paint.h>
-#include <common/buffer.h>
 #include <catch2/catch.hpp>
+#include <common/buffer.h>
+#include <common/paint.h>
 
 #include <fstream>
 #include <string>
@@ -33,10 +33,10 @@ TEST_CASE("simple_line", "painter") {
 
     artist.new_art({ 240, 320 });
     artist.set_brush_thickness(3);
-    artist.set_brush_color({0, 191, 255, 0});
+    artist.set_brush_color({ 0, 191, 255, 0 });
 
     // Draw a rectangle
-    artist.vertical_line({ 10, 5 }, 20 );
+    artist.vertical_line({ 10, 5 }, 20);
     artist.horizontal_line({ 10, 25 }, 160);
     artist.vertical_line({ 170, 5 }, 20);
     artist.horizontal_line({ 10, 5 }, 160);
@@ -48,11 +48,11 @@ TEST_CASE("simple_line", "painter") {
     artist.set_brush_thickness(2);
     artist.set_fill_when_draw(true);
     artist.set_brush_color({ 123, 239, 178, 0 });
-    artist.rect(eka2l1::rect { {120, 260}, {40, 40} });
-    
+    artist.rect(eka2l1::rect{ { 120, 260 }, { 40, 40 } });
+
     artist.set_brush_color({ 204, 0, 255, 0 });
-    artist.ellipse({ 120, 120}, { 20, 40 });
+    artist.ellipse({ 120, 120 }, { 20, 40 });
     artist.circle({ 40, 40 }, 33);
 
-    plotter.save_to_bmp(reinterpret_cast<common::wo_stream*>(&std_fstream_paint));
+    plotter.save_to_bmp(reinterpret_cast<common::wo_stream *>(&std_fstream_paint));
 }

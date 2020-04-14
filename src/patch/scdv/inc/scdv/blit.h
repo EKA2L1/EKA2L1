@@ -30,18 +30,19 @@ class CFbsDrawDevice;
 namespace Scdv {
     class MFastBlitBlock {
     public:
-        virtual TInt WriteBitmapBlock(const TPoint& aDest,
-	                                CFbsDrawDevice* aSrcDrawDevice,
-	                                const TRect& aSrcRect) = 0;
+        virtual TInt WriteBitmapBlock(const TPoint &aDest,
+            CFbsDrawDevice *aSrcDrawDevice,
+            const TRect &aSrcRect)
+            = 0;
 
-       			
-        virtual TInt WriteBitmapBlock(const TPoint& aDest,
-                                        const TUint32* aSrcBase,
-                                        TInt aSrcStride,
-                                        const TSize& aSrcSize,
-                                        const TRect& aSrcRect) = 0;
+        virtual TInt WriteBitmapBlock(const TPoint &aDest,
+            const TUint32 *aSrcBase,
+            TInt aSrcStride,
+            const TSize &aSrcSize,
+            const TRect &aSrcRect)
+            = 0;
 
-        virtual const TUint32* Bits() const = 0;
+        virtual const TUint32 *Bits() const = 0;
     };
 
     class MOrientation {

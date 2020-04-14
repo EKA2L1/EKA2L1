@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/framework.h>
 #include <common/log.h>
+#include <epoc/services/framework.h>
 
 namespace eka2l1::service {
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
@@ -40,7 +40,7 @@ namespace eka2l1::service {
         return true;
     }
 
-    typical_server::typical_server(system *sys, const std::string name) 
+    typical_server::typical_server(system *sys, const std::string name)
         : server(sys, name, true, false) {
     }
 
@@ -63,7 +63,7 @@ namespace eka2l1::service {
         ipc_context context;
         context.sys = sys;
         context.msg = process_msg;
-        
+
         auto func = ipc_funcs.find(process_msg->function);
 
         if (func != ipc_funcs.end()) {
@@ -74,6 +74,9 @@ namespace eka2l1::service {
         auto ss_ite = sessions.find(process_msg->msg_session->unique_id());
 
         if (ss_ite == sessions.end()) {
+            LOG_TRACE("Can't find responsible server-side session to client session with ID {}",
+                process_msg->msg_session->unique_id());
+
             return;
         }
 

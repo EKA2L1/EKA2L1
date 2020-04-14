@@ -99,7 +99,6 @@ namespace eka2l1::common {
 
         // Call Detect()
         explicit cpu_info() {
-            
         }
 
         // Turn the cpu info into a string we can show

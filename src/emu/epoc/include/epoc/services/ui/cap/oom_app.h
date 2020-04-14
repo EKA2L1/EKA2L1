@@ -21,9 +21,9 @@
 #include <epoc/services/context.h>
 #include <epoc/services/framework.h>
 #include <epoc/services/server.h>
-#include <epoc/services/window/window.h>
 #include <epoc/services/ui/cap/eiksrv.h>
 #include <epoc/services/ui/cap/sgc.h>
+#include <epoc/services/window/window.h>
 
 #include <mutex>
 
@@ -128,7 +128,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
-    static const char* OOM_APP_UI_SERVER_NAME = "101fdfae_10207218_AppServer";
+    static const char *OOM_APP_UI_SERVER_NAME = "101fdfae_10207218_AppServer";
 
     /*! \brief OOM App Server Memebers can receive notification when memory ran out and can't be
        freed. This is basiclly AknCapServer but loaded with this plugin.

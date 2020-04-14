@@ -75,7 +75,7 @@ namespace eka2l1 {
         std::int64_t get_slice_length() {
             return slice_len;
         }
-        
+
         inline int64_t ms_to_cycles(int ms) {
             return CPU_HZ / 1000 * ms;
         }

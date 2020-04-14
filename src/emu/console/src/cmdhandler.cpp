@@ -19,8 +19,8 @@
 
 #include <common/arghandler.h>
 #include <common/cvt.h>
-#include <common/pystr.h>
 #include <common/path.h>
+#include <common/pystr.h>
 #include <console/cmdhandler.h>
 #include <console/state.h>
 #include <manager/device_manager.h>
@@ -32,8 +32,8 @@
 #include <pybind11/embed.h>
 #endif
 
-#include <epoc/services/applist/applist.h>
 #include <epoc/kernel.h>
+#include <epoc/services/applist/applist.h>
 
 using namespace eka2l1;
 
@@ -107,8 +107,8 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
     emu->stage_two();
 
     // Get app list server
-    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server*>(emu->symsys->get_kernel_system()
-        ->get_by_name<service::server>("!AppListServer"));
+    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server *>(emu->symsys->get_kernel_system()
+                                                                                 ->get_by_name<service::server>("!AppListServer"));
 
     if (!svr) {
         *err = "Can't get app list server!\n";
@@ -138,7 +138,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         // Load with name
         std::vector<apa_app_registry> &regs = svr->get_registerations();
 
-        for (auto &reg: regs) {
+        for (auto &reg : regs) {
             if (common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr))
                 == tokstr) {
                 // Load the app
@@ -169,10 +169,10 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userda
         *err = "RPKG installation failed. No path provided";
         return false;
     }
-    
+
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
     std::string firmware_code;
-    
+
     bool install_result = emu->symsys->install_rpkg(emu->conf.storage + "/drives/z/", path, firmware_code);
     if (!install_result) {
         *err = "RPKG installation failed. Something is wrong, see log";
@@ -184,10 +184,10 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userda
 
 bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
-    
+
     // Get app list server
-    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server*>(emu->symsys->get_kernel_system()
-        ->get_by_name<service::server>("!AppListServer"));
+    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server *>(emu->symsys->get_kernel_system()
+                                                                                 ->get_by_name<service::server>("!AppListServer"));
 
     if (!svr) {
         *err = "Can't get app list server!\n";
@@ -253,8 +253,7 @@ bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *user
             "if not hasattr(sys, 'argv'):\n"
             "   sys.argv = ['temp', '-b', 'html', 'scripts/source/', 'scripts/build/']\n"
             "import sphinx.cmd.build\n"
-            "sphinx.cmd.build.build_main(['-b', 'html', 'scripts/source/', 'scripts/build/'])"
-        );
+            "sphinx.cmd.build.build_main(['-b', 'html', 'scripts/source/', 'scripts/build/'])");
     } catch (pybind11::error_already_set &exec) {
         std::cout << std::string("Generate documents failed with error: ") + exec.what() << std::endl;
     }

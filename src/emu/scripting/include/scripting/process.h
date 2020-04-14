@@ -22,8 +22,8 @@
 #include <pybind11/pybind11.h>
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace eka2l1 {
     namespace kernel {
@@ -53,7 +53,7 @@ namespace eka2l1::scripting {
         std::string get_name();
 
         std::vector<std::unique_ptr<eka2l1::scripting::thread>> get_thread_list();
-        
+
         eka2l1::kernel::process *get_process_handle() {
             return process_handle;
         }

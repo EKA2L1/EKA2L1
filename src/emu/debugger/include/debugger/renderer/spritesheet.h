@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <drivers/graphics/common.h>
 #include <common/vecx.h>
+#include <drivers/graphics/common.h>
 
 #include <cstdint>
 #include <string>
@@ -32,7 +32,7 @@ namespace eka2l1::drivers {
 }
 
 namespace eka2l1::renderer {
-    // Please forgive me... 
+    // Please forgive me...
     struct spritesheet {
     private:
         /**
@@ -49,10 +49,10 @@ namespace eka2l1::renderer {
 
     public:
         struct frame_metadata {
-            float         frame_time_;
-            eka2l1::vec2  position_;
-            eka2l1::vec2  size_;
-            std::string   frame_name_;
+            float frame_time_;
+            eka2l1::vec2 position_;
+            eka2l1::vec2 size_;
+            std::string frame_name_;
         };
 
         float remaining_;
@@ -69,5 +69,5 @@ namespace eka2l1::renderer {
             const std::string &texture_filename, const std::string &meta_filename, const int fps);
         void play(const float elapsed);
         void get_current_frame_uv_coords(float &uv_x_min, float &uv_x_max, float &uv_y_min, float &uv_y_max);
-    }; 
+    };
 }

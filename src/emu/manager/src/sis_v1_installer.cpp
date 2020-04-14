@@ -32,10 +32,10 @@
 #include <cwctype>
 
 namespace eka2l1::loader {
-    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, 
+    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive,
         manager::package_info &info, std::vector<std::u16string> &package_files) {
         loader::sis_old res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
-    
+
         info.drive = drive;
         info.id = res.header.uid1;
         info.vendor_name = u"Nokia";

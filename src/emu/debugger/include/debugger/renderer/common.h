@@ -30,7 +30,7 @@ namespace eka2l1::drivers {
 namespace eka2l1::renderer {
     drivers::handle load_texture_from_file(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
         const std::string &path, const bool as_bitmap = false, int *width = nullptr, int *height = nullptr);
-    
+
     // Load with standalone builder
     drivers::handle load_texture_from_file_standalone(drivers::graphics_driver *driver, const std::string &path, const bool as_bitmap = false, int *width = nullptr,
         int *height = nullptr);

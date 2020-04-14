@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/cdl/watcher.h>
 #include <epoc/services/cdl/common.h>
+#include <epoc/services/cdl/watcher.h>
 
 #pragma once
 
@@ -28,12 +28,11 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc {
-    class cdl_ecom_generic_observer: public cdl_ecom_watcher_observer {
+    class cdl_ecom_generic_observer : public cdl_ecom_watcher_observer {
         cdl_server *serv_;
 
     public:
-        bool read_refs_of_instance(io_system *io, const std::u16string &path
-            , cdl_ref_collection &collection_);
+        bool read_refs_of_instance(io_system *io, const std::u16string &path, cdl_ref_collection &collection_);
 
         explicit cdl_ecom_generic_observer(cdl_server *serv)
             : serv_(serv) {

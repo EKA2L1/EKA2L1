@@ -36,8 +36,8 @@
 
 #include <scripting/instance.h>
 #include <scripting/message.h>
-#include <scripting/thread.h>
 #include <scripting/symemu.inl>
+#include <scripting/thread.h>
 
 namespace py = pybind11;
 
@@ -154,8 +154,7 @@ namespace eka2l1::manager {
     }
 
     void script_manager::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, pybind11::function &func) {
-        ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | 
-            (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
+        ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
     }
 
     void script_manager::register_library_hook(const std::string &name, const uint32_t ord, pybind11::function &func) {
@@ -186,16 +185,14 @@ namespace eka2l1::manager {
         eka2l1::system *crr_instance = scripting::get_current_instance();
         eka2l1::scripting::set_current_instance(sys);
 
-        for (const auto &ipc_func: ipc_functions[server_name][opcode]) {
+        for (const auto &ipc_func : ipc_functions[server_name][opcode]) {
             try {
-                ipc_func(arg0, arg1, arg2, arg3, flags, std::make_unique<scripting::thread>(
-                    reinterpret_cast<std::uint64_t>(callee)
-                ));
+                ipc_func(arg0, arg1, arg2, arg3, flags, std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(callee)));
             } catch (py::error_already_set &exec) {
                 LOG_WARN("Script interpreted error: {}", exec.what());
             }
         }
-        
+
         scripting::set_current_instance(crr_instance);
     }
 
@@ -206,19 +203,18 @@ namespace eka2l1::manager {
         eka2l1::system *crr_instance = scripting::get_current_instance();
         eka2l1::scripting::set_current_instance(sys);
 
-        for (const auto &ipc_func: ipc_functions[server_name][(2ULL << 32) | opcode]) {
+        for (const auto &ipc_func : ipc_functions[server_name][(2ULL << 32) | opcode]) {
             try {
                 ipc_func(std::make_unique<scripting::ipc_message_wrapper>(
-                    reinterpret_cast<std::uint64_t>(msg)
-                ));
+                    reinterpret_cast<std::uint64_t>(msg)));
             } catch (py::error_already_set &exec) {
                 LOG_WARN("Script interpreted error: {}", exec.what());
             }
         }
-        
+
         scripting::set_current_instance(crr_instance);
     }
-    
+
     void script_manager::call_reschedules() {
         std::lock_guard<std::mutex> guard(smutex);
 

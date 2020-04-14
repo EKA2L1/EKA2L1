@@ -19,22 +19,22 @@
 
 #pragma once
 
-#include <epoc/mem/process.h>
 #include <epoc/mem/page.h>
+#include <epoc/mem/process.h>
 
 #include <epoc/mem/model/multiple/chunk.h>
 #include <epoc/mem/model/multiple/section.h>
 
 namespace eka2l1::mem {
-    struct multiple_mem_model_process: public mem_model_process {
+    struct multiple_mem_model_process : public mem_model_process {
     private:
         friend struct multiple_mem_model_chunk;
-        
+
         asid addr_space_id_;
         linear_section user_local_sec_;
 
         std::vector<std::unique_ptr<multiple_mem_model_chunk>> chunks_;
-        std::vector<multiple_mem_model_chunk*> attached_;
+        std::vector<multiple_mem_model_chunk *> attached_;
 
         multiple_mem_model_chunk *allocate_chunk_struct_ptr();
 
@@ -50,9 +50,9 @@ namespace eka2l1::mem {
 
         int create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) override;
         void delete_chunk(mem_model_chunk *chunk) override;
-        
+
         void *get_pointer(const vm_address addr) override;
-        
+
         bool attach_chunk(mem_model_chunk *chunk) override;
         bool detach_chunk(mem_model_chunk *chunk) override;
 

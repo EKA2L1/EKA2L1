@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <drivers/graphics/backend/ogl/fb_ogl.h>
 #include <drivers/graphics/fb.h>
 #include <drivers/graphics/graphics.h>
-#include <drivers/graphics/backend/ogl/fb_ogl.h>
 
 namespace eka2l1::drivers {
     framebuffer_ptr make_framebuffer(graphics_driver *driver, texture *color_buffer, texture *depth_buffer) {

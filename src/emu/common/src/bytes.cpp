@@ -40,7 +40,7 @@ namespace eka2l1::common {
 
         return (val << 32) | (val >> 32);
     }
-    
+
     template <>
     std::int16_t byte_swap(std::int16_t val) {
         return byte_swap(static_cast<std::uint16_t>(val));
@@ -50,7 +50,7 @@ namespace eka2l1::common {
     std::int32_t byte_swap(std::int32_t val) {
         return byte_swap(static_cast<std::uint32_t>(val));
     }
-    
+
     template <>
     std::int64_t byte_swap(std::int64_t val) {
         return byte_swap(static_cast<std::uint64_t>(val));

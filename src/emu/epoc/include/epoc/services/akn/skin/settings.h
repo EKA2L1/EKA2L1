@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/services/akn/skin/common.h>
 #include <cstdint>
+#include <epoc/services/akn/skin/common.h>
 
 namespace eka2l1 {
     struct central_repo;
@@ -31,15 +31,15 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc {
     class akn_ss_settings {
-        central_repo *avkon_rep_ { nullptr };
-        central_repo *skins_rep_ { nullptr };
-        central_repo *theme_rep_ { nullptr };
+        central_repo *avkon_rep_{ nullptr };
+        central_repo *skins_rep_{ nullptr };
+        central_repo *theme_rep_{ nullptr };
 
         io_system *io_;
 
-        pid default_skin_pid_ { 0, 0 };
-        pid active_skin_pid_ { 0, 0 };
-        bool ah_mirroring_active;       ///< Arabic/hebrew mirroring active
+        pid default_skin_pid_{ 0, 0 };
+        pid active_skin_pid_{ 0, 0 };
+        bool ah_mirroring_active; ///< Arabic/hebrew mirroring active
         bool highlight_anim_enabled;
 
     protected:

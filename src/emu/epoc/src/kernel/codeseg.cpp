@@ -63,8 +63,8 @@ namespace eka2l1::kernel {
         }
 
         if (common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == new_foe;
-        })) {
+                return info.attached_process == new_foe;
+            })) {
             return false;
         }
 
@@ -75,14 +75,14 @@ namespace eka2l1::kernel {
 
         chunk_ptr code_chunk = nullptr;
         chunk_ptr dt_chunk = nullptr;
-        
+
         if (code_addr == 0) {
             code_chunk = kern->create<kernel::chunk>(mem, nullptr, "", 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
 
             // Copy data
-            std::uint8_t *code_base = reinterpret_cast<std::uint8_t*>(code_chunk->host_base());
-            std::copy(code_data.get(), code_data.get() + code_size, code_base);               // .code
+            std::uint8_t *code_base = reinterpret_cast<std::uint8_t *>(code_chunk->host_base());
+            std::copy(code_data.get(), code_data.get() + code_size, code_base); // .code
         }
 
         if (data_size_align != 0) {
@@ -93,16 +93,16 @@ namespace eka2l1::kernel {
             if (!dt_chunk) {
                 return false;
             }
-            
-            std::uint8_t *dt_base = reinterpret_cast<std::uint8_t*>(dt_chunk->host_base());
+
+            std::uint8_t *dt_base = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
 
             if (data_addr == 0) {
                 // Confirmed that if data is in ROM, only BSS is reserved
-                std::copy(constant_data.get(), constant_data.get() + data_size, dt_base);         // .data
+                std::copy(constant_data.get(), constant_data.get() + data_size, dt_base); // .data
             }
 
             const std::uint32_t bss_off = data_addr ? 0 : data_size;
-            std::fill(dt_base + bss_off, dt_base + bss_off + bss_size, 0);                // .bss
+            std::fill(dt_base + bss_off, dt_base + bss_off + bss_size, 0); // .bss
         }
 
         attaches.push_back({ new_foe, dt_chunk, code_chunk });
@@ -137,12 +137,11 @@ namespace eka2l1::kernel {
 
         return true;
     }
-    
+
     address codeseg::get_code_run_addr(kernel::process *pr, std::uint8_t **base) {
         if (code_addr != 0) {
             if (base) {
-                *base = reinterpret_cast<std::uint8_t*>(kern->get_memory_system()->
-                    get_real_pointer(code_addr));
+                *base = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(code_addr));
             }
 
             return code_addr;
@@ -158,12 +157,12 @@ namespace eka2l1::kernel {
         }
 
         if (base) {
-            *base = reinterpret_cast<std::uint8_t*>(attach_info->code_chunk->host_base());
+            *base = reinterpret_cast<std::uint8_t *>(attach_info->code_chunk->host_base());
         }
 
         return attach_info->code_chunk->base().ptr_address();
     }
-    
+
     address codeseg::get_data_run_addr(kernel::process *pr, std::uint8_t **base) {
         if (data_size == 0) {
             return 0;
@@ -171,8 +170,7 @@ namespace eka2l1::kernel {
 
         if (data_addr != 0) {
             if (base) {
-                *base = reinterpret_cast<std::uint8_t*>(kern->get_memory_system()->
-                    get_real_pointer(data_addr));
+                *base = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(data_addr));
             }
 
             return data_addr;
@@ -188,12 +186,12 @@ namespace eka2l1::kernel {
         }
 
         if (base) {
-            *base = reinterpret_cast<std::uint8_t*>(attach_info->data_chunk->host_base());
+            *base = reinterpret_cast<std::uint8_t *>(attach_info->data_chunk->host_base());
         }
 
         return attach_info->data_chunk->base().ptr_address();
     }
-    
+
     std::uint32_t codeseg::get_exception_descriptor(kernel::process *pr) {
         // Find our stuffs
         auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
@@ -231,7 +229,7 @@ namespace eka2l1::kernel {
 
         return export_table[ord - 1];
     }
-    
+
     address codeseg::lookup(kernel::process *pr, const std::uint32_t ord) {
         const address lookup_res = lookup_no_relocate(ord);
 
@@ -251,22 +249,25 @@ namespace eka2l1::kernel {
     }
 
     void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list) {
-        if (mark) {
-            return;
-        }
-
-        mark = true;
-
         // Iterate through dependency first
         for (auto &dependency : dependencies) {
             if (!dependency->mark) {
+                dependency->mark = true;
                 dependency->queries_call_list(pr, call_list);
             }
         }
 
         // Add our last. Don't change order, this is how it supposed to be
         call_list.push_back(get_entry_point(pr));
-        mark = false;
+    }
+
+    void codeseg::unmark() {
+        for (auto &dependency : dependencies) {
+            if (dependency->mark) {
+                dependency->mark = false;
+                dependency->unmark();
+            }
+        }
     }
 
     bool codeseg::add_dependency(codeseg_ptr codeseg) {
@@ -299,10 +300,18 @@ namespace eka2l1::kernel {
         std::vector<std::uint32_t> new_table = export_table;
         const std::uint32_t delta = attach_info->code_chunk->base().ptr_address() - code_base;
 
-        for (auto &entry: new_table) {
+        for (auto &entry : new_table) {
             entry += delta;
         }
 
         return new_table;
+    }
+
+    void codeseg::set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address) {
+        if (export_table.size() < ordinal) {
+            return;
+        }
+
+        export_table[ordinal - 1] = address.ptr_address();
     }
 }

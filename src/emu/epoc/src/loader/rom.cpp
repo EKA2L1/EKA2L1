@@ -129,11 +129,11 @@ namespace eka2l1::loader {
         if (entry.attrib & static_cast<int>(file_attrib::dir)) {
             const auto crr_pos = stream->tell();
             stream->seek(rom_to_offset(romf.header.rom_base, entry.address_lin), common::seek_where::beg);
-            
+
             entry.dir = std::make_optional<rom_dir>(read_rom_dir(romf, stream));
             entry.dir->name = entry.name;
             mother->subdirs.push_back(entry.dir.value());
-            
+
             stream->seek(crr_pos, common::seek_where::beg);
         }
 
@@ -217,7 +217,7 @@ namespace eka2l1::loader {
         romf.header = read_rom_header(stream);
 
         // Seek to the first entry
-        stream->seek(rom_to_offset(romf.header.rom_base, romf.header.rom_root_dir_list), 
+        stream->seek(rom_to_offset(romf.header.rom_base, romf.header.rom_root_dir_list),
             common::seek_where::beg);
 
         romf.root = read_root_dir_list(romf, stream);

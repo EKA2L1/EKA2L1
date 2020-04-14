@@ -17,23 +17,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scripting/session.h>
 #include <scripting/instance.h>
+#include <scripting/session.h>
 
-#include <epoc/services/session.h>
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
+#include <epoc/services/session.h>
 
 namespace eka2l1::scripting {
-    session_wrapper::session_wrapper(std::uint64_t handle) 
-        : ss_(reinterpret_cast<service::session*>(handle)) {
+    session_wrapper::session_wrapper(std::uint64_t handle)
+        : ss_(reinterpret_cast<service::session *>(handle)) {
     }
-    
+
     std::unique_ptr<scripting::server_wrapper> session_wrapper::server() {
         return std::make_unique<scripting::server_wrapper>(
             reinterpret_cast<std::uint64_t>(&(*ss_->get_server())));
     }
-    
+
     std::unique_ptr<session_wrapper> session_from_handle(const std::uint32_t handle) {
         return std::make_unique<scripting::session_wrapper>(reinterpret_cast<std::uint64_t>(&(
             *get_current_instance()->get_kernel_system()->get<service::session>(handle))));

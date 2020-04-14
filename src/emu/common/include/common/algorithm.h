@@ -75,7 +75,7 @@ namespace eka2l1 {
          * \param compare_       Function comparing two element of the iterable object.
          */
         template <typename T, typename H = typename T::value_type>
-        void detect_changes(const T &old_, const T &new_, addition_callback_func add_callback_, 
+        void detect_changes(const T &old_, const T &new_, addition_callback_func add_callback_,
             remove_callback_func rev_callback_, compare_func<H> compare_ = default_compare_func<H>) {
             std::size_t index_new = 0;
             std::size_t index_old = 0;
@@ -207,6 +207,11 @@ namespace eka2l1 {
         template <typename T>
         constexpr int sign(T val) {
             return val <= 0 ? -1 : 1;
+        }
+
+        template <typename T>
+        constexpr T clamp(T min, T max, T val) {
+            return (min > val) ? min : ((val > max) ? max : val);
         }
 
         /*! Convert KB to bytes */

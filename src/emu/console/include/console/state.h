@@ -23,8 +23,8 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <thread>
 #include <queue>
+#include <thread>
 
 #include <common/queue.h>
 #include <common/sync.h>

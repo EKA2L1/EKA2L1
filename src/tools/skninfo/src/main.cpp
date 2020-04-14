@@ -30,14 +30,14 @@ int main(int argc, char **argv) {
     if (argc <= 1) {
         LOG_ERROR("No file provided!");
         LOG_INFO("Usage: skninfo [filename].");
-        
+
         return -1;
     }
 
     eka2l1::symfile f = eka2l1::physical_file_proxy(argv[1], READ_MODE | BIN_MODE);
     eka2l1::ro_file_stream f_stream(f.get());
 
-    eka2l1::epoc::skn_file sknf(reinterpret_cast<eka2l1::common::ro_stream*>(&f_stream));
+    eka2l1::epoc::skn_file sknf(reinterpret_cast<eka2l1::common::ro_stream *>(&f_stream));
 
     // Print out skin name
     LOG_INFO("Skin name: {}, language: {}", eka2l1::common::ucs2_to_utf8(sknf.skin_name_.name),
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 
     std::string listed_name = "Associated filenames: \n";
 
-    for (auto &filename_: sknf.filenames_) {
+    for (auto &filename_ : sknf.filenames_) {
         listed_name += fmt::format("\t- {} (ID: {})\n", eka2l1::common::ucs2_to_utf8(filename_.second),
             filename_.first);
     }

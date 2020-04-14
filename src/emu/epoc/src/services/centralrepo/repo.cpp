@@ -68,13 +68,13 @@ namespace eka2l1 {
 
         return &(*ite);
     }
-    
+
     void central_repo::query_entries(const std::uint32_t partial_key, const std::uint32_t mask,
-        std::vector<central_repo_entry*> &matched_entries,
+        std::vector<central_repo_entry *> &matched_entries,
         const central_repo_entry_type etype) {
         std::uint32_t required_mask = mask & partial_key;
 
-        for (auto &entry: entries) {
+        for (auto &entry : entries) {
             if ((entry.key & required_mask) && (entry.data.etype == etype)) {
                 matched_entries.push_back(&entry);
             }

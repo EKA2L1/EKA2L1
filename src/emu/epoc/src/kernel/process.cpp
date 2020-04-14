@@ -30,8 +30,8 @@
 #include <epoc/kernel/process.h>
 #include <epoc/kernel/scheduler.h>
 
-#include <epoc/mem/process.h>
 #include <epoc/mem/mmu.h>
+#include <epoc/mem/process.h>
 
 namespace eka2l1::kernel {
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
@@ -65,7 +65,7 @@ namespace eka2l1::kernel {
 
         puid = std::get<2>(codeseg->get_uids());
         priority = pri;
-        
+
         if (kern->get_epoc_version() >= epocver::eka2) {
             std::string all_caps;
 
@@ -182,8 +182,7 @@ namespace eka2l1::kernel {
     bool process::logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
         decltype(rendezvous_requests) *container = rendezvous ? &rendezvous_requests : &logon_requests;
 
-        const auto find_result = std::find(container->begin(), container->end(), epoc::notify_info(
-            logon_request, kern->crr_thread()));
+        const auto find_result = std::find(container->begin(), container->end(), epoc::notify_info(logon_request, kern->crr_thread()));
 
         if (find_result == container->end()) {
             return false;

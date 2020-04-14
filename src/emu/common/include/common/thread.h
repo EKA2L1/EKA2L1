@@ -27,5 +27,5 @@ namespace eka2l1::common {
      * 
      * \param thread_name       New name of the thread.
      */
-    void set_thread_name(const char* thread_name);
+    void set_thread_name(const char *thread_name);
 }

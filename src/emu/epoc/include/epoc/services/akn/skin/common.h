@@ -45,16 +45,16 @@ namespace eka2l1::epoc {
         THEMES_UID = 0x102818E8,
         ICON_CAPTION_UID = 0x1028583D
     };
-    
+
     using pid = std::pair<std::int32_t, std::int32_t>;
 
     /**
      * \brief Multi-purpose pointer type for AKN server.
      */
     enum akns_mtptr_type {
-        akns_mtptr_type_absolute_ram = 2,       /** Pointer is absolute on RAM. */
-        akns_mtptr_type_relative_ram = 3,       /** Pointer is offset on a base. */
-        akns_mtptr_type_absolute_rom = 4        /** Pointer is on ROM. */
+        akns_mtptr_type_absolute_ram = 2, /** Pointer is absolute on RAM. */
+        akns_mtptr_type_relative_ram = 3, /** Pointer is offset on a base. */
+        akns_mtptr_type_absolute_rom = 4 /** Pointer is on ROM. */
     };
 
     /**
@@ -79,7 +79,7 @@ namespace eka2l1::epoc {
                 return nullptr;
             }
 
-            return reinterpret_cast<T*>(reinterpret_cast<std::uint8_t*>(base) + address_or_offset_);
+            return reinterpret_cast<T *>(reinterpret_cast<std::uint8_t *>(base) + address_or_offset_);
         }
     };
 
@@ -102,7 +102,7 @@ namespace eka2l1::epoc {
         akns_mtptr data_;
     };
 
-    struct akns_item_def_v2: public akns_item_def_v1 {
+    struct akns_item_def_v2 : public akns_item_def_v1 {
         std::int32_t next_hash_;
     };
 

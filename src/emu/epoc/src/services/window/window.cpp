@@ -198,7 +198,7 @@ namespace eka2l1::epoc {
         window_client_obj_ptr device = std::make_unique<epoc::screen_device>(this, target_screen);
 
         if (!primary_device) {
-            primary_device = reinterpret_cast<epoc::screen_device*>(device.get());
+            primary_device = reinterpret_cast<epoc::screen_device *>(device.get());
         }
 
         ctx.set_request_status(add_object(device));
@@ -213,7 +213,7 @@ namespace eka2l1::epoc {
 
         ctx.set_request_status(add_object(dsa_inst));
     }
-    
+
     void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd) {
         THotKey key = *reinterpret_cast<THotKey *>(cmd.data_ptr);
 
@@ -229,22 +229,22 @@ namespace eka2l1::epoc {
         if (device_handle <= 0) {
             device_ptr = primary_device;
         } else {
-            device_ptr = reinterpret_cast<epoc::screen_device*>(get_object(device_handle));
+            device_ptr = reinterpret_cast<epoc::screen_device *>(get_object(device_handle));
         }
 
         if (!device_ptr) {
             device_ptr = primary_device;
         }
 
-        epoc::window *parent_group = reinterpret_cast<epoc::window*>(get_object(header->parent_id));
-        
+        epoc::window *parent_group = reinterpret_cast<epoc::window *>(get_object(header->parent_id));
+
         if (!parent_group) {
             LOG_WARN("Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
             parent_group = device_ptr->scr->root.get();
         }
 
         window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group, header->client_handle);
-        epoc::window_group *group_casted = reinterpret_cast<epoc::window_group*>(group.get());
+        epoc::window_group *group_casted = reinterpret_cast<epoc::window_group *>(group.get());
 
         if (header->focus) {
             group_casted->set_receive_focus(true);
@@ -261,8 +261,8 @@ namespace eka2l1::epoc {
 
     void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
-        epoc::window *parent = reinterpret_cast<epoc::window*>(get_object(header->parent));
- 
+        epoc::window *parent = reinterpret_cast<epoc::window *>(get_object(header->parent));
+
         if (!parent) {
             LOG_WARN("Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
             ctx.set_request_status(epoc::error_argument);
@@ -290,7 +290,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::create_sprite(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_create_sprite_header *sprite_header = reinterpret_cast<decltype(sprite_header)>(cmd.data_ptr);
-        epoc::window *win = reinterpret_cast<epoc::window*>(get_object(sprite_header->window_handle));
+        epoc::window *win = reinterpret_cast<epoc::window *>(get_object(sprite_header->window_handle));
 
         if (!win) {
             LOG_WARN("Window handle is invalid! Abort");
@@ -328,16 +328,15 @@ namespace eka2l1::epoc {
         std::uint32_t total = 0;
 
         const int screen = (cmd.header.cmd_len == 8) ? 0 : list_req->screen_num;
-        const int accept_priority = ((cmd.header.op == ws_cl_op_window_group_list_all_priorities) || 
-            (cmd.header.op == ws_cl_op_window_group_list_and_chain_all_priorities)) ? -1 : list_req->priority;
+        const int accept_priority = ((cmd.header.op == ws_cl_op_window_group_list_all_priorities) || (cmd.header.op == ws_cl_op_window_group_list_and_chain_all_priorities)) ? -1 : list_req->priority;
 
         if (cmd.header.op == ws_cl_op_window_group_list || cmd.header.op == ws_cl_op_window_group_list_all_priorities) {
             ids.resize(list_req->count * sizeof(std::uint32_t));
-            total = get_ws().get_window_group_list(reinterpret_cast<std::uint32_t*>(&ids[0]), list_req->count,
+            total = get_ws().get_window_group_list(reinterpret_cast<std::uint32_t *>(&ids[0]), list_req->count,
                 accept_priority, screen);
         } else {
             ids.resize(list_req->count * sizeof(epoc::window_group_chain_info));
-            total = get_ws().get_window_group_list_and_chain(reinterpret_cast<epoc::window_group_chain_info*>(&ids[0]),
+            total = get_ws().get_window_group_list_and_chain(reinterpret_cast<epoc::window_group_chain_info *>(&ids[0]),
                 list_req->count, accept_priority, screen);
         }
 
@@ -359,7 +358,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_find_window_group_identifier *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
-        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(primary_device->scr->root->child);
+        epoc::window_group *group = reinterpret_cast<epoc::window_group *>(primary_device->scr->root->child);
 
         if (find_info->previous_id) {
             // Find our lost sibling!!!!! Bring him to me....
@@ -373,13 +372,13 @@ namespace eka2l1::epoc {
 
             // She's sweet but sibling...
             // A little sibling
-            group = reinterpret_cast<epoc::window_group*>(group->sibling);
+            group = reinterpret_cast<epoc::window_group *>(group->sibling);
         }
 
         const char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
         const std::u16string win_group_name(win_group_name_ptr, find_info->length);
 
-        for (; group; group = reinterpret_cast<epoc::window_group*>(group->sibling)) {
+        for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
             if (common::compare_ignore_case(group->name.substr(find_info->offset), win_group_name) == 0) {
                 ctx.set_request_status(group->id);
                 return;
@@ -479,14 +478,14 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
-    struct window_clear_store_walker: public epoc::window_tree_walker {
+    struct window_clear_store_walker : public epoc::window_tree_walker {
         bool do_it(epoc::window *win) {
             if (win->type == window_kind::group) {
                 win->client->trigger_redraw();
             }
 
             if (win->type == window_kind::client) {
-                epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+                epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
                 user->clear_redraw_store();
             }
 
@@ -498,7 +497,7 @@ namespace eka2l1::epoc {
         // Clear all stored drawing commands. We have none, but keep this here if we ever did.
         // Send redraws commands to all client window
         window_clear_store_walker walker;
-        
+
         for (epoc::screen *scr = get_ws().screens; scr; scr = scr->next) {
             scr->root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
         }
@@ -543,14 +542,14 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd) {
-        std::int32_t screen_num = *reinterpret_cast<std::int32_t*>(cmd.data_ptr);
+        std::int32_t screen_num = *reinterpret_cast<std::int32_t *>(cmd.data_ptr);
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
         if (!scr) {
             LOG_ERROR("Can't find requested screen {}, use focus one", screen_num);
             scr = get_ws().get_current_focus_screen();
         }
-        
+
         ctx.set_request_status(1 << (static_cast<std::uint8_t>(scr->disp_mode) - 1));
     }
 
@@ -802,7 +801,7 @@ namespace eka2l1 {
     window_server::window_server(system *sys)
         : service::server(sys, WINDOW_SERVER_NAME, true, true)
         , bmp_cache(sys->get_kernel_system())
-        , anim_sched(sys->get_timing_system(), 1) 
+        , anim_sched(sys->get_timing_system(), 1)
         , screens(nullptr)
         , focus_screen_(nullptr) {
         REGISTER_IPC(window_server, init, EWservMessInit,
@@ -828,7 +827,7 @@ namespace eka2l1 {
     drivers::graphics_driver *window_server::get_graphics_driver() {
         return get_system()->get_graphics_driver();
     }
-    
+
     timing_system *window_server::get_timing_system() {
         return get_system()->get_timing_system();
     }
@@ -836,16 +835,16 @@ namespace eka2l1 {
     kernel_system *window_server::get_kernel_system() {
         return get_system()->get_kernel_system();
     }
-    
+
     constexpr std::int64_t input_update_ticks = 10000;
-    
+
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
         guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
-        guest_evt_.key_evt_.repeats = 0;            // TODO?
+        guest_evt_.key_evt_.repeats = 0; // TODO?
     }
 
     /**
@@ -859,20 +858,17 @@ namespace eka2l1 {
             if (driver_evt_.mouse_.action_ == drivers::mouse_action::repeat) {
                 guest_evt_.adv_pointer_evt_.evtype = epoc::event_type::drag;
             } else {
-                guest_evt_.adv_pointer_evt_.evtype = (driver_evt_.mouse_.action_ == drivers::mouse_action::press) ?
-                    epoc::event_type::button1down : epoc::event_type::button1up;
+                guest_evt_.adv_pointer_evt_.evtype = (driver_evt_.mouse_.action_ == drivers::mouse_action::press) ? epoc::event_type::button1down : epoc::event_type::button1up;
             }
 
             break;
         }
         case drivers::mouse_button::middle: {
-            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
-                epoc::event_type::button2down : epoc::event_type::button2up;
+            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ? epoc::event_type::button2down : epoc::event_type::button2up;
             break;
         }
         case drivers::mouse_button::right: {
-            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ?
-                epoc::event_type::button3down : epoc::event_type::button3up;
+            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ? epoc::event_type::button3down : epoc::event_type::button3up;
             break;
         }
         }
@@ -882,7 +878,7 @@ namespace eka2l1 {
         guest_evt_.adv_pointer_evt_.pos.y = driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y;
         scr->screen_mutex.unlock();
     }
-    
+
     void window_server::queue_input_from_driver(drivers::input_event &evt) {
         if (!loaded) {
             return;
@@ -892,7 +888,7 @@ namespace eka2l1 {
         input_events.push(std::move(evt));
     }
 
-    struct window_pointer_focus_walker: public epoc::window_tree_walker {
+    struct window_pointer_focus_walker : public epoc::window_tree_walker {
         epoc::event evt_;
         eka2l1::vec2 scr_coord_;
         bool sended_to_highest_z_;
@@ -900,7 +896,7 @@ namespace eka2l1 {
         void process_event_to_target_window(epoc::window *win) {
             assert(win->type == epoc::window_kind::client);
 
-            epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+            epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
             // Stop, we found it!
             // Send it right now
             evt_.adv_pointer_evt_.pos = scr_coord_ - user->pos;
@@ -910,7 +906,7 @@ namespace eka2l1 {
             } else {
                 // It must be client kind
                 assert(user->parent->type == epoc::window_kind::client);
-                evt_.adv_pointer_evt_.parent_pos = scr_coord_ - reinterpret_cast<epoc::window_user*>(user->parent)->pos;
+                evt_.adv_pointer_evt_.parent_pos = scr_coord_ - reinterpret_cast<epoc::window_user *>(user->parent)->pos;
             }
 
             evt_.handle = win->get_client_handle();
@@ -922,7 +918,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            epoc::window_user *user = reinterpret_cast<epoc::window_user*>(win);
+            epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
 
             const bool filter_enter_exit = ((evt_.type == epoc::event_code::touch_enter) || (evt_.type == epoc::event_code::touch_exit))
                 && (user->filter & epoc::pointer_filter_type::pointer_enter);
@@ -935,7 +931,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            eka2l1::rect window_rect { user->pos, user->size };
+            eka2l1::rect window_rect{ user->pos, user->size };
 
             if (!sended_to_highest_z_) {
                 if (window_rect.contains(evt_.adv_pointer_evt_.pos)) {
@@ -981,7 +977,7 @@ namespace eka2l1 {
             switch (input_event.type_) {
             case drivers::input_event_type::key: {
                 make_key_event(input_event, guest_event);
-                    
+
                 extra_key_evt = guest_event;
                 extra_key_evt.type = epoc::event_code::key;
                 extra_key_evt.key_evt_.code = epoc::map_scancode_to_keycode(
@@ -995,14 +991,15 @@ namespace eka2l1 {
                 break;
             }
 
-            default: 
+            default:
                 break;
             }
 
-            if (skip_event) continue;
+            if (skip_event)
+                continue;
 
-            if (input_event.type_ == drivers::input_event_type::key) {   
-                // Report to the focused window first 
+            if (input_event.type_ == drivers::input_event_type::key) {
+                // Report to the focused window first
                 guest_event.handle = get_focus()->get_client_handle();
                 extra_key_evt.handle = get_focus()->get_client_handle();
                 get_focus()->queue_event(guest_event);
@@ -1011,7 +1008,7 @@ namespace eka2l1 {
                 window_pointer_focus_walker walker(guest_event);
                 get_current_focus_screen()->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
             }
-    
+
             // Send a key event also
             if (guest_event.type == epoc::event_code::key_down) {
                 get_focus()->queue_event(extra_key_evt);
@@ -1061,17 +1058,17 @@ namespace eka2l1 {
 
         sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
     }
-    
+
     static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
         // Try to create memory chunk at kernel mapping, for DSA
         const std::string chunk_name = fmt::format("ScreenBuffer{}", scr->number);
-        const std::size_t max_chunk_size =  scr->size().x * scr->size().y * 4;
+        const std::size_t max_chunk_size = scr->size().x * scr->size().y * 4;
 
         // Create chunk with maximum size (32-bit)
         kernel::chunk *buffer = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, chunk_name, 0,
-           static_cast<address>(max_chunk_size), max_chunk_size, prot::read_write,
-           kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
-           kernel::chunk_attrib::none);
+            static_cast<address>(max_chunk_size), max_chunk_size, prot::read_write,
+            kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
+            kernel::chunk_attrib::none);
 
         scr->screen_buffer_chunk = buffer;
     }
@@ -1116,9 +1113,9 @@ namespace eka2l1 {
         epoc::screen *current = screens;
 
         while (current) {
-            epoc::window_group *group = reinterpret_cast<epoc::window_group*>(current->root->child);
+            epoc::window_group *group = reinterpret_cast<epoc::window_group *>(current->root->child);
             while (group && group->id != id) {
-                group = reinterpret_cast<epoc::window_group*>(group->sibling);
+                group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 
             if (group && group->id == id) {
@@ -1150,24 +1147,24 @@ namespace eka2l1 {
 
     void window_server::connect(service::ipc_context &ctx) {
         std::optional<std::uint32_t> version = ctx.get_arg<std::uint32_t>(0);
-        epoc::version v = *reinterpret_cast<epoc::version*>(&version.value());
+        epoc::version v = *reinterpret_cast<epoc::version *>(&version.value());
 
         clients.emplace(ctx.msg->msg_session->unique_id(),
             std::make_unique<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr, v));
 
         server::connect(ctx);
     }
-    
+
     void window_server::disconnect(service::ipc_context &ctx) {
         clients.erase(ctx.msg->msg_session->unique_id());
         server::disconnect(ctx);
     }
-    
+
     void window_server::init(service::ipc_context &ctx) {
         if (!loaded) {
             do_base_init();
         }
-        
+
         ctx.set_request_status(ctx.msg->msg_session->unique_id());
     }
 
@@ -1226,7 +1223,7 @@ namespace eka2l1 {
         }
     }
 
-    struct window_group_tree_moonwalker: public epoc::window_tree_walker {
+    struct window_group_tree_moonwalker : public epoc::window_tree_walker {
         epoc::screen *scr;
         std::uint32_t total;
         std::uint32_t max;
@@ -1259,7 +1256,7 @@ namespace eka2l1 {
             if (buffer_vector) {
                 if (flags & FLAGS_GET_CHAIN) {
                     epoc::window_group_chain_info *infos = reinterpret_cast<decltype(infos)>(buffer_vector);
-                    
+
                     epoc::window_group_chain_info chain_info;
                     chain_info.id = win->id;
                     chain_info.parent_id = 0;
@@ -1268,7 +1265,7 @@ namespace eka2l1 {
                         // Chain!
                         chain_info.parent_id = win->parent->id;
                     }
-    
+
                     infos[total - 1] = chain_info;
 
                     if (total >= max) {
@@ -1335,8 +1332,7 @@ namespace eka2l1 {
 
     fbs_server *window_server::get_fbs_server() {
         if (!fbss) {
-            fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name
-                <service::server>("!Fontbitmapserver")));
+            fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
         }
 
         return fbss;

@@ -93,9 +93,11 @@ drive_number char16_to_drive(const char16_t c) {
 
 const char *num_to_lang(const int num) {
     switch (static_cast<language>(num)) {
-    #define LANG_DECL(x, y) case language::x: return #y;
-        #include <common/lang.def>
-    #undef LANG_DECL
+#define LANG_DECL(x, y) \
+    case language::x:   \
+        return #y;
+#include <common/lang.def>
+#undef LANG_DECL
     default:
         break;
     }

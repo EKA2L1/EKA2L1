@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/server.h>
 #include <epoc/common.h>
+#include <epoc/services/server.h>
 
 #include <vector>
 

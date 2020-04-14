@@ -33,9 +33,9 @@ namespace eka2l1 {
             int lock_count;
 
             //! Thread holding
-            kernel::thread* holding;
+            kernel::thread *holding;
 
-            cp_queue<kernel::thread*> waits;
+            cp_queue<kernel::thread *> waits;
             common::roundabout pendings;
             common::roundabout suspended;
 

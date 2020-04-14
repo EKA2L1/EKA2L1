@@ -22,13 +22,18 @@
 namespace eka2l1::epoc {
     const char *akn_skin_server_opcode_to_str(const akn_skin_server_opcode op) {
         switch (op) {
-        #define OPCODE(op) case akn_skin_server_##op: return "akn_server::"#op;
-        #define OPCODE2(op, num) case akn_skin_server_##op: return "akn_server::"#op;
-        #include <epoc/services/akn/skin/ops.def>
-        #undef OPCODE
-        #undef OPCODE2
-        
-        default: break;
+#define OPCODE(op)             \
+    case akn_skin_server_##op: \
+        return "akn_server::" #op;
+#define OPCODE2(op, num)       \
+    case akn_skin_server_##op: \
+        return "akn_server::" #op;
+#include <epoc/services/akn/skin/ops.def>
+#undef OPCODE
+#undef OPCODE2
+
+        default:
+            break;
         }
 
         return nullptr;

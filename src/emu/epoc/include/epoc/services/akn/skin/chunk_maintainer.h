@@ -19,10 +19,10 @@
 
 #pragma once
 
+#include <epoc/services/akn/skin/bitmap_store.h>
 #include <epoc/services/akn/skin/common.h>
 #include <epoc/services/akn/skin/skn.h>
 #include <epoc/services/fbs/fbs.h>
-#include <epoc/services/akn/skin/bitmap_store.h>
 
 #include <cstdint>
 #include <string>
@@ -61,14 +61,14 @@ namespace eka2l1::epoc {
     };
 
     enum akn_skin_chunk_maintainer_flag {
-        akn_skin_chunk_maintainer_lookup_use_linked_list = 1 << 0       ///< Use linked list for lookup definition. Available on S^3.
+        akn_skin_chunk_maintainer_lookup_use_linked_list = 1 << 0 ///< Use linked list for lookup definition. Available on S^3.
     };
 
     /**
      * Maximum length of a filename in shared chunk.
      */
     constexpr std::uint32_t AKN_SKIN_SERVER_MAX_FILENAME_LENGTH = 512;
-    
+
     /**
      * Maximum bytes of a filename in shared chunk.
      */
@@ -260,7 +260,7 @@ namespace eka2l1::epoc {
          * 
          * \see     update_defintion
          */
-        bool  update_filename(const std::uint32_t filename_id, const std::u16string &filename, const std::u16string &filename_base);
+        bool update_filename(const std::uint32_t filename_id, const std::u16string &filename, const std::u16string &filename_base);
 
         /**
          * \brief Lookup filename and returns its data offset from filename area.
@@ -303,7 +303,7 @@ namespace eka2l1::epoc {
          * 
          * \see     update_filename
          */
-        bool  update_definition(const epoc::akns_item_def &def, const void *data, const std::size_t data_size,
+        bool update_definition(const epoc::akns_item_def &def, const void *data, const std::size_t data_size,
             const std::size_t old_data_size);
 
         /**

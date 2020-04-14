@@ -18,25 +18,7 @@ SOURCEPATH	  ..\src
 
 SOURCE		  scdv.cpp log.cpp drawdvcbuf.cpp drawdvcalgo.cpp drawdvc24.cpp panic.cpp instantiate.cpp drawdvc32.cpp cdsb.cpp sv.cpp
 
-// In order to use .def files to freeze code you must use one or more DEFFILE lines;
-// see the ones commented out below for examples.
-// By default, the build tools look for the WINSCW def file in a BWINS directory
-// (at the same level as the directory containing the mmp file), 
-// the GCC ARM def file in a BMARM directory, and the ARMV5 def file in a EABI directory. 
-// If your .def files are stored in these default locations, you can simply specify the
-// .def filename(s) with no path. If you want to store .def files in non-default 
-// locations, you will need to specify the paths in the DEFFILE statement(s).
-
-//The following commented out code shows how the build system uses the implicit
-// location for defiles. To create the DEF files Choose Project > Freeze Exports from Carbide
-// or run 'abld freeze' from the command-line
-//#if defined (WINS)
-//  DEFFILE ..\bwins\scdv.def
-//#elif defined (GCC32)
-//  DEFFILE ..\bmarm\scdv.def
-//#else 
-//  DEFFILE ..\eabi\scdv.def
-//#endif
+DEFFILE ..\eabi\scdv.def
 
 nostrictdef
 

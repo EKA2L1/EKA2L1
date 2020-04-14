@@ -35,7 +35,7 @@ namespace eka2l1::scripting {
     process::process(std::uint64_t handle)
         : process_handle(reinterpret_cast<eka2l1::kernel::process *>(handle)) {
     }
-    
+
     py::bytes process::read_process_memory(const std::uint32_t addr, const size_t size) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
 
@@ -61,12 +61,12 @@ namespace eka2l1::scripting {
         memcpy(ptr, buffer.data(), buffer.size());
     }
 
-    #define READ_TEMPLATE(ret_type)         \
-        void *ptr = process_handle->get_ptr_on_addr_space(addr);    \
-        if (!ptr) {                                                 \
-            throw std::runtime_error("The memory at specified address hasn't been mapped yet!");        \
-        }                                                                                               \
-        return *reinterpret_cast<ret_type*>(ptr)
+#define READ_TEMPLATE(ret_type)                                                              \
+    void *ptr = process_handle->get_ptr_on_addr_space(addr);                                 \
+    if (!ptr) {                                                                              \
+        throw std::runtime_error("The memory at specified address hasn't been mapped yet!"); \
+    }                                                                                        \
+    return *reinterpret_cast<ret_type *>(ptr)
 
     std::uint8_t process::read_byte(const std::uint32_t addr) {
         READ_TEMPLATE(std::uint8_t);
@@ -99,7 +99,7 @@ namespace eka2l1::scripting {
         std::vector<std::unique_ptr<scripting::thread>> script_threads;
 
         for (const auto &thr : threads) {
-            if (reinterpret_cast<kernel::thread*>(thr.get())->owning_process() == process_handle) {
+            if (reinterpret_cast<kernel::thread *>(thr.get())->owning_process() == process_handle) {
                 script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(thr.get())));
             }
         }
@@ -119,7 +119,7 @@ namespace eka2l1::scripting {
 
         return script_processes;
     }
-    
+
     std::unique_ptr<eka2l1::scripting::process> get_current_process() {
         if (get_current_instance()->get_kernel_system()->crr_process() == nullptr) {
             return nullptr;

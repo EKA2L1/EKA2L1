@@ -109,7 +109,7 @@ namespace eka2l1 {
             return;
         }
 
-        directory *dir = reinterpret_cast<directory*>(dir_node->vfs_node.get());
+        directory *dir = reinterpret_cast<directory *>(dir_node->vfs_node.get());
 
         epoc::fs::entry entry;
         std::optional<entry_info> info = dir->get_next_entry();
@@ -141,7 +141,7 @@ namespace eka2l1 {
 
         entry.size = static_cast<std::uint32_t>(info->size);
         entry.name = common::utf8_to_ucs2(info->full_path);
-        entry.modified = epoc::time { info->last_write };
+        entry.modified = epoc::time{ info->last_write };
 
         ctx->write_arg_pkg<epoc::fs::entry>(1, entry);
         ctx->set_request_status(epoc::error_none);
@@ -163,14 +163,14 @@ namespace eka2l1 {
             return;
         }
 
-        directory *dir = reinterpret_cast<directory*>(dir_node->vfs_node.get());
+        directory *dir = reinterpret_cast<directory *>(dir_node->vfs_node.get());
 
         kernel::process *own_pr = ctx->msg->own_thr->owning_process();
 
         epoc::des8 *entry_arr = ptr<epoc::des8>(*entry_arr_vir_ptr).get(own_pr);
         epoc::buf_des<char> *entry_arr_buf = reinterpret_cast<epoc::buf_des<char> *>(entry_arr);
 
-        std::uint8_t *entry_buf = reinterpret_cast<std::uint8_t*>(entry_arr->get_pointer(own_pr));
+        std::uint8_t *entry_buf = reinterpret_cast<std::uint8_t *>(entry_arr->get_pointer(own_pr));
         std::uint8_t *entry_buf_end = entry_buf + entry_arr_buf->max_length;
         std::uint8_t *entry_buf_org = entry_buf;
 
@@ -220,7 +220,7 @@ namespace eka2l1 {
 
             entry.size = static_cast<std::uint32_t>(info->size);
             entry.name = common::utf8_to_ucs2(info->name);
-            entry.modified = epoc::time { info->last_write };
+            entry.modified = epoc::time{ info->last_write };
 
             const std::uint32_t entry_write_size = epoc::fs::entry_standard_size + 4;
 

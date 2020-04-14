@@ -33,6 +33,6 @@ namespace eka2l1::hle {
         std::function<void(system *)> func;
         std::string name;
     };
-    
+
     using func_map = std::map<uint32_t, eka2l1::hle::epoc_import_func>;
 }

@@ -8,8 +8,8 @@
 #include <epoc/services/centralrepo/centralrepo.h>
 #include <epoc/services/centralrepo/cre.h>
 #include <epoc/vfs.h>
-#include <manager/manager.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 
 #include <epoc/utils/err.h>
 
@@ -714,7 +714,7 @@ namespace eka2l1 {
             array[++array[0]] = key;
         }
     }
-    
+
     void central_repo_client_subsession::find_eq(service::ipc_context *ctx) {
         // Clear found result
         // TODO: Should we?
@@ -722,9 +722,8 @@ namespace eka2l1 {
 
         // Get the filter
         std::optional<central_repo_key_filter> filter = ctx->get_arg_packed<central_repo_key_filter>(0);
-        std::uint32_t *found_uid_result_array = ptr<std::uint32_t>(*ctx->get_arg<kernel::address>(2)).get(
-            ctx->msg->own_thr->owning_process());
-        
+        std::uint32_t *found_uid_result_array = ptr<std::uint32_t>(*ctx->get_arg<kernel::address>(2)).get(ctx->msg->own_thr->owning_process());
+
         if (!filter || !found_uid_result_array) {
             LOG_ERROR("Trying to find equal value in cenrep, but arguments are invalid!");
             ctx->set_request_status(epoc::error_argument);
@@ -734,7 +733,7 @@ namespace eka2l1 {
         // Set found count to 0
         found_uid_result_array[0] = 0;
 
-        for (auto &entry: attach_repo->entries) {
+        for (auto &entry : attach_repo->entries) {
             // Try to match the key first
             if ((entry.key & filter->id_mask) != (filter->partial_key & filter->id_mask)) {
                 // Mask doesn't match, abadon this entry
@@ -793,7 +792,7 @@ namespace eka2l1 {
 
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     int central_repo_client_session::closerep(io_system *io, manager::device_manager *mngr, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
         auto &repo_subsession = repo_subsession_ite->second;
 
@@ -879,7 +878,7 @@ namespace eka2l1 {
             central_repo_client_session &ss = ss_ite->second;
 
             for (auto ite = ss.client_subsessions.begin(); ite != ss.client_subsessions.end(); ite++) {
-                ss.closerep(io, mngr,  0, ite);
+                ss.closerep(io, mngr, 0, ite);
             }
 
             ss.client_subsessions.clear();

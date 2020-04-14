@@ -17,27 +17,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <e32debug.h>
 #include <e32std.h>
 #include <scdv/log.h>
 #include <scdv/panic.h>
-#include <e32debug.h>
 
 namespace Scdv {
-    class TDesOverflowHandler: public TDes8Overflow {
+    class TDesOverflowHandler : public TDes8Overflow {
         virtual void Overflow(TDes8 &) {
             Panic(Scdv::EPanicLogFailure);
         }
     };
 
     void Log(const char *aFormat, ...) {
-        TPtrC8 baseFormat(reinterpret_cast<const TUint8*>(aFormat));
+        TPtrC8 baseFormat(reinterpret_cast<const TUint8 *>(aFormat));
         HBufC8 *newString = HBufC8::NewL(baseFormat.Length() * 2);
-        
+
         VA_LIST list;
         va_start(list, aFormat);
-        
+
         TDesOverflowHandler handler;
-        
+
         TPtr8 stringDes = newString->Des();
         stringDes.AppendFormatList(baseFormat, list, &handler);
 

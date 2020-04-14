@@ -70,7 +70,6 @@ namespace eka2l1::epoc {
         }
 
     protected:
-
         /*! \brief Queue an event. This doesn't care about whenther the queue has reached maximum size
          *         yet
          * 
@@ -138,7 +137,7 @@ namespace eka2l1::epoc {
          * \param userdata      Userdata passed to callback.
          */
         void walk(walker_func walker, void *userdata) {
-            for (std::uint32_t i = 0; i < q_.size(); ) {
+            for (std::uint32_t i = 0; i < q_.size();) {
                 if (!walker(userdata, q_[i].evt)) {
                     // Delete the element
                     q_.erase(q_.begin() + i);

@@ -30,7 +30,7 @@
 namespace eka2l1::epoc {
     dsa::dsa(window_server_client_ptr client)
         : window_client_obj(client, nullptr)
-        , husband_(nullptr) 
+        , husband_(nullptr)
         , state_(state_none) {
         kernel_system *kern = client->get_ws().get_kernel_system();
 
@@ -50,8 +50,8 @@ namespace eka2l1::epoc {
             }
         }
 
-        std::uint32_t window_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
-        epoc::window_user *user = reinterpret_cast<epoc::window_user*>(client->get_object(window_handle));
+        std::uint32_t window_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(client->get_object(window_handle));
 
         // what the fuck msvc
         if ((!user) || (user->type != epoc::window_kind::client)) {
@@ -85,7 +85,7 @@ namespace eka2l1::epoc {
     }
 
     void dsa::get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        std::uint32_t max_rects = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        std::uint32_t max_rects = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
         if ((max_rects == 0) || (state_ != state_prepare)) {
             // What? Nothing?
@@ -109,12 +109,11 @@ namespace eka2l1::epoc {
 
         switch (op) {
         case ws_dsa_get_send_queue:
-        case ws_dsa_get_rec_queue: {    
+        case ws_dsa_get_rec_queue: {
             kernel_system *kern = client->get_ws().get_kernel_system();
             std::int32_t target_handle = 0;
 
-            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue)
-                ? dsa_ready_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_ready_queue_ : dsa_complete_queue_, kernel::owner_type::process);
 
             ctx.set_request_status(target_handle);
             break;

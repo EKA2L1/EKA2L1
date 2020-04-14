@@ -34,8 +34,8 @@ namespace eka2l1 {
         class codeseg;
     }
 
-    using codeseg_ptr = kernel::codeseg*;
-    using chunk_ptr = kernel::chunk*;
+    using codeseg_ptr = kernel::codeseg *;
+    using chunk_ptr = kernel::chunk *;
 }
 
 namespace eka2l1::kernel {
@@ -120,6 +120,8 @@ namespace eka2l1::kernel {
         virtual ~codeseg() {}
 
         void queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list);
+        void unmark();
+
         bool attach(kernel::process *new_foe);
         bool detatch(kernel::process *de_foe);
 
@@ -183,5 +185,8 @@ namespace eka2l1::kernel {
         }
 
         std::vector<std::uint32_t> get_export_table(kernel::process *pr);
+
+        // Use for patching
+        void set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address);
     };
 }

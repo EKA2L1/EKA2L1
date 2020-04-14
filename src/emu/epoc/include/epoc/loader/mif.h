@@ -31,11 +31,11 @@ namespace eka2l1::loader {
     struct mif_header_v2 {
         int uid;
         int version;
-        int offset;         ///< Offset of index section.
-        int array_len;      ///< Total entry count.
+        int offset; ///< Offset of index section.
+        int array_len; ///< Total entry count.
     };
 
-    struct mif_header_v3: public mif_header_v2 {
+    struct mif_header_v3 : public mif_header_v2 {
         int index_dll_uid;
     };
 
@@ -72,7 +72,7 @@ namespace eka2l1::loader {
          * \returns True on success. 
          */
         bool do_parse();
-        
+
         /**
          * \brief Read an MIF data entry.
          * 

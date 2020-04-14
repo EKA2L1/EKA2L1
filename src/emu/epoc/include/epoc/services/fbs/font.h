@@ -64,7 +64,7 @@ namespace eka2l1::epoc {
             serif = 0x4,
             mono_width = 0x8
         };
-        
+
         bufc_static<char16_t, 32> name;
         std::uint32_t coverage[4];
         std::int32_t style;
@@ -77,9 +77,9 @@ namespace eka2l1::epoc {
     };
 
     enum glyph_bitmap_type : std::int16_t {
-        default_glyph_bitmap,           ///< High chance (?) is monochrome.
-        monochrome_glyph_bitmap,        ///< 1 bit per pixel. This thing is usually compressed using RLE.
-        antialised_glyph_bitmap,        ///< 8 bit per pixel. Standard. Not compressed.
+        default_glyph_bitmap, ///< High chance (?) is monochrome.
+        monochrome_glyph_bitmap, ///< 1 bit per pixel. This thing is usually compressed using RLE.
+        antialised_glyph_bitmap, ///< 8 bit per pixel. Standard. Not compressed.
         subpixel_glyph_bitmap,
         four_color_blend_glyph_bitmap,
         undefined_glyph_bitmap,
@@ -109,7 +109,7 @@ namespace eka2l1::epoc {
         std::uint32_t flags;
         eka2l1::ptr<void> reserved1;
         eka2l1::ptr<void> reserved2;
-        
+
         void reset_flags() {
             flags = 0;
         }
@@ -205,31 +205,31 @@ namespace eka2l1::epoc {
     static_assert(sizeof(open_font_character_metric) == 20);
 
     struct open_font_glyph_v3 {
-        std::int32_t codepoint;             ///< Unicode value of character.
-        std::int32_t glyph_index;           ///< The index of this glyph.
+        std::int32_t codepoint; ///< Unicode value of character.
+        std::int32_t glyph_index; ///< The index of this glyph.
         open_font_character_metric metric;
-        std::int32_t offset;                ///< Offset from *this* pointer to the bitmap data.
+        std::int32_t offset; ///< Offset from *this* pointer to the bitmap data.
 
         void destroy(fbs_server *serv);
     };
 
-    struct open_font_session_cache_entry_v3: public open_font_glyph_v3 {
-        std::int32_t font_offset;           ///< Offset of the font that contains this glyph.
+    struct open_font_session_cache_entry_v3 : public open_font_glyph_v3 {
+        std::int32_t font_offset; ///< Offset of the font that contains this glyph.
     };
 
     struct open_font_glyph_v2 {
-        std::int32_t codepoint;             ///< Unicode value of character.
-        std::int32_t glyph_index;           ///< The index of this glyph.
+        std::int32_t codepoint; ///< Unicode value of character.
+        std::int32_t glyph_index; ///< The index of this glyph.
         open_font_character_metric metric;
-        std::int32_t offset;                ///< Offset from *this* pointer to the bitmap data.
-        std::uint32_t metric_offset;        ///< Pointer to metric. This is what the hell moment.
+        std::int32_t offset; ///< Offset from *this* pointer to the bitmap data.
+        std::uint32_t metric_offset; ///< Pointer to metric. This is what the hell moment.
 
         void destroy(fbs_server *serv);
     };
 
-    struct open_font_session_cache_entry_v2: public open_font_glyph_v2 {
-        std::int32_t font_offset;            ///< Offset of the font that contains this glyph.
-        std::int32_t last_use;               /*< A number that tells last time this was reference.
+    struct open_font_session_cache_entry_v2 : public open_font_glyph_v2 {
+        std::int32_t font_offset; ///< Offset of the font that contains this glyph.
+        std::int32_t last_use; /*< A number that tells last time this was reference.
                                                  The smaller the number is, the less recent it was referenced. */
     };
 
@@ -238,10 +238,10 @@ namespace eka2l1::epoc {
     };
 
     struct open_font_glyph_offset_array {
-        std::int32_t offset_array_offset;       /**< Offset of the array contains font glyph offset, starting from
+        std::int32_t offset_array_offset; /**< Offset of the array contains font glyph offset, starting from
                                                 *this* pointer. */
 
-        std::int32_t offset_array_count;        ///< Total entry in the array.
+        std::int32_t offset_array_count; ///< Total entry in the array.
 
         void init(fbscli *cli, const std::int32_t count);
 
@@ -290,10 +290,10 @@ namespace eka2l1::epoc {
     /**
      * \brief The second(?) version of the session cache. Used on build 94 and lower.
      */
-    struct open_font_session_cache_v2: public open_font_session_cache_base {
+    struct open_font_session_cache_v2 : public open_font_session_cache_base {
         open_font_glyph_offset_array offset_array;
-        std::uint32_t last_use_counter { 0 };
-        
+        std::uint32_t last_use_counter{ 0 };
+
         /**
          * \brief Add a new glyph in the session cache.
          * 
@@ -316,7 +316,7 @@ namespace eka2l1::epoc {
     /**
      * \brief The third(?) version of the session cache. Used on build 95(?) onwards.
      */
-    struct open_font_session_cache_v3: public open_font_session_cache_base {
+    struct open_font_session_cache_v3 : public open_font_session_cache_base {
         std::int64_t random_seed;
         open_font_glyph_offset_array offset_array;
 
@@ -346,8 +346,8 @@ namespace eka2l1::epoc {
      * Used below FBS build 95.
      */
     struct open_font_session_cache_link {
-        eka2l1::ptr<open_font_session_cache_link> next { 0 };
-        eka2l1::ptr<open_font_session_cache_v2> cache { 0 }; 
+        eka2l1::ptr<open_font_session_cache_link> next{ 0 };
+        eka2l1::ptr<open_font_session_cache_v2> cache{ 0 };
 
         /**
          * \brief     Try to find the link that correspond to this client, starting from the link that called
@@ -365,7 +365,7 @@ namespace eka2l1::epoc {
          */
         bool remove(fbscli *cli);
     };
-    
+
     enum {
         NORMAL_SESSION_CACHE_LIST_ENTRY_COUNT = 256
     };
@@ -374,8 +374,8 @@ namespace eka2l1::epoc {
      * \brief A vector map storing open font session cache offset.
      * Used from FBS build 95 onwards.
      */
-    struct open_font_session_cache_list: public common::vector_static_map<std::int32_t, std::int32_t,
-        NORMAL_SESSION_CACHE_ENTRY_COUNT> {
+    struct open_font_session_cache_list : public common::vector_static_map<std::int32_t, std::int32_t,
+                                              NORMAL_SESSION_CACHE_ENTRY_COUNT> {
         open_font_session_cache_v3 *get(fbscli *cli, const std::int32_t session_handle, const bool create = false);
 
         /**

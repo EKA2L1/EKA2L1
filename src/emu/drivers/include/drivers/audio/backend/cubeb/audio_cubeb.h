@@ -19,20 +19,21 @@
 
 #pragma once
 
-#include <drivers/audio/audio.h>
 #include <cubeb/cubeb.h>
+#include <drivers/audio/audio.h>
 
 namespace eka2l1::drivers {
-    struct cubeb_audio_driver: public audio_driver {
+    struct cubeb_audio_driver : public audio_driver {
     private:
         cubeb *context_;
+        bool init_;
 
     public:
         explicit cubeb_audio_driver();
 
         ~cubeb_audio_driver() override;
         std::unique_ptr<audio_output_stream> new_output_stream(const std::uint32_t sample_rate,
-            data_callback callback) override;
+            const std::uint8_t channels, data_callback callback) override;
         std::uint32_t native_sample_rate() override;
     };
 }

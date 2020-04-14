@@ -128,7 +128,7 @@ namespace eka2l1::common {
             }
         }
     }
-    
+
     int bitmap_allocator::force_fill(const std::uint32_t offset, const int size, const bool or_mode) {
         std::uint32_t *word = &words_[0] + (offset >> 5);
         const std::uint32_t set_bit = offset & 31;
@@ -160,8 +160,8 @@ namespace eka2l1::common {
             } else {
                 *word = wval & (~mask);
             }
-            
-            word += 1; 
+
+            word += 1;
 
             // We only need to be careful with the first word, since it only fills
             // some first bits. We should fully fill with other word, so set the mask full
@@ -213,7 +213,7 @@ namespace eka2l1::common {
                         boff = cursor;
                         bflen = 0;
                         bword = word;
-                        
+
                         while (cursor >= 0 && ((wv >> cursor) & 1) == 1) {
                             bflen++;
                             cursor--;
@@ -242,7 +242,7 @@ namespace eka2l1::common {
                             }
                         }
                     }
-                
+
                     cursor--;
                 }
             }
@@ -258,10 +258,10 @@ namespace eka2l1::common {
 
             return offset;
         }
-    
+
         return -1;
     }
-    
+
 #ifdef _MSC_VER
 #pragma optimize("", on)
 #endif

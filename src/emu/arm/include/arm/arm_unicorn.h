@@ -57,13 +57,13 @@ namespace eka2l1 {
             manager_system *mngr;
 
             breakpoint_address last_breakpoint;
-            bool last_breakpoint_hit { false };
-            address breakpoint_hit_addr { 0 };
+            bool last_breakpoint_hit{ false };
+            address breakpoint_hit_addr{ 0 };
 
         public:
             manager::config_state *conf;
-            std::uint32_t num_insts_runned { 0 };
-            
+            std::uint32_t num_insts_runned{ 0 };
+
             bool execute_instructions(uint32_t num_instructions);
 
             timing_system *get_timing_sys() {
@@ -97,7 +97,7 @@ namespace eka2l1 {
             bool did_last_breakpoint_hit() const {
                 return last_breakpoint_hit;
             }
-            
+
             void record_break(breakpoint_address bkpt) {
                 last_breakpoint = bkpt;
                 last_breakpoint_hit = true;
@@ -107,7 +107,7 @@ namespace eka2l1 {
                 breakpoint_hit_addr = addr;
             }
 
-            arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf, 
+            arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf,
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
 
             ~arm_unicorn();

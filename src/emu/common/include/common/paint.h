@@ -64,7 +64,7 @@ namespace eka2l1::common {
      * This plotter only stores R,G and B channel, and ignore the alpha channel.
      * This plotter produces 24 bits per pixel bitmap.
      */
-    class buffer_24bmp_pixel_plotter: public pixel_plotter {
+    class buffer_24bmp_pixel_plotter : public pixel_plotter {
         eka2l1::vec2 size_;
         std::vector<std::uint8_t> buf_;
 
@@ -92,14 +92,14 @@ namespace eka2l1::common {
         eka2l1::vecx<int, 4> brush_col_;
         eka2l1::vecx<int, 4> fill_col_;
 
-        int brush_thick_ { 1 };
-        int trans_ { 0 };
+        int brush_thick_{ 1 };
+        int trans_{ 0 };
 
         enum {
             PAINTER_FLAG_FILL_WHEN_DRAW = 0x1
         };
 
-        std::uint32_t flags { 0 };
+        std::uint32_t flags{ 0 };
 
     public:
         explicit painter(pixel_plotter *plotter);
@@ -107,7 +107,7 @@ namespace eka2l1::common {
         void set_brush_color(const eka2l1::vecx<int, 4> &color) {
             brush_col_ = color;
         }
-        
+
         void set_fill_color(const eka2l1::vecx<int, 4> &color) {
             fill_col_ = color;
         }
@@ -166,7 +166,7 @@ namespace eka2l1::common {
          * \param rad (X, Y) radius of the ellipse.
          */
         void ellipse(const eka2l1::vec2 &pos, const eka2l1::vec2 &rad);
-        
+
         /**
          * \brief Draw an ellipse with one-pixel thick.
          * 
@@ -185,7 +185,7 @@ namespace eka2l1::common {
          * \param re The rectangle to draw.
          */
         void rect(const eka2l1::rect &re);
-        
+
         /**
          * \brief Flood-fill a region with scan-line algorithm.
          * 

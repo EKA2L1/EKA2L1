@@ -50,7 +50,7 @@ namespace eka2l1 {
 
         return true;
     }
-    
+
     static bool read_non_localisable_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
         if (!read_str16_aligned(stream, reg.localised_info_rsc_path)) {
             return false;
@@ -113,8 +113,7 @@ namespace eka2l1 {
         }
 
         if (reg.caps.flags & apa_capability::non_native) {
-            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + 
-                eka2l1::relative_path(app_file);
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + eka2l1::relative_path(app_file);
         } else if (reg.caps.flags & apa_capability::built_as_dll) {
             reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + u"\\:system\\programs\\"
                 + binary_name + u".dll";
@@ -139,7 +138,7 @@ namespace eka2l1 {
 
         return true;
     }
-    
+
     bool read_localised_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
         // Skip over reserved variables
         stream->seek(8, common::seek_where::beg);

@@ -66,7 +66,7 @@ namespace eka2l1::drivers {
         GLint color_loc;
         GLint proj_loc;
         GLint model_loc;
-        
+
         GLint color_loc_fill;
         GLint proj_loc_fill;
         GLint model_loc_fill;

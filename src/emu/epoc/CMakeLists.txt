@@ -109,6 +109,9 @@ add_library(epocservs
     include/epoc/services/audio/keysound/keysound.h
     include/epoc/services/audio/keysound/ops.h
     include/epoc/services/audio/keysound/ringtab.h
+    include/epoc/services/audio/keysound/ringtab.h
+    include/epoc/services/audio/mmf/audio.h
+    include/epoc/services/audio/mmf/dev.h
     include/epoc/services/backup/backup.h
     include/epoc/services/cdl/cdl.h
     include/epoc/services/cdl/common.h
@@ -186,6 +189,8 @@ add_library(epocservs
     src/services/applist/registeration.cpp
     src/services/audio/keysound/context.cpp
     src/services/audio/keysound/keysound.cpp
+    src/services/audio/mmf/audio.cpp
+    src/services/audio/mmf/dev.cpp
     src/services/backup/backup.cpp
     src/services/cdl/cdl.cpp
     src/services/cdl/common.cpp
@@ -278,10 +283,13 @@ add_library(epocutils
 )
 
 add_library(epocdispatch
+    include/epoc/dispatch/audio.h
     include/epoc/dispatch/def.h
     include/epoc/dispatch/dispatcher.h
+    include/epoc/dispatch/management.h
     include/epoc/dispatch/register.h
     include/epoc/dispatch/screen.h
+    src/dispatch/audio.cpp
     src/dispatch/dispatcher.cpp
     src/dispatch/register.cpp
     src/dispatch/screen.cpp)

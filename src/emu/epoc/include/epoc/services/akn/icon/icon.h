@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/framework.h>
 #include <epoc/services/akn/icon/common.h>
 #include <epoc/services/faker.h>
+#include <epoc/services/framework.h>
 
 #include <memory>
 
@@ -30,12 +30,12 @@ namespace eka2l1 {
         epoc::akn_icon_params spec;
         epoc::akn_icon_srv_return_data ret;
 
-        int use_count { 0 };
+        int use_count{ 0 };
     };
 
     class fbs_server;
 
-    class akn_icon_server_session: public service::typical_session {
+    class akn_icon_server_session : public service::typical_session {
     public:
         explicit akn_icon_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version version);
         ~akn_icon_server_session() override {}
@@ -43,13 +43,13 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
-    class akn_icon_server: public service::typical_server {
+    class akn_icon_server : public service::typical_server {
         enum flags {
             akn_icon_srv_flag_inited = 0x1
         };
-        
+
         epoc::akn_icon_init_data init_data;
-        std::uint32_t flags {0};
+        std::uint32_t flags{ 0 };
 
         fbs_server *fbss;
         std::vector<icon_data_item> icons;

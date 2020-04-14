@@ -22,7 +22,7 @@
 #include <functional>
 
 namespace eka2l1::drivers {
-    using data_callback = std::function<std::size_t(std::int16_t*, std::size_t)>;
+    using data_callback = std::function<std::size_t(std::int16_t *, std::size_t)>;
 
     struct audio_output_stream {
         virtual ~audio_output_stream() {}

@@ -24,8 +24,8 @@
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
-#include <common/path.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include <epoc/services/ecom/ecom.h>
 #include <epoc/vfs.h>
@@ -34,8 +34,8 @@
 #include <epoc/loader/spi.h>
 #include <epoc/utils/uid.h>
 
-#include <epoc/services/ecom/common.h>
 #include <common/wildcard.h>
+#include <epoc/services/ecom/common.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1 {
@@ -44,7 +44,7 @@ namespace eka2l1 {
         auto &interface = interfaces[interface_uid];
 
         if (!std::binary_search(interface.implementations.begin(), interface.implementations.end(), impl,
-            [&](const ecom_implementation_info_ptr &impl1, const ecom_implementation_info_ptr &impl2) { return impl1->uid < impl2->uid; })) {
+                [&](const ecom_implementation_info_ptr &impl1, const ecom_implementation_info_ptr &impl2) { return impl1->uid < impl2->uid; })) {
             interface.implementations.push_back(impl);
             implementations.push_back(impl);
 
@@ -53,7 +53,7 @@ namespace eka2l1 {
                 [](const ecom_implementation_info_ptr &lhs, const ecom_implementation_info_ptr &rhs) {
                     return lhs->uid < rhs->uid;
                 });
-            
+
             std::sort(implementations.begin(), implementations.end(),
                 [](const ecom_implementation_info_ptr &lhs, const ecom_implementation_info_ptr &rhs) {
                     return lhs->uid < rhs->uid;
@@ -102,7 +102,7 @@ namespace eka2l1 {
     bool ecom_server::load_and_install_plugin_from_buffer(const std::u16string &name, std::uint8_t *buf, const std::size_t size,
         const drive_number drv) {
         common::ro_buf_stream stream(buf, size);
-        loader::rsc_file rsc(reinterpret_cast<common::ro_stream*>(&stream));
+        loader::rsc_file rsc(reinterpret_cast<common::ro_stream *>(&stream));
 
         ecom_plugin plugin;
 
@@ -276,7 +276,7 @@ namespace eka2l1 {
         return true;
     }
 
-    bool ecom_server::unpack_match_str_and_extended_interfaces(std::string &data, std::string &match_str, 
+    bool ecom_server::unpack_match_str_and_extended_interfaces(std::string &data, std::string &match_str,
         std::vector<std::uint32_t> &extended_interfaces) {
         // Data is empty. No match string, no extended interfaces whatsoever
         if (data.length() == 0) {
@@ -322,14 +322,13 @@ namespace eka2l1 {
 
         return true;
     }
-        
+
     void ecom_server::list_implementations(service::ipc_context &ctx) {
         // Clear last cache
         collected_impls.clear();
 
         // TODO: See if there is any exception (eg N97 could support it, not sure).
-        const bool support_extended_interface = 
-            ctx.sys->get_symbian_version_use() > epocver::epoc94;
+        const bool support_extended_interface = ctx.sys->get_symbian_version_use() > epocver::epoc94;
 
         // The UID type is the first parameter
         // First UID contains the interface UID, while the third one contains resolver UID
@@ -361,10 +360,14 @@ namespace eka2l1 {
                 return;
             }
 
-            if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
-                // TODO: This is some mysterious here.
-                ctx.set_request_status(epoc::error_argument);
-                return;
+            if (!support_extended_interface) {
+                match_str = arg2_data;
+            } else {
+                if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
+                    // TODO: This is some mysterious here.
+                    ctx.set_request_status(epoc::error_argument);
+                    return;
+                }
             }
         }
 
@@ -442,11 +445,11 @@ namespace eka2l1 {
             // We still need to see if the name is match
             // Generic match ? Wildcard check
             if (list_impl_param.match_type) {
-                if (std::regex_match(common::ucs2_to_utf8(implementation->display_name), wildcard_matcher)) {
+                if (std::regex_match(implementation->default_data, wildcard_matcher)) {
                     sastify = true;
                 }
             } else {
-                if (match_str == common::ucs2_to_utf8(implementation->display_name)) {
+                if (implementation->default_data.find(match_str) != std::string::npos) {
                     sastify = true;
                 }
             }
@@ -496,8 +499,7 @@ namespace eka2l1 {
     }
 
     void ecom_server::collect_implementation_list(service::ipc_context &ctx) {
-        const bool support_extended_interface = 
-            ctx.sys->get_symbian_version_use() > epocver::epoc94;
+        const bool support_extended_interface = ctx.sys->get_symbian_version_use() > epocver::epoc94;
 
         const std::size_t total_buffer_size_given = ctx.get_arg_max_size(0);
 
@@ -511,7 +513,7 @@ namespace eka2l1 {
         collected_impls.clear();
         ctx.set_request_status(epoc::error_none);
     }
-        
+
     ecom_server::ecom_server(eka2l1::system *sys)
         : service::server(sys, "!ecomserver", true) {
         REGISTER_IPC(ecom_server, list_implementations, ecom_list_implementations, "ECom::ListImpls");

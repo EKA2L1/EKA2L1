@@ -28,17 +28,17 @@
 #include <epoc/utils/uid.h>
 
 #include <common/configure.h>
+#include <epoc/dispatch/dispatcher.h>
 #include <epoc/hal.h>
 #include <epoc/svc.h>
-#include <epoc/dispatch/dispatcher.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
 
 #include <epoc/loader/rom.h>
 
-#include <manager/manager.h>
 #include <manager/config.h>
+#include <manager/manager.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
@@ -472,7 +472,7 @@ namespace eka2l1::epoc {
     /*
     * Warning: It's not possible to set the UTC time and offset in the emulator at the moment.
     */
-   
+
     BRIDGE_FUNC(std::int32_t, UTCOffset) {
         // TODO: Users and apps can set this
         return common::get_current_utc_offset();
@@ -663,7 +663,9 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
-        TIpcCopyInfo *info = aInfo.get(mem);
+        process_ptr crr_process = kern->crr_process();
+
+        TIpcCopyInfo *info = aInfo.get(crr_process);
         ipc_msg_ptr msg = kern->get_msg(aHandle);
 
         if (!msg) {
@@ -695,7 +697,7 @@ namespace eka2l1::epoc {
                 std::int32_t lengthToRead = common::min(
                     static_cast<std::int32_t>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
-                memcpy(info->iTargetPtr.get(mem), arg_request->data() + aStartOffset, lengthToRead);
+                memcpy(info->iTargetPtr.get(crr_process), arg_request->data() + aStartOffset, lengthToRead);
                 return lengthToRead;
             }
 
@@ -708,7 +710,7 @@ namespace eka2l1::epoc {
             std::int32_t lengthToRead = common::min(
                 static_cast<std::int32_t>(arg_request->length()) - aStartOffset, info->iTargetLength);
 
-            memcpy(info->iTargetPtr.get(mem), reinterpret_cast<const std::uint8_t *>(arg_request->data()) + aStartOffset * 2,
+            memcpy(info->iTargetPtr.get(crr_process), reinterpret_cast<const std::uint8_t *>(arg_request->data()) + aStartOffset * 2,
                 lengthToRead * 2);
 
             return lengthToRead;
@@ -719,7 +721,7 @@ namespace eka2l1::epoc {
         context.msg = msg;
 
         std::string content;
-        
+
         // We must keep the other part behind the offset
         if (des8) {
             content = std::move(*context.get_arg<std::string>(aParam));
@@ -810,7 +812,8 @@ namespace eka2l1::epoc {
         if (!server_name.empty() && server_name[0] == '!') {
             if (!crr_pr->satisfy(server_exclamination_point_name_policy)) {
                 LOG_ERROR("Process {} try to create a server with exclamination point at the beginning of name ({}),"
-                          " but doesn't have ProtServ", crr_pr->name(), server_name);
+                          " but doesn't have ProtServ",
+                    crr_pr->name(), server_name);
 
                 return epoc::error_permission_denied;
             }
@@ -855,11 +858,28 @@ namespace eka2l1::epoc {
         server->cancel_async_lle();
     }
 
+    static std::int32_t do_create_session_from_server(system *sys, server_ptr server, std::int32_t msg_slot_count, eka2l1::ptr<void> sec, std::int32_t mode) {
+        kernel_system *kern = sys->get_kernel_system();
+        const kernel::handle handle = kern->create_and_add<service::session>(
+                                              kernel::owner_type::process, server, msg_slot_count)
+                                          .first;
+
+        if (handle == INVALID_HANDLE) {
+            return epoc::error_general;
+        }
+
+        LOG_TRACE("New session connected to {} with handle {}", server->name(), handle);
+
+        return handle;
+    }
+
     BRIDGE_FUNC(std::int32_t, SessionCreate, eka2l1::ptr<desc8> aServerName, std::int32_t aMsgSlot, eka2l1::ptr<void> aSec, std::int32_t aMode) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        std::string server_name = aServerName.get(mem)->to_std_string(kern->crr_process());
+        process_ptr pr = kern->crr_process();
+
+        std::string server_name = aServerName.get(pr)->to_std_string(pr);
         server_ptr server = kern->get_by_name<service::server>(server_name);
 
         if (!server) {
@@ -867,17 +887,22 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        const kernel::handle handle = kern->create_and_add<service::session>(
-                                              kernel::owner_type::process, server, aMsgSlot)
-                                          .first;
+        return do_create_session_from_server(sys, server, aMsgSlot, aSec, aMode);
+    }
 
-        if (handle == INVALID_HANDLE) {
-            return epoc::error_general;
+    BRIDGE_FUNC(std::int32_t, SessionCreateFromHandle, std::uint32_t aServerHandle, std::int32_t aMsgSlot, eka2l1::ptr<void> aSec, std::int32_t aMode) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        process_ptr pr = kern->crr_process();
+        server_ptr server = kern->get<service::server>(aServerHandle);
+
+        if (!server) {
+            LOG_TRACE("Create session to unexist server handle: {}", aServerHandle);
+            return epoc::error_not_found;
         }
 
-        LOG_TRACE("New session connected to {} with handle {}", server_name, handle);
-
-        return handle;
+        return do_create_session_from_server(sys, server, aMsgSlot, aSec, aMode);
     }
 
     BRIDGE_FUNC(std::int32_t, SessionShare, eka2l1::ptr<std::int32_t> aHandle, std::int32_t aShare) {
@@ -911,7 +936,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, SessionSendSync, std::int32_t aHandle, std::int32_t aOrd, eka2l1::ptr<void> aIpcArgs,
         eka2l1::ptr<epoc::request_status> aStatus) {
-        //LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
+        // LOG_TRACE("Send using handle: {}", (aHandle & 0x8000) ? (aHandle & ~0x8000) : (aHandle));
 
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -996,7 +1021,7 @@ namespace eka2l1::epoc {
 #endif
 
         const int result = ss->send_receive(aOrd, arg, aStatus);
-        
+
         if (ss->get_server()->is_hle()) {
             // Process it right away.
             ss->get_server()->process_accepted_msg();
@@ -1119,7 +1144,7 @@ namespace eka2l1::epoc {
 
         return chunk->base();
     }
-    
+
     BRIDGE_FUNC(std::int32_t, ChunkSize, std::int32_t aChunkHandle) {
         chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(aChunkHandle);
         if (!chunk) {
@@ -1430,6 +1455,7 @@ namespace eka2l1::epoc {
 
         std::vector<uint32_t> list;
         pr->get_codeseg()->queries_call_list(pr, list);
+        pr->get_codeseg()->unmark();
 
         *total = static_cast<std::int32_t>(list.size());
         memcpy(list_ptr, list.data(), sizeof(std::uint32_t) * *total);
@@ -1558,9 +1584,15 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
+        process_ptr pr = kern->crr_process();
+
         // Get rid of null terminator
-        std::string thr_name = aThreadName.get(mem)->to_std_string(kern->crr_process()).c_str();
-        thread_create_info_expand *info = aInfo.get(mem);
+        std::string thr_name = aThreadName.get(pr)->to_std_string(pr).c_str();
+        thread_create_info_expand *info = aInfo.get(pr);
+
+        if (thr_name.empty()) {
+            thr_name = "AnonymousThread";
+        }
 
         const kernel::handle thr_handle = kern->create_and_add<kernel::thread>(static_cast<kernel::owner_type>(aOwnerType),
                                                   mem, kern->get_timing_system(), kern->crr_process(),
@@ -1688,7 +1720,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
-        return kern->mirror(kern->get_by_id<kernel::process>(thr->owning_process()->unique_id()), 
+        return kern->mirror(kern->get_by_id<kernel::process>(thr->owning_process()->unique_id()),
             kernel::owner_type::thread);
     }
 
@@ -1874,7 +1906,7 @@ namespace eka2l1::epoc {
         if (return_code != epoc::error_none) {
             return return_code;
         }
-        
+
         return aDataLength;
     }
 
@@ -1897,7 +1929,7 @@ namespace eka2l1::epoc {
 
         auto property_ref_handle_and_obj = kern->create_and_add<service::property_reference>(
             static_cast<kernel::owner_type>(aOwnerType), prop);
-        
+
         if (property_ref_handle_and_obj.first == INVALID_HANDLE) {
             return epoc::error_general;
         }
@@ -2262,16 +2294,15 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, VirtualReality) {
         // Call host function. Hack.
-        typedef bool (*reality_func)(void* data);
+        typedef bool (*reality_func)(void *data);
 
         const std::uint32_t current = sys->get_cpu()->get_pc();
-        std::uint64_t *data = reinterpret_cast<std::uint64_t*>(sys->get_kernel_system()->
-            crr_process()->get_ptr_on_addr_space(current - 20));
+        std::uint64_t *data = reinterpret_cast<std::uint64_t *>(sys->get_kernel_system()->crr_process()->get_ptr_on_addr_space(current - 20));
 
         sys->get_cpu()->save_context(sys->get_kernel_system()->crr_thread()->get_thread_context());
 
         reality_func to_call = reinterpret_cast<reality_func>(*data++);
-        void *userdata = reinterpret_cast<void*>(*data++);
+        void *userdata = reinterpret_cast<void *>(*data++);
 
         if (!to_call(userdata)) {
             sys->get_kernel_system()->crr_thread()->wait_for_any_request();
@@ -2377,6 +2408,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7D, ThreadProcess),
         BRIDGE_REGISTER(0x7E, ServerCreate),
         BRIDGE_REGISTER(0x7F, SessionCreate),
+        BRIDGE_REGISTER(0x80, SessionCreateFromHandle),
         BRIDGE_REGISTER(0x84, TimerCreate),
         BRIDGE_REGISTER(0x87, ChangeNotifierCreate),
         BRIDGE_REGISTER(0x9C, WaitDllLock),

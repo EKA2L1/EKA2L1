@@ -23,15 +23,15 @@
 
 namespace eka2l1::epoc {
 
-    void akn_skin_bitmap_store::store_bitmap(fbsbitmap* bitmap) {
+    void akn_skin_bitmap_store::store_bitmap(fbsbitmap *bitmap) {
         bitmap_vector.emplace_back(bitmap);
     }
 
     void akn_skin_bitmap_store::remove_stored_bitmap(const std::uint32_t bmp_handle) {
-        if (! bmp_handle)
+        if (!bmp_handle)
             return;
 
-        auto bmp_to_remove = std::find_if(bitmap_vector.begin(), bitmap_vector.end(), [&](fbsbitmap* it) -> bool {
+        auto bmp_to_remove = std::find_if(bitmap_vector.begin(), bitmap_vector.end(), [&](fbsbitmap *it) -> bool {
             return it->id == bmp_handle;
         });
 

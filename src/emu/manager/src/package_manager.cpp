@@ -41,9 +41,8 @@ namespace eka2l1 {
         static constexpr const char *PACKAGE_FOLDER_PATH = "packages";
 
         package_manager::package_manager(io_system *io, config_state *conf)
-            : io(io) 
-            , conf(conf)
-        { 
+            : io(io)
+            , conf(conf) {
             load_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
             eka2l1::create_directory(add_path(conf->storage, PACKAGE_FOLDER_PATH));
         }
@@ -51,7 +50,7 @@ namespace eka2l1 {
         static std::string get_bucket_stream_path(config_state *state, const uid package_uid) {
             return add_path(state->storage, add_path(PACKAGE_FOLDER_PATH, common::to_string(package_uid, std::hex) + ".txt"));
         }
-            
+
         bool package_manager::add_to_file_bucket(const uid package_uid, const std::string &path) {
             std::fstream bucket_stream(get_bucket_stream_path(conf, package_uid), std::ios::out | std::ios::app);
 
@@ -62,7 +61,7 @@ namespace eka2l1 {
             bucket_stream << path << '\n';
             return true;
         }
-    
+
         void package_manager::get_file_bucket(const manager::uid pkg_uid, std::vector<std::string> &paths) {
             std::fstream bucket_stream(get_bucket_stream_path(conf, pkg_uid), std::ios::in);
 
@@ -76,7 +75,7 @@ namespace eka2l1 {
                 paths.push_back(path);
             }
         }
-        
+
         bool package_manager::load_sdb_yaml(const std::string &path) {
             FILE *f = fopen(path.c_str(), "rb");
 
@@ -143,7 +142,7 @@ namespace eka2l1 {
 
             return &packages[idx];
         }
-        
+
         void package_manager::add_package(package_info &pkg) {
             // Lock the list.
             const std::lock_guard<std::mutex> guard(lockdown);
@@ -154,7 +153,7 @@ namespace eka2l1 {
                 return lhs.id < rhs.id;
             });
         }
-        
+
         bool package_manager::installed(uid app_uid) {
             // Lock the list.
             const std::lock_guard<std::mutex> guard(lockdown);
@@ -163,9 +162,9 @@ namespace eka2l1 {
             temp.id = app_uid;
 
             if (std::binary_search(packages.begin(), packages.end(), temp,
-                [](const package_info &lhs, const package_info &rhs) {
-                    return lhs.id < rhs.id;
-                })) {
+                    [](const package_info &lhs, const package_info &rhs) {
+                        return lhs.id < rhs.id;
+                    })) {
                 return true;
             }
 
@@ -188,7 +187,7 @@ namespace eka2l1 {
 
             for (auto &wrap_file_des : ctrl->install_block.files.fields) {
                 const loader::sis_file_des *file_des = reinterpret_cast<loader::sis_file_des *>(wrap_file_des.get());
-                
+
                 std::string file_path = common::ucs2_to_utf8(file_des->target.unicode_string);
 
                 if (file_path[0] == '!') {
@@ -224,7 +223,7 @@ namespace eka2l1 {
                 common::ro_std_file_stream stream(common::ucs2_to_utf8(path), true);
 
                 // Interpret the file
-                loader::ss_interpreter interpreter(reinterpret_cast<common::ro_stream*>(&stream),
+                loader::ss_interpreter interpreter(reinterpret_cast<common::ro_stream *>(&stream),
                     io,
                     this,
                     conf,
@@ -240,7 +239,7 @@ namespace eka2l1 {
                 if (choose_lang) {
                     interpreter.choose_lang = choose_lang;
                 }
-                
+
                 interpreter.interpret(progress);
                 install_controller(&res.controller, drive);
             } else {
@@ -253,10 +252,10 @@ namespace eka2l1 {
                     return false;
                 }
 
-                for (const auto &file: files) {
+                for (const auto &file : files) {
                     add_to_file_bucket(de_info.id, common::ucs2_to_utf8(file));
                 }
-                
+
                 add_package(de_info);
             }
 
@@ -265,7 +264,7 @@ namespace eka2l1 {
             if (show_text) {
                 show_text("Installation done!");
             }
-            
+
             LOG_TRACE("Installation done!");
 
             return true;
@@ -276,7 +275,7 @@ namespace eka2l1 {
             const std::string pkg_file = get_bucket_stream_path(conf, pkg_uid);
             std::ifstream bucket_stream(pkg_file);
 
-            if (bucket_stream) {    
+            if (bucket_stream) {
                 std::string file_path = "";
 
                 while (std::getline(bucket_stream, file_path)) {

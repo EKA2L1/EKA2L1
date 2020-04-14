@@ -20,9 +20,9 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 
+#include <fstream>
 #include <manager/config.h>
 #include <yaml-cpp/yaml.h>
-#include <fstream>
 
 namespace eka2l1::manager {
     template <typename T, typename Q = T>
@@ -33,7 +33,7 @@ namespace eka2l1::manager {
             *target_val = std::move(default_val);
         }
     }
-    
+
     template <typename T>
     void config_file_emit_single(YAML::Emitter &emitter, const char *name, T &val) {
         emitter << YAML::Key << name << YAML::Value << val;
@@ -90,7 +90,7 @@ namespace eka2l1::manager {
         config_file_emit_single(emitter, "fbs-enable-compression-queue", fbs_enable_compression_queue);
 
         emitter << YAML::EndMap;
-        
+
         std::ofstream file("config.yml");
         file << emitter.c_str();
     }

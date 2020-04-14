@@ -194,7 +194,7 @@ namespace eka2l1 {
             */
 
             ctx.pc = owner ? (inital ? entry_point : owning_process()->get_entry_point_address())
-                                 : entry_point;
+                           : entry_point;
 
             ctx.sp = stack_top;
             ctx.cpsr = ((ctx.pc & 1) << 5);
@@ -243,7 +243,7 @@ namespace eka2l1 {
             ptr<void> usrdata,
             ptr<void> allocator,
             thread_priority pri)
-            : kernel_obj(kern, name, reinterpret_cast<kernel_obj*>(owner), access)
+            : kernel_obj(kern, name, reinterpret_cast<kernel_obj *>(owner), access)
             , stack_size(static_cast<int>(stack_size))
             , min_heap_size(static_cast<int>(min_heap_size))
             , max_heap_size(static_cast<int>(max_heap_size))
@@ -266,7 +266,7 @@ namespace eka2l1 {
             }
 
             create_time = timing->get_ticks();
-            
+
             timeslice = 20000;
             time = 20000;
 
@@ -294,7 +294,7 @@ namespace eka2l1 {
             // TODO: Not hardcode this
             const size_t metadata_size = 0x40;
 
-            std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t*>(stack_chunk->host_base());
+            std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t *>(stack_chunk->host_base());
             std::uint8_t *stack_top_ptr = stack_beg_meta_ptr + stack_size - metadata_size;
 
             const address stack_top = stack_chunk->base().ptr_address() + static_cast<address>(stack_size - metadata_size);
@@ -389,7 +389,7 @@ namespace eka2l1 {
             last_priority = real_priority;
 
             bool should_reschedule_back = false;
-            
+
             if (scheduler_link.next != nullptr && scheduler_link.previous != nullptr) {
                 // It's in the queue!!! Move it!
                 scheduler->dequeue_thread_from_ready(this);
@@ -498,7 +498,7 @@ namespace eka2l1 {
         }
 
         void thread::owning_process(kernel::process *pr) {
-            owner = reinterpret_cast<kernel_obj*>(pr);
+            owner = reinterpret_cast<kernel_obj *>(pr);
             owning_process()->increase_thread_count();
 
             name_chunk->set_owner(pr);
@@ -578,7 +578,7 @@ namespace eka2l1 {
         chunk_ptr thread::get_stack_chunk() {
             return stack_chunk;
         }
-        
+
         void thread::add_ticks(const int num) {
             time = common::max(0, time - num);
         }

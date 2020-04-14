@@ -38,7 +38,7 @@
 namespace eka2l1::epoc {
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        attached_window = reinterpret_cast<epoc::window_user*>(client->get_object(window_to_attach_handle));
+        attached_window = reinterpret_cast<epoc::window_user *>(client->get_object(window_to_attach_handle));
 
         // Attach context with window
         attached_window->attached_contexts.push(&context_attach_link);
@@ -75,19 +75,19 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
-    void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left, 
+    void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
         eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
         const int baseline_offset, const int margin) {
         // TODO: Pen outline >_<
         eka2l1::vecx<int, 4> color;
         color = common::rgb_to_vec(brush_color);
         cmd_builder->set_brush_color({ color[1], color[2], color[3] });
-        
+
         eka2l1::rect area(top_left, bottom_right - top_left);
-        
+
         // Add the baseline offset. Where text will sit on.
         area.top.y += baseline_offset;
-        
+
         if (align == epoc::text_alignment::right) {
             area.top.x -= margin;
         } else {
@@ -102,7 +102,7 @@ namespace eka2l1::epoc {
 
     bool graphic_context::do_command_set_color(const set_color_type to_set) {
         eka2l1::vecx<int, 4> color;
-        
+
         switch (to_set) {
         case set_color_type::brush: {
             // Don't bother even sending any draw command
@@ -163,11 +163,11 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
-        brush_color = *reinterpret_cast<const common::rgb*>(cmd.data_ptr);
+        brush_color = *reinterpret_cast<const common::rgb *>(cmd.data_ptr);
         context.set_request_status(epoc::error_none);
     }
 
-    void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {        
+    void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {
         context_attach_link.deque();
 
         // Might have to flush sooner, since this window can be used with another
@@ -178,13 +178,13 @@ namespace eka2l1::epoc {
         recording = false;
         context.set_request_status(epoc::error_none);
     }
-    
+
     drivers::handle graphic_context::handle_from_bitwise_bitmap(epoc::bitwise_bitmap *bmp) {
         drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
         epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
         return cacher->add_or_get(driver, cmd_builder.get(), bmp);
     }
-    
+
     void graphic_context::draw_bitmap(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap *>(cmd.data_ptr);
         epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
@@ -198,9 +198,9 @@ namespace eka2l1::epoc {
         do_command_draw_bitmap(context, bmp_driver_handle, rect({ 0, 0 }, bw_bmp->header_.size_pixels),
             rect(bitmap_cmd->pos, { 0, 0 }));
     }
-    
+
     void graphic_context::gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
-        ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked*>(cmd.data_ptr);
+        ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked *>(cmd.data_ptr);
         epoc::bitwise_bitmap *bmp = client->get_ws().get_bitmap(blt_cmd->source_handle);
         epoc::bitwise_bitmap *masked = client->get_ws().get_bitmap(blt_cmd->mask_handle);
 
@@ -231,16 +231,16 @@ namespace eka2l1::epoc {
         }
 
         cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, blt_cmd->source_rect, flags);
-        
-        if (alpha_blending) {    
+
+        if (alpha_blending) {
             cmd_builder->set_blend_mode(false);
         }
-        
+
         context.set_request_status(epoc::error_none);
     }
 
     void graphic_context::gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver) {
-        ws_cmd_gdi_blt3 *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt3*>(cmd.data_ptr);
+        ws_cmd_gdi_blt3 *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt3 *>(cmd.data_ptr);
 
         // Try to get the bitmap
         epoc::bitwise_bitmap *bmp = client->get_ws().get_bitmap(blt_cmd->handle);
@@ -273,7 +273,7 @@ namespace eka2l1::epoc {
             source_rect.size.y = bmp->header_.size_pixels.y - blt_cmd->source_rect.top.y;
             dest_rect.size.y = source_rect.size.y;
         }
-        
+
         drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bmp);
         do_command_draw_bitmap(context, bmp_driver_handle, source_rect, dest_rect);
     }
@@ -281,23 +281,23 @@ namespace eka2l1::epoc {
     void graphic_context::gdi_blt2(service::ipc_context &context, ws_cmd &cmd) {
         gdi_blt_impl(context, cmd, 2);
     }
-    
+
     void graphic_context::gdi_blt3(service::ipc_context &context, ws_cmd &cmd) {
         gdi_blt_impl(context, cmd, 3);
     }
 
     void graphic_context::set_brush_style(service::ipc_context &context, ws_cmd &cmd) {
-        fill_mode = *reinterpret_cast<brush_style*>(cmd.data_ptr);
+        fill_mode = *reinterpret_cast<brush_style *>(cmd.data_ptr);
         context.set_request_status(epoc::error_none);
     }
-    
+
     void graphic_context::set_pen_style(service::ipc_context &context, ws_cmd &cmd) {
-        line_mode = *reinterpret_cast<pen_style*>(cmd.data_ptr);
+        line_mode = *reinterpret_cast<pen_style *>(cmd.data_ptr);
         context.set_request_status(epoc::error_none);
     }
-    
+
     void graphic_context::draw_rect(service::ipc_context &context, ws_cmd &cmd) {
-        eka2l1::rect area = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+        eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
         // Symbian rectangle second vector is the bottom right, not the size
         area.size = area.size - area.top;
@@ -307,7 +307,7 @@ namespace eka2l1::epoc {
             eka2l1::rect backup_border = area;
             backup_border.top -= pen_size;
             backup_border.size += pen_size * 2;
-            
+
             cmd_builder->draw_rectangle(backup_border);
         }
 
@@ -318,9 +318,9 @@ namespace eka2l1::epoc {
 
         context.set_request_status(epoc::error_none);
     }
-    
+
     void graphic_context::clear_rect(service::ipc_context &context, ws_cmd &cmd) {
-        eka2l1::rect area = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+        eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
         // Symbian rectangle second vector is the bottom right, not the size
         area.size = area.size - area.top;
@@ -333,23 +333,23 @@ namespace eka2l1::epoc {
         cmd_builder->draw_rectangle(area);
         context.set_request_status(epoc::error_none);
     }
-    
+
     void graphic_context::reset_context() {
         text_font = nullptr;
-        
+
         fill_mode = brush_style::null;
         line_mode = pen_style::null;
 
         pen_size = { 1, 1 };
     }
-    
+
     void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
         reset_context();
         context.set_request_status(epoc::error_none);
     }
 
     void graphic_context::use_font(service::ipc_context &context, ws_cmd &cmd) {
-        service::uid font_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        service::uid font_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         fbs_server *fbs = client->get_ws().get_fbs_server();
 
         fbsfont *font_object = fbs->get_font(font_handle);
@@ -360,7 +360,7 @@ namespace eka2l1::epoc {
         }
 
         text_font = font_object;
-        
+
         if (text_font->atlas.atlas_handle_ == 0) {
             // Initialize the atlas
             text_font->atlas.init(font_object->of_info.adapter, 0x20, 0xFF - 0x20,
@@ -372,17 +372,15 @@ namespace eka2l1::epoc {
 
     void graphic_context::draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_draw_box_text_optimised1 *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
-        std::u16string text(reinterpret_cast<char16_t*>(reinterpret_cast<std::uint8_t*>
-            (cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised1)), info->length);
-        
+        std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised1)), info->length);
+
         do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
             epoc::text_alignment::left, info->baseline_offset, 0);
     }
-    
+
     void graphic_context::draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_draw_box_text_optimised2 *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
-        std::u16string text(reinterpret_cast<char16_t*>(reinterpret_cast<std::uint8_t*>
-            (cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised2)), info->length);
+        std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised2)), info->length);
 
         do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
             info->horiz, info->baseline_offset, info->left_mgr);
@@ -392,16 +390,16 @@ namespace eka2l1::epoc {
         context.set_request_status(epoc::error_none);
         client->delete_object(cmd.obj_handle);
     }
-    
+
     void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
         // General rules: Stub to err_none = nullptr, implement = function pointer
         //                Do nothing = add nothing
-        using ws_graphics_context_op_handler = std::function<void(graphic_context*, 
-            service::ipc_context &ctx, ws_cmd &cmd)>;
+        using ws_graphics_context_op_handler = std::function<void(graphic_context *,
+            service::ipc_context & ctx, ws_cmd & cmd)>;
 
-        using ws_graphics_context_table_op =  std::map<ws_graphics_context_opcode, ws_graphics_context_op_handler>;
+        using ws_graphics_context_table_op = std::map<ws_graphics_context_opcode, ws_graphics_context_op_handler>;
 
         static const ws_graphics_context_table_op v171u_opcode_handlers = {
             { ws_gc_u171_active, &graphic_context::active },
@@ -421,7 +419,7 @@ namespace eka2l1::epoc {
             { ws_gc_u171_gdi_blt_masked, &graphic_context::gdi_blt_masked },
             { ws_gc_u171_free, &graphic_context::free }
         };
-        
+
         static const ws_graphics_context_table_op curr_opcode_handlers = {
             { ws_gc_curr_active, &graphic_context::active },
             { ws_gc_curr_set_brush_color, &graphic_context::set_brush_color },
@@ -443,19 +441,19 @@ namespace eka2l1::epoc {
 
         epoc::version cli_ver = client->client_version();
         ws_graphics_context_op_handler handler = nullptr;
-        
-        #define FIND_OPCODE(op, table)                                                  \
-            auto result = table.find(op);                                               \
-            if (result == table.end() || !result->second) {                             \
-                LOG_WARN("Unimplemented graphics context opcode {}", cmd.header.op);    \
-                return;                                                                 \
-            }                                                                           \
-            handler = result->second;
+
+#define FIND_OPCODE(op, table)                                               \
+    auto result = table.find(op);                                            \
+    if (result == table.end() || !result->second) {                          \
+        LOG_WARN("Unimplemented graphics context opcode {}", cmd.header.op); \
+        return;                                                              \
+    }                                                                        \
+    handler = result->second;
 
         if (cli_ver.major == 1 && cli_ver.minor == 0) {
             if (cli_ver.build <= 171) {
                 // Execute table 1
-                FIND_OPCODE(op, v171u_opcode_handlers) 
+                FIND_OPCODE(op, v171u_opcode_handlers)
             } else {
                 // Execute table 2
                 FIND_OPCODE(op, curr_opcode_handlers)
@@ -467,7 +465,7 @@ namespace eka2l1::epoc {
 
     graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
         : window_client_obj(client, nullptr)
-        , attached_window(reinterpret_cast<epoc::window_user*>(attach_win))
+        , attached_window(reinterpret_cast<epoc::window_user *>(attach_win))
         , text_font(nullptr)
         , fill_mode(brush_style::null)
         , line_mode(pen_style::null)

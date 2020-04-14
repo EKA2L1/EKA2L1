@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/remcon/target.h>
 #include <epoc/services/context.h>
+#include <epoc/services/remcon/target.h>
 #include <epoc/utils/err.h>
 
 #include <common/log.h>

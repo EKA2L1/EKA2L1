@@ -19,8 +19,8 @@
  */
 #pragma once
 
-#include <common/types.h>
 #include <common/buffer.h>
+#include <common/types.h>
 
 #include <array>
 #include <atomic>
@@ -398,11 +398,12 @@ namespace eka2l1 {
 
     symfile physical_file_proxy(const std::string &path, int mode);
 
-    class ro_file_stream: public common::ro_stream {
+    class ro_file_stream : public common::ro_stream {
         file *f_;
 
     public:
-        explicit ro_file_stream(file *f): f_(f) {
+        explicit ro_file_stream(file *f)
+            : f_(f) {
         }
 
         void seek(const std::int64_t amount, common::seek_where wh) override;
@@ -410,7 +411,7 @@ namespace eka2l1 {
         std::uint64_t left() override;
         uint64_t tell() const override;
         uint64_t size() override;
-        
+
         std::uint64_t read(void *buf, const std::uint64_t read_size) override;
     };
 }

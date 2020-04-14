@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/hwrm/vibration/vibration.h>
-#include <epoc/services/hwrm/op.h>
 #include <epoc/services/context.h>
+#include <epoc/services/hwrm/op.h>
+#include <epoc/services/hwrm/vibration/vibration.h>
 
 namespace eka2l1::epoc {
     void vibration_resource::execute_command(service::ipc_context &ctx) {

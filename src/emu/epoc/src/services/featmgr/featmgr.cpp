@@ -24,8 +24,8 @@
 #include <epoc/services/featmgr/featmgr.h>
 #include <epoc/services/featmgr/op.h>
 #include <epoc/utils/des.h>
-#include <epoc/vfs.h>
 #include <epoc/utils/err.h>
+#include <epoc/vfs.h>
 
 namespace eka2l1 {
     featmgr_server::featmgr_server(system *sys)
@@ -33,7 +33,7 @@ namespace eka2l1 {
         REGISTER_IPC(featmgr_server, feature_supported, EFeatMgrFeatureSupported, "FeatMgr::FeatureSupported");
     }
 
-    enum feature_id: epoc::uid {
+    enum feature_id : epoc::uid {
         feature_id_opengl_es_3d_api = 10,
         feature_id_svgt = 77,
         feature_id_korean = 180,
@@ -45,7 +45,7 @@ namespace eka2l1 {
     void featmgr_server::do_feature_scanning(system *sys) {
         // TODO: There is a lot of features.
         // See in here: https://github.com/SymbianSource/oss.FCL.sf.os.deviceplatformrelease/blob/master/foundation_system/sf_config/config/inc/publicruntimeids.hrh
-        
+
         // 1. We always welcome rendering with OpenGL ES
         enable_features.push_back(feature_id_opengl_es_3d_api);
 
@@ -57,7 +57,7 @@ namespace eka2l1 {
         // 3. Check for system language. User have responsibility to be honest :D
         // I like automatic detection, but it's not really easy thogh
         switch (sys->get_system_language()) {
-        case language::zh: {    
+        case language::zh: {
             enable_features.push_back(feature_id_chinese);
             break;
         }
@@ -80,7 +80,7 @@ namespace eka2l1 {
         default:
             break;
         }
-        
+
         // 4: Add stuff you like here.
     }
 
@@ -148,7 +148,7 @@ namespace eka2l1 {
         } else {
             // Failed? Search in the range.
             // TODO: We can probably improve this with a binary search, which blocks the head and the tail.
-            for (const auto &feature_range: enable_feature_ranges) {
+            for (const auto &feature_range : enable_feature_ranges) {
                 if (feature_range.low_uid <= feature_id && feature_id <= feature_range.high_uid) {
                     result = 1;
                     break;

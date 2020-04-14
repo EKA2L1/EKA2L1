@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <epoc/utils/des.h>
 #include <cstdint>
+#include <epoc/utils/des.h>
 
 namespace eka2l1::epoc {
     struct time {
@@ -61,8 +61,7 @@ namespace eka2l1::epoc::fs {
     constexpr std::uint32_t entry_att_xip = 0x0080;
     constexpr std::uint32_t entry_att_remove = 0x0100;
     constexpr std::uint32_t entry_att_mask_filesystem_specific = 0x00FF0000;
-    constexpr std::uint32_t entry_att_match_mask = 
-        (entry_att_hidden | entry_att_system | entry_att_dir);
+    constexpr std::uint32_t entry_att_match_mask = (entry_att_hidden | entry_att_system | entry_att_dir);
 
     constexpr std::uint32_t drive_att_transaction = 0x80;
     constexpr std::uint32_t drive_att_pageable = 0x100;
@@ -146,7 +145,7 @@ namespace eka2l1::epoc::fs {
         std::uint32_t reserved3;
         std::uint32_t reserved4;
     };
-    
+
     struct io_drive_param_info {
         int block_size;
         int cluster_size;
@@ -154,7 +153,7 @@ namespace eka2l1::epoc::fs {
         int rec_write_buf_size;
         std::uint64_t max_supported_file_size;
     };
-    
+
     static constexpr std::size_t entry_standard_size = 28;
 
     struct entry {

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/audio/keysound/context.h>
 #include <common/chunkyseri.h>
+#include <epoc/services/audio/keysound/context.h>
 
 #include <algorithm>
 

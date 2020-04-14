@@ -32,11 +32,11 @@ namespace eka2l1::kernel::smp {
     struct cpu_availability {
         enum : int32_t {
             idle_unit = 4095,
-            maxed_out_unit = -268435456 
+            maxed_out_unit = -268435456
         };
-        
-        std::vector<std::int32_t> remains;          ///< The total load unit that each core (element) can handle left.
-        std::int32_t total_remain;                  ///< The total load unit that all cores can handle left.
+
+        std::vector<std::int32_t> remains; ///< The total load unit that each core (element) can handle left.
+        std::int32_t total_remain; ///< The total load unit that all cores can handle left.
 
         explicit cpu_availability(const std::uint32_t num_cores);
 

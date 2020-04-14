@@ -58,11 +58,11 @@ namespace eka2l1::epoc::cap {
     };
 
     struct akn_indicator_state {
-        enum { 
-            MAX_VISIBLE_INDICATORS = 10 
+        enum {
+            MAX_VISIBLE_INDICATORS = 10
         };
 
-        std::int32_t visible_indicators_[MAX_VISIBLE_INDICATORS];           ///< Visible indicator UIDs
+        std::int32_t visible_indicators_[MAX_VISIBLE_INDICATORS]; ///< Visible indicator UIDs
         std::int32_t visibile_indicator_states_[MAX_VISIBLE_INDICATORS];
         std::int32_t incall_bubble_flags_;
         bool incall_bubble_allow_in_usual_;
@@ -82,8 +82,8 @@ namespace eka2l1::epoc::cap {
     };
 
     struct eik_status_pane_maintainer {
-        service::property *prop_;             ///< The property contains status pane data.
-        akn_status_pane_data local_data_;     ///< Local status pane data.
+        service::property *prop_; ///< The property contains status pane data.
+        akn_status_pane_data local_data_; ///< Local status pane data.
 
         explicit eik_status_pane_maintainer(kernel_system *kern);
 

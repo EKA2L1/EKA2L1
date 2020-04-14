@@ -43,16 +43,17 @@ namespace eka2l1::epoc {
         ecom_server *ecom_;
         cdl_ecom_watcher_observer *observer_;
 
-        std::vector<ecom_implementation_info_ptr>  last;
+        std::vector<ecom_implementation_info_ptr> last;
 
     protected:
         void refresh_plugin_list();
 
     public:
         drive_number get_plugin_drive(const std::u16string &name);
-        
+
         explicit cdl_ecom_watcher(ecom_server *ecom, cdl_ecom_watcher_observer *observer)
-            : ecom_(ecom), observer_(observer) {
+            : ecom_(ecom)
+            , observer_(observer) {
             // TODO: Put notification
             refresh_plugin_list();
         }

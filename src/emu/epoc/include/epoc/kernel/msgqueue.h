@@ -22,11 +22,11 @@
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/utils/reqsts.h>
 
-#include <vector>
 #include <queue>
+#include <vector>
 
 namespace eka2l1::kernel {
-    class msg_queue: public kernel_obj {
+    class msg_queue : public kernel_obj {
         std::uint32_t max_msg_length_;
         std::uint32_t max_length_;
 
@@ -36,7 +36,7 @@ namespace eka2l1::kernel {
 
         std::vector<epoc::notify_info> avail_notifies_;
         std::vector<epoc::notify_info> full_notifies_;
-        
+
     public:
         explicit msg_queue(eka2l1::kernel_system *kern, const std::string &name,
             const std::uint32_t max_message_size, const std::uint32_t max_length);

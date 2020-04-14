@@ -1,9 +1,9 @@
-#include <epoc/services/akn/skin/chunk_maintainer.h>
-#include <epoc/services/akn/skin/skn.h>
-#include <epoc/kernel/chunk.h>
 #include <common/path.h>
 #include <common/time.h>
 #include <common/vecx.h>
+#include <epoc/kernel/chunk.h>
+#include <epoc/services/akn/skin/chunk_maintainer.h>
+#include <epoc/services/akn/skin/skn.h>
 
 namespace eka2l1::epoc {
     constexpr std::int64_t AKNS_CHUNK_ITEM_DEF_HASH_BASE_SIZE_GRAN = -4;
@@ -14,42 +14,42 @@ namespace eka2l1::epoc {
 
     // ======================= DEFINITION FOR CHUNK STRUCT =======================
     struct akns_srv_bitmap_def {
-        akns_mtptr filename_;           ///< Pointer to filename.
-        std::int32_t index_;            ///< Index in bitmap file.
-        std::int32_t image_attrib_;     ///< Attribute for the bitmap.
-        std::int32_t image_alignment_;  ///< Alignment for the bitmap.
-        std::int32_t image_x_coord_;    ///< X coordinate of the image.
-        std::int32_t image_y_coord_;    ///< Y coordinate of the image.
-        std::int32_t image_width_;      ///< Width of the image.
-        std::int32_t image_height_;     ///< Height of the image.
+        akns_mtptr filename_; ///< Pointer to filename.
+        std::int32_t index_; ///< Index in bitmap file.
+        std::int32_t image_attrib_; ///< Attribute for the bitmap.
+        std::int32_t image_alignment_; ///< Alignment for the bitmap.
+        std::int32_t image_x_coord_; ///< X coordinate of the image.
+        std::int32_t image_y_coord_; ///< Y coordinate of the image.
+        std::int32_t image_width_; ///< Width of the image.
+        std::int32_t image_height_; ///< Height of the image.
     };
 
     struct akns_srv_masked_bitmap_def {
-        akns_mtptr filename_;           ///< Pointer to filename.
-        std::int32_t index_;            ///< Index in bitmap file.
-        std::int32_t masked_index_;     ///< Masked index in bitmap file.
-        std::int32_t image_attrib_;     ///< Attribute for the bitmap.
-        std::int32_t image_alignment_;  ///< Alignment for the bitmap.
-        std::int32_t image_x_coord_;    ///< X coordinate of the image.
-        std::int32_t image_y_coord_;    ///< Y coordinate of the image.
-        std::int32_t image_width_;      ///< Width of the image.
-        std::int32_t image_height_;     ///< Height of the image.
+        akns_mtptr filename_; ///< Pointer to filename.
+        std::int32_t index_; ///< Index in bitmap file.
+        std::int32_t masked_index_; ///< Masked index in bitmap file.
+        std::int32_t image_attrib_; ///< Attribute for the bitmap.
+        std::int32_t image_alignment_; ///< Alignment for the bitmap.
+        std::int32_t image_x_coord_; ///< X coordinate of the image.
+        std::int32_t image_y_coord_; ///< Y coordinate of the image.
+        std::int32_t image_width_; ///< Width of the image.
+        std::int32_t image_height_; ///< Height of the image.
     };
 
     struct akns_color_table_entry {
-        std::int32_t index_;            ///< Index of the color in the table.
-        std::uint32_t rgb_;             ///< Color data, in RGB.
+        std::int32_t index_; ///< Index of the color in the table.
+        std::uint32_t rgb_; ///< Color data, in RGB.
     };
 
     struct akns_srv_color_table_def {
-        std::int32_t count_;            ///< Total of colors in the table.
-        akns_mtptr   entries_;          ///< All entries in the table.
-        std::int32_t image_attrib_;     ///< Attribute for the bitmap.
-        std::int32_t image_alignment_;  ///< Alignment for the bitmap.
-        std::int32_t image_x_coord_;    ///< X coordinate of the image.
-        std::int32_t image_y_coord_;    ///< Y coordinate of the image.
-        std::int32_t image_width_;      ///< Width of the image.
-        std::int32_t image_height_;     ///< Height of the image.
+        std::int32_t count_; ///< Total of colors in the table.
+        akns_mtptr entries_; ///< All entries in the table.
+        std::int32_t image_attrib_; ///< Attribute for the bitmap.
+        std::int32_t image_alignment_; ///< Alignment for the bitmap.
+        std::int32_t image_x_coord_; ///< X coordinate of the image.
+        std::int32_t image_y_coord_; ///< Y coordinate of the image.
+        std::int32_t image_width_; ///< Width of the image.
+        std::int32_t image_height_; ///< Height of the image.
     };
 
     struct akns_srv_effect_queue_def {
@@ -119,7 +119,7 @@ namespace eka2l1::epoc {
         add_area(akn_skin_chunk_area_base_offset::filename_area_base, AKNS_CHUNK_FILENAME_AREA_BASE_SIZE_GRAN);
 
         // Fill hash area with negaitve
-        std::uint8_t *area = reinterpret_cast<std::uint8_t*>(get_area_base(akn_skin_chunk_area_base_offset::item_def_hash_base));
+        std::uint8_t *area = reinterpret_cast<std::uint8_t *>(get_area_base(akn_skin_chunk_area_base_offset::item_def_hash_base));
         std::fill(area, area + get_area_size(akn_skin_chunk_area_base_offset::item_def_hash_base), 0xFF);
 
         // Init container for bitmaps
@@ -168,7 +168,7 @@ namespace eka2l1::epoc {
     }
 
     std::int32_t akn_skin_chunk_maintainer::get_filename_offset_from_id(const std::uint32_t filename_id) {
-        std::uint32_t *areabase = reinterpret_cast<std::uint32_t*>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
+        std::uint32_t *areabase = reinterpret_cast<std::uint32_t *>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
 
         if (areabase == nullptr) {
             // Area doesn't exist
@@ -185,12 +185,12 @@ namespace eka2l1::epoc {
         // Plus for, skip the filename length
         return static_cast<std::int32_t>((area_ptr - areabase) * sizeof(std::uint32_t)) + 4;
     }
-    
+
     bool akn_skin_chunk_maintainer::update_filename(const std::uint32_t filename_id, const std::u16string &filename,
         const std::u16string &filename_base) {
         // We need to search for the one and only.
         // Get the base first
-        std::uint32_t *areabase = reinterpret_cast<std::uint32_t*>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
+        std::uint32_t *areabase = reinterpret_cast<std::uint32_t *>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
 
         if (areabase == nullptr) {
             // Area doesn't exist
@@ -207,7 +207,7 @@ namespace eka2l1::epoc {
             // Nope, expand the chunk and add this guy in
             set_area_current_size(akn_skin_chunk_area_base_offset::filename_area_base,
                 static_cast<std::uint32_t>(get_area_current_size(akn_skin_chunk_area_base_offset::filename_area_base)
-                + AKN_SKIN_SERVER_MAX_FILENAME_BYTES));
+                    + AKN_SKIN_SERVER_MAX_FILENAME_BYTES));
         }
 
         // Let's do copy!
@@ -215,13 +215,12 @@ namespace eka2l1::epoc {
         areaptr += 1;
 
         // Copy the base in
-        std::copy(filename_base.data(), filename_base.data() + filename_base.length(), reinterpret_cast<char16_t*>(areaptr));
-        std::copy(filename.data(), filename.data() + filename.length(), reinterpret_cast<char16_t*>(
-            reinterpret_cast<std::uint8_t*>(areaptr) + filename_base.length() * 2));
+        std::copy(filename_base.data(), filename_base.data() + filename_base.length(), reinterpret_cast<char16_t *>(areaptr));
+        std::copy(filename.data(), filename.data() + filename.length(), reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(areaptr) + filename_base.length() * 2));
 
         // Fill 0 in the unused places
-        std::fill(reinterpret_cast<std::uint8_t*>(areaptr) + filename_base.length() * 2 + filename.length() * 2,
-            reinterpret_cast<std::uint8_t*>(areaptr) + AKN_SKIN_SERVER_MAX_FILENAME_BYTES, 0);
+        std::fill(reinterpret_cast<std::uint8_t *>(areaptr) + filename_base.length() * 2 + filename.length() * 2,
+            reinterpret_cast<std::uint8_t *>(areaptr) + AKN_SKIN_SERVER_MAX_FILENAME_BYTES, 0);
 
         return true;
     }
@@ -234,7 +233,7 @@ namespace eka2l1::epoc {
 
     std::int32_t akn_skin_chunk_maintainer::get_item_definition_index(const epoc::pid &id) {
         if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
-            std::int32_t *hash = reinterpret_cast<std::int32_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
+            std::int32_t *hash = reinterpret_cast<std::int32_t *>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
 
             epoc::akns_item_def *defs = reinterpret_cast<decltype(defs)>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_area_base));
             std::uint32_t hash_index = calculate_item_hash(id);
@@ -254,7 +253,7 @@ namespace eka2l1::epoc {
 
         // Lookup with the old method uses in old Symbian version: iterate through the definition
         // data area and look for identical ID
-        epoc::akns_item_def_v1 *items = reinterpret_cast<epoc::akns_item_def_v1*>(
+        epoc::akns_item_def_v1 *items = reinterpret_cast<epoc::akns_item_def_v1 *>(
             get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_area_base));
 
         const std::size_t total_items = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::item_def_area_base)
@@ -271,23 +270,23 @@ namespace eka2l1::epoc {
 
         return static_cast<std::int32_t>(std::distance(items, target_item));
     }
-    
+
     std::int32_t akn_skin_chunk_maintainer::update_data(const std::uint8_t *new_data, std::uint8_t *old_data, const std::size_t new_size, const std::size_t old_size) {
         std::int32_t offset = 0;
 
         if (old_data == nullptr || (old_size < new_size)) {
             // Just add the new data.
             offset = static_cast<std::int32_t>(get_area_current_size(epoc::akn_skin_chunk_area_base_offset::data_area_base));
-            std::uint8_t *data_head = reinterpret_cast<std::uint8_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::data_area_base))
+            std::uint8_t *data_head = reinterpret_cast<std::uint8_t *>(get_area_base(epoc::akn_skin_chunk_area_base_offset::data_area_base))
                 + offset;
 
-            set_area_current_size(epoc::akn_skin_chunk_area_base_offset::data_area_base, 
+            set_area_current_size(epoc::akn_skin_chunk_area_base_offset::data_area_base,
                 static_cast<std::uint32_t>(offset + new_size));
 
             if (new_data) {
                 std::copy(new_data, new_data + new_size, data_head);
             }
-        
+
             return offset;
         }
 
@@ -296,15 +295,14 @@ namespace eka2l1::epoc {
             std::copy(new_data, new_data + new_size, old_data);
         }
 
-        return static_cast<std::int32_t>(old_data - reinterpret_cast<std::uint8_t*>(get_area_base(
-            epoc::akn_skin_chunk_area_base_offset::data_area_base)));
+        return static_cast<std::int32_t>(old_data - reinterpret_cast<std::uint8_t *>(get_area_base(epoc::akn_skin_chunk_area_base_offset::data_area_base)));
     }
-    
+
     // More efficient. Giving the index first.
     bool akn_skin_chunk_maintainer::update_definition_hash(epoc::akns_item_def *def, const std::int32_t index) {
         // Get current head
         std::int32_t head = calculate_item_hash(def->id_);
-        std::int32_t *hash = reinterpret_cast<std::int32_t*>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
+        std::int32_t *hash = reinterpret_cast<std::int32_t *>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
 
         // Add the definition as the head
         def->next_hash_ = hash[head];
@@ -314,7 +312,7 @@ namespace eka2l1::epoc {
 
         return true;
     }
-    
+
     bool akn_skin_chunk_maintainer::update_definition(const epoc::akns_item_def &def, const void *data, const std::size_t data_size,
         const std::size_t old_data_size) {
         std::int32_t index = get_item_definition_index(def.id_);
@@ -332,9 +330,9 @@ namespace eka2l1::epoc {
             const std::size_t def_size = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::item_def_area_base);
 
             // Add this to the chunk immediately. No hesitation.
-            std::uint8_t *current_head = reinterpret_cast<std::uint8_t*>(
-                get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_area_base)) +
-                def_size;
+            std::uint8_t *current_head = reinterpret_cast<std::uint8_t *>(
+                                             get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_area_base))
+                + def_size;
 
             set_area_current_size(epoc::akn_skin_chunk_area_base_offset::item_def_area_base,
                 static_cast<std::uint32_t>(def_size + definition_size));
@@ -343,15 +341,16 @@ namespace eka2l1::epoc {
 
             // Update the hash
             if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
-                update_definition_hash(reinterpret_cast<akns_item_def*>(current_head),
+                update_definition_hash(reinterpret_cast<akns_item_def *>(current_head),
                     static_cast<std::int32_t>(def_size / sizeof(akns_item_def)));
             }
 
-            current_def = reinterpret_cast<akns_item_def*>(current_head);
+            current_def = reinterpret_cast<akns_item_def *>(current_head);
         } else {
             // The defintion already exists. Recopy it
-            current_def = reinterpret_cast<akns_item_def*>(get_area_base(
-                epoc::akn_skin_chunk_area_base_offset::item_def_area_base)) + index;
+            current_def = reinterpret_cast<akns_item_def *>(get_area_base(
+                              epoc::akn_skin_chunk_area_base_offset::item_def_area_base))
+                + index;
 
             if (current_def->type_ == def.type_ && current_def->data_.type_ == epoc::akns_mtptr_type::akns_mtptr_type_relative_ram) {
                 std::uint32_t *data_size = current_def->data_.get_relative<std::uint32_t>(
@@ -365,7 +364,7 @@ namespace eka2l1::epoc {
 
                 old_data = data_size;
             }
-            
+
             std::int32_t head = 0;
             if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
                 std::int32_t head = current_def->next_hash_;
@@ -379,13 +378,14 @@ namespace eka2l1::epoc {
 
         // Now we update data.
         current_def->data_.type_ = akns_mtptr_type_relative_ram;
-        current_def->data_.address_or_offset_ = update_data(reinterpret_cast<const std::uint8_t*>(
-            data), reinterpret_cast<std::uint8_t*>(old_data), data_size, old_data_size_to_update);
+        current_def->data_.address_or_offset_ = update_data(reinterpret_cast<const std::uint8_t *>(
+                                                                data),
+            reinterpret_cast<std::uint8_t *>(old_data), data_size, old_data_size_to_update);
 
         return true;
     }
-        
-    bool akn_skin_chunk_maintainer::add_area(const akn_skin_chunk_area_base_offset offset_type, 
+
+    bool akn_skin_chunk_maintainer::add_area(const akn_skin_chunk_area_base_offset offset_type,
         const std::int64_t allocated_size_gran) {
         // Enum value "*_base" always aligned with 3
         if (static_cast<int>(offset_type) % 3 != 0) {
@@ -412,7 +412,7 @@ namespace eka2l1::epoc {
         }
 
         // Get chunk base
-        std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
+        std::uint32_t *base = reinterpret_cast<std::uint32_t *>(shared_chunk_->host_base());
 
         if (!areas_.empty() && base[static_cast<int>(areas_[0].base_) + 1] <= 4 * 3) {
             // We can eat more first area memory for the header. Abort!
@@ -420,16 +420,13 @@ namespace eka2l1::epoc {
         }
 
         // Set area base offset
-        base[static_cast<int>(offset_type)] = static_cast<std::uint32_t>(current_granularity_off_ *
-            granularity_);
-        
+        base[static_cast<int>(offset_type)] = static_cast<std::uint32_t>(current_granularity_off_ * granularity_);
+
         // Set area allocated size
         if (allocated_size_gran < 0) {
-            base[static_cast<int>(offset_type) + 1] = static_cast<std::uint32_t>(granularity_ / 
-                allocated_size_gran);
-        } else {    
-            base[static_cast<int>(offset_type) + 1] = static_cast<std::uint32_t>(allocated_size_gran * 
-                granularity_);
+            base[static_cast<int>(offset_type) + 1] = static_cast<std::uint32_t>(granularity_ / allocated_size_gran);
+        } else {
+            base[static_cast<int>(offset_type) + 1] = static_cast<std::uint32_t>(allocated_size_gran * granularity_);
         }
 
         // Clear area current size to 0
@@ -470,7 +467,7 @@ namespace eka2l1::epoc {
 
         return &(*search_result);
     }
-    
+
     const std::size_t akn_skin_chunk_maintainer::get_area_size(const akn_skin_chunk_area_base_offset area_type, const bool paper_calc) {
         akn_skin_chunk_area *area = get_area_info(area_type);
 
@@ -486,12 +483,12 @@ namespace eka2l1::epoc {
 
             return granularity_ * area->gran_size_;
         }
-        
-        std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
+
+        std::uint32_t *base = reinterpret_cast<std::uint32_t *>(shared_chunk_->host_base());
         return static_cast<std::size_t>(base[static_cast<int>(area_type) + 1]);
     }
 
-    void *akn_skin_chunk_maintainer::get_area_base(const akn_skin_chunk_area_base_offset area_type, 
+    void *akn_skin_chunk_maintainer::get_area_base(const akn_skin_chunk_area_base_offset area_type,
         std::uint64_t *offset_from_begin) {
         akn_skin_chunk_area *area = get_area_info(area_type);
 
@@ -500,7 +497,7 @@ namespace eka2l1::epoc {
             return nullptr;
         }
 
-        std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
+        std::uint32_t *base = reinterpret_cast<std::uint32_t *>(shared_chunk_->host_base());
 
         // Check for the optional pointer, if valid, write the offset of the area from the beginning of the chunk
         // to it
@@ -508,7 +505,7 @@ namespace eka2l1::epoc {
             *offset_from_begin = base[static_cast<int>(area_type)];
         }
 
-        return reinterpret_cast<std::uint8_t*>(shared_chunk_->host_base()) + (base[static_cast<int>(area_type)]);
+        return reinterpret_cast<std::uint8_t *>(shared_chunk_->host_base()) + (base[static_cast<int>(area_type)]);
     }
 
     const std::size_t akn_skin_chunk_maintainer::get_area_current_size(const akn_skin_chunk_area_base_offset area_type) {
@@ -520,20 +517,20 @@ namespace eka2l1::epoc {
         }
 
         // Get chunk base
-        std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
+        std::uint32_t *base = reinterpret_cast<std::uint32_t *>(shared_chunk_->host_base());
         return static_cast<std::size_t>(base[static_cast<int>(area_type) + 2]);
     }
 
     bool akn_skin_chunk_maintainer::set_area_current_size(const akn_skin_chunk_area_base_offset area_type, const std::uint32_t new_size) {
-         akn_skin_chunk_area *area = get_area_info(area_type);
+        akn_skin_chunk_area *area = get_area_info(area_type);
 
         if (!area) {
             // We can't get the area. Abort!!!
             return false;
         }
-        
+
         // Get chunk base
-        std::uint32_t *base = reinterpret_cast<std::uint32_t*>(shared_chunk_->host_base());
+        std::uint32_t *base = reinterpret_cast<std::uint32_t *>(shared_chunk_->host_base());
         base[static_cast<int>(area_type) + 2] = new_size;
 
         return true;
@@ -546,7 +543,7 @@ namespace eka2l1::epoc {
             return nullptr;
         }
 
-        akns_item_def *defs = reinterpret_cast<akns_item_def*>(get_area_base(
+        akns_item_def *defs = reinterpret_cast<akns_item_def *>(get_area_base(
             akn_skin_chunk_area_base_offset::item_def_area_base));
 
         if (!defs) {
@@ -555,7 +552,7 @@ namespace eka2l1::epoc {
 
         return defs + index;
     }
-        
+
     bool akn_skin_chunk_maintainer::import_color_table(const skn_color_table &table) {
         akns_item_def item;
         item.type_ = akns_item_type_color_table;
@@ -564,18 +561,17 @@ namespace eka2l1::epoc {
         akns_srv_color_table_def color_table;
         color_table.count_ = static_cast<std::int32_t>(table.colors.size());
         color_table.entries_.type_ = akns_mtptr_type::akns_mtptr_type_relative_ram;
-        
+
         // Find the old table if available
         akns_item_def *last_color_table_item = get_item_definition(item.id_);
-        std::uint8_t *data_area = reinterpret_cast<std::uint8_t*>(get_area_base(
+        std::uint8_t *data_area = reinterpret_cast<std::uint8_t *>(get_area_base(
             akn_skin_chunk_area_base_offset::data_area_base));
 
         std::uint8_t *old_color_entries_data = nullptr;
         std::size_t old_size = 0;
 
         if (last_color_table_item) {
-            akns_srv_color_table_def *last_color_table = last_color_table_item->data_.
-                get_relative<akns_srv_color_table_def>(data_area);
+            akns_srv_color_table_def *last_color_table = last_color_table_item->data_.get_relative<akns_srv_color_table_def>(data_area);
 
             if (last_color_table) {
                 old_color_entries_data = last_color_table->entries_.get_relative<std::uint8_t>(data_area);
@@ -590,13 +586,13 @@ namespace eka2l1::epoc {
         }
 
         color_table.entries_.type_ = akns_mtptr_type_relative_ram;
-        color_table.entries_.address_or_offset_ = update_data(nullptr, old_color_entries_data, 
+        color_table.entries_.address_or_offset_ = update_data(nullptr, old_color_entries_data,
             color_table.count_ * sizeof(akns_color_table_entry), old_size);
 
         akns_color_table_entry *entries_to_fill = color_table.entries_.get_relative<akns_color_table_entry>(data_area);
         std::size_t index_ite = 0;
 
-        for (const auto &entry: table.colors) {
+        for (const auto &entry : table.colors) {
             entries_to_fill[index_ite].index_ = entry.first;
             entries_to_fill[index_ite].rgb_ = entry.second;
             index_ite++;
@@ -629,7 +625,7 @@ namespace eka2l1::epoc {
         srv_effect->output_layer_mode_ = effect.output_layer_mode;
         srv_effect->effect_parameter_count_ = static_cast<std::uint32_t>(effect.parameters.size());
         srv_effect->effect_size_ = sizeof(akns_srv_effect_def);
-        
+
         // Import parameters
         for (std::size_t i = 0; i < effect.parameters.size(); i++) {
             akns_srv_effect_parameter_def parameter;
@@ -638,32 +634,31 @@ namespace eka2l1::epoc {
                 + sizeof(akns_srv_effect_parameter_def);
 
             std::uint32_t to_pad = 0;
-            
+
             if (parameter.param_length_ % 4 != 0) {
                 // Align it by 4
                 const std::uint32_t aligned = common::align(parameter.param_length_, 4);
                 to_pad = aligned - parameter.param_length_;
                 parameter.param_length_ = aligned;
             }
-        
-            effects.insert(effects.end(), reinterpret_cast<std::uint8_t*>(&parameter), 
-                reinterpret_cast<std::uint8_t*>(&parameter) + sizeof(akns_srv_effect_parameter_def));   
-            
+
+            effects.insert(effects.end(), reinterpret_cast<std::uint8_t *>(&parameter),
+                reinterpret_cast<std::uint8_t *>(&parameter) + sizeof(akns_srv_effect_parameter_def));
+
             if (parameter.param_type_ == 2) {
                 // Graphics parameter
-                const std::uint32_t filename_id = maintainer.level() + *reinterpret_cast<const std::uint32_t*>
-                    (&effect.parameters[i].data[effect.parameters[i].data.length() - 4]);
+                const std::uint32_t filename_id = maintainer.level() + *reinterpret_cast<const std::uint32_t *>(&effect.parameters[i].data[effect.parameters[i].data.length() - 4]);
 
                 const std::uint32_t offset = maintainer.get_filename_offset_from_id(filename_id);
 
-                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
-                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[effect.parameters[i].data.length() - 4]));
+                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t *>(&effect.parameters[i].data[0]),
+                    reinterpret_cast<const std::uint8_t *>(&effect.parameters[i].data[effect.parameters[i].data.length() - 4]));
 
-                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&offset), 
-                    reinterpret_cast<const std::uint8_t*>(&offset + 1));
+                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t *>(&offset),
+                    reinterpret_cast<const std::uint8_t *>(&offset + 1));
             } else {
-                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data[0]),
-                    reinterpret_cast<const std::uint8_t*>(&effect.parameters[i].data.back()) + 1);
+                effects.insert(effects.end(), reinterpret_cast<const std::uint8_t *>(&effect.parameters[i].data[0]),
+                    reinterpret_cast<const std::uint8_t *>(&effect.parameters[i].data.back()) + 1);
             }
 
             if (to_pad != 0) {
@@ -677,7 +672,7 @@ namespace eka2l1::epoc {
 
         return true;
     }
-    
+
     bool akn_skin_chunk_maintainer::import_effect_queue(const skn_effect_queue &queue) {
         akns_item_def item;
         item.type_ = akns_item_type_effect_queue;
@@ -698,12 +693,12 @@ namespace eka2l1::epoc {
         std::vector<std::uint8_t> buffer;
         buffer.resize(sizeof(akns_srv_effect_queue_def));
 
-        akns_srv_effect_queue_def *queue_def = reinterpret_cast<akns_srv_effect_queue_def*>(&buffer[0]);
-        
-        queue_def->count_= static_cast<std::uint32_t>(queue.effects.size());
+        akns_srv_effect_queue_def *queue_def = reinterpret_cast<akns_srv_effect_queue_def *>(&buffer[0]);
+
+        queue_def->count_ = static_cast<std::uint32_t>(queue.effects.size());
         queue_def->ref_major_ = 0;
         queue_def->ref_minor_ = 0;
-        
+
         queue_def->input_layer_index_ = queue.input_layer_index;
         queue_def->input_layer_mode_ = queue.input_layer_mode;
         queue_def->output_layer_index_ = queue.output_layer_index;
@@ -719,16 +714,16 @@ namespace eka2l1::epoc {
 
             queue_def->size_ += static_cast<std::uint32_t>(temp_effect_data.size());
             buffer.insert(buffer.end(), temp_effect_data.begin(), temp_effect_data.end());
-            
+
             // Resize realloc the buffer pointer, so cast it again.
-            queue_def = reinterpret_cast<akns_srv_effect_queue_def*>(&buffer[0]);
+            queue_def = reinterpret_cast<akns_srv_effect_queue_def *>(&buffer[0]);
 
             temp_effect_data.clear();
         }
 
         return update_definition(item, &buffer[0], buffer.size(), -1);
     }
-    
+
     bool akn_skin_chunk_maintainer::import_bitmap(const skn_bitmap_info &info) {
         akns_item_def item;
         item.type_ = akns_item_type_bitmap;
@@ -776,18 +771,17 @@ namespace eka2l1::epoc {
         akns_srv_image_table_def image_table;
         image_table.count_ = static_cast<std::int32_t>(table.images.size());
         image_table.entries_.type_ = akns_mtptr_type::akns_mtptr_type_relative_ram;
-        
+
         // Find the old table if available
         akns_item_def *last_image_table_item = get_item_definition(item.id_);
-        std::uint8_t *data_area = reinterpret_cast<std::uint8_t*>(get_area_base(
+        std::uint8_t *data_area = reinterpret_cast<std::uint8_t *>(get_area_base(
             akn_skin_chunk_area_base_offset::data_area_base));
 
         std::uint8_t *old_image_entries_data = nullptr;
         std::size_t old_size = 0;
 
         if (last_image_table_item) {
-            akns_srv_color_table_def *last_image_table = last_image_table_item->data_.
-                get_relative<akns_srv_image_table_def>(data_area);
+            akns_srv_color_table_def *last_image_table = last_image_table_item->data_.get_relative<akns_srv_image_table_def>(data_area);
 
             if (last_image_table) {
                 old_image_entries_data = last_image_table->entries_.get_relative<std::uint8_t>(data_area);
@@ -802,13 +796,13 @@ namespace eka2l1::epoc {
         }
 
         image_table.entries_.type_ = akns_mtptr_type_relative_ram;
-        image_table.entries_.address_or_offset_ = update_data(nullptr, old_image_entries_data, 
+        image_table.entries_.address_or_offset_ = update_data(nullptr, old_image_entries_data,
             image_table.count_ * sizeof(pid), old_size);
 
         pid *entries_to_fill = image_table.entries_.get_relative<pid>(data_area);
         std::size_t index_ite = 0;
 
-        for (const auto &entry: table.images) {
+        for (const auto &entry : table.images) {
             entries_to_fill[index_ite] = make_pid_from_id_hash(entry);
             index_ite++;
         }
@@ -823,38 +817,38 @@ namespace eka2l1::epoc {
         if (!update_definition(item, &image_table, sizeof(akns_srv_image_table_def), sizeof(akns_srv_image_table_def))) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     bool akn_skin_chunk_maintainer::import(skn_file &skn, const std::u16string &filename_base) {
         // First up import filenames
-        for (auto &filename: skn.filenames_) {
+        for (auto &filename : skn.filenames_) {
             if (!update_filename(filename.first, filename.second, filename_base)) {
                 return false;
             }
         }
 
         // Import bitmap
-        for (auto &bmp: skn.bitmaps_) {
+        for (auto &bmp : skn.bitmaps_) {
             if (!import_bitmap(bmp.second)) {
                 return false;
             }
         }
 
-        for (auto &table: skn.color_tabs_) {
+        for (auto &table : skn.color_tabs_) {
             if (!import_color_table(table.second)) {
                 return false;
             }
         }
 
-        for (auto &table: skn.img_tabs_) {
+        for (auto &table : skn.img_tabs_) {
             if (!import_image_table(table.second)) {
                 return false;
             }
         }
 
-        for (auto &effect_queue: skn.effect_queues_) {
+        for (auto &effect_queue : skn.effect_queues_) {
             if (!import_effect_queue(effect_queue)) {
                 return false;
             }
@@ -869,7 +863,7 @@ namespace eka2l1::epoc {
             bitmap_store_->store_bitmap(msk);
         }
 
-        const akns_srv_scalable_item_def def {
+        const akns_srv_scalable_item_def def{
             item_id,
             bmp->id,
             msk ? msk->id : 0,
@@ -878,10 +872,10 @@ namespace eka2l1::epoc {
             common::get_current_time_in_microseconds_since_1ad(),
             layout_info.layout_size
         };
-        const std::uint8_t *new_data = reinterpret_cast<const std::uint8_t*>(&def);
+        const std::uint8_t *new_data = reinterpret_cast<const std::uint8_t *>(&def);
 
         // store into shared chunk
-        akns_srv_scalable_item_def *table = reinterpret_cast<akns_srv_scalable_item_def*>(
+        akns_srv_scalable_item_def *table = reinterpret_cast<akns_srv_scalable_item_def *>(
             get_area_base(epoc::akn_skin_chunk_area_base_offset::gfx_area_base));
         const std::size_t gfx_area_size = get_area_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
         const std::size_t gfx_current_size = get_area_current_size(epoc::akn_skin_chunk_area_base_offset::gfx_area_base);
@@ -890,11 +884,11 @@ namespace eka2l1::epoc {
         // update if exist
         for (std::size_t i = 0; i < def_count; i++) {
             if (table[i].item_id == item_id
-            && table[i].layout_type == layout_info.layout_type
-            && table[i].layout_size == layout_info.layout_size) {
+                && table[i].layout_type == layout_info.layout_type
+                && table[i].layout_size == layout_info.layout_size) {
                 bitmap_store_->remove_stored_bitmap(table[i].bitmap_handle);
                 bitmap_store_->remove_stored_bitmap(table[i].mask_handle);
-                std::uint8_t *dest = reinterpret_cast<std::uint8_t*>(table + i);
+                std::uint8_t *dest = reinterpret_cast<std::uint8_t *>(table + i);
                 std::copy(new_data, new_data + sizeof(def), dest);
                 return true;
             }
@@ -912,15 +906,14 @@ namespace eka2l1::epoc {
             }
             bitmap_store_->remove_stored_bitmap(table[oldest_index].bitmap_handle);
             bitmap_store_->remove_stored_bitmap(table[oldest_index].mask_handle);
-            std::uint8_t *dest = reinterpret_cast<std::uint8_t*>(table + oldest_index);
+            std::uint8_t *dest = reinterpret_cast<std::uint8_t *>(table + oldest_index);
             std::copy(new_data, new_data + sizeof(def), dest);
         } else {
             // add a new one
-            std::uint8_t *dest = reinterpret_cast<std::uint8_t*>(table + def_count);
+            std::uint8_t *dest = reinterpret_cast<std::uint8_t *>(table + def_count);
             set_area_current_size(
                 epoc::akn_skin_chunk_area_base_offset::gfx_area_base,
-                static_cast<std::uint32_t>(gfx_current_size + sizeof(def))
-            );
+                static_cast<std::uint32_t>(gfx_current_size + sizeof(def)));
             std::copy(new_data, new_data + sizeof(def), dest);
         }
         return true;

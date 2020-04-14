@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/cdl/common.h>
 #include <common/chunkyseri.h>
+#include <epoc/services/cdl/common.h>
 
 #include <algorithm>
 #include <vector>
@@ -43,7 +43,7 @@ namespace eka2l1::epoc {
                 str.resize(dat_size / 2);
             }
 
-            seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&str[0]), dat_size);
+            seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), dat_size);
         });
 
         seri.absorb_container(collection_, [&](common::chunkyseri &seri, cdl_ref &ref) {

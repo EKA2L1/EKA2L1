@@ -31,7 +31,7 @@ namespace eka2l1::epoc::keysound {
     enum ring_frequency {
         ring_frequency_none = 0x40,
         ring_frequency_network_1 = 0x4E,
-        
+
         ring_frequency_a0 = 0x56,
         ring_frequency_b0b = 0x57,
         ring_frequency_b0 = 0x58,
@@ -73,7 +73,7 @@ namespace eka2l1::epoc::keysound {
         ring_frequency_a3 = 0x7A
     };
 
-    static std::map<ring_frequency, std::int32_t> frequency_map {
+    static std::map<ring_frequency, std::int32_t> frequency_map{
         { ring_frequency_network_1, 425 }, { ring_frequency_a0, 220 },
         { ring_frequency_b0b, 233 }, { ring_frequency_b0, 247 },
         { ring_frequency_c0, 262 }, { ring_frequency_d0b, 277 },

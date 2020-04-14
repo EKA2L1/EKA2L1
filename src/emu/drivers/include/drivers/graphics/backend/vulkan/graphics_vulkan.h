@@ -23,8 +23,8 @@
 
 #ifdef BUILD_WITH_VULKAN
 
-#include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <common/platform.h>
+#include <drivers/graphics/backend/graphics_driver_shared.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -37,7 +37,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace eka2l1::drivers {
-    class vulkan_graphics_driver: public shared_graphics_driver {
+    class vulkan_graphics_driver : public shared_graphics_driver {
         vk::UniqueInstance inst_;
         vk::UniqueDebugReportCallbackEXT reporter_;
         vk::UniqueDevice dvc_;

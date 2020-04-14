@@ -151,7 +151,7 @@ namespace eka2l1 {
          * \param etype           The type of all the entries to be matched.
          */
         void query_entries(const std::uint32_t partial_key, const std::uint32_t mask,
-            std::vector<central_repo_entry*> &matched_entries, 
+            std::vector<central_repo_entry *> &matched_entries,
             const central_repo_entry_type etype);
     };
 

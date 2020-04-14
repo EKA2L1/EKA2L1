@@ -202,8 +202,8 @@ namespace eka2l1 {
 
         static bool is_expression_integral_type(const ss_expr_op op) {
             return (op == ss_expr_op::EPrimTypeNumber)
-                    || (op == ss_expr_op::EPrimTypeOption)
-                    || (op == ss_expr_op::EPrimTypeVariable);
+                || (op == ss_expr_op::EPrimTypeOption)
+                || (op == ss_expr_op::EPrimTypeVariable);
         }
 
         int ss_interpreter::gasp_true_form_of_integral_expression(const sis_expression &expr) {
@@ -219,7 +219,7 @@ namespace eka2l1 {
                     break;
                 }
                 }
-                
+
                 return static_cast<int>(conf->get_hal_entry(expr.int_val));
             }
 
@@ -364,7 +364,7 @@ namespace eka2l1 {
 
             return pass;
         }
-    
+
         bool ss_interpreter::interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress) {
             // Set current controller
             current_controller = controller;
@@ -374,8 +374,8 @@ namespace eka2l1 {
             if (controller->langs.langs.fields.size() != 1 && choose_lang) {
                 std::vector<int> langs;
 
-                for (auto &lang_field: controller->langs.langs.fields) {
-                    langs.push_back(static_cast<int>(reinterpret_cast<sis_language*>(lang_field.get())->language));
+                for (auto &lang_field : controller->langs.langs.fields) {
+                    langs.push_back(static_cast<int>(reinterpret_cast<sis_language *>(lang_field.get())->language));
                 }
 
                 controller->choosen_lang = static_cast<sis_lang>(choose_lang(&langs[0], static_cast<int>(langs.size())));
@@ -385,7 +385,7 @@ namespace eka2l1 {
                         controller->info.uid.uid);
 
                     LOG_ERROR("{}", error_string);
-                    
+
                     if (show_text) {
                         show_text(error_string.c_str());
                     }
@@ -393,8 +393,7 @@ namespace eka2l1 {
                     return false;
                 }
             } else {
-                controller->choosen_lang =
-                    reinterpret_cast<sis_language*>(controller->langs.langs.fields[0].get())->language;
+                controller->choosen_lang = reinterpret_cast<sis_language *>(controller->langs.langs.fields[0].get())->language;
             }
 
             // TODO: Choose options
@@ -422,22 +421,21 @@ namespace eka2l1 {
                         bool yes_choosen = true;
 
                         if (show_text) {
-                            yes_choosen = show_text(reinterpret_cast<const char*>(buf.data()));
+                            yes_choosen = show_text(reinterpret_cast<const char *>(buf.data()));
                         }
-                        
-                        LOG_INFO("EOpText: {}", reinterpret_cast<const char*>(buf.data()));
+
+                        LOG_INFO("EOpText: {}", reinterpret_cast<const char *>(buf.data()));
 
                         switch (file->op_op) {
-                        case 1 << 10: {     // Skip next files
+                        case 1 << 10: { // Skip next files
                             skip_next_file = true;
                             break;
                         }
 
                         case 1 << 11:
-                        case 1 << 12: {     // Abort
+                        case 1 << 12: { // Abort
                             mngr->delete_files_and_bucket(current_controller->info.uid.uid);
-                            const std::string err_string = fmt::format("Choosing No, installation abort for controller 0x{:X}"
-                                , current_controller->info.uid.uid);
+                            const std::string err_string = fmt::format("Choosing No, installation abort for controller 0x{:X}", current_controller->info.uid.uid);
 
                             LOG_ERROR("{}", err_string);
 

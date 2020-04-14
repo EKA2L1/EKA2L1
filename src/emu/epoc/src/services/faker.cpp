@@ -27,7 +27,7 @@
 #include <common/allocator.h>
 
 static bool faker_next_hook(void *userdata) {
-    return reinterpret_cast<eka2l1::service::faker*>(userdata)->walk();
+    return reinterpret_cast<eka2l1::service::faker *>(userdata)->walk();
 }
 
 namespace eka2l1::service {
@@ -43,13 +43,13 @@ namespace eka2l1::service {
     eka2l1::address faker::trampoline_address() const {
         return lr_addr_;
     }
-    
+
     static constexpr std::uint32_t TEMP_ARGS_REGION = 0x100;
 
     bool faker::initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name, const std::uint32_t uid) {
         // Create the fake process first
         process_ = kern->create<kernel::process>(kern->get_memory_system(), name, u"Nowhere", u"");
-        
+
         if (!process_) {
             return false;
         }
@@ -59,8 +59,10 @@ namespace eka2l1::service {
             0, 0x1000, 0x1000, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local,
             kernel::chunk_attrib::none);
 
-        allocator_ = std::make_unique<common::block_allocator>(reinterpret_cast<std::uint8_t*>(
-            control_->host_base()) + TEMP_ARGS_REGION, 0x1000 - TEMP_ARGS_REGION);
+        allocator_ = std::make_unique<common::block_allocator>(reinterpret_cast<std::uint8_t *>(
+                                                                   control_->host_base())
+                + TEMP_ARGS_REGION,
+            0x1000 - TEMP_ARGS_REGION);
 
         if (!control_) {
             return false;
@@ -76,15 +78,15 @@ namespace eka2l1::service {
         static const char *TRAMPOLINE_SEG_NAME = "JumpJupTrampoline";
 
         codeseg_ptr seg = kern->get_by_name<kernel::codeseg>(TRAMPOLINE_SEG_NAME);
-            
+
         data_offset_ = 200;
-            
+
         static constexpr std::uint32_t SETUP_THREAD_HEAP_EXPORT_ORD = 1360;
         static constexpr std::uint32_t NEW_TRAP_CLEANUP_EXPORT_ORD = 196;
 
         if (!seg) {
             kernel::codeseg_create_info create_info;
-            
+
             create_info.code_base = 0;
             create_info.data_base = 0;
             create_info.data_size = 0;
@@ -103,7 +105,7 @@ namespace eka2l1::service {
             common::cpu_info context_info;
             context_info.bARMv7 = false;
 
-            common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(&trampoline_code[0]), context_info);
+            common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t *>(&trampoline_code[0]), context_info);
             int a = 5;
 
             // Set up heap by jumping
@@ -111,13 +113,13 @@ namespace eka2l1::service {
             // - 0: Control block address.
             // - 4: CreateHeap
             // - 8 : NewTrapCleanup.
-            emitter.MOV(common::armgen::R0, common::armgen::R4);        // R4 should contains whether the thread is first in process or not.
-            emitter.MOV(common::armgen::R1, common::armgen::R_SP);      // Stack pointer points to heap thread info.
+            emitter.MOV(common::armgen::R0, common::armgen::R4); // R4 should contains whether the thread is first in process or not.
+            emitter.MOV(common::armgen::R1, common::armgen::R_SP); // Stack pointer points to heap thread info.
             emitter.ADD(common::armgen::R11, common::armgen::R_PC, data_offset_ - 16);
-            emitter.LDR(common::armgen::R12, common::armgen::R11, 4);     // Load export UserHeap::SetupThreadHeap
-            
+            emitter.LDR(common::armgen::R12, common::armgen::R11, 4); // Load export UserHeap::SetupThreadHeap
+
             emitter.PUSH(1, common::armgen::R11);
-            emitter.BL(common::armgen::R12);        // Jump to it.
+            emitter.BL(common::armgen::R12); // Jump to it.
 
             // Don't have to call InitProcess SVC since we dont have anything actually, this process barely uses stuffs.
             // Try to setup a trap cleanup
@@ -127,7 +129,7 @@ namespace eka2l1::service {
 
             // Load control block address
             emitter.LDR(common::armgen::R11, common::armgen::R11);
-            
+
             // Let thread semaphore wait. Call WaitForAnyRequest.
             emitter.SVC(0x800000);
             emitter.B(emitter.get_code_pointer() + sizeof(std::uint64_t) * 2);
@@ -139,25 +141,24 @@ namespace eka2l1::service {
             // - 1 qword pointing to this class.
             // - The SVC call, which should be ARM. 0xEF0000FF in this case (DFFF - ARM GDB)
             // TODO: This smells hacks. If there is an 128-bit OS in the future than I'm so sorry my lord.
-            std::uint64_t *trampoline_ptr = reinterpret_cast<std::uint64_t*>(emitter.get_writeable_code_ptr());
+            std::uint64_t *trampoline_ptr = reinterpret_cast<std::uint64_t *>(emitter.get_writeable_code_ptr());
 
             *trampoline_ptr++ = reinterpret_cast<std::uint64_t>(faker_next_hook);
             *trampoline_ptr++ = reinterpret_cast<std::uint64_t>(this);
-            
-            lr_addr_ = static_cast<address>(reinterpret_cast<std::uint8_t*>(trampoline_ptr) - 
-                trampoline_code.data());
 
-            *reinterpret_cast<std::uint32_t*>(trampoline_ptr++) = 0xEF0000FF; // SVC #0xFF - HLE host call.
+            lr_addr_ = static_cast<address>(reinterpret_cast<std::uint8_t *>(trampoline_ptr) - trampoline_code.data());
+
+            *reinterpret_cast<std::uint32_t *>(trampoline_ptr++) = 0xEF0000FF; // SVC #0xFF - HLE host call.
 
             emitter.set_code_pointer(emitter.get_writeable_code_ptr() + 2 * sizeof(std::uint64_t) + 4);
 
             // Jump to control LLE code. TODO to preserve R11
-            emitter.LDR(common::armgen::R12, common::armgen::R11);  // Jump address
-            emitter.LDR(common::armgen::R0, common::armgen::R11, 4);    // Arg0
-            emitter.LDR(common::armgen::R1, common::armgen::R11, 8);    // Arg1
-            emitter.LDR(common::armgen::R2, common::armgen::R11, 12);   // Arg2
+            emitter.LDR(common::armgen::R12, common::armgen::R11); // Jump address
+            emitter.LDR(common::armgen::R0, common::armgen::R11, 4); // Arg0
+            emitter.LDR(common::armgen::R1, common::armgen::R11, 8); // Arg1
+            emitter.LDR(common::armgen::R2, common::armgen::R11, 12); // Arg2
             emitter.LDR(common::armgen::R3, common::armgen::R11, 16);
-            emitter.PUSH(1, common::armgen::R11);  // Preserve control
+            emitter.PUSH(1, common::armgen::R11); // Preserve control
             emitter.BL(common::armgen::R12);
             emitter.POP(1, common::armgen::R11);
 
@@ -177,13 +178,13 @@ namespace eka2l1::service {
 
         // Relocate some stuff
         std::uint32_t addr = seg->get_code_run_addr(process_, &trampoline);
-        std::uint32_t *trampoline32 = reinterpret_cast<std::uint32_t*>(trampoline + data_offset_);
+        std::uint32_t *trampoline32 = reinterpret_cast<std::uint32_t *>(trampoline + data_offset_);
 
         // Relocate export.
         trampoline32[0] = control_->base().ptr_address();
         trampoline32[1] = euser_lib->lookup(process_, SETUP_THREAD_HEAP_EXPORT_ORD);
         trampoline32[2] = euser_lib->lookup(process_, NEW_TRAP_CLEANUP_EXPORT_ORD);
-        
+
         // Intialise the initial chain
         initial_ = new chain(this);
 
@@ -203,7 +204,7 @@ namespace eka2l1::service {
             return false;
         }
 
-        auto cycle_next = [&]() {    
+        auto cycle_next = [&]() {
             chain *org = initial_;
             initial_ = initial_->next_;
 
@@ -218,14 +219,14 @@ namespace eka2l1::service {
                 cycle_next();
             }
         } else {
-            for (const auto &to_free: free_lists_) {
+            for (const auto &to_free : free_lists_) {
                 allocator_->free(to_free);
             }
 
             free_lists_.clear();
 
             // Write control block
-            std::uint32_t *control_block = reinterpret_cast<std::uint32_t*>(control_->host_base());
+            std::uint32_t *control_block = reinterpret_cast<std::uint32_t *>(control_->host_base());
             control_block[0] = initial_->data_.raw_func_addr_;
 
             for (std::uint32_t i = 0; i < sizeof(initial_->data_.raw_func_args_) / sizeof(std::uint32_t); i++) {
@@ -252,7 +253,7 @@ namespace eka2l1::service {
     }
 
     eka2l1::address faker::new_temporary_argument_with_size(const std::uint32_t size, std::uint8_t **pointer) {
-        std::uint8_t *result = reinterpret_cast<std::uint8_t*>(allocator_->allocate(size));
+        std::uint8_t *result = reinterpret_cast<std::uint8_t *>(allocator_->allocate(size));
 
         if (!result) {
             return 0;
@@ -262,8 +263,7 @@ namespace eka2l1::service {
             *pointer = result;
         }
 
-        eka2l1::address offset = static_cast<eka2l1::address>(result - reinterpret_cast<std::uint8_t*>(
-            control_->host_base()));
+        eka2l1::address offset = static_cast<eka2l1::address>(result - reinterpret_cast<std::uint8_t *>(control_->host_base()));
 
         faker::chain *end = get_end_chain(initial_);
 
@@ -280,14 +280,13 @@ namespace eka2l1::service {
     }
 
     std::uint32_t faker::get_native_return_value() const {
-        return E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link)->
-            get_thread_context().cpu_registers[0];
+        return E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link)->get_thread_context().cpu_registers[0];
     }
 
     faker::chain *faker::then(void *userdata, faker::chain::chain_func func) {
         return get_end_chain(initial_)->then(userdata, func);
     }
-        
+
     faker::chain *faker::then(eka2l1::ptr<void> raw_func_addr) {
         return get_end_chain(initial_)->then(raw_func_addr);
     }
@@ -303,12 +302,11 @@ namespace eka2l1::service {
     kernel::thread *faker::main_thread() {
         return E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link);
     }
-    
-    faker::chain::chain(faker *daddy) 
+
+    faker::chain::chain(faker *daddy)
         : daddy_(daddy)
         , next_(nullptr)
         , type_(faker::chain::chain_type::unk) {
-
     }
 
     static void notify_native_execution(faker *daddy) {
@@ -344,7 +342,7 @@ namespace eka2l1::service {
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1) {
         notify_native_execution(daddy_);
-        
+
         type_ = faker::chain::chain_type::raw_code;
         data_.raw_func_addr_ = raw_func_addr.ptr_address();
         data_.raw_func_args_[0] = arg1;
@@ -355,7 +353,7 @@ namespace eka2l1::service {
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1, const std::uint32_t arg2) {
         notify_native_execution(daddy_);
-        
+
         type_ = faker::chain::chain_type::raw_code;
         data_.raw_func_addr_ = raw_func_addr.ptr_address();
         data_.raw_func_args_[0] = arg1;

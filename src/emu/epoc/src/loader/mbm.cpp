@@ -104,13 +104,13 @@ namespace eka2l1::loader {
 
         return result;
     }
-    
-    bool mbm_file::read_single_bitmap(const std::size_t index, std::uint8_t *dest, 
+
+    bool mbm_file::read_single_bitmap(const std::size_t index, std::uint8_t *dest,
         std::size_t &dest_max) {
         if (index >= trailer.count) {
             return false;
         }
-        
+
         sbm_header &single_bm_header = sbm_headers[index];
         const std::size_t data_offset = trailer.sbm_offsets[index] + single_bm_header.header_len;
 
@@ -127,7 +127,7 @@ namespace eka2l1::loader {
         switch (single_bm_header.compression) {
         case 0: {
             dest_max = compressed_size;
-            
+
             if (dest) {
                 stream->read(dest, dest_max);
             }
@@ -136,26 +136,26 @@ namespace eka2l1::loader {
         }
 
         case 1: {
-            eka2l1::decompress_rle<8>(stream, reinterpret_cast<common::wo_stream*>(&dest_stream));
+            eka2l1::decompress_rle<8>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
             dest_max = dest_stream.tell();
 
             break;
         }
 
         case 3: {
-            eka2l1::decompress_rle<16>(stream, reinterpret_cast<common::wo_stream*>(&dest_stream));
+            eka2l1::decompress_rle<16>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
             dest_max = dest_stream.tell();
 
             break;
         }
 
         case 4: {
-            eka2l1::decompress_rle<24>(stream, reinterpret_cast<common::wo_stream*>(&dest_stream));
+            eka2l1::decompress_rle<24>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
             dest_max = dest_stream.tell();
 
             break;
         }
-        
+
         default: {
             LOG_ERROR("Unsupport RLE compression type {}", single_bm_header.compression);
             stream->seek(crr_pos, common::beg);
@@ -165,13 +165,13 @@ namespace eka2l1::loader {
         }
 
         stream->seek(crr_pos, common::beg);
-        
+
         return true;
     }
 
     bool mbm_file::save_bitmap_to_file(const std::size_t index, const char *name) {
         std::size_t uncompressed_size = 0;
-        
+
         if (!read_single_bitmap(index, nullptr, uncompressed_size)) {
             return false;
         }
@@ -179,8 +179,8 @@ namespace eka2l1::loader {
         // Calculate uncompressed size first
         std::size_t bitmap_file_size = sizeof(common::bmp_header) + sizeof(common::dib_header_v1)
             + uncompressed_size;
-        
-        std::uint8_t *buf = reinterpret_cast<std::uint8_t*>(
+
+        std::uint8_t *buf = reinterpret_cast<std::uint8_t *>(
             common::map_file(name, prot::read_write, bitmap_file_size));
 
         if (!buf) {
@@ -190,12 +190,12 @@ namespace eka2l1::loader {
         common::bmp_header header;
         header.file_size = static_cast<std::uint32_t>(bitmap_file_size);
         header.pixel_array_offset = static_cast<std::uint32_t>(bitmap_file_size - uncompressed_size);
-        
+
         common::wo_buf_stream stream(buf);
         stream.write(&header, sizeof(header));
 
         sbm_header &single_bm_header = sbm_headers[index];
-        
+
         common::dib_header_v1 dib_header;
         dib_header.bit_per_pixels = single_bm_header.bit_per_pixels;
         dib_header.color_plane_count = 1;

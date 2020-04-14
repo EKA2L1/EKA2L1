@@ -20,8 +20,8 @@
 #include <epoc/services/centralrepo/centralrepo.h>
 #include <epoc/services/centralrepo/repo.h>
 
-#include <epoc/services/akn/skin/icon_cfg.h>
 #include <epoc/services/akn/skin/common.h>
+#include <epoc/services/akn/skin/icon_cfg.h>
 
 namespace eka2l1::epoc {
     akn_skin_icon_config_map::akn_skin_icon_config_map(central_repo_server *cenrep_,
@@ -41,10 +41,10 @@ namespace eka2l1::epoc {
             return;
         }
 
-        std::vector<eka2l1::central_repo_entry*> app_uids_entries;
+        std::vector<eka2l1::central_repo_entry *> app_uids_entries;
         repo->query_entries(0x00FFFFFF, 0x00FFFFFF, app_uids_entries, central_repo_entry_type::integer);
 
-        for (auto &app_uid_entry: app_uids_entries) {
+        for (auto &app_uid_entry : app_uids_entries) {
             const std::uint32_t app_uid_key = static_cast<int>(app_uid_entry->data.intd);
             central_repo_entry *ent = repo->find_entry(app_uid_key);
 
@@ -54,10 +54,10 @@ namespace eka2l1::epoc {
 
             const epoc::uid app_uid_val = static_cast<epoc::uid>(ent->data.intd);
 
-            std::vector<eka2l1::central_repo_entry*> app_key_entries;
+            std::vector<eka2l1::central_repo_entry *> app_key_entries;
             repo->query_entries(app_uid_key, 0xFF000000, app_key_entries, central_repo_entry_type::integer);
 
-            for (auto &app_key_entry: app_key_entries) {
+            for (auto &app_key_entry : app_key_entries) {
                 const std::uint32_t app_config_key = static_cast<std::uint32_t>(app_key_entry->data.intd);
 
                 // The higher 16-bits tell total number of icon block
@@ -66,7 +66,7 @@ namespace eka2l1::epoc {
                 // Normally Symbian hardcoded to have 2 icons (in skin server)
                 if (app_config_key >> 16 == 2) {
                     language app_lang = static_cast<language>(app_config_key & 0x0000FFFF);
-                    
+
                     // Get number of icon
                     ent = repo->find_entry(app_config_key);
 

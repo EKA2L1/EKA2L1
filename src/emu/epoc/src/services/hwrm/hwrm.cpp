@@ -19,12 +19,12 @@
 
 #include <epoc/epoc.h>
 #include <epoc/services/hwrm/hwrm.h>
-#include <epoc/services/hwrm/op.h>
 #include <epoc/services/hwrm/light/light.h>
+#include <epoc/services/hwrm/op.h>
 #include <epoc/utils/err.h>
 
-namespace eka2l1 {    
-    hwrm_session::hwrm_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version) 
+namespace eka2l1 {
+    hwrm_session::hwrm_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version) {
     }
 
@@ -54,7 +54,7 @@ namespace eka2l1 {
             break;
         }
         }
-    }    
+    }
 
     hwrm_server::hwrm_server(system *sys)
         : service::typical_server(sys, "!HWRMServer") {

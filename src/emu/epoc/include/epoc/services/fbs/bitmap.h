@@ -20,9 +20,9 @@
 #pragma once
 
 #include <epoc/loader/mbm.h>
+#include <epoc/ptr.h>
 #include <epoc/services/window/common.h>
 #include <epoc/utils/uid.h>
-#include <epoc/ptr.h>
 
 namespace eka2l1::epoc {
     struct bitwise_bitmap {
@@ -31,13 +31,13 @@ namespace eka2l1::epoc {
             violate_bitmap = 0x00020000
         };
 
-        uid                uid_;
+        uid uid_;
 
         struct settings {
             // The first 8 bits are reserved for initial display mode
             // The next 8 bits are reserved for current display mode
             // 16 bits left are for flags
-            std::uint32_t flags_ { 0 };
+            std::uint32_t flags_{ 0 };
 
             display_mode initial_display_mode() const;
             display_mode current_display_mode() const;
@@ -52,16 +52,16 @@ namespace eka2l1::epoc {
             void violate_bitmap(const bool is_it);
         } settings_;
 
-        eka2l1::ptr<void>  allocator_;
-        eka2l1::ptr<void>  pile_;
-        int                byte_width_;
+        eka2l1::ptr<void> allocator_;
+        eka2l1::ptr<void> pile_;
+        int byte_width_;
         loader::sbm_header header_;
-        int                spare1_;
-        int                data_offset_;
-        bool               compressed_in_ram_;
+        int spare1_;
+        int data_offset_;
+        bool compressed_in_ram_;
 
         void construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool white_fill = false);
-        int copy_data(const bitwise_bitmap& source, uint8_t *base);
+        int copy_data(const bitwise_bitmap &source, uint8_t *base);
     };
 
     constexpr epoc::uid bitwise_bitmap_uid = 0x10000040;
@@ -84,6 +84,6 @@ namespace eka2l1::epoc {
         color_bitmap_with_alpha = 2,
         color_bitmap_with_alpha_pm = 3
     };
-    
+
     bool save_bwbmp_to_file(const std::string &destination, bitwise_bitmap *bitmap, const char *base);
 }

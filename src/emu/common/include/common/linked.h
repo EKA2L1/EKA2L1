@@ -21,7 +21,7 @@
 
 #include <common/algorithm.h>
 
-#define E_LOFF(linked, object, linked_field) reinterpret_cast<object*>(reinterpret_cast<unsigned char*>(linked)   \
+#define E_LOFF(linked, object, linked_field) reinterpret_cast<object *>(reinterpret_cast<unsigned char *>(linked) \
     - offsetof(object, linked_field))
 
 namespace eka2l1::common {
@@ -30,7 +30,7 @@ namespace eka2l1::common {
      */
     template <typename T>
     struct single_link {
-        T *next { nullptr };
+        T *next{ nullptr };
     };
 
     /**
@@ -38,11 +38,11 @@ namespace eka2l1::common {
      */
     template <typename T>
     struct double_link {
-        T *previous { nullptr };
-        T *next { nullptr };
+        T *previous{ nullptr };
+        T *next{ nullptr };
     };
 
-    struct double_linked_queue_element: public double_link<double_linked_queue_element> {
+    struct double_linked_queue_element : public double_link<double_linked_queue_element> {
         void insert_before(double_linked_queue_element *this_guy) {
             previous = this_guy->previous;
             next = this_guy;
@@ -136,7 +136,7 @@ namespace eka2l1::common {
             return true;
         }
 
-        double_linked_queue_element *highest() {  
+        double_linked_queue_element *highest() {
             // Release code generation is corrupted somewhere on MSVC. Force fill is good so i guess it's the other.
             // Either way, until when i can repro this in a short code, files and bug got fixed, this stays here.
 #ifdef _MSC_VER

@@ -246,8 +246,7 @@ namespace eka2l1 {
                 }
 
                 case ecom_plugin_type_2: {
-                    implementation->flags |= 
-                        ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
+                    implementation->flags |= ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
 
                     if (!read_impl_ver2(*implementation, stream)) {
                         return false;
@@ -260,10 +259,9 @@ namespace eka2l1 {
                     if (!read_impl_ver1(*implementation, stream)) {
                         return false;
                     }
-                    
-                    implementation->flags |= 
-                        ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
-                    
+
+                    implementation->flags |= ecom_implementation_info::FLAG_HINT_NO_EXTENDED_INTERFACE;
+
                     break;
                 }
                 }
@@ -317,7 +315,7 @@ namespace eka2l1 {
         }
 
         // Absorb extended interfaces
-        // There is a difference in S^3 and S9.4 and down: GetExtendedInterfaceListL does not exist in 
+        // There is a difference in S^3 and S9.4 and down: GetExtendedInterfaceListL does not exist in
         // Symbian 9.4 document or any lower ECOM documents.
 
         // Causious about this.

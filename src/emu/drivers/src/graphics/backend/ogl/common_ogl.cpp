@@ -35,6 +35,6 @@ namespace eka2l1::drivers {
             break;
         }
 
-       return GL_INVALID_ENUM;
+        return GL_INVALID_ENUM;
     }
 }

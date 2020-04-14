@@ -49,8 +49,8 @@
 
 #include <epoc/services/init.h>
 
-#include <manager/manager.h>
 #include <common/time.h>
+#include <manager/manager.h>
 
 namespace eka2l1 {
     void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
@@ -215,7 +215,7 @@ namespace eka2l1 {
             } else {
                 new_stack_size = std::min<std::uint32_t>(imgs.first->header.stack_size, stack_size);
             }
-            
+
             pri = static_cast<kernel::process_priority>(imgs.first->header.priority);
             heap_min = imgs.first->header.heap_size_min;
             heap_max = imgs.first->header.heap_size_max;
@@ -273,10 +273,10 @@ namespace eka2l1 {
 
     kernel_obj_ptr kernel_system::get_kernel_obj_raw(uint32_t handle) {
         if (handle == 0xFFFF8000) {
-            return reinterpret_cast<kernel::kernel_obj*>(get_by_id<kernel::process>(
+            return reinterpret_cast<kernel::kernel_obj *>(get_by_id<kernel::process>(
                 crr_process()->unique_id()));
         } else if (handle == 0xFFFF8001) {
-            return reinterpret_cast<kernel::kernel_obj*>(get_by_id<kernel::thread>(
+            return reinterpret_cast<kernel::kernel_obj *>(get_by_id<kernel::thread>(
                 crr_thread()->unique_id()));
         }
 
@@ -297,7 +297,7 @@ namespace eka2l1 {
         if (msg->locked()) {
             return;
         }
-        
+
         msg->free = true;
     }
 
@@ -353,8 +353,8 @@ namespace eka2l1 {
         default:
             break;
         }
-    
-        if (h != INVALID_HANDLE) {    
+
+        if (h != INVALID_HANDLE) {
             target_obj->open_to(own_thread->owning_process());
         }
 
@@ -519,7 +519,7 @@ namespace eka2l1 {
 
         // Don't care about the result as long as it's not null.
         kernel::chunk *rom_chunk = create<kernel::chunk>(mem, nullptr, "ROM", 0, rom_size,
-            rom_size, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            static_cast<address>(rom_size), prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
             kernel::chunk_attrib::none, false, addr, rom_map);
 
         if (!rom_chunk) {

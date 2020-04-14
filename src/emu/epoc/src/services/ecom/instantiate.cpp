@@ -18,18 +18,18 @@
  */
 
 #include <epoc/epoc.h>
+#include <epoc/kernel/process.h>
 #include <epoc/services/ecom/common.h>
 #include <epoc/services/ecom/ecom.h>
 #include <epoc/services/fs/std.h>
 #include <epoc/utils/dll.h>
 #include <epoc/utils/uid.h>
-#include <epoc/kernel/process.h>
 #include <epoc/vfs.h>
 
 #include <epoc/utils/err.h>
 
 namespace eka2l1 {
-    bool ecom_server::get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid, 
+    bool ecom_server::get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid,
         const epoc::uid implementation_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp) {
         if (implementation_uid == 0) {
             return false;
@@ -39,7 +39,7 @@ namespace eka2l1 {
 
         // Find the implementation
         ecom_implementation_info_ptr impl_info = nullptr;
-        
+
         if (interface_uid == 0) {
             // Find the implementation uid in the list
             auto result = std::lower_bound(implementations.begin(), implementations.end(), implementation_uid,
@@ -49,7 +49,7 @@ namespace eka2l1 {
                 if (err) {
                     *err = epoc::ecom_no_registeration_identified;
                 }
-                
+
                 return false;
             }
 
@@ -79,8 +79,7 @@ namespace eka2l1 {
             impl_info = *result;
         }
 
-        std::u16string name = std::u16string(1, drive_to_char16(impl_info->drv)) + 
-                u":\\sys\\bin\\" + impl_info->original_name + u".dll";
+        std::u16string name = std::u16string(1, drive_to_char16(impl_info->drv)) + u":\\sys\\bin\\" + impl_info->original_name + u".dll";
 
         if (!(impl_info->flags & ecom_implementation_info::FLAG_IMPL_CREATE_INFO_CACHED)) {
             if (!epoc::get_image_info(sys->get_lib_manager(), name, impl_info->plugin_dll_info)) {
@@ -94,15 +93,15 @@ namespace eka2l1 {
             // Cache the info
             impl_info->flags |= ecom_implementation_info::FLAG_IMPL_CREATE_INFO_CACHED;
         }
-        
+
         // Must satisfy the capabilities
-        if (check_cap_comp && !requester->owning_process()->has(*reinterpret_cast<epoc::capability_set*>(impl_info->plugin_dll_info.caps))) {
+        if (check_cap_comp && !requester->owning_process()->has(*reinterpret_cast<epoc::capability_set *>(impl_info->plugin_dll_info.caps))) {
             if (err) {
                 *err = epoc::error_permission_denied;
             }
 
             return false;
-        }   
+        }
 
         dll_entry.uid1 = impl_info->plugin_dll_info.uid1;
         dll_entry.uid2 = impl_info->plugin_dll_info.uid2;
@@ -142,14 +141,14 @@ namespace eka2l1 {
         }
 
         epoc::fs::entry lib_entry{};
-        epoc::uid dtor_key { 0 };
+        epoc::uid dtor_key{ 0 };
 
         switch (ctx->msg->function) {
         case ecom_get_implementation_creation_method: {
             std::int32_t error_code = 0;
 
-            if (!get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index], 
-                lib_entry, dtor_key, &error_code, true)) {
+            if (!get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index],
+                    lib_entry, dtor_key, &error_code, true)) {
                 ctx->set_request_status(error_code);
                 return;
             }
@@ -163,10 +162,10 @@ namespace eka2l1 {
         }
         }
 
-        // Write entry and more infos        
+        // Write entry and more infos
         ctx->write_arg_pkg<epoc::fs::entry>(3, lib_entry);
-        
-        epoc::uid_type dtor_uids { 0, dtor_key, 0 };
+
+        epoc::uid_type dtor_uids{ 0, dtor_key, 0 };
         ctx->write_arg_pkg<epoc::uid_type>(0, dtor_uids);
 
         ctx->set_request_status(epoc::error_none);

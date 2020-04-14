@@ -29,13 +29,13 @@
 
 #include <epoc/common.h>
 #include <epoc/epoc.h>
-#include <epoc/vfs.h>
 #include <epoc/loader/rsc.h>
 #include <epoc/utils/bafl.h>
 #include <epoc/utils/des.h>
+#include <epoc/vfs.h>
 
-#include <functional>
 #include <epoc/utils/err.h>
+#include <functional>
 
 namespace eka2l1 {
     applist_server::applist_server(system *sys)
@@ -73,7 +73,7 @@ namespace eka2l1 {
                 return {};
             }
 
-            loader::rsc_file std_rsc(reinterpret_cast<common::ro_stream*>(&std_rsc_raw));
+            loader::rsc_file std_rsc(reinterpret_cast<common::ro_stream *>(&std_rsc_raw));
 
             if (confirm_sig) {
                 std_rsc.confirm_signature();
@@ -92,9 +92,9 @@ namespace eka2l1 {
         if (dat.empty()) {
             return false;
         }
-        
+
         common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
-        bool result = read_registeration_info(reinterpret_cast<common::ro_stream*>(&app_info_resource_stream),
+        bool result = read_registeration_info(reinterpret_cast<common::ro_stream *>(&app_info_resource_stream),
             reg, land_drive);
 
         if (!result) {
@@ -118,21 +118,21 @@ namespace eka2l1 {
         }
 
         f = io->open_file(localised_path, READ_MODE | BIN_MODE);
-        
+
         dat = read_rsc_from_file(f, reg.localised_info_rsc_id, true, nullptr);
 
         common::ro_buf_stream localised_app_info_resource_stream(&dat[0], dat.size());
 
         // Read localised info
         // Ignore result
-        read_localised_registeration_info(reinterpret_cast<common::ro_stream*>(&localised_app_info_resource_stream),
+        read_localised_registeration_info(reinterpret_cast<common::ro_stream *>(&localised_app_info_resource_stream),
             reg, land_drive);
 
-        LOG_INFO("Found app: {}, uid: 0x{:X}", 
-            common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr)), 
+        LOG_INFO("Found app: {}, uid: 0x{:X}",
+            common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr)),
             reg.mandatory_info.uid);
-        
-        if (!eka2l1::is_absolute(reg.icon_file_path, std::u16string(u"c:\\"), true)) {    
+
+        if (!eka2l1::is_absolute(reg.icon_file_path, std::u16string(u"c:\\"), true)) {
             // Try to absolute icon path
             // Search the registeration file drive, and than the localiseable registeration file
             std::u16string try_1 = eka2l1::absolute_path(reg.icon_file_path,
@@ -142,7 +142,7 @@ namespace eka2l1 {
                 reg.icon_file_path = try_1;
             } else {
                 try_1[0] = localised_path[0];
-                
+
                 if (io->exist(try_1)) {
                     reg.icon_file_path = try_1;
                 } else {
@@ -154,14 +154,13 @@ namespace eka2l1 {
         regs.push_back(std::move(reg));
         return true;
     }
-    
+
     void applist_server::rescan_registries(eka2l1::io_system *io) {
         LOG_INFO("Loading app registries");
 
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
-                auto reg_dir = io->open_dir(std::u16string(1, drive_to_char16(drv)) + 
-                    u":\\Private\\10003a3f\\import\\apps\\");
+                auto reg_dir = io->open_dir(std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\");
 
                 if (reg_dir) {
                     while (auto ent = reg_dir->get_next_entry()) {
@@ -179,7 +178,7 @@ namespace eka2l1 {
 
         LOG_INFO("Done loading!");
     }
-    
+
     void applist_server::connect(service::ipc_context &ctx) {
         server::connect(ctx);
     }
@@ -192,10 +191,10 @@ namespace eka2l1 {
             rescan_registries(sys->get_io_system());
             flags |= AL_INITED;
         }
-        
+
         return regs;
     }
-    
+
     apa_app_registry *applist_server::get_registeration(const std::uint32_t uid) {
         const std::lock_guard<std::mutex> guard(list_access_mut_);
 
@@ -204,7 +203,7 @@ namespace eka2l1 {
             rescan_registries(sys->get_io_system());
             flags |= AL_INITED;
         }
-        
+
         auto result = std::lower_bound(regs.begin(), regs.end(), uid, [](const apa_app_registry &lhs, const std::uint32_t rhs) {
             return lhs.mandatory_info.uid < rhs;
         });

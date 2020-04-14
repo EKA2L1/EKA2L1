@@ -44,7 +44,7 @@ TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
     f->close();
 
     common::ro_buf_stream stream(&buf[0], buf.size());
-    loader::rsc_file test_rsc(reinterpret_cast<common::ro_stream*>(&stream));
+    loader::rsc_file test_rsc(reinterpret_cast<common::ro_stream *>(&stream));
 
     const std::uint16_t total_res = 11;
     REQUIRE(test_rsc.get_total_resources() == total_res);
@@ -85,7 +85,7 @@ TEST_CASE("no_compress_but_may_contain_unicode_2", "rsc_file") {
     f->close();
 
     common::ro_buf_stream stream(&buf[0], buf.size());
-    loader::rsc_file test_rsc(reinterpret_cast<common::ro_stream*>(&stream));
+    loader::rsc_file test_rsc(reinterpret_cast<common::ro_stream *>(&stream));
 
     const std::uint16_t total_res = 3;
     REQUIRE(test_rsc.get_total_resources() == total_res);
@@ -128,7 +128,7 @@ TEST_CASE("no_compress_but_may_contain_unicode_3", "rsc_file") {
     f->close();
 
     common::ro_buf_stream stream(&buf[0], buf.size());
-    loader::rsc_file test_rsc(reinterpret_cast<common::ro_stream*>(&stream));
+    loader::rsc_file test_rsc(reinterpret_cast<common::ro_stream *>(&stream));
 
     std::ifstream fi("loaderassets//obscurersc.seg1", std::ios::ate | std::ios::binary);
     const std::size_t res_size = fi.tellg();

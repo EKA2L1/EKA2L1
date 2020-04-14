@@ -64,18 +64,18 @@ namespace eka2l1 {
         using uid = std::uint32_t;
     }
 
-    using thread_ptr = kernel::thread*;
-    using process_ptr = kernel::process*;
-    using chunk_ptr = kernel::chunk*;
-    using mutex_ptr = kernel::mutex*;
-    using sema_ptr = kernel::semaphore*;
-    using timer_ptr = kernel::timer*;
-    using kernel_obj_ptr = kernel::kernel_obj*;
-    using change_notifier_ptr = kernel::change_notifier*;
-    using property_ptr = service::property*;
-    using library_ptr = kernel::library*;
-    using codeseg_ptr = kernel::codeseg*;
-    using property_ref_ptr = service::property_reference*;
+    using thread_ptr = kernel::thread *;
+    using process_ptr = kernel::process *;
+    using chunk_ptr = kernel::chunk *;
+    using mutex_ptr = kernel::mutex *;
+    using sema_ptr = kernel::semaphore *;
+    using timer_ptr = kernel::timer *;
+    using kernel_obj_ptr = kernel::kernel_obj *;
+    using change_notifier_ptr = kernel::change_notifier *;
+    using property_ptr = service::property *;
+    using library_ptr = kernel::library *;
+    using codeseg_ptr = kernel::codeseg *;
+    using property_ref_ptr = service::property_reference *;
 
     using kernel_obj_unq_ptr = std::unique_ptr<kernel::kernel_obj>;
     using prop_ident_pair = std::pair<int, int>;
@@ -122,7 +122,7 @@ namespace eka2l1 {
         int index;
         uint32_t object_id;
     };
-    
+
     namespace arm {
         class arm_interface;
     }
@@ -308,7 +308,7 @@ namespace eka2l1 {
         */
         template <typename T>
         T *get(const kernel::handle handle) {
-            return reinterpret_cast<T*>(get_kernel_obj_raw(handle));
+            return reinterpret_cast<T *>(get_kernel_obj_raw(handle));
         }
 
         template <typename T>
@@ -321,7 +321,7 @@ namespace eka2l1 {
         });                                                                            \
         if (res == obj_map.end())                                                      \
             return nullptr;                                                            \
-        return reinterpret_cast<T*>(res->get());                                       \
+        return reinterpret_cast<T *>(res->get());                                      \
     }
 
                 OBJECT_SEARCH(mutex, mutexes)
@@ -375,7 +375,7 @@ namespace eka2l1 {
             return lhs->unique_id() < uid;                                                                           \
         });                                                                                                          \
         if (res != obj_map.end()) {                                                                                  \
-            return reinterpret_cast<T*>(res->get());                                                           \
+            return reinterpret_cast<T *>(res->get());                                                                \
         }                                                                                                            \
         return nullptr;                                                                                              \
     }
@@ -419,28 +419,27 @@ namespace eka2l1 {
 
             const kernel::uid obj_uid = obj->unique_id();
 
-            #define ADD_OBJECT_TO_CONTAINER(type, container, additional_setup)           \
-            case type:                                                                   \
-                additional_setup;                                                        \
-                container.push_back(std::move(obj));                                     \
-                return reinterpret_cast<T*>(container.back().get());
+#define ADD_OBJECT_TO_CONTAINER(type, container, additional_setup) \
+    case type:                                                     \
+        additional_setup;                                          \
+        container.push_back(std::move(obj));                       \
+        return reinterpret_cast<T *>(container.back().get());
 
             switch (obj_type) {
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::thread, threads, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::process, processes, setup_new_process(
-                reinterpret_cast<process_ptr>(obj.get())));
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::chunk, chunks, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::server, servers, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop, props, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop_ref, prop_refs, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::session, sessions, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::library, libraries, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::timer, timers, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::mutex, mutexes, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::sema, semas, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs, )
-            ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::thread, threads, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::process, processes, setup_new_process(reinterpret_cast<process_ptr>(obj.get())));
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::chunk, chunks, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::server, servers, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop, props, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop_ref, prop_refs, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::session, sessions, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::library, libraries, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::timer, timers, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::mutex, mutexes, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::sema, semas, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues, )
 
             default:
                 break;
@@ -450,14 +449,14 @@ namespace eka2l1 {
         }
 
         template <typename T, typename... args>
-        std::pair<kernel::handle, T*> create_and_add(kernel::owner_type owner,
+        std::pair<kernel::handle, T *> create_and_add(kernel::owner_type owner,
             args... creation_args) {
             T *obj = create<T>(creation_args...);
             return std::make_pair(open_handle(obj, owner), obj);
         }
 
         template <typename T, typename... args>
-        std::pair<kernel::handle, T*> create_and_add_thread(kernel::owner_type owner,
+        std::pair<kernel::handle, T *> create_and_add_thread(kernel::owner_type owner,
             kernel::thread *thr, args... creation_args) {
             T *obj = create<T>(creation_args...);
             return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
@@ -472,7 +471,7 @@ namespace eka2l1 {
         void unlock() {
             kern_lock.unlock();
         }
-        
+
         bool map_rom(const mem::vm_address addr, const std::string &path);
     };
 }

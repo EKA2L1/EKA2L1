@@ -458,12 +458,12 @@ namespace eka2l1 {
     }
 
     bool domain::is_notification_enabled(service::session *ss) {
-        domain_server *dmsrv = reinterpret_cast<domain_server*>(ss->get_server());
+        domain_server *dmsrv = reinterpret_cast<domain_server *>(ss->get_server());
         return dmsrv->nof_enable[ss->unique_id()];
     }
 
     void domain::set_notification_option(service::session *ss, const bool val) {
-        domain_server *dmsrv = reinterpret_cast<domain_server*>(ss->get_server());
+        domain_server *dmsrv = reinterpret_cast<domain_server *>(ss->get_server());
         dmsrv->nof_enable[ss->unique_id()] = val;
     }
 

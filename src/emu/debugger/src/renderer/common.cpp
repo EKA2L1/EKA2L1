@@ -49,10 +49,10 @@ namespace eka2l1::renderer {
         }
 
         drivers::handle tex = 0;
-        
+
         if (as_bitmap) {
             tex = drivers::create_bitmap(driver, { width, height });
-            builder->update_bitmap(tex, 32, reinterpret_cast<const char*>(dat), width * height * 4,
+            builder->update_bitmap(tex, 32, reinterpret_cast<const char *>(dat), width * height * 4,
                 { 0, 0 }, { width, height });
         } else {
             tex = drivers::create_texture(driver, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
@@ -64,7 +64,7 @@ namespace eka2l1::renderer {
 
         return tex;
     }
-    
+
     drivers::handle load_texture_from_file_standalone(drivers::graphics_driver *driver, const std::string &path, const bool as_bitmap, int *width, int *height) {
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());

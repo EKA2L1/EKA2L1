@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/ui/cap/eiksrv.h>
-#include <epoc/services/property.h>
 #include <epoc/kernel.h>
+#include <epoc/services/property.h>
+#include <epoc/services/ui/cap/eiksrv.h>
 
 #include <array>
 
@@ -33,16 +33,14 @@ namespace eka2l1::epoc::cap {
         : strength_(BATTERY_LEVEL_MAX)
         , charging_(0)
         , icon_state_(0) {
-
     }
 
     akn_signal_state::akn_signal_state()
         : strength_(SIGNAL_LEVEL_MAX)
         , icon_state_(GPRS_SIGNAL_ICON) {
-
     }
 
-    akn_indicator_state::akn_indicator_state() 
+    akn_indicator_state::akn_indicator_state()
         : incall_bubble_flags_(0)
         , incall_bubble_allow_in_usual_(0)
         , incall_bubble_allow_in_idle_(0)
@@ -81,7 +79,7 @@ namespace eka2l1::epoc::cap {
 
         return true;
     }
-    
+
     void eik_status_pane_maintainer::set_battery_charging(const bool is_charging) {
         local_data_.battery_.charging_ = is_charging;
         publish_data();
@@ -106,7 +104,7 @@ namespace eka2l1::epoc::cap {
     std::int32_t eik_status_pane_maintainer::get_battery_level() const {
         return local_data_.battery_.strength_;
     }
-    
+
     bool eik_status_pane_maintainer::get_battery_charging() const {
         return local_data_.battery_.charging_;
     }

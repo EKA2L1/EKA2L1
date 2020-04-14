@@ -20,9 +20,9 @@
 #pragma once
 
 #include <epoc/ipc.h>
-#include <scripting/thread.h>
 #include <scripting/server.h>
 #include <scripting/session.h>
+#include <scripting/thread.h>
 
 #include <cstddef>
 #include <memory>
@@ -39,7 +39,7 @@ namespace eka2l1::scripting {
 
         std::uint32_t arg(const int idx);
         std::uint32_t flags() const;
-        
+
         std::unique_ptr<scripting::session_wrapper> session();
     };
 

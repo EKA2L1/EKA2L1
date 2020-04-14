@@ -51,15 +51,15 @@ namespace eka2l1 {
         struct ipc_context {
             explicit ipc_context(const bool auto_free = true);
             ~ipc_context();
-            
-            eka2l1::system *sys;        ///< The system instance pointer.
-            ipc_msg_ptr msg;            ///< The IPC message that this struct wrapped.
 
-            bool signaled = false;      ///< A safe-check if a request status is set. This allow setting multiple
-                                        ///< time with only one time it signaled the client.
+            eka2l1::system *sys; ///< The system instance pointer.
+            ipc_msg_ptr msg; ///< The IPC message that this struct wrapped.
 
-            bool auto_free = false;     ///< Auto free this message when the context is destroyed. Useful 
-                                        ///< for HLE context.
+            bool signaled = false; ///< A safe-check if a request status is set. This allow setting multiple
+                ///< time with only one time it signaled the client.
+
+            bool auto_free = false; ///< Auto free this message when the context is destroyed. Useful
+                ///< for HLE context.
 
             /**
              * \brief   Get raw IPC argument data.
@@ -95,12 +95,12 @@ namespace eka2l1 {
 
                 if (packed_size != sizeof(T)) {
                     LOG_WARN("Getting packed struct with mismatch size ({} vs {}), size to get "
-                        "will be automatically clamped", packed_size, sizeof(T));
+                             "will be automatically clamped",
+                        packed_size, sizeof(T));
                 }
 
                 T object;
-                std::copy(data, data + common::min(packed_size, sizeof(T)), reinterpret_cast<std::uint8_t*>(
-                    &object));
+                std::copy(data, data + common::min(packed_size, sizeof(T)), reinterpret_cast<std::uint8_t *>(&object));
 
                 return std::make_optional<T>(std::move(object));
             }

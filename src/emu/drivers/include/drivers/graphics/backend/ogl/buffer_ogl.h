@@ -45,8 +45,8 @@ namespace eka2l1::drivers {
 
         void bind(graphics_driver *driver) override;
         void unbind(graphics_driver *driver) override;
-        
-        void attach_descriptors(graphics_driver *driver, const int stride, const bool instance_move, 
+
+        void attach_descriptors(graphics_driver *driver, const int stride, const bool instance_move,
             const attribute_descriptor *descriptors, const int total) override;
 
         bool create(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint, const buffer_upload_hint use_hint) override;

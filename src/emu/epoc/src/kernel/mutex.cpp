@@ -130,7 +130,7 @@ namespace eka2l1 {
 
             case thread_state::wait_mutex: {
                 auto thr_ite = std::find(waits.begin(), waits.end(), thread_to_wake);
-                
+
                 if (thr_ite == waits.end()) {
                     LOG_ERROR("Thread request to wake up with this mutex is not in hold pending queue");
                     return;

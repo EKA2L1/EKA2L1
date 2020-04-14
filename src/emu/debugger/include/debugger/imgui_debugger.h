@@ -25,8 +25,8 @@
 #include <mutex>
 #include <thread>
 
-#include <common/types.h>
 #include <common/queue.h>
+#include <common/types.h>
 #include <common/vecx.h>
 #include <debugger/debugger.h>
 #include <drivers/graphics/common.h>
@@ -43,7 +43,7 @@ namespace eka2l1 {
     class oom_ui_app_server;
 
     using app_launch_function = std::function<void(const std::u16string &path)>;
-    using selected_window_callback_function = std::function<void(void*)>;
+    using selected_window_callback_function = std::function<void(void *)>;
 
     class imgui_debugger : public debugger_base {
         system *sys;
@@ -95,7 +95,7 @@ namespace eka2l1 {
                 ENDING = 4,
                 FINAL_FOR_REAL = 5
             } stage;
-                
+
             std::string current_rom_path;
             std::string current_rpkg_path;
 
@@ -116,14 +116,14 @@ namespace eka2l1 {
         } device_wizard_state;
 
         applist_server *alserv;
-        window_server  *winserv;
+        window_server *winserv;
         oom_ui_app_server *oom;
 
         app_launch_function app_launch;
 
         std::mutex errors_mut;
         std::queue<std::string> error_queue;
-        
+
         selected_window_callback_function selected_callback;
         void *selected_callback_data;
 

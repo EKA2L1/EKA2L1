@@ -40,15 +40,15 @@ namespace eka2l1 {
             data_change_callbacks.push_back({ userdata, handler });
             kern->unlock();
         }
-        
+
         void property::fire_data_change_callbacks() {
-            for (auto &callback: data_change_callbacks) {
+            for (auto &callback : data_change_callbacks) {
                 callback.second(callback.first, this);
             }
 
             data_change_callbacks.clear();
         }
-        
+
         void property::define(service::property_type pt, uint32_t pre_allocated) {
             data_type = pt;
             data_len = pre_allocated;

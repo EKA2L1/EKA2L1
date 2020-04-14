@@ -51,7 +51,7 @@ namespace eka2l1 {
             seri.absorb(access);
             seri.absorb(access_count);
         }
-    
+
         void kernel_obj::full_name(std::string &name_will_full) {
             if (owner) {
                 // recusively calling parent's owner to get name

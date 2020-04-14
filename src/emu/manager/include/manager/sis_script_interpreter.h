@@ -34,7 +34,7 @@ namespace eka2l1 {
         class package_manager;
         struct config_state;
     }
-    
+
     namespace common {
         class ro_stream;
     }
@@ -55,7 +55,7 @@ namespace eka2l1 {
             io_system *io;
             manager::package_manager *mngr;
 
-            bool skip_next_file { false };
+            bool skip_next_file{ false };
 
             bool appprop(const sis_uid uid, sis_property prop);
             bool package(const sis_uid uid);
@@ -65,15 +65,15 @@ namespace eka2l1 {
              * \return True if it can be passed.
              */
             bool condition_passed(sis_field *wrap_if_stmt);
-            
+
             /**
              * \brief Get the true integral value from an expression.
              */
             int gasp_true_form_of_integral_expression(const sis_expression &expr);
 
         public:
-            show_text_func show_text;                       ///< Hook function to display texts.
-            choose_lang_func choose_lang;                   ///< Hook function to choose controller's language.
+            show_text_func show_text; ///< Hook function to display texts.
+            choose_lang_func choose_lang; ///< Hook function to choose controller's language.
 
             /**
              * \brief Get the data in the index of a buffer block in the SIS.
@@ -110,13 +110,13 @@ namespace eka2l1 {
                 sis_data *inst_data,
                 drive_number install_drv);
 
-            bool interpret(sis_install_block &install_block, std::atomic<int> &progress, 
+            bool interpret(sis_install_block &install_block, std::atomic<int> &progress,
                 uint16_t crr_blck_idx = 0);
 
             bool interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress);
-            
+
             bool interpret(std::atomic<int> &progress) {
-                return interpret(main_controller, 0, progress); 
+                return interpret(main_controller, 0, progress);
             }
         };
     }

@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <epoc/services/window/classes/winuser.h>
 #include <drivers/graphics/common.h>
 #include <drivers/graphics/graphics.h>
+#include <epoc/services/window/classes/winuser.h>
 
 #include <common/linked.h>
 #include <common/rgb.h>
@@ -91,7 +91,7 @@ namespace eka2l1::epoc {
             eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
             const int baseline_offset, const int margin);
 
-        void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, 
+        void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
             const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);
         bool do_command_set_color(const set_color_type to_set);
 

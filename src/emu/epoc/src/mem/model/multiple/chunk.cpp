@@ -46,8 +46,7 @@ namespace eka2l1::mem {
             int page_num = (end_offset - running_offset) >> mmu_->page_size_bits_;
 
             // The number of page to the end of page table
-            const int page_num_till_end_pt = (mmu_->chunk_size_ - (running_offset & mmu_->chunk_mask_)) >> 
-                mmu_->page_size_bits_;
+            const int page_num_till_end_pt = (mmu_->chunk_size_ - (running_offset & mmu_->chunk_mask_)) >> mmu_->page_size_bits_;
 
             page_num = common::min(page_num, page_num_till_end_pt);
 
@@ -71,8 +70,7 @@ namespace eka2l1::mem {
             const auto pt_base = (running_offset >> mmu_->chunk_shift_) << mmu_->chunk_shift_;
 
             // Commit the memory to the host
-            if (!is_external_host && !common::commit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_)
-                + pt_base, page_num << mmu_->page_size_bits_, permission_)) {
+            if (!is_external_host && !common::commit(reinterpret_cast<std::uint8_t *>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base, page_num << mmu_->page_size_bits_, permission_)) {
                 return running_offset - offset;
             }
 
@@ -80,8 +78,7 @@ namespace eka2l1::mem {
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
                 // If the entry has not yet been committed.
                 if (pt->pages_[poff].host_addr == nullptr) {
-                    pt->pages_[poff].host_addr = reinterpret_cast<std::uint8_t*>(host_base_) + 
-                        (poff << mmu_->page_size_bits_) + pt_base;
+                    pt->pages_[poff].host_addr = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
                     pt->pages_[poff].perm = permission_;
 
                     // Increase committed size.
@@ -90,7 +87,7 @@ namespace eka2l1::mem {
 
                     if (off_start_just_mapped == 0) {
                         off_start_just_mapped = (poff << mmu_->page_size_bits_) + base_ + pt_base;
-                        host_start_just_mapped =  reinterpret_cast<std::uint8_t*>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
+                        host_start_just_mapped = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
                     }
                 } else {
                     // Map those just mapped to the CPU. It will love this
@@ -139,8 +136,7 @@ namespace eka2l1::mem {
             int page_num = (end_offset - running_offset) >> mmu_->page_size_bits_;
 
             // The number of page to the end of page table
-            const int page_num_till_end_pt = (mmu_->chunk_size_ - (running_offset & mmu_->chunk_mask_)) >> 
-                mmu_->page_size_bits_;
+            const int page_num_till_end_pt = (mmu_->chunk_size_ - (running_offset & mmu_->chunk_mask_)) >> mmu_->page_size_bits_;
 
             page_num = common::min(page_num, page_num_till_end_pt);
             std::uint32_t ptid = page_tabs_[running_offset >> mmu_->chunk_shift_];
@@ -191,15 +187,15 @@ namespace eka2l1::mem {
                 //LOG_TRACE("Unmapped from CPU: 0x{:X}, size 0x{:X}", off_start_just_unmapped, size_just_unmapped);
                 mmu_->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
             }
-            
+
             // Decommit the memory from the host
             if (!is_external_host) {
-                if (!common::decommit(reinterpret_cast<std::uint8_t*>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base,
-                    page_num << mmu_->page_size_bits_)) {
+                if (!common::decommit(reinterpret_cast<std::uint8_t *>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base,
+                        page_num << mmu_->page_size_bits_)) {
                     LOG_ERROR("Can't decommit a page from host memory");
                 }
             }
-            
+
             // Dealloc in-house bits
             if (page_bma_) {
                 page_bma_->force_fill(running_offset >> mmu_->page_size_bits_, page_num, true);
@@ -208,7 +204,7 @@ namespace eka2l1::mem {
             running_offset += (page_num << mmu_->page_size_bits_);
         }
     }
-    
+
     bool multiple_mem_model_chunk::allocate(const std::size_t size) {
         if (!page_bma_) {
             return false;
@@ -232,16 +228,16 @@ namespace eka2l1::mem {
     bool multiple_mem_model_chunk::adjust(const address bottom, const address top) {
         const std::size_t top_page_off = ((top + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
         const std::size_t bottom_page_off = (bottom >> mmu_->page_size_bits_);
-        
+
         // Check the top
         // Top offset adjusted smaller than current top offset
         if (top_page_off < top_) {
             // Decommit
-            decommit(static_cast<vm_address>(top_page_off << mmu_->page_size_bits_), 
+            decommit(static_cast<vm_address>(top_page_off << mmu_->page_size_bits_),
                 (top_ - top_page_off) << mmu_->page_size_bits_);
         } else if (top_page_off > top_) {
             // We must commit more memory
-            commit(static_cast<vm_address>(top_ << mmu_->page_size_bits_), 
+            commit(static_cast<vm_address>(top_ << mmu_->page_size_bits_),
                 (top_page_off - top_) << mmu_->page_size_bits_);
         }
 
@@ -252,11 +248,11 @@ namespace eka2l1::mem {
             // Check the bottom
             if (bottom_page_off > bottom_) {
                 // Decommit
-                decommit(static_cast<vm_address>(bottom_ << mmu_->page_size_bits_), 
+                decommit(static_cast<vm_address>(bottom_ << mmu_->page_size_bits_),
                     (bottom_page_off - bottom_) << mmu_->page_size_bits_);
             } else if (bottom_page_off < bottom_) {
                 // We must commit more memory
-                commit(static_cast<vm_address>(bottom_page_off << mmu_->page_size_bits_), 
+                commit(static_cast<vm_address>(bottom_page_off << mmu_->page_size_bits_),
                     (bottom_ - bottom_page_off) << mmu_->page_size_bits_);
             }
 
@@ -265,10 +261,10 @@ namespace eka2l1::mem {
 
         return true;
     }
-    
+
     linear_section *multiple_mem_model_chunk::get_section(const std::uint32_t flags) {
-        mmu_multiple *mul_mmu = reinterpret_cast<mmu_multiple*>(mmu_); 
-        
+        mmu_multiple *mul_mmu = reinterpret_cast<mmu_multiple *>(mmu_);
+
         if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
             return &mul_mmu->user_code_sec_;
         }
@@ -292,7 +288,7 @@ namespace eka2l1::mem {
         return nullptr;
     }
 
-    int multiple_mem_model_chunk::do_create(const mem_model_chunk_creation_info &create_info) {   
+    int multiple_mem_model_chunk::do_create(const mem_model_chunk_creation_info &create_info) {
         // get the right virtual address space allocator
         linear_section *chunk_sec = get_section(create_info.flags);
 
@@ -330,7 +326,7 @@ namespace eka2l1::mem {
             max_size_ = static_cast<std::size_t>(max_page) << mmu_->page_size_bits_;
         } else {
             // Mark those as allocated
-            max_size_ = chunk_sec->alloc_.force_fill((addr - chunk_sec->beg_) >> mmu_->page_size_bits_, 
+            max_size_ = chunk_sec->alloc_.force_fill((addr - chunk_sec->beg_) >> mmu_->page_size_bits_,
                 static_cast<int>(total_pt << mmu_->page_per_tab_shift_), false);
 
             max_size_ <<= mmu_->page_size_bits_;
@@ -351,7 +347,7 @@ namespace eka2l1::mem {
         if (!host_base_) {
             return MEM_MODEL_CHUNK_ERR_NO_MEM;
         }
-        
+
         // Allocate page table IDs storage that the chunk will use
         page_tabs_.resize(total_pt);
         std::fill(page_tabs_.begin(), page_tabs_.end(), 0xFFFFFFFF);
@@ -364,7 +360,7 @@ namespace eka2l1::mem {
 
         return MEM_MODEL_CHUNK_ERR_OK;
     }
-    
+
     void multiple_mem_model_chunk::do_selection_cpu_memory_manipulation(const bool unmap) {
         if (!page_bma_) {
             // Contigious types. Just unmap/map directly
@@ -372,7 +368,7 @@ namespace eka2l1::mem {
                 mmu_->unmap_from_cpu(base_ + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_);
             } else {
                 mmu_->map_to_cpu(base_ + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_,
-                    reinterpret_cast<std::uint8_t*>(host_base_) + (bottom_ << mmu_->page_size_bits_), permission_);
+                    reinterpret_cast<std::uint8_t *>(host_base_) + (bottom_ << mmu_->page_size_bits_), permission_);
             }
 
             return;
@@ -387,8 +383,7 @@ namespace eka2l1::mem {
             int page_num = (end_offset - running_offset) >> mmu_->page_size_bits_;
 
             // The number of page to the end of page table
-            const int page_num_till_end_pt = (mmu_->chunk_size_ - (running_offset & mmu_->chunk_mask_)) >> 
-                mmu_->page_size_bits_;
+            const int page_num_till_end_pt = (mmu_->chunk_size_ - (running_offset & mmu_->chunk_mask_)) >> mmu_->page_size_bits_;
 
             page_num = common::min(page_num, page_num_till_end_pt);
 
@@ -418,7 +413,7 @@ namespace eka2l1::mem {
 
                     if (off_start_mani == 0) {
                         off_start_mani = (poff << mmu_->page_size_bits_) + base_ + pt_base;
-                        host_start_mani = reinterpret_cast<std::uint8_t*>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
+                        host_start_mani = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
                     }
                 } else {
                     // Map those just mapped to the CPU. It will love this
@@ -431,7 +426,7 @@ namespace eka2l1::mem {
                     }
                 }
             }
-            
+
             // Map those just mapped to the CPU. It will love this
             if (size_mani != 0) {
                 if (unmap) {
@@ -440,7 +435,7 @@ namespace eka2l1::mem {
                     mmu_->map_to_cpu(off_start_mani, size_mani, host_start_mani, permission_);
                 }
             }
-            
+
             running_offset += (page_num << mmu_->page_size_bits_);
         }
     }

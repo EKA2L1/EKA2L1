@@ -19,14 +19,14 @@
  */
 
 #include <common/vecx.h>
-#include <debugger/renderer/renderer.h>
 #include <debugger/renderer/common.h>
+#include <debugger/renderer/renderer.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/graphics/imgui_renderer.h>
 #include <drivers/graphics/texture.h>
 
-#include <manager/config.h>
 #include <imgui.h>
+#include <manager/config.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -57,12 +57,12 @@ namespace eka2l1 {
 
     bool debugger_renderer::change_background_internal(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder, const char *path) {
         drivers::handle new_tex = renderer::load_texture_from_file(driver, builder, path);
-        
+
         if (background_tex_ && new_tex) {
             // Free previous texture
             builder->destroy(background_tex_);
         }
-    
+
         if (new_tex)
             background_tex_ = new_tex;
 
@@ -72,9 +72,8 @@ namespace eka2l1 {
     void debugger_renderer::draw(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
         const std::uint32_t width, const std::uint32_t height, const std::uint32_t fb_width,
         const std::uint32_t fb_height) {
-
         const std::uint32_t scaled_width = static_cast<std::uint32_t>(width / debugger_->get_config()->ui_scale),
-            scaled_height = static_cast<std::uint32_t>(height / debugger_->get_config()->ui_scale);
+                            scaled_height = static_cast<std::uint32_t>(height / debugger_->get_config()->ui_scale);
 
         if (!background_change_path_.empty()) {
             // Update the background
@@ -116,7 +115,7 @@ namespace eka2l1 {
                 ImVec2(1, 1),
                 IM_COL32(255, 255, 255, sstate->bkg_transparency));
         }
-        
+
         /*
         ImGui::GetBackgroundDrawList()->AddImage(
             reinterpret_cast<ImTextureID>(error_sheet.sheet_),

@@ -44,7 +44,7 @@ namespace eka2l1 {
         using jitter = std::unique_ptr<arm_interface>;
 
         /*! Create a jitter. A JITter is unique by itself. */
-        jitter create_jitter(kernel_system *kern, timing_system *timing, manager::config_state *conf, manager_system *mngr, 
+        jitter create_jitter(kernel_system *kern, timing_system *timing, manager::config_state *conf, manager_system *mngr,
             memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_base *debugger, arm_emulator_type arm_type);
     }
 }

@@ -18,8 +18,8 @@
 #include <epoc/epoc.h>
 #include <epoc/hal.h>
 #include <epoc/kernel.h>
-#include <epoc/timing.h>
 #include <epoc/services/window/window.h>
+#include <epoc/timing.h>
 
 #include <epoc/loader/rom.h>
 
@@ -36,12 +36,12 @@
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
     funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3))
 
-#define REGISTER_HAL_D(sys, cage, hal_name) \
-    std::unique_ptr<epoc::hal> hal_com = std::make_unique<hal_name>(sys);   \
+#define REGISTER_HAL_D(sys, cage, hal_name)                               \
+    std::unique_ptr<epoc::hal> hal_com = std::make_unique<hal_name>(sys); \
     sys->add_new_hal(cage, hal_com);
 
-#define REGISTER_HAL(sys, cage, hal_name) \
-    hal_com = std::make_unique<hal_name>(sys);   \
+#define REGISTER_HAL(sys, cage, hal_name)      \
+    hal_com = std::make_unique<hal_name>(sys); \
     sys->add_new_hal(cage, hal_com);
 
 namespace eka2l1::epoc {
@@ -129,7 +129,7 @@ namespace eka2l1::epoc {
 
     struct display_hal : public hal {
         window_server *winserv_;
-        
+
         int current_mode_info(int *a1, int *a2, const std::uint16_t device_num) {
             assert(winserv_);
 
@@ -152,7 +152,7 @@ namespace eka2l1::epoc {
             // TODO: Verify
             info_ptr->is_pixel_order_landspace_ = (scr->size().x > scr->size().y);
             info_ptr->is_palettelized_ = !info_ptr->is_mono_ && (scr->disp_mode < epoc::display_mode::color4k);
-            
+
             // Intentional
             info_ptr->video_address_ = scr->screen_buffer_chunk->base().ptr_address();
             info_ptr->offset_to_first_pixel_ = 0;
@@ -163,7 +163,7 @@ namespace eka2l1::epoc {
 
         int color_count(int *a1, int *a2, const std::uint16_t device_num) {
             assert(winserv_);
-            
+
             epoc::screen *scr = winserv_->get_screen(device_num);
 
             if (!scr) {
@@ -179,9 +179,9 @@ namespace eka2l1::epoc {
             , winserv_(nullptr) {
             REGISTER_HAL_FUNC(EDisplayHalCurrentModeInfo, display_hal, current_mode_info);
             REGISTER_HAL_FUNC(EDisplayHalColors, display_hal, color_count);
-            
-            winserv_ = reinterpret_cast<window_server*>(sys->get_kernel_system()
-                ->get_by_name<service::server>(WINDOW_SERVER_NAME));
+
+            winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()
+                                                             ->get_by_name<service::server>(WINDOW_SERVER_NAME));
         }
     };
 

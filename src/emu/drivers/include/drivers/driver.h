@@ -142,7 +142,7 @@ namespace eka2l1::drivers {
     inline void push_arguments(command_helper &helper, Head arg1, Args... args) {
         helper.push(arg1);
 
-        if constexpr(sizeof...(Args) > 0) {
+        if constexpr (sizeof...(Args) > 0) {
             push_arguments(helper, args...);
         }
     }
@@ -152,9 +152,9 @@ namespace eka2l1::drivers {
         command *cmd = new command(opcode, status);
         command_helper helper(cmd);
 
-        if constexpr(sizeof...(Args) > 0)
+        if constexpr (sizeof...(Args) > 0)
             push_arguments(helper, arguments...);
-        
+
         return cmd;
     }
 
@@ -199,7 +199,7 @@ namespace eka2l1::drivers {
             if (*status == 0) {
                 return;
             }
-            
+
             std::unique_lock<std::mutex> ulock(mut_);
             cond_.wait(ulock, [&]() { return *status != -100; });
         }

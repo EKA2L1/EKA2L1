@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/mem/model/multiple/mmu.h>
 #include <algorithm>
+#include <epoc/mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
     mmu_multiple::mmu_multiple(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old)
@@ -31,7 +31,7 @@ namespace eka2l1::mem {
         , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size()) {
         cur_dir_ = &global_dir_;
     }
-    
+
     asid mmu_multiple::rollover_fresh_addr_space() {
         // Try to find existing unoccpied page directory
         for (std::size_t i = 0; i < dirs_.size(); i++) {
@@ -45,11 +45,11 @@ namespace eka2l1::mem {
         if (dirs_.size() == 255) {
             return -1;
         }
-        
+
         // Create new one. We would start at offset 1, since 0 is for global page directory.
         dirs_.push_back(std::make_unique<page_directory>(page_size_bits_, static_cast<asid>(dirs_.size() + 1)));
         dirs_.back()->occupied_ = true;
-        
+
         return static_cast<asid>(dirs_.size());
     }
 
@@ -66,9 +66,8 @@ namespace eka2l1::mem {
         cur_dir_ = dirs_[id - 1].get();
         return true;
     }
-    
-    void mmu_multiple::assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags
-        , asid *id_list, const std::uint32_t id_list_size) {
+
+    void mmu_multiple::assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags, asid *id_list, const std::uint32_t id_list_size) {
         // Extract the page directory offset
         const std::uint32_t pde_off = linear_addr >> page_table_index_shift_;
         const std::uint32_t last_off = tab ? tab->idx_ : 0;
@@ -99,7 +98,7 @@ namespace eka2l1::mem {
             // Iterates through all page directories and assign it
             switch_page_table(&global_dir_);
 
-            for (auto &pde: dirs_) {
+            for (auto &pde : dirs_) {
                 switch_page_table(pde.get());
             }
         } else {
@@ -121,8 +120,7 @@ namespace eka2l1::mem {
             return global_dir_.get_pointer(addr);
         }
 
-        return (id == -1) ? cur_dir_->get_pointer(addr) : 
-               ((id == 0)  ? global_dir_.get_pointer(addr) : dirs_[id - 1]->get_pointer(addr));
+        return (id == -1) ? cur_dir_->get_pointer(addr) : ((id == 0) ? global_dir_.get_pointer(addr) : dirs_[id - 1]->get_pointer(addr));
     }
 
     const asid mmu_multiple::current_addr_space() const {

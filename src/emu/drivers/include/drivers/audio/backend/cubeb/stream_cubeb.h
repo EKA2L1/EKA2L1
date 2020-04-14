@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include <drivers/audio/stream.h>
 #include <cubeb/cubeb.h>
+#include <drivers/audio/stream.h>
 
 namespace eka2l1::drivers {
-    struct cubeb_audio_output_stream: public audio_output_stream {
+    struct cubeb_audio_output_stream : public audio_output_stream {
     private:
         cubeb_stream *stream_;
         data_callback callback_;
@@ -31,7 +31,7 @@ namespace eka2l1::drivers {
 
     public:
         explicit cubeb_audio_output_stream(cubeb *context_, const std::uint32_t sample_rate,
-            data_callback callback);
+            const std::uint8_t channels, data_callback callback);
 
         ~cubeb_audio_output_stream() override;
 
@@ -41,7 +41,7 @@ namespace eka2l1::drivers {
         bool stop() override;
 
         bool is_playing() override;
-        
+
         bool set_volume(const float volume) override;
     };
 }

@@ -40,39 +40,39 @@ namespace eka2l1 {
 
         template <typename T>
         std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, std::optional<T>>
-            get_integral_arg_from_msg(ipc_msg_ptr &msg, const int idx) {
+        get_integral_arg_from_msg(ipc_msg_ptr &msg, const int idx) {
             if (idx >= 4) {
                 return std::nullopt;
             }
 
-            return *reinterpret_cast<T*>(&msg->args.args[idx]);
+            return *reinterpret_cast<T *>(&msg->args.args[idx]);
         }
 
         template <>
         std::optional<std::uint8_t> ipc_context::get_arg(const int idx) {
             return get_integral_arg_from_msg<std::uint8_t>(msg, idx);
         }
-        
+
         template <>
         std::optional<std::uint16_t> ipc_context::get_arg(const int idx) {
             return get_integral_arg_from_msg<std::uint16_t>(msg, idx);
         }
-        
+
         template <>
         std::optional<std::uint32_t> ipc_context::get_arg(const int idx) {
             return get_integral_arg_from_msg<std::uint32_t>(msg, idx);
         }
-        
+
         template <>
         std::optional<std::int8_t> ipc_context::get_arg(const int idx) {
             return get_integral_arg_from_msg<std::int8_t>(msg, idx);
         }
-        
+
         template <>
         std::optional<std::int16_t> ipc_context::get_arg(const int idx) {
             return get_integral_arg_from_msg<std::int16_t>(msg, idx);
         }
-        
+
         template <>
         std::optional<std::int32_t> ipc_context::get_arg(const int idx) {
             return get_integral_arg_from_msg<std::int32_t>(msg, idx);
@@ -238,7 +238,7 @@ namespace eka2l1 {
 
             return nullptr;
         }
-    
+
         std::size_t ipc_context::get_arg_max_size(int idx) {
             if (idx >= 4 || idx < 0) {
                 return static_cast<std::size_t>(-1);
@@ -261,7 +261,7 @@ namespace eka2l1 {
 
             return descriptor->get_max_length(own_pr);
         }
-        
+
         std::size_t ipc_context::get_arg_size(int idx) {
             if (idx >= 4 || idx < 0) {
                 return static_cast<std::size_t>(-1);

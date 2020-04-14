@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scripting/common/loader.h>
 #include <epoc/vfs.h>
+#include <scripting/common/loader.h>
 
 #include <pybind11/pybind11.h>
 
@@ -99,13 +99,13 @@ namespace eka2l1::scripting {
     py::bytes mif_reader::read_entry(const std::size_t idx) {
         std::string dat;
         int size = 0;
-       
+
         if (!mif_->read_mif_entry(idx, nullptr, size)) {
             throw pybind11::index_error("Index of MIF entry out of range!");
         }
 
         dat.resize(size);
-        mif_->read_mif_entry(idx, reinterpret_cast<std::uint8_t*>(&dat[0]), size);
+        mif_->read_mif_entry(idx, reinterpret_cast<std::uint8_t *>(&dat[0]), size);
 
         return dat;
     }

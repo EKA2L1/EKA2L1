@@ -26,7 +26,7 @@
 #include <memory>
 
 namespace eka2l1 {
-    class hwrm_session: public service::typical_session {
+    class hwrm_session : public service::typical_session {
         std::unique_ptr<epoc::resource_interface> resource_;
 
     public:
@@ -35,7 +35,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
-    class hwrm_server: public service::typical_server {
+    class hwrm_server : public service::typical_server {
         std::unique_ptr<epoc::hwrm::light::resource_data> light_data_;
 
         /**

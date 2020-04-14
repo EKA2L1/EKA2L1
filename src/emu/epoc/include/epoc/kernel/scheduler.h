@@ -52,7 +52,7 @@ namespace eka2l1 {
 
         class thread_scheduler {
             kernel::thread *readys[64];
-            std::uint32_t ready_mask[2] { 0, 0 };
+            std::uint32_t ready_mask[2]{ 0, 0 };
 
             kernel::thread *crr_thread;
             kernel::process *crr_process;

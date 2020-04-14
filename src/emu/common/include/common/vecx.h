@@ -63,7 +63,7 @@ namespace eka2l1 {
             return newv;
         }
 
-        bool operator == (const eka2l1::vecx<T, SIZE> &v) {
+        bool operator==(const eka2l1::vecx<T, SIZE> &v) {
             for (std::size_t i = 0; i < SIZE; i++) {
                 if (elements[i] != v.elements[i]) {
                     return false;
@@ -73,7 +73,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool operator != (const eka2l1::vecx<T, SIZE> &v) {
+        bool operator!=(const eka2l1::vecx<T, SIZE> &v) {
             return !(*this == v);
         }
     };
@@ -110,11 +110,11 @@ namespace eka2l1 {
         bool operator==(const vec2 &rhs) const {
             return (x == rhs.x) && (y == rhs.y);
         }
-        
+
         bool operator!=(const vec2 &rhs) const {
             return (x != rhs.x) || (y != rhs.y);
         }
-        
+
         bool operator<(const vec2 &rhs) const {
             return (x < rhs.x && y < rhs.y);
         }
@@ -123,7 +123,7 @@ namespace eka2l1 {
             x += rhs.x;
             y += rhs.y;
         }
-        
+
         void operator-=(const vec2 &rhs) {
             x -= rhs.x;
             y -= rhs.y;
@@ -197,16 +197,17 @@ namespace eka2l1 {
      * This rectangle is in 2D.
      */
     struct rect {
-        vec2 top;           ///< Top left of the rectangle.
-        object_size size;   ///< Size of the rectangle.
+        vec2 top; ///< Top left of the rectangle.
+        object_size size; ///< Size of the rectangle.
 
-        rect() 
+        rect()
             : top(0, 0)
             , size(0, 0) {
         }
 
         explicit rect(const vec2 &top_, const vec2 &obj_size_)
-            : top(top_), size(obj_size_) { 
+            : top(top_)
+            , size(obj_size_) {
         }
 
         /**

@@ -1,5 +1,6 @@
-1,1
-3,3
-42,5
-43,6
-7,7
+[shared]
+1 1       ; CFbsDrawDevice::DisplayMode16M
+3 3       ; CFbsDrawDevice::NewScreenDeviceL (ScreenInfo variant)
+42 5      ; CFbsDrawDevice::NewScreenDeviceL (Screen number variant)
+43 6      ; CDirectScreenBitmap::NewL(int aScreenNumber)
+7 7       ; CDirectScreenBitmap::NewL

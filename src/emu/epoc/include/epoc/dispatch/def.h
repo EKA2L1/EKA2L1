@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <hle/bridge.h>
 #include <cstdint>
+#include <hle/bridge.h>
 
 #define BRIDGE_FUNC_DISPATCHER(ret, name, ...) BRIDGE_FUNC(ret, name, const std::uint32_t function_number, ##__VA_ARGS__)

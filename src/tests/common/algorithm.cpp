@@ -34,7 +34,7 @@ void detect_change_vector(const std::vector<T> &old_, const std::vector<T> &new_
     };
 
     common::detect_changes(old_, new_, add_cb, rev_cb);
-} 
+}
 
 TEST_CASE("detect_equal_comp", "detect_changes") {
     std::vector<int> v1 = { 1, 2, 4, 5, 7 };

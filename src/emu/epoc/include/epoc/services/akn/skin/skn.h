@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include <epoc/services/akn/skin/common.h>
 #include <common/buffer.h>
 #include <common/rgb.h>
 #include <common/types.h>
 #include <common/vecx.h>
+#include <epoc/services/akn/skin/common.h>
 
 #include <map>
 #include <unordered_map>
@@ -71,7 +71,7 @@ namespace eka2l1::epoc {
         skn_desc_dfo_skin_reserved3 = 34,
         skn_desc_dfo_skin_chunks_count = 38,
         skn_desc_dfo_skin_content = 42,
-        
+
         skn_desc_dfo_name_lang = 8,
         skn_desc_dfo_name_name_Len = 10,
         skn_desc_dfo_name_name = 12,
@@ -96,7 +96,7 @@ namespace eka2l1::epoc {
         skn_desc_dfo_color_tab_color_idx0 = 17,
         skn_desc_dfo_color_tab_color_rgb0 = 19,
         skn_desc_dfo_color_tab_color_size = 6,
-        
+
         skn_desc_dfo_img_table_major = 8,
         skn_desc_dfo_img_table_minor = 12,
         skn_desc_dfo_img_table_images_count = 16,
@@ -159,7 +159,7 @@ namespace eka2l1::epoc {
         skn_desc_dfo_effect_output_layer_mode = 17,
         skn_desc_dfo_effect_param_count = 18,
         skn_desc_dfo_effect_params = 20,
-        
+
         skn_desc_dfo_anim_major = 8,
         skn_desc_dfo_anim_minor = 12,
         skn_desc_dfo_anim_type = 16,
@@ -170,7 +170,7 @@ namespace eka2l1::epoc {
         skn_desc_dfo_anim_min_interval = 28,
         skn_desc_dfo_anim_preprocess_count = 32,
         skn_desc_dfo_anim_content_begin = 34,
-        
+
         skn_desc_dfo_anim_param_group_value_a = 8,
         skn_desc_dfo_anim_param_group_value_b = 12,
         skn_desc_dfo_anim_param_group_param_count = 16,
@@ -181,18 +181,18 @@ namespace eka2l1::epoc {
         skn_desc_dfo_param_type = 3,
         skn_desc_dfo_param_name_len = 4,
         skn_desc_dfo_param_name = 6,
-        
+
         skn_desc_dfo_release26_len = 0,
         skn_desc_dfo_release26_plat_major = 8,
         skn_desc_dfo_release26_plat_minor = 9,
         skn_desc_dfo_release26_chunks_count = 10,
         skn_desc_dfo_release26_content = 14,
-        
+
         skn_desc_dfo_lang_gen_restr = 8,
         skn_desc_dfo_lang_lang_restr = 10,
         skn_desc_dfo_lang_lang_count = 12,
         skn_desc_dfo_lang_content = 16,
-        
+
         skn_desc_dfo_release_generic_len = 0,
         skn_desc_dfo_release_generic_plat_major = 8,
         skn_desc_dfo_release_generic_plat_minor = 9,
@@ -200,7 +200,7 @@ namespace eka2l1::epoc {
         skn_desc_dfo_release_generic_plat_reserved2 = 14,
         skn_desc_dfo_release_generic_chunks_count = 18,
         skn_desc_dfo_release_generic_content = 22,
-        
+
         skn_desc_dfo_info_compiler_ver = 16,
         skn_desc_dfo_info_author_len = 24,
         skn_desc_dfo_info_author_str = 26
@@ -212,7 +212,7 @@ namespace eka2l1::epoc {
     };
 
     struct skn_attrib_info {
-        std::uint32_t attrib {0};
+        std::uint32_t attrib{ 0 };
         std::uint8_t align;
 
         std::int16_t image_coord_x;
@@ -246,12 +246,12 @@ namespace eka2l1::epoc {
         vec2 layout_size;
     };
 
-    struct skn_image_table: public skn_def_base {
+    struct skn_image_table : public skn_def_base {
         std::vector<std::uint64_t> images;
         skn_attrib_info attrib;
     };
-    
-    struct skn_color_table: public skn_def_base {
+
+    struct skn_color_table : public skn_def_base {
         std::vector<std::pair<std::int16_t, common::rgb>> colors;
         skn_attrib_info attrib;
     };
@@ -279,7 +279,7 @@ namespace eka2l1::epoc {
         std::vector<skn_effect_parameter> parameters;
     };
 
-    struct skn_effect_queue: public skn_def_base {
+    struct skn_effect_queue : public skn_def_base {
         std::uint8_t input_layer_index;
         std::uint8_t input_layer_mode;
         std::uint8_t output_layer_index;
@@ -289,7 +289,7 @@ namespace eka2l1::epoc {
         std::vector<skn_effect> effects;
     };
 
-    struct skn_bitmap_animation: public skn_def_base {
+    struct skn_bitmap_animation : public skn_def_base {
         std::int16_t interval;
         std::int16_t play_mode;
 
@@ -340,7 +340,7 @@ namespace eka2l1::epoc {
         void process_effect_queue_chunk(std::uint32_t base_offset);
         void process_effects(std::uint32_t &base_offset, std::vector<skn_effect> &effects);
         void process_effect_parameters(std::uint32_t &base_offset, std::vector<skn_effect_parameter> &parameters);
-        
+
         std::uint32_t handle_info_chunk(std::uint32_t base_offset, skn_file_info &info);
         std::uint32_t handle_name_chunk(std::uint32_t base_offset, skn_name &name);
         std::uint32_t handle_filename_chunk(std::uint32_t base_offset);
@@ -348,7 +348,7 @@ namespace eka2l1::epoc {
         std::uint32_t handle_release_26_restriction_chunk(std::uint32_t base_offset);
         std::uint32_t handle_release_generic_restriction_chunk(std::uint32_t base_offset);
         std::uint32_t handle_lang_restriction_chunk(std::uint32_t base_offset);
-        
+
         std::string process_string(std::uint32_t base_offset, const std::uint16_t size);
 
         explicit skn_file(common::ro_stream *stream, plat_ver platform_version = { 2, 8 },

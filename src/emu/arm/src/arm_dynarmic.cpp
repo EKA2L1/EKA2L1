@@ -540,7 +540,7 @@ namespace eka2l1 {
         void arm_dynarmic::imb_range(address addr, std::size_t size) {
             jit->InvalidateCacheRange(addr, size);
         }
-        
+
         std::uint32_t arm_dynarmic::get_num_instruction_executed() {
             return ticks_executed;
         }

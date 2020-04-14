@@ -25,8 +25,8 @@
 #include <epoc/services/server.h>
 #include <epoc/timing.h>
 
-#include <manager/manager.h>
 #include <manager/config.h>
+#include <manager/manager.h>
 
 namespace eka2l1 {
     namespace service {

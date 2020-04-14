@@ -19,11 +19,11 @@
 
 namespace eka2l1::epoc {
     enum akn_skin_server_opcode {
-        #define OPCODE(op) akn_skin_server_##op,
-        #define OPCODE2(op, num) akn_skin_server_##op = num,
-        #include "ops.def"
-        #undef OPCODE
-        #undef OPCODE2
+#define OPCODE(op) akn_skin_server_##op,
+#define OPCODE2(op, num) akn_skin_server_##op = num,
+#include "ops.def"
+#undef OPCODE
+#undef OPCODE2
         akn_skin_server_total_opcode
     };
 

@@ -38,8 +38,8 @@
 #include <epoc/ptr.h>
 #include <epoc/timing.h>
 #include <gdbstub/gdbstub.h>
-#include <manager/manager.h>
 #include <manager/config.h>
+#include <manager/manager.h>
 
 #include <unicorn/unicorn.h>
 
@@ -77,13 +77,13 @@ static bool break_for(eka2l1::arm::arm_unicorn *jit, uc_engine *uc, const eka2l1
 static void read_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int size, int64_t value, void *user_data) {
     eka2l1::arm::arm_unicorn *jit = reinterpret_cast<decltype(jit)>(user_data);
 
-    if (jit && jit->conf->log_read) {   
+    if (jit && jit->conf->log_read) {
         eka2l1::memory_system *mem = jit->get_memory_sys();
         mem->read(address, &value, size);
 
-        LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);   
+        LOG_TRACE("Read at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
     }
-    
+
     break_for(jit, uc, address, eka2l1::breakpoint_type::Read);
 }
 
@@ -93,7 +93,7 @@ static void write_hook(uc_engine *uc, uc_mem_type type, uint32_t address, int si
     if (jit && jit->conf->log_write) {
         LOG_TRACE("Write at address = 0x{:x}, size = 0x{:x}, val = 0x{:x}", address, size, value);
     }
-    
+
     break_for(jit, uc, address, eka2l1::breakpoint_type::Write);
 }
 
@@ -179,7 +179,6 @@ static void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
     default:
         break;
     }
-    
 }
 
 namespace eka2l1 {
@@ -232,7 +231,7 @@ namespace eka2l1 {
 
             uc_hook_add(engine, &hook, UC_HOOK_MEM_READ, reinterpret_cast<void *>(read_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_MEM_WRITE, reinterpret_cast<void *>(write_hook), this, 1, 0);
-            
+
             uc_hook_add(engine, &hook, UC_HOOK_CODE, reinterpret_cast<void *>(code_hook), this, 1, 0);
             uc_hook_add(engine, &hook, UC_HOOK_INTR, reinterpret_cast<void *>(intr_hook), this, 1, 0);
 
@@ -323,7 +322,7 @@ namespace eka2l1 {
                     if (last_breakpoint_hit || stub->is_memory_break() || stub->get_cpu_step_flag()) {
                         kernel::thread *crr_thread = kern->crr_thread();
                         save_context(crr_thread->get_thread_context());
-                        
+
                         last_breakpoint_hit = false;
 
                         stub->break_exec();

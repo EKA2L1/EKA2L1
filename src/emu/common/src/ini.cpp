@@ -110,7 +110,7 @@ namespace eka2l1::common {
             return false;
         }
 
-        ini_pair *pair = reinterpret_cast<ini_pair*>(node.get());
+        ini_pair *pair = reinterpret_cast<ini_pair *>(node.get());
 
         error_code ? (*error_code = 0) : 0;
         return pair->get(val, count, default_val);
@@ -125,7 +125,7 @@ namespace eka2l1::common {
             return false;
         }
 
-        ini_pair *pair = reinterpret_cast<ini_pair*>(node.get());
+        ini_pair *pair = reinterpret_cast<ini_pair *>(node.get());
 
         error_code ? (*error_code = 0) : 0;
         return pair->get(val, count, default_val);
@@ -139,7 +139,7 @@ namespace eka2l1::common {
             return false;
         }
 
-        ini_pair *pair = reinterpret_cast<ini_pair*>(node.get());
+        ini_pair *pair = reinterpret_cast<ini_pair *>(node.get());
 
         error_code ? (*error_code = 0) : 0;
         return pair->get(val);

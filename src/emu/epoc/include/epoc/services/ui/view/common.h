@@ -22,9 +22,9 @@
 #include <epoc/utils/uid.h>
 
 namespace eka2l1::ui::view {
-     struct view_id {
-        epoc::uid app_uid;           ///< The UID of the app owning this view.
-        epoc::uid view_uid;          ///< The view UID.
+    struct view_id {
+        epoc::uid app_uid; ///< The UID of the app owning this view.
+        epoc::uid view_uid; ///< The view UID.
     };
 
     struct view_event {

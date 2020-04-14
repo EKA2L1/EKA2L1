@@ -23,8 +23,8 @@
 #include <common/vecx.h>
 
 #include <common/rgb.h>
-#include <epoc/utils/fscmn.h>
 #include <epoc/services/window/common.h>
+#include <epoc/utils/fscmn.h>
 
 namespace eka2l1::epoc {
     struct akn_icon_srv_return_data {

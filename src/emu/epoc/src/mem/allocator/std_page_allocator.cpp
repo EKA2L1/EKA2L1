@@ -27,7 +27,7 @@ namespace eka2l1::mem {
             }
         }
 
-        page_tabs_.push_back(std::make_unique<page_table>(static_cast<std::uint32_t>(page_tabs_.size()), 
+        page_tabs_.push_back(std::make_unique<page_table>(static_cast<std::uint32_t>(page_tabs_.size()),
             psize));
 
         return page_tabs_.back().get();

@@ -17,19 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/ui/view/view.h>
-#include <epoc/loader/rsc.h>
 #include <common/log.h>
+#include <epoc/loader/rsc.h>
+#include <epoc/services/ui/view/view.h>
 
-#include <epoc/utils/err.h>
 #include <epoc/epoc.h>
+#include <epoc/utils/err.h>
 #include <epoc/vfs.h>
 
 namespace eka2l1 {
     view_server::view_server(system *sys)
         : service::typical_server(sys, "!ViewServer")
         , flags_(0)
-        , active_{0, 0} {
+        , active_{ 0, 0 } {
     }
 
     void view_server::connect(service::ipc_context &ctx) {
@@ -47,7 +47,7 @@ namespace eka2l1 {
         // Try to read resource file contains priority
         std::u16string priority_filename = u"resource\\apps\\PrioritySet.rsc";
         symfile f = nullptr;
-        
+
         for (drive_number drive = drive_z; drive >= drive_a; drive = static_cast<drive_number>(static_cast<int>(drive) - 1)) {
             if (io->get_drive_entry(drive)) {
                 f = io->open_file(std::u16string(drive_to_char16(drive), 1) + priority_filename, READ_MODE | BIN_MODE);
@@ -64,17 +64,17 @@ namespace eka2l1 {
         }
 
         eka2l1::ro_file_stream fstream(f.get());
-        loader::rsc_file rsc_priority(reinterpret_cast<common::ro_stream*>(&fstream));
+        loader::rsc_file rsc_priority(reinterpret_cast<common::ro_stream *>(&fstream));
 
         auto priority_view_value_raw = rsc_priority.read(2);
-        priority_ = *reinterpret_cast<const std::uint32_t*>(priority_view_value_raw.data());
+        priority_ = *reinterpret_cast<const std::uint32_t *>(priority_view_value_raw.data());
 
         flags_ |= flag_inited;
 
         return true;
     }
-    
-    view_session::view_session(service::typical_server *server, const service::uid session_uid, epoc::version client_version) 
+
+    view_session::view_session(service::typical_server *server, const service::uid session_uid, epoc::version client_version)
         : service::typical_session(server, session_uid, client_version)
         , to_panic_(nullptr)
         , app_uid_(0) {
@@ -115,7 +115,7 @@ namespace eka2l1 {
 
         if (!queue_.hear(nof_info, event_buf)) {
             ctx->set_request_status(epoc::error_already_exists);
-            return;     // TODO: We can panic. It's allowed.
+            return; // TODO: We can panic. It's allowed.
         }
     }
 
@@ -147,7 +147,7 @@ namespace eka2l1 {
         server<view_server>()->set_active(id.value());
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
         to_panic_ = ctx->msg;
         ctx->auto_free = false;

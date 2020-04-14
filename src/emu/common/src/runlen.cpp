@@ -27,7 +27,7 @@ namespace eka2l1 {
         std::uint8_t *dest, std::size_t &dest_size) {
         const std::uint8_t *src_org = src;
         const std::uint8_t *dest_org = dest;
-        
+
         const std::uint8_t *src_end = src + src_size;
         const std::uint8_t *dest_end = dest + dest_size;
 
@@ -70,7 +70,7 @@ namespace eka2l1 {
         dest_size = dest - dest_org;
         src_size = src - src_org;
     }
-    
+
     void decompress_rle_24bit_stream(common::ro_stream *stream, std::size_t &src_size, std::uint8_t *dest, std::size_t &dest_size) {
         const std::uint8_t *dest_org = dest;
         const std::uint8_t *dest_end = dest + dest_size;

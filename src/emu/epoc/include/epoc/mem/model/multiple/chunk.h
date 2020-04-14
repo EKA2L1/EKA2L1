@@ -24,21 +24,20 @@
 #include <epoc/mem/model/multiple/section.h>
 
 #include <memory>
-#include <memory>
 #include <vector>
 
 namespace eka2l1::mem {
     struct multiple_mem_model_process;
 
-    struct multiple_mem_model_chunk: public mem_model_chunk {
+    struct multiple_mem_model_chunk : public mem_model_chunk {
         vm_address base_;
         void *host_base_;
 
-        multiple_mem_model_process *own_process_ { nullptr };
+        multiple_mem_model_process *own_process_{ nullptr };
 
         std::size_t chunk_id_in_mmp_;
-        vm_address bottom_ { 0 };
-        vm_address top_ { 0 };
+        vm_address bottom_{ 0 };
+        vm_address top_{ 0 };
 
         std::size_t committed_;
         std::size_t max_size_;
@@ -52,8 +51,8 @@ namespace eka2l1::mem {
         void do_selection_cpu_memory_manipulation(const bool unmap);
 
     public:
-        bool is_local { false };
-        bool is_external_host { false };
+        bool is_local{ false };
+        bool is_external_host{ false };
 
         explicit multiple_mem_model_chunk(mmu_base *mmu, const asid id)
             : mem_model_chunk(mmu, id) {
@@ -65,11 +64,11 @@ namespace eka2l1::mem {
         const vm_address base() override {
             return base_;
         }
-        
+
         void *host_base() override {
             return host_base_;
         }
-        
+
         const vm_address bottom() const override;
         const vm_address top() const override;
 
@@ -88,7 +87,7 @@ namespace eka2l1::mem {
 
         bool allocate(const std::size_t size) override;
         bool adjust(const address bottom, const address top) override;
-        
+
         void unmap_from_cpu() override;
         void map_to_cpu() override;
     };

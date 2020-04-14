@@ -20,6 +20,9 @@
 #pragma once
 
 #include <cstdint>
+#include <drivers/audio/dsp.h>
+#include <drivers/audio/player.h>
+#include <epoc/dispatch/management.h>
 
 // Foward declarations
 namespace eka2l1 {
@@ -32,6 +35,9 @@ namespace eka2l1::dispatch {
     struct dispatcher {
     public:
         window_server *winserv_;
+
+        object_manager<drivers::player> audio_players_;
+        object_manager<drivers::dsp_stream> dsp_streams_;
 
         explicit dispatcher();
         void init(kernel_system *kern);

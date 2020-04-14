@@ -76,7 +76,7 @@ namespace eka2l1 {
             return mem_address != 0;
         }
 
-        const bool operator == (const eka2l1::ptr<T> rhs) const {
+        const bool operator==(const eka2l1::ptr<T> rhs) const {
             return mem_address == rhs.mem_address;
         }
 

@@ -44,10 +44,10 @@
 
 #define POSIX_REQUEST_FINISH_WITH_ERR(ctx, err) \
     *errnoptr = err;                            \
-    ctx.set_request_status(epoc::error_none);           \
+    ctx.set_request_status(epoc::error_none);   \
     return
 
-#define POSIX_REQUEST_FINISH(ctx)     \
+#define POSIX_REQUEST_FINISH(ctx)             \
     ctx.set_request_status(epoc::error_none); \
     return
 

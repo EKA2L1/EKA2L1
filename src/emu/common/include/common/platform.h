@@ -111,7 +111,7 @@
 
 namespace eka2l1 {
     // Add JIT backend name here
-    static constexpr const char *dynarmic_jit_backend_name = "dynarmic";  ///< Dynarmic recompiler backend name
-    static constexpr const char *unicorn_jit_backend_name = "unicorn";    ///< Unicorn recompiler backend name
-    static constexpr const char *earm_jit_backend_name = "earm";          ///< EKA2L1's ARM recompiler backend name
+    static constexpr const char *dynarmic_jit_backend_name = "dynarmic"; ///< Dynarmic recompiler backend name
+    static constexpr const char *unicorn_jit_backend_name = "unicorn"; ///< Unicorn recompiler backend name
+    static constexpr const char *earm_jit_backend_name = "earm"; ///< EKA2L1's ARM recompiler backend name
 }

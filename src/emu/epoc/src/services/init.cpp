@@ -24,6 +24,8 @@
 #include <epoc/services/akn/skin/server.h>
 #include <epoc/services/applist/applist.h>
 #include <epoc/services/audio/keysound/keysound.h>
+#include <epoc/services/audio/mmf/audio.h>
+#include <epoc/services/audio/mmf/dev.h>
 #include <epoc/services/backup/backup.h>
 #include <epoc/services/cdl/cdl.h>
 #include <epoc/services/centralrepo/centralrepo.h>
@@ -37,31 +39,31 @@
 #include <epoc/services/hwrm/hwrm.h>
 #include <epoc/services/install/install.h>
 #include <epoc/services/loader/loader.h>
+#include <epoc/services/remcon/remcon.h>
 #include <epoc/services/sms/sa/sa.h>
-#include <epoc/services/ui/eikappui.h>
 #include <epoc/services/ui/cap/oom_app.h>
+#include <epoc/services/ui/eikappui.h>
 #include <epoc/services/ui/view/view.h>
 #include <epoc/services/window/window.h>
-#include <epoc/services/remcon/remcon.h>
 
 #include <epoc/epoc.h>
-#include <epoc/utils/locale.h>
 #include <epoc/services/init.h>
+#include <epoc/utils/locale.h>
 
 #include <manager/config.h>
-#include <manager/manager.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #endif
 
-#define CREATE_SERVER_D(sys, svr)                                       \
-    std::unique_ptr<service::server> temp = std::make_unique<svr>(sys); \
+#define CREATE_SERVER_D(sys, svr, ...)                                                 \
+    std::unique_ptr<service::server> temp = std::make_unique<svr>(sys, ##__VA_ARGS__); \
     sys->get_kernel_system()->add_custom_server(temp)
 
-#define CREATE_SERVER(sys, svr)        \
-    temp = std::make_unique<svr>(sys); \
+#define CREATE_SERVER(sys, svr, ...)                  \
+    temp = std::make_unique<svr>(sys, ##__VA_ARGS__); \
     sys->get_kernel_system()->add_custom_server(temp)
 
 #define DEFINE_INT_PROP_D(sys, category, key, data)                            \
@@ -92,7 +94,6 @@
     prop->define(service::property_type::bin_data, size);         \
     prop->set(data);
 
-
 namespace eka2l1::epoc {
     epoc::locale get_locale_info() {
         epoc::locale locale;
@@ -115,15 +116,15 @@ namespace eka2l1::epoc {
     static void initialize_system_properties(eka2l1::system *sys, manager::config_state *cfg) {
         auto lang = epoc::locale_language{ epoc::lang_english, 0, 0, 0, 0, 0, 0, 0 };
         auto locale = epoc::get_locale_info();
-        auto& dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
+        auto &dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
 
         if (dvcs.size() > cfg->device) {
-            auto& dvc = dvcs[cfg->device];
+            auto &dvc = dvcs[cfg->device];
 
             if (cfg->language == -1) {
                 lang.language = static_cast<epoc::language>(dvc.default_language_code);
             } else {
-                lang.language =static_cast<epoc::language>(cfg->language);
+                lang.language = static_cast<epoc::language>(cfg->language);
             }
         }
 
@@ -158,19 +159,19 @@ namespace eka2l1 {
                 CREATE_SERVER(sys, central_repo_server);
 
             CREATE_SERVER(sys, featmgr_server);
-            
+
             if (cfg->enable_srv_backup)
                 CREATE_SERVER(sys, backup_server);
 
             if (cfg->enable_srv_install)
                 CREATE_SERVER(sys, install_server);
-            
+
             if (cfg->enable_srv_rights)
                 CREATE_SERVER(sys, rights_server);
-            
+
             if (cfg->enable_srv_sa)
                 CREATE_SERVER(sys, sa_server);
-            
+
             if (cfg->enable_srv_drm)
                 CREATE_SERVER(sys, drm_helper_server);
 
@@ -189,26 +190,34 @@ namespace eka2l1 {
 
             if (cfg->enable_srv_akn_icon)
                 CREATE_SERVER(sys, akn_icon_server);
-            
+
             if (cfg->enable_srv_cdl)
                 CREATE_SERVER(sys, cdl_server);
-            
+
             if (cfg->enable_srv_akn_skin)
                 CREATE_SERVER(sys, akn_skin_server);
 
             // Don't change order
             temp = std::make_unique<domainmngr_server>(sys);
+            kernel_system *kern = sys->get_kernel_system();
 
-            auto &dmmngr = reinterpret_cast<domainmngr_server*>(temp.get())->get_domain_manager();
+            auto &dmmngr = reinterpret_cast<domainmngr_server *>(temp.get())->get_domain_manager();
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
             dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);
 
-            sys->get_kernel_system()->add_custom_server(temp);
+            kern->add_custom_server(temp);
 
             // Create the domain server
             temp = std::make_unique<domain_server>(sys, dmmngr);
-            sys->get_kernel_system()->add_custom_server(temp);
-            
+            kern->add_custom_server(temp);
+
+            std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
+            std::unique_ptr<service::server> audio_serv = std::make_unique<mmf_audio_server>(sys,
+                reinterpret_cast<mmf_dev_server *>(dev_serv.get()));
+
+            kern->add_custom_server(dev_serv);
+            kern->add_custom_server(audio_serv);
+
             epoc::initialize_system_properties(sys, cfg);
         }
     }

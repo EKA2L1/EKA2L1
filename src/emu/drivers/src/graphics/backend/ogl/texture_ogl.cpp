@@ -196,7 +196,7 @@ namespace eka2l1::drivers {
 
         case channel_swizzle::blue:
             return GL_BLUE;
-        
+
         case channel_swizzle::green:
             return GL_GREEN;
 
@@ -205,7 +205,7 @@ namespace eka2l1::drivers {
 
         case channel_swizzle::one:
             return GL_ONE;
-        
+
         case channel_swizzle::zero:
             return GL_ZERO;
 
@@ -226,7 +226,7 @@ namespace eka2l1::drivers {
 
         bind(nullptr, 0);
         glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizz_gl);
-        unbind(nullptr);        
+        unbind(nullptr);
     }
 
     static GLenum get_binding_enum_dim(const int dim) {

@@ -74,7 +74,7 @@ namespace eka2l1::drivers {
         tex.reset();
         fb.reset();
     }
-    
+
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
         : graphics_driver(gr_api)
         , binding(nullptr)
@@ -85,7 +85,7 @@ namespace eka2l1::drivers {
     shared_graphics_driver::~shared_graphics_driver() {
     }
 
-    #define HANDLE_BITMAP (1ULL << 32)
+#define HANDLE_BITMAP (1ULL << 32)
 
     bitmap *shared_graphics_driver::get_bitmap(const drivers::handle h) {
         if ((h & HANDLE_BITMAP) == 0) {
@@ -148,12 +148,12 @@ namespace eka2l1::drivers {
 
         switch (data_format) {
         case texture_format::r:
-            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red, 
+            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
                 channel_swizzle::red, channel_swizzle::red });
             break;
 
         case texture_format::rgb:
-            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green, 
+            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
                 channel_swizzle::blue, channel_swizzle::one });
             break;
 
@@ -560,7 +560,7 @@ namespace eka2l1::drivers {
         if (!binding) {
             current_fb_height = swapchain_size.y;
         }
-        
+
         projection_matrix = glm::identity<glm::mat4>();
         projection_matrix = glm::ortho(0.0f, static_cast<float>(swapchain_size.x), static_cast<float>(swapchain_size.y),
             0.0f, -1.0f, 1.0f);

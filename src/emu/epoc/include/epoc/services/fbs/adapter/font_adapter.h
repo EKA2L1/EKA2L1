@@ -48,14 +48,16 @@ namespace eka2l1::epoc::adapter {
         virtual bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) = 0;
         virtual bool get_metrics(const std::size_t idx, open_font_metrics &metrics) = 0;
         virtual bool get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &metric,
-             const std::int32_t baseline_horz_off, const float scale_x = 1.0f, const float scale_y = 1.0f) = 0;
+            const std::int32_t baseline_horz_off, const float scale_x = 1.0f, const float scale_y = 1.0f)
+            = 0;
 
         virtual std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const float scale_x,
-            const float scale_y, int *rasterized_width, int *rasterized_height, epoc::glyph_bitmap_type *bmp_type) = 0;
+            const float scale_y, int *rasterized_width, int *rasterized_height, epoc::glyph_bitmap_type *bmp_type)
+            = 0;
 
         virtual void free_glyph_bitmap(std::uint8_t *data) = 0;
         virtual glyph_bitmap_type get_output_bitmap_type() const = 0;
-        
+
         /**
          * \brief Initialize getting glyph atlas.
          * 
@@ -78,7 +80,8 @@ namespace eka2l1::epoc::adapter {
          * \returns True on success. 
          */
         virtual bool get_glyph_atlas(const char16_t start_code, int *unicode_point,
-            const char16_t num_code, const int font_size, character_info *info) = 0;
+            const char16_t num_code, const int font_size, character_info *info)
+            = 0;
 
         // End getting atlas.
         virtual void end_get_atlas() = 0;

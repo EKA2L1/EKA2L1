@@ -26,7 +26,7 @@ namespace Scdv {
     class MScalingSettings {
     public:
         virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY) = 0;
-        virtual void Get(TInt& aFactorX, TInt& aFactorY, TInt& aDivisorX, TInt& aDivisorY) = 0;
+        virtual void Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY) = 0;
         virtual TBool IsScalingOff() = 0;
     };
 }

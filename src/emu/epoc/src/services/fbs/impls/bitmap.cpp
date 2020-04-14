@@ -34,11 +34,11 @@
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
-#include <epoc/vfs.h>
 #include <epoc/utils/err.h>
+#include <epoc/vfs.h>
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 namespace eka2l1 {
     static epoc::display_mode get_display_mode_from_bpp(const int bpp) {
@@ -180,7 +180,7 @@ namespace eka2l1 {
         static void do_white_fill(std::uint8_t *dest, const std::size_t size, epoc::display_mode mode) {
             std::fill(dest, dest + size, 0xFF);
         }
-        
+
         void bitwise_bitmap::construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool white_fill) {
             uid_ = epoc::BITWISE_BITMAP_UID;
             allocator_ = MAGIC_FBS_HEAP_PTR;
@@ -211,7 +211,7 @@ namespace eka2l1 {
             }
         }
 
-        int bitwise_bitmap::copy_data(const bitwise_bitmap& source, uint8_t *base) {
+        int bitwise_bitmap::copy_data(const bitwise_bitmap &source, uint8_t *base) {
             const auto disp_mode = source.settings_.current_display_mode();
             assert(disp_mode == settings_.current_display_mode());
             if (source.header_.size_pixels.width() > 0) {
@@ -244,8 +244,8 @@ namespace eka2l1 {
                     mask <<= extra_bits;
                     const int dest_word_width = byte_width_ >> 2;
                     const int src_word_width = source.byte_width_ >> 2;
-                    uint32_t *mask_addr = reinterpret_cast<uint32_t*>(dest_base) + src_word_width - 1;
-                    for (int row = 0; row < min_pixel_height; row ++) {
+                    uint32_t *mask_addr = reinterpret_cast<uint32_t *>(dest_base) + src_word_width - 1;
+                    for (int row = 0; row < min_pixel_height; row++) {
                         *mask_addr |= mask;
                         mask_addr += dest_word_width;
                     }
@@ -305,7 +305,7 @@ namespace eka2l1 {
         session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_arg<std::int32_t>(2)));
         const std::uint32_t fs_file_handle = *(ctx->get_arg<std::uint32_t>(3));
 
-        auto fs_server = reinterpret_cast<eka2l1::fs_server*>(server<fbs_server>()->fs_server);
+        auto fs_server = reinterpret_cast<eka2l1::fs_server *>(server<fbs_server>()->fs_server);
         file *source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
 
         if (!source_file) {
@@ -406,7 +406,7 @@ namespace eka2l1 {
 
             // Load the bitmap data to large chunk
             int err_code = fbs_load_data_err_none;
-            auto bmp_data_offset = fbss->load_data_to_rom(mbmf_, load_options->bitmap_id , &err_code);
+            auto bmp_data_offset = fbss->load_data_to_rom(mbmf_, load_options->bitmap_id, &err_code);
 
             if (!bmp_data_offset) {
                 switch (err_code) {
@@ -580,7 +580,7 @@ namespace eka2l1 {
 
         bmp = get_clean_bitmap(bmp);
 
-        const vec2 new_size = {*(ctx->get_arg<int>(1)), *(ctx->get_arg<int>(2))};
+        const vec2 new_size = { *(ctx->get_arg<int>(1)), *(ctx->get_arg<int>(2)) };
         const bool compressed_in_ram = bmp->bitmap_->compressed_in_ram_;
 
         // not working with compressed bitmaps right now
@@ -656,13 +656,12 @@ namespace eka2l1 {
             if (bitmap->header_.compression != epoc::bitmap_file_no_compression) {
                 return false;
             }
-            
+
             bool need_process = false;
 
             common::dib_header_v2 dib_header;
 
-            dib_header.uncompressed_size = static_cast<std::uint32_t>(calculate_aligned_bitmap_bytes
-                (bitmap->header_.size_pixels, bitmap->settings_.current_display_mode()));
+            dib_header.uncompressed_size = static_cast<std::uint32_t>(calculate_aligned_bitmap_bytes(bitmap->header_.size_pixels, bitmap->settings_.current_display_mode()));
             dib_header.bit_per_pixels = bitmap->header_.bit_per_pixels;
             dib_header.color_plane_count = 1;
             dib_header.important_color_count = 0;
@@ -670,7 +669,8 @@ namespace eka2l1 {
             dib_header.size = bitmap->header_.size_pixels;
 
             switch (dib_header.bit_per_pixels) {
-            case 8: case 16: {
+            case 8:
+            case 16: {
                 dib_header.header_size = sizeof(common::dib_header_v1);
                 dib_header.comp = 0;
                 dib_header.bit_per_pixels = 24;
@@ -691,8 +691,7 @@ namespace eka2l1 {
             dib_header.print_res = bitmap->header_.size_twips;
 
             common::bmp_header header;
-            header.file_size = static_cast<std::uint32_t>(sizeof(common::bmp_header) + dib_header.header_size +
-                dib_header.uncompressed_size);
+            header.file_size = static_cast<std::uint32_t>(sizeof(common::bmp_header) + dib_header.header_size + dib_header.uncompressed_size);
             header.pixel_array_offset = static_cast<std::uint32_t>(sizeof(common::bmp_header) + dib_header.header_size);
 
             std::ofstream file(destination);
@@ -701,20 +700,20 @@ namespace eka2l1 {
                 return false;
             }
 
-            file.write(reinterpret_cast<const char*>(&header), sizeof(common::bmp_header));
-            file.write(reinterpret_cast<const char*>(&dib_header), dib_header.header_size);
+            file.write(reinterpret_cast<const char *>(&header), sizeof(common::bmp_header));
+            file.write(reinterpret_cast<const char *>(&dib_header), dib_header.header_size);
 
             if (need_process) {
-                const std::uint32_t byte_width = get_byte_width(bitmap->header_.size_pixels.x, 
+                const std::uint32_t byte_width = get_byte_width(bitmap->header_.size_pixels.x,
                     bitmap->header_.bit_per_pixels);
 
-                const std::uint8_t *packed_data = reinterpret_cast<const std::uint8_t*>(bitmap->data_offset_ + base);
+                const std::uint8_t *packed_data = reinterpret_cast<const std::uint8_t *>(bitmap->data_offset_ + base);
 
                 switch (bitmap->settings_.current_display_mode()) {
                 case epoc::display_mode::color64k:
                     for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
                         for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
-                            const std::uint16_t pixel = *reinterpret_cast<const std::uint16_t*>(packed_data + y * byte_width + x * 2);
+                            const std::uint16_t pixel = *reinterpret_cast<const std::uint16_t *>(packed_data + y * byte_width + x * 2);
                             std::uint8_t r = static_cast<std::uint8_t>((pixel & 0xF800) >> 8);
                             r += r >> 5;
 
@@ -724,14 +723,14 @@ namespace eka2l1 {
                             std::uint8_t b = static_cast<std::uint8_t>((pixel & 0x001F) << 3);
                             b += b >> 5;
 
-                            file.write(reinterpret_cast<const char*>(&b), 1);
-                            file.write(reinterpret_cast<const char*>(&g), 1);
-                            file.write(reinterpret_cast<const char*>(&r), 1);
+                            file.write(reinterpret_cast<const char *>(&b), 1);
+                            file.write(reinterpret_cast<const char *>(&g), 1);
+                            file.write(reinterpret_cast<const char *>(&r), 1);
                         }
 
-                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
+                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4)
                             - bitmap->header_.size_pixels.x * 3;
-                        
+
                         const char fill_char = 0;
 
                         for (std::size_t i = 0; i < fill_align; i++) {
@@ -744,17 +743,17 @@ namespace eka2l1 {
                 case epoc::display_mode::color256:
                     for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
                         for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
-                            const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t*>(packed_data + y * byte_width + x);
+                            const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t *>(packed_data + y * byte_width + x);
                             std::uint32_t palette_color = epoc::color_256_palette[pixel];
 
-                            file.write(reinterpret_cast<const char*>(&palette_color) + 2, 1);
-                            file.write(reinterpret_cast<const char*>(&palette_color) + 1, 1);
-                            file.write(reinterpret_cast<const char*>(&palette_color) + 0, 1);
+                            file.write(reinterpret_cast<const char *>(&palette_color) + 2, 1);
+                            file.write(reinterpret_cast<const char *>(&palette_color) + 1, 1);
+                            file.write(reinterpret_cast<const char *>(&palette_color) + 0, 1);
                         }
 
-                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
+                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4)
                             - bitmap->header_.size_pixels.x * 3;
-                        
+
                         const char fill_char = 0;
 
                         for (std::size_t i = 0; i < fill_align; i++) {
@@ -766,17 +765,17 @@ namespace eka2l1 {
 
                 case epoc::display_mode::gray256:
                     for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
-                        for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {   
-                            const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t*>(packed_data + y * byte_width + x);
+                        for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
+                            const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t *>(packed_data + y * byte_width + x);
 
-                            file.write(reinterpret_cast<const char*>(&pixel), 1);
-                            file.write(reinterpret_cast<const char*>(&pixel), 1);
-                            file.write(reinterpret_cast<const char*>(&pixel), 1);
+                            file.write(reinterpret_cast<const char *>(&pixel), 1);
+                            file.write(reinterpret_cast<const char *>(&pixel), 1);
+                            file.write(reinterpret_cast<const char *>(&pixel), 1);
                         }
 
-                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4) 
+                        const std::size_t fill_align = common::align(bitmap->header_.size_pixels.x * 3, 4)
                             - bitmap->header_.size_pixels.x * 3;
-                        
+
                         const char fill_char = 0;
 
                         for (std::size_t i = 0; i < fill_align; i++) {
@@ -786,7 +785,7 @@ namespace eka2l1 {
 
                     break;
 
-                default:    
+                default:
                     file.write(bitmap->data_offset_ + base, dib_header.uncompressed_size);
                     break;
                 }

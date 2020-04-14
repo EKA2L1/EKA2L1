@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 #include <memory>
 
 #include <epoc/services/hwrm/light/light_def.h>
@@ -30,7 +30,7 @@ namespace eka2l1 {
         class property;
     }
 
-    using property_ptr = service::property*;
+    using property_ptr = service::property *;
 
     class kernel_system;
 
@@ -39,14 +39,14 @@ namespace eka2l1 {
          * \brief Short brief info about a light.
          */
         struct target_info {
-            std::uint32_t target_;      ///< The target of this light.
-            std::uint32_t status_;      ///< The status of the light.
+            std::uint32_t target_; ///< The target of this light.
+            std::uint32_t status_; ///< The status of the light.
         };
 
         struct resource_data {
         private:
-            std::array<target_info, MAXIMUM_LIGHT> infos_;          ///< Light brief info array.
-            property_ptr infos_prop_;                         ///< Pointer to the property
+            std::array<target_info, MAXIMUM_LIGHT> infos_; ///< Light brief info array.
+            property_ptr infos_prop_; ///< Pointer to the property
 
             /**
              * \brief   Initialise internal light resource components.

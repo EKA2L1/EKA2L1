@@ -90,7 +90,7 @@ namespace eka2l1::loader {
 
             // Read component name
             std::u16string name;
-            
+
             fseek(f, sold.header.comp_name_ptr + i * 4, SEEK_SET);
 
             // Read only one name

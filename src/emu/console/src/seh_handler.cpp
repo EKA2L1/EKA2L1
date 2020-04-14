@@ -19,12 +19,12 @@
  */
 
 #include <common/configure.h>
-#include <common/platform.h>
 #include <common/cvt.h>
+#include <common/platform.h>
 
 #if EKA2L1_PLATFORM(WIN32) && ENABLE_SEH_HANDLER
-#include <cstdint>
 #include <Windows.h>
+#include <cstdint>
 #include <string>
 
 void seh_handler_translator_func(unsigned int u, EXCEPTION_POINTERS *excp) {

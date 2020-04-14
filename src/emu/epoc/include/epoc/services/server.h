@@ -40,13 +40,13 @@
 namespace eka2l1 {
     class system;
 
-    using session_ptr = service::session*;
+    using session_ptr = service::session *;
 
     /*! \brief IPC implementation. */
     namespace service {
         struct server_msg;
 
-        using ipc_func_wrapper = std::function<void(ipc_context&)>;
+        using ipc_func_wrapper = std::function<void(ipc_context &)>;
         using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 
         /*! \brief A class represents an IPC function */

@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/backend/cubeb/audio_cubeb.h>
-#include <drivers/audio/backend/cubeb/stream_cubeb.h>
 #include <common/log.h>
 #include <common/platform.h>
+#include <drivers/audio/backend/cubeb/audio_cubeb.h>
+#include <drivers/audio/backend/cubeb/stream_cubeb.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <objbase.h>
@@ -28,11 +28,12 @@
 
 namespace eka2l1::drivers {
     cubeb_audio_driver::cubeb_audio_driver()
-        : context_(nullptr) {
+        : context_(nullptr)
+        , init_(false) {
 #if EKA2L1_PLATFORM(WIN32)
         HRESULT hr = S_OK;
         hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        
+
         if (hr != S_OK) {
             LOG_CRITICAL("Failed to initialize COM");
             return;
@@ -43,6 +44,8 @@ namespace eka2l1::drivers {
             LOG_CRITICAL("Can't initialize Cubeb audio driver!");
             return;
         }
+
+        init_ = true;
     }
 
     cubeb_audio_driver::~cubeb_audio_driver() {
@@ -63,7 +66,11 @@ namespace eka2l1::drivers {
     }
 
     std::unique_ptr<audio_output_stream> cubeb_audio_driver::new_output_stream(const std::uint32_t sample_rate,
-        data_callback callback) {
-        return std::make_unique<cubeb_audio_output_stream>(context_, sample_rate, callback);
+        const std::uint8_t channels, data_callback callback) {
+        if (!init_) {
+            return nullptr;
+        }
+
+        return std::make_unique<cubeb_audio_output_stream>(context_, sample_rate, channels, callback);
     }
 };

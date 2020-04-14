@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/loader/mif.h>
 #include <common/buffer.h>
+#include <epoc/loader/mif.h>
 
 namespace eka2l1::loader {
     mif_file::mif_file(common::ro_stream *stream)
@@ -54,7 +54,7 @@ namespace eka2l1::loader {
             return false;
         }
         }
-        
+
         // Now, read indexes
         idxs_.resize(header_.array_len);
         stream_->read(header_.offset, &idxs_[0], sizeof(mif_index) * header_.array_len);
@@ -69,7 +69,7 @@ namespace eka2l1::loader {
 
         if (buf == nullptr) {
             dest_size = idxs_[idx].len;
-            return true; 
+            return true;
         }
 
         dest_size = static_cast<int>(stream_->read(idxs_[idx].offset, buf, common::min(dest_size, idxs_[idx].len)));

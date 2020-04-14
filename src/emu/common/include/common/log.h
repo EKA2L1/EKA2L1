@@ -62,11 +62,11 @@ namespace eka2l1 {
 #define LOG_CRITICAL_IF(flag, fmt, ...)
 #else
 #ifdef ENABLE_SCRIPTING
-    #define COND_CHECK if (eka2l1::log::spd_logger)
-    #define COND_CHECK_AND && eka2l1::log::spd_logger
+#define COND_CHECK if (eka2l1::log::spd_logger)
+#define COND_CHECK_AND &&eka2l1::log::spd_logger
 #else
-    #define COND_CHECK
-    #define COND_CHECK_AND
+#define COND_CHECK
+#define COND_CHECK_AND
 #endif
 
 #define LOG_TRACE(fmt, ...) COND_CHECK eka2l1::log::spd_logger->trace("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)

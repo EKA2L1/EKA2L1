@@ -85,7 +85,7 @@ namespace eka2l1::drivers {
         void set_filter(command_helper &helper);
         void resize_bitmap(command_helper &helper);
 
-    public : 
+    public:
         explicit shared_graphics_driver(const graphic_api gr_api);
 
         ~shared_graphics_driver() override;

@@ -40,12 +40,12 @@ namespace eka2l1::epoc {
         eka2l1::central_repo_server *cenrep_serv_;
         io_system *io_;
         manager::device_manager *mngr_;
-        
+
         std::vector<epoc::uid> cfgs_;
         bool inited_ = false;
 
         language sys_lang_;
-    
+
     protected:
         /**
          * \brief Read and parse the icon caption central repository.
