@@ -104,16 +104,22 @@ namespace eka2l1::kernel {
 #pragma optimize("", off)
 #endif
     kernel::thread *thread_scheduler::next_ready_thread() {
-        // Check the most significant bit and get the non-empty read queue
-        int non_empty = common::find_most_significant_bit_one(ready_mask[0]);
+        if (ready_mask[0] != 0) {
+            // Check the most significant bit and get the non-empty read queue
+            int non_empty = common::find_most_significant_bit_one(ready_mask[0]);
 
-        if (non_empty != 0) {
-            return readys[non_empty - 1];
+            if (non_empty > 0) {
+                return readys[non_empty - 1];
+            }
         }
 
-        non_empty = common::find_most_significant_bit_one(ready_mask[1]);
+        if (ready_mask[1] == 0) {
+            return nullptr;
+        }
 
-        if (non_empty != 0) {
+        const int non_empty = common::find_most_significant_bit_one(ready_mask[1]);
+
+        if (non_empty > 0) {
             return readys[non_empty + 31];
         }
 
@@ -129,7 +135,7 @@ namespace eka2l1::kernel {
         kernel::thread *crr_thread = current_thread();
         kernel::thread *next_thread = next_ready_thread();
 
-        if (next_thread && next_thread->time == 0) {
+        if (next_thread && next_thread->time == 0 && !next_thread->scheduler_link.next) {
             // Get the next thread ready
             next_thread = next_thread->scheduler_link.next;
 
