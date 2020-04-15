@@ -296,6 +296,12 @@ namespace eka2l1 {
         }
 
         symfile f = ctx->sys->get_io_system()->open_file(final_path, READ_MODE);
+
+        if (!f) {
+            ctx->set_request_status(0);
+            return;
+        }
+
         address addr = f->rom_address();
 
         f->close();
