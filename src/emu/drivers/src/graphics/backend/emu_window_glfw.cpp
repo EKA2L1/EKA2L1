@@ -118,12 +118,21 @@ namespace eka2l1 {
             return (glfwWindowShouldClose(emu_win) == GL_TRUE);
         }
 
-        void emu_window_glfw3::init(std::string title, vec2 size) {
+        void emu_window_glfw3::init(std::string title, vec2 size, const std::uint32_t flags) {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            
+            GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 
-            emu_win = glfwCreateWindow(size.x, size.y, title.data(), nullptr, nullptr);
+            if (flags & emu_window_flag_maximum_size) {
+                const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+                size.x = mode->width;
+                size.y = mode->height;
+            }
+
+            emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ?
+                monitor : nullptr, nullptr);
 
             if (!emu_win) {
                 LOG_ERROR("Can't create window!");

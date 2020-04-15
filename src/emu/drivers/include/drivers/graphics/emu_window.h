@@ -76,6 +76,11 @@ namespace eka2l1 {
      * driver will get it done.
      */
     namespace drivers {
+        enum emu_window_flag {
+            emu_window_flag_fullscreen = 1 << 0,
+            emu_window_flag_maximum_size = 1 << 1
+        };
+
         /**
          * \brief An abstract class to implement the emulator window.
          * 
@@ -91,8 +96,9 @@ namespace eka2l1 {
 			 *
              * \param title The initial window title.
 			 * \param size The initial window size.
+             * \param flags Flags for window creation.
 			*/
-            virtual void init(std::string title, vec2 size) = 0;
+            virtual void init(std::string title, vec2 size, const std::uint32_t flags) = 0;
 
             virtual void make_current() = 0;
             virtual void done_current() = 0;

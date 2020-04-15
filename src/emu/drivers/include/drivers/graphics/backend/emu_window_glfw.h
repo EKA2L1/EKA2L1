@@ -44,7 +44,7 @@ namespace eka2l1 {
 
             void change_title(std::string new_title) override;
 
-            void init(std::string title, vec2 size) override;
+            void init(std::string title, vec2 size, const std::uint32_t flags) override;
             void make_current() override;
             void done_current() override;
             void swap_buffer() override;
