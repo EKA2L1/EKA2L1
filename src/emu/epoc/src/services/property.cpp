@@ -85,7 +85,10 @@ namespace eka2l1 {
             memcpy(data.bindata.data(), bdata, arr_length);
             bin_data_len = arr_length;
 
+            kern->unlock();
             notify_request(epoc::error_none);
+            kern->lock();
+
             fire_data_change_callbacks();
 
             kern->unlock();
