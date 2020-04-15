@@ -555,6 +555,12 @@ namespace eka2l1::epoc {
             ctx.set_request_status(epoc::error_none);
             break;
 
+        case EWsWinOpSetShape:
+            LOG_WARN("SetShape stubbed");
+
+            ctx.set_request_status(epoc::error_none);
+            break;
+
         default: {
             LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
             break;
