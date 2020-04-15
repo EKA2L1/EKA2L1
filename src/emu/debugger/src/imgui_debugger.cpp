@@ -518,7 +518,9 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::set_language_to_property(const language new_one) {
-        property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+        kernel_system *kern = sys->get_kernel_system();
+
+        property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
         auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
 
         if (!current_lang) {
