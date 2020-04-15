@@ -1,7 +1,7 @@
 # EKA2L1 
 [![Build Status Windows](https://ci.appveyor.com/api/projects/status/hnm73527hkrfrffm/branch/master?svg=true)](https://ci.appveyor.com/project/bentokun/eka2l1-mjiuq) [![Build Status Linux](https://travis-ci.org/EKA2L1/EKA2L1.svg?branch=master)](https://travis-ci.org/EKA2L1/EKA2L1)
 
-![Screenshot](https://cdn.discordapp.com/attachments/565196457435594755/673402419819970569/result_2_2_2020.png)
+![Screenshot](screenshots/result_animated.gif)
 
 Experimental Symbian OS emulator, written in C++ 17.
 
