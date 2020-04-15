@@ -177,7 +177,7 @@ namespace eka2l1::desktop {
 
         window_title += std::string(" - ") + random_references[eka2l1::random_range(0, random_references_count - 1)];
 
-        state.window->init(window_title, eka2l1::vec2(1080, 720));
+        state.window->init(window_title, eka2l1::vec2(1080, 720), drivers::emu_window_flag_maximum_size);
         state.window->set_userdata(&state);
         state.window->make_current();
 
