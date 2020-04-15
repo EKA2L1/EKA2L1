@@ -76,6 +76,11 @@ namespace eka2l1 {
         public:
             explicit property(kernel_system *kern);
 
+            /**
+             * \brief Add a callback that gets waken up when data changed.
+             * 
+             * Note: This does not lock the kernel.
+             */
             void add_data_change_callback(void *userdata, data_change_callback_handler handler);
 
             void define(service::property_type pt, uint32_t pre_allocated);

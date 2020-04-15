@@ -36,9 +36,7 @@ namespace eka2l1 {
         }
 
         void property::add_data_change_callback(void *userdata, data_change_callback_handler handler) {
-            kern->lock();
             data_change_callbacks.push_back({ userdata, handler });
-            kern->unlock();
         }
 
         void property::fire_data_change_callbacks() {
