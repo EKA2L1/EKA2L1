@@ -496,6 +496,7 @@ namespace eka2l1 {
 
     class physical_file_system : public abstract_file_system {
         std::mutex fs_mutex;
+        std::unique_ptr<common::directory_watcher> watcher_;
 
     protected:
         std::string firmcode;
@@ -587,7 +588,8 @@ namespace eka2l1 {
     public:
         explicit physical_file_system(epocver ver, const std::string &product_code)
             : ver(ver)
-            , firmcode(product_code) {
+            , firmcode(product_code)
+            , watcher_(nullptr) {
             for (auto &[drv, mapped] : mappings) {
                 mapped = false;
             }
@@ -777,6 +779,29 @@ namespace eka2l1 {
             }
 
             return std::make_unique<physical_file>(path, *real_path, mode);
+        }
+
+        std::int64_t watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
+            void *callback_userdata, const std::uint32_t filters) override {
+            const std::optional<std::u16string> real_path = get_raw_path(path);
+
+            if (!real_path.has_value()) {
+                return -1;
+            }
+
+            if (!watcher_) {
+                watcher_ = std::make_unique<common::directory_watcher>();
+            }
+
+            return watcher_->watch(common::ucs2_to_utf8(real_path.value()), callback, callback_userdata, filters);
+        }
+
+        bool unwatch_directory(const std::int64_t handle) override {
+            if (!watcher_) {
+                return false;
+            }
+
+            return watcher_->unwatch(static_cast<std::int32_t>(handle));
         }
     };
 
@@ -1152,6 +1177,32 @@ namespace eka2l1 {
         for (auto &[id, fs] : filesystems) {
             fs->set_epoc_ver(ver);
         }
+    }
+
+    std::int64_t io_system::watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
+        void *callback_userdata, const std::uint32_t filters) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs]: filesystems) {
+            const std::int64_t result = fs->watch_directory(path, callback, callback_userdata, filters);
+
+            if (result != -1) {
+                return result | (id << 32);
+            }
+        }
+
+        return -1;
+    }
+    
+    bool io_system::unwatch_directory(const std::int64_t handle) {
+        const std::int32_t fs_id = static_cast<std::int32_t>(handle >> 32);
+        auto fs_pair = filesystems.find(fs_id);
+
+        if (fs_pair == filesystems.end()) {
+            return false;
+        }
+
+        return fs_pair->second->unwatch_directory(handle);
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {
