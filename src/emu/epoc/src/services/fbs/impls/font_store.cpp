@@ -32,13 +32,12 @@ namespace eka2l1::epoc {
 
             const std::u16string fam_name = attrib.fam_name.to_std_string(nullptr);
             const std::u16string name = attrib.name.to_std_string(nullptr);
-            auto &font_fam_collection = open_font_store[fam_name];
 
             bool found = false;
 
             // Are we facing duplicate fonts ?
-            for (std::size_t i = 0; i < font_fam_collection.size(); i++) {
-                if (font_fam_collection[i].face_attrib.name.to_std_string(nullptr) == name) {
+            for (std::size_t i = 0; i < open_font_store.size(); i++) {
+                if (open_font_store[i].face_attrib.name.to_std_string(nullptr) == name) {
                     found = true;
                     break;
                 }
@@ -50,11 +49,12 @@ namespace eka2l1::epoc {
                 open_font_info info;
                 adapter->get_metrics(i, info.metrics);
 
+                info.family = fam_name;
                 info.idx = static_cast<std::int32_t>(i);
                 info.face_attrib = attrib;
                 info.adapter = adapter.get();
 
-                font_fam_collection.push_back(std::move(info));
+                open_font_store.push_back(std::move(info));
             }
         }
 
@@ -67,34 +67,30 @@ namespace eka2l1::epoc {
 
         const std::u16string my_name = spec.tf.name.to_std_string(nullptr);
 
-        for (auto &[fam_name, collection] : open_font_store) {
-            bool maybe_same_family = (my_name.find(fam_name) != std::string::npos);
+        for (auto &info : open_font_store) {
+            bool maybe_same_family = (my_name.find(info.family) != std::string::npos);
+            int score = 0;
 
-            // Seek the way out! Seek the one that contains my name first!
-            for (auto &info : collection) {
-                int score = 0;
+            // Better returns me!
+            if (info.face_attrib.name.to_std_string(nullptr) == my_name) {
+                return &info;
+            }
 
-                // Better returns me!
-                if (info.face_attrib.name.to_std_string(nullptr) == my_name) {
-                    return &info;
-                }
+            if (maybe_same_family) {
+                score += 100;
+            }
 
-                if (maybe_same_family) {
-                    score += 100;
-                }
+            if ((spec.style.flags & epoc::font_style::italic) == (info.face_attrib.style & epoc::open_font_face_attrib::italic)) {
+                score += 50;
+            }
 
-                if ((spec.style.flags & epoc::font_style::italic) == (info.face_attrib.style & epoc::open_font_face_attrib::italic)) {
-                    score += 50;
-                }
+            if ((spec.style.flags & epoc::font_style::bold) == (info.face_attrib.style & epoc::open_font_face_attrib::bold)) {
+                score += 50;
+            }
 
-                if ((spec.style.flags & epoc::font_style::bold) == (info.face_attrib.style & epoc::open_font_face_attrib::bold)) {
-                    score += 50;
-                }
-
-                if (score > best_score) {
-                    best = &info;
-                    best_score = score;
-                }
+            if (score > best_score) {
+                best = &info;
+                best_score = score;
             }
         }
 
