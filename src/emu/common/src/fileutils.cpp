@@ -148,7 +148,12 @@ namespace eka2l1::common {
 #elif EKA2L1_PLATFORM(WIN32)
         find_data = new WIN32_FIND_DATA;
 
-        std::string name_wildcard = name + "\\*.*";
+        std::string name_wildcard = name;
+
+        if (eka2l1::filename(name).empty()) {
+            name_wildcard += "\\*.*";
+        }
+
         handle = reinterpret_cast<void *>(FindFirstFileA(name_wildcard.c_str(),
             reinterpret_cast<LPWIN32_FIND_DATA>(find_data)));
 
