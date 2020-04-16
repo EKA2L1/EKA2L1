@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <tuple>
+#include <string>
 
 namespace eka2l1::common {
     struct directory_watcher_impl;
