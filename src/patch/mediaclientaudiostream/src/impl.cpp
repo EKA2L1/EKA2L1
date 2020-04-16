@@ -26,7 +26,7 @@
 #include <e32cmn.h>
 
 CMMFMdaOutputBufferCopied::CMMFMdaOutputBufferCopied(CMMFMdaAudioOutputStream *aStream)
-    : CActive(EPriorityNormal)
+    : CActive(CActive::EPriorityIdle)
     , iStream(aStream) {
 
 }
@@ -199,7 +199,7 @@ static TInt ConvertFreqEnumToNumber(const TInt caps) {
         break;
     }
 
-    return -1;
+    return 8000;
 }
 
 static TInt ConvertChannelEnumToNum(const TInt caps) {
@@ -214,7 +214,7 @@ static TInt ConvertChannelEnumToNum(const TInt caps) {
         break;
     }
 
-    return -1;
+    return 1;
 }
 
 TInt CMMFMdaAudioOutputStream::SetAudioProperties(const TInt aFreq, const TInt aChannels) {

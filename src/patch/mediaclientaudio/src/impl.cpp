@@ -24,7 +24,7 @@
 #include <e32cmn.h>
 
 CMMFMdaAudioPlayerUtility::CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
-    : CActive(EPriorityNormal)
+    : CActive(CActive::EPriorityIdle)
     , iCallback(aCallback)
     , iPriority(aPriority)
     , iPref(aPref)
