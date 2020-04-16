@@ -2462,6 +2462,32 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800009, SetTrapHandler),
         BRIDGE_REGISTER(0x0080000D, DebugMask),
         /* SLOW EXECUTIVE CALL */
-        BRIDGE_REGISTER(0x00, ObjectNext)
+        BRIDGE_REGISTER(0x00, ObjectNext),
+        BRIDGE_REGISTER(0x01, ChunkBase),
+        BRIDGE_REGISTER(0x03, ChunkMaxSize),
+        BRIDGE_REGISTER(0x16, ProcessFilename),
+        BRIDGE_REGISTER(0x17, ProcessCommandLine),
+        BRIDGE_REGISTER(0x27, SessionShare),
+
+        BRIDGE_REGISTER(0x4C, SessionSendSync),
+        BRIDGE_REGISTER(0x4D, DllTls),
+        BRIDGE_REGISTER(0x4E, HalFunction),
+        BRIDGE_REGISTER(0x51, ProcessCommandLineLength),
+        BRIDGE_REGISTER(0x63, ProcessType),
+        BRIDGE_REGISTER(0x69, HandleClose),
+        BRIDGE_REGISTER(0x6A, ChunkCreate),
+        BRIDGE_REGISTER(0x6B, ChunkAdjust),
+        BRIDGE_REGISTER(0x6D, HandleDuplicate),
+        BRIDGE_REGISTER(0x6F, SemaphoreCreate),
+        BRIDGE_REGISTER(0x72, ThreadKill),
+        BRIDGE_REGISTER(0x75, DllSetTls),
+        BRIDGE_REGISTER(0x76, DllFreeTLS),
+        BRIDGE_REGISTER(0x77, ThreadRename),
+        BRIDGE_REGISTER(0x7E, SessionCreate),
+        BRIDGE_REGISTER(0x9F, StaticCallList),
+        BRIDGE_REGISTER(0xA2, LastThreadHandle),
+        BRIDGE_REGISTER(0xD0, ProcessGetDataParameter),
+        BRIDGE_REGISTER(0xD1, ProcessDataParameterLength),
+        BRIDGE_REGISTER(0xDE, LeaveStart)
     };
 }
