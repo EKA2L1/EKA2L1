@@ -22,6 +22,7 @@
 
 #include <epoc/services/server.h>
 #include <epoc/utils/des.h>
+#include <epoc/vfs.h>
 
 #include <mutex>
 #include <vector>
@@ -90,6 +91,7 @@ namespace eka2l1 {
         apa_app_info mandatory_info;
         apa_capability caps;
 
+        std::u16string rsc_path;
         std::u16string localised_info_rsc_path;
         std::uint32_t localised_info_rsc_id{ 1 };
 
@@ -135,12 +137,21 @@ namespace eka2l1 {
         std::vector<apa_app_registry> regs;
         std::uint32_t flags{ 0 };
 
+        std::vector<std::int64_t> watchs_;
+
         enum {
             AL_INITED = 0x1
         };
 
+        void sort_registry_list();
+
+        bool delete_registry(const std::u16string &rsc_path);
+
         bool load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
             const language ideal_lang = language::en);
+
+        void on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
+            common::directory_changes &changes);
 
         void rescan_registries(eka2l1::io_system *io);
 
@@ -194,7 +205,7 @@ namespace eka2l1 {
         void connect(service::ipc_context &ctx);
 
     public:
-        applist_server(system *sys);
+        explicit applist_server(system *sys);
 
         std::mutex list_access_mut_;
 

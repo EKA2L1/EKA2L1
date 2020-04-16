@@ -59,6 +59,7 @@ namespace eka2l1 {
         // common::benchmarker marker(__FUNCTION__);
 
         apa_app_registry reg;
+        reg.rsc_path = path;
 
         // Load the resource
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
@@ -155,12 +156,71 @@ namespace eka2l1 {
         return true;
     }
 
+    bool applist_server::delete_registry(const std::u16string &rsc_path) {
+        auto result = std::find_if(regs.begin(), regs.end(), [rsc_path](const apa_app_registry &reg) {
+            return common::compare_ignore_case(reg.rsc_path, rsc_path) == 0;
+        });
+
+        if (result == regs.end()) {
+            return false;
+        }
+
+        regs.erase(result);
+        return true;
+    }
+
+    void applist_server::sort_registry_list() {
+        std::sort(regs.begin(), regs.end(), [](const apa_app_registry &lhs, const apa_app_registry &rhs) {
+            return lhs.mandatory_info.uid < rhs.mandatory_info.uid;
+        });
+    }
+
+    void applist_server::on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
+        common::directory_changes &changes) {
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
+        
+        for (auto &change: changes) {
+            const std::u16string rsc_path = eka2l1::add_path(base, common::utf8_to_ucs2(change.filename_));
+            
+            switch (change.change_) {
+            case common::directory_change_action_created:
+            case common::directory_change_action_moved_to:
+                if (!change.filename_.empty())
+                    load_registry(io, rsc_path, land_drive);
+
+                break;
+
+            case common::directory_change_action_delete:
+            case common::directory_change_action_moved_from:
+                // Try to delete the app entry
+                if (!change.filename_.empty()) {
+                    delete_registry(rsc_path);
+                }
+
+                break;
+
+            case common::directory_change_action_modified:
+                // Delete the registry and then load it again
+                delete_registry(rsc_path);
+                load_registry(io, rsc_path, land_drive);
+                
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        sort_registry_list();
+    }
+    
     void applist_server::rescan_registries(eka2l1::io_system *io) {
         LOG_INFO("Loading app registries");
 
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
-                auto reg_dir = io->open_dir(std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\");
+                const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
+                auto reg_dir = io->open_dir(base_dir);
 
                 if (reg_dir) {
                     while (auto ent = reg_dir->get_next_entry()) {
@@ -169,13 +229,19 @@ namespace eka2l1 {
                         }
                     }
                 }
+
+                const std::int64_t watch = io->watch_directory(base_dir, [this, base_dir, io, drv](void *userdata,
+                    common::directory_changes &changes) {
+                        on_register_directory_changes(io, base_dir, drv, changes);
+                    }, nullptr, common::directory_change_move | common::directory_change_last_write);
+
+                if (watch != -1) {
+                    watchs_.push_back(watch);
+                }
             }
         }
 
-        std::sort(regs.begin(), regs.end(), [](const apa_app_registry &lhs, const apa_app_registry &rhs) {
-            return lhs.mandatory_info.uid < rhs.mandatory_info.uid;
-        });
-
+        sort_registry_list();
         LOG_INFO("Done loading!");
     }
 
