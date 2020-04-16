@@ -1,3 +1,17 @@
+if (WIN32)
+    set(CUSTOM_COMMON_SOURCE    
+        src/watcher_win32.h
+        src/watcher_win32.cpp)
+elseif (UNIX)
+    set(CUSTOM_COMMON_SOURCE  
+        src/watcher_unix.h
+        src/watcher_unix.cpp)
+else()
+    set(CUSTOM_COMMON_SOURCE
+        src/watcher_null.h
+        src/watcher_null.cpp)
+endif()
+
 add_library(common
     include/common/arghandler.h
     include/common/advstream.h
@@ -41,6 +55,7 @@ add_library(common
     include/common/types.h
     include/common/unicode.h
     include/common/virtualmem.h
+    include/common/watcher.h
     include/common/wildcard.h
     src/arghandler.cpp
     src/armemitter.cpp
@@ -72,7 +87,9 @@ add_library(common
     src/types.cpp
     src/unicode.cpp
     src/virtualmem.cpp
+    src/watcher.cpp
     src/wildcard.cpp
+    ${CUSTOM_COMMON_SOURCE}
 )
 
 target_include_directories(common PUBLIC include)
@@ -81,6 +98,7 @@ target_link_libraries(common PRIVATE pugixml)
 
 if (UNIX OR APPLE)
     set_property(TARGET common PROPERTY POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(common PRIVATE pthread)
 endif()
 
 execute_process(
