@@ -85,7 +85,7 @@ namespace eka2l1::common {
                     while (pointee < buffer_wrote_length) {
                         FILE_NOTIFY_INFORMATION *info = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&file_infos_[pointee]);
 
-                        std::u16string filename(reinterpret_cast<char16_t*>(info->FileName), info->FileNameLength);
+                        std::u16string filename(reinterpret_cast<char16_t*>(info->FileName), info->FileNameLength / 2);
                         directory_change change;
                         change.change_ = 0;
                         change.filename_ = common::ucs2_to_utf8(filename);

@@ -154,7 +154,7 @@ namespace eka2l1::common {
         int filters = 0;
 
         if (masks & directory_change_move) {
-            filters |= (IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
+            filters |= (IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE | IN_CREATE);
         }
 
         if ((masks & directory_change_last_access) || (masks & directory_change_last_write)) {
@@ -166,7 +166,7 @@ namespace eka2l1::common {
         }
 
         if (masks & directory_change_creation) {
-            filters |= IN_CREATE;
+            filters |= IN_ATTRIB;
         }
 
         return filters;
