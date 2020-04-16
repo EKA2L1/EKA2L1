@@ -379,6 +379,15 @@ namespace eka2l1 {
         target_spec.style.set_glyph_bitmap_type(adapter->get_output_bitmap_type());
     }
 
+    void fbscli::num_typefaces(service::ipc_context *ctx) {
+        ctx->set_request_status(static_cast<std::int32_t>(server<fbs_server>()->
+            persistent_font_store.number_of_fonts()));
+    }
+
+    void fbscli::typeface_support(service::ipc_context *ctx) {
+        
+    }
+
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
         epoc::font_spec spec = *ctx->get_arg_packed<epoc::font_spec>(0);
 

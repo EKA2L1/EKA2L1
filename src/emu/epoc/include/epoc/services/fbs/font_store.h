@@ -31,6 +31,8 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc {
     struct open_font_info {
+        std::u16string family;
+
         std::size_t idx;
         float scale_factor_x;
         float scale_factor_y;
@@ -42,7 +44,7 @@ namespace eka2l1::epoc {
 
     // A set of fonts
     class font_store {
-        std::unordered_map<std::u16string, std::vector<open_font_info>> open_font_store;
+        std::vector<open_font_info> open_font_store;
         std::vector<epoc::adapter::font_file_adapter_instance> font_adapters;
 
         eka2l1::io_system *io;
@@ -57,5 +59,9 @@ namespace eka2l1::epoc {
 
         void add_fonts(std::vector<std::uint8_t> &buf);
         open_font_info *seek_the_open_font(epoc::font_spec &spec);
+
+        const std::size_t number_of_fonts() const {
+            return open_font_store.size();
+        }
     };
 }

@@ -97,6 +97,14 @@ namespace eka2l1::epoc {
         };
     };
 
+    struct typeface_support {
+        typeface_info info_;
+        std::uint32_t num_heights_;
+        std::int32_t min_height_in_twips_;
+        std::int32_t max_height_in_twips_;
+        std::int32_t is_scalable_;
+    };
+
     struct font_style {
         enum {
             italic = 0x1,

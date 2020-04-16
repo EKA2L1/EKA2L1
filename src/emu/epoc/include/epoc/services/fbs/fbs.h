@@ -181,6 +181,8 @@ namespace eka2l1 {
         void get_clean_bitmap(service::ipc_context *ctx);
         void rasterize_glyph(service::ipc_context *ctx);
         void background_compress_bitmap(service::ipc_context *ctx);
+        void num_typefaces(service::ipc_context *ctx);
+        void typeface_support(service::ipc_context *ctx);
 
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
