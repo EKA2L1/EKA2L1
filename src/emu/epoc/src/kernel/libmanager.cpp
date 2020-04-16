@@ -485,7 +485,7 @@ namespace eka2l1::hle {
             epoc::register_epocv93(*this);
         }
 
-        load_patch_libraries(".//patch");
+        load_patch_libraries(".//patch//");
     }
 
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
