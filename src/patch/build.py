@@ -342,8 +342,15 @@ def main():
     print('Using the following device to build the project:')
     print(device)
 
+    group_folder = os.path.abspath(group_folder)
+
     # Remove device letters because all the tools dont like it
     (drive, abs_path) = os.path.splitdrive(device[1])
+    (group_drive, abs_path_drive) = os.path.splitdrive(group_folder)
+    
+    if drive.lower() != group_drive.lower():
+        print('Drive of the SDK versus drive of the project to build are not the same')
+        return 0
 
     # Yes it also want separator at the end
     if not (abs_path.endswith('\\') or abs_path.endswith('/')):
