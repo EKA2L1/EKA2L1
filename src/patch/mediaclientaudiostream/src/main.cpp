@@ -58,13 +58,13 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
 
     if (result != KErrNone) {
         LogOut(MCA_CAT, _L("ERR:: Unable to set audio properties on stream opening!"));
+
+        // Further error should not enable stream write.
+        iProperties->iCallback.MaoscOpenComplete(result);
+        return;
     }
 
-    iProperties->iCallback.MaoscOpenComplete(result);
-
-    if (result != KErrNone)
-        return;
-
+    iProperties->NotifyOpenComplete();
     iProperties->Play();
 }
 

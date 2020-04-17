@@ -36,17 +36,32 @@ struct TMMFMdaBufferNode: public TDblQueLink {
     const TDesC8 *iBuffer;
 };
 
-struct CMMFMdaOutputBufferCopied: public CActive {
+struct CMMFMdaOutputBufferQueue: public CActive {
     CMMFMdaAudioOutputStream *iStream;
     TDblQue<TMMFMdaBufferNode> iBufferNodes;
 
-    explicit CMMFMdaOutputBufferCopied(CMMFMdaAudioOutputStream *aStream);
+    TMMFMdaBufferNode *iCopied;
 
-    void WriteAndWait(TMMFMdaBufferNode *aNode);
-    ~CMMFMdaOutputBufferCopied();
+    explicit CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream);
+
+    void WriteAndWait();
+    ~CMMFMdaOutputBufferQueue();
+
+    void StartTransfer();
 
     virtual void RunL();
     virtual void DoCancel();
+};
+
+struct CMMFMdaOutputOpen: public CActive {
+    CMMFMdaAudioOutputStream *iStream;
+
+    explicit CMMFMdaOutputOpen(CMMFMdaAudioOutputStream *aStream);
+
+    virtual void RunL();
+    virtual void DoCancel();
+
+    void Listen();
 };
 
 class CMMFMdaAudioOutputStream {
@@ -56,13 +71,16 @@ class CMMFMdaAudioOutputStream {
     TMdaState iState;
     TTimeIntervalMicroSeconds iPosition;
 
-    CMMFMdaOutputBufferCopied iBufferCopied;
+    CMMFMdaOutputBufferQueue iBufferQueue;
+    CMMFMdaOutputOpen iOpen;
 
 public:
     MMdaAudioOutputStreamCallback &iCallback;
 
     CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
     ~CMMFMdaAudioOutputStream();
+
+    void NotifyOpenComplete();
 
     static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
     void ConstructL();

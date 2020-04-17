@@ -25,14 +25,16 @@
 
 #include <e32cmn.h>
 
-CMMFMdaOutputBufferCopied::CMMFMdaOutputBufferCopied(CMMFMdaAudioOutputStream *aStream)
+CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
     : CActive(CActive::EPriorityIdle)
-    , iStream(aStream) {
+    , iStream(aStream)
+    , iCopied(NULL) {
 
 }
 
-void CMMFMdaOutputBufferCopied::WriteAndWait(TMMFMdaBufferNode *aNode) {
-    if (!aNode) {
+void CMMFMdaOutputBufferQueue::WriteAndWait() {
+    if (iBufferNodes.IsEmpty()) {
+        iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
         return;
     }
 
@@ -41,26 +43,52 @@ void CMMFMdaOutputBufferCopied::WriteAndWait(TMMFMdaBufferNode *aNode) {
 
     // Register the notifcation for the buffer we just sent
     iStream->RegisterNotifyBufferSent(iStatus);
+    iCopied = node;
+
     SetActive();
 }
 
-CMMFMdaOutputBufferCopied::~CMMFMdaOutputBufferCopied() {
+CMMFMdaOutputBufferQueue::~CMMFMdaOutputBufferQueue() {
     Deque();
 }
 
-void CMMFMdaOutputBufferCopied::RunL() {
+void CMMFMdaOutputBufferQueue::RunL() {
     // Notify that last buffer has been copied
-    TMMFMdaBufferNode *beforeNode = iBufferNodes.First();
-    iStream->iCallback.MaoscBufferCopied(KErrNone, *beforeNode->iBuffer);
+    if (iCopied) {
+        iStream->iCallback.MaoscBufferCopied(KErrNone, *iCopied->iBuffer);
 
-    beforeNode->Deque();
-    delete beforeNode;
+        iCopied->Deque();
+        delete iCopied;
+    }
 
-    WriteAndWait(iBufferNodes.First());
+    WriteAndWait();
 }
 
-void CMMFMdaOutputBufferCopied::DoCancel() {
+void CMMFMdaOutputBufferQueue::DoCancel() {
     iStream->CancelRegisterNotifyBufferSent();
+}
+
+void CMMFMdaOutputBufferQueue::StartTransfer() {
+    WriteAndWait();
+}
+
+CMMFMdaOutputOpen::CMMFMdaOutputOpen(CMMFMdaAudioOutputStream *aStream)
+    : CActive(CActive::EPriorityHigh)
+    , iStream(aStream) {
+}
+
+void CMMFMdaOutputOpen::RunL() {
+    LogOut(MCA_CAT, _L("Open complete"));
+    iStream->iCallback.MaoscOpenComplete(KErrNone);
+    Deque();
+}
+
+void CMMFMdaOutputOpen::DoCancel() {
+
+}
+
+void CMMFMdaOutputOpen::Listen() {
+    SetActive();
 }
 
 /// AUDIO OUTPUT STREAM
@@ -69,7 +97,8 @@ CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback
     , iPriority(aPriority)
     , iPref(aPref)
     , iState(EMdaStateReady)
-    , iBufferCopied(this) {
+    , iBufferQueue(this)
+    , iOpen(this) {
 }
 
 CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
@@ -92,7 +121,15 @@ void CMMFMdaAudioOutputStream::ConstructL() {
         User::Leave(KErrGeneral);
     }
 
-    CActiveScheduler::Add(&iBufferCopied);
+    CActiveScheduler::Add(&iBufferQueue);
+    CActiveScheduler::Add(&iOpen);
+
+    iOpen.Listen();
+}
+
+void CMMFMdaAudioOutputStream::NotifyOpenComplete() {
+    TRequestStatus *sts = &iOpen.iStatus;
+    User::RequestComplete(sts, KErrNone);
 }
 
 void CMMFMdaAudioOutputStream::Play() {
@@ -101,6 +138,7 @@ void CMMFMdaAudioOutputStream::Play() {
     } else {
         // Simulates that buffer has been written to server
         iState = EMdaStatePlay;
+        iBufferQueue.StartTransfer();
     }
 }
 
@@ -123,14 +161,11 @@ void CMMFMdaAudioOutputStream::WriteWithQueueL(const TDesC8 &aData) {
     TMMFMdaBufferNode *node = new (ELeave) TMMFMdaBufferNode;
     node->iBuffer = &aData;
 
-    const TBool isFirst = (iBufferCopied.iBufferNodes.IsEmpty());
+    TBool isFirst = iBufferQueue.iBufferNodes.IsEmpty();
+    iBufferQueue.iBufferNodes.AddLast(*node);
 
-    iBufferCopied.iBufferNodes.AddLast(*node);
-    
     if (isFirst) {
-        // We do want a kickstart. Write and wait.
-        // But we still need to push it to the queue so the callback can happens
-        iBufferCopied.WriteAndWait(node);
+        iBufferQueue.StartTransfer();
     }
 }
 
@@ -199,7 +234,7 @@ static TInt ConvertFreqEnumToNumber(const TInt caps) {
         break;
     }
 
-    return 8000;
+    return -1;
 }
 
 static TInt ConvertChannelEnumToNum(const TInt caps) {
@@ -214,7 +249,7 @@ static TInt ConvertChannelEnumToNum(const TInt caps) {
         break;
     }
 
-    return 1;
+    return -1;
 }
 
 TInt CMMFMdaAudioOutputStream::SetAudioProperties(const TInt aFreq, const TInt aChannels) {
@@ -222,7 +257,8 @@ TInt CMMFMdaAudioOutputStream::SetAudioProperties(const TInt aFreq, const TInt a
     const TInt numChannels = ConvertChannelEnumToNum(aChannels);
 
     if ((realFreq == -1) || (numChannels == -1)) {
-        return KErrNotSupported;
+        // Do nothing i suppose
+        return KErrNone;
     }
 
     return EAudioDspStreamSetProperties(0, iDispatchInstance, realFreq, numChannels);
