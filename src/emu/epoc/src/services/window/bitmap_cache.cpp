@@ -47,9 +47,7 @@ namespace eka2l1::epoc {
 
     bool is_palette_bitmap(epoc::bitwise_bitmap *bw_bmp) {
         const epoc::display_mode dsp = bw_bmp->settings_.current_display_mode();
-        return (dsp == epoc::display_mode::color16) || (dsp == epoc::display_mode::color16m)
-            || (dsp == epoc::display_mode::color16ma) || (dsp == epoc::display_mode::color16map)
-            || (dsp == epoc::display_mode::color16mu) || (dsp == epoc::display_mode::color256);
+        return (dsp == epoc::display_mode::color16) || (dsp == epoc::display_mode::color256);
     }
 
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
