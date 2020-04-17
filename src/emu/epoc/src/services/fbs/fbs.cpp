@@ -66,7 +66,12 @@ namespace eka2l1 {
         switch (ctx->msg->function) {
         case fbs_init: {
             connection_id_ = server<fbs_server>()->init();
-            ctx->set_request_status(connection_id_);
+
+            if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
+                ctx->set_request_status(epoc::error_none);
+            } else {
+                ctx->set_request_status(connection_id_);
+            }
 
             break;
         }
