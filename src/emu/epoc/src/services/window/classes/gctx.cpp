@@ -327,7 +327,18 @@ namespace eka2l1::epoc {
 
         eka2l1::vecx<int, 4> color;
         color = common::rgb_to_vec(brush_color);
-        cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+
+        if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
+            if (color[0] == 0) {
+                // Nothing, dont draw
+                context.set_request_status(epoc::error_none);
+                return;
+            }
+
+            cmd_builder->set_brush_color_detail({ color[1], color[2], color[3], color[0] });
+        } else {
+            cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+        }
 
         // Draw rectangle
         cmd_builder->draw_rectangle(area);
@@ -341,6 +352,7 @@ namespace eka2l1::epoc {
         line_mode = pen_style::null;
 
         pen_size = { 1, 1 };
+        brush_color = 0;
     }
 
     void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
