@@ -112,7 +112,11 @@ namespace eka2l1::drivers {
 
         virtual ~graphics_command_list_builder() {}
 
-        virtual void set_brush_color(const eka2l1::vec3 &color) = 0;
+        virtual void set_brush_color_detail(const eka2l1::vecx<int, 4> &color) = 0;
+
+        void set_brush_color(const eka2l1::vec3 &color) {
+            set_brush_color_detail({ color.x, color.y, color.z, 255 });
+        }
 
         /**
          * \brief Set scissor rectangle, allow redraw only in specified area if invalidate is enabled.
@@ -324,7 +328,7 @@ namespace eka2l1::drivers {
     public:
         explicit server_graphics_command_list_builder(graphics_command_list *list);
 
-        void set_brush_color(const eka2l1::vec3 &color) override;
+        void set_brush_color_detail(const eka2l1::vecx<int, 4> &color) override;
 
         /**
          * \brief Set scissor rectangle, allow redraw only in specified area if invalidate is enabled.
