@@ -26,9 +26,12 @@
 #include <epoc/kernel.h>
 #include <epoc/services/window/common.h>
 #include <epoc/services/window/window.h>
+
 #include <fstream>
 
 namespace eka2l1::dispatch {
+    static constexpr std::uint32_t FPS_LIMIT = 60;
+
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::graphics_driver *driver = sys->get_graphics_driver();
@@ -54,6 +57,7 @@ namespace eka2l1::dispatch {
                     { 0, 0 }, screen_size);
 
                 driver->submit_command_list(*command_list);
+                scr->vsync(sys->get_timing_system());
             }
 
             scr = scr->next;

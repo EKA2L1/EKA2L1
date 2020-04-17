@@ -24,6 +24,9 @@
 #include <epoc/services/window/window.h>
 
 #include <drivers/itc.h>
+#include <common/time.h>
+
+#include <epoc/timing.h>
 
 namespace eka2l1::epoc {
     struct window_drawer_walker : public window_tree_walker {
@@ -77,6 +80,7 @@ namespace eka2l1::epoc {
         , screen_texture(0)
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
+        , last_vsync(0)
         , scr_config(scr_conf)
         , crr_mode(1)
         , next(nullptr)
@@ -236,6 +240,22 @@ namespace eka2l1::epoc {
     void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {
         crr_mode = mode;
         resize(drv, mode_info(mode)->size);
+    }
+
+    static constexpr std::uint32_t SCREEN_HZ = 60;
+
+    void screen::vsync(timing_system *timing) {
+        const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
+        std::uint64_t delta = tnow - last_vsync;
+
+        const std::uint64_t microsecs_a_frame = 1000000 / SCREEN_HZ;
+
+        if (delta < microsecs_a_frame) {
+            std::this_thread::sleep_for(std::chrono::microseconds(microsecs_a_frame - delta));
+            timing->add_ticks(static_cast<std::uint32_t>(timing->us_to_cycles(microsecs_a_frame - delta)));
+        }
+
+        last_vsync = tnow;
     }
 
     const epoc::config::screen_mode *screen::mode_info(const int number) const {

@@ -23,9 +23,10 @@
 #include <drivers/graphics/common.h>
 #include <epoc/services/window/classes/config.h>
 #include <epoc/services/window/common.h>
-#include <mutex>
 
+#include <cstdint>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace eka2l1 {
@@ -34,6 +35,7 @@ namespace eka2l1 {
     }
 
     class window_server;
+    class timing_system;
 }
 
 namespace eka2l1::drivers {
@@ -54,6 +56,8 @@ namespace eka2l1::epoc {
         drivers::handle screen_texture; ///< Server handle to texture of the screen
         drivers::handle dsa_texture; ///< Server handle to the DSA modified part of the screen.
         epoc::display_mode disp_mode;
+
+        std::uint64_t last_vsync;
 
         epoc::config::screen scr_config; ///< All mode of this screen
         std::uint8_t crr_mode; ///< The current mode being used by the screen.
@@ -78,6 +82,8 @@ namespace eka2l1::epoc {
 
         void fire_focus_change_callbacks();
         void add_focus_change_callback(void *userdata, focus_change_callback_handler handler);
+
+        void vsync(timing_system *timing);
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
 

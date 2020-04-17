@@ -163,8 +163,13 @@ namespace eka2l1::epoc {
 
         sched->scheduled = false;
 
-        // Do redraw, now!
-        sched->scr->redraw(driver);
+        {
+            const std::lock_guard<std::mutex> guard(sched->scr->screen_mutex);
+
+            // Do redraw, now!
+            sched->scr->redraw(driver);
+            sched->scr->vsync(timing_);
+        }
 
         // Transtition the state to inactive.
         states_[screen_number].flags = screen_state::inactive;

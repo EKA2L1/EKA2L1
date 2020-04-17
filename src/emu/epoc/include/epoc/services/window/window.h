@@ -172,6 +172,7 @@ namespace eka2l1::epoc {
         void create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd);
         void create_click_dll(service::ipc_context &ctx, ws_cmd &cmd);
         void create_sprite(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_wsbmp(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd);
         void get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd);
         void restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd);
