@@ -196,6 +196,11 @@ namespace eka2l1::epoc {
         return reinterpret_cast<window_user_base *>(parent)->absolute_position() + pos;
     }
 
+    epoc::display_mode window_user::display_mode() const {
+        // Fallback to screen
+        return scr->disp_mode;
+    }
+
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -231,7 +236,7 @@ namespace eka2l1::epoc {
             ite = ite->next;
         } while (ite != end);
 
-        LOG_DEBUG("End redraw to window 0x{:X}!", id);
+        // LOG_DEBUG("End redraw to window 0x{:X}!", id);
 
         // Want to trigger a screen redraw
         if (is_visible()) {
@@ -243,7 +248,7 @@ namespace eka2l1::epoc {
     }
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
-        LOG_TRACE("Begin redraw to window 0x{:X}!", id);
+        // LOG_TRACE("Begin redraw to window 0x{:X}!", id);
 
         // Cancel pending redraw event, since by using this,
         // we already starts one
@@ -370,7 +375,7 @@ namespace eka2l1::epoc {
 
         // Fall through to get system display mode
         case EWsWinOpGetDisplayMode: {
-            ctx.set_request_status(static_cast<int>(scr->disp_mode));
+            ctx.set_request_status(static_cast<int>(display_mode()));
             break;
         }
 

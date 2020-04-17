@@ -88,6 +88,8 @@ namespace eka2l1::epoc {
             const epoc::window_type type_of_window, const epoc::display_mode dmode,
             const std::uint32_t client_handle);
 
+        epoc::display_mode display_mode() const;
+
         eka2l1::vec2 absolute_position() const override;
 
         eka2l1::vec2 get_origin() override;
