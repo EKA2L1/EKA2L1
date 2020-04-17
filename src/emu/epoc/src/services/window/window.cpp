@@ -22,6 +22,7 @@
 #include <epoc/services/window/window.h>
 
 #include <epoc/services/fbs/fbs.h>
+#include <epoc/services/window/classes/bitmap.h>
 #include <epoc/services/window/classes/dsa.h>
 #include <epoc/services/window/classes/gctx.h>
 #include <epoc/services/window/classes/plugins/animdll.h>
@@ -319,6 +320,22 @@ namespace eka2l1::epoc {
 
         window_client_obj_ptr clickdll = std::make_unique<epoc::click_dll>(this, nullptr);
         ctx.set_request_status(add_object(clickdll));
+    }
+
+    void window_server_client::create_wsbmp(service::ipc_context &ctx, ws_cmd &cmd) {
+        const std::uint32_t bmp_handle = *reinterpret_cast<const std::uint32_t*>(cmd.data_ptr);
+        fbs_server *serv = get_ws().get_fbs_server();
+
+        // Try to get the fbsbitmap
+        fbsbitmap *bmp = serv->get<fbsbitmap>(bmp_handle);
+
+        if (!bmp) {
+            ctx.set_request_status(epoc::error_bad_handle);
+            return;
+        }
+
+        window_client_obj_ptr wsbmpobj = std::make_unique<epoc::wsbitmap>(this, bmp);
+        ctx.set_request_status(add_object(wsbmpobj));
     }
 
     void window_server_client::get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -678,6 +695,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_get_color_mode_list: {
             get_color_mode_list(ctx, cmd);
+            break;
+        }
+
+        case ws_cl_op_create_bitmap: {
+            create_wsbmp(ctx, cmd);
             break;
         }
 
