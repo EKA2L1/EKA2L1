@@ -2185,6 +2185,13 @@ namespace eka2l1::epoc {
         timer->cancel_request();
     }
 
+    BRIDGE_FUNC(std::uint32_t, NTickCount) {
+        timing_system *timing = sys->get_timing_system();
+        static constexpr std::uint64_t NANOKERNEL_HZ = 1000;
+
+        return static_cast<std::uint32_t>(timing->get_ticks() * NANOKERNEL_HZ / 1000000 / timing->get_clock_frequency_mhz());
+    }
+
     /**********************/
     /* CHANGE NOTIFIER */
     /**********************/
@@ -2334,6 +2341,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0080000C, DebugMask),
         BRIDGE_REGISTER(0x0080000D, DebugMaskIndex),
         BRIDGE_REGISTER(0x0080000E, SetDebugMask),
+        BRIDGE_REGISTER(0x00800010, NTickCount),
         BRIDGE_REGISTER(0x00800013, UserSvrRomHeaderAddress),
         BRIDGE_REGISTER(0x00800014, UserSvrRomRootDirAddress),
         BRIDGE_REGISTER(0x00800015, SafeInc32),
