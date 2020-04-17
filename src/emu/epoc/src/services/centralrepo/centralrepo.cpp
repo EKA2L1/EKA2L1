@@ -202,6 +202,7 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req_check, "CenRep::NofReqCheck");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_eq_int, "CenRep::FindEqInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_neq_int, "CenRep::FindNeqInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel_all, "CenRep::NofCancelAll");
     }
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
@@ -511,6 +512,13 @@ namespace eka2l1 {
             const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
 
             cancel_notify_request(partial_key, mask);
+
+            ctx->set_request_status(epoc::error_none);
+            break;
+        }
+
+        case cen_rep_notify_cancel_all: {
+            cancel_all_notify_requests();
 
             ctx->set_request_status(epoc::error_none);
             break;

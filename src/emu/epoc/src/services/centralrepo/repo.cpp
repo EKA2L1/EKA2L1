@@ -110,6 +110,13 @@ namespace eka2l1 {
         return 0;
     }
 
+    void central_repo_client_subsession::cancel_all_notify_requests() {
+        common::erase_elements(notifies, [=](cenrep_notify_info &info) {
+            info.sts.complete(-3);
+            return true;
+        });
+    }
+
     void central_repo_client_subsession::cancel_notify_request(const std::uint32_t match_key, const std::uint32_t mask) {
         common::erase_elements(notifies, [=](cenrep_notify_info &info) {
             if (info.match == match_key && info.mask == mask) {
