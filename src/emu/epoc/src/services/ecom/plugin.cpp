@@ -271,8 +271,8 @@ namespace eka2l1 {
         return true;
     }
 
-    void ecom_implementation_info::do_state(common::chunkyseri &seri,
-        const bool support_extended_interface) {
+    void ecom_implementation_info::do_state(common::chunkyseri &seri, const bool support_extended_interface,
+        const bool old_abi) {
         seri.absorb(uid);
 
         std::uint32_t ver32 = version;
@@ -280,6 +280,12 @@ namespace eka2l1 {
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             version = static_cast<std::uint8_t>(ver32);
+        }
+
+        if (old_abi) {
+            // TODO(pent0): Disable flag check
+            std::uint32_t disabled = 0;
+            seri.absorb(disabled);
         }
 
         seri.absorb(display_name);
@@ -294,24 +300,45 @@ namespace eka2l1 {
             drv = static_cast<drive_number>(drv32);
         }
 
+        if (old_abi) {
+            std::uint32_t is_rom_only = (flags & FLAG_ROM_ONLY);
+            seri.absorb(is_rom_only);
+
+            // TODO(pent0): Dangerous hardcode
+            std::uint32_t is_rom_based = (drv == drive_z);
+            seri.absorb(is_rom_based);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                if (is_rom_only) {
+                    flags |= FLAG_ROM_ONLY;
+                }
+
+                if (is_rom_based) {
+                    flags |= FLAG_ROM_BASED;
+                }
+            }
+        }
+
         // TODO: What is this ?? Version ID?
         std::uint32_t vid = 0;
         seri.absorb(vid);
 
         // Bit 0: Rom only, bit 1: Rom based, bit 2: Disabled ?
-        std::uint8_t absorb_flags = 0;
-        if (flags & FLAG_ROM_ONLY) {
-            absorb_flags |= 0b1;
-        }
+        if (!old_abi) {
+            std::uint8_t absorb_flags = 0;
+            if (flags & FLAG_ROM_ONLY) {
+                absorb_flags |= 0b1;
+            }
 
-        // TODO: Hardcode is dangerous
-        if (drv == drive_z) {
-            absorb_flags |= 0b10;
-        }
+            // TODO: Hardcode is dangerous
+            if (drv == drive_z) {
+                absorb_flags |= 0b10;
+            }
 
-        seri.absorb(absorb_flags);
-        if (seri.get_seri_mode() == common::SERI_MODE_READ || (absorb_flags & 0b10 || absorb_flags & 0b01)) {
-            flags |= FLAG_ROM_ONLY | FLAG_ROM_BASED;
+            seri.absorb(absorb_flags);
+            if (seri.get_seri_mode() == common::SERI_MODE_READ || (absorb_flags & 0b10 || absorb_flags & 0b01)) {
+                flags |= FLAG_ROM_ONLY | FLAG_ROM_BASED;
+            }
         }
 
         // Absorb extended interfaces

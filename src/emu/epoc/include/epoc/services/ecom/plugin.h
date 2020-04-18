@@ -58,7 +58,7 @@ namespace eka2l1 {
         // A implementation may covers other interface ?
         std::vector<std::uint32_t> extended_interfaces;
 
-        void do_state(common::chunkyseri &seri, const bool support_extended_interface);
+        void do_state(common::chunkyseri &seri, const bool support_extended_interface, const bool old_abi);
     };
 
     using ecom_implementation_info_ptr = std::shared_ptr<ecom_implementation_info>;
