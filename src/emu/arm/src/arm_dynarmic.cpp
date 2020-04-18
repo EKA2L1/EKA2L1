@@ -402,7 +402,7 @@ namespace eka2l1 {
         }
 
         void arm_dynarmic::step() {
-            cb->InterpreterFallback(get_pc(), 1);
+            jit->Step();
         }
 
         uint32_t arm_dynarmic::get_reg(size_t idx) {
