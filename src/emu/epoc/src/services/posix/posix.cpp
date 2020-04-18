@@ -51,12 +51,13 @@
     ctx.set_request_status(epoc::error_none); \
     return
 
-#define POSIX_REQUEST_INIT(ctx)                                                                               \
-    int *errnoptr = eka2l1::ptr<int>(ctx.msg->args.args[0]).get(ctx.sys->get_memory_system());                \
-    *errnoptr = 0;                                                                                            \
-    auto params = eka2l1::ptr<eka2l1::posix_params>(ctx.msg->args.args[1]).get(ctx.sys->get_memory_system()); \
-    if (!params) {                                                                                            \
-        POSIX_REQUEST_FINISH_WITH_ERR(ctx, EINVAL);                                                           \
+#define POSIX_REQUEST_INIT(ctx)                                                                                 \
+    kernel::process *own_process = ctx.msg->own_thr->owning_process();                                          \
+    int *errnoptr = eka2l1::ptr<int>(ctx.msg->args.args[0]).get(own_process);                                   \
+    *errnoptr = 0;                                                                                              \
+    auto params = eka2l1::ptr<eka2l1::posix_params>(ctx.msg->args.args[1]).get(own_process);                    \
+    if (!params) {                                                                                              \
+        POSIX_REQUEST_FINISH_WITH_ERR(ctx, EINVAL);                                                             \
     }
 
 namespace eka2l1 {
@@ -93,6 +94,8 @@ namespace eka2l1 {
             terrno = ENOENT;
             return 0;
         }
+
+        LOG_TRACE("File opened {}", common::ucs2_to_utf8(path));
 
         terrno = 0;
         return suit_fid;
@@ -229,7 +232,7 @@ namespace eka2l1 {
         POSIX_REQUEST_INIT(ctx);
 
         std::u16string current_dir(reinterpret_cast<char16_t *>(
-            params->cwptr[0].get(ctx.sys->get_memory_system())));
+            params->cwptr[0].get(ctx.msg->own_thr->owning_process())));
 
         working_dir = eka2l1::absolute_path(current_dir, working_dir, true);
 
@@ -242,7 +245,7 @@ namespace eka2l1 {
         POSIX_REQUEST_INIT(ctx);
 
         std::u16string current_dir(reinterpret_cast<char16_t *>(
-            params->cwptr[0].get(ctx.sys->get_memory_system())));
+            params->cwptr[0].get(ctx.msg->own_thr->owning_process())));
 
         const std::u16string full_new_path = common::utf8_to_ucs2(eka2l1::absolute_path(
             common::ucs2_to_utf8(current_dir),
@@ -271,7 +274,7 @@ namespace eka2l1 {
         }
 
         std::u16string current_dir(reinterpret_cast<char16_t *>(
-            params->cwptr[0].get(ctx.sys->get_memory_system())));
+            params->cwptr[0].get(ctx.msg->own_thr->owning_process())));
 
         const std::u16string path_u16 = eka2l1::absolute_path(current_dir, base_dir, true);
 
@@ -336,7 +339,8 @@ namespace eka2l1 {
     void posix_server::fstat(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        struct stat *file_stat = reinterpret_cast<struct stat *>(params->ptr[0].get(ctx.sys->get_memory_system()));
+        struct stat *file_stat = reinterpret_cast<struct stat *>(params->ptr[0].get(ctx.msg->
+            own_thr->owning_process()));
 
         file_manager.stat(params->fid, file_stat, *errnoptr);
         params->ret = *errnoptr ? -1 : 0;
@@ -346,7 +350,9 @@ namespace eka2l1 {
 
     void posix_server::read(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
-        params->ret = static_cast<std::int32_t>(file_manager.read(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
+
+        char *dest_ptr = params->ptr[0].get(ctx.msg->own_thr->owning_process());
+        params->ret = static_cast<std::int32_t>(file_manager.read(params->fid, params->len[0], dest_ptr, *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
@@ -357,8 +363,11 @@ namespace eka2l1 {
 
     void posix_server::write(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
+        
+        char *source_ptr = params->ptr[0].get(ctx.msg->own_thr->owning_process());
+        
         params->ret = static_cast<std::int32_t>(
-            file_manager.write(params->fid, params->len[0], params->ptr[0].get(ctx.sys->get_memory_system()), *errnoptr));
+            file_manager.write(params->fid, params->len[0], source_ptr, *errnoptr));
 
         if (*errnoptr) {
             params->ret = -1;
