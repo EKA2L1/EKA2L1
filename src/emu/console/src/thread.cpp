@@ -252,6 +252,7 @@ namespace eka2l1::desktop {
 
         ImGuiIO &io = ImGui::GetIO();
 
+        io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.KeyMap[ImGuiKey_A] = 'A';
         io.KeyMap[ImGuiKey_C] = 'C';
         io.KeyMap[ImGuiKey_V] = 'V';
