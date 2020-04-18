@@ -342,6 +342,11 @@ namespace eka2l1 {
          */
         bool free_bitmap(fbsbitmap *bmp);
 
+        /**
+         * \brief Check if we are working on legacy FBS.
+         */
+        bool legacy_mode() const;
+
         drivers::graphics_driver *get_graphics_driver();
 
         fbsfont *look_for_font_with_address(const eka2l1::address addr);

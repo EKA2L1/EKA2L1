@@ -177,6 +177,17 @@ namespace eka2l1 {
                 flags_ &= ~(settings_flag::violate_bitmap);
         }
 
+        bool bitwise_bitmap::settings::is_large() const {
+            return flags_ & settings_flag::large_bitmap;
+        }
+
+        void bitwise_bitmap::settings::set_large(const bool result) {
+            if (result)
+                flags_ |= settings_flag::large_bitmap;
+            else
+                flags_ &= ~(settings_flag::large_bitmap);
+        }
+
         static void do_white_fill(std::uint8_t *dest, const std::size_t size, epoc::display_mode mode) {
             std::fill(dest, dest + size, 0xFF);
         }
@@ -267,6 +278,23 @@ namespace eka2l1 {
         std::int32_t address_offset;
     };
 
+    struct bmp_specs {
+        eka2l1::vec2 size;
+        epoc::display_mode bpp; // Ignore
+        std::uint32_t handle;
+        std::uint32_t server_handle;
+        std::uint32_t address_offset;
+    };
+
+    struct bmp_specs_legacy {
+        eka2l1::vec2 size;
+        epoc::display_mode bpp; // Ignore
+        std::uint32_t padding[130];
+        std::uint32_t handle;
+        std::uint32_t server_handle;
+        std::uint32_t address_offset;
+    };
+
     fbsbitmap::~fbsbitmap() {
         serv_->free_bitmap(this);
     }
@@ -340,14 +368,31 @@ namespace eka2l1 {
             return;
         }
 
-        bmp_handles handle_info;
+        const std::uint32_t handle_ret = obj_table_.add(bmp);
+        const std::uint32_t server_handle = bmp->id;
+        const std::uint32_t off = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
-        // Add this object to the object table!
-        handle_info.handle = obj_table_.add(bmp);
-        handle_info.server_handle = bmp->id;
-        handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+        const bool legacy_return = (ctx->get_arg_size(1) > sizeof(bmp_handles));
 
-        ctx->write_arg_pkg(1, handle_info);
+        if (legacy_return) {
+            bmp_specs_legacy specs;
+
+            specs.handle = handle_ret;
+            specs.server_handle = server_handle;
+            specs.address_offset = off;
+
+            ctx->write_arg_pkg(1, specs);
+        } else {
+            bmp_handles handle_info;
+
+            // Add this object to the object table!
+            handle_info.handle = handle_ret;
+            handle_info.server_handle = server_handle;
+            handle_info.address_offset = off;
+
+            ctx->write_arg_pkg(1, handle_info);
+        }
+
         ctx->set_request_status(epoc::error_none);
     }
 
@@ -403,6 +448,11 @@ namespace eka2l1 {
             // hesistate is bad.
             epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
             bws_bmp->header_ = mbmf_.sbm_headers[load_options->bitmap_id];
+
+            if (fbss->legacy_mode()) {
+                // Set large bitmap flag so that the data pointer base is in large chunk
+                bws_bmp->settings_.set_large(true);
+            }
 
             // Load the bitmap data to large chunk
             int err_code = fbs_load_data_err_none;
@@ -468,14 +518,6 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
-    struct bmp_specs {
-        eka2l1::vec2 size;
-        epoc::display_mode bpp; // Ignore
-        std::uint32_t handle;
-        std::uint32_t server_handle;
-        std::uint32_t address_offset;
-    };
-
     static std::size_t calculate_aligned_bitmap_bytes(const eka2l1::vec2 &size, const epoc::display_mode bpp) {
         if (size.x == 0 || size.y == 0) {
             return 0;
@@ -515,6 +557,11 @@ namespace eka2l1 {
 
         bws_bmp->construct(header, dpm, data, base_large_chunk, true);
 
+        if (legacy_mode()) {
+            // Set large bitmap flag so that the data pointer base is in large chunk
+            bws_bmp->settings_.set_large(true);
+        }
+
         fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty);
 
         return bmp;
@@ -539,26 +586,60 @@ namespace eka2l1 {
     }
 
     void fbscli::create_bitmap(service::ipc_context *ctx) {
-        std::optional<bmp_specs> specs = ctx->get_arg_packed<bmp_specs>(0);
+        bmp_specs_legacy specs;
+        const bool use_spec_legacy = ctx->get_arg_size(0) > sizeof(bmp_specs);
 
-        if (!specs) {
-            ctx->set_request_status(epoc::error_argument);
-            return;
+        if (!use_spec_legacy) {
+            std::optional<bmp_specs> specs_morden = ctx->get_arg_packed<bmp_specs>(0);
+                
+            if (!specs_morden) {
+                ctx->set_request_status(epoc::error_argument);
+                return;
+            }
+
+            specs.size = specs_morden->size;
+            specs.bpp = specs_morden->bpp;
+        } else {
+            std::optional<bmp_specs_legacy> specs_legacy = ctx->get_arg_packed<bmp_specs_legacy>(0);
+
+            if (!specs_legacy) {
+                ctx->set_request_status(epoc::error_argument);
+                return;
+            }
+
+            specs = std::move(specs_legacy.value());
         }
 
         fbs_server *fbss = server<fbs_server>();
-        fbsbitmap *bmp = fbss->create_bitmap(specs->size, specs->bpp);
+        fbsbitmap *bmp = fbss->create_bitmap(specs.size, specs.bpp);
 
         if (!bmp) {
             ctx->set_request_status(epoc::error_no_memory);
             return;
         }
 
-        specs->handle = obj_table_.add(bmp);
-        specs->server_handle = bmp->id;
-        specs->address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+        const std::uint32_t handle_ret = obj_table_.add(bmp);
+        const std::uint32_t serv_handle = bmp->id;
+        const std::uint32_t addr_off = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
-        ctx->write_arg_pkg(0, specs.value());
+        if (use_spec_legacy) {
+            specs.handle = handle_ret;
+            specs.server_handle = serv_handle;
+            specs.address_offset = addr_off;
+
+            ctx->write_arg_pkg(0, specs);
+        } else {
+            bmp_specs specs_to_write;
+            specs_to_write.size = specs.size;
+            specs_to_write.bpp = specs.bpp;
+            
+            specs_to_write.handle = handle_ret;
+            specs_to_write.server_handle = serv_handle;
+            specs_to_write.address_offset = addr_off;
+
+            ctx->write_arg_pkg(0, specs_to_write);
+        }
+
         ctx->set_request_status(epoc::error_none);
     }
 

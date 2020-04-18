@@ -178,6 +178,10 @@ namespace eka2l1 {
         queue->run();
     }
 
+    bool fbs_server::legacy_mode() const {
+        return large_bitmap_access_mutex->get_access_count() > 0;
+    }
+
     void fbs_server::connect(service::ipc_context &context) {
         if (!shared_chunk && !large_chunk) {
             // Initialize those chunks

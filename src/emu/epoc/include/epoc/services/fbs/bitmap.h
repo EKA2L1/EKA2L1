@@ -27,6 +27,7 @@
 namespace eka2l1::epoc {
     struct bitwise_bitmap {
         enum settings_flag {
+            large_bitmap = 0x00010000,
             dirty_bitmap = 0x00010000,
             violate_bitmap = 0x00020000
         };
@@ -44,6 +45,9 @@ namespace eka2l1::epoc {
 
             void current_display_mode(const display_mode &mode);
             void initial_display_mode(const display_mode &mode);
+
+            bool is_large() const;
+            void set_large(const bool result);
 
             bool dirty_bitmap() const;
             void dirty_bitmap(const bool is_it);
