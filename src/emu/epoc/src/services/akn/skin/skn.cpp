@@ -408,6 +408,11 @@ namespace eka2l1::epoc {
             std::uint16_t param_count = 0;
             stream_->read(base_offset + skn_desc_dfo_effect_param_count, &param_count, 2);
 
+            if (param_count > 0x40) {
+                LOG_ERROR("Parameters count exceed maximum: {} (vs 64), skip this effect queue", param_count);
+                return;
+            }
+
             base_offset += skn_desc_dfo_effect_param_count + 2;
 
             effects[i].parameters.resize(param_count);
@@ -433,6 +438,11 @@ namespace eka2l1::epoc {
 
         if (effect_queue.input_layer_mode > 8 || effect_queue.output_layer_mode > 8 || effect_count > 64) {
             LOG_ERROR("Corrupted effect queue chunk!");
+            return;
+        }
+
+        if (effect_count > 0x20) {
+            LOG_ERROR("Effect count exceed maximum {} (vs 32), skipping this effect.", effect_count);
             return;
         }
 
