@@ -95,6 +95,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(file_drive, epoc::fs_msg_file_drive, "Fs::FileDrive");
             HANDLE_CLIENT_IPC(file_name, epoc::fs_msg_filename, "Fs::FileName");
             HANDLE_CLIENT_IPC(file_full_name, epoc::fs_msg_file_fullname, "Fs::FileFullName");
+            HANDLE_CLIENT_IPC(file_att, epoc::fs_msg_file_att, "Fs::FileAtt");
             HANDLE_CLIENT_IPC(is_file_in_rom, epoc::fs_msg_is_file_in_rom, "Fs::IsFileInRom");
             HANDLE_CLIENT_IPC(open_dir, epoc::fs_msg_dir_open, "Fs::OpenDir");
             HANDLE_CLIENT_IPC(close_dir, epoc::fs_msg_dir_subclose, "Fs::CloseDir");
@@ -379,6 +380,30 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    std::uint32_t build_attribute_from_entry_info(entry_info &info) {
+        std::uint32_t attrib = 0;
+
+        if (info.has_raw_attribute) {
+            attrib = info.raw_attribute;
+        } else {
+            bool dir = (info.type == io_component_type::dir);
+
+            if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib::internal)) {
+                attrib = epoc::fs::entry_att_read_only | epoc::fs::entry_att_system;
+            }
+
+            // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).
+
+            if (dir) {
+                attrib |= epoc::fs::entry_att_dir;
+            } else {
+                attrib |= epoc::fs::entry_att_archive;
+            }
+        }
+
+        return attrib;
+    }
+
     void fs_server_client::entry(service::ipc_context *ctx) {
         std::optional<std::u16string> fname_op = ctx->get_arg<std::u16string>(0);
 
@@ -405,26 +430,9 @@ namespace eka2l1 {
 
         epoc::fs::entry entry;
         entry.size = static_cast<std::uint32_t>(entry_hle->size);
+        entry.size_high = static_cast<std::uint32_t>(entry_hle->size >> 32);
 
-        if (entry_hle->has_raw_attribute) {
-            entry.attrib = entry_hle->raw_attribute;
-        } else {
-            bool dir = (entry_hle->type == io_component_type::dir);
-
-            if (static_cast<int>(entry_hle->attribute) & static_cast<int>(io_attrib::internal)) {
-                entry.attrib = epoc::fs::entry_att_read_only | epoc::fs::entry_att_system;
-            }
-
-            // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).
-
-            if (dir) {
-                entry.attrib |= epoc::fs::entry_att_dir;
-            } else {
-                entry.attrib |= epoc::fs::entry_att_archive;
-            }
-        }
-
-        entry.size_high = 0;
+        entry.attrib = build_attribute_from_entry_info(entry_hle.value());
         entry.name = fname;
         entry.modified = epoc::time{ entry_hle->last_write };
 

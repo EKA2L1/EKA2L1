@@ -582,6 +582,26 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    void fs_server_client::file_att(service::ipc_context *ctx) {
+        std::int32_t target_handle = *ctx->get_arg<std::int32_t>(0);
+        fs_node *node = get_file_node(target_handle);
+
+        if (!node) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        file *f = reinterpret_cast<file *>(node->vfs_node.get());
+        io_system *io = ctx->sys->get_io_system();
+        
+        std::optional<entry_info> info = io->get_entry_info(f->file_name());
+        assert(info);
+
+        const std::uint32_t attrib = build_attribute_from_entry_info(info.value());
+        ctx->write_arg_pkg(0, attrib);
+        ctx->set_request_status(epoc::error_none);
+    }
+
     void fs_server_client::read_file_section(service::ipc_context *ctx) {
         std::uint64_t position = 0;
 

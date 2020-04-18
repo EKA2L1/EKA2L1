@@ -42,6 +42,8 @@ namespace eka2l1::service {
 }
 
 namespace eka2l1 {
+    struct entry_info;
+
     static constexpr std::uint32_t FS_UID = 0x100039E3;
     static constexpr std::uint32_t SYSTEM_DRIVE_KEY = 0x10283049;
 
@@ -82,6 +84,8 @@ namespace eka2l1 {
         bool operator()(const utf16_str &x, const utf16_str &y) const;
     };
 
+    std::uint32_t build_attribute_from_entry_info(entry_info &info);
+
     struct fs_server_client : public service::typical_session {
         std::u16string ss_path;
 
@@ -103,6 +107,7 @@ namespace eka2l1 {
         void file_drive(service::ipc_context *ctx);
         void file_name(service::ipc_context *ctx);
         void file_full_name(service::ipc_context *ctx);
+        void file_att(service::ipc_context *ctx);
 
         void new_file_subsession(service::ipc_context *ctx, bool overwrite = false,
             bool temporary = false);
