@@ -21,7 +21,7 @@
 #pragma once
 
 #include <epoc/services/ecom/plugin.h>
-#include <epoc/services/server.h>
+#include <epoc/services/framework.h>
 #include <epoc/utils/uid.h>
 
 #include <string>
@@ -56,29 +56,54 @@ namespace eka2l1 {
         std::int32_t cap_check;
     };
 
-    class ecom_server : public service::server {
+    struct ecom_session: public service::typical_session {
+        enum {
+            FLAG_ECOM_OLD_ABI = 1 << 0
+        };
+
+        std::vector<ecom_implementation_info_ptr> collected_impls_;
+        std::uint32_t flags_;
+
+    protected:
+        void do_get_resolved_impl_creation_method(service::ipc_context *ctx);
+        bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
+            const bool support_extended_interface);
+
+        void list_implementations(service::ipc_context *ctx);
+        void get_implementation_creation_method(service::ipc_context *ctx);
+        void collect_implementation_list(service::ipc_context *ctx);
+
+        bool unpack_match_str_and_extended_interfaces(std::string &data, std::string &match_str,
+            std::vector<std::uint32_t> &extended_interfaces);
+
+    public:
+        explicit ecom_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver);
+        void fetch(service::ipc_context *ctx) override;
+
+        const bool is_using_old_ecom_abi() const {
+            return flags_ & FLAG_ECOM_OLD_ABI;
+        }
+
+        void set_using_old_ecom_abi(const bool result) {
+            flags_ &= ~FLAG_ECOM_OLD_ABI;
+
+            if (result) {
+                flags_ |= FLAG_ECOM_OLD_ABI;
+            }
+        }
+    };
+
+    class ecom_server : public service::typical_server {
         std::unordered_map<std::uint32_t, ecom_interface_info> interfaces;
 
         // Storing implementations pointer for implementation look-up only. Costly
         // to use unordered_map.
         // We may need to reconsider this.
         std::vector<ecom_implementation_info_ptr> implementations;
-        std::vector<ecom_implementation_info_ptr> collected_impls;
 
         bool init{ false };
 
-        void do_get_resolved_impl_creation_method(service::ipc_context *ctx);
-        bool unpack_match_str_and_extended_interfaces(std::string &data, std::string &match_str,
-            std::vector<std::uint32_t> &extended_interfaces);
-
     protected:
-        void list_implementations(service::ipc_context &ctx);
-        void get_implementation_creation_method(service::ipc_context &ctx);
-        void collect_implementation_list(service::ipc_context &ctx);
-
-        bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
-            const bool support_extended_interface);
-
         bool register_implementation(const std::uint32_t interface_uid,
             ecom_implementation_info_ptr &impl);
 
