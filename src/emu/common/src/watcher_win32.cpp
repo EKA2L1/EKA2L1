@@ -34,6 +34,8 @@ namespace eka2l1::common {
             return;
         }
 
+        ResetEvent(stop_event);
+
         // Create event for notifing new watches
         HANDLE new_watch_event = CreateEvent(nullptr, true, false, TEXT("EDirectoryWatcherNewWatchEvt"));
 
@@ -44,9 +46,15 @@ namespace eka2l1::common {
             return;
         }
 
+        ResetEvent(new_watch_event);
+
         // Add two event in wait list
         waits_.push_back(stop_event);
         waits_.push_back(new_watch_event);
+
+        pending_read_.hEvent = CreateEvent(nullptr, true, false, nullptr);
+        pending_read_.Offset = 0;
+        pending_read_.OffsetHigh = 0;
 
         file_infos_.resize(MAX_FILE_INFO_COUNT * FILE_INFO_MAX_SIZE);
 
@@ -58,7 +66,7 @@ namespace eka2l1::common {
                 switch (which) {
                 case WAIT_OBJECT_0:
                     // This is the stop event. End this loop.
-                    break;
+                    return;
 
                 case WAIT_OBJECT_0 + 1:
                     // New watch was added. This is just a simple notifcation.
@@ -75,9 +83,12 @@ namespace eka2l1::common {
                     auto &callback = callbacks_[which - WAIT_OBJECT_0 - 2];
 
                     if (!ReadDirectoryChangesW(dirs_[which - WAIT_OBJECT_0 - 2], &file_infos_[0], static_cast<DWORD>(file_infos_.size()),
-                            false, callback.filters_, &buffer_wrote_length, nullptr, nullptr)) {
+                        false, callback.filters_, &buffer_wrote_length, &pending_read_, nullptr)) {
                         LOG_WARN("Can't read directory changes. Report empty changes.");
+                        break;
                     }
+
+                    WaitForSingleObject(pending_read_.hEvent, INFINITE);
 
                     std::size_t pointee = 0;
                     directory_changes changes;
@@ -140,7 +151,7 @@ namespace eka2l1::common {
     }
 
     directory_watcher_impl::~directory_watcher_impl() {
-        const std::lock_guard<std::mutex> guard(lock_);
+        SetEvent(pending_read_.hEvent);
         SetEvent(waits_[0]);
 
         // Wait for the thread to terminate
@@ -149,10 +160,6 @@ namespace eka2l1::common {
         // Close down all remaining events
         CloseHandle(waits_[0]);
         CloseHandle(waits_[1]);
-
-        for (auto &wait = waits_.begin() + 2; wait < waits_.end(); wait++) {
-            FindCloseChangeNotification(*wait);
-        }
     }
 
     bool directory_watcher_impl::unwatch(const std::int32_t watch_handle) {
@@ -201,7 +208,7 @@ namespace eka2l1::common {
         }
 
         HANDLE dir_handle = CreateFileA(folder.c_str(), GENERIC_READ | GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS,
+            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
             nullptr);
 
         if (dir_handle == INVALID_HANDLE_VALUE) {
@@ -212,6 +219,7 @@ namespace eka2l1::common {
 
         HANDLE added_nof = CreateEvent(NULL, true, false, NULL);
         assert(added_nof != INVALID_HANDLE_VALUE);
+        ResetEvent(added_nof);
 
         std::int32_t slot = 0;
 
@@ -236,6 +244,9 @@ namespace eka2l1::common {
 
         SetEvent(waits_[1]);
 
+        // Software gore: Wait for some microsecs
+        std::this_thread::sleep_for(std::chrono::microseconds(2000));
+
         WaitForSingleObject(added_nof, INFINITE);
         CloseHandle(added_nof);
 
@@ -259,6 +270,8 @@ namespace eka2l1::common {
         
         if (!is_in_loop) {
             removed_nof = CreateEvent(NULL, true, false, NULL);
+            ResetEvent(removed_nof);
+
             assert(removed_nof != INVALID_HANDLE_VALUE);
         }
 

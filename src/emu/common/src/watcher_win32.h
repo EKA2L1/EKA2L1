@@ -37,6 +37,8 @@ namespace eka2l1::common {
 
         std::vector<HANDLE> waits_;
         std::vector<HANDLE> dirs_;
+
+        OVERLAPPED pending_read_;
         
         std::vector<directory_watcher_data> callbacks_;
         std::vector<std::uint8_t> file_infos_;
