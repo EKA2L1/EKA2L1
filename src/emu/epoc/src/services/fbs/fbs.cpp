@@ -217,6 +217,13 @@ namespace eka2l1 {
                 return;
             }
 
+            large_bitmap_access_mutex = kern->create<kernel::mutex>(kern->get_timing_system(),
+                "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
+
+            if (!large_bitmap_access_mutex) {
+                LOG_WARN("Large bitmap access mutex fail to create!");
+            }
+
             memory_system *mem = sys->get_memory_system();
 
             base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());

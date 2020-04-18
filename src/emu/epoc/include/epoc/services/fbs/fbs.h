@@ -276,6 +276,8 @@ namespace eka2l1 {
         chunk_ptr shared_chunk;
         chunk_ptr large_chunk;
 
+        mutex_ptr large_bitmap_access_mutex;
+
         std::uint8_t *base_shared_chunk;
         std::uint8_t *base_large_chunk;
 
