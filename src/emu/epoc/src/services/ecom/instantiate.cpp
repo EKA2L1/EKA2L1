@@ -113,7 +113,7 @@ namespace eka2l1 {
         return true;
     }
 
-    void ecom_server::do_get_resolved_impl_creation_method(service::ipc_context *ctx) {
+    void ecom_session::do_get_resolved_impl_creation_method(service::ipc_context *ctx) {
         std::optional<epoc::uid_type> uids = ctx->get_arg_packed<epoc::uid_type>(0);
 
         if (!uids) {
@@ -147,7 +147,7 @@ namespace eka2l1 {
         case ecom_get_implementation_creation_method: {
             std::int32_t error_code = 0;
 
-            if (!get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index],
+            if (!server<ecom_server>()->get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index],
                     lib_entry, dtor_key, &error_code, true)) {
                 ctx->set_request_status(error_code);
                 return;
