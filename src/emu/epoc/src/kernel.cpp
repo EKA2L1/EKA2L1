@@ -427,8 +427,9 @@ namespace eka2l1 {
     }
 
     void kernel_system::setup_new_process(process_ptr pr) {
-        std::unique_ptr<service::server> ps_srv = std::make_unique<eka2l1::posix_server>(sys, pr);
-        add_custom_server(ps_srv);
+        // TODO(pent0): Hope i can enable this server again, it's currently buggy
+        // std::unique_ptr<service::server> ps_srv = std::make_unique<eka2l1::posix_server>(sys, pr);
+        // add_custom_server(ps_srv);
     }
 
     codeseg_ptr kernel_system::pull_codeseg_by_ep(const address ep) {
