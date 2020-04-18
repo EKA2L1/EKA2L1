@@ -649,7 +649,7 @@ namespace eka2l1 {
         // Search all drives
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
-                const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + u":\\Resource\\Fonts\\";
+                const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + u":\\Resource\\Fonts\\*.ttf";
                 auto folder = io->open_dir(fonts_folder_path, io_attrib::none);
 
                 if (folder) {
