@@ -85,6 +85,8 @@ public:
     static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
     void ConstructL();
 
+    void StartRaw();
+
     void Play();
     void Stop();
 

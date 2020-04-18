@@ -39,12 +39,12 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
     }
 
     TMMFMdaBufferNode *node = iBufferNodes.First();
+
+    // Register the notifcation for the buffer we are gonna sent
+    iStream->RegisterNotifyBufferSent(iStatus);
     iStream->WriteL(*node->iBuffer);
 
-    // Register the notifcation for the buffer we just sent
-    iStream->RegisterNotifyBufferSent(iStatus);
     iCopied = node;
-
     SetActive();
 }
 
@@ -79,7 +79,10 @@ CMMFMdaOutputOpen::CMMFMdaOutputOpen(CMMFMdaAudioOutputStream *aStream)
 
 void CMMFMdaOutputOpen::RunL() {
     LogOut(MCA_CAT, _L("Open complete"));
+
     iStream->iCallback.MaoscOpenComplete(KErrNone);
+    iStream->StartRaw();
+
     Deque();
 }
 
@@ -123,8 +126,6 @@ void CMMFMdaAudioOutputStream::ConstructL() {
 
     CActiveScheduler::Add(&iBufferQueue);
     CActiveScheduler::Add(&iOpen);
-
-    iOpen.Listen();
 }
 
 void CMMFMdaAudioOutputStream::NotifyOpenComplete() {
@@ -132,14 +133,18 @@ void CMMFMdaAudioOutputStream::NotifyOpenComplete() {
     User::RequestComplete(sts, KErrNone);
 }
 
-void CMMFMdaAudioOutputStream::Play() {
+void CMMFMdaAudioOutputStream::StartRaw() {
     if (EAudioDspStreamStart(0, iDispatchInstance) != KErrNone) {
         LogOut(MCA_CAT, _L("Failed to start audio output stream"));
-    } else {
-        // Simulates that buffer has been written to server
-        iState = EMdaStatePlay;
-        iBufferQueue.StartTransfer();
     }
+}
+
+void CMMFMdaAudioOutputStream::Play() {
+    // Simulates that buffer has been written to server
+    iState = EMdaStatePlay;
+
+    iOpen.Listen();
+    iBufferQueue.StartTransfer();
 }
 
 void CMMFMdaAudioOutputStream::Stop() {
