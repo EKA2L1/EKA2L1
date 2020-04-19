@@ -73,7 +73,7 @@ namespace eka2l1::epoc {
         , size(0, 0)
         , resize_needed(false)
         , clear_color(0xFFFFFFFF)
-        , filter(pointer_filter_type::all)
+        , filter(pointer_filter_type::pointer_enter | pointer_filter_type::pointer_drag | pointer_filter_type::pointer_move)
         , cursor_pos(-1, -1)
         , irect({ 0, 0 }, { 0, 0 })
         , dmode(dmode)
@@ -447,8 +447,6 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpPointerFilter: {
-            LOG_TRACE("Filtering pointer event type");
-
             ws_cmd_pointer_filter *filter_info = reinterpret_cast<ws_cmd_pointer_filter *>(cmd.data_ptr);
             filter &= ~filter_info->mask;
             filter |= filter_info->flags;
