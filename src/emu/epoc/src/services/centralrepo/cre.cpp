@@ -186,7 +186,7 @@ namespace eka2l1 {
         seri.absorb(default_meta_range_count);
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            repo.policies_range.resize(default_meta_range_count);
+            repo.meta_range.resize(default_meta_range_count);
         }
 
         for (auto &meta : repo.meta_range) {
