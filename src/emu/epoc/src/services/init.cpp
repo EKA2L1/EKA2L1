@@ -33,6 +33,7 @@
 #include <epoc/services/drm/helper.h>
 #include <epoc/services/drm/rights.h>
 #include <epoc/services/ecom/ecom.h>
+#include <epoc/services/etel/etel.h>
 #include <epoc/services/fbs/fbs.h>
 #include <epoc/services/featmgr/featmgr.h>
 #include <epoc/services/fs/fs.h>
@@ -181,6 +182,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, hwrm_server);
             CREATE_SERVER(sys, view_server);
             CREATE_SERVER(sys, remcon_server);
+            CREATE_SERVER(sys, etel_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
