@@ -130,6 +130,47 @@ namespace eka2l1::epoc {
     struct display_hal : public hal {
         window_server *winserv_;
 
+        void get_screen_info_from_scr_object(epoc::screen *scr, epoc::screen_info_v1 &info) {
+            info.window_handle_valid_ = false;
+            info.screen_address_valid_ = true;
+            info.screen_address_ = scr->screen_buffer_chunk->base().cast<void>();
+            info.screen_size_ = scr->current_mode().size;
+        }
+
+        void get_video_info_from_scr_object(epoc::screen *scr, const epoc::config::screen_mode &mode, epoc::video_info_v1 &info) {
+            info.size_in_pixels_ = mode.size;
+            info.size_in_twips_ = info.size_in_pixels_ * 15;
+            info.is_mono_ = is_display_mode_mono(scr->disp_mode);
+            info.bits_per_pixel_ = get_bpp_from_display_mode(scr->disp_mode);
+            info.is_pixel_order_rgb_ = (scr->disp_mode >= epoc::display_mode::color4k);
+
+            // TODO: Verify
+            info.is_pixel_order_landspace_ = (mode.size.x > mode.size.y);
+            info.is_palettelized_ = !info.is_mono_ && (scr->disp_mode < epoc::display_mode::color4k);
+
+            // Intentional
+            info.video_address_ = scr->screen_buffer_chunk->base().ptr_address();
+            info.offset_to_first_pixel_ = 0;
+            info.bits_per_pixel_ = static_cast<std::int32_t>(scr->disp_mode);
+        }
+
+        int current_screen_info(int *a1, int *a2, const std::uint16_t device_num) {
+            assert(winserv_);
+
+            epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
+            epoc::screen_info_v1 *info_ptr = reinterpret_cast<epoc::screen_info_v1 *>(
+                package->get_pointer(sys->get_kernel_system()->crr_process()));
+
+            epoc::screen *scr = winserv_->get_current_focus_screen();
+
+            if (!scr || !info_ptr) {
+                return epoc::error_not_found;
+            }
+
+            get_screen_info_from_scr_object(scr, *info_ptr);
+            return epoc::error_none;
+        }
+
         int current_mode_info(int *a1, int *a2, const std::uint16_t device_num) {
             assert(winserv_);
 
@@ -143,21 +184,30 @@ namespace eka2l1::epoc {
                 return epoc::error_not_found;
             }
 
-            info_ptr->size_in_pixels_ = scr->size();
-            info_ptr->size_in_twips_ = info_ptr->size_in_pixels_ * 15;
-            info_ptr->is_mono_ = is_display_mode_mono(scr->disp_mode);
-            info_ptr->bits_per_pixel_ = get_bpp_from_display_mode(scr->disp_mode);
-            info_ptr->is_pixel_order_rgb_ = (scr->disp_mode >= epoc::display_mode::color4k);
+            get_video_info_from_scr_object(scr, scr->current_mode(), *info_ptr);
+            return 0;
+        }
 
-            // TODO: Verify
-            info_ptr->is_pixel_order_landspace_ = (scr->size().x > scr->size().y);
-            info_ptr->is_palettelized_ = !info_ptr->is_mono_ && (scr->disp_mode < epoc::display_mode::color4k);
+        int specified_mode_info(int *a1, int *a2, const std::uint16_t device_num) {
+            assert(winserv_);
 
-            // Intentional
-            info_ptr->video_address_ = scr->screen_buffer_chunk->base().ptr_address();
-            info_ptr->offset_to_first_pixel_ = 0;
-            info_ptr->display_mode_ = static_cast<std::int32_t>(scr->disp_mode);
+            epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a2);
+            epoc::video_info_v1 *info_ptr = reinterpret_cast<epoc::video_info_v1 *>(
+                package->get_pointer(sys->get_kernel_system()->crr_process()));
 
+            epoc::screen *scr = winserv_->get_screen(device_num);
+
+            if (!scr) {
+                return epoc::error_not_found;
+            }
+
+            const epoc::config::screen_mode *mode = scr->mode_info(*a1);
+
+            if (!mode) {
+                return epoc::error_not_found;
+            }
+
+            get_video_info_from_scr_object(scr, *mode, *info_ptr);
             return 0;
         }
 
@@ -177,7 +227,9 @@ namespace eka2l1::epoc {
         explicit display_hal(system *sys)
             : hal(sys)
             , winserv_(nullptr) {
+            REGISTER_HAL_FUNC(EDisplayHalScreenInfo, display_hal, current_screen_info);
             REGISTER_HAL_FUNC(EDisplayHalCurrentModeInfo, display_hal, current_mode_info);
+            REGISTER_HAL_FUNC(EDisplayHalSpecifiedModeInfo, display_hal, specified_mode_info);
             REGISTER_HAL_FUNC(EDisplayHalColors, display_hal, color_count);
 
             winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()

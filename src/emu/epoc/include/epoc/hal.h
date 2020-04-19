@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <epoc/ptr.h>
 #include <common/vecx.h>
 
 #include <functional>
@@ -175,6 +176,15 @@ namespace eka2l1::epoc {
     };
 
     static_assert(sizeof(video_info_v1) == 52);
+
+    struct screen_info_v1 {
+    public:
+        std::int32_t window_handle_valid_;
+        eka2l1::ptr<void> window_handle_;
+        std::int32_t screen_address_valid_;
+        eka2l1::ptr<void> screen_address_;
+        eka2l1::vec2 screen_size_;
+    };
 
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */
     using hal_func = std::function<int(int *, int *, std::uint16_t)>;
