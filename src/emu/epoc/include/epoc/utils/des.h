@@ -213,6 +213,8 @@ namespace eka2l1::epoc {
         }
     };
 
+    using name = buf_static<char16_t, 0x80>;
+
     using filename = buf_static<char16_t, 0x100>;
     using apa_app_caption = buf_static<char16_t, 0x100>;
 
