@@ -393,6 +393,7 @@ namespace eka2l1::epoc {
     };
 
     enum pointer_filter_type {
+        pointer_none = 0x00,
         pointer_enter = 0x01, ///< In/out
         pointer_move = 0x02,
         pointer_drag = 0x04,

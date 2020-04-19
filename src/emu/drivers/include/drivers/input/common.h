@@ -23,6 +23,7 @@
 
 namespace eka2l1::drivers {
     enum class input_event_type {
+        none,
         key,
         touch
     };

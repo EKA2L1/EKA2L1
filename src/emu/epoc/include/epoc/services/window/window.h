@@ -61,6 +61,7 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc {
     struct window;
+    struct window_key_shipper;
 
     struct event_mod_notifier {
         event_modifier what;
@@ -285,6 +286,7 @@ namespace eka2l1 {
 
     private:
         friend class epoc::window_server_client;
+        friend struct epoc::window_key_shipper;
 
         std::unordered_map<std::uint64_t, std::unique_ptr<epoc::window_server_client>>
             clients;

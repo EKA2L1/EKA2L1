@@ -251,6 +251,7 @@ add_library(epocservs
     src/services/window/bitmap_cache.cpp
     src/services/window/common.cpp
     src/services/window/fifo.cpp
+    src/services/window/io.cpp
     src/services/window/scheduler.cpp
     src/services/window/screen.cpp
     src/services/window/window.cpp

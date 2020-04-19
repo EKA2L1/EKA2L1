@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/window/io.h>
 #include <epoc/services/window/op.h>
 #include <epoc/services/window/window.h>
 
@@ -910,73 +911,6 @@ namespace eka2l1 {
         input_events.push(std::move(evt));
     }
 
-    struct window_pointer_focus_walker : public epoc::window_tree_walker {
-        epoc::event evt_;
-        eka2l1::vec2 scr_coord_;
-        bool sended_to_highest_z_;
-
-        void process_event_to_target_window(epoc::window *win) {
-            assert(win->type == epoc::window_kind::client);
-
-            epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
-            // Stop, we found it!
-            // Send it right now
-            evt_.adv_pointer_evt_.pos = scr_coord_ - user->pos;
-
-            if (user->parent->type == epoc::window_kind::top_client) {
-                evt_.adv_pointer_evt_.parent_pos = scr_coord_;
-            } else {
-                // It must be client kind
-                assert(user->parent->type == epoc::window_kind::client);
-                evt_.adv_pointer_evt_.parent_pos = scr_coord_ - reinterpret_cast<epoc::window_user *>(user->parent)->pos;
-            }
-
-            evt_.handle = win->get_client_handle();
-            win->queue_event(evt_);
-        }
-
-        bool do_it(epoc::window *win) override {
-            if (win->type != epoc::window_kind::client) {
-                return false;
-            }
-
-            epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
-
-            const bool filter_enter_exit = ((evt_.type == epoc::event_code::touch_enter) || (evt_.type == epoc::event_code::touch_exit))
-                && (user->filter & epoc::pointer_filter_type::pointer_enter);
-
-            const bool filter_drag = evt_.adv_pointer_evt_.evtype == epoc::event_type::drag && (user->filter & epoc::pointer_filter_type::pointer_drag);
-
-            // Filter out events, assuming move event never exist (phone)
-            // When you use touch on your phone, you drag your finger. Move your mouse simply doesn't exist.
-            if (filter_enter_exit || filter_drag) {
-                return false;
-            }
-
-            eka2l1::rect window_rect{ user->pos, user->size };
-
-            if (!sended_to_highest_z_) {
-                if (window_rect.contains(evt_.adv_pointer_evt_.pos)) {
-                    process_event_to_target_window(win);
-                    sended_to_highest_z_ = true;
-                }
-
-                return false;
-            } else {
-                // Check to see if capture flag is enabled
-                // TODO:
-            }
-
-            return false;
-        }
-
-        explicit window_pointer_focus_walker(const epoc::event &evt)
-            : evt_(evt)
-            , scr_coord_(evt.adv_pointer_evt_.pos)
-            , sended_to_highest_z_(false) {
-        }
-    };
-
     void window_server::handle_inputs_from_driver(std::uint64_t userdata, int cycles_late) {
         if (!focus_screen_ || !focus_screen_->focus) {
             sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
@@ -986,96 +920,74 @@ namespace eka2l1 {
         const std::lock_guard<std::mutex> guard(input_queue_mut);
         epoc::event guest_event;
 
+        drivers::input_event_type last_event_type = drivers::input_event_type::none;
+
+        epoc::window_pointer_focus_walker touch_shipper;
+        epoc::window_key_shipper key_shipper(this);
+
+        epoc::window *root_current = get_current_focus_screen()->root->child;
+
+        auto flush_events = [&]() {
+            // Delivery events stored
+            switch (last_event_type) {
+            case drivers::input_event_type::touch:
+                root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+                touch_shipper.clear();
+                break;
+
+            case drivers::input_event_type::key:
+                key_shipper.start_shipping();
+                break;
+
+            default:
+                LOG_ERROR("Unknown driver event type {}", static_cast<int>(last_event_type));
+                break;
+            }
+        };
+
         // Processing the events, translate them to cool things
         while (!input_events.empty()) {
             drivers::input_event input_event = std::move(input_events.back());
             input_events.pop();
 
-            epoc::event extra_key_evt;
-
             // Translate host event to guest event
-            // skip this host event if there is no corresponding guest event
-            bool skip_event = false;
             switch (input_event.type_) {
-            case drivers::input_event_type::key: {
+            case drivers::input_event_type::key:
                 make_key_event(input_event, guest_event);
-
-                extra_key_evt = guest_event;
-                extra_key_evt.type = epoc::event_code::key;
-                extra_key_evt.key_evt_.code = epoc::map_scancode_to_keycode(
-                    static_cast<TStdScanCode>(guest_event.key_evt_.scancode));
-
                 break;
-            }
 
-            case drivers::input_event_type::touch: {
+            case drivers::input_event_type::touch:
                 make_mouse_event(input_event, guest_event, get_current_focus_screen());
                 break;
-            }
 
             default:
+                continue;
+            }
+
+            if ((last_event_type != drivers::input_event_type::none) && (last_event_type != input_event.type_)) {
+                flush_events();
+            }
+
+            switch (input_event.type_) {
+            case drivers::input_event_type::touch:
+                touch_shipper.add_new_event(guest_event);
+                break;
+
+            case drivers::input_event_type::key:
+                key_shipper.add_new_event(guest_event);
+                break;
+
+            default:
+                LOG_ERROR("Unknown driver event type {}", static_cast<int>(last_event_type));
                 break;
             }
 
-            if (skip_event)
-                continue;
+            last_event_type = input_event.type_; 
+        }
 
-            if (input_event.type_ == drivers::input_event_type::key) {
-                // Report to the focused window first
-                guest_event.handle = get_focus()->get_client_handle();
-                extra_key_evt.handle = get_focus()->get_client_handle();
-                get_focus()->queue_event(guest_event);
-            } else {
-                // Send the pointer event to the highest-z order window contains the pointer
-                window_pointer_focus_walker walker(guest_event);
-                get_current_focus_screen()->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
-            }
-
-            // Send a key event also
-            if (guest_event.type == epoc::event_code::key_down) {
-                get_focus()->queue_event(extra_key_evt);
-            }
-
-            // Now we find all request from other windows and start doing horrible stuffs with it
-            // Not so horrible though ... :) Don't worry, they won't get hurt!
-            if (input_event.type_ == drivers::input_event_type::key) {
-                key_capture_request_queue &rqueue = key_capture_requests[extra_key_evt.key_evt_.code];
-
-                epoc::ws::uid top_id;
-
-                for (auto ite = rqueue.end(); ite != rqueue.begin(); ite--) {
-                    if (ite->user->id == get_focus()->id) {
-                        break;
-                    }
-
-                    if (ite == rqueue.end()) {
-                        top_id = ite->user->id;
-                    }
-
-                    if (ite->user->id != top_id) {
-                        break;
-                    }
-
-                    switch (ite->type_) {
-                    case epoc::event_key_capture_type::normal: {
-                        extra_key_evt.handle = ite->user->get_client_handle();
-                        ite->user->queue_event(extra_key_evt);
-
-                        break;
-                    }
-
-                    case epoc::event_key_capture_type::up_and_downs: {
-                        guest_event.handle = ite->user->get_client_handle();
-                        ite->user->queue_event(guest_event);
-
-                        break;
-                    }
-
-                    default:
-                        break;
-                    }
-                }
-            }
+        // Flush remaining events.
+        if (last_event_type != drivers::input_event_type::none) {
+            flush_events();
         }
 
         sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
