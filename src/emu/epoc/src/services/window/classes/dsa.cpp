@@ -35,9 +35,14 @@ namespace eka2l1::epoc {
         kernel_system *kern = client->get_ws().get_kernel_system();
 
         // Each message is an integer. Allow maximum of 10 messages
-        dsa_ready_queue_ = kern->create<kernel::msg_queue>("DsaReadyQueue", 4, 10);
+        dsa_must_abort_queue_ = kern->create<kernel::msg_queue>("DsaAbortQueue", 4, 10);
         dsa_complete_queue_ = kern->create<kernel::msg_queue>("DsaCompleteQueue", 4, 10);
     };
+
+    dsa::~dsa() {
+        husband_->set_dsa_active(false);
+        husband_->direct = nullptr;
+    }
 
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         if (state_ != state_none) {
@@ -74,6 +79,7 @@ namespace eka2l1::epoc {
 
         state_ = state_prepare;
         husband_->set_dsa_active(true);
+        husband_->direct = this;
 
         eka2l1::rect extent;
         extent.top = husband_->pos;
@@ -113,7 +119,8 @@ namespace eka2l1::epoc {
             kernel_system *kern = client->get_ws().get_kernel_system();
             std::int32_t target_handle = 0;
 
-            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_ready_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? 
+                dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
 
             ctx.set_request_status(target_handle);
             break;
