@@ -2244,6 +2244,44 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, MessageQueueSend, std::int32_t aHandle, void *aData, const std::int32_t aLength) {
+        kernel_system *kern = sys->get_kernel_system(); 
+        kernel::msg_queue *queue = kern->get<kernel::msg_queue>(aHandle);
+
+        if (!queue) {
+            return epoc::error_bad_handle;
+        }
+
+        if ((aLength <= 0) || (aLength > queue->max_message_length())) {
+            return epoc::error_argument;
+        }
+
+        if (!queue->send(aData, aLength)) {
+            return epoc::error_overflow;
+        }
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, MessageQueueReceive, std::int32_t aHandle, void *aData, const std::int32_t aLength) {
+        kernel_system *kern = sys->get_kernel_system(); 
+        kernel::msg_queue *queue = kern->get<kernel::msg_queue>(aHandle);
+
+        if (!queue) {
+            return epoc::error_bad_handle;
+        }
+
+        if (aLength != queue->max_message_length()) {
+            return epoc::error_argument;
+        }
+
+        if (!queue->receive(aData, aLength)) {
+            return epoc::error_underflow;
+        }
+
+        return epoc::error_none;
+    }
+    
     /* DEBUG AND SECURITY */
 
     BRIDGE_FUNC(void, DebugPrint, eka2l1::ptr<desc8> aDes, std::int32_t aMode) {
@@ -2436,6 +2474,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xAE, ProcessSecurityInfo),
         BRIDGE_REGISTER(0xAF, ThreadSecurityInfo),
         BRIDGE_REGISTER(0xB0, MessageSecurityInfo),
+        BRIDGE_REGISTER(0xB5, MessageQueueSend),
+        BRIDGE_REGISTER(0xB6, MessageQueueReceive),
         BRIDGE_REGISTER(0xB9, MessageQueueNotifyDataAvailable),
         BRIDGE_REGISTER(0xBC, PropertyDefine),
         BRIDGE_REGISTER(0xBE, PropertyAttach),
