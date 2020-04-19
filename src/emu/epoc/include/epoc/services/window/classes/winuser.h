@@ -28,6 +28,7 @@
 namespace eka2l1::epoc {
     struct graphic_context;
     struct window_group;
+    struct dsa;
 
     struct window_user_base : public epoc::window {
         explicit window_user_base(window_server_client_ptr client, screen *scr, window *parent, const window_kind kind);
@@ -63,6 +64,8 @@ namespace eka2l1::epoc {
 
         std::uint32_t redraw_evt_id;
         std::uint64_t driver_win_id;
+
+        dsa *direct;
 
         int shadow_height;
 

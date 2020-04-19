@@ -34,8 +34,8 @@ namespace eka2l1::epoc {
 
     struct dsa : public window_client_obj {
         window_user *husband_; ///< Mmmhhh
-        kernel::msg_queue *dsa_ready_queue_; ///< Queue to notify clients that DSA operation is permitted.
-        kernel::msg_queue *dsa_complete_queue_; ///< Queue for client to report completion of a DSA operation.
+        kernel::msg_queue *dsa_must_abort_queue_;   ///< Queue to notify clients that DSA operation must be stopped.
+        kernel::msg_queue *dsa_complete_queue_;     ///< Queue for client to report completion of a DSA operation.
 
         enum state {
             state_none,
@@ -45,6 +45,7 @@ namespace eka2l1::epoc {
         } state_;
 
         explicit dsa(window_server_client_ptr client);
+        ~dsa() override;
 
         void request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
