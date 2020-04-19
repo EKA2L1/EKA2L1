@@ -484,11 +484,13 @@ namespace eka2l1::epoc {
     };
 
     BRIDGE_FUNC(std::int32_t, TimeNow, eka2l1::ptr<std::uint64_t> aTime, eka2l1::ptr<std::int32_t> aUTCOffset) {
-        std::uint64_t *time = aTime.get(sys->get_memory_system());
-        std::int32_t *offset = aUTCOffset.get(sys->get_memory_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        std::uint64_t *time = aTime.get(kern->crr_process());
+        std::int32_t *offset = aUTCOffset.get(kern->crr_process());
 
         // The time is since EPOC, we need to convert it to first of AD
-        *time = sys->get_kernel_system()->home_time();
+        *time = kern->home_time();
         *offset = common::get_current_utc_offset();
 
         return epoc::error_none;
