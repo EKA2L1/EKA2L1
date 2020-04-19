@@ -22,10 +22,14 @@
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/utils/reqsts.h>
 
+#include <functional>
 #include <queue>
 #include <vector>
 
 namespace eka2l1::kernel {
+    using msg_queue_callback = std::function<void(void*)>;
+    using msg_queue_callback_entry = std::pair<msg_queue_callback, void*>;
+
     class msg_queue : public kernel_obj {
         std::uint32_t max_msg_length_;
         std::uint32_t max_length_;
@@ -37,12 +41,21 @@ namespace eka2l1::kernel {
         std::vector<epoc::notify_info> avail_notifies_;
         std::vector<epoc::notify_info> full_notifies_;
 
+        msg_queue_callback_entry avail_callback_;
+
     public:
         explicit msg_queue(eka2l1::kernel_system *kern, const std::string &name,
             const std::uint32_t max_message_size, const std::uint32_t max_length);
 
+        const std::uint32_t max_message_length() const {
+            return max_msg_length_;
+        }
+
         bool notify_available(epoc::notify_info &info);
         bool notify_full(epoc::notify_info &info);
+        
+        void clear_available_callback();
+        void set_available_callback(msg_queue_callback callback, void *userdata);
 
         bool receive(void *target_buffer, const std::uint32_t buffer_size);
         bool send(const void *target_data, const std::uint32_t buffer_size);

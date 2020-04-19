@@ -25,7 +25,26 @@ namespace eka2l1::kernel {
         const std::uint32_t max_message_size, const std::uint32_t max_length)
         : kernel_obj(kern, name)
         , max_msg_length_(max_message_size)
-        , max_length_(max_length) {
+        , max_length_(max_length)
+        , avail_callback_(nullptr, nullptr) {
+    }
+
+    void msg_queue::set_available_callback(msg_queue_callback callback, void *userdata) {
+        kern->lock();
+
+        avail_callback_.first = callback;
+        avail_callback_.second = userdata;
+
+        if (!msgs_.empty()) {
+            kern->unlock();
+            callback(userdata);
+        } else {
+            kern->unlock();
+        }
+    }
+
+    void msg_queue::clear_available_callback() {
+        avail_callback_.first = nullptr;
     }
 
     bool msg_queue::notify_available(epoc::notify_info &info) {
@@ -118,10 +137,18 @@ namespace eka2l1::kernel {
         }
 
         if (msgs_.empty()) {
+            kern->unlock();
+
             // Notify all available data
             for (auto &notify : avail_notifies_) {
                 notify.complete(0);
             }
+
+            if (avail_callback_.first) {
+                avail_callback_.first(avail_callback_.second);
+            }
+
+            kern->lock();
         }
 
         // Push new message
@@ -136,10 +163,14 @@ namespace eka2l1::kernel {
 
         // Check if full, then notify
         if (msgs_.size() == max_length_) {
+            kern->unlock();
+            
             // Notify all available data
             for (auto &notify : full_notifies_) {
                 notify.complete(0);
             }
+
+            kern->lock();
         }
 
         kern->unlock();
