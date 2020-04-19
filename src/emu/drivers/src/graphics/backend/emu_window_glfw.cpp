@@ -84,6 +84,15 @@ void close_callback(GLFWwindow *window) {
     CALL_IF_VALID(win->close_hook, win->get_userdata());
 }
 
+static void mouse_cursor_callback(GLFWwindow *window, double xpos, double ypos) {
+    eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
+    
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+        CALL_IF_VALID(win->touch_move, win->get_userdata(), eka2l1::vec2(static_cast<int>(xpos),
+            static_cast<int>(ypos)));
+    }
+}
+
 namespace eka2l1 {
     namespace drivers {
         const uint32_t default_width_potrait = 360;
@@ -148,6 +157,7 @@ namespace eka2l1 {
             glfwSetWindowCloseCallback(emu_win, &close_callback);
             glfwSetScrollCallback(emu_win, &mouse_wheel_callback);
             glfwSetCharCallback(emu_win, &char_callback);
+            glfwSetCursorPosCallback(emu_win, &mouse_cursor_callback);
 
             emu_screen_size = size;
         }
