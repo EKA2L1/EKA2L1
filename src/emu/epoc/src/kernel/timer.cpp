@@ -84,7 +84,7 @@ namespace eka2l1 {
                 // Do a signal so that the semaphore won't lock
                 // the thread up next time it waits
                 //info.own_thread->signal_request();
-                //return false;
+                return false;
             }
 
             *info.request_status = -3;
