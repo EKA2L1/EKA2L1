@@ -88,6 +88,14 @@ static void on_ui_window_mouse_scrolling(void *userdata, eka2l1::vec2 v) {
     io.MouseWheel += static_cast<float>(v.y);
 }
 
+static void on_ui_window_touch_move(void *userdata, eka2l1::vec2 v) {
+    eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+
+    // Make repeat event for button 0 (left mouse click)
+    auto mouse_evt = make_mouse_event_driver(static_cast<float>(v.x), static_cast<float>(v.y), 0, 1);
+    emu->winserv->queue_input_from_driver(mouse_evt);
+}
+
 static eka2l1::drivers::input_event make_key_event_driver(const int key, const eka2l1::drivers::key_state key_state) {
     eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::key;
@@ -159,6 +167,7 @@ namespace eka2l1::desktop {
         state.window->button_pressed = on_ui_window_key_press;
         state.window->button_released = on_ui_window_key_release;
         state.window->char_hook = on_ui_window_char_type;
+        state.window->touch_move = on_ui_window_touch_move;
 
         std::string window_title = "EKA2L1 (" GIT_BRANCH " " GIT_COMMIT_HASH ")";
 
