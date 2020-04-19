@@ -26,7 +26,7 @@
 #include <e32cmn.h>
 
 CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
-    : CActive(CActive::EPriorityIdle)
+    : CActive(-200)
     , iStream(aStream)
     , iCopied(NULL) {
 
