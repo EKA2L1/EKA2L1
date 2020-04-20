@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team / 2008 Dolphin Emulator Project
+ * Copyright (c) 2020 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project / Dolphin Emulator Project
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
+
+#include <common/queue.h>
 
 #include <cstdint>
 #include <functional>
@@ -25,10 +27,8 @@
 #include <vector>
 
 namespace eka2l1 {
-    // Based on Dolphin
     using mhz_change_callback = std::function<void()>;
     using timed_callback = std::function<void(uint64_t, int)>;
-    using dfc = timed_callback;
 
     enum {
         MAX_SLICE_LENGTH = 20000,
@@ -50,32 +50,67 @@ namespace eka2l1 {
         class chunkyseri;
     }
 
-    // class NTimer
+    class timing_system;
+
+    /**
+     * \brief Nanokernel timer, used to track timing for a core.
+     */
+    class ntimer {
+    private:
+        std::uint32_t core_;
+        std::vector<event> events_;
+        eka2l1::threadsafe_cn_queue<event> ts_events_;
+
+        timing_system *timing_;
+
+        std::int64_t slice_len_;
+        std::int64_t downcount_;
+
+        std::uint64_t ticks_;
+        std::uint64_t idle_ticks_;
+
+        bool timer_sane_;
+
+    protected:
+        void move_events();
+
+    public:
+        explicit ntimer(timing_system *timing, const std::uint32_t core_num);
+
+        const std::uint32_t core_number() const;
+        const std::int64_t get_slice_length() const;
+        const std::int64_t downcount() const;
+
+        const std::uint64_t ticks() const;
+        const std::uint64_t idle_ticks() const;
+
+        void idle(int max_idle = 0);
+        void add_ticks(uint32_t ticks);
+        void advance();
+
+        void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata,
+            const bool thr_safe = false);
+
+        void unschedule_event(int event_type, uint64_t userdata);
+    };
+
     class timing_system {
-        std::int64_t slice_len;
-        std::int64_t downcount;
+        friend class ntimer;
 
-        int64_t CPU_HZ;
+        std::int64_t CPU_HZ;
+        std::mutex mut_;
 
-        uint64_t global_timer;
-        uint64_t idle_ticks;
-        uint64_t last_global_time_ticks;
-        uint64_t last_global_time_us;
+        std::uint32_t current_core_;
 
-        std::mutex mut;
+        std::vector<mhz_change_callback> internal_mhzcs_;
+        std::vector<event_type> event_types_;
 
-        std::vector<mhz_change_callback> internal_mhzcs;
+        std::vector<std::unique_ptr<ntimer>> timers_;
 
-        std::vector<event_type> event_types;
-        std::vector<event> events, ts_events;
-
+    protected:
         void fire_mhz_changes();
 
     public:
-        std::int64_t get_slice_length() {
-            return slice_len;
-        }
-
         inline int64_t ms_to_cycles(int ms) {
             return CPU_HZ / 1000 * ms;
         }
@@ -116,12 +151,16 @@ namespace eka2l1 {
             return (int64_t)(CPU_HZ / 1000000000 * us);
         }
 
-        void init();
+        ntimer *current_timer();
+
+        void init(const int total_core = 1);
         void shutdown();
 
-        uint64_t get_ticks();
-        uint64_t get_idle_ticks();
-        uint64_t get_global_time_us();
+        std::uint64_t get_global_time_us();
+        const std::uint64_t ticks();
+        const std::uint64_t idle_ticks();
+
+        const std::int64_t downcount();
 
         int register_event(const std::string &name, timed_callback callback);
         int get_register_event(const std::string &name);
@@ -129,32 +168,21 @@ namespace eka2l1 {
         void restore_register_event(int event_type, const std::string &name, timed_callback callback);
         void unregister_all_events();
 
-        // Swap userdata, returns doing nothing if event is not present
-        void swap_userdata_event(int event_type, std::uint64_t old_userdata, std::uint64_t new_userdata);
-
-        void schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata = 0);
-        void schedule_event_imm(int event_type, uint64_t userdata = 0);
-        void unschedule_event(int event_type, uint64_t userdata);
-
         void remove_event(int event_type);
         void remove_all_events(int event_type);
+
         void advance();
-        void move_events();
-
         void add_ticks(uint32_t ticks);
-
-        void force_check();
-
         void idle(int max_idle = 0);
-        void clear_pending_events();
-        void log_pending_events();
+
+        void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata,
+            const bool thr_safe = false);
+
+        void unschedule_event(int event_type, uint64_t userdata);
 
         void register_mhz_change_callback(mhz_change_callback change_callback);
-
         void set_clock_frequency_mhz(int cpu_mhz);
-        uint32_t get_clock_frequency_mhz();
-        std::int64_t get_downcount();
 
-        void do_state(common::chunkyseri &seri);
+        uint32_t get_clock_frequency_mhz();
     };
 }

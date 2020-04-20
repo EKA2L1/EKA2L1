@@ -18,10 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/log.h>
-#include <epoc/timing.h>
-
+#include <common/algorithm.h>
 #include <common/chunkyseri.h>
+#include <common/log.h>
+
+#include <epoc/timing.h>
 
 #include <algorithm>
 #include <mutex>
@@ -29,159 +30,61 @@
 #include <vector>
 
 namespace eka2l1 {
-    void timing_system::fire_mhz_changes() {
-        for (auto &mhz_change : internal_mhzcs) {
-            mhz_change();
-        }
+    ntimer::ntimer(timing_system *timing, const std::uint32_t core_num)
+        : timing_(timing)
+        , core_(core_num)
+        , slice_len_(INITIAL_SLICE_LENGTH)
+        , timer_sane_(false) {
+
     }
 
-    void timing_system::set_clock_frequency_mhz(int cpu_mhz) {
-        last_global_time_ticks = get_ticks();
-        last_global_time_us = get_global_time_us();
-
-        CPU_HZ = cpu_mhz;
-
-        fire_mhz_changes();
-    }
-
-    std::uint32_t timing_system::get_clock_frequency_mhz() {
-        return static_cast<std::uint32_t>(CPU_HZ / 1000000);
-    }
-
-    std::uint64_t timing_system::get_ticks() {
-        return global_timer + slice_len - downcount;
-    }
-
-    std::uint64_t timing_system::get_idle_ticks() {
-        return idle_ticks;
-    }
-
-    uint64_t timing_system::get_global_time_us() {
-        uint64_t passed = global_timer - last_global_time_ticks;
-        auto frequency = get_clock_frequency_mhz();
-
-        return last_global_time_us + passed / frequency;
-    }
-
-    int timing_system::register_event(const std::string &name, timed_callback callback) {
-        event_type evtype;
-
-        evtype.name = name;
-        evtype.callback = callback;
-
-        event_types.push_back(evtype);
-
-        return static_cast<int>(event_types.size() - 1);
-    }
-
-    int timing_system::get_register_event(const std::string &name) {
-        for (uint32_t i = 0; i < event_types.size(); i++) {
-            if (event_types[i].name == name) {
-                return i;
-            }
+    void ntimer::move_events() {
+        while (std::optional<event> evt = ts_events_.pop()) {
+            events_.push_back(evt.value());
         }
 
-        return -1;
-    }
-
-    std::int64_t timing_system::get_downcount() {
-        return downcount;
-    }
-
-    void timing_system::init() {
-        downcount = INITIAL_SLICE_LENGTH;
-        slice_len = INITIAL_SLICE_LENGTH;
-        internal_mhzcs.clear();
-
-        global_timer = 0;
-        last_global_time_ticks = 0;
-        last_global_time_us = 0;
-        idle_ticks = 0;
-
-        CPU_HZ = 484000000;
-    }
-
-    void timing_system::restore_register_event(int evt_type, const std::string &name, timed_callback callback) {
-        event_type evtype;
-
-        evtype.callback = callback;
-        evtype.name = name;
-
-        event_types[evt_type] = evtype;
-    }
-
-    void timing_system::swap_userdata_event(int event_type, std::uint64_t old_userdata, std::uint64_t new_userdata) {
-        auto e = std::find_if(events.begin(), events.end(), [=](const event &ei) {
-            return (ei.event_user_data == old_userdata) && (ei.event_type == event_type);
+        // Sort the event
+        std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
+            return lhs.event_time > rhs.event_time;
         });
+    }
 
-        if (e != events.end()) {
-            e->event_user_data = new_userdata;
+    const std::uint32_t ntimer::core_number() const {
+        return core_;
+    }
+
+    const std::int64_t ntimer::get_slice_length() const {
+        return slice_len_;
+    }
+    
+    const std::int64_t ntimer::downcount() const {
+        return downcount_;
+    }
+
+    const std::uint64_t ntimer::ticks() const {
+        if (timer_sane_) {
+            return ticks_ + slice_len_ - downcount_;
         }
+
+        return ticks_;
     }
 
-    void timing_system::unregister_all_events() {
-        event_types.clear();
+    const std::uint64_t ntimer::idle_ticks() const {
+        return idle_ticks_;
     }
 
-    void timing_system::add_ticks(uint32_t ticks) {
-        downcount -= ticks;
-    }
-
-    void timing_system::schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata) {
-        std::lock_guard<std::mutex> guard(mut);
-        event evt;
-
-        evt.event_time = get_ticks() + cycles_into_future;
-        evt.event_type = event_type;
-        evt.event_user_data = userdata;
-
-        events.push_back(evt);
-
-        std::stable_sort(events.begin(), events.end(),
-            [](const event &lhs, const event &rhs) {
-                return lhs.event_time > rhs.event_time;
-            });
-    }
-
-    void timing_system::schedule_event_imm(int event_type, uint64_t userdata) {
-        schedule_event(0, event_type, userdata);
-    }
-
-    void timing_system::unschedule_event(int event_type, uint64_t usrdata) {
-        std::lock_guard<std::mutex> guard(mut);
-
-        auto res = std::find_if(events.begin(), events.end(),
-            [&](auto evt) { return (evt.event_type == event_type) && (evt.event_user_data == usrdata); });
-
-        if (res != events.end()) {
-            events.erase(res);
-        }
-    }
-
-    void timing_system::remove_event(int event_type) {
-        std::lock_guard<std::mutex> guard(mut);
-
-        auto res = std::find_if(events.begin(), events.end(),
-            [&](auto evt) { return (evt.event_type == event_type); });
-
-        if (res != events.end()) {
-            events.erase(res);
-        }
-    }
-
-    void timing_system::idle(int max_idle) {
-        auto dc = downcount;
+    void ntimer::idle(int max_idle) {
+        auto dc = downcount_;
 
         if (max_idle != 0 && dc > max_idle) {
             dc = max_idle;
         }
 
-        if (events.size() > 0 && dc > 0) {
-            event first_event = events[0];
+        if (events_.size() > 0 && dc > 0) {
+            event first_event = events_[0];
 
-            std::size_t cexecuted = slice_len - downcount;
-            std::size_t cnextevt = first_event.event_time - global_timer;
+            std::size_t cexecuted = slice_len_ - downcount_;
+            std::size_t cnextevt = first_event.event_time - ticks_;
 
             if (cnextevt < cexecuted + dc) {
                 dc = static_cast<int>(cnextevt - cexecuted);
@@ -192,124 +95,192 @@ namespace eka2l1 {
             }
         }
 
-        idle_ticks += dc;
-        downcount -= dc;
+        idle_ticks_ += dc;
+        downcount_ -= dc;
     }
 
-    void timing_system::remove_all_events(int event_type) {
-        remove_event(event_type);
+    void ntimer::add_ticks(uint32_t ticks) {
+        downcount_ -= ticks;
     }
 
-    void timing_system::advance() {
+    void ntimer::advance() {
         move_events();
 
-        auto org_slice = slice_len;
-        auto org_timer = global_timer;
+        auto org_slice = slice_len_;
+        auto org_timer = ticks_;
 
-        const std::int64_t cycles_executed = slice_len - downcount;
-        global_timer += cycles_executed;
-        slice_len = INITIAL_SLICE_LENGTH;
+        const std::int64_t cycles_executed = slice_len_ - downcount_;
+        ticks_ += cycles_executed;
+        slice_len_ = INITIAL_SLICE_LENGTH;
 
-        while (!events.empty() && events.back().event_time <= global_timer) {
-            event evt = std::move(events.back());
-            events.pop_back();
+        timer_sane_ = true;
 
-            std::stable_sort(events.begin(), events.end(),
-                [](const event &lhs, const event &rhs) {
-                    return lhs.event_time > rhs.event_time;
-                });
+        while (!events_.empty() && events_.back().event_time <= ticks_) {
+            event evt = std::move(events_.back());
+            events_.pop_back();
 
-            event_types[evt.event_type]
-                .callback(evt.event_user_data, static_cast<int>(global_timer - evt.event_time));
+            std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
+                return lhs.event_time > rhs.event_time;
+            });
+
+            {
+                const std::lock_guard<std::mutex> lock(timing_->mut_);
+                timing_->event_types_[evt.event_type]
+                    .callback(evt.event_user_data, static_cast<int>(ticks_ - evt.event_time));
+            }
         }
 
-        if (!events.empty()) {
-            slice_len = std::min(static_cast<std::int64_t>(events.back().event_time - global_timer),
+        timer_sane_ = false;
+
+        if (!events_.empty()) {
+            slice_len_ = common::min<std::int64_t>(static_cast<std::int64_t>(events_.back().event_time - ticks_),
                 static_cast<std::int64_t>(MAX_SLICE_LENGTH));
         }
 
-        downcount = slice_len;
+        downcount_ = slice_len_;
     }
 
-    void timing_system::move_events() {
-        std::lock_guard<std::mutex> guard(mut);
+    void ntimer::schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata,
+        const bool thr_safe) {
+        event evt;
 
-        for (uint32_t i = 0; i < ts_events.size(); i++) {
-            events.push_back(ts_events[i]);
+        evt.event_time = ticks_ + cycles_into_future;
+        evt.event_type = event_type;
+        evt.event_user_data = userdata;
 
-            std::stable_sort(events.begin(), events.end(),
-                [](const event &lhs, const event &rhs) {
-                    return lhs.event_time > rhs.event_time;
-                });
+        if (thr_safe) {
+            ts_events_.push(evt);
+        } else {
+            events_.push_back(evt);
 
-            ts_events.erase(events.begin() + i);
+            std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
+                return lhs.event_time > rhs.event_time;
+            });
         }
+    }
+
+    void ntimer::unschedule_event(int event_type, uint64_t userdata) {
+        auto res = std::find_if(events_.begin(), events_.end(),
+            [&](auto evt) { return (evt.event_type == event_type) && (evt.event_user_data == userdata); });
+
+        if (res != events_.end()) {
+            events_.erase(res);
+        } else {
+            // TODO(pent0): Unschedule thread-safe events
+        }
+    }
+
+    void timing_system::fire_mhz_changes() {
+        for (auto &mhz_change : internal_mhzcs_) {
+            mhz_change();
+        }
+    }
+
+    ntimer *timing_system::current_timer() {
+        return timers_[current_core_].get();
+    }
+
+    void timing_system::set_clock_frequency_mhz(int cpu_mhz) {
+        CPU_HZ = cpu_mhz;
+        fire_mhz_changes();
+    }
+
+    std::uint32_t timing_system::get_clock_frequency_mhz() {
+        return static_cast<std::uint32_t>(CPU_HZ / 1000000);
+    }
+
+    const std::int64_t timing_system::downcount() {
+        return current_timer()->downcount();
+    }
+    
+    const std::uint64_t timing_system::ticks() {
+        return current_timer()->ticks();
+    }
+
+    const std::uint64_t timing_system::idle_ticks() {
+        return current_timer()->idle_ticks();
+    }
+
+    std::uint64_t timing_system::get_global_time_us() {
+        return cycles_to_us(ticks());
+    }
+
+    int timing_system::register_event(const std::string &name, timed_callback callback) {
+        const std::lock_guard<std::mutex> guard(mut_);
+        event_type evtype;
+
+        evtype.name = name;
+        evtype.callback = callback;
+
+        event_types_.push_back(evtype);
+
+        return static_cast<int>(event_types_.size() - 1);
+    }
+
+    int timing_system::get_register_event(const std::string &name) {
+        const std::lock_guard<std::mutex> guard(mut_);
+
+        for (uint32_t i = 0; i < event_types_.size(); i++) {
+            if (event_types_[i].name == name) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    void timing_system::init(const int total_core) {
+        // TODO(pent0): Multicore
+        timers_.resize(1);
+
+        for (int i = 0; i < total_core; i++) {
+            timers_[i] = std::make_unique<ntimer>(this, i);
+        }
+
+        current_core_ = 0;
+        CPU_HZ = 484000000;
     }
 
     void timing_system::shutdown() {
-        move_events();
-        clear_pending_events();
-        unregister_all_events();
+
     }
 
-    void timing_system::clear_pending_events() {
-        events.clear();
+    void timing_system::restore_register_event(int evt_type, const std::string &name, timed_callback callback) {
+        event_type evtype;
+
+        evtype.callback = callback;
+        evtype.name = name;
+
+        event_types_[evt_type] = evtype;
     }
 
-    void timing_system::log_pending_events() {
-        for (auto evt : events) {
-            LOG_INFO("Pending event: Time: {}, Event type pos: {}, Event userdata: {}",
-                evt.event_time, evt.event_type, evt.event_user_data);
-        }
+    void timing_system::unregister_all_events() {
+        event_types_.clear();
+    }
+
+    void timing_system::add_ticks(uint32_t ticks) {
+        current_timer()->add_ticks(ticks);
+    }
+    
+    void timing_system::idle(int max_idle) {
+        current_timer()->idle(max_idle);
+    }
+
+    void timing_system::advance() {
+        current_timer()->advance();
+    }
+
+    void timing_system::schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata,
+        const bool thr_safe) {
+        current_timer()->schedule_event(cycles_into_future, event_type, userdata, thr_safe);
+    }
+
+    void timing_system::unschedule_event(int event_type, uint64_t usrdata) {
+        current_timer()->unschedule_event(event_type, usrdata);
     }
 
     void timing_system::register_mhz_change_callback(mhz_change_callback change_callback) {
-        std::lock_guard<std::mutex> guard(mut);
-        internal_mhzcs.push_back(change_callback);
-    }
-
-    void timing_system::force_check() {
-        const std::int64_t cycles_executed = slice_len - downcount;
-        global_timer += cycles_executed;
-        downcount = -1;
-        slice_len = -1;
-    }
-
-    static void anticrash_callback(std::uint64_t usdata, int cycles_late) {
-        LOG_ERROR("Snapshot broken: Unregister event called!");
-    }
-
-    static void event_do_state(common::chunkyseri &seri, event &evt) {
-        seri.absorb(evt.event_type);
-        seri.absorb(evt.event_time);
-        seri.absorb(evt.event_user_data);
-    }
-
-    void timing_system::do_state(common::chunkyseri &seri) {
-        std::lock_guard<std::mutex> guard(mut);
-        auto s = seri.section("CoreTiming", 1);
-
-        if (!s) {
-            return;
-        }
-
-        seri.absorb(CPU_HZ);
-        seri.absorb(slice_len);
-        seri.absorb(global_timer);
-        seri.absorb(idle_ticks);
-
-        seri.absorb(last_global_time_ticks);
-        seri.absorb(last_global_time_us);
-
-        std::uint32_t total_event_type = static_cast<std::uint32_t>(event_types.size());
-        seri.absorb(total_event_type);
-
-        event_types.resize(total_event_type, event_type{ anticrash_callback, "INVALID" });
-
-        // Since many events using a native pointer, storing the old userdata
-        // Than the object will restore with new userdata, using swap_event_userdata.
-        seri.absorb_container(events, event_do_state);
-
-        fire_mhz_changes();
+        std::lock_guard<std::mutex> guard(mut_);
+        internal_mhzcs_.push_back(change_callback);
     }
 }
