@@ -557,6 +557,11 @@ namespace eka2l1::epoc {
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, absolute_position());
             ctx.set_request_status(epoc::error_none);
             break;
+            
+        case EWsWinOpGetInvalidRegionCount:
+            ctx.write_arg_pkg<std::uint32_t>(reply_slot, 0);
+            ctx.set_request_status(epoc::error_none);
+            break;
 
         case EWsWinOpSetShape:
             LOG_WARN("SetShape stubbed");

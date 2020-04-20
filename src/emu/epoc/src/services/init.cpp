@@ -40,6 +40,7 @@
 #include <epoc/services/hwrm/hwrm.h>
 #include <epoc/services/install/install.h>
 #include <epoc/services/loader/loader.h>
+#include <epoc/services/notifier/notifier.h>
 #include <epoc/services/remcon/remcon.h>
 #include <epoc/services/sms/sa/sa.h>
 #include <epoc/services/ui/cap/oom_app.h>
@@ -183,6 +184,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, view_server);
             CREATE_SERVER(sys, remcon_server);
             CREATE_SERVER(sys, etel_server);
+            CREATE_SERVER(sys, notifier_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
