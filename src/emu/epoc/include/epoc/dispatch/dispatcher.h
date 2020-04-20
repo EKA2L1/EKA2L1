@@ -29,6 +29,7 @@ namespace eka2l1 {
     class window_server;
     class kernel_system;
     class system;
+    class timing_system;
 }
 
 namespace eka2l1::dispatch {
@@ -39,8 +40,10 @@ namespace eka2l1::dispatch {
         object_manager<drivers::player> audio_players_;
         object_manager<drivers::dsp_stream> dsp_streams_;
 
+        int nof_complete_evt_;
+
         explicit dispatcher();
-        void init(kernel_system *kern);
+        void init(kernel_system *kern, timing_system *timing);
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);
     };

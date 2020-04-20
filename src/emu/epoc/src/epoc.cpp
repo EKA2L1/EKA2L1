@@ -324,8 +324,6 @@ namespace eka2l1 {
     }
 
     void system_impl::do_state(common::chunkyseri &seri) {
-        // Save timing first
-        timing.do_state(seri);
     }
 
     void system_impl::init() {
@@ -357,7 +355,7 @@ namespace eka2l1 {
         epoc::init_panic_descriptions();
 
         // Initialize HLE finally
-        dispatcher.init(&kern);
+        dispatcher.init(&kern, &timing);
     }
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, manager::config_state *conf)

@@ -21,6 +21,7 @@
 #include <epoc/dispatch/register.h>
 #include <epoc/kernel.h>
 #include <epoc/services/window/window.h>
+#include <epoc/utils/err.h>
 
 #include <common/log.h>
 
@@ -29,8 +30,14 @@ namespace eka2l1::dispatch {
         : winserv_(nullptr) {
     }
 
-    void dispatcher::init(kernel_system *kern) {
+    void dispatcher::init(kernel_system *kern, timing_system *timing) {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
+        nof_complete_evt_ = timing->register_event("DispatcherNofComplete", [](std::uint64_t userdata, std::uint64_t late) {
+            epoc::notify_info *info = reinterpret_cast<epoc::notify_info*>(userdata);
+            info->complete(epoc::error_none);
+
+            delete info;
+        });
     }
 
     void dispatcher::resolve(eka2l1::system *sys, const std::uint32_t function_ord) {

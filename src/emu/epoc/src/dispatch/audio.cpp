@@ -285,15 +285,16 @@ namespace eka2l1::dispatch {
 
         drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream);
 
-        epoc::notify_info info;
+        epoc::notify_info *info = new epoc::notify_info;
 
-        info.requester = sys->get_kernel_system()->crr_thread();
-        info.sts = req;
+        info->requester = sys->get_kernel_system()->crr_thread();
+        info->sts = req;
 
-        out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, [](void *userdata) {
-                epoc::notify_info *info = reinterpret_cast<epoc::notify_info*>(userdata);
-                info->complete(epoc::error_none);
-            }, &info, sizeof(epoc::notify_info));
+        timing_system *timing = sys->get_timing_system();
+
+        out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, [dispatcher, timing](void *userdata) {
+            timing->schedule_event(40000, dispatcher->nof_complete_evt_, reinterpret_cast<std::uint64_t>(userdata), true); 
+        }, info);
 
         return epoc::error_none;
     }
