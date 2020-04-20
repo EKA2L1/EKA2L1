@@ -760,16 +760,21 @@ namespace eka2l1 {
     }
 
     void window_server::parse_wsini() {
-        common::ini_node_ptr screen_node = nullptr;
+        common::ini_node *screen_node = nullptr;
         int total_screen = 0;
+        
+        bool one_screen_only = false;
 
         do {
             std::string screen_key = "SCREEN";
             screen_key += std::to_string(total_screen);
-            screen_node = ws_config.find(screen_key.c_str());
+            auto screen_node_shared = ws_config.find(screen_key.c_str());
 
-            if (!screen_node || !common::ini_section::is_my_type(screen_node)) {
-                break;
+            if (!screen_node_shared || !common::ini_section::is_my_type(screen_node_shared)) {
+                screen_node = reinterpret_cast<common::ini_node*>(&ws_config);
+                one_screen_only = true;
+            } else {
+                screen_node = screen_node_shared.get();
             }
 
             total_screen++;
@@ -817,7 +822,7 @@ namespace eka2l1 {
             } while (true);
 
             screen_configs.push_back(scr);
-        } while (screen_node != nullptr);
+        } while ((screen_node != nullptr) && !one_screen_only);
     }
 
     // TODO: Anim scheduler currently has no way to resize number of screens after construction.
