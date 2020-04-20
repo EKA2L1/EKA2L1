@@ -34,6 +34,7 @@ namespace eka2l1 {
         : timing_(timing)
         , core_(core_num)
         , slice_len_(INITIAL_SLICE_LENGTH)
+        , downcount_(INITIAL_SLICE_LENGTH)
         , timer_sane_(false) {
 
     }
