@@ -1332,6 +1332,21 @@ namespace eka2l1::epoc {
         mut->signal(kern->crr_thread());
     }
 
+    BRIDGE_FUNC(std::int32_t, MutexIsHeld, std::int32_t aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        mutex_ptr mut = kern->get<kernel::mutex>(aHandle);
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return epoc::error_not_found;
+        }
+
+        kern->lock();
+        const bool result = (mut->holder() == kern->crr_thread());
+        kern->unlock();
+
+        return result;
+    }
+
     BRIDGE_FUNC(void, WaitForAnyRequest) {
         sys->get_kernel_system()->crr_thread()->wait_for_any_request();
     }
@@ -1859,6 +1874,36 @@ namespace eka2l1::epoc {
         thr->set_flags(org_flags ^ new_flags);
     }
 
+    BRIDGE_FUNC(std::int32_t, ThreadOpenByID, const std::uint32_t aId, const epoc::owner_type aOwner) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel::thread *thr = kern->get_by_id<kernel::thread>(aId);
+
+        if (!thr) {
+            LOG_ERROR("Unable to find thread with ID: {}", aId);
+            return epoc::error_not_found;
+        }
+
+        const kernel::handle handle = kern->open_handle_with_thread(kern->crr_thread(), thr,
+            static_cast<kernel::owner_type>(aOwner));
+
+        if (handle == INVALID_HANDLE) {
+            return epoc::error_general;
+        }
+
+        return static_cast<std::int32_t>(handle);
+    }
+
+    BRIDGE_FUNC(std::int32_t, ThreadExitType, const std::uint32_t aHandle) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel::thread *thr = kern->get<kernel::thread>(aHandle);
+
+        if (!thr) {
+            return epoc::error_not_found;
+        }
+
+        return thr->get_exit_reason();
+    }
+
     /*****************************/
     /* PROPERTY */
     /****************************/
@@ -2252,7 +2297,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        if ((aLength <= 0) || (aLength > queue->max_message_length())) {
+        if ((aLength <= 0) || (static_cast<std::size_t>(aLength) > queue->max_message_length())) {
             return epoc::error_argument;
         }
 
@@ -2356,6 +2401,10 @@ namespace eka2l1::epoc {
         }
     }
 
+    BRIDGE_FUNC(std::uint32_t, MathRandom) {
+        return eka2l1::random();
+    }
+
     /*
     BRIDGE_FUNC(std::int32_t, AtomicTas32, eka2l1::ptr<SAtomicOpInfo32> aAtomicInfo) {
         SAtomicOpInfo32 *info = aAtomicInfo.get(sys->get_memory_system());
@@ -2392,6 +2441,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, ChunkBase),
         BRIDGE_REGISTER(0x02, ChunkSize),
         BRIDGE_REGISTER(0x03, ChunkMaxSize),
+        BRIDGE_REGISTER(0x0B, MathRandom),
         BRIDGE_REGISTER(0x0C, IMB_Range),
         BRIDGE_REGISTER(0x0E, LibraryLookup),
         BRIDGE_REGISTER(0x11, MutexWait),
@@ -2417,6 +2467,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, ThreadSuspend),
         BRIDGE_REGISTER(0x2B, ThreadSetPriority),
         BRIDGE_REGISTER(0x2F, ThreadSetFlags),
+        BRIDGE_REGISTER(0x31, ThreadExitType),
         BRIDGE_REGISTER(0x35, TimerCancel),
         BRIDGE_REGISTER(0x36, TimerAfter),
         BRIDGE_REGISTER(0x37, TimerAtUtc),
@@ -2444,6 +2495,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6E, HandleDuplicate),
         BRIDGE_REGISTER(0x6F, MutexCreate),
         BRIDGE_REGISTER(0x70, SemaphoreCreate),
+        BRIDGE_REGISTER(0x71, ThreadOpenByID),
         BRIDGE_REGISTER(0x73, ThreadKill),
         BRIDGE_REGISTER(0x74, ThreadLogon),
         BRIDGE_REGISTER(0x75, ThreadLogonCancel),
@@ -2495,6 +2547,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDB, PlatSecDiagnostic),
         BRIDGE_REGISTER(0xDC, ExceptionDescriptor),
         BRIDGE_REGISTER(0xDD, ThreadRequestSignal),
+        BRIDGE_REGISTER(0xDE, MutexIsHeld),
         BRIDGE_REGISTER(0xDF, LeaveStart),
         BRIDGE_REGISTER(0xE0, LeaveEnd),
         BRIDGE_REGISTER(0xFE, HleDispatch),

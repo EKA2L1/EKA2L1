@@ -67,6 +67,10 @@ namespace eka2l1 {
 
             void wait_for(int msecs);
 
+            kernel::thread *holder() {
+                return holding;
+            }
+
             bool signal(kernel::thread *callee);
 
             /*! \brief This update the mutex accordingly to the priority.
