@@ -90,15 +90,15 @@ namespace eka2l1::drivers {
 
         // Attach descriptor
         attribute_descriptor descriptor[3];
-        descriptor[0].location = 0;
+        descriptor[0].location = smeta.get_attribute_binding("UV");
         descriptor[0].set_format(2, data_format::sfloat);
         descriptor[0].offset = offsetof(ImDrawVert, uv);
 
-        descriptor[1].location = 1;
+        descriptor[1].location = smeta.get_attribute_binding("Color");
         descriptor[1].set_format(4, data_format::byte);
         descriptor[1].offset = offsetof(ImDrawVert, col);
 
-        descriptor[2].location = 2;
+        descriptor[2].location = smeta.get_attribute_binding("Position");
         descriptor[2].set_format(2, data_format::sfloat);
         descriptor[2].offset = offsetof(ImDrawVert, pos);
 
