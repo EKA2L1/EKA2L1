@@ -341,6 +341,11 @@ namespace eka2l1::epoc {
         client->delete_object(cmd.obj_handle);
     }
 
+    void window_user::store_draw_commands(service::ipc_context &ctx, ws_cmd &cmd) {
+        LOG_TRACE("Store draw command stubbed");
+        ctx.set_request_status(epoc::error_none);
+    }
+
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
 
@@ -567,6 +572,10 @@ namespace eka2l1::epoc {
             LOG_WARN("SetShape stubbed");
 
             ctx.set_request_status(epoc::error_none);
+            break;
+
+        case EWsWinOpStoreDrawCommands:
+            store_draw_commands(ctx, cmd);
             break;
 
         default: {
