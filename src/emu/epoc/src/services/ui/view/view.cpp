@@ -191,6 +191,12 @@ namespace eka2l1 {
             break;
         }
 
+        case view_opcode_set_background_color: {
+            LOG_WARN("SetBackgroundColor stubbed");
+            ctx->set_request_status(epoc::error_none);
+            break;
+        }
+
         default:
             LOG_ERROR("Unimplemented view session opcode {}", ctx->msg->function);
             break;
