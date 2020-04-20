@@ -24,9 +24,10 @@
 #include <log.h>
 
 #include <e32cmn.h>
+#include <e32std.h>
 
 CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
-    : CActive(-200)
+    : CActive(CActive::EPriorityStandard)
     , iStream(aStream)
     , iCopied(NULL) {
 
@@ -45,6 +46,7 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
     iStream->WriteL(*node->iBuffer);
 
     iCopied = node;
+
     SetActive();
 }
 
@@ -61,6 +63,7 @@ void CMMFMdaOutputBufferQueue::RunL() {
         delete iCopied;
     }
 
+    iStatus = KRequestPending;
     WriteAndWait();
 }
 
@@ -72,26 +75,23 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
     WriteAndWait();
 }
 
-CMMFMdaOutputOpen::CMMFMdaOutputOpen(CMMFMdaAudioOutputStream *aStream)
-    : CActive(CActive::EPriorityHigh)
-    , iStream(aStream) {
+CMMFMdaOutputOpen::CMMFMdaOutputOpen()
+    : CIdle(CActive::EPriorityIdle) {
 }
 
-void CMMFMdaOutputOpen::RunL() {
+static TInt OpenCompleteCallback(void *aUserdata) {
     LogOut(MCA_CAT, _L("Open complete"));
+   
+    CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream*>(aUserdata);
 
-    iStream->iCallback.MaoscOpenComplete(KErrNone);
-    iStream->StartRaw();
+    stream->iCallback.MaoscOpenComplete(KErrNone);
+    stream->StartRaw();
 
-    Deque();
+    return 0;
 }
 
-void CMMFMdaOutputOpen::DoCancel() {
-
-}
-
-void CMMFMdaOutputOpen::Listen() {
-    SetActive();
+void CMMFMdaOutputOpen::Open(CMMFMdaAudioOutputStream *stream) {
+    Start(TCallBack(OpenCompleteCallback, stream));
 }
 
 /// AUDIO OUTPUT STREAM
@@ -101,7 +101,7 @@ CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback
     , iPref(aPref)
     , iState(EMdaStateReady)
     , iBufferQueue(this)
-    , iOpen(this) {
+    , iOpen() {
 }
 
 CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
@@ -143,7 +143,7 @@ void CMMFMdaAudioOutputStream::Play() {
     // Simulates that buffer has been written to server
     iState = EMdaStatePlay;
 
-    iOpen.Listen();
+    iOpen.Open(this);
     iBufferQueue.StartTransfer();
 }
 
