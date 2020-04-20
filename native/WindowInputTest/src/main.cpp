@@ -42,17 +42,7 @@ public:
     case EEventKeyDown: case EEventKeyUp:
     {
       TKeyEvent *keyEvt = event.Key();
-      if (keyEvt->iScanCode == 197)
-      {
-        RDebug::Printf("Red key pressed down/up");
-        
-        // STOP IMMIDIATELY
-        CActiveScheduler::Stop(); 
-        return;
-      } else if (keyEvt->iScanCode == 196)
-      {
-        RDebug::Printf("Green key pressed down/up"); 
-      }
+      RDebug::Printf("Key down/up code %d scancode %d", keyEvt->iCode, keyEvt->iScanCode);
 
       break;
     }
@@ -60,18 +50,7 @@ public:
     case EEventKey:
     {
       TKeyEvent *keyEvt = event.Key();
-      
-      if (keyEvt->iScanCode == 197)
-      {
-        RDebug::Printf("Red key pressed down/up");
-        
-        // STOP IMMIDIATELY
-        CActiveScheduler::Stop(); 
-        return;
-      } else if (keyEvt->iScanCode == 180)
-      {
-        RDebug::Printf("Mid button pressed down/up"); 
-      } 
+      RDebug::Printf("Key code %d scancode %d", keyEvt->iCode, keyEvt->iScanCode);
 
       break;
     }
@@ -155,6 +134,8 @@ void MainL()
   RBlankWindow *window = new (ELeave) RBlankWindow(winSession);
   window->Construct(*group, 123);
   TInt err = window->SetSizeErr(device->SizeInPixels());
+  
+  window->PointerFilter(EPointerFilterDrag, 0);
   window->SetPointerCapture(RWindowBase::TCaptureDragDrop);
   window->Activate();
   
