@@ -175,7 +175,7 @@ namespace eka2l1 {
         void add_ticks(uint32_t ticks);
         void idle(int max_idle = 0);
 
-        void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata,
+        void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata = 0,
             const bool thr_safe = false);
 
         void unschedule_event(int event_type, uint64_t userdata);

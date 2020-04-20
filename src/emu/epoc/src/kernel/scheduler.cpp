@@ -63,7 +63,7 @@ namespace eka2l1::kernel {
 
     void thread_scheduler::switch_context(kernel::thread *oldt, kernel::thread *newt) {
         if (oldt) {
-            oldt->lrt = timing->get_ticks();
+            oldt->lrt = timing->ticks();
             jitter->save_context(oldt->ctx);
 
             if (oldt->state == thread_state::run) {

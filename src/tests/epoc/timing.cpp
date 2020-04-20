@@ -18,10 +18,10 @@ void timed_nop_callback(uint64_t time_delay) {
 }
 
 void advance_and_check(eka2l1::timing_system &timing, uint32_t ticks) {
-    timing.add_ticks(static_cast<std::uint32_t>(timing.get_downcount()));
+    timing.add_ticks(static_cast<std::uint32_t>(timing.downcount()));
     timing.advance();
 
-    REQUIRE(timing.get_downcount() == ticks);
+    REQUIRE(timing.downcount() == ticks);
 }
 
 struct scope_guard {

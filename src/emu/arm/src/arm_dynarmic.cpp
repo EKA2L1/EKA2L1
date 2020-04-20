@@ -361,7 +361,7 @@ namespace eka2l1 {
 
             uint64_t GetTicksRemaining() override {
                 return eka2l1::common::max<std::uint64_t>(
-                    static_cast<std::uint64_t>(parent.get_timing_sys()->get_downcount()), 0ULL);
+                    static_cast<std::uint64_t>(parent.get_timing_sys()->downcount()), 0ULL);
             }
         };
 

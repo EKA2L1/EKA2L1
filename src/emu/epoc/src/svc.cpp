@@ -2236,7 +2236,7 @@ namespace eka2l1::epoc {
         timing_system *timing = sys->get_timing_system();
         static constexpr std::uint64_t NANOKERNEL_HZ = 1000;
 
-        return static_cast<std::uint32_t>(timing->get_ticks() * NANOKERNEL_HZ / 1000000 / timing->get_clock_frequency_mhz());
+        return static_cast<std::uint32_t>(timing->ticks() * NANOKERNEL_HZ / 1000000 / timing->get_clock_frequency_mhz());
     }
 
     /**********************/

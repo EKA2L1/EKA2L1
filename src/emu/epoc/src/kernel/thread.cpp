@@ -265,7 +265,7 @@ namespace eka2l1 {
                 last_priority = real_priority;
             }
 
-            create_time = timing->get_ticks();
+            create_time = timing->ticks();
 
             timeslice = 20000;
             time = 20000;
