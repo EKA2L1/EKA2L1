@@ -52,6 +52,13 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_session::fetch(service::ipc_context *ctx) {
+        if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
+            // Move app in z order does not exist. Forward to other message
+            if (ctx->msg->function >= EAknEikAppUiMoveAppInZOrder) {
+                ctx->msg->function++;
+            }
+        }
+
         switch (ctx->msg->function) {
         case EAknEikAppUiLayoutConfigSize: {
             server<oom_ui_app_server>()->get_layout_config_size(*ctx);
