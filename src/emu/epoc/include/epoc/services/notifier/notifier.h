@@ -39,8 +39,6 @@ namespace eka2l1 {
     };
 
     class notifier_server : public service::typical_server {
-        friend struct central_repo_client_session;
-
     public:
         explicit notifier_server(eka2l1::system *sys);
 
