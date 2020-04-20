@@ -56,7 +56,7 @@ namespace eka2l1::drivers {
         virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels);
 
         void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
-            void *userdata, const std::size_t userdata_size) override;
+            void *userdata) override;
 
         virtual bool start();
         virtual bool stop();

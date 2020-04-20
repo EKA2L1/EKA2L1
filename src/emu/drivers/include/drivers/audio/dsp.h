@@ -44,7 +44,7 @@ namespace eka2l1::drivers {
     };
 
     using dsp_stream_notification_callback = std::function<void(void *)>;
-    using dsp_stream_userdata = std::vector<std::uint8_t>;
+    using dsp_stream_userdata = void*;
 
     struct dsp_stream {
     protected:
@@ -87,7 +87,7 @@ namespace eka2l1::drivers {
         virtual bool stop() = 0;
 
         virtual void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
-            void *userdata, const std::size_t userdata_size) = 0;
+            void *userdata) = 0;
     };
 
     struct dsp_output_stream : public dsp_stream {

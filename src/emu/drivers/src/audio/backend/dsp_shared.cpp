@@ -64,24 +64,22 @@ namespace eka2l1::drivers {
             return true;
 
         // Call the finish callback
-        complete_callback_(complete_userdata_.data());
+        complete_callback_(complete_userdata_);
         return stream_->stop();
     }
 
     void dsp_output_stream_shared::register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
-        void *userdata, const std::size_t userdata_size) {
+        void *userdata) {
         const std::lock_guard<std::mutex> guard(callback_lock_);
 
         switch (nof_type) {
         case dsp_stream_notification_done:
             complete_callback_ = callback;
-            complete_userdata_.assign(reinterpret_cast<std::uint8_t*>(userdata),
-                reinterpret_cast<std::uint8_t*>(userdata) + userdata_size);
+            complete_userdata_ = userdata;
             break;
 
         case dsp_stream_notification_buffer_copied:
-            buffer_copied_userdata_.assign(reinterpret_cast<std::uint8_t*>(userdata),
-                reinterpret_cast<std::uint8_t*>(userdata) + userdata_size);
+            buffer_copied_userdata_ = userdata;
             buffer_copied_callback_ = callback;
             break;
 
@@ -121,7 +119,7 @@ namespace eka2l1::drivers {
                 {
                     const std::lock_guard<std::mutex> guard(callback_lock_);
                     if (buffer_copied_callback_) {
-                        buffer_copied_callback_(buffer_copied_userdata_.data());
+                        buffer_copied_callback_(buffer_copied_userdata_);
                         buffer_copied_callback_ = nullptr;
                     }
                 }
