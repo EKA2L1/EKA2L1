@@ -771,8 +771,12 @@ namespace eka2l1 {
             auto screen_node_shared = ws_config.find(screen_key.c_str());
 
             if (!screen_node_shared || !common::ini_section::is_my_type(screen_node_shared)) {
-                screen_node = reinterpret_cast<common::ini_node*>(&ws_config);
-                one_screen_only = true;
+                if (total_screen == 0) {
+                    screen_node = reinterpret_cast<common::ini_node*>(&ws_config);
+                    one_screen_only = true;
+                } else {
+                    break;
+                }
             } else {
                 screen_node = screen_node_shared.get();
             }
