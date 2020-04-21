@@ -177,6 +177,7 @@ namespace eka2l1 {
         mutable std::atomic<uint32_t> uid_counter;
 
         std::uint64_t base_time;
+        int realtime_ipc_signal_evt;
 
         void setup_new_process(process_ptr pr);
 
@@ -235,6 +236,10 @@ namespace eka2l1 {
         // For user-provided EPOC version
         void set_epoc_version(const epocver ver) {
             kern_ver = ver;
+        }
+
+        int get_ipc_realtime_signal_event() const {
+            return realtime_ipc_signal_evt;
         }
 
         void prepare_reschedule();

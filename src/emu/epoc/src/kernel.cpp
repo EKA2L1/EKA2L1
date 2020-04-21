@@ -69,6 +69,14 @@ namespace eka2l1 {
 
         kernel_handles = kernel::object_ix(this, kernel::handle_array_owner::kernel);
         service::init_services(sys);
+
+        // Create real time IPC event
+        realtime_ipc_signal_evt = timing->register_event("RealTimeIpc", [this](std::uint64_t userdata, std::uint64_t cycles_late) {
+            kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
+            assert(thr);
+
+            thr->signal_request();
+        });
     }
 
     void kernel_system::shutdown() {

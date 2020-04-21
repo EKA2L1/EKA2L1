@@ -49,7 +49,7 @@ namespace eka2l1 {
          * struct supported.
          */
         struct ipc_context {
-            explicit ipc_context(const bool auto_free = true);
+            explicit ipc_context(const bool auto_free = true, const bool accurate_timing = false);
             ~ipc_context();
 
             eka2l1::system *sys; ///< The system instance pointer.
@@ -60,6 +60,8 @@ namespace eka2l1 {
 
             bool auto_free = false; ///< Auto free this message when the context is destroyed. Useful
                 ///< for HLE context.
+
+            bool accurate_timing = false;
 
             /**
              * \brief   Get raw IPC argument data.
