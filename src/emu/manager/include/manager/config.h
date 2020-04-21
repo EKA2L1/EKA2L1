@@ -77,6 +77,7 @@ namespace eka2l1::manager {
         bool enable_srv_cdl{ true };
 
         bool fbs_enable_compression_queue{ false };
+        bool accurate_ipc_timing{ false };
 
         void serialize();
         void deserialize();
