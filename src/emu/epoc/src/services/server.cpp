@@ -148,10 +148,12 @@ namespace eka2l1 {
             int func = process_msg->function;
 
             auto func_ite = ipc_funcs.find(func);
+            manager::config_state *conf = sys->get_config();
 
             if (func_ite == ipc_funcs.end()) {
                 if (unhandle_callback_enable) {
-                    ipc_context context;
+                    ipc_context context(true, conf->accurate_ipc_timing);
+
                     context.sys = sys;
                     context.msg = process_msg;
 
@@ -161,19 +163,15 @@ namespace eka2l1 {
                 }
 
                 LOG_WARN("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
-
-                // Signal request semaphore, to tell everyone that it has finished random request
-                // process_msg->own_thr->signal_request();
-
                 return;
             }
 
             ipc_func ipf = func_ite->second;
-            ipc_context context;
+            ipc_context context(false, conf->accurate_ipc_timing);
             context.sys = sys;
             context.msg = process_msg;
 
-            if (sys->get_config()->log_ipc) {
+            if (conf->log_ipc) {
                 LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
             }
 

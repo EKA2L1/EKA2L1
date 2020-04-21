@@ -28,8 +28,9 @@
 
 namespace eka2l1 {
     namespace service {
-        ipc_context::ipc_context(const bool auto_free)
-            : auto_free(auto_free) {
+        ipc_context::ipc_context(const bool auto_free, const bool accurate_timing)
+            : auto_free(auto_free)
+            , accurate_timing(accurate_timing) {
         }
 
         ipc_context::~ipc_context() {
@@ -138,13 +139,17 @@ namespace eka2l1 {
 
                 // Avoid signal twice to cause undefined behavior
                 if (!signaled) {
-                    signaled = true;
-                    
-                    timing_system *timing = sys->get_timing_system();
-                    kernel_system *kern = sys->get_kernel_system();
+                    if (accurate_timing) {
+                        timing_system *timing = sys->get_timing_system();
+                        kernel_system *kern = sys->get_kernel_system();
 
-                    // TODO(pent0): No hardcode
-                    timing->schedule_event(40000, kern->get_ipc_realtime_signal_event(), msg->own_thr->unique_id());
+                        // TODO(pent0): No hardcode
+                        timing->schedule_event(40000, kern->get_ipc_realtime_signal_event(), msg->own_thr->unique_id());
+                    } else {
+                        msg->own_thr->signal_request();
+                    }
+
+                    signaled = true;
                 }
             }
         }
