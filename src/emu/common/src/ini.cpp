@@ -359,6 +359,11 @@ namespace eka2l1::common {
                 } else {
                     std::string next_tok = first_token.c_str();
 
+                    if ((!next_tok.empty()) && (next_tok[0] == '#')) {
+                        // It's comment
+                        continue;
+                    }
+
                     if (stream.eof()) {
                         sec->create_value(next_tok.c_str());
                     } else {
