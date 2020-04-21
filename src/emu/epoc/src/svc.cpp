@@ -126,7 +126,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, After, std::int32_t aMicroSecs, eka2l1::ptr<epoc::request_status> aStatus) {
-        sys->get_kernel_system()->crr_thread()->after(aStatus, aMicroSecs);
+        sys->get_kernel_system()->crr_thread()->sleep_nof(aStatus, aMicroSecs);
     }
 
     /****************************/
@@ -2393,7 +2393,8 @@ namespace eka2l1::epoc {
         const std::uint32_t current = sys->get_cpu()->get_pc();
         std::uint64_t *data = reinterpret_cast<std::uint64_t *>(sys->get_kernel_system()->crr_process()->get_ptr_on_addr_space(current - 20));
 
-        sys->get_cpu()->save_context(sys->get_kernel_system()->crr_thread()->get_thread_context());
+        kernel::thread *thr = sys->get_kernel_system()->crr_thread();
+        sys->get_cpu()->save_context(thr->get_thread_context());
 
         reality_func to_call = reinterpret_cast<reality_func>(*data++);
         void *userdata = reinterpret_cast<void *>(*data++);
@@ -2512,6 +2513,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7F, SessionCreate),
         BRIDGE_REGISTER(0x80, SessionCreateFromHandle),
         BRIDGE_REGISTER(0x84, TimerCreate),
+        BRIDGE_REGISTER(0x86, After),       // Actually AfterHighRes
         BRIDGE_REGISTER(0x87, ChangeNotifierCreate),
         BRIDGE_REGISTER(0x9C, WaitDllLock),
         BRIDGE_REGISTER(0x9D, ReleaseDllLock),
