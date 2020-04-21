@@ -35,6 +35,43 @@
 154 38          ; CMdaAudioPlayerUtility::SetThreadPriority
 158 40          ; CMdaAudioPlayerUtility::UseSharedHeap
 
+[epoc9v3]
+11 1            ; CMdaAudioPlayerUtility::GetBalance
+12 2            ; CMdaAudioPlayerUtility::GetBitrate
+13 3            ; CMdaAudioPlayerUtility::SetBalance
+14 4            ; CMdaAudioPlayerUtility::GetPosition
+15 5            ; CMdaAudioPlayerUtility::SetPosition
+16 6            ; CMdaAudioPlayerUtility::SetPriority
+17 34           ; CMdaAudioPlayerUtility::NewDesPlayerL
+18 7            ; CMdaAudioPlayerUtility::SetPlayWindow
+19 35           ; CMdaAudioPlayerUtility::NewFilePlayerL
+20 37           ; CMdaAudioPlayerUtility::WillResumePlay
+21 8            ; CMdaAudioPlayerUtility::ClearPlayWindow
+22 9            ; CMdaAudioPlayerUtility::CustomCommandSync (var1)
+23 10           ; CMdaAudioPlayerUtility::CustomCommandSync (var2)
+24 11           ; CMdaAudioPlayerUtility::GetMetadataEntry
+25 12           ; CMdaAudioPlayerUtility::CustomCommandAsync (var1)
+26 13           ; CMdaAudioPlayerUtility::CustomCommandAsync (var2)
+27 14           ; CMdaAudioPlayerUtility::GetDRMCustomCommand
+28 36           ; CMdaAudioPlayerUtility::NewDesPlayerReadOnlyL
+29 15           ; CMdaAudioPlayerUtility::GetAudioLoadingProgressL
+30 16           ; CMdaAudioPlayerUtility::GetNumberOfMetadataEntryL
+31 17           ; CMdaAudioPlayerUtility::RegisterAudioResourceNotification
+32 18           ; CMdaAudioPlayerUtility::RegisterForAudioLoadingNotification
+33 19           ; CMdaAudioPlayerUtility::ControllerImplementationInformation
+34 20           ; CMdaAudioPlayerUtility::CancelRegisterAudioResourceNotification
+35 21           ; CMdaAudioPlayerUtility::NewL
+36 39           ; CMdaAudioPlayerUtiltiy::Close
+37 22           ; CMdaAudioPlayerUtility::Pause
+38 24           ; CMdaAudioPlayerUtility::OpenDesL
+39 25           ; CMdaAudioPlayerUtility::OpenUrlL
+40 26           ; CMdaAudioPlayerUtility::GetVolume
+41 27           ; CMdaAudioPlayerUtility::OpenFileL(RFile)
+42 28           ; CMdaAudioPlayerUtility::OpenFileL(TDesC)
+43 29           ; CMdaAudioPlayerUtility::OpenFileL(TMMSource)
+154 38          ; CMdaAudioPlayerUtility::SetThreadPriority
+158 40          ; CMdaAudioPlayerUtility::UseSharedHeap
+
 [epocv6]
 2 36            ; CMdaAudioPlayerUtility::NewDesPlayerReadOnlyL
 3 35            ; CMdaAudioPlayerUtility::NewFilePlayerL
