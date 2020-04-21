@@ -512,7 +512,7 @@ namespace eka2l1 {
 
         case cen_rep_group_nof_cancel:
         case cen_rep_notify_cancel: {
-            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
+            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_cancel) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
             const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
 
             cancel_notify_request(partial_key, mask);
