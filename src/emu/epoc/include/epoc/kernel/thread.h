@@ -261,13 +261,10 @@ namespace eka2l1 {
 
             void set_priority(const thread_priority new_pri);
 
-            bool sleep(std::uint32_t mssecs);
+            bool sleep(std::uint32_t mssecs, const bool deque = true);
             bool sleep_nof(eka2l1::ptr<epoc::request_status> sts, std::uint32_t mssecs);
 
-            void after(eka2l1::ptr<epoc::request_status> sts, std::uint32_t mssecs);
-
             void notify_sleep(const int errcode);
-            void notify_after(const int errcode);
 
             bool stop();
 

@@ -31,18 +31,6 @@
 #include <epoc/ptr.h>
 #include <epoc/utils/err.h>
 
-int after_timout_evt = -1;
-
-static void after_thread_timeout(std::uint64_t data, int cycles_late) {
-    eka2l1::kernel::thread *thr = reinterpret_cast<decltype(thr)>(data);
-
-    if (thr == nullptr) {
-        return;
-    }
-
-    thr->notify_after(0);
-}
-
 namespace eka2l1 {
     namespace kernel {
         struct epoc9_thread_create_info {
@@ -255,10 +243,6 @@ namespace eka2l1 {
             , wait_obj(nullptr)
             , sleep_nof_sts(0)
             , thread_handles(kern, handle_array_owner::thread) {
-            if (after_timout_evt == -1) {
-                after_timout_evt = timing->register_event("ThreadAfterTimoutEvt", &after_thread_timeout);
-            }
-
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = caculate_thread_priority(owning_process(), pri);
@@ -340,23 +324,15 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
-        void thread::after(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
-            assert(!timeout_sts && "After request outstanding");
-            timeout_sts = sts;
-
-            timing->schedule_event(timing->us_to_cycles((uint64_t)mssecs),
-                after_timout_evt, reinterpret_cast<uint64_t>(this));
-        }
-
-        bool thread::sleep(uint32_t mssecs) {
-            return scheduler->sleep(this, mssecs);
+        bool thread::sleep(uint32_t mssecs, const bool deque) {
+            return scheduler->sleep(this, mssecs, deque);
         }
 
         bool thread::sleep_nof(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
             assert(!sleep_nof_sts && "Thread supposed to sleep already");
             sleep_nof_sts = sts;
 
-            return scheduler->sleep(this, mssecs);
+            return scheduler->sleep(this, mssecs, false);
         }
 
         void thread::notify_sleep(const int errcode) {
@@ -368,17 +344,6 @@ namespace eka2l1 {
             }
 
             sleep_nof_sts = 0;
-        }
-
-        void thread::notify_after(const int errcode) {
-            if (timeout_sts) {
-                *(timeout_sts.get(owning_process())) = errcode;
-                timeout_sts = 0;
-
-                signal_request();
-            }
-
-            timeout_sts = 0;
         }
 
         bool thread::stop() {
