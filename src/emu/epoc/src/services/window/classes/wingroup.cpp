@@ -89,6 +89,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        //LOG_TRACE("Window group op: {}", cmd.header.op);
         bool result = execute_command_for_general_node(ctx, cmd);
 
         if (result) {
@@ -96,7 +97,6 @@ namespace eka2l1::epoc {
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
-        //LOG_TRACE("Window group op: {}", (int)op);
 
         switch (op) {
         case EWsWinOpEnableScreenChangeEvents: {

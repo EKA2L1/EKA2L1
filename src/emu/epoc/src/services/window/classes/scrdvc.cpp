@@ -148,6 +148,7 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        //LOG_TRACE("Screen device {}", cmd.header.op);
         ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {

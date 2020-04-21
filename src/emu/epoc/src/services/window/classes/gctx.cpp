@@ -404,6 +404,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        //LOG_TRACE("Graphics context opcode {}", cmd.header.op);
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
         // General rules: Stub to err_none = nullptr, implement = function pointer
