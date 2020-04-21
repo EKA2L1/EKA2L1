@@ -139,7 +139,12 @@ namespace eka2l1 {
                 // Avoid signal twice to cause undefined behavior
                 if (!signaled) {
                     signaled = true;
-                    msg->own_thr->signal_request();
+                    
+                    timing_system *timing = sys->get_timing_system();
+                    kernel_system *kern = sys->get_kernel_system();
+
+                    // TODO(pent0): No hardcode
+                    timing->schedule_event(40000, kern->get_ipc_realtime_signal_event(), msg->own_thr->unique_id());
                 }
             }
         }
