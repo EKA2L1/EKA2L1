@@ -498,7 +498,9 @@ namespace eka2l1 {
         // TODO: Faster way
         case cen_rep_notify_req_check: {
             epoc::notify_info holder;
+            holder.sts = 0;
 
+            // Pass a test notify info. Add notify request will not add this, but will check for request existence.
             if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_arg<std::int32_t>(0)) == 0) {
                 ctx->set_request_status(epoc::error_none);
                 break;

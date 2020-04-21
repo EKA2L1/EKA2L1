@@ -104,9 +104,14 @@ namespace eka2l1 {
 
         if (find_result != notifies.end()) {
             return -1;
+        } else {
+            if (info.empty()) {
+                // Likely a test, pass
+                return 0;
+            }
         }
 
-        notifies.push_back({ std::move(info), mask, match });
+        notifies.push_back({ info, mask, match });
         return 0;
     }
 
