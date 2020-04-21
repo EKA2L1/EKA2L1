@@ -84,6 +84,7 @@ namespace eka2l1::drivers {
         void destroy_object(command_helper &helper);
         void set_filter(command_helper &helper);
         void resize_bitmap(command_helper &helper);
+        void set_swizzle(command_helper &helper);
 
     public:
         explicit shared_graphics_driver(const graphic_api gr_api);

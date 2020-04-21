@@ -432,6 +432,36 @@ namespace eka2l1::drivers {
         delete data;
     }
 
+    void shared_graphics_driver::set_swizzle(command_helper &helper) {
+        drivers::handle num = 0;
+        drivers::channel_swizzle r = drivers::channel_swizzle::red;
+        drivers::channel_swizzle g = drivers::channel_swizzle::green;
+        drivers::channel_swizzle b = drivers::channel_swizzle::blue;
+        drivers::channel_swizzle a = drivers::channel_swizzle::alpha;
+
+        helper.pop(num);
+        helper.pop(r);
+        helper.pop(g);
+        helper.pop(b);
+        helper.pop(a);
+        
+        texture *target = nullptr;
+
+        if (num & HANDLE_BITMAP) {
+            bitmap *bmp = get_bitmap(num);
+
+            if (!bmp) {
+                return;
+            }
+
+            target = bmp->tex.get();
+        } else {
+            target = reinterpret_cast<drivers::texture*>(get_graphics_object(num));
+        }
+
+        target->set_channel_swizzle({ r, g, b, a });
+    }
+
     void shared_graphics_driver::bind_texture(command_helper &helper) {
         drivers::handle num = 0;
         int binding = 0;
@@ -657,6 +687,11 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_swapchain_size: {
             set_swapchain_size(helper);
+            break;
+        }
+
+        case graphics_driver_set_swizzle: {
+            set_swizzle(helper);
             break;
         }
 

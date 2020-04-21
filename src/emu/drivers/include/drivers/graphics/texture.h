@@ -53,7 +53,7 @@ namespace eka2l1::drivers {
         linear
     };
 
-    enum class channel_swizzle {
+    enum class channel_swizzle: std::uint32_t {
         red,
         green,
         blue,
