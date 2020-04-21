@@ -622,6 +622,11 @@ namespace eka2l1 {
 
             ImGui::PopItemWidth();
         }
+
+        ImGui::Checkbox("Accurate IPC timing", &conf->accurate_ipc_timing);
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Improve the accuracy of system, but may results in slowdown.");
+        }
     }
 
     void imgui_debugger::show_pref_mounting() {
