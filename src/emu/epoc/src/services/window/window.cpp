@@ -1013,6 +1013,10 @@ namespace eka2l1 {
             kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
             kernel::chunk_attrib::none);
 
+        // Fill with white
+        std::uint8_t *fill_start = reinterpret_cast<std::uint8_t*>(buffer->host_base());
+        std::fill(fill_start, fill_start + max_chunk_size, 255);
+
         scr->screen_buffer_chunk = buffer;
     }
 

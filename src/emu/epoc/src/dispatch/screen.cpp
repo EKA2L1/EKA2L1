@@ -56,6 +56,9 @@ namespace eka2l1::dispatch {
                     reinterpret_cast<const char *>(scr->screen_buffer_chunk->host_base()), buffer_size,
                     { 0, 0 }, screen_size);
 
+                command_builder->set_swizzle(scr->dsa_texture, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                    drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+
                 driver->submit_command_list(*command_list);
                 scr->vsync(sys->get_timing_system());
             }
