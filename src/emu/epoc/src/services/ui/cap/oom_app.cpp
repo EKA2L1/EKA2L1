@@ -51,6 +51,11 @@ namespace eka2l1 {
         , blank_count(0) {
     }
 
+    void oom_ui_app_session::redraw_status_pane(service::ipc_context *ctx) {
+        server<oom_ui_app_server>()->redraw_status_pane();
+        ctx->set_request_status(epoc::error_none);
+    }
+
     void oom_ui_app_session::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
             // Move app in z order does not exist. Forward to other message
@@ -98,11 +103,20 @@ namespace eka2l1 {
             break;
         }
 
+        case EAknEikAppUiRedrawServerStatusPane: {
+            redraw_status_pane(ctx);
+            break;
+        }
+
         default: {
             LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with epoc::error_none", ctx->msg->function);
             ctx->set_request_status(epoc::error_none);
         }
         }
+    }
+
+    void oom_ui_app_server::redraw_status_pane() {
+        LOG_TRACE("Status pane redrawed");
     }
 
     std::string oom_ui_app_server::get_layout_buf() {

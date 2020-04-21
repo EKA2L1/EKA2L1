@@ -123,6 +123,8 @@ namespace eka2l1 {
     class oom_ui_app_session : public service::typical_session {
         std::int32_t blank_count;
 
+        void redraw_status_pane(service::ipc_context *ctx);
+
     public:
         explicit oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;
@@ -158,6 +160,7 @@ namespace eka2l1 {
         void load_screen_mode();
         std::string get_layout_buf();
         void set_sgc_params(service::ipc_context &ctx);
+        void redraw_status_pane();
 
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);
