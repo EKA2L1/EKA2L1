@@ -1707,6 +1707,7 @@ namespace eka2l1::epoc {
         thread_ptr thr = kern->get<kernel::thread>(aHandle);
 
         if (!thr) {
+            LOG_ERROR("Thread not found with handle {}", aHandle);
             return;
         }
 
@@ -2207,7 +2208,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSeconds);
+        epoc::request_status *sts = aRequestStatus.get(kern->crr_process());
+        timer->after(kern->crr_thread(), sts, aMicroSeconds);
     }
 
     BRIDGE_FUNC(void, TimerAtUtc, std::int32_t aHandle, eka2l1::ptr<epoc::request_status> aRequestStatus, std::uint64_t aMicroSecondsAt) {
@@ -2218,7 +2220,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        timer->after(kern->crr_thread(), aRequestStatus.get(sys->get_memory_system()), aMicroSecondsAt - kern->home_time());
+        timer->after(kern->crr_thread(), aRequestStatus.get(kern->crr_process()), aMicroSecondsAt - kern->home_time());
     }
 
     BRIDGE_FUNC(void, TimerCancel, std::int32_t aHandle) {
@@ -2650,6 +2652,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDB, ExceptionDescriptor),
         BRIDGE_REGISTER(0xDC, ThreadRequestSignal),
         BRIDGE_REGISTER(0xDE, LeaveStart),
-        BRIDGE_REGISTER(0xDF, LeaveEnd)
+        BRIDGE_REGISTER(0xDF, LeaveEnd),
+        BRIDGE_REGISTER(0xFE, HleDispatch)
     };
 }
