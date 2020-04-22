@@ -702,6 +702,7 @@ namespace eka2l1 {
 
     int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {
         int real_mode = org_mode & ~(epoc::fs::file_stream_text | epoc::fs::file_read_async_all | epoc::fs::file_big_size);
+        epoc::fs::file_mode share_mode = static_cast<epoc::fs::file_mode>(real_mode & 0b11);
 
         // Fetch open mode
         int access_mode = -1;
@@ -726,7 +727,7 @@ namespace eka2l1 {
             }
         }
 
-        if (real_mode & epoc::fs::file_share_exclusive) {
+        if (share_mode == epoc::fs::file_share_exclusive) {
             // Try to claim and return denied if we can't
             if (!node_attrib.claim_exclusive(own_pr_uid)) {
                 return epoc::error_access_denied;
@@ -736,13 +737,13 @@ namespace eka2l1 {
         //======================= CHECK COMPARE MODE ===============================
 
         if (node_attrib.is_readable_and_writeable() && !node_attrib.is_optional()) {
-            if (real_mode & epoc::fs::file_share_readers_only) {
+            if (share_mode == epoc::fs::file_share_readers_only) {
                 // Hell no.
                 return epoc::error_access_denied;
             }
         }
 
-        if (node_attrib.is_readonly() && ((real_mode & epoc::fs::file_share_any) || (real_mode & epoc::fs::file_share_readers_or_writers))) {
+        if (node_attrib.is_readonly() && ((share_mode == epoc::fs::file_share_any) || (share_mode == epoc::fs::file_share_readers_or_writers))) {
             return epoc::error_access_denied;
         }
 
@@ -762,7 +763,7 @@ namespace eka2l1 {
             access_mode |= READ_MODE;
         }
 
-        if (access_mode & WRITE_MODE && (real_mode & epoc::fs::file_share_readers_only)) {
+        if ((access_mode & WRITE_MODE) && (share_mode == epoc::fs::file_share_readers_only)) {
             return epoc::error_access_denied;
         }
 
