@@ -90,7 +90,6 @@ namespace eka2l1 {
         , should_show_window_tree(false)
         , should_show_disassembler(false)
         , should_show_logger(true)
-        , should_show_breakpoint_list(false)
         , should_show_preferences(false)
         , should_package_manager(false)
         , should_package_manager_display_file_list(false)
@@ -336,94 +335,6 @@ namespace eka2l1 {
                 ImGui::Text("r12: 0x%08X        r13: 0x%08X        r14: 0x%08X", ctx.cpu_registers[12], ctx.cpu_registers[13], ctx.cpu_registers[14]);
                 ImGui::Text("r15: 0x%08X        CPSR: 0x%08X", ctx.cpu_registers[15], ctx.cpsr);
             }
-        }
-
-        ImGui::End();
-    }
-
-    void imgui_debugger::show_breakpoint_list() {
-        ImGui::Begin("Breakpoints", &should_show_breakpoint_list);
-
-        ImGuiStyle &style = ImGui::GetStyle();
-
-        const float height_separator = style.ItemSpacing.y;
-        float footer_height = height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
-
-        ImGui::BeginChild("##breakpoints_scroll", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove);
-        ImGuiListClipper clipper(static_cast<int>(breakpoints.size()), ImGui::GetTextLineHeight());
-
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-8s        %-32s", "Number",
-            "Address");
-
-        for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-            std::string bkpt_info;
-            bkpt_info.resize(22);
-
-            sprintf(&bkpt_info[0], "0x%08X    0x%08X", i, breakpoints[i].addr);
-
-            bool pushed = false;
-
-            if (modify_element == i) {
-                ImGui::PushStyleColor(ImGuiCol_Text, GUI_COLOR_TEXT_SELECTED);
-                pushed = true;
-            }
-
-            if (ImGui::Selectable(bkpt_info.c_str(), i == modify_element)) {
-                modify_element = i;
-            }
-
-            if (pushed) {
-                ImGui::PopStyleColor();
-            }
-        }
-
-        clipper.End();
-        ImGui::EndChild();
-
-        ImGui::Separator();
-
-        std::string buf;
-        buf.resize(18);
-
-        if (ImGui::InputText("", &buf[0], 18)) {
-            try {
-                if (buf.substr(0, 2) == "0x") {
-                    buf = buf.c_str();
-                    addr = std::stoul(buf, 0, 16);
-                } else {
-                    addr = std::atol(buf.data());
-                }
-            } catch (...) {
-                addr = 0;
-            }
-
-            addr -= addr % 2;
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Add")) {
-            if (addr != 0) {
-                set_breakpoint(addr, false, true);
-                addr = 0;
-            }
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Remove")) {
-            if (addr != 0) {
-                unset_breakpoint(addr);
-                addr = 0;
-            } else if (modify_element != -1) {
-                unset_breakpoint(breakpoints[modify_element].addr);
-            }
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Deselect")) {
-            modify_element = -1;
         }
 
         ImGui::End();
@@ -1200,8 +1111,7 @@ namespace eka2l1 {
                 ImGui::Separator();
 
                 ImGui::MenuItem("Disassembler", nullptr, &should_show_disassembler);
-                ImGui::MenuItem("Breakpoints", nullptr, &should_show_breakpoint_list);
-
+                
                 if (ImGui::BeginMenu("Objects")) {
                     ImGui::MenuItem("Threads", nullptr, &should_show_threads);
                     ImGui::MenuItem("Mutexs", nullptr, &should_show_mutexs);
@@ -1650,10 +1560,6 @@ namespace eka2l1 {
 
         if (should_show_disassembler) {
             show_disassembler();
-        }
-
-        if (should_show_breakpoint_list) {
-            show_breakpoint_list();
         }
 
         if (should_show_preferences) {
